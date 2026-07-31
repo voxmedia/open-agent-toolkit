@@ -16,7 +16,7 @@
   - [Commit Conventions](contributing/commit-conventions.md) — Commit message patterns and traceability rules for cross-artifact linkage.
   - [CLI Design Principles](contributing/design-principles.md) — Cross-cutting design rules for CLI commands, UX, logging, safety, and verification.
   - [Contributing to OAT Docs](contributing/documentation.md) — Docs authoring contract for OAT: navigation, local workflow, and contributor guidance.
-  - [Verifying Explainer Kit](contributing/explainer-kit-verification.md) — Maintainer runbook for golden recap cases, real-Chromium evidence, fixture regeneration, and release validation.
+  - [Verifying Explainer Kit](contributing/explainer-kit-verification.md) — Maintainer runbook for semantic golden cases, temporary real-Chromium evidence, and release validation.
   - [Hooks and Safety](contributing/hooks-and-safety.md) — Pre-commit hooks and safety contracts for provider sync mutations.
   - [Markdown Features](contributing/markdown-features.md) — Supported markdown patterns for OAT docs, including frontmatter, callouts, Mermaid, tabs, and code blocks.
   - [Writing Skills](contributing/skills.md) — Contributor guide to authoring OAT skills, including runtime contracts, governance, and where to start.

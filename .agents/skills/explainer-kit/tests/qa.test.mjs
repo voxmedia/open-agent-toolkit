@@ -1005,6 +1005,33 @@ test('rejects recap QA when applicable ledger claims are empty or unobserved', a
   );
 });
 
+test('does not observe ledger claims inside unrelated words or numbers', async () => {
+  const report = await auditArtifactSet({
+    artifacts: [
+      {
+        id: 'hub',
+        type: 'hub',
+        html: '<main><p>The score is already 13.</p></main>',
+      },
+    ],
+    setPlan: {
+      recipe: { id: 'project-recap' },
+      ledger: {
+        terminology: [{ term: 'core', meaning: 'Runtime.' }],
+        statuses: [{ subject: 'release', value: 'ready' }],
+        numbers: [{ subject: 'artifact count', value: 3, unit: 'artifacts' }],
+      },
+    },
+  });
+
+  assert.equal(report.valid, false);
+  assert.equal(
+    report.issues.filter(({ code }) => code === 'cohesion-claim-unobserved')
+      .length,
+    3,
+  );
+});
+
 test('composes structural, cohesion and optional browser checks', async () => {
   const report = await auditArtifactSet({
     artifacts: [

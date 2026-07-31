@@ -74,6 +74,30 @@ test('supplied mode performs only consistency and freshness checks', async () =>
   assert.equal(validateContract('fact-base', result.factBase).valid, true);
 });
 
+test('preserves a git source revision without treating it as a GitHub backlink', async () => {
+  const factBase = suppliedFactBase({
+    sources: [
+      source('plan', {
+        kind: 'git',
+        revision: COMMIT_SHA,
+      }),
+    ],
+  });
+
+  const result = await processFactBase(
+    {
+      mode: 'supplied',
+      freshnessPolicy: 'live-wins',
+      factBase,
+    },
+    { now: NOW },
+  );
+
+  assert.equal(result.factBase.sources[0].revision, COMMIT_SHA);
+  assert.equal(result.factBase.sources[0].url, undefined);
+  assert.equal(validateContract('fact-base', result.factBase).valid, true);
+});
+
 test('supplied mode reports staleness and rejects inconsistent citations', async () => {
   const stale = suppliedFactBase({
     sources: [

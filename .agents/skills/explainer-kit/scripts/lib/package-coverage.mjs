@@ -208,12 +208,33 @@ export async function validateImmutablePackageEvidence(
             `Visual-review evidence binding mismatch for ${key} in ${requestPath}.`,
           );
         }
-        const sourceMetrics = browserRecords.get(sourceMetricsPath);
+        const copiedMetricsPath = `${root}/evidence/${artifact.id}/${viewport}.json`;
+        const copiedMetrics = await readVerified(copiedMetricsPath);
+        const copiedScreenshotPath = `${root}/evidence/${artifact.id}/${viewport}.png`;
+        const copiedScreenshot = await readVerified(copiedScreenshotPath);
+        if (!isPng(copiedScreenshot)) {
+          throw new Error(
+            `Retained visual-review screenshot ${copiedScreenshotPath} is not a PNG.`,
+          );
+        }
+        const copiedRecord = parseJson(copiedMetrics, copiedMetricsPath);
+        validateBrowserEvidenceRecord(copiedRecord, {
+          artifactId: artifact.id,
+          viewport,
+          metricsPath: copiedMetricsPath,
+          requireLaunched: successful && runMode === 'unattended',
+        });
+        if (
+          canonicalHash(copiedRecord.runtime) !== expectedRuntimeHash ||
+          copiedRecord.captureIdentity !== expectedCaptureIdentity
+        ) {
+          throw new Error(
+            `Retained visual-review browser runtime or capture identity mismatch in ${copiedMetricsPath}.`,
+          );
+        }
         if (
           evidence.metricsHash !==
-          `sha256:${createHash('sha256')
-            .update(sourceMetrics.bytes)
-            .digest('hex')}`
+          `sha256:${createHash('sha256').update(copiedMetrics).digest('hex')}`
         ) {
           throw new Error(
             `Visual-review metrics hash mismatch for ${key} in ${requestPath}.`,
@@ -222,26 +243,23 @@ export async function validateImmutablePackageEvidence(
         if (
           evidence.screenshotHash !==
           `sha256:${createHash('sha256')
-            .update(sourceMetrics.screenshotBytes)
+            .update(copiedScreenshot)
             .digest('hex')}`
         ) {
           throw new Error(
             `Visual-review screenshot hash mismatch for ${key} in ${requestPath}.`,
           );
         }
-        const copiedMetricsPath = `${root}/evidence/${artifact.id}/${viewport}.json`;
-        const copiedMetrics = await readVerified(copiedMetricsPath);
-        if (!copiedMetrics.equals(sourceMetrics.bytes)) {
-          throw new Error(
-            `Retained visual-review browser identity differs from ${sourceMetricsPath}.`,
-          );
-        }
-        const copiedScreenshotPath = `${root}/evidence/${artifact.id}/${viewport}.png`;
-        const copiedScreenshot = await readVerified(copiedScreenshotPath);
-        if (!copiedScreenshot.equals(sourceMetrics.screenshotBytes)) {
-          throw new Error(
-            `Retained visual-review screenshot differs from ${sourceScreenshotPath}.`,
-          );
+        if (attempt === attempts.at(-1)) {
+          const sourceMetrics = browserRecords.get(sourceMetricsPath);
+          if (
+            !copiedMetrics.equals(sourceMetrics.bytes) ||
+            !copiedScreenshot.equals(sourceMetrics.screenshotBytes)
+          ) {
+            throw new Error(
+              `Terminal visual-review evidence differs from ${sourceMetricsPath}.`,
+            );
+          }
         }
       }
     }

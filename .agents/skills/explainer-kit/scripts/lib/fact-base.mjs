@@ -630,7 +630,7 @@ function declaresBacklinkTuple(value) {
   return (
     value &&
     typeof value === 'object' &&
-    ['repository', 'revision', 'path', 'lineRange', 'url'].some(
+    ['repository', 'path', 'lineRange', 'url'].some(
       (field) => value[field] !== undefined,
     )
   );

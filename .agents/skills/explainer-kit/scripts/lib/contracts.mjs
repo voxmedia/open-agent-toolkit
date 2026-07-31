@@ -96,13 +96,9 @@ function validateSourceBacklinks(kind, value, errors) {
       ),
     ];
     tuples.forEach((tuple, index) => {
-      const declaresBacklink = [
-        'repository',
-        'revision',
-        'path',
-        'lineRange',
-        'url',
-      ].some((field) => tuple[field] !== undefined);
+      const declaresBacklink = ['repository', 'path', 'lineRange', 'url'].some(
+        (field) => tuple[field] !== undefined,
+      );
       if (declaresBacklink && !validateCanonicalGithubBlobTuple(tuple)) {
         add(
           errors,

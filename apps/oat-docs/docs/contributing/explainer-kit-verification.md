@@ -1,6 +1,6 @@
 ---
 title: Verifying Explainer Kit
-description: 'Maintainer runbook for golden recap cases, real-Chromium evidence, fixture regeneration, and release validation.'
+description: 'Maintainer runbook for semantic golden cases, temporary real-Chromium evidence, and release validation.'
 ---
 
 # Verifying Explainer Kit
@@ -14,17 +14,19 @@ evidence quality.
 
 The suite under
 `.agents/skills/explainer-kit/tests/fixtures/golden/` contains three
-self-contained cases:
+portable semantic cases:
 
 | Case                           | What it proves                                             |
 | ------------------------------ | ---------------------------------------------------------- |
-| `simple`                       | First-viewport clarity and a cohesive baseline recap       |
+| `simple`                       | Viewport-sized lead evidence and a cohesive baseline recap |
 | `non-linear`                   | Exact branch, fan-in, and cycle preservation               |
 | `explainer-authoring-redesign` | Archive-only rebuild from a dense completed project record |
 
-Every case retains source claims, topology, rubric pointers, personal-kit
-reference artifacts, browser evidence, screenshots, and content hashes. Paths
-are repository-relative; machine roots, home-relative paths, `file://` URLs,
+Every case retains only its descriptor, source input, and content-addressed
+source record. The three cases share one rubric. Generated artifacts, browser
+evidence, screenshots, manifests, catalogs, and review results stay in a
+temporary test directory and are never committed. Paths are
+repository-relative; machine roots, home-relative paths, `file://` URLs,
 Windows drive paths, and UNC paths are rejected.
 
 ## Prerequisites
@@ -51,33 +53,21 @@ A passing run proves:
 - exact topology and catalog parity;
 - mobile, tablet, and desktop Chromium evidence;
 - one independent critic invocation; and
-- zero or one bounded correction before a passing terminal review.
+- a passing terminal review without correction.
 
-The suite recomputes retained hashes and JSON evidence pointers. A prose claim
-or status label without the referenced bytes does not pass.
+The focused integration suites below separately exercise the one-correction
+ceiling.
 
-## Regenerate one case
+The suite recomputes semantic-input hashes, grounds every claim in retained
+source evidence, and evaluates the shared rubric against live runtime output.
+A prose claim or status label without runtime proof does not pass.
 
-Generated runtime outputs are products of the rebuilt runtime. Do not hand-edit
-files under a case's `runtime/` directory.
+## Inspect generated evidence
 
-Set `UPDATE_GOLDEN_CASE` to exactly one case ID:
-
-```bash
-UPDATE_GOLDEN_CASE=simple \
-  node --test .agents/skills/explainer-kit/tests/golden-conformance.test.mjs
-
-UPDATE_GOLDEN_CASE=non-linear \
-  node --test .agents/skills/explainer-kit/tests/golden-conformance.test.mjs
-
-UPDATE_GOLDEN_CASE=explainer-authoring-redesign \
-  node --test .agents/skills/explainer-kit/tests/golden-conformance.test.mjs
-```
-
-The command still runs every test, but only the matching case replaces retained
-runtime evidence. Review the complete generated diff, confirm the browser
-runtime and capture identity are consistent across records, and rerun the suite
-without the environment variable.
+The suite materializes each case's runtime package under its temporary working
+directory, validates it, and removes it at test completion. Add a local
+debugger breakpoint or temporarily disable cleanup when diagnosing a failure;
+do not add generated runtime output to the fixture directories.
 
 ## Focused integrity suites
 

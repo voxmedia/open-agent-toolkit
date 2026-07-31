@@ -222,6 +222,7 @@ export function cohesionEvidenceFromLedger(artifacts, plan) {
           ({ subject }) => subject,
           ({ value }) => value,
           text,
+          true,
         ),
         statuses: observedClaims(
           plan.ledger.statuses,
@@ -264,6 +265,7 @@ export function cohesionObservationsFromLedger({
       ({ subject }) => subject,
       ({ value }) => value,
       text,
+      true,
     ),
   ].map((observation) => ({
     artifactId,
@@ -272,26 +274,48 @@ export function cohesionObservationsFromLedger({
   }));
 }
 
-function observedClaims(entries, keyOf, valueOf, text) {
+function observedClaims(entries, keyOf, valueOf, text, numeric = false) {
   return Object.fromEntries(
     (entries ?? [])
-      .filter((entry) =>
-        text.includes(String(valueOf(entry)).toLocaleLowerCase()),
-      )
+      .filter((entry) => claimObserved(text, valueOf(entry), numeric))
       .map((entry) => [keyOf(entry), valueOf(entry)]),
   );
 }
 
-function observedEntries(entries, group, keyOf, valueOf, text) {
+function observedEntries(
+  entries,
+  group,
+  keyOf,
+  valueOf,
+  text,
+  numeric = false,
+) {
   return (entries ?? [])
-    .filter((entry) =>
-      text.includes(String(valueOf(entry)).toLocaleLowerCase()),
-    )
+    .filter((entry) => claimObserved(text, valueOf(entry), numeric))
     .map((entry) => ({
       group,
       claim: keyOf(entry),
       value: valueOf(entry),
     }));
+}
+
+function claimObserved(text, value, numeric) {
+  const normalized = String(value)
+    .replaceAll(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase();
+  if (!normalized) return false;
+  const escaped = normalized.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const startsWithDigit = numeric && /^\p{N}/u.test(normalized);
+  const endsWithDigit = numeric && /\p{N}$/u.test(normalized);
+  const leftBoundary = startsWithDigit
+    ? '[^\\p{L}\\p{N}.,]'
+    : '[^\\p{L}\\p{N}]';
+  const rightBoundary = endsWithDigit ? '[^\\p{L}\\p{N}.,]' : '[^\\p{L}\\p{N}]';
+  return new RegExp(
+    `(?:^|${leftBoundary})${escaped}(?=$|${rightBoundary})`,
+    'u',
+  ).test(text);
 }
 
 function visibleText(value) {

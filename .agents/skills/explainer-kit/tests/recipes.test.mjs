@@ -804,6 +804,23 @@ test('project recap requires the adaptive visual minimum and source-backed optio
   }
 });
 
+test('an expansion profile without a justification allowlist accepts source-backed kinds', () => {
+  const optional = {
+    artifactId: 'runtime-map',
+    profileId: 'supporting-diagram',
+    justification: {
+      kind: 'architecture-complexity',
+      sourceIds: ['project'],
+      rationale: 'The source describes multiple runtime boundaries.',
+    },
+  };
+
+  assert.deepEqual(validatePlannedPortfolio(recipeV2(), [optional]), {
+    valid: true,
+    errors: [],
+  });
+});
+
 test('program recap binds one program and requires its six birdseye sections', () => {
   const recipe = loadRecipe('program-recap', '1');
   const artifact = recipeFloor(recipe)[0];

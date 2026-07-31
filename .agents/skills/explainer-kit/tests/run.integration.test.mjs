@@ -21,6 +21,7 @@ import {
   createFixtureBrowserProbeSession,
 } from '../scripts/lib/browser-runtime.mjs';
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
+import { validateImmutablePackageEvidence } from '../scripts/lib/package-coverage.mjs';
 import { decodeBrowserPng } from '../scripts/lib/png.mjs';
 import { SET_PLAN_RECORD_PATHS } from '../scripts/lib/records.mjs';
 import {
@@ -1973,11 +1974,29 @@ test('caps visual review at one correction and one final review', async (t) => {
                 ],
         };
       });
+      const browserSession = fixtureBrowserSession(async (probeRequest) => {
+        const probeResult = await retainingBrowserProbe(probeRequest);
+        if (
+          probeRequest.screenshotPath &&
+          probeRequest.artifact.html.includes('Corrected first viewport.')
+        ) {
+          await writeFile(
+            probeRequest.screenshotPath,
+            png(probeRequest.viewport.width, probeRequest.viewport.height, {
+              pixels: Buffer.alloc(
+                probeRequest.viewport.width * probeRequest.viewport.height * 4,
+                1,
+              ),
+            }),
+          );
+        }
+        return probeResult;
+      });
 
       const result = await runExplainerCore(fixture.request, {
         author,
         planSet: async (plannerRequest) => plannedSet(plannerRequest),
-        browserSession: fixtureBrowserSession(),
+        browserSession,
         visualCritic,
         now: () => NOW,
       });
@@ -1993,6 +2012,18 @@ test('caps visual review at one correction and one final review', async (t) => {
         result.visualReview.disposition,
         scenario.expectedFinal === 'error' ? 'correct' : scenario.expectedFinal,
       );
+      if (scenario.expectedReviews === 2 && scenario.expectedFinal === 'pass') {
+        const manifest = JSON.parse(
+          await readFile(result.manifestPath, 'utf8'),
+        );
+        manifest.outcome = 'built-not-durable';
+        await assert.doesNotReject(
+          validateImmutablePackageEvidence(manifest, {
+            runMode: 'interactive',
+            read: (path) => readFile(join(result.runRoot, path)),
+          }),
+        );
+      }
       await access(
         join(result.runRoot, 'qa/visual-review/attempt-1/request.json'),
       );

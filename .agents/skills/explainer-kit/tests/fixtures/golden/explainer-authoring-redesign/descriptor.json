@@ -1,16 +1,11 @@
 {
-  "schemaVersion": "explainer-kit.golden-fixture/v1",
+  "schemaVersion": "explainer-kit.golden-fixture/v2",
   "id": "explainer-authoring-redesign",
   "title": "Archived Explainer Kit authoring redesign",
   "inputPath": "source-input.json",
-  "rubricPath": "rubric.json",
-  "referenceEvidencePath": "personal-kit-reference.json",
+  "sharedRubricPath": "rubric.json",
+  "sharedRubricSha256": "sha256:7c15893cea765d474446dfeca25761751a57f8e0081595b1b9698e5559dd89dd",
   "purpose": "Rebuild a dense archived project recap without an active project, moving branch, or machine-local source.",
-  "producer": {
-    "name": "personal-explainer-kit",
-    "version": "0.4.1",
-    "generatedAt": "2026-07-28T03:35:00.000Z"
-  },
   "sourceIds": ["archived-summary"],
   "retainedFiles": [
     {
@@ -21,73 +16,10 @@
       "sourceIds": ["archived-summary"]
     },
     {
-      "path": "rubric.json",
-      "sha256": "sha256:c86f38b8f3737d3d0f52d42656ff4ef8af0c7932f1be13c03506785e9101ea4b",
-      "role": "rubric",
-      "mediaType": "application/json",
-      "sourceIds": ["archived-summary"]
-    },
-    {
-      "path": "personal-kit-reference.json",
-      "sha256": "sha256:b6983cef9fd4ec548fc29260213d8c9a82d72266958a6bb9a985526ed356a9c5",
-      "role": "reference-descriptor",
-      "mediaType": "application/json",
-      "sourceIds": ["archived-summary"]
-    },
-    {
       "path": "evidence/source-record.json",
       "sha256": "sha256:9fa802f45b3939ff717f2e61aafc6bfea69f4cab5de3876368fa9299708756b5",
       "role": "source-evidence",
       "mediaType": "application/json",
-      "sourceIds": ["archived-summary"]
-    },
-    {
-      "path": "evidence/browser-evidence.json",
-      "sha256": "sha256:ffadd2d52ae5b1c1e47e3d7ea49351014934d4fb2694b3aa6d2d64c9c257fb5f",
-      "role": "browser-evidence",
-      "mediaType": "application/json",
-      "sourceIds": ["archived-summary"]
-    },
-    {
-      "path": "artifacts/hub.html",
-      "sha256": "sha256:eabd5ed10bedf195b77a28a3542d423d343218be2b3eed33332bd63a51f04f87",
-      "role": "hub-output",
-      "mediaType": "text/html",
-      "sourceIds": ["archived-summary"]
-    },
-    {
-      "path": "artifacts/architecture.html",
-      "sha256": "sha256:f633dd560000617f5e95177421c7d22ce419b50add3624a8ab51ab986b1e91a5",
-      "role": "architecture-output",
-      "mediaType": "text/html",
-      "sourceIds": ["archived-summary"]
-    },
-    {
-      "path": "artifacts/deck.html",
-      "sha256": "sha256:3b999446f58513a1810839cd602a676b9370595781c768dde5de99c19da5f045",
-      "role": "deck-output",
-      "mediaType": "text/html",
-      "sourceIds": ["archived-summary"]
-    },
-    {
-      "path": "evidence/screenshots/desktop.png",
-      "sha256": "sha256:3b5a55e4b3e7e7f5f3c8027a9a49802568629019e76a979d9e96e04b5af76b57",
-      "role": "browser-screenshot",
-      "mediaType": "image/png",
-      "sourceIds": ["archived-summary"]
-    },
-    {
-      "path": "evidence/screenshots/tablet.png",
-      "sha256": "sha256:863af5435ae8a77ad2ac0244141835560c0253dea29a597271b78e8c1fe748e5",
-      "role": "browser-screenshot",
-      "mediaType": "image/png",
-      "sourceIds": ["archived-summary"]
-    },
-    {
-      "path": "evidence/screenshots/mobile.png",
-      "sha256": "sha256:49bf544474f50c038714a65a562b8995a93bffa263c0685e5e7c57aaca3f6cf4",
-      "role": "browser-screenshot",
-      "mediaType": "image/png",
       "sourceIds": ["archived-summary"]
     }
   ]

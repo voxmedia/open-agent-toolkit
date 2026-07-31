@@ -1,16 +1,11 @@
 {
-  "schemaVersion": "explainer-kit.golden-fixture/v1",
+  "schemaVersion": "explainer-kit.golden-fixture/v2",
   "id": "non-linear",
   "title": "Branched and cyclic event-processing architecture",
   "inputPath": "source-input.json",
-  "rubricPath": "rubric.json",
-  "referenceEvidencePath": "personal-kit-reference.json",
+  "sharedRubricPath": "rubric.json",
+  "sharedRubricSha256": "sha256:7c15893cea765d474446dfeca25761751a57f8e0081595b1b9698e5559dd89dd",
   "purpose": "Prove branch, fan-in, and cycle topology is preserved or explicitly rejected instead of flattened.",
-  "producer": {
-    "name": "personal-explainer-kit",
-    "version": "0.4.1",
-    "generatedAt": "2026-07-28T03:35:00.000Z"
-  },
   "sourceIds": ["architecture-record"],
   "retainedFiles": [
     {
@@ -21,73 +16,10 @@
       "sourceIds": ["architecture-record"]
     },
     {
-      "path": "rubric.json",
-      "sha256": "sha256:c86f38b8f3737d3d0f52d42656ff4ef8af0c7932f1be13c03506785e9101ea4b",
-      "role": "rubric",
-      "mediaType": "application/json",
-      "sourceIds": ["architecture-record"]
-    },
-    {
-      "path": "personal-kit-reference.json",
-      "sha256": "sha256:274eaa50a48c933fb17f6b3cdd89a7ca39fca65e896db3e2012a0779aa7bc8bc",
-      "role": "reference-descriptor",
-      "mediaType": "application/json",
-      "sourceIds": ["architecture-record"]
-    },
-    {
       "path": "evidence/source-record.json",
       "sha256": "sha256:2271d9b8bd7735c9aee938ad16f275f4d823677f9f135df58539bd28f55cd5f2",
       "role": "source-evidence",
       "mediaType": "application/json",
-      "sourceIds": ["architecture-record"]
-    },
-    {
-      "path": "evidence/browser-evidence.json",
-      "sha256": "sha256:d58b84fa778b9e1a997bb70ada7c068247e603a715683c128ff99f56d4c06d5c",
-      "role": "browser-evidence",
-      "mediaType": "application/json",
-      "sourceIds": ["architecture-record"]
-    },
-    {
-      "path": "artifacts/hub.html",
-      "sha256": "sha256:bab73f4cbebc2f8162e53081af282dd1b6efdb02598a12ccc82c449605b87f77",
-      "role": "hub-output",
-      "mediaType": "text/html",
-      "sourceIds": ["architecture-record"]
-    },
-    {
-      "path": "artifacts/architecture.html",
-      "sha256": "sha256:a39d10124fc7b84efe3f30f5c978f852aec828a3089fc636ad5e53f0c7f81960",
-      "role": "architecture-output",
-      "mediaType": "text/html",
-      "sourceIds": ["architecture-record"]
-    },
-    {
-      "path": "artifacts/deck.html",
-      "sha256": "sha256:8469e269ecc0e85acb7481974c2cb2833b5823943ab1658760f5a266873ea1d6",
-      "role": "deck-output",
-      "mediaType": "text/html",
-      "sourceIds": ["architecture-record"]
-    },
-    {
-      "path": "evidence/screenshots/desktop.png",
-      "sha256": "sha256:7b9891354804e6e4bfb3d0d96b7128f5f528fe0f4fc902a9168a118ac374e0c1",
-      "role": "browser-screenshot",
-      "mediaType": "image/png",
-      "sourceIds": ["architecture-record"]
-    },
-    {
-      "path": "evidence/screenshots/tablet.png",
-      "sha256": "sha256:701a8391c57157de3d2e234092892f0cbb0888bfec91af872db023de3a1f4190",
-      "role": "browser-screenshot",
-      "mediaType": "image/png",
-      "sourceIds": ["architecture-record"]
-    },
-    {
-      "path": "evidence/screenshots/mobile.png",
-      "sha256": "sha256:b251b3b41225a4f10f49e60ba897be6b094ecf629262fbef1f7aa0fb29ae0528",
-      "role": "browser-screenshot",
-      "mediaType": "image/png",
       "sourceIds": ["architecture-record"]
     }
   ]

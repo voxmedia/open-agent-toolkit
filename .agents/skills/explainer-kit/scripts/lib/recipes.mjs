@@ -387,7 +387,8 @@ export function validatePlannedPortfolio(recipe, portfolio) {
       continue;
     }
     if (
-      !profile.allowedJustificationKinds?.includes(artifact.justification.kind)
+      profile.allowedJustificationKinds !== undefined &&
+      !profile.allowedJustificationKinds.includes(artifact.justification.kind)
     ) {
       errors.push(
         `Optional artifact ${artifact.artifactId} justification ${artifact.justification.kind} is not allowed for ${profile.profileId}`,
