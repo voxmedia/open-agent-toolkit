@@ -48,6 +48,10 @@ INVALID_RUN_ABORT before edit: accepted phase packet carried an incorrect full b
 
 Operator explicitly authorized one new corrected p-rev1 run after the prior accepted invalid-run abort; preserve the same exact target and bounded revision scope.
 
+### 2026-07-31 · structural · oat-project-implement · p-rev1
+
+Phase outcome PASS after one task commit and one fresh review cycle with zero findings; review artifact: reviews/p-rev1-review-2026-07-31T191244Z.md; fix-loop count 0.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

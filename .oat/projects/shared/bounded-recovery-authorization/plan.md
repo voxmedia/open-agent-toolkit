@@ -444,17 +444,17 @@ validation all pass from a clean post-task tree.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                 | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | ---------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | received | 2026-07-31 | reviews/p01-review-2026-07-31T175303Z.md | a2d875bb379941301c3ed811b40cfee7a40148e8 | auto       | -           |
-| p-rev1 | code     | pending  | -          | -                                        | -                                        | -          | -           |
-| p02    | code     | pending  | -          | -                                        | -                                        | -          | -           |
-| p03    | code     | pending  | -          | -                                        | -                                        | -          | -           |
-| p04    | code     | pending  | -          | -                                        | -                                        | -          | -           |
-| final  | code     | pending  | -          | -                                        | -                                        | -          | -           |
-| spec   | artifact | pending  | -          | -                                        | -                                        | -          | -           |
-| design | artifact | passed   | 2026-07-31 | user-approved lightweight design         | -                                        | manual     | -           |
-| plan   | artifact | passed   | 2026-07-31 | structured review rounds 1-3             | -                                        | auto       | -           |
+| Scope  | Type     | Status   | Date       | Artifact                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | -------- | ---------- | ------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | received | 2026-07-31 | reviews/p01-review-2026-07-31T175303Z.md    | a2d875bb379941301c3ed811b40cfee7a40148e8 | auto       | -           |
+| p-rev1 | code     | passed   | 2026-07-31 | reviews/p-rev1-review-2026-07-31T191244Z.md | 53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc | auto       | -           |
+| p02    | code     | pending  | -          | -                                           | -                                        | -          | -           |
+| p03    | code     | pending  | -          | -                                           | -                                        | -          | -           |
+| p04    | code     | pending  | -          | -                                           | -                                        | -          | -           |
+| final  | code     | pending  | -          | -                                           | -                                        | -          | -           |
+| spec   | artifact | pending  | -          | -                                           | -                                        | -          | -           |
+| design | artifact | passed   | 2026-07-31 | user-approved lightweight design            | -                                        | manual     | -           |
+| plan   | artifact | passed   | 2026-07-31 | structured review rounds 1-3                | -                                        | auto       | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

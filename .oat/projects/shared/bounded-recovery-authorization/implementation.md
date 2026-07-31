@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status         | Tasks | Completed |
-| ------------ | -------------- | ----- | --------- |
-| Phase 1      | review_failed  | 2     | 2/2       |
-| Phase p-rev1 | review_pending | 1     | 1/1       |
-| Phase 2      | pending        | 1     | 0/1       |
-| Phase 3      | pending        | 1     | 0/1       |
-| Phase 4      | pending        | 1     | 0/1       |
+| Phase        | Status        | Tasks | Completed |
+| ------------ | ------------- | ----- | --------- |
+| Phase 1      | review_failed | 2     | 2/2       |
+| Phase p-rev1 | passed        | 1     | 1/1       |
+| Phase 2      | pending       | 1     | 0/1       |
+| Phase 3      | pending       | 1     | 0/1       |
+| Phase 4      | pending       | 1     | 0/1       |
 
 **Total:** 3/6 tasks completed
 
@@ -126,8 +126,16 @@ oat_generated: false
 
 ## Revision Phase 1: Final Reserved Attempt Revision
 
-**Status:** review_pending
+**Status:** passed
 **Started:** 2026-07-31
+
+**Review:**
+
+- Artifact: `reviews/p-rev1-review-2026-07-31T191244Z.md`
+- Reviewed head: `53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc`
+- Cycle: 1/3 for p-rev1, independent of the terminal p01 cycle
+- Result: passed with zero findings
+- Reconnaissance: not attempted
 
 ### Task p-rev1-t01: (revision) Distinguish Pending Completion from New Reservation
 
@@ -227,6 +235,8 @@ _- Outstanding Items_
   invalid-run abort; target and bounded scope remain unchanged
 - Corrected p-rev1 run completed at
   `53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc`; fresh root-owned review pending
+- Phase p-rev1 review passed at the task head with zero findings; fix-loop
+  count 0
 
 #### Dispatch Record: p-rev1 invalid run
 
@@ -310,13 +320,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run the fresh root-owned p-rev1 review.
+- Run planned parallel Phases 2 and 3 in isolated worktrees.
 
 **Blockers:**
 
 - None.
 
-**Session End:** Phase p-rev1 review pending
+**Session End:** Phase p-rev1 passed; parallel group pending
 
 ---
 
