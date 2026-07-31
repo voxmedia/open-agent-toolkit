@@ -3017,7 +3017,7 @@ rewriting either historical result as passed.
 
 - Phase 1: 13 tasks - baseline, contracts, portability seams
 - Phase 2: 55 tasks - authoritative metadata, validation runtime, and review fixes
-- Phase 3: 8 tasks - reviewer planning and selective evidence
+- Phase 3: 10 tasks - reviewer planning, selective evidence, and review fixes
 - Phase 4: 8 tasks - accounting, repair, and coordinator adoption
 - Phase 5: 7 tasks - gate diagnostics, timeout, and compatibility mode
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
