@@ -63,6 +63,34 @@ worker/model/provider replacement.
 **Decision:** Separate route fallback, same-target bounded repair, and
 scope-expanding recovery as three explicit policy categories.
 
+### Question 4: Regression versus exposure
+
+**Q:** Did a recent dispatch or base-anchoring change introduce the repeated
+prompts?
+
+**A:** No. Blame and pull-request correlation place the two governing rules in
+PRs #138 and #141. A July 18 project hit the same path before the suspected
+window, while PRs #186 and #187 did not alter recovery authorization. Exact
+per-phase base capture also absorbs prior recovery commits, and no project
+artifact contains a phase-base mismatch.
+
+**Decision:** Frame this as a latent policy exposed at volume by
+integration-heavy work, not a recent delivery regression. Preserve the original
+history and fallback safeguards; do not target base anchoring.
+
+### Question 5: Recovery observability
+
+**Q:** Can existing project records measure whether the policy improves?
+
+**A:** Not reliably. One project uses `**Recovery:**` headings while an earlier
+occurrence appears only as free-form run-log prose. A heading-count sweep
+therefore undercounts the event class.
+
+**Decision:** Standardize one append-only recovery-event record for every
+post-commit defect disposition, including the defect class, discovering check,
+repair commit when present, authorization source, retry position, verification,
+and original request/target provenance.
+
 ## Solution Space
 
 The chosen direction is one durable canonical recovery policy, consumed by the
@@ -115,6 +143,12 @@ auditable path for composition failures that can only be detected later.
    safeguards remain unchanged.
 7. **Distribution:** Canonical assets own policy. Cursor, Claude, and Codex
    views are regenerated and validated for equivalent semantics.
+8. **Causal framing:** This is exposure of an existing policy under
+   integration-heavy verification, not a regression from PR #176, #186, or
+   #187.
+9. **Observability:** Every post-commit defect disposition uses one canonical
+   recovery-event record so prompt reduction cannot conceal unchanged defect
+   volume.
 
 ## Constraints
 
@@ -144,6 +178,9 @@ auditable path for composition failures that can only be detected later.
   recovery stops for user direction.
 - Tiered pre-commit verification guidance catches discoverable task-local
   defects without mandating every expensive broad check per task.
+- Regression coverage pins verification-before-commit ordering, and the
+  canonical recovery-event count makes post-commit defect reduction measurable
+  separately from authorization-prompt reduction.
 - Cursor, Claude, and Codex generated/materialized agents express equivalent
   semantics and sync parity passes.
 - Focused contracts, full repository gates, build, formatting, release
@@ -155,7 +192,9 @@ auditable path for composition failures that can only be detected later.
 
 - Changing the three-cycle review cap or review severity acceptance rules.
 - Altering provider selection ladders or permitting accepted-launch fallback.
-- Applying a local mitigation inside the separate active project/worktree.
+- Applying an interim mitigation inside the separate active project/worktree;
+  the user chose to preserve project isolation.
+- Changing phase-base anchoring from PR #176.
 - Fixing the unrelated session-observer transcript prefix mismatch.
 - Pushing a branch or opening a pull request.
 
@@ -167,14 +206,17 @@ auditable path for composition failures that can only be detected later.
 
 ## Open Questions
 
-- **Retry reuse:** Can the existing orchestration retry limit count bounded
-  post-commit recovery without conflating review rewrites or dispatch launch
-  attempts?
-- **Bookkeeping shape:** Which existing dispatch and implementation records can
-  preserve original-request linkage and same-target recovery provenance without
-  adding redundant state?
-- **Policy ownership:** Which canonical asset should own the durable recovery
-  contract so consumers reference one definition?
+Resolved during discovery:
+
+- Reuse `oat_orchestration_retry_limit` as the project-level bound, with a
+  distinct per-phase post-commit recovery counter so review and gate counters
+  remain independent.
+- Extend normal implementation bookkeeping with a canonical recovery-event
+  record and reuse existing dispatch `continuation_events` for fresh same-target
+  linkage.
+- Keep lifecycle eligibility and validation in the project implementation
+  contract, execution in the phase-agent contract, and the generic
+  continuation-versus-fallback distinction in the shared dispatch contract.
 
 ## Assumptions
 
@@ -182,6 +224,8 @@ auditable path for composition failures that can only be detected later.
   same-intent recovery when the contract makes the boundary explicit.
 - Build-only composition failures cannot always be prevented economically at
   task granularity.
+- Corpus counts based only on `**Recovery:**` headings are incomplete because
+  earlier projects used free-form logging.
 - Provider copies are generated from canonical assets and can be validated
   without hand-maintenance.
 

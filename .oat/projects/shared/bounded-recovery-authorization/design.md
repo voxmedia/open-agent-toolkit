@@ -71,6 +71,9 @@ inherit the canonical phase-agent contract through normal synchronization.
   for Claude, Codex, and Cursor without provider-specific policy forks.
 - **Contract validation:** Checks behaviorally meaningful policy clauses,
   report/provenance fields, stop conditions, and generated parity.
+- **Recovery-event ledger:** Uses one append-only implementation bookkeeping
+  shape for every post-commit defect disposition so defect volume, prompt
+  volume, and recovery outcomes are independently measurable.
 
 ### Component Diagram
 
@@ -112,10 +115,19 @@ phase implementer -- task checks --> immutable task commit
 6. An ineligible result or exhausted budget returns `DONE_WITH_CONCERNS` or
    `BLOCKED`; the root records the evidence and requests user direction without
    launching a fallback.
-7. Root validation confirms original commits were not amended, every recovery
+7. Every branch appends the same recovery-event record with defect class,
+   discovering check, disposition, authorization source, attempt/budget,
+   original request and target, recovery commit when present, and verification
+   outcome.
+8. Root validation confirms original commits were not amended, every recovery
    commit is append-only and in scope, provenance is same-target, the reported
    range matches Git history, and verification passed before normal phase
    bookkeeping continues.
+
+Base anchoring is deliberately unchanged. The root captures a fresh phase base
+immediately before each phase launch, so earlier recovery commits are already
+part of the next phase's base. PR #176 is not part of the causal or corrective
+design.
 
 ## Component Design
 
