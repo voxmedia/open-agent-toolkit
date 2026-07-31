@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p02-t44 post-commit type-aware lint rejects an async socket callback
+oat_blockers: []
 oat_last_updated: 2026-07-30
 oat_current_task_id: p02-t44
 oat_generated: false
@@ -25,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | blocked   | 49    | 43/49     |
-| Phase 3 | pending   | 5     | 0/5       |
-| Phase 4 | pending   | 8     | 0/8       |
-| Phase 5 | pending   | 7     | 0/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | in_progress | 49    | 43/49     |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 8     | 0/8       |
+| Phase 5 | pending     | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
 **Total:** 56/95 tasks completed
 
@@ -46,6 +45,9 @@ oat_generated: false
 - Dispatch policy: managed `high` from project state
 - Phase 1 target: `oat-phase-implementer-gpt-5-6-sol-medium`
 - Phase 2 target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Narrow append-only recoveries: standing operator authorization as of
+  2026-07-31; continue automatically when scope is mechanically bounded and
+  behavior-preserving, but stop for broader or ambiguous recovery.
 
 ---
 
@@ -413,7 +415,7 @@ workspace type-checks pass.
 
 ### Task p02-t44: (review2 C1) Broker validation authority outside reviewer processes
 
-**Status:** blocked
+**Status:** in_progress
 **Commit:** `5f8e9ca0`
 **Concern:** Fifty-two focused broker/security tests pass, but type-aware lint
 rejects the async socket callback because `createServer` requires a void-return
@@ -885,6 +887,36 @@ None in this run entry.
 - p02-t44 requires explicit authorization for one append-only repair limited to
   `packages/cli/src/review/validation-authority-broker.ts`, followed by focused
   tests and package lint before p02-t45.
+
+### Run 11 — 2026-07-31T03:39:00Z {#run-11}
+
+**Branch:** `review-plan-workflow`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict    | Task Commits | Review  | Fixes           |
+| ----- | ---------- | ------------ | ------- | --------------- |
+| p02   | continuing | `5f8e9ca0`   | pending | recovery active |
+
+#### Dispatch Notes
+
+- The operator granted standing authorization for narrow append-only
+  recoveries in this workflow. Future mechanically bounded,
+  behavior-preserving repairs continue without another approval prompt.
+- The p02-t44 recovery remains limited to
+  `validation-authority-broker.ts`; broader scope or architectural ambiguity
+  still requires a stop.
+
+#### Parallel Groups
+
+None in this run entry.
+
+#### Outstanding Items
+
+- Complete the p02-t44 callback recovery, then continue p02-t45 through
+  p02-t49 under pre-commit focused, lint, and type-check gates.
 
 <!-- orchestration-runs-end -->
 

@@ -88,6 +88,10 @@ Phase p02 fix re-review resolved nine prior findings but failed with 1 Critical,
 
 Second-cycle fixes stopped after p02-t44: 52 focused authority-broker tests passed, but post-commit type-aware lint rejected an async createServer callback. Explicit append-only recovery authorization is required.
 
+### 2026-07-31 · structural · oat-project-implement · narrow-recovery-authorization
+
+Operator granted standing authorization for mechanically bounded, behavior-preserving append-only recoveries. Continue without repeated prompts; stop only for broader file scope, behavior, architecture, destructive action, or ambiguity.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

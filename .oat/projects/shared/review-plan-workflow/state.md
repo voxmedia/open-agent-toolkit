@@ -1,8 +1,7 @@
 ---
 oat_current_task: p02-t44
 oat_last_commit: 5f8e9ca092586edbf8615453d6824273bf888f11
-oat_blockers:
-  - p02-t44 post-commit type-aware lint rejects an async socket callback
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -76,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T02:19:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T03:39:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -86,15 +85,15 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 2 second review fixes blocked
+**Status:** Phase 2 second review fixes in progress
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-30
 
 ## Current Phase
 
 Phase 1 is complete and independently reviewed. p02-t44's broker/security tests
-pass, but its committed implementation is blocked by type-aware lint before the
-remaining second-cycle tasks can start.
+pass, and the operator granted standing authorization for its narrow
+append-only lint recovery and similarly bounded future recoveries.
 
 ## Artifacts
 
@@ -145,13 +144,13 @@ remaining second-cycle tasks can start.
 - ✓ p02-t39 compile-time fixture recovery passed package and workspace checks
 - ⚠ Phase 2 fix re-review failed at reviewed head `f7452e5b`
 - ⚠ p02-t44 committed and passed focused tests, then failed package lint
-- → Authorize or decline a narrow append-only p02-t44 lint recovery
+- ✓ Standing operator authorization granted for narrow append-only recoveries
+- → Recover p02-t44 and continue p02-t45 through p02-t49
 
 ## Blockers
 
-- `p02-t44`: the broker passes an async handler where Node's `createServer`
-  callback contract requires a void return.
+None.
 
 ## Next Milestone
 
-Resolve the p02-t44 lint recovery boundary, then continue from p02-t45.
+Complete p02-t44 recovery and continue second-cycle fixes through p02-t49.
