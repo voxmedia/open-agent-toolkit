@@ -1,3 +1,4 @@
+import { ReviewDomainError } from '@review/errors';
 import type { PreparedReviewContextV1 } from '@review/types';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -72,5 +73,41 @@ describe('createReviewCheckpointArtifactsCommand', () => {
     ).rejects.toMatchObject({ code: 'commander.missingMandatoryOptionValue' });
 
     expect(checkpoint).not.toHaveBeenCalled();
+  });
+
+  it('emits safe exit-one lifecycle rejections', async () => {
+    const write = vi.fn();
+    const setExitCode = vi.fn();
+    const command = createReviewCheckpointArtifactsCommand({
+      write,
+      setExitCode,
+      checkpoint: vi.fn(async () => {
+        throw new ReviewDomainError({
+          category: 'contract',
+          code: 'command-capability-rejected',
+          message: 'review command capability was rejected',
+        });
+      }),
+      lifecycle: {} as never,
+    });
+    await command.parseAsync([
+      'node',
+      'oat',
+      'checkpoint-artifacts',
+      '--run-id',
+      'run-1',
+      '--checkpoint-token',
+      'replayed',
+      '--json',
+    ]);
+
+    expect(setExitCode).toHaveBeenCalledWith(1);
+    expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
+      ok: false,
+      error: {
+        category: 'contract',
+        code: 'command-capability-rejected',
+      },
+    });
   });
 });

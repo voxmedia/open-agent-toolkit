@@ -1,4 +1,5 @@
 import { canonicalizeJson } from '@review/canonical-json';
+import { ReviewDomainError } from '@review/errors';
 import type {
   JsonValue,
   ReviewCliEnvelope,
@@ -86,13 +87,16 @@ export async function runReviewJsonCommand<T>(input: {
     exitCode = 0;
   } catch (error) {
     const known =
-      error instanceof ReviewJsonCommandError
+      error instanceof ReviewJsonCommandError ||
+      error instanceof ReviewDomainError
         ? error
         : new ReviewJsonCommandError({
             category: 'system',
             code: 'review-json-system-error',
-            message: error instanceof Error ? error.message : String(error),
+            message: 'review command failed unexpectedly',
           });
+    const result =
+      known instanceof ReviewJsonCommandError ? known.result : undefined;
     envelope = {
       ok: false,
       error: {
@@ -101,7 +105,7 @@ export async function runReviewJsonCommand<T>(input: {
         message: known.message,
         details: known.details,
       },
-      ...(known.result === undefined ? {} : { result: known.result as T }),
+      ...(result === undefined ? {} : { result: result as T }),
     };
     exitCode = known.category === 'system' ? 2 : 1;
   }

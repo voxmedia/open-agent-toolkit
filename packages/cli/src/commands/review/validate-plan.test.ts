@@ -1,5 +1,6 @@
 import { Readable } from 'node:stream';
 
+import { ReviewDomainError } from '@review/errors';
 import type { ReviewPlanV1 } from '@review/types';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -193,5 +194,43 @@ describe('createReviewValidatePlanCommand', () => {
         error: { category: 'input', code: 'review-plan-schema-invalid' },
       });
     }
+  });
+
+  it('maps lifecycle contract rejection to a safe exit-one envelope', async () => {
+    const write = vi.fn();
+    const setExitCode = vi.fn();
+    const command = createReviewValidatePlanCommand({
+      stdin: Readable.from([JSON.stringify(plan)]),
+      write,
+      setExitCode,
+      validate: vi.fn(async () => {
+        throw new ReviewDomainError({
+          category: 'validation',
+          code: 'plan-validation-attempt-limit',
+          message: 'plan validation attempt limit exceeded',
+        });
+      }),
+      lifecycle: {} as never,
+    });
+    await command.parseAsync([
+      'node',
+      'oat',
+      'validate-plan',
+      '--run-id',
+      'run-1',
+      '--command-token',
+      'token',
+      '--stdin',
+      '--json',
+    ]);
+
+    expect(setExitCode).toHaveBeenCalledWith(1);
+    expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
+      ok: false,
+      error: {
+        category: 'validation',
+        code: 'plan-validation-attempt-limit',
+      },
+    });
   });
 });

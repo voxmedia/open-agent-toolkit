@@ -1,5 +1,6 @@
 import { Readable } from 'node:stream';
 
+import { ReviewDomainError } from '@review/errors';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -53,7 +54,26 @@ describe('review JSON command boundary', () => {
     },
     {
       operation: async () => {
-        throw new Error('disk failed');
+        throw new ReviewDomainError({
+          category: 'contract',
+          code: 'capability-rejected',
+          message: 'review capability was rejected',
+        });
+      },
+      exitCode: 1,
+      envelope: {
+        ok: false,
+        error: {
+          category: 'contract',
+          code: 'capability-rejected',
+          message: 'review capability was rejected',
+          details: null,
+        },
+      },
+    },
+    {
+      operation: async () => {
+        throw new Error('/private/store/state.json: disk failed');
       },
       exitCode: 2,
       envelope: {
@@ -61,7 +81,7 @@ describe('review JSON command boundary', () => {
         error: {
           category: 'system',
           code: 'review-json-system-error',
-          message: 'disk failed',
+          message: 'review command failed unexpectedly',
           details: null,
         },
       },

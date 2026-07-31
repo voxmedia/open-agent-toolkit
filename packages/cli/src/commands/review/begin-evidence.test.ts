@@ -1,3 +1,4 @@
+import { ReviewDomainError } from '@review/errors';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createReviewBeginEvidenceCommand } from './begin-evidence';
@@ -60,5 +61,41 @@ describe('createReviewBeginEvidenceCommand', () => {
     ).rejects.toMatchObject({ code: 'commander.missingMandatoryOptionValue' });
 
     expect(begin).not.toHaveBeenCalled();
+  });
+
+  it('maps receipt rejection to a safe exit-one envelope', async () => {
+    const write = vi.fn();
+    const setExitCode = vi.fn();
+    const command = createReviewBeginEvidenceCommand({
+      write,
+      setExitCode,
+      begin: vi.fn(async () => {
+        throw new ReviewDomainError({
+          category: 'validation',
+          code: 'plan-receipt-identity-mismatch',
+          message: 'plan receipt identity mismatch',
+        });
+      }),
+      lifecycle: {} as never,
+    });
+    await command.parseAsync([
+      'node',
+      'oat',
+      'begin-evidence',
+      '--run-id',
+      'run-1',
+      '--receipt',
+      'mismatch',
+      '--json',
+    ]);
+
+    expect(setExitCode).toHaveBeenCalledWith(1);
+    expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
+      ok: false,
+      error: {
+        category: 'validation',
+        code: 'plan-receipt-identity-mismatch',
+      },
+    });
   });
 });

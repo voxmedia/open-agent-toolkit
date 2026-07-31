@@ -203,7 +203,7 @@ describe('post-artifact review checkpoint', () => {
         },
         dependencies,
       ),
-    ).rejects.toThrow(/bound/);
+    ).rejects.toMatchObject({ code: 'command-capability-rejected' });
     await bindAcceptedHandle(store, 'lifecyclerun0002', 'handle');
     await checkpointArtifactsLoaded(
       {
@@ -220,7 +220,7 @@ describe('post-artifact review checkpoint', () => {
         },
         dependencies,
       ),
-    ).rejects.toThrow(/consumed/);
+    ).rejects.toMatchObject({ code: 'command-capability-rejected' });
   });
 
   it('rejects post-plan checkpoint attempts', async () => {
