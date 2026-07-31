@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - p02-t44 post-commit type-aware lint rejects an async socket callback
 oat_last_updated: 2026-07-30
 oat_current_task_id: p02-t44
 oat_generated: false
@@ -24,15 +25,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | in_progress | 49    | 43/49     |
-| Phase 3 | pending     | 5     | 0/5       |
-| Phase 4 | pending     | 8     | 0/8       |
-| Phase 5 | pending     | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | blocked   | 49    | 43/49     |
+| Phase 3 | pending   | 5     | 0/5       |
+| Phase 4 | pending   | 8     | 0/8       |
+| Phase 5 | pending   | 7     | 0/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
 **Total:** 56/95 tasks completed
 
@@ -175,7 +176,7 @@ fix commit `40fa861f`.
 
 ## Phase 2: ChangeMap and Validation Runtime
 
-**Status:** in_progress
+**Status:** blocked
 **Started:** 2026-07-30
 
 ### Task p02-t01: Normalize authoritative review paths
@@ -412,8 +413,11 @@ workspace type-checks pass.
 
 ### Task p02-t44: (review2 C1) Broker validation authority outside reviewer processes
 
-**Status:** pending
-**Commit:** -
+**Status:** blocked
+**Commit:** `5f8e9ca0`
+**Concern:** Fifty-two focused broker/security tests pass, but type-aware lint
+rejects the async socket callback because `createServer` requires a void-return
+handler.
 
 ### Task p02-t45: (review2 I1) Fence stale-lock reclamation
 
@@ -849,6 +853,38 @@ None in this run entry.
 
 - Execute p02-t44 through p02-t49 in order, then independently re-review the
   second fix range. This is review cycle 2 of the three-cycle cap.
+
+### Run 10 — 2026-07-31T02:19:00Z {#run-10}
+
+**Branch:** `review-plan-workflow`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict | Task Commits | Review  | Fixes |
+| ----- | ------- | ------------ | ------- | ----- |
+| p02   | blocked | `5f8e9ca0`   | pending | none  |
+
+#### Dispatch Notes
+
+- p02-t44 changed only declared files and passed 52 focused broker/security
+  tests.
+- Mandatory post-commit type-aware lint rejected the async
+  `createServer` connection callback in `validation-authority-broker.ts`.
+- The implementer stopped before p02-t45 without an unplanned repair commit.
+- Dispatch stamp:
+  - `Dispatch: scope=p02-review-fix2 action=fix role=implementer producer=oat-reviewer-gpt-5-6-sol-high provenance=same-accepted-handle model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+#### Parallel Groups
+
+None in this run entry.
+
+#### Outstanding Items
+
+- p02-t44 requires explicit authorization for one append-only repair limited to
+  `packages/cli/src/review/validation-authority-broker.ts`, followed by focused
+  tests and package lint before p02-t45.
 
 <!-- orchestration-runs-end -->
 
