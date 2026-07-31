@@ -39,15 +39,21 @@ pin both the allowed recovery path and every stop boundary.
 
 ### System Context
 
-`oat-project-implement` remains the lifecycle owner. It resolves the existing
-`oat_orchestration_retry_limit` once for the phase (default `2`, valid range
-`0`–`5`) and passes that value, the original request ID, and the exact
-implementation target in the Phase Scope. The limit becomes the maximum number
-of automatic post-commit recovery rounds across task-transition and phase-wide
-verification for that phase attempt. A value of `0` disables automatic
-post-commit repair. Review-fix and gate loops keep their existing separately
-counted bounds and the independent three-cycle review governance cap is not
-changed.
+`oat-project-implement` remains the lifecycle owner. It resolves a dedicated
+project-state `oat_phase_recovery_policy` once for the phase and passes the
+effective limit, the original request ID, and the exact implementation target
+in the Phase Scope. The default permits `10` automatic attempts per phase,
+chosen to cover the observed nine-event disruption with one attempt of headroom;
+project or phase overrides accept `0`–`20`. A value of `0` explicitly disables
+automatic post-commit repair. Review-fix and gate loops keep
+`oat_orchestration_retry_limit`; their counters and the independent three-cycle
+review governance cap are unchanged.
+
+```yaml
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {} # optional pNN: 0-20 overrides
+```
 
 The canonical project implementation contract owns recovery eligibility,
 budget, report validation, and bookkeeping. The phase implementer owns
@@ -145,6 +151,9 @@ bounded same-target repair can be covered by an earlier phase authorization.
 - Define continuation in the same accepted handle, and a lifecycle-authorized
   fresh launch with the identical target plus original-request linkage, as
   same-target recovery rather than fallback.
+- Make standing recovery authority default-deny: it exists only when a
+  caller-specific lifecycle contract explicitly supplies scope, target,
+  budget, record, and stop conditions.
 - Require new operator direction for scope-expanding, consequential,
   destructive, ambiguous, or retry-exhausted recovery.
 
@@ -152,8 +161,11 @@ bounded same-target repair can be covered by an earlier phase authorization.
 
 **Design decision:** Replace the absolute "new explicit action" wording with
 authorization-aware wording: recovery must be explicitly authorized, but the
-authorization may be standing phase authority established before launch. No
-post-acceptance outcome makes another route eligible.
+authorization may be standing phase authority established before launch only
+for `oat-project-implement`. Wave execution, autonomous projects, cloud-project
+orchestration, reviewers, and every other consumer remain outside that grant
+unless their own future contract independently defines the complete boundary.
+No post-acceptance outcome makes another route eligible.
 
 ### Project Implementation Recovery Policy
 
@@ -162,7 +174,7 @@ and bookkeeping for post-commit defects.
 
 **Responsibilities:**
 
-- Resolve `oat_orchestration_retry_limit` and pass a distinct
+- Resolve `oat_phase_recovery_policy` and pass the effective
   `phase_recovery_limit` counter with the original request and exact target.
 - State the complete automatic-recovery predicate and stop conditions once in
   the canonical phase-execution contract.
@@ -178,14 +190,30 @@ and bookkeeping for post-commit defects.
 - `.agents/skills/oat-project-implement/SKILL.md`
 - `.agents/skills/oat-project-implement/references/phase-execution.md`
 - `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md`
+- `.oat/templates/state.md`
 
-**Retry semantics:** The default of two permits at most two automatic
+**Retry semantics:** The default of ten permits at most ten automatic
 post-commit recovery attempts during one phase implementation attempt. Initial
-task work does not consume the budget. An attempt is consumed when bounded
-repair work begins, so a failed edit, verification, or commit cannot loop for
-free. Every successful attempt produces exactly one append-only recovery
-commit. Review-fix and gate loops continue using their own existing counters;
-the three-cycle review governance cap remains separate and unchanged.
+task work and one no-edit rerun of a suspected infrastructure/flake failure do
+not consume the budget. An attempt is consumed when bounded code repair begins,
+so a failed edit, verification, or commit cannot loop for free. Every successful
+attempt produces exactly one append-only recovery commit. At three events, the
+phase report flags elevated recovery volume but continues. Review-fix and gate
+loops retain `oat_orchestration_retry_limit`; the three-cycle review governance
+cap remains separate and unchanged.
+
+On exhaustion, operator direction has defined semantics:
+
+1. **Add N attempts:** persist the active phase's total limit as
+   `used_attempts + N` under `phase_attempt_limits`, capped at `20`; do not reset
+   the counter.
+2. **Authorize a changed scope:** create a newly recorded consequential or
+   scope-expanding action outside automatic recovery.
+3. **Stop:** preserve the worktree and evidence for later resumption.
+
+An extension preserves the exact implementation target unless the operator
+explicitly authorizes a separate route decision. Repeated exhaustion cannot
+silently reset or lift the bound.
 
 ### Phase Implementer Prevention and Recovery
 
@@ -202,6 +230,8 @@ post-commit defects without returning for redundant authorization.
   not required per task.
 - Keep broad repository tests/builds at the phase boundary when per-task cost is
   disproportionate.
+- Permit one no-edit rerun when evidence indicates infrastructure or flake; a
+  repeated failure must be classified as a code defect or stopped as ambiguous.
 - On task, transition, or phase verification failure, evaluate the eligibility
   predicate before returning.
 - For an eligible failure, preserve the accepted task commit, apply only the
@@ -234,7 +264,7 @@ projects regardless of prose conventions.
 - Defect class: lint | type | test | build | composition | other
 - Discovered by: {exact verification command or transition check}
 - Disposition: recovered | direction-required
-- Authorization: phase-standing | operator
+- Authorization: phase-standing | operator-extension | operator-scope
 - Attempt: {used}/{phase_recovery_limit}
 - Dispatch target: {same launcher-owned implementation target}
 - Recovery commit: {sha or -}
@@ -258,6 +288,9 @@ summaries.
   for automatic recovery, immutability, same-target provenance, no fallback,
   ambiguity/destructiveness stops, retry exhaustion, prevention ordering, and
   the canonical event record.
+- Assert that wave execution, autonomous projects, cloud-project orchestration,
+  and reviewers do not inherit implementation standing authority from the
+  shared dispatch taxonomy.
 - Extend sync/materialization tests to assert equivalent semantics in generated
   Claude, Codex, base Cursor, and representative materialized Cursor variants.
 - Run canonical validation and `oat sync --scope all`; never hand-edit provider
@@ -331,6 +364,9 @@ recorded action outside automatic phase recovery.
 
 - Failed edits, commit-hook failures, or failed re-verification consume the
   attempt and are recorded with no successful recovery commit.
+- A suspected infrastructure/flake failure may be rerun once without edits or
+  attempt consumption. A second unexplained failure is contradictory evidence
+  and stops rather than triggering speculative repair.
 - A dirty worktree, unverifiable commit range, missing provenance, or malformed
   recovery event blocks continuation.
 - The original task commit SHA must still exist at the same history position;
@@ -366,7 +402,8 @@ phase-agent contracts:
 6. Destructive, irreversible, protected, credential-bearing, or out-of-scope
    repair stops without editing.
 7. Attempt exhaustion stops, including attempts that fail before producing a
-   commit.
+   commit; an operator grant adds an explicit number of attempts without
+   resetting prior usage or lifting the maximum.
 8. Prevention ordering requires formatting, declared task verification, and
    discoverable proportionate checks before commit; scoped build/test runs
    before commit when emitted output or build/test configuration changes.
@@ -376,6 +413,8 @@ phase-agent contracts:
     record, allowing defect count and prompt count to be measured separately.
 11. Review-cycle caps, unresolved Critical/Important handling, and protected
     boundaries remain unchanged.
+12. Non-implementation consumers remain default-deny and cannot infer standing
+    recovery authority from the shared dispatch contract.
 
 These assertions test relationships and stop/continue behavior, not only
 isolated wording snapshots.
@@ -407,23 +446,34 @@ pnpm oat:validate-skills
 oat status --scope project
 ```
 
-Then run repository-required gates:
+Then run surface-required checks for the changed skills and docs:
+
+```bash
+pnpm lint
+pnpm format
+pnpm build:docs
+```
+
+Run the four CI gates in repository-defined order:
 
 ```bash
 pnpm check
-pnpm lint
-pnpm format
 pnpm type-check
 pnpm test
 pnpm build
-pnpm build:docs
+```
+
+Finally run release and diff validation:
+
+```bash
 pnpm release:validate
 git diff --check
 ```
 
-`pnpm build:docs` is included because the implementation-execution
-documentation changes. Release validation is mandatory because canonical agent,
-skill, and docs assets ship with the CLI.
+`pnpm lint` and `pnpm format` are required by the `.agents/skills` surface, and
+`pnpm build:docs` is required by the docs-app change; they are not CI gates.
+Release validation is mandatory because canonical agent, skill, template, and
+docs assets ship with the CLI.
 
 ### Success Measurement
 
@@ -436,6 +486,12 @@ both:
 - **Recovery observability:** canonical event records expose post-commit defect
   count, defect class, discovering check, repair count, and authorization source
   so future project sweeps do not depend on heading conventions.
+
+The recorded pre-change baseline is nine recovery events and two
+operator-recovery continuations in the isolated disruption project, with known
+classes including lint, composition, and test-fixture failures. The project
+does not import that active artifact, so exact per-class counts remain
+unavailable; the canonical record makes future class/check baselines exact.
 
 ## References
 

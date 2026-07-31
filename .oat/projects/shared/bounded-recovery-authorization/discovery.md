@@ -47,10 +47,12 @@ emit configuration.
 **A:** Attach a concrete project-level retry budget and stop when it is
 exhausted; do not replace repeated prompts with an unbounded repair loop.
 
-**Decision:** Prefer the existing project orchestration retry policy if its
-current semantics can safely cover append-only recovery. Otherwise add the
-smallest coherent project-level policy. The design must state the counting
-unit and default explicitly.
+**Decision:** The existing project orchestration retry policy is not safe to
+reuse: it controls review/fix-loop cost, its configured value may be `0`, and
+its `0`–`5` range is below the observed nine-event phase. Add the smallest
+coherent dedicated project-level phase-recovery policy with an evidence-based
+default, per-phase overrides, separate no-edit verification reruns, and explicit
+exhaustion grants.
 
 ### Question 3: Historical intent
 
@@ -137,8 +139,10 @@ auditable path for composition failures that can only be detected later.
    discoverable and proportionate formatting, lint/check, type-check, build,
    test, and task-specific verification. Expensive broad checks remain
    phase-level when per-task execution is disproportionate.
-5. **Bound:** Automatic recovery uses an explicit project-level retry budget.
-   Exhaustion stops for user direction.
+5. **Bound:** Automatic recovery uses dedicated
+   `oat_phase_recovery_policy` state, defaulting to ten attempts per phase with
+   `0`–`20` project/phase limits. Exhaustion stops for a numeric extension,
+   changed-scope authorization, or stop decision; prior usage never resets.
 6. **Review:** The three-cycle review cap and unresolved Critical/Important
    safeguards remain unchanged.
 7. **Distribution:** Canonical assets own policy. Cursor, Claude, and Codex
@@ -176,6 +180,8 @@ auditable path for composition failures that can only be detected later.
 - No fallback worker/model/provider is launched.
 - Ambiguous, architectural, destructive, out-of-scope, or retry-exhausted
   recovery stops for user direction.
+- Exhaustion resumption is explicit and durable: added attempts are numeric,
+  phase-scoped, capped, and preserve prior usage and exact-target provenance.
 - Tiered pre-commit verification guidance catches discoverable task-local
   defects without mandating every expensive broad check per task.
 - Regression coverage pins verification-before-commit ordering, and the
@@ -208,9 +214,10 @@ auditable path for composition failures that can only be detected later.
 
 Resolved during discovery:
 
-- Reuse `oat_orchestration_retry_limit` as the project-level bound, with a
-  distinct per-phase post-commit recovery counter so review and gate counters
-  remain independent.
+- Do not reuse `oat_orchestration_retry_limit`. Add a dedicated
+  `oat_phase_recovery_policy` because review-loop tuning must not silently
+  disable phase recovery and the existing maximum cannot cover the observed
+  nine-event phase.
 - Extend normal implementation bookkeeping with a canonical recovery-event
   record and reuse existing dispatch `continuation_events` for fresh same-target
   linkage.
@@ -226,6 +233,10 @@ Resolved during discovery:
   task granularity.
 - Corpus counts based only on `**Recovery:**` headings are incomplete because
   earlier projects used free-form logging.
+- The pre-change disruption baseline supplied from the isolated project is nine
+  recovery events plus two operator-recovery continuations, primarily spanning
+  lint, composition, and test-fixture failures. Exact per-class counts are not
+  imported because this project does not read or depend on that active project.
 - Provider copies are generated from canonical assets and can be validated
   without hand-maintenance.
 
