@@ -675,18 +675,27 @@ autonomy inventory while preserving the Tier 3 strategy contract.
 
 ### Task p03-t06: (review C1) Enforce verifiable plan boundaries
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `46ab1efb`
+**Outcome:** Enforced unique task IDs, complete direct-claim coverage,
+registered provenance, and verifiable contingency boundaries.
 
 ### Task p03-t07: (review C2) Parse worker dossiers strictly
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `49bcbcc2`
+**Outcome:** Added strict dossier schema, digest, scope, timestamp, and
+partial-result coherence validation.
 
 ### Task p03-t08: (review C3) Derive operation savings from traces
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `9a9ebbbc`
+**Outcome:** Derived operation savings from production-shaped traces and
+rejected aggregates and forged producers.
+
+**Recovery:** `46cc8351` aligned six valid-plan compatibility fixtures with
+the mandatory direct-claim set without weakening production validation.
 
 ### Phase Verification
 
@@ -697,6 +706,10 @@ autonomy inventory while preserving the Tier 3 strategy contract.
   operation-metrics tests.
 - Range diff-check is clean and the worktree contains only the 13 declared
   Phase 3 files.
+- Fix verification: 3,828 CLI tests, workspace type-check 10/10, CLI lint,
+  repository formatting, and a 265-test adversarial union passed.
+- Root independently reran 110 focused validator, schema, dossier, and
+  operation-metrics tests after receiving the fix range.
 
 ### Review Received: p03
 
