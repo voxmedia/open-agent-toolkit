@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p04-t19
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | in_progress | 19    | 18/19     |
-| Phase 5 | pending     | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | completed | 10    | 10/10     |
+| Phase 4 | in_review | 19    | 19/19     |
+| Phase 5 | pending   | 7     | 0/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 96/117 tasks completed
+**Total:** 97/117 tasks completed
 
 ## Execution Configuration
 
@@ -919,7 +919,11 @@ required lane-ownership projection.
 
 ### Task p04-t19: (re-review C1) Persist accepted worker dossier coverage
 
-**Status:** pending
+**Status:** completed
+**Commit:** `100d7493`
+**Outcome:** Added the launcher-owned receipt-bound dossier transition, wired
+local and remote coordinator rails before output validation, and covered
+complete/partial real-store lifecycles without fixture injection.
 
 ### Phase Verification
 
@@ -948,6 +952,10 @@ required lane-ownership projection.
   lint, format, build, and exact-range diff-check.
 - Root independently reran 63 worker-coverage, output-validation, validation
   store, recovery, and coordinator contract tests.
+- p04-t19 exact verification passed 279 tests; package and workspace lint,
+  package type-check, formatting, and diff-check passed.
+- Root independently reran 263 command, broker, recovery, coordinator, skill,
+  lifecycle-inventory, and help-snapshot tests.
 
 ### Review Received: p04
 
@@ -1044,7 +1052,10 @@ review cycle needed to resolve this finding. The override is limited to
 p04-t19, its standing narrow mechanical recoveries, and one independent
 cycle-4 re-review.
 
-**Next:** Execute p04-t19, then run the authorized narrowed cycle-4 re-review.
+**Fix completion:** p04-t19 completed at `100d7493`; implementer and root
+verification passed with no recovery commit.
+
+**Next:** Run the authorized narrowed cycle-4 re-review.
 
 ---
 

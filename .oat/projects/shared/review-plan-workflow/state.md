@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t19
-oat_last_commit: 79b90f3a32eb15935309d0879532f6557f960341
+oat_current_task: null
+oat_last_commit: 100d7493db8e4b0c74139862ddc2b7ac29709317
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T20:12:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T21:42:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,15 +85,15 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 4 authorized cycle-4 fix in progress
+**Status:** Phase 4 authorized cycle-4 re-review pending
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
 ## Current Phase
 
-Phases 1 through 3 are complete. The cycle-3 Phase 4 review found one Critical
-production-wiring gap. The operator authorized p04-t19 and one narrowed
-cycle-4 re-review beyond the normal three-cycle limit.
+Phases 1 through 3 are complete. The authorized p04-t19 production-wiring fix
+is committed and independently root-verified. Its narrowed cycle-4 re-review is
+next.
 
 ## Artifacts
 
@@ -185,7 +185,10 @@ cycle-4 re-review beyond the normal three-cycle limit.
 - ✓ Root worker-coverage verification passed 63 focused tests
 - ⚠ Phase 4 cycle-3 re-review found one Critical production-wiring gap
 - ✓ Operator authorized p04-t19 and one narrowed cycle-4 re-review
-- → Execute p04-t19
+- ✓ p04-t19 completed at `100d7493`
+- ✓ Implementer verification passed 279 tests and all package/workspace gates
+- ✓ Root independently passed 263 focused lifecycle tests
+- → Run the authorized narrowed cycle-4 re-review
 
 ## Blockers
 
@@ -193,5 +196,4 @@ None.
 
 ## Next Milestone
 
-Complete p04-t19, root-verify its production lifecycle, and run the authorized
-narrowed cycle-4 re-review.
+Run the authorized narrowed cycle-4 re-review over p04-t19.
