@@ -1,17 +1,17 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-31
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: [['p02', 'p03']] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null # e.g., references/imported-plan.md
 oat_import_source_path: null # original source path provided by user
 oat_import_provider: null # codex | cursor | claude | null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: bounded-recovery-authorization
@@ -364,16 +364,16 @@ validation all pass from a clean post-task tree.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                         | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | -------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                | -             | -          | -           |
-| p02    | code     | pending         | -          | -                                | -             | -          | -           |
-| p03    | code     | pending         | -          | -                                | -             | -          | -           |
-| p04    | code     | pending         | -          | -                                | -             | -          | -           |
-| final  | code     | pending         | -          | -                                | -             | -          | -           |
-| spec   | artifact | pending         | -          | -                                | -             | -          | -           |
-| design | artifact | passed          | 2026-07-31 | user-approved lightweight design | -             | manual     | -           |
-| plan   | artifact | fixes_completed | 2026-07-31 | structured review rounds 1-2     | -             | auto       | -           |
+| Scope  | Type     | Status  | Date       | Artifact                         | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | -------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -                                | -             | -          | -           |
+| p02    | code     | pending | -          | -                                | -             | -          | -           |
+| p03    | code     | pending | -          | -                                | -             | -          | -           |
+| p04    | code     | pending | -          | -                                | -             | -          | -           |
+| final  | code     | pending | -          | -                                | -             | -          | -           |
+| spec   | artifact | pending | -          | -                                | -             | -          | -           |
+| design | artifact | passed  | 2026-07-31 | user-approved lightweight design | -             | manual     | -           |
+| plan   | artifact | passed  | 2026-07-31 | structured review rounds 1-3     | -             | auto       | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

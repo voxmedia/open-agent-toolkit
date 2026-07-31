@@ -11,7 +11,7 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
@@ -61,7 +61,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T16:22:41Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T16:36:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -73,14 +73,14 @@ oat_generated: false
 
 ## Current Phase
 
-Design - Approved lightweight design ready for planning
+Plan - Reviewed and ready for implementation
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (complete)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -89,7 +89,8 @@ Design - Approved lightweight design ready for planning
 - ✓ Execution artifacts scaffolded
 - ✓ Requirements and constraints captured
 - ✓ Lightweight design approved
-- ⧗ Plan generation next
+- ✓ Implementation plan generated and reviewed
+- ⧗ Awaiting implementation decision
 
 ## Blockers
 
@@ -97,4 +98,4 @@ None
 
 ## Next Milestone
 
-Generate and review the quick implementation plan
+Run `oat-project-implement` after explicit user approval
