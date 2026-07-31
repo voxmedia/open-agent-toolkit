@@ -1764,6 +1764,60 @@ coherence.
 
 **Step 5: Commit** `fix(p02-t53): enforce telemetry free coherence`
 
+### Task p02-t54: (review4 I1) Bound broker connection lifetime
+
+**Files:**
+
+- Modify: `packages/cli/src/review/validation-authority-broker.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.test.ts`
+- Modify: `packages/cli/src/commands/review/authority-broker.ts`
+- Modify: `packages/cli/src/commands/review/authority-broker.test.ts`
+
+**Step 1: Reproduce** Hold a partial, unterminated reviewer-visible socket
+connection open while completing checkpoint, validate, and begin. Assert that
+terminal shutdown still resolves and the detached broker exits within a fixed
+deadline.
+
+**Step 2: Implement** Track accepted sockets, enforce a bounded per-connection
+read deadline, destroy tracked connections during terminal close after the
+active response flushes, and add an absolute shutdown deadline so `closed`
+always resolves and signing authority cannot remain resident indefinitely.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-authority-broker.test.ts src/commands/review/authority-broker.test.ts`.
+Expected: unterminated and slow socket clients cannot pin the broker beyond its
+bounded shutdown deadline, while normal command responses remain complete.
+
+**Step 5: Commit** `fix(p02-t54): bound broker connection lifetime`
+
+### Task p02-t55: (review4 M1) Confine broker sockets to private directories
+
+**Files:**
+
+- Modify: `packages/cli/src/review/validation-authority-broker.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.test.ts`
+
+**Step 1: Reproduce** Launch a real broker and assert that its containing
+directory is private to the current user and is removed after normal,
+expiration, and forced shutdown.
+
+**Step 2: Implement** Create a per-run temporary directory with mode `0700`,
+place the broker socket inside it, and remove the socket and directory
+idempotently from every terminal cleanup path.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-authority-broker.test.ts`.
+Expected: the socket is unreachable to other local users and all temporary
+broker paths are removed after shutdown.
+
+**Step 5: Commit** `fix(p02-t55): confine broker socket directory`
+
 ---
 
 ## Phase 3: Reviewer Plan and Evidence Contract
@@ -2780,6 +2834,7 @@ B post-publication bookkeeping PR.
 | p02    | code     | fixes_completed | 2026-07-30 | reviews/archived/p02-review-2026-07-30T234200Z.md           | d6c204514b076d57eaf2ee277d72e6de9a995a53 | auto       | -           |
 | p02    | code     | fixes_completed | 2026-07-31 | reviews/archived/p02-review-2026-07-31T014800Z.md           | f7452e5b6fc64256f24d12c2a323be7494bbf08a | auto       | -           |
 | p02    | code     | fixes_completed | 2026-07-31 | reviews/archived/p02-review-2026-07-31T040400Z.md           | f179344bdc12d0edc397d526f8665572826a9ad1 | auto       | -           |
+| p02    | code     | fixes_added     | 2026-07-31 | reviews/archived/p02-review-2026-07-31T051943Z.md           | a2605f967a543f4772833e0af90cb0ef35ad93df | manual     | -           |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -2807,14 +2862,14 @@ rewriting either historical result as passed.
 **Summary:**
 
 - Phase 1: 13 tasks - baseline, contracts, portability seams
-- Phase 2: 53 tasks - authoritative metadata, validation runtime, and review fixes
+- Phase 2: 55 tasks - authoritative metadata, validation runtime, and review fixes
 - Phase 3: 5 tasks - reviewer planning and selective evidence
 - Phase 4: 8 tasks - accounting, repair, and coordinator adoption
 - Phase 5: 7 tasks - gate diagnostics, timeout, and compatibility mode
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 99 tasks**
+**Total: 101 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.

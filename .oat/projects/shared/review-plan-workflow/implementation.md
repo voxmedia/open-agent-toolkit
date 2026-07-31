@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-30
-oat_current_task_id: null
+oat_current_task_id: p02-t54
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | in_review | 53    | 53/53     |
-| Phase 3 | pending   | 5     | 0/5       |
-| Phase 4 | pending   | 8     | 0/8       |
-| Phase 5 | pending   | 7     | 0/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | in_progress | 55    | 53/55     |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 8     | 0/8       |
+| Phase 5 | pending     | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 66/99 tasks completed
+**Total:** 66/101 tasks completed
 
 ## Execution Configuration
 
@@ -178,7 +178,7 @@ fix commit `40fa861f`.
 
 ## Phase 2: ChangeMap and Validation Runtime
 
-**Status:** in_review
+**Status:** in_progress
 **Started:** 2026-07-30
 
 ### Task p02-t01: Normalize authoritative review paths
@@ -473,6 +473,16 @@ retaining strict telemetry parsing and coherence checks.
 mutation with the real lifecycle transition now required by strict state
 validation.
 
+### Task p02-t54: (review4 I1) Bound broker connection lifetime
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t55: (review4 M1) Confine broker sockets to private directories
+
+**Status:** pending
+**Commit:** -
+
 ### Review Received: p02
 
 **Date:** 2026-07-30
@@ -586,6 +596,38 @@ lint, type-check, formatting, and task-range diff-check passed. Root
 independently reran 38 critical broker/source-lifecycle/coherence tests.
 
 **Next:** Run the single operator-authorized manual independent review.
+
+### Review Received: p02 fix iteration 3
+
+**Date:** 2026-07-31
+**Review artifact:**
+`reviews/archived/p02-review-2026-07-31T051943Z.md`
+
+**Verdict:** Conditional pass
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Prior findings resolved:** 4 of 4
+**New tasks added:** p02-t54 and p02-t55
+
+**Finding disposition map:**
+
+- I1 (broker shutdown liveness and key residency) → p02-t54
+- M1 (world-connectable broker socket) → p02-t55
+
+**Disposition:** The user resumed `oat-project-implement`; both bounded findings
+were converted using the standard fix-now disposition and implementation
+continues without another narrow-recovery authorization prompt.
+
+**Review-cycle note:** The operator-authorized cycle-4 extension is consumed.
+No further review cycle is implicitly authorized.
+
+**Next:** Execute p02-t54 and p02-t55, then return for Phase 2 disposition.
 
 ---
 
