@@ -616,7 +616,7 @@ post-task tree passes.
 | p03    | code     | passed          | 2026-07-31 | reviews/p03-review-2026-07-31T200025Z.md    | 4f6d934b955b030dfacb06ae91e2e81d92c3b30a | auto       | -           |
 | p-rev2 | code     | passed          | 2026-07-31 | reviews/p-rev2-review-2026-07-31T213539Z.md | 0adcee7f8e143221e14b6f50579ab35e9bc0425a | auto       | -           |
 | p04    | code     | passed          | 2026-07-31 | reviews/p04-review-2026-07-31T215112Z.md    | 0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c | auto       | -           |
-| p05    | code     | pending         | -          | -                                           | -                                        | -          | -           |
+| p05    | code     | passed          | 2026-07-31 | reviews/p05-review-2026-07-31T222411Z.md    | 0eaaf85a1926607a3d864fca21791ee4637c91ce | auto       | -           |
 | final  | code     | fixes_completed | 2026-07-31 | reviews/final-review-2026-07-31T215922Z.md  | d7fb5652da797e3c3826f46adda42bd6f5caac3f | auto       | -           |
 | spec   | artifact | pending         | -          | -                                           | -                                        | -          | -           |
 | design | artifact | passed          | 2026-07-31 | user-approved lightweight design            | -                                        | manual     | -           |
