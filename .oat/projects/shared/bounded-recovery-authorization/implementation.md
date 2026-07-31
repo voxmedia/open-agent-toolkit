@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-summary
 oat_blockers: []
 oat_last_updated: 2026-07-31
 oat_current_task_id: null
@@ -504,6 +504,22 @@ fresh review loop.
   invocation, and target.
 - No unrelated implementation or product files were changed by receive.
 - Exit gate terminal state: `allowed` / `passed`; receive completed.
+
+### Final Approval Resolution
+
+- Design approval mode: absent in the lightweight design; approval checkpoint
+  skipped by contract.
+- Primary resolver attempted:
+  `oat project gates resolve --project "$PROJECT_PATH" --json`; unavailable in
+  the installed CLI (`unknown command 'gates'`).
+- Config fallback attempted:
+  `oat config get project.gates.approval --json`; key unsupported.
+- Merged config inspection confirmed no project approval declaration.
+- Gate freshness revalidated at current state: the effective delta matched
+  checkpoint fingerprint
+  `sha256:effective-delta-v1:439f75aca4bb96155aaf8074c09f37e1f0c93fe80bf1c277c81fe5a1bd1f1a11`.
+- Implementation completion is authorized; configured lifecycle sequence is
+  summary → document → PR.
 
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 

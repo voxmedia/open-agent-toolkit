@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-project-implement
+oat_ready_for: oat-project-summary
 oat_blockers: []
 oat_last_updated: 2026-07-31
 oat_phase: plan
@@ -654,7 +654,8 @@ cell; never truncate a widened row back to five columns.
 
 **Total: 9 tasks**
 
-Ready for final-review fix implementation and re-review.
+Implementation complete: all nine tasks, superseding revision phases, final
+lifecycle review, and the configured implementation exit gate passed.
 
 ---
 
