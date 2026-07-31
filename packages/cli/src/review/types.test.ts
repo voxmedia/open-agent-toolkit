@@ -22,6 +22,7 @@ import type {
   ReviewAccountingV1,
   ReviewCandidateV1,
   ReviewCommandEvidenceV1,
+  ReviewCommandResultV1,
   ReviewEvidenceRefV1,
   ReviewLaneV1,
   ReviewPlanV1,
@@ -437,7 +438,11 @@ const command = {
     invocationDigest: 'invocation-digest',
     capturedAt: '2026-07-30T20:03:00.000Z',
   },
-  result: { status: 'completed', exitCode: 0, outputDigest: 'output-digest' },
+  result: {
+    status: 'completed',
+    exitCode: 0,
+    outputDigest: 'output-digest',
+  } satisfies ReviewCommandResultV1,
 } satisfies ReviewCommandEvidenceV1;
 
 const evidence = {

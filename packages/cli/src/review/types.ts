@@ -364,18 +364,20 @@ export interface ReviewCommandEvidenceV1 {
     invocationDigest: string;
     capturedAt: string;
   };
-  result:
-    | {
-        status: 'completed';
-        exitCode: number;
-        outputDigest: string;
-      }
-    | {
-        status: 'interrupted';
-        signal: string;
-        outputDigest: string;
-      };
+  result: ReviewCommandResultV1;
 }
+
+export type ReviewCommandResultV1 =
+  | {
+      status: 'completed';
+      exitCode: number;
+      outputDigest: string;
+    }
+  | {
+      status: 'interrupted';
+      signal: string;
+      outputDigest: string;
+    };
 
 export interface ReviewEvidenceRefBaseV1 {
   id: string;

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { hashCanonicalJson } from './canonical-json';
 import type { ReviewLaneV1, ReviewPlanV1, WorkerDossierV1 } from './types';
-import { validateWorkerDossier } from './worker-dossier';
+import {
+  parseWorkerDossierV1,
+  validateWorkerDossier,
+  WorkerDossierParseError,
+} from './worker-dossier';
 
 function lane(): ReviewLaneV1 {
   return {
@@ -68,7 +73,7 @@ function plan(): ReviewPlanV1 {
 }
 
 function completeDossier(): WorkerDossierV1 {
-  return {
+  const dossier: WorkerDossierV1 = {
     schemaVersion: 1,
     runId: 'run-1',
     planDigest: 'plan-digest',
@@ -115,7 +120,7 @@ function completeDossier(): WorkerDossierV1 {
         provenance: 'captured',
         digest: 'evidence',
         commandId: 'command-1',
-        commandResultDigest: 'result',
+        commandResultDigest: '',
       },
     ],
     candidateFindings: [
@@ -129,6 +134,10 @@ function completeDossier(): WorkerDossierV1 {
     uncoveredObligationIds: [],
     uncertainty: [],
   };
+  dossier.evidence[0]!.commandResultDigest = hashCanonicalJson(
+    dossier.commands[0]!.result,
+  );
+  return dossier;
 }
 
 describe('worker dossier validation', () => {
@@ -207,6 +216,106 @@ describe('worker dossier validation', () => {
     expect(validateWorkerDossier(plan(), 'plan-digest', falsePartial)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'partial-dossier-without-gap' }),
+      ]),
+    );
+  });
+
+  it('strictly parses schema, exact keys, timestamps, and result branches', () => {
+    expect(parseWorkerDossierV1(completeDossier())).toEqual(completeDossier());
+
+    const wrongVersion = completeDossier() as unknown as Record<
+      string,
+      unknown
+    >;
+    wrongVersion['schemaVersion'] = 2;
+    expect(() => parseWorkerDossierV1(wrongVersion)).toThrow(
+      WorkerDossierParseError,
+    );
+
+    const unknownRoot = structuredClone(completeDossier()) as unknown as Record<
+      string,
+      unknown
+    >;
+    unknownRoot['extra'] = true;
+    expect(() => parseWorkerDossierV1(unknownRoot)).toThrow(/unknown field/);
+
+    const duplicateJson = JSON.stringify(completeDossier()).replace(
+      '"schemaVersion":1',
+      '"schemaVersion":1,"schemaVersion":1',
+    );
+    expect(() => parseWorkerDossierV1(duplicateJson)).toThrow(/duplicate/);
+
+    const invalidTimestamp = structuredClone(completeDossier());
+    invalidTimestamp.commands[0]!.provenance.capturedAt = 'not-a-timestamp';
+    expect(() => parseWorkerDossierV1(invalidTimestamp)).toThrow(/capturedAt/);
+
+    const invalidResult = structuredClone(
+      completeDossier(),
+    ) as unknown as Record<string, unknown>;
+    const commands = invalidResult['commands'] as Array<
+      Record<string, unknown>
+    >;
+    commands[0]!['result'] = {
+      status: 'completed',
+      signal: 'SIGTERM',
+      outputDigest: 'output',
+    };
+    expect(() => parseWorkerDossierV1(invalidResult)).toThrow(/result/);
+  });
+
+  it('rejects empty scopes and command-result digest mismatch', () => {
+    const dossier = completeDossier();
+    dossier.commands[0]!.scopeRefs = [];
+    dossier.evidence[0]!.scopeRefs = [];
+    dossier.evidence[0]!.commandResultDigest = 'wrong';
+
+    expect(validateWorkerDossier(plan(), 'plan-digest', dossier)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'empty-dossier-scope' }),
+        expect.objectContaining({ code: 'command-result-digest-mismatch' }),
+      ]),
+    );
+
+    const outOfLane = completeDossier();
+    outOfLane.commands[0]!.scopeRefs[0]!.bucketId = 'sibling-lane';
+    outOfLane.evidence[0]!.scopeRefs[0]!.pathIndexes = [99];
+    expect(validateWorkerDossier(plan(), 'plan-digest', outOfLane)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'dossier-scope-out-of-lane' }),
+        expect.objectContaining({
+          code: 'dossier-scope-path-index-out-of-bounds',
+        }),
+      ]),
+    );
+  });
+
+  it('requires explicit uncertainty and coherent uncovered coverage for partial dossiers', () => {
+    const noUncertainty = completeDossier();
+    noUncertainty.outcome = 'partial';
+    noUncertainty.inspectedPaths = ['a.ts'];
+    noUncertainty.inspectedObligationIds = ['FR1', 'FR3'];
+    noUncertainty.uncoveredObligationIds = ['FR2'];
+
+    expect(validateWorkerDossier(plan(), 'plan-digest', noUncertainty)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'partial-dossier-without-uncertainty',
+        }),
+      ]),
+    );
+
+    const overlappingCoverage = completeDossier();
+    overlappingCoverage.outcome = 'partial';
+    overlappingCoverage.inspectedPaths = ['a.ts'];
+    overlappingCoverage.uncoveredObligationIds = ['FR2'];
+    overlappingCoverage.uncertainty = ['Worker deadline expired.'];
+    expect(
+      validateWorkerDossier(plan(), 'plan-digest', overlappingCoverage),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'invalid-partial-obligation-partition',
+        }),
       ]),
     );
   });
