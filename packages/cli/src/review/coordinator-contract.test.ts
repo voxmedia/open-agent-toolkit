@@ -29,15 +29,10 @@ function fixture(): {
     plan: {
       strategy: 'selective-inline',
       verificationBoundary: {
-        requiredClaims: [
-          { kind: 'promoted-finding', mode: 'direct' },
-          { kind: 'consequential-absence', mode: 'direct' },
-          { kind: 'worker-conflict', mode: 'direct' },
-          { kind: 'cross-lane-gap', mode: 'direct' },
-        ],
+        requiredClaims: [],
         positiveCoverage: {
           mode: 'sample',
-          laneIds: ['lane-1'],
+          laneIds: [],
           rationale: 'sample',
         },
         deterministicAcceptance: {
@@ -231,6 +226,41 @@ describe('immutable same-handle accounting repair', () => {
     allowed.reviewAccounting.lanes[0]!.primaryCompletion.completedObligationIds =
       ['task:new'];
     expect(immutableReviewSubstanceDigest(allowed)).toBe(original);
+
+    const artifact = (summary: string, pretty: boolean) =>
+      Buffer.from(
+        [
+          '# Review',
+          summary,
+          '',
+          '## Review Accounting',
+          '',
+          '```json',
+          JSON.stringify(
+            terminal.reviewAccounting,
+            null,
+            pretty ? 2 : undefined,
+          ),
+          '```',
+          '',
+        ].join('\n'),
+      ).toString('base64');
+    const artifactDigest = immutableReviewSubstanceDigest(
+      terminal,
+      artifact('original prose', false),
+    );
+    expect(
+      immutableReviewSubstanceDigest(
+        terminal,
+        artifact('original prose', true),
+      ),
+    ).toBe(artifactDigest);
+    expect(
+      immutableReviewSubstanceDigest(
+        terminal,
+        artifact('changed prose', false),
+      ),
+    ).not.toBe(artifactDigest);
   });
 
   it('rejects any repaired substance mutation', async () => {

@@ -5,6 +5,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { validateStoredReviewOutput } from '../commands/review/validate-output';
 import { evaluateWholeDiffEligibility } from './budget';
 import {
   bindAcceptedHandle,
@@ -19,6 +20,7 @@ import type {
   PreparedReviewContextV1,
   ReviewPlanV1,
   ReviewPreparationV1,
+  ReviewerTerminalV1,
 } from './types';
 import { reapExpiredValidationState } from './validation-reaper';
 import { type ValidationRunState, ValidationStore } from './validation-store';
@@ -190,7 +192,174 @@ async function lifecycleSnapshots(root: string) {
   };
 }
 
+function invalidAccountingTerminal(summary = 'reviewed'): ReviewerTerminalV1 {
+  const evidence = {
+    id: 'evidence-1',
+    kind: 'source' as const,
+    locator: 'validated review scope',
+    scopeRefs: [
+      { bucket: 'lane' as const, bucketId: 'legacy-lane', pathIndexes: [] },
+    ],
+    provenance: 'reviewer',
+    digest: 'evidence',
+    commandId: null,
+    commandResultDigest: null,
+  };
+  return {
+    schemaVersion: 1,
+    status: 'complete',
+    candidate: {
+      kind: 'structured',
+      review: { summary, findings: [], verification_commands: [] },
+    },
+    reviewAccounting: {
+      schemaVersion: 1,
+      receipt: 'wrong-receipt',
+      contextDigest: 'placeholder',
+      planDigest: 'placeholder',
+      assignmentDigest: 'placeholder',
+      strategy: 'selective-inline',
+      completion: 'complete',
+      evidence: [evidence],
+      lanes: [
+        {
+          id: 'legacy-lane',
+          paths: [],
+          primaryObligationIds: [],
+          seamObligationIds: [],
+          workerOutcome: 'not-delegated',
+          dossierDigest: null,
+          inspectionCoverage: 'all',
+          uninspectedPathIndexes: [],
+          uncoveredObligationIds: [],
+          commands: [],
+          evidenceRefIds: ['evidence-1'],
+          uncertainty: [],
+          primaryCompletion: {
+            outcome: 'not-needed',
+            completedPathIndexes: [],
+            completedObligationIds: [],
+            commands: [],
+            evidenceRefIds: [],
+          },
+        },
+      ],
+      classifications: [],
+      verification: [
+        {
+          claimId: 'promoted',
+          kind: 'promoted-finding',
+          findingId: null,
+          laneIds: ['legacy-lane'],
+          mode: 'direct',
+          disposition: 'rejected',
+          evidenceRefIds: ['evidence-1'],
+        },
+        ...(
+          [
+            'consequential-absence',
+            'worker-conflict',
+            'cross-lane-gap',
+          ] as const
+        ).map((kind) => ({
+          claimId: kind,
+          kind,
+          findingId: null,
+          laneIds: ['legacy-lane'],
+          mode: 'direct' as const,
+          disposition: 'rejected' as const,
+          evidenceRefIds: ['evidence-1'],
+        })),
+        {
+          claimId: 'positive',
+          kind: 'positive-coverage-sample',
+          findingId: null,
+          laneIds: ['legacy-lane'],
+          mode: 'sample',
+          disposition: 'verified',
+          evidenceRefIds: ['evidence-1'],
+        },
+      ],
+      budget: { evidenceStoppedAt: null, outputReservePreserved: null },
+    },
+  };
+}
+
 describe('validation recovery integration', () => {
+  it('enforces immutable substance and the total-attempt cap through the real store transition', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validation-output-repair-'));
+    roots.push(root);
+    const fixture = await lifecycleSnapshots(root);
+    const terminal = invalidAccountingTerminal();
+    terminal.reviewAccounting.contextDigest =
+      fixture.evidenceStarted.receipt!.contextDigest;
+    terminal.reviewAccounting.planDigest =
+      fixture.evidenceStarted.receipt!.planDigest;
+    terminal.reviewAccounting.assignmentDigest =
+      fixture.evidenceStarted.receipt!.assignmentDigest;
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      await expect(
+        validateStoredReviewOutput(
+          { runId: fixture.created.runId, terminal },
+          fixture.store,
+        ),
+      ).resolves.toMatchObject({ valid: false });
+      await expect(
+        fixture.store.readRun(fixture.created.runId),
+      ).resolves.toMatchObject({
+        state: {
+          phase: attempt < 3 ? 'accounting_repair' : 'terminal',
+          output: { attempts: attempt },
+        },
+      });
+    }
+    await expect(
+      validateStoredReviewOutput(
+        { runId: fixture.created.runId, terminal },
+        fixture.store,
+      ),
+    ).rejects.toMatchObject({ code: 'output-attempt-limit' });
+
+    const mutationRoot = await mkdtemp(
+      join(tmpdir(), 'oat-validation-output-mutation-'),
+    );
+    roots.push(mutationRoot);
+    const mutationFixture = await lifecycleSnapshots(mutationRoot);
+    const first = invalidAccountingTerminal();
+    first.reviewAccounting.contextDigest =
+      mutationFixture.evidenceStarted.receipt!.contextDigest;
+    first.reviewAccounting.planDigest =
+      mutationFixture.evidenceStarted.receipt!.planDigest;
+    first.reviewAccounting.assignmentDigest =
+      mutationFixture.evidenceStarted.receipt!.assignmentDigest;
+    await validateStoredReviewOutput(
+      { runId: mutationFixture.created.runId, terminal: first },
+      mutationFixture.store,
+    );
+    const changed = structuredClone(first);
+    if (
+      changed.status === 'complete' &&
+      changed.candidate.kind === 'structured'
+    ) {
+      changed.candidate.review.summary = 'changed substance';
+    }
+    await expect(
+      validateStoredReviewOutput(
+        { runId: mutationFixture.created.runId, terminal: changed },
+        mutationFixture.store,
+      ),
+    ).resolves.toMatchObject({
+      valid: false,
+      errors: [{ code: 'immutable-substance-mismatch' }],
+    });
+    await expect(
+      mutationFixture.store.readRun(mutationFixture.created.runId),
+    ).resolves.toMatchObject({
+      state: { phase: 'terminal', output: { attempts: 2 } },
+    });
+  });
+
   it('accepts empty legacy telemetry for every coherent lifecycle phase', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validation-legacy-state-'));
     roots.push(root);
@@ -204,9 +373,20 @@ describe('validation recovery integration', () => {
         ...fixture.evidenceStarted,
         telemetry: [],
         phase: 'accounting_repair',
+        output: { immutableSubstanceDigest: 'a'.repeat(64), attempts: 1 },
       },
-      { ...fixture.evidenceStarted, telemetry: [], phase: 'accepted' },
-      { ...fixture.evidenceStarted, telemetry: [], phase: 'terminal' },
+      {
+        ...fixture.evidenceStarted,
+        telemetry: [],
+        phase: 'accepted',
+        output: { immutableSubstanceDigest: 'a'.repeat(64), attempts: 1 },
+      },
+      {
+        ...fixture.evidenceStarted,
+        telemetry: [],
+        phase: 'terminal',
+        output: { immutableSubstanceDigest: 'a'.repeat(64), attempts: 1 },
+      },
     ];
 
     for (const candidate of candidates) {

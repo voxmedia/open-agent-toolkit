@@ -87,6 +87,7 @@ describe('ValidationStore.createRun', () => {
     expect(await store.unsafeReadStateForTesting(result.runId)).toMatchObject({
       phase: 'prepared',
       draft: { device: draft.dev, inode: draft.ino },
+      output: { immutableSubstanceDigest: null, attempts: 0 },
     });
   });
 

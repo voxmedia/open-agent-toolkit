@@ -1,13 +1,21 @@
+import { extractArtifactFindingProjection } from '@review/artifact-accounting';
 import {
   snapshotArtifactDraft,
   type ArtifactDraft,
 } from '@review/artifact-staging';
 import {
+  immutableReviewSubstanceDigest,
+  isAccountingRepairablePointer,
+} from '@review/coordinator-contract';
+import {
   validateReviewOutput,
   type OutputValidationResult,
 } from '@review/output-validator';
 import { parseReviewerTerminalV1, ReviewSchemaError } from '@review/schemas';
-import type { ReviewerTerminalV1 } from '@review/types';
+import type {
+  ArtifactFindingProjectionV1,
+  ReviewerTerminalV1,
+} from '@review/types';
 import { ValidationStore } from '@review/validation-store';
 import {
   launcherValidationStoreAuthority,
@@ -44,6 +52,13 @@ export async function validateStoredReviewOutput(
 ): Promise<OutputValidationResult> {
   const run = await store.readRun(input.runId);
   const { state } = run;
+  if (state.phase === 'terminal' && state.output.attempts >= 3) {
+    throw new ReviewJsonCommandError({
+      category: 'contract',
+      code: 'output-attempt-limit',
+      message: 'review output submission limit is exhausted',
+    });
+  }
   if (
     !['evidence_started', 'accounting_repair'].includes(state.phase) ||
     state.receipt === null ||
@@ -57,6 +72,9 @@ export async function validateStoredReviewOutput(
     });
   }
 
+  let artifactFindingProjection: ArtifactFindingProjectionV1 | undefined;
+  let artifactBytesBase64: string | undefined;
+  let artifactError: OutputValidationResult | null = null;
   if (
     input.terminal.status === 'complete' &&
     input.terminal.candidate.kind === 'artifact-draft'
@@ -65,7 +83,7 @@ export async function validateStoredReviewOutput(
       state.draft === null ||
       input.terminal.candidate.privateDraftPath !== state.draft.path
     ) {
-      return {
+      artifactError = {
         valid: false,
         errors: [
           {
@@ -75,39 +93,118 @@ export async function validateStoredReviewOutput(
           },
         ],
       };
-    }
-    try {
-      await snapshotArtifactDraft(
-        {
-          path: state.draft.path,
-          device: state.draft.device,
-          inode: state.draft.inode,
-        } satisfies ArtifactDraft,
-        input.terminal.reviewAccounting,
-      );
-    } catch {
-      return {
-        valid: false,
-        errors: [
+    } else {
+      try {
+        const snapshot = await snapshotArtifactDraft(
           {
-            code: 'schema-error',
-            pointer: '/reviewAccounting',
-            message:
-              'artifact accounting or private draft identity failed validation',
-          },
-        ],
-      };
+            path: state.draft.path,
+            device: state.draft.device,
+            inode: state.draft.inode,
+          } satisfies ArtifactDraft,
+          input.terminal.reviewAccounting,
+        );
+        artifactFindingProjection = extractArtifactFindingProjection(
+          Buffer.from(snapshot.bytesBase64, 'base64'),
+        );
+        artifactBytesBase64 = snapshot.bytesBase64;
+      } catch {
+        artifactError = {
+          valid: false,
+          errors: [
+            {
+              code: 'schema-error',
+              pointer: '/reviewAccounting',
+              message:
+                'artifact accounting or private draft identity failed validation',
+            },
+          ],
+        };
+      }
     }
   }
 
-  return validateReviewOutput(
-    {
-      receipt: state.receipt,
-      plan: state.plan,
-      assignment: state.assignment,
-    },
-    input.terminal,
-  );
+  let result: OutputValidationResult | undefined;
+  await store.updateRun(input.runId, (current) => {
+    if (
+      current.receipt === null ||
+      current.plan === null ||
+      current.assignment === null
+    ) {
+      throw new ReviewJsonCommandError({
+        category: 'contract',
+        code: 'output-validation-phase-invalid',
+        message: 'review output validation state is incomplete',
+      });
+    }
+    if (current.phase === 'terminal' && current.output.attempts >= 3) {
+      throw new ReviewJsonCommandError({
+        category: 'contract',
+        code: 'output-attempt-limit',
+        message: 'review output submission limit is exhausted',
+      });
+    }
+    const expectedPhase =
+      current.output.attempts === 0 ? 'evidence_started' : 'accounting_repair';
+    if (current.phase !== expectedPhase || current.output.attempts >= 3) {
+      throw new ReviewJsonCommandError({
+        category: 'contract',
+        code: 'output-validation-phase-invalid',
+        message: 'review output cannot be submitted in the current phase',
+      });
+    }
+
+    const immutableSubstanceDigest = immutableReviewSubstanceDigest(
+      input.terminal,
+      artifactBytesBase64,
+    );
+    current.output.attempts++;
+    if (current.output.immutableSubstanceDigest === null) {
+      current.output.immutableSubstanceDigest = immutableSubstanceDigest;
+    } else if (
+      current.output.immutableSubstanceDigest !== immutableSubstanceDigest
+    ) {
+      result = {
+        valid: false,
+        errors: [
+          {
+            code: 'immutable-substance-mismatch',
+            pointer: '/',
+            message: 'accounting repair changed immutable review substance',
+          },
+        ],
+      };
+      current.phase = 'terminal';
+      return current;
+    }
+
+    result =
+      artifactError ??
+      validateReviewOutput(
+        {
+          receipt: current.receipt,
+          plan: current.plan,
+          assignment: current.assignment,
+          artifactFindingProjection,
+        },
+        input.terminal,
+      );
+    if (result.valid) {
+      current.phase = 'accepted';
+    } else {
+      const repairable =
+        current.output.attempts < 3 &&
+        result.errors.length > 0 &&
+        result.errors.every((error) =>
+          isAccountingRepairablePointer(error.pointer),
+        );
+      current.phase = repairable ? 'accounting_repair' : 'terminal';
+    }
+    return current;
+  });
+  if (result === undefined) {
+    throw new Error('output validation transition produced no result');
+  }
+  return result;
 }
 
 const DEFAULT_DEPENDENCIES: ValidateOutputCommandDependencies = {

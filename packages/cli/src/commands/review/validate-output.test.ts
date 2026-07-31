@@ -65,6 +65,80 @@ function terminal(): ReviewerTerminalV1 {
   };
 }
 
+function validationState() {
+  return {
+    phase: 'evidence_started',
+    draft: null as {
+      path: string;
+      device: number;
+      inode: number;
+    } | null,
+    receipt: {
+      token: 'receipt',
+      validationRunId: 'validation-run-1',
+      gateRunId: null,
+      launchAttemptId: 'launch',
+      acceptedHandleDigest: 'handle',
+      contractVersion: 1 as const,
+      contextDigest: 'context',
+      planDigest: 'plan',
+      assignmentDigest: 'assignment',
+      validatedAt: '2026-07-30T20:00:00.000Z',
+      expiresAt: '2026-07-30T22:00:00.000Z',
+    },
+    plan: {
+      strategy: 'selective-inline' as const,
+      verificationBoundary: {
+        requiredClaims: [],
+        positiveCoverage: {
+          mode: 'sample' as const,
+          laneIds: [],
+          rationale: '',
+        },
+        deterministicAcceptance: {
+          mode: 'provenance' as const,
+          requiredFields: [],
+        },
+      },
+    },
+    assignment: {
+      lanes: [
+        {
+          id: 'lane',
+          paths: ['src/a.ts'],
+          primaryObligationIds: ['task:p01-t01'],
+          seamObligationIds: [],
+          primaryContingency: {
+            allowed: false,
+            paths: [],
+            obligationIds: [],
+          },
+        },
+      ],
+      classifications: [],
+    },
+    output: { immutableSubstanceDigest: null, attempts: 0 },
+  };
+}
+
+function fakeStore(state: ReturnType<typeof validationState>) {
+  return {
+    readRun: vi.fn(async () => ({ state })),
+    updateRun: vi.fn(
+      async (
+        _runId: string,
+        update: (current: typeof state) => typeof state,
+      ) => {
+        state = update(structuredClone(state));
+        return { state };
+      },
+    ),
+    get state() {
+      return state;
+    },
+  };
+}
+
 function args(): string[] {
   return [
     'node',
@@ -173,7 +247,7 @@ describe('validate-output command', () => {
     const draft = await createArtifactDraft(root);
     await writeFile(
       draft.path,
-      `## Review Accounting\n\n\`\`\`json\n${JSON.stringify(accounting())}\n\`\`\`\n`,
+      `Findings: 0 critical, 0 important, 0 medium, 0 minor\n\n## Review Accounting\n\n\`\`\`json\n${JSON.stringify(accounting())}\n\`\`\`\n`,
     );
     const value = terminal();
     if (value.status !== 'complete') throw new Error('fixture');
@@ -181,53 +255,8 @@ describe('validate-output command', () => {
       kind: 'artifact-draft',
       privateDraftPath: draft.path,
     };
-    const state = {
-      phase: 'evidence_started',
-      draft,
-      receipt: {
-        token: 'receipt',
-        validationRunId: 'validation-run-1',
-        gateRunId: null,
-        launchAttemptId: 'launch',
-        acceptedHandleDigest: 'handle',
-        contractVersion: 1,
-        contextDigest: 'context',
-        planDigest: 'plan',
-        assignmentDigest: 'assignment',
-        validatedAt: '2026-07-30T20:00:00.000Z',
-        expiresAt: '2026-07-30T22:00:00.000Z',
-      },
-      plan: {
-        strategy: 'selective-inline',
-        verificationBoundary: {
-          requiredClaims: [],
-          positiveCoverage: { mode: 'sample', laneIds: [], rationale: '' },
-          deterministicAcceptance: {
-            mode: 'provenance',
-            requiredFields: [],
-          },
-        },
-      },
-      assignment: {
-        lanes: [
-          {
-            id: 'lane',
-            paths: ['src/a.ts'],
-            primaryObligationIds: ['task:p01-t01'],
-            seamObligationIds: [],
-            primaryContingency: {
-              allowed: false,
-              paths: [],
-              obligationIds: [],
-            },
-          },
-        ],
-        classifications: [],
-      },
-    };
-    const store = {
-      readRun: vi.fn(async () => ({ state })),
-    };
+    const state = { ...validationState(), draft };
+    const store = fakeStore(state);
     expect(
       await validateStoredReviewOutput(
         { runId: 'validation-run-1', terminal: value },
@@ -236,14 +265,70 @@ describe('validate-output command', () => {
     ).toMatchObject({ valid: true });
 
     value.reviewAccounting.receipt = 'different';
+    const mismatchStore = fakeStore({ ...validationState(), draft });
     expect(
       await validateStoredReviewOutput(
         { runId: 'validation-run-1', terminal: value },
-        store as never,
+        mismatchStore as never,
       ),
     ).toMatchObject({
       valid: false,
       errors: [{ code: 'schema-error' }],
     });
+  });
+
+  it('persists immutable substance and terminalizes the third failed submission', async () => {
+    const state = validationState();
+    const store = fakeStore(state);
+    const invalid = terminal();
+    invalid.reviewAccounting.receipt = 'wrong';
+
+    expect(
+      await validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: invalid },
+        store as never,
+      ),
+    ).toMatchObject({ valid: false });
+    expect(store.state).toMatchObject({
+      phase: 'accounting_repair',
+      output: {
+        immutableSubstanceDigest: expect.stringMatching(/^[0-9a-f]{64}$/),
+        attempts: 1,
+      },
+    });
+
+    const changed = structuredClone(invalid);
+    if (changed.status === 'complete') {
+      changed.candidate.review.summary = 'changed substance';
+    }
+    expect(
+      await validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: changed },
+        store as never,
+      ),
+    ).toMatchObject({
+      valid: false,
+      errors: [{ code: 'immutable-substance-mismatch' }],
+    });
+    expect(store.state).toMatchObject({
+      phase: 'terminal',
+      output: { attempts: 2 },
+    });
+
+    const cappedStore = fakeStore(validationState());
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      await validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: invalid },
+        cappedStore as never,
+      );
+      expect(cappedStore.state.output.attempts).toBe(attempt);
+    }
+    expect(cappedStore.state.phase).toBe('terminal');
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: invalid },
+        cappedStore as never,
+      ),
+    ).rejects.toMatchObject({ code: 'output-attempt-limit' });
   });
 });

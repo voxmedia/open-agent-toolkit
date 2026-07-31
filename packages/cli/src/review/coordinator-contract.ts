@@ -1,4 +1,5 @@
-import { hashCanonicalJson } from './canonical-json';
+import { canonicalizeJson, hashCanonicalJson } from './canonical-json';
+import { normalizeMarkdownSource } from './markdown-grammar';
 import {
   validateReviewOutput,
   type AccountingValidationError,
@@ -35,7 +36,7 @@ export type ReviewCoordinatorResult =
       repairAttempts: number;
     };
 
-function normalizedSubstance(terminal: ReviewerTerminalV1): unknown {
+function normalizedSubstance(terminal: ReviewerTerminalV1): ReviewerTerminalV1 {
   const value = structuredClone(terminal);
   const accounting = value.reviewAccounting;
   accounting.receipt = '';
@@ -58,13 +59,54 @@ function normalizedSubstance(terminal: ReviewerTerminalV1): unknown {
   return value;
 }
 
-export function immutableReviewSubstanceDigest(
-  terminal: ReviewerTerminalV1,
+function normalizedArtifactSubstance(
+  bytesBase64: string,
+  accounting: ReviewerTerminalV1['reviewAccounting'],
 ): string {
-  return hashCanonicalJson(normalizedSubstance(terminal));
+  const source = normalizeMarkdownSource(Buffer.from(bytesBase64, 'base64'));
+  const lines = source.split('\n');
+  const heading = lines.indexOf('## Review Accounting');
+  if (
+    heading === -1 ||
+    lines.indexOf('## Review Accounting', heading + 1) !== -1
+  ) {
+    throw new Error('artifact substance has invalid accounting headings');
+  }
+  let opening = heading + 1;
+  if (lines[opening] === '') opening++;
+  if (lines[opening] !== '```json') {
+    throw new Error('artifact substance has invalid accounting fence');
+  }
+  const closing = lines.indexOf('```', opening + 1);
+  if (closing === -1) {
+    throw new Error('artifact substance has unclosed accounting fence');
+  }
+  return [
+    ...lines.slice(0, opening + 1),
+    canonicalizeJson(accounting),
+    ...lines.slice(closing),
+  ].join('\n');
 }
 
-function isRepairablePointer(pointer: string): boolean {
+export function immutableReviewSubstanceDigest(
+  terminal: ReviewerTerminalV1,
+  artifactBytesBase64?: string,
+): string {
+  const normalized = normalizedSubstance(terminal);
+  return hashCanonicalJson(
+    artifactBytesBase64 === undefined
+      ? normalized
+      : {
+          terminal: normalized,
+          artifact: normalizedArtifactSubstance(
+            artifactBytesBase64,
+            normalized.reviewAccounting,
+          ),
+        },
+  );
+}
+
+export function isAccountingRepairablePointer(pointer: string): boolean {
   return (
     /^\/reviewAccounting\/(?:receipt|contextDigest|planDigest|assignmentDigest)$/.test(
       pointer,
@@ -110,7 +152,9 @@ export async function validateAndRepair(
       repairAttempts >= 2 ||
       !beforeDeadline(session) ||
       validation.errors.length === 0 ||
-      validation.errors.some((error) => !isRepairablePointer(error.pointer))
+      validation.errors.some(
+        (error) => !isAccountingRepairablePointer(error.pointer),
+      )
     ) {
       return {
         accepted: false,

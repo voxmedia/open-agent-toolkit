@@ -62,6 +62,10 @@ export interface ValidationRunState {
   assignment: ValidatedAssignmentProjectionV1 | null;
   receipt: PlanValidationReceiptV1 | null;
   planValidationAttempts: number;
+  output: {
+    immutableSubstanceDigest: string | null;
+    attempts: number;
+  };
 }
 
 export interface StoredValidationRun {
@@ -128,6 +132,7 @@ function parseValidationRunState(
       'assignment',
       'receipt',
       'planValidationAttempts',
+      'output',
     ],
     'validation state',
   );
@@ -279,6 +284,34 @@ function parseValidationRunState(
   ) {
     throw new Error('plan validation attempts are invalid');
   }
+  const output = exactKeys(
+    state.output,
+    ['immutableSubstanceDigest', 'attempts'],
+    'validation output state',
+  );
+  if (
+    !Number.isSafeInteger(output.attempts) ||
+    (output.attempts as number) < 0 ||
+    (output.attempts as number) > 3 ||
+    (output.immutableSubstanceDigest !== null &&
+      (typeof output.immutableSubstanceDigest !== 'string' ||
+        !/^[0-9a-f]{64}$/.test(output.immutableSubstanceDigest)))
+  ) {
+    throw new Error('validation output state is invalid');
+  }
+  const attempts = output.attempts as number;
+  const immutableSubstanceDigest = output.immutableSubstanceDigest as
+    | string
+    | null;
+  if (
+    (attempts === 0) !== (immutableSubstanceDigest === null) ||
+    (phase === 'accounting_repair' && (attempts < 1 || attempts > 2)) ||
+    ((phase === 'accepted' || phase === 'terminal') && attempts < 1) ||
+    (!['accounting_repair', 'accepted', 'terminal'].includes(phase) &&
+      attempts !== 0)
+  ) {
+    throw new Error('validation output phase is incoherent');
+  }
   return {
     schemaVersion: 1,
     preparation,
@@ -292,6 +325,7 @@ function parseValidationRunState(
     assignment,
     receipt,
     planValidationAttempts: state.planValidationAttempts as number,
+    output: { immutableSubstanceDigest, attempts },
   };
 }
 
@@ -553,6 +587,7 @@ export class ValidationStore {
         assignment: null,
         receipt: null,
         planValidationAttempts: 0,
+        output: { immutableSubstanceDigest: null, attempts: 0 },
       };
       const statePath = join(runDirectory, 'state.json');
       await writeExclusive(statePath, this.#authority.seal(state));
