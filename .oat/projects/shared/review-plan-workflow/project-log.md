@@ -124,6 +124,10 @@ Phase p03 completed five planned task commits plus bounded wording recovery 4243
 
 Independent Phase p03 review failed with 3 Critical findings. Added p03-t06 through p03-t08 for strict plan boundaries, strict worker dossiers, and trace-derived operation metrics.
 
+### 2026-07-31 · structural · oat-project-implement · p03
+
+Phase p03 passed after two bounded fix iterations and three independent review rounds; final evidence: reviews/p03-review-2026-07-31T150048Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

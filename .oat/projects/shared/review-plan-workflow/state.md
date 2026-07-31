@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t01
 oat_last_commit: 9d3952313c3d1d4ddabf13e63c3e41eac116623b
 oat_blockers: []
 associated_issues:
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T14:54:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T15:03:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,15 +85,15 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 3 final automatic re-review in progress
+**Status:** Phase 4 implementation in progress
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
 ## Current Phase
 
-Phases 1 and 2 are complete. Phase 3 final fixes p03-t09 and p03-t10 are
-complete and independently root-verified. The third and final automatic review
-round is pending against the updated narrowed range.
+Phases 1 through 3 are complete. The third and final automatic Phase 3 review
+passed with no findings. Phase 4 begins with canonical artifact accounting and
+validated coordinator integration.
 
 ## Artifacts
 
@@ -167,7 +167,9 @@ round is pending against the updated narrowed range.
 - ✓ Findings independently confirmed and converted to p03-t09 and p03-t10
 - ✓ Final automatic fixes p03-t09 and p03-t10 completed
 - ✓ 3,833 CLI tests, workspace gates, and root-focused verification pass
-- → Third and final automatic Phase 3 review round
+- ✓ Third automatic Phase 3 review passed with no findings
+- ✓ Phase 3 completed at reviewed head `9d395231`
+- → Execute Phase 4 tasks p04-t01 through p04-t08
 
 ## Blockers
 
@@ -175,4 +177,4 @@ None.
 
 ## Next Milestone
 
-Receive the final automatic Phase 3 re-review and route its disposition.
+Complete and independently review Phase 4.
