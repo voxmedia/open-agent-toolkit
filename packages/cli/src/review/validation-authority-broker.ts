@@ -8,6 +8,11 @@ import { join } from 'node:path';
 import { DefaultGitChangeMapAdapter } from './change-map';
 import { bindAcceptedHandle } from './command-capabilities';
 import {
+  deserializeReviewError,
+  type ReviewErrorEnvelopeV1,
+  serializeReviewError,
+} from './errors';
+import {
   type PrepareReviewContextInput,
   prepareReviewContext,
 } from './prepare-context';
@@ -55,9 +60,17 @@ interface AcceptedContinuationBinding {
   handleId: string;
 }
 
-interface BrokerResponse {
+type BrokerResponse =
+  | { schemaVersion: 1; ok: true; result: unknown }
+  | {
+      schemaVersion: 1;
+      ok: false;
+      error: ReviewErrorEnvelopeV1;
+    };
+
+interface BrokerStartupResponse {
   ok: boolean;
-  result?: unknown;
+  result?: PrepareReviewContextResultV1;
   error?: string;
 }
 
@@ -109,9 +122,9 @@ export async function requestValidationAuthorityBroker<T>(
 ): Promise<T> {
   const socket = createConnection(socketPath);
   socket.end(JSON.stringify(request));
-  const response = (await readSocketJson(socket)) as BrokerResponse;
+  const response = parseBrokerResponse(await readSocketJson(socket));
   if (!response.ok) {
-    throw new Error(response.error ?? 'validation authority broker failed');
+    throw deserializeReviewError(response.error);
   }
   return response.result as T;
 }
@@ -182,6 +195,7 @@ export async function startPreparedValidationAuthorityBroker(input: {
       switch (request.action) {
         case 'checkpoint':
           response = {
+            schemaVersion: 1,
             ok: true,
             result: await checkpointArtifactsLoaded(request, {
               ...lifecycle,
@@ -192,12 +206,14 @@ export async function startPreparedValidationAuthorityBroker(input: {
           break;
         case 'validate':
           response = {
+            schemaVersion: 1,
             ok: true,
             result: await validateAndReceiptPlan(request, lifecycle),
           };
           break;
         case 'begin':
           response = {
+            schemaVersion: 1,
             ok: true,
             result: await beginEvidence(request, lifecycle),
           };
@@ -208,8 +224,9 @@ export async function startPreparedValidationAuthorityBroker(input: {
       }
     } catch (error) {
       response = {
+        schemaVersion: 1,
         ok: false,
-        error: error instanceof Error ? error.message : 'broker request failed',
+        error: serializeReviewError(error),
       };
     }
     socket.end(JSON.stringify(response));
@@ -220,8 +237,9 @@ export async function startPreparedValidationAuthorityBroker(input: {
   server.on('connection', (socket) => {
     handleConnection(socket).catch((error: unknown) => {
       const response: BrokerResponse = {
+        schemaVersion: 1,
         ok: false,
-        error: error instanceof Error ? error.message : 'broker request failed',
+        error: serializeReviewError(error),
       };
       if (socket.destroyed) return;
       socket.end(JSON.stringify(response));
@@ -386,7 +404,9 @@ async function readBrokerStartupResponse(
       const source = Buffer.concat(chunks).toString('utf8');
       const newline = source.indexOf('\n');
       if (newline < 0) return;
-      const response = JSON.parse(source.slice(0, newline)) as BrokerResponse;
+      const response = JSON.parse(
+        source.slice(0, newline),
+      ) as BrokerStartupResponse;
       if (!response.ok) {
         finish({
           ok: false,
@@ -395,7 +415,7 @@ async function readBrokerStartupResponse(
       } else {
         finish({
           ok: true,
-          value: response.result as PrepareReviewContextResultV1,
+          value: response.result!,
         });
       }
     });
@@ -403,3 +423,23 @@ async function readBrokerStartupResponse(
 }
 
 export type { AcceptedContinuationBinding, BrokerRequest, BrokerStartup };
+
+function parseBrokerResponse(value: unknown): BrokerResponse {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error('validation authority broker response is invalid');
+  }
+  const response = value as Record<string, unknown>;
+  if (response.schemaVersion !== 1 || typeof response.ok !== 'boolean') {
+    throw new Error('validation authority broker response is invalid');
+  }
+  const expectedKeys = response.ok
+    ? 'ok,result,schemaVersion'
+    : 'error,ok,schemaVersion';
+  if (Object.keys(response).sort().join(',') !== expectedKeys) {
+    throw new Error('validation authority broker response is invalid');
+  }
+  if (!response.ok) {
+    deserializeReviewError(response.error);
+  }
+  return response as BrokerResponse;
+}

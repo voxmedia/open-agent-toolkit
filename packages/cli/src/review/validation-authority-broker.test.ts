@@ -185,6 +185,23 @@ describe('validation authority broker', () => {
       broker.preparation.commands.validatePlan,
       broker.preparation.commands.beginEvidence,
     ];
+    const invalidCheckpoint = structuredClone(checkpoint);
+    invalidCheckpoint.argv[
+      invalidCheckpoint.argv.indexOf('--checkpoint-token') + 1
+    ] = 'wrong-capability';
+    const capabilityFailure = await executeCommandInvocation(
+      invalidCheckpoint,
+      {
+        cwd: resolve('..', '..'),
+      },
+    );
+    expect(capabilityFailure.exitCode).toBe(1);
+    expect(JSON.parse(capabilityFailure.stdout)).toMatchObject({
+      error: {
+        category: 'contract',
+        code: 'command-capability-rejected',
+      },
+    });
     const checkpointResult = await executeCommandInvocation(checkpoint, {
       cwd: resolve('..', '..'),
       environment: {
@@ -196,6 +213,16 @@ describe('validation authority broker', () => {
       checkpointResult.exitCode,
       `${checkpointResult.stderr}\n${JSON.stringify(checkpoint)}`,
     ).toBe(0);
+    const replay = await executeCommandInvocation(checkpoint, {
+      cwd: resolve('..', '..'),
+    });
+    expect(replay.exitCode).toBe(1);
+    expect(JSON.parse(replay.stdout)).toMatchObject({
+      error: {
+        category: 'contract',
+        code: 'command-capability-rejected',
+      },
+    });
     const checkpointEnvelope = JSON.parse(checkpointResult.stdout) as {
       result: { contextDigest: string };
     };
@@ -228,6 +255,18 @@ describe('validation authority broker', () => {
       result: { receipt: { token: string } };
     };
     const receiptIndex = begin.argv.indexOf('__OAT_PLAN_RECEIPT__');
+    const invalidBegin = structuredClone(begin);
+    invalidBegin.argv[receiptIndex] = 'wrong-receipt';
+    const receiptFailure = await executeCommandInvocation(invalidBegin, {
+      cwd: resolve('..', '..'),
+    });
+    expect(receiptFailure.exitCode).toBe(1);
+    expect(JSON.parse(receiptFailure.stdout)).toMatchObject({
+      error: {
+        category: 'validation',
+        code: 'plan-receipt-identity-mismatch',
+      },
+    });
     begin.argv[receiptIndex] = validateEnvelope.result.receipt.token;
     const beginResult = await executeCommandInvocation(begin, {
       cwd: resolve('..', '..'),
@@ -238,8 +277,42 @@ describe('validation authority broker', () => {
     });
     expect(beginResult.exitCode).toBe(0);
     await broker.closed;
+    const transportFailure = await executeCommandInvocation(begin, {
+      cwd: resolve('..', '..'),
+    });
+    expect(transportFailure.exitCode).toBe(2);
+    expect(JSON.parse(transportFailure.stdout)).toMatchObject({
+      error: {
+        category: 'system',
+        code: 'review-json-system-error',
+      },
+    });
     expect(root).not.toContain('OAT_REVIEW_AUTHORITY_KEY');
   }, 20_000);
+
+  it('preserves expiry as a typed broker domain rejection', async () => {
+    const { broker, key, socketPath, validationRoot } = await fixture();
+    const runId = broker.preparation.preparation.runId;
+    const authority = new ValidationStoreAuthority(key);
+    const statePath = join(validationRoot, `run-${runId}`, 'state.json');
+    const state = authority.open(await readFile(statePath, 'utf8')) as {
+      preparation: { expiresAt: string };
+    };
+    state.preparation.expiresAt = '2000-01-01T00:00:00.000Z';
+    await writeFile(statePath, authority.seal(state));
+    await expect(
+      requestValidationAuthorityBroker(socketPath, {
+        action: 'checkpoint',
+        runId,
+        checkpointToken: 'unused',
+      }),
+    ).rejects.toMatchObject({
+      name: 'ReviewDomainError',
+      category: 'validation',
+      code: 'validation-state-expired',
+    });
+    await broker.close();
+  });
 
   it('runs the real source lifecycle after prepare exits without sharing authority', async () => {
     const { root, validationRoot, baseSha, headSha } =
@@ -365,7 +438,7 @@ describe('validation authority broker', () => {
         runId,
         checkpointToken: 'forged',
       }),
-    ).rejects.toThrow(/authentication/);
+    ).rejects.toThrow(/broker failed unexpectedly/);
     await broker.close();
   });
 });
