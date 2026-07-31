@@ -5,6 +5,7 @@ import { createReviewBeginEvidenceCommand } from './begin-evidence';
 import { createReviewCheckpointArtifactsCommand } from './checkpoint-artifacts';
 import { createReviewLatestCommand } from './latest';
 import { createReviewPrepareContextCommand } from './prepare-context';
+import { createValidateOutputCommand } from './validate-output';
 import { createReviewValidatePlanCommand } from './validate-plan';
 
 export function createReviewCommand(): Command {
@@ -15,5 +16,6 @@ export function createReviewCommand(): Command {
     .addCommand(createReviewPrepareContextCommand())
     .addCommand(createReviewCheckpointArtifactsCommand())
     .addCommand(createReviewValidatePlanCommand())
-    .addCommand(createReviewBeginEvidenceCommand());
+    .addCommand(createReviewBeginEvidenceCommand())
+    .addCommand(createValidateOutputCommand());
 }
