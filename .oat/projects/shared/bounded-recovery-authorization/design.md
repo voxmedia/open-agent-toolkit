@@ -107,11 +107,13 @@ phase implementer -- task checks --> immutable task commit
 3. After a task commit, transition or phase verification may expose a defect.
    The implementer evaluates scope, ambiguity, consequence, destructiveness,
    target continuity, file boundaries, evidence, and remaining budget.
-4. An eligible round preserves the original commit, applies only the bounded
-   correction, creates one recovery commit, records its trigger and original
-   task/request linkage, and reruns focused plus relevant phase verification.
-5. A passing result continues the phase. Each recovery commit consumes one
-   phase recovery round.
+4. An eligible round records its evidence and consumes one attempt before
+   editing. It preserves the original commit, applies only the bounded
+   correction, creates one recovery commit when the repair succeeds, records
+   its trigger and original task/request linkage, and reruns focused plus
+   relevant phase verification.
+5. A passing result continues the phase. A failed edit, commit, or verification
+   has already consumed the attempt and cannot retry for free.
 6. An ineligible result or exhausted budget returns `DONE_WITH_CONCERNS` or
    `BLOCKED`; the root records the evidence and requests user direction without
    launching a fallback.
@@ -178,9 +180,11 @@ and bookkeeping for post-commit defects.
 - `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md`
 
 **Retry semantics:** The default of two permits at most two automatic
-post-commit recovery commits during one phase implementation attempt. Initial
-task work does not consume the budget. Each appended recovery commit consumes
-one round. Review-fix and gate loops continue using their own existing counters;
+post-commit recovery attempts during one phase implementation attempt. Initial
+task work does not consume the budget. An attempt is consumed when bounded
+repair work begins, so a failed edit, verification, or commit cannot loop for
+free. Every successful attempt produces exactly one append-only recovery
+commit. Review-fix and gate loops continue using their own existing counters;
 the three-cycle review governance cap remains separate and unchanged.
 
 ### Phase Implementer Prevention and Recovery
@@ -274,19 +278,170 @@ summaries.
   approval.
 - Bump every changed canonical skill once, synchronize providers, and advance
   the five public packages plus bundled inventory in lockstep.
-- Include the post-release migration note: update bundled OAT tools, then run
-  provider sync before expecting global phase agents to use the new contract.
+- Include the post-release migration note: run `oat tools update`, then
+  `oat sync --scope all`, before expecting global phase agents to use the new
+  contract.
 - Preserve isolation from the active `review-plan-workflow`; no interim
   mitigation is applied by this project.
 
 ## Error Handling
 
-_Pending collaborative validation._
+### Automatic Recovery Eligibility
+
+Automatic recovery proceeds only when every condition is true:
+
+- a declared task, transition, or phase verification discovered the failure;
+- the correction is mechanically bounded and unambiguous;
+- the correction remains within declared phase intent and public requirements;
+- any file-boundary expansion is mechanically derived and remains in-phase;
+- architecture, security policy, product scope, and requirements are unchanged;
+- the work is non-destructive, reversible, and does not cross protected-branch,
+  credential, or other consequential boundaries;
+- the accepted implementation handle and launcher-owned target remain intact;
+- a phase recovery attempt remains; and
+- focused plus relevant phase verification can prove the correction.
+
+The implementer records the eligibility evidence before editing. Starting the
+repair consumes one attempt. A successful attempt creates exactly one recovery
+commit and returns to normal phase execution without a prompt.
+
+### Direction-Required Boundaries
+
+The phase stops with `DONE_WITH_CONCERNS` or `BLOCKED`, emits a
+`direction-required` recovery event, and leaves the original commit unchanged
+when any of these applies:
+
+- the appropriate fix is ambiguous or evidence conflicts;
+- architecture, security, product, requirements, or public behavior needs a
+  decision;
+- scope or declared file boundaries widen non-mechanically;
+- the operation is destructive, irreversible, credential-bearing, or
+  protected-branch sensitive;
+- the exact implementation target cannot continue;
+- focused and phase verification cannot establish correctness;
+- the phase recovery budget is exhausted; or
+- an independent governance boundary, including the review-cycle cap, is
+  reached.
+
+No stop condition makes another model, provider, route, or worker eligible.
+User direction may authorize a new consequential scope, but that is a new
+recorded action outside automatic phase recovery.
+
+### Partial and Failed Recovery
+
+- Failed edits, commit-hook failures, or failed re-verification consume the
+  attempt and are recorded with no successful recovery commit.
+- A dirty worktree, unverifiable commit range, missing provenance, or malformed
+  recovery event blocks continuation.
+- The original task commit SHA must still exist at the same history position;
+  amend, reset, rebase, squashing, or concealment invalidates the report.
+- Multiple mechanically related failures from one verification command may be
+  corrected in one atomic recovery attempt. Independent failures use separate
+  attempts and commits.
+- A fresh same-target launch is allowed only when the lifecycle contract already
+  authorizes recovery, the original handle cannot be resumed, the exact target
+  is preserved, and `continuation_events` links the new record to the original
+  request. It is never triggered by route eligibility.
 
 ## Testing Strategy
 
-_Pending collaborative validation._
+### Contract-Level Scenarios
+
+Extend `packages/cli/src/validation/skills.test.ts` with scenario-oriented
+assertions over the canonical dispatch, implementation, phase-execution, and
+phase-agent contracts:
+
+1. A post-commit lint, type, test, build, or composition failure with one
+   obvious in-scope correction creates exactly one recovery commit, records
+   `phase-standing` authorization, reruns focused and phase verification, and
+   continues without a prompt.
+2. The original task commit remains immutable and at the same history position;
+   no amend, reset, replacement task ID, or concealed rewrite is permitted.
+3. The recovery event and any fresh-launch continuation preserve original
+   request ID, original commit, exact target, attempt/budget, discovering check,
+   repair SHA, and verification outcome.
+4. No second provider, model, route, or worker is launched as fallback.
+5. Ambiguous, contradictory, architecture-changing, security-changing,
+   product-changing, or requirements-changing repair stops for direction.
+6. Destructive, irreversible, protected, credential-bearing, or out-of-scope
+   repair stops without editing.
+7. Attempt exhaustion stops, including attempts that fail before producing a
+   commit.
+8. Prevention ordering requires formatting, declared task verification, and
+   discoverable proportionate checks before commit; scoped build/test runs
+   before commit when emitted output or build/test configuration changes.
+9. Broad repository tests/builds may remain phase-level, and an obvious
+   composition failure there enters the same bounded recovery path.
+10. Every recovered or stopped post-commit defect emits the canonical event
+    record, allowing defect count and prompt count to be measured separately.
+11. Review-cycle caps, unresolved Critical/Important handling, and protected
+    boundaries remain unchanged.
+
+These assertions test relationships and stop/continue behavior, not only
+isolated wording snapshots.
+
+### Provider and Sync Parity
+
+Extend `packages/cli/src/commands/sync/index.test.ts` and the existing provider
+contract coverage to:
+
+- materialize Claude, Codex, base Cursor, and representative pinned Cursor phase
+  agents from the canonical source;
+- assert equivalent prevention, budget, recovery-event, same-target, and stop
+  semantics;
+- assert provider-specific wrappers do not add fallback or drop provenance; and
+- pass canonical asset validation and manifest parity after
+  `oat sync --scope all`.
+
+Tracked provider outputs are regenerated, then validated; tests do not make
+provider copies an authored source of truth.
+
+### Focused Verification
+
+Run the narrow suites first:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts
+pnpm oat:validate-skills
+oat status --scope project
+```
+
+Then run repository-required gates:
+
+```bash
+pnpm check
+pnpm lint
+pnpm format
+pnpm type-check
+pnpm test
+pnpm build
+pnpm build:docs
+pnpm release:validate
+git diff --check
+```
+
+`pnpm build:docs` is included because the implementation-execution
+documentation changes. Release validation is mandatory because canonical agent,
+skill, and docs assets ship with the CLI.
+
+### Success Measurement
+
+Prompt elimination alone is insufficient. Verification evidence must establish
+both:
+
+- **Prevention:** contracts force applicable task-local checks, including a
+  scoped build when emitted-output configuration changes, before the task
+  commit.
+- **Recovery observability:** canonical event records expose post-commit defect
+  count, defect class, discovering check, repair count, and authorization source
+  so future project sweeps do not depend on heading conventions.
 
 ## References
 
 - Discovery: `discovery.md`
+- [PR #138 — reusable subagent dispatch](https://github.com/voxmedia/open-agent-toolkit/pull/138)
+- [PR #141 — phase-agent orchestration](https://github.com/voxmedia/open-agent-toolkit/pull/141)
+- [PR #187 — dispatch visibility](https://github.com/voxmedia/open-agent-toolkit/pull/187)
+- Public workflow guide:
+  `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
