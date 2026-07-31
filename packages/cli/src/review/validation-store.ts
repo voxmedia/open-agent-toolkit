@@ -35,11 +35,14 @@ import type {
   ReviewPreparationV1,
   ReviewProgress,
   ValidatedAssignmentProjectionV1,
+  ValidatedWorkerCoverageProjectionV1,
+  WorkerDossierV1,
 } from './types';
 import {
   ephemeralValidationStoreAuthority,
   type ValidationStoreAuthority,
 } from './validation-store-authority';
+import { parseWorkerDossierV1, validateWorkerDossier } from './worker-dossier';
 
 export interface ValidationRunState {
   schemaVersion: 1;
@@ -62,6 +65,7 @@ export interface ValidationRunState {
   plan: ReviewPlanV1 | null;
   assignment: ValidatedAssignmentProjectionV1 | null;
   receipt: PlanValidationReceiptV1 | null;
+  workerCoverage: ValidatedWorkerCoverageProjectionV1[];
   planValidationAttempts: number;
   output: {
     immutableSubstanceDigest: string | null;
@@ -125,8 +129,15 @@ function parseValidationRunState(
   value: unknown,
   runId: string,
 ): ValidationRunState {
+  const normalizedValue =
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    !('workerCoverage' in value)
+      ? { ...value, workerCoverage: [] }
+      : value;
   const state = exactKeys(
-    value,
+    normalizedValue,
     [
       'schemaVersion',
       'preparation',
@@ -139,6 +150,7 @@ function parseValidationRunState(
       'plan',
       'assignment',
       'receipt',
+      'workerCoverage',
       'planValidationAttempts',
       'output',
       'acceptedSnapshot',
@@ -235,6 +247,50 @@ function parseValidationRunState(
   }
   const receipt =
     state.receipt === null ? null : parsePlanValidationReceiptV1(state.receipt);
+  if (!Array.isArray(state.workerCoverage)) {
+    throw new Error('validation worker coverage must be an array');
+  }
+  const workerCoverage = state.workerCoverage.map((value, index) => {
+    const pointer = `validation worker coverage ${index}`;
+    const coverage = exactKeys(
+      value,
+      [
+        'validationRunId',
+        'planDigest',
+        'laneId',
+        'dossierDigest',
+        'outcome',
+        'inspectedPathIndexes',
+        'uncoveredPathIndexes',
+        'inspectedObligationIds',
+        'uncoveredObligationIds',
+      ],
+      pointer,
+    );
+    if (
+      typeof coverage.validationRunId !== 'string' ||
+      typeof coverage.planDigest !== 'string' ||
+      typeof coverage.laneId !== 'string' ||
+      typeof coverage.dossierDigest !== 'string' ||
+      !/^[0-9a-f]{64}$/.test(coverage.dossierDigest) ||
+      !['complete', 'partial'].includes(coverage.outcome as string) ||
+      !Array.isArray(coverage.inspectedPathIndexes) ||
+      !Array.isArray(coverage.uncoveredPathIndexes) ||
+      !Array.isArray(coverage.inspectedObligationIds) ||
+      !Array.isArray(coverage.uncoveredObligationIds)
+    ) {
+      throw new Error(`${pointer} schema is invalid`);
+    }
+    return structuredClone(
+      coverage,
+    ) as unknown as ValidatedWorkerCoverageProjectionV1;
+  });
+  if (
+    new Set(workerCoverage.map((coverage) => coverage.laneId)).size !==
+    workerCoverage.length
+  ) {
+    throw new Error('validation worker coverage lane identity is duplicated');
+  }
   const phase = state.phase as ValidationRunState['phase'];
   if (phase === 'prepared') {
     if (
@@ -242,7 +298,8 @@ function parseValidationRunState(
       context !== null ||
       plan !== null ||
       assignment !== null ||
-      receipt !== null
+      receipt !== null ||
+      workerCoverage.length > 0
     ) {
       throw new Error('prepared validation state is incoherent');
     }
@@ -265,6 +322,50 @@ function parseValidationRunState(
     ) {
       throw new Error('post-validation state is incoherent');
     }
+  }
+  if (workerCoverage.length > 0) {
+    if (plan === null || receipt === null) {
+      throw new Error('validation worker coverage requires a validated plan');
+    }
+    workerCoverage.forEach((coverage) => {
+      const lane = plan.lanes.find(
+        (candidate) => candidate.id === coverage.laneId,
+      );
+      const pathIndexes = [
+        ...coverage.inspectedPathIndexes,
+        ...coverage.uncoveredPathIndexes,
+      ];
+      const obligationIds = [
+        ...coverage.inspectedObligationIds,
+        ...coverage.uncoveredObligationIds,
+      ];
+      if (
+        coverage.validationRunId !== receipt.validationRunId ||
+        coverage.planDigest !== receipt.planDigest ||
+        lane === undefined ||
+        !lane.delegated ||
+        new Set(pathIndexes).size !== pathIndexes.length ||
+        pathIndexes.some(
+          (pathIndex) =>
+            !Number.isSafeInteger(pathIndex) ||
+            pathIndex < 0 ||
+            pathIndex >= lane.paths.length,
+        ) ||
+        pathIndexes.length !== lane.paths.length ||
+        new Set(obligationIds).size !== obligationIds.length ||
+        obligationIds.some(
+          (obligationId) =>
+            typeof obligationId !== 'string' ||
+            !lane.primaryObligationIds.includes(obligationId),
+        ) ||
+        obligationIds.length !== lane.primaryObligationIds.length ||
+        (coverage.outcome === 'complete' &&
+          (coverage.uncoveredPathIndexes.length > 0 ||
+            coverage.uncoveredObligationIds.length > 0))
+      ) {
+        throw new Error('validation worker coverage identity is invalid');
+      }
+    });
   }
   const preArtifact = telemetry.find(
     (evidence) => evidence.phase === 'pre_artifact',
@@ -379,6 +480,7 @@ function parseValidationRunState(
     plan,
     assignment,
     receipt,
+    workerCoverage,
     planValidationAttempts: state.planValidationAttempts as number,
     output: { immutableSubstanceDigest, attempts },
     acceptedSnapshot,
@@ -642,6 +744,7 @@ export class ValidationStore {
         plan: null,
         assignment: null,
         receipt: null,
+        workerCoverage: [],
         planValidationAttempts: 0,
         output: { immutableSubstanceDigest: null, attempts: 0 },
         acceptedSnapshot: null,
@@ -739,6 +842,79 @@ export class ValidationStore {
       await rename(temporaryPath, current.statePath);
       return this.readRun(runId);
     });
+  }
+
+  async bindValidatedWorkerDossier(
+    runId: string,
+    input: WorkerDossierV1,
+  ): Promise<ValidatedWorkerCoverageProjectionV1> {
+    let bound: ValidatedWorkerCoverageProjectionV1 | undefined;
+    await this.updateRun(runId, (state) => {
+      if (
+        state.phase !== 'evidence_started' ||
+        state.plan === null ||
+        state.receipt === null ||
+        state.output.attempts !== 0
+      ) {
+        throw new Error(
+          'worker dossier binding requires pre-output evidence-started state',
+        );
+      }
+      const dossier = parseWorkerDossierV1(input);
+      const validationErrors = validateWorkerDossier(
+        state.plan,
+        state.receipt.planDigest,
+        dossier,
+      );
+      if (validationErrors.length > 0) {
+        throw new Error(
+          `worker dossier validation failed: ${validationErrors
+            .map((error) => error.code)
+            .join(', ')}`,
+        );
+      }
+      const lane = state.plan.lanes.find(
+        (candidate) => candidate.id === dossier.laneId,
+      );
+      if (lane === undefined) {
+        throw new Error('validated worker dossier lane is missing');
+      }
+      const inspectedPathSet = new Set(dossier.inspectedPaths);
+      const inspectedObligationSet = new Set(dossier.inspectedObligationIds);
+      const projection: ValidatedWorkerCoverageProjectionV1 = {
+        validationRunId: state.receipt.validationRunId,
+        planDigest: state.receipt.planDigest,
+        laneId: dossier.laneId,
+        dossierDigest: hashCanonicalJson(dossier),
+        outcome: dossier.outcome,
+        inspectedPathIndexes: lane.paths.flatMap((path, index) =>
+          inspectedPathSet.has(path) ? [index] : [],
+        ),
+        uncoveredPathIndexes: lane.paths.flatMap((path, index) =>
+          inspectedPathSet.has(path) ? [] : [index],
+        ),
+        inspectedObligationIds: lane.primaryObligationIds.filter((id) =>
+          inspectedObligationSet.has(id),
+        ),
+        uncoveredObligationIds: [...dossier.uncoveredObligationIds],
+      };
+      const existing = state.workerCoverage.find(
+        (coverage) => coverage.laneId === projection.laneId,
+      );
+      if (
+        existing !== undefined &&
+        canonicalizeJson(existing) !== canonicalizeJson(projection)
+      ) {
+        throw new Error('worker dossier coverage is already bound');
+      }
+      if (existing === undefined) state.workerCoverage.push(projection);
+      bound = structuredClone(projection);
+      return state;
+    });
+    if (bound === undefined) {
+      throw new Error('worker dossier binding produced no coverage');
+    }
+    return bound;
   }
 
   async bindGateCorrelation(

@@ -7,6 +7,7 @@ import type {
   ReviewPlanV1,
   ReviewerTerminalV1,
   ValidatedAssignmentProjectionV1,
+  ValidatedWorkerCoverageProjectionV1,
 } from './types';
 
 export interface AccountingValidationError {
@@ -17,8 +18,11 @@ export interface AccountingValidationError {
 
 export interface ReviewOutputValidationContext {
   receipt: PlanValidationReceiptV1;
-  plan: Pick<ReviewPlanV1, 'strategy' | 'verificationBoundary'>;
+  plan: Pick<ReviewPlanV1, 'strategy' | 'verificationBoundary'> & {
+    lanes: Array<Pick<ReviewPlanV1['lanes'][number], 'id' | 'delegated'>>;
+  };
   assignment: ValidatedAssignmentProjectionV1;
+  workerCoverage?: ValidatedWorkerCoverageProjectionV1[];
   artifactFindingProjection?: ArtifactFindingProjectionV1;
 }
 
@@ -615,11 +619,29 @@ function validateOutcomes(
   const expectedLanes = new Map(
     context.assignment.lanes.map((lane) => [lane.id, lane]),
   );
+  const planLanes = new Map(context.plan.lanes.map((lane) => [lane.id, lane]));
+  const workerCoverage = context.workerCoverage ?? [];
+  const workerCoverageByLane = new Map<
+    string,
+    ValidatedWorkerCoverageProjectionV1
+  >();
+  workerCoverage.forEach((coverage, index) => {
+    if (workerCoverageByLane.has(coverage.laneId)) {
+      add(
+        errors,
+        'duplicate-worker-coverage',
+        `/workerCoverage/${index}/laneId`,
+        `worker coverage for lane ${coverage.laneId} is duplicated`,
+      );
+    }
+    workerCoverageByLane.set(coverage.laneId, coverage);
+  });
   let incomplete = false;
   accounting.lanes.forEach((lane, index) => {
     const pointer = `/reviewAccounting/lanes/${index}`;
     const expected = expectedLanes.get(lane.id);
     if (expected === undefined) return;
+    const planLane = planLanes.get(lane.id);
     const contingency = expected.primaryContingency;
     const contingencyPathIndexes = contingency.paths.map((path) =>
       lane.paths.indexOf(path),
@@ -630,6 +652,111 @@ function validateOutcomes(
     const completedObligationIds = new Set(
       lane.primaryCompletion.completedObligationIds,
     );
+    const workerProjection = workerCoverageByLane.get(lane.id);
+    const expectedPathIndexSet = new Set(
+      expected.paths.map((_, pathIndex) => pathIndex),
+    );
+    const expectedPrimaryObligationSet = new Set(expected.primaryObligationIds);
+    let workerUncoveredPathIndexes: number[];
+    let workerUncoveredObligationIds: string[];
+    if (lane.workerOutcome === 'uncovered') {
+      workerUncoveredPathIndexes = [...expectedPathIndexSet];
+      workerUncoveredObligationIds = [...expectedPrimaryObligationSet];
+    } else if (lane.workerOutcome === 'not-delegated') {
+      const inlinePathIndexes = new Set(lane.uninspectedPathIndexes);
+      const inlineObligationIds = new Set(lane.uncoveredObligationIds);
+      if (
+        inlinePathIndexes.size !== lane.uninspectedPathIndexes.length ||
+        inlineObligationIds.size !== lane.uncoveredObligationIds.length ||
+        [...inlinePathIndexes].some(
+          (pathIndex) => !expectedPathIndexSet.has(pathIndex),
+        ) ||
+        [...inlineObligationIds].some(
+          (obligationId) => !expectedPrimaryObligationSet.has(obligationId),
+        )
+      ) {
+        add(
+          errors,
+          'invalid-worker-coverage',
+          pointer,
+          'inline coverage must be a unique subset of the validated lane',
+        );
+      }
+      workerUncoveredPathIndexes = [...lane.uninspectedPathIndexes];
+      workerUncoveredObligationIds = [...lane.uncoveredObligationIds];
+    } else if (workerProjection === undefined) {
+      add(
+        errors,
+        'missing-worker-coverage',
+        pointer,
+        'delegated worker coverage requires a launcher-validated dossier projection',
+      );
+      workerUncoveredPathIndexes = [...expectedPathIndexSet];
+      workerUncoveredObligationIds = [...expectedPrimaryObligationSet];
+    } else {
+      const inspectedPathIndexes = new Set(
+        workerProjection.inspectedPathIndexes,
+      );
+      const uncoveredPathIndexes = new Set(
+        workerProjection.uncoveredPathIndexes,
+      );
+      const inspectedObligationIds = new Set(
+        workerProjection.inspectedObligationIds,
+      );
+      const uncoveredObligationIds = new Set(
+        workerProjection.uncoveredObligationIds,
+      );
+      const validPathPartition =
+        inspectedPathIndexes.size ===
+          workerProjection.inspectedPathIndexes.length &&
+        uncoveredPathIndexes.size ===
+          workerProjection.uncoveredPathIndexes.length &&
+        [...expectedPathIndexSet].every(
+          (pathIndex) =>
+            inspectedPathIndexes.has(pathIndex) !==
+            uncoveredPathIndexes.has(pathIndex),
+        ) &&
+        [...inspectedPathIndexes, ...uncoveredPathIndexes].every((pathIndex) =>
+          expectedPathIndexSet.has(pathIndex),
+        );
+      const validObligationPartition =
+        inspectedObligationIds.size ===
+          workerProjection.inspectedObligationIds.length &&
+        uncoveredObligationIds.size ===
+          workerProjection.uncoveredObligationIds.length &&
+        [...expectedPrimaryObligationSet].every(
+          (obligationId) =>
+            inspectedObligationIds.has(obligationId) !==
+            uncoveredObligationIds.has(obligationId),
+        ) &&
+        [...inspectedObligationIds, ...uncoveredObligationIds].every(
+          (obligationId) => expectedPrimaryObligationSet.has(obligationId),
+        );
+      if (!validPathPartition || !validObligationPartition) {
+        add(
+          errors,
+          'invalid-worker-coverage',
+          `/workerCoverage/${workerCoverage.indexOf(workerProjection)}`,
+          'worker coverage does not exactly partition the validated lane',
+        );
+      }
+      if (
+        workerProjection.validationRunId !== context.receipt.validationRunId ||
+        workerProjection.planDigest !== context.receipt.planDigest ||
+        workerProjection.outcome !== lane.workerOutcome ||
+        workerProjection.dossierDigest !== lane.dossierDigest ||
+        !/^[0-9a-f]{64}$/.test(workerProjection.dossierDigest)
+      ) {
+        add(
+          errors,
+          'worker-coverage-identity-mismatch',
+          pointer,
+          'worker coverage is not bound to this validation run and accepted dossier',
+        );
+      }
+      workerUncoveredPathIndexes = [...uncoveredPathIndexes];
+      workerUncoveredObligationIds = [...uncoveredObligationIds];
+    }
     const expectedPathIndexes = new Set(contingencyPathIndexes);
     const expectedObligationIds = new Set(contingency.obligationIds);
     const completedSubsetValid =
@@ -642,6 +769,12 @@ function validateOutcomes(
       ) &&
       [...completedObligationIds].every((item) =>
         expectedObligationIds.has(item),
+      ) &&
+      [...completedPathIndexes].every((item) =>
+        workerUncoveredPathIndexes.includes(item),
+      ) &&
+      [...completedObligationIds].every((item) =>
+        workerUncoveredObligationIds.includes(item),
       );
     const exactCompletion =
       completedSubsetValid &&
@@ -698,28 +831,29 @@ function validateOutcomes(
     }
 
     const workerIdentityValid =
-      (lane.workerOutcome === 'not-delegated' && lane.dossierDigest === null) ||
-      (lane.workerOutcome === 'complete' && lane.dossierDigest !== null) ||
-      (lane.workerOutcome === 'partial' && lane.dossierDigest !== null) ||
-      (lane.workerOutcome === 'uncovered' && lane.dossierDigest === null);
+      (lane.workerOutcome === 'not-delegated' &&
+        planLane?.delegated === false &&
+        lane.dossierDigest === null &&
+        workerProjection === undefined) ||
+      (lane.workerOutcome === 'uncovered' &&
+        planLane?.delegated === true &&
+        lane.dossierDigest === null &&
+        workerProjection === undefined) ||
+      ((lane.workerOutcome === 'complete' ||
+        lane.workerOutcome === 'partial') &&
+        planLane?.delegated === true &&
+        lane.dossierDigest !== null &&
+        workerProjection !== undefined);
     if (!workerIdentityValid) {
       add(errors, 'invalid-outcome', pointer, 'lane worker outcome is invalid');
     }
 
-    const remainingPathIndexes =
-      lane.workerOutcome === 'not-delegated' ||
-      lane.workerOutcome === 'complete'
-        ? []
-        : contingencyPathIndexes.filter(
-            (pathIndex) => !completedPathIndexes.has(pathIndex),
-          );
-    const remainingObligationIds =
-      lane.workerOutcome === 'not-delegated' ||
-      lane.workerOutcome === 'complete'
-        ? []
-        : contingency.obligationIds.filter(
-            (obligationId) => !completedObligationIds.has(obligationId),
-          );
+    const remainingPathIndexes = workerUncoveredPathIndexes.filter(
+      (pathIndex) => !completedPathIndexes.has(pathIndex),
+    );
+    const remainingObligationIds = workerUncoveredObligationIds.filter(
+      (obligationId) => !completedObligationIds.has(obligationId),
+    );
     const derivedCoverage =
       remainingPathIndexes.length === 0 && remainingObligationIds.length === 0
         ? 'all'

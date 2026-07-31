@@ -30,6 +30,7 @@ import type {
   ReviewPreparationV1,
   ReviewerTerminalV1,
   ValidatedAssignmentProjectionV1,
+  ValidatedWorkerCoverageProjectionV1,
   WorkerDossierV1,
 } from './types';
 
@@ -540,6 +541,23 @@ describe('review output contracts', () => {
 
     expect(complete.evidence[0]?.kind).toBe('command');
     expect(partial.outcome).toBe('partial');
+  });
+
+  it('binds validated worker coverage to launcher-owned identities', () => {
+    const projection = {
+      validationRunId: 'run-1',
+      planDigest: 'plan-digest',
+      laneId: 'semantic',
+      dossierDigest: 'd'.repeat(64),
+      outcome: 'partial',
+      inspectedPathIndexes: [0],
+      uncoveredPathIndexes: [1],
+      inspectedObligationIds: ['task:p01-t01'],
+      uncoveredObligationIds: ['task:p01-t02'],
+    } satisfies ValidatedWorkerCoverageProjectionV1;
+
+    expect(projection.outcome).toBe('partial');
+    expect(projection.uncoveredPathIndexes).toEqual([1]);
   });
 
   it('keeps private candidates separate from complete and blocked terminals', () => {

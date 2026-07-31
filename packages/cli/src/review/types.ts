@@ -334,6 +334,18 @@ export interface ValidatedAssignmentProjectionV1 {
   classifications: ReviewClassificationV1[];
 }
 
+export interface ValidatedWorkerCoverageProjectionV1 {
+  validationRunId: string;
+  planDigest: string;
+  laneId: string;
+  dossierDigest: string;
+  outcome: 'complete' | 'partial';
+  inspectedPathIndexes: number[];
+  uncoveredPathIndexes: number[];
+  inspectedObligationIds: string[];
+  uncoveredObligationIds: string[];
+}
+
 export interface PlanValidationReceiptV1 {
   token: string;
   validationRunId: string;

@@ -189,6 +189,7 @@ export async function validateStoredReviewOutput(
           receipt: current.receipt,
           plan: current.plan,
           assignment: current.assignment,
+          workerCoverage: current.workerCoverage,
           artifactFindingProjection,
         },
         input.terminal,

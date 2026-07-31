@@ -397,9 +397,27 @@ describe('validation recovery integration', () => {
       await expect(
         fixture.store.readRun(fixture.created.runId),
       ).resolves.toMatchObject({
-        state: { phase: candidate.phase, telemetry: [] },
+        state: {
+          phase: candidate.phase,
+          telemetry: [],
+          workerCoverage: [],
+        },
       });
     }
+
+    const {
+      workerCoverage: _legacyMissingWorkerCoverage,
+      ...legacyEvidenceStarted
+    } = fixture.evidenceStarted;
+    await writeFile(
+      fixture.created.statePath,
+      fixture.authority.seal(legacyEvidenceStarted),
+    );
+    await expect(
+      fixture.store.readRun(fixture.created.runId),
+    ).resolves.toMatchObject({
+      state: { phase: 'evidence_started', workerCoverage: [] },
+    });
   });
 
   it('rejects empty-telemetry states with incomplete phase data', async () => {

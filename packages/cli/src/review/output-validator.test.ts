@@ -151,6 +151,7 @@ function fixture(): {
       },
       plan: {
         strategy: 'selective-inline',
+        lanes: [{ id: 'lane-1', delegated: false }],
         verificationBoundary: {
           requiredClaims: [
             { kind: 'promoted-finding', mode: 'direct' },
@@ -403,9 +404,7 @@ describe('review output validation', () => {
     terminal.reviewAccounting.lanes[0]!.uncoveredObligationIds = [
       'task:p01-t01',
     ];
-    expect(errorCodes(context, terminal)).toContain(
-      'contingency-coverage-mismatch',
-    );
+    expect(errorCodes(context, terminal)).toContain('invalid-outcome');
 
     const blockedAccounting = {
       ...structuredClone(terminal.reviewAccounting),
@@ -417,6 +416,7 @@ describe('review output validation', () => {
       obligationIds: ['task:p01-t01'],
     };
     blockedAccounting.lanes[0]!.workerOutcome = 'uncovered';
+    context.plan.lanes[0]!.delegated = true;
     blockedAccounting.lanes[0]!.dossierDigest = null;
     blockedAccounting.lanes[0]!.primaryCompletion = {
       outcome: 'not-permitted',
@@ -437,6 +437,7 @@ describe('review output validation', () => {
 
   it('rejects primary completion when contingency is not permitted', () => {
     const { context, terminal } = fixture();
+    context.plan.lanes[0]!.delegated = true;
     context.assignment.lanes[0]!.primaryContingency = {
       allowed: false,
       paths: ['src/review.ts'],
@@ -461,6 +462,7 @@ describe('review output validation', () => {
 
   it('derives final coverage from exact permitted primary subsets', () => {
     const { context, terminal } = fixture();
+    context.plan.lanes[0]!.delegated = true;
     context.assignment.lanes[0]!.paths = ['src/review.ts', 'src/second.ts'];
     context.assignment.lanes[0]!.primaryObligationIds = [
       'task:p01-t01',
@@ -508,6 +510,155 @@ describe('review output validation', () => {
 
     lane.primaryCompletion.outcome = 'complete';
     expect(errorCodes(context, blocked)).toContain('invalid-contingency');
+  });
+
+  it('starts uncovered delegated coverage from the full lane assignment', () => {
+    const { context, terminal } = fixture();
+    context.plan.lanes[0]!.delegated = true;
+    const expected = context.assignment.lanes[0]!;
+    expected.paths = ['src/review.ts', 'src/second.ts'];
+    expected.primaryObligationIds = ['task:p01-t01', 'task:p01-t02'];
+    expected.primaryContingency = {
+      allowed: true,
+      paths: ['src/review.ts'],
+      obligationIds: ['task:p01-t01'],
+    };
+    const lane = terminal.reviewAccounting.lanes[0]!;
+    lane.paths = [...expected.paths];
+    lane.primaryObligationIds = [...expected.primaryObligationIds];
+    lane.workerOutcome = 'uncovered';
+    lane.dossierDigest = null;
+    lane.primaryCompletion = {
+      outcome: 'complete',
+      completedPathIndexes: [0],
+      completedObligationIds: ['task:p01-t01'],
+      commands: [],
+      evidenceRefIds: ['evidence-1'],
+    };
+    lane.inspectionCoverage = 'all';
+    lane.uninspectedPathIndexes = [];
+    lane.uncoveredObligationIds = [];
+
+    expect(errorCodes(context, terminal)).toContain(
+      'contingency-coverage-mismatch',
+    );
+
+    lane.inspectionCoverage = 'partial';
+    lane.uninspectedPathIndexes = [1];
+    lane.uncoveredObligationIds = ['task:p01-t02'];
+    terminal.reviewAccounting.completion = 'blocked-incomplete';
+    const blocked: ReviewerTerminalV1 = {
+      schemaVersion: 1,
+      status: 'blocked',
+      reason: 'strict-subset contingency left lane work',
+      diagnostics: ['second path and obligation remain uncovered'],
+      reviewAccounting: terminal.reviewAccounting as ReviewAccountingV1 & {
+        completion: 'blocked-incomplete';
+      },
+    };
+    expect(validateReviewOutput(context, blocked).valid).toBe(true);
+  });
+
+  it('requires partial worker coverage from a run-bound dossier projection', () => {
+    const { context, terminal } = fixture();
+    context.plan.lanes[0]!.delegated = true;
+    const expected = context.assignment.lanes[0]!;
+    expected.paths = ['src/review.ts', 'src/second.ts', 'src/third.ts'];
+    expected.primaryObligationIds = [
+      'task:p01-t01',
+      'task:p01-t02',
+      'task:p01-t03',
+    ];
+    expected.primaryContingency = {
+      allowed: true,
+      paths: ['src/second.ts'],
+      obligationIds: ['task:p01-t02'],
+    };
+    const lane = terminal.reviewAccounting.lanes[0]!;
+    lane.paths = [...expected.paths];
+    lane.primaryObligationIds = [...expected.primaryObligationIds];
+    lane.workerOutcome = 'partial';
+    lane.dossierDigest = 'd'.repeat(64);
+    lane.primaryCompletion = {
+      outcome: 'complete',
+      completedPathIndexes: [1],
+      completedObligationIds: ['task:p01-t02'],
+      commands: [],
+      evidenceRefIds: ['evidence-1'],
+    };
+    lane.inspectionCoverage = 'all';
+    lane.uninspectedPathIndexes = [];
+    lane.uncoveredObligationIds = [];
+
+    expect(errorCodes(context, terminal)).toContain('missing-worker-coverage');
+
+    context.workerCoverage = [
+      {
+        validationRunId: 'validation-run-1',
+        planDigest: 'plan',
+        laneId: 'lane-1',
+        dossierDigest: 'd'.repeat(64),
+        outcome: 'partial',
+        inspectedPathIndexes: [0],
+        uncoveredPathIndexes: [1, 2],
+        inspectedObligationIds: ['task:p01-t01'],
+        uncoveredObligationIds: ['task:p01-t02', 'task:p01-t03'],
+      },
+    ];
+    expect(errorCodes(context, terminal)).toContain(
+      'contingency-coverage-mismatch',
+    );
+
+    lane.inspectionCoverage = 'partial';
+    lane.uninspectedPathIndexes = [2];
+    lane.uncoveredObligationIds = ['task:p01-t03'];
+    terminal.reviewAccounting.completion = 'blocked-incomplete';
+    const blocked: ReviewerTerminalV1 = {
+      schemaVersion: 1,
+      status: 'blocked',
+      reason: 'partial worker and contingency left a coverage gap',
+      diagnostics: ['third path and obligation remain uncovered'],
+      reviewAccounting: terminal.reviewAccounting as ReviewAccountingV1 & {
+        completion: 'blocked-incomplete';
+      },
+    };
+    expect(validateReviewOutput(context, blocked).valid).toBe(true);
+    context.workerCoverage[0]!.validationRunId = 'other-run';
+    expect(errorCodes(context, blocked)).toContain(
+      'worker-coverage-identity-mismatch',
+    );
+  });
+
+  it('preserves inline not-delegated blocked-incomplete coverage', () => {
+    const { context, terminal } = fixture();
+    const expected = context.assignment.lanes[0]!;
+    expected.paths = ['src/review.ts', 'src/second.ts'];
+    expected.primaryObligationIds = ['task:p01-t01', 'task:p01-t02'];
+    const lane = terminal.reviewAccounting.lanes[0]!;
+    lane.paths = [...expected.paths];
+    lane.primaryObligationIds = [...expected.primaryObligationIds];
+    lane.inspectionCoverage = 'partial';
+    lane.uninspectedPathIndexes = [1];
+    lane.uncoveredObligationIds = ['task:p01-t02'];
+    terminal.reviewAccounting.completion = 'blocked-incomplete';
+    const blocked: ReviewerTerminalV1 = {
+      schemaVersion: 1,
+      status: 'blocked',
+      reason: 'inline inspection remained partial',
+      diagnostics: ['second path remains'],
+      reviewAccounting: terminal.reviewAccounting as ReviewAccountingV1 & {
+        completion: 'blocked-incomplete';
+      },
+    };
+
+    expect(validateReviewOutput(context, blocked).valid).toBe(true);
+  });
+
+  it('does not let delegated lanes masquerade as inline coverage', () => {
+    const { context, terminal } = fixture();
+    context.plan.lanes[0]!.delegated = true;
+
+    expect(errorCodes(context, terminal)).toContain('invalid-outcome');
   });
 
   it('rejects complete output that omits required direct and sample claims', () => {

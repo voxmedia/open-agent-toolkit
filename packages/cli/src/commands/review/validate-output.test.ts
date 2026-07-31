@@ -4,7 +4,11 @@ import { join } from 'node:path';
 import { Readable } from 'node:stream';
 
 import { createArtifactDraft } from '@review/artifact-staging';
-import type { ReviewAccountingV1, ReviewerTerminalV1 } from '@review/types';
+import type {
+  ReviewAccountingV1,
+  ReviewerTerminalV1,
+  ValidatedWorkerCoverageProjectionV1,
+} from '@review/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -88,6 +92,7 @@ function validationState() {
     },
     plan: {
       strategy: 'selective-inline' as const,
+      lanes: [{ id: 'lane', delegated: false }],
       verificationBoundary: {
         requiredClaims: [],
         positiveCoverage: {
@@ -117,6 +122,7 @@ function validationState() {
       ],
       classifications: [],
     },
+    workerCoverage: [] as ValidatedWorkerCoverageProjectionV1[],
     output: { immutableSubstanceDigest: null, attempts: 0 },
     acceptedSnapshot: null as {
       id: string;
@@ -349,5 +355,57 @@ describe('validate-output command', () => {
         cappedStore as never,
       ),
     ).rejects.toMatchObject({ code: 'output-attempt-limit' });
+  });
+
+  it('validates partial lanes against persisted worker coverage', async () => {
+    const state = validationState();
+    state.assignment.lanes[0]!.paths = ['src/a.ts', 'src/b.ts'];
+    state.assignment.lanes[0]!.primaryObligationIds = [
+      'task:p01-t01',
+      'task:p01-t02',
+    ];
+    state.plan.lanes[0]!.delegated = true;
+    state.workerCoverage = [
+      {
+        validationRunId: 'validation-run-1',
+        planDigest: 'plan',
+        laneId: 'lane',
+        dossierDigest: 'd'.repeat(64),
+        outcome: 'partial',
+        inspectedPathIndexes: [0],
+        uncoveredPathIndexes: [1],
+        inspectedObligationIds: ['task:p01-t01'],
+        uncoveredObligationIds: ['task:p01-t02'],
+      },
+    ];
+    const reviewAccounting: ReviewAccountingV1 = accounting();
+    reviewAccounting.completion = 'blocked-incomplete';
+    const lane = reviewAccounting.lanes[0]!;
+    lane.paths = ['src/a.ts', 'src/b.ts'];
+    lane.primaryObligationIds = ['task:p01-t01', 'task:p01-t02'];
+    lane.workerOutcome = 'partial';
+    lane.dossierDigest = 'd'.repeat(64);
+    lane.inspectionCoverage = 'partial';
+    lane.uninspectedPathIndexes = [1];
+    lane.uncoveredObligationIds = ['task:p01-t02'];
+    lane.primaryCompletion.outcome = 'not-permitted';
+    const value: ReviewerTerminalV1 = {
+      schemaVersion: 1,
+      status: 'blocked',
+      reason: 'worker coverage remained partial',
+      diagnostics: ['second path remains uncovered'],
+      reviewAccounting: reviewAccounting as ReviewAccountingV1 & {
+        completion: 'blocked-incomplete';
+      },
+    };
+
+    const store = fakeStore(state);
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: value },
+        store as never,
+      ),
+    ).resolves.toMatchObject({ valid: true });
+    expect(store.state.phase).toBe('terminal');
   });
 });
