@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { DefaultGitChangeMapAdapter } from './change-map';
+import { bindAcceptedHandle } from './command-capabilities';
 import {
   type PrepareReviewContextInput,
   prepareReviewContext,
@@ -47,6 +48,11 @@ type BrokerRequest =
 interface BrokerStartup {
   input: PrepareReviewContextInput;
   launcherInvocation: { executable: string; argvPrefix: string[] };
+}
+
+interface AcceptedContinuationBinding {
+  schemaVersion: 1;
+  handleId: string;
 }
 
 interface BrokerResponse {
@@ -114,6 +120,7 @@ export async function startPreparedValidationAuthorityBroker(input: {
   socketPath: string;
   key: Uint8Array;
   startup: BrokerStartup;
+  acceptedContinuation: AcceptedContinuationBinding;
   validationRoot?: string;
 }): Promise<{
   preparation: PrepareReviewContextResultV1;
@@ -136,6 +143,11 @@ export async function startPreparedValidationAuthorityBroker(input: {
       commandArgvPrefix: input.startup.launcherInvocation.argvPrefix,
     }),
     input.socketPath,
+  );
+  await bindAcceptedHandle(
+    store,
+    preparation.preparation.runId,
+    input.acceptedContinuation.handleId,
   );
   await mkdir(join(input.socketPath, '..'), { recursive: true });
   await rm(input.socketPath, { force: true });
@@ -259,62 +271,135 @@ export async function launchValidationAuthorityBroker(input: {
       detached: true,
       env: reviewerSafeEnvironment(environment),
       shell: false,
-      stdio: ['ignore', 'pipe', 'pipe', 'pipe', 'pipe'],
+      stdio: ['ignore', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe'],
     },
   );
   try {
     const startup = child.stdio[3] as NodeJS.WritableStream | null;
     const authority = child.stdio[4] as NodeJS.WritableStream | null;
-    if (!startup || !authority || !child.stdout) {
+    const acceptedContinuation = (
+      child.stdio as unknown as Array<
+        NodeJS.ReadableStream | NodeJS.WritableStream | null | undefined
+      >
+    )[5] as NodeJS.WritableStream | null | undefined;
+    if (!startup || !authority || !acceptedContinuation || !child.stdout) {
       throw new Error('validation authority broker pipes are unavailable');
     }
-    startup.end(
-      JSON.stringify({
-        input: input.preparationInput,
-        launcherInvocation: input.launcherInvocation,
-      } satisfies BrokerStartup),
-    );
-    authority.end(key.toString('base64url'));
-    const result = await new Promise<PrepareReviewContextResultV1>(
-      (resolve, reject) => {
-        const chunks: Buffer[] = [];
-        const timer = setTimeout(
-          () =>
-            reject(new Error('validation authority broker startup timed out')),
-          10_000,
-        );
-        child.once('error', reject);
-        child.once('exit', (code) => {
-          if (code !== null && code !== 0) {
-            reject(
-              new Error(`validation authority broker exited with code ${code}`),
-            );
-          }
-        });
-        child.stdout!.on('data', (chunk: Buffer) => {
-          chunks.push(chunk);
-          const source = Buffer.concat(chunks).toString('utf8');
-          const newline = source.indexOf('\n');
-          if (newline < 0) return;
-          clearTimeout(timer);
-          const response = JSON.parse(
-            source.slice(0, newline),
-          ) as BrokerResponse;
-          if (!response.ok) {
-            reject(new Error(response.error ?? 'broker startup failed'));
-          } else {
-            resolve(response.result as PrepareReviewContextResultV1);
-          }
-        });
-      },
-    );
-    child.stdout.destroy();
-    child.stderr?.destroy();
+    await Promise.all([
+      writeStartupPipe(
+        startup,
+        JSON.stringify({
+          input: input.preparationInput,
+          launcherInvocation: input.launcherInvocation,
+        } satisfies BrokerStartup),
+      ),
+      writeStartupPipe(authority, key.toString('base64url')),
+      writeStartupPipe(
+        acceptedContinuation,
+        JSON.stringify({
+          schemaVersion: 1,
+          handleId: randomBytes(32).toString('base64url'),
+        } satisfies AcceptedContinuationBinding),
+      ),
+    ]);
+    const result = await readBrokerStartupResponse(child);
+    for (const stream of [
+      startup,
+      authority,
+      acceptedContinuation,
+      child.stdout,
+      child.stderr,
+    ]) {
+      destroyAndUnref(stream);
+    }
     child.unref();
     return result;
+  } catch (error) {
+    if (child.exitCode === null && child.signalCode === null) {
+      child.kill('SIGKILL');
+    }
+    throw error;
   } finally {
     key.fill(0);
   }
 }
 
-export type { BrokerRequest, BrokerStartup };
+async function writeStartupPipe(
+  stream: NodeJS.WritableStream,
+  value: string,
+): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    stream.once('error', reject);
+    stream.end(value, resolve);
+  });
+  destroyAndUnref(stream);
+}
+
+function destroyAndUnref(
+  stream: NodeJS.ReadableStream | NodeJS.WritableStream | null,
+): void {
+  const detachable = stream as unknown as {
+    destroy?: () => void;
+    unref?: () => void;
+  } | null;
+  detachable?.destroy?.();
+  detachable?.unref?.();
+}
+
+async function readBrokerStartupResponse(
+  child: ReturnType<typeof spawn>,
+): Promise<PrepareReviewContextResultV1> {
+  if (!child.stdout) {
+    throw new Error('validation authority broker stdout is unavailable');
+  }
+  return new Promise<PrepareReviewContextResultV1>((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    const timer = setTimeout(
+      () => reject(new Error('validation authority broker startup timed out')),
+      10_000,
+    );
+    const finish = (
+      outcome:
+        | { ok: true; value: PrepareReviewContextResultV1 }
+        | { ok: false; error: unknown },
+    ) => {
+      clearTimeout(timer);
+      child.removeListener('error', reject);
+      child.removeListener('exit', onExit);
+      if (outcome.ok) resolve(outcome.value);
+      else reject(outcome.error);
+    };
+    const onExit = (code: number | null) => {
+      if (code !== null && code !== 0) {
+        finish({
+          ok: false,
+          error: new Error(
+            `validation authority broker exited with code ${code}`,
+          ),
+        });
+      }
+    };
+    child.once('error', reject);
+    child.once('exit', onExit);
+    child.stdout!.on('data', (chunk: Buffer) => {
+      chunks.push(chunk);
+      const source = Buffer.concat(chunks).toString('utf8');
+      const newline = source.indexOf('\n');
+      if (newline < 0) return;
+      const response = JSON.parse(source.slice(0, newline)) as BrokerResponse;
+      if (!response.ok) {
+        finish({
+          ok: false,
+          error: new Error(response.error ?? 'broker startup failed'),
+        });
+      } else {
+        finish({
+          ok: true,
+          value: response.result as PrepareReviewContextResultV1,
+        });
+      }
+    });
+  });
+}
+
+export type { AcceptedContinuationBinding, BrokerRequest, BrokerStartup };

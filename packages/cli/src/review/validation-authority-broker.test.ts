@@ -1,4 +1,4 @@
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { evaluateWholeDiffEligibility } from './budget';
-import { bindAcceptedHandle } from './command-capabilities';
+import { collectChangeMap } from './change-map';
 import { executeCommandInvocation } from './command-invocation';
 import type { ReviewPlanV1 } from './types';
 import {
@@ -37,7 +37,7 @@ const planSource = `## Phase 2
 **Step 1: Verify** Broker behavior.
 `;
 
-async function fixture() {
+async function repositoryFixture() {
   const root = await mkdtemp(join(tmpdir(), 'oat-authority-broker-'));
   roots.push(root);
   await exec('git', ['init', '-q'], { cwd: root });
@@ -59,12 +59,29 @@ async function fixture() {
   const socketPath = join(root, 'authority.sock');
   const validationRoot = join(root, '..', `authority-state-${Date.now()}`);
   roots.push(validationRoot);
-  const key = Buffer.alloc(32, 11);
   const sourceEntry = resolve('src/index.ts');
+  return {
+    root,
+    validationRoot,
+    socketPath,
+    baseSha,
+    headSha,
+    sourceEntry,
+  };
+}
+
+async function fixture() {
+  const { root, validationRoot, socketPath, baseSha, headSha, sourceEntry } =
+    await repositoryFixture();
+  const key = Buffer.alloc(32, 11);
   const broker = await startPreparedValidationAuthorityBroker({
     socketPath,
     key,
     validationRoot,
+    acceptedContinuation: {
+      schemaVersion: 1,
+      handleId: 'accepted-handle',
+    },
     startup: {
       input: {
         repoRoot: root,
@@ -91,12 +108,16 @@ async function fixture() {
     validationRoot,
     new ValidationStoreAuthority(key),
   );
-  await bindAcceptedHandle(
+  return {
+    root,
+    validationRoot,
+    key,
+    socketPath,
+    broker,
     store,
-    broker.preparation.preparation.runId,
-    'accepted-handle',
-  );
-  return { root, validationRoot, key, socketPath, broker, store };
+    baseSha,
+    headSha,
+  };
 }
 
 function plan(
@@ -220,6 +241,101 @@ describe('validation authority broker', () => {
     expect(root).not.toContain('OAT_REVIEW_AUTHORITY_KEY');
   }, 20_000);
 
+  it('runs the real source lifecycle after prepare exits without sharing authority', async () => {
+    const { root, validationRoot, baseSha, headSha } =
+      await repositoryFixture();
+    const sourceInvocation = {
+      executable: resolve('../../node_modules/.bin/tsx'),
+      argv: ['--tsconfig', resolve('tsconfig.json'), resolve('src/index.ts')],
+    };
+    const prepare = await runSourceCommand(
+      sourceInvocation.executable,
+      [...sourceInvocation.argv, 'review', 'prepare-context'],
+      JSON.stringify({
+        schemaVersion: 1,
+        repoRoot: root,
+        project: '.oat/projects/shared/demo',
+        scope: 'p02-t01',
+        workflowMode: 'spec-driven',
+        range: { baseSha, headSha },
+        sink: 'structured',
+        invocation: 'manual',
+        budget: null,
+        gateRunId: null,
+        launchAttemptId: null,
+        obligationSources: {
+          plan: { source: planSource, path: 'plan.md' },
+          spec: null,
+          implementation: null,
+        },
+        priorEvidenceCandidates: [],
+        target: 'reviewer',
+      }),
+      {
+        ...process.env,
+        OAT_REVIEW_AUTHORITY_KEY: Buffer.alloc(32, 17).toString('base64url'),
+        OAT_REVIEW_VALIDATION_ROOT: validationRoot,
+      },
+    );
+    expect(prepare.exitCode, prepare.stderr).toBe(0);
+    const preparedEnvelope = JSON.parse(prepare.stdout) as {
+      result: {
+        validationRunId: string;
+        commands: PrepareReviewContextResultV1['commands'];
+      };
+    };
+    const prepared = preparedEnvelope.result;
+    expect(prepare.stdout).not.toContain('accepted-handle');
+
+    const checkpoint = await executeCommandInvocation(
+      prepared.commands.checkpointArtifacts,
+      { environment: process.env },
+    );
+    expect(
+      checkpoint.exitCode,
+      `${checkpoint.stderr}\n${JSON.stringify(prepared.commands.checkpointArtifacts)}`,
+    ).toBe(0);
+    const checkpointEnvelope = JSON.parse(checkpoint.stdout) as {
+      result: { contextDigest: string };
+    };
+    const changeMap = await collectChangeMap({
+      repoRoot: root,
+      baseSha,
+      headSha,
+      remainingTokens: null,
+      outerBudgetMs: null,
+    });
+    const validate = await executeCommandInvocation(
+      prepared.commands.validatePlan,
+      {
+        stdin: JSON.stringify(
+          plan(
+            prepared.validationRunId,
+            checkpointEnvelope.result.contextDigest,
+            evaluateWholeDiffEligibility({
+              changeMap,
+              contextBudget: null,
+              coherentLaneCount: 1,
+              hasConsequentialSeam: false,
+            }),
+          ),
+        ),
+        environment: process.env,
+      },
+    );
+    expect(validate.exitCode, `${validate.stderr}\n${validate.stdout}`).toBe(0);
+    const validateEnvelope = JSON.parse(validate.stdout) as {
+      result: { receipt: { token: string } };
+    };
+    const begin = structuredClone(prepared.commands.beginEvidence);
+    const receiptIndex = begin.argv.indexOf('__OAT_PLAN_RECEIPT__');
+    begin.argv[receiptIndex] = validateEnvelope.result.receipt.token;
+    const started = await executeCommandInvocation(begin, {
+      environment: process.env,
+    });
+    expect(started.exitCode, started.stderr).toBe(0);
+  }, 30_000);
+
   it('rejects reviewer-side key disclosure and state re-signing attempts', async () => {
     const { validationRoot, socketPath, broker } = await fixture();
     const runId = broker.preparation.preparation.runId;
@@ -253,3 +369,31 @@ describe('validation authority broker', () => {
     await broker.close();
   });
 });
+
+async function runSourceCommand(
+  executable: string,
+  argv: string[],
+  stdin: string,
+  environment: NodeJS.ProcessEnv,
+): Promise<{ exitCode: number | null; stdout: string; stderr: string }> {
+  const child = spawn(executable, argv, {
+    cwd: resolve('..', '..'),
+    env: environment,
+    shell: false,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  const stdout: Buffer[] = [];
+  const stderr: Buffer[] = [];
+  child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk));
+  child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk));
+  child.stdin.end(stdin);
+  const exitCode = await new Promise<number | null>((resolveExit, reject) => {
+    child.once('error', reject);
+    child.once('close', resolveExit);
+  });
+  return {
+    exitCode,
+    stdout: Buffer.concat(stdout).toString('utf8'),
+    stderr: Buffer.concat(stderr).toString('utf8'),
+  };
+}

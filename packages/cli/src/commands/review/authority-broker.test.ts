@@ -20,6 +20,10 @@ describe('createReviewAuthorityBrokerCommand', () => {
         launcherInvocation: { executable: '/node', argvPrefix: ['/oat'] },
       })) as never,
       readKey: vi.fn(async () => key),
+      readAcceptedContinuation: vi.fn(async () => ({
+        schemaVersion: 1,
+        handleId: 'accepted-handle',
+      })),
       write,
       start: start as never,
     });
@@ -38,6 +42,10 @@ describe('createReviewAuthorityBrokerCommand', () => {
       expect.objectContaining({
         socketPath: '/tmp/broker.sock',
         key,
+        acceptedContinuation: {
+          schemaVersion: 1,
+          handleId: 'accepted-handle',
+        },
       }),
     );
     expect(key).toEqual(Buffer.alloc(32));
