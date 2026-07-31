@@ -1,0 +1,130 @@
+import { createHash } from 'node:crypto';
+import { constants } from 'node:fs';
+import { lstat, link, mkdir, open, readFile, rm } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+
+import { extractReviewAccounting } from './artifact-accounting';
+import { canonicalizeJson } from './canonical-json';
+import type { ReviewAccountingV1 } from './types';
+
+const NOFOLLOW =
+  'O_NOFOLLOW' in constants ? constants.O_NOFOLLOW : (0 as number);
+
+export interface ArtifactDraft {
+  path: string;
+  device: number;
+  inode: number;
+}
+
+export interface ArtifactSnapshot {
+  bytesBase64: string;
+  digest: string;
+  accounting: ReviewAccountingV1;
+}
+
+function digest(bytes: Buffer): string {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+export async function createArtifactDraft(
+  runDirectory: string,
+): Promise<ArtifactDraft> {
+  const directoryInfo = await lstat(runDirectory);
+  if (!directoryInfo.isDirectory() || directoryInfo.isSymbolicLink()) {
+    throw new Error('artifact draft directory identity is unsafe');
+  }
+  const path = join(runDirectory, 'artifact-draft.md');
+  const handle = await open(
+    path,
+    constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | NOFOLLOW,
+    0o600,
+  );
+  try {
+    const info = await handle.stat();
+    if (!info.isFile() || info.nlink !== 1 || info.mode & 0o077) {
+      throw new Error('artifact draft identity or permissions are unsafe');
+    }
+    return { path, device: info.dev, inode: info.ino };
+  } finally {
+    await handle.close();
+  }
+}
+
+export async function snapshotArtifactDraft(
+  draft: ArtifactDraft,
+  envelopeAccounting: ReviewAccountingV1,
+): Promise<ArtifactSnapshot> {
+  const handle = await open(draft.path, constants.O_RDONLY | NOFOLLOW);
+  try {
+    const info = await handle.stat();
+    if (
+      !info.isFile() ||
+      info.nlink !== 1 ||
+      info.dev !== draft.device ||
+      info.ino !== draft.inode ||
+      info.mode & 0o077
+    ) {
+      throw new Error('artifact draft identity mismatch');
+    }
+    const bytes = await handle.readFile();
+    const embeddedAccounting = extractReviewAccounting(bytes);
+    if (
+      canonicalizeJson(embeddedAccounting) !==
+      canonicalizeJson(envelopeAccounting)
+    ) {
+      throw new Error(
+        'embedded artifact accounting does not match the terminal envelope',
+      );
+    }
+    return Object.freeze({
+      bytesBase64: bytes.toString('base64'),
+      digest: digest(bytes),
+      accounting: structuredClone(embeddedAccounting),
+    });
+  } finally {
+    await handle.close();
+  }
+}
+
+export async function publishAcceptedArtifact(
+  snapshot: ArtifactSnapshot,
+  destination: string,
+): Promise<void> {
+  const bytes = Buffer.from(snapshot.bytesBase64, 'base64');
+  if (digest(bytes) !== snapshot.digest) {
+    throw new Error('artifact snapshot digest mismatch');
+  }
+
+  const destinationDirectory = dirname(destination);
+  await mkdir(destinationDirectory, { recursive: true });
+  const directoryInfo = await lstat(destinationDirectory);
+  if (!directoryInfo.isDirectory() || directoryInfo.isSymbolicLink()) {
+    throw new Error('artifact publication directory identity is unsafe');
+  }
+
+  const temporaryPath = join(
+    destinationDirectory,
+    `.review-${process.pid}-${crypto.randomUUID()}.tmp`,
+  );
+  try {
+    const handle = await open(
+      temporaryPath,
+      constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | NOFOLLOW,
+      0o600,
+    );
+    try {
+      await handle.writeFile(bytes);
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+
+    const publishedBytes = await readFile(temporaryPath);
+    if (digest(publishedBytes) !== snapshot.digest) {
+      throw new Error('artifact publication digest mismatch');
+    }
+    await link(temporaryPath, destination);
+  } finally {
+    await rm(temporaryPath, { force: true });
+  }
+}
