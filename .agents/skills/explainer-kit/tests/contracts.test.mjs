@@ -4,7 +4,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
-import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
+import {
+  catalogFromManifest,
+  validateInitiativeCatalog,
+} from '../scripts/lib/catalog.mjs';
+import {
+  canonicalHash,
+  validateContract,
+  visualReviewRequestId,
+} from '../scripts/lib/contracts.mjs';
 import { resolveRootConfinedPath } from '../scripts/lib/safe-paths.mjs';
 import { runValidationCli } from '../scripts/validate.mjs';
 
@@ -134,6 +142,12 @@ function manifest() {
       factBaseHash: HASH_A,
       inputHashes: { 'plan.md': HASH_A },
       authorResultPaths: ['source/author/hub.json'],
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/plan.md#L1-L8`,
+        },
+      ],
     },
     theme: { path: 'theme.resolved.json', hash: HASH_A, derived: false },
     artifacts: [
@@ -203,25 +217,283 @@ function publishReceipt() {
   };
 }
 
+test('derives an exact, absolute initiative catalog from the finalized manifest', () => {
+  const finalized = manifest();
+  const catalog = catalogFromManifest(
+    finalized,
+    'https://cdn.example.com/published/',
+  );
+
+  assert.deepEqual(
+    catalog.artifacts.map(({ id, hash, url }) => ({ id, hash, url })),
+    [
+      {
+        id: 'hub',
+        hash: HASH_B,
+        url: 'https://cdn.example.com/published/index.html',
+      },
+    ],
+  );
+  assert.deepEqual(catalog.sourceBacklinks, finalized.source.backlinks);
+  assert.deepEqual(
+    validateInitiativeCatalog(
+      catalog,
+      finalized,
+      'https://cdn.example.com/published/',
+    ),
+    {
+      valid: true,
+      errors: [],
+    },
+  );
+
+  const stale = structuredClone(catalog);
+  stale.artifacts[0].hash = HASH_A;
+  assert.ok(
+    validateInitiativeCatalog(
+      stale,
+      finalized,
+      'https://cdn.example.com/published/',
+    ).errors.some(({ code }) => code === 'catalog-artifact-mismatch'),
+  );
+});
+
+test('binds initiative catalog URLs to the exact normalized publish root', () => {
+  const finalized = manifest();
+  const base = 'https://cdn.example.com/published';
+  const catalog = catalogFromManifest(finalized, base);
+  const mutations = [
+    ['wrong origin', 'https://other.example.com/published/index.html'],
+    ['wrong base', 'https://cdn.example.com/elsewhere/index.html'],
+    ['credentials', 'https://user:secret@cdn.example.com/published/index.html'],
+    ['query', `${catalog.artifacts[0].url}?token=secret`],
+    ['fragment', `${catalog.artifacts[0].url}#stale`],
+    ['encoded mutation', 'https://cdn.example.com/published/%69ndex.html'],
+  ];
+  for (const [label, url] of mutations) {
+    const changed = structuredClone(catalog);
+    changed.artifacts[0].url = url;
+    assert.equal(
+      validateInitiativeCatalog(changed, finalized, base).valid,
+      false,
+      label,
+    );
+  }
+
+  const unknown = structuredClone(catalog);
+  unknown.artifacts[0].extra = true;
+  assert.equal(
+    validateInitiativeCatalog(unknown, finalized, base).valid,
+    false,
+  );
+
+  const duplicate = structuredClone(catalog);
+  duplicate.artifacts.push(structuredClone(duplicate.artifacts[0]));
+  assert.equal(
+    validateInitiativeCatalog(duplicate, finalized, base).valid,
+    false,
+  );
+});
+
+test('requires publish receipts to cover the exact manifest and generated catalog', () => {
+  const finalized = manifest();
+  const catalog = catalogFromManifest(
+    finalized,
+    'https://example.com/explainers',
+  );
+  const receipt = publishReceipt();
+  receipt.artifacts.push({
+    relativePath: 'site/initiatives/demo-project/catalog.json',
+    hash: canonicalHash(catalog),
+    s3Uri: 's3://example/explainers/initiatives/demo-project/catalog.json',
+    publicUrl:
+      'https://example.com/explainers/initiatives/demo-project/catalog.json',
+    httpStatus: 200,
+    contentType: 'application/json',
+  });
+
+  assert.equal(
+    validateContract('publish-receipt', receipt, {
+      manifest: finalized,
+      catalogArtifact: {
+        relativePath: 'site/initiatives/demo-project/catalog.json',
+        hash: canonicalHash(catalog),
+      },
+    }).valid,
+    true,
+  );
+
+  receipt.artifacts.pop();
+  assert.ok(
+    validateContract('publish-receipt', receipt, {
+      manifest: finalized,
+      catalogArtifact: {
+        relativePath: 'site/initiatives/demo-project/catalog.json',
+        hash: canonicalHash(catalog),
+      },
+    }).errors.some(({ code }) => code === 'receipt-artifact-parity'),
+  );
+});
+
 function authorRequestV2() {
   return {
     schemaVersion: 'explainer-kit.author-request/v2',
-    artifactId: 'project-hub',
+    artifactId: 'project-recap',
     artifactType: 'hub',
     authoring: 'markdown',
     brief: '# Project recap author brief',
+    visualAuthoringGuidance:
+      'Representation, hierarchy, responsive navigation, table, diagram, and deck guidance.',
     factBase: factBase(),
     theme: theme(),
+    setContext: setPlan(),
+    plannedArtifact: setPlan().portfolio[0],
     floor: {
       requiredNarrative: ['context', 'architecture', 'validation'],
     },
   };
 }
 
+function setPlan() {
+  return {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'project-recap-set',
+    recipe: { id: 'project-recap', version: '1' },
+    sourceIds: ['plan'],
+    ledger: {
+      terminology: [{ term: 'set planner', meaning: 'One planning callback.' }],
+      statuses: [{ subject: 'runtime', value: 'in progress' }],
+      numbers: [{ subject: 'required artifacts', value: 3, unit: 'artifacts' }],
+    },
+    portfolio: [
+      {
+        artifactId: 'project-recap',
+        artifactType: 'hub',
+        profileId: 'recap-hub',
+        required: true,
+        sourceIds: ['plan'],
+        draft: 'Lead with the validated project outcome.',
+        visualIntent: 'Orient the reader in the first viewport.',
+      },
+      {
+        artifactId: 'system-visual',
+        artifactType: 'diagram',
+        profileId: 'architecture-system',
+        required: true,
+        sourceIds: ['plan'],
+        draft: 'Show the core boundary and its adapter.',
+        visualIntent: 'Preserve system relationships.',
+      },
+      {
+        artifactId: 'walkthrough-deck',
+        artifactType: 'deck',
+        profileId: 'walkthrough-deck',
+        required: true,
+        sourceIds: ['plan'],
+        draft: 'Sequence the request, architecture, and outcome.',
+        visualIntent: 'Tell one paced project story.',
+      },
+      {
+        artifactId: 'runtime-deep-dive',
+        artifactType: 'explainer',
+        profileId: 'deep-dive',
+        required: false,
+        sourceIds: ['plan'],
+        draft: 'Explain the retained records in detail.',
+        visualIntent: 'Keep mechanics out of the hub.',
+        justification: {
+          kind: 'source-backed-detail',
+          sourceIds: ['plan'],
+          rationale: 'The retained-record mechanics need dedicated space.',
+        },
+      },
+    ],
+  };
+}
+
+function visualReviewRequest() {
+  const payload = {
+    schemaVersion: 'explainer-kit.visual-review-request/v1',
+    browserRuntime: {
+      kind: 'launched',
+      name: 'chromium',
+      version: '123.0.6312.0',
+    },
+    captureIdentity: HASH_A,
+    plan: setPlan(),
+    renderedArtifacts: setPlan().portfolio.map(({ artifactId }) => ({
+      artifactId,
+      renderedPath: `site/${artifactId}/index.html`,
+      renderedHash: HASH_A,
+      cohesionObservations: [
+        {
+          artifactId,
+          contentHash: HASH_A,
+          group: 'terminology',
+          claim: 'set planner',
+          value: 'set planner',
+        },
+        {
+          artifactId,
+          contentHash: HASH_A,
+          group: 'statuses',
+          claim: 'runtime',
+          value: 'in progress',
+        },
+        {
+          artifactId,
+          contentHash: HASH_A,
+          group: 'numericClaims',
+          claim: 'required artifacts',
+          value: 3,
+        },
+      ],
+      evidence: [
+        {
+          viewport: 'desktop',
+          screenshotPath: `qa/${artifactId}-desktop.png`,
+          screenshotHash: HASH_A,
+          metricsPath: `qa/${artifactId}-desktop.json`,
+          metricsHash: HASH_B,
+          captureIdentity: HASH_A,
+        },
+      ],
+    })),
+  };
+  const requestHash = canonicalHash(payload);
+  return {
+    ...payload,
+    requestId: visualReviewRequestId(requestHash),
+    requestHash,
+  };
+}
+
+function visualReviewResult() {
+  const request = visualReviewRequest();
+  return {
+    schemaVersion: 'explainer-kit.visual-review-result/v1',
+    reviewId: 'visual-review-1',
+    requestId: request.requestId,
+    requestHash: request.requestHash,
+    reviewedAt: NOW,
+    disposition: 'correct',
+    artifactIds: setPlan().portfolio.map(({ artifactId }) => artifactId),
+    findings: [
+      {
+        artifactId: 'project-recap',
+        rubric: 'first-viewport',
+        severity: 'important',
+        evidence: 'The primary outcome begins below the fold.',
+        correction: 'Move the outcome summary into the lead panel.',
+      },
+    ],
+  };
+}
+
 function authorResultV2() {
   return {
     schemaVersion: 'explainer-kit.author-result/v2',
-    artifactId: 'project-hub',
+    artifactId: 'project-recap',
     content: {
       markdown: '# Project recap\n\nA concise, evidence-backed recap.',
     },
@@ -262,6 +534,20 @@ test('accepts valid v1 fixtures for every contract kind', () => {
   }
 });
 
+test('accepts built-needs-review as a matched non-durable terminal outcome', () => {
+  const record = buildRecord();
+  record.outcome = 'built-needs-review';
+  const value = manifest();
+  value.outcome = 'built-needs-review';
+  value.buildRecord.hash = canonicalHash(record);
+
+  assert.equal(validateContract('build-record', record).valid, true);
+  assert.equal(
+    validateContract('manifest', value, { buildRecord: record }).valid,
+    true,
+  );
+});
+
 test('validates author contract v2 by kind, kind+version, and schema id', () => {
   const request = authorRequestV2();
   const result = authorResultV2();
@@ -286,6 +572,306 @@ test('validates author contract v2 by kind, kind+version, and schema id', () => 
       valid: true,
       errors: [],
     });
+  }
+});
+
+test('validates provider-neutral set planning and visual review envelopes', () => {
+  const reviewRequest = visualReviewRequest();
+  for (const [kind, fixture, context] of [
+    ['set-plan', setPlan(), undefined],
+    ['visual-review-request', reviewRequest, undefined],
+    [
+      'visual-review-result',
+      visualReviewResult(),
+      { visualReviewRequest: reviewRequest },
+    ],
+  ]) {
+    assert.deepEqual(validateContract(kind, fixture, context), {
+      valid: true,
+      errors: [],
+    });
+    assert.equal(JSON.stringify(fixture).includes('provider'), false);
+  }
+});
+
+test('rejects set drift, unjustified optional artifacts, and detached authors', () => {
+  const unjustified = setPlan();
+  delete unjustified.portfolio.at(-1).justification;
+  assert.ok(
+    validateContract('set-plan', unjustified).errors.some(
+      ({ code }) => code === 'optional-justification-required',
+    ),
+  );
+
+  const unknownSource = setPlan();
+  unknownSource.portfolio[0].sourceIds = ['unknown'];
+  assert.ok(
+    validateContract('set-plan', unknownSource).errors.some(
+      ({ code }) => code === 'unknown-source',
+    ),
+  );
+
+  const detached = authorRequestV2();
+  detached.plannedArtifact = structuredClone(detached.setContext.portfolio[1]);
+  assert.ok(
+    validateContract('author-request', detached).errors.some(
+      ({ code }) => code === 'set-artifact-mismatch',
+    ),
+  );
+
+  const drifted = authorRequestV2();
+  drifted.plannedArtifact = {
+    ...drifted.plannedArtifact,
+    draft: 'A different per-author draft.',
+  };
+  assert.ok(
+    validateContract('author-request', drifted).errors.some(
+      ({ code }) => code === 'set-plan-drift',
+    ),
+  );
+});
+
+test('requires complete bundled visual guidance in author requests', () => {
+  const missing = authorRequestV2();
+  delete missing.visualAuthoringGuidance;
+  assert.equal(validateContract('author-request', missing).valid, false);
+
+  const malformed = authorRequestV2();
+  malformed.visualAuthoringGuidance =
+    'This incomplete guidance mentions only hierarchy.';
+  assert.ok(
+    validateContract('author-request', malformed).errors.some(
+      ({ code }) => code === 'malformed-authoring-guidance',
+    ),
+  );
+});
+
+test('requires closed, internally consistent planner-owned graph semantics', () => {
+  const request = authorRequestV2();
+  request.artifactId = 'system-visual';
+  request.artifactType = 'diagram';
+  request.authoring = 'html';
+  request.plannedArtifact = structuredClone(request.setContext.portfolio[1]);
+  delete request.floor;
+  request.graphSemantics = [
+    {
+      direction: 'TD',
+      nodes: [
+        {
+          id: 'source',
+          label: 'source',
+          shape: 'rectangle',
+          explicit: false,
+        },
+        {
+          id: 'accepted',
+          label: 'accepted',
+          shape: 'rectangle',
+          explicit: false,
+        },
+        {
+          id: 'rejected',
+          label: 'rejected',
+          shape: 'rectangle',
+          explicit: false,
+        },
+      ],
+      edges: [
+        { from: 'source', to: 'accepted', kind: 'arrow', label: '' },
+        { from: 'source', to: 'rejected', kind: 'arrow', label: '' },
+      ],
+      topology: {
+        kind: 'non-linear',
+        features: ['branch'],
+        branchNodes: ['source'],
+        fanInNodes: [],
+        cycle: false,
+        order: [],
+      },
+    },
+  ];
+
+  assert.deepEqual(validateContract('author-request', request), {
+    valid: true,
+    errors: [],
+  });
+  const detachedEndpoint = structuredClone(request);
+  detachedEndpoint.graphSemantics[0].edges[1].to = 'missing';
+  assert.ok(
+    validateContract('author-request', detachedEndpoint).errors.some(
+      ({ code }) => code === 'graph-semantics',
+    ),
+  );
+  const duplicateEdge = structuredClone(request);
+  duplicateEdge.graphSemantics[0].edges.push(
+    structuredClone(duplicateEdge.graphSemantics[0].edges[0]),
+  );
+  assert.ok(
+    validateContract('author-request', duplicateEdge).errors.some(
+      ({ code }) => code === 'graph-semantics',
+    ),
+  );
+});
+
+test('rejects unknown review dispositions and artifact references', () => {
+  const disposition = visualReviewResult();
+  disposition.disposition = 'maybe';
+  assert.equal(
+    validateContract('visual-review-result', disposition).valid,
+    false,
+  );
+
+  const request = visualReviewRequest();
+  request.renderedArtifacts[0].artifactId = 'unknown-artifact';
+  assert.ok(
+    validateContract('visual-review-request', request).errors.some(
+      ({ code }) => code === 'unknown-artifact',
+    ),
+  );
+});
+
+test('binds visual reviews to the exact complete rendered set', () => {
+  for (const [label, mutate] of [
+    [
+      'omitted rendered artifact',
+      (request) => {
+        request.renderedArtifacts.pop();
+      },
+    ],
+    [
+      'extra rendered artifact',
+      (request) => {
+        request.renderedArtifacts.push({
+          ...structuredClone(request.renderedArtifacts[0]),
+          artifactId: 'extra',
+        });
+      },
+    ],
+    [
+      'duplicate rendered artifact identity',
+      (request) => {
+        request.renderedArtifacts.push({
+          ...structuredClone(request.renderedArtifacts[0]),
+          renderedPath: 'site/duplicate/index.html',
+        });
+      },
+    ],
+  ]) {
+    const request = visualReviewRequest();
+    mutate(request);
+    assert.equal(
+      validateContract('visual-review-request', request).valid,
+      false,
+      label,
+    );
+  }
+
+  const reviewRequest = visualReviewRequest();
+  const partial = visualReviewResult();
+  partial.artifactIds.pop();
+  assert.equal(
+    validateContract('visual-review-result', partial, {
+      visualReviewRequest: reviewRequest,
+    }).valid,
+    false,
+  );
+
+  const detached = visualReviewResult();
+  detached.findings[0].artifactId = 'detached';
+  assert.equal(
+    validateContract('visual-review-result', detached, {
+      visualReviewRequest: reviewRequest,
+    }).valid,
+    false,
+  );
+
+  const passingWithCorrections = visualReviewResult();
+  passingWithCorrections.disposition = 'pass';
+  assert.equal(
+    validateContract('visual-review-result', passingWithCorrections, {
+      visualReviewRequest: reviewRequest,
+    }).valid,
+    false,
+  );
+
+  assert.equal(
+    validateContract('visual-review-result', visualReviewResult()).valid,
+    false,
+    'a result without its reviewed request is detached',
+  );
+});
+
+test('rejects stale visual review identities and post-request byte bindings', () => {
+  const request = visualReviewRequest();
+  const stale = visualReviewResult();
+  stale.requestHash = HASH_A;
+  assert.ok(
+    validateContract('visual-review-result', stale, {
+      visualReviewRequest: request,
+    }).errors.some(({ code }) => code === 'review-binding-mismatch'),
+  );
+
+  const mutated = structuredClone(request);
+  mutated.renderedArtifacts[0].evidence[0].screenshotHash = HASH_B;
+  assert.ok(
+    validateContract('visual-review-request', mutated).errors.some(
+      ({ code }) => code === 'request-hash-mismatch',
+    ),
+  );
+});
+
+test('rejects cross-record browser runtime identity mismatches', () => {
+  const request = visualReviewRequest();
+  request.renderedArtifacts[0].evidence[0].captureIdentity = HASH_B;
+  const payload = {
+    ...request,
+  };
+  delete payload.requestId;
+  delete payload.requestHash;
+  request.requestHash = canonicalHash(payload);
+  request.requestId = visualReviewRequestId(request.requestHash);
+
+  assert.ok(
+    validateContract('visual-review-request', request).errors.some(
+      ({ code }) => code === 'browser-runtime-mismatch',
+    ),
+  );
+});
+
+test('rejects empty or content-detached recap cohesion observations', () => {
+  for (const mutate of [
+    (request) => {
+      request.plan.ledger = { terminology: [], statuses: [], numbers: [] };
+      request.renderedArtifacts.forEach(
+        (artifact) => (artifact.cohesionObservations = []),
+      );
+    },
+    (request) => {
+      request.renderedArtifacts[0].cohesionObservations[0].contentHash = HASH_B;
+    },
+    (request) => {
+      request.renderedArtifacts.forEach(
+        (artifact) =>
+          (artifact.cohesionObservations = artifact.cohesionObservations.filter(
+            ({ group }) => group !== 'statuses',
+          )),
+      );
+    },
+  ]) {
+    const request = visualReviewRequest();
+    mutate(request);
+    request.requestHash = canonicalHash(
+      Object.fromEntries(
+        Object.entries(request).filter(
+          ([key]) => !['requestId', 'requestHash'].includes(key),
+        ),
+      ),
+    );
+    request.requestId = visualReviewRequestId(request.requestHash);
+    assert.equal(
+      validateContract('visual-review-request', request).valid,
+      false,
+    );
   }
 });
 
@@ -379,6 +965,24 @@ test('rejects unsafe paths, invalid render strategies, and duplicate paths', () 
       (error) => error.code === 'duplicate-artifact-path',
     ),
   );
+});
+
+test('manifest validation rejects normalized or noncanonical source backlinks', () => {
+  for (const url of [
+    `https://github.com/acme/project/blob/${'1'.repeat(40)}/../main/plan.md#L1`,
+    `https://github.com/acme/project/blob/${'1'.repeat(40)}/%2e%2e/main/plan.md#L1`,
+    `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs//plan.md#L1`,
+    `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs/%70lan.md#L1`,
+  ]) {
+    const value = manifest();
+    value.source.backlinks = [{ sourceId: 'plan', url }];
+    assert.ok(
+      validateContract('manifest', value).errors.some(
+        ({ code }) => code === 'source-backlink',
+      ),
+      url,
+    );
+  }
 });
 
 test('requires complete immutable request, approval, and author provenance coverage', () => {
@@ -611,6 +1215,27 @@ test('enforces every run-request fact-base and durability invariant', () => {
   retained.theme.artDirection = 'Use hand-drawn diagrams';
   retained.privacy = { retainRawArtDirection: true };
   assert.equal(validateContract('run-request', retained).valid, true);
+});
+
+test('allows explicit recap modes only for project recaps', () => {
+  for (const recapMode of ['artistic', 'deterministic-markdown']) {
+    const request = runRequest();
+    request.recipe = { id: 'project-recap', version: '1' };
+    request.recapMode = recapMode;
+    assert.equal(
+      validateContract('run-request', request).valid,
+      true,
+      recapMode,
+    );
+  }
+
+  const unrelated = runRequest();
+  unrelated.recapMode = 'deterministic-markdown';
+  assert.ok(
+    validateContract('run-request', unrelated).errors.some(
+      ({ code }) => code === 'recap-mode-recipe',
+    ),
+  );
 });
 
 test('rejects raw secret fields', () => {

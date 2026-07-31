@@ -55,6 +55,15 @@
       "minItems": 1,
       "uniqueItems": true
     },
+    "lineRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "integer", "minimum": 1 },
+        "end": { "type": "integer", "minimum": 1 }
+      }
+    },
     "source": {
       "type": "object",
       "additionalProperties": false,
@@ -67,7 +76,20 @@
         "locator": { "type": "string", "minLength": 1 },
         "role": { "type": "string", "minLength": 1 },
         "sourceSetId": { "type": "string", "minLength": 1 },
-        "revision": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "repository": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*//)(?!.*(?:^|/)(?:\\.|\\.\\.)(?:/|$))(?!.*\\\\).+$"
+        },
+        "lineRange": { "$ref": "#/$defs/lineRange" },
+        "url": {
+          "type": "string",
+          "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/blob/[a-f0-9]{40}/[^\\s?#]+#L[1-9][0-9]*(?:-L[1-9][0-9]*)?$"
+        },
         "hash": { "$ref": "#/$defs/hash" },
         "observedAt": { "type": "string", "format": "date-time" },
         "authoritativeFor": {
@@ -83,7 +105,21 @@
       "required": ["sourceId", "locator"],
       "properties": {
         "sourceId": { "type": "string", "minLength": 1 },
-        "locator": { "type": "string", "minLength": 1 }
+        "locator": { "type": "string", "minLength": 1 },
+        "repository": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "revision": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*//)(?!.*(?:^|/)(?:\\.|\\.\\.)(?:/|$))(?!.*\\\\).+$"
+        },
+        "lineRange": { "$ref": "#/$defs/lineRange" },
+        "url": {
+          "type": "string",
+          "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/blob/[a-f0-9]{40}/[^\\s?#]+#L[1-9][0-9]*(?:-L[1-9][0-9]*)?$"
+        }
       }
     },
     "claim": {

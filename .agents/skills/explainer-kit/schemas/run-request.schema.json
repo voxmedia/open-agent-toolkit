@@ -25,6 +25,10 @@
         "version": { "type": "string", "minLength": 1 }
       }
     },
+    "recapMode": {
+      "type": "string",
+      "enum": ["artistic", "deterministic-markdown"]
+    },
     "slug": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"

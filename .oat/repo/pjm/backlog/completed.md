@@ -8,6 +8,12 @@
 
 ## Completed Items
 
+- 2026-07-29 — BL-260727-close-the-explainer-kit-visual — Close the Explainer Kit visual authoring capability gap — Closed the golden visual recovery umbrella with adaptive recap sets, independent browser-backed criticism, exact non-linear topology, durable backlinks, catalogs, and release verification; additional visual workflows remain separately tracked.
+- 2026-07-29 — BL-260728-durable-backlinks-catalog — Durable backlinks catalog — Delivered commit-pinned canonical source backlinks and manifest-derived per-initiative catalogs verified by archived-project golden coverage.
+- 2026-07-29 — BL-260728-non-linear-diagram-routing — Non-linear diagram routing — Delivered artistic non-linear diagram routing with exact branch, fan-in, cycle, node, edge, direction, and label semantics.
+- 2026-07-29 — BL-260728-cohesive-adaptive-recap-set — Cohesive adaptive recap set — Delivered planner-owned adaptive recap sets with one shared ledger, required hub, architecture, and deck artifacts, and justified optional views.
+- 2026-07-29 — BL-260728-unattended-visual-author-critic — Unattended visual author and critic — Delivered provider-neutral unattended visual author and independent critic seams with exact real-browser evidence and a bounded correction loop.
+- 2026-07-28 — BL-260727-ship-mit-notices-inside — Ship MIT notices inside distributed packages — Complete MIT notices now ship in affected package payloads and are enforced by release validation.
 - 2026-07-29 — BL-260727-surface-implementer-dispatches — Surface implementer dispatches that sit at the ceiling without classification — Added structured warnings and classification provenance for managed-capped implementation/fix dispatches, plus terminal reviewer constraint disclosures.
 - 2026-07-21 — BL-260720-fix-cross-machine-flakiness — Fix cross-machine flakiness in explainer visual-validation release gate — Stabilized the explainer visual release gate across machines with focus priming, semantic tabbability fallback, and retry-safe deck movement; Mini and 65-measurement release validation pass.
 - 2026-07-20 — BL-260718-remove-post-w6-reviews-row — Remove post-W6 reviews-row restore watch — Trigger fired: stoa W6 delivered the clean final-gate observation (3 rounds, zero stomps, restore-watch never fired; evidence in w6-acceptance-report-2026-07-20.md + stoa archived wave-6-execution). Restore-watch retired from oat-wave-execute closeout step 5 text; passed-only-terminal rule (p-rev3 S8, convergently confirmed by W6) remains.

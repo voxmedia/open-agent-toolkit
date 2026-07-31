@@ -86,13 +86,48 @@ The resolved callback is passed only as the `author` option to
 `run-request.json`, or another retained data contract. Interactive runs use the
 same author contract and differ only at the later approval gate.
 
+## Browser and visual-review execution
+
+Every unattended `project-recap` must provide exactly one browser-evidence
+session and exactly one whole-set visual critic through the adapter's
+first-class boundary. In-process callers pass `browserSession`, created by the
+compatible core's `createBrowserProbeSession()`, and `visualCritic`. JSON-only
+and official CLI callers pass `browserSessionModulePath` and
+`visualCriticModulePath`, naming modules whose matching exports are
+`browserSession` and `visualCritic`. Direct-plus-module conflicts, invalid
+exports, bare `browserProbe` inputs, and the legacy
+`coreOptions.browserProbe`, `coreOptions.browserSession`, or
+`coreOptions.visualCritic` routes fail before core invocation.
+
+The author, fact critic, branded session probe, and visual critic must have
+distinct callback identities. The adapter asks the loaded core to validate the
+session's private brand and launched-Chromium runtime before passing it to
+`core.runExplainer`. Executable callbacks, descriptors, and module paths never
+enter the retained run request. Deterministic fixture sessions are rejected for
+unattended project recaps. See `visual-review-callback.md` for the session,
+request/result, and byte-bound whole-set review contracts.
+
+The core retains canonical 320, 768, and 1440 viewport screenshots, paired
+`explainer-kit.browser-evidence/v2` metrics with launched Chromium name,
+version, and capture identity, each review request/result, cohesion
+observations, and any one-pass revision record. Missing, malformed, forged,
+cross-record mismatched, stale, or failed review-chain evidence terminates as
+`built-needs-review`; durability and publication remain blocked.
+
 ## Tracked-run finalization
 
 `planTrackedRunFinalization(request, context)` is the shared command planner for
 tracked project explainer and recap runs. The request contains `runRoot`,
 `manifestPath`, `commitMode`, and optional `relocatedFrom`. Context supplies the
-repository root, project name, and, for `completion-bookkeeping`, the existing
-full artifact commit SHA.
+repository root, project name, an explicit compatible `coreRoot`, and, for
+`completion-bookkeeping`, the existing full artifact commit SHA. Finalization
+dynamically loads the versioned package-coverage contract from that core root;
+it does not maintain an adapter-local path list.
+
+A core `built-needs-review` outcome is a terminal review gate, not a
+non-durable success. The planner rejects it before producing artifact,
+attestation, evidence-commit, or push commands. The recap must instead be
+reviewed and rebuilt to a passing visual-review outcome.
 
 The returned stages must run in order:
 
@@ -151,6 +186,9 @@ export remains committed, the mutable records retain the warning and
 `built-not-durable` outcome, and the evidence-record commit and push still
 complete. A later attestation may recover durability without repeating the
 archive.
+
+This recovery path applies only to `built-not-durable`.
+`built-needs-review` cannot be exported, attested, finalized, or pushed.
 
 Post-archive summary and PR recap links target `projectRecapExport.exportRoot`
 under `.oat/repo/reference/project-recaps/` on the current head branch. The

@@ -68,6 +68,27 @@ test('runs the packaged adapter against the user-scoped packaged core', async ()
   assert.equal(result.request.recipe.id, 'project-explainer');
   assert.equal(result.result.outcome, 'built-not-durable');
   assert.equal(result.manifest.schemaVersion, 'explainer-kit.manifest/v1');
+  assert.match(fixture.reviewedRepository.revision, /^[a-f0-9]{40}$/);
+  const approval = JSON.parse(
+    await readFile(
+      `${result.result.runRoot}/source/content-approval.json`,
+      'utf8',
+    ),
+  );
+  assert.deepEqual(approval.reviewedSource, {
+    kind: 'approved-oat-artifacts',
+    locator: fixture.reviewedRepository.repositoryUrl,
+    ...fixture.reviewedRepository,
+  });
+  assert.ok(result.manifest.source.backlinks.length > 0);
+  assert.equal(
+    result.manifest.source.backlinks.every(
+      ({ url }) =>
+        url.startsWith(`${fixture.reviewedRepository.repositoryUrl}/blob/`) &&
+        url.includes(`/${fixture.reviewedRepository.revision}/`),
+    ),
+    true,
+  );
   await assertAuthoredRun(result.result.runRoot, result.manifest);
   assert.doesNotMatch(
     JSON.stringify(result),

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "explainer-kit.golden-input/v1",
+  "id": "non-linear",
+  "title": "Branched event-processing recap",
+  "sourceRevision": "sha256-pinned",
+  "sources": [
+    {
+      "id": "architecture-record",
+      "kind": "retained-synthetic-source",
+      "locator": "evidence/source-record.json",
+      "sha256": "sha256:2271d9b8bd7735c9aee938ad16f275f4d823677f9f135df58539bd28f55cd5f2"
+    }
+  ],
+  "claims": [
+    {
+      "id": "N-1",
+      "text": "The intake router sends accepted events to both enrichment and audit branches.",
+      "sourceId": "architecture-record",
+      "sourceClaimId": "N-1"
+    },
+    {
+      "id": "N-2",
+      "text": "Enrichment and policy results join before publication.",
+      "sourceId": "architecture-record",
+      "sourceClaimId": "N-2"
+    },
+    {
+      "id": "N-3",
+      "text": "Failed publication enters a bounded retry loop through the retry queue.",
+      "sourceId": "architecture-record",
+      "sourceClaimId": "N-3"
+    }
+  ],
+  "topology": {
+    "kind": "branched-fan-in-cycle",
+    "nodes": [
+      "intake",
+      "router",
+      "enrichment",
+      "audit",
+      "policy",
+      "join",
+      "publish",
+      "retry"
+    ],
+    "edges": [
+      ["intake", "router"],
+      ["router", "enrichment"],
+      ["router", "audit"],
+      ["enrichment", "join"],
+      ["audit", "policy"],
+      ["policy", "join"],
+      ["join", "publish"],
+      ["publish", "retry"],
+      ["retry", "router"]
+    ],
+    "requiredStructures": [
+      {
+        "type": "branch",
+        "from": "router",
+        "to": ["enrichment", "audit"]
+      },
+      {
+        "type": "fan-in",
+        "from": ["enrichment", "policy"],
+        "to": "join"
+      },
+      {
+        "type": "cycle",
+        "path": ["router", "enrichment", "join", "publish", "retry", "router"]
+      }
+    ]
+  },
+  "readerQuestions": [
+    "Where does the flow branch?",
+    "Where do results join?",
+    "How is a failed publication retried?"
+  ]
+}

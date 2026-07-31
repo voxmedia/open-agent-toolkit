@@ -31,6 +31,18 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.27` closes the Explainer Kit golden visual recovery: one immutable
+  adaptive set plans a hub, architecture view, and deck from a shared claim
+  ledger; artistic routing preserves exact branch, fan-in, cycle, node, edge,
+  direction, and label semantics; lifecycle sources resolve to commit-pinned
+  canonical backlinks; and each initiative emits a manifest-derived catalog.
+  Unattended recaps require a trusted launched-Chromium session and independent
+  critic, retain engine/version identity and decoded PNG evidence through
+  finalization and archive validation, and permit at most one correction.
+  Authenticated `ekrt2` resume tokens bind the complete canonical request.
+  Three portable real-Chromium golden cases, five public package payloads, and
+  the 65-measurement release visual gate pass. Additional visual workflows
+  remain separately tracked as `BL-260728-additional-visual-workflows`.
 - CLI `0.2.26` makes managed-capped implementation and fix dispatches
   auditable without changing compatibility exit behavior. Dispatch Report V1
   now carries provider-neutral task classification, applicable Codex task

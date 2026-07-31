@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "explainer-kit.golden-rubric/v1",
+  "checks": {
+    "adaptiveMinimumSet": {
+      "required": true
+    },
+    "firstViewport": {
+      "required": true
+    },
+    "hierarchy": {
+      "required": true
+    },
+    "representationChoice": {
+      "required": true
+    },
+    "legibility": {
+      "required": true
+    },
+    "cohesion": {
+      "required": true
+    },
+    "sourceCoverage": {
+      "required": true
+    },
+    "interactions": {
+      "required": true
+    },
+    "topologyPreservation": {
+      "required": true
+    },
+    "catalogParity": {
+      "required": true
+    },
+    "boundedCorrection": {
+      "required": true
+    }
+  }
+}

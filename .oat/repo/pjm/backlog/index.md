@@ -82,28 +82,19 @@
   creation, and distinct idle-kill versus hard-cap outcomes. Medium-priority
   workflow maintenance tracks project-scoped gate overrides.
 - High-priority review-efficiency work now tracks skipping redundant reviewer dispatches after narrowly classified, deterministically validated bookkeeping-only fixes in both direct/subagent and gate-originated review flows.
+- Explainer Kit golden visual recovery is complete. The packaged notices,
+  adaptive recap set, independent browser-backed critic, exact non-linear
+  topology, commit-pinned backlinks, initiative catalogs, authenticated resume,
+  and trusted Chromium evidence all ship in CLI `0.2.27`. The four recovery
+  successors and umbrella are archived; only
+  `BL-260728-additional-visual-workflows` remains open for lower-priority diff,
+  plan, fact-check, dashboard, complex-table, and richer-composition work.
 - The broader high-priority review redesign is tracked separately in
   `BL-260729-implement-reviewplan-first`: enforce artifact-only intake,
   metadata-only change mapping, an explicit ReviewPlan, selective evidence
   lanes, economically justified delegation, bounded deadlines, and a narrower
   primary replay boundary. PR #185 diagnostics and PR #186 guarded narrowing
   are prerequisites, not substitutes for this work.
-- Explainer Kit follow-ups from the `explainer-authoring-redesign` closeout are
-  deliberately split by kind. `BL-260727-ship-mit-notices-inside` (high) is a
-  contained packaging and compliance fix: adapted MIT code ships without its
-  required notice because the repo-level `NOTICES.md` is not in the published
-  payload. `BL-260727-close-the-explainer-kit-visual` (medium) carries the
-  substantive capability work — the inline diagram renderer silently flattens
-  non-linear graphs, and upstream visual workflows stay unreachable from bundled
-  recipes. The redesign narrowed that second gap without closing it: `recipe/v2`
-  expansion profiles can now select the diagram and deck shells, and a recap run
-  confirmed the artistic path renders branching and cyclic diagrams correctly,
-  so the remaining defect is localized to the inline renderer's layout logic.
-  A second recap run against `in5-game-cms` widened the same item to XL by
-  surfacing two further losses against upstream: the fact base exposes only
-  machine-local absolute paths for its file sources, so nothing can link a
-  reader back to the lifecycle documents a claim came from, and the per-set
-  `catalog.json` upstream published is no longer emitted at all.
 
 <!-- OAT BACKLOG-INDEX -->
 
@@ -118,12 +109,10 @@
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments           | open   | high     | task    | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills       | open   | high     | task    | S        |
 | BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                       | open   | high     | task    | S        |
-| BL-260727-ship-mit-notices-inside        | Ship MIT notices inside distributed packages                           | open   | high     | task    | S        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                    | open   | high     | feature | M        |
 | BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version              | open   | high     | feature | S        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                        | open   | medium   | feature | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                     | open   | medium   | feature | M        |
-| BL-260727-close-the-explainer-kit-visual | Close the Explainer Kit visual authoring capability gap                | open   | medium   | feature | XL       |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract             | open   | medium   | feature | M        |
 | BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance          | open   | medium   | task    | S        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos         | open   | medium   | task    |          |
@@ -136,6 +125,7 @@
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                          | open   | medium   | task    | S        |
 | BL-260726-validate-structured-output     | Validate structured-output contract in gate skill commands             | open   | medium   | task    |          |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                             | open   | medium   | task    | S        |
+| BL-260728-additional-visual-workflows    | Additional visual workflows                                            | open   | low      | feature | L        |
 | BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight            | open   | low      | task    | M        |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization | open   | low      | feature | M        |
 

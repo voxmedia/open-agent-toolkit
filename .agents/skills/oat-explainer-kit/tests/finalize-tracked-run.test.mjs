@@ -1,17 +1,34 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
+import { browserCaptureIdentity } from '../../explainer-kit/scripts/lib/browser-runtime.mjs';
 import {
-  planTrackedRunFinalization,
+  canonicalHash,
+  visualReviewRequestId,
+} from '../../explainer-kit/scripts/lib/contracts.mjs';
+import { png } from '../../explainer-kit/tests/fixtures/png.mjs';
+import {
+  planTrackedRunFinalization as planTrackedRunFinalizationCore,
   verifyTrackedRunFinalization,
 } from '../scripts/finalize-tracked-run.mjs';
 
 const SHA = 'a'.repeat(40);
 const EVIDENCE_SHA = 'b'.repeat(40);
 const tempDirs = [];
+const CORE_ROOT = fileURLToPath(
+  new URL('../../explainer-kit/', import.meta.url),
+);
+
+const planTrackedRunFinalization = (finalizationRequest, context = {}) =>
+  planTrackedRunFinalizationCore(finalizationRequest, {
+    coreRoot: CORE_ROOT,
+    ...context,
+  });
 
 afterEach(async () => {
   await Promise.all(
@@ -60,17 +77,11 @@ test('plans a dedicated immutable artifact commit followed by evidence and one p
 test('plans evidence for every manifest immutable hash path', async () => {
   const fixture = await createRun();
   const manifest = JSON.parse(await readFile(fixture.manifestPath, 'utf8'));
-  manifest.immutableHashes = Object.fromEntries(
-    [
-      'run-request.json',
-      'source/fact-base.json',
-      'source/fact-base.md',
-      'source/content-approval.json',
-      'source/author/recap.json',
-      'source/content/recap.md',
-      'theme.resolved.json',
-      'site/index.html',
-    ].map((path) => [path, `sha256:${'a'.repeat(64)}`]),
+  const extraPath = 'qa/custom-observation.json';
+  await mkdir(join(fixture.runRoot, 'qa'), { recursive: true });
+  await writeFile(join(fixture.runRoot, extraPath), '{"observed":true}\n');
+  manifest.immutableHashes[extraPath] = await fileHash(
+    join(fixture.runRoot, extraPath),
   );
   await writeFile(
     fixture.manifestPath,
@@ -240,6 +251,164 @@ test('terminates idempotently when the same commit evidence is already durable',
   assert.deepEqual(plan.commands, []);
 });
 
+test('refuses to finalize a recap whose visual review gate is unresolved', async () => {
+  const fixture = await createRun({ outcome: 'built-needs-review' });
+
+  await assert.rejects(
+    planTrackedRunFinalization(request(fixture, 'dedicated'), {
+      repoRoot: fixture.repoRoot,
+      project: 'demo',
+    }),
+    /built-needs-review.*visual review.*before finalization/i,
+  );
+});
+
+test('loads versioned package coverage from the explicit compatible core root', async () => {
+  const fixture = await createRun();
+  await assert.rejects(
+    planTrackedRunFinalizationCore(request(fixture, 'dedicated'), {
+      repoRoot: fixture.repoRoot,
+      project: 'demo',
+    }),
+    /coreRoot is required/i,
+  );
+
+  const incompatibleCore = join(fixture.repoRoot, 'incompatible-core');
+  await mkdir(join(incompatibleCore, 'scripts', 'lib'), { recursive: true });
+  await writeFile(
+    join(incompatibleCore, 'scripts', 'lib', 'package-coverage.mjs'),
+    "export const PACKAGE_COVERAGE_VERSION = 'future';\nexport const requiredImmutablePackagePaths = () => [];\n",
+  );
+  await assert.rejects(
+    planTrackedRunFinalizationCore(request(fixture, 'dedicated'), {
+      repoRoot: fixture.repoRoot,
+      project: 'demo',
+      coreRoot: incompatibleCore,
+    }),
+    /explainer-kit\.package-coverage\/v2/i,
+  );
+});
+
+test('finalizes a successful interactive recap without visual-review evidence', async () => {
+  const fixture = await createRun({ mode: 'interactive' });
+
+  const plan = await planTrackedRunFinalization(request(fixture, 'dedicated'), {
+    repoRoot: fixture.repoRoot,
+    project: 'demo',
+  });
+
+  assert.equal(plan.status, 'ready');
+  assert.equal(
+    fixture.immutablePaths.some(
+      (path) =>
+        path.includes('/qa/browser/') || path.includes('/qa/visual-review/'),
+    ),
+    false,
+  );
+});
+
+test('rejects partial interactive review evidence and an unverified mode change', async () => {
+  const partial = await createRun({
+    mode: 'interactive',
+    includeReviewEvidence: false,
+  });
+  const partialManifest = JSON.parse(
+    await readFile(partial.manifestPath, 'utf8'),
+  );
+  const partialPath = 'qa/browser/recap/mobile.png';
+  await mkdir(dirname(join(partial.runRoot, partialPath)), { recursive: true });
+  await writeFile(join(partial.runRoot, partialPath), 'partial\n');
+  partialManifest.immutableHashes[partialPath] = await fileHash(
+    join(partial.runRoot, partialPath),
+  );
+  await writeFile(
+    partial.manifestPath,
+    `${JSON.stringify(partialManifest, null, 2)}\n`,
+  );
+  await assert.rejects(
+    planTrackedRunFinalization(request(partial, 'dedicated'), {
+      repoRoot: partial.repoRoot,
+      project: 'demo',
+    }),
+    /canonical package.*visual-review|canonical package.*browser/i,
+  );
+
+  const mutated = await createRun();
+  await writeFile(
+    join(mutated.runRoot, 'run-request.json'),
+    '{"mode":"interactive"}\n',
+  );
+  await assert.rejects(
+    planTrackedRunFinalization(request(mutated, 'dedicated'), {
+      repoRoot: mutated.repoRoot,
+      project: 'demo',
+    }),
+    /hash mismatch.*run-request\.json/i,
+  );
+});
+
+test('rejects incomplete or mutated review evidence before planning commits', async () => {
+  const incomplete = await createRun();
+  const incompleteManifest = JSON.parse(
+    await readFile(incomplete.manifestPath, 'utf8'),
+  );
+  delete incompleteManifest.immutableHashes[
+    'qa/visual-review/attempt-1/evidence/recap/tablet.json'
+  ];
+  await writeFile(
+    incomplete.manifestPath,
+    `${JSON.stringify(incompleteManifest, null, 2)}\n`,
+  );
+  await assert.rejects(
+    planTrackedRunFinalization(request(incomplete, 'dedicated'), {
+      repoRoot: incomplete.repoRoot,
+      project: 'demo',
+    }),
+    /canonical package.*tablet\.json/i,
+  );
+
+  const mutated = await createRun();
+  await writeFile(
+    join(mutated.runRoot, 'qa/browser/recap/mobile.png'),
+    'mutated\n',
+  );
+  await assert.rejects(
+    planTrackedRunFinalization(request(mutated, 'dedicated'), {
+      repoRoot: mutated.repoRoot,
+      project: 'demo',
+    }),
+    /hash mismatch.*mobile\.png/i,
+  );
+});
+
+test('rejects hash-valid cross-record browser capture identity drift', async () => {
+  const fixture = await createRun();
+  const metricsPath = 'qa/browser/recap/mobile.json';
+  const absoluteMetricsPath = join(fixture.runRoot, metricsPath);
+  const metrics = JSON.parse(await readFile(absoluteMetricsPath, 'utf8'));
+  metrics.runtime.version = '124.0.6367.0';
+  metrics.captureIdentity = browserCaptureIdentity(
+    metrics.runtime,
+    metrics.capture,
+  );
+  await writeFile(absoluteMetricsPath, `${JSON.stringify(metrics, null, 2)}\n`);
+
+  const manifest = JSON.parse(await readFile(fixture.manifestPath, 'utf8'));
+  manifest.immutableHashes[metricsPath] = await fileHash(absoluteMetricsPath);
+  await writeFile(
+    fixture.manifestPath,
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
+
+  await assert.rejects(
+    planTrackedRunFinalization(request(fixture, 'dedicated'), {
+      repoRoot: fixture.repoRoot,
+      project: 'demo',
+    }),
+    /browser.*capture identity|capture identity.*mismatch/i,
+  );
+});
+
 function successfulObservation(fixture) {
   return {
     artifactCommit: { sha: SHA, paths: fixture.immutablePaths },
@@ -262,42 +431,198 @@ function request(fixture, commitMode) {
   };
 }
 
-async function createRun({ outcome = 'built-not-durable', evidence } = {}) {
+async function createRun({
+  outcome = 'built-not-durable',
+  evidence: providedEvidence,
+  mode = 'unattended',
+  includeReviewEvidence = mode === 'unattended',
+} = {}) {
   const repoRoot = await mkdtemp(join(tmpdir(), 'oat-finalizer-'));
   tempDirs.push(repoRoot);
   const runRoot = join(repoRoot, '.oat/projects/shared/demo/explainers/recap');
-  await mkdir(join(runRoot, 'source/content'), { recursive: true });
-  await mkdir(join(runRoot, 'site'), { recursive: true });
-  for (const [path, content] of [
+  const files = [
+    ['run-request.json', `${JSON.stringify({ mode })}\n`],
+    ['source/content-approval.json', '{}\n'],
     ['source/fact-base.json', '{}\n'],
     ['source/fact-base.md', '# Facts\n'],
+    ['source/author/recap.json', '{}\n'],
     ['source/content/recap.md', '# Recap\n'],
+    ['source/set-plan/request.json', '{}\n'],
+    ['source/set-plan/result.json', '{}\n'],
+    ['source/set-plan/ledger.json', '{}\n'],
+    ['source/set-plan/portfolio.json', '{}\n'],
+    ['source/set-plan/drafts.json', '{}\n'],
     ['theme.resolved.json', '{}\n'],
     ['site/index.html', '<h1>Recap</h1>\n'],
-  ]) {
+  ];
+  if (includeReviewEvidence) {
+    const runtime = {
+      kind: 'launched',
+      name: 'chromium',
+      version: '123.0.6312.0',
+    };
+    const capture = {
+      format: 'png',
+      fullPage: false,
+      reducedMotion: 'reduce',
+      animationsDisabled: true,
+    };
+    const captureIdentity = browserCaptureIdentity(runtime, capture);
+    const renderedBytes = Buffer.from('<h1>Recap</h1>\n');
+    const plan = {
+      schemaVersion: 'explainer-kit.set-plan/v1',
+      planId: 'recap-plan',
+      recipe: { id: 'project-recap', version: '1' },
+      sourceIds: ['plan'],
+      ledger: {
+        terminology: [{ term: 'recap', meaning: 'The project recap.' }],
+        statuses: [{ subject: 'review', value: 'passed' }],
+        numbers: [{ subject: 'artifacts', value: 1, unit: 'artifact' }],
+      },
+      portfolio: [
+        {
+          artifactId: 'recap',
+          artifactType: 'hub',
+          profileId: 'recap-hub',
+          required: true,
+          sourceIds: ['plan'],
+          draft: 'Summarize the completed project.',
+          visualIntent: 'Lead with the reviewed outcome.',
+        },
+      ],
+    };
+    const evidence = [];
+    const reviewFiles = [];
+    for (const [viewport, width] of [
+      ['mobile', 320],
+      ['tablet', 768],
+      ['desktop', 1440],
+    ]) {
+      const screenshotBytes = png(width, 900);
+      const metrics = {
+        schemaVersion: 'explainer-kit.browser-evidence/v2',
+        artifactId: 'recap',
+        viewport,
+        scenario: 'default',
+        runtime,
+        capture,
+        captureIdentity,
+        metrics: {
+          pageOverflowX: false,
+          clippedX: [],
+          viewportClipped: [],
+          unreadableHeadings: [],
+        },
+      };
+      const metricsBytes = jsonBytes(metrics);
+      const screenshotPath = `qa/browser/recap/${viewport}.png`;
+      const metricsPath = `qa/browser/recap/${viewport}.json`;
+      evidence.push({
+        viewport,
+        screenshotPath,
+        screenshotHash: hashBytes(screenshotBytes),
+        metricsPath,
+        metricsHash: hashBytes(metricsBytes),
+        captureIdentity,
+      });
+      reviewFiles.push(
+        [screenshotPath, screenshotBytes],
+        [metricsPath, metricsBytes],
+        [
+          `qa/visual-review/attempt-1/evidence/recap/${viewport}.png`,
+          screenshotBytes,
+        ],
+        [
+          `qa/visual-review/attempt-1/evidence/recap/${viewport}.json`,
+          metricsBytes,
+        ],
+      );
+    }
+    const requestPayload = {
+      schemaVersion: 'explainer-kit.visual-review-request/v1',
+      browserRuntime: runtime,
+      captureIdentity,
+      plan,
+      renderedArtifacts: [
+        {
+          artifactId: 'recap',
+          renderedPath: 'site/index.html',
+          renderedHash: hashBytes(renderedBytes),
+          cohesionObservations: [
+            {
+              artifactId: 'recap',
+              contentHash: hashBytes(renderedBytes),
+              group: 'terminology',
+              claim: 'recap',
+              value: 'recap',
+            },
+            {
+              artifactId: 'recap',
+              contentHash: hashBytes(renderedBytes),
+              group: 'statuses',
+              claim: 'review',
+              value: 'passed',
+            },
+            {
+              artifactId: 'recap',
+              contentHash: hashBytes(renderedBytes),
+              group: 'numericClaims',
+              claim: 'artifacts',
+              value: 1,
+            },
+          ],
+          evidence,
+        },
+      ],
+    };
+    const requestHash = canonicalHash(requestPayload);
+    const reviewRequest = {
+      ...requestPayload,
+      requestId: visualReviewRequestId(requestHash),
+      requestHash,
+    };
+    const reviewResult = {
+      schemaVersion: 'explainer-kit.visual-review-result/v1',
+      reviewId: 'finalizer-review',
+      requestId: reviewRequest.requestId,
+      requestHash,
+      reviewedAt: '2026-07-18T00:00:00.000Z',
+      disposition: 'pass',
+      artifactIds: ['recap'],
+      findings: [],
+    };
+    files.push(
+      ['qa/visual-review/attempt-1/request.json', jsonBytes(reviewRequest)],
+      ['qa/visual-review/attempt-1/result.json', jsonBytes(reviewResult)],
+      ...reviewFiles,
+    );
+  }
+  for (const [path, content] of files) {
+    await mkdir(dirname(join(runRoot, path)), { recursive: true });
     await writeFile(join(runRoot, path), content);
   }
+  const immutableHashes = Object.fromEntries(
+    await Promise.all(
+      files.map(async ([path]) => [path, await fileHash(join(runRoot, path))]),
+    ),
+  );
 
   const manifest = {
     schemaVersion: 'explainer-kit.manifest/v1',
     recipe: { id: 'project-recap', version: '1' },
-    source: { factBasePath: 'source/fact-base.json' },
+    source: {
+      factBasePath: 'source/fact-base.json',
+      authorResultPaths: ['source/author/recap.json'],
+    },
     theme: { path: 'theme.resolved.json' },
-    immutableHashes: Object.fromEntries(
-      [
-        'source/fact-base.json',
-        'source/fact-base.md',
-        'source/content/recap.md',
-        'theme.resolved.json',
-        'site/index.html',
-      ].map((path) => [path, `sha256:${'a'.repeat(64)}`]),
-    ),
+    immutableHashes,
     artifacts: [
       {
+        id: 'recap',
         contentPath: 'source/content/recap.md',
         renderedPath: 'site/index.html',
         status: 'built',
-        ...(evidence ? { durableEvidence: [evidence] } : {}),
+        ...(providedEvidence ? { durableEvidence: [providedEvidence] } : {}),
       },
     ],
     buildRecord: { path: 'build-record.json' },
@@ -308,17 +633,28 @@ async function createRun({ outcome = 'built-not-durable', evidence } = {}) {
   await writeFile(join(runRoot, 'build-record.json'), '{}\n');
 
   const prefix = '.oat/projects/shared/demo/explainers/recap';
+  const immutablePaths = Object.keys(immutableHashes).map(
+    (path) => `${prefix}/${path}`,
+  );
   return {
     repoRoot,
     runRoot,
     manifestPath,
-    immutablePaths: [
-      `${prefix}/source/fact-base.json`,
-      `${prefix}/source/fact-base.md`,
-      `${prefix}/source/content/recap.md`,
-      `${prefix}/theme.resolved.json`,
-      `${prefix}/site/index.html`,
-    ],
+    immutablePaths,
     mutablePaths: [`${prefix}/manifest.json`, `${prefix}/build-record.json`],
   };
+}
+
+async function fileHash(path) {
+  return `sha256:${createHash('sha256')
+    .update(await readFile(path))
+    .digest('hex')}`;
+}
+
+function hashBytes(value) {
+  return `sha256:${createHash('sha256').update(value).digest('hex')}`;
+}
+
+function jsonBytes(value) {
+  return Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
 }

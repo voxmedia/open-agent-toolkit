@@ -98,6 +98,7 @@ export async function createPackagedLayout() {
       criticModulePath,
       mode: 'unattended',
     });
+    const reviewedRepository = await initializeReviewedRepository(repoRoot);
 
     await rename(assetsRoot, poisonedAssetsRoot);
     const env = isolatedEnvironment({ userRoot, binRoot });
@@ -111,6 +112,7 @@ export async function createPackagedLayout() {
       userSkillsRoot,
       coreRoot,
       repoRoot,
+      reviewedRepository,
       adapterRoot,
       requestPath,
       coreRunArgs: {
@@ -131,6 +133,41 @@ export async function createPackagedLayout() {
     await rm(root, { recursive: true, force: true });
     throw error;
   }
+}
+
+async function initializeReviewedRepository(repoRoot) {
+  const repository = 'acme/packaged-layout';
+  const repositoryUrl = `https://github.com/${repository}`;
+  await execFileAsync('git', ['init', '--quiet'], { cwd: repoRoot });
+  await execFileAsync(
+    'git',
+    ['remote', 'add', 'origin', `${repositoryUrl}.git`],
+    { cwd: repoRoot },
+  );
+  await execFileAsync('git', ['add', '.'], { cwd: repoRoot });
+  await execFileAsync(
+    'git',
+    [
+      '-c',
+      'user.name=Explainer Package Test',
+      '-c',
+      'user.email=explainer-package@example.com',
+      'commit',
+      '--quiet',
+      '-m',
+      'fixture',
+    ],
+    { cwd: repoRoot },
+  );
+  const { stdout } = await execFileAsync('git', ['rev-parse', 'HEAD'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+  return {
+    repository,
+    repositoryUrl,
+    revision: stdout.trim(),
+  };
 }
 
 async function bundleAssets(assetsRoot) {

@@ -18,6 +18,7 @@ import {
   buildProjectArchiveS3Uri,
   resolveArchiveProjectTarget,
   resolvePrimaryRepoRoot,
+  verifySelectedProjectRecapForArchive,
   type ArchiveProjectTarget,
   type ArchiveProjectOnCompletionOptions,
   type ArchiveProjectOnCompletionResult,
@@ -42,6 +43,7 @@ export interface ProjectArchivePushCommandDependencies {
   ) => Promise<string>;
   resolvePrimaryRepoRoot: typeof resolvePrimaryRepoRoot;
   resolveArchiveProjectTarget: typeof resolveArchiveProjectTarget;
+  verifySelectedProjectRecapForArchive: typeof verifySelectedProjectRecapForArchive;
   archiveProjectOnCompletion: (
     options: ArchiveProjectOnCompletionOptions,
   ) => Promise<ArchiveProjectOnCompletionResult>;
@@ -75,6 +77,7 @@ export function defaultProjectArchivePushCommandDependencies(): ProjectArchivePu
     resolveProjectsRoot,
     resolvePrimaryRepoRoot,
     resolveArchiveProjectTarget,
+    verifySelectedProjectRecapForArchive,
     archiveProjectOnCompletion,
     processEnv: process.env,
     timestamp: () => new Date().toISOString(),
@@ -255,6 +258,12 @@ export async function runArchivePushCommand(
       },
     );
     assertDurableArchiveProjectTarget(archiveTarget);
+    if (options.projectRecapRun?.trim()) {
+      await dependencies.verifySelectedProjectRecapForArchive(
+        target.projectPath,
+        options.projectRecapRun.trim(),
+      );
+    }
     const dryRun = options.dryRun === true || context.dryRun;
 
     if (dryRun) {

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "explainer-kit.retained-source/v1",
+  "id": "archived-summary",
+  "kind": "retained-repository-source",
+  "upstream": {
+    "locator": ".oat/repo/reference/project-summaries/20260728-explainer-authoring-redesign.md",
+    "sha256": "sha256:6a4a99346ab02339e29fabd3c5b27370dc8fae13526dd69c1a0ce36523dbff6c"
+  },
+  "claims": [
+    {
+      "id": "A-1",
+      "text": "Recipe policy selects the path through expansion profiles; the author does not."
+    },
+    {
+      "id": "A-2",
+      "text": "Explainer authoring is two-path with a caller-owned author seam."
+    },
+    {
+      "id": "A-3",
+      "text": "No gate could see the styling surface."
+    },
+    {
+      "id": "A-4",
+      "text": "Final gates: core 231, adapter 59, release 44 (1 env-gated skip), smoke 129, plus `release:validate`, `release:check-versions`, `lint`, and `type-check`."
+    }
+  ],
+  "topology": {
+    "kind": "authoring-workflow",
+    "nodes": [
+      "fact-base",
+      "recipe-policy",
+      "narrative-author",
+      "artistic-author",
+      "render",
+      "browser-review",
+      "publish"
+    ],
+    "edges": [
+      ["fact-base", "recipe-policy"],
+      ["recipe-policy", "narrative-author"],
+      ["recipe-policy", "artistic-author"],
+      ["narrative-author", "render"],
+      ["artistic-author", "render"],
+      ["render", "browser-review"],
+      ["browser-review", "publish"]
+    ]
+  }
+}

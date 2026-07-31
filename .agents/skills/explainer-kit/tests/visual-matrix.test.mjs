@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readdir } from 'node:fs/promises';
 import { test } from 'node:test';
 
+import { createFixtureBrowserProbeSession } from '../scripts/lib/browser-runtime.mjs';
 import { checkHtmlStructure } from '../scripts/lib/qa.mjs';
 import { renderArtifact } from '../scripts/lib/render.mjs';
 import { resolveTheme } from '../scripts/lib/theme.mjs';
@@ -231,6 +232,7 @@ test('executes horizontal, no-JS, and print deck probes in release QA', async ()
 });
 
 test('release QA rejects a deck that is not horizontal by default', async () => {
+  const observations = [];
   const deckEntry = selectReleaseVisualMatrix().find(
     ({ axis, artifact, renderStrategy }) =>
       axis === 'profile-artifact' &&
@@ -239,27 +241,38 @@ test('release QA rejects a deck that is not horizontal by default', async () => 
   );
   const report = await runReleaseVisualMatrix({
     matrix: [deckEntry],
-    browserProbe: async ({ scenario }) => ({
-      pageOverflowX: false,
-      clippedX: [],
-      reducedMotion: true,
-      keyboard: {
-        tab: true,
-        arrows: Object.fromEntries(
-          ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].map((key) => [
-            key,
-            true,
-          ]),
-        ),
-      },
-      deckLayout: {
-        flow: 'vertical',
-        overflowX: scenario === 'print' ? 'visible' : 'auto',
-      },
+    browserSession: createFixtureBrowserProbeSession({
+      probe: async ({ scenario }) => ({
+        pageOverflowX: false,
+        clippedX: [],
+        reducedMotion: true,
+        keyboard: {
+          tab: true,
+          arrows: Object.fromEntries(
+            ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].map((key) => [
+              key,
+              true,
+            ]),
+          ),
+        },
+        deckLayout: {
+          flow: 'vertical',
+          overflowX: scenario === 'print' ? 'visible' : 'auto',
+        },
+      }),
     }),
+    onProbeResult: (observation) => observations.push(observation),
   });
 
   assert.equal(report.valid, false);
+  assert.equal(
+    observations.length,
+    deckEntry.viewports.length * deckEntry.scenarios.length,
+  );
+  assert.deepEqual(
+    new Set(observations.map(({ scenario }) => scenario)),
+    new Set(['default', 'no-js', 'print']),
+  );
   assert.ok(
     report.issues.some(({ code }) => code === 'deck-horizontal-layout'),
   );

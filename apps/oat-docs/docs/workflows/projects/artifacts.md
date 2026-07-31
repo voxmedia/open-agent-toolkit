@@ -57,12 +57,30 @@ The archive exports at most one selected recap package. It preserves structured
 failure outcomes and successful intermediates, rejects an existing dated
 destination, and requires the selected path to stay under the project's
 `explainers/` directory with a `project-recap` manifest. Verification covers
-the exact retained bytes for the privacy-safe request, content approval, fact
-base JSON and Markdown, declared author results, authored content, resolved
-theme, and every built artifact. Canonical fact-base and theme hashes remain
-normalized-object identities; `manifest.immutableHashes` independently covers
-serialized file bytes. Missing, stale, or tampered coverage fails before the
-active project is deleted.
+the complete mode-aware package:
+
+- privacy-safe request and content approval;
+- fact-base JSON and Markdown;
+- the five immutable set-plan records and authored drafts;
+- declared author results and authored content;
+- resolved theme and every built artifact;
+- canonical mobile, tablet, and desktop screenshots;
+- paired `browser-evidence/v2` metrics with launched Chromium name, version,
+  and capture identity;
+- cohesion observations and each visual-review request/result; and
+- the bounded revision record when a correction occurred.
+
+Canonical object hashes identify normalized fact-base, theme, runtime, and
+capture objects; `manifest.immutableHashes` independently covers serialized file
+bytes. The archive requires one complete, internally consistent browser and
+review chain for a successful unattended recap. Missing, stale, forged,
+cross-record-mismatched, or tampered coverage fails before the active project is
+deleted.
+
+`built-needs-review` is a terminal review-gate outcome, not a non-durable
+success. Its partial evidence remains available for diagnosis, but it cannot be
+finalized, exported, attested, archived, or pushed. Review and rebuild the recap
+to a passing visual-review outcome first.
 
 Local-scope projects are not archived through this export path. Their explainer
 packages inherit the local project's untracked posture and remain

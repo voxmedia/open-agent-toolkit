@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.visual-review-request/v1",
+  "title": "VisualReviewRequestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "requestId",
+    "requestHash",
+    "browserRuntime",
+    "captureIdentity",
+    "plan",
+    "renderedArtifacts"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "explainer-kit.visual-review-request/v1"
+    },
+    "requestId": { "$ref": "#/$defs/safeId" },
+    "requestHash": { "$ref": "#/$defs/hash" },
+    "browserRuntime": { "$ref": "#/$defs/browserRuntime" },
+    "captureIdentity": { "$ref": "#/$defs/hash" },
+    "plan": { "$ref": "explainer-kit.set-plan/v1" },
+    "renderedArtifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/renderedArtifact" },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "safeRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "safeId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "browserRuntime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "version"],
+      "properties": {
+        "kind": { "enum": ["launched", "fixture"] },
+        "name": { "const": "chromium" },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "renderedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactId", "renderedPath", "renderedHash", "evidence"],
+      "properties": {
+        "artifactId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+        },
+        "renderedPath": { "$ref": "#/$defs/safeRelativePath" },
+        "renderedHash": { "$ref": "#/$defs/hash" },
+        "cohesionObservations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/cohesionObservation" },
+          "uniqueItems": true
+        },
+        "evidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidence" },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "cohesionObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactId", "contentHash", "group", "claim", "value"],
+      "properties": {
+        "artifactId": { "$ref": "#/$defs/safeId" },
+        "contentHash": { "$ref": "#/$defs/hash" },
+        "group": {
+          "enum": ["terminology", "statuses", "numericClaims"]
+        },
+        "claim": { "type": "string", "minLength": 1 },
+        "value": {
+          "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "number" }]
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "viewport",
+        "screenshotPath",
+        "screenshotHash",
+        "metricsPath",
+        "metricsHash",
+        "captureIdentity"
+      ],
+      "properties": {
+        "viewport": { "enum": ["desktop", "tablet", "mobile"] },
+        "screenshotPath": { "$ref": "#/$defs/safeRelativePath" },
+        "screenshotHash": { "$ref": "#/$defs/hash" },
+        "metricsPath": { "$ref": "#/$defs/safeRelativePath" },
+        "metricsHash": { "$ref": "#/$defs/hash" },
+        "captureIdentity": { "$ref": "#/$defs/hash" }
+      }
+    }
+  }
+}

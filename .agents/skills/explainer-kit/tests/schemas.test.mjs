@@ -20,6 +20,9 @@ const schemas = {
   'publish-receipt': 'explainer-kit.publish-receipt/v1',
   'author-request.v2': 'explainer-kit.author-request/v2',
   'author-result.v2': 'explainer-kit.author-result/v2',
+  'set-plan.v1': 'explainer-kit.set-plan/v1',
+  'visual-review-request.v1': 'explainer-kit.visual-review-request/v1',
+  'visual-review-result.v1': 'explainer-kit.visual-review-result/v1',
 };
 
 async function loadSchema(name) {
@@ -78,6 +81,10 @@ test('run request persists render strategy and complete durability input', async
     'commit',
     'publish',
   ]);
+  assert.deepEqual(schema.properties.recapMode.enum, [
+    'artistic',
+    'deterministic-markdown',
+  ]);
   assert.equal(schema.$defs.sourceBinding.properties.role.minLength, 1);
   assert.equal(schema.$defs.sourceBinding.properties.sourceSetId.minLength, 1);
 });
@@ -95,6 +102,7 @@ test('manifest and build record share outcomes and evidence contracts', async ()
   const outcomes = [
     'built-durable',
     'built-not-durable',
+    'built-needs-review',
     'failed',
     'incomplete',
   ];
@@ -146,10 +154,26 @@ test('author v2 contracts require authored content and provenance', async () => 
     'artifactType',
     'authoring',
     'brief',
+    'visualAuthoringGuidance',
     'factBase',
     'theme',
+    'setContext',
+    'plannedArtifact',
   ]);
   assert.deepEqual(request.properties.authoring.enum, ['markdown', 'html']);
+  assert.equal(request.properties.visualAuthoringGuidance.type, 'string');
+  assert.equal(request.properties.visualAuthoringGuidance.minLength, 1);
+  assert.equal(
+    request.properties.graphSemantics.items.$ref,
+    '#/$defs/graphSemantics',
+  );
+  assert.equal(request.$defs.graphSemantics.additionalProperties, false);
+  assert.deepEqual(request.$defs.graphSemantics.required, [
+    'direction',
+    'nodes',
+    'edges',
+    'topology',
+  ]);
   assert.deepEqual(result.required, [
     'schemaVersion',
     'artifactId',
@@ -168,4 +192,55 @@ test('author v2 contracts require authored content and provenance', async () => 
     'self-asserted',
   ]);
   assert.equal(result.properties.provenance.additionalProperties, false);
+});
+
+test('set and visual review schemas carry closed shared context', async () => {
+  const plan = await loadSchema('set-plan.v1');
+  const reviewRequest = await loadSchema('visual-review-request.v1');
+  const reviewResult = await loadSchema('visual-review-result.v1');
+
+  assert.deepEqual(plan.required, [
+    'schemaVersion',
+    'planId',
+    'recipe',
+    'sourceIds',
+    'ledger',
+    'portfolio',
+  ]);
+  assert.equal(plan.properties.portfolio.minItems, 1);
+  assert.deepEqual(plan.$defs.ledger.required, [
+    'terminology',
+    'statuses',
+    'numbers',
+  ]);
+  assert.deepEqual(reviewResult.properties.disposition.enum, [
+    'pass',
+    'correct',
+    'fail',
+  ]);
+  assert.ok(reviewRequest.required.includes('requestId'));
+  assert.ok(reviewRequest.required.includes('requestHash'));
+  assert.ok(reviewRequest.required.includes('renderedArtifacts'));
+  assert.equal(reviewRequest.properties.renderedArtifacts.uniqueItems, true);
+  assert.ok(
+    reviewRequest.$defs.renderedArtifact.required.includes('renderedHash'),
+  );
+  assert.ok(
+    reviewRequest.$defs.renderedArtifact.properties.cohesionObservations,
+  );
+  assert.equal(
+    reviewRequest.$defs.cohesionObservation.properties.group.enum.length,
+    3,
+  );
+  assert.equal(
+    reviewRequest.$defs.renderedArtifact.properties.evidence.uniqueItems,
+    true,
+  );
+  assert.ok(reviewRequest.$defs.evidence.required.includes('screenshotHash'));
+  assert.ok(reviewRequest.$defs.evidence.required.includes('metricsHash'));
+  assert.ok(reviewResult.required.includes('requestId'));
+  assert.ok(reviewResult.required.includes('requestHash'));
+  assert.ok(reviewResult.required.includes('artifactIds'));
+  assert.equal(reviewResult.properties.artifactIds.uniqueItems, true);
+  assert.equal(reviewResult.properties.findings.uniqueItems, true);
 });

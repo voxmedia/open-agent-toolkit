@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "explainer-kit.retained-source/v1",
+  "id": "project-record",
+  "kind": "retained-repository-source",
+  "upstream": {
+    "locator": ".agents/skills/explainer-kit/examples/project-recap/fact-base.json",
+    "sha256": "sha256:a649d093f781ca713cf2db7937596dece7af6a49ac0d06788f3ad637c1dd14a9"
+  },
+  "claims": [
+    {
+      "id": "F-101",
+      "text": "Nightly full rebuilds were replaced by incremental indexing with no change to the public query contract."
+    },
+    {
+      "id": "F-102",
+      "text": "Checkpoints are partition-local, index writes are idempotent, and the full rebuild survives as a recovery path."
+    },
+    {
+      "id": "F-103",
+      "text": "A checkpointed change reader feeds idempotent workers, and a scheduled audit samples both sides for drift."
+    }
+  ],
+  "topology": {
+    "kind": "linear-with-audit",
+    "nodes": [
+      "change-reader",
+      "batch-queue",
+      "index-worker",
+      "search-index",
+      "drift-audit"
+    ],
+    "edges": [
+      ["change-reader", "batch-queue"],
+      ["batch-queue", "index-worker"],
+      ["index-worker", "search-index"],
+      ["search-index", "drift-audit"]
+    ]
+  }
+}
