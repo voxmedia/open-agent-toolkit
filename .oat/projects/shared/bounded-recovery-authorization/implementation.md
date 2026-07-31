@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - 'Phase p-rev1 invalid-run abort: accepted packet carried incorrect full base SHA; corrected relaunch requires explicit direction'
 oat_last_updated: 2026-07-31
 oat_current_task_id: p-rev1-t01
 oat_generated: false
@@ -27,7 +28,7 @@ oat_generated: false
 | Phase        | Status        | Tasks | Completed |
 | ------------ | ------------- | ----- | --------- |
 | Phase 1      | review_failed | 2     | 2/2       |
-| Phase p-rev1 | in_progress   | 1     | 0/1       |
+| Phase p-rev1 | blocked       | 1     | 0/1       |
 | Phase 2      | pending       | 1     | 0/1       |
 | Phase 3      | pending       | 1     | 0/1       |
 | Phase 4      | pending       | 1     | 0/1       |
@@ -126,12 +127,12 @@ oat_generated: false
 
 ## Revision Phase 1: Final Reserved Attempt Revision
 
-**Status:** in_progress
+**Status:** blocked
 **Started:** 2026-07-31
 
 ### Task p-rev1-t01: (revision) Distinguish Pending Completion from New Reservation
 
-**Status:** in_progress
+**Status:** blocked
 **Commit:** -
 
 ---
@@ -205,6 +206,31 @@ _- Outstanding Items_
   exhausted; operator direction required
 - Operator authorization: add a new explicit `p-rev1` phase for the retained
   attempt-boundary defect; do not reopen or extend the Phase 1 review cycle
+- Phase p-rev1 launch accepted on the resolved target, then returned
+  `INVALID_RUN_ABORT` before edit because the packet's full expected base SHA
+  did not equal the actual clean HEAD
+
+#### Dispatch Record: p-rev1 invalid run
+
+- Request:
+  `bounded-recovery-authorization-p-rev1-implementation-20260731T1830Z`
+- Launch state: accepted
+- Route: Cursor native materialized role
+  `oat-phase-implementer-gpt-5-6-sol-high`
+- Selection: managed High; candidate `gpt-5.6-sol-high`; task class
+  `hard-reasoning`
+- Model axis: `selected:gpt-5.6-sol-high`
+- Effort axis: `not-applicable`
+- Packet base:
+  `5494dbfe4b4934c94fbb7d9cb911dc9cfce5bb22`
+- Actual clean HEAD:
+  `5494dbfe98129193f1db46d86f12b768b7511f39`
+- Outcome: `INVALID_RUN_ABORT`
+- Task/commit: not executed
+- Verification/recovery/children: none
+- Fallback/replacement: none; stopped after accepted invalid-run abort
+- Dispatch stamp:
+  `Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 
 <!-- orchestration-runs-end -->
 
@@ -242,14 +268,14 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Execute and independently review Phase p-rev1.
+- Await explicit direction before any corrected p-rev1 launch.
 
 **Blockers:**
 
-- None. The operator authorized a new revision phase without extending the
-  Phase 1 review cycle.
+- Accepted p-rev1 run aborted before edit on exact-base mismatch. Automatic
+  replacement is forbidden.
 
-**Session End:** Phase p-rev1 authorized
+**Session End:** Blocked after p-rev1 invalid-run abort
 
 ---
 
