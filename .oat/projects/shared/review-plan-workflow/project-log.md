@@ -68,6 +68,10 @@ Phase p02 implementation completed after the authorized six-file composition rep
 
 Received failed Phase p02 independent review at d6c204514b076d57eaf2ee277d72e6de9a995a53: 5 Critical, 6 Important, 3 Medium, 0 Minor. Added p02-t30 through p02-t43 with no deferrals.
 
+### 2026-07-31 · structural · oat-project-implement · p02-review-fix-1
+
+Review-fix iteration 1 stopped after p02-t35: focused tests passed, but post-commit package lint rejected unsafe throw control flow in validation-store lock cleanup. Explicit append-only recovery authorization is required.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

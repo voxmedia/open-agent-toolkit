@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - p02-t35 post-commit lint rejects unsafe control flow in lock cleanup
 oat_last_updated: 2026-07-30
-oat_current_task_id: p02-t30
+oat_current_task_id: p02-t35
 oat_generated: false
 ---
 
@@ -24,17 +25,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | in_progress | 43    | 29/43     |
-| Phase 3 | pending     | 5     | 0/5       |
-| Phase 4 | pending     | 8     | 0/8       |
-| Phase 5 | pending     | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | blocked   | 43    | 34/43     |
+| Phase 3 | pending   | 5     | 0/5       |
+| Phase 4 | pending   | 8     | 0/8       |
+| Phase 5 | pending   | 7     | 0/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 42/89 tasks completed
+**Total:** 47/89 tasks completed
 
 ## Execution Configuration
 
@@ -175,7 +176,7 @@ fix commit `40fa861f`.
 
 ## Phase 2: ChangeMap and Validation Runtime
 
-**Status:** in_progress
+**Status:** blocked
 **Started:** 2026-07-30
 
 ### Task p02-t01: Normalize authoritative review paths
@@ -338,33 +339,36 @@ and CLI help integration passed.
 
 ### Task p02-t30: (review C1) Parse canonical implementation deviations
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `b2ff4a2b`
 
 ### Task p02-t31: (review C2) Enforce strict ReviewPlan CLI parsing
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `91d213fe`
 
 ### Task p02-t32: (review C3) Enforce whole-diff execution policy
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `953b69a9`
 
 ### Task p02-t33: (review C4) Make gate correlation injective
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `f19843d2`
 
 ### Task p02-t34: (review C5) Isolate and authenticate validation state
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `f9153603`
 
 ### Task p02-t35: (review I1) Make lifecycle transitions crash-safe
 
-**Status:** pending
-**Commit:** -
+**Status:** blocked
+**Commit:** `de51125a`
+**Concern:** Focused tests pass, but package lint rejects a throw in the lock
+cleanup `finally` block because it can overwrite the operation's result or
+error.
 
 ### Task p02-t36: (review I2) Enforce patch-stream wall-clock deadlines
 
@@ -642,6 +646,39 @@ None in this run entry.
 
 - Execute p02-t30 through p02-t43 in order, then independently re-review the
   fix range.
+
+### Run 6 — 2026-07-31T00:18:00Z {#run-6}
+
+**Branch:** `review-plan-workflow`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict | Task Commits                                                           | Review  | Fixes  |
+| ----- | ------- | ---------------------------------------------------------------------- | ------- | ------ |
+| p02   | blocked | `b2ff4a2b`, `91d213fe`, `953b69a9`, `f19843d2`, `f9153603`, `de51125a` | pending | 5 done |
+
+#### Dispatch Notes
+
+- Bounded review-fix iteration 1 completed p02-t30 through p02-t34 with focused
+  verification and package lint passing after each task.
+- p02-t35 committed its exact seven-file boundary and passed 25 focused tests.
+  The mandatory post-commit lint then rejected `validation-store.ts:386`
+  because throwing from `finally` can overwrite the operation result/error.
+- No unplanned repair commit was made.
+- Dispatch stamp:
+  - `Dispatch: scope=p02-review-fix1 action=fix role=implementer producer=oat-reviewer-gpt-5-6-sol-high provenance=same-accepted-handle model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+#### Parallel Groups
+
+None in this run entry.
+
+#### Outstanding Items
+
+- p02-t35 requires explicit authorization for one append-only repair limited to
+  `packages/cli/src/review/validation-store.ts`, followed by its focused tests
+  and package lint before p02-t36.
 
 <!-- orchestration-runs-end -->
 

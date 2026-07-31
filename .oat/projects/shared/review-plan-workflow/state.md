@@ -1,7 +1,8 @@
 ---
-oat_current_task: p02-t30
-oat_last_commit: d6c204514b076d57eaf2ee277d72e6de9a995a53
-oat_blockers: []
+oat_current_task: p02-t35
+oat_last_commit: de51125add2d4b8e2dce3b9d328af528a753ff17
+oat_blockers:
+  - p02-t35 post-commit lint rejects unsafe control flow in lock cleanup
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -75,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-30T23:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T00:18:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,15 +86,15 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 2 review fixes queued
+**Status:** Phase 2 review fixes blocked
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-30
 
 ## Current Phase
 
-Phase 1 is complete and independently reviewed. The first independent Phase 2
-review failed with five Critical, six Important, and three Medium findings.
-Fourteen fix tasks are queued as p02-t30 through p02-t43.
+Phase 1 is complete and independently reviewed. Phase 2 review-fix tasks
+p02-t30 through p02-t34 are complete. p02-t35 passed its focused tests but is
+blocked by the mandatory post-commit package lint gate.
 
 ## Artifacts
 
@@ -137,12 +138,16 @@ Fourteen fix tasks are queued as p02-t30 through p02-t43.
   type-check, and lint
 - ✓ Phase 2 verification passed
 - ⚠ Independent Phase 2 review failed at reviewed head `d6c20451`
-- → Execute p02-t30 through p02-t43, then re-review the fix range
+- ✓ Review fixes p02-t30 through p02-t34 completed
+- ⚠ p02-t35 committed and passed focused tests, then failed package lint
+- → Authorize or decline a narrow append-only p02-t35 lint recovery
 
 ## Blockers
 
-None.
+- `p02-t35`: `validation-store.ts` throws from a `finally` cleanup path, which
+  can overwrite the operation's return or original error and violates
+  `no-unsafe-finally`.
 
 ## Next Milestone
 
-Execute Phase 2 review-fix tasks starting at p02-t30.
+Resolve the p02-t35 lint recovery boundary, then continue from p02-t36.
