@@ -57,6 +57,13 @@ oat_generated: false
 - `pnpm lint`, `pnpm format`, and `git diff --check`: passed
 - `review-plan-workflow` isolation check: passed
 
+**Review round 1:**
+
+- Artifact: `reviews/p01-review-2026-07-31T171149Z.md`
+- Reviewed head: `31fd3a86fb44c7abb24cf4bc183e5a3793681876`
+- Result: 4 Important findings; bounded fix continuation required
+- Reconnaissance: not attempted
+
 ### Task p01-t01: Separate Standing Recovery Authority from Fallback
 
 **Status:** completed
@@ -143,6 +150,7 @@ _- Outstanding Items_
 - Started: Phase 1 (`p01-t01`)
 - Phase 1 implementer outcome: done at
   `31fd3a86fb44c7abb24cf4bc183e5a3793681876`
+- Phase 1 review round 1: 4 Important findings; fix continuation pending
 
 <!-- orchestration-runs-end -->
 
@@ -175,13 +183,14 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run root-owned phase review after each implementation phase.
+- Resume the exact Phase 1 implementation target for the four bounded review
+  fixes, then run a fresh root-owned re-review.
 
 **Blockers:**
 
 - None.
 
-**Session End:** Phase 1 mandatory review pending
+**Session End:** Phase 1 review fixes pending
 
 ---
 
