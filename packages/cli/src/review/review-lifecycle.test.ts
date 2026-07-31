@@ -226,8 +226,31 @@ describe('post-artifact review checkpoint', () => {
   it('rejects post-plan checkpoint attempts', async () => {
     const { store, tokens } = await setup('lifecyclerun0003');
     await bindAcceptedHandle(store, 'lifecyclerun0003', 'handle');
+    const dependencies = {
+      store,
+      telemetryAdapter: { observe: async () => observation },
+      telemetryAdapterId: 'host',
+      clock: clock(),
+    };
+    const context = await checkpointArtifactsLoaded(
+      {
+        runId: 'lifecyclerun0003',
+        checkpointToken: tokens.checkpointToken,
+      },
+      dependencies,
+    );
+    await expect(
+      validateAndReceiptPlan(
+        {
+          runId: 'lifecyclerun0003',
+          commandToken: tokens.planToken,
+          plan: validPlan(context),
+        },
+        dependencies,
+      ),
+    ).resolves.toMatchObject({ valid: true });
     await store.updateRun('lifecyclerun0003', (state) => {
-      state.phase = 'plan_validated';
+      state.capabilities!.checkpointUsed = false;
       return state;
     });
     await expect(
@@ -236,12 +259,7 @@ describe('post-artifact review checkpoint', () => {
           runId: 'lifecyclerun0003',
           checkpointToken: tokens.checkpointToken,
         },
-        {
-          store,
-          telemetryAdapter: { observe: async () => observation },
-          telemetryAdapterId: 'host',
-          clock: clock(),
-        },
+        dependencies,
       ),
     ).rejects.toThrow(/current phase/);
   });
