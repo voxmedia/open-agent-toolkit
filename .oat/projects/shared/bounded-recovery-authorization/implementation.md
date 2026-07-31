@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status         | Tasks | Completed |
-| ------------ | -------------- | ----- | --------- |
-| Phase 1      | review_failed  | 2     | 2/2       |
-| Phase p-rev1 | passed         | 1     | 1/1       |
-| Phase 2      | passed         | 1     | 1/1       |
-| Phase 3      | review_pending | 2     | 2/2       |
-| Phase 4      | pending        | 1     | 0/1       |
+| Phase        | Status        | Tasks | Completed |
+| ------------ | ------------- | ----- | --------- |
+| Phase 1      | review_failed | 2     | 2/2       |
+| Phase p-rev1 | passed        | 1     | 1/1       |
+| Phase 2      | passed        | 1     | 1/1       |
+| Phase 3      | passed        | 2     | 2/2       |
+| Phase 4      | pending       | 1     | 0/1       |
 
 **Total:** 6/7 tasks completed
 
@@ -197,8 +197,15 @@ oat_generated: false
 
 ## Phase 3: Public Recovery Documentation
 
-**Status:** review_pending
+**Status:** passed
 **Started:** 2026-07-31
+
+**Review cycle 2/3:**
+
+- Artifact: `reviews/p03-review-2026-07-31T200025Z.md`
+- Reviewed head: `4f6d934b955b030dfacb06ae91e2e81d92c3b30a`
+- Result: passed with zero findings; prior Important finding I1 resolved
+- Reconnaissance: not attempted
 
 ### Review Received: p03 cycle 1/3
 
@@ -326,6 +333,8 @@ _- Outstanding Items_
 - Phase 2 review passed at the task head with zero findings; fix-loop count 0
 - Sequential Phase 3 completed at
   `431841fc74e3453a86317366a78f767a2e94186d`; fresh root-owned review pending
+- Phase 3 review cycle 2 passed at the fix head with zero findings; fix-loop
+  count 1
 
 #### Dispatch Record: p-rev1 invalid run
 
@@ -466,13 +475,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run fresh Phase 3 review cycle 2/3.
+- Run Phase 4 lockstep release and full verification.
 
 **Blockers:**
 
 - None.
 
-**Session End:** Phase 3 re-review pending
+**Session End:** Phase 3 passed; Phase 4 pending
 
 ---
 
