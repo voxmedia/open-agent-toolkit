@@ -1,3 +1,7 @@
+import { canonicalizeJson } from './canonical-json';
+import { validateReviewPlan } from './plan-validator';
+import type { PreparedReviewContextV1, ReviewPlanV1 } from './types';
+
 export type ReviewOperationKind =
   | 'content-diff'
   | 'full-file-read'
@@ -86,6 +90,7 @@ const OPERATION_SOURCES = [
   'output',
 ] as const satisfies readonly ReviewOperationSource[];
 const PRODUCTION_TRACE_PRODUCER = 'review-operation-recorder/v1';
+const PRODUCTION_TRACES = new WeakSet<ReviewOperationTraceV1>();
 
 function isOperationKind(value: unknown): value is ReviewOperationKind {
   return OPERATION_KINDS.some((kind) => kind === value);
@@ -250,6 +255,14 @@ function parseOperationTrace(value: unknown): ReviewOperationTraceV1 {
         'whole-diff-inline traces require one complete diff and no broad reads or replay',
       );
     }
+  } else if (
+    trace['completion'] === 'complete' &&
+    changedFiles > 0 &&
+    !events.some((event) => event.source === 'evidence')
+  ) {
+    throw new Error(
+      'complete non-empty selective traces require evidence operations',
+    );
   }
 
   return {
@@ -264,7 +277,7 @@ function parseOperationTrace(value: unknown): ReviewOperationTraceV1 {
   };
 }
 
-export function createReviewOperationTrace(
+function createReviewOperationTrace(
   input: Omit<ReviewOperationTraceV1, 'schemaVersion' | 'producer' | 'events'>,
 ): ReviewOperationTraceV1 {
   if (
@@ -286,7 +299,7 @@ export function createReviewOperationTrace(
   };
 }
 
-export function recordReviewOperation(
+function recordReviewOperation(
   trace: ReviewOperationTraceV1,
   event: Omit<ReviewOperationTraceEventV1, 'sequence'>,
 ): void {
@@ -299,9 +312,158 @@ export function recordReviewOperation(
   });
 }
 
+function pathIndexesFor(
+  context: PreparedReviewContextV1,
+  paths: readonly string[],
+): number[] {
+  const indexesByPath = new Map(
+    context.changeMap.files.map((file, index) => [file.path, index]),
+  );
+  return paths.map((path) => {
+    const index = indexesByPath.get(path);
+    if (index === undefined) {
+      throw new Error(`validated execution path ${path} is not authoritative`);
+    }
+    return index;
+  });
+}
+
+function recordPathStrategy(
+  trace: ReviewOperationTraceV1,
+  strategy: ReviewPlanV1['lanes'][number]['strategy'],
+  replay: ReviewPlanV1['lanes'][number]['replay'],
+  pathIndexes: number[],
+): void {
+  if (strategy === 'path-diff' && pathIndexes.length > 0) {
+    recordReviewOperation(trace, {
+      kind: 'content-diff',
+      source: 'evidence',
+      pathIndexes,
+    });
+  } else if (strategy === 'full-file') {
+    for (const pathIndex of pathIndexes) {
+      recordReviewOperation(trace, {
+        kind: 'full-file-read',
+        source: 'evidence',
+        pathIndexes: [pathIndex],
+      });
+    }
+  } else if (strategy === 'command' || strategy === 'inventory') {
+    recordReviewOperation(trace, {
+      kind: 'tool-step',
+      source: 'evidence',
+      pathIndexes: [],
+    });
+  }
+
+  const replayIndexes =
+    replay === 'direct-verify'
+      ? pathIndexes
+      : replay === 'sample'
+        ? pathIndexes.slice(0, 1)
+        : [];
+  for (const pathIndex of replayIndexes) {
+    recordReviewOperation(trace, {
+      kind: 'semantic-replay',
+      source: 'reconciliation',
+      pathIndexes: [pathIndex],
+    });
+  }
+}
+
+export function executeValidatedReviewStrategy(
+  context: PreparedReviewContextV1,
+  plan: ReviewPlanV1,
+  fixture: string,
+): ReviewOperationTraceV1 {
+  const validationErrors = validateReviewPlan(context, plan);
+  if (validationErrors.length > 0) {
+    throw new Error(
+      `operation strategy requires a validated review plan: ${canonicalizeJson(validationErrors)}`,
+    );
+  }
+
+  const trace = createReviewOperationTrace({
+    fixture,
+    changedFiles: context.changeMap.files.length,
+    strategy: plan.strategy,
+    completion: 'complete',
+    accountingBytes: 0,
+  });
+  recordReviewOperation(trace, {
+    kind: 'tool-step',
+    source: 'strategy',
+    pathIndexes: [],
+  });
+
+  if (plan.strategy === 'whole-diff-inline') {
+    recordReviewOperation(trace, {
+      kind: 'content-diff',
+      source: 'evidence',
+      pathIndexes: context.changeMap.files.map((_, index) => index),
+    });
+  } else {
+    for (const lane of plan.lanes) {
+      recordPathStrategy(
+        trace,
+        lane.strategy,
+        lane.replay,
+        pathIndexesFor(context, lane.paths),
+      );
+    }
+    for (const classification of plan.classifications) {
+      const pathIndexes = pathIndexesFor(context, classification.paths);
+      if (classification.strategy === 'path-diff' && pathIndexes.length > 0) {
+        recordReviewOperation(trace, {
+          kind: 'content-diff',
+          source: 'evidence',
+          pathIndexes,
+        });
+      } else {
+        recordReviewOperation(trace, {
+          kind: 'tool-step',
+          source: 'evidence',
+          pathIndexes: [],
+        });
+      }
+    }
+  }
+
+  recordReviewOperation(trace, {
+    kind: 'tool-step',
+    source: 'output',
+    pathIndexes: [],
+  });
+  trace.accountingBytes = Buffer.byteLength(
+    canonicalizeJson({
+      contextDigest: plan.contextDigest,
+      strategy: plan.strategy,
+      events: trace.events,
+    }),
+  );
+  const validatedTrace = parseOperationTrace(trace);
+  for (const event of validatedTrace.events) {
+    Object.freeze(event.pathIndexes);
+    Object.freeze(event);
+  }
+  Object.freeze(validatedTrace.events);
+  Object.freeze(validatedTrace);
+  PRODUCTION_TRACES.add(validatedTrace);
+  return validatedTrace;
+}
+
 export function deriveOperationMetrics(
   value: unknown,
 ): ReviewOperationMetricsV1 {
+  if (
+    value === null ||
+    typeof value !== 'object' ||
+    !PRODUCTION_TRACES.has(value as ReviewOperationTraceV1)
+  ) {
+    throw new Error(
+      'operation metrics require output from the production execution harness',
+    );
+  }
   const trace = parseOperationTrace(value);
   const counts = new Map<ReviewOperationKind, number>(
     OPERATION_KINDS.map((kind) => [kind, 0]),
