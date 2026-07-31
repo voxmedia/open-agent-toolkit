@@ -191,9 +191,49 @@ describe('review preparation contracts', () => {
       preparation,
       artifactDraftPath: '/private/review-draft.md',
       commands: {
-        checkpointArtifacts: 'oat review checkpoint-artifacts',
-        validatePlan: 'oat review validate-plan',
-        beginEvidence: 'oat review begin-evidence',
+        checkpointArtifacts: {
+          executable: process.execPath,
+          argv: [
+            '/repo/packages/cli/dist/index.js',
+            'review',
+            'checkpoint-artifacts',
+            '--run-id',
+            preparation.runId,
+            '--checkpoint-token',
+            'checkpoint-token',
+            '--json',
+          ],
+          stdin: 'none',
+        },
+        validatePlan: {
+          executable: process.execPath,
+          argv: [
+            '/repo/packages/cli/dist/index.js',
+            'review',
+            'validate-plan',
+            '--run-id',
+            preparation.runId,
+            '--command-token',
+            'plan-token',
+            '--stdin',
+            '--json',
+          ],
+          stdin: 'review-plan-json',
+        },
+        beginEvidence: {
+          executable: process.execPath,
+          argv: [
+            '/repo/packages/cli/dist/index.js',
+            'review',
+            'begin-evidence',
+            '--run-id',
+            preparation.runId,
+            '--receipt',
+            '__OAT_PLAN_RECEIPT__',
+            '--json',
+          ],
+          stdin: 'none',
+        },
       },
     } satisfies PrepareReviewContextResultV1;
 
