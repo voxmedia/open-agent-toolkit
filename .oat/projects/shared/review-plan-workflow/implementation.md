@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-30
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | in_progress | 5     | 0/5       |
-| Phase 4 | pending     | 8     | 0/8       |
-| Phase 5 | pending     | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | in_review | 5     | 5/5       |
+| Phase 4 | pending   | 8     | 0/8       |
+| Phase 5 | pending   | 7     | 0/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 68/101 tasks completed
+**Total:** 73/101 tasks completed
 
 ## Execution Configuration
 
@@ -640,6 +640,53 @@ independent root verification without authorizing another review cycle.
 
 ---
 
+## Phase 3: Reviewer Plan and Evidence Contract
+
+**Status:** in_review
+**Started:** 2026-07-31
+**Completed:** -
+
+### Task p03-t01: Define the canonical plan-first reviewer contract
+
+**Status:** completed
+**Commit:** `eda7c09e`
+
+### Task p03-t02: Enforce delegation gates and dossier contracts
+
+**Status:** completed
+**Commit:** `b91662ac`
+
+### Task p03-t03: Pin accepted-handle evidence ordering
+
+**Status:** completed
+**Commit:** `2fbcae03`
+
+### Task p03-t04: Replace local Tier 3 read-all behavior
+
+**Status:** completed
+**Commit:** `c6ff7bee`
+**Recovery:** `4243aeb6` replaced prompt-like wording that triggered the
+autonomy inventory while preserving the Tier 3 strategy contract.
+
+### Task p03-t05: Prove selective evidence reduces broad operations
+
+**Status:** completed
+**Commit:** `0ca8fe29`
+
+### Phase Verification
+
+- 3,812 CLI tests passed.
+- Workspace type-check passed 10/10 tasks.
+- CLI lint and repository formatting passed.
+- Root independently reran 186 focused contract, dossier, boundary, and
+  operation-metrics tests.
+- Range diff-check is clean and the worktree contains only the 13 declared
+  Phase 3 files.
+
+**Next:** Run the root-owned independent Phase 3 review.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1176,6 +1223,41 @@ None in this run entry.
 
 - Operator must choose whether to authorize one final fix-range review or
   accept root verification and proceed to Phase 3.
+
+### Run 16 — 2026-07-31T13:53:00Z {#run-16}
+
+**Branch:** `review-plan-workflow`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict   | Task Commits | Review  | Fixes              |
+| ----- | --------- | ------------ | ------- | ------------------ |
+| p03   | in_review | 6            | pending | 1 bounded recovery |
+
+#### Dispatch Notes
+
+- Request `0d8a2a16-c919-4d41-a887-5ec14a5df82d` selected
+  `oat-phase-implementer-gpt-5-6-sol-high` for the consequential Phase 3
+  reviewer-contract scope.
+- Five planned commits completed in order; bounded recovery `4243aeb6`
+  corrected prompt-inventory wording without changing behavior.
+- The worker reported 3,812 CLI tests, workspace type-check, CLI lint,
+  formatting, and range diff-check passing.
+- Root independently passed 186 focused contract and integration tests and
+  confirmed the clean 13-file range.
+- Dispatch stamp:
+  - `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+#### Parallel Groups
+
+None in this run entry.
+
+#### Outstanding Items
+
+- Dispatch and receive the root-owned independent Phase 3 review against
+  `1a02af986..4243aeb6b`.
 
 <!-- orchestration-runs-end -->
 
