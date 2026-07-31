@@ -788,9 +788,9 @@ run `21b68483-5f01-498c-bfb7-60fd79a8504c`.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented                                                   | Actual / Accepted                                                                                                             | Reason                                                                                                                                   | Source of Truth                                                                            | Follow-up                          |
+| ------------- | --------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------- |
+| p02-t10 / I6  | design.md       | Plan Files blocks terminated only at standalone fully-bold Step lines. | Plan Files blocks terminate at standalone fully-bold Step lines or canonical inline-prose Step lines with a fully-bold label. | Canonical plan artifacts use inline-prose Step syntax, so the implemented grammar intentionally accepts both canonical and legacy forms. | `packages/cli/src/review/obligations.ts` and `packages/cli/src/review/obligations.test.ts` | Design grammar aligned by p02-t41. |
 
 ## Test Results
 

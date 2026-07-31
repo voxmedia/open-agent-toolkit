@@ -359,8 +359,10 @@ the selected scope.
 - Before the next level-two or level-three heading, require exactly one
   `**Files:**` line. After optional blank lines, consume one or more exact file
   lines. The block ends at a heading or at one or more empty lines followed by
-  a line matching `^\*\*Step \d+: [^*]+\*\*$`; any other non-empty line in the
-  block is malformed.
+  a line matching `^\*\*Step \d+: [^*]+\*\*(?: [^\r\n]+)?$`. This accepts both
+  standalone fully-bold Step lines and canonical inline-prose Step lines whose
+  fully-bold label is followed by prose. Any other non-empty line in the block
+  is malformed.
 - Paths must pass repository-relative POSIX normalization and remain inside the
   resolved repository root.
 
