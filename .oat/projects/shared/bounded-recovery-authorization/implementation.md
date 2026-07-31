@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p02-t01
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status        | Tasks | Completed |
-| ------- | ------------- | ----- | --------- |
-| Phase 1 | review_failed | 2     | 2/2       |
-| Phase 2 | in_progress   | 1     | 0/1       |
-| Phase 3 | pending       | 1     | 0/1       |
-| Phase 4 | pending       | 1     | 0/1       |
-| Phase 5 | pending       | 1     | 0/1       |
+| Phase        | Status        | Tasks | Completed |
+| ------------ | ------------- | ----- | --------- |
+| Phase 1      | review_failed | 2     | 2/2       |
+| Phase p-rev1 | in_progress   | 1     | 0/1       |
+| Phase 2      | pending       | 1     | 0/1       |
+| Phase 3      | pending       | 1     | 0/1       |
+| Phase 4      | pending       | 1     | 0/1       |
 
 **Total:** 2/6 tasks completed
 
@@ -124,48 +124,48 @@ oat_generated: false
 
 ---
 
-## Phase 2: Final Reserved Attempt Revision
+## Phase p-rev1: Final Reserved Attempt Revision
 
 **Status:** in_progress
 **Started:** 2026-07-31
 
-### Task p02-t01: Distinguish Pending Completion from New Reservation
+### Task prev1-t01: (revision) Distinguish Pending Completion from New Reservation
 
 **Status:** in_progress
 **Commit:** -
 
 ---
 
-## Phase 3: Provider Materialization and Parity
+## Phase 2: Provider Materialization and Parity
 
 **Status:** pending
 **Started:** -
 
-### Task p03-t01: Regenerate and Validate Provider Agents
+### Task p02-t01: Regenerate and Validate Provider Agents
 
 **Status:** pending
 **Commit:** -
 
 ---
 
-## Phase 4: Public Recovery Documentation
+## Phase 3: Public Recovery Documentation
 
 **Status:** pending
 **Started:** -
 
-### Task p04-t01: Explain Prevention, Recovery, and Migration
+### Task p03-t01: Explain Prevention, Recovery, and Migration
 
 **Status:** pending
 **Commit:** -
 
 ---
 
-## Phase 5: Lockstep Release and Full Verification
+## Phase 4: Lockstep Release and Full Verification
 
 **Status:** pending
 **Started:** -
 
-### Task p05-t01: Bump Public Packages and Validate the Release
+### Task p04-t01: Bump Public Packages and Validate the Release
 
 **Status:** pending
 **Commit:** -
@@ -188,9 +188,9 @@ _- Outstanding Items_
 - Base: `69070269bcdff8a4609dd6cc45c970f66aa7f844`
 - Dispatch: managed High; Cursor phase implementer
   `oat-phase-implementer-gpt-5-6-sol-high`
-- Schedule: `p01` → operator-authorized `p02` revision → parallel `p03`/`p04`
-  → `p05`
-- HiLL: final phase `p05`; auto-review enabled
+- Schedule: `p01` → operator-authorized `p-rev1` → parallel `p02`/`p03` →
+  `p04`
+- HiLL: final phase `p04`; auto-review enabled
 - Optional phase gate: disabled
 - Started: Phase 1 (`p01-t01`)
 - Phase 1 implementer outcome: done at
@@ -203,7 +203,7 @@ _- Outstanding Items_
   `a2d875bb379941301c3ed811b40cfee7a40148e8`; final review cycle pending
 - Phase 1 review round 3: failed with 1 Important finding; governance cap
   exhausted; operator direction required
-- Operator authorization: add a new explicit Phase 2 for the retained
+- Operator authorization: add a new explicit `p-rev1` phase for the retained
   attempt-boundary defect; do not reopen or extend the Phase 1 review cycle
 
 <!-- orchestration-runs-end -->
@@ -237,19 +237,19 @@ Chronological log of implementation progress.
 
 - Implementation remains isolated from `review-plan-workflow`.
 - Phase 1 review history and its three-cycle cap remain immutable.
-- Phase 3 provider materialization and Phase 4 docs run in parallel after the
-  operator-authorized Phase 2 revision passes.
+- Phase 2 provider materialization and Phase 3 docs run in parallel after the
+  operator-authorized revision phase passes.
 
 **Follow-ups / TODO:**
 
-- Execute and independently review the new Phase 2 revision.
+- Execute and independently review Phase p-rev1.
 
 **Blockers:**
 
 - None. The operator authorized a new revision phase without extending the
   Phase 1 review cycle.
 
-**Session End:** Phase 2 revision authorized
+**Session End:** Phase p-rev1 authorized
 
 ---
 
@@ -257,21 +257,21 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review  | Source Artifact | Planned / Documented                        | Actual / Accepted                                              | Reason                                                                                             | Source of Truth | Follow-up                                      |
-| -------------- | --------------- | ------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------- | ---------------------------------------------- |
-| p01 review 3/3 | plan.md         | Phase 1 must pass before provider/docs work | Added a new narrow Phase 2; shifted original Phases 2–4 to 3–5 | Terminal review found one attempt-boundary defect; operator explicitly authorized a revision phase | Revised plan.md | Implement and review p02 without reopening p01 |
+| Task / Review  | Source Artifact | Planned / Documented                        | Actual / Accepted                                 | Reason                                                                                             | Source of Truth | Follow-up                                         |
+| -------------- | --------------- | ------------------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------- |
+| p01 review 3/3 | plan.md         | Phase 1 must pass before provider/docs work | Added narrow revision phase p-rev1 before Phase 2 | Terminal review found one attempt-boundary defect; operator explicitly authorized a revision phase | Revised plan.md | Implement and review p-rev1 without reopening p01 |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                  | Passed                | Failed | Coverage                     |
-| ----- | ---------------------------------------------------------- | --------------------- | ------ | ---------------------------- |
-| 1     | skills.test.ts; skill validation; lint; format; diff check | 129 tests + 61 skills | 0      | Canonical recovery contracts |
-| 2     | -                                                          | -                     | -      | -                            |
-| 3     | -                                                          | -                     | -      | -                            |
-| 4     | -                                                          | -                     | -      | -                            |
-| 5     | -                                                          | -                     | -      | -                            |
+| Phase  | Tests Run                                                  | Passed                | Failed | Coverage                     |
+| ------ | ---------------------------------------------------------- | --------------------- | ------ | ---------------------------- |
+| 1      | skills.test.ts; skill validation; lint; format; diff check | 129 tests + 61 skills | 0      | Canonical recovery contracts |
+| p-rev1 | -                                                          | -                     | -      | -                            |
+| 2      | -                                                          | -                     | -      | -                            |
+| 3      | -                                                          | -                     | -      | -                            |
+| 4      | -                                                          | -                     | -      | -                            |
 
 ## Final Summary (for PR/docs)
 

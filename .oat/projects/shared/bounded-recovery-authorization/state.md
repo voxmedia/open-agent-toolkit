@@ -1,5 +1,5 @@
 ---
-oat_current_task: p02-t01
+oat_current_task: prev1-t01
 oat_last_commit: a2d875bb379941301c3ed811b40cfee7a40148e8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -8,7 +8,7 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: ['p04'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
@@ -73,7 +73,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - Phase 2 operator-authorized revision
+Implement - Phase p-rev1 operator-authorized revision
 
 ## Artifacts
 
@@ -98,7 +98,7 @@ Implement - Phase 2 operator-authorized revision
 - ✓ Phase 1 second bounded fix continuation completed
 - ✗ Phase 1 final review retained one Important finding
 - ✓ Operator authorized a new narrow revision phase without reopening Phase 1
-- ⧗ Phase 2 attempt-boundary revision in progress
+- ⧗ Phase p-rev1 attempt-boundary revision in progress
 
 ## Blockers
 
@@ -106,4 +106,4 @@ None
 
 ## Next Milestone
 
-Complete and independently review Phase 2
+Complete and independently review Phase p-rev1
