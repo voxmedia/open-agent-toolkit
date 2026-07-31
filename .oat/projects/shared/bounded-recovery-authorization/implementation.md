@@ -237,6 +237,15 @@ _- Outstanding Items_
   `53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc`; fresh root-owned review pending
 - Phase p-rev1 review passed at the task head with zero findings; fix-loop
   count 0
+- Parallel p02/p03 bootstrap created correct-base worktrees and a shared sync
+  commit, but strict readiness failed because local unmanaged Cursor entries
+  made `oat status --scope project` exit nonzero
+- No phase agent was launched into either failed baseline; both worktrees were
+  preserved and the group degraded to sequential target-preserving execution
+- Preserved worktrees:
+  `/Users/tstang/orca/workspaces/open-agent-toolkit-worktrees/bounded-recovery-authorization-p02`
+  and
+  `/Users/tstang/orca/workspaces/open-agent-toolkit-worktrees/bounded-recovery-authorization-p03`
 
 #### Dispatch Record: p-rev1 invalid run
 
@@ -317,10 +326,12 @@ Chronological log of implementation progress.
 - Phase 1 review history and its three-cycle cap remain immutable.
 - Phase 2 provider materialization and Phase 3 docs run in parallel after the
   operator-authorized revision phase passes.
+- The planned parallel group degraded to sequential execution after strict
+  worktree readiness failed; the phase scopes and targets remain unchanged.
 
 **Follow-ups / TODO:**
 
-- Run planned parallel Phases 2 and 3 in isolated worktrees.
+- Run Phase 2 sequentially in the root checkout, then Phase 3.
 
 **Blockers:**
 
@@ -334,10 +345,11 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review   | Source Artifact    | Planned / Documented                        | Actual / Accepted                                   | Reason                                                                                             | Source of Truth | Follow-up                                                       |
-| --------------- | ------------------ | ------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------- | --------------------------------------------------------------- |
-| p01 review 3/3  | plan.md            | Phase 1 must pass before provider/docs work | Added narrow revision phase p-rev1 before Phase 2   | Terminal review found one attempt-boundary defect; operator explicitly authorized a revision phase | Revised plan.md | Implement and review p-rev1 without reopening p01               |
-| p-rev1 identity | plan-and-resume.md | Revision tasks use `prev1-t01`              | Used executable status-parser identity `p-rev1-t01` | `oat project status` otherwise omits the revision phase from dispatch state                        | CLI parser      | Preserve scope; do not expand this revision into parser cleanup |
+| Task / Review     | Source Artifact    | Planned / Documented                           | Actual / Accepted                                     | Reason                                                                                             | Source of Truth   | Follow-up                                                           |
+| ----------------- | ------------------ | ---------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------- |
+| p01 review 3/3    | plan.md            | Phase 1 must pass before provider/docs work    | Added narrow revision phase p-rev1 before Phase 2     | Terminal review found one attempt-boundary defect; operator explicitly authorized a revision phase | Revised plan.md   | Implement and review p-rev1 without reopening p01                   |
+| p-rev1 identity   | plan-and-resume.md | Revision tasks use `prev1-t01`                 | Used executable status-parser identity `p-rev1-t01`   | `oat project status` otherwise omits the revision phase from dispatch state                        | CLI parser        | Preserve scope; do not expand this revision into parser cleanup     |
+| p02/p03 bootstrap | plan.md            | Run p02 and p03 in isolated parallel worktrees | Degraded the whole group to sequential root execution | Strict bootstrap readiness failed on unmanaged local Cursor entries before any phase-agent launch  | implementation.md | Preserve both failed-baseline worktrees; keep original phase scopes |
 
 ## Test Results
 

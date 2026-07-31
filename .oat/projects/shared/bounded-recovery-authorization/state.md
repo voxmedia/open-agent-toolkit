@@ -61,7 +61,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T19:16:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T19:20:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -73,7 +73,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - Parallel Phases 2 and 3 pending
+Implement - Phase 2 sequential fallback pending
 
 ## Artifacts
 
@@ -102,7 +102,8 @@ Implement - Parallel Phases 2 and 3 pending
 - ✓ Operator explicitly authorized one corrected new launch
 - ✓ Corrected Phase p-rev1 task completed and root-validated
 - ✓ Fresh root-owned Phase p-rev1 review passed with zero findings
-- ⧗ Parallel Phases 2 and 3 pending
+- ⚠ Parallel worktree bootstrap failed strict readiness before phase launch
+- ⧗ Phase 2 then Phase 3 will run sequentially with unchanged targets
 
 ## Blockers
 
@@ -110,4 +111,4 @@ None
 
 ## Next Milestone
 
-Run parallel Phases 2 and 3 in isolated worktrees
+Run Phase 2 sequentially, then Phase 3
