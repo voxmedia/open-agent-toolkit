@@ -1,9 +1,9 @@
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { mkdir, rm } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { createConnection, createServer, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import { parseStrictJson } from './canonical-json';
 import { DefaultGitChangeMapAdapter } from './change-map';
@@ -36,6 +36,8 @@ import {
 const MAX_BROKER_REQUEST_BYTES = 2 * 1024 * 1024;
 const DEFAULT_CONNECTION_READ_TIMEOUT_MS = 10_000;
 const DEFAULT_SHUTDOWN_TIMEOUT_MS = 1_000;
+const BROKER_DIRECTORY_PREFIX = 'oat-review-authority-';
+const BROKER_SOCKET_FILENAME = 'broker.sock';
 
 type BrokerRequest =
   | {
@@ -170,7 +172,7 @@ export async function requestValidationAuthorityBroker<T>(
   return response.result as T;
 }
 
-export async function startPreparedValidationAuthorityBroker(input: {
+interface StartPreparedBrokerInput {
   socketPath: string;
   key: Uint8Array;
   startup: BrokerStartup;
@@ -181,11 +183,28 @@ export async function startPreparedValidationAuthorityBroker(input: {
     shutdownTimeoutMs?: number;
     expiryMs?: number;
   };
-}): Promise<{
+}
+
+interface PreparedBroker {
   preparation: PrepareReviewContextResultV1;
   closed: Promise<void>;
   close: () => Promise<void>;
-}> {
+}
+
+export async function startPreparedValidationAuthorityBroker(
+  input: StartPreparedBrokerInput,
+): Promise<PreparedBroker> {
+  try {
+    return await startPreparedValidationAuthorityBrokerInternal(input);
+  } catch (error) {
+    await cleanupBrokerSocketPath(input.socketPath);
+    throw error;
+  }
+}
+
+async function startPreparedValidationAuthorityBrokerInternal(
+  input: StartPreparedBrokerInput,
+): Promise<PreparedBroker> {
   const authority = new ValidationStoreAuthority(input.key);
   const store = new ValidationStore(
     input.validationRoot ??
@@ -218,7 +237,7 @@ export async function startPreparedValidationAuthorityBroker(input: {
   const finish = () => {
     finishPromise ??= (async () => {
       try {
-        await rm(input.socketPath, { force: true });
+        await cleanupBrokerSocketPath(input.socketPath);
       } finally {
         resolveClosed();
       }
@@ -339,27 +358,28 @@ export async function launchValidationAuthorityBroker(input: {
 }): Promise<PrepareReviewContextResultV1> {
   const environment = input.environment ?? process.env;
   const key = consumeLauncherValidationAuthorityKey(environment);
-  const socketPath = join(
-    tmpdir(),
-    `oat-review-authority-${process.pid}-${randomBytes(8).toString('hex')}.sock`,
-  );
-  const child = spawn(
-    input.launcherInvocation.executable,
-    [
-      ...input.launcherInvocation.argvPrefix,
-      'review',
-      'authority-broker',
-      '--socket',
-      socketPath,
-    ],
-    {
-      detached: true,
-      env: reviewerSafeEnvironment(environment),
-      shell: false,
-      stdio: ['ignore', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe'],
-    },
-  );
+  let socketDirectory: string | undefined;
+  let child: ReturnType<typeof spawn> | undefined;
   try {
+    socketDirectory = await mkdtemp(join(tmpdir(), BROKER_DIRECTORY_PREFIX));
+    await chmod(socketDirectory, 0o700);
+    const socketPath = join(socketDirectory, BROKER_SOCKET_FILENAME);
+    child = spawn(
+      input.launcherInvocation.executable,
+      [
+        ...input.launcherInvocation.argvPrefix,
+        'review',
+        'authority-broker',
+        '--socket',
+        socketPath,
+      ],
+      {
+        detached: true,
+        env: reviewerSafeEnvironment(environment),
+        shell: false,
+        stdio: ['ignore', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe'],
+      },
+    );
     const startup = child.stdio[3] as NodeJS.WritableStream | null;
     const authority = child.stdio[4] as NodeJS.WritableStream | null;
     const acceptedContinuation = (
@@ -400,8 +420,11 @@ export async function launchValidationAuthorityBroker(input: {
     child.unref();
     return result;
   } catch (error) {
-    if (child.exitCode === null && child.signalCode === null) {
+    if (child && child.exitCode === null && child.signalCode === null) {
       child.kill('SIGKILL');
+    }
+    if (socketDirectory) {
+      await rm(socketDirectory, { force: true, recursive: true });
     }
     throw error;
   } finally {
@@ -429,6 +452,16 @@ function destroyAndUnref(
   } | null;
   detachable?.destroy?.();
   detachable?.unref?.();
+}
+
+async function cleanupBrokerSocketPath(socketPath: string): Promise<void> {
+  const socketDirectory = dirname(socketPath);
+  const target =
+    basename(socketPath) === BROKER_SOCKET_FILENAME &&
+    basename(socketDirectory).startsWith(BROKER_DIRECTORY_PREFIX)
+      ? socketDirectory
+      : socketPath;
+  await rm(target, { force: true, recursive: true });
 }
 
 async function readBrokerStartupResponse(

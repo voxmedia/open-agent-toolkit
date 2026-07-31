@@ -1,8 +1,8 @@
 import { execFile, spawn } from 'node:child_process';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { createConnection } from 'node:net';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 
 import { afterEach, describe, expect, it } from 'vitest';
@@ -23,7 +23,7 @@ const roots: string[] = [];
 
 afterEach(async () => {
   await Promise.all(
-    roots.splice(0).map((root) => rm(root, { recursive: true })),
+    roots.splice(0).map((root) => rm(root, { force: true, recursive: true })),
   );
 });
 
@@ -57,13 +57,18 @@ async function repositoryFixture() {
   const headSha = (
     await exec('git', ['rev-parse', 'HEAD'], { cwd: root })
   ).stdout.trim();
-  const socketPath = join(root, 'authority.sock');
+  const socketDirectory = await mkdtemp(
+    join(tmpdir(), 'oat-review-authority-'),
+  );
+  roots.push(socketDirectory);
+  const socketPath = join(socketDirectory, 'broker.sock');
   const validationRoot = join(root, '..', `authority-state-${Date.now()}`);
   roots.push(validationRoot);
   const sourceEntry = resolve('src/index.ts');
   return {
     root,
     validationRoot,
+    socketDirectory,
     socketPath,
     baseSha,
     headSha,
@@ -76,8 +81,15 @@ async function fixture(timings?: {
   shutdownTimeoutMs?: number;
   expiryMs?: number;
 }) {
-  const { root, validationRoot, socketPath, baseSha, headSha, sourceEntry } =
-    await repositoryFixture();
+  const {
+    root,
+    validationRoot,
+    socketDirectory,
+    socketPath,
+    baseSha,
+    headSha,
+    sourceEntry,
+  } = await repositoryFixture();
   const key = Buffer.alloc(32, 11);
   const broker = await startPreparedValidationAuthorityBroker({
     socketPath,
@@ -118,6 +130,7 @@ async function fixture(timings?: {
     root,
     validationRoot,
     key,
+    socketDirectory,
     socketPath,
     broker,
     store,
@@ -185,7 +198,7 @@ function plan(
 
 describe('validation authority broker', () => {
   it('runs every one-shot lifecycle command in a separate keyless process', async () => {
-    const { root, broker, store, socketPath } = await fixture({
+    const { root, broker, store, socketDirectory, socketPath } = await fixture({
       connectionReadTimeoutMs: 5_000,
       shutdownTimeoutMs: 100,
     });
@@ -304,6 +317,9 @@ describe('validation authority broker', () => {
     });
     await withinDeadline(broker.closed, 500);
     await withinDeadline(pinnedClosed, 500);
+    await expect(stat(socketDirectory)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
     const transportFailure = await executeCommandInvocation(begin, {
       cwd: resolve('..', '..'),
     });
@@ -342,6 +358,9 @@ describe('validation authority broker', () => {
     pinned.write('{"schemaVersion":1');
     await withinDeadline(expiryFixture.broker.closed, 500);
     await withinDeadline(pinnedClosed, 500);
+    await expect(stat(expiryFixture.socketDirectory)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
   });
 
   it('preserves expiry as a typed broker domain rejection', async () => {
@@ -366,6 +385,57 @@ describe('validation authority broker', () => {
       code: 'validation-state-expired',
     });
     await broker.close();
+    await broker.close();
+    await expect(stat(dirname(socketPath))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+  });
+
+  it('removes the private socket directory after startup failure', async () => {
+    const {
+      root,
+      validationRoot,
+      socketDirectory,
+      socketPath,
+      baseSha,
+      headSha,
+      sourceEntry,
+    } = await repositoryFixture();
+    await expect(
+      startPreparedValidationAuthorityBroker({
+        socketPath,
+        key: Buffer.alloc(32, 19),
+        validationRoot,
+        acceptedContinuation: {
+          schemaVersion: 1,
+          handleId: 'accepted-handle',
+        },
+        startup: {
+          input: {
+            repoRoot: root,
+            project: '.oat/projects/shared/demo',
+            scope: 'p02-t01',
+            workflowMode: 'spec-driven',
+            range: { baseSha, headSha: `${headSha}-invalid` },
+            sink: 'structured',
+            invocation: 'manual',
+            budget: null,
+            obligationSources: {
+              plan: { source: planSource, path: 'plan.md' },
+              implementation: null,
+            },
+            target: 'reviewer',
+          },
+          launcherInvocation: {
+            executable: resolve('../../node_modules/.bin/tsx'),
+            argvPrefix: ['--tsconfig', resolve('tsconfig.json'), sourceEntry],
+          },
+        },
+      }),
+    ).rejects.toThrow();
+    await expect(stat(socketDirectory)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
   });
 
   it('rejects malformed exact requests before state or capability mutation', async () => {
@@ -502,6 +572,8 @@ describe('validation authority broker', () => {
         prepared.commands.checkpointArtifacts.argv.indexOf('--broker-socket') +
           1
       ];
+    const brokerSocketDirectory = dirname(brokerSocket);
+    expect((await stat(brokerSocketDirectory)).mode & 0o777).toBe(0o700);
     const pinned = createConnection(brokerSocket);
     pinned.on('error', () => undefined);
     await waitForSocketConnect(pinned);
@@ -560,6 +632,9 @@ describe('validation authority broker', () => {
       result: { phase: 'evidence_started' },
     });
     await withinDeadline(pinnedClosed, 2_000);
+    await expect(stat(brokerSocketDirectory)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
   }, 30_000);
 
   it('rejects reviewer-side key disclosure and state re-signing attempts', async () => {
