@@ -67,7 +67,8 @@ describe('prepareReviewContext', () => {
         },
       },
       telemetryAdapterId: 'host',
-      cli: '/repo/node_modules/.bin/oat',
+      commandExecutable: process.execPath,
+      commandArgvPrefix: ['/repo/packages/cli/dist/index.js'],
       clock: clock(),
       reap: async () => {
         events.push('reap');
@@ -103,8 +104,14 @@ describe('prepareReviewContext', () => {
     ]);
     expect(result.preparation).not.toHaveProperty('contentDiff');
     expect(result.artifactDraftPath).toMatch(/artifact-draft\.md$/);
-    expect(result.commands.checkpointArtifacts).toContain(
+    expect(result.commands.checkpointArtifacts.executable).toBe(
+      process.execPath,
+    );
+    expect(result.commands.checkpointArtifacts.argv).toContain(
       result.preparation.runId,
+    );
+    expect(result.commands.checkpointArtifacts.argv[0]).toBe(
+      '/repo/packages/cli/dist/index.js',
     );
     expect(JSON.stringify(result.preparation)).not.toContain(
       '--checkpoint-token',

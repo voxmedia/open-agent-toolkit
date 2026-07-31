@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -10,6 +10,7 @@ import {
 } from './budget';
 import type { GitChangeMapAdapter } from './change-map';
 import { bindAcceptedHandle } from './command-capabilities';
+import { executeCommandInvocation } from './command-invocation';
 import { prepareReviewContext } from './prepare-context';
 import {
   beginEvidence,
@@ -17,7 +18,11 @@ import {
   validateAndReceiptPlan,
 } from './review-lifecycle';
 import { parseReviewPlanV1 } from './schemas';
-import type { PreparedReviewContextV1, ReviewPlanV1 } from './types';
+import type {
+  PreparedReviewContextV1,
+  ReviewCommandInvocationV1,
+  ReviewPlanV1,
+} from './types';
 import { ValidationStore } from './validation-store';
 
 const roots: string[] = [];
@@ -28,10 +33,16 @@ afterEach(async () => {
   );
 });
 
-function extractArgument(command: string, name: string): string {
-  const match = new RegExp(`'${name}' '([^']+)'`).exec(command);
-  if (!match?.[1]) throw new Error(`missing trusted command argument: ${name}`);
-  return match[1];
+function extractArgument(
+  command: ReviewCommandInvocationV1,
+  name: string,
+): string {
+  const index = command.argv.indexOf(name);
+  const value = command.argv[index + 1];
+  if (index < 0 || !value) {
+    throw new Error(`missing trusted command argument: ${name}`);
+  }
+  return value;
 }
 
 function reviewPlan(context: PreparedReviewContextV1): ReviewPlanV1 {
@@ -116,6 +127,11 @@ describe('review validation lifecycle integration', () => {
     );
     roots.push(root);
     const store = new ValidationStore(join(root, 'private-store'));
+    const branchCandidate = join(root, 'branch-candidate.cjs');
+    await writeFile(
+      branchCandidate,
+      "process.stdin.resume(); process.stdin.on('end', () => process.stdout.write(JSON.stringify({ candidate: __filename, argv: process.argv.slice(2) })));",
+    );
     const git: GitChangeMapAdapter = {
       nameStatus: async () => Buffer.from('M\0src/example.ts\0'),
       numstat: async () => Buffer.from('2\t1\tsrc/example.ts\0'),
@@ -152,12 +168,27 @@ describe('review validation lifecycle integration', () => {
         git,
         telemetryAdapter: null,
         telemetryAdapterId: null,
-        cli: 'oat',
+        commandExecutable: process.execPath,
+        commandArgvPrefix: [branchCandidate],
         clock,
       },
     );
 
     const runId = prepared.preparation.runId;
+    const oldGlobalDirectory = join(root, 'old-global');
+    for (const invocation of Object.values(prepared.commands)) {
+      const executed = await executeCommandInvocation(invocation, {
+        environment: {
+          ...process.env,
+          PATH: `${oldGlobalDirectory}:${process.env.PATH ?? ''}`,
+        },
+        stdin: invocation.stdin === 'review-plan-json' ? '{}' : undefined,
+      });
+      expect(executed.exitCode).toBe(0);
+      expect(JSON.parse(executed.stdout)).toMatchObject({
+        candidate: await realpath(branchCandidate),
+      });
+    }
     await bindAcceptedHandle(store, runId, 'accepted-handle');
     const context = await checkpointArtifactsLoaded(
       {

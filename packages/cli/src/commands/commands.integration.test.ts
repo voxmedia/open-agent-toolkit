@@ -3,6 +3,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  realpath,
   rm,
   symlink,
   writeFile,
@@ -11,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { createProgram } from '@app/create-program';
+import { executeCommandInvocation } from '@review/command-invocation';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { registerCommands } from './index';
@@ -539,6 +541,39 @@ describe('CLI command integration', () => {
       'validate-plan',
       'begin-evidence',
     ]);
+  });
+
+  it('executes branch-local review command identity ahead of ambient PATH', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const candidate = join(root, 'branch-candidate.cjs');
+    const ambient = join(root, 'ambient');
+    await mkdir(ambient);
+    await writeFile(
+      candidate,
+      'process.stdout.write(JSON.stringify({ candidate: __filename, argv: process.argv.slice(2) }))',
+    );
+    await writeFile(join(ambient, 'oat'), 'older global installation');
+
+    const result = await executeCommandInvocation(
+      {
+        executable: process.execPath,
+        argv: [candidate, 'review', 'checkpoint-artifacts'],
+        stdin: 'none',
+      },
+      {
+        environment: {
+          ...process.env,
+          PATH: `${ambient}:${process.env.PATH ?? ''}`,
+        },
+      },
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual({
+      candidate: await realpath(candidate),
+      argv: ['review', 'checkpoint-artifacts'],
+    });
   });
 
   it('providers set writes provider enablement to sync config', async () => {

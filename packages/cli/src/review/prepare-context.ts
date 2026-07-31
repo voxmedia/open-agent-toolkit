@@ -55,7 +55,8 @@ export interface PrepareReviewContextDependencies {
   git: GitChangeMapAdapter;
   telemetryAdapter: HostContextTelemetryAdapter | null;
   telemetryAdapterId: string | null;
-  cli: string;
+  commandExecutable: string;
+  commandArgvPrefix: string[];
   clock?: () => Date;
   reap?: (store: ValidationStore) => Promise<unknown>;
 }
@@ -190,7 +191,8 @@ export async function prepareReviewContext(
       preparation,
       artifactDraftPath: stored.artifactDraftPath,
       commands: renderReviewCommands({
-        cli: dependencies.cli,
+        executable: dependencies.commandExecutable,
+        argvPrefix: dependencies.commandArgvPrefix,
         runId,
         checkpointToken: tokens.checkpointToken,
         planToken: tokens.planToken,

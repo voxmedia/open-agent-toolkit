@@ -33,9 +33,21 @@ const prepared = {
   },
   artifactDraftPath: '/private/draft.md',
   commands: {
-    checkpointArtifacts: 'trusted checkpoint',
-    validatePlan: 'trusted validate',
-    beginEvidence: 'trusted begin',
+    checkpointArtifacts: {
+      executable: process.execPath,
+      argv: ['/branch/oat.js', 'review', 'checkpoint-artifacts'],
+      stdin: 'none',
+    },
+    validatePlan: {
+      executable: process.execPath,
+      argv: ['/branch/oat.js', 'review', 'validate-plan'],
+      stdin: 'review-plan-json',
+    },
+    beginEvidence: {
+      executable: process.execPath,
+      argv: ['/branch/oat.js', 'review', 'begin-evidence'],
+      stdin: 'none',
+    },
   },
 } as unknown as PrepareReviewContextResultV1;
 
@@ -44,17 +56,26 @@ describe('createReviewPrepareContextCommand', () => {
     const write = vi.fn();
     const prepare = vi.fn(async () => prepared);
     const setExitCode = vi.fn();
+    const createDependencies = vi.fn(() => ({}) as never);
     const command = createReviewPrepareContextCommand({
       stdin: Readable.from([JSON.stringify(baseInput)]),
       write,
       setExitCode,
       prepare,
-      createDependencies: () => ({}) as never,
+      createDependencies,
+      launcherInvocation: {
+        executable: process.execPath,
+        argvPrefix: ['/branch/oat.js'],
+      },
     });
 
     await command.parseAsync(['node', 'oat', 'prepare-context']);
 
     expect(prepare).toHaveBeenCalledOnce();
+    expect(createDependencies).toHaveBeenCalledWith(baseInput, {
+      executable: process.execPath,
+      argvPrefix: ['/branch/oat.js'],
+    });
     expect(setExitCode).toHaveBeenCalledWith(0);
     const output = write.mock.calls[0]?.[0] as string;
     expect(JSON.parse(output)).toMatchObject({

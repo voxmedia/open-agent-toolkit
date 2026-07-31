@@ -28,7 +28,9 @@ interface PrepareContextCommandDependencies {
   ) => Promise<PrepareReviewContextResultV1>;
   createDependencies: (
     input: PrepareReviewContextInput,
+    launcherInvocation: { executable: string; argvPrefix: string[] },
   ) => PrepareReviewContextDependencies;
+  launcherInvocation: { executable: string; argvPrefix: string[] };
 }
 
 const DEFAULT_DEPENDENCIES: PrepareContextCommandDependencies = {
@@ -38,7 +40,11 @@ const DEFAULT_DEPENDENCIES: PrepareContextCommandDependencies = {
     process.exitCode = code;
   },
   prepare: prepareReviewContext,
-  createDependencies: (input) => ({
+  launcherInvocation: {
+    executable: process.execPath,
+    argvPrefix: process.argv[1] ? [process.argv[1]] : [],
+  },
+  createDependencies: (input, launcherInvocation) => ({
     store: new ValidationStore(
       launcherValidationStoreRoot({ repoRoot: input.repoRoot }),
       launcherValidationStoreAuthority(),
@@ -46,7 +52,8 @@ const DEFAULT_DEPENDENCIES: PrepareContextCommandDependencies = {
     git: new DefaultGitChangeMapAdapter(),
     telemetryAdapter: null,
     telemetryAdapterId: null,
-    cli: 'oat',
+    commandExecutable: launcherInvocation.executable,
+    commandArgvPrefix: launcherInvocation.argvPrefix,
   }),
 };
 
@@ -118,7 +125,10 @@ export function createReviewPrepareContextCommand(
           return projectPrepareResult(
             await dependencies.prepare(
               input,
-              dependencies.createDependencies(input),
+              dependencies.createDependencies(
+                input,
+                dependencies.launcherInvocation,
+              ),
             ),
           );
         },
