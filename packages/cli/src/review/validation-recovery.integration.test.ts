@@ -5,9 +5,24 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import type { ReviewPreparationV1 } from './types';
+import { evaluateWholeDiffEligibility } from './budget';
+import {
+  bindAcceptedHandle,
+  issueCommandCapabilities,
+} from './command-capabilities';
+import {
+  beginEvidence,
+  checkpointArtifactsLoaded,
+  validateAndReceiptPlan,
+} from './review-lifecycle';
+import type {
+  PreparedReviewContextV1,
+  ReviewPlanV1,
+  ReviewPreparationV1,
+} from './types';
 import { reapExpiredValidationState } from './validation-reaper';
-import { ValidationStore } from './validation-store';
+import { type ValidationRunState, ValidationStore } from './validation-store';
+import { ValidationStoreAuthority } from './validation-store-authority';
 
 const roots: string[] = [];
 
@@ -55,7 +70,182 @@ function preparation(runId: string, expiresAt: string): ReviewPreparationV1 {
   };
 }
 
+function reviewPlan(context: PreparedReviewContextV1): ReviewPlanV1 {
+  return {
+    schemaVersion: 1,
+    runId: context.runId,
+    contextDigest: context.contextDigest,
+    strategy: 'selective-inline',
+    lanes: [
+      {
+        id: 'legacy-lane',
+        paths: [],
+        primaryObligationIds: [],
+        seamObligationIds: [],
+        risk: 'low',
+        evidenceClass: 'semantic',
+        strategy: 'path-diff',
+        checks: ['inspect'],
+        delegated: false,
+        independenceRationale: null,
+        substantial: false,
+        substantialityRationale: null,
+        deadlineMs: null,
+        dossier: { contractVersion: 1, partialAllowed: true },
+        replay: 'direct-verify',
+        primaryContingency: {
+          allowed: false,
+          paths: [],
+          obligationIds: [],
+        },
+      },
+    ],
+    classifications: [],
+    crossLaneInvariants: [],
+    delegationEconomics: {
+      independentLaneIds: [],
+      nonReplayedLaneIds: [],
+      expectedSavings: [],
+      coordinationCosts: [],
+      decisionRationale: 'single coherent lane',
+      decision: 'inline',
+    },
+    verificationBoundary: {
+      requiredClaims: [],
+      positiveCoverage: {
+        mode: 'sample',
+        laneIds: ['legacy-lane'],
+        rationale: 'legacy compatibility fixture',
+      },
+      deterministicAcceptance: {
+        mode: 'provenance',
+        requiredFields: ['command', 'cwd', 'scopeRefs', 'provenance', 'result'],
+      },
+    },
+    wholeDiff: evaluateWholeDiffEligibility({
+      changeMap: context.changeMap,
+      contextBudget: context.budget.context,
+      coherentLaneCount: 1,
+      hasConsequentialSeam: false,
+    }),
+    timeAllocation: null,
+  };
+}
+
+async function lifecycleSnapshots(root: string) {
+  const authority = new ValidationStoreAuthority(Buffer.alloc(32, 19));
+  const store = new ValidationStore(join(root, 'private-store'), authority);
+  const created = await store.createRun({
+    preparation: preparation('legacytelemetry01', '2098-01-01T02:00:00.000Z'),
+    artifactDraft: false,
+  });
+  const prepared = (await store.unsafeReadStateForTesting(
+    created.runId,
+  )) as ValidationRunState;
+  const tokens = await issueCommandCapabilities(store, created.runId);
+  await bindAcceptedHandle(store, created.runId, 'accepted-handle');
+  const context = await checkpointArtifactsLoaded(
+    { runId: created.runId, checkpointToken: tokens.checkpointToken },
+    { store, telemetryAdapter: null, telemetryAdapterId: null },
+  );
+  const artifactsLoaded = (await store.unsafeReadStateForTesting(
+    created.runId,
+  )) as ValidationRunState;
+  const validated = await validateAndReceiptPlan(
+    {
+      runId: created.runId,
+      commandToken: tokens.planToken,
+      plan: reviewPlan(context),
+    },
+    { store },
+  );
+  if (!validated.valid) {
+    throw new Error(
+      `expected valid compatibility plan: ${JSON.stringify(validated.errors)}`,
+    );
+  }
+  const planValidated = (await store.unsafeReadStateForTesting(
+    created.runId,
+  )) as ValidationRunState;
+  await beginEvidence(
+    { runId: created.runId, receipt: validated.receipt.token },
+    { store },
+  );
+  const evidenceStarted = (await store.unsafeReadStateForTesting(
+    created.runId,
+  )) as ValidationRunState;
+  return {
+    authority,
+    store,
+    created,
+    prepared,
+    artifactsLoaded,
+    planValidated,
+    evidenceStarted,
+  };
+}
+
 describe('validation recovery integration', () => {
+  it('accepts empty legacy telemetry for every coherent lifecycle phase', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validation-legacy-state-'));
+    roots.push(root);
+    const fixture = await lifecycleSnapshots(root);
+    const candidates: ValidationRunState[] = [
+      { ...fixture.prepared, telemetry: [] },
+      { ...fixture.artifactsLoaded, telemetry: [] },
+      { ...fixture.planValidated, telemetry: [] },
+      { ...fixture.evidenceStarted, telemetry: [] },
+      {
+        ...fixture.evidenceStarted,
+        telemetry: [],
+        phase: 'accounting_repair',
+      },
+      { ...fixture.evidenceStarted, telemetry: [], phase: 'accepted' },
+      { ...fixture.evidenceStarted, telemetry: [], phase: 'terminal' },
+    ];
+
+    for (const candidate of candidates) {
+      await writeFile(
+        fixture.created.statePath,
+        fixture.authority.seal(candidate),
+      );
+      await expect(
+        fixture.store.readRun(fixture.created.runId),
+      ).resolves.toMatchObject({
+        state: { phase: candidate.phase, telemetry: [] },
+      });
+    }
+  });
+
+  it('rejects empty-telemetry states with incomplete phase data', async () => {
+    const root = await mkdtemp(
+      join(tmpdir(), 'oat-validation-incoherent-state-'),
+    );
+    roots.push(root);
+    const fixture = await lifecycleSnapshots(root);
+    const malformed: ValidationRunState[] = [
+      { ...fixture.artifactsLoaded, telemetry: [], context: null },
+      {
+        ...fixture.artifactsLoaded,
+        telemetry: [],
+        plan: fixture.planValidated.plan,
+      },
+      { ...fixture.planValidated, telemetry: [], plan: null },
+      { ...fixture.planValidated, telemetry: [], assignment: null },
+      { ...fixture.planValidated, telemetry: [], receipt: null },
+    ];
+
+    for (const candidate of malformed) {
+      await writeFile(
+        fixture.created.statePath,
+        fixture.authority.seal(candidate),
+      );
+      await expect(
+        fixture.store.readRun(fixture.created.runId),
+      ).rejects.toThrow();
+    }
+  });
+
   it('recovers from a process death while the store lock is held', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validation-lock-recovery-'));
     roots.push(root);

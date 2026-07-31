@@ -232,8 +232,11 @@ function parseValidationRunState(
     ) {
       throw new Error('prepared validation state is incoherent');
     }
-  } else if (telemetry.length > 0) {
-    if (!telemetryPhases.includes('post_artifact') || context === null) {
+  } else {
+    if (
+      (telemetry.length > 0 && !telemetryPhases.includes('post_artifact')) ||
+      context === null
+    ) {
       throw new Error('post-checkpoint validation state is incoherent');
     }
     if (

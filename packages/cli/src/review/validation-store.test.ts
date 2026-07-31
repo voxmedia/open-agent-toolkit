@@ -405,5 +405,22 @@ describe('validation state and gate correlation', () => {
       { mode: 0o600 },
     );
     await expect(store.readRun(created.runId)).rejects.toThrow(/incoherent/);
+
+    await writeFile(
+      created.statePath,
+      authority.seal({
+        ...initial,
+        phase: 'evidence_started',
+        telemetry: [],
+        context: null,
+        plan: null,
+        assignment: null,
+        receipt: null,
+      }),
+      { mode: 0o600 },
+    );
+    await expect(store.readRun(created.runId)).rejects.toThrow(
+      /post-checkpoint/,
+    );
   });
 });
