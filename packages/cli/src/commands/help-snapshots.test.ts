@@ -639,6 +639,8 @@ describe('help output snapshots', () => {
         checkpoint-artifacts [options]  Seal loaded review artifacts
         validate-plan [options]         Validate a review plan from JSON stdin
         begin-evidence [options]        Begin receipt-authorized review evidence
+        validate-output [options]       Validate complete reviewer output from JSON
+                                        stdin
         help [command]                  display help for command
       "
     `);
