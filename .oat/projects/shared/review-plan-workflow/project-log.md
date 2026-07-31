@@ -76,6 +76,10 @@ Review-fix iteration 1 stopped after p02-t35: focused tests passed, but post-com
 
 All p02 review-fix code tasks completed with focused checks and lint passing, but workspace type-check found three legacy string values in the undeclared compile-time fixture review/types.test.ts. Explicit append-only recovery authorization is required.
 
+### 2026-07-31 · structural · oat-project-implement · p02-review-fix-1-complete
+
+All fourteen Phase p02 review-fix tasks and two append-only recoveries are complete. Focused checks, 3,756 CLI tests, workspace type-check, lint, and diff-check pass; fresh independent fix-range re-review is pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

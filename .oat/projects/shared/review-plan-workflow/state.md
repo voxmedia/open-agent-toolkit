@@ -1,8 +1,7 @@
 ---
-oat_current_task: p02-t39
-oat_last_commit: a2efe68c8bd435ff0da3dbd37ef9fdb2b5fdf332
-oat_blockers:
-  - p02-t39 compile-time fixture still uses legacy string command values
+oat_current_task: null
+oat_last_commit: f7452e5b6fc64256f24d12c2a323be7494bbf08a
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -76,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T00:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T01:48:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -86,16 +85,15 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 2 review fixes blocked
+**Status:** Phase 2 fix re-review pending
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-30
 
 ## Current Phase
 
-Phase 1 is complete and independently reviewed. All Phase 2 review-fix code
-tasks are implemented, focused verification and lint pass, and the full CLI
-suite passes. Workspace type-check is blocked by one omitted compile-time
-fixture migration from p02-t39.
+Phase 1 is complete and independently reviewed. All 14 Phase 2 review-fix
+tasks and their two append-only recoveries are complete. Focused checks, the
+full CLI suite, workspace type-check, lint, and diff-check pass.
 
 ## Artifacts
 
@@ -143,15 +141,13 @@ fixture migration from p02-t39.
 - ✓ p02-t35 append-only lint recovery passed focused tests and lint
 - ✓ Review fixes p02-t36 through p02-t43 completed
 - ✓ Full CLI suite passed 3,756 tests; package lint and diff-check pass
-- ⚠ Workspace type-check found three legacy values in `review/types.test.ts`
-- → Authorize or decline a narrow append-only p02-t39 fixture recovery
+- ✓ p02-t39 compile-time fixture recovery passed package and workspace checks
+- → Fresh independent fix-range re-review pending
 
 ## Blockers
 
-- `p02-t39`: `review/types.test.ts` still assigns three strings where the
-  contract now requires `ReviewCommandInvocationV1` objects.
+None.
 
 ## Next Milestone
 
-Resolve the p02-t39 compile-time fixture boundary, then re-run Phase 2 gates
-and independent fix-range review.
+Run and receive the independent Phase 2 fix-range re-review.

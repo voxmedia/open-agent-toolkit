@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p02-t39 compile-time fixture still uses legacy string command values
+oat_blockers: []
 oat_last_updated: 2026-07-30
-oat_current_task_id: p02-t39
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -28,14 +27,14 @@ oat_generated: false
 | Phase   | Status    | Tasks | Completed |
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | blocked   | 43    | 42/43     |
+| Phase 2 | in_review | 43    | 43/43     |
 | Phase 3 | pending   | 5     | 0/5       |
 | Phase 4 | pending   | 8     | 0/8       |
 | Phase 5 | pending   | 7     | 0/7       |
 | Phase 6 | pending   | 7     | 0/7       |
 | Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 55/89 tasks completed
+**Total:** 56/89 tasks completed
 
 ## Execution Configuration
 
@@ -176,7 +175,7 @@ fix commit `40fa861f`.
 
 ## Phase 2: ChangeMap and Validation Runtime
 
-**Status:** blocked
+**Status:** in_review
 **Started:** 2026-07-30
 
 ### Task p02-t01: Normalize authoritative review paths
@@ -386,11 +385,10 @@ and CLI help integration passed.
 
 ### Task p02-t39: (review M3) Represent trusted commands portably
 
-**Status:** blocked
+**Status:** completed
 **Commit:** `f81a6f1d`
-**Concern:** The production and runtime fixtures pass, but workspace type-check
-found three legacy string command values in the compile-time contract fixture
-outside this task's declared boundary.
+**Recovery:** `f7452e5b` migrated the compile-time command fixtures; focused and
+workspace type-checks pass.
 
 ### Task p02-t40: (review I5) Preserve branch-local command identity
 
@@ -716,6 +714,40 @@ None in this run entry.
 - p02-t39 requires explicit authorization for one append-only fixture migration
   limited to `packages/cli/src/review/types.test.ts`, followed by package and
   workspace type-check before Phase 2 re-review.
+
+### Run 8 — 2026-07-31T01:48:00Z {#run-8}
+
+**Branch:** `review-plan-workflow`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict        | Task Commits | Review  | Fixes              |
+| ----- | -------------- | ------------ | ------- | ------------------ |
+| p02   | review_pending | `f7452e5b`   | pending | all 14 implemented |
+
+#### Dispatch Notes
+
+- The explicitly authorized p02-t39 recovery changed only
+  `packages/cli/src/review/types.test.ts` and migrated the three command
+  fixtures to `ReviewCommandInvocationV1`.
+- Focused type-check, seven focused tests, package lint, the 3,756-test CLI
+  suite, and all ten workspace type-check tasks passed.
+- An initial full-suite attempt lacked ignored generated CLI assets; rebuilding
+  the bundle resolved the environmental failure without source changes.
+- Final lint, diff-check, and worktree cleanliness passed.
+- Dispatch stamp:
+  - `Dispatch: scope=p02-review-fix1-recovery2 action=fix role=implementer producer=oat-reviewer-gpt-5-6-sol-high provenance=same-accepted-handle model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+#### Parallel Groups
+
+None in this run entry.
+
+#### Outstanding Items
+
+- Run a fresh independent review of the p02-t30 through p02-t43 fix range and
+  both append-only fix recoveries.
 
 <!-- orchestration-runs-end -->
 
