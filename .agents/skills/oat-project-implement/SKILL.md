@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.2.3
+version: 2.2.4
 description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -147,9 +147,10 @@ If you catch yourself:
 
 **Recovery:**
 
-1. Acknowledge the deviation
-2. Return to current task
-3. Document in implementation.md
+1. Complete pre-commit prevention before writing history.
+2. For post-commit defects, follow `oat_phase_recovery_policy` in
+   `references/phase-execution.md`, preserving history and the exact target.
+3. Record every recovery disposition in `implementation.md`.
 
 ## Process
 

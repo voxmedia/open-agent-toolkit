@@ -22,7 +22,14 @@ Before each phase:
 1. Resolve the project dispatch policy and optional narrower phase maximum from
    the plan's `## Dispatch Profile`. Classify the complete phase scope and
    record the classification source and rationale. For Codex, also classify
-   the preferred task effort.
+   the preferred task effort. Separately resolve
+   `oat_phase_recovery_policy`: use the phase-specific
+   `phase_attempt_limits.<pNN>` value when present, otherwise
+   `default_attempt_limit`, which defaults to `10`. Both project-default and
+   phase-specific limits must be integers from `0` through `20`; fail closed on
+   malformed values. Start `phase_recovery_attempts_used` at the durable count
+   already recorded for this phase, never at zero merely because execution
+   resumed.
 2. Resolve one exact phase implementer target with
    `--role implementer --ceiling-tier <project-or-phase-named-tier> --task-class <task-class> [--task-effort <codex-preferred-effort>] --report-scope <pNN> --report-action implementation`.
    Use the phase scope, not each task ID. Omit `--ceiling-tier` only for
@@ -53,6 +60,10 @@ Before each phase:
    expected_base_sha: {group base or PHASE_BASE_HEAD}
    commit_convention: {from plan.md}
    request_id: {generic dispatch request ID}
+   phase_recovery_limit: {resolved 0-20 limit}
+   phase_recovery_attempts_used: {durable prior usage, initially 0}
+   original_request_id: {same generic phase dispatch request ID}
+   phase_recovery_authorization: {phase-standing|operator-extension}
    dispatch_policy: {resolver policy}
    dispatch_ceiling: {resolved project/phase maximum or none}
    dispatch_target: {resolver exact target}
@@ -77,6 +88,11 @@ another target-preserving route. After acceptance, missing telemetry, timeout,
 `BLOCKED`, or any other terminal outcome cannot trigger fallback or
 replacement.
 
+The phase recovery limit is not a route retry limit. Implementation recovery
+must not use route escalation, route-level advancement, model/provider
+replacement, or `oat_orchestration_retry_limit`. It remains pinned to the exact
+accepted implementation target.
+
 Tier 2 inline execution is allowed only under the existing verified-equivalent
 controls or documented inherit/default exception. Inline mode executes the
 phase-implementer contract directly; it does not reintroduce mandatory
@@ -86,6 +102,119 @@ Optional third-tier readiness is not a preflight blocker. Codex depth two may be
 provisioned as capability, but default phase execution requires only the root →
 phase-agent depth.
 
+#### Dedicated Phase Recovery Contract
+
+This contract covers only a post-commit defect discovered by declared task,
+transition, or phase verification. The default `10` attempt limit and a
+phase-specific `0`–`20` override are independent of review-fix and gate retry
+configuration.
+
+```yaml
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {} # optional pNN: 0-20 overrides
+```
+
+A project default limit of `0` stops automatic recovery for direction without
+edit, commit, attempt consumption, or fallback. A phase-specific override of
+`0` has the same effect: stop for direction without edit, commit, attempt
+consumption, or fallback. Still append the direction-required recovery event.
+
+Automatic recovery is eligible only when every condition is true:
+
+- the correction is mechanically bounded and unambiguous;
+- it remains within declared phase intent and public requirements;
+- any file-boundary expansion is mechanically derived and remains in-phase;
+- architecture, security, product scope, requirements, and public behavior are
+  unchanged;
+- the work is non-destructive, reversible, and outside protected-branch,
+  credential, or other consequential boundaries;
+- the accepted implementation handle and exact target remain intact;
+- `phase_recovery_attempts_used < phase_recovery_limit`; and
+- focused plus relevant phase verification can establish correctness.
+
+The implementer records eligibility before editing. The attempt is consumed
+before editing begins. A failed edit, commit, or re-verification consumes that
+attempt and records a failed-attempt disposition with no successful recovery commit.
+Successful recovery creates one append-only recovery commit per successful
+attempt, reruns the failing focused command and relevant phase verification,
+and continues without a prompt. At three recovery events, require an elevated
+recovery-volume warning and continue if all eligibility conditions still hold.
+
+One no-edit rerun is permitted for evidence-backed infrastructure or flake
+failure without attempt consumption. A repeated unexplained failure is
+ambiguous: stop without edit and record direction-required rather than
+speculating.
+
+The accepted task commit remains immutable at the same history position.
+Amend, reset, rebase, squash, replacement task IDs, or concealed rewriting
+invalidates the report. Mechanically related failures from the same
+verification command may be handled in one atomic attempt and commit.
+Independent failures require separate attempts and commits.
+
+Stop with `DONE_WITH_CONCERNS` or `BLOCKED` for ambiguous or contradictory
+evidence; architecture, security, product, requirements, or public-behavior
+change; non-mechanical file-boundary widening; destructive, irreversible,
+credential-bearing, protected-branch, or out-of-scope work; retry exhaustion;
+dirty worktree or dirty history; inability to establish correctness; missing
+original-request or missing exact-target provenance; unverifiable commit range;
+malformed recovery event; exact-target loss; or an independent governance cap.
+No stop boundary authorizes a fallback model, provider, route, or worker.
+If the exact target is lost or cannot continue, stop before editing.
+Architecture, security, product, or requirements changes stop for direction.
+Non-mechanical widening or destructive work stops before editing. Retry
+exhaustion and every governance cap stop automatic recovery. A dirty worktree
+or dirty history blocks continuation. Inability to establish correctness,
+missing original-request provenance, missing exact-target provenance, an
+unverifiable commit range, or a malformed recovery event stops for direction.
+If focused and phase verification cannot establish correctness, stop for
+direction.
+
+When the accepted handle can continue, use only that handle. If it cannot be
+resumed, a fresh same-target recovery launch is allowed only under this
+already-resolved lifecycle authority. Preserve the exact target and link the
+fresh record to the original request through the generic dispatch record's
+existing `continuation_events`. Missing or changed provenance stops; it never
+creates route eligibility.
+
+Exhaustion requires operator direction with one of these durable outcomes:
+
+1. **Add N attempts:** set the active phase's total
+   to `used_attempts + N` under `phase_attempt_limits.<pNN>`, capped at `20`;
+   do not reset prior usage.
+2. **Authorize changed scope:** record a consequential or scope-expanding
+   action outside automatic recovery.
+3. **Stop:** preserve the worktree, immutable history, and evidence.
+
+An extension preserves the exact implementation target unless the operator
+explicitly authorizes a separate route action. Repeated exhaustion never resets
+usage or silently lifts the cap.
+
+Append exactly one canonical recovery event for every recovered,
+direction-required, or failed-attempt disposition:
+
+```markdown
+### Recovery Event {event-id}
+
+- Phase/task: {phase and originating task when known}
+- Original request: {original_request_id}
+- Original commit: {immutable task commit}
+- Defect class: lint | type | test | build | composition | other
+- Discovered by: {exact verification command or transition check}
+- Disposition: recovered | direction-required | failed-attempt
+- Authorization: phase-standing | operator-extension | operator-scope
+- Attempt: {used}/{phase_recovery_limit}
+- Dispatch target: {exact launcher-owned implementation target}
+- Recovery commit: {sha or -}
+- Verification: {focused and relevant phase result}
+- Reason: {eligibility or stop-boundary evidence}
+```
+
+Exactly one event is counted even when an attempt fails before a commit. The
+canonical fields make defect count, prompt count, and successful repair count
+independently measurable. Root bookkeeping copies validated report facts; it
+does not infer or reconstruct them.
+
 #### Verify the Phase Report
 
 On return:
@@ -94,10 +223,20 @@ On return:
 - verify phase ID, request ID, phase base, task count, and phase verification;
 - for each task, verify its commit is exactly one append-only commit in plan
   order, changes only declared files, and has passing task verification;
+- for each reported recovery, verify attempt accounting, the immutable original
+  commit and original request, exact-target provenance, one in-scope append-only
+  recovery commit when successful, focused and phase verification, and exactly
+  one well-formed canonical recovery event;
+- verify recovered, direction-required, and failed-attempt dispositions are all
+  represented without gaps or duplicate events;
 - verify the reported commit range equals the worktree's range from
   `PHASE_BASE_HEAD` to HEAD;
 - require a clean worktree; and
 - validate every optional child record without requiring any child.
+
+A dirty worktree, unverifiable commit range, missing provenance, malformed
+recovery event, rewritten original commit, or recovery commit outside the
+declared/mechanically derived phase boundary blocks continuation.
 
 `NEEDS_CONTEXT` may receive only missing artifact context through the original
 handle. `BLOCKED` is terminal for the attempt. `INVALID_RUN_ABORT` terminates
@@ -196,6 +335,11 @@ On Critical/Important findings:
    phase verification, and clean worktree.
 4. Dispatch one new root-owned reviewer round against the updated range.
 5. Repeat until pass or retry exhaustion.
+
+Review-fix and gate rounds continue to use
+`oat_orchestration_retry_limit`; implementation recovery does not consume or
+alter that counter. The independent three-cycle review governance cap,
+Critical/Important handling, and protected boundaries remain unchanged.
 
 If the original phase handle cannot be resumed after successful phase
 completion, the root may launch at most one fresh phase implementer with the

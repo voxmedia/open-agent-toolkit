@@ -14,6 +14,9 @@ oat_parallel_execution: false
 oat_phase: { OAT_PHASE } # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
+# oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
+#   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
+#   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
