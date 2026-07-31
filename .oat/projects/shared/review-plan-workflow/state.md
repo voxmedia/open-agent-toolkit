@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: 9d3952313c3d1d4ddabf13e63c3e41eac116623b
+oat_current_task: p04-t09
+oat_last_commit: d2c46355741c3b63925a16d38cbbc1e7b849968e
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T15:03:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T15:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,15 +85,16 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 4 implementation in progress
+**Status:** Phase 4 bounded fixes in progress
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
 ## Current Phase
 
-Phases 1 through 3 are complete. The third and final automatic Phase 3 review
-passed with no findings. Phase 4 begins with canonical artifact accounting and
-validated coordinator integration.
+Phases 1 through 3 are complete. Phase 4 tasks p04-t01 through p04-t08 and one
+bounded recovery are committed. Full-suite verification exposed one genuine
+remote dispatch-ownership violation and two stale command compatibility
+contracts, now bounded as p04-t09 and p04-t10.
 
 ## Artifacts
 
@@ -169,7 +170,11 @@ validated coordinator integration.
 - ✓ 3,833 CLI tests, workspace gates, and root-focused verification pass
 - ✓ Third automatic Phase 3 review passed with no findings
 - ✓ Phase 3 completed at reviewed head `9d395231`
-- → Execute Phase 4 tasks p04-t01 through p04-t08
+- ✓ Phase 4 tasks p04-t01 through p04-t08 completed
+- ⚠ Full CLI suite found five blocking contract failures
+- ✓ Root classified ownership failures as architectural and command failures as
+  compatibility drift
+- → Execute p04-t09 and p04-t10
 
 ## Blockers
 
@@ -177,4 +182,5 @@ None.
 
 ## Next Milestone
 
-Complete and independently review Phase 4.
+Complete p04-t09 and p04-t10, rerun Phase 4 verification, and independently
+review the phase.

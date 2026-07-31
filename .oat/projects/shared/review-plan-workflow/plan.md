@@ -2323,6 +2323,65 @@ Expected: every in-scope rail resolves exactly one coordinator.
 
 **Step 5: Commit** `feat(p04-t08): adopt validated direct phase reviews`
 
+### Task p04-t09: Preserve remote reference-dispatch ownership
+
+**Files:**
+
+- Modify: `packages/cli/src/review-remote/reviewer-dispatch.ts`
+- Modify: `packages/cli/src/review-remote/reviewer-dispatch.test.ts`
+- Modify: `packages/cli/src/review-remote/__integration__/project/project-rail.test.ts`
+- Verify: `packages/cli/src/review/dispatch-ownership.test.ts`
+
+**Step 1: Reproduce** Run the ownership contract and show that the reference
+dispatcher now imports coordinator authority, adapts the accepted continuation,
+and performs same-handle repair despite the design explicitly reserving those
+responsibilities for the provider/skill coordinator.
+
+**Step 2: Implement** Restore `reviewer-dispatch.ts` to the design-prescribed
+reference boundary: payload construction, exactly one injected spawn, and pure
+`StructuredFindings` validation only. It must not import coordinator,
+validation-store, or lifecycle authority and must not own accepted-continuation,
+repair, retry, replacement, publication, or posting behavior. Keep the
+production remote skill's launcher-owned `ReviewerTerminalV1` →
+`validate-output` → same-handle accounting repair sequence as the actual
+coordinator contract; adjust wrapper and project-rail tests so they do not
+misrepresent the unwired reference as that coordinator.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/dispatch-ownership.test.ts src/review-remote/reviewer-dispatch.test.ts src/review-remote/__integration__/project/project-rail.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`.
+Expected: the reference wrapper remains pure and single-spawn while the
+canonical remote skill retains validation-before-posting and same-handle repair.
+
+**Step 5: Commit** `fix(p04-t09): preserve remote dispatch ownership`
+
+### Task p04-t10: Align validate-output command compatibility contracts
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/commands.integration.test.ts`
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts`
+
+**Step 1: Reproduce** Run the complete review-command lifecycle inventory and
+`review --help` snapshot; show that both omit the new `validate-output`
+subcommand registered by p04-t05.
+
+**Step 2: Implement** Add `validate-output` to the expected lifecycle command
+inventory and refresh only the affected review-help snapshot with the exact
+registered command description and ordering.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/commands.integration.test.ts src/commands/help-snapshots.test.ts`.
+Expected: command registration and help contracts include `validate-output`
+without unrelated snapshot churn.
+
+**Step 5: Commit** `test(p04-t10): align validate-output command contracts`
+
 ---
 
 ## Phase 5: Gate Diagnostics and Compatibility
@@ -3018,12 +3077,12 @@ rewriting either historical result as passed.
 - Phase 1: 13 tasks - baseline, contracts, portability seams
 - Phase 2: 55 tasks - authoritative metadata, validation runtime, and review fixes
 - Phase 3: 10 tasks - reviewer planning, selective evidence, and review fixes
-- Phase 4: 8 tasks - accounting, repair, and coordinator adoption
+- Phase 4: 10 tasks - accounting, repair, coordinator adoption, and compatibility fixes
 - Phase 5: 7 tasks - gate diagnostics, timeout, and compatibility mode
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 106 tasks**
+**Total: 108 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.

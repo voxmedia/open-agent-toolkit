@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t09
 oat_generated: false
 ---
 
@@ -29,12 +29,12 @@ oat_generated: false
 | Phase 1 | completed   | 13    | 13/13     |
 | Phase 2 | completed   | 55    | 55/55     |
 | Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | in_progress | 8     | 0/8       |
+| Phase 4 | in_progress | 10    | 8/10      |
 | Phase 5 | pending     | 7     | 0/7       |
 | Phase 6 | pending     | 7     | 0/7       |
 | Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 78/106 tasks completed
+**Total:** 86/108 tasks completed
 
 ## Execution Configuration
 
@@ -803,6 +803,82 @@ automatic fix iteration, then independently re-review the updated range.
 
 **Phase disposition:** Passed at reviewed head
 `9d3952313c3d1d4ddabf13e63c3e41eac116623b`; proceed to Phase 4.
+
+---
+
+## Phase 4: Output Accounting and Coordinator Integration
+
+**Status:** blocked_on_fix_tasks
+**Started:** 2026-07-31
+
+### Task p04-t01: Parse exact artifact accounting grammar
+
+**Status:** completed
+**Commit:** `fce1b090`
+
+### Task p04-t02: Validate terminal accounting and ID registries
+
+**Status:** completed
+**Commit:** `d395abf6`
+
+### Task p04-t03: Stage and publish artifact snapshots safely
+
+**Status:** completed
+**Commit:** `294dac65`
+
+### Task p04-t04: Constrain immutable same-handle repair
+
+**Status:** completed
+**Commit:** `4214a971`
+
+### Task p04-t05: Add the validate-output JSON command
+
+**Status:** completed
+**Commit:** `9eb457f5`
+
+### Task p04-t06: Wire local artifact Tier 1 and Tier 3
+
+**Status:** completed
+**Commit:** `1b1fc017`
+
+### Task p04-t07: Wire remote structured Tier 1 and Tier 3
+
+**Status:** completed
+**Commit:** `bac6fde3`
+
+### Task p04-t08: Wire direct phase review and close inventory
+
+**Status:** completed
+**Commit:** `9adef7ec`
+**Commit deviation:** The append-only commit subject omitted the planned
+`p04-t08` prefix. History remains unchanged; task identity is recorded here.
+
+**Recovery:** `d2c46355` corrected in-bound prompt-inventory wording without
+changing behavior.
+
+### Task p04-t09: Preserve remote reference-dispatch ownership
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t10: Align validate-output command compatibility contracts
+
+**Status:** pending
+**Commit:** -
+
+### Phase Verification
+
+- Focused Phase 4 union passed 253 tests.
+- Recovery verification passed 190 tests.
+- Workspace type-check, lint, formatting, build, and range diff-check passed.
+- Full CLI suite passed 3,878 of 3,883 tests and exposed five blocking contract
+  failures.
+- Root confirmed that three ownership failures reflect a real design violation,
+  while the command lifecycle and help failures are stale compatibility
+  expectations.
+
+**Next:** Resume the original Phase 4 handle with p04-t09 and p04-t10, rerun
+the full phase gates, then dispatch independent review.
 
 ---
 
