@@ -2625,6 +2625,53 @@ derive exact coverage; no incomplete lane can validate as complete.
 
 **Step 5: Commit** `fix(p04-t18): bind final worker coverage`
 
+### Task p04-t19: (re-review C1) Persist accepted worker dossier coverage
+
+**Files:**
+
+- Add: `packages/cli/src/commands/review/bind-worker-dossier.ts`
+- Add: `packages/cli/src/commands/review/bind-worker-dossier.test.ts`
+- Modify: `packages/cli/src/commands/review/index.ts`
+- Modify: `packages/cli/src/commands/commands.integration.test.ts`
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+- Modify: `packages/cli/src/review/validation-recovery.integration.test.ts`
+- Modify: `packages/cli/src/review/local-coordinator.integration.test.ts`
+- Modify: `packages/cli/src/review/direct-phase-coordinator.integration.test.ts`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide-remote/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Reproduce** Exercise a real validation store through the local and
+remote coordinator contracts with a delegated complete or partial
+`WorkerDossierV1`. Prove that the production lifecycle currently reaches
+`validate-output` with empty persisted worker coverage and fails
+`missing-worker-coverage`.
+
+**Step 2: Implement** Add a launcher-owned accepted-continuation command and
+authority-broker transition that validates each complete or partial worker
+dossier through `bindValidatedWorkerDossier` before output validation.
+Authenticate the transition through the existing launcher-owned broker,
+correlate the dossier to the accepted validation run and receipt, preserve
+idempotence for an identical dossier, and reject replacement or post-output
+binding. Wire both local artifact and remote structured coordinator rails to
+submit every applicable dossier before `validate-output`; inline
+`not-delegated` lanes remain unchanged.
+
+**Step 3: Format** Run `pnpm format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review/bind-worker-dossier.test.ts src/review/validation-authority-broker.test.ts src/review/validation-store.test.ts src/review/validation-recovery.integration.test.ts src/review/local-coordinator.integration.test.ts src/review/direct-phase-coordinator.integration.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation/skills.test.ts src/commands/commands.integration.test.ts src/commands/help-snapshots.test.ts`.
+Expected: accepted complete and partial dossiers persist exact launcher-validated
+coverage before output validation on both coordinator rails; missing,
+mis-correlated, replacement, and post-output submissions fail closed.
+
+**Step 5: Commit** `fix(p04-t19): persist accepted worker coverage`
+
 ---
 
 ## Phase 5: Gate Diagnostics and Compatibility
@@ -3294,6 +3341,7 @@ B post-publication bookkeeping PR.
 | p03    | code     | passed          | 2026-07-31 | reviews/p03-review-2026-07-31T150048Z.md                    | 9d3952313c3d1d4ddabf13e63c3e41eac116623b | auto       | -           |
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/p04-review-2026-07-31T155658Z.md                    | 9d199314f0956290c70babcc3139c7edebb36869 | auto       | -           |
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/archived/p04-review-2026-07-31T164356Z.md           | 055b5b2132de9f4077c2ba52c9aceee421b83805 | auto       | -           |
+| p04    | code     | fixes_added     | 2026-07-31 | reviews/archived/p04-review-2026-07-31T171500Z.md           | 78790a61d41cf209be15dcf98645105ccb799d57 | auto       | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -3321,12 +3369,12 @@ rewriting either historical result as passed.
 - Phase 1: 13 tasks - baseline, contracts, portability seams
 - Phase 2: 55 tasks - authoritative metadata, validation runtime, and review fixes
 - Phase 3: 10 tasks - reviewer planning, selective evidence, and review fixes
-- Phase 4: 18 tasks - accounting, repair, coordinator adoption, compatibility, and review fixes
+- Phase 4: 19 tasks - accounting, repair, coordinator adoption, compatibility, and review fixes
 - Phase 5: 7 tasks - gate diagnostics, timeout, and compatibility mode
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 116 tasks**
+**Total: 117 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.

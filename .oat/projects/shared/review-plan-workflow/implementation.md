@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: null
+oat_current_task_id: p04-t19
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | completed | 55    | 55/55     |
-| Phase 3 | completed | 10    | 10/10     |
-| Phase 4 | in_review | 18    | 18/18     |
-| Phase 5 | pending   | 7     | 0/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | completed   | 55    | 55/55     |
+| Phase 3 | completed   | 10    | 10/10     |
+| Phase 4 | in_progress | 19    | 18/19     |
+| Phase 5 | pending     | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 96/116 tasks completed
+**Total:** 96/117 tasks completed
 
 ## Execution Configuration
 
@@ -917,6 +917,10 @@ without changing the launcher-private publication behavior.
 change; `79b90f3a` aligned the coordinator compatibility fixture with the
 required lane-ownership projection.
 
+### Task p04-t19: (re-review C1) Persist accepted worker dossier coverage
+
+**Status:** pending
+
 ### Phase Verification
 
 - Focused Phase 4 union passed 253 tests.
@@ -1006,6 +1010,41 @@ required lane-ownership projection.
 passed.
 
 **Next:** Run the cycle-3 narrowed re-review.
+
+### Review Received: p04 (cycle 3)
+
+**Date:** 2026-07-31
+**Review artifact:**
+`reviews/archived/p04-review-2026-07-31T171500Z.md`
+
+**Verdict:** Failed
+
+**Findings:**
+
+- Critical: 1
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** p04-t19
+
+**Finding disposition map:**
+
+- C1 (launcher never persists accepted worker dossier coverage) → p04-t19
+  (`code_fix_required`). The finding is valid: p04-t18 created a strict,
+  fail-closed store transition, but no production command or local/remote
+  coordinator rail invokes it before `validate-output`, so valid delegated
+  reviews cannot complete.
+
+**Task Scope:** Large
+
+**Review-limit disposition:** This was automatic review cycle 3 of 3. On
+2026-07-31 the operator explicitly authorized the additional bounded fix and
+review cycle needed to resolve this finding. The override is limited to
+p04-t19, its standing narrow mechanical recoveries, and one independent
+cycle-4 re-review.
+
+**Next:** Execute p04-t19, then run the authorized narrowed cycle-4 re-review.
 
 ---
 
