@@ -671,7 +671,7 @@ Chronological log of implementation progress.
 
 - None. Operator authorized the narrow revision path.
 
-**Session End:** Phase p-rev2 pending
+**Session End:** All implementation phases passed; final closeout pending
 
 ---
 
@@ -703,23 +703,66 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- Pending implementation.
+- A provider-neutral, default-deny authorization contract for bounded
+  post-commit implementation recovery, distinct from forbidden accepted-launch
+  fallback and from review-fix retry governance.
+- Durable per-phase recovery budgets and attempt ledgers with pre-edit
+  reservation, pending-attempt reconciliation, exact-target continuity,
+  immutable original task commits, append-only recovery commits, and canonical
+  recovery events for recovered, direction-required, and failed-attempt
+  outcomes.
+- Matching Cursor, Codex, and Claude phase-agent materializations plus semantic
+  parity coverage, public implementation/migration documentation, autonomy
+  prompt-site inventory coverage, and the lockstep `0.2.27` public package
+  release boundary.
 
 **Behavioral changes (user-facing):**
 
-- Pending implementation.
+- Mechanically bounded post-commit verification defects can continue without a
+  repeated authorization prompt when the phase's numeric budget, exact target,
+  provenance, scope, ledger, and verification conditions all remain valid.
+- Recovery never rewrites accepted task history or substitutes a model,
+  provider, route, or worker. Ambiguity, consequential changes, exhausted
+  budgets, lost provenance/target, and unreconciled state stop for direction.
+- Operators can extend a phase's total attempt budget without resetting prior
+  usage; a fully reconciled already-pending final attempt may finish even when
+  the durable count equals the limit.
 
 **Key files / modules:**
 
-- Pending implementation.
+- `.agents/skills/oat-dispatch-subagents/SKILL.md` and
+  `.agents/skills/oat-project-dispatch-subagents/SKILL.md`
+- `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md` and
+  `.agents/skills/oat-project-implement/references/phase-execution.md`
+- `.agents/agents/oat-phase-implementer.md` and generated provider agent views
+- `.agents/docs/autonomy-contract.md`
+- `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- CLI skill/provider-sync/autonomy-inventory validation tests and the five
+  public package manifests plus bundled public-package inventory
 
 **Verification performed:**
 
-- Pending implementation.
+- Focused skill, provider-sync, semantic-parity, autonomy-inventory, and
+  documentation checks passed across implementation and revision phases.
+- `pnpm lint`, `pnpm format`, `pnpm build:docs`, `pnpm check`,
+  `pnpm type-check`, `pnpm test`, and `pnpm build` passed in the Phase 4
+  pre-commit and clean post-commit verification chains.
+- `pnpm release:validate` passed repeatedly and validated all five `0.2.27`
+  public-package tarballs plus visual validation.
+- Every accepted phase task/fix commit was range-, boundary-, and
+  clean-worktree-validated; passing root-owned phase reviews reported zero
+  Critical or Important findings.
 
 **Design deltas (if any):**
 
-- None recorded.
+- Operator-authorized revision phase `p-rev1` corrected the terminal
+  reserved-attempt boundary without reopening failed Phase 1 review history.
+- The declared p02/p03 parallel group degraded to sequential execution after
+  strict worktree readiness failed before launch; phase scopes and targets did
+  not change.
+- Operator-authorized revision phase `p-rev2` repaired three exact non-gate
+  autonomy inventory mappings exposed by the full test gate, after which Phase
+  4 reran unchanged from a clean baseline.
 
 ## References
 
