@@ -890,6 +890,26 @@ describe('validateOatSkills', () => {
     expect(tier3).not.toMatch(/read all (?:files in )?`?FILES_CHANGED`?/i);
   });
 
+  it('requires remote structured reviews to validate terminal accounting before posting', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    );
+    for (const rail of [
+      content.match(/\*\*Step 5b: Tier 1[\s\S]*?(?=\*\*Step 5c: Tier 2)/)?.[0],
+      content.match(
+        /\*\*Step 5d: Tier 3[\s\S]*?(?=### Step 6: Map Inline Comments)/,
+      )?.[0],
+    ]) {
+      expect(rail).toBeDefined();
+      expect(rail).toMatch(
+        /prepare-context[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*StructuredFindings[\s\S]*GitHub post/i,
+      );
+      expect(rail).toMatch(
+        /Accepted timeout[\s\S]*BLOCKED[\s\S]*malformed[\s\S]*accounting-invalid[\s\S]*non-actionable/i,
+      );
+    }
+  });
+
   it('keeps reviewer-local reconnaissance bounded and advisory', async () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';

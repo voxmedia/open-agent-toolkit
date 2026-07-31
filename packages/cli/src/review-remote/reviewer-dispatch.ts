@@ -7,9 +7,9 @@
  * payload carrying the project context, the posted-review-body schema
  * reference, the resolved re-review narrowing range, and the
  * `oat_output_mode: structured` flag. In that mode the reviewer returns a
- * `StructuredFindings` object in-memory rather than writing a review artifact;
- * this wrapper validates that object and hands it back to the skill, which is
- * then responsible for building the posted body and posting to GitHub.
+ * `ReviewerTerminalV1` envelope in-memory rather than writing a review
+ * artifact; this wrapper validates the terminal accounting before projecting
+ * `StructuredFindings` for the skill to post to GitHub.
  *
  * Responsibilities are deliberately narrow:
  *
@@ -18,16 +18,24 @@
  *   skill; stubs in tests).
  * - Surface dispatcher errors to the caller WITHOUT retry — the Tier 2/3
  *   fallback decision belongs to the skill, not this wrapper.
- * - Validate the returned `StructuredFindings` shape with a hand-rolled
- *   validator (matching the zero-dependency style of the other review-remote
- *   helpers) and raise a typed {@link StructuredFindingsError} on malformed
- *   output.
+ * - Retain accepted-handle repair and reject malformed, blocked, timed-out, or
+ *   accounting-invalid terminals without exposing actionable findings.
  */
 
+import {
+  validateAndRepair,
+  type ReviewerContinuation,
+} from '@review/coordinator-contract';
+import type {
+  AccountingValidationError,
+  ReviewOutputValidationContext,
+} from '@review/output-validator';
+import { parseReviewerTerminalV1 } from '@review/schemas';
 import {
   type StructuredFindings,
   validateStructuredFindings,
 } from '@review/structured-findings';
+import type { ReviewerTerminalV1 } from '@review/types';
 
 import type { NarrowingResult } from './narrowing';
 
@@ -50,11 +58,40 @@ export const STRUCTURED_OUTPUT_MODE_FLAG = 'oat_output_mode' as const;
 export const STRUCTURED_OUTPUT_MODE_VALUE = 'structured' as const;
 
 /**
- * Raw response envelope from a provider dispatch. The reviewer's structured
- * return lands on `findings`; the wrapper validates it before returning.
+ * Raw response from provider-owned dispatch. A pre-start rejection may be
+ * eligible for caller-owned fallback; accepted output is terminal.
  */
-export interface RawAgentResponse {
-  findings: unknown;
+export type RawAgentResponse =
+  | { accepted: false; reason: string }
+  | {
+      accepted: true;
+      terminal: unknown | Promise<unknown>;
+      repairAccounting?: (input: {
+        attempt: number;
+        errors: AccountingValidationError[];
+        immutableSubstanceDigest: string;
+      }) => Promise<unknown>;
+    };
+
+export class AcceptedReviewOutputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AcceptedReviewOutputError';
+  }
+}
+
+export class AcceptedReviewBlockedError extends Error {
+  constructor(readonly terminal: ReviewerTerminalV1 & { status: 'blocked' }) {
+    super(terminal.reason);
+    this.name = 'AcceptedReviewBlockedError';
+  }
+}
+
+export class ReviewDispatchRejectedError extends Error {
+  constructor(readonly reason: string) {
+    super(reason);
+    this.name = 'ReviewDispatchRejectedError';
+  }
 }
 
 /**
@@ -79,6 +116,10 @@ export interface ReviewDispatchContext {
   postedBodySchemaRef: string;
   /** Resolved re-review narrowing decision from {@link pickNarrowingTarget}. */
   narrowing: NarrowingResult;
+  /** Coordinator-owned receipt, plan, and assignment projection. */
+  validation: ReviewOutputValidationContext;
+  /** Absolute output deadline, or null when no outer budget exists. */
+  outputDeadlineMs: number | null;
 }
 
 /**
@@ -118,5 +159,52 @@ export async function dispatchStructuredReview(
   const payload = buildDispatchPayload(context);
   // No try/catch — a dispatcher error surfaces to the skill without retry.
   const response = await dispatcher.spawn(payload);
-  return validateStructuredFindings(response.findings);
+  if (!response.accepted) {
+    throw new ReviewDispatchRejectedError(response.reason);
+  }
+
+  let terminal: ReviewerTerminalV1;
+  try {
+    terminal = parseReviewerTerminalV1(await response.terminal);
+  } catch {
+    throw new AcceptedReviewOutputError(
+      'accepted reviewer returned malformed ReviewerTerminalV1',
+    );
+  }
+  const repairAccounting: ReviewerContinuation['repairAccounting'] = async (
+    input,
+  ) => {
+    if (response.repairAccounting === undefined) {
+      throw new AcceptedReviewOutputError(
+        'accepted reviewer does not support same-handle accounting repair',
+      );
+    }
+    try {
+      return parseReviewerTerminalV1(await response.repairAccounting(input));
+    } catch {
+      throw new AcceptedReviewOutputError(
+        'accepted reviewer returned malformed accounting repair',
+      );
+    }
+  };
+  const validation = await validateAndRepair(
+    {
+      context: context.validation,
+      continuation: { repairAccounting },
+      outputDeadlineMs: context.outputDeadlineMs,
+    },
+    terminal,
+  );
+  if (!validation.accepted) {
+    throw new AcceptedReviewOutputError(validation.code);
+  }
+  if (validation.terminal.status === 'blocked') {
+    throw new AcceptedReviewBlockedError(validation.terminal);
+  }
+  if (validation.terminal.candidate.kind !== 'structured') {
+    throw new AcceptedReviewOutputError(
+      'remote reviewer returned an artifact candidate',
+    );
+  }
+  return validateStructuredFindings(validation.terminal.candidate.review);
 }

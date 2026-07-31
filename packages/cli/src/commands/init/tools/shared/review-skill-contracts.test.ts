@@ -183,6 +183,31 @@ describe('review skill contracts', () => {
     }
   });
 
+  it('keeps remote structured tiers behind terminal validation', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    );
+    const rails = [
+      content.match(
+        /\*\*Step 5b: Tier 1[\s\S]*?(?=\*\*Step 5c: Tier 2)/,
+      )?.[0] ?? '',
+      content.match(
+        /\*\*Step 5d: Tier 3[\s\S]*?(?=### Step 6: Map Inline Comments)/,
+      )?.[0] ?? '',
+    ];
+    for (const rail of rails) {
+      const normalized = rail.replace(/\s+/g, ' ');
+      expect(normalized).toMatch(
+        /prepare-context[\s\S]*accepted handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*StructuredFindings[\s\S]*finding mapping[\s\S]*GitHub post/i,
+      );
+      expect(normalized).toMatch(
+        /Accepted timeout,[\s\S]*BLOCKED[\s\S]*malformed[\s\S]*accounting-invalid[\s\S]*non-actionable/i,
+      );
+      expect(normalized).toMatch(/never launch(?:es)? a replacement/i);
+    }
+    expect(rails[1]).not.toMatch(/read all files in the review scope/i);
+  });
+
   it('keeps reviewer timestamps aligned and next-step guidance inside the artifact template', () => {
     const content = readRepoFile('.agents/agents/oat-reviewer.md');
     const templateStart = content.indexOf('````markdown\n---');

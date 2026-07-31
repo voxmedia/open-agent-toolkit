@@ -310,25 +310,56 @@ Detection:
 
 **Step 5b: Tier 1 — `oat-reviewer` in structured-output mode (preferred).**
 
-Build the dispatch payload and spawn the reviewer in structured-output mode. This mirrors the tested wrapper at `packages/cli/src/review-remote/reviewer-dispatch.ts` (`buildDispatchPayload` / `dispatchStructuredReview`):
+Before dispatch, invoke launcher-owned `oat review prepare-context` with sink
+`structured`, the authoritative PR range, invocation lineage, and resolved
+budget. Build the dispatch payload from that preparation and spawn the reviewer
+in structured-output mode. This mirrors the tested wrapper at
+`packages/cli/src/review-remote/reviewer-dispatch.ts`
+(`buildDispatchPayload` / `dispatchStructuredReview`):
 
-- Set `oat_output_mode: structured` in the dispatch payload (the flag `.agents/agents/oat-reviewer.md` recognizes). In this mode the reviewer returns a `StructuredFindings` object in-memory and writes NO artifact under `reviews/`.
+- Set `oat_output_mode: structured` in the dispatch payload (the flag
+  `.agents/agents/oat-reviewer.md` recognizes). In enforce mode the reviewer
+  returns a `ReviewerTerminalV1` whose accepted complete candidate contains
+  `StructuredFindings`; it writes NO artifact under `reviews/`.
 - Include the project context (`oat_project`, `oat_review_scope`, `oat_review_head_sha`), the Review Scope metadata block, a pointer to the posted-review-body schema (`design.md` → Data Models → Posted-review-body), and the resolved narrowing range (`<prior_sha>..<HEAD>` or none).
 - If a worktree was resolved in Step 2, include its path so the reviewer reads from the checkout.
 - For Cursor concrete managed dispatch, invoke
   `providers.cursor.dispatchArgs.variant` as the exact native agent type. Do
   not substitute base `oat-reviewer` or add a concrete model argument.
-- The reviewer returns `StructuredFindings` (summary + findings array +
-  `verification_commands`). Tier 2/3 is eligible only when dispatch is
-  unavailable before launch or the exact native role is explicitly rejected
-  before any reviewer starts; record that pre-start outcome and do not retry
-  at Tier 1. Once a reviewer is accepted, malformed structured output is a
-  terminal validation failure: surface the error, block the review, and do not
-  launch another reviewer.
+- On host acceptance, bind and retain the exact accepted handle. The reviewer
+  performs required artifact intake, invokes supplied `checkpointArtifacts`,
+  submits `ReviewPlanV1` through `validate-plan`, retains
+  `PlanValidationReceiptV1`, and invokes `begin-evidence` before selective
+  content evidence.
+- The accepted handle returns one `ReviewerTerminalV1`, not bare findings.
+  Submit that envelope through launcher-owned `validate-output`. If and only if
+  every validation error is accounting-allowlisted, perform at most two
+  same-handle accounting repair turns with frozen review substance.
+- Only an accepted, validated complete structured terminal may project
+  `StructuredFindings` for Step 6 finding mapping, Step 7 body/verdict
+  construction, confirmation, or Step 8 GitHub posting. Accepted timeout,
+  `BLOCKED`, malformed terminal, or accounting-invalid output is non-actionable:
+  perform no finding mapping and no GitHub post.
+- Tier 2/3 is eligible only when dispatch is unavailable before launch or the
+  exact native role is explicitly rejected before any reviewer starts; record
+  that pre-start outcome and do not retry at Tier 1. Once accepted, never
+  launch a replacement or select a fallback tier.
 
 **Step 5c: Tier 2 — Fresh session (recommended fallback).** If subagent dispatch is unavailable and the user is not already in a fresh session, provide fresh-session instructions and exit. (If Codex reported `authorization required` and the user later authorizes, return to Tier 1.)
 
-**Step 5d: Tier 3 — Inline review (fallback).** If the user insists on inline review in the current session, run the reset protocol: re-read the required project artifacts, read all files in the review scope, apply the `oat-reviewer` checklist inline, and produce the findings set in the same `StructuredFindings` shape. Write NO artifact.
+**Step 5d: Tier 3 — Inline review (fallback).** If the user insists on inline
+review and the managed-target guard permits it, invoke
+`oat review prepare-context` with sink `structured`, then bind the current
+planning parent as the accepted handle. Perform required artifact intake; invoke supplied
+`checkpointArtifacts`; submit `ReviewPlanV1` through `validate-plan`; retain
+`PlanValidationReceiptV1`; and invoke `begin-evidence` before selective,
+path-scoped content evidence. Return one `ReviewerTerminalV1` from this same
+continuation and run `validate-output`. Permit at most two same-handle
+accounting repair turns. Only a validated complete structured terminal may
+project `StructuredFindings` and proceed to finding mapping, body construction,
+confirmation, or GitHub posting. Accepted timeout, `BLOCKED`, malformed, or
+accounting-invalid output is non-actionable and never launches a replacement or
+fallback tier. Write NO artifact.
 
 ### Step 6: Map Inline Comments to the Diff
 
