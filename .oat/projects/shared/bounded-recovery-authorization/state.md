@@ -61,7 +61,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T21:33:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T21:40:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -73,7 +73,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - Revision Phase p-rev2 review pending
+Implement - Phase 4 ready
 
 ## Artifacts
 
@@ -112,7 +112,8 @@ Implement - Revision Phase p-rev2 review pending
 - ✓ Operator authorized narrow revision phase p-rev2
 - ✓ Uncommitted Phase 4 version edits restored to the verified baseline
 - ✓ Revision task p-rev2-t01 completed and root-validated
-- ⧗ Fresh root-owned p-rev2 review pending
+- ✓ Fresh root-owned p-rev2 review passed with zero findings
+- ⧗ Phase 4 lockstep release and full verification pending
 
 ## Blockers
 
@@ -120,4 +121,4 @@ None
 
 ## Next Milestone
 
-Review p-rev2, then rerun Phase 4
+Rerun Phase 4 from the passing post-revision baseline
