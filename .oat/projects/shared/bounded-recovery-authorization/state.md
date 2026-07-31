@@ -1,8 +1,7 @@
 ---
 oat_current_task: p-rev1-t01
 oat_last_commit: a2d875bb379941301c3ed811b40cfee7a40148e8
-oat_blockers:
-  - 'Phase p-rev1 invalid-run abort: accepted packet carried incorrect full base SHA; corrected relaunch requires explicit direction'
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -62,7 +61,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T18:34:24Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T19:02:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -74,7 +73,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - Blocked after Phase p-rev1 invalid-run abort
+Implement - Corrected Phase p-rev1 launch authorized
 
 ## Artifacts
 
@@ -100,13 +99,13 @@ Implement - Blocked after Phase p-rev1 invalid-run abort
 - ✗ Phase 1 final review retained one Important finding
 - ✓ Operator authorized a new narrow revision phase without reopening Phase 1
 - ✗ Phase p-rev1 packet failed exact-base validation before edit
-- ⧗ Awaiting direction for any corrected launch
+- ✓ Operator explicitly authorized one corrected new launch
+- ⧗ Corrected Phase p-rev1 launch pending
 
 ## Blockers
 
-The accepted p-rev1 run aborted before edit because the packet carried an
-incorrect full expected-base SHA. Automatic replacement is forbidden.
+None
 
 ## Next Milestone
 
-Operator disposition for a corrected Phase p-rev1 launch
+Complete and independently review Phase p-rev1

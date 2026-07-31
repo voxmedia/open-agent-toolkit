@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - 'Phase p-rev1 invalid-run abort: accepted packet carried incorrect full base SHA; corrected relaunch requires explicit direction'
+oat_blockers: []
 oat_last_updated: 2026-07-31
 oat_current_task_id: p-rev1-t01
 oat_generated: false
@@ -28,7 +27,7 @@ oat_generated: false
 | Phase        | Status        | Tasks | Completed |
 | ------------ | ------------- | ----- | --------- |
 | Phase 1      | review_failed | 2     | 2/2       |
-| Phase p-rev1 | blocked       | 1     | 0/1       |
+| Phase p-rev1 | in_progress   | 1     | 0/1       |
 | Phase 2      | pending       | 1     | 0/1       |
 | Phase 3      | pending       | 1     | 0/1       |
 | Phase 4      | pending       | 1     | 0/1       |
@@ -127,12 +126,12 @@ oat_generated: false
 
 ## Revision Phase 1: Final Reserved Attempt Revision
 
-**Status:** blocked
+**Status:** in_progress
 **Started:** 2026-07-31
 
 ### Task p-rev1-t01: (revision) Distinguish Pending Completion from New Reservation
 
-**Status:** blocked
+**Status:** in_progress
 **Commit:** -
 
 ---
@@ -209,6 +208,8 @@ _- Outstanding Items_
 - Phase p-rev1 launch accepted on the resolved target, then returned
   `INVALID_RUN_ABORT` before edit because the packet's full expected base SHA
   did not equal the actual clean HEAD
+- Operator explicitly authorized one new corrected p-rev1 run after the
+  invalid-run abort; target and bounded scope remain unchanged
 
 #### Dispatch Record: p-rev1 invalid run
 
@@ -268,14 +269,14 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Await explicit direction before any corrected p-rev1 launch.
+- Execute the explicitly authorized corrected p-rev1 launch.
 
 **Blockers:**
 
-- Accepted p-rev1 run aborted before edit on exact-base mismatch. Automatic
-  replacement is forbidden.
+- None. The prior accepted run remains terminal; this is a separately
+  authorized new run.
 
-**Session End:** Blocked after p-rev1 invalid-run abort
+**Session End:** Corrected p-rev1 launch authorized
 
 ---
 

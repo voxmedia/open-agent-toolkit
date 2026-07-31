@@ -44,6 +44,10 @@ Entries are chronological and append-only.
 
 INVALID_RUN_ABORT before edit: accepted phase packet carried an incorrect full base SHA; preserved clean HEAD 5494dbfe98129193f1db46d86f12b768b7511f39 and stopped without fallback.
 
+### 2026-07-31 · structural · oat-project-implement · p-rev1-corrected-launch
+
+Operator explicitly authorized one new corrected p-rev1 run after the prior accepted invalid-run abort; preserve the same exact target and bounded revision scope.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
