@@ -800,7 +800,7 @@ Then spawn the reviewer:
   - Cursor: for a concrete managed target, invoke `providers.cursor.dispatchArgs.variant` as the exact resolver-selected native reviewer variant. Do not attach a Task-level model argument or normalize the mapped model. Base `oat-reviewer` is allowed only for explicit inherit/default behavior. A pre-start native role-selection rejection is the only replacement boundary.
   - Codex style: for a concrete managed target, first spawn the exact resolver-returned native `agent_type`; only an explicit pre-start native role-selection rejection permits the explicitly pinned fresh-child route from Step 6.0. Generic auto-selection is permitted only for the documented base-role exceptions.
 - Pass the Review Scope metadata block from Step 5 as the prompt
-- Pass only `artifactDraftPath` for the subagent to write to. Do not include the pre-computed final publication path in any reviewer prompt, payload, or instruction.
+- Pass only `artifactDraftPath` for the subagent to write to. Do not include the pre-computed final publication path in any reviewer input, payload, or instruction.
 - **If a worktree was resolved in Step 1.5:** include the worktree path in the prompt so the subagent writes the artifact to the worktree directory, not the current session's working directory
 - Run in background if supported (`run_in_background: true`)
 
