@@ -171,9 +171,23 @@ Automatic recovery is eligible only when every condition is true:
   unchanged;
 - the work is non-destructive, reversible, and outside protected-branch,
   credential, or other consequential boundaries;
-- the accepted implementation handle and exact target remain intact;
+- the exact target remains unchanged and bindable regardless of handle state;
+- handle continuity follows one of the authorized alternatives below;
 - `phase_recovery_attempts_used < phase_recovery_limit`; and
 - focused plus relevant phase verification can establish correctness.
+
+Handle and exact-target continuity use these mutually compatible branches:
+
+1. When the accepted handle is available or resumable, use same-handle
+   continuation.
+2. When the accepted handle is unavailable or unresumable, an unchanged,
+   bindable exact target plus a lifecycle-authorized recover scope, a reconciled
+   pending attempt, and continuation linkage authorizes fresh `mode: recover`.
+3. A lost or unbindable exact target requires a direction-required stop with no
+   fallback.
+
+Handle unavailability alone does not make automatic recovery ineligible or
+stop it. It selects the second branch only when all its conditions hold.
 
 The implementer records eligibility before editing. The attempt is consumed
 before editing begins. A failed edit, commit, or re-verification consumes that

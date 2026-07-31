@@ -2724,6 +2724,42 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('makes handle continuity alternatives compatible with exact-target recovery', async () => {
+    const contracts = [
+      [
+        'phase agent',
+        await readRawRepoFile('.agents/agents/oat-phase-implementer.md'),
+      ],
+      [
+        'phase root',
+        await readRawRepoFile(
+          '.agents/skills/oat-project-implement/references/phase-execution.md',
+        ),
+      ],
+    ] as const;
+
+    for (const [name, contract] of contracts) {
+      expect(contract, `${name} exact-target invariant`).toMatch(
+        /exact target[\s\S]{0,220}(?:must remain|remains)[\s\S]{0,160}unchanged[\s\S]{0,80}bindable[\s\S]{0,180}regardless of handle/i,
+      );
+      expect(contract, `${name} same-handle branch`).toMatch(
+        /handle[\s\S]{0,120}(?:available|resumable)[\s\S]{0,220}same-handle\s+continuation/i,
+      );
+      expect(contract, `${name} fresh-recover branch`).toMatch(
+        /handle[\s\S]{0,160}(?:unavailable|unresumable|cannot be resumed)[\s\S]{0,260}unchanged[\s\S]{0,120}bindable\s+exact\s+target[\s\S]{0,260}lifecycle-authorized\s+recover\s+scope[\s\S]{0,220}reconciled\s+pending\s+attempt[\s\S]{0,220}continuation\s+linkage[\s\S]{0,260}(?:fresh\s+)?`?mode:\s*recover`?/i,
+      );
+      expect(contract, `${name} target-loss branch`).toMatch(
+        /(?:lost|unbindable)\s+exact\s+target[\s\S]{0,220}direction-required[\s\S]{0,220}no\s+fallback/i,
+      );
+      expect(contract, `${name} handle-only eligibility`).toMatch(
+        /handle\s+unavailability\s+alone[\s\S]{0,220}(?:does not|must not)[\s\S]{0,160}(?:ineligible|block|stop)/i,
+      );
+      expect(contract, `${name} contradictory conjunction`).not.toMatch(
+        /accepted implementation handle and exact (?:launcher-owned dispatch )?target[\s\S]{0,80}remain (?:available|intact)/i,
+      );
+    }
+  });
+
   it('uses one monotonic durable per-phase attempt ledger across resumes', async () => {
     const agent = await readRawRepoFile(
       '.agents/agents/oat-phase-implementer.md',
