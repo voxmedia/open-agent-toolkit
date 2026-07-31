@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status        | Tasks | Completed |
-| ------------ | ------------- | ----- | --------- |
-| Phase 1      | review_failed | 2     | 2/2       |
-| Phase p-rev1 | passed        | 1     | 1/1       |
-| Phase 2      | passed        | 1     | 1/1       |
-| Phase 3      | passed        | 2     | 2/2       |
-| Phase p-rev2 | passed        | 1     | 1/1       |
-| Phase 4      | passed        | 1     | 1/1       |
-| Phase 5      | pending       | 1     | 0/1       |
+| Phase        | Status         | Tasks | Completed |
+| ------------ | -------------- | ----- | --------- |
+| Phase 1      | review_failed  | 2     | 2/2       |
+| Phase p-rev1 | passed         | 1     | 1/1       |
+| Phase 2      | passed         | 1     | 1/1       |
+| Phase 3      | passed         | 2     | 2/2       |
+| Phase p-rev2 | passed         | 1     | 1/1       |
+| Phase 4      | passed         | 1     | 1/1       |
+| Phase 5      | review_pending | 1     | 1/1       |
 
-**Total:** 8/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
@@ -351,7 +351,7 @@ oat_generated: false
 
 ## Phase 5: Final Review Ledger Handoff Fix
 
-**Status:** pending
+**Status:** review_pending
 **Started:** 2026-07-31
 
 ### Review Received: final
@@ -388,8 +388,26 @@ fresh review loop.
 
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0eaaf85a1926607a3d864fca21791ee4637c91ce
+
+**Result:**
+
+- Replaced the circular settled-ledger precondition with an explicit
+  pre-bookkeeping handoff matrix for no-recovery, matching committed
+  `completed`, and matching committed `failed` states.
+- Root validation now precedes marker clearing, preserves monotonic attempt
+  usage and terminal-stop disposition, and rejects premature clear, status or
+  identity mismatch, active markers, and unreconciled state.
+- Added ordered relational transition tests and generated-provider parity
+  coverage, then regenerated every Codex and Cursor phase-agent view.
+- RED produced the two expected canonical/parity failures. Focused verification
+  passed 163 tests and 61 canonical skill validations; full pre-commit and clean
+  post-commit repository/release chains passed.
+- Root independently verified the exact one-commit boundary, 36-file authorized
+  surface, 163 focused tests, canonical skill validation, clean worktree, and
+  unchanged `0.2.27` release versions.
+- Recovery attempts used: 0; no recovery event.
 
 ---
 
@@ -661,6 +679,46 @@ _- Outstanding Items_
 - Dispatch stamp:
   `Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`
 
+#### Dispatch Record: final review cycle 1
+
+- Request: `bounded-recovery-authorization-final-review1-20260731T215922Z`
+- Launch state/outcome: accepted / `FAIL`
+- Route: Cursor native materialized role
+  `oat-reviewer-gpt-5-6-sol-high`
+- Selection: managed High review target `gpt-5.6-sol-high`; reason
+  `gate-target`
+- Model axis: `selected:gpt-5.6-sol-high`
+- Effort axis: `not-applicable`
+- Reviewed range:
+  `721af62d641061870a71550ed2d487c69b8ea58d..d7fb5652da797e3c3826f46adda42bd6f5caac3f`
+- Artifact:
+  `reviews/final-review-2026-07-31T215922Z.md`
+- Findings: 1 Critical, 0 Important, 0 Medium, 0 Minor
+- Reconnaissance: not attempted; no Review Orchestration section present
+- Dispatch stamp:
+  `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`
+
+#### Dispatch Record: p05 implementation
+
+- Request: `bounded-recovery-authorization-p05-implementation-20260731T221106Z`
+- Launch state/outcome: accepted / `DONE`
+- Route: Cursor native materialized role
+  `oat-phase-implementer-gpt-5-6-sol-high`
+- Classification: `hard-reasoning`; source `caller`; rationale: the final
+  review exposed a load-bearing circular state-machine handoff requiring
+  cross-contract reconciliation
+- Selection: explicit candidate `gpt-5.6-sol-high`, High tier index 1, under the
+  managed High ceiling
+- Model axis: `selected:gpt-5.6-sol-high`
+- Effort axis: `not-applicable`
+- Base/head:
+  `c8593262479127565a681ba9cfba548d743d82dc..0eaaf85a1926607a3d864fca21791ee4637c91ce`
+- Task/commit: `p05-t01` /
+  `0eaaf85a1926607a3d864fca21791ee4637c91ce`
+- Recovery attempts: 0; no recovery event
+- Dispatch stamp:
+  `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -698,6 +756,8 @@ Chronological log of implementation progress.
 - Fresh root-owned Phase 4 review passed with zero findings; fix-loop count 0.
 - Received final review cycle 1 with one Critical recovery-ledger handoff
   contradiction and converted it to `p05-t01`.
+- Completed and root-validated `p05-t01`; final review cycle 1 is
+  `fixes_completed` and fresh Phase 5 review is pending.
 
 **Decisions:**
 
@@ -712,14 +772,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Implement and review `p05-t01`, then rerun final closeout verification and
-  lifecycle review.
+- Review Phase 5, then rerun final closeout verification and lifecycle review.
 
 **Blockers:**
 
 - None. Operator authorized the narrow revision path.
 
-**Session End:** Final-review fix task `p05-t01` pending
+**Session End:** Phase 5 implementation complete; review pending
 
 ---
 
@@ -775,6 +834,9 @@ Track test execution during implementation.
 - Operators can extend a phase's total attempt budget without resetting prior
   usage; a fully reconciled already-pending final attempt may finish even when
   the durable count equals the limit.
+- Root now validates a matching committed `completed` or `failed`
+  pre-bookkeeping marker before clearing it; only the post-bookkeeping null
+  marker is called settled.
 
 **Key files / modules:**
 
@@ -797,6 +859,9 @@ Track test execution during implementation.
   pre-commit and clean post-commit verification chains.
 - `pnpm release:validate` passed repeatedly and validated all five `0.2.27`
   public-package tarballs plus visual validation.
+- Phase 5 added ordered transition-matrix and provider-parity coverage; 163
+  focused tests, 61 skill validations, and full pre/post-commit repository and
+  release chains passed.
 - Every accepted phase task/fix commit was range-, boundary-, and
   clean-worktree-validated; passing root-owned phase reviews reported zero
   Critical or Important findings.
@@ -811,6 +876,9 @@ Track test execution during implementation.
 - Operator-authorized revision phase `p-rev2` repaired three exact non-gate
   autonomy inventory mappings exposed by the full test gate, after which Phase
   4 reran unchanged from a clean baseline.
+- Final lifecycle review cycle 1 exposed a circular validate/clear precondition;
+  review-generated Phase 5 corrected the ordered ledger handoff and added
+  relational coverage before final re-review.
 
 ## References
 

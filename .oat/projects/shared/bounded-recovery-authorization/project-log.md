@@ -88,6 +88,10 @@ Phase p04 outcome PASS after one authorized rerun task commit and root-owned rev
 
 Final lifecycle review cycle 1/3 FAIL at d7fb5652da797e3c3826f46adda42bd6f5caac3f with one Critical finding: root success required a post-bookkeeping settled ledger before validating the phase-agent's committed completed marker. Auto-disposition converted C1 to p05-t01 and shifted the configured final HiLL checkpoint to p05; no deferred findings.
 
+### 2026-07-31 · structural · oat-project-implement · p05-implementation
+
+Completed p05-t01 at 0eaaf85a1926607a3d864fca21791ee4637c91ce from base c8593262479127565a681ba9cfba548d743d82dc. Root validated the exact one-commit 36-file boundary, ordered pre-bookkeeping terminal-marker handoff, 163 focused tests, 61 skill validations, clean worktree, unchanged 0.2.27 versions, and zero recovery attempts. Final review cycle 1 status advanced to fixes_completed; Phase 5 review pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
