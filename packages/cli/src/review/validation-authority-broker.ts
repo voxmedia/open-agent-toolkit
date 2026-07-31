@@ -34,6 +34,8 @@ import {
 } from './validation-store-authority';
 
 const MAX_BROKER_REQUEST_BYTES = 2 * 1024 * 1024;
+const DEFAULT_CONNECTION_READ_TIMEOUT_MS = 10_000;
+const DEFAULT_SHUTDOWN_TIMEOUT_MS = 1_000;
 
 type BrokerRequest =
   | {
@@ -97,27 +99,61 @@ function brokerCommands(
   };
 }
 
-function readSocketJson(socket: Socket): Promise<unknown> {
+function readSocketJson(
+  socket: Socket,
+  timeoutMs = DEFAULT_CONNECTION_READ_TIMEOUT_MS,
+): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let bytes = 0;
-    socket.on('data', (chunk: Buffer) => {
+    let settled = false;
+    const cleanup = () => {
+      socket.setTimeout(0);
+      socket.removeListener('data', onData);
+      socket.removeListener('end', onEnd);
+      socket.removeListener('error', onError);
+      socket.removeListener('close', onClose);
+      socket.removeListener('timeout', onTimeout);
+    };
+    const fail = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    };
+    const onData = (chunk: Buffer) => {
       bytes += chunk.byteLength;
       if (bytes > MAX_BROKER_REQUEST_BYTES) {
-        reject(new Error('validation authority broker request is too large'));
+        fail(new Error('validation authority broker request is too large'));
         socket.destroy();
         return;
       }
       chunks.push(chunk);
-    });
-    socket.on('end', () => {
+    };
+    const onEnd = () => {
+      if (settled) return;
       try {
-        resolve(parseStrictJson(Buffer.concat(chunks).toString('utf8')));
+        const value = parseStrictJson(Buffer.concat(chunks).toString('utf8'));
+        settled = true;
+        cleanup();
+        resolve(value);
       } catch (error) {
-        reject(error);
+        fail(error);
       }
-    });
-    socket.on('error', reject);
+    };
+    const onError = (error: Error) => fail(error);
+    const onClose = () =>
+      fail(new Error('validation authority broker connection closed'));
+    const onTimeout = () => {
+      fail(new Error('validation authority broker request timed out'));
+      socket.destroy();
+    };
+    socket.on('data', onData);
+    socket.on('end', onEnd);
+    socket.on('error', onError);
+    socket.on('close', onClose);
+    socket.on('timeout', onTimeout);
+    socket.setTimeout(timeoutMs);
   });
 }
 
@@ -140,6 +176,11 @@ export async function startPreparedValidationAuthorityBroker(input: {
   startup: BrokerStartup;
   acceptedContinuation: AcceptedContinuationBinding;
   validationRoot?: string;
+  timings?: {
+    connectionReadTimeoutMs?: number;
+    shutdownTimeoutMs?: number;
+    expiryMs?: number;
+  };
 }): Promise<{
   preparation: PrepareReviewContextResultV1;
   closed: Promise<void>;
@@ -173,29 +214,49 @@ export async function startPreparedValidationAuthorityBroker(input: {
   const closed = new Promise<void>((resolve) => {
     resolveClosed = resolve;
   });
-  let finished = false;
-  const finish = async () => {
-    if (finished) return;
-    finished = true;
-    await rm(input.socketPath, { force: true });
-    resolveClosed();
+  let finishPromise: Promise<void> | undefined;
+  const finish = () => {
+    finishPromise ??= (async () => {
+      try {
+        await rm(input.socketPath, { force: true });
+      } finally {
+        resolveClosed();
+      }
+    })();
+    return finishPromise;
   };
   const server = createServer({ allowHalfOpen: true });
-  const closeBroker = () =>
-    new Promise<void>((resolve, reject) => {
-      server.close((error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        finish().then(resolve, reject);
-      });
+  const sockets = new Set<Socket>();
+  const shutdownTimeoutMs =
+    input.timings?.shutdownTimeoutMs ?? DEFAULT_SHUTDOWN_TIMEOUT_MS;
+  let shutdownPromise: Promise<void> | undefined;
+  const closeBroker = () => {
+    shutdownPromise ??= new Promise<void>((resolve, reject) => {
+      let completed = false;
+      const complete = (error?: Error | null) => {
+        if (completed) return;
+        completed = true;
+        clearTimeout(deadline);
+        finish().then(() => (error ? reject(error) : resolve()), reject);
+      };
+      const deadline = setTimeout(() => {
+        for (const socket of sockets) socket.destroy();
+        complete();
+      }, shutdownTimeoutMs);
+      deadline.unref();
+      server.close((error) => complete(error));
+      for (const socket of sockets) socket.destroy();
     });
+    return shutdownPromise;
+  };
   const handleConnection = async (socket: Socket) => {
     let response: BrokerResponse;
     let closeAfterResponse = false;
     try {
-      const request = await readBrokerRequest(socket);
+      const request = await readBrokerRequest(
+        socket,
+        input.timings?.connectionReadTimeoutMs,
+      );
       const lifecycle = { store };
       switch (request.action) {
         case 'checkpoint':
@@ -234,12 +295,14 @@ export async function startPreparedValidationAuthorityBroker(input: {
         error: serializeReviewError(error),
       };
     }
-    socket.end(JSON.stringify(response));
+    await writeSocketResponse(socket, response);
     if (closeAfterResponse) {
       await closeBroker();
     }
   };
   server.on('connection', (socket) => {
+    sockets.add(socket);
+    socket.once('close', () => sockets.delete(socket));
     handleConnection(socket).catch((error: unknown) => {
       const response: BrokerResponse = {
         schemaVersion: 1,
@@ -247,17 +310,16 @@ export async function startPreparedValidationAuthorityBroker(input: {
         error: serializeReviewError(error),
       };
       if (socket.destroyed) return;
-      socket.end(JSON.stringify(response));
+      writeSocketResponse(socket, response).catch(() => socket.destroy());
     });
   });
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
     server.listen(input.socketPath, resolve);
   });
-  const expiresInMs = Math.max(
-    1,
-    Date.parse(preparation.preparation.expiresAt) - Date.now(),
-  );
+  const expiresInMs =
+    input.timings?.expiryMs ??
+    Math.max(1, Date.parse(preparation.preparation.expiresAt) - Date.now());
   const expiry = setTimeout(() => {
     closeBroker().catch(() => undefined);
   }, expiresInMs);
@@ -431,9 +493,10 @@ export type { AcceptedContinuationBinding, BrokerRequest, BrokerStartup };
 
 async function readBrokerRequest(
   socket: Socket,
+  timeoutMs?: number,
 ): Promise<VersionedBrokerRequest> {
   try {
-    return parseBrokerRequest(await readSocketJson(socket));
+    return parseBrokerRequest(await readSocketJson(socket, timeoutMs));
   } catch {
     throw new ReviewDomainError({
       category: 'input',
@@ -441,6 +504,38 @@ async function readBrokerRequest(
       message: 'validation authority broker request is invalid',
     });
   }
+}
+
+async function writeSocketResponse(
+  socket: Socket,
+  response: BrokerResponse,
+): Promise<void> {
+  if (socket.destroyed) {
+    throw new Error('validation authority broker connection is closed');
+  }
+  await new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      socket.removeListener('finish', onFinish);
+      socket.removeListener('error', onError);
+      socket.removeListener('close', onClose);
+    };
+    const finish = (error?: Error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      if (error) reject(error);
+      else resolve();
+    };
+    const onFinish = () => finish();
+    const onError = (error: Error) => finish(error);
+    const onClose = () =>
+      finish(new Error('validation authority broker response was interrupted'));
+    socket.once('finish', onFinish);
+    socket.once('error', onError);
+    socket.once('close', onClose);
+    socket.end(JSON.stringify(response));
+  });
 }
 
 function parseBrokerRequest(value: unknown): VersionedBrokerRequest {

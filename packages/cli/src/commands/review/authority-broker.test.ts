@@ -35,6 +35,7 @@ describe('createReviewAuthorityBrokerCommand', () => {
       '/tmp/broker.sock',
     ]);
     await vi.waitFor(() => expect(write).toHaveBeenCalledOnce());
+    expect(key).toEqual(Buffer.alloc(32, 7));
     close();
     await running;
 

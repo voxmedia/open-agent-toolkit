@@ -71,7 +71,11 @@ async function repositoryFixture() {
   };
 }
 
-async function fixture() {
+async function fixture(timings?: {
+  connectionReadTimeoutMs?: number;
+  shutdownTimeoutMs?: number;
+  expiryMs?: number;
+}) {
   const { root, validationRoot, socketPath, baseSha, headSha, sourceEntry } =
     await repositoryFixture();
   const key = Buffer.alloc(32, 11);
@@ -83,6 +87,7 @@ async function fixture() {
       schemaVersion: 1,
       handleId: 'accepted-handle',
     },
+    timings,
     startup: {
       input: {
         repoRoot: root,
@@ -180,7 +185,10 @@ function plan(
 
 describe('validation authority broker', () => {
   it('runs every one-shot lifecycle command in a separate keyless process', async () => {
-    const { root, broker, store } = await fixture();
+    const { root, broker, store, socketPath } = await fixture({
+      connectionReadTimeoutMs: 5_000,
+      shutdownTimeoutMs: 100,
+    });
     const [checkpoint, validate, begin] = [
       broker.preparation.commands.checkpointArtifacts,
       broker.preparation.commands.validatePlan,
@@ -268,6 +276,16 @@ describe('validation authority broker', () => {
         code: 'plan-receipt-identity-mismatch',
       },
     });
+    const pinned = createConnection(socketPath);
+    pinned.on('error', () => undefined);
+    await waitForSocketConnect(pinned);
+    const pinnedClosed = waitForSocketClose(pinned);
+    await new Promise<void>((resolveWrite, reject) => {
+      pinned.write('{"schemaVersion":1', (error) => {
+        if (error) reject(error);
+        else resolveWrite();
+      });
+    });
     begin.argv[receiptIndex] = validateEnvelope.result.receipt.token;
     const beginResult = await executeCommandInvocation(begin, {
       cwd: resolve('..', '..'),
@@ -277,7 +295,15 @@ describe('validation authority broker', () => {
       },
     });
     expect(beginResult.exitCode).toBe(0);
-    await broker.closed;
+    expect(JSON.parse(beginResult.stdout)).toEqual({
+      ok: true,
+      result: {
+        validationRunId: broker.preparation.preparation.runId,
+        phase: 'evidence_started',
+      },
+    });
+    await withinDeadline(broker.closed, 500);
+    await withinDeadline(pinnedClosed, 500);
     const transportFailure = await executeCommandInvocation(begin, {
       cwd: resolve('..', '..'),
     });
@@ -290,6 +316,33 @@ describe('validation authority broker', () => {
     });
     expect(root).not.toContain('OAT_REVIEW_AUTHORITY_KEY');
   }, 20_000);
+
+  it('closes partial clients on their read deadline and at run expiry', async () => {
+    const readDeadlineFixture = await fixture({
+      connectionReadTimeoutMs: 25,
+      shutdownTimeoutMs: 50,
+    });
+    const slow = createConnection(readDeadlineFixture.socketPath);
+    slow.on('error', () => undefined);
+    await waitForSocketConnect(slow);
+    const slowClosed = waitForSocketClose(slow);
+    slow.write('{"schemaVersion":1');
+    await withinDeadline(slowClosed, 500);
+    await readDeadlineFixture.broker.close();
+
+    const expiryFixture = await fixture({
+      connectionReadTimeoutMs: 5_000,
+      shutdownTimeoutMs: 50,
+      expiryMs: 50,
+    });
+    const pinned = createConnection(expiryFixture.socketPath);
+    pinned.on('error', () => undefined);
+    await waitForSocketConnect(pinned);
+    const pinnedClosed = waitForSocketClose(pinned);
+    pinned.write('{"schemaVersion":1');
+    await withinDeadline(expiryFixture.broker.closed, 500);
+    await withinDeadline(pinnedClosed, 500);
+  });
 
   it('preserves expiry as a typed broker domain rejection', async () => {
     const { broker, key, socketPath, validationRoot } = await fixture();
@@ -444,6 +497,16 @@ describe('validation authority broker', () => {
     };
     const prepared = preparedEnvelope.result;
     expect(prepare.stdout).not.toContain('accepted-handle');
+    const brokerSocket =
+      prepared.commands.checkpointArtifacts.argv[
+        prepared.commands.checkpointArtifacts.argv.indexOf('--broker-socket') +
+          1
+      ];
+    const pinned = createConnection(brokerSocket);
+    pinned.on('error', () => undefined);
+    await waitForSocketConnect(pinned);
+    const pinnedClosed = waitForSocketClose(pinned);
+    pinned.write('{"schemaVersion":1');
 
     const checkpoint = await executeCommandInvocation(
       prepared.commands.checkpointArtifacts,
@@ -492,6 +555,11 @@ describe('validation authority broker', () => {
       environment: process.env,
     });
     expect(started.exitCode, started.stderr).toBe(0);
+    expect(JSON.parse(started.stdout)).toMatchObject({
+      ok: true,
+      result: { phase: 'evidence_started' },
+    });
+    await withinDeadline(pinnedClosed, 2_000);
   }, 30_000);
 
   it('rejects reviewer-side key disclosure and state re-signing attempts', async () => {
@@ -569,4 +637,41 @@ async function rawBrokerRequest(
     socket.once('error', reject);
   });
   return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown;
+}
+
+async function waitForSocketConnect(
+  socket: ReturnType<typeof createConnection>,
+) {
+  if (socket.readyState === 'open') return;
+  await new Promise<void>((resolveConnect, reject) => {
+    socket.once('connect', resolveConnect);
+    socket.once('error', reject);
+  });
+}
+
+function waitForSocketClose(
+  socket: ReturnType<typeof createConnection>,
+): Promise<void> {
+  if (socket.closed) return Promise.resolve();
+  return new Promise((resolveClose) => socket.once('close', resolveClose));
+}
+
+async function withinDeadline<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
+  let timer: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`deadline exceeded after ${timeoutMs}ms`)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
