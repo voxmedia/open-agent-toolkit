@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: null
+oat_current_task_id: p04-t11
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | completed | 55    | 55/55     |
-| Phase 3 | completed | 10    | 10/10     |
-| Phase 4 | in_review | 10    | 10/10     |
-| Phase 5 | pending   | 7     | 0/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | completed   | 55    | 55/55     |
+| Phase 3 | completed   | 10    | 10/10     |
+| Phase 4 | in_progress | 17    | 10/17     |
+| Phase 5 | pending     | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 88/108 tasks completed
+**Total:** 88/115 tasks completed
 
 ## Execution Configuration
 
@@ -642,7 +642,7 @@ independent root verification without authorizing another review cycle.
 
 ## Phase 3: Reviewer Plan and Evidence Contract
 
-**Status:** in_review
+**Status:** review_fixes_pending
 **Started:** 2026-07-31
 **Completed:** -
 
@@ -871,6 +871,41 @@ launcher-owned terminal validation in the canonical remote skill.
 **Outcome:** Added `validate-output` to the lifecycle command inventory and
 review-help snapshot without unrelated churn.
 
+### Task p04-t11: (review C1) Keep final artifact paths launcher-private
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t12: (review C2) Enforce the final verification boundary
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t13: (review C3) Require exact assignment bucket identities
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t14: (review C4) Derive coverage through permitted contingency
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t15: (review C5) Persist immutable same-handle output repair
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t16: (review I1) Publish through a descriptor-safe atomic rename
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t17: (review C6) Bind publication to the accepted snapshot
+
+**Status:** pending
+**Commit:** -
+
 ### Phase Verification
 
 - Focused Phase 4 union passed 253 tests.
@@ -888,7 +923,34 @@ review-help snapshot without unrelated churn.
 - Root independently reran the 105 ownership, remote-wrapper, project-rail,
   command-inventory, and help-snapshot tests.
 
-**Next:** Dispatch the root-owned independent Phase 4 review.
+### Review Received: p04
+
+**Date:** 2026-07-31
+**Review artifact:** `reviews/p04-review-2026-07-31T155658Z.md`
+
+**Verdict:** Failed
+
+**Findings:**
+
+- Critical: 6
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** p04-t11 through p04-t17
+
+**Finding disposition map:**
+
+- C1 (Tier 1 exposes final artifact path before acceptance) → p04-t11
+- C2 (output ignores required verification boundary) → p04-t12
+- C3 (duplicate buckets can omit required assignment owners) → p04-t13
+- C4 (uncovered delegated lanes can fabricate primary completion) → p04-t14
+- C5 (production CLI bypasses immutable repair state) → p04-t15
+- I1 (publication reopens and hard-links an untrusted pathname) → p04-t16
+- C6 (validation discards the only accepted artifact snapshot) → p04-t17
+
+**Next:** Resume the original Phase 4 handle with the bounded fix tasks, then
+independently re-review the updated range.
 
 ---
 

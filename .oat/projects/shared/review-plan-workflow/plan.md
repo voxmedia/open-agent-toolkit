@@ -2382,6 +2382,203 @@ without unrelated snapshot churn.
 
 **Step 5: Commit** `test(p04-t10): align validate-output command contracts`
 
+### Task p04-t11: (review C1) Keep final artifact paths launcher-private
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/review/local-coordinator.integration.test.ts`
+
+**Step 1: Reproduce** Assert that Tier 1 instructions currently pass the
+pre-computed discoverable final path after stating that the reviewer receives
+only the private draft path.
+
+**Step 2: Implement** Pass only `artifactDraftPath` to the accepted reviewer and
+retain the final publication path exclusively in the launcher. Reject any Tier
+1 payload/instruction that exposes the discoverable final path before output
+acceptance.
+
+**Step 3: Format** Run `pnpm format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/review/local-coordinator.integration.test.ts`.
+Expected: no local reviewer can create the final artifact before validation and
+publication.
+
+**Step 5: Commit** `fix(p04-t11): keep final artifact paths launcher private`
+
+### Task p04-t12: (review C2) Enforce the final verification boundary
+
+**Files:**
+
+- Modify: `packages/cli/src/review/output-validator.ts`
+- Modify: `packages/cli/src/review/output-validator.test.ts`
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/types.test.ts`
+- Modify: `packages/cli/src/review/schemas.ts`
+- Modify: `packages/cli/src/review/schemas.test.ts`
+- Modify: `packages/cli/src/review/artifact-accounting.ts`
+- Modify: `packages/cli/src/review/artifact-accounting.test.ts`
+
+**Step 1: Reproduce** Validate a complete output with an empty evidence/claim
+registry against a plan requiring all direct claim kinds and positive coverage;
+also show that artifact findings are absent from promoted-finding checks.
+
+**Step 2: Implement** Require the exact planned direct-claim kinds and positive
+coverage samples, with evidence for every required direct/sample claim. Add a
+strict typed artifact finding-ID projection bound to the immutable artifact
+accounting/snapshot so promoted artifact findings receive the same exactly-once
+verification checks as structured findings.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/output-validator.test.ts src/review/types.test.ts src/review/schemas.test.ts src/review/artifact-accounting.test.ts`.
+Expected: omitted direct/sample claims and unprojected artifact findings reject.
+
+**Step 5: Commit** `fix(p04-t12): enforce final verification boundary`
+
+### Task p04-t13: (review C3) Require exact assignment bucket identities
+
+**Files:**
+
+- Modify: `packages/cli/src/review/output-validator.ts`
+- Modify: `packages/cli/src/review/output-validator.test.ts`
+
+**Step 1: Reproduce** Repeat one valid lane/classification ID while omitting a
+different required ID without changing the bucket count.
+
+**Step 2: Implement** Reject duplicate lane/classification IDs and require the
+exact output ID sets to equal the stored assignment projection before validating
+bucket content or references.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/output-validator.test.ts`.
+Expected: duplicate, missing, and substituted buckets reject.
+
+**Step 5: Commit** `fix(p04-t13): require exact assignment buckets`
+
+### Task p04-t14: (review C4) Derive coverage through permitted contingency
+
+**Files:**
+
+- Modify: `packages/cli/src/review/output-validator.ts`
+- Modify: `packages/cli/src/review/output-validator.test.ts`
+
+**Step 1: Reproduce** Mark a delegated lane uncovered, set primary completion
+to complete, and self-declare full coverage when the stored contingency is not
+allowed or does not cover the claimed subset.
+
+**Step 2: Implement** Validate primary completion against the stored
+`primaryContingency`, reject unpermitted execution, require exact completed
+path/obligation subsets with evidence, and derive final coverage from worker
+plus primary evidence instead of trusting `inspectionCoverage`.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/output-validator.test.ts`.
+Expected: uncovered or partial lanes cannot fabricate complete coverage.
+
+**Step 5: Commit** `fix(p04-t14): derive contingency coverage`
+
+### Task p04-t15: (review C5) Persist immutable same-handle output repair
+
+**Files:**
+
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+- Modify: `packages/cli/src/review/coordinator-contract.ts`
+- Modify: `packages/cli/src/review/coordinator-contract.test.ts`
+- Modify: `packages/cli/src/commands/review/validate-output.ts`
+- Modify: `packages/cli/src/commands/review/validate-output.test.ts`
+- Modify: `packages/cli/src/review/validation-recovery.integration.test.ts`
+
+**Step 1: Reproduce** Submit an invalid initial terminal, then a changed
+substance terminal, and submit more repair attempts than the allowed maximum
+through the production CLI/store path.
+
+**Step 2: Implement** Persist the initial immutable review-substance digest and
+output attempt/repair count in launcher-owned validation state. Route
+`validate-output` through the coordinator transition, permit only accounting
+allowlist repairs through the retained accepted continuation, reject substance
+mutation and a fourth total submission, and terminalize exhausted runs.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-store.test.ts src/review/coordinator-contract.test.ts src/commands/review/validate-output.test.ts src/review/validation-recovery.integration.test.ts`.
+Expected: production state, not prose or an isolated helper, enforces immutable
+same-handle repair and the two-repair cap.
+
+**Step 5: Commit** `fix(p04-t15): persist output repair state`
+
+### Task p04-t16: (review I1) Publish through a descriptor-safe atomic rename
+
+**Files:**
+
+- Modify: `packages/cli/src/review/artifact-staging.ts`
+- Modify: `packages/cli/src/review/artifact-staging.test.ts`
+
+**Step 1: Reproduce** Replace the publication temporary pathname after write
+and verification but before destination creation.
+
+**Step 2: Implement** Keep the temporary descriptor and inode identity bound
+through verification, reject path/link/inode drift, and atomically rename that
+exact verified temporary file within the destination directory. Never reopen
+and hard-link an untrusted pathname.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/artifact-staging.test.ts`.
+Expected: publication-temp replacement cannot publish unverified bytes.
+
+**Step 5: Commit** `fix(p04-t16): publish verified artifact atomically`
+
+### Task p04-t17: (review C6) Bind publication to the accepted snapshot
+
+**Files:**
+
+- Modify: `packages/cli/src/review/artifact-staging.ts`
+- Modify: `packages/cli/src/review/artifact-staging.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+- Modify: `packages/cli/src/commands/review/validate-output.ts`
+- Modify: `packages/cli/src/commands/review/validate-output.test.ts`
+- Modify: `packages/cli/src/commands/review/index.ts`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/review/local-coordinator.integration.test.ts`
+
+**Step 1: Reproduce** Validate an artifact draft, mutate its prose while
+preserving accounting, re-snapshot through the available API, and publish the
+post-validation bytes.
+
+**Step 2: Implement** Persist an opaque accepted-snapshot identity and immutable
+bytes/digest in launcher-owned private state, atomically bind it to the accepted
+terminal, and expose a launcher-only one-shot publication path that consumes
+exactly that snapshot. Publication must never re-snapshot reviewer-controlled
+draft bytes after validation; blocked/invalid output deletes or leaves no
+discoverable artifact.
+
+**Step 3: Format** Run `pnpm format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/artifact-staging.test.ts src/review/validation-store.test.ts src/commands/review/validate-output.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/review/local-coordinator.integration.test.ts`.
+Expected: only the once-consumed accepted snapshot reaches the discoverable
+review path.
+
+**Step 5: Commit** `fix(p04-t17): bind publication to accepted snapshot`
+
 ---
 
 ## Phase 5: Gate Diagnostics and Compatibility
@@ -3049,7 +3246,7 @@ B post-publication bookkeeping PR.
 | p03    | code     | fixes_completed | 2026-07-31 | reviews/archived/p03-review-2026-07-31T140054Z.md           | 4243aeb6bc992543f0da5ebe88f03b83dfd9db77 | auto       | -           |
 | p03    | code     | fixes_completed | 2026-07-31 | reviews/p03-review-2026-07-31T143803Z.md                    | 46cc835170ab90aa7f016c5c698d3bf4772e010b | auto       | -           |
 | p03    | code     | passed          | 2026-07-31 | reviews/p03-review-2026-07-31T150048Z.md                    | 9d3952313c3d1d4ddabf13e63c3e41eac116623b | auto       | -           |
-| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p04    | code     | fixes_added     | 2026-07-31 | reviews/p04-review-2026-07-31T155658Z.md                    | 9d199314f0956290c70babcc3139c7edebb36869 | auto       | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -3077,12 +3274,12 @@ rewriting either historical result as passed.
 - Phase 1: 13 tasks - baseline, contracts, portability seams
 - Phase 2: 55 tasks - authoritative metadata, validation runtime, and review fixes
 - Phase 3: 10 tasks - reviewer planning, selective evidence, and review fixes
-- Phase 4: 10 tasks - accounting, repair, coordinator adoption, and compatibility fixes
+- Phase 4: 17 tasks - accounting, repair, coordinator adoption, compatibility, and review fixes
 - Phase 5: 7 tasks - gate diagnostics, timeout, and compatibility mode
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 108 tasks**
+**Total: 115 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.

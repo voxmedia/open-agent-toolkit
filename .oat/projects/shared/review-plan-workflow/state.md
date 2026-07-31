@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t11
 oat_last_commit: 9d199314f0956290c70babcc3139c7edebb36869
 oat_blockers: []
 associated_issues:
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T15:46:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T16:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,15 +85,15 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 4 independent review in progress
+**Status:** Phase 4 review fixes in progress
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
 ## Current Phase
 
-Phases 1 through 3 are complete. All ten Phase 4 tasks and one bounded recovery
-are complete. Package, workspace, build, lint, format, and root-focused
-verification pass; the phase is ready for independent review.
+Phases 1 through 3 are complete. The first independent Phase 4 review found six
+Critical acceptance gaps and one Important publication race. Root confirmed
+the findings and bounded them as p04-t11 through p04-t17.
 
 ## Artifacts
 
@@ -175,7 +175,9 @@ verification pass; the phase is ready for independent review.
   compatibility drift
 - ✓ p04-t09 and p04-t10 completed
 - ✓ Corrected full CLI and workspace smoke gates passed
-- → Independent Phase 4 review
+- ⚠ Independent Phase 4 review failed with 6 Critical and 1 Important finding
+- ✓ Root confirmed and converted all findings to p04-t11 through p04-t17
+- → Execute the first Phase 4 review-fix iteration
 
 ## Blockers
 
@@ -183,4 +185,4 @@ None.
 
 ## Next Milestone
 
-Receive the independent Phase 4 review and route its disposition.
+Complete p04-t11 through p04-t17 and independently re-review the fix range.
