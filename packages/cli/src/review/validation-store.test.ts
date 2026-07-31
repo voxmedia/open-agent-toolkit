@@ -361,7 +361,22 @@ describe('validation state and gate correlation', () => {
 
     await writeFile(
       created.statePath,
-      authority.seal({ ...initial, phase: 'artifacts_loaded' }),
+      authority.seal({
+        ...initial,
+        telemetry: [
+          {
+            schemaVersion: 1,
+            validationRunId: created.runId,
+            phase: 'post_artifact',
+            adapterId: null,
+            requestStartedAt: '2026-07-30T20:00:00.000Z',
+            requestCompletedAt: '2026-07-30T20:00:01.000Z',
+            observation: null,
+            disposition: 'missing',
+            rejectionReason: null,
+          },
+        ],
+      }),
       { mode: 0o600 },
     );
     await expect(store.readRun(created.runId)).rejects.toThrow(/incoherent/);

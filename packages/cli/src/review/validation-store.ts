@@ -199,8 +199,9 @@ function parseValidationRunState(
   const telemetryPhases = telemetry.map((evidence) => evidence.phase);
   if (
     new Set(telemetryPhases).size !== telemetryPhases.length ||
-    telemetryPhases[0] === 'post_artifact' ||
-    telemetryPhases.length > 2
+    telemetryPhases.length > 2 ||
+    (telemetryPhases.length === 2 &&
+      telemetryPhases.join(',') !== 'pre_artifact,post_artifact')
   ) {
     throw new Error('validation telemetry phase sequence is invalid');
   }
@@ -231,11 +232,8 @@ function parseValidationRunState(
     ) {
       throw new Error('prepared validation state is incoherent');
     }
-  } else {
-    if (
-      telemetryPhases.join(',') !== 'pre_artifact,post_artifact' ||
-      context === null
-    ) {
+  } else if (telemetry.length > 0) {
+    if (!telemetryPhases.includes('post_artifact') || context === null) {
       throw new Error('post-checkpoint validation state is incoherent');
     }
     if (
@@ -251,7 +249,9 @@ function parseValidationRunState(
       throw new Error('post-validation state is incoherent');
     }
   }
-  const preArtifact = telemetry[0];
+  const preArtifact = telemetry.find(
+    (evidence) => evidence.phase === 'pre_artifact',
+  );
   if (
     preArtifact !== undefined &&
     hashCanonicalJson(preArtifact) !==
@@ -259,7 +259,9 @@ function parseValidationRunState(
   ) {
     throw new Error('pre-artifact telemetry digest mismatch');
   }
-  const postArtifact = telemetry[1];
+  const postArtifact = telemetry.find(
+    (evidence) => evidence.phase === 'post_artifact',
+  );
   if (
     postArtifact !== undefined &&
     context !== null &&
