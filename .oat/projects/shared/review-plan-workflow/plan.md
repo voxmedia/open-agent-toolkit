@@ -3342,6 +3342,7 @@ B post-publication bookkeeping PR.
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/p04-review-2026-07-31T155658Z.md                    | 9d199314f0956290c70babcc3139c7edebb36869 | auto       | -           |
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/archived/p04-review-2026-07-31T164356Z.md           | 055b5b2132de9f4077c2ba52c9aceee421b83805 | auto       | -           |
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/archived/p04-review-2026-07-31T171500Z.md           | 78790a61d41cf209be15dcf98645105ccb799d57 | auto       | -           |
+| p04    | code     | received        | 2026-07-31 | reviews/p04-review-2026-07-31T214700Z.md                    | 100d7493db8e4b0c74139862ddc2b7ac29709317 | auto       | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -           |

@@ -1057,6 +1057,41 @@ verification passed with no recovery commit.
 
 **Next:** Run the authorized narrowed cycle-4 re-review.
 
+### Review Received: p04 (cycle 4)
+
+**Date:** 2026-07-31
+**Review artifact:** `reviews/p04-review-2026-07-31T214700Z.md`
+
+**Verdict:** Failed
+
+**Findings:**
+
+- Critical: 2
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Finding summary:**
+
+- Tier 1 coordinator rails have no full-dossier handoff from the accepted
+  primary continuation to the launcher-owned binder.
+- Direct phase reviews still validate delegated output before binding worker
+  dossiers.
+- The binder command is not pinned to the preparation-supplied branch-local
+  invocation.
+- Lifecycle tests do not compose the production binder through final output
+  validation.
+
+**Out-of-scope observation:** The live `prepare-context` failure is a
+pre-existing p04-t09 plan/parser incompatibility, not a p04-t19 regression.
+
+**Review-limit disposition:** The operator-authorized cycle-4 override is
+exhausted. No further fix tasks or review cycle may start without explicit
+operator disposition.
+
+**Next:** Await operator disposition for an additional bounded Phase 4
+fix/re-review cycle.
+
 ---
 
 ## Orchestration Runs

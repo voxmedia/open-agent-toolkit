@@ -128,6 +128,10 @@ Independent Phase p03 review failed with 3 Critical findings. Added p03-t06 thro
 
 Phase p03 passed after two bounded fix iterations and three independent review rounds; final evidence: reviews/p03-review-2026-07-31T150048Z.md.
 
+### 2026-07-31 · structural · oat-project-implement · p04
+
+phase_blocked: operator-authorized cycle-4 review failed and the override is exhausted; see reviews/p04-review-2026-07-31T214700Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

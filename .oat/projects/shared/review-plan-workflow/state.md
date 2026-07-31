@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: 100d7493db8e4b0c74139862ddc2b7ac29709317
-oat_blockers: []
+oat_blockers:
+  - Phase 4 cycle-4 review failed after exhausting the operator-authorized override; explicit operator disposition is required.
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -75,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T21:42:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T21:57:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,15 +86,15 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 4 authorized cycle-4 re-review pending
+**Status:** Phase 4 blocked pending operator disposition
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
 ## Current Phase
 
-Phases 1 through 3 are complete. The authorized p04-t19 production-wiring fix
-is committed and independently root-verified. Its narrowed cycle-4 re-review is
-next.
+Phases 1 through 3 are complete. The authorized cycle-4 review of p04-t19 found
+two Critical, one Important, and one Medium issue. The review override is
+exhausted, so further Phase 4 fixes require explicit operator disposition.
 
 ## Artifacts
 
@@ -188,12 +189,15 @@ next.
 - ✓ p04-t19 completed at `100d7493`
 - ✓ Implementer verification passed 279 tests and all package/workspace gates
 - ✓ Root independently passed 263 focused lifecycle tests
-- → Run the authorized narrowed cycle-4 re-review
+- ⚠ Authorized Phase 4 cycle-4 re-review failed with four findings
+- ⚠ Review override exhausted; awaiting operator disposition
 
 ## Blockers
 
-None.
+- Phase 4 cannot continue automatically after the failed operator-authorized
+  cycle-4 review.
 
 ## Next Milestone
 
-Run the authorized narrowed cycle-4 re-review over p04-t19.
+Obtain operator disposition for an additional bounded Phase 4 fix/re-review
+cycle.
