@@ -76,9 +76,9 @@ consequential stop boundary.
 - Phase 1 exhausted its three-cycle review cap with one Important finding, so
   the terminal-attempt correction had to proceed through a separately
   authorized revision phase without rewriting failed review history.
-- Phase 3's first review found a migration-command defect and its original fix
-  continuation lacked required linkage; a bounded corrected launch preserved
-  the same target and scope.
+- Phase 3's first review found a recovery-ledger ownership wording defect and
+  its original fix continuation lacked required linkage; a bounded corrected
+  launch preserved the same target and scope.
 - Full Phase 4 verification surfaced autonomy gate-inventory drift outside that
   phase's authorized boundary. The release edits were restored, a narrow
   revision phase repaired the mappings, and Phase 4 reran from a clean baseline.
