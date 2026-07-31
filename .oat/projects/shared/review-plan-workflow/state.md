@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t09
-oat_last_commit: d2c46355741c3b63925a16d38cbbc1e7b849968e
+oat_current_task: null
+oat_last_commit: 9d199314f0956290c70babcc3139c7edebb36869
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T15:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T15:46:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,16 +85,15 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 4 bounded fixes in progress
+**Status:** Phase 4 independent review in progress
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
 ## Current Phase
 
-Phases 1 through 3 are complete. Phase 4 tasks p04-t01 through p04-t08 and one
-bounded recovery are committed. Full-suite verification exposed one genuine
-remote dispatch-ownership violation and two stale command compatibility
-contracts, now bounded as p04-t09 and p04-t10.
+Phases 1 through 3 are complete. All ten Phase 4 tasks and one bounded recovery
+are complete. Package, workspace, build, lint, format, and root-focused
+verification pass; the phase is ready for independent review.
 
 ## Artifacts
 
@@ -174,7 +173,9 @@ contracts, now bounded as p04-t09 and p04-t10.
 - ⚠ Full CLI suite found five blocking contract failures
 - ✓ Root classified ownership failures as architectural and command failures as
   compatibility drift
-- → Execute p04-t09 and p04-t10
+- ✓ p04-t09 and p04-t10 completed
+- ✓ Corrected full CLI and workspace smoke gates passed
+- → Independent Phase 4 review
 
 ## Blockers
 
@@ -182,5 +183,4 @@ None.
 
 ## Next Milestone
 
-Complete p04-t09 and p04-t10, rerun Phase 4 verification, and independently
-review the phase.
+Receive the independent Phase 4 review and route its disposition.

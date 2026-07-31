@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p04-t09
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | in_progress | 10    | 8/10      |
-| Phase 5 | pending     | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | completed | 10    | 10/10     |
+| Phase 4 | in_review | 10    | 10/10     |
+| Phase 5 | pending   | 7     | 0/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 86/108 tasks completed
+**Total:** 88/108 tasks completed
 
 ## Execution Configuration
 
@@ -808,7 +808,7 @@ automatic fix iteration, then independently re-review the updated range.
 
 ## Phase 4: Output Accounting and Coordinator Integration
 
-**Status:** blocked_on_fix_tasks
+**Status:** in_review
 **Started:** 2026-07-31
 
 ### Task p04-t01: Parse exact artifact accounting grammar
@@ -858,13 +858,18 @@ changing behavior.
 
 ### Task p04-t09: Preserve remote reference-dispatch ownership
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `fb4257e1`
+**Outcome:** Restored the unwired reference dispatcher to pure payload,
+single-spawn, and `StructuredFindings` validation ownership while preserving
+launcher-owned terminal validation in the canonical remote skill.
 
 ### Task p04-t10: Align validate-output command compatibility contracts
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `9d199314`
+**Outcome:** Added `validate-output` to the lifecycle command inventory and
+review-help snapshot without unrelated churn.
 
 ### Phase Verification
 
@@ -876,9 +881,14 @@ changing behavior.
 - Root confirmed that three ownership failures reflect a real design violation,
   while the command lifecycle and help failures are stale compatibility
   expectations.
+- Corrected Phase 4/compatibility union passed 324 tests.
+- Full CLI passed 3,875 tests; workspace smoke retry passed 129 tests.
+- Workspace type-check, CLI lint, repository formatting, build, and range
+  diff-check passed.
+- Root independently reran the 105 ownership, remote-wrapper, project-rail,
+  command-inventory, and help-snapshot tests.
 
-**Next:** Resume the original Phase 4 handle with p04-t09 and p04-t10, rerun
-the full phase gates, then dispatch independent review.
+**Next:** Dispatch the root-owned independent Phase 4 review.
 
 ---
 
