@@ -1956,6 +1956,98 @@ Expected: large scopes improve measured operations and small scopes stay inline.
 
 **Step 5: Commit** `test(p03-t05): pin selective review operation savings`
 
+### Task p03-t06: (review C1) Enforce verifiable plan boundaries
+
+**Files:**
+
+- Modify: `packages/cli/src/review/plan-validator.ts`
+- Modify: `packages/cli/src/review/plan-validator.test.ts`
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/types.test.ts`
+- Modify: `packages/cli/src/review/schemas.ts`
+- Modify: `packages/cli/src/review/schemas.test.ts`
+
+**Step 1: Reproduce** Add adversarial plans with duplicate classification IDs,
+full-file lanes masquerading as non-replayed deterministic evidence, empty or
+fabricated positive coverage, incomplete/duplicate direct claim kinds, and
+inline or empty enabled contingencies.
+
+**Step 2: Implement** Require globally unique lane/classification IDs, the
+complete duplicate-free direct-claim-kind set, non-empty existing
+positive-coverage lanes and rationale, structurally provenance-producing
+strategies for every accepted/non-replayed lane, and a non-empty delegated
+contingency subset. Keep delegation economics explicitly validated at the
+strongest mechanically enforceable structure without treating free prose as a
+numeric proof.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/plan-validator.test.ts src/review/types.test.ts src/review/schemas.test.ts`.
+Expected: every malformed FR5/FR7 boundary rejects before plan receipt while
+valid delegated and inline plans remain accepted.
+
+**Step 5: Commit** `fix(p03-t06): enforce verifiable plan boundaries`
+
+### Task p03-t07: (review C2) Parse worker dossiers strictly
+
+**Files:**
+
+- Modify: `packages/cli/src/review/worker-dossier.ts`
+- Modify: `packages/cli/src/review/worker-dossier.test.ts`
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/types.test.ts`
+
+**Step 1: Reproduce** Add unknown-input fixtures for wrong schema versions,
+unknown/duplicate keys, malformed nested records, invalid timestamps and result
+discriminants, empty or out-of-lane scopes, command-result digest mismatch, and
+partial dossiers without explicit uncertainty or uncovered coverage.
+
+**Step 2: Implement** Add a strict unknown-to-`WorkerDossierV1` parser and bind
+every command/evidence record to non-empty in-lane scopes and the canonical
+referenced command-result digest. Require explicit, coherent uncertainty and
+coverage for every partial outcome.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/worker-dossier.test.ts src/review/types.test.ts`.
+Expected: malformed, replayable, unscoped, or ambiguous dossiers reject at the
+external worker-data boundary.
+
+**Step 5: Commit** `fix(p03-t07): parse worker dossiers strictly`
+
+### Task p03-t08: (review C3) Derive operation savings from traces
+
+**Files:**
+
+- Modify: `packages/cli/src/review/operation-metrics.ts`
+- Modify: `packages/cli/src/review/operation-metrics.test.ts`
+- Modify: `packages/cli/src/review/__fixtures__/large-scope-selective.v1.json`
+- Modify: `packages/cli/src/review/__fixtures__/small-scope-inline.v1.json`
+
+**Step 1: Reproduce** Show that arbitrary smaller aggregate counters pass the
+current comparison without representing any production strategy or evidence
+operation.
+
+**Step 2: Implement** Define a production-owned non-aggregate operation trace
+and derive broad-read/replay counts from validated trace events. Replace
+hand-authored aggregate fixtures with deterministic traces tied to selective
+and compact-inline strategies, and add a broad/replay-heavy negative trace
+that fails the threshold. Preserve the prohibition on wall-clock claims.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/operation-metrics.test.ts`.
+Expected: operation savings are derived from validated production-owned events,
+and broad/replay-heavy traces fail.
+
+**Step 5: Commit** `fix(p03-t08): derive operation savings from traces`
+
 ---
 
 ## Phase 4: Output Accounting and Coordinator Integration
@@ -2835,7 +2927,7 @@ B post-publication bookkeeping PR.
 | p02    | code     | fixes_completed | 2026-07-31 | reviews/archived/p02-review-2026-07-31T014800Z.md           | f7452e5b6fc64256f24d12c2a323be7494bbf08a | auto       | -           |
 | p02    | code     | fixes_completed | 2026-07-31 | reviews/archived/p02-review-2026-07-31T040400Z.md           | f179344bdc12d0edc397d526f8665572826a9ad1 | auto       | -           |
 | p02    | code     | passed          | 2026-07-31 | reviews/archived/p02-review-2026-07-31T051943Z.md           | a2605f967a543f4772833e0af90cb0ef35ad93df | manual     | -           |
-| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p03    | code     | fixes_added     | 2026-07-31 | reviews/archived/p03-review-2026-07-31T140054Z.md           | 4243aeb6bc992543f0da5ebe88f03b83dfd9db77 | auto       | -           |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -2863,13 +2955,13 @@ rewriting either historical result as passed.
 
 - Phase 1: 13 tasks - baseline, contracts, portability seams
 - Phase 2: 55 tasks - authoritative metadata, validation runtime, and review fixes
-- Phase 3: 5 tasks - reviewer planning and selective evidence
+- Phase 3: 8 tasks - reviewer planning and selective evidence
 - Phase 4: 8 tasks - accounting, repair, and coordinator adoption
 - Phase 5: 7 tasks - gate diagnostics, timeout, and compatibility mode
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 101 tasks**
+**Total: 104 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-30
-oat_current_task_id: null
+oat_current_task_id: p03-t06
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | completed | 55    | 55/55     |
-| Phase 3 | in_review | 5     | 5/5       |
-| Phase 4 | pending   | 8     | 0/8       |
-| Phase 5 | pending   | 7     | 0/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | completed   | 55    | 55/55     |
+| Phase 3 | in_progress | 8     | 5/8       |
+| Phase 4 | pending     | 8     | 0/8       |
+| Phase 5 | pending     | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 73/101 tasks completed
+**Total:** 73/104 tasks completed
 
 ## Execution Configuration
 
@@ -178,7 +178,7 @@ fix commit `40fa861f`.
 
 ## Phase 2: ChangeMap and Validation Runtime
 
-**Status:** in_review
+**Status:** in_progress
 **Started:** 2026-07-30
 
 ### Task p02-t01: Normalize authoritative review paths
@@ -673,6 +673,21 @@ autonomy inventory while preserving the Tier 3 strategy contract.
 **Status:** completed
 **Commit:** `0ca8fe29`
 
+### Task p03-t06: (review C1) Enforce verifiable plan boundaries
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t07: (review C2) Parse worker dossiers strictly
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t08: (review C3) Derive operation savings from traces
+
+**Status:** pending
+**Commit:** -
+
 ### Phase Verification
 
 - 3,812 CLI tests passed.
@@ -683,7 +698,31 @@ autonomy inventory while preserving the Tier 3 strategy contract.
 - Range diff-check is clean and the worktree contains only the 13 declared
   Phase 3 files.
 
-**Next:** Run the root-owned independent Phase 3 review.
+### Review Received: p03
+
+**Date:** 2026-07-31
+**Review artifact:**
+`reviews/archived/p03-review-2026-07-31T140054Z.md`
+
+**Verdict:** Failed
+
+**Findings:**
+
+- Critical: 3
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** p03-t06 through p03-t08
+
+**Finding disposition map:**
+
+- C1 (non-verifiable plan and fabricated verification boundary) → p03-t06
+- C2 (malformed and unbound worker dossier evidence) → p03-t07
+- C3 (tautological aggregate operation-savings fixtures) → p03-t08
+
+**Next:** Resume the original Phase 3 implementer with the bounded fix scope,
+then independently re-review only the fix range.
 
 ---
 

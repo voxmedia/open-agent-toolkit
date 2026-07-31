@@ -120,6 +120,10 @@ Operator accepted the verified p02-t54/p02-t55 fix range without another review 
 
 Phase p03 completed five planned task commits plus bounded wording recovery 4243aeb6. Full phase and focused root verification pass; root-owned independent review is pending.
 
+### 2026-07-31 · structural · oat-project-implement · p03-review-cycle-1
+
+Independent Phase p03 review failed with 3 Critical findings. Added p03-t06 through p03-t08 for strict plan boundaries, strict worker dossiers, and trace-derived operation metrics.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
