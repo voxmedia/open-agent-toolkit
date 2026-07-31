@@ -128,6 +128,9 @@ Add contract assertions covering:
 - dedicated `oat_phase_recovery_policy` defaults (`10`, per-phase `0`–`20`),
   one no-edit flake rerun, elevated-volume warning at three, and exact numeric
   exhaustion grants that never reset usage;
+- project-default and phase-specific limits of `0`, each proving automatic
+  post-commit recovery stops for direction without editing, committing,
+  consuming an attempt, or launching fallback;
 - no attempt consumption for the one no-edit flake rerun, followed by a
   no-edit stop when the repeated unexplained failure remains ambiguous;
 - attempt consumption with no successful recovery commit when an edit, commit,
@@ -140,11 +143,16 @@ Add contract assertions covering:
 - exactly one event for every recovered, direction-required, or failed-attempt
   disposition, with defect, prompt, and successful-repair counts independently
   measurable;
+- one atomic attempt/commit for mechanically related failures emitted by the
+  same verification command, but separate attempts and commits for independent
+  defects;
 - automatic continuation for obvious in-scope lint/type/test/build/composition
   defects; and
 - stops for ambiguity, architecture/security/product/requirements changes,
   non-mechanical boundary widening, destructive work, retry exhaustion, dirty
-  history, or governance caps.
+  history, inability to establish correctness, missing original-request or
+  exact-target provenance, unverifiable commit range, malformed recovery event,
+  or governance caps.
 
 Run:
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
@@ -365,7 +373,7 @@ validation all pass from a clean post-task tree.
 | final  | code     | pending         | -          | -                                | -             | -          | -           |
 | spec   | artifact | pending         | -          | -                                | -             | -          | -           |
 | design | artifact | passed          | 2026-07-31 | user-approved lightweight design | -             | manual     | -           |
-| plan   | artifact | fixes_completed | 2026-07-31 | structured review round 1        | -             | auto       | -           |
+| plan   | artifact | fixes_completed | 2026-07-31 | structured review rounds 1-2     | -             | auto       | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
