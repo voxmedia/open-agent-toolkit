@@ -196,7 +196,14 @@ describe('review output validation', () => {
   it('rejects assignment projection drift', () => {
     const { context, terminal } = fixture();
     terminal.reviewAccounting.lanes[0]!.paths = ['src/fabricated.ts'];
-    expect(errorCodes(context, terminal)).toContain('assignment-mismatch');
+    const result = validateReviewOutput(context, terminal);
+    expect(result.valid).toBe(false);
+    expect(result.valid ? [] : result.errors).toContainEqual(
+      expect.objectContaining({
+        code: 'assignment-mismatch',
+        pointer: '/reviewAccounting/lanes/0/paths',
+      }),
+    );
   });
 
   it.each([

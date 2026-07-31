@@ -85,39 +85,85 @@ function validateIdentity(
     );
   }
 
-  const echoed = {
-    lanes: accounting.lanes
-      .map((lane) => ({
-        id: lane.id,
-        paths: lane.paths,
-        primaryObligationIds: lane.primaryObligationIds,
-        seamObligationIds: lane.seamObligationIds,
-        primaryContingency:
-          context.assignment.lanes.find((entry) => entry.id === lane.id)
-            ?.primaryContingency ?? null,
-      }))
-      .sort((left, right) => left.id.localeCompare(right.id)),
-    classifications: accounting.classifications
-      .map((classification) => ({
-        id: classification.id,
-        kind: classification.kind,
-        reason: classification.reason,
-        paths: classification.paths,
-        disposition: classification.planDisposition,
-        strategy: classification.strategy,
-        checks: classification.plannedChecks,
-        exclusionAuthority: classification.exclusionAuthority,
-      }))
-      .sort((left, right) => left.id.localeCompare(right.id)),
-  };
-  if (!same(echoed, context.assignment)) {
+  if (
+    accounting.lanes.length !== context.assignment.lanes.length ||
+    accounting.classifications.length !==
+      context.assignment.classifications.length
+  ) {
     add(
       errors,
       'assignment-mismatch',
-      '/reviewAccounting',
-      'accounting assignment projection differs from the validated plan',
+      '/reviewAccounting/lanes',
+      'accounting bucket count differs from the validated plan',
     );
   }
+  const expectedLanes = new Map(
+    context.assignment.lanes.map((lane) => [lane.id, lane]),
+  );
+  accounting.lanes.forEach((lane, index) => {
+    const expected = expectedLanes.get(lane.id);
+    if (expected === undefined) {
+      add(
+        errors,
+        'assignment-mismatch',
+        `/reviewAccounting/lanes/${index}/id`,
+        `lane ${lane.id} is not in the validated assignment`,
+      );
+      return;
+    }
+    for (const field of [
+      'paths',
+      'primaryObligationIds',
+      'seamObligationIds',
+    ] as const) {
+      if (!same(lane[field], expected[field])) {
+        add(
+          errors,
+          'assignment-mismatch',
+          `/reviewAccounting/lanes/${index}/${field}`,
+          `${field} differs from the validated assignment`,
+        );
+      }
+    }
+  });
+  const expectedClassifications = new Map(
+    context.assignment.classifications.map((classification) => [
+      classification.id,
+      classification,
+    ]),
+  );
+  accounting.classifications.forEach((classification, index) => {
+    const expected = expectedClassifications.get(classification.id);
+    if (expected === undefined) {
+      add(
+        errors,
+        'assignment-mismatch',
+        `/reviewAccounting/classifications/${index}/id`,
+        `classification ${classification.id} is not in the validated assignment`,
+      );
+      return;
+    }
+    const comparisons = {
+      kind: expected.kind,
+      reason: expected.reason,
+      paths: expected.paths,
+      planDisposition: expected.disposition,
+      strategy: expected.strategy,
+      plannedChecks: expected.checks,
+      exclusionAuthority: expected.exclusionAuthority,
+    };
+    for (const [field, expectedValue] of Object.entries(comparisons)) {
+      const actual = classification[field as keyof typeof classification];
+      if (!same(actual, expectedValue)) {
+        add(
+          errors,
+          'assignment-mismatch',
+          `/reviewAccounting/classifications/${index}/${field}`,
+          `${field} differs from the validated assignment`,
+        );
+      }
+    }
+  });
 }
 
 function collectCommands(
