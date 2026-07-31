@@ -100,6 +100,10 @@ All six second-cycle Phase p02 tasks and two bounded recoveries are complete. Fo
 
 Final automatic Phase p02 review failed with 1 Critical, 2 Important, 1 Medium, and 0 Minor findings. Added p02-t50 through p02-t53; automatic review limit 3 of 3 is reached and operator direction is required.
 
+### 2026-07-31 · structural · oat-project-implement · p02-review-limit-override
+
+Operator authorized p02-t50 through p02-t53 and one manual independent review beyond the automatic cycle limit. Tasks completed in be112969, 019d3964, 0da53d35, and 7920923f with bounded fixture recovery a2605f96; full CLI and root critical verification pass.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

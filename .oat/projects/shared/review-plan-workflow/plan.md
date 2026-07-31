@@ -2779,7 +2779,7 @@ B post-publication bookkeeping PR.
 | p01    | code     | passed          | 2026-07-30 | reviews/archived/p01-review-2026-07-30T215327Z.md           | 40fa861fe199f755f66cce784feafbc1e0ff68c1 | auto       | -           |
 | p02    | code     | fixes_completed | 2026-07-30 | reviews/archived/p02-review-2026-07-30T234200Z.md           | d6c204514b076d57eaf2ee277d72e6de9a995a53 | auto       | -           |
 | p02    | code     | fixes_completed | 2026-07-31 | reviews/archived/p02-review-2026-07-31T014800Z.md           | f7452e5b6fc64256f24d12c2a323be7494bbf08a | auto       | -           |
-| p02    | code     | fixes_added     | 2026-07-31 | reviews/archived/p02-review-2026-07-31T040400Z.md           | f179344bdc12d0edc397d526f8665572826a9ad1 | auto       | -           |
+| p02    | code     | fixes_completed | 2026-07-31 | reviews/archived/p02-review-2026-07-31T040400Z.md           | f179344bdc12d0edc397d526f8665572826a9ad1 | auto       | -           |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
