@@ -17,126 +17,200 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Fix OAT's repeated authorization prompts when phase verification discovers a
+mechanically bounded defect after a task has already committed. Preserve
+append-only history and accepted-launch terminality while treating safe,
+same-target recovery as part of the phase authority the user already granted.
+
+This is an independent systemic change. It must not modify or depend on the
+active `review-plan-workflow` project.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Prevention versus recovery
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Should the change primarily relax recovery authorization, or should it
+also prevent avoidable post-commit defects?
+
+**A:** Prevention is primary. Cheap, discoverable, proportionate checks should
+run before each task commit. Expensive repository-wide tests and builds may
+remain phase-boundary checks, with bounded in-scope repair already authorized.
+
+**Decision:** Define a tiered verification order. Do not claim that lint,
+format, or type-check would catch build-output defects such as a bad TypeScript
+emit configuration.
+
+### Question 2: Recovery limit
+
+**Q:** How should automatic recovery remain bounded?
+
+**A:** Attach a concrete project-level retry budget and stop when it is
+exhausted; do not replace repeated prompts with an unbounded repair loop.
+
+**Decision:** Prefer the existing project orchestration retry policy if its
+current semantics can safely cover append-only recovery. Otherwise add the
+smallest coherent project-level policy. The design must state the counting
+unit and default explicitly.
+
+### Question 3: Historical intent
+
+**Q:** Should the older policy simply be removed?
+
+**A:** No. Read the originating pull requests and retain the guardrails they
+were protecting, especially no accepted-commit rewriting and no silent
+worker/model/provider replacement.
+
+**Decision:** Separate route fallback, same-target bounded repair, and
+scope-expanding recovery as three explicit policy categories.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+The chosen direction is one durable canonical recovery policy, consumed by the
+phase implementer and implementation workflow, paired with tiered
+verification-before-commit guidance and targeted behavioral contract tests.
+Provider assets remain generated views.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
+### Option A: Prompt after every committed defect
 
-### Option A: {Option Name}
+This preserves strict operator control but makes routine verification failures
+interrupt every phase and incorrectly treats same-target repair as fallback.
 
-**Description:** {What this option involves}
+**Chosen:** No.
 
-**Pros:**
+### Option B: Pre-authorize all recovery without a budget
 
-- {Benefit 1}
-- {Benefit 2}
+This removes interruptions but permits silent repair churn and weakens the
+reason the append-only guardrail exists.
 
-**Cons:**
+**Chosen:** No.
 
-- {Drawback 1}
-- {Drawback 2}
+### Option C: Tiered prevention plus bounded same-target recovery
 
-**Chosen:** {A/B/Neither}
+Run proportionate task checks before commit, retain phase-wide composition
+checks, and automatically create separately recorded recovery commits only
+while scope, target, safety, evidence, and retry conditions remain satisfied.
 
-**Summary:** {1-2 sentence summary of the chosen option and why}
+**Chosen:** Yes. This prevents avoidable defects while retaining a bounded,
+auditable path for composition failures that can only be detected later.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **History:** Accepted task commits are immutable. Every post-commit repair is
+   a separate append-only recovery commit with normal verification and
+   bookkeeping.
+2. **Authority:** Initial phase authorization includes mechanically bounded,
+   unambiguous same-target repair that remains within declared intent.
+3. **Fallback distinction:** A same-target root-owned recovery continuation is
+   not automatic route/model/provider fallback. Accepted-launch replacement
+   remains forbidden.
+4. **Prevention:** Before committing, phase implementers run every applicable
+   discoverable and proportionate formatting, lint/check, type-check, build,
+   test, and task-specific verification. Expensive broad checks remain
+   phase-level when per-task execution is disproportionate.
+5. **Bound:** Automatic recovery uses an explicit project-level retry budget.
+   Exhaustion stops for user direction.
+6. **Review:** The three-cycle review cap and unresolved Critical/Important
+   safeguards remain unchanged.
+7. **Distribution:** Canonical assets own policy. Cursor, Claude, and Codex
+   views are regenerated and validated for equivalent semantics.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- No amendment, reset, rewrite, or concealment of an accepted task commit.
+- No model, provider, route, or worker replacement after accepted launch.
+- Automatic repair must be mechanically bounded, unambiguous, in-scope,
+  non-destructive, same-target, retry-bounded, and verifiable.
+- Architecture, security, product, public requirements, consequential file
+  boundary changes, ambiguity, contradictory evidence, destructive work,
+  retry exhaustion, and separate governance caps require operator direction.
+- Do not weaken protected-branch, credential, destructive-action, security, or
+  review-cycle boundaries.
+- Do not require expensive repository-wide verification before every task when
+  narrower checks are proportionate and sufficient.
+- Update canonical skills once per changed skill version, regenerate provider
+  views, bump the five public packages in lockstep, and run release validation.
+- Do not modify or depend on `review-plan-workflow`.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- An obvious post-commit lint, type, or build correction produces one separate
+  recovery commit and continues without an authorization prompt.
+- The original commit remains unchanged and recovery bookkeeping preserves the
+  original request, continuation linkage, and same-target provenance.
+- No fallback worker/model/provider is launched.
+- Ambiguous, architectural, destructive, out-of-scope, or retry-exhausted
+  recovery stops for user direction.
+- Tiered pre-commit verification guidance catches discoverable task-local
+  defects without mandating every expensive broad check per task.
+- Cursor, Claude, and Codex generated/materialized agents express equivalent
+  semantics and sync parity passes.
+- Focused contracts, full repository gates, build, formatting, release
+  validation, and diff checks pass.
+- Documentation and a migration note explain why append-only repair does not
+  require repeated approval and how users refresh released global assets.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Changing the three-cycle review cap or review severity acceptance rules.
+- Altering provider selection ladders or permitting accepted-launch fallback.
+- Applying a local mitigation inside the separate active project/worktree.
+- Fixing the unrelated session-observer transcript prefix mismatch.
+- Pushing a branch or opening a pull request.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- A separately requested write-up for the session-observer prefix mismatch.
+- Project-specific standing authorization for already-running projects; the
+  active project is intentionally isolated from this systemic change.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Retry reuse:** Can the existing orchestration retry limit count bounded
+  post-commit recovery without conflating review rewrites or dispatch launch
+  attempts?
+- **Bookkeeping shape:** Which existing dispatch and implementation records can
+  preserve original-request linkage and same-target recovery provenance without
+  adding redundant state?
+- **Policy ownership:** Which canonical asset should own the durable recovery
+  contract so consumers reference one definition?
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Existing implementation authorization is phase-scoped and can safely include
+  same-intent recovery when the contract makes the boundary explicit.
+- Build-only composition failures cannot always be prevented economically at
+  task granularity.
+- Provider copies are generated from canonical assets and can be validated
+  without hand-maintenance.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Silent repair churn:** Automatic continuation could hide systemic problems.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation:** Numeric retry budget, append-only records, and exhaustion
+    escalation.
+- **Fallback conflation:** Broad wording could accidentally permit replacement
+  dispatch after acceptance.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation:** Explicit three-way taxonomy and assertions that no second
+    provider/model launches.
+- **Unenforced prevention:** Vague "run checks" wording may be skipped or may
+  falsely imply broad build coverage.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Tiered, discoverability- and proportionality-based
+    verification order with behavior-focused tests.
+- **Provider drift:** Generated agents may diverge from canonical policy.
+  - **Likelihood:** Low
+  - **Impact:** High
+  - **Mitigation:** Regenerate all views and run parity/materialization tests.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Produce a lightweight design that resolves policy ownership, retry semantics,
+bookkeeping, verification tiers, and regression boundaries, then generate the
+quick implementation plan.
