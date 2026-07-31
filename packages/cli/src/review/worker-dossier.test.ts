@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
+import {
+  allocateReviewTimeBudget,
+  evaluateWholeDiffEligibility,
+} from './budget';
 import { hashCanonicalJson } from './canonical-json';
-import type { ReviewLaneV1, ReviewPlanV1, WorkerDossierV1 } from './types';
+import { validateReviewPlan } from './plan-validator';
+import type {
+  PreparedReviewContextV1,
+  ReviewLaneV1,
+  ReviewPlanV1,
+  WorkerDossierV1,
+} from './types';
 import {
   parseWorkerDossierV1,
   validateWorkerDossier,
@@ -145,7 +155,273 @@ function completeDossier(): WorkerDossierV1 {
   return dossier;
 }
 
+function acceptedPlan(strategy: 'command' | 'inventory'): {
+  context: PreparedReviewContextV1;
+  plan: ReviewPlanV1;
+} {
+  const context = {
+    changeMap: {
+      files: [
+        {
+          path: 'a.ts',
+          status: 'modified',
+          isBinary: false,
+          additions: 1,
+          deletions: 1,
+          generatedHint: false,
+          bookkeepingHint: false,
+        },
+        {
+          path: 'b.ts',
+          status: 'modified',
+          isBinary: false,
+          additions: 1,
+          deletions: 1,
+          generatedHint: false,
+          bookkeepingHint: false,
+        },
+      ],
+      totals: {
+        files: 2,
+        additions: 2,
+        deletions: 2,
+        binaryFiles: 0,
+        numstatChangedLines: 4,
+        numstatTokenDenialEstimate: 1,
+        patchBytes: 40,
+        patchByteLowerBound: null,
+        patchEstimateState: 'exact',
+        patchCountingSkippedReason: null,
+        estimatedPatchTokens: 10,
+      },
+    },
+    obligations: [{ id: 'FR1' }, { id: 'FR2' }],
+    runId: 'run-1',
+    contextDigest: 'context',
+    budget: {
+      time: {
+        totalMs: 120_000,
+        source: 'test',
+        deadlineMs: 120_000,
+      },
+      context: null,
+    },
+  } as PreparedReviewContextV1;
+  const timeAllocation = allocateReviewTimeBudget({
+    totalMs: 120_000,
+    source: 'test',
+    startedAtMs: 0,
+  }).allocation;
+  const semanticLane: ReviewLaneV1 = {
+    id: 'semantic',
+    paths: ['a.ts'],
+    primaryObligationIds: ['FR1'],
+    seamObligationIds: [],
+    risk: 'high',
+    evidenceClass: 'semantic',
+    strategy: 'path-diff',
+    checks: ['inspect'],
+    delegated: true,
+    independenceRationale: 'Independent semantic inspection.',
+    substantial: true,
+    substantialityRationale: 'Owns one complete semantic boundary.',
+    deadlineMs: timeAllocation.planningDeadlineMs + 1,
+    dossier: { contractVersion: 1, partialAllowed: true },
+    replay: 'sample',
+    primaryContingency: {
+      allowed: true,
+      paths: ['a.ts'],
+      obligationIds: ['FR1'],
+    },
+  };
+  const acceptedLane: ReviewLaneV1 = {
+    id: 'accepted',
+    paths: ['b.ts'],
+    primaryObligationIds: ['FR2'],
+    seamObligationIds: [],
+    risk: 'high',
+    evidenceClass: 'deterministic',
+    strategy,
+    checks: ['verify'],
+    delegated: true,
+    independenceRationale: 'Independent deterministic verification.',
+    substantial: true,
+    substantialityRationale: 'Owns one complete deterministic boundary.',
+    deadlineMs: timeAllocation.planningDeadlineMs + 1,
+    dossier: { contractVersion: 1, partialAllowed: true },
+    replay: 'accept-provenance',
+    primaryContingency: {
+      allowed: false,
+      paths: [],
+      obligationIds: [],
+    },
+  };
+  const candidate: ReviewPlanV1 = {
+    schemaVersion: 1,
+    runId: 'run-1',
+    contextDigest: 'context',
+    strategy: 'delegated',
+    lanes: [semanticLane, acceptedLane],
+    classifications: [],
+    crossLaneInvariants: [],
+    delegationEconomics: {
+      independentLaneIds: ['semantic', 'accepted'],
+      nonReplayedLaneIds: ['accepted'],
+      expectedSavings: ['Deterministic provenance avoids semantic replay.'],
+      coordinationCosts: ['Two bounded dossiers require reconciliation.'],
+      decisionRationale: 'Expected savings exceed coordination cost.',
+      decision: 'delegate',
+    },
+    verificationBoundary: {
+      requiredClaims: [
+        { kind: 'promoted-finding', mode: 'direct' },
+        { kind: 'consequential-absence', mode: 'direct' },
+        { kind: 'worker-conflict', mode: 'direct' },
+        { kind: 'cross-lane-gap', mode: 'direct' },
+      ],
+      positiveCoverage: {
+        mode: 'sample',
+        laneIds: ['semantic', 'accepted'],
+        rationale: 'Sample both independent lanes.',
+      },
+      deterministicAcceptance: {
+        mode: 'provenance',
+        requiredFields: ['command', 'cwd', 'scopeRefs', 'provenance', 'result'],
+      },
+    },
+    wholeDiff: evaluateWholeDiffEligibility({
+      changeMap: context.changeMap,
+      contextBudget: context.budget.context,
+      coherentLaneCount: 2,
+      hasConsequentialSeam: false,
+    }),
+    timeAllocation,
+  };
+  return { context, plan: candidate };
+}
+
+function acceptedDossier(
+  strategy: 'command' | 'inventory',
+  withEvidence: boolean,
+): WorkerDossierV1 {
+  const dossier: WorkerDossierV1 = {
+    schemaVersion: 1,
+    runId: 'run-1',
+    planDigest: 'plan-digest',
+    laneId: 'accepted',
+    outcome: 'complete',
+    inspectedPaths: ['b.ts'],
+    inspectedObligationIds: ['FR2'],
+    commands: [],
+    evidence: [],
+    candidateFindings: [],
+    uncoveredObligationIds: [],
+    uncertainty: [],
+  };
+  if (!withEvidence) return dossier;
+  if (strategy === 'inventory') {
+    dossier.evidence.push({
+      id: 'inventory-1',
+      kind: 'inventory',
+      locator: 'inventory:b.ts',
+      scopeRefs: [{ bucket: 'lane', bucketId: 'accepted', pathIndexes: [0] }],
+      provenance: 'validated inventory executor',
+      digest: 'inventory-digest',
+      commandId: null,
+      commandResultDigest: null,
+    });
+    return dossier;
+  }
+  const command = {
+    id: 'command-1',
+    command: 'pnpm test',
+    cwd: '.',
+    scopeRefs: [
+      { bucket: 'lane' as const, bucketId: 'accepted', pathIndexes: [0] },
+    ],
+    provenance: {
+      runner: 'worker',
+      invocationDigest: 'invocation',
+      capturedAt: '2026-07-31T00:00:00.000Z',
+    },
+    result: {
+      status: 'completed' as const,
+      exitCode: 0,
+      outputDigest: 'output',
+    },
+  };
+  dossier.commands.push(command);
+  dossier.evidence.push({
+    id: 'command-evidence-1',
+    kind: 'command',
+    locator: 'command:command-1',
+    scopeRefs: [{ bucket: 'lane', bucketId: 'accepted', pathIndexes: [0] }],
+    provenance: 'validated command executor',
+    digest: 'evidence-digest',
+    commandId: command.id,
+    commandResultDigest: hashCanonicalJson(command.result),
+  });
+  return dossier;
+}
+
 describe('worker dossier validation', () => {
+  it.each(['command', 'inventory'] as const)(
+    'rejects evidence-free complete accepted %s dossiers from valid plans',
+    (strategy) => {
+      const candidate = acceptedPlan(strategy);
+      expect(validateReviewPlan(candidate.context, candidate.plan)).toEqual([]);
+      expect(
+        validateWorkerDossier(
+          candidate.plan,
+          'plan-digest',
+          acceptedDossier(strategy, false),
+        ),
+      ).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            code:
+              strategy === 'command'
+                ? 'missing-command-provenance-evidence'
+                : 'missing-inventory-provenance-evidence',
+          }),
+        ]),
+      );
+    },
+  );
+
+  it('preserves valid command, inventory, replayed, and partial dossiers', () => {
+    for (const strategy of ['command', 'inventory'] as const) {
+      const candidate = acceptedPlan(strategy);
+      expect(validateReviewPlan(candidate.context, candidate.plan)).toEqual([]);
+      expect(
+        validateWorkerDossier(
+          candidate.plan,
+          'plan-digest',
+          acceptedDossier(strategy, true),
+        ),
+      ).toEqual([]);
+    }
+
+    const commandPlan = acceptedPlan('command');
+    const replayed = acceptedDossier('command', false);
+    replayed.laneId = 'semantic';
+    replayed.inspectedPaths = ['a.ts'];
+    replayed.inspectedObligationIds = ['FR1'];
+    expect(
+      validateWorkerDossier(commandPlan.plan, 'plan-digest', replayed),
+    ).toEqual([]);
+
+    const partial = acceptedDossier('command', false);
+    partial.outcome = 'partial';
+    partial.inspectedPaths = [];
+    partial.inspectedObligationIds = [];
+    partial.uncoveredObligationIds = ['FR2'];
+    partial.uncertainty = ['Worker deadline expired before evidence.'];
+    expect(
+      validateWorkerDossier(commandPlan.plan, 'plan-digest', partial),
+    ).toEqual([]);
+  });
+
   it('accepts bounded complete and partial dossiers', () => {
     const candidatePlan = plan();
     const complete = completeDossier();

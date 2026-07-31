@@ -605,6 +605,35 @@ export function validateWorkerDossier(
     (id) => inspectedObligations.has(id) === uncoveredObligations.has(id),
   );
 
+  if (dossier.outcome === 'complete' && lane.replay === 'accept-provenance') {
+    if (lane.strategy === 'command') {
+      const hasBoundCommandEvidence = dossier.evidence.some(
+        (evidence) =>
+          evidence.kind === 'command' &&
+          commandResultDigests.get(evidence.commandId) ===
+            evidence.commandResultDigest,
+      );
+      if (!hasBoundCommandEvidence) {
+        errors.push({
+          code: 'missing-command-provenance-evidence',
+          pointer: '/evidence',
+          message:
+            'complete command dossiers accepted by provenance require canonical command-result evidence',
+        });
+      }
+    } else if (
+      lane.strategy === 'inventory' &&
+      !dossier.evidence.some((evidence) => evidence.kind === 'inventory')
+    ) {
+      errors.push({
+        code: 'missing-inventory-provenance-evidence',
+        pointer: '/evidence',
+        message:
+          'complete inventory dossiers accepted by provenance require inventory evidence',
+      });
+    }
+  }
+
   if (
     dossier.outcome === 'complete' &&
     (missingPath ||
