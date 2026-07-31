@@ -138,8 +138,10 @@ unwired reference implementation, not an additional coordinator.
    whole-diff without starting a diff child. Otherwise a capped child counts
    and discards diff bytes; cap or timeout produces a lower-bound estimate.
 5. Preparation creates `ReviewPreparationV1`, writes private run state, and
-   returns launcher-owned checkpoint/validation command strings. Opaque
-   checkpoint state is not embedded in reviewer-readable context.
+   returns launcher-owned checkpoint/validation `ReviewCommandInvocationV1`
+   values. Each invocation identifies one executable, an argv array, and its
+   stdin mode; opaque checkpoint state is not embedded in reviewer-readable
+   context.
 6. The provider/skill runtime launches the reviewer. On acceptance, it binds
    the opaque handle ID to the run before any mutation command is accepted and
    retains that continuation for checkpoint and repair.
@@ -149,14 +151,14 @@ unwired reference implementation, not an additional coordinator.
    `PreparedReviewContextV1`; absent post-artifact telemetry leaves context
    budget null.
 8. The reviewer constructs `ReviewPlanV1`.
-9. The reviewer submits the complete plan through
-   `oat review validate-plan --run-id <id> --stdin`.
+9. The reviewer submits the complete plan on stdin by executing the supplied
+   `validatePlan` invocation with its exact executable and argv.
 10. The validator loads the coordinator-owned context, validates the plan, stores
     a receipt record, and returns an opaque token.
-11. The reviewer invokes the launcher-owned begin-evidence command with that
-    receipt. The coordinator atomically records `evidence_started`; only then
-    may the reviewer load evidence according to the plan. Inline and delegated
-    paths use the same sequence.
+11. The reviewer executes the launcher-owned `beginEvidence` invocation for
+    that receipt. The coordinator atomically records `evidence_started`; only
+    then may the reviewer load evidence according to the plan. Inline and
+    delegated paths use the same sequence.
 12. The reviewer returns findings plus compact `ReviewAccountingV1`.
 13. The coordinator validates the output. On failure, it sends precise errors
     through the same accepted continuation for at most two accounting-only
@@ -736,13 +738,19 @@ type PreparedReviewContextV1 = Omit<ReviewPreparationV1, 'timeBudget'> & {
   contextDigest: string;
 };
 
+interface ReviewCommandInvocationV1 {
+  executable: string;
+  argv: string[];
+  stdin: 'none' | 'review-plan-json';
+}
+
 interface PrepareReviewContextResultV1 {
   preparation: ReviewPreparationV1;
   artifactDraftPath: string | null;
   commands: {
-    checkpointArtifacts: string;
-    validatePlan: string;
-    beginEvidence: string;
+    checkpointArtifacts: ReviewCommandInvocationV1;
+    validatePlan: ReviewCommandInvocationV1;
+    beginEvidence: ReviewCommandInvocationV1;
   };
 }
 ```
@@ -769,9 +777,11 @@ interface PrepareReviewContextResultV1 {
 - Preparation creates distinct checkpoint and plan-validation command
   capabilities bound to validation run and launch-attempt IDs; begin-evidence
   later uses the one-shot plan receipt as its capability. These secrets appear
-  only inside launcher-owned command strings, are enabled only after
-  accepted-handle binding, and are excluded from preparation/context digests,
-  logs, and reviewer-authored JSON.
+  only in launcher-owned invocation argv, are enabled only after accepted-handle
+  binding, and are excluded from preparation/context digests, logs, and
+  reviewer-authored JSON. Consumers execute the supplied executable and argv
+  directly without shell parsing and provide stdin only when its discriminant
+  requires `review-plan-json`.
 - `PreparedReviewContextV1` is created exactly once after artifact intake;
   plan validation requires it.
 - Legacy runs do not create preparation/context records or receipts.
@@ -1676,8 +1686,9 @@ receipt returned by successful validation. Exact argv fixtures verify all three
 commands.
 
 The trusted `prepare-context` JSON result and accepted-reviewer planning payload
-necessarily carry the generated command strings and their tokens. The launcher
-captures that stdout without logging it. Tokens are prohibited from
+necessarily carry the generated `ReviewCommandInvocationV1` values and their
+argv tokens. The launcher captures that stdout without logging it. Tokens are
+prohibited from
 `ReviewPreparationV1`, reviewer-authored plan/output JSON, canonical digests,
 diagnostics, and logs.
 
