@@ -1,0 +1,74 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { describe, expect, it } from 'vitest';
+
+const skill = readFileSync(
+  join(
+    import.meta.dirname,
+    '../../../../.agents/skills/oat-project-review-provide/SKILL.md',
+  ),
+  'utf8',
+);
+
+function section(start: string, end: string): string {
+  const from = skill.indexOf(start);
+  const to = skill.indexOf(end, from + start.length);
+  expect(from, start).toBeGreaterThanOrEqual(0);
+  expect(to, end).toBeGreaterThan(from);
+  return skill.slice(from, to);
+}
+
+describe('local review coordinator integration contract', () => {
+  it.each([
+    ['Tier 1', '**Step 6b: Tier 1', '**Step 6c: Tier 2'],
+    [
+      'Tier 3',
+      '### Step 6d: Tier 3',
+      '### Step 7: Determine Review Artifact Path',
+    ],
+  ])('%s validates before publishing or bookkeeping', (_, start, end) => {
+    const rail = section(start, end).replace(/\s+/g, ' ');
+    const validation = rail.indexOf('validate-output');
+    const publication = rail.indexOf('publishAcceptedArtifact');
+    const bookkeeping = rail.indexOf('bookkeeping');
+    expect(validation).toBeGreaterThanOrEqual(0);
+    expect(publication).toBeGreaterThan(validation);
+    expect(bookkeeping).toBeGreaterThan(publication);
+  });
+
+  it('retains accepted continuations and forbids fallback after acceptance', () => {
+    const tier1 = section('**Step 6b: Tier 1', '**Step 6c: Tier 2').replace(
+      /\s+/g,
+      ' ',
+    );
+    const tier3 = section(
+      '### Step 6d: Tier 3',
+      '### Step 7: Determine Review Artifact Path',
+    ).replace(/\s+/g, ' ');
+    expect(tier1).toContain('Retain that exact accepted reviewer handle');
+    expect(tier3).toContain(
+      'The current planning parent is the accepted inline continuation.',
+    );
+    for (const rail of [tier1, tier3]) {
+      expect(rail).toContain('same-handle accounting repair');
+      expect(rail).toContain(
+        'never launch a replacement after accepted timeout, blocked, malformed, or accounting-invalid output',
+      );
+    }
+  });
+
+  it('keeps blocked output non-actionable across every local sink side effect', () => {
+    for (const rail of [
+      section('**Step 6b: Tier 1', '**Step 6c: Tier 2'),
+      section(
+        '### Step 6d: Tier 3',
+        '### Step 7: Determine Review Artifact Path',
+      ),
+    ]) {
+      expect(rail.replace(/\s+/g, ' ')).toContain(
+        'No discoverable artifact, Reviews row, project log, or bookkeeping commit',
+      );
+    }
+  });
+});

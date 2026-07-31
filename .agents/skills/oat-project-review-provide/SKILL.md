@@ -787,7 +787,11 @@ Detection logic:
 
 **Step 6b: Tier 1 — Subagent (if available)**
 
-First, pre-compute the review artifact path using Step 7 naming conventions so it can be passed to the subagent.
+First, pre-compute the final review artifact path using Step 7 naming
+conventions, but do not create that discoverable file. For enforce-mode code
+review, invoke launcher-owned `oat review prepare-context` before dispatch and
+retain its validation run, private artifact draft path, and command
+invocations. The reviewer receives only the private draft path.
 
 Then spawn the reviewer:
 
@@ -802,14 +806,28 @@ Then spawn the reviewer:
 
 The `oat-reviewer` agent definition contains the full review process, mode contract, severity categories, artifact template, and critical rules. No additional instructions need to be injected.
 
+When the host accepts the reviewer, bind and retain that exact accepted handle
+for the full coordinator lifetime. The accepted reviewer performs required
+artifact intake, invokes the supplied `checkpointArtifacts`, submits
+`ReviewPlanV1` through `validate-plan`, retains its
+`PlanValidationReceiptV1`, and invokes `begin-evidence` before selective
+content evidence. Retain that exact accepted reviewer handle for its typed
+`ReviewerTerminalV1`; never launch a replacement after accepted timeout,
+blocked, malformed, or accounting-invalid output.
+
 After the subagent completes:
 
-- Treat its terminal status as authoritative. An accepted `BLOCKED` result
-  blocks the review; do not invoke fallback and do not infer a pass from a
-  missing review artifact or absent findings.
-- Verify the review artifact was written to the expected path
-- Continue with Step 8.5 (artifact/orchestration validation), Step 9 (plan
-  update), and Step 9.5 (commit)
+- Submit the complete terminal through launcher-owned `validate-output`.
+- If and only if every error points into the closed accounting allowlist, offer
+  at most two same-handle accounting repair turns through the retained handle.
+  Substance mutation or exhausted repair yields
+  `review_complete_accounting_invalid`.
+- Only an accepted complete terminal may call `publishAcceptedArtifact` with
+  the immutable validated snapshot and final Step 7 path. After publication,
+  continue to Step 8.5 and then the Step 9/9.5 bookkeeping.
+- Blocked or accounting-invalid output remains non-actionable. No discoverable
+  artifact, Reviews row, project log, or bookkeeping commit may be created.
+  Delete the private draft and stop. Never infer a pass from absent findings.
 
 **Step 6c: Tier 2 — Fresh Session (recommended fallback)**
 
@@ -850,7 +868,8 @@ Use this exact contract:
    `prepare-context` command for the authoritative range, sink, invocation, and
    already-resolved outer budget. Treat its changed-file set, metadata-only
    ChangeMap, obligations, run identity, and command invocations as
-   authoritative.
+   authoritative. Bind the current planning parent as the accepted handle and
+   retain it for all continuation and repair turns.
 2. **Required artifact intake** — Re-read the mode-required lifecycle artifacts
    from scratch. Use `FILES_CHANGED` only as the authoritative path inventory;
    do not read source files or content-level diffs yet. For a narrowed
@@ -863,7 +882,7 @@ Use this exact contract:
    assigns every authoritative path and obligation, records the mandatory
    delegation economics and verification boundary, and records a
    selective-inline or eligible whole-diff-inline evidence strategy. Submit it
-   with the supplied plan-validation command. One rejected plan may be
+   with the supplied `validate-plan` command. One rejected plan may be
    corrected once before evidence.
 5. **Validation receipt (`PlanValidationReceiptV1`)** — Retain the opaque
    receipt returned by the launcher-owned validator. Do not infer acceptance
@@ -883,9 +902,22 @@ Use this exact contract:
    `oat-reviewer` checklist, reconcile evidence, and return one complete or
    blocked terminal from this same continuation. Complete output carries the
    dispatch-selected candidate and `ReviewAccountingV1`; blocked output carries
-   blocked-incomplete accounting and no actionable candidate. Run the
-   launcher-owned output validator before translating to the artifact or
-   structured sink.
+   blocked-incomplete accounting and no actionable candidate.
+9. **Output validation (`validate-output`)** — Run the launcher-owned output
+   validator before translating to the artifact sink. For an artifact
+   candidate, require the private draft path and immutable embedded accounting
+   snapshot to equal the terminal envelope.
+10. **Bounded repair** — If and only if all validation errors point into the
+    closed encoding allowlist, perform at most two same-handle accounting repair
+    turns in this accepted inline continuation. Preserve the immutable substance
+    digest and never launch a replacement after accepted timeout, blocked,
+    malformed, or accounting-invalid output.
+11. **Acceptance side effects** — Only accepted complete output may invoke
+    `publishAcceptedArtifact` for the final Step 7 path and then continue with
+    artifact orchestration validation and bookkeeping. Blocked or
+    accounting-invalid output remains non-actionable. No discoverable artifact,
+    Reviews row, project log, or bookkeeping commit may be created; delete the
+    private draft and stop.
 
 ### Step 7: Determine Review Artifact Path
 
@@ -917,7 +949,11 @@ mkdir -p "$PROJECT_PATH/reviews"
 
 ### Step 8: Write Review Artifact (if Tier 3)
 
-If running inline (Tier 3), execute the review and write artifact.
+If running inline (Tier 3), execute the review into the launcher-created
+private draft only. Do not write the Step 7 discoverable path directly.
+Step 6d validates the terminal and embedded accounting snapshot, then publishes
+the accepted snapshot atomically. If validation does not accept a complete
+terminal, delete the private draft and skip Steps 8.5, 9, and 9.5.
 
 **Review checklist (from oat-reviewer):**
 

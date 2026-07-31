@@ -140,6 +140,49 @@ describe('review skill contracts', () => {
     expect(tier3).not.toMatch(/read all (?:files in )?`?FILES_CHANGED`?/i);
   });
 
+  it('keeps both local artifact tiers behind one acceptance coordinator', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const tier1 =
+      content.match(
+        /\*\*Step 6b: Tier 1[\s\S]*?(?=\*\*Step 6c: Tier 2)/,
+      )?.[0] ?? '';
+    const tier3 =
+      content.match(
+        /### Step 6d: Tier 3[\s\S]*?(?=### Step 7: Determine Review Artifact Path)/,
+      )?.[0] ?? '';
+    for (const [name, tier] of [
+      ['Tier 1', tier1],
+      ['Tier 3', tier3],
+    ] as const) {
+      const normalized = tier.replace(/\s+/g, ' ');
+      const ordered = [
+        'prepare-context',
+        'accepted handle',
+        'checkpointArtifacts',
+        'validate-plan',
+        'begin-evidence',
+        'validate-output',
+        'same-handle accounting repair',
+        'publishAcceptedArtifact',
+        'bookkeeping',
+      ];
+      let prior = -1;
+      for (const marker of ordered) {
+        const index = normalized.indexOf(marker);
+        expect(index, `${name}: ${marker}`).toBeGreaterThan(prior);
+        prior = index;
+      }
+      expect(normalized).toContain(
+        'Blocked or accounting-invalid output remains non-actionable',
+      );
+      expect(normalized).toContain(
+        'No discoverable artifact, Reviews row, project log, or bookkeeping commit',
+      );
+    }
+  });
+
   it('keeps reviewer timestamps aligned and next-step guidance inside the artifact template', () => {
     const content = readRepoFile('.agents/agents/oat-reviewer.md');
     const templateStart = content.indexOf('````markdown\n---');
