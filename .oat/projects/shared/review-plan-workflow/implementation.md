@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-30
-oat_current_task_id: p03-t06
+oat_last_updated: 2026-07-31
+oat_current_task_id: p03-t09
 oat_generated: false
 ---
 
 # Implementation: review-plan-workflow
 
 **Started:** 2026-07-29
-**Last Updated:** 2026-07-30
+**Last Updated:** 2026-07-31
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -28,13 +28,13 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 13    | 13/13     |
 | Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | in_progress | 8     | 5/8       |
+| Phase 3 | in_progress | 10    | 8/10      |
 | Phase 4 | pending     | 8     | 0/8       |
 | Phase 5 | pending     | 7     | 0/7       |
 | Phase 6 | pending     | 7     | 0/7       |
 | Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 73/104 tasks completed
+**Total:** 76/106 tasks completed
 
 ## Execution Configuration
 
@@ -697,6 +697,16 @@ rejected aggregates and forged producers.
 **Recovery:** `46cc8351` aligned six valid-plan compatibility fixtures with
 the mandatory direct-claim set without weakening production validation.
 
+### Task p03-t09: (re-review C1) Require provenance evidence in accepted dossiers
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t10: (re-review C2) Produce operation traces from validated execution
+
+**Status:** pending
+**Commit:** -
+
 ### Phase Verification
 
 - 3,812 CLI tests passed.
@@ -736,6 +746,30 @@ the mandatory direct-claim set without weakening production validation.
 
 **Next:** Resume the original Phase 3 implementer with the bounded fix scope,
 then independently re-review only the fix range.
+
+### Review Received: p03 (cycle 2)
+
+**Date:** 2026-07-31
+**Review artifact:** `reviews/p03-review-2026-07-31T143803Z.md`
+
+**Verdict:** Failed
+
+**Findings:**
+
+- Critical: 2
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** p03-t09 through p03-t10
+
+**Finding disposition map:**
+
+- C1 (accepted provenance lane can return evidence-free dossier) → p03-t09
+- C2 (self-declared traces can claim savings without execution) → p03-t10
+
+**Next:** Resume the original Phase 3 implementer for the second and final
+automatic fix iteration, then independently re-review the updated range.
 
 ---
 

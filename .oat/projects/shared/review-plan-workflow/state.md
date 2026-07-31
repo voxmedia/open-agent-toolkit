@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p03-t09
 oat_last_commit: 46cc835170ab90aa7f016c5c698d3bf4772e010b
 oat_blockers: []
 associated_issues:
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T14:28:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T14:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,15 +85,15 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 3 fix re-review in progress
+**Status:** Phase 3 second fix iteration in progress
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
 ## Current Phase
 
-Phases 1 and 2 are complete. Phase 3 fixes p03-t06 through p03-t08 are complete
-and independently root-verified. Their exact fix range is in the required
-artifact-mode re-review.
+Phases 1 and 2 are complete. The Phase 3 cycle-2 re-review confirmed the plan
+boundary fix but found two remaining Critical evidence-production gaps. They
+are converted to p03-t09 and p03-t10 for the final automatic fix iteration.
 
 ## Artifacts
 
@@ -163,7 +163,9 @@ artifact-mode re-review.
 - ✓ Phase 3 review fixes p03-t06 through p03-t08 completed
 - ✓ Append-only compatibility-fixture recovery completed at `46cc8351`
 - ✓ 3,828 CLI tests, workspace gates, and root-focused verification pass
-- → Independent artifact-mode re-review of the Phase 3 fix range
+- ⚠ Phase 3 cycle-2 re-review found 2 Critical evidence-production gaps
+- ✓ Findings independently confirmed and converted to p03-t09 and p03-t10
+- → Execute the final automatic Phase 3 fix iteration
 
 ## Blockers
 
@@ -171,4 +173,4 @@ None.
 
 ## Next Milestone
 
-Receive the independent Phase 3 fix-range re-review and route its disposition.
+Execute p03-t09 and p03-t10, then independently re-review the updated range.

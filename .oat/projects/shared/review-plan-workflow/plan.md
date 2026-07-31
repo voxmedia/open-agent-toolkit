@@ -2048,6 +2048,66 @@ and broad/replay-heavy traces fail.
 
 **Step 5: Commit** `fix(p03-t08): derive operation savings from traces`
 
+### Task p03-t09: (re-review C1) Require provenance evidence in accepted dossiers
+
+**Files:**
+
+- Modify: `packages/cli/src/review/worker-dossier.ts`
+- Modify: `packages/cli/src/review/worker-dossier.test.ts`
+
+**Step 1: Reproduce** Build a plan that passes `validateReviewPlan` with a
+non-replayed deterministic command lane using `accept-provenance`, then show
+that a complete dossier with empty `commands` and `evidence` currently passes.
+Add the equivalent empty-inventory case and positive command/inventory cases.
+
+**Step 2: Implement** Bind dossier completeness to the accepted lane strategy:
+every `accept-provenance` command lane must contain at least one in-scope
+command evidence record bound to a canonical command-result digest, and every
+accepted inventory lane must contain non-empty in-scope inventory provenance.
+Keep complete inline/replayed lanes and valid partial dossiers compatible with
+their declared contracts.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/worker-dossier.test.ts src/review/plan-validator.test.ts`.
+Expected: evidence-free accepted-provenance dossiers reject while valid command,
+inventory, inline, and partial dossiers remain accepted.
+
+**Step 5: Commit** `fix(p03-t09): require accepted dossier provenance`
+
+### Task p03-t10: (re-review C2) Produce operation traces from validated execution
+
+**Files:**
+
+- Modify: `packages/cli/src/review/operation-metrics.ts`
+- Modify: `packages/cli/src/review/operation-metrics.test.ts`
+- Modify: `packages/cli/src/review/__fixtures__/large-scope-selective.v1.json`
+- Modify: `packages/cli/src/review/__fixtures__/small-scope-inline.v1.json`
+
+**Step 1: Reproduce** Show that a caller-authored complete selective trace with
+the expected producer string, non-empty changed-file scope, and zero events
+passes and claims maximum savings.
+
+**Step 2: Implement** Generate candidate traces through a production-owned
+deterministic strategy/evidence harness over validated ChangeMap and ReviewPlan
+inputs, rather than trusting fixture-authored producer identity or event lists.
+Bind completion and operation events to the executor output, reject complete
+non-empty selective scopes with no evidence operations, and retain the
+broad/replay-heavy negative case. Preserve the prohibition on wall-clock
+claims.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/operation-metrics.test.ts`.
+Expected: hand-authored empty or forged traces cannot establish savings, valid
+production-derived selective/compact traces pass, and replay-heavy traces fail.
+
+**Step 5: Commit** `fix(p03-t10): bind operation traces to execution`
+
 ---
 
 ## Phase 4: Output Accounting and Coordinator Integration
@@ -2928,6 +2988,7 @@ B post-publication bookkeeping PR.
 | p02    | code     | fixes_completed | 2026-07-31 | reviews/archived/p02-review-2026-07-31T040400Z.md           | f179344bdc12d0edc397d526f8665572826a9ad1 | auto       | -           |
 | p02    | code     | passed          | 2026-07-31 | reviews/archived/p02-review-2026-07-31T051943Z.md           | a2605f967a543f4772833e0af90cb0ef35ad93df | manual     | -           |
 | p03    | code     | fixes_completed | 2026-07-31 | reviews/archived/p03-review-2026-07-31T140054Z.md           | 4243aeb6bc992543f0da5ebe88f03b83dfd9db77 | auto       | -           |
+| p03    | code     | fixes_added     | 2026-07-31 | reviews/p03-review-2026-07-31T143803Z.md                    | 46cc835170ab90aa7f016c5c698d3bf4772e010b | auto       | -           |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -2961,7 +3022,7 @@ rewriting either historical result as passed.
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 104 tasks**
+**Total: 106 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.
