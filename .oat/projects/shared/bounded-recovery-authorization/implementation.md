@@ -24,40 +24,64 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 0/2       |
-| Phase 2 | pending     | 1     | 0/1       |
-| Phase 3 | pending     | 1     | 0/1       |
-| Phase 4 | pending     | 1     | 0/1       |
+| Phase   | Status         | Tasks | Completed |
+| ------- | -------------- | ----- | --------- |
+| Phase 1 | review_pending | 2     | 2/2       |
+| Phase 2 | pending        | 1     | 0/1       |
+| Phase 3 | pending        | 1     | 0/1       |
+| Phase 4 | pending        | 1     | 0/1       |
 
-**Total:** 0/5 tasks completed
+**Total:** 2/5 tasks completed
 
 ---
 
 ## Phase 1: Canonical Recovery Contract
 
-**Status:** in_progress
+**Status:** review_pending
 **Started:** 2026-07-31
+
+### Phase Summary
+
+**Outcome:**
+
+- Shared dispatch now distinguishes default-deny standing recovery authority
+  from forbidden accepted-launch fallback.
+- Project implementation and phase-agent contracts now define tiered
+  prevention, a dedicated recovery policy, append-only recovery commits,
+  canonical event records, exact-target continuity, and fail-closed boundaries.
+
+**Verification:**
+
+- `packages/cli/src/validation/skills.test.ts`: 124 passed
+- Canonical skill validation: 61 passed
+- `pnpm lint`, `pnpm format`, and `git diff --check`: passed
+- `review-plan-workflow` isolation check: passed
 
 ### Task p01-t01: Separate Standing Recovery Authority from Fallback
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 4333dcae0f3cad0c3eb465d5319d7d5f35924146
 
-**Planned verification:**
+**Outcome:**
 
-- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
-- `pnpm oat:validate-skills`
-- `pnpm lint`
-- `pnpm format`
+- Added default-deny caller-scoped recovery authority without weakening
+  accepted-launch terminality.
+- Added negative consumer assertions for wave, autonomous, cloud-project, and
+  reviewer callers.
 
 ---
 
 ### Task p01-t02: Add Tiered Prevention and Bounded Phase Recovery
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 31fd3a86fb44c7abb24cf4bc183e5a3793681876
+
+**Outcome:**
+
+- Added pre-commit verification tiers and dedicated bounded phase recovery.
+- Added zero-limit, attempt, flake, event, provenance, atomicity, exhaustion,
+  fail-closed, immutable-history, and unchanged-governance assertions.
+- Preserved phase-base anchoring and isolated the active external project.
 
 ---
 
@@ -117,6 +141,8 @@ _- Outstanding Items_
 - HiLL: final phase `p04`; auto-review enabled
 - Optional phase gate: disabled
 - Started: Phase 1 (`p01-t01`)
+- Phase 1 implementer outcome: done at
+  `31fd3a86fb44c7abb24cf4bc183e5a3793681876`
 
 <!-- orchestration-runs-end -->
 
@@ -130,13 +156,16 @@ Chronological log of implementation progress.
 
 **Session Start:** 16:47 UTC
 
-- [ ] p01-t01: Separate Standing Recovery Authority from Fallback - in progress
-- [ ] p01-t02: Add Tiered Prevention and Bounded Phase Recovery - pending
+- [x] p01-t01: Separate Standing Recovery Authority from Fallback -
+      `4333dcae0f3cad0c3eb465d5319d7d5f35924146`
+- [x] p01-t02: Add Tiered Prevention and Bounded Phase Recovery -
+      `31fd3a86fb44c7abb24cf4bc183e5a3793681876`
 
 **What changed (high level):**
 
 - Confirmed the reviewed four-phase plan, managed High dispatch, final-phase
   HiLL checkpoint, and disabled optional phase gate.
+- Completed and root-validated both Phase 1 task commits.
 
 **Decisions:**
 
@@ -152,7 +181,7 @@ Chronological log of implementation progress.
 
 - None.
 
-**Session End:** In progress
+**Session End:** Phase 1 mandatory review pending
 
 ---
 
@@ -168,12 +197,12 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-| 3     | -         | -      | -      | -        |
-| 4     | -         | -      | -      | -        |
+| Phase | Tests Run                                                  | Passed                | Failed | Coverage                     |
+| ----- | ---------------------------------------------------------- | --------------------- | ------ | ---------------------------- |
+| 1     | skills.test.ts; skill validation; lint; format; diff check | 124 tests + 61 skills | 0      | Canonical recovery contracts |
+| 2     | -                                                          | -                     | -      | -                            |
+| 3     | -                                                          | -                     | -      | -                            |
+| 4     | -                                                          | -                     | -      | -                            |
 
 ## Final Summary (for PR/docs)
 
