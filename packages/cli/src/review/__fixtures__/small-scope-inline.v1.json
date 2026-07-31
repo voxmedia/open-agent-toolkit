@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "fixture": "small-scope-compact-review-plan",
+  "changedFiles": 3,
+  "strategy": "whole-diff-inline",
+  "operations": [
+    { "kind": "content-diff", "count": 1 },
+    { "kind": "full-file-read", "count": 0 },
+    { "kind": "semantic-replay", "count": 0 },
+    { "kind": "tool-step", "count": 5 }
+  ],
+  "completion": "complete",
+  "accountingBytes": 2048
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "fixture": "large-scope-selective-review-plan",
+  "changedFiles": 237,
+  "strategy": "selective-inline",
+  "operations": [
+    { "kind": "content-diff", "count": 0 },
+    { "kind": "full-file-read", "count": 18 },
+    { "kind": "semantic-replay", "count": 12 },
+    { "kind": "tool-step", "count": 55 }
+  ],
+  "completion": "complete",
+  "accountingBytes": 32768
+}
