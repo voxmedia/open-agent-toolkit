@@ -829,6 +829,42 @@ describe('validateOatSkills', () => {
     expect(content).toMatch(/`oat gate review`/);
   });
 
+  it('requires one receipt-bound plan-first contract for every code-review sink', async () => {
+    const content = await readRepoFile('.agents/agents/oat-reviewer.md');
+    const boundary = content.match(
+      /^## Plan-First Review Boundary\n([\s\S]*?)(?=^## )/m,
+    )?.[1];
+    const normalizedBoundary = boundary?.replace(/\s+/g, ' ');
+
+    expect(boundary).toBeDefined();
+    expect(boundary).toMatch(
+      /Required artifact intake[\s\S]*checkpointArtifacts[\s\S]*ReviewPlanV1[\s\S]*PlanValidationReceiptV1[\s\S]*beginEvidence[\s\S]*Selective evidence execution/,
+    );
+    expect(normalizedBoundary).toContain(
+      'Do not read source files or content-level diffs before `beginEvidence` succeeds.',
+    );
+    expect(boundary).toMatch(
+      /launcher-owned[\s\S]{0,180}(?:commands|validators)[\s\S]{0,180}authoritative/i,
+    );
+    expect(boundary).toMatch(
+      /delegationEconomics[\s\S]*independentLaneIds[\s\S]*nonReplayedLaneIds[\s\S]*verificationBoundary[\s\S]*primaryContingency[\s\S]*WorkerDossierV1/,
+    );
+    expect(boundary).toMatch(
+      /accepted worker timeout or failure[\s\S]{0,180}never[\s\S]{0,100}replacement launch/i,
+    );
+    expect(boundary).toMatch(
+      /ReviewerTerminalV1[\s\S]{0,220}complete terminal[\s\S]{0,220}blocked terminal/i,
+    );
+
+    expect(content.match(/^## Review Accounting$/gm)).toHaveLength(1);
+    expect(content).toMatch(
+      /^## Review Accounting\n```json\n\{[\s\S]*?"schemaVersion": 1[\s\S]*?\n\}\n```$/m,
+    );
+    expect(content).not.toMatch(
+      /(?:unconditionally|always|first)\s+(?:read|load)[^\n]*(?:source|content-level diff)/i,
+    );
+  });
+
   it('keeps reviewer-local reconnaissance bounded and advisory', async () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';

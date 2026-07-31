@@ -56,6 +56,55 @@ function expectValidReportContext(command: string): void {
 }
 
 describe('review skill contracts', () => {
+  it('pins the canonical reviewer plan-first evidence boundary', () => {
+    const content = readRepoFile('.agents/agents/oat-reviewer.md');
+    const normalizedContent = content.replace(/\s+/g, ' ');
+    const orderedBoundary = [
+      'Required artifact intake',
+      'checkpointArtifacts',
+      'ReviewPlanV1',
+      'PlanValidationReceiptV1',
+      'beginEvidence',
+      'Selective evidence execution',
+    ];
+    let previousIndex = -1;
+
+    for (const marker of orderedBoundary) {
+      const markerIndex = content.indexOf(marker);
+      expect(markerIndex, marker).toBeGreaterThan(previousIndex);
+      previousIndex = markerIndex;
+    }
+
+    for (const requiredField of [
+      'delegationEconomics',
+      'independentLaneIds',
+      'nonReplayedLaneIds',
+      'verificationBoundary',
+      'primaryContingency',
+      'WorkerDossierV1',
+    ]) {
+      expect(content, requiredField).toContain(requiredField);
+    }
+
+    expect(normalizedContent).toContain(
+      'Do not read source files or content-level diffs before `beginEvidence` succeeds.',
+    );
+    expect(normalizedContent).toContain(
+      'An accepted worker timeout or failure never authorizes a replacement launch.',
+    );
+    expect(content).toContain('ReviewerTerminalV1');
+    expect(content.match(/^## Review Accounting$/gm)).toHaveLength(1);
+    expect(content).toMatch(
+      /^## Review Accounting\n```json\n\{[\s\S]*?"schemaVersion": 1[\s\S]*?\n\}\n```$/m,
+    );
+    expect(content).toMatch(
+      /Findings:\s*\{N\} critical,\s*\{N\} important,\s*\{N\} medium,\s*\{N\} minor/,
+    );
+    for (const severity of ['Critical', 'Important', 'Medium', 'Minor']) {
+      expect(content).toMatch(new RegExp(`^### ${severity}$`, 'm'));
+    }
+  });
+
   it('keeps reviewer timestamps aligned and next-step guidance inside the artifact template', () => {
     const content = readRepoFile('.agents/agents/oat-reviewer.md');
     const templateStart = content.indexOf('````markdown\n---');
