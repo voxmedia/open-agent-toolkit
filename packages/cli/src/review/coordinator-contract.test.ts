@@ -28,6 +28,7 @@ function fixture(): {
     },
     plan: {
       strategy: 'selective-inline',
+      lanes: [{ id: 'lane-1', delegated: false }],
       verificationBoundary: {
         requiredClaims: [],
         positiveCoverage: {
