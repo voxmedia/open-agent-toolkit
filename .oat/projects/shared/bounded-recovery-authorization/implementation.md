@@ -26,82 +26,71 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 2     | 0/2       |
+| Phase 2 | pending     | 1     | 0/1       |
+| Phase 3 | pending     | 1     | 0/1       |
+| Phase 4 | pending     | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/5 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Canonical Recovery Contract
 
 **Status:** in_progress
 **Started:** 2026-07-31
 
-### Phase Summary (fill when phase is complete)
+### Task p01-t01: Separate Standing Recovery Authority from Fallback
 
-**Outcome (what changed):**
+**Status:** in_progress
+**Commit:** -
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+**Planned verification:**
 
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+- `pnpm oat:validate-skills`
+- `pnpm lint`
+- `pnpm format`
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add Tiered Prevention and Bounded Phase Recovery
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
-
-- {Notes will be added during implementation}
-
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Provider Materialization and Parity
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Regenerate and Validate Provider Agents
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Public Recovery Documentation
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Explain Prevention, Recovery, and Migration
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Lockstep Release and Full Verification
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Bump Public Packages and Validate the Release
 
 **Status:** pending
 **Commit:** -
@@ -118,7 +107,16 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1 — 2026-07-31T16:47:23Z
+
+- Branch: `append-only-disruptions`
+- Base: `69070269bcdff8a4609dd6cc45c970f66aa7f844`
+- Dispatch: managed High; Cursor phase implementer
+  `oat-phase-implementer-gpt-5-6-sol-high`
+- Schedule: `p01` → parallel `p02`/`p03` → `p04`
+- HiLL: final phase `p04`; auto-review enabled
+- Optional phase gate: disabled
+- Started: Phase 1 (`p01-t01`)
 
 <!-- orchestration-runs-end -->
 
@@ -130,36 +128,31 @@ Chronological log of implementation progress.
 
 ### 2026-07-31
 
-**Session Start:** {time}
+**Session Start:** 16:47 UTC
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [ ] p01-t01: Separate Standing Recovery Authority from Fallback - in progress
+- [ ] p01-t02: Add Tiered Prevention and Bounded Phase Recovery - pending
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Confirmed the reviewed four-phase plan, managed High dispatch, final-phase
+  HiLL checkpoint, and disabled optional phase gate.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Implementation remains isolated from `review-plan-workflow`.
+- Phase 2 provider materialization and Phase 3 docs run in parallel after Phase
+  1 passes.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Run root-owned phase review after each implementation phase.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
-**Session End:** {time}
-
----
-
-### 2026-07-31
-
-**Session Start:** {time}
-
-{Continue log...}
+**Session End:** In progress
 
 ---
 
@@ -179,32 +172,33 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
+| 4     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Pending implementation.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Pending implementation.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- Pending implementation.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Pending implementation.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- None recorded.
 
 ## References
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Spec: N/A (quick workflow)
