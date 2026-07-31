@@ -128,9 +128,18 @@ Add contract assertions covering:
 - dedicated `oat_phase_recovery_policy` defaults (`10`, per-phase `0`–`20`),
   one no-edit flake rerun, elevated-volume warning at three, and exact numeric
   exhaustion grants that never reset usage;
+- no attempt consumption for the one no-edit flake rerun, followed by a
+  no-edit stop when the repeated unexplained failure remains ambiguous;
+- attempt consumption with no successful recovery commit when an edit, commit,
+  or re-verification fails;
 - one append-only recovery commit per successful attempt, immutable task
   commits, same-target/original-request provenance, and canonical recovery-event
   fields;
+- an exact-target-loss stop and a fresh same-target recovery launch linked
+  through the original request's `continuation_events`;
+- exactly one event for every recovered, direction-required, or failed-attempt
+  disposition, with defect, prompt, and successful-repair counts independently
+  measurable;
 - automatic continuation for obvious in-scope lint/type/test/build/composition
   defects; and
 - stops for ambiguity, architecture/security/product/requirements changes,
@@ -151,6 +160,11 @@ protected-branch, credential, destructive-action, or security safeguards.
 Prevent route escalation from applying to implementation recovery. Add the new
 commented policy shape to the state template.
 
+Preserve the existing `PHASE_BASE_HEAD=$(git rev-parse HEAD)` capture immediately
+before each phase launch. Do not redesign base anchoring or attribute the
+exposure to PR #176. Do not read, modify, link, or depend on
+`.oat/projects/shared/review-plan-workflow`.
+
 Bump `oat-project-implement` once from `2.2.3` to `2.2.4` and the canonical
 phase agent from `1.0.10` to `1.0.11`.
 
@@ -167,7 +181,12 @@ Expected: Canonical assets, template, and tests are formatted.
 
 Run:
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills && pnpm lint && pnpm format`
-Expected: Focused contracts and canonical asset validation pass.
+Expected: Focused contracts and canonical asset validation pass, including the
+unchanged phase-base capture.
+
+Run:
+`test -z "$(git diff --name-only "$(git merge-base HEAD main)"...HEAD -- .oat/projects/shared/review-plan-workflow)"`
+Expected: The isolated active project contributes no file or dependency change.
 
 **Step 5: Commit**
 
@@ -248,8 +267,11 @@ Document task-local cheap checks and scoped build/test checks before commit;
 broad phase-level verification and automatic same-target repair; dedicated
 default-ten/per-phase recovery budgets; one no-edit flake rerun;
 elevated-volume reporting; numeric exhaustion grants; canonical recovery-event
-fields; the nine-event baseline; why append-only history does not require
-repeated approval; the fallback distinction; and migration commands
+fields; the complete pre-change baseline of nine recovery events plus two
+operator-recovery continuations; the distinction between defects, prompts,
+continuations, and successful repair commits; why append-only history does not
+require repeated approval; the fallback distinction; the exposure-not-regression
+finding with PR #176 explicitly excluded; and migration commands
 `oat tools update` followed by `oat sync --scope all`.
 
 Do not add or move a page, so no navigation or generated root-index edit is
@@ -334,16 +356,16 @@ validation all pass from a clean post-task tree.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                         | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | -------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -                                | -             | -          | -           |
-| p02    | code     | pending | -          | -                                | -             | -          | -           |
-| p03    | code     | pending | -          | -                                | -             | -          | -           |
-| p04    | code     | pending | -          | -                                | -             | -          | -           |
-| final  | code     | pending | -          | -                                | -             | -          | -           |
-| spec   | artifact | pending | -          | -                                | -             | -          | -           |
-| design | artifact | passed  | 2026-07-31 | user-approved lightweight design | -             | manual     | -           |
-| plan   | artifact | pending | -          | -                                | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                         | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | -------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                | -             | -          | -           |
+| p02    | code     | pending         | -          | -                                | -             | -          | -           |
+| p03    | code     | pending         | -          | -                                | -             | -          | -           |
+| p04    | code     | pending         | -          | -                                | -             | -          | -           |
+| final  | code     | pending         | -          | -                                | -             | -          | -           |
+| spec   | artifact | pending         | -          | -                                | -             | -          | -           |
+| design | artifact | passed          | 2026-07-31 | user-approved lightweight design | -             | manual     | -           |
+| plan   | artifact | fixes_completed | 2026-07-31 | structured review round 1        | -             | auto       | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
