@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { evaluateWholeDiffEligibility } from './budget';
+import {
+  allocateReviewTimeBudget,
+  evaluateWholeDiffEligibility,
+} from './budget';
 import {
   projectValidatedAssignments,
   validatePlanObligationAccounting,
@@ -317,6 +320,54 @@ describe('review plan policy and projection', () => {
     expect(validateReviewPlan(sealed, candidate)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'inconsistent-whole-diff-lane' }),
+      ]),
+    );
+  });
+
+  it.each([
+    { label: 'before planning', deadlineMs: 4_999, valid: false },
+    { label: 'at planning', deadlineMs: 5_000, valid: false },
+    { label: 'inside evidence', deadlineMs: 5_001, valid: true },
+    { label: 'at evidence cutoff', deadlineMs: 20_000, valid: true },
+    { label: 'after evidence cutoff', deadlineMs: 20_001, valid: false },
+    { label: 'at output cutoff', deadlineMs: 120_000, valid: false },
+  ])('validates delegated lane deadlines $label', ({ deadlineMs, valid }) => {
+    const sealed = context();
+    sealed.budget.time = {
+      totalMs: 120_000,
+      source: 'gate',
+      deadlineMs: 120_000,
+    };
+    const candidate = policyPlan();
+    candidate.lanes[0]!.delegated = true;
+    candidate.lanes[0]!.deadlineMs = deadlineMs;
+    candidate.timeAllocation = allocateReviewTimeBudget({
+      totalMs: 120_000,
+      source: 'gate',
+      startedAtMs: 0,
+    }).allocation;
+
+    const cutoffErrors = validateReviewPlan(sealed, candidate).filter(
+      (error) => error.code === 'lane-evidence-deadline-out-of-bounds',
+    );
+    expect(cutoffErrors).toHaveLength(valid ? 0 : 1);
+  });
+
+  it('requires mode-appropriate null deadline shapes', () => {
+    const inline = policyPlan();
+    inline.lanes[0]!.deadlineMs = 10;
+    expect(validateReviewPlan(context(), inline)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'inline-lane-deadline' }),
+      ]),
+    );
+
+    const unbudgetedDelegated = policyPlan();
+    unbudgetedDelegated.lanes[0]!.delegated = true;
+    unbudgetedDelegated.lanes[0]!.deadlineMs = 10;
+    expect(validateReviewPlan(context(), unbudgetedDelegated)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'unbudgeted-lane-deadline' }),
       ]),
     );
   });

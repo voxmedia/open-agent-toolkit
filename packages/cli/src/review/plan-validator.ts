@@ -204,6 +204,49 @@ function validateContingencies(plan: ReviewPlanV1): PlanValidationError[] {
   return errors;
 }
 
+function validateLaneDeadlines(
+  plan: ReviewPlanV1,
+  allocation: ReviewPlanV1['timeAllocation'],
+): PlanValidationError[] {
+  const errors: PlanValidationError[] = [];
+  plan.lanes.forEach((lane, index) => {
+    if (!lane.delegated) {
+      if (lane.deadlineMs !== null) {
+        errors.push({
+          code: 'inline-lane-deadline',
+          pointer: `/lanes/${index}/deadlineMs`,
+          message: 'non-delegated lanes cannot declare a worker deadline',
+        });
+      }
+      return;
+    }
+    if (allocation === null) {
+      if (lane.deadlineMs !== null) {
+        errors.push({
+          code: 'unbudgeted-lane-deadline',
+          pointer: `/lanes/${index}/deadlineMs`,
+          message:
+            'lanes cannot declare a deadline without a sealed time budget',
+        });
+      }
+      return;
+    }
+    if (
+      lane.deadlineMs === null ||
+      lane.deadlineMs <= allocation.planningDeadlineMs ||
+      lane.deadlineMs > allocation.evidenceDeadlineMs
+    ) {
+      errors.push({
+        code: 'lane-evidence-deadline-out-of-bounds',
+        pointer: `/lanes/${index}/deadlineMs`,
+        message:
+          'delegated lane deadline must be after planning and at or before the evidence cutoff',
+      });
+    }
+  });
+  return errors;
+}
+
 export function validateReviewPlan(
   context: PreparedReviewContextV1,
   plan: ReviewPlanV1,
@@ -277,5 +320,6 @@ export function validateReviewPlan(
       message: 'time allocation differs from the sealed outer budget',
     });
   }
+  errors.push(...validateLaneDeadlines(plan, expectedAllocation));
   return errors;
 }
