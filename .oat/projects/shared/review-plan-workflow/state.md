@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t18
 oat_last_commit: 055b5b2132de9f4077c2ba52c9aceee421b83805
 oat_blockers: []
 associated_issues:
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T16:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T16:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,15 +85,15 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 4 fix re-review in progress
+**Status:** Phase 4 cycle-2 fix in progress
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
 ## Current Phase
 
-Phases 1 through 3 are complete. Phase 4 review fixes p04-t11 through p04-t17
-and one bounded wording recovery are complete with all package/workspace gates
-passing. The exact fix range is ready for independent re-review.
+Phases 1 through 3 are complete. Phase 4 cycle-2 re-review resolved six of seven
+prior findings and found one remaining Critical worker-coverage derivation gap.
+The final automatic fix task p04-t18 is queued.
 
 ## Artifacts
 
@@ -179,7 +179,9 @@ passing. The exact fix range is ready for independent re-review.
 - ✓ Root confirmed and converted all findings to p04-t11 through p04-t17
 - ✓ p04-t11 through p04-t17 and bounded recovery completed
 - ✓ Full CLI, workspace, smoke, build, and root-focused verification passed
-- → Independent Phase 4 fix-range re-review
+- ⚠ Phase 4 cycle-2 re-review found one remaining Critical coverage gap
+- ✓ Six prior Phase 4 findings independently confirmed resolved
+- → p04-t18: bind final coverage to validated worker coverage
 
 ## Blockers
 
@@ -187,4 +189,5 @@ None.
 
 ## Next Milestone
 
-Receive the independent Phase 4 fix-range re-review and route its disposition.
+Execute p04-t18, verify the exact worker-coverage boundary, and run the final
+automatic narrowed Phase 4 re-review.

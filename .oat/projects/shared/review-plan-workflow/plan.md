@@ -2585,6 +2585,46 @@ review path.
 
 **Step 5: Commit** `fix(p04-t17): bind publication to accepted snapshot`
 
+### Task p04-t18: (re-review C1) Bind final coverage to validated worker coverage
+
+**Files:**
+
+- Modify: `packages/cli/src/review/output-validator.ts`
+- Modify: `packages/cli/src/review/output-validator.test.ts`
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/types.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+- Modify: `packages/cli/src/commands/review/validate-output.ts`
+- Modify: `packages/cli/src/commands/review/validate-output.test.ts`
+- Modify: `packages/cli/src/review/validation-recovery.integration.test.ts`
+
+**Step 1: Reproduce** Add an uncovered delegated lane with two paths and two
+primary obligations whose permitted contingency covers only one path and one
+obligation. Prove that evidenced completion of that strict subset currently
+returns complete/all coverage. Add equivalent partial-worker and inline
+blocked-incomplete cases.
+
+**Step 2: Implement** Derive delegated final coverage from the complete
+validated lane assignment minus a launcher-validated worker coverage projection,
+then subtract only evidenced primary completion permitted by the contingency.
+An uncovered worker starts with every lane path and primary obligation
+uncovered; a partial worker uses its validated dossier partition instead of
+inferring that non-contingency work completed. Bind any persisted projection to
+the accepted dossier digest and validation run. Preserve inline
+`not-delegated` partial/none accounting and require it to remain
+blocked-incomplete. Do not trust reviewer-authored final coverage as the worker
+coverage source.
+
+**Step 3: Format** Run `pnpm format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/output-validator.test.ts src/review/types.test.ts src/review/validation-store.test.ts src/commands/review/validate-output.test.ts src/review/validation-recovery.integration.test.ts`.
+Expected: strict-subset uncovered, partial-worker, and inline-blocked cases
+derive exact coverage; no incomplete lane can validate as complete.
+
+**Step 5: Commit** `fix(p04-t18): bind final worker coverage`
+
 ---
 
 ## Phase 5: Gate Diagnostics and Compatibility
@@ -3253,6 +3293,7 @@ B post-publication bookkeeping PR.
 | p03    | code     | fixes_completed | 2026-07-31 | reviews/p03-review-2026-07-31T143803Z.md                    | 46cc835170ab90aa7f016c5c698d3bf4772e010b | auto       | -           |
 | p03    | code     | passed          | 2026-07-31 | reviews/p03-review-2026-07-31T150048Z.md                    | 9d3952313c3d1d4ddabf13e63c3e41eac116623b | auto       | -           |
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/p04-review-2026-07-31T155658Z.md                    | 9d199314f0956290c70babcc3139c7edebb36869 | auto       | -           |
+| p04    | code     | fixes_added     | 2026-07-31 | reviews/archived/p04-review-2026-07-31T164356Z.md           | 055b5b2132de9f4077c2ba52c9aceee421b83805 | auto       | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -3280,12 +3321,12 @@ rewriting either historical result as passed.
 - Phase 1: 13 tasks - baseline, contracts, portability seams
 - Phase 2: 55 tasks - authoritative metadata, validation runtime, and review fixes
 - Phase 3: 10 tasks - reviewer planning, selective evidence, and review fixes
-- Phase 4: 17 tasks - accounting, repair, coordinator adoption, compatibility, and review fixes
+- Phase 4: 18 tasks - accounting, repair, coordinator adoption, compatibility, and review fixes
 - Phase 5: 7 tasks - gate diagnostics, timeout, and compatibility mode
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 115 tasks**
+**Total: 116 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.

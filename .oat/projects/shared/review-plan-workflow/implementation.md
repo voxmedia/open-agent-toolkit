@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: null
+oat_current_task_id: p04-t18
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | completed | 55    | 55/55     |
-| Phase 3 | completed | 10    | 10/10     |
-| Phase 4 | in_review | 17    | 17/17     |
-| Phase 5 | pending   | 7     | 0/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | completed   | 55    | 55/55     |
+| Phase 3 | completed   | 10    | 10/10     |
+| Phase 4 | in_progress | 18    | 17/18     |
+| Phase 5 | pending     | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 95/115 tasks completed
+**Total:** 95/116 tasks completed
 
 ## Execution Configuration
 
@@ -642,9 +642,9 @@ independent root verification without authorizing another review cycle.
 
 ## Phase 3: Reviewer Plan and Evidence Contract
 
-**Status:** in_review
+**Status:** completed
 **Started:** 2026-07-31
-**Completed:** -
+**Completed:** 2026-07-31
 
 ### Task p03-t01: Define the canonical plan-first reviewer contract
 
@@ -808,7 +808,7 @@ automatic fix iteration, then independently re-review the updated range.
 
 ## Phase 4: Output Accounting and Coordinator Integration
 
-**Status:** in_review
+**Status:** in_progress
 **Started:** 2026-07-31
 
 ### Task p04-t01: Parse exact artifact accounting grammar
@@ -908,6 +908,10 @@ review-help snapshot without unrelated churn.
 **Recovery:** `055b5b21` preserved autonomy inventory wording compatibility
 without changing the launcher-private publication behavior.
 
+### Task p04-t18: (re-review C1) Bind final coverage to validated worker coverage
+
+**Status:** pending
+
 ### Phase Verification
 
 - Focused Phase 4 union passed 253 tests.
@@ -958,6 +962,37 @@ without changing the launcher-private publication behavior.
 - C6 (validation discards the only accepted artifact snapshot) → p04-t17
 
 **Next:** Independently re-review the Phase 4 fix range.
+
+### Review Received: p04 (cycle 2)
+
+**Date:** 2026-07-31
+**Review artifact:**
+`reviews/archived/p04-review-2026-07-31T164356Z.md`
+
+**Verdict:** Failed
+
+**Findings:**
+
+- Critical: 1
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** p04-t18
+
+**Finding disposition map:**
+
+- C1 (contingency coverage treats uninspected lane work as worker-covered) →
+  p04-t18 (`code_fix_required`). The finding is valid: final coverage currently
+  starts from the permitted contingency subset rather than the complete lane
+  assignment and validated worker result, so a strict-subset contingency can
+  turn an uncovered lane into accepted complete output. Six prior findings are
+  resolved.
+
+**Task Scope:** Moderate
+
+**Next:** Execute the final automatic Phase 4 fix task, then run the cycle-3
+narrowed re-review.
 
 ---
 
