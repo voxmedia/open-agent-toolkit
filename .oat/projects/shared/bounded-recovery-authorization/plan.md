@@ -216,9 +216,9 @@ stop boundaries, skill versions, and non-consumer default-deny assertions pass.
 
 ---
 
-## Phase p-rev1: Final Reserved Attempt Revision
+## Revision Phase 1: Final Reserved Attempt Revision
 
-### Task prev1-t01: (revision) Distinguish Pending Completion from New Reservation
+### Task p-rev1-t01: (revision) Distinguish Pending Completion from New Reservation
 
 **Authorization:** Explicit operator direction after the Phase 1 three-cycle
 review cap was exhausted. This is a new planned revision phase, not a fourth
@@ -278,7 +278,7 @@ Expected: The isolated active project remains unchanged.
 
 **Step 5: Commit**
 
-Commit: `fix(prev1-t01): distinguish reserved recovery attempts`
+Commit: `fix(p-rev1-t01): distinguish reserved recovery attempts`
 
 ---
 

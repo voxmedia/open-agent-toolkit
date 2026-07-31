@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: prev1-t01
+oat_current_task_id: p-rev1-t01
 oat_generated: false
 ---
 
@@ -124,12 +124,12 @@ oat_generated: false
 
 ---
 
-## Phase p-rev1: Final Reserved Attempt Revision
+## Revision Phase 1: Final Reserved Attempt Revision
 
 **Status:** in_progress
 **Started:** 2026-07-31
 
-### Task prev1-t01: (revision) Distinguish Pending Completion from New Reservation
+### Task p-rev1-t01: (revision) Distinguish Pending Completion from New Reservation
 
 **Status:** in_progress
 **Commit:** -
@@ -257,9 +257,10 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review  | Source Artifact | Planned / Documented                        | Actual / Accepted                                 | Reason                                                                                             | Source of Truth | Follow-up                                         |
-| -------------- | --------------- | ------------------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------- |
-| p01 review 3/3 | plan.md         | Phase 1 must pass before provider/docs work | Added narrow revision phase p-rev1 before Phase 2 | Terminal review found one attempt-boundary defect; operator explicitly authorized a revision phase | Revised plan.md | Implement and review p-rev1 without reopening p01 |
+| Task / Review   | Source Artifact    | Planned / Documented                        | Actual / Accepted                                   | Reason                                                                                             | Source of Truth | Follow-up                                                       |
+| --------------- | ------------------ | ------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------- | --------------------------------------------------------------- |
+| p01 review 3/3  | plan.md            | Phase 1 must pass before provider/docs work | Added narrow revision phase p-rev1 before Phase 2   | Terminal review found one attempt-boundary defect; operator explicitly authorized a revision phase | Revised plan.md | Implement and review p-rev1 without reopening p01               |
+| p-rev1 identity | plan-and-resume.md | Revision tasks use `prev1-t01`              | Used executable status-parser identity `p-rev1-t01` | `oat project status` otherwise omits the revision phase from dispatch state                        | CLI parser      | Preserve scope; do not expand this revision into parser cleanup |
 
 ## Test Results
 
