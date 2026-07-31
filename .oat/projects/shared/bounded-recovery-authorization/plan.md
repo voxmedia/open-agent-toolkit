@@ -387,6 +387,42 @@ Commit: `docs(p03-t01): explain bounded phase recovery`
 
 ---
 
+### Task p03-t02: (review) Clarify Recovery Ledger Ownership
+
+**Files:**
+
+- Modify:
+  `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+
+**Step 1: Understand the issue**
+
+Review finding I1: the ownership section categorically says the phase
+implementer does not mutate project bookkeeping, but the shipped recovery
+contract requires a narrow durable attempt-ledger write.
+
+Location:
+`apps/oat-docs/docs/workflows/projects/implementation-execution.md:85`
+
+**Step 2: Implement fix**
+
+Qualify the ownership sentence: the phase implementer does not mutate general
+project bookkeeping, but while it owns the worktree it may atomically update
+only the active phase's authoritative
+`oat_phase_recovery_policy.phase_attempt_usage.<pNN>` entry. State that the root
+validates the entry and later clears a reconciled pending marker.
+
+**Step 3: Verify**
+
+Run: `pnpm check && pnpm build:docs && git diff --check`
+Expected: Documentation checks and build pass; the ownership section matches
+the canonical attempt-ledger contract.
+
+**Step 4: Commit**
+
+Commit: `fix(p03-t02): clarify recovery ledger ownership`
+
+---
+
 ## Phase 4: Lockstep Release and Full Verification
 
 ### Task p04-t01: Bump Public Packages and Validate the Release
@@ -444,17 +480,17 @@ validation all pass from a clean post-task tree.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | ------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | received | 2026-07-31 | reviews/p01-review-2026-07-31T175303Z.md    | a2d875bb379941301c3ed811b40cfee7a40148e8 | auto       | -           |
-| p-rev1 | code     | passed   | 2026-07-31 | reviews/p-rev1-review-2026-07-31T191244Z.md | 53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc | auto       | -           |
-| p02    | code     | passed   | 2026-07-31 | reviews/p02-review-2026-07-31T193213Z.md    | 395fca50e96ec4f895d3b9ad828b0900f67ce95e | auto       | -           |
-| p03    | code     | pending  | -          | -                                           | -                                        | -          | -           |
-| p04    | code     | pending  | -          | -                                           | -                                        | -          | -           |
-| final  | code     | pending  | -          | -                                           | -                                        | -          | -           |
-| spec   | artifact | pending  | -          | -                                           | -                                        | -          | -           |
-| design | artifact | passed   | 2026-07-31 | user-approved lightweight design            | -                                        | manual     | -           |
-| plan   | artifact | passed   | 2026-07-31 | structured review rounds 1-3                | -                                        | auto       | -           |
+| Scope  | Type     | Status      | Date       | Artifact                                          | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | received    | 2026-07-31 | reviews/p01-review-2026-07-31T175303Z.md          | a2d875bb379941301c3ed811b40cfee7a40148e8 | auto       | -           |
+| p-rev1 | code     | passed      | 2026-07-31 | reviews/p-rev1-review-2026-07-31T191244Z.md       | 53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc | auto       | -           |
+| p02    | code     | passed      | 2026-07-31 | reviews/p02-review-2026-07-31T193213Z.md          | 395fca50e96ec4f895d3b9ad828b0900f67ce95e | auto       | -           |
+| p03    | code     | fixes_added | 2026-07-31 | reviews/archived/p03-review-2026-07-31T194702Z.md | 431841fc74e3453a86317366a78f767a2e94186d | auto       | -           |
+| p04    | code     | pending     | -          | -                                                 | -                                        | -          | -           |
+| final  | code     | pending     | -          | -                                                 | -                                        | -          | -           |
+| spec   | artifact | pending     | -          | -                                                 | -                                        | -          | -           |
+| design | artifact | passed      | 2026-07-31 | user-approved lightweight design                  | -                                        | manual     | -           |
+| plan   | artifact | passed      | 2026-07-31 | structured review rounds 1-3                      | -                                        | auto       | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -480,10 +516,10 @@ cell; never truncate a widened row back to five columns.
 - Phase 1: 2 tasks - Canonical dispatch and phase recovery contracts
 - Phase p-rev1: 1 task - Final reserved-attempt boundary revision
 - Phase 2: 1 task - Provider regeneration and semantic parity
-- Phase 3: 1 task - Public recovery and migration documentation
+- Phase 3: 2 tasks - Public recovery and migration documentation
 - Phase 4: 1 task - Lockstep release bump and full verification
 
-**Total: 6 tasks**
+**Total: 7 tasks**
 
 Ready for code review and merge.
 

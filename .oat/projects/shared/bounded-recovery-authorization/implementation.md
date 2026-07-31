@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status         | Tasks | Completed |
-| ------------ | -------------- | ----- | --------- |
-| Phase 1      | review_failed  | 2     | 2/2       |
-| Phase p-rev1 | passed         | 1     | 1/1       |
-| Phase 2      | passed         | 1     | 1/1       |
-| Phase 3      | review_pending | 1     | 1/1       |
-| Phase 4      | pending        | 1     | 0/1       |
+| Phase        | Status        | Tasks | Completed |
+| ------------ | ------------- | ----- | --------- |
+| Phase 1      | review_failed | 2     | 2/2       |
+| Phase p-rev1 | passed        | 1     | 1/1       |
+| Phase 2      | passed        | 1     | 1/1       |
+| Phase 3      | in_progress   | 2     | 1/2       |
+| Phase 4      | pending       | 1     | 0/1       |
 
-**Total:** 5/6 tasks completed
+**Total:** 5/7 tasks completed
 
 ---
 
@@ -197,8 +197,31 @@ oat_generated: false
 
 ## Phase 3: Public Recovery Documentation
 
-**Status:** review_pending
+**Status:** in_progress
 **Started:** 2026-07-31
+
+### Review Received: p03 cycle 1/3
+
+**Date:** 2026-07-31
+**Review artifact:**
+`reviews/archived/p03-review-2026-07-31T194702Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**Finding disposition:**
+
+- I1 — convert to `p03-t02` (Minor task scope): qualify the general
+  bookkeeping prohibition with the exact active-phase attempt-ledger exception.
+
+**New tasks added:** `p03-t02`
+
+**Next:** Execute the bounded fix through the original Phase 3 implementation
+handle, then run fresh review cycle 2/3.
 
 ### Task p03-t01: Explain Prevention, Recovery, and Migration
 
@@ -217,6 +240,11 @@ oat_generated: false
 - `pnpm check`: passed
 - `pnpm build:docs`: passed
 - Protected paths, commit integrity, clean tree, and `git diff --check`: passed
+
+### Task p03-t02: (review) Clarify Recovery Ledger Ownership
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -415,13 +443,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run the fresh root-owned Phase 3 review.
+- Execute Phase 3 review fix `p03-t02`.
 
 **Blockers:**
 
 - None.
 
-**Session End:** Phase 3 review pending
+**Session End:** Phase 3 review fix pending
 
 ---
 
