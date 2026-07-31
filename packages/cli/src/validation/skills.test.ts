@@ -910,6 +910,22 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('requires direct phase review to publish only validated artifact snapshots', async () => {
+    const entry = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const reference = await readRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const content = `${entry}\n${reference}`.replace(/\s+/g, ' ');
+    expect(content).toMatch(
+      /direct phase review[\s\S]*prepare-context[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*publishAcceptedArtifact/i,
+    );
+    expect(content).toContain(
+      'Gate and checkpoint/final aliases inherit this coordinator; they do not create another authoritative context.',
+    );
+  });
+
   it('keeps reviewer-local reconnaissance bounded and advisory', async () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';

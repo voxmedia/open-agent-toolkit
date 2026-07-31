@@ -127,6 +127,31 @@ commit range, task IDs and boundaries, artifacts, verification evidence,
 configured axes, selection reason, and candidates. Require a timestamped review
 artifact under the project's `reviews/` directory.
 
+The direct phase review is a first-class shared artifact coordinator. Before
+launch, invoke launcher-owned `oat review prepare-context` for the phase range,
+artifact sink, invocation, and resolved budget. Pre-compute the final review
+path but pass only the private draft path and supplied command invocations to
+the reviewer. On host acceptance, bind and retain the exact accepted reviewer
+handle. That handle performs required artifact intake, invokes
+`checkpointArtifacts`, submits `ReviewPlanV1` through `validate-plan`, retains
+`PlanValidationReceiptV1`, invokes `begin-evidence`, executes selective
+evidence, and returns one `ReviewerTerminalV1`.
+
+Submit the terminal through launcher-owned `validate-output`. If and only if
+all errors are within the closed encoding allowlist, offer at most two
+same-handle accounting repair turns with immutable review substance. Only an
+accepted complete terminal may call `publishAcceptedArtifact` with the
+validated immutable snapshot. After publication, continue to artifact
+confirmation, orchestration checks, and project bookkeeping. Blocked or
+accounting-invalid output remains non-actionable: delete the private draft,
+create no discoverable review artifact or ledger/log entry, and stop without a
+replacement reviewer.
+
+Gate and checkpoint/final aliases inherit this coordinator; they do not create
+another authoritative context. `oat gate review` remains an indirect consumer
+of its child project-review coordinator, while checkpoint/final aliases remain
+indirect consumers of `oat-project-review-provide`.
+
 For a managed capped review, bind the exact provider argument to the actual
 invocation: `providers.codex.dispatchArgs.variant`,
 `providers.claude.dispatchArgs.model`, or

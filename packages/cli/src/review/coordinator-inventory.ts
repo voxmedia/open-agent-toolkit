@@ -10,6 +10,8 @@ export interface ReviewCoordinatorInventoryEntry {
   tier: ReviewCoordinatorTier;
   sink: ReviewCoordinatorSink;
   authority: 'review-coordinator' | 'inherited';
+  resolution: 'direct-owner' | 'inherits-owner';
+  sharedCoordinator: 'review-validation-v1';
 }
 
 export const REVIEW_COORDINATOR_INVENTORY = [
@@ -19,6 +21,8 @@ export const REVIEW_COORDINATOR_INVENTORY = [
     tier: 'direct',
     sink: 'artifact',
     authority: 'review-coordinator',
+    resolution: 'direct-owner',
+    sharedCoordinator: 'review-validation-v1',
   },
   {
     id: 'local-artifact-tier-3',
@@ -26,6 +30,8 @@ export const REVIEW_COORDINATOR_INVENTORY = [
     tier: 'direct',
     sink: 'artifact',
     authority: 'review-coordinator',
+    resolution: 'direct-owner',
+    sharedCoordinator: 'review-validation-v1',
   },
   {
     id: 'remote-structured-tier-1',
@@ -33,6 +39,8 @@ export const REVIEW_COORDINATOR_INVENTORY = [
     tier: 'direct',
     sink: 'structured',
     authority: 'review-coordinator',
+    resolution: 'direct-owner',
+    sharedCoordinator: 'review-validation-v1',
   },
   {
     id: 'remote-structured-tier-3',
@@ -40,6 +48,8 @@ export const REVIEW_COORDINATOR_INVENTORY = [
     tier: 'direct',
     sink: 'structured',
     authority: 'review-coordinator',
+    resolution: 'direct-owner',
+    sharedCoordinator: 'review-validation-v1',
   },
   {
     id: 'direct-phase-review',
@@ -47,6 +57,8 @@ export const REVIEW_COORDINATOR_INVENTORY = [
     tier: 'direct',
     sink: 'artifact',
     authority: 'review-coordinator',
+    resolution: 'direct-owner',
+    sharedCoordinator: 'review-validation-v1',
   },
   {
     id: 'gate-review',
@@ -54,6 +66,8 @@ export const REVIEW_COORDINATOR_INVENTORY = [
     tier: 'indirect',
     sink: 'artifact',
     authority: 'inherited',
+    resolution: 'inherits-owner',
+    sharedCoordinator: 'review-validation-v1',
   },
   {
     id: 'implementation-checkpoint-final-aliases',
@@ -61,6 +75,8 @@ export const REVIEW_COORDINATOR_INVENTORY = [
     tier: 'indirect',
     sink: 'artifact',
     authority: 'inherited',
+    resolution: 'inherits-owner',
+    sharedCoordinator: 'review-validation-v1',
   },
 ] as const satisfies readonly ReviewCoordinatorInventoryEntry[];
 

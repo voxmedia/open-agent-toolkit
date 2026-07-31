@@ -30,6 +30,21 @@ describe('review coordinator inventory', () => {
     expect(
       REVIEW_COORDINATOR_INVENTORY.every(({ owner }) => owner.length > 0),
     ).toBe(true);
+    expect(
+      REVIEW_COORDINATOR_INVENTORY.every(
+        ({ sharedCoordinator }) => sharedCoordinator === 'review-validation-v1',
+      ),
+    ).toBe(true);
+    expect(
+      REVIEW_COORDINATOR_INVENTORY.filter(
+        ({ resolution }) => resolution === 'direct-owner',
+      ),
+    ).toHaveLength(5);
+    expect(
+      REVIEW_COORDINATOR_INVENTORY.filter(
+        ({ resolution }) => resolution === 'inherits-owner',
+      ),
+    ).toHaveLength(2);
   });
 
   it('explicitly excludes ad-hoc and non-code rails', () => {

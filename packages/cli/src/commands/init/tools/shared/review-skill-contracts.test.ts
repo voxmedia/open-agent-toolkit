@@ -208,6 +208,19 @@ describe('review skill contracts', () => {
     expect(rails[1]).not.toMatch(/read all files in the review scope/i);
   });
 
+  it('makes direct phase review a shared validated artifact coordinator', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const normalized = content.replace(/\s+/g, ' ');
+    expect(normalized).toMatch(
+      /direct phase review[\s\S]*prepare-context[\s\S]*accepted reviewer handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*publishAcceptedArtifact[\s\S]*bookkeeping/i,
+    );
+    expect(normalized).toContain(
+      'Gate and checkpoint/final aliases inherit this coordinator; they do not create another authoritative context.',
+    );
+  });
+
   it('keeps reviewer timestamps aligned and next-step guidance inside the artifact template', () => {
     const content = readRepoFile('.agents/agents/oat-reviewer.md');
     const templateStart = content.indexOf('````markdown\n---');
