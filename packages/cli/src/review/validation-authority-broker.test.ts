@@ -1,5 +1,6 @@
 import { execFile, spawn } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { createConnection } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
@@ -256,7 +257,7 @@ describe('validation authority broker', () => {
     };
     const receiptIndex = begin.argv.indexOf('__OAT_PLAN_RECEIPT__');
     const invalidBegin = structuredClone(begin);
-    invalidBegin.argv[receiptIndex] = 'wrong-receipt';
+    invalidBegin.argv[receiptIndex] = 'wrong-receipt-token';
     const receiptFailure = await executeCommandInvocation(invalidBegin, {
       cwd: resolve('..', '..'),
     });
@@ -304,13 +305,97 @@ describe('validation authority broker', () => {
       requestValidationAuthorityBroker(socketPath, {
         action: 'checkpoint',
         runId,
-        checkpointToken: 'unused',
+        checkpointToken: 'unused-capability-token',
       }),
     ).rejects.toMatchObject({
       name: 'ReviewDomainError',
       category: 'validation',
       code: 'validation-state-expired',
     });
+    await broker.close();
+  });
+
+  it('rejects malformed exact requests before state or capability mutation', async () => {
+    const { broker, store, socketPath } = await fixture();
+    const runId = broker.preparation.preparation.runId;
+    const before = await store.unsafeReadStateForTesting(runId);
+    const candidatePlan = {
+      ...plan(runId, 'context-digest', {
+        allowed: false,
+        estimatedTokens: null,
+        evidenceBudgetTokens: null,
+        reason: 'No sealed context budget.',
+      }),
+      unknown: true,
+    };
+    const malformedNestedPlan = plan(runId, 'context-digest', {
+      allowed: false,
+      estimatedTokens: null,
+      evidenceBudgetTokens: null,
+      reason: 'No sealed context budget.',
+    }) as unknown as Record<string, unknown>;
+    (malformedNestedPlan['verificationBoundary'] as Record<string, unknown>)[
+      'requiredClaims'
+    ] = ['invalid'];
+    const malformedRequests = [
+      `{"schemaVersion":1,"action":"checkpoint","action":"checkpoint","runId":${JSON.stringify(runId)},"checkpointToken":"valid-capability-token"}`,
+      JSON.stringify({
+        schemaVersion: 1,
+        action: 'checkpoint',
+        runId,
+        checkpointToken: 'valid-capability-token',
+        unknown: true,
+      }),
+      JSON.stringify({
+        schemaVersion: 1,
+        action: 'checkpoint',
+        runId: '../malformed',
+        checkpointToken: 'valid-capability-token',
+      }),
+      JSON.stringify({
+        schemaVersion: 1,
+        action: 'checkpoint',
+        runId,
+        checkpointToken: 'short',
+      }),
+      JSON.stringify({
+        schemaVersion: 1,
+        action: 'validate',
+        runId,
+        commandToken: 'valid-capability-token',
+        plan: candidatePlan,
+      }),
+      JSON.stringify({
+        schemaVersion: 1,
+        action: 'validate',
+        runId,
+        commandToken: 'valid-capability-token',
+        plan: malformedNestedPlan,
+      }),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        action: 'begin',
+        runId,
+        receipt: 'valid-receipt-token',
+      })} true`,
+    ];
+
+    for (const source of malformedRequests) {
+      expect(await rawBrokerRequest(socketPath, source)).toMatchObject({
+        ok: false,
+        error: {
+          category: 'input',
+          code: 'validation-authority-broker-request-invalid',
+        },
+      });
+      expect(await store.unsafeReadStateForTesting(runId)).toEqual(before);
+    }
+
+    const checkpoint = await executeCommandInvocation(
+      broker.preparation.commands.checkpointArtifacts,
+      { cwd: resolve('..', '..') },
+    );
+    expect(checkpoint.exitCode, checkpoint.stderr).toBe(0);
     await broker.close();
   });
 
@@ -436,7 +521,7 @@ describe('validation authority broker', () => {
       requestValidationAuthorityBroker(socketPath, {
         action: 'checkpoint',
         runId,
-        checkpointToken: 'forged',
+        checkpointToken: 'forged-capability',
       }),
     ).rejects.toThrow(/broker failed unexpectedly/);
     await broker.close();
@@ -469,4 +554,19 @@ async function runSourceCommand(
     stdout: Buffer.concat(stdout).toString('utf8'),
     stderr: Buffer.concat(stderr).toString('utf8'),
   };
+}
+
+async function rawBrokerRequest(
+  socketPath: string,
+  source: string,
+): Promise<unknown> {
+  const socket = createConnection(socketPath);
+  const chunks: Buffer[] = [];
+  socket.on('data', (chunk: Buffer) => chunks.push(chunk));
+  socket.end(source);
+  await new Promise<void>((resolveEnd, reject) => {
+    socket.once('end', resolveEnd);
+    socket.once('error', reject);
+  });
+  return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown;
 }

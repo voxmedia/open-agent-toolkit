@@ -581,6 +581,11 @@ describe('plan, receipt, and terminal schemas', () => {
     const invalidPlan = plan();
     invalidPlan['strategy'] = 'read-everything';
     expect(() => parseReviewPlanV1(invalidPlan)).toThrow('invalid value');
+    const planWithUnknownField = plan();
+    planWithUnknownField['unknown'] = true;
+    expect(() => parseReviewPlanV1(planWithUnknownField)).toThrow(
+      'unknown field',
+    );
 
     const invalidReceipt = receipt();
     invalidReceipt['contractVersion'] = 2;

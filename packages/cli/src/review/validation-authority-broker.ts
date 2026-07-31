@@ -5,10 +5,12 @@ import { createConnection, createServer, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { parseStrictJson } from './canonical-json';
 import { DefaultGitChangeMapAdapter } from './change-map';
 import { bindAcceptedHandle } from './command-capabilities';
 import {
   deserializeReviewError,
+  ReviewDomainError,
   type ReviewErrorEnvelopeV1,
   serializeReviewError,
 } from './errors';
@@ -21,6 +23,7 @@ import {
   checkpointArtifactsLoaded,
   validateAndReceiptPlan,
 } from './review-lifecycle';
+import { parseReviewPlanV1 } from './schemas';
 import type { PrepareReviewContextResultV1, ReviewPlanV1 } from './types';
 import { ValidationStore } from './validation-store';
 import {
@@ -49,6 +52,8 @@ type BrokerRequest =
       runId: string;
       receipt: string;
     };
+
+type VersionedBrokerRequest = BrokerRequest & { schemaVersion: 1 };
 
 interface BrokerStartup {
   input: PrepareReviewContextInput;
@@ -107,7 +112,7 @@ function readSocketJson(socket: Socket): Promise<unknown> {
     });
     socket.on('end', () => {
       try {
-        resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown);
+        resolve(parseStrictJson(Buffer.concat(chunks).toString('utf8')));
       } catch (error) {
         reject(error);
       }
@@ -121,7 +126,7 @@ export async function requestValidationAuthorityBroker<T>(
   request: BrokerRequest,
 ): Promise<T> {
   const socket = createConnection(socketPath);
-  socket.end(JSON.stringify(request));
+  socket.end(JSON.stringify({ schemaVersion: 1, ...request }));
   const response = parseBrokerResponse(await readSocketJson(socket));
   if (!response.ok) {
     throw deserializeReviewError(response.error);
@@ -190,7 +195,7 @@ export async function startPreparedValidationAuthorityBroker(input: {
     let response: BrokerResponse;
     let closeAfterResponse = false;
     try {
-      const request = (await readSocketJson(socket)) as BrokerRequest;
+      const request = await readBrokerRequest(socket);
       const lifecycle = { store };
       switch (request.action) {
         case 'checkpoint':
@@ -423,6 +428,70 @@ async function readBrokerStartupResponse(
 }
 
 export type { AcceptedContinuationBinding, BrokerRequest, BrokerStartup };
+
+async function readBrokerRequest(
+  socket: Socket,
+): Promise<VersionedBrokerRequest> {
+  try {
+    return parseBrokerRequest(await readSocketJson(socket));
+  } catch {
+    throw new ReviewDomainError({
+      category: 'input',
+      code: 'validation-authority-broker-request-invalid',
+      message: 'validation authority broker request is invalid',
+    });
+  }
+}
+
+function parseBrokerRequest(value: unknown): VersionedBrokerRequest {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error('broker request must be an object');
+  }
+  const request = value as Record<string, unknown>;
+  if (request.schemaVersion !== 1) {
+    throw new Error('broker request schema version is invalid');
+  }
+  if (!['checkpoint', 'validate', 'begin'].includes(String(request.action))) {
+    throw new Error('broker request action is invalid');
+  }
+  const action = request.action as BrokerRequest['action'];
+  const expectedKeys = {
+    checkpoint: 'action,checkpointToken,runId,schemaVersion',
+    validate: 'action,commandToken,plan,runId,schemaVersion',
+    begin: 'action,receipt,runId,schemaVersion',
+  }[action];
+  if (Object.keys(request).sort().join(',') !== expectedKeys) {
+    throw new Error('broker request fields are invalid');
+  }
+  if (
+    typeof request.runId !== 'string' ||
+    !/^[A-Za-z0-9_-]{16,128}$/.test(request.runId)
+  ) {
+    throw new Error('broker request run ID is invalid');
+  }
+  if (action === 'checkpoint') {
+    assertBrokerToken(request.checkpointToken);
+    return request as VersionedBrokerRequest;
+  }
+  if (action === 'validate') {
+    assertBrokerToken(request.commandToken);
+    return {
+      schemaVersion: 1,
+      action,
+      runId: request.runId,
+      commandToken: request.commandToken,
+      plan: parseReviewPlanV1(request.plan),
+    };
+  }
+  assertBrokerToken(request.receipt);
+  return request as VersionedBrokerRequest;
+}
+
+function assertBrokerToken(value: unknown): asserts value is string {
+  if (typeof value !== 'string' || !/^[A-Za-z0-9_-]{16,256}$/.test(value)) {
+    throw new Error('broker request token is invalid');
+  }
+}
 
 function parseBrokerResponse(value: unknown): BrokerResponse {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {

@@ -155,6 +155,31 @@ describe('validation state and gate correlation', () => {
     expect(updated.state.planValidationAttempts).toBe(1);
   });
 
+  it('validates the complete next state before atomic rename', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const store = new ValidationStore(join(parent, 'store'));
+    await store.createRun({
+      preparation: preparation(),
+      artifactDraft: false,
+    });
+    const before = await store.unsafeReadStateForTesting('abcdefghijklmnop');
+
+    await expect(
+      store.updateRun('abcdefghijklmnop', (state) => {
+        (state as unknown as Record<string, unknown>)['unknown'] = true;
+        return state;
+      }),
+    ).rejects.toThrow(/invalid schema/);
+
+    expect(await store.unsafeReadStateForTesting('abcdefghijklmnop')).toEqual(
+      before,
+    );
+    await expect(store.readRun('abcdefghijklmnop')).resolves.toMatchObject({
+      state: { phase: 'prepared', planValidationAttempts: 0 },
+    });
+  });
+
   it('recovers a lock whose owning process has died', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
     roots.push(parent);

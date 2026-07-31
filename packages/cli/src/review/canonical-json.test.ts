@@ -46,6 +46,11 @@ describe('canonical review JSON', () => {
   it('exposes a strict parser that rejects duplicate keys and trailing values', () => {
     expect(parseStrictJson('{"a":1}')).toEqual({ a: 1 });
     expect(() => parseStrictJson('{"a":1,"a":1}')).toThrow(/duplicate/);
+    expect(() =>
+      parseStrictJson(
+        '{"action":"validate","plan":{"runId":"one","runId":"two"}}',
+      ),
+    ).toThrow(/duplicate/);
     expect(() => parseStrictJson('{"a":1} true')).toThrow(/strict JSON/);
   });
 

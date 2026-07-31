@@ -634,11 +634,12 @@ export class ValidationStore {
       ) {
         throw new Error('validation update changed immutable identity');
       }
+      const validatedNext = parseValidationRunState(next, runId);
       const temporaryPath = join(
         current.runDirectory,
         `.state-${randomUUID()}.tmp`,
       );
-      await writeExclusive(temporaryPath, this.#authority.seal(next));
+      await writeExclusive(temporaryPath, this.#authority.seal(validatedNext));
       await assertOwnership();
       await rename(temporaryPath, current.statePath);
       return this.readRun(runId);
