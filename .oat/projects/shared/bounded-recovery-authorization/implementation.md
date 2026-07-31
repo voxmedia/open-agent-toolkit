@@ -398,7 +398,16 @@ _- Outstanding Items_
   `431841fc74e3453a86317366a78f767a2e94186d`
 - Verification: check, docs build, protected-path isolation, clean tree,
   commit integrity, and diff checks passed
-- Recovery/children: none
+- Recovery/children: no recovery attempts; no children
+- Continuation events:
+  - ID: `bounded-recovery-authorization-p03-review1-fix1`
+  - Original request:
+    `bounded-recovery-authorization-p03-implementation-20260731T1940Z`
+  - Mode/scope: `fix` / `p03-t02`
+  - Review/finding: cycle 1/3 / I1
+  - Issued: `2026-07-31T19:55:25Z`
+  - Status: issued after the same accepted handle returned `NEEDS_CONTEXT`
+    without edit because the prior packet omitted this identifier
 - Dispatch stamp:
   `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
 
