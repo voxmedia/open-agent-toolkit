@@ -70,6 +70,15 @@ oat_generated: false
 - Fix verification: 128 focused tests, 61 skills, lint, format, diff, and
   isolation checks passed
 
+**Review round 2:**
+
+- Artifact: `reviews/p01-review-2026-07-31T174038Z.md`
+- Reviewed head: `61c9a7c9f89c8ab9af01e2b5c8d65d68626c545f`
+- Result: 1 Important finding; second bounded fix continuation required
+- Reconnaissance: not attempted
+- Finding: make handle continuity an explicit same-handle/fresh-recover
+  alternative while keeping exact-target continuity mandatory
+
 ### Task p01-t01: Separate Standing Recovery Authority from Fallback
 
 **Status:** completed
@@ -159,6 +168,7 @@ _- Outstanding Items_
 - Phase 1 review round 1: 4 Important findings; fix continuation pending
 - Phase 1 fix round 1: done at
   `61c9a7c9f89c8ab9af01e2b5c8d65d68626c545f`; re-review pending
+- Phase 1 review round 2: 1 Important finding; fix continuation pending
 
 <!-- orchestration-runs-end -->
 
@@ -192,13 +202,14 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run a fresh root-owned Phase 1 re-review against the updated head.
+- Resume the exact Phase 1 target for the one bounded review-round-2 fix, then
+  run the third and final root-owned Phase 1 review cycle.
 
 **Blockers:**
 
 - None.
 
-**Session End:** Phase 1 re-review pending
+**Session End:** Phase 1 review-round-2 fix pending
 
 ---
 
