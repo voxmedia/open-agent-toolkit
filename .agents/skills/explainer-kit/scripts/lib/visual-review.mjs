@@ -311,9 +311,11 @@ function claimObserved(text, value, numeric) {
   const leftBoundary = startsWithDigit
     ? '[^\\p{L}\\p{N}.,]'
     : '[^\\p{L}\\p{N}]';
-  const rightBoundary = endsWithDigit ? '[^\\p{L}\\p{N}.,]' : '[^\\p{L}\\p{N}]';
+  const rightBoundary = endsWithDigit
+    ? '(?![\\p{L}\\p{N}]|[.,]\\p{N})'
+    : '(?![\\p{L}\\p{N}])';
   return new RegExp(
-    `(?:^|${leftBoundary})${escaped}(?=$|${rightBoundary})`,
+    `(?:^|${leftBoundary})${escaped}${rightBoundary}`,
     'u',
   ).test(text);
 }

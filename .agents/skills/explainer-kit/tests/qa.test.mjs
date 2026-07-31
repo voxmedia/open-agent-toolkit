@@ -25,7 +25,10 @@ import {
 import { evaluateExpansionProposals } from '../scripts/lib/recipes.mjs';
 import { renderArtifact } from '../scripts/lib/render.mjs';
 import { resolveTheme } from '../scripts/lib/theme.mjs';
-import { runVisualReview } from '../scripts/lib/visual-review.mjs';
+import {
+  cohesionEvidenceFromLedger,
+  runVisualReview,
+} from '../scripts/lib/visual-review.mjs';
 import { runRenderQaCli, runRenderQaStage } from '../scripts/render-qa.mjs';
 import { png } from './fixtures/png.mjs';
 
@@ -1030,6 +1033,23 @@ test('does not observe ledger claims inside unrelated words or numbers', async (
       .length,
     3,
   );
+});
+
+test('observes numeric ledger claims before ordinary punctuation', () => {
+  const [artifact] = cohesionEvidenceFromLedger(
+    [{ id: 'hub', html: '<p>Processed 231, with 231.</p>' }],
+    {
+      ledger: {
+        terminology: [],
+        statuses: [],
+        numbers: [{ subject: 'processed records', value: 231 }],
+      },
+    },
+  );
+
+  assert.deepEqual(artifact.cohesion.numericClaims, {
+    'processed records': 231,
+  });
 });
 
 test('composes structural, cohesion and optional browser checks', async () => {
