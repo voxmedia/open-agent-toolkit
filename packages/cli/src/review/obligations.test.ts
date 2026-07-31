@@ -29,8 +29,19 @@ describe('requirement obligations', () => {
     '## Requirement Index\n\n| ID | X |\n| --- | --- |\n| FR1 | x | extra |\n',
     '## Requirement Index\n\n| Wrong | X |\n| --- | --- |\n| FR1 | x |\n',
     '## Requirement Index\n\n| ID | X |\n| --- | --- |\n| FR1 | x |\ntrailing\n',
+    '## Requirement Index\n\n| ID | X |\n| --- | --- |\n| FR1 | x |\n\ntrailing after blank\n',
+    '## Requirement Index\n\n| ID | X |\n| --- | --- |\n| FR1 | x |\n\n| Extra | Table |\n| --- | --- |\n| value | value |\n',
   ])('rejects malformed Requirement Index input', (source) => {
     expect(() => parseRequirementObligations(source, 'spec.md')).toThrow();
+  });
+
+  it('ends the Requirement Index at the next structural heading', () => {
+    expect(
+      parseRequirementObligations(
+        '## Requirement Index\n\n| ID | X |\n| --- | --- |\n| FR1 | x |\n\n## Requirements\n\n### FR1\n',
+        'spec.md',
+      ),
+    ).toMatchObject([{ id: 'FR1' }]);
   });
 });
 

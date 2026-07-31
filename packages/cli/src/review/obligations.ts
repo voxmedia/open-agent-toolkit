@@ -26,11 +26,9 @@ export function parseRequirementObligations(
   if (table.headers[0] !== 'ID') {
     throw new Error('Requirement Index first header must be ID');
   }
-  if (
-    table.endIndex < lines.length &&
-    lines[table.endIndex] !== '' &&
-    !lines[table.endIndex]!.startsWith('## ')
-  ) {
+  let sectionEnd = table.endIndex;
+  while (lines[sectionEnd] === '') sectionEnd++;
+  if (sectionEnd < lines.length && !lines[sectionEnd]!.startsWith('## ')) {
     throw new Error('Requirement Index has trailing content');
   }
   const seen = new Set<string>();
