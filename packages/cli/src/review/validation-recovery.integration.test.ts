@@ -55,6 +55,30 @@ function preparation(runId: string, expiresAt: string): ReviewPreparationV1 {
 }
 
 describe('validation recovery integration', () => {
+  it('never resolves an unbound tuple that shares its legacy filename', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validation-correlation-'));
+    roots.push(root);
+    const store = new ValidationStore(join(root, 'private-store'));
+    const correlated = preparation(
+      'correlatedrun001',
+      '2098-01-01T02:00:00.000Z',
+    );
+    correlated.invocation = 'gate';
+    correlated.correlation = {
+      gateRunId: 'a-b',
+      launchAttemptId: 'c',
+    };
+    await store.createRun({ preparation: correlated, artifactDraft: false });
+    await store.bindGateCorrelation('a-b', 'c', correlated.runId);
+
+    await expect(store.resolveGateCorrelation('a-b', 'c')).resolves.toBe(
+      correlated.runId,
+    );
+    await expect(
+      store.resolveGateCorrelation('a', 'b-c'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
   it('reaps a crashed expired run without disturbing a live sibling', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validation-recovery-'));
     roots.push(root);

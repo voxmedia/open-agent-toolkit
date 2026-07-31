@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { constants } from 'node:fs';
 import {
   chmod,
@@ -146,7 +146,10 @@ export class ValidationStore {
     ) {
       throw new Error('gate correlation IDs are malformed');
     }
-    return join(this.root, `correlation-${gateRunId}-${launchAttemptId}.json`);
+    const tupleDigest = createHash('sha256')
+      .update(JSON.stringify([gateRunId, launchAttemptId]))
+      .digest('hex');
+    return join(this.root, `correlation-${tupleDigest}.json`);
   }
 
   async createRun(input: {
@@ -306,7 +309,12 @@ export class ValidationStore {
       }
       await writeExclusive(
         this.correlationPath(gateRunId, launchAttemptId),
-        `${JSON.stringify({ schemaVersion: 1, runId })}\n`,
+        `${JSON.stringify({
+          schemaVersion: 1,
+          gateRunId,
+          launchAttemptId,
+          runId,
+        })}\n`,
       );
     });
   }
@@ -324,12 +332,25 @@ export class ValidationStore {
       }
       const record = JSON.parse(await handle.readFile('utf8')) as {
         schemaVersion?: unknown;
+        gateRunId?: unknown;
+        launchAttemptId?: unknown;
         runId?: unknown;
       };
-      if (record.schemaVersion !== 1 || typeof record.runId !== 'string') {
+      if (
+        record.schemaVersion !== 1 ||
+        record.gateRunId !== gateRunId ||
+        record.launchAttemptId !== launchAttemptId ||
+        typeof record.runId !== 'string'
+      ) {
         throw new Error('gate correlation schema is invalid');
       }
-      await this.readRun(record.runId);
+      const run = await this.readRun(record.runId);
+      if (
+        run.state.preparation.correlation.gateRunId !== gateRunId ||
+        run.state.preparation.correlation.launchAttemptId !== launchAttemptId
+      ) {
+        throw new Error('gate correlation does not match validation state');
+      }
       return record.runId;
     } finally {
       await handle.close();

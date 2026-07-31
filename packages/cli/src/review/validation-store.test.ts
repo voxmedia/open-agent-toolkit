@@ -4,6 +4,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  readdir,
   rm,
   stat,
   symlink,
@@ -223,5 +224,69 @@ describe('validation state and gate correlation', () => {
     await expect(
       store.resolveGateCorrelation('gate-1', 'attempt-1'),
     ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('encodes colliding tuples injectively', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const store = new ValidationStore(join(parent, 'store'));
+    const gatePreparation = preparation('collisionrun0001');
+    gatePreparation.invocation = 'gate';
+    gatePreparation.correlation = {
+      gateRunId: 'a-b',
+      launchAttemptId: 'c',
+    };
+    await store.createRun({
+      preparation: gatePreparation,
+      artifactDraft: false,
+    });
+    await store.bindGateCorrelation('a-b', 'c', gatePreparation.runId);
+
+    await expect(store.resolveGateCorrelation('a-b', 'c')).resolves.toBe(
+      gatePreparation.runId,
+    );
+    await expect(
+      store.resolveGateCorrelation('a', 'b-c'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('rejects tampered index records and loaded-run tuple mismatches', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const store = new ValidationStore(join(parent, 'store'));
+    const gatePreparation = preparation('tamperedrun00001');
+    gatePreparation.invocation = 'gate';
+    gatePreparation.correlation = {
+      gateRunId: 'gate',
+      launchAttemptId: 'attempt',
+    };
+    const created = await store.createRun({
+      preparation: gatePreparation,
+      artifactDraft: false,
+    });
+    await store.bindGateCorrelation('gate', 'attempt', gatePreparation.runId);
+    const correlationName = (await readdir(store.root)).find((name) =>
+      name.startsWith('correlation-'),
+    )!;
+    const correlationPath = join(store.root, correlationName);
+    const record = JSON.parse(await readFile(correlationPath, 'utf8')) as {
+      gateRunId: string;
+    };
+    record.gateRunId = 'other';
+    await writeFile(correlationPath, JSON.stringify(record), { mode: 0o600 });
+    await expect(
+      store.resolveGateCorrelation('gate', 'attempt'),
+    ).rejects.toThrow(/schema/);
+
+    await rm(correlationPath);
+    await store.bindGateCorrelation('gate', 'attempt', gatePreparation.runId);
+    const state = JSON.parse(await readFile(created.statePath, 'utf8')) as {
+      preparation: ReviewPreparationV1;
+    };
+    state.preparation.correlation.launchAttemptId = 'other';
+    await writeFile(created.statePath, JSON.stringify(state), { mode: 0o600 });
+    await expect(
+      store.resolveGateCorrelation('gate', 'attempt'),
+    ).rejects.toThrow(/does not match/);
   });
 });
