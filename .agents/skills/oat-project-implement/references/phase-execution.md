@@ -27,9 +27,11 @@ Before each phase:
    `phase_attempt_limits.<pNN>` value when present, otherwise
    `default_attempt_limit`, which defaults to `10`. Both project-default and
    phase-specific limits must be integers from `0` through `20`; fail closed on
-   malformed values. Start `phase_recovery_attempts_used` at the durable count
-   already recorded for this phase, never at zero merely because execution
-   resumed.
+   malformed values. Read `phase_recovery_attempts_used` only from the
+   authoritative
+   `oat_phase_recovery_policy.phase_attempt_usage.<pNN>.used_attempts` ledger in
+   `state.md`, never from a report summary or a reset local counter. Reconcile
+   any `pending_attempt` before launch.
 2. Resolve one exact phase implementer target with
    `--role implementer --ceiling-tier <project-or-phase-named-tier> --task-class <task-class> [--task-effort <codex-preferred-effort>] --report-scope <pNN> --report-action implementation`.
    Use the phase scope, not each task ID. Omit `--ceiling-tier` only for
@@ -62,6 +64,8 @@ Before each phase:
    request_id: {generic dispatch request ID}
    phase_recovery_limit: {resolved 0-20 limit}
    phase_recovery_attempts_used: {durable prior usage, initially 0}
+   attempt_usage_ledger: {state.md oat_phase_recovery_policy.phase_attempt_usage.<pNN>}
+   pending_attempt: {reconciled pending entry or null}
    original_request_id: {same generic phase dispatch request ID}
    phase_recovery_authorization: {phase-standing|operator-extension}
    dispatch_policy: {resolver policy}
@@ -113,7 +117,45 @@ configuration.
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {} # optional pNN: 0-20 overrides
+  phase_attempt_usage:
+    pNN:
+      used_attempts: 0
+      pending_attempt: null
 ```
+
+A phase's `phase_attempt_usage.<pNN>` entry in `state.md` is the authoritative
+durable usage ledger. The count is monotonic and survives process, handle, and
+session interruption. Reports and canonical events corroborate the ledger; they
+never replace it.
+
+For a new attempt, the phase implementer that owns the worktree atomically
+increments `used_attempts` and writes `pending_attempt` before edit. The pending
+entry records attempt number, event ID, original request, original task/commit,
+discovering check, exact dispatch target, reservation HEAD, and status. The
+agent's narrow ledger write is the only project-state write allowed while it
+owns the worktree; no root writer may race it.
+
+On return or resume, reconcile the ledger against the original commit, current
+HEAD, bounded diff, report, and canonical event:
+
+- a settled ledger has `pending_attempt: null` and a nondecreasing
+  `used_attempts`;
+- a pending attempt continues, after every recorded identity and bounded diff
+  reconcile, as the same attempt without consuming another;
+- an interruption preserves the consumed reservation in the working tree, even
+  if no recovery commit exists yet;
+- an unreconciled pending attempt, regressed count, missing reservation, or
+  unexplained dirty file rejects and blocks resume before editing; and
+- when `used_attempts` is equal to or greater than `phase_recovery_limit`, no
+  new attempt may be reserved because the phase recovery budget is exhausted.
+  An already-pending attempt may only finish or fail.
+
+After verification, the agent atomically marks the pending entry `completed` or
+`failed`. A successful recovery commit includes that ledger transition. Root
+bookkeeping clears `pending_attempt` only after validating the matching report
+and event, and always preserves `used_attempts`. Failed edit, commit, or
+re-verification paths retain the consumed count. No retry, fresh launch,
+extension, or nonzero resume resets usage.
 
 A project default limit of `0` stops automatic recovery for direction without
 edit, commit, attempt consumption, or fallback. A phase-specific override of
@@ -177,6 +219,39 @@ fresh record to the original request through the generic dispatch record's
 existing `continuation_events`. Missing or changed provenance stops; it never
 creates route eligibility.
 
+Before that fresh launch, reconcile or create exactly one authoritative pending
+attempt reservation. Launch the exact original phase-agent target in
+`mode: recover` with this isolated scope:
+
+```yaml
+mode: recover
+phase: { pNN }
+original_request_id: { original phase request }
+continuation_event: { generic continuation_events identifier }
+recovery_base_head: { current immutable Git HEAD }
+original_task_id: { originating planned task }
+original_commit: { immutable task commit }
+defect_class: { lint|type|test|build|composition|other }
+discovered_by: { exact command or transition check }
+bounded_correction_scope: { mechanical correction only }
+bounded_files: { declared or mechanically derived in-phase files }
+phase_recovery_limit: { resolved total limit }
+phase_recovery_attempts_used: { authoritative nonzero used count }
+pending_attempt: { matching authoritative ledger entry }
+focused_verification: { exact failing check }
+phase_verification: { relevant phase command }
+dispatch_target: { exact original launcher-owned target }
+dispatch_axes: { unchanged original axes }
+dispatch_stamp: { original formal Dispatch line }
+```
+
+Recover mode never replays planned tasks and never consumes review findings.
+Require its Phase Recovery Continuation Report, matching canonical event,
+ledger reconciliation, immutable-history proof, focused/phase verification,
+and recovery commit when successful. A missing field, changed target, unrelated
+dirty diff, or unreconciled reservation is an accepted terminal stop, not
+fallback eligibility.
+
 Exhaustion requires operator direction with one of these durable outcomes:
 
 1. **Add N attempts:** set the active phase's total
@@ -217,10 +292,24 @@ does not infer or reconstruct them.
 
 #### Verify the Phase Report
 
-On return:
+On return, select exactly one branch from this status matrix:
 
-- require `DONE` or `DONE_WITH_CONCERNS`;
-- verify phase ID, request ID, phase base, task count, and phase verification;
+| Report status        | Validation branch                                            | Root action                                                                 |
+| -------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `DONE`               | accepted success                                             | Validate the complete report and continue lifecycle execution.              |
+| `DONE_WITH_CONCERNS` | accepted success or accepted terminal stop, from event state | Continue only for validated success; otherwise record the stop and return.  |
+| `BLOCKED`            | accepted terminal stop                                       | Validate the complete terminal evidence, record it, and stop.               |
+| `NEEDS_CONTEXT`      | context-only continuation                                    | Supply only missing artifact context through the original accepted handle.  |
+| `INVALID_RUN_ABORT`  | invalid-run terminal                                         | Preserve invalidating evidence and terminate every handle owned by the run. |
+
+`INVALID_RUN_ABORT` terminates every accepted handle and never authorizes
+fallback, replacement, or sequential degradation.
+
+Both accepted success and accepted terminal-stop branches must:
+
+- verify phase ID, request ID, phase or recovery base, and phase verification;
+- for a Phase Implementation Report, verify task count; for a Phase Recovery
+  Continuation Report, verify the original task and commit instead;
 - for each task, verify its commit is exactly one append-only commit in plan
   order, changes only declared files, and has passing task verification;
 - for each reported recovery, verify attempt accounting, the immutable original
@@ -230,18 +319,33 @@ On return:
 - verify recovered, direction-required, and failed-attempt dispositions are all
   represented without gaps or duplicate events;
 - verify the reported commit range equals the worktree's range from
-  `PHASE_BASE_HEAD` to HEAD;
-- require a clean worktree; and
+  `PHASE_BASE_HEAD` to HEAD for implementation, or from `recovery_base_head` to
+  HEAD for recover mode;
+- verify the worktree state matches the selected branch; and
 - validate every optional child record without requiring any child.
+
+The accepted success branch requires passing phase verification, a reconciled
+settled ledger, no unresolved direction-required event, a clean worktree, and
+then continues.
+
+The accepted terminal-stop branch validates provenance, attempt accounting,
+immutable history, canonical recovery event shape, commit range, and ledger
+state before bookkeeping. Its worktree may retain only the reconciled pending
+ledger reservation and bounded failed-attempt diff named by the report; any
+other dirt is invalid. A valid `BLOCKED` report is recorded, then stops without
+continuation or fallback. `DONE_WITH_CONCERNS` uses this terminal branch when it
+reports an unresolved direction-required or failed-attempt disposition;
+otherwise it may use the success branch only when every success invariant
+passes.
 
 A dirty worktree, unverifiable commit range, missing provenance, malformed
 recovery event, rewritten original commit, or recovery commit outside the
 declared/mechanically derived phase boundary blocks continuation.
 
 `NEEDS_CONTEXT` may receive only missing artifact context through the original
-handle. `BLOCKED` is terminal for the attempt. `INVALID_RUN_ABORT` terminates
-every accepted handle owned by the run, preserves invalidating evidence, and
-never authorizes fallback, replacement, or sequential degradation. Sequential
+handle. It cannot change target or scope. `INVALID_RUN_ABORT` terminates every
+accepted handle owned by the run, preserves invalidating evidence, and never
+authorizes fallback, replacement, or sequential degradation. Sequential
 degradation is forbidden for the invalid run.
 
 ### Per-Phase Review

@@ -26,7 +26,7 @@ The root supplies:
 
 - `project`: active OAT project path;
 - `phase`: one phase ID;
-- `mode`: `implement` or `fix`;
+- `mode`: `implement`, `fix`, or `recover`;
 - `artifact_paths`: available plan, design, spec, discovery, implementation,
   and imported-plan paths;
 - `workflow_mode`: `spec-driven`, `quick`, or `import`;
@@ -47,8 +47,21 @@ Fix mode also supplies:
 - `original_request_id`: original phase dispatch request;
 - `continuation_event`: resume linkage for this fix attempt.
 
+Recover mode also supplies:
+
+- `original_request_id` and `continuation_event`;
+- `recovery_base_head`, `original_task_id`, and immutable `original_commit`;
+- `defect_class`, `discovered_by`, `bounded_correction_scope`, and
+  `bounded_files`;
+- `phase_recovery_limit`, `phase_recovery_attempts_used`, and the authoritative
+  `pending_attempt` ledger entry;
+- `focused_verification` and `phase_verification`; and
+- the exact original `dispatch_target` plus launcher-owned axes and stamp.
+
 Reject a missing/unknown phase, an unrecognized mode, a base mismatch, or a
-fix request without bounded findings.
+fix request without bounded findings. Reject recover mode when any recover input
+is absent, the continuation does not link to the original request, or the
+pending attempt cannot be reconciled.
 
 ## Shared Dispatch Contract
 
@@ -173,6 +186,59 @@ commit when one exists, verification outcome, and reason. This allows defect
 count, prompt count, and successful repair count to remain independently
 measurable.
 
+### Authoritative Attempt Ledger
+
+The active project's
+`oat_phase_recovery_policy.phase_attempt_usage.<pNN>` entry in `state.md` is the
+one authoritative durable per-phase attempt ledger. The phase implementer has a
+narrow exception to root-owned bookkeeping: while it owns the worktree, it may
+atomically replace only that ledger entry. It must not alter any other project
+tracking field.
+
+Before the first code edit for a new recovery attempt, atomically increment
+`used_attempts` and write `pending_attempt` with the attempt number, event ID,
+original request, original task/commit, discovering check, exact target, and
+reservation HEAD. This reservation happens before editing and survives
+interruption. Never decrement or reset `used_attempts`.
+
+On same-handle resume or recover mode, reconcile the supplied nonzero
+`used_attempts` and `pending_attempt` against `state.md`, Git history, and the
+bounded worktree diff. Continue the same attempt without consuming another
+attempt. Reject an unreconciled resume before further editing. A new attempt is
+exhausted when `used_attempts` is equal to or greater than
+`phase_recovery_limit`; an already-pending attempt may only finish or fail and
+does not receive another reservation.
+
+After the focused and phase checks, atomically mark the pending entry
+`completed` or `failed`. A successful recovery commit includes the bounded code
+change and this ledger transition. If interruption or commit failure leaves the
+ledger reservation uncommitted, preserve the working tree; the root must
+reconcile it before any continuation. The root later clears `pending_attempt`
+only after validating the matching canonical event, while retaining the
+monotonic `used_attempts`.
+
+### Canonical Recovery Event
+
+Emit this exact heading, label order, and enum vocabulary for every post-commit
+disposition:
+
+```markdown
+### Recovery Event {event-id}
+
+- Phase/task: {phase and originating task when known}
+- Original request: {original_request_id}
+- Original commit: {immutable task commit}
+- Defect class: lint | type | test | build | composition | other
+- Discovered by: {exact verification command or transition check}
+- Disposition: recovered | direction-required | failed-attempt
+- Authorization: phase-standing | operator-extension | operator-scope
+- Attempt: {used}/{phase_recovery_limit}
+- Dispatch target: {exact launcher-owned implementation target}
+- Recovery commit: {sha or -}
+- Verification: {focused and relevant phase result}
+- Reason: {eligibility or stop-boundary evidence}
+```
+
 ## Mode: Implement
 
 ### 1. Verify Phase Base
@@ -276,6 +342,82 @@ report.
 ### Concerns or Block
 
 - {None or concise reason/evidence}
+```
+
+## Mode: Recover
+
+Recover mode is a continuation of a post-commit recovery attempt already
+authorized when the original accepted handle cannot resume. It is not phase
+implementation, review-fix mode, fallback, or replay.
+
+Require this self-contained Recover Scope:
+
+```yaml
+mode: recover
+original_request_id: { original phase request }
+continuation_event: { generic continuation_events identifier }
+recovery_base_head: { current immutable Git HEAD }
+original_task_id: { originating planned task }
+original_commit: { immutable task commit }
+defect_class: { lint|type|test|build|composition|other }
+discovered_by: { exact command or transition check }
+bounded_correction_scope: { mechanical correction only }
+bounded_files: { declared or mechanically derived in-phase files }
+phase_recovery_limit: { resolved total limit }
+phase_recovery_attempts_used: { authoritative nonzero used count }
+pending_attempt: { matching authoritative ledger entry }
+focused_verification: { exact failing check }
+phase_verification: { relevant phase command }
+dispatch_target: { exact original launcher-owned target }
+dispatch_axes: { unchanged original launcher-owned axes }
+dispatch_stamp: { original formal Dispatch line }
+```
+
+1. Validate every recover input. Confirm the exact launcher-owned target equals
+   the original target and the generic `continuation_events` record links
+   `continuation_event` to `original_request_id`.
+2. Confirm HEAD exactly equals `recovery_base_head`; the `original_commit`
+   remains immutable at the same history position; and the worktree contains
+   only the reconciled pending ledger reservation plus an optional mechanically
+   bounded diff inside `bounded_files`. Any other dirt or history change
+   blocks.
+3. Reconcile the authoritative `pending_attempt` and nonzero
+   `phase_recovery_attempts_used` with `state.md`. Recover mode continues that
+   same consumed attempt and must not increment usage again. Missing,
+   contradictory, or unreconciled state blocks before editing.
+4. Apply or complete only `bounded_correction_scope`. Recover mode must not
+   replay planned tasks and must not require, fabricate, or consume a review
+   artifact.
+5. Run `focused_verification`, then `phase_verification`. Atomically mark the
+   pending ledger entry completed or failed and emit exactly one Canonical
+   Recovery Event.
+6. On success, create one append-only recovery commit containing only
+   `bounded_files` plus the authoritative ledger transition. On failure,
+   preserve the consumed attempt and evidence; do not amend history or launch
+   fallback.
+7. Return the report below. `DONE` is accepted success;
+   `DONE_WITH_CONCERNS` and `BLOCKED` may be accepted terminal stops and must
+   still report provenance, accounting, immutable history, and the event.
+
+```markdown
+## Phase Recovery Continuation Report
+
+**Status:** DONE | DONE_WITH_CONCERNS | BLOCKED
+**Phase:** {phase-id}
+**Original request ID:** {original_request_id}
+**Continuation event:** {continuation_event}
+**Recovery base:** {recovery_base_head}
+**Original task/commit:** {original_task_id} / {original_commit}
+**Attempt:** {phase_recovery_attempts_used}/{phase_recovery_limit}
+**Dispatch target:** {same exact launcher-owned target}
+**Dispatch stamp:** {original formal Dispatch line}
+**Recovery commit:** {sha or -}
+**Verification:** {focused result}; {phase result}
+**Recovery event:** {event-id}
+
+### Concerns or Block
+
+- {None or bounded terminal-stop evidence}
 ```
 
 ## Mode: Fix
