@@ -409,6 +409,19 @@ fresh review loop.
   the shared CLI asset bundler; the identical checks passed when rerun
   sequentially and changed no tracked file.
 
+### Implementation Exit Gate Generation
+
+- Gate: `IMPLEMENT-11` / configured lifecycle exit gate
+- Resolution: configured; `on_failure: block`; `max_attempts: 2`
+- Reviewed head: `cd7fd7aef3d39c6c545ac8d4f62017ae710e7b1b`
+- Logical base: `origin/main`; unique merge base
+  `721af62d641061870a71550ed2d487c69b8ea58d`
+- Configuration fingerprint:
+  `sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`
+- Implementation fingerprint:
+  `sha256:effective-delta-v1:609e85c2b566e739f7ce05022cbc3413cf8a7edd525173ce6c316edadfbd2cd8`
+- Launch state: not started; immutable inputs persisted before launch
+
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 
 **Status:** completed
