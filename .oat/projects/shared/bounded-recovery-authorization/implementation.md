@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -32,8 +32,9 @@ oat_generated: false
 | Phase 3      | passed        | 2     | 2/2       |
 | Phase p-rev2 | passed        | 1     | 1/1       |
 | Phase 4      | passed        | 1     | 1/1       |
+| Phase 5      | pending       | 1     | 0/1       |
 
-**Total:** 8/8 tasks completed
+**Total:** 8/9 tasks completed
 
 ---
 
@@ -348,6 +349,50 @@ oat_generated: false
 
 ---
 
+## Phase 5: Final Review Ledger Handoff Fix
+
+**Status:** pending
+**Started:** 2026-07-31
+
+### Review Received: final
+
+**Date:** 2026-07-31
+**Review artifact:** `reviews/final-review-2026-07-31T215922Z.md`
+**Review cycle:** 1/3
+**Reviewed head:** `d7fb5652da797e3c3826f46adda42bd6f5caac3f`
+**Reconnaissance:** not attempted
+
+**Findings:**
+
+- Critical: 1
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Finding disposition:**
+
+- `C1` — Successful recovery cannot satisfy the root's settled-ledger
+  precondition.
+  - Analysis: agree. The phase agent must commit a `completed` pending marker
+    before root validates it, but the root success branch currently requires
+    `pending_attempt: null`, so the intended recovery path has no valid
+    pre-bookkeeping state.
+  - Recommendation: `code_fix_required`; convert to one bounded task now.
+  - Task Scope: Moderate
+  - Converted task: `p05-t01`
+
+**New tasks added:** `p05-t01`
+
+**Next:** Execute the fix task through the normal phase implementation and
+fresh review loop.
+
+### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -651,6 +696,8 @@ Chronological log of implementation progress.
 - Fresh root-owned p-rev2 review passed with zero findings; fix-loop count 0.
 - Completed and root-validated the Phase 4 lockstep release commit.
 - Fresh root-owned Phase 4 review passed with zero findings; fix-loop count 0.
+- Received final review cycle 1 with one Critical recovery-ledger handoff
+  contradiction and converted it to `p05-t01`.
 
 **Decisions:**
 
@@ -665,13 +712,14 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run the final implementation checkpoint closeout sequence.
+- Implement and review `p05-t01`, then rerun final closeout verification and
+  lifecycle review.
 
 **Blockers:**
 
 - None. Operator authorized the narrow revision path.
 
-**Session End:** All implementation phases passed; final closeout pending
+**Session End:** Final-review fix task `p05-t01` pending
 
 ---
 

@@ -84,6 +84,10 @@ Phase p-rev2 outcome PASS after one task commit and root-owned review cycle 1/3;
 
 Phase p04 outcome PASS after one authorized rerun task commit and root-owned review cycle 1/3; zero Critical, Important, Medium, or Minor findings; fix-loop count 0; review artifact reviews/p04-review-2026-07-31T215112Z.md; reconnaissance not attempted; all five 0.2.27 public tarballs validated.
 
+### 2026-07-31 · structural · oat-project-implement · final-review-cycle-1
+
+Final lifecycle review cycle 1/3 FAIL at d7fb5652da797e3c3826f46adda42bd6f5caac3f with one Critical finding: root success required a post-bookkeeping settled ledger before validating the phase-agent's committed completed marker. Auto-disposition converted C1 to p05-t01 and shifted the configured final HiLL checkpoint to p05; no deferred findings.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

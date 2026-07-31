@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c
+oat_current_task: p05-t01
+oat_last_commit: d7fb5652da797e3c3826f46adda42bd6f5caac3f
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -8,7 +8,7 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: ['p04'] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
@@ -61,7 +61,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T21:57:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T22:10:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -73,7 +73,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Tasks complete; awaiting final review
+Implementation - Phase 5 final-review fix pending
 
 ## Artifacts
 
@@ -116,7 +116,8 @@ Implementation - Tasks complete; awaiting final review
 - ✓ Phase 4 lockstep release and full verification completed
 - ✓ Fresh root-owned Phase 4 review passed with zero findings
 - ✓ Implementation tasks complete
-- ⧗ Awaiting final verification and lifecycle review
+- ✗ Final lifecycle review cycle 1 found one Critical ledger handoff conflict
+- ⧗ Phase 5 review-fix task `p05-t01` pending
 
 ## Blockers
 
@@ -124,4 +125,4 @@ None
 
 ## Next Milestone
 
-Run final verification, final lifecycle review, and approval sequencing
+Implement and review `p05-t01`, then resume final closeout

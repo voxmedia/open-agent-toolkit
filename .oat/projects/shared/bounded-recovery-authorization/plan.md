@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-07-31
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p04']
+oat_plan_hill_phases: ['p05']
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [['p02', 'p03']] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported
@@ -56,8 +56,9 @@ regeneration/tests modify generated agent surfaces and sync tests, while
 documentation modifies only the authored implementation guide. After fan-in,
 operator-authorized revision phase `p-rev2` repairs autonomy gate-inventory
 coverage exposed by the full test gate. Phase 4 then runs because the release
-bump and full validation must cover all outputs. No other phases are
-parallelized.
+bump and full validation must cover all outputs. Final-review fix Phase 5 runs
+after the complete lifecycle review and becomes the configured final HiLL
+checkpoint. No other phases are parallelized.
 
 ---
 
@@ -518,20 +519,107 @@ validation all pass from a clean post-task tree.
 
 ---
 
+## Phase 5: Final Review Ledger Handoff Fix
+
+### Task p05-t01: (review) Reconcile Recovery Ledger Validation and Clearing
+
+**Files:**
+
+- Modify:
+  `.agents/skills/oat-project-implement/references/phase-execution.md`
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/commands/sync/index.test.ts`
+- Regenerate: `.claude/agents/oat-phase-implementer.md`
+- Regenerate: `.cursor/agents/oat-phase-implementer*.md`
+- Regenerate: `.codex/agents/oat-phase-implementer*.toml`
+- Regenerate: provider-linked views and `.oat/sync/manifest.json`
+- Modify conditionally: `.agents/docs/autonomy-contract.md` only if the exact
+  prompt-site inventory changes
+
+**Step 1: Add relational transition coverage (RED)**
+
+Add a transition-matrix regression that spans reservation → committed
+`completed` marker → root validation → root clear while preserving
+`used_attempts`. Add rejection cases for a prematurely cleared recovery marker,
+a mismatched terminal status, and an active or unreconciled pending marker. Add
+the analogous validated `failed` terminal handoff and assert generated-provider
+semantic parity.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/sync/index.test.ts`
+
+Expected: The new ordered-transition assertions fail against the circular
+settled-ledger precondition.
+
+**Step 2: Define pre-bookkeeping and post-bookkeeping states (GREEN)**
+
+In the root contract, accept a matching committed `completed` pending marker as
+the pre-bookkeeping success state only while validating the report, immutable
+history, exact target, event, attempt count, and verification. After validation,
+root bookkeeping clears `pending_attempt` and preserves `used_attempts`; reserve
+`pending_attempt: null` and “settled ledger” for the post-bookkeeping state.
+
+For a failed attempt, require and validate the analogous matching `failed`
+marker before root bookkeeping clears it while preserving usage and the
+terminal-stop disposition. Keep active, contradictory, prematurely cleared, or
+unreconciled markers fail-closed. A phase with no recovery attempt may still
+return with a settled null marker. Preserve the final-attempt, exact-target,
+append-only, canonical-event, and no-fallback contracts.
+
+Update the canonical phase-agent wording to match, then run
+`oat sync --scope all`; do not hand-edit provider copies. The canonical skill
+and agent versions were already bumped once for this PR, so do not bump them
+again. The public packages were already bumped to `0.2.27`; do not perform a
+second release bump.
+
+**Step 3: Format and run focused verification**
+
+Run:
+`pnpm format:fix && pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/sync/index.test.ts src/validation/autonomy-gate-inventory.test.ts && pnpm oat:validate-skills`
+
+Expected: Transition coverage, generated-provider parity, autonomy inventory,
+canonical validation, and formatting pass.
+
+**Step 4: Run full and release verification**
+
+Run:
+`pnpm lint && pnpm format && pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm release:validate && git diff --check`
+
+Expected: All repository, package, and release gates pass with the lockstep
+version remaining `0.2.27`.
+
+**Step 5: Commit**
+
+Commit: `fix(p05-t01): reconcile recovery ledger handoff`
+
+---
+
+**Phase 5 verification**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/sync/index.test.ts src/validation/autonomy-gate-inventory.test.ts && pnpm oat:validate-skills && pnpm lint && pnpm format && pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm release:validate && git diff --check`
+
+Expected: The end-to-end ledger handoff is relationally covered, all provider
+views remain synchronized, all five `0.2.27` tarballs validate, and the clean
+post-task tree passes.
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | ------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | received | 2026-07-31 | reviews/p01-review-2026-07-31T175303Z.md    | a2d875bb379941301c3ed811b40cfee7a40148e8 | auto       | -           |
-| p-rev1 | code     | passed   | 2026-07-31 | reviews/p-rev1-review-2026-07-31T191244Z.md | 53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc | auto       | -           |
-| p02    | code     | passed   | 2026-07-31 | reviews/p02-review-2026-07-31T193213Z.md    | 395fca50e96ec4f895d3b9ad828b0900f67ce95e | auto       | -           |
-| p03    | code     | passed   | 2026-07-31 | reviews/p03-review-2026-07-31T200025Z.md    | 4f6d934b955b030dfacb06ae91e2e81d92c3b30a | auto       | -           |
-| p-rev2 | code     | passed   | 2026-07-31 | reviews/p-rev2-review-2026-07-31T213539Z.md | 0adcee7f8e143221e14b6f50579ab35e9bc0425a | auto       | -           |
-| p04    | code     | passed   | 2026-07-31 | reviews/p04-review-2026-07-31T215112Z.md    | 0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c | auto       | -           |
-| final  | code     | pending  | -          | -                                           | -                                        | -          | -           |
-| spec   | artifact | pending  | -          | -                                           | -                                        | -          | -           |
-| design | artifact | passed   | 2026-07-31 | user-approved lightweight design            | -                                        | manual     | -           |
-| plan   | artifact | passed   | 2026-07-31 | structured review rounds 1-3                | -                                        | auto       | -           |
+| Scope  | Type     | Status      | Date       | Artifact                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | received    | 2026-07-31 | reviews/p01-review-2026-07-31T175303Z.md    | a2d875bb379941301c3ed811b40cfee7a40148e8 | auto       | -           |
+| p-rev1 | code     | passed      | 2026-07-31 | reviews/p-rev1-review-2026-07-31T191244Z.md | 53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc | auto       | -           |
+| p02    | code     | passed      | 2026-07-31 | reviews/p02-review-2026-07-31T193213Z.md    | 395fca50e96ec4f895d3b9ad828b0900f67ce95e | auto       | -           |
+| p03    | code     | passed      | 2026-07-31 | reviews/p03-review-2026-07-31T200025Z.md    | 4f6d934b955b030dfacb06ae91e2e81d92c3b30a | auto       | -           |
+| p-rev2 | code     | passed      | 2026-07-31 | reviews/p-rev2-review-2026-07-31T213539Z.md | 0adcee7f8e143221e14b6f50579ab35e9bc0425a | auto       | -           |
+| p04    | code     | passed      | 2026-07-31 | reviews/p04-review-2026-07-31T215112Z.md    | 0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c | auto       | -           |
+| final  | code     | fixes_added | 2026-07-31 | reviews/final-review-2026-07-31T215922Z.md  | d7fb5652da797e3c3826f46adda42bd6f5caac3f | auto       | -           |
+| spec   | artifact | pending     | -          | -                                           | -                                        | -          | -           |
+| design | artifact | passed      | 2026-07-31 | user-approved lightweight design            | -                                        | manual     | -           |
+| plan   | artifact | passed      | 2026-07-31 | structured review rounds 1-3                | -                                        | auto       | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -560,10 +648,11 @@ cell; never truncate a widened row back to five columns.
 - Phase 3: 2 tasks - Public recovery and migration documentation
 - Phase p-rev2: 1 task - Autonomy gate-inventory coverage
 - Phase 4: 1 task - Lockstep release bump and full verification
+- Phase 5: 1 task - Final-review recovery-ledger handoff correction
 
-**Total: 8 tasks**
+**Total: 9 tasks**
 
-Ready for code review and merge.
+Ready for final-review fix implementation and re-review.
 
 ---
 
