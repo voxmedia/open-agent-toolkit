@@ -1074,6 +1074,371 @@ Expected: receipt precedes the evidence sentinel and abandoned state is reaped.
 
 **Step 5: Commit** `test(p02-t29): verify review validation lifecycle`
 
+### Task p02-t30: (review C1) Parse canonical implementation deviations
+
+**Files:**
+
+- Modify: `packages/cli/src/review/obligations.ts`
+- Modify: `packages/cli/src/review/obligations.test.ts`
+- Modify: `packages/cli/src/review/obligation-fixtures.test.ts`
+
+**Step 1: Reproduce** Pin the canonical explanatory prose and current
+seven-column deviations table from `.oat/templates/implementation.md` and this
+project's `implementation.md`; preserve fail-closed placeholder and partial-row
+behavior.
+
+**Step 2: Implement** Locate exactly one canonical deviations table within the
+section and parse its current exact headers without treating introductory prose
+as a table row.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/obligations.test.ts src/review/obligation-fixtures.test.ts`.
+Expected: canonical implementation artifacts parse and malformed tables reject.
+
+**Step 5: Commit** `fix(p02-t30): parse canonical implementation deviations`
+
+### Task p02-t31: (review C2) Enforce strict ReviewPlan CLI parsing
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/review/validate-plan.ts`
+- Modify: `packages/cli/src/commands/review/validate-plan.test.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.integration.test.ts`
+
+**Step 1: Reproduce** Add command and spawned-lifecycle cases for unknown keys,
+malformed nested values, and the invalid string-array `requiredClaims` fixture.
+
+**Step 2: Implement** Parse bounded stdin with `parseReviewPlanV1` before
+semantic validation and translate schema failures to a stable exit-1
+input/contract envelope.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review/validate-plan.test.ts src/review/review-lifecycle.integration.test.ts`.
+Expected: malformed plans never reach lifecycle validation or become receipts.
+
+**Step 5: Commit** `fix(p02-t31): enforce strict review plan input`
+
+### Task p02-t32: (review C3) Enforce whole-diff execution policy
+
+**Files:**
+
+- Modify: `packages/cli/src/review/plan-validator.ts`
+- Modify: `packages/cli/src/review/plan-validator.test.ts`
+
+**Step 1: Reproduce** Add negative cases for `whole-diff-inline` and
+whole-diff lane evidence under every denied eligibility reason.
+
+**Step 2: Implement** Require top-level strategy, echoed eligibility, and lane
+evidence strategies to be mutually consistent with the sealed whole-diff
+policy.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/plan-validator.test.ts`.
+Expected: denied whole-diff execution cannot obtain a receipt.
+
+**Step 5: Commit** `fix(p02-t32): enforce whole diff policy`
+
+### Task p02-t33: (review C4) Make gate correlation injective
+
+**Files:**
+
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+- Modify: `packages/cli/src/review/validation-recovery.integration.test.ts`
+
+**Step 1: Reproduce** Pin the colliding tuples `("a-b", "c")` and
+`("a", "b-c")`, plus tampered index and loaded-run mismatch cases.
+
+**Step 2: Implement** Encode correlation tuples injectively, persist both
+components, and verify the index record and loaded run against the requested
+tuple before returning.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-store.test.ts src/review/validation-recovery.integration.test.ts`.
+Expected: no alternate tuple can resolve another run.
+
+**Step 5: Commit** `fix(p02-t33): encode gate correlation exactly`
+
+### Task p02-t34: (review C5) Isolate and authenticate validation state
+
+**Files:**
+
+- Create: `packages/cli/src/review/validation-store-authority.ts`
+- Create: `packages/cli/src/review/validation-store-authority.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/commands/review/checkpoint-artifacts.ts`
+- Modify: `packages/cli/src/commands/review/checkpoint-artifacts.test.ts`
+- Modify: `packages/cli/src/commands/review/validate-plan.ts`
+- Modify: `packages/cli/src/commands/review/validate-plan.test.ts`
+- Modify: `packages/cli/src/commands/review/begin-evidence.ts`
+- Modify: `packages/cli/src/commands/review/begin-evidence.test.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.integration.test.ts`
+
+**Step 1: Reproduce** Demonstrate that repository-local same-UID plaintext
+edits can currently forge phase, capability, plan, or receipt state.
+
+**Step 2: Implement** Move authoritative state outside the repository, strictly
+parse every persisted load, and introduce launcher-owned authentication or a
+service boundary so possession of a run ID and repository access cannot forge
+valid transitions. Preserve short TTL, `0700` directories, `0600` files, and
+one-shot command capabilities.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-store-authority.test.ts src/review/validation-store.test.ts src/commands/review/prepare-context.test.ts src/commands/review/checkpoint-artifacts.test.ts src/commands/review/validate-plan.test.ts src/commands/review/begin-evidence.test.ts src/review/review-lifecycle.integration.test.ts`.
+Expected: direct repository or plaintext state mutation cannot authorize a
+transition.
+
+**Step 5: Commit** `fix(p02-t34): isolate validation state authority`
+
+### Task p02-t35: (review I1) Make lifecycle transitions crash-safe
+
+**Files:**
+
+- Modify: `packages/cli/src/review/command-capabilities.ts`
+- Modify: `packages/cli/src/review/command-capabilities.test.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+- Modify: `packages/cli/src/review/validation-recovery.integration.test.ts`
+
+**Step 1: Reproduce** Simulate crashes between capability verification and
+phase commit, and a process death while holding the store lock.
+
+**Step 2: Implement** Consume one-shot capabilities in the same atomic mutation
+that commits checkpoint or receipt state, and replace the permanent lock file
+with owner/lease-based stale-lock recovery.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/command-capabilities.test.ts src/review/review-lifecycle.test.ts src/review/validation-store.test.ts src/review/validation-recovery.integration.test.ts`.
+Expected: interruption cannot burn a token without its transition or wedge the
+store permanently.
+
+**Step 5: Commit** `fix(p02-t35): make validation transitions crash safe`
+
+### Task p02-t36: (review I2) Enforce patch-stream wall-clock deadlines
+
+**Files:**
+
+- Modify: `packages/cli/src/review/patch-estimate.ts`
+- Modify: `packages/cli/src/review/patch-estimate.test.ts`
+- Modify: `packages/cli/src/review/change-map.ts`
+- Modify: `packages/cli/src/review/change-map.test.ts`
+
+**Step 1: Reproduce** Race a never-yielding iterator and a child that ignores
+normal completion past the configured deadline.
+
+**Step 2: Implement** Race stream reads against a real timer or abort signal,
+terminate the producer at deadline, await cleanup, and return a conservative
+lower-bound estimate.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/patch-estimate.test.ts src/review/change-map.test.ts`.
+Expected: stalled reads terminate within the bounded deadline.
+
+**Step 5: Commit** `fix(p02-t36): enforce patch stream deadlines`
+
+### Task p02-t37: (review I3) Classify lifecycle command errors safely
+
+**Files:**
+
+- Create: `packages/cli/src/review/errors.ts`
+- Create: `packages/cli/src/review/errors.test.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.test.ts`
+- Modify: `packages/cli/src/commands/review/review-json.ts`
+- Modify: `packages/cli/src/commands/review/review-json.test.ts`
+- Modify: `packages/cli/src/commands/review/checkpoint-artifacts.test.ts`
+- Modify: `packages/cli/src/commands/review/validate-plan.test.ts`
+- Modify: `packages/cli/src/commands/review/begin-evidence.test.ts`
+
+**Step 1: Reproduce** Cover replay, invalid token, receipt mismatch,
+pre-validation begin, expiry, malformed ranges, budget rejection, and genuine
+store/I/O failures at command boundaries.
+
+**Step 2: Implement** Introduce typed domain errors, map expected
+input/contract/validation rejections to stable safe exit-1 envelopes, and
+reserve sanitized exit-2 responses for system failures.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/errors.test.ts src/review/review-lifecycle.test.ts src/commands/review/review-json.test.ts src/commands/review/checkpoint-artifacts.test.ts src/commands/review/validate-plan.test.ts src/commands/review/begin-evidence.test.ts`.
+Expected: deterministic rejection classes do not leak internal errors.
+
+**Step 5: Commit** `fix(p02-t37): classify review command errors`
+
+### Task p02-t38: (review I4) Validate lane evidence cutoffs
+
+**Files:**
+
+- Modify: `packages/cli/src/review/plan-validator.ts`
+- Modify: `packages/cli/src/review/plan-validator.test.ts`
+
+**Step 1: Reproduce** Add lanes before, at, and after planning, evidence, and
+output cutoffs with mode-appropriate null/non-null deadline shapes.
+
+**Step 2: Implement** Validate every lane deadline against the sealed
+allocation and reject evidence work beyond its authorized interval.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/plan-validator.test.ts`.
+Expected: no lane can execute evidence after its sealed cutoff.
+
+**Step 5: Commit** `fix(p02-t38): validate lane evidence cutoffs`
+
+### Task p02-t39: (review M3) Represent trusted commands portably
+
+**Files:**
+
+- Create: `packages/cli/src/review/command-invocation.ts`
+- Create: `packages/cli/src/review/command-invocation.test.ts`
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/schemas.ts`
+- Modify: `packages/cli/src/review/schemas.test.ts`
+- Modify: `packages/cli/src/review/command-capabilities.ts`
+- Modify: `packages/cli/src/review/command-capabilities.test.ts`
+
+**Step 1: Reproduce** Pin arguments containing POSIX, PowerShell, and
+`cmd.exe` metacharacters without relying on shell quoting.
+
+**Step 2: Implement** Preserve trusted commands as executable-plus-argv data
+and execute without a shell, or apply an explicit launcher-selected rendering
+strategy. Keep tokens out of logs and digests.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/command-invocation.test.ts src/review/command-capabilities.test.ts src/review/schemas.test.ts`.
+Expected: command identity and arguments round-trip across supported platforms.
+
+**Step 5: Commit** `fix(p02-t39): represent trusted commands portably`
+
+### Task p02-t40: (review I5) Preserve branch-local command identity
+
+**Files:**
+
+- Modify: `packages/cli/src/review/prepare-context.ts`
+- Modify: `packages/cli/src/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.integration.test.ts`
+- Modify: `packages/cli/src/commands/commands.integration.test.ts`
+
+**Step 1: Reproduce** Run source and branch-local preparation while an older
+global `oat` appears first on `PATH`.
+
+**Step 2: Implement** Carry the exact launcher-owned executable and argv prefix
+through preparation and execute every returned command against that same
+candidate build.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/prepare-context.test.ts src/commands/review/prepare-context.test.ts src/review/review-lifecycle.integration.test.ts src/commands/commands.integration.test.ts`.
+Expected: trusted follow-up commands cannot drift to an ambient installation.
+
+**Step 5: Commit** `fix(p02-t40): preserve branch local review commands`
+
+### Task p02-t41: (review I6) Align the plan-step design grammar
+
+**Files:**
+
+- Modify: `.oat/projects/shared/review-plan-workflow/design.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Confirm** Preserve the implemented acceptance of canonical inline
+prose and standalone fully-bold Step lines.
+
+**Step 2: Align artifacts** Update the stale design regex and add the accepted
+drift to the canonical deviations table, naming implementation and canonical
+plan syntax as the source of truth.
+
+**Step 3: Format** Run `pnpm exec oxfmt --write` on both modified Markdown
+files.
+
+**Step 4: Verify** Run `git diff --check` and confirm the deviations table uses
+the canonical seven-column header.
+
+**Step 5: Commit** `docs(p02-t41): align plan step grammar`
+
+### Task p02-t42: (review M1) Connect the obligation fixture corpus
+
+**Files:**
+
+- Modify: `packages/cli/src/review/obligation-fixtures.test.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.integration.test.ts`
+
+**Step 1: Reproduce** Replace every parser-dependent todo with an executable
+source/expectation assertion and make malformed integration fixtures fail
+runtime schema parsing.
+
+**Step 2: Implement** Exercise all canonical corpus entries through their
+owning parsers and correct the integration fixture to the actual
+`requiredClaims` contract.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/obligation-fixtures.test.ts src/review/review-lifecycle.integration.test.ts`.
+Expected: no obligation fixture remains todo and every integration plan is
+schema-valid.
+
+**Step 5: Commit** `test(p02-t42): connect obligation fixture corpus`
+
+### Task p02-t43: (review M2) Reject trailing Requirement Index content
+
+**Files:**
+
+- Modify: `packages/cli/src/review/obligations.ts`
+- Modify: `packages/cli/src/review/obligations.test.ts`
+
+**Step 1: Reproduce** Add blank-then-content, multiple-blank, next-heading, and
+EOF cases after the Requirement Index table.
+
+**Step 2: Implement** Scan the entire interval through the next exact
+level-two heading or EOF and permit only blank lines.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/obligations.test.ts`.
+Expected: trailing non-heading content rejects even after blank lines.
+
+**Step 5: Commit** `fix(p02-t43): reject trailing requirement content`
+
 ---
 
 ## Phase 3: Reviewer Plan and Evidence Contract
@@ -2087,7 +2452,7 @@ B post-publication bookkeeping PR.
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01    | code     | fixes_completed | 2026-07-30 | reviews/archived/p01-review-2026-07-30T213813Z.md           | 6f119c18ed8aa2c5aa12a4184206fdad0db16321 | auto       | -           |
 | p01    | code     | passed          | 2026-07-30 | reviews/archived/p01-review-2026-07-30T215327Z.md           | 40fa861fe199f755f66cce784feafbc1e0ff68c1 | auto       | -           |
-| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p02    | code     | fixes_added     | 2026-07-30 | reviews/archived/p02-review-2026-07-30T234200Z.md           | d6c204514b076d57eaf2ee277d72e6de9a995a53 | auto       | -           |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -2115,14 +2480,14 @@ rewriting either historical result as passed.
 **Summary:**
 
 - Phase 1: 13 tasks - baseline, contracts, portability seams
-- Phase 2: 29 tasks - authoritative metadata and validation runtime
+- Phase 2: 43 tasks - authoritative metadata, validation runtime, and review fixes
 - Phase 3: 5 tasks - reviewer planning and selective evidence
 - Phase 4: 8 tasks - accounting, repair, and coordinator adoption
 - Phase 5: 7 tasks - gate diagnostics, timeout, and compatibility mode
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 75 tasks**
+**Total: 89 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.

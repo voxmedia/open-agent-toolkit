@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-30
-oat_current_task_id: null
+oat_current_task_id: p02-t30
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | in_review | 29    | 29/29     |
-| Phase 3 | pending   | 5     | 0/5       |
-| Phase 4 | pending   | 8     | 0/8       |
-| Phase 5 | pending   | 7     | 0/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | in_progress | 43    | 29/43     |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 8     | 0/8       |
+| Phase 5 | pending     | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 42/75 tasks completed
+**Total:** 42/89 tasks completed
 
 ## Execution Configuration
 
@@ -175,7 +175,7 @@ fix commit `40fa861f`.
 
 ## Phase 2: ChangeMap and Validation Runtime
 
-**Status:** in_review
+**Status:** in_progress
 **Started:** 2026-07-30
 
 ### Task p02-t01: Normalize authoritative review paths
@@ -335,6 +335,117 @@ the trusted CLI argv contract while keeping the plan on bounded stdin.
 **Commit:** `d6c20451`
 **Outcome:** End-to-end lifecycle, crash recovery, sibling-attempt isolation,
 and CLI help integration passed.
+
+### Task p02-t30: (review C1) Parse canonical implementation deviations
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t31: (review C2) Enforce strict ReviewPlan CLI parsing
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t32: (review C3) Enforce whole-diff execution policy
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t33: (review C4) Make gate correlation injective
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t34: (review C5) Isolate and authenticate validation state
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t35: (review I1) Make lifecycle transitions crash-safe
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t36: (review I2) Enforce patch-stream wall-clock deadlines
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t37: (review I3) Classify lifecycle command errors safely
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t38: (review I4) Validate lane evidence cutoffs
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t39: (review M3) Represent trusted commands portably
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t40: (review I5) Preserve branch-local command identity
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t41: (review I6) Align the plan-step design grammar
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t42: (review M1) Connect the obligation fixture corpus
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t43: (review M2) Reject trailing Requirement Index content
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p02
+
+**Date:** 2026-07-30
+**Review artifact:**
+`reviews/archived/p02-review-2026-07-30T234200Z.md`
+
+**Findings:**
+
+- Critical: 5
+- Important: 6
+- Medium: 3
+- Minor: 0
+
+**New tasks added:** p02-t30 through p02-t43
+
+**Finding disposition map:**
+
+- C1 → p02-t30
+- C2 → p02-t31
+- C3 → p02-t32
+- C4 → p02-t33
+- C5 → p02-t34
+- I1 → p02-t35
+- I2 → p02-t36
+- I3 → p02-t37
+- I4 → p02-t38
+- M3 → p02-t39
+- I5 → p02-t40
+- I6 → p02-t41 (`artifact_alignment_required`)
+- M1 → p02-t42
+- M2 → p02-t43
+
+**Design drift / artifact alignment notes:**
+
+- I6 found the p02-t10 implementation correctly accepts canonical inline-prose
+  Step lines while `design.md` documents only standalone fully-bold lines.
+  Implementation and canonical plan syntax remain authoritative; p02-t41 will
+  align the design and canonical deviations table.
+
+**Next:** Execute the fix tasks and re-review their changes.
 
 ---
 
@@ -496,6 +607,41 @@ None in this run entry.
 
 - Run the independent root-owned Phase 2 review against reviewed head
   `d6c204514b076d57eaf2ee277d72e6de9a995a53`.
+
+### Run 5 — 2026-07-30T23:55:00Z {#run-5}
+
+**Branch:** `review-plan-workflow`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict | Task Commits | Review                                              | Fixes           |
+| ----- | ------- | ------------ | --------------------------------------------------- | --------------- |
+| p02   | failed  | all 29       | `reviews/archived/p02-review-2026-07-30T234200Z.md` | 14 tasks queued |
+
+#### Dispatch Notes
+
+- Fresh independent request `7f91d0ab-8d8f-4b7d-a8a5-cc0412f3d70e`
+  reviewed every Phase 2 task and both authorized recoveries at reviewed head
+  `d6c204514b076d57eaf2ee277d72e6de9a995a53`.
+- Verdict: fail with five Critical, six Important, three Medium, and zero Minor
+  findings. Fourteen bounded fix tasks were added as p02-t30 through p02-t43;
+  no finding was deferred.
+- The reviewer independently reproduced canonical implementation parser
+  failure, gate-correlation tuple collision, and the stalled patch-stream
+  deadline.
+- Dispatch stamp:
+  - `Dispatch: scope=p02 action=review role=reviewer producer=oat-phase-implementer-gpt-5-6-sol-high provenance=independent model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`
+
+#### Parallel Groups
+
+None in this run entry.
+
+#### Outstanding Items
+
+- Execute p02-t30 through p02-t43 in order, then independently re-review the
+  fix range.
 
 <!-- orchestration-runs-end -->
 
