@@ -18,6 +18,14 @@ describe('ValidationStoreAuthority', () => {
     expect(authority.open(sealed)).toEqual({ phase: 'prepared', count: 1 });
     const tampered = sealed.replace('"count":1', '"count":2');
     expect(() => authority.open(tampered)).toThrow(/authentication/);
+    const duplicateState = sealed.replace(
+      '"state":{"phase":"prepared","count":1}',
+      '"state":{"phase":"prepared","count":1},"state":{"phase":"prepared","count":1}',
+    );
+    expect(() => authority.open(duplicateState)).toThrow(/duplicate/);
+    expect(() => authority.open(`${sealed.trim()} true`)).toThrow(
+      /strict JSON/,
+    );
     expect(() =>
       authority.open(JSON.stringify({ phase: 'evidence_started' })),
     ).toThrow(/envelope/);

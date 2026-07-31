@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { isAbsolute, relative, resolve } from 'node:path';
 import { join } from 'node:path';
 
-import { canonicalizeJson } from './canonical-json';
+import { canonicalizeJson, parseStrictJson } from './canonical-json';
 
 const AUTHORITY_KEY_ENV = 'OAT_REVIEW_AUTHORITY_KEY';
 const VALIDATION_ROOT_ENV = 'OAT_REVIEW_VALIDATION_ROOT';
@@ -60,7 +60,7 @@ export class ValidationStoreAuthority {
   }
 
   open(source: string): unknown {
-    const envelope = exactEnvelope(JSON.parse(source) as unknown);
+    const envelope = exactEnvelope(parseStrictJson(source));
     const expected = Buffer.from(this.#tag(envelope.state));
     const received = Buffer.from(envelope.tag);
     if (

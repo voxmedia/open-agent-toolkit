@@ -150,9 +150,9 @@ describe('validation state and gate correlation', () => {
     });
     const updated = await store.updateRun('abcdefghijklmnop', (state) => ({
       ...state,
-      phase: 'artifacts_loaded',
+      planValidationAttempts: 1,
     }));
-    expect(updated.state.phase).toBe('artifacts_loaded');
+    expect(updated.state.planValidationAttempts).toBe(1);
   });
 
   it('recovers a lock whose owning process has died', async () => {
@@ -323,5 +323,47 @@ describe('validation state and gate correlation', () => {
     await expect(
       store.resolveGateCorrelation('gate', 'attempt'),
     ).rejects.toThrow(/does not match/);
+  });
+
+  it('rejects authenticated malformed telemetry and incoherent phases', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const authority = new ValidationStoreAuthority(Buffer.alloc(32, 11));
+    const store = new ValidationStore(join(parent, 'store'), authority);
+    const created = await store.createRun({
+      preparation: preparation('stricttelemetry1'),
+      artifactDraft: false,
+    });
+    const initial = authority.open(
+      await readFile(created.statePath, 'utf8'),
+    ) as Record<string, unknown>;
+    await writeFile(
+      created.statePath,
+      authority.seal({
+        ...initial,
+        telemetry: [
+          {
+            schemaVersion: 1,
+            validationRunId: created.runId,
+            phase: 'pre_artifact',
+            adapterId: 7,
+            requestStartedAt: '2026-07-30T20:00:00.000Z',
+            requestCompletedAt: '2026-07-30T20:00:01.000Z',
+            observation: null,
+            disposition: 'missing',
+            rejectionReason: null,
+          },
+        ],
+      }),
+      { mode: 0o600 },
+    );
+    await expect(store.readRun(created.runId)).rejects.toThrow(/adapterId/);
+
+    await writeFile(
+      created.statePath,
+      authority.seal({ ...initial, phase: 'artifacts_loaded' }),
+      { mode: 0o600 },
+    );
+    await expect(store.readRun(created.runId)).rejects.toThrow(/incoherent/);
   });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   parsePrepareReviewContextInputV1,
+  parseHostTelemetryEvidenceV1,
   parsePlanValidationReceiptV1,
   parsePreparedReviewContextV1,
   parseReviewCommandInvocationV1,
@@ -60,6 +61,58 @@ describe('prepare review input schema', () => {
     expect(() => parsePrepareReviewContextInputV1(candidate)).toThrow(
       ReviewSchemaError,
     );
+  });
+});
+
+const hostTelemetry = {
+  schemaVersion: 1,
+  validationRunId: 'validation-run-1',
+  phase: 'pre_artifact',
+  adapterId: 'host',
+  requestStartedAt: '2026-07-30T20:00:00.000Z',
+  requestCompletedAt: '2026-07-30T20:00:01.000Z',
+  observation: {
+    observedAt: '2026-07-30T20:00:00.500Z',
+    contextWindowTokens: 100_000,
+    consumedTokens: 20_000,
+    remainingTokens: 80_000,
+    adapterId: 'host',
+    source: 'host-observed',
+  },
+  disposition: 'accepted',
+  rejectionReason: null,
+};
+
+describe('host telemetry evidence schema', () => {
+  it('parses complete coherent telemetry evidence', () => {
+    expect(
+      parseHostTelemetryEvidenceV1(hostTelemetry, 'validation-run-1'),
+    ).toEqual(hostTelemetry);
+  });
+
+  it.each([
+    { ...hostTelemetry, adapterId: 1 },
+    { ...hostTelemetry, requestStartedAt: 'July 30, 2026' },
+    { ...hostTelemetry, requestCompletedAt: '2026-07-30T19:59:59.000Z' },
+    { ...hostTelemetry, rejectionReason: 'unexpected' },
+    {
+      ...hostTelemetry,
+      observation: { ...hostTelemetry.observation, adapterId: 'other' },
+    },
+    {
+      ...hostTelemetry,
+      observation: { ...hostTelemetry.observation, remainingTokens: 70_000 },
+    },
+    {
+      ...hostTelemetry,
+      disposition: 'invalid',
+      observation: null,
+      rejectionReason: 'made-up',
+    },
+  ])('rejects malformed telemetry %#', (candidate) => {
+    expect(() =>
+      parseHostTelemetryEvidenceV1(candidate, 'validation-run-1'),
+    ).toThrow(ReviewSchemaError);
   });
 });
 

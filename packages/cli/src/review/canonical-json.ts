@@ -30,7 +30,7 @@ function assertNoDuplicateKeys(node: JsonNode): void {
   }
 }
 
-function parseStrictJson(source: string): unknown {
+export function parseStrictJson(source: string): unknown {
   const errors: ParseError[] = [];
   const tree = parseTree(source, errors, {
     allowTrailingComma: false,

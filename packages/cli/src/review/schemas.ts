@@ -3,6 +3,7 @@ import { isAbsolute } from 'node:path';
 import type {
   ChangeMapV1,
   ContextBudgetTelemetry,
+  HostTelemetryEvidenceV1,
   PreparedReviewContextV1,
   PlanValidationReceiptV1,
   PrepareReviewContextInputV1,
@@ -168,6 +169,103 @@ function parseTelemetry(
     throw new ReviewSchemaError(`${pointer} has inconsistent token arithmetic`);
   }
   return item as unknown as ContextBudgetTelemetry;
+}
+
+export function parseHostTelemetryEvidenceV1(
+  value: unknown,
+  expectedRunId?: string,
+): HostTelemetryEvidenceV1 {
+  const evidence = object(value, '$');
+  keys(
+    evidence,
+    [
+      'schemaVersion',
+      'validationRunId',
+      'phase',
+      'adapterId',
+      'requestStartedAt',
+      'requestCompletedAt',
+      'observation',
+      'disposition',
+      'rejectionReason',
+    ],
+    '$',
+  );
+  if (evidence['schemaVersion'] !== 1) {
+    throw new ReviewSchemaError('$/schemaVersion must equal 1');
+  }
+  string(evidence['validationRunId'], '$/validationRunId');
+  if (
+    expectedRunId !== undefined &&
+    evidence['validationRunId'] !== expectedRunId
+  ) {
+    throw new ReviewSchemaError('$/validationRunId does not match state');
+  }
+  enumValue(evidence['phase'], ['pre_artifact', 'post_artifact'], '$/phase');
+  nullableString(evidence['adapterId'], '$/adapterId');
+  isoDate(evidence['requestStartedAt'], '$/requestStartedAt');
+  isoDate(evidence['requestCompletedAt'], '$/requestCompletedAt');
+  for (const key of ['requestStartedAt', 'requestCompletedAt'] as const) {
+    const timestamp = evidence[key] as string;
+    if (
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(timestamp) ||
+      new Date(timestamp).toISOString() !== timestamp
+    ) {
+      throw new ReviewSchemaError(`$/${key} must be an exact UTC timestamp`);
+    }
+  }
+  if (
+    Date.parse(evidence['requestCompletedAt'] as string) <
+    Date.parse(evidence['requestStartedAt'] as string)
+  ) {
+    throw new ReviewSchemaError(
+      '$/requestCompletedAt precedes requestStartedAt',
+    );
+  }
+  const observation = parseTelemetry(evidence['observation'], '$/observation');
+  enumValue(
+    evidence['disposition'],
+    ['accepted', 'missing', 'invalid'],
+    '$/disposition',
+  );
+  nullableString(evidence['rejectionReason'], '$/rejectionReason');
+  const disposition = evidence['disposition'];
+  if (disposition === 'accepted') {
+    if (
+      observation === null ||
+      evidence['adapterId'] === null ||
+      evidence['rejectionReason'] !== null ||
+      observation.adapterId !== evidence['adapterId'] ||
+      Date.parse(observation.observedAt) <
+        Date.parse(evidence['requestStartedAt'] as string) ||
+      Date.parse(observation.observedAt) >
+        Date.parse(evidence['requestCompletedAt'] as string)
+    ) {
+      throw new ReviewSchemaError('$/accepted telemetry is incoherent');
+    }
+  } else if (disposition === 'missing') {
+    if (observation !== null || evidence['rejectionReason'] !== null) {
+      throw new ReviewSchemaError('$/missing telemetry is incoherent');
+    }
+  } else {
+    if (
+      observation !== null ||
+      evidence['adapterId'] === null ||
+      typeof evidence['rejectionReason'] !== 'string' ||
+      ![
+        'adapter-error',
+        'stale-observation',
+        'future-observation',
+        'non-monotonic-observation',
+        'wrong-adapter',
+        'inconsistent-token-arithmetic',
+        'missing-source',
+      ].includes(evidence['rejectionReason'])
+    ) {
+      throw new ReviewSchemaError('$/invalid telemetry is incoherent');
+    }
+  }
+  return evidence as unknown as HostTelemetryEvidenceV1;
 }
 
 function parseChangeMap(value: unknown, pointer: string): ChangeMapV1 {

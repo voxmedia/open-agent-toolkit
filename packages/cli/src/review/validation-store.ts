@@ -17,9 +17,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
-import { canonicalizeJson } from './canonical-json';
+import { canonicalizeJson, hashCanonicalJson } from './canonical-json';
 import { projectValidatedAssignments } from './plan-validator';
 import {
+  parseHostTelemetryEvidenceV1,
   parsePlanValidationReceiptV1,
   parsePreparedReviewContextV1,
   parseReviewPlanV1,
@@ -192,30 +193,16 @@ function parseValidationRunState(
   if (!Array.isArray(state.telemetry)) {
     throw new Error('validation telemetry must be an array');
   }
-  for (const evidence of state.telemetry) {
-    const parsed = exactKeys(
-      evidence,
-      [
-        'schemaVersion',
-        'validationRunId',
-        'phase',
-        'adapterId',
-        'requestStartedAt',
-        'requestCompletedAt',
-        'observation',
-        'disposition',
-        'rejectionReason',
-      ],
-      'validation telemetry evidence',
-    );
-    if (
-      parsed.schemaVersion !== 1 ||
-      parsed.validationRunId !== runId ||
-      !['pre_artifact', 'post_artifact'].includes(parsed.phase as string) ||
-      !['accepted', 'missing', 'invalid'].includes(parsed.disposition as string)
-    ) {
-      throw new Error('validation telemetry evidence is invalid');
-    }
+  const telemetry = state.telemetry.map((evidence) =>
+    parseHostTelemetryEvidenceV1(evidence, runId),
+  );
+  const telemetryPhases = telemetry.map((evidence) => evidence.phase);
+  if (
+    new Set(telemetryPhases).size !== telemetryPhases.length ||
+    telemetryPhases[0] === 'post_artifact' ||
+    telemetryPhases.length > 2
+  ) {
+    throw new Error('validation telemetry phase sequence is invalid');
   }
   const context =
     state.context === null ? null : parsePreparedReviewContextV1(state.context);
@@ -233,6 +220,54 @@ function parseValidationRunState(
   }
   const receipt =
     state.receipt === null ? null : parsePlanValidationReceiptV1(state.receipt);
+  const phase = state.phase as ValidationRunState['phase'];
+  if (phase === 'prepared') {
+    if (
+      telemetryPhases.includes('post_artifact') ||
+      context !== null ||
+      plan !== null ||
+      assignment !== null ||
+      receipt !== null
+    ) {
+      throw new Error('prepared validation state is incoherent');
+    }
+  } else {
+    if (
+      telemetryPhases.join(',') !== 'pre_artifact,post_artifact' ||
+      context === null
+    ) {
+      throw new Error('post-checkpoint validation state is incoherent');
+    }
+    if (
+      phase === 'artifacts_loaded' &&
+      (plan !== null || assignment !== null || receipt !== null)
+    ) {
+      throw new Error('artifact-loaded validation state is incoherent');
+    }
+    if (
+      phase !== 'artifacts_loaded' &&
+      (plan === null || assignment === null || receipt === null)
+    ) {
+      throw new Error('post-validation state is incoherent');
+    }
+  }
+  const preArtifact = telemetry[0];
+  if (
+    preArtifact !== undefined &&
+    hashCanonicalJson(preArtifact) !==
+      preparation.prepareTelemetryEvidenceDigest
+  ) {
+    throw new Error('pre-artifact telemetry digest mismatch');
+  }
+  const postArtifact = telemetry[1];
+  if (
+    postArtifact !== undefined &&
+    context !== null &&
+    hashCanonicalJson(postArtifact) !==
+      context.postArtifactTelemetryEvidenceDigest
+  ) {
+    throw new Error('post-artifact telemetry digest mismatch');
+  }
   if (
     !Number.isSafeInteger(state.planValidationAttempts) ||
     (state.planValidationAttempts as number) < 0
@@ -242,13 +277,11 @@ function parseValidationRunState(
   return {
     schemaVersion: 1,
     preparation,
-    phase: state.phase as ValidationRunState['phase'],
+    phase,
     draft,
     acceptedHandleDigest: state.acceptedHandleDigest as string | null,
     capabilities,
-    telemetry: structuredClone(
-      state.telemetry,
-    ) as ValidationRunState['telemetry'],
+    telemetry,
     context,
     plan,
     assignment,

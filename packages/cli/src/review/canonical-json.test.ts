@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { canonicalizeJson, hashCanonicalJson } from './canonical-json';
+import {
+  canonicalizeJson,
+  hashCanonicalJson,
+  parseStrictJson,
+} from './canonical-json';
 
 describe('canonical review JSON', () => {
   it('is independent of object key order with stable SHA-256 output', () => {
@@ -37,6 +41,12 @@ describe('canonical review JSON', () => {
     expect(() => canonicalizeJson('{"a":1,"a":2}', { jsonText: true })).toThrow(
       /duplicate/,
     );
+  });
+
+  it('exposes a strict parser that rejects duplicate keys and trailing values', () => {
+    expect(parseStrictJson('{"a":1}')).toEqual({ a: 1 });
+    expect(() => parseStrictJson('{"a":1,"a":1}')).toThrow(/duplicate/);
+    expect(() => parseStrictJson('{"a":1} true')).toThrow(/strict JSON/);
   });
 
   it.each([Number.NaN, Number.POSITIVE_INFINITY, undefined, () => undefined])(
