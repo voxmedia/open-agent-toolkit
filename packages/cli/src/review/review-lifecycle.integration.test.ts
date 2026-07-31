@@ -40,7 +40,7 @@ function reviewPlan(context: PreparedReviewContextV1): ReviewPlanV1 {
     schemaVersion: 1,
     runId: context.runId,
     contextDigest: context.contextDigest,
-    strategy: 'whole-diff-inline',
+    strategy: 'selective-inline',
     lanes: [
       {
         id: 'primary',

@@ -1,5 +1,3 @@
-import { join } from 'node:path';
-
 import { DefaultGitChangeMapAdapter } from '@review/change-map';
 import {
   type PrepareReviewContextDependencies,
@@ -8,6 +6,10 @@ import {
 } from '@review/prepare-context';
 import type { PrepareReviewContextResultV1 } from '@review/types';
 import { ValidationStore } from '@review/validation-store';
+import {
+  launcherValidationStoreAuthority,
+  launcherValidationStoreRoot,
+} from '@review/validation-store-authority';
 import { Command } from 'commander';
 
 import {
@@ -38,7 +40,8 @@ const DEFAULT_DEPENDENCIES: PrepareContextCommandDependencies = {
   prepare: prepareReviewContext,
   createDependencies: (input) => ({
     store: new ValidationStore(
-      join(input.repoRoot, '.oat', 'review-validation'),
+      launcherValidationStoreRoot({ repoRoot: input.repoRoot }),
+      launcherValidationStoreAuthority(),
     ),
     git: new DefaultGitChangeMapAdapter(),
     telemetryAdapter: null,

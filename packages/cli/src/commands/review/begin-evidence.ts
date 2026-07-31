@@ -1,10 +1,12 @@
-import { join } from 'node:path';
-
 import {
   beginEvidence,
   type ReviewLifecycleDependencies,
 } from '@review/review-lifecycle';
 import { ValidationStore } from '@review/validation-store';
+import {
+  launcherValidationStoreAuthority,
+  launcherValidationStoreRoot,
+} from '@review/validation-store-authority';
 import { Command } from 'commander';
 
 import { runReviewJsonCommand } from './review-json';
@@ -13,7 +15,8 @@ interface BeginEvidenceCommandDependencies {
   write: (output: string) => void;
   setExitCode: (code: number) => void;
   begin: typeof beginEvidence;
-  lifecycle: Pick<ReviewLifecycleDependencies, 'store' | 'clock'>;
+  lifecycle?: Pick<ReviewLifecycleDependencies, 'store' | 'clock'>;
+  createLifecycle: () => Pick<ReviewLifecycleDependencies, 'store' | 'clock'>;
 }
 
 const DEFAULT_DEPENDENCIES: BeginEvidenceCommandDependencies = {
@@ -22,11 +25,12 @@ const DEFAULT_DEPENDENCIES: BeginEvidenceCommandDependencies = {
     process.exitCode = code;
   },
   begin: beginEvidence,
-  lifecycle: {
+  createLifecycle: () => ({
     store: new ValidationStore(
-      join(process.cwd(), '.oat', 'review-validation'),
+      launcherValidationStoreRoot(),
+      launcherValidationStoreAuthority(),
     ),
-  },
+  }),
 };
 
 export function createReviewBeginEvidenceCommand(
@@ -44,7 +48,7 @@ export function createReviewBeginEvidenceCommand(
         operation: () =>
           dependencies.begin(
             { runId: options.runId, receipt: options.receipt },
-            dependencies.lifecycle,
+            dependencies.lifecycle ?? dependencies.createLifecycle(),
           ),
       });
       dependencies.setExitCode(exitCode);

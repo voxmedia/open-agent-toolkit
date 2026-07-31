@@ -18,6 +18,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { bindAcceptedHandle } from './command-capabilities';
 import type { ReviewPreparationV1 } from './types';
 import { ValidationStore } from './validation-store';
+import { ValidationStoreAuthority } from './validation-store-authority';
 
 const roots: string[] = [];
 afterEach(async () => {
@@ -161,12 +162,14 @@ describe('validation state and gate correlation', () => {
       preparation: preparation(),
       artifactDraft: true,
     });
-    const raw = JSON.parse(await readFile(created.statePath, 'utf8')) as {
-      schemaVersion: number;
+    const envelope = JSON.parse(await readFile(created.statePath, 'utf8')) as {
+      state: { schemaVersion: number };
     };
-    raw.schemaVersion = 2;
-    await writeFile(created.statePath, JSON.stringify(raw));
-    await expect(store.readRun(created.runId)).rejects.toThrow(/schema/);
+    envelope.state.schemaVersion = 2;
+    await writeFile(created.statePath, JSON.stringify(envelope));
+    await expect(store.readRun(created.runId)).rejects.toThrow(
+      /authentication/,
+    );
 
     const expired = preparation('expiredvalidation');
     expired.expiresAt = '2020-01-01T00:00:00.000Z';
@@ -253,7 +256,8 @@ describe('validation state and gate correlation', () => {
   it('rejects tampered index records and loaded-run tuple mismatches', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
     roots.push(parent);
-    const store = new ValidationStore(join(parent, 'store'));
+    const authority = new ValidationStoreAuthority(Buffer.alloc(32, 9));
+    const store = new ValidationStore(join(parent, 'store'), authority);
     const gatePreparation = preparation('tamperedrun00001');
     gatePreparation.invocation = 'gate';
     gatePreparation.correlation = {
@@ -280,11 +284,11 @@ describe('validation state and gate correlation', () => {
 
     await rm(correlationPath);
     await store.bindGateCorrelation('gate', 'attempt', gatePreparation.runId);
-    const state = JSON.parse(await readFile(created.statePath, 'utf8')) as {
+    const state = authority.open(await readFile(created.statePath, 'utf8')) as {
       preparation: ReviewPreparationV1;
     };
     state.preparation.correlation.launchAttemptId = 'other';
-    await writeFile(created.statePath, JSON.stringify(state), { mode: 0o600 });
+    await writeFile(created.statePath, authority.seal(state), { mode: 0o600 });
     await expect(
       store.resolveGateCorrelation('gate', 'attempt'),
     ).rejects.toThrow(/does not match/);

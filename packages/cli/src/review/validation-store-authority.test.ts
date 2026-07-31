@@ -1,0 +1,50 @@
+import { join } from 'node:path';
+
+import { describe, expect, it } from 'vitest';
+
+import {
+  launcherValidationStoreAuthority,
+  launcherValidationStoreRoot,
+  ValidationStoreAuthority,
+} from './validation-store-authority';
+
+describe('ValidationStoreAuthority', () => {
+  it('authenticates state and rejects plaintext or tampered envelopes', () => {
+    const authority = new ValidationStoreAuthority(Buffer.alloc(32, 7));
+    const sealed = authority.seal({ phase: 'prepared', count: 1 });
+
+    expect(authority.open(sealed)).toEqual({ phase: 'prepared', count: 1 });
+    const tampered = sealed.replace('"count":1', '"count":2');
+    expect(() => authority.open(tampered)).toThrow(/authentication/);
+    expect(() =>
+      authority.open(JSON.stringify({ phase: 'evidence_started' })),
+    ).toThrow(/envelope/);
+  });
+
+  it('requires a launcher-held key and an outside-repository absolute root', () => {
+    const key = Buffer.alloc(32, 3).toString('base64url');
+    expect(
+      launcherValidationStoreAuthority({ OAT_REVIEW_AUTHORITY_KEY: key }),
+    ).toBeInstanceOf(ValidationStoreAuthority);
+    expect(() => launcherValidationStoreAuthority({})).toThrow(
+      /OAT_REVIEW_AUTHORITY_KEY/,
+    );
+    expect(() =>
+      launcherValidationStoreRoot({
+        environment: { OAT_REVIEW_VALIDATION_ROOT: 'relative/store' },
+      }),
+    ).toThrow(/absolute/);
+    expect(() =>
+      launcherValidationStoreRoot({
+        repoRoot: '/workspace/repo',
+        environment: {
+          OAT_REVIEW_VALIDATION_ROOT: join(
+            '/workspace/repo',
+            '.oat',
+            'validation',
+          ),
+        },
+      }),
+    ).toThrow(/outside/);
+  });
+});

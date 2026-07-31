@@ -15,6 +15,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
+import { canonicalizeJson } from './canonical-json';
+import { projectValidatedAssignments } from './plan-validator';
+import {
+  parsePlanValidationReceiptV1,
+  parsePreparedReviewContextV1,
+  parseReviewPlanV1,
+  parseReviewPreparationV1,
+} from './schemas';
 import type {
   HostTelemetryEvidenceV1,
   PlanValidationReceiptV1,
@@ -24,6 +32,10 @@ import type {
   ReviewProgress,
   ValidatedAssignmentProjectionV1,
 } from './types';
+import {
+  ephemeralValidationStoreAuthority,
+  type ValidationStoreAuthority,
+} from './validation-store-authority';
 
 export interface ValidationRunState {
   schemaVersion: 1;
@@ -64,6 +76,170 @@ const NOFOLLOW =
 const EXCLUSIVE_WRITE =
   constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | NOFOLLOW;
 
+function exactKeys(
+  value: unknown,
+  expected: readonly string[],
+  name: string,
+): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error(`${name} must be an object`);
+  }
+  const record = value as Record<string, unknown>;
+  if (Object.keys(record).sort().join(',') !== [...expected].sort().join(',')) {
+    throw new Error(`${name} has an invalid schema`);
+  }
+  return record;
+}
+
+function parseValidationRunState(
+  value: unknown,
+  runId: string,
+): ValidationRunState {
+  const state = exactKeys(
+    value,
+    [
+      'schemaVersion',
+      'preparation',
+      'phase',
+      'draft',
+      'acceptedHandleDigest',
+      'capabilities',
+      'telemetry',
+      'context',
+      'plan',
+      'assignment',
+      'receipt',
+      'planValidationAttempts',
+    ],
+    'validation state',
+  );
+  if (state.schemaVersion !== 1) {
+    throw new Error('validation state schema version is invalid');
+  }
+  const preparation = parseReviewPreparationV1(state.preparation);
+  if (preparation.runId !== runId) {
+    throw new Error('validation state identity mismatch');
+  }
+  if (
+    ![
+      'prepared',
+      'artifacts_loaded',
+      'plan_validated',
+      'evidence_started',
+      'accounting_repair',
+      'accepted',
+      'terminal',
+    ].includes(state.phase as string)
+  ) {
+    throw new Error('validation state phase is invalid');
+  }
+  let draft: ValidationRunState['draft'] = null;
+  if (state.draft !== null) {
+    const parsed = exactKeys(
+      state.draft,
+      ['path', 'device', 'inode'],
+      'validation draft',
+    );
+    if (
+      typeof parsed.path !== 'string' ||
+      !Number.isSafeInteger(parsed.device) ||
+      !Number.isSafeInteger(parsed.inode)
+    ) {
+      throw new Error('validation draft schema is invalid');
+    }
+    draft = parsed as unknown as ValidationRunState['draft'];
+  }
+  if (
+    state.acceptedHandleDigest !== null &&
+    typeof state.acceptedHandleDigest !== 'string'
+  ) {
+    throw new Error('accepted handle digest is invalid');
+  }
+  let capabilities: ValidationRunState['capabilities'] = null;
+  if (state.capabilities !== null) {
+    const parsed = exactKeys(
+      state.capabilities,
+      ['checkpointDigest', 'planDigest', 'checkpointUsed', 'planUsed'],
+      'validation capabilities',
+    );
+    if (
+      typeof parsed.checkpointDigest !== 'string' ||
+      typeof parsed.planDigest !== 'string' ||
+      typeof parsed.checkpointUsed !== 'boolean' ||
+      typeof parsed.planUsed !== 'boolean'
+    ) {
+      throw new Error('validation capabilities schema is invalid');
+    }
+    capabilities = parsed as unknown as ValidationRunState['capabilities'];
+  }
+  if (!Array.isArray(state.telemetry)) {
+    throw new Error('validation telemetry must be an array');
+  }
+  for (const evidence of state.telemetry) {
+    const parsed = exactKeys(
+      evidence,
+      [
+        'schemaVersion',
+        'validationRunId',
+        'phase',
+        'adapterId',
+        'requestStartedAt',
+        'requestCompletedAt',
+        'observation',
+        'disposition',
+        'rejectionReason',
+      ],
+      'validation telemetry evidence',
+    );
+    if (
+      parsed.schemaVersion !== 1 ||
+      parsed.validationRunId !== runId ||
+      !['pre_artifact', 'post_artifact'].includes(parsed.phase as string) ||
+      !['accepted', 'missing', 'invalid'].includes(parsed.disposition as string)
+    ) {
+      throw new Error('validation telemetry evidence is invalid');
+    }
+  }
+  const context =
+    state.context === null ? null : parsePreparedReviewContextV1(state.context);
+  const plan = state.plan === null ? null : parseReviewPlanV1(state.plan);
+  let assignment: ValidatedAssignmentProjectionV1 | null = null;
+  if (state.assignment !== null) {
+    if (plan === null) {
+      throw new Error('validation assignment requires a plan');
+    }
+    const expected = projectValidatedAssignments(plan);
+    if (canonicalizeJson(state.assignment) !== canonicalizeJson(expected)) {
+      throw new Error('validation assignment schema or identity is invalid');
+    }
+    assignment = expected;
+  }
+  const receipt =
+    state.receipt === null ? null : parsePlanValidationReceiptV1(state.receipt);
+  if (
+    !Number.isSafeInteger(state.planValidationAttempts) ||
+    (state.planValidationAttempts as number) < 0
+  ) {
+    throw new Error('plan validation attempts are invalid');
+  }
+  return {
+    schemaVersion: 1,
+    preparation,
+    phase: state.phase as ValidationRunState['phase'],
+    draft,
+    acceptedHandleDigest: state.acceptedHandleDigest as string | null,
+    capabilities,
+    telemetry: structuredClone(
+      state.telemetry,
+    ) as ValidationRunState['telemetry'],
+    context,
+    plan,
+    assignment,
+    receipt,
+    planValidationAttempts: state.planValidationAttempts as number,
+  };
+}
+
 async function writeExclusive(path: string, content: string): Promise<void> {
   const handle = await open(path, EXCLUSIVE_WRITE, 0o600);
   try {
@@ -76,9 +252,14 @@ async function writeExclusive(path: string, content: string): Promise<void> {
 
 export class ValidationStore {
   readonly root: string;
+  readonly #authority: ValidationStoreAuthority;
 
-  constructor(root = join(tmpdir(), 'oat-review-validation-v1')) {
+  constructor(
+    root = join(tmpdir(), 'oat-review-validation-v1'),
+    authority = ephemeralValidationStoreAuthority(),
+  ) {
     this.root = root;
+    this.#authority = authority;
   }
 
   private async ensureRoot(): Promise<void> {
@@ -195,7 +376,7 @@ export class ValidationStore {
         planValidationAttempts: 0,
       };
       const statePath = join(runDirectory, 'state.json');
-      await writeExclusive(statePath, `${JSON.stringify(state)}\n`);
+      await writeExclusive(statePath, this.#authority.seal(state));
       const stateInfo = await stat(statePath);
       if (!stateInfo.isFile() || stateInfo.mode & 0o077) {
         throw new Error('validation state permissions are unsafe');
@@ -216,9 +397,9 @@ export class ValidationStore {
   }
 
   async unsafeReadStateForTesting(runId: string): Promise<unknown> {
-    return JSON.parse(
+    return this.#authority.open(
       await readFile(join(this.runDirectory(runId), 'state.json'), 'utf8'),
-    ) as unknown;
+    );
   }
 
   async readRun(runId: string, now = new Date()): Promise<StoredValidationRun> {
@@ -235,14 +416,7 @@ export class ValidationStore {
     } finally {
       await handle.close();
     }
-    const state = JSON.parse(source) as ValidationRunState;
-    if (
-      state.schemaVersion !== 1 ||
-      state.preparation?.schemaVersion !== 1 ||
-      state.preparation.runId !== runId
-    ) {
-      throw new Error('validation state schema or identity mismatch');
-    }
+    const state = parseValidationRunState(this.#authority.open(source), runId);
     if (Date.parse(state.preparation.expiresAt) <= now.getTime()) {
       throw new Error('validation state has expired');
     }
@@ -288,7 +462,7 @@ export class ValidationStore {
         current.runDirectory,
         `.state-${randomUUID()}.tmp`,
       );
-      await writeExclusive(temporaryPath, `${JSON.stringify(next)}\n`);
+      await writeExclusive(temporaryPath, this.#authority.seal(next));
       await rename(temporaryPath, current.statePath);
       return this.readRun(runId);
     });

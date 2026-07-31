@@ -1,11 +1,13 @@
-import { join } from 'node:path';
-
 import {
   checkpointArtifactsLoaded,
   type ReviewLifecycleDependencies,
 } from '@review/review-lifecycle';
 import type { PreparedReviewContextV1 } from '@review/types';
 import { ValidationStore } from '@review/validation-store';
+import {
+  launcherValidationStoreAuthority,
+  launcherValidationStoreRoot,
+} from '@review/validation-store-authority';
 import { Command } from 'commander';
 
 import { runReviewJsonCommand } from './review-json';
@@ -17,7 +19,8 @@ interface CheckpointArtifactsCommandDependencies {
     input: { runId: string; checkpointToken: string },
     dependencies: ReviewLifecycleDependencies,
   ) => Promise<PreparedReviewContextV1>;
-  lifecycle: ReviewLifecycleDependencies;
+  lifecycle?: ReviewLifecycleDependencies;
+  createLifecycle: () => ReviewLifecycleDependencies;
 }
 
 const DEFAULT_DEPENDENCIES: CheckpointArtifactsCommandDependencies = {
@@ -26,13 +29,14 @@ const DEFAULT_DEPENDENCIES: CheckpointArtifactsCommandDependencies = {
     process.exitCode = code;
   },
   checkpoint: checkpointArtifactsLoaded,
-  lifecycle: {
+  createLifecycle: () => ({
     store: new ValidationStore(
-      join(process.cwd(), '.oat', 'review-validation'),
+      launcherValidationStoreRoot(),
+      launcherValidationStoreAuthority(),
     ),
     telemetryAdapter: null,
     telemetryAdapterId: null,
-  },
+  }),
 };
 
 export function createReviewCheckpointArtifactsCommand(
@@ -56,7 +60,7 @@ export function createReviewCheckpointArtifactsCommand(
               runId: options.runId,
               checkpointToken: options.checkpointToken,
             },
-            dependencies.lifecycle,
+            dependencies.lifecycle ?? dependencies.createLifecycle(),
           );
           return {
             validationRunId: context.runId,

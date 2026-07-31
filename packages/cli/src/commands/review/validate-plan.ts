@@ -1,5 +1,3 @@
-import { join } from 'node:path';
-
 import {
   type ReviewLifecycleDependencies,
   validateAndReceiptPlan,
@@ -7,6 +5,10 @@ import {
 import { parseReviewPlanV1, ReviewSchemaError } from '@review/schemas';
 import type { ReviewPlanV1 } from '@review/types';
 import { ValidationStore } from '@review/validation-store';
+import {
+  launcherValidationStoreAuthority,
+  launcherValidationStoreRoot,
+} from '@review/validation-store-authority';
 import { Command } from 'commander';
 
 import {
@@ -20,7 +22,8 @@ interface ValidatePlanCommandDependencies {
   write: (output: string) => void;
   setExitCode: (code: number) => void;
   validate: typeof validateAndReceiptPlan;
-  lifecycle: Pick<ReviewLifecycleDependencies, 'store' | 'clock'>;
+  lifecycle?: Pick<ReviewLifecycleDependencies, 'store' | 'clock'>;
+  createLifecycle: () => Pick<ReviewLifecycleDependencies, 'store' | 'clock'>;
 }
 
 const DEFAULT_DEPENDENCIES: ValidatePlanCommandDependencies = {
@@ -30,11 +33,12 @@ const DEFAULT_DEPENDENCIES: ValidatePlanCommandDependencies = {
     process.exitCode = code;
   },
   validate: validateAndReceiptPlan,
-  lifecycle: {
+  createLifecycle: () => ({
     store: new ValidationStore(
-      join(process.cwd(), '.oat', 'review-validation'),
+      launcherValidationStoreRoot(),
+      launcherValidationStoreAuthority(),
     ),
-  },
+  }),
 };
 
 function parseReviewPlan(value: unknown): ReviewPlanV1 {
@@ -73,7 +77,7 @@ export function createReviewValidatePlanCommand(
               commandToken: options.commandToken,
               plan,
             },
-            dependencies.lifecycle,
+            dependencies.lifecycle ?? dependencies.createLifecycle(),
           );
           if (!result.valid) {
             throw new ReviewJsonCommandError({
