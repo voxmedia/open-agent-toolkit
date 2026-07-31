@@ -95,7 +95,7 @@ describe('review skill contracts', () => {
     expect(content).toContain('ReviewerTerminalV1');
     expect(content.match(/^## Review Accounting$/gm)).toHaveLength(1);
     expect(content).toMatch(
-      /^## Review Accounting\n```json\n\{[\s\S]*?"schemaVersion": 1[\s\S]*?\n\}\n```$/m,
+      /^## Review Accounting\n(?:\n)?```json\n\{[\s\S]*?"schemaVersion": 1[\s\S]*?\n\}\n```$/m,
     );
     expect(content).toMatch(
       /Findings:\s*\{N\} critical,\s*\{N\} important,\s*\{N\} medium,\s*\{N\} minor/,
@@ -103,6 +103,41 @@ describe('review skill contracts', () => {
     for (const severity of ['Critical', 'Important', 'Medium', 'Minor']) {
       expect(content).toMatch(new RegExp(`^### ${severity}$`, 'm'));
     }
+  });
+
+  it('makes Tier 3 a receipt-bound selective inline continuation', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const tier3 =
+      content.match(
+        /### Step 6d: Tier 3[\s\S]*?(?=### Step 7: Determine Review Artifact Path)/,
+      )?.[0] ?? '';
+    const normalizedTier3 = tier3.replace(/\s+/g, ' ');
+    const orderedBoundary = [
+      'prepare-context',
+      'Required artifact intake',
+      'checkpointArtifacts',
+      'ReviewPlanV1',
+      'PlanValidationReceiptV1',
+      'beginEvidence',
+      'Selective evidence',
+      'ReviewerTerminalV1',
+    ];
+    let previousIndex = -1;
+
+    for (const marker of orderedBoundary) {
+      const markerIndex = tier3.indexOf(marker);
+      expect(markerIndex, marker).toBeGreaterThan(previousIndex);
+      previousIndex = markerIndex;
+    }
+
+    expect(normalizedTier3).toContain(
+      'The current planning parent is the accepted inline continuation.',
+    );
+    expect(tier3).toContain("patchEstimateState === 'exact'");
+    expect(tier3).toContain('estimatedPatchTokens <= evidenceBudgetTokens');
+    expect(tier3).not.toMatch(/read all (?:files in )?`?FILES_CHANGED`?/i);
   });
 
   it('keeps reviewer timestamps aligned and next-step guidance inside the artifact template', () => {

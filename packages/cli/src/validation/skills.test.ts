@@ -858,11 +858,36 @@ describe('validateOatSkills', () => {
 
     expect(content.match(/^## Review Accounting$/gm)).toHaveLength(1);
     expect(content).toMatch(
-      /^## Review Accounting\n```json\n\{[\s\S]*?"schemaVersion": 1[\s\S]*?\n\}\n```$/m,
+      /^## Review Accounting\n(?:\n)?```json\n\{[\s\S]*?"schemaVersion": 1[\s\S]*?\n\}\n```$/m,
     );
     expect(content).not.toMatch(
       /(?:unconditionally|always|first)\s+(?:read|load)[^\n]*(?:source|content-level diff)/i,
     );
+  });
+
+  it('requires Tier 3 to use the validated plan-first inline contract', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const tier3 = content.match(
+      /### Step 6d: Tier 3[\s\S]*?(?=### Step 7: Determine Review Artifact Path)/,
+    )?.[0];
+    const normalizedTier3 = tier3?.replace(/\s+/g, ' ');
+
+    expect(tier3).toBeDefined();
+    expect(tier3).toMatch(
+      /prepare-context[\s\S]*Required artifact intake[\s\S]*checkpointArtifacts[\s\S]*ReviewPlanV1[\s\S]*PlanValidationReceiptV1[\s\S]*beginEvidence[\s\S]*Selective evidence[\s\S]*ReviewerTerminalV1/,
+    );
+    expect(normalizedTier3).toContain(
+      'The current planning parent is the accepted inline continuation.',
+    );
+    expect(tier3).toMatch(
+      /patchEstimateState === 'exact'[\s\S]{0,260}estimatedPatchTokens <= evidenceBudgetTokens/,
+    );
+    expect(tier3).toMatch(
+      /missing[\s\S]{0,120}telemetry[\s\S]{0,220}path-scoped/i,
+    );
+    expect(tier3).not.toMatch(/read all (?:files in )?`?FILES_CHANGED`?/i);
   });
 
   it('keeps reviewer-local reconnaissance bounded and advisory', async () => {

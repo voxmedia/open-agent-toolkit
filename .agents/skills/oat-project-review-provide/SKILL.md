@@ -830,7 +830,7 @@ To run review in a fresh session:
 4. Run the oat-project-review-receive skill
 ```
 
-**Step 6d: Tier 3 — Inline Reset (fallback)**
+### Step 6d: Tier 3 — Plan-First Inline Continuation (fallback)
 
 If the user requests inline review, first verify equivalent current-host model
 and effort controls. Inline is also allowed for explicit inherit/default or the
@@ -838,14 +838,54 @@ documented managed-uncapped reviewer behavior. User preference alone does not
 override a concrete managed target; if the guard fails, use the exact/pinned
 route or block.
 
-When inline is allowed:
+When inline is allowed, use the following contract. The current planning parent
+is the accepted inline continuation. Do not launch a replacement reviewer or
+introduce another coordinator. The launcher-owned commands and validators
+remain authoritative; execute their supplied executable and argument arrays
+directly.
 
-- Run "reset protocol":
-  1. Re-read required artifacts for current workflow mode from scratch
-  2. Read all files in `FILES_CHANGED`. For a narrowed re-review, do not expand
-     this back to every file in the nominal full scope.
-  3. Apply oat-reviewer checklist inline
-  4. Write review artifact
+Use this exact contract:
+
+1. **Preparation (`oat review prepare-context`)** — Invoke the launcher-owned
+   `prepare-context` command for the authoritative range, sink, invocation, and
+   already-resolved outer budget. Treat its changed-file set, metadata-only
+   ChangeMap, obligations, run identity, and command invocations as
+   authoritative.
+2. **Required artifact intake** — Re-read the mode-required lifecycle artifacts
+   from scratch. Use `FILES_CHANGED` only as the authoritative path inventory;
+   do not read source files or content-level diffs yet. For a narrowed
+   re-review, keep the exact narrowed range and inherited-coverage provenance.
+3. **Artifact checkpoint (`checkpointArtifacts`)** — After artifact intake,
+   execute the supplied one-shot checkpoint command from this accepted
+   continuation. Use its sealed `PreparedReviewContextV1` and post-artifact
+   budget; never supply self-reported token counts.
+4. **Validated plan (`ReviewPlanV1`)** — Build one compact inline plan that
+   assigns every authoritative path and obligation, records the mandatory
+   delegation economics and verification boundary, and chooses either
+   selective-inline or eligible whole-diff-inline evidence. Submit it with the
+   supplied plan-validation command. One rejected plan may be corrected once
+   before evidence.
+5. **Validation receipt (`PlanValidationReceiptV1`)** — Retain the opaque
+   receipt returned by the launcher-owned validator. Do not infer acceptance
+   from reviewer-authored digests.
+6. **Evidence transition (`beginEvidence`)** — Execute the supplied
+   begin-evidence command with that receipt. Do not read source files or
+   content-level diffs unless this atomic transition succeeds.
+7. **Selective evidence** — Inspect consequential seams first, then use
+   path-scoped diffs and targeted source context according to the validated
+   plan. Inline does not imply whole-diff. Whole-diff is valid only when
+   `patchEstimateState === 'exact'`, observed post-artifact telemetry produced
+   a context budget, `estimatedPatchTokens <= evidenceBudgetTokens`, and the
+   scope is one coherent lane without an unresolved consequential seam.
+   Missing telemetry, missing budget evidence, or an inexact/capped patch
+   estimate keeps the review inline but requires path-scoped evidence.
+8. **Typed terminal (`ReviewerTerminalV1`)** — Apply the full canonical
+   `oat-reviewer` checklist, reconcile evidence, and return one complete or
+   blocked terminal from this same continuation. Complete output carries the
+   dispatch-selected candidate and `ReviewAccountingV1`; blocked output carries
+   blocked-incomplete accounting and no actionable candidate. Run the
+   launcher-owned output validator before translating to the artifact or
+   structured sink.
 
 ### Step 7: Determine Review Artifact Path
 
