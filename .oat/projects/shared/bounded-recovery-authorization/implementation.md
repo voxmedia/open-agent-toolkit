@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p-rev1-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status        | Tasks | Completed |
-| ------------ | ------------- | ----- | --------- |
-| Phase 1      | review_failed | 2     | 2/2       |
-| Phase p-rev1 | in_progress   | 1     | 0/1       |
-| Phase 2      | pending       | 1     | 0/1       |
-| Phase 3      | pending       | 1     | 0/1       |
-| Phase 4      | pending       | 1     | 0/1       |
+| Phase        | Status         | Tasks | Completed |
+| ------------ | -------------- | ----- | --------- |
+| Phase 1      | review_failed  | 2     | 2/2       |
+| Phase p-rev1 | review_pending | 1     | 1/1       |
+| Phase 2      | pending        | 1     | 0/1       |
+| Phase 3      | pending        | 1     | 0/1       |
+| Phase 4      | pending        | 1     | 0/1       |
 
-**Total:** 2/6 tasks completed
+**Total:** 3/6 tasks completed
 
 ---
 
@@ -126,13 +126,28 @@ oat_generated: false
 
 ## Revision Phase 1: Final Reserved Attempt Revision
 
-**Status:** in_progress
+**Status:** review_pending
 **Started:** 2026-07-31
 
 ### Task p-rev1-t01: (revision) Distinguish Pending Completion from New Reservation
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc
+
+**Outcome:**
+
+- Split new-reservation budget eligibility from completion of a matching,
+  fully reconciled pending reservation.
+- Added root and isolated-agent boundary scenarios for `limit=1, used=1` with
+  and without a matching pending attempt.
+
+**Verification:**
+
+- Focused contract tests: 130/130 passed
+- Canonical skill validation: 61 skills passed
+- `pnpm lint`, `pnpm format`, isolation, and `git diff --check`: passed
+- Root sequential rerun confirmed the initial concurrent asset-bundling failure
+  was a command race rather than a contract failure
 
 ---
 
@@ -210,6 +225,8 @@ _- Outstanding Items_
   did not equal the actual clean HEAD
 - Operator explicitly authorized one new corrected p-rev1 run after the
   invalid-run abort; target and bounded scope remain unchanged
+- Corrected p-rev1 run completed at
+  `53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc`; fresh root-owned review pending
 
 #### Dispatch Record: p-rev1 invalid run
 
@@ -230,6 +247,29 @@ _- Outstanding Items_
 - Task/commit: not executed
 - Verification/recovery/children: none
 - Fallback/replacement: none; stopped after accepted invalid-run abort
+- Dispatch stamp:
+  `Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+#### Dispatch Record: p-rev1 corrected run
+
+- Request:
+  `bounded-recovery-authorization-p-rev1-corrected-20260731T1903Z`
+- Operator authorization: explicit new action recorded at
+  `2dbd574715701b27ddb0a85e175abdf458df0698`
+- Launch state/outcome: accepted / `DONE`
+- Route: Cursor native materialized role
+  `oat-phase-implementer-gpt-5-6-sol-high`
+- Selection: managed High; candidate `gpt-5.6-sol-high`; task class
+  `hard-reasoning`
+- Model axis: `selected:gpt-5.6-sol-high`
+- Effort axis: `not-applicable`
+- Base/head:
+  `2dbd574715701b27ddb0a85e175abdf458df0698..53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc`
+- Task/commit: `p-rev1-t01` /
+  `53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc`
+- Verification: 130 focused tests, 61 skills, lint, format, isolation, and diff
+  checks passed
+- Recovery/children: none
 - Dispatch stamp:
   `Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 
@@ -259,6 +299,7 @@ Chronological log of implementation progress.
 - Completed and root-validated the second append-only Phase 1 review-fix commit.
 - Recorded operator authorization for a new explicit revision phase after the
   terminal Phase 1 review.
+- Completed and root-validated the corrected p-rev1 task commit.
 
 **Decisions:**
 
@@ -269,14 +310,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Execute the explicitly authorized corrected p-rev1 launch.
+- Run the fresh root-owned p-rev1 review.
 
 **Blockers:**
 
-- None. The prior accepted run remains terminal; this is a separately
-  authorized new run.
+- None.
 
-**Session End:** Corrected p-rev1 launch authorized
+**Session End:** Phase p-rev1 review pending
 
 ---
 
@@ -296,7 +336,7 @@ Track test execution during implementation.
 | Phase  | Tests Run                                                  | Passed                | Failed | Coverage                     |
 | ------ | ---------------------------------------------------------- | --------------------- | ------ | ---------------------------- |
 | 1      | skills.test.ts; skill validation; lint; format; diff check | 129 tests + 61 skills | 0      | Canonical recovery contracts |
-| p-rev1 | -                                                          | -                     | -      | -                            |
+| p-rev1 | skills.test.ts; skill validation; lint; format; diff check | 130 tests + 61 skills | 0      | Attempt-boundary contracts   |
 | 2      | -                                                          | -                     | -      | -                            |
 | 3      | -                                                          | -                     | -      | -                            |
 | 4      | -                                                          | -                     | -      | -                            |
