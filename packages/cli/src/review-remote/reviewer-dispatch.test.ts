@@ -5,13 +5,13 @@
  * this wrapper exercises.
  */
 
-import { type StructuredFindings } from '@review/structured-findings';
-import type { ReviewAccountingV1, ReviewerTerminalV1 } from '@review/types';
+import {
+  StructuredFindingsError,
+  type StructuredFindings,
+} from '@review/structured-findings';
 import { describe, expect, it } from 'vitest';
 
 import {
-  AcceptedReviewBlockedError,
-  AcceptedReviewOutputError,
   STRUCTURED_OUTPUT_MODE_FLAG,
   buildDispatchPayload,
   dispatchStructuredReview,
@@ -32,45 +32,6 @@ function context(
       '## Review Scope\n\n**Project:** .oat/projects/foo/bar',
     postedBodySchemaRef: 'design.md → Data Models → Posted-review-body',
     narrowing: { kind: 'full-scope-fallback', reason: 'no-prior-review' },
-    validation: {
-      receipt: {
-        token: 'receipt',
-        validationRunId: 'validation-run',
-        gateRunId: null,
-        launchAttemptId: 'launch',
-        acceptedHandleDigest: 'handle',
-        contractVersion: 1,
-        contextDigest: 'context',
-        planDigest: 'plan',
-        assignmentDigest: 'assignment',
-        validatedAt: '2026-07-30T20:00:00.000Z',
-        expiresAt: '2026-07-30T22:00:00.000Z',
-      },
-      plan: {
-        strategy: 'selective-inline',
-        verificationBoundary: {
-          requiredClaims: [
-            { kind: 'promoted-finding', mode: 'direct' },
-            { kind: 'consequential-absence', mode: 'direct' },
-            { kind: 'worker-conflict', mode: 'direct' },
-            { kind: 'cross-lane-gap', mode: 'direct' },
-          ],
-          positiveCoverage: { mode: 'sample', laneIds: [], rationale: 'none' },
-          deterministicAcceptance: {
-            mode: 'provenance',
-            requiredFields: [
-              'command',
-              'cwd',
-              'scopeRefs',
-              'provenance',
-              'result',
-            ],
-          },
-        },
-      },
-      assignment: { lanes: [], classifications: [] },
-    },
-    outputDeadlineMs: Date.now() + 60_000,
     ...overrides,
   };
 }
@@ -103,57 +64,6 @@ function wellFormedFindings(): StructuredFindings {
 }
 
 /** A dispatcher whose spawn returns a fixed response and records its payload. */
-function terminalFor(review: unknown): ReviewerTerminalV1 {
-  const findings =
-    typeof review === 'object' &&
-    review !== null &&
-    Array.isArray((review as { findings?: unknown }).findings)
-      ? ((review as { findings: Array<{ id?: unknown }> }).findings ?? [])
-      : [];
-  const evidence = findings
-    .filter((finding) => typeof finding.id === 'string')
-    .map((finding) => ({
-      id: `evidence-${finding.id as string}`,
-      kind: 'source' as const,
-      locator: 'review finding',
-      scopeRefs: [],
-      provenance: 'reviewer',
-      digest: `digest-${finding.id as string}`,
-      commandId: null,
-      commandResultDigest: null,
-    }));
-  const accounting: ReviewAccountingV1 & { completion: 'complete' } = {
-    schemaVersion: 1,
-    receipt: 'receipt',
-    contextDigest: 'context',
-    planDigest: 'plan',
-    assignmentDigest: 'assignment',
-    strategy: 'selective-inline',
-    completion: 'complete',
-    evidence,
-    lanes: [],
-    classifications: [],
-    verification: findings
-      .filter((finding) => typeof finding.id === 'string')
-      .map((finding) => ({
-        claimId: `claim-${finding.id as string}`,
-        kind: 'promoted-finding' as const,
-        findingId: finding.id as string,
-        laneIds: [],
-        mode: 'direct' as const,
-        disposition: 'verified' as const,
-        evidenceRefIds: [`evidence-${finding.id as string}`],
-      })),
-    budget: { evidenceStoppedAt: null, outputReservePreserved: null },
-  };
-  return {
-    schemaVersion: 1,
-    status: 'complete',
-    candidate: { kind: 'structured', review: review as StructuredFindings },
-    reviewAccounting: accounting,
-  };
-}
-
 function stubDispatcher(response: unknown): {
   dispatcher: Dispatcher;
   payloads: Record<string, unknown>[];
@@ -162,7 +72,7 @@ function stubDispatcher(response: unknown): {
   const dispatcher: Dispatcher = {
     async spawn(payload) {
       payloads.push(payload);
-      return { accepted: true, terminal: terminalFor(response) };
+      return { findings: response };
     },
   };
   return { dispatcher, payloads };
@@ -238,7 +148,7 @@ describe('dispatchStructuredReview', () => {
     const { dispatcher } = stubDispatcher('not an object');
     await expect(
       dispatchStructuredReview(context(), dispatcher),
-    ).rejects.toBeInstanceOf(AcceptedReviewOutputError);
+    ).rejects.toBeInstanceOf(StructuredFindingsError);
   });
 
   it('raises a typed error when a finding has an invalid severity', async () => {
@@ -248,7 +158,7 @@ describe('dispatchStructuredReview', () => {
     const { dispatcher } = stubDispatcher(bad);
     await expect(
       dispatchStructuredReview(context(), dispatcher),
-    ).rejects.toBeInstanceOf(AcceptedReviewOutputError);
+    ).rejects.toBeInstanceOf(StructuredFindingsError);
   });
 
   it('raises a typed error when file/line are not both set or both null', async () => {
@@ -258,7 +168,7 @@ describe('dispatchStructuredReview', () => {
     const { dispatcher } = stubDispatcher(bad);
     await expect(
       dispatchStructuredReview(context(), dispatcher),
-    ).rejects.toBeInstanceOf(AcceptedReviewOutputError);
+    ).rejects.toBeInstanceOf(StructuredFindingsError);
   });
 
   it('raises a typed error when verification_commands is not a string array', async () => {
@@ -268,7 +178,7 @@ describe('dispatchStructuredReview', () => {
     const { dispatcher } = stubDispatcher(bad);
     await expect(
       dispatchStructuredReview(context(), dispatcher),
-    ).rejects.toBeInstanceOf(AcceptedReviewOutputError);
+    ).rejects.toBeInstanceOf(StructuredFindingsError);
   });
 
   it('raises a typed error when summary is missing', async () => {
@@ -277,7 +187,7 @@ describe('dispatchStructuredReview', () => {
     const { dispatcher } = stubDispatcher(bad);
     await expect(
       dispatchStructuredReview(context(), dispatcher),
-    ).rejects.toBeInstanceOf(AcceptedReviewOutputError);
+    ).rejects.toBeInstanceOf(StructuredFindingsError);
   });
 
   it('accepts a clean review with zero findings', async () => {
@@ -289,79 +199,5 @@ describe('dispatchStructuredReview', () => {
     const { dispatcher } = stubDispatcher(clean);
     const result = await dispatchStructuredReview(context(), dispatcher);
     expect(result.findings).toEqual([]);
-  });
-
-  it('keeps accepted blocked output non-actionable without another spawn', async () => {
-    let calls = 0;
-    const blocked: ReviewerTerminalV1 = {
-      schemaVersion: 1,
-      status: 'blocked',
-      reason: 'coverage incomplete',
-      diagnostics: ['no evidence budget remained'],
-      reviewAccounting: {
-        ...terminalFor({
-          summary: '',
-          findings: [],
-          verification_commands: [],
-        }).reviewAccounting,
-        completion: 'blocked-incomplete',
-        verification: [
-          {
-            claimId: 'claim-unresolved',
-            kind: 'consequential-absence',
-            findingId: null,
-            laneIds: [],
-            mode: 'direct',
-            disposition: 'unresolved',
-            evidenceRefIds: [],
-          },
-        ],
-      },
-    };
-    const dispatcher: Dispatcher = {
-      async spawn() {
-        calls++;
-        return { accepted: true, terminal: blocked };
-      },
-    };
-    await expect(
-      dispatchStructuredReview(context(), dispatcher),
-    ).rejects.toBeInstanceOf(AcceptedReviewBlockedError);
-    expect(calls).toBe(1);
-  });
-
-  it.each([
-    ['malformed terminal', () => ({})],
-    ['terminal timeout', () => Promise.reject(new Error('accepted timeout'))],
-    [
-      'accounting-invalid terminal',
-      () => ({
-        ...terminalFor({
-          summary: 'clean',
-          findings: [],
-          verification_commands: [],
-        }),
-        reviewAccounting: {
-          ...terminalFor({
-            summary: 'clean',
-            findings: [],
-            verification_commands: [],
-          }).reviewAccounting,
-          receipt: 'wrong',
-        },
-      }),
-    ],
-  ])('does not fall back after accepted %s', async (_, terminalFactory) => {
-    let calls = 0;
-    const dispatcher: Dispatcher = {
-      async spawn() {
-        calls++;
-        return { accepted: true, terminal: terminalFactory() };
-      },
-    };
-    await expect(
-      dispatchStructuredReview(context(), dispatcher),
-    ).rejects.toBeInstanceOf(AcceptedReviewOutputError);
-    expect(calls).toBe(1);
   });
 });
