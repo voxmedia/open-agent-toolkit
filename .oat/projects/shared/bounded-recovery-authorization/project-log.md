@@ -68,6 +68,10 @@ Original Phase p03 handle returned NEEDS_CONTEXT before edit because the review-
 
 Phase outcome PASS after two task commits and review cycle 2/3; prior Important finding I1 resolved by continuation bounded-recovery-authorization-p03-review1-fix1; review artifact: reviews/p03-review-2026-07-31T200025Z.md; fix-loop count 1.
 
+### 2026-07-31 · project · bug · autonomy gate-inventory drift
+
+Phase p04 full verification exposed three unmapped prompt-site keys introduced by the earlier recovery-contract prose. Focused reproduction shows all three are non-gate occurrences requiring NG mappings in .agents/docs/autonomy-contract.md; p04 stopped without commit because that file is outside its authorized boundary.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - p04 test gate blocked by unmapped autonomy prompt-site coverage from earlier recovery-contract changes
 oat_last_updated: 2026-07-31
 oat_current_task_id: p04-t01
 oat_generated: false
@@ -267,13 +268,29 @@ oat_generated: false
 
 ## Phase 4: Lockstep Release and Full Verification
 
-**Status:** pending
-**Started:** -
+**Status:** blocked
+**Started:** 2026-07-31
 
 ### Task p04-t01: Bump Public Packages and Validate the Release
 
-**Status:** pending
+**Status:** blocked
 **Commit:** -
+
+**Blocked run:**
+
+- Request: `bounded-recovery-authorization-p04-implementation-20260731T2007Z`
+- Base/head:
+  `51c360cbed9ee4f3c07e85f645f97922e59a901e`
+- Authorized version edits: complete but uncommitted in exactly six JSON files
+- Verification passed through lint, format, docs build, check, and type-check
+- `pnpm test` failed because three recovery-contract prose sites are absent from
+  `.agents/docs/autonomy-contract.md` HEAD prompt-site coverage
+- Focused root reproduction confirmed stable keys `4d6c519131e5`,
+  `81db07214b06`, and `4aa21120295f`; all are non-gate occurrences requiring
+  `NG` mappings
+- Build and release validation were not run; no task commit or recovery event
+  exists
+- Scope expansion or a narrow revision phase requires operator direction
 
 ---
 
@@ -479,9 +496,10 @@ Chronological log of implementation progress.
 
 **Blockers:**
 
-- None.
+- Phase 4 cannot commit or continue while the full test gate fails on canonical
+  autonomy inventory drift outside the phase's authorized files.
 
-**Session End:** Phase 3 passed; Phase 4 pending
+**Session End:** Phase 4 blocked pending operator direction
 
 ---
 
