@@ -469,6 +469,30 @@ fresh review loop.
 - Pre-receive head: `6618a87fc5d73270e83ce4aeb729c1b09b942593`
 - Receive state: `intent_persisted`; archive collision check passed
 
+### Review Received: final (configured gate)
+
+**Date:** 2026-07-31
+**Review artifact:**
+`reviews/archived/final-review-2026-07-31T224851Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Disposition:**
+
+- Passing gate judgment sweep consumed autonomously.
+- No fix tasks, deferred Medium findings, Minor dispositions, or unresolved
+  final-scope gates exist.
+- Exact event `final/code/final-review-2026-07-31T224851Z.md` marked `passed`.
+- Gate provenance preserved: run
+  `2985cf13-b9ca-449a-8384-81e0a86f44eb`, target
+  `cursor-fable-5-xhigh`, invocation `gate`, reviewed head
+  `7aec7f31ec00c8949ab2f96a005256efbcb316a1`.
+
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 
 **Status:** completed
