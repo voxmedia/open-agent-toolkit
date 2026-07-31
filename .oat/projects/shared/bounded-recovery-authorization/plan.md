@@ -448,7 +448,7 @@ validation all pass from a clean post-task tree.
 | ------ | -------- | -------- | ---------- | ------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01    | code     | received | 2026-07-31 | reviews/p01-review-2026-07-31T175303Z.md    | a2d875bb379941301c3ed811b40cfee7a40148e8 | auto       | -           |
 | p-rev1 | code     | passed   | 2026-07-31 | reviews/p-rev1-review-2026-07-31T191244Z.md | 53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc | auto       | -           |
-| p02    | code     | pending  | -          | -                                           | -                                        | -          | -           |
+| p02    | code     | passed   | 2026-07-31 | reviews/p02-review-2026-07-31T193213Z.md    | 395fca50e96ec4f895d3b9ad828b0900f67ce95e | auto       | -           |
 | p03    | code     | pending  | -          | -                                           | -                                        | -          | -           |
 | p04    | code     | pending  | -          | -                                           | -                                        | -          | -           |
 | final  | code     | pending  | -          | -                                           | -                                        | -          | -           |
