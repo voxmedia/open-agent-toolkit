@@ -108,6 +108,10 @@ Persisted configured implementation exit-gate generation before launch: blocking
 
 target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/bounded-recovery-authorization/reviews/final-review-2026-07-31T224851Z.md
 
+### 2026-07-31 · structural · oat-project-implement · implement-exit-gate-completed
+
+Configured exit gate run 2985cf13-b9ca-449a-8384-81e0a86f44eb passed with zero findings. Correlated gate event final/code/final-review-2026-07-31T224851Z.md was received in commit 0d9c2ec269c452c68ab6908f52663071d14a3da1, archived at its preselected path, and the durable gate state is allowed/passed.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

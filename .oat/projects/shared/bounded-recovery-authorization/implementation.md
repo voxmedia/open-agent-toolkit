@@ -493,6 +493,18 @@ fresh review loop.
   `cursor-fable-5-xhigh`, invocation `gate`, reviewed head
   `7aec7f31ec00c8949ab2f96a005256efbcb316a1`.
 
+### Implementation Exit Gate Receive Completion
+
+- Receive commit: `0d9c2ec269c452c68ab6908f52663071d14a3da1`
+- The commit descends from persisted pre-receive head
+  `6618a87fc5d73270e83ce4aeb729c1b09b942593`.
+- The exact source artifact was removed from the active review directory and
+  archived at the preselected collision-free path.
+- The matching gate review row is `passed` with preserved reviewed head,
+  invocation, and target.
+- No unrelated implementation or product files were changed by receive.
+- Exit gate terminal state: `allowed` / `passed`; receive completed.
+
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 
 **Status:** completed
