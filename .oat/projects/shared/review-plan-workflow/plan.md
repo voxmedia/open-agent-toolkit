@@ -1633,6 +1633,137 @@ persisted-schema boundary.
 
 **Step 5: Commit** `fix(p02-t49): parse persisted telemetry strictly`
 
+### Task p02-t50: (review3 C1) Complete the bound broker lifecycle
+
+**Files:**
+
+- Modify: `packages/cli/src/review/validation-authority-broker.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.test.ts`
+- Modify: `packages/cli/src/commands/review/authority-broker.ts`
+- Modify: `packages/cli/src/commands/review/authority-broker.test.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/commands/review/checkpoint-artifacts.test.ts`
+- Modify: `packages/cli/src/commands/review/validate-plan.test.ts`
+- Modify: `packages/cli/src/commands/review/begin-evidence.test.ts`
+- Modify: `packages/cli/src/review/command-capabilities.ts`
+- Modify: `packages/cli/src/review/command-capabilities.test.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.integration.test.ts`
+- Modify: `packages/cli/src/commands/commands.integration.test.ts`
+
+**Step 1: Reproduce** Run the real source `prepare-context`, require it to exit,
+bind an accepted handle without reconstructing the key/store, then execute the
+returned checkpoint, validate, and begin commands as separate keyless
+processes.
+
+**Step 2: Implement** Add a distinct launcher-only accepted-continuation
+binding channel that is unavailable through reviewer-visible socket data or
+capabilities. Bind before enabling reviewer mutations, and fully close/unref
+every broker startup pipe after the handshake so preparation terminates while
+the detached broker remains usable.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-authority-broker.test.ts src/commands/review/authority-broker.test.ts src/commands/review/prepare-context.test.ts src/commands/review/checkpoint-artifacts.test.ts src/commands/review/validate-plan.test.ts src/commands/review/begin-evidence.test.ts src/review/command-capabilities.test.ts src/review/review-lifecycle.integration.test.ts src/commands/commands.integration.test.ts`.
+Expected: the real source lifecycle terminates and composes without exposing
+signing or launcher-binding authority.
+
+**Step 5: Commit** `fix(p02-t50): complete bound broker lifecycle`
+
+### Task p02-t51: (review3 I1) Preserve broker domain error envelopes
+
+**Files:**
+
+- Modify: `packages/cli/src/review/validation-authority-broker.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.test.ts`
+- Modify: `packages/cli/src/review/errors.ts`
+- Modify: `packages/cli/src/review/errors.test.ts`
+- Modify: `packages/cli/src/commands/review/review-json.ts`
+- Modify: `packages/cli/src/commands/review/review-json.test.ts`
+- Modify: `packages/cli/src/commands/review/checkpoint-artifacts.test.ts`
+- Modify: `packages/cli/src/commands/review/validate-plan.test.ts`
+- Modify: `packages/cli/src/commands/review/begin-evidence.test.ts`
+
+**Step 1: Reproduce** Exercise broker-backed replay, phase, expiry, receipt,
+capability, transport, corruption, and unexpected runtime failures.
+
+**Step 2: Implement** Use a strict versioned broker error envelope carrying
+safe category, code, message, and details. Reconstruct typed domain errors at
+the client boundary so deterministic rejection remains exit 1 and reserve exit
+2 for transport, corruption, and unexpected failures.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-authority-broker.test.ts src/review/errors.test.ts src/commands/review/review-json.test.ts src/commands/review/checkpoint-artifacts.test.ts src/commands/review/validate-plan.test.ts src/commands/review/begin-evidence.test.ts`.
+Expected: broker transport preserves domain rejection semantics without
+leaking internal errors.
+
+**Step 5: Commit** `fix(p02-t51): preserve broker domain errors`
+
+### Task p02-t52: (review3 I2) Strictly validate broker requests before mutation
+
+**Files:**
+
+- Modify: `packages/cli/src/review/canonical-json.ts`
+- Modify: `packages/cli/src/review/canonical-json.test.ts`
+- Modify: `packages/cli/src/review/schemas.ts`
+- Modify: `packages/cli/src/review/schemas.test.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+
+**Step 1: Reproduce** Send duplicate-key, unknown-action-field, malformed
+correlation/token, and unknown/malformed nested plan requests directly to the
+reviewer-visible socket; assert state and capability remain unchanged.
+
+**Step 2: Implement** Strictly parse an exact versioned broker request,
+including `parseReviewPlanV1`, before any lifecycle mutation. Validate the
+complete next persisted state before atomic rename so failed validation cannot
+commit corruption or consume a capability.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/canonical-json.test.ts src/review/schemas.test.ts src/review/validation-authority-broker.test.ts src/review/validation-store.test.ts`.
+Expected: malformed direct requests reject before any authoritative state
+change.
+
+**Step 5: Commit** `fix(p02-t52): validate broker requests strictly`
+
+### Task p02-t53: (review3 M1) Enforce lifecycle coherence without telemetry
+
+**Files:**
+
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+- Modify: `packages/cli/src/review/validation-recovery.integration.test.ts`
+
+**Step 1: Reproduce** Add valid empty-telemetry states for every supported
+phase and malformed post-checkpoint states missing context, plan, assignment,
+or receipt.
+
+**Step 2: Implement** Decouple lifecycle phase coherence from telemetry
+cardinality. Permit an empty legacy telemetry array where compatible while
+always requiring context after checkpoint, no plan/receipt at
+`artifacts_loaded`, and complete plan/assignment/receipt state for later
+phases.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-store.test.ts src/review/validation-recovery.integration.test.ts`.
+Expected: empty telemetry remains compatible without bypassing phase
+coherence.
+
+**Step 5: Commit** `fix(p02-t53): enforce telemetry free coherence`
+
 ---
 
 ## Phase 3: Reviewer Plan and Evidence Contract
@@ -2648,6 +2779,7 @@ B post-publication bookkeeping PR.
 | p01    | code     | passed          | 2026-07-30 | reviews/archived/p01-review-2026-07-30T215327Z.md           | 40fa861fe199f755f66cce784feafbc1e0ff68c1 | auto       | -           |
 | p02    | code     | fixes_completed | 2026-07-30 | reviews/archived/p02-review-2026-07-30T234200Z.md           | d6c204514b076d57eaf2ee277d72e6de9a995a53 | auto       | -           |
 | p02    | code     | fixes_completed | 2026-07-31 | reviews/archived/p02-review-2026-07-31T014800Z.md           | f7452e5b6fc64256f24d12c2a323be7494bbf08a | auto       | -           |
+| p02    | code     | fixes_added     | 2026-07-31 | reviews/archived/p02-review-2026-07-31T040400Z.md           | f179344bdc12d0edc397d526f8665572826a9ad1 | auto       | -           |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -2675,14 +2807,14 @@ rewriting either historical result as passed.
 **Summary:**
 
 - Phase 1: 13 tasks - baseline, contracts, portability seams
-- Phase 2: 49 tasks - authoritative metadata, validation runtime, and review fixes
+- Phase 2: 53 tasks - authoritative metadata, validation runtime, and review fixes
 - Phase 3: 5 tasks - reviewer planning and selective evidence
 - Phase 4: 8 tasks - accounting, repair, and coordinator adoption
 - Phase 5: 7 tasks - gate diagnostics, timeout, and compatibility mode
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 95 tasks**
+**Total: 99 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.
