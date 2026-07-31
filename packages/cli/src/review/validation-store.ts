@@ -365,28 +365,39 @@ export class ValidationStore {
       }
     }
     if (!handle) throw new Error('validation store lock timeout');
+    let outcome: { ok: true; value: T } | { ok: false; error: unknown };
     try {
-      return await operation();
-    } finally {
+      outcome = { ok: true, value: await operation() };
+    } catch (error) {
+      outcome = { ok: false, error };
+    }
+    let cleanupError: unknown;
+    try {
       await handle.close();
-      try {
-        const current = JSON.parse(await readFile(lockPath, 'utf8')) as {
-          nonce?: unknown;
-        };
-        if (current.nonce === owner.nonce) {
-          await rm(lockPath, { force: true });
-        }
-      } catch (error) {
-        if (
-          typeof error !== 'object' ||
+    } catch (error) {
+      cleanupError = error;
+    }
+    try {
+      const current = JSON.parse(await readFile(lockPath, 'utf8')) as {
+        nonce?: unknown;
+      };
+      if (current.nonce === owner.nonce) {
+        await rm(lockPath, { force: true });
+      }
+    } catch (error) {
+      if (
+        (typeof error !== 'object' ||
           error === null ||
           !('code' in error) ||
-          error.code !== 'ENOENT'
-        ) {
-          throw error;
-        }
+          error.code !== 'ENOENT') &&
+        cleanupError === undefined
+      ) {
+        cleanupError = error;
       }
     }
+    if (!outcome.ok) throw outcome.error;
+    if (cleanupError !== undefined) throw cleanupError;
+    return outcome.value;
   }
 
   private runDirectory(runId: string): string {
