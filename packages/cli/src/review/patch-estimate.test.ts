@@ -96,6 +96,42 @@ describe('patch byte counting', () => {
     });
   });
 
+  it('enforces the wall-clock deadline while the iterator is stalled', async () => {
+    const stop = vi.fn(async () => undefined);
+    const stalled: AsyncIterable<Uint8Array> = {
+      [Symbol.asyncIterator]: () => ({
+        next: () => new Promise(() => undefined),
+      }),
+    };
+    const startedAt = Date.now();
+
+    await expect(
+      countPatchBytes(stalled, {
+        deadlineMs: startedAt + 20,
+        stop,
+      }),
+    ).resolves.toMatchObject({
+      patchEstimateState: 'lower-bound',
+      patchByteLowerBound: 0,
+      stoppedBy: 'deadline',
+    });
+    expect(Date.now() - startedAt).toBeLessThan(500);
+    expect(stop).toHaveBeenCalledOnce();
+  });
+
+  it('awaits producer cleanup before returning a lower bound', async () => {
+    let cleaned = false;
+    await countPatchBytes(chunks(8), {
+      deadlineMs: Date.now() + 1_000,
+      maxBytes: 4,
+      stop: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        cleaned = true;
+      },
+    });
+    expect(cleaned).toBe(true);
+  });
+
   it('computes the bounded preparation deadline', () => {
     expect(computePreparationDeadline(1_000, null)).toBe(31_000);
     expect(computePreparationDeadline(1_000, 1_000)).toBe(6_000);

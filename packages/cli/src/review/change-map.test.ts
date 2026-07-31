@@ -111,4 +111,43 @@ describe('collectChangeMap', () => {
       ),
     ).rejects.toThrow(/git unavailable/);
   });
+
+  it('stops and awaits a stalled patch producer at the wall-clock deadline', async () => {
+    let cleaned = false;
+    const adapter: GitChangeMapAdapter = {
+      nameStatus: async () => Buffer.from('M\0a.ts\0'),
+      numstat: async () => Buffer.from('1\t1\ta.ts\0'),
+      patch: async () => ({
+        output: {
+          [Symbol.asyncIterator]: () => ({
+            next: () => new Promise(() => undefined),
+          }),
+        },
+        stop: async () => {
+          await new Promise((resolve) => setTimeout(resolve, 5));
+          cleaned = true;
+        },
+      }),
+    };
+    const startedAt = Date.now();
+    let clockCalls = 0;
+    const result = await collectChangeMap(
+      {
+        repoRoot: '.',
+        baseSha: 'a'.repeat(40),
+        headSha: 'b'.repeat(40),
+        remainingTokens: 1_000,
+        outerBudgetMs: 0,
+        now: () => Date.now() + (clockCalls++ === 0 ? 0 : 4_990),
+      },
+      adapter,
+    );
+
+    expect(result.totals).toMatchObject({
+      patchEstimateState: 'lower-bound',
+      patchByteLowerBound: 0,
+    });
+    expect(cleaned).toBe(true);
+    expect(Date.now() - startedAt).toBeLessThan(500);
+  });
 });

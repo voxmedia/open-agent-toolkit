@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { setTimeout as delay } from 'node:timers/promises';
 
 import {
   mergeChangeMetadata,
@@ -14,7 +15,7 @@ import type { ChangeMapV1 } from './types';
 
 export interface GitPatchStream {
   output: AsyncIterable<Uint8Array>;
-  stop(): void;
+  stop(): void | Promise<void>;
 }
 
 export interface GitChangeMapAdapter {
@@ -88,7 +89,22 @@ export class DefaultGitChangeMapAdapter implements GitChangeMapAdapter {
         );
       }
     })();
-    return { output, stop: () => child.kill('SIGTERM') };
+    return {
+      output,
+      stop: async () => {
+        if (child.exitCode !== null || child.signalCode !== null) return;
+        child.kill('SIGTERM');
+        await Promise.race([
+          completion.then(() => undefined),
+          delay(1_000).then(async () => {
+            if (child.exitCode === null && child.signalCode === null) {
+              child.kill('SIGKILL');
+            }
+            await completion;
+          }),
+        ]);
+      },
+    };
   }
 }
 

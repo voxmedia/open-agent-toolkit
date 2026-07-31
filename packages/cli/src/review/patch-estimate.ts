@@ -90,15 +90,17 @@ export async function countPatchBytes(
     deadlineMs: number;
     now?: () => number;
     maxBytes?: number;
-    stop?: () => void;
+    stop?: () => void | Promise<void>;
   },
 ): Promise<PatchByteEstimate> {
   const now = options.now ?? Date.now;
   const maxBytes = options.maxBytes ?? MAX_PATCH_COUNT_BYTES;
+  const iterator = source[Symbol.asyncIterator]();
   let bytes = 0;
-  for await (const chunk of source) {
-    if (now() >= options.deadlineMs) {
-      options.stop?.();
+  while (true) {
+    const remainingMs = options.deadlineMs - now();
+    if (remainingMs <= 0) {
+      await options.stop?.();
       return {
         patchEstimateState: 'lower-bound',
         patchBytes: null,
@@ -107,9 +109,29 @@ export async function countPatchBytes(
         stoppedBy: 'deadline',
       };
     }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const next = await Promise.race([
+      iterator.next().then((result) => ({ kind: 'next' as const, result })),
+      new Promise<{ kind: 'deadline' }>((resolve) => {
+        timer = setTimeout(() => resolve({ kind: 'deadline' }), remainingMs);
+      }),
+    ]);
+    if (timer !== undefined) clearTimeout(timer);
+    if (next.kind === 'deadline') {
+      await options.stop?.();
+      return {
+        patchEstimateState: 'lower-bound',
+        patchBytes: null,
+        patchByteLowerBound: bytes,
+        estimatedPatchTokens: null,
+        stoppedBy: 'deadline',
+      };
+    }
+    if (next.result.done) break;
+    const chunk = next.result.value;
     bytes += chunk.byteLength;
     if (bytes >= maxBytes) {
-      options.stop?.();
+      await options.stop?.();
       return {
         patchEstimateState: 'lower-bound',
         patchBytes: null,
