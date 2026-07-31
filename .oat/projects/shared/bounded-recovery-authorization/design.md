@@ -131,7 +131,153 @@ design.
 
 ## Component Design
 
-_Pending collaborative validation._
+### Shared Dispatch Recovery Taxonomy
+
+**Purpose:** Preserve accepted-launch terminality while making clear that
+bounded same-target repair can be covered by an earlier phase authorization.
+
+**Responsibilities:**
+
+- Define automatic route/model/provider replacement after accepted launch as
+  forbidden fallback.
+- Define continuation in the same accepted handle, and a lifecycle-authorized
+  fresh launch with the identical target plus original-request linkage, as
+  same-target recovery rather than fallback.
+- Require new operator direction for scope-expanding, consequential,
+  destructive, ambiguous, or retry-exhausted recovery.
+
+**Canonical surface:** `.agents/skills/oat-dispatch-subagents/SKILL.md`.
+
+**Design decision:** Replace the absolute "new explicit action" wording with
+authorization-aware wording: recovery must be explicitly authorized, but the
+authorization may be standing phase authority established before launch. No
+post-acceptance outcome makes another route eligible.
+
+### Project Implementation Recovery Policy
+
+**Purpose:** Own eligibility, retry accounting, dispatch continuity, validation,
+and bookkeeping for post-commit defects.
+
+**Responsibilities:**
+
+- Resolve `oat_orchestration_retry_limit` and pass a distinct
+  `phase_recovery_limit` counter with the original request and exact target.
+- State the complete automatic-recovery predicate and stop conditions once in
+  the canonical phase-execution contract.
+- Keep implementer recovery pinned to the original target and prevent
+  retry-loop route escalation from applying to implementation recovery.
+- Validate append-only commit order, declared or mechanically derived in-phase
+  file boundaries, report provenance, and focused/phase verification.
+- Append a canonical recovery-event record to normal implementation
+  bookkeeping for both recovered and stopped dispositions.
+
+**Canonical surfaces:**
+
+- `.agents/skills/oat-project-implement/SKILL.md`
+- `.agents/skills/oat-project-implement/references/phase-execution.md`
+- `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md`
+
+**Retry semantics:** The default of two permits at most two automatic
+post-commit recovery commits during one phase implementation attempt. Initial
+task work does not consume the budget. Each appended recovery commit consumes
+one round. Review-fix and gate loops continue using their own existing counters;
+the three-cycle review governance cap remains separate and unchanged.
+
+### Phase Implementer Prevention and Recovery
+
+**Purpose:** Prevent discoverable defects before commit and repair eligible
+post-commit defects without returning for redundant authorization.
+
+**Responsibilities:**
+
+- Before each task commit, run formatting, declared task verification, and
+  repository-discovered cheap checks applicable to the changed surface.
+- Run a scoped test or build before commit when the task changes test/build
+  configuration, emitted output, packaging, or another behavior for which that
+  scoped command is discoverable and proportionate. A full repository build is
+  not required per task.
+- Keep broad repository tests/builds at the phase boundary when per-task cost is
+  disproportionate.
+- On task, transition, or phase verification failure, evaluate the eligibility
+  predicate before returning.
+- For an eligible failure, preserve the accepted task commit, apply only the
+  mechanical correction, create exactly one recovery commit, consume one
+  attempt, and rerun the failing focused check plus relevant phase verification.
+- Stop without repair when evidence is ambiguous, scope or file boundaries
+  widen non-mechanically, consequence/destructiveness is present, or the budget
+  is exhausted.
+
+**Canonical surface:** `.agents/agents/oat-phase-implementer.md`.
+
+**Commit contract:** Planned tasks still create exactly one task commit.
+Recovery commits are additional, explicitly typed append-only commits associated
+with the original task/phase; they are never assigned a fake planned task ID and
+never amend or replace the task commit.
+
+### Recovery Event Record
+
+**Purpose:** Make defect frequency and authorization behavior measurable across
+projects regardless of prose conventions.
+
+**Record shape:**
+
+```markdown
+### Recovery Event {event-id}
+
+- Phase/task: {phase and originating task when known}
+- Original request: {request_id}
+- Original commit: {immutable task commit}
+- Defect class: lint | type | test | build | composition | other
+- Discovered by: {exact verification command or transition check}
+- Disposition: recovered | direction-required
+- Authorization: phase-standing | operator
+- Attempt: {used}/{phase_recovery_limit}
+- Dispatch target: {same launcher-owned implementation target}
+- Recovery commit: {sha or -}
+- Verification: {focused and phase result}
+- Reason: {bounded eligibility or stop-boundary evidence}
+```
+
+**Rules:** Append one event whenever a post-commit defect is dispositioned,
+including a stop with no repair. Reuse dispatch `continuation_events` when a
+fresh same-target recovery launch is required; do not invent a second dispatch
+schema. Root bookkeeping copies validated report facts rather than free-form
+summaries.
+
+### Tests and Generated Providers
+
+**Purpose:** Pin the behavioral contract and prevent provider drift.
+
+**Responsibilities:**
+
+- Extend existing skill/agent contract tests with scenario-oriented assertions
+  for automatic recovery, immutability, same-target provenance, no fallback,
+  ambiguity/destructiveness stops, retry exhaustion, prevention ordering, and
+  the canonical event record.
+- Extend sync/materialization tests to assert equivalent semantics in generated
+  Claude, Codex, base Cursor, and representative materialized Cursor variants.
+- Run canonical validation and `oat sync --scope all`; never hand-edit provider
+  copies.
+- Keep a cheap base-anchoring assertion only if it naturally fits an existing
+  contract test; do not treat it as corrective scope.
+
+### Documentation and Distribution
+
+**Purpose:** Explain the policy and ship it through normal OAT asset delivery.
+
+**Responsibilities:**
+
+- Update implementation-execution documentation with verification tiers,
+  recovery eligibility/budget, event records, and the distinction from
+  fallback.
+- Explain that append-only history requires a separate commit, not repeated
+  approval.
+- Bump every changed canonical skill once, synchronize providers, and advance
+  the five public packages plus bundled inventory in lockstep.
+- Include the post-release migration note: update bundled OAT tools, then run
+  provider sync before expecting global phase agents to use the new contract.
+- Preserve isolation from the active `review-plan-workflow`; no interim
+  mitigation is applied by this project.
 
 ## Error Handling
 
