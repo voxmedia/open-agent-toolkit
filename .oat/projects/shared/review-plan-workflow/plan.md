@@ -2777,6 +2777,60 @@ all mis-correlated or late submissions fail closed.
 
 **Step 5: Commit** `test(p04-t22): compose worker dossier lifecycle`
 
+### Task p04-t23: (cycle-5 I1) Align the binder command design contract
+
+**Files:**
+
+- Modify: `.oat/projects/shared/review-plan-workflow/design.md`
+
+**Step 1: Reproduce** Compare the authoritative design command model and exact
+command wording with `PrepareReviewContextResultV1` and show that the design
+still permits only two stdin modes and names only three preparation commands.
+
+**Step 2: Implement** Update the design data model, lifecycle flow, command
+payload description, and exact-fixture wording for the preparation-supplied
+`bindWorkerDossier` invocation and bounded `worker-dossier-json` stdin. Preserve
+launcher ownership, exact executable/argv routing, receipt correlation, and the
+accepted-continuation-before-terminal ordering. Do not change code.
+
+**Step 3: Format** Run
+`pnpm exec oxfmt --write ".oat/projects/shared/review-plan-workflow/design.md"`.
+
+**Step 4: Verify** Run
+`pnpm exec oxfmt --check ".oat/projects/shared/review-plan-workflow/design.md"` and
+search the design for superseded two-mode or three-command claims.
+Expected: every authoritative command-model reference includes the fourth
+branch-local binder and its bounded dossier stdin mode.
+
+**Step 5: Commit** `docs(p04-t23): align binder command design`
+
+### Task p04-t24: (cycle-5 M1) Cover sibling launch-attempt rejection
+
+**Files:**
+
+- Modify: `packages/cli/src/review/bind-worker-dossier.lifecycle.integration.test.ts`
+
+**Step 1: Reproduce** Show that the current `siblingAttempt` fixture uses two
+manual runs and fails on run/plan identity before exercising launch-attempt
+correlation.
+
+**Step 2: Implement** Create two gate preparations with one shared gate-run ID
+and distinct launch-attempt IDs. Submit the sibling attempt's receipt and
+dossier through the current run's exact preparation-supplied branch-local
+binder, assert the stable launch-attempt rejection, and prove neither run's
+worker coverage mutates. Retain the distinct wrong-receipt, replacement,
+post-output replay, and idempotence cases.
+
+**Step 3: Format** Run
+`pnpm exec oxfmt --write "packages/cli/src/review/bind-worker-dossier.lifecycle.integration.test.ts"`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/bind-worker-dossier.lifecycle.integration.test.ts`.
+Expected: the process suite distinguishes sibling launch-attempt rejection from
+cross-run receipt and run/plan mismatch rejection.
+
+**Step 5: Commit** `test(p04-t24): cover sibling launch attempts`
+
 ---
 
 ## Phase 5: Gate Diagnostics and Compatibility
@@ -3448,7 +3502,7 @@ B post-publication bookkeeping PR.
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/archived/p04-review-2026-07-31T164356Z.md           | 055b5b2132de9f4077c2ba52c9aceee421b83805 | auto       | -           |
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/archived/p04-review-2026-07-31T171500Z.md           | 78790a61d41cf209be15dcf98645105ccb799d57 | auto       | -           |
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/p04-review-2026-07-31T214700Z.md                    | 100d7493db8e4b0c74139862ddc2b7ac29709317 | auto       | -           |
-| p04    | code     | received        | 2026-08-01 | reviews/p04-review-2026-08-01T004400Z.md                    | 96c3a5ef711005f9cde07c30ca2a86075286821d | auto       | -           |
+| p04    | code     | fixes_added     | 2026-08-01 | reviews/p04-review-2026-08-01T004400Z.md                    | 96c3a5ef711005f9cde07c30ca2a86075286821d | auto       | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -           |

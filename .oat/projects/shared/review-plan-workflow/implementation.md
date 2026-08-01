@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: null
+oat_current_task_id: p04-t23
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | completed | 55    | 55/55     |
-| Phase 3 | completed | 10    | 10/10     |
-| Phase 4 | in_review | 22    | 22/22     |
-| Phase 5 | pending   | 7     | 0/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | completed   | 55    | 55/55     |
+| Phase 3 | completed   | 10    | 10/10     |
+| Phase 4 | in_progress | 24    | 22/24     |
+| Phase 5 | pending     | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 100/120 tasks completed
+**Total:** 100/122 tasks completed
 
 ## Execution Configuration
 
@@ -1160,11 +1160,21 @@ recovery commits. Implementer and independent root verification passed.
 finding are resolved. The cycle-4 Medium lifecycle finding is partially
 resolved pending the exact sibling-attempt correlation case.
 
-**Review-limit disposition:** The operator-authorized cycle-5 override is
-exhausted. No additional artifact alignment, test fix, or review cycle may
-start without explicit operator disposition.
+**New tasks added:** p04-t23 and p04-t24
 
-**Next:** Await operator disposition for the two bounded residual findings.
+**Finding disposition map:**
+
+- I1 (design command schema is stale) → p04-t23
+  (`artifact_alignment_required`).
+- M1 (sibling-attempt test does not reach launch-attempt correlation) → p04-t24
+  (`test_fix_required`).
+
+**Review-limit disposition:** On 2026-08-01 the operator explicitly authorized
+one bounded fix cycle for p04-t23 and p04-t24 and one independent cycle-6
+re-review.
+
+**Next:** Execute p04-t23 and p04-t24, then run the authorized cycle-6
+re-review.
 
 ---
 
