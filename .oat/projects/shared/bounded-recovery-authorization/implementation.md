@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: oat-project-revise
 oat_blockers: []
 oat_last_updated: 2026-07-31
 oat_current_task_id: null
@@ -568,6 +568,15 @@ fresh review loop.
 - User decision: skip
 - Outcome: no recap attempted or reused; project summary remains unchanged.
 - This optional gate is non-blocking; final `p05` HiLL approval remains next.
+
+### Final p05 HiLL Approval
+
+- Decision: approved by the user.
+- Approved at: `2026-08-01T23:54:31Z`
+- The configured post-implementation sequence is complete.
+- Implementation lifecycle outcome: complete with PR open.
+- Next route: `oat-project-revise` for PR feedback, or
+  `oat-project-complete` after merge.
 
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 

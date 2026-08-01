@@ -9,7 +9,7 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['p05'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: pr_open # Status: in_progress | complete | pr_open
@@ -57,13 +57,13 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-08-01T17:13:43Z'
 oat_post_implement_sequence:
-  status: awaiting_approval
+  status: complete
   source: configured
   final_phase: p05
   pre_approval: [summary, document, pr]
   pre_approval_completed: [summary, document, pr]
-  approval: pending
-  approval_source: null
+  approval: approved
+  approval_source: human
   post_approval: []
   post_approval_completed: []
   failure: null
@@ -72,19 +72,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/189 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-01T17:13:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-01T23:54:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: bounded-recovery-authorization
 
-**Status:** Implementing
+**Status:** Implementation complete; PR open
 **Started:** 2026-07-31
 **Last Updated:** 2026-07-31
 
 ## Current Phase
 
-Implementation - PR open; final p05 HiLL approval pending
+Implementation complete - PR open
 
 ## Artifacts
 
@@ -92,7 +92,7 @@ Implementation - PR open; final p05 HiLL approval pending
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in_progress)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
@@ -142,7 +142,8 @@ Implementation - PR open; final p05 HiLL approval pending
 - ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/189
 - ✓ Configured pre-approval sequence complete
 - ✓ Optional project recap skipped by user
-- ⧗ Final `p05` HiLL approval pending after pre-approval steps
+- ✓ Final `p05` HiLL checkpoint approved
+- ✓ Configured post-implementation sequence complete
 
 ## Blockers
 
@@ -150,4 +151,5 @@ None
 
 ## Next Milestone
 
-Approve or defer the final p05 HiLL checkpoint
+Process PR feedback with `oat-project-revise`, or run `oat-project-complete`
+after merge
