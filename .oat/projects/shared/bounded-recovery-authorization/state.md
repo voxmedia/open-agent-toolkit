@@ -61,18 +61,18 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p05
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending
   approval_source: null
   post_approval: []
   post_approval_completed: []
   failure: null
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-01T00:03:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-01T00:05:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -84,7 +84,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Pre-approval sequence: documentation approved
+Implementation - Pre-approval sequence: final PR pending
 
 ## Artifacts
 
@@ -137,7 +137,7 @@ Implementation - Pre-approval sequence: documentation approved
 - ✓ Configured closeout sequence snapshot recovered
 - ✓ Project summary generated
 - ✓ Documentation delta approved
-- ⧗ Documentation update in progress
+- ✓ Documentation updated and validated
 - ⧗ Final PR pre-approval step pending
 - ⧗ Final `p05` HiLL approval pending after pre-approval steps
 
@@ -147,4 +147,4 @@ None
 
 ## Next Milestone
 
-Apply the approved documentation delta
+Create the final project PR

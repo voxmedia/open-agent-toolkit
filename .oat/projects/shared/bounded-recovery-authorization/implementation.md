@@ -1,6 +1,6 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-document
+oat_ready_for: oat-project-pr-final
 oat_blockers: []
 oat_last_updated: 2026-07-31
 oat_current_task_id: null
@@ -533,6 +533,20 @@ fresh review loop.
 - Repo-reference refresh commit: `56f94e8a0bfbd6a1647b01f15b6a8e46e5961660`.
 - Documentation recommendations were presented and explicitly approved by the
   user; `document` is the next incomplete stored step.
+
+### Closeout Step: Documentation
+
+- Status: completed
+- Documentation commit:
+  `98d03cd1425461a691fea80e7252b9db6116269b`
+- Updated the existing implementation-execution page with the committed
+  terminal-marker handoff, validation-before-clear ordering, settled-state
+  definition, release `0.2.27`, and canonical provider-regeneration guidance.
+- Repo reference commit:
+  `56f94e8a0bfbd6a1647b01f15b6a8e46e5961660`
+- Validation: `pnpm check`, `pnpm build:docs`, file formatting, and
+  `git diff --check` passed.
+- Sequence result: `summary` and `document` complete; `pr` next.
 
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 

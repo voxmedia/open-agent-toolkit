@@ -120,6 +120,10 @@ Implementation completed after final lifecycle review, configured exit gate, cor
 
 Corrected premature completion bookkeeping before docs edits: restored implementation to in_progress, persisted the configured immutable pre-approval sequence [summary, document, pr] with summary completed, and retained final p05 HiLL approval pending. No implementation behavior changed.
 
+### 2026-08-01 · structural · oat-project-implement · closeout-document
+
+Configured pre-approval document step completed at 98d03cd1425461a691fea80e7252b9db6116269b after user approval. pnpm check, pnpm build:docs, formatting, and diff validation passed; sequence now awaits pr.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
