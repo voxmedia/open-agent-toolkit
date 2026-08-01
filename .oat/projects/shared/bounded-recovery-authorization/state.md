@@ -57,22 +57,22 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-08-01T00:09:38Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   source: configured
   final_phase: p05
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   approval_source: null
   post_approval: []
   post_approval_completed: []
   failure: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/189 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-01T00:10:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-01T00:12:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -84,7 +84,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - PR artifact ready; opening final PR
+Implementation - PR open; final p05 HiLL approval pending
 
 ## Artifacts
 
@@ -139,7 +139,8 @@ Implementation - PR artifact ready; opening final PR
 - ✓ Documentation delta approved
 - ✓ Documentation updated and validated
 - ✓ Final PR artifact generated
-- ⧗ Final PR creation in progress
+- ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/189
+- ✓ Configured pre-approval sequence complete
 - ⧗ Final `p05` HiLL approval pending after pre-approval steps
 
 ## Blockers
@@ -148,4 +149,4 @@ None
 
 ## Next Milestone
 
-Push the branch and create the final PR
+Approve or defer the final p05 HiLL checkpoint
