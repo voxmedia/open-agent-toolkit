@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -56,24 +56,35 @@ oat_implement_exit_gate:
   receive_completed: true
   failure: null
   updated_at: '2026-07-31T22:56:25Z'
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p05
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: [summary]
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T22:58:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-01T00:02:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: bounded-recovery-authorization
 
-**Status:** Implementation Complete
+**Status:** Implementing
 **Started:** 2026-07-31
 **Last Updated:** 2026-07-31
 
 ## Current Phase
 
-Implementation - Complete; lifecycle sequence pending
+Implementation - Pre-approval sequence: documentation approved
 
 ## Artifacts
 
@@ -81,7 +92,7 @@ Implementation - Complete; lifecycle sequence pending
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (complete)
+- **Implementation:** `implementation.md` (in_progress)
 
 ## Progress
 
@@ -123,9 +134,12 @@ Implementation - Complete; lifecycle sequence pending
 - ✓ Final lifecycle review cycle 2 passed with zero findings
 - ✓ Configured implementation exit gate returned a valid passing envelope
 - ✓ Correlated gate review received and archived
-- ✓ Final approval checkpoint skipped because design declares no approval mode
-- ✓ Implementation marked complete
-- ⧗ Configured summary → documentation → PR lifecycle sequence pending
+- ✓ Configured closeout sequence snapshot recovered
+- ✓ Project summary generated
+- ✓ Documentation delta approved
+- ⧗ Documentation update in progress
+- ⧗ Final PR pre-approval step pending
+- ⧗ Final `p05` HiLL approval pending after pre-approval steps
 
 ## Blockers
 
@@ -133,4 +147,4 @@ None
 
 ## Next Milestone
 
-Generate the project summary
+Apply the approved documentation delta

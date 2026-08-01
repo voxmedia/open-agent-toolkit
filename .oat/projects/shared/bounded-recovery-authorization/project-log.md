@@ -116,6 +116,10 @@ Configured exit gate run 2985cf13-b9ca-449a-8384-81e0a86f44eb passed with zero f
 
 Implementation completed after final lifecycle review, configured exit gate, correlated receive, and freshness validation passed. Lightweight design declares no approval_mode, so the final approval checkpoint was skipped; configured lifecycle sequence is summary, document, then PR.
 
+### 2026-08-01 · structural · oat-project-implement · closeout-sequence-recovery
+
+Corrected premature completion bookkeeping before docs edits: restored implementation to in_progress, persisted the configured immutable pre-approval sequence [summary, document, pr] with summary completed, and retained final p05 HiLL approval pending. No implementation behavior changed.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

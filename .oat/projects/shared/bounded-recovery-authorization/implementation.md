@@ -1,6 +1,6 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-summary
+oat_status: in_progress
+oat_ready_for: oat-project-document
 oat_blockers: []
 oat_last_updated: 2026-07-31
 oat_current_task_id: null
@@ -507,8 +507,7 @@ fresh review loop.
 
 ### Final Approval Resolution
 
-- Design approval mode: absent in the lightweight design; approval checkpoint
-  skipped by contract.
+- Design approval mode: absent in the lightweight design.
 - Primary resolver attempted:
   `oat project gates resolve --project "$PROJECT_PATH" --json`; unavailable in
   the installed CLI (`unknown command 'gates'`).
@@ -518,8 +517,22 @@ fresh review loop.
 - Gate freshness revalidated at current state: the effective delta matched
   checkpoint fingerprint
   `sha256:effective-delta-v1:439f75aca4bb96155aaf8074c09f37e1f0c93fe80bf1c277c81fe5a1bd1f1a11`.
-- Implementation completion is authorized; configured lifecycle sequence is
-  summary → document → PR.
+- The configured sequence's final `p05` HiLL checkpoint remains authoritative;
+  approval is required after summary, document, and PR pre-approval steps.
+
+### Closeout Sequence Snapshot Recovery
+
+- The first closeout pass incorrectly marked implementation complete before
+  persisting `oat_post_implement_sequence` and crossing the configured final
+  `p05` HiLL checkpoint.
+- Corrected without changing implementation behavior: restored implementation
+  to `in_progress`, persisted the configured immutable sequence
+  `summary → document → PR`, and recorded `summary` complete.
+- Summary commits: `c05450d29f2c1896b47285aa7d7b2508befb829d` plus factual
+  correction `0a5b3e32`.
+- Repo-reference refresh commit: `56f94e8a0bfbd6a1647b01f15b6a8e46e5961660`.
+- Documentation recommendations were presented and explicitly approved by the
+  user; `document` is the next incomplete stored step.
 
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 
