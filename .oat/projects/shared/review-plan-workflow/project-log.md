@@ -132,6 +132,10 @@ Phase p03 passed after two bounded fix iterations and three independent review r
 
 phase_blocked: operator-authorized cycle-4 review failed and the override is exhausted; see reviews/p04-review-2026-07-31T214700Z.md
 
+### 2026-08-01 · structural · oat-project-implement · p04
+
+phase_blocked: operator-authorized cycle-5 review found two bounded residual gaps and the override is exhausted; see reviews/p04-review-2026-08-01T004400Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

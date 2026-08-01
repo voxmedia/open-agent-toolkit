@@ -1135,6 +1135,37 @@ recovery commits. Implementer and independent root verification passed.
 
 **Next:** Run the authorized cycle-5 re-review.
 
+### Review Received: p04 (cycle 5)
+
+**Date:** 2026-08-01
+**Review artifact:** `reviews/p04-review-2026-08-01T004400Z.md`
+
+**Verdict:** Failed
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Finding summary:**
+
+- The authoritative design still defines the superseded three-command,
+  two-stdin-mode preparation contract.
+- The process test's sibling-attempt case exercises a run/plan mismatch rather
+  than two launch attempts under one gate run.
+
+**Prior finding resolution:** Both cycle-4 Critical findings and its Important
+finding are resolved. The cycle-4 Medium lifecycle finding is partially
+resolved pending the exact sibling-attempt correlation case.
+
+**Review-limit disposition:** The operator-authorized cycle-5 override is
+exhausted. No additional artifact alignment, test fix, or review cycle may
+start without explicit operator disposition.
+
+**Next:** Await operator disposition for the two bounded residual findings.
+
 ---
 
 ## Orchestration Runs
