@@ -205,13 +205,14 @@ export interface PrepareReviewContextResultV1 {
     checkpointArtifacts: ReviewCommandInvocationV1;
     validatePlan: ReviewCommandInvocationV1;
     beginEvidence: ReviewCommandInvocationV1;
+    bindWorkerDossier: ReviewCommandInvocationV1;
   };
 }
 
 export interface ReviewCommandInvocationV1 {
   executable: string;
   argv: string[];
-  stdin: 'none' | 'review-plan-json';
+  stdin: 'none' | 'review-plan-json' | 'worker-dossier-json';
 }
 
 export type ReviewStrategy =

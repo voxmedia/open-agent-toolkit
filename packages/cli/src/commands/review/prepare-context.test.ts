@@ -70,6 +70,17 @@ const prepared = {
       argv: ['/branch/oat.js', 'review', 'begin-evidence'],
       stdin: 'none',
     },
+    bindWorkerDossier: {
+      executable: process.execPath,
+      argv: [
+        '/branch/oat.js',
+        'review',
+        'bind-worker-dossier',
+        '--receipt',
+        '__OAT_PLAN_RECEIPT__',
+      ],
+      stdin: 'worker-dossier-json',
+    },
   },
 } as unknown as PrepareReviewContextResultV1;
 
@@ -137,6 +148,9 @@ describe('createReviewPrepareContextCommand', () => {
         commands: prepared.commands,
       },
     });
+    expect(JSON.parse(output).result.commands.bindWorkerDossier).toEqual(
+      prepared.commands.bindWorkerDossier,
+    );
     expect(output).not.toContain('contextWindowTokens');
     expect(output).not.toContain('remainingTokens');
   });

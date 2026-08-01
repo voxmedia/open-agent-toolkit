@@ -122,6 +122,7 @@ describe('review skill contracts', () => {
       'PlanValidationReceiptV1',
       'beginEvidence',
       'Selective evidence',
+      'bindWorkerDossier',
       'ReviewerTerminalV1',
     ];
     let previousIndex = -1;
@@ -163,7 +164,8 @@ describe('review skill contracts', () => {
         'checkpointArtifacts',
         'validate-plan',
         'begin-evidence',
-        'bind-worker-dossier',
+        'bindWorkerDossier',
+        'ReviewerTerminalV1',
         'validate-output',
         'same-handle accounting repair',
         'publish-output',
@@ -181,6 +183,11 @@ describe('review skill contracts', () => {
       expect(normalized).toContain(
         'No discoverable artifact, Reviews row, project log, or bookkeeping commit',
       );
+      expect(normalized).toContain('preparation-supplied');
+      expect(normalized).toContain('exact executable and argv array');
+      expect(normalized).toContain('__OAT_PLAN_RECEIPT__');
+      expect(normalized).toContain('bounded JSON stdin');
+      expect(normalized).toContain('ambient `oat`');
     }
   });
 
@@ -216,12 +223,17 @@ describe('review skill contracts', () => {
     for (const rail of rails) {
       const normalized = rail.replace(/\s+/g, ' ');
       expect(normalized).toMatch(
-        /prepare-context[\s\S]*accepted handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*ReviewerTerminalV1[\s\S]*bind-worker-dossier[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*StructuredFindings[\s\S]*finding mapping[\s\S]*GitHub post/i,
+        /prepare-context[\s\S]*accepted handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*StructuredFindings[\s\S]*finding mapping[\s\S]*GitHub post/i,
       );
       expect(normalized).toMatch(
         /Accepted timeout,[\s\S]*BLOCKED[\s\S]*malformed[\s\S]*accounting-invalid[\s\S]*non-actionable/i,
       );
       expect(normalized).toMatch(/never launch(?:es)? a replacement/i);
+      expect(normalized).toContain('preparation-supplied');
+      expect(normalized).toContain('exact executable and argv array');
+      expect(normalized).toContain('__OAT_PLAN_RECEIPT__');
+      expect(normalized).toContain('bounded JSON stdin');
+      expect(normalized).toContain('ambient `oat`');
     }
     expect(rails[1]).not.toMatch(/read all files in the review scope/i);
   });

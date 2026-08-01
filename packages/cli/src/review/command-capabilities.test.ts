@@ -184,5 +184,21 @@ describe('review command capabilities', () => {
     expect(commands.validatePlan.argv).toContain('plan-token');
     expect(commands.validatePlan.stdin).toBe('review-plan-json');
     expect(commands.beginEvidence.argv).toContain('__OAT_PLAN_RECEIPT__');
+    expect(commands.bindWorkerDossier).toEqual({
+      executable: "/tmp/oat'bin",
+      argv: [
+        '--branch',
+        'feature & fix',
+        'review',
+        'bind-worker-dossier',
+        '--run-id',
+        'run id',
+        '--receipt',
+        '__OAT_PLAN_RECEIPT__',
+        '--stdin',
+        '--json',
+      ],
+      stdin: 'worker-dossier-json',
+    });
   });
 });

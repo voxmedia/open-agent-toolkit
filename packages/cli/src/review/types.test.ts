@@ -262,6 +262,21 @@ describe('review preparation contracts', () => {
           ],
           stdin: 'none',
         },
+        bindWorkerDossier: {
+          executable: process.execPath,
+          argv: [
+            '/repo/packages/cli/dist/index.js',
+            'review',
+            'bind-worker-dossier',
+            '--run-id',
+            preparation.runId,
+            '--receipt',
+            '__OAT_PLAN_RECEIPT__',
+            '--stdin',
+            '--json',
+          ],
+          stdin: 'worker-dossier-json',
+        },
       },
     } satisfies PrepareReviewContextResultV1;
 

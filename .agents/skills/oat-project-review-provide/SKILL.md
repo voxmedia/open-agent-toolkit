@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.4.1
+version: 1.4.2
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -811,17 +811,24 @@ for the full coordinator lifetime. The accepted reviewer performs required
 artifact intake, invokes the supplied `checkpointArtifacts`, submits
 `ReviewPlanV1` through `validate-plan`, retains its
 `PlanValidationReceiptV1`, and invokes `begin-evidence` before selective
-content evidence. Retain that exact accepted reviewer handle for its typed
-`ReviewerTerminalV1`; never launch a replacement after accepted timeout,
-blocked, malformed, or accounting-invalid output.
+content evidence. Keep every complete or partial `WorkerDossierV1` inside this
+accepted primary continuation. As each dossier is accepted, and before
+terminal return, the continuation must execute the preparation-supplied
+`bindWorkerDossier` invocation with its exact executable and argv array, replace
+only `__OAT_PLAN_RECEIPT__` with the retained receipt, and write exactly that
+dossier as bounded JSON stdin. Only after applicable dossiers are bound may it
+return `ReviewerTerminalV1`. Never invoke ambient `oat`, reconstruct a dossier
+from terminal digests, or hand a full dossier back to the parent launcher.
+Retain that exact accepted reviewer handle for its typed terminal; never launch
+a replacement after accepted timeout, blocked, malformed, or
+accounting-invalid output.
 
 After the subagent completes:
 
-- Before output validation, submit every applicable complete or partial
-  `WorkerDossierV1` through launcher-owned
-  `oat review bind-worker-dossier --run-id <id> --receipt <receipt> --broker-socket <path> --stdin --json`.
-  Submit each accepted delegated lane dossier exactly once; identical retries
-  are idempotent. Do not submit a dossier for a not-delegated inline lane.
+- Confirm its terminal accounts only for dossiers already bound inside the
+  accepted continuation. Identical retries there are idempotent; a
+  not-delegated inline lane has no dossier. The parent must not reconstruct or
+  submit a dossier from `ReviewerTerminalV1` digests.
 - Submit the complete terminal through launcher-owned `validate-output`.
 - If and only if every error points into the closed accounting allowlist, offer
   at most two same-handle accounting repair turns through the retained handle.
@@ -905,15 +912,19 @@ Use this exact contract:
    scope is one coherent lane without an unresolved consequential seam.
    Missing telemetry, missing budget evidence, or an inexact/capped patch
    estimate keeps the review inline but requires path-scoped evidence.
-8. **Typed terminal (`ReviewerTerminalV1`)** — Apply the full canonical
-   `oat-reviewer` checklist, reconcile evidence, and return one complete or
-   blocked terminal from this same continuation. Complete output carries the
-   dispatch-selected candidate and `ReviewAccountingV1`; blocked output carries
-   blocked-incomplete accounting and no actionable candidate.
-9. **Delegated dossier binding (`bind-worker-dossier`)** — Before output
-   validation, submit every applicable complete or partial `WorkerDossierV1`
-   through the launcher-owned receipt-bound broker command. Identical retries
-   are idempotent. A not-delegated inline lane has no dossier to submit.
+8. **Delegated dossier binding (`bindWorkerDossier`)** — Keep every applicable
+   complete or partial `WorkerDossierV1` in this accepted continuation. As each
+   dossier is accepted, execute the preparation-supplied exact executable and
+   argv array, replace only `__OAT_PLAN_RECEIPT__`, and provide that dossier as
+   bounded JSON stdin. Never use ambient `oat` or reconstruct a dossier from a
+   terminal digest. Identical retries are idempotent. A not-delegated inline
+   lane has no dossier.
+9. **Typed terminal (`ReviewerTerminalV1`)** — Only after applicable dossiers
+   are bound, apply the full canonical `oat-reviewer` checklist, reconcile
+   evidence, and return one complete or blocked terminal from this same
+   continuation. Complete output carries the dispatch-selected candidate and
+   `ReviewAccountingV1`; blocked output carries blocked-incomplete accounting
+   and no actionable candidate.
 10. **Output validation (`validate-output`)** — Run the launcher-owned output
     validator before translating to the artifact sink. For an artifact
     candidate, require the private draft path and immutable embedded accounting

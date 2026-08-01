@@ -113,6 +113,21 @@ describe('prepareReviewContext', () => {
     expect(result.commands.checkpointArtifacts.argv[0]).toBe(
       '/repo/packages/cli/dist/index.js',
     );
+    expect(result.commands.bindWorkerDossier).toMatchObject({
+      executable: process.execPath,
+      stdin: 'worker-dossier-json',
+    });
+    expect(result.commands.bindWorkerDossier.argv).toEqual([
+      '/repo/packages/cli/dist/index.js',
+      'review',
+      'bind-worker-dossier',
+      '--run-id',
+      result.preparation.runId,
+      '--receipt',
+      '__OAT_PLAN_RECEIPT__',
+      '--stdin',
+      '--json',
+    ]);
     expect(JSON.stringify(result.preparation)).not.toContain(
       '--checkpoint-token',
     );

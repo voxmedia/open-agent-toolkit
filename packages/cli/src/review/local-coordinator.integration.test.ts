@@ -29,18 +29,38 @@ describe('local review coordinator integration contract', () => {
     ],
   ])('%s validates before publishing or bookkeeping', (_, start, end) => {
     const rail = section(start, end).replace(/\s+/g, ' ');
-    const binding = rail.indexOf('bind-worker-dossier');
+    const binding = rail.indexOf('bindWorkerDossier');
+    const terminal = rail.indexOf('ReviewerTerminalV1');
     const validation = rail.indexOf('validate-output');
     const publication = rail.indexOf('publish-output');
     const bookkeeping = rail.indexOf('bookkeeping');
     expect(binding).toBeGreaterThanOrEqual(0);
-    expect(validation).toBeGreaterThan(binding);
+    expect(terminal).toBeGreaterThan(binding);
+    expect(validation).toBeGreaterThan(terminal);
     expect(publication).toBeGreaterThan(validation);
     expect(bookkeeping).toBeGreaterThan(publication);
     expect(rail).toContain(
       'oat review publish-output --run-id <id> --destination <final-path> --json',
     );
     expect(rail).toContain('never reads or re-snapshots the reviewer draft');
+    expect(rail).toContain('preparation-supplied');
+    expect(rail).toContain('exact executable and argv array');
+    expect(rail).toContain('__OAT_PLAN_RECEIPT__');
+    expect(rail).toContain('bounded JSON stdin');
+    expect(rail).toContain('ambient `oat`');
+  });
+
+  it('keeps full worker dossiers inside the accepted Tier 1 continuation', () => {
+    const tier1 = section('**Step 6b: Tier 1', '**Step 6c: Tier 2').replace(
+      /\s+/g,
+      ' ',
+    );
+    expect(tier1).toContain(
+      'Never invoke ambient `oat`, reconstruct a dossier from terminal digests, or hand a full dossier back to the parent launcher.',
+    );
+    expect(tier1).toContain(
+      'The parent must not reconstruct or submit a dossier from `ReviewerTerminalV1` digests.',
+    );
   });
 
   it('retains accepted continuations and forbids fallback after acceptance', () => {

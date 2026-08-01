@@ -112,6 +112,7 @@ export function renderReviewCommands(input: {
   checkpointArtifacts: ReviewCommandInvocationV1;
   validatePlan: ReviewCommandInvocationV1;
   beginEvidence: ReviewCommandInvocationV1;
+  bindWorkerDossier: ReviewCommandInvocationV1;
 } {
   const executable = input.executable ?? input.cli;
   if (!executable) throw new Error('review command executable is required');
@@ -155,5 +156,18 @@ export function renderReviewCommands(input: {
       '__OAT_PLAN_RECEIPT__',
       '--json',
     ]),
+    bindWorkerDossier: command(
+      [
+        'review',
+        'bind-worker-dossier',
+        '--run-id',
+        input.runId,
+        '--receipt',
+        '__OAT_PLAN_RECEIPT__',
+        '--stdin',
+        '--json',
+      ],
+      'worker-dossier-json',
+    ),
   };
 }
