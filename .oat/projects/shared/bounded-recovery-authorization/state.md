@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -68,11 +68,11 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-01T00:09:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-01T00:10:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -84,7 +84,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Pre-approval sequence: final PR pending
+Implementation - PR artifact ready; opening final PR
 
 ## Artifacts
 
@@ -138,7 +138,8 @@ Implementation - Pre-approval sequence: final PR pending
 - ✓ Project summary generated
 - ✓ Documentation delta approved
 - ✓ Documentation updated and validated
-- ⧗ Final PR pre-approval step pending
+- ✓ Final PR artifact generated
+- ⧗ Final PR creation in progress
 - ⧗ Final `p05` HiLL approval pending after pre-approval steps
 
 ## Blockers
@@ -147,4 +148,4 @@ None
 
 ## Next Milestone
 
-Create the final project PR
+Push the branch and create the final PR
