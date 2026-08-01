@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: p04-t20
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | in_progress | 22    | 19/22     |
-| Phase 5 | pending     | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | completed | 10    | 10/10     |
+| Phase 4 | in_review | 22    | 22/22     |
+| Phase 5 | pending   | 7     | 0/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 97/120 tasks completed
+**Total:** 100/120 tasks completed
 
 ## Execution Configuration
 
@@ -925,6 +925,29 @@ required lane-ownership projection.
 local and remote coordinator rails before output validation, and covered
 complete/partial real-store lifecycles without fixture injection.
 
+### Task p04-t20: (cycle-4 C1, I1) Bind dossiers inside the accepted continuation
+
+**Status:** completed
+**Commit:** `8371892a`
+**Outcome:** Added the preparation-supplied branch-local binder invocation and
+required accepted local and remote primary continuations to bind complete or
+partial dossiers before returning their terminal.
+
+### Task p04-t21: (cycle-4 C2) Bind direct phase worker coverage
+
+**Status:** completed
+**Commit:** `5a8f365f`
+**Outcome:** Added the same receipt-bound dossier binding sequence to direct
+phase review and updated its canonical skill contract.
+
+### Task p04-t22: (cycle-4 M1) Compose the production dossier lifecycle
+
+**Status:** completed
+**Commit:** `96c3a5ef`
+**Outcome:** Added process-level artifact and structured sink lifecycles through
+the real branch-local binder, broker/store transition, and final output
+validation, including mis-correlation and replay rejection.
+
 ### Phase Verification
 
 - Focused Phase 4 union passed 253 tests.
@@ -956,6 +979,11 @@ complete/partial real-store lifecycles without fixture injection.
   package type-check, formatting, and diff-check passed.
 - Root independently reran 263 command, broker, recovery, coordinator, skill,
   lifecycle-inventory, and help-snapshot tests.
+- p04-t20 through p04-t22 passed their task suites, combined 250-test cycle-5
+  verification, package type-check/lint, workspace formatting, and exact-range
+  diff checks.
+- Root independently reran the same 250 lifecycle, coordinator, command, skill,
+  and validation tests plus package and workspace gates.
 
 ### Review Received: p04
 
@@ -1102,8 +1130,10 @@ cycle-5 re-review. The pre-existing p04-t09 malformed `Files` entry was
 corrected mechanically together with the pre-existing p04-t19 `Add` aliases so
 the launcher-owned review preparation can parse the authoritative plan.
 
-**Next:** Execute p04-t20 through p04-t22, then run the authorized cycle-5
-re-review.
+**Fix completion:** p04-t20 through p04-t22 completed at `96c3a5ef` with no
+recovery commits. Implementer and independent root verification passed.
+
+**Next:** Run the authorized cycle-5 re-review.
 
 ---
 
