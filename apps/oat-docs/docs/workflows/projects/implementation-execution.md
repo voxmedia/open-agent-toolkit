@@ -85,7 +85,11 @@ After all tasks, it runs phase-wide verification and returns a compact report.
 It does not dispatch the phase reviewer or mutate general project bookkeeping.
 While it owns the worktree, it may atomically update only the active phase's
 authoritative `oat_phase_recovery_policy.phase_attempt_usage.<pNN>` entry. The
-root validates that ledger entry and later clears a reconciled pending marker.
+phase returns with a matching committed `completed` or `failed` terminal marker
+still present. The root validates that marker against the report, recovery
+event, immutable history, attempt accounting, exact target, and verification
+before clearing it. Only the post-validation null marker is the settled ledger
+state; a premature clear or contradictory marker fails closed.
 
 ## Prevent Defects Before Commit
 
@@ -281,8 +285,9 @@ or emit success.
 
 ## Update Installed Recovery Contracts
 
-After upgrading to a release that includes bounded phase recovery, update the
-installed OAT tools and then synchronize provider views:
+Bounded phase recovery ships in OAT `0.2.27`. After upgrading to that release or
+later, update the installed OAT tools and then regenerate provider views from
+the canonical contracts:
 
 ```bash
 oat tools update
@@ -290,7 +295,8 @@ oat sync --scope all
 ```
 
 Run the commands in that order before expecting global Claude, Codex, or Cursor
-phase agents to use the new contract.
+phase agents to use the new contract. Provider assets are generated views, not
+independently maintained policy forks.
 
 ## Phase Scope
 
