@@ -62,7 +62,7 @@ oat_generated: false
 
 **Review round 1:**
 
-- Artifact: `reviews/p01-review-2026-07-31T171149Z.md`
+- Artifact: `reviews/archived/p01-review-2026-07-31T171149Z.md`
 - Reviewed head: `31fd3a86fb44c7abb24cf4bc183e5a3793681876`
 - Result: 4 Important findings; bounded fix continuation required
 - Reconnaissance: not attempted
@@ -75,7 +75,7 @@ oat_generated: false
 
 **Review round 2:**
 
-- Artifact: `reviews/p01-review-2026-07-31T174038Z.md`
+- Artifact: `reviews/archived/p01-review-2026-07-31T174038Z.md`
 - Reviewed head: `61c9a7c9f89c8ab9af01e2b5c8d65d68626c545f`
 - Result: 1 Important finding; second bounded fix continuation required
 - Reconnaissance: not attempted
@@ -90,7 +90,7 @@ oat_generated: false
 
 **Review round 3 (terminal):**
 
-- Artifact: `reviews/p01-review-2026-07-31T175303Z.md`
+- Artifact: `reviews/archived/p01-review-2026-07-31T175303Z.md`
 - Reviewed head: `a2d875bb379941301c3ed811b40cfee7a40148e8`
 - Result: 1 Important finding; phase failed
 - Governance: three-cycle review cap exhausted
@@ -133,7 +133,7 @@ oat_generated: false
 
 **Review:**
 
-- Artifact: `reviews/p-rev1-review-2026-07-31T191244Z.md`
+- Artifact: `reviews/archived/p-rev1-review-2026-07-31T191244Z.md`
 - Reviewed head: `53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc`
 - Cycle: 1/3 for p-rev1, independent of the terminal p01 cycle
 - Result: passed with zero findings
@@ -168,7 +168,7 @@ oat_generated: false
 
 **Review:**
 
-- Artifact: `reviews/p02-review-2026-07-31T193213Z.md`
+- Artifact: `reviews/archived/p02-review-2026-07-31T193213Z.md`
 - Reviewed head: `395fca50e96ec4f895d3b9ad828b0900f67ce95e`
 - Cycle: 1/3
 - Result: passed with zero findings
@@ -204,7 +204,7 @@ oat_generated: false
 
 **Review cycle 2/3:**
 
-- Artifact: `reviews/p03-review-2026-07-31T200025Z.md`
+- Artifact: `reviews/archived/p03-review-2026-07-31T200025Z.md`
 - Reviewed head: `4f6d934b955b030dfacb06ae91e2e81d92c3b30a`
 - Result: passed with zero findings; prior Important finding I1 resolved
 - Reconnaissance: not attempted
@@ -275,7 +275,7 @@ oat_generated: false
 **Review:**
 
 - Artifact:
-  `reviews/p-rev2-review-2026-07-31T213539Z.md`
+  `reviews/archived/p-rev2-review-2026-07-31T213539Z.md`
 - Reviewed head: `0adcee7f8e143221e14b6f50579ab35e9bc0425a`
 - Cycle: 1/3
 - Result: passed with zero findings
@@ -307,7 +307,7 @@ oat_generated: false
 **Review:**
 
 - Artifact:
-  `reviews/p04-review-2026-07-31T215112Z.md`
+  `reviews/archived/p04-review-2026-07-31T215112Z.md`
 - Reviewed head: `0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c`
 - Cycle: 1/3
 - Result: passed with zero findings
@@ -357,7 +357,7 @@ oat_generated: false
 **Review:**
 
 - Artifact:
-  `reviews/p05-review-2026-07-31T222411Z.md`
+  `reviews/archived/p05-review-2026-07-31T222411Z.md`
 - Reviewed head: `0eaaf85a1926607a3d864fca21791ee4637c91ce`
 - Cycle: 1/3
 - Result: passed with zero findings; final-review C1 closed
@@ -366,7 +366,7 @@ oat_generated: false
 ### Review Received: final
 
 **Date:** 2026-07-31
-**Review artifact:** `reviews/final-review-2026-07-31T215922Z.md`
+**Review artifact:** `reviews/archived/final-review-2026-07-31T215922Z.md`
 **Review cycle:** 1/3
 **Reviewed head:** `d7fb5652da797e3c3826f46adda42bd6f5caac3f`
 **Reconnaissance:** not attempted
@@ -398,7 +398,7 @@ fresh review loop.
 ### Final Lifecycle Review Cycle 2
 
 - Artifact:
-  `reviews/final-review-2026-07-31T223213Z.md`
+  `reviews/archived/final-review-2026-07-31T223213Z.md`
 - Reviewed head: `cd7fd7aef3d39c6c545ac8d4f62017ae710e7b1b`
 - Range:
   `c8593262479127565a681ba9cfba548d743d82dc..cd7fd7aef3d39c6c545ac8d4f62017ae710e7b1b`
@@ -791,7 +791,7 @@ _- Outstanding Items_
 - Reviewed range:
   `7f4ef2814d7dcc80f25e61efed9ac5a1a6a751dd..0adcee7f8e143221e14b6f50579ab35e9bc0425a`
 - Artifact:
-  `reviews/p-rev2-review-2026-07-31T213539Z.md`
+  `reviews/archived/p-rev2-review-2026-07-31T213539Z.md`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Reconnaissance: not attempted; no Review Orchestration section present
 - Dispatch stamp:
@@ -835,7 +835,7 @@ _- Outstanding Items_
 - Reviewed range:
   `282338dc22fc97fa6510ba9f078c2d6acb89cc05..0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c`
 - Artifact:
-  `reviews/p04-review-2026-07-31T215112Z.md`
+  `reviews/archived/p04-review-2026-07-31T215112Z.md`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Reconnaissance: not attempted; no Review Orchestration section present
 - Dispatch stamp:
@@ -854,7 +854,7 @@ _- Outstanding Items_
 - Reviewed range:
   `721af62d641061870a71550ed2d487c69b8ea58d..d7fb5652da797e3c3826f46adda42bd6f5caac3f`
 - Artifact:
-  `reviews/final-review-2026-07-31T215922Z.md`
+  `reviews/archived/final-review-2026-07-31T215922Z.md`
 - Findings: 1 Critical, 0 Important, 0 Medium, 0 Minor
 - Reconnaissance: not attempted; no Review Orchestration section present
 - Dispatch stamp:
@@ -894,7 +894,7 @@ _- Outstanding Items_
 - Reviewed range:
   `c8593262479127565a681ba9cfba548d743d82dc..0eaaf85a1926607a3d864fca21791ee4637c91ce`
 - Artifact:
-  `reviews/p05-review-2026-07-31T222411Z.md`
+  `reviews/archived/p05-review-2026-07-31T222411Z.md`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Reconnaissance: not attempted; no Review Orchestration section present
 - Dispatch stamp:
@@ -913,7 +913,7 @@ _- Outstanding Items_
 - Reviewed range:
   `c8593262479127565a681ba9cfba548d743d82dc..cd7fd7aef3d39c6c545ac8d4f62017ae710e7b1b`
 - Artifact:
-  `reviews/final-review-2026-07-31T223213Z.md`
+  `reviews/archived/final-review-2026-07-31T223213Z.md`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Deferred findings: none
 - Reconnaissance: not attempted; no Review Orchestration section present
