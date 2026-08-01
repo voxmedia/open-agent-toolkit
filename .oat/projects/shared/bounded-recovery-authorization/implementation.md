@@ -562,6 +562,13 @@ fresh review loop.
 - Sequence result: all configured pre-approval steps complete; final `p05` HiLL
   approval pending.
 
+### Implementation-Tail Project Recap
+
+- Resolved preference: `ask`
+- User decision: skip
+- Outcome: no recap attempted or reused; project summary remains unchanged.
+- This optional gate is non-blocking; final `p05` HiLL approval remains next.
+
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 
 **Status:** completed

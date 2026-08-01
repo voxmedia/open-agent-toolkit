@@ -128,6 +128,10 @@ Configured pre-approval document step completed at 98d03cd1425461a691fea80e7252b
 
 Configured pre-approval pr step completed: opened https://github.com/voxmedia/open-agent-toolkit/pull/189 from append-only-disruptions into main. All pre-approval steps [summary, document, pr] are complete; final p05 HiLL approval remains pending.
 
+### 2026-08-01 · structural · oat-project-implement · project-recap-gate
+
+Interactive implementation-tail project-recap preference resolved to ask; user selected skip. No recap was attempted or reused, summary remains unchanged, and final p05 HiLL approval remains pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
