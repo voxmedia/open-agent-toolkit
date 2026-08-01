@@ -27,6 +27,7 @@ describe('direct phase review coordinator integration', () => {
       'checkpointArtifacts',
       'validate-plan',
       'begin-evidence',
+      'bindWorkerDossier',
       'ReviewerTerminalV1',
       'validate-output',
       'same-handle accounting repair',
@@ -41,6 +42,14 @@ describe('direct phase review coordinator integration', () => {
     }
     expect(review).toContain(
       'Blocked or accounting-invalid output remains non-actionable',
+    );
+    expect(review).toContain('preparation-supplied');
+    expect(review).toContain('exact executable and argv array');
+    expect(review).toContain('__OAT_PLAN_RECEIPT__');
+    expect(review).toContain('bounded JSON stdin');
+    expect(review).toContain('ambient `oat`');
+    expect(review).toContain(
+      'A not-delegated inline lane has no dossier and remains unchanged.',
     );
   });
 

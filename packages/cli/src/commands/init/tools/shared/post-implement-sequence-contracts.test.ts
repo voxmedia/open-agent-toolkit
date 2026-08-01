@@ -151,8 +151,10 @@ describe('post-implementation sequence contracts', () => {
       'Gate and checkpoint/final aliases inherit this coordinator; they do not create another authoritative context.',
     );
     expect(normalized).toMatch(
-      /prepare-context[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*validate-output[\s\S]*publishAcceptedArtifact/,
+      /prepare-context[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*publishAcceptedArtifact/,
     );
+    expect(normalized).toContain('preparation-supplied');
+    expect(normalized).toContain('A not-delegated inline lane has no dossier');
   });
 
   it('defers only the final checkpoint until final review and pre-approval work finish', () => {

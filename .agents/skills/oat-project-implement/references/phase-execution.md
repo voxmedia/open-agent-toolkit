@@ -135,7 +135,15 @@ the reviewer. On host acceptance, bind and retain the exact accepted reviewer
 handle. That handle performs required artifact intake, invokes
 `checkpointArtifacts`, submits `ReviewPlanV1` through `validate-plan`, retains
 `PlanValidationReceiptV1`, invokes `begin-evidence`, executes selective
-evidence, and returns one `ReviewerTerminalV1`.
+evidence, and keeps every accepted complete or partial `WorkerDossierV1` inside
+the same continuation. As each applicable dossier is accepted, execute the
+preparation-supplied `bindWorkerDossier` invocation with its exact executable
+and argv array, replace only `__OAT_PLAN_RECEIPT__` with the retained receipt,
+and provide exactly that dossier as bounded JSON stdin. Identical retries are
+idempotent. A not-delegated inline lane has no dossier and remains unchanged.
+Never invoke ambient `oat`, reconstruct a dossier from terminal digests, or
+transfer a full dossier to the parent. Only after applicable dossiers are bound
+may the accepted handle return one `ReviewerTerminalV1`.
 
 Submit the terminal through launcher-owned `validate-output`. If and only if
 all errors are within the closed encoding allowlist, offer at most two

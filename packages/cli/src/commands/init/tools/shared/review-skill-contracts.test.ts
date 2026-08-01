@@ -244,8 +244,12 @@ describe('review skill contracts', () => {
     );
     const normalized = content.replace(/\s+/g, ' ');
     expect(normalized).toMatch(
-      /direct phase review[\s\S]*prepare-context[\s\S]*accepted reviewer handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*publishAcceptedArtifact[\s\S]*bookkeeping/i,
+      /direct phase review[\s\S]*prepare-context[\s\S]*accepted reviewer handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*publishAcceptedArtifact[\s\S]*bookkeeping/i,
     );
+    expect(normalized).toContain('preparation-supplied');
+    expect(normalized).toContain('exact executable and argv array');
+    expect(normalized).toContain('__OAT_PLAN_RECEIPT__');
+    expect(normalized).toContain('bounded JSON stdin');
     expect(normalized).toContain(
       'Gate and checkpoint/final aliases inherit this coordinator; they do not create another authoritative context.',
     );
