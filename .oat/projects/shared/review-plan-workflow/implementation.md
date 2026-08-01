@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-31
-oat_current_task_id: null
+oat_last_updated: 2026-08-01
+oat_current_task_id: p04-t20
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | completed | 55    | 55/55     |
-| Phase 3 | completed | 10    | 10/10     |
-| Phase 4 | in_review | 19    | 19/19     |
-| Phase 5 | pending   | 7     | 0/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | completed   | 55    | 55/55     |
+| Phase 3 | completed   | 10    | 10/10     |
+| Phase 4 | in_progress | 22    | 19/22     |
+| Phase 5 | pending     | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 97/117 tasks completed
+**Total:** 97/120 tasks completed
 
 ## Execution Configuration
 
@@ -1085,12 +1085,25 @@ verification passed with no recovery commit.
 **Out-of-scope observation:** The live `prepare-context` failure is a
 pre-existing p04-t09 plan/parser incompatibility, not a p04-t19 regression.
 
-**Review-limit disposition:** The operator-authorized cycle-4 override is
-exhausted. No further fix tasks or review cycle may start without explicit
-operator disposition.
+**New tasks added:** p04-t20 through p04-t22
 
-**Next:** Await operator disposition for an additional bounded Phase 4
-fix/re-review cycle.
+**Finding disposition map:**
+
+- C1 (Tier 1 has no dossier handoff) and I1 (binder is not branch-pinned) →
+  p04-t20 (`code_fix_required`).
+- C2 (direct phase validates before binding) → p04-t21
+  (`code_fix_required`).
+- M1 (tests do not compose the production lifecycle) → p04-t22
+  (`code_fix_required`).
+
+**Review-limit disposition:** On 2026-07-31 the operator explicitly authorized
+one additional bounded fix cycle for p04-t20 through p04-t22 and one independent
+cycle-5 re-review. The pre-existing p04-t09 malformed `Files` entry was
+corrected mechanically so the launcher-owned review preparation can parse the
+authoritative plan.
+
+**Next:** Execute p04-t20 through p04-t22, then run the authorized cycle-5
+re-review.
 
 ---
 

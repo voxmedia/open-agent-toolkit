@@ -2330,7 +2330,6 @@ Expected: every in-scope rail resolves exactly one coordinator.
 - Modify: `packages/cli/src/review-remote/reviewer-dispatch.ts`
 - Modify: `packages/cli/src/review-remote/reviewer-dispatch.test.ts`
 - Modify: `packages/cli/src/review-remote/__integration__/project/project-rail.test.ts`
-- Verify: `packages/cli/src/review/dispatch-ownership.test.ts`
 
 **Step 1: Reproduce** Run the ownership contract and show that the reference
 dispatcher now imports coordinator authority, adapts the accepted continuation,
@@ -2671,6 +2670,112 @@ coverage before output validation on both coordinator rails; missing,
 mis-correlated, replacement, and post-output submissions fail closed.
 
 **Step 5: Commit** `fix(p04-t19): persist accepted worker coverage`
+
+### Task p04-t20: (cycle-4 C1, I1) Bind dossiers inside the accepted continuation
+
+**Files:**
+
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/types.test.ts`
+- Modify: `packages/cli/src/review/command-capabilities.ts`
+- Modify: `packages/cli/src/review/command-capabilities.test.ts`
+- Modify: `packages/cli/src/review/prepare-context.ts`
+- Modify: `packages/cli/src/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/review/local-coordinator.integration.test.ts`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide-remote/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Reproduce** Prove that the accepted primary continuation can receive
+complete or partial worker dossiers but can return only a terminal digest,
+leaving the parent launcher with no dossier payload. Prove separately that the
+skills' ambient `oat review bind-worker-dossier` command can resolve to the
+wrong checkout.
+
+**Step 2: Implement** Add a preparation-supplied, branch-local binder invocation
+that preserves the exact executable and argv prefix and accepts one
+`WorkerDossierV1` on bounded stdin with the validated receipt placeholder. Keep
+full dossiers inside the accepted primary continuation and require it to
+execute that launcher-owned invocation for every accepted complete or partial
+dossier before returning `ReviewerTerminalV1`. The parent must never reconstruct
+dossiers from terminal digests. Update both local and remote coordinator
+contracts and bump each changed canonical skill version once.
+
+**Step 3: Format** Run `pnpm format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/types.test.ts src/review/command-capabilities.test.ts src/review/prepare-context.test.ts src/commands/review/prepare-context.test.ts src/review/local-coordinator.integration.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation/skills.test.ts`.
+Expected: complete and partial dossiers cross the continuation-to-launcher
+boundary only through the receipt-bound branch-local invocation, while ambient
+PATH shadowing and terminal-only handoff fail closed.
+
+**Step 5: Commit** `fix(p04-t20): bind dossiers within accepted reviews`
+
+### Task p04-t21: (cycle-4 C2) Bind direct phase worker coverage
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/references/phase-execution.md`
+- Modify: `packages/cli/src/review/direct-phase-coordinator.integration.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Reproduce** Exercise direct phase review with a delegated complete or
+partial lane and prove that its production sequence reaches `validate-output`
+without executing the preparation-supplied binder.
+
+**Step 2: Implement** Require the direct phase coordinator's accepted primary
+continuation to bind every applicable worker dossier after plan validation and
+before terminal output validation. Preserve inline `not-delegated` behavior,
+same-handle repair, and launcher ownership. Update the direct-phase contracts
+and bump the changed canonical implementation skill version once.
+
+**Step 3: Format** Run `pnpm format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/direct-phase-coordinator.integration.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts src/validation/skills.test.ts`.
+Expected: direct phase complete and partial lanes bind exact persisted coverage
+before output validation; inline and blocked lanes remain unchanged.
+
+**Step 5: Commit** `fix(p04-t21): bind direct phase worker coverage`
+
+### Task p04-t22: (cycle-4 M1) Compose the production dossier lifecycle
+
+**Files:**
+
+- Add: `packages/cli/src/review/bind-worker-dossier.lifecycle.integration.test.ts`
+- Modify: `packages/cli/src/commands/review/bind-worker-dossier.ts`
+- Modify: `packages/cli/src/commands/review/bind-worker-dossier.test.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+- Modify: `packages/cli/src/review/validation-recovery.integration.test.ts`
+
+**Step 1: Reproduce** Show that existing tests separately cover command
+adaptation, broker binding, store projection, and output validation but never
+execute the preparation-supplied command through the final validation boundary.
+
+**Step 2: Implement** Add process-level artifact and structured sink lifecycles
+that launch the branch-local binder against a real authority broker and store,
+bind accepted complete and partial dossiers, and then run output validation.
+Cover wrong run/receipt, sibling attempt, replacement, post-output replay, and
+identical idempotent submission. Make only defects exposed by this composed
+boundary.
+
+**Step 3: Format** Run `pnpm format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/bind-worker-dossier.lifecycle.integration.test.ts src/commands/review/bind-worker-dossier.test.ts src/review/validation-authority-broker.test.ts src/review/validation-store.test.ts src/review/validation-recovery.integration.test.ts`.
+Expected: both sinks complete only after real branch-local command binding and
+all mis-correlated or late submissions fail closed.
+
+**Step 5: Commit** `test(p04-t22): compose worker dossier lifecycle`
 
 ---
 
@@ -3342,7 +3447,7 @@ B post-publication bookkeeping PR.
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/p04-review-2026-07-31T155658Z.md                    | 9d199314f0956290c70babcc3139c7edebb36869 | auto       | -           |
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/archived/p04-review-2026-07-31T164356Z.md           | 055b5b2132de9f4077c2ba52c9aceee421b83805 | auto       | -           |
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/archived/p04-review-2026-07-31T171500Z.md           | 78790a61d41cf209be15dcf98645105ccb799d57 | auto       | -           |
-| p04    | code     | received        | 2026-07-31 | reviews/p04-review-2026-07-31T214700Z.md                    | 100d7493db8e4b0c74139862ddc2b7ac29709317 | auto       | -           |
+| p04    | code     | fixes_added     | 2026-07-31 | reviews/p04-review-2026-07-31T214700Z.md                    | 100d7493db8e4b0c74139862ddc2b7ac29709317 | auto       | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
