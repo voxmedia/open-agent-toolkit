@@ -191,7 +191,7 @@ p04-t20 through p04-t22 and one independent cycle-5 re-review.
 - ⚠ Authorized Phase 4 cycle-4 re-review failed with four findings
 - ✓ Operator authorized one bounded fix cycle and one cycle-5 re-review
 - ✓ Converted findings to p04-t20 through p04-t22
-- ✓ Corrected the pre-existing p04-t09 plan terminator incompatibility
+- ✓ Corrected pre-existing Phase 4 plan file-entry grammar incompatibilities
 - → Execute p04-t20
 
 ## Blockers

@@ -2628,8 +2628,8 @@ derive exact coverage; no incomplete lane can validate as complete.
 
 **Files:**
 
-- Add: `packages/cli/src/commands/review/bind-worker-dossier.ts`
-- Add: `packages/cli/src/commands/review/bind-worker-dossier.test.ts`
+- Create: `packages/cli/src/commands/review/bind-worker-dossier.ts`
+- Create: `packages/cli/src/commands/review/bind-worker-dossier.test.ts`
 - Modify: `packages/cli/src/commands/review/index.ts`
 - Modify: `packages/cli/src/commands/commands.integration.test.ts`
 - Modify: `packages/cli/src/commands/help-snapshots.test.ts`
@@ -2748,7 +2748,7 @@ before output validation; inline and blocked lanes remain unchanged.
 
 **Files:**
 
-- Add: `packages/cli/src/review/bind-worker-dossier.lifecycle.integration.test.ts`
+- Create: `packages/cli/src/review/bind-worker-dossier.lifecycle.integration.test.ts`
 - Modify: `packages/cli/src/commands/review/bind-worker-dossier.ts`
 - Modify: `packages/cli/src/commands/review/bind-worker-dossier.test.ts`
 - Modify: `packages/cli/src/review/validation-authority-broker.ts`

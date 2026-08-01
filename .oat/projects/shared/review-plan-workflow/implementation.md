@@ -1099,8 +1099,8 @@ pre-existing p04-t09 plan/parser incompatibility, not a p04-t19 regression.
 **Review-limit disposition:** On 2026-07-31 the operator explicitly authorized
 one additional bounded fix cycle for p04-t20 through p04-t22 and one independent
 cycle-5 re-review. The pre-existing p04-t09 malformed `Files` entry was
-corrected mechanically so the launcher-owned review preparation can parse the
-authoritative plan.
+corrected mechanically together with the pre-existing p04-t19 `Add` aliases so
+the launcher-owned review preparation can parse the authoritative plan.
 
 **Next:** Execute p04-t20 through p04-t22, then run the authorized cycle-5
 re-review.
