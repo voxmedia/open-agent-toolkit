@@ -25,6 +25,7 @@ import {
 import { BUILTIN_EXEC_TARGETS, type ExecTarget } from '@config/oat-config';
 import { resolveEffectiveConfig, resolveExecTargets } from '@config/resolve';
 import { resolveAssetsRoot } from '@fs/assets';
+import { ValidationStore } from '@review/validation-store';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -5383,6 +5384,71 @@ describe('oat gate', () => {
       expect(process.exitCode).toBe(1);
     },
   );
+
+  it('preserves an out-of-contract refusal after accepted-handle binding', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeOutput: 'OAT_GATE_REFUSAL: refusal after acceptance\n',
+    });
+    const deletePreStartRejectedGateRun = vi.fn(async () => {
+      throw new Error(
+        'accepted gate launch attempt cannot be replaced or deleted',
+      );
+    });
+    const diagnostics: string[] = [];
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      deletePreStartRejectedGateRun,
+      writeDiagnostic: (message) => diagnostics.push(message),
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(deletePreStartRejectedGateRun).toHaveBeenCalledWith(
+      capture.jsonPayloads[0]?.runId,
+      expect.any(String),
+    );
+    expect(capture.jsonPayloads).toHaveLength(1);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'review_did_not_complete',
+      refusal: 'refusal after acceptance',
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('receiveEligible');
+    expect(diagnostics).toContainEqual(
+      expect.stringContaining('"type":"gate-refusal-cleanup"'),
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('treats accepted pre-start cleanup as a deliberate no-op', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-gate-validation-'));
+    tempDirs.push(root);
+    const deleteAttempt = vi
+      .spyOn(ValidationStore.prototype, 'deletePreStartRejectedGateRun')
+      .mockRejectedValue(
+        new Error('accepted gate launch attempt cannot be replaced or deleted'),
+      );
+
+    try {
+      await expect(
+        cleanupPreStartRejectedGateRun('accepted-gate', 'accepted-attempt', {
+          OAT_REVIEW_AUTHORITY_KEY: Buffer.alloc(32, 17).toString('base64url'),
+          OAT_REVIEW_VALIDATION_ROOT: root,
+        }),
+      ).resolves.toBeUndefined();
+      expect(deleteAttempt).toHaveBeenCalledWith(
+        'accepted-gate',
+        'accepted-attempt',
+      );
+    } finally {
+      deleteAttempt.mockRestore();
+    }
+  });
 
   it('tolerates legacy pre-start refusal cleanup without validation state', async () => {
     await expect(

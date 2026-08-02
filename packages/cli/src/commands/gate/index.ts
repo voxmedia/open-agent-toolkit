@@ -418,7 +418,12 @@ export async function cleanupPreStartRejectedGateRun(
       error.message.includes(
         'OAT_REVIEW_AUTHORITY_KEY is required for review state authority',
       );
-    if (!missing && !legacyWithoutAuthority) throw error;
+    const acceptedAttempt =
+      error instanceof Error &&
+      error.message.includes(
+        'accepted gate launch attempt cannot be replaced or deleted',
+      );
+    if (!missing && !legacyWithoutAuthority && !acceptedAttempt) throw error;
   }
 }
 
@@ -3413,8 +3418,25 @@ async function runReviewGate(
         artifactResolution.diagnosticArtifact?.path;
     }
     if (!artifactResolution.artifact && refusal) {
-      await dependencies.deletePreStartRejectedGateRun(runId, launchAttemptId);
-      if (writeRefusalFailure()) return;
+      if (writeRefusalFailure()) {
+        try {
+          await dependencies.deletePreStartRejectedGateRun(
+            runId,
+            launchAttemptId,
+          );
+        } catch (error) {
+          dependencies.writeDiagnostic(
+            `${JSON.stringify({
+              type: 'gate-refusal-cleanup',
+              runId,
+              launchAttemptId,
+              status: 'failed',
+              message: error instanceof Error ? error.message : String(error),
+            })}\n`,
+          );
+        }
+        return;
+      }
     }
     if (
       childExitCode !== 0 &&
