@@ -35,7 +35,11 @@ import type {
 } from './activity-probes';
 import { currentGateCliRoot, type GateRouteReceipt } from './branch-local-cli';
 import { extractStructuredRefusal } from './child-process';
-import { createGateCommand, selectExecTarget } from './index';
+import {
+  cleanupPreStartRejectedGateRun,
+  createGateCommand,
+  selectExecTarget,
+} from './index';
 import { resolveReviewPlanFailure as resolveReviewPlanFailureFromDisk } from './review-plan-failure';
 import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
 
@@ -47,6 +51,10 @@ interface HarnessOptions {
   runProcess?: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
   resolveReviewPlanFailure?: typeof resolveReviewPlanFailureFromDisk;
+  deletePreStartRejectedGateRun?: (
+    gateRunId: string,
+    launchAttemptId: string,
+  ) => Promise<void>;
   writeDiagnostic?: (message: string) => void;
   writeGateRunMarker?: (
     path: string,
@@ -161,6 +169,8 @@ function createHarness(options: HarnessOptions): {
       : {}),
     resolveReviewPlanFailure:
       options.resolveReviewPlanFailure ?? (async () => null),
+    deletePreStartRejectedGateRun:
+      options.deletePreStartRejectedGateRun ?? (async () => {}),
     ...(options.writeGateRunMarker
       ? { writeGateRunMarker: options.writeGateRunMarker }
       : {}),
@@ -386,6 +396,7 @@ async function runReviewGate(options: {
   runProcess: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
   resolveReviewPlanFailure?: typeof resolveReviewPlanFailureFromDisk;
+  deletePreStartRejectedGateRun?: HarnessOptions['deletePreStartRejectedGateRun'];
   writeDiagnostic?: (message: string) => void;
   writeGateRunMarker?: HarnessOptions['writeGateRunMarker'];
   removeGateRunMarker?: HarnessOptions['removeGateRunMarker'];
@@ -403,6 +414,7 @@ async function runReviewGate(options: {
     runProcess: options.runProcess,
     parseReviewGateVerdict: options.parseReviewGateVerdict,
     resolveReviewPlanFailure: options.resolveReviewPlanFailure,
+    deletePreStartRejectedGateRun: options.deletePreStartRejectedGateRun,
     writeDiagnostic: options.writeDiagnostic,
     writeGateRunMarker: options.writeGateRunMarker,
     removeGateRunMarker: options.removeGateRunMarker,
@@ -5340,14 +5352,20 @@ describe('oat gate', () => {
         executeExitCode: exitCode,
         executeOutput: 'diagnostic\nOAT_GATE_REFUSAL: cannot await reviewer\n',
       });
+      const deletePreStartRejectedGateRun = vi.fn(async () => {});
 
       const capture = await runReviewGate({
         root,
         home,
         runProcess: runner.runProcess,
+        deletePreStartRejectedGateRun,
         args: ['--target', 'codex-default', 'Review'],
       });
 
+      expect(deletePreStartRejectedGateRun).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+      );
       expect(capture.jsonPayloads[0]).toMatchObject({
         status: 'review_failed',
         outcome: 'review_did_not_complete',
@@ -5357,6 +5375,12 @@ describe('oat gate', () => {
       expect(process.exitCode).toBe(1);
     },
   );
+
+  it('tolerates legacy pre-start refusal cleanup without validation state', async () => {
+    await expect(
+      cleanupPreStartRejectedGateRun('legacy-gate', 'legacy-attempt', {}),
+    ).resolves.toBeUndefined();
+  });
 
   it('uses the first strict line-start refusal and ignores mid-line tokens', async () => {
     const { root, home } = await setup();

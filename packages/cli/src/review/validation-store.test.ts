@@ -550,11 +550,26 @@ describe('validation state and gate correlation', () => {
     };
     await store.createRun({ preparation: rejected, artifactDraft: false });
     await store.bindGateCorrelation('gate-retry', 'attempt-1', rejected.runId);
+    const unrelated = preparation('unrelatedattempt');
+    unrelated.invocation = 'gate';
+    unrelated.correlation = {
+      gateRunId: 'other-gate',
+      launchAttemptId: 'other-attempt',
+    };
+    await store.createRun({ preparation: unrelated, artifactDraft: false });
+    await store.bindGateCorrelation(
+      'other-gate',
+      'other-attempt',
+      unrelated.runId,
+    );
 
     await store.deletePreStartRejectedGateRun('gate-retry', 'attempt-1');
     await expect(
       store.resolveGateCorrelation('gate-retry', 'attempt-1'),
     ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(
+      store.resolveGateCorrelation('other-gate', 'other-attempt'),
+    ).resolves.toBe(unrelated.runId);
 
     const replacement = preparation('replacementtry01');
     replacement.invocation = 'gate';

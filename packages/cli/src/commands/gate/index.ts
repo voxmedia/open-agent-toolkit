@@ -66,6 +66,11 @@ import {
   type IdentityRecord,
 } from '@providers/identity/provenance';
 import { parseDispatchStamps } from '@providers/identity/stamp';
+import { ValidationStore } from '@review/validation-store';
+import {
+  launcherValidationStoreAuthority,
+  launcherValidationStoreRoot,
+} from '@review/validation-store-authority';
 import { Command } from 'commander';
 import YAML from 'yaml';
 
@@ -123,6 +128,10 @@ interface GateCommandDependencies {
   ) => Promise<ProcessRunResult>;
   parseReviewGateVerdict: typeof parseReviewGateVerdict;
   resolveReviewPlanFailure: typeof resolveReviewPlanFailure;
+  deletePreStartRejectedGateRun: (
+    gateRunId: string,
+    launchAttemptId: string,
+  ) => Promise<void>;
   appendProjectLog: typeof appendProjectLog;
   processEnv: NodeJS.ProcessEnv;
   writeGateRunMarker: (
@@ -375,12 +384,40 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   runProcess: runChildProcess,
   parseReviewGateVerdict,
   resolveReviewPlanFailure,
+  deletePreStartRejectedGateRun: (gateRunId, launchAttemptId) =>
+    cleanupPreStartRejectedGateRun(gateRunId, launchAttemptId),
   appendProjectLog,
   processEnv: process.env,
   writeGateRunMarker,
   removeGateRunMarker,
   writeDiagnostic: (message) => process.stderr.write(message),
 };
+
+export async function cleanupPreStartRejectedGateRun(
+  gateRunId: string,
+  launchAttemptId: string,
+  environment: NodeJS.ProcessEnv = process.env,
+): Promise<void> {
+  try {
+    const store = new ValidationStore(
+      launcherValidationStoreRoot({ environment }),
+      launcherValidationStoreAuthority(environment),
+    );
+    await store.deletePreStartRejectedGateRun(gateRunId, launchAttemptId);
+  } catch (error) {
+    const missing =
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT';
+    const legacyWithoutAuthority =
+      error instanceof Error &&
+      error.message.includes(
+        'OAT_REVIEW_AUTHORITY_KEY is required for review state authority',
+      );
+    if (!missing && !legacyWithoutAuthority) throw error;
+  }
+}
 
 const VALID_ON_FAILURE: readonly GateOnFailure[] = ['block', 'prompt', 'warn'];
 const VALID_WRITE_LAYERS: readonly GateWriteLayer[] = [
@@ -3352,8 +3389,9 @@ async function runReviewGate(
         artifactResolution.artifact?.path ??
         artifactResolution.diagnosticArtifact?.path;
     }
-    if (!artifactResolution.artifact && writeRefusalFailure()) {
-      return;
+    if (!artifactResolution.artifact && refusal) {
+      await dependencies.deletePreStartRejectedGateRun(runId, launchAttemptId);
+      if (writeRefusalFailure()) return;
     }
     if (
       childExitCode !== 0 &&
