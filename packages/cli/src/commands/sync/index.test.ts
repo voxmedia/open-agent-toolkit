@@ -1550,15 +1550,19 @@ describe('createSyncCommand', () => {
         'Before the first code edit for a new recovery attempt',
       );
       const terminalMark = content.indexOf(
-        'atomically mark the pending entry completed or failed',
+        'pre-commit pass atomically marks the pending entry completed',
         reservation,
+      );
+      const authoritativeRerun = content.indexOf(
+        'Immediately rerun both checks against committed HEAD',
+        terminalMark,
       );
       const committedHandoff = content.indexOf(
         'committed pre-bookkeeping terminal handoff',
-        terminalMark,
+        authoritativeRerun,
       );
       const rootClear = content.indexOf(
-        'Root bookkeeping clears pending_attempt',
+        'Root clears an attempted-recovery marker',
         committedHandoff,
       );
 
@@ -1585,19 +1589,34 @@ describe('createSyncCommand', () => {
         'No stop condition authorizes fallback or another model, provider, route, or worker.',
       );
       expect(
-        [reservation, terminalMark, committedHandoff, rootClear],
-        `${relativePath} reservation → terminal marker → committed handoff → root clear order`,
+        [
+          reservation,
+          terminalMark,
+          authoritativeRerun,
+          committedHandoff,
+          rootClear,
+        ],
+        `${relativePath} reservation → candidate marker → authoritative rerun → committed handoff → root clear order`,
       ).toEqual(
         [
-          ...new Set([reservation, terminalMark, committedHandoff, rootClear]),
+          ...new Set([
+            reservation,
+            terminalMark,
+            authoritativeRerun,
+            committedHandoff,
+            rootClear,
+          ]),
         ].sort((left, right) => left - right),
       );
       expect(reservation, `${relativePath} reservation`).toBeGreaterThan(-1);
       expect(content, relativePath).toContain(
-        'A recovery report returns with that matching committed completed or failed marker still present; pending_attempt: null is valid on return only when no recovery attempt was reported.',
+        'A report of recovered or failed-attempt returns with that marker still present.',
       );
       expect(content, relativePath).toContain(
-        'An active, mismatched, prematurely cleared, unreconciled, or contradictory marker must fail closed before root bookkeeping.',
+        'A pre-attempt direction-required report instead returns with pending_attempt: null, unchanged usage, and evidence of no reservation, edit, or recovery commit.',
+      );
+      expect(content, relativePath).toContain(
+        'An active, mismatched, prematurely cleared, unreconciled, or contradictory attempted-recovery marker must fail closed before root bookkeeping.',
       );
     }
   });

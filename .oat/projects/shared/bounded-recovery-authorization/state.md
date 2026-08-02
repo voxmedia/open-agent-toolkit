@@ -8,11 +8,11 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: ['p05', 'p-rev3'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['p05'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -22,7 +22,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20
@@ -54,8 +54,8 @@ oat_implement_exit_gate:
   receive_commit: 0d9c2ec269c452c68ab6908f52663071d14a3da1
   receive_eligible: true
   receive_completed: true
-  failure: null
-  updated_at: '2026-08-01T17:13:43Z'
+  failure: PR feedback changed the effective implementation delta after the passing gate.
+  updated_at: '2026-08-02T00:59:20Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -63,7 +63,7 @@ oat_post_implement_sequence:
   pre_approval: [summary, document, pr]
   pre_approval_completed: [summary, document, pr]
   approval: approved
-  approval_source: human
+  approval_source: user
   post_approval: []
   post_approval_completed: []
   failure: null
@@ -72,19 +72,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/189 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-01T23:54:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T01:04:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: bounded-recovery-authorization
 
-**Status:** Implementation complete; PR open
+**Status:** Implementing PR feedback revision
 **Started:** 2026-07-31
-**Last Updated:** 2026-07-31
+**Last Updated:** 2026-08-01
 
 ## Current Phase
 
-Implementation complete - PR open
+Implementation - revision p-rev3 fixes completed; remote re-review pending
 
 ## Artifacts
 
@@ -92,7 +92,7 @@ Implementation complete - PR open
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (complete)
+- **Implementation:** `implementation.md` (in_progress)
 
 ## Progress
 
@@ -144,6 +144,9 @@ Implementation complete - PR open
 - ✓ Optional project recap skipped by user
 - ✓ Final `p05` HiLL checkpoint approved
 - ✓ Configured post-implementation sequence complete
+- ✓ PR feedback revision `p-rev3-t01` implemented
+- ✓ Full repository, docs, and release validation passed
+- ⧗ Remote Bugbot re-review pending
 
 ## Blockers
 
@@ -151,5 +154,4 @@ None
 
 ## Next Milestone
 
-Process PR feedback with `oat-project-revise`, or run `oat-project-complete`
-after merge
+Validate and push `p-rev3-t01`, then receive the remote Bugbot re-review

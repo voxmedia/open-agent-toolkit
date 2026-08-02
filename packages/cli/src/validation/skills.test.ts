@@ -2833,30 +2833,36 @@ describe('validateOatSkills', () => {
       'Before the first code edit for a new recovery attempt',
     );
     const agentTerminalMark = normalizedAgent.indexOf(
-      'atomically mark the pending entry',
+      'pre-commit pass atomically marks the pending entry completed',
       agentReservation,
+    );
+    const agentAuthoritativeRerun = normalizedAgent.indexOf(
+      'Immediately rerun both checks against committed HEAD',
+      agentTerminalMark,
     );
     const agentCommittedHandoff = normalizedAgent.indexOf(
       'committed pre-bookkeeping terminal handoff',
-      agentTerminalMark,
+      agentAuthoritativeRerun,
     );
     const agentRootClear = normalizedAgent.indexOf(
-      'Root bookkeeping clears pending_attempt',
+      'Root clears an attempted-recovery marker',
       agentCommittedHandoff,
     );
     expect(
       [
         agentReservation,
         agentTerminalMark,
+        agentAuthoritativeRerun,
         agentCommittedHandoff,
         agentRootClear,
       ],
-      'phase-agent reservation → terminal marker → committed handoff → root clear order',
+      'phase-agent reservation → candidate marker → authoritative rerun → committed handoff → root clear order',
     ).toEqual(
       [
         ...new Set([
           agentReservation,
           agentTerminalMark,
+          agentAuthoritativeRerun,
           agentCommittedHandoff,
           agentRootClear,
         ]),
@@ -2867,9 +2873,13 @@ describe('validateOatSkills', () => {
     const matrixStart = normalizedVerifier.indexOf(
       'Pre-bookkeeping terminal handoff matrix',
     );
+    const directionRequiredValidation = normalizedVerifier.indexOf(
+      '| `direction-required` before any attempt |',
+      matrixStart,
+    );
     const recoveredValidation = normalizedVerifier.indexOf(
       '| Recovery reported as `recovered` |',
-      matrixStart,
+      directionRequiredValidation,
     );
     const failedValidation = normalizedVerifier.indexOf(
       '| Recovery reported as `failed-attempt` |',
@@ -2880,16 +2890,17 @@ describe('validateOatSkills', () => {
       failedValidation,
     );
     const validatedClear = normalizedVerifier.indexOf(
-      'Only after the selected row validates completely may root bookkeeping clear `pending_attempt`',
+      'Only after a selected `recovered` or `failed-attempt` row validates completely may root bookkeeping clear `pending_attempt`',
       rejectionRows,
     );
     const settledState = normalizedVerifier.indexOf(
-      'The post-bookkeeping result is the only settled ledger state',
+      'The post-bookkeeping result is the only settled state for an attempted recovery',
       validatedClear,
     );
     expect(
       [
         matrixStart,
+        directionRequiredValidation,
         recoveredValidation,
         failedValidation,
         rejectionRows,
@@ -2901,6 +2912,7 @@ describe('validateOatSkills', () => {
       [
         ...new Set([
           matrixStart,
+          directionRequiredValidation,
           recoveredValidation,
           failedValidation,
           rejectionRows,
@@ -2913,6 +2925,9 @@ describe('validateOatSkills', () => {
 
     expect(verifier).toMatch(
       /\|\s*No recovery attempt reported\s*\|\s*`pending_attempt: null`[\s\S]{0,360}success may continue/i,
+    );
+    expect(verifier).toMatch(
+      /\|\s*`direction-required` before any attempt\s*\|\s*`pending_attempt: null`[\s\S]{0,520}canonical `direction-required` event[\s\S]{0,360}unchanged usage[\s\S]{0,360}no reservation, edit, or recovery commit[\s\S]{0,360}record the event[\s\S]{0,180}stop/i,
     );
     expect(verifier).toMatch(
       /\|\s*Recovery reported as `recovered`\s*\|\s*Matching committed `completed` marker[\s\S]{0,520}immutable original history[\s\S]{0,360}recovery commit[\s\S]{0,360}exact target and axes[\s\S]{0,360}canonical `recovered` event[\s\S]{0,360}attempt count[\s\S]{0,360}verification/i,
@@ -2934,11 +2949,48 @@ describe('validateOatSkills', () => {
       );
     }
     expect(normalizedVerifier).toContain(
-      'Only after the selected row validates completely may root bookkeeping clear `pending_attempt`, append the validated canonical event, and preserve monotonic `used_attempts`.',
+      'Only after a selected `recovered` or `failed-attempt` row validates completely may root bookkeeping clear `pending_attempt`, append the validated canonical event, and preserve monotonic `used_attempts`.',
     );
     expect(normalizedVerifier).toContain(
       'For `failed-attempt`, clearing must also preserve the terminal-stop disposition and then stop.',
     );
+    expect(normalizedVerifier).toContain(
+      'only for a Phase Implementation Report, verify each planned task commit is exactly one append-only commit in plan order',
+    );
+    expect(normalizedVerifier).toContain(
+      'never require a Phase Recovery Continuation Report to replay or restate all planned task outcomes',
+    );
+    expect(normalizedVerifier).toContain(
+      'for each reported attempted recovery (`recovered` or `failed-attempt`)',
+    );
+    expect(normalizedVerifier).toContain(
+      'for a pre-attempt `direction-required` event',
+    );
+  });
+
+  it('makes committed-tree verification authoritative for recovery outcomes', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const recover = agent.slice(
+      agent.indexOf('## Mode: Recover'),
+      agent.indexOf('## Mode: Fix'),
+    );
+    const normalizedRecover = recover.replaceAll(/\s+/g, ' ');
+
+    expect(normalizedRecover).toMatch(
+      /run `focused_verification` and `phase_verification` before creating a candidate commit/i,
+    );
+    expect(normalizedRecover).toMatch(
+      /mark the pending entry `completed`[\s\S]{0,240}append-only candidate recovery commit/i,
+    );
+    expect(normalizedRecover).toMatch(
+      /rerun `focused_verification` and `phase_verification` against the committed HEAD[\s\S]{0,180}authoritative/i,
+    );
+    expect(normalizedRecover).toMatch(
+      /failure[\s\S]{0,180}replace `completed` with `failed`[\s\S]{0,220}ledger-only transition/i,
+    );
+    expect(normalizedRecover).toMatch(/claim no successful recovery commit/i);
   });
 
   it('distinguishes a reserved final attempt from a new exhausted attempt', async () => {

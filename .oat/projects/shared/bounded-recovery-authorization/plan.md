@@ -2,10 +2,10 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-31
+oat_last_updated: 2026-08-01
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p05']
+oat_plan_hill_phases: ['p05', 'p-rev3']
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [['p02', 'p03']] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported
@@ -606,22 +606,79 @@ post-task tree passes.
 
 ---
 
+## Revision Phase 3: Bugbot Recovery Contract Corrections
+
+### Task p-rev3-t01: (review) Resolve Post-PR Recovery Contract Gaps
+
+**Source:** Unresolved Bugbot review threads on PR #189 (2026-08-01)
+
+**Files:**
+
+- Modify:
+  `.agents/skills/oat-project-implement/references/phase-execution.md`
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `.agents/docs/autonomy-contract.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/commands/sync/index.test.ts`
+- Modify:
+  `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Modify: project lifecycle bookkeeping
+- Regenerate: Codex and Cursor phase-implementer views
+
+**Step 1: Close the direction-required handoff gap**
+
+Add an explicit pre-attempt `direction-required` matrix row with null pending
+state, unchanged usage, no reservation/edit/recovery commit, one canonical
+event, and a terminal stop. Restrict committed `completed`/`failed` marker
+requirements to attempted recovery.
+
+**Step 2: Make committed-tree verification authoritative**
+
+Define pre-commit candidate checks, the candidate commit with its `completed`
+handoff, immediate authoritative reruns against committed HEAD, and a durable
+ledger-only `failed` transition when those reruns fail.
+
+**Step 3: Scope report validation and approval provenance**
+
+Apply planned-task commit validation only to Phase Implementation Reports.
+Validate Phase Recovery Continuation Reports from their original task/commit
+and recovery range. Replace the invalid final approval source `human` with the
+contract value `user`.
+
+**Step 4: Regenerate and verify**
+
+Run:
+`oat sync --scope all && pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/sync/index.test.ts src/validation/autonomy-gate-inventory.test.ts && pnpm oat:validate-skills`
+
+Then run the full repository, docs, and release validation sequence.
+
+Expected: Canonical and generated contracts agree, all four Bugbot findings are
+covered by regression assertions, and every required gate passes at public
+package version `0.2.28`.
+
+**Step 5: Commit**
+
+Commit: `fix(oat): resolve recovery contract review gaps`
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                             | Reviewed Head                            | Invocation | Gate Target          |
-| ------ | -------- | -------- | ---------- | ---------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
-| p01    | code     | received | 2026-07-31 | reviews/archived/p01-review-2026-07-31T175303Z.md    | a2d875bb379941301c3ed811b40cfee7a40148e8 | auto       | -                    |
-| p-rev1 | code     | passed   | 2026-07-31 | reviews/archived/p-rev1-review-2026-07-31T191244Z.md | 53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc | auto       | -                    |
-| p02    | code     | passed   | 2026-07-31 | reviews/archived/p02-review-2026-07-31T193213Z.md    | 395fca50e96ec4f895d3b9ad828b0900f67ce95e | auto       | -                    |
-| p03    | code     | passed   | 2026-07-31 | reviews/archived/p03-review-2026-07-31T200025Z.md    | 4f6d934b955b030dfacb06ae91e2e81d92c3b30a | auto       | -                    |
-| p-rev2 | code     | passed   | 2026-07-31 | reviews/archived/p-rev2-review-2026-07-31T213539Z.md | 0adcee7f8e143221e14b6f50579ab35e9bc0425a | auto       | -                    |
-| p04    | code     | passed   | 2026-07-31 | reviews/archived/p04-review-2026-07-31T215112Z.md    | 0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c | auto       | -                    |
-| p05    | code     | passed   | 2026-07-31 | reviews/archived/p05-review-2026-07-31T222411Z.md    | 0eaaf85a1926607a3d864fca21791ee4637c91ce | auto       | -                    |
-| final  | code     | passed   | 2026-07-31 | reviews/archived/final-review-2026-07-31T223213Z.md  | cd7fd7aef3d39c6c545ac8d4f62017ae710e7b1b | auto       | -                    |
-| spec   | artifact | pending  | -          | -                                                    | -                                        | -          | -                    |
-| design | artifact | passed   | 2026-07-31 | user-approved lightweight design                     | -                                        | manual     | -                    |
-| plan   | artifact | passed   | 2026-07-31 | structured review rounds 1-3                         | -                                        | auto       | -                    |
-| final  | code     | passed   | 2026-07-31 | reviews/archived/final-review-2026-07-31T224851Z.md  | 7aec7f31ec00c8949ab2f96a005256efbcb316a1 | gate       | cursor-fable-5-xhigh |
+| Scope  | Type     | Status          | Date       | Artifact                                             | Reviewed Head                            | Invocation | Gate Target          |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
+| p01    | code     | received        | 2026-07-31 | reviews/archived/p01-review-2026-07-31T175303Z.md    | a2d875bb379941301c3ed811b40cfee7a40148e8 | auto       | -                    |
+| p-rev1 | code     | passed          | 2026-07-31 | reviews/archived/p-rev1-review-2026-07-31T191244Z.md | 53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc | auto       | -                    |
+| p02    | code     | passed          | 2026-07-31 | reviews/archived/p02-review-2026-07-31T193213Z.md    | 395fca50e96ec4f895d3b9ad828b0900f67ce95e | auto       | -                    |
+| p03    | code     | passed          | 2026-07-31 | reviews/archived/p03-review-2026-07-31T200025Z.md    | 4f6d934b955b030dfacb06ae91e2e81d92c3b30a | auto       | -                    |
+| p-rev2 | code     | passed          | 2026-07-31 | reviews/archived/p-rev2-review-2026-07-31T213539Z.md | 0adcee7f8e143221e14b6f50579ab35e9bc0425a | auto       | -                    |
+| p04    | code     | passed          | 2026-07-31 | reviews/archived/p04-review-2026-07-31T215112Z.md    | 0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c | auto       | -                    |
+| p05    | code     | passed          | 2026-07-31 | reviews/archived/p05-review-2026-07-31T222411Z.md    | 0eaaf85a1926607a3d864fca21791ee4637c91ce | auto       | -                    |
+| final  | code     | passed          | 2026-07-31 | reviews/archived/final-review-2026-07-31T223213Z.md  | cd7fd7aef3d39c6c545ac8d4f62017ae710e7b1b | auto       | -                    |
+| spec   | artifact | pending         | -          | -                                                    | -                                        | -          | -                    |
+| design | artifact | passed          | 2026-07-31 | user-approved lightweight design                     | -                                        | manual     | -                    |
+| plan   | artifact | passed          | 2026-07-31 | structured review rounds 1-3                         | -                                        | auto       | -                    |
+| final  | code     | passed          | 2026-07-31 | reviews/archived/final-review-2026-07-31T224851Z.md  | 7aec7f31ec00c8949ab2f96a005256efbcb316a1 | gate       | cursor-fable-5-xhigh |
+| p-rev3 | code     | fixes_completed | 2026-08-01 | PR #189 Bugbot review threads                        | 796c000da3f61441b89ea5a4d1c5ddb676904f22 | auto       | cursor-bugbot        |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -651,11 +708,12 @@ cell; never truncate a widened row back to five columns.
 - Phase p-rev2: 1 task - Autonomy gate-inventory coverage
 - Phase 4: 1 task - Lockstep release bump and full verification
 - Phase 5: 1 task - Final-review recovery-ledger handoff correction
+- Phase p-rev3: 1 task - Post-PR recovery contract corrections
 
-**Total: 9 tasks**
+**Total: 10 tasks**
 
-Implementation complete: all nine tasks, superseding revision phases, final
-lifecycle review, and the configured implementation exit gate passed.
+Implementation revision in progress: the p-rev3 fix and full validation are
+complete; remote Bugbot re-review remains.
 
 ---
 

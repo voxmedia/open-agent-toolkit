@@ -120,11 +120,15 @@ non-mechanical scope changes require operator direction.
 
 The accepted task commit remains immutable. For an eligible defect, the phase
 implementer reserves an attempt in the authoritative phase ledger, applies the
-bounded correction, creates exactly one append-only recovery commit, reruns the
-failing focused check and relevant phase verification, and continues without a
-new authorization prompt. Mechanically related failures from one verification
-command may share one atomic attempt and commit; independent defects require
-separate attempts and commits.
+bounded correction, and runs focused and phase checks before a candidate commit.
+After those checks pass, the implementer commits the correction with a
+`completed` pre-bookkeeping marker and immediately reruns both checks against
+the committed HEAD. Those post-commit reruns are authoritative. A pass makes
+the candidate the successful recovery commit; a failure durably transitions the
+marker to `failed` in ledger-only terminal evidence and stops without claiming
+a successful recovery. Mechanically related failures from one verification
+command may share one atomic attempt and successful commit; independent defects
+require separate attempts.
 
 Append-only history protects accepted work by requiring a new, auditable commit;
 it does not require repeated approval for a mechanical repair already covered
@@ -160,6 +164,9 @@ cannot retry for free. An already-reconciled pending attempt may finish without
 another reservation, even when usage equals the limit. Evidence of an
 infrastructure or flaky failure permits one no-edit rerun without consuming an
 attempt; a repeated unexplained failure is ambiguous and stops without editing.
+A direction-required boundary reached before reservation leaves the pending
+marker null and usage unchanged, emits its required event, and records no edit
+or recovery commit.
 
 At three recovery events, the phase report warns about elevated recovery volume
 but may continue while every eligibility condition and the budget remain valid.

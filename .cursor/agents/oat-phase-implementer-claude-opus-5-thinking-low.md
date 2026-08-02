@@ -185,20 +185,27 @@ without incrementing usage. With `limit=1`, `used=1`, and no `pending_attempt`,
 stop direction-required before edit with no new reservation and no fallback.
 
 Record the eligibility evidence before editing. A new reservation consumes one
-attempt before editing. A failed edit, commit, or re-verification leaves that
-attempt consumed and records no successful recovery commit; continuation of a
-reconciled pending attempt does not consume another. Preserve the accepted task
-commit as immutable at the same history position. A successful attempt creates
-exactly one append-only recovery commit associated with the originating task
-and phase; never amend, reset, rebase, squash, replace its task ID, or conceal
-it. Mechanically related failures from the same verification command may use
-one atomic attempt and commit. Independent failures require separate attempts
-and commits.
+attempt before editing; continuation of a reconciled pending attempt does not
+consume another. Apply the bounded correction and run the focused and phase
+checks before creating a candidate commit. If either check fails, restore the
+bounded files to their original committed content without rewriting history,
+atomically mark the reservation `failed`, durably commit only that ledger
+transition, and stop. When both checks pass, atomically mark the reservation
+`completed` and create one append-only candidate recovery commit containing the
+bounded correction plus that transition.
 
-After a recovery commit, rerun the failing focused command and relevant phase
-verification, then continue without a new authorization prompt. At three
-recovery events, report an elevated recovery-volume warning but continue while
-the predicate and budget remain valid.
+Immediately rerun the focused and phase checks against the committed HEAD.
+These post-commit reruns are the authoritative recovery result. On pass, the
+candidate is the successful recovery commit. On failure, atomically replace the
+`completed` marker with `failed`, durably commit that ledger-only transition,
+preserve the candidate commit as immutable, claim no successful recovery
+commit, and stop. Any failed edit, commit, or re-verification leaves the attempt
+consumed. Preserve the accepted task commit at the same history position; never
+amend, reset, rebase, squash, replace its task ID, or conceal it. Mechanically
+related failures from the same verification command may use one atomic attempt
+and successful recovery commit. Independent failures require separate attempts.
+At three recovery events, report an elevated recovery-volume warning but
+continue while the predicate and budget remain valid.
 
 A suspected infrastructure or flake failure permits one no-edit rerun without
 attempt consumption. If the repeated unexplained failure remains ambiguous,
@@ -221,6 +228,12 @@ check, disposition, authorization, attempt/budget, dispatch target, recovery
 commit when one exists, verification outcome, and reason. This allows defect
 count, prompt count, and successful repair count to remain independently
 measurable.
+
+A `direction-required` disposition reached before any reservation leaves
+`pending_attempt: null`, does not increment `used_attempts`, and performs no
+edit or recovery commit. Its event carries the stop-boundary evidence so root
+can validate and record the terminal stop without expecting a `completed` or
+`failed` marker.
 
 ### Authoritative Attempt Ledger
 
@@ -247,25 +260,31 @@ editing. A new attempt is exhausted when `used_attempts` is equal to or greater
 than `phase_recovery_limit`; an already-pending matching attempt may only finish
 or fail and does not receive another reservation.
 
-After the focused and phase checks, atomically mark the pending entry
-`completed` or `failed`. A successful recovery commit includes the bounded code
-change and the `completed` ledger transition. A failed attempt must durably
-commit the matching `failed` transition as terminal ledger evidence without
-claiming a successful recovery commit. If the terminal marker cannot be
-committed, preserve the working tree and report the attempt as unreconciled;
-the root must fail closed without bookkeeping.
+Run focused and phase checks before a candidate commit. A pre-commit failure
+restores the bounded files and commits only the `failed` transition. A
+pre-commit pass atomically marks the pending entry `completed` and creates the
+candidate recovery commit with the bounded code change plus that transition.
+Immediately rerun both checks against committed HEAD. Those reruns are
+authoritative: a pass leaves the committed `completed` marker for root
+validation, while a failure atomically replaces it with `failed` in a separate
+ledger-only evidence commit and claims no successful recovery commit. If any
+required terminal marker cannot be committed, preserve the working tree and
+report the attempt as unreconciled; root must fail closed without bookkeeping.
 
-The matching committed `completed` or `failed` marker is the committed
-pre-bookkeeping terminal handoff. A recovery report returns with that matching
-committed `completed` or `failed` marker still present; `pending_attempt: null`
-is valid on return only when no recovery attempt was reported. An active,
-mismatched, prematurely cleared, unreconciled, or contradictory marker must
-fail closed before root bookkeeping. Root bookkeeping clears `pending_attempt`
-only after validating the report, immutable original history, exact target and
-axes, canonical event, attempt count, recovery commit when successful, and
-focused plus phase verification. Clearing always retains monotonic
+The final matching committed `completed` or `failed` marker is the committed
+pre-bookkeeping terminal handoff for an attempted recovery. A report of
+`recovered` or `failed-attempt` returns with that marker still present. A
+pre-attempt `direction-required` report instead returns with
+`pending_attempt: null`, unchanged usage, and evidence of no reservation, edit,
+or recovery commit. An active, mismatched, prematurely cleared, unreconciled,
+or contradictory attempted-recovery marker must fail closed before root
+bookkeeping. Root clears an attempted-recovery marker only after validating the
+report, immutable original history, exact target and axes, canonical event,
+attempt count, recovery commit when successful, and authoritative focused plus
+phase verification. Root records a valid pre-attempt `direction-required`
+event without clearing a marker. Clearing always retains monotonic
 `used_attempts`; failed attempts also preserve their terminal-stop disposition.
-Only that post-bookkeeping null state is a settled ledger.
+Only the post-bookkeeping null state is settled for an attempted recovery.
 
 ### Canonical Recovery Event
 
@@ -438,17 +457,24 @@ dispatch_stamp: { original formal Dispatch line }
 4. Apply or complete only `bounded_correction_scope`. Recover mode must not
    replay planned tasks and must not require, fabricate, or consume a review
    artifact.
-5. Run `focused_verification`, then `phase_verification`. Atomically mark the
-   pending ledger entry completed or failed and emit exactly one Canonical
-   Recovery Event.
-6. On success, create one append-only recovery commit containing only
-   `bounded_files` plus the authoritative `completed` ledger transition. On
-   failure, durably commit only the authoritative `failed` ledger transition as
-   terminal evidence, preserve the consumed attempt and stop disposition, and
-   claim no successful recovery commit. If the failed marker cannot be
-   committed, report an unreconciled block that root must reject before
-   bookkeeping. Never amend history or launch fallback.
-7. Return the report below. `DONE` is accepted success;
+5. Apply the bounded correction, then run `focused_verification` and
+   `phase_verification` before creating a candidate commit. If either check
+   fails, restore `bounded_files` to their original committed content,
+   atomically mark the pending entry `failed`, durably commit only that
+   ledger transition, emit one `failed-attempt` event, and stop.
+6. When both pre-commit checks pass, atomically mark the pending entry
+   `completed` and create one append-only candidate recovery commit containing
+   only `bounded_files` plus that ledger transition.
+7. Immediately rerun `focused_verification` and `phase_verification` against the
+   committed HEAD; these reruns are authoritative. On pass, emit one `recovered`
+   event and report the candidate as the successful recovery commit. On
+   failure, atomically replace `completed` with `failed`, durably commit that
+   ledger-only transition, emit one `failed-attempt` event, preserve the
+   consumed attempt and immutable candidate, and claim no successful recovery
+   commit. If terminal evidence cannot be committed, report an unreconciled
+   block that root must reject before bookkeeping. Never amend history or
+   launch fallback.
+8. Return the report below. `DONE` is accepted success;
    `DONE_WITH_CONCERNS` and `BLOCKED` may be accepted terminal stops and must
    still report provenance, accounting, immutable history, and the event.
 

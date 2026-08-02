@@ -1,8 +1,8 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-revise
+oat_status: in_progress
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
-oat_last_updated: 2026-07-31
+oat_last_updated: 2026-08-01
 oat_current_task_id: null
 oat_generated: false
 ---
@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: bounded-recovery-authorization
 
 **Started:** 2026-07-31
-**Last Updated:** 2026-07-31
+**Last Updated:** 2026-08-01
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -24,17 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status        | Tasks | Completed |
-| ------------ | ------------- | ----- | --------- |
-| Phase 1      | review_failed | 2     | 2/2       |
-| Phase p-rev1 | passed        | 1     | 1/1       |
-| Phase 2      | passed        | 1     | 1/1       |
-| Phase 3      | passed        | 2     | 2/2       |
-| Phase p-rev2 | passed        | 1     | 1/1       |
-| Phase 4      | passed        | 1     | 1/1       |
-| Phase 5      | passed        | 1     | 1/1       |
+| Phase        | Status          | Tasks | Completed |
+| ------------ | --------------- | ----- | --------- |
+| Phase 1      | review_failed   | 2     | 2/2       |
+| Phase p-rev1 | passed          | 1     | 1/1       |
+| Phase 2      | passed          | 1     | 1/1       |
+| Phase 3      | passed          | 2     | 2/2       |
+| Phase p-rev2 | passed          | 1     | 1/1       |
+| Phase 4      | passed          | 1     | 1/1       |
+| Phase 5      | passed          | 1     | 1/1       |
+| Phase p-rev3 | fixes_completed | 1     | 1/1       |
 
-**Total:** 9/9 tasks completed
+**Total:** 10/10 tasks completed
 
 ---
 
@@ -578,6 +579,42 @@ fresh review loop.
 - Implementation lifecycle outcome: complete with PR open.
 - Next route: `oat-project-revise` for PR feedback, or
   `oat-project-complete` after merge.
+
+### Revision Received: PR #189 Bugbot Feedback
+
+**Date:** 2026-08-01
+**Source:** Four unresolved Bugbot review threads
+
+**Validated findings:**
+
+- High: pre-attempt `direction-required` had no valid handoff-matrix row.
+- High: recover mode conflicted over pre-commit versus authoritative
+  post-commit verification.
+- Medium: planned-task commit validation incorrectly applied to recovery-only
+  reports.
+- Low: final approval used invalid provenance value `human` instead of `user`.
+
+**Revision:** `p-rev3-t01`
+
+**Implemented corrections:**
+
+- Added a no-attempt direction-required terminal row and report-specific root
+  validation.
+- Defined candidate checks, committed-tree authoritative reruns, and durable
+  failed evidence after a post-commit check failure.
+- Added canonical/provider regression assertions and refreshed the autonomy
+  prompt-site inventory.
+- Corrected approval provenance and regenerated Codex/Cursor provider views.
+
+**Focused verification:** 165 tests passed across skill contracts, provider
+sync parity, and autonomy inventory; all 61 OAT skills validated.
+
+**Full verification:** `pnpm check`, `pnpm type-check`, `pnpm test`,
+`pnpm build`, `pnpm lint`, `pnpm format`, `pnpm build:docs`, and
+`pnpm release:validate` passed.
+
+**Next:** Commit and push the revision, then receive the remote Bugbot
+re-review.
 
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 

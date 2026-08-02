@@ -136,6 +136,14 @@ Interactive implementation-tail project-recap preference resolved to ask; user s
 
 User approved the final p05 HiLL checkpoint after configured pre-approval steps [summary, document, pr] completed and the optional recap was skipped. The post-implementation sequence is complete; implementation is complete with PR #189 open.
 
+### 2026-08-02 · structural · oat-project-revise · p-rev3-bugbot-feedback
+
+Validated four PR #189 Bugbot findings and implemented revision p-rev3-t01: pre-attempt direction-required handoff, authoritative committed-tree recovery verification, report-specific task validation, and approval-source vocabulary. Focused contract/provider/autonomy verification passed; full validation and remote re-review pending.
+
+### 2026-08-02 · structural · oat-project-implement · p-rev3-t01-complete
+
+Revision p-rev3-t01 completed locally. Focused recovery-contract, provider-sync, and autonomy-inventory coverage passed 165 tests; 61 OAT skills validated; full repository CI, docs build, formatting, and release validation passed at 0.2.28. Remote Bugbot re-review remains pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

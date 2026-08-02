@@ -160,13 +160,21 @@ HEAD, bounded diff, report, and canonical event:
 An unreconciled pending attempt rejects and blocks resume before editing; it
 cannot be converted into a terminal handoff by report wording.
 
-After verification, the agent atomically marks the pending entry `completed` or
-`failed`. A successful recovery commit includes the `completed` ledger
-transition. A failed attempt durably commits the matching `failed` transition
-as terminal ledger evidence and claims no successful recovery commit; inability
-to commit that marker remains unreconciled and cannot be cleared. Root
-bookkeeping clears a matching terminal marker only after validating the report,
-event, immutable history, accounting, exact target and axes, and verification.
+After applying a bounded correction, the agent runs focused and phase
+verification before creating a candidate commit. When both checks pass, it
+atomically marks the pending entry `completed`, creates the append-only recovery
+commit containing the bounded correction plus that transition, and immediately
+reruns both checks against the committed HEAD. Those post-commit reruns are the
+authoritative recovery result. If either rerun fails, the agent atomically
+replaces `completed` with `failed` and durably commits that ledger-only
+transition; the immutable candidate commit is not reported as a successful
+recovery commit. A check that fails before the candidate commit instead restores
+the bounded files to their original committed content and durably commits only
+the matching `failed` transition. Inability to commit terminal evidence remains
+unreconciled and cannot be cleared. Root bookkeeping clears a matching terminal
+marker only after validating the report, event, immutable history, accounting,
+exact target and axes, and authoritative post-commit verification when a
+candidate commit exists.
 It always preserves `used_attempts` and, for a failed attempt, the terminal-stop
 disposition. The resulting `pending_attempt: null` state is the settled ledger.
 Failed edit, commit, or re-verification paths retain the consumed count. No
@@ -226,9 +234,12 @@ one attempt before editing begins. A failed edit, commit, or re-verification
 leaves that attempt consumed and records no successful recovery commit.
 Continuing a reconciled pending attempt does not consume another. Successful
 recovery creates one append-only recovery commit per successful attempt, reruns
-the failing focused command and relevant phase verification, and continues
-without a prompt. At three recovery events, require an elevated recovery-volume
-warning and continue if all eligibility conditions still hold.
+the failing focused command and relevant phase verification against committed
+HEAD as the authoritative result, and continues without a prompt. A failed
+post-commit rerun transitions the committed marker to `failed` in separate
+ledger-only terminal evidence and stops without claiming the candidate as a
+successful recovery commit. At three recovery events, require an elevated
+recovery-volume warning and continue if all eligibility conditions still hold.
 
 One no-edit rerun is permitted for evidence-backed infrastructure or flake
 failure without attempt consumption. A repeated unexplained failure is
@@ -358,36 +369,44 @@ Select the report-status branch and exactly one attempt-state row. These are
 pre-bookkeeping states, so none of the rows with a terminal marker is a settled
 ledger:
 
-| Reported attempt state                        | Required committed pre-bookkeeping ledger | Root validation                                                                                                                                            | Root action                                                                                          |
-| --------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| No recovery attempt reported                  | `pending_attempt: null`                   | Validate that the report claims no recovery attempt or recovery event and no attempt-accounting transition; ordinary phase success may continue.           | Leave `pending_attempt` null; accepted success may continue.                                         |
-| Recovery reported as `recovered`              | Matching committed `completed` marker     | Validate the report, immutable original history, recovery commit, exact target and axes, canonical `recovered` event, attempt count, and all verification. | After all validation passes, clear the marker, preserve `used_attempts`, record the event, continue. |
-| Recovery reported as `failed-attempt`         | Matching committed `failed` marker        | Validate the terminal-stop report, event, immutable history, accounting, exact target and axes, attempt count, and failed verification evidence.           | After all validation passes, clear the marker, preserve `used_attempts` and the stop disposition.    |
-| Attempt reported with `pending_attempt: null` | Invalid premature clear                   | Fail closed because the claimed attempt has no committed terminal marker.                                                                                  | Perform no bookkeeping and do not continue or fallback.                                              |
-| Terminal status or identity mismatch          | Invalid contradiction                     | Fail closed on a status, event ID, request, task/commit, target, attempt-number, or disposition mismatch.                                                  | Perform no bookkeeping and do not continue or fallback.                                              |
-| Marker status `active`                        | Invalid in-flight state                   | Fail closed because an active reservation is not a terminal handoff.                                                                                       | Perform no bookkeeping and do not continue or fallback.                                              |
-| Any other unreconciled or contradictory state | Invalid                                   | Fail closed before mutating project state.                                                                                                                 | Perform no bookkeeping and do not continue or fallback.                                              |
+| Reported attempt state                        | Required committed pre-bookkeeping ledger | Root validation                                                                                                                                                        | Root action                                                                                          |
+| --------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| No recovery attempt reported                  | `pending_attempt: null`                   | Validate that the report claims no recovery attempt or recovery event and no attempt-accounting transition; ordinary phase success may continue.                       | Leave `pending_attempt` null; accepted success may continue.                                         |
+| `direction-required` before any attempt       | `pending_attempt: null`                   | Validate the terminal-stop report, canonical `direction-required` event, unchanged usage, immutable history, and evidence of no reservation, edit, or recovery commit. | Leave `pending_attempt` null, preserve usage, record the event, and stop.                            |
+| Recovery reported as `recovered`              | Matching committed `completed` marker     | Validate the report, immutable original history, recovery commit, exact target and axes, canonical `recovered` event, attempt count, and all verification.             | After all validation passes, clear the marker, preserve `used_attempts`, record the event, continue. |
+| Recovery reported as `failed-attempt`         | Matching committed `failed` marker        | Validate the terminal-stop report, event, immutable history, accounting, exact target and axes, attempt count, and failed verification evidence.                       | After all validation passes, clear the marker, preserve `used_attempts` and the stop disposition.    |
+| Attempt reported with `pending_attempt: null` | Invalid premature clear                   | Fail closed because the claimed attempt has no committed terminal marker.                                                                                              | Perform no bookkeeping and do not continue or fallback.                                              |
+| Terminal status or identity mismatch          | Invalid contradiction                     | Fail closed on a status, event ID, request, task/commit, target, attempt-number, or disposition mismatch.                                                              | Perform no bookkeeping and do not continue or fallback.                                              |
+| Marker status `active`                        | Invalid in-flight state                   | Fail closed because an active reservation is not a terminal handoff.                                                                                                   | Perform no bookkeeping and do not continue or fallback.                                              |
+| Any other unreconciled or contradictory state | Invalid                                   | Fail closed before mutating project state.                                                                                                                             | Perform no bookkeeping and do not continue or fallback.                                              |
 
-Only after the selected row validates completely may root bookkeeping clear
-`pending_attempt`, append the validated canonical event, and preserve monotonic
-`used_attempts`. For `failed-attempt`, clearing must also preserve the
-terminal-stop disposition and then stop. The post-bookkeeping result is the only
-settled ledger state: `pending_attempt: null` with nondecreasing
-`used_attempts`. A null marker before validation is valid only for the explicit
-no-recovery row; it is never evidence that a reported attempt was reconciled.
+Only after a selected `recovered` or `failed-attempt` row validates completely
+may root bookkeeping clear `pending_attempt`, append the validated canonical
+event, and preserve monotonic `used_attempts`. For `failed-attempt`, clearing
+must also preserve the terminal-stop disposition and then stop. The no-recovery
+and pre-attempt `direction-required` rows already have `pending_attempt: null`;
+root leaves it null and never treats it as attempted-recovery evidence. The
+post-bookkeeping result is the only settled state for an attempted recovery:
+`pending_attempt: null` with nondecreasing `used_attempts`.
 
 Both accepted success and accepted terminal-stop branches must:
 
 - verify phase ID, request ID, phase or recovery base, and phase verification;
 - for a Phase Implementation Report, verify task count; for a Phase Recovery
   Continuation Report, verify the original task and commit instead;
-- for each task, verify its commit is exactly one append-only commit in plan
-  order, changes only declared files, and has passing task verification;
-- for each reported recovery, verify attempt accounting, the immutable original
-  commit and original request, exact-target provenance, one in-scope append-only
-  recovery commit when successful, focused and phase verification, and exactly
-  one well-formed canonical recovery event, plus the matching committed
-  `completed` or `failed` pre-bookkeeping terminal marker;
+- only for a Phase Implementation Report, verify each planned task commit is
+  exactly one append-only commit in plan order, changes only declared files, and
+  has passing task verification; never require a Phase Recovery Continuation
+  Report to replay or restate all planned task outcomes;
+- for each reported attempted recovery (`recovered` or `failed-attempt`), verify
+  attempt accounting, the immutable original commit and original request,
+  exact-target provenance, one in-scope append-only recovery commit when
+  successful, focused and phase verification, exactly one well-formed canonical
+  recovery event, and the matching committed `completed` or `failed`
+  pre-bookkeeping terminal marker;
+- for a pre-attempt `direction-required` event, verify unchanged accounting,
+  immutable history, exact-target and stop-boundary evidence, and the absence of
+  any reservation, edit, or recovery commit; require `pending_attempt: null`;
 - verify recovered, direction-required, and failed-attempt dispositions are all
   represented without gaps or duplicate events;
 - verify the reported commit range equals the worktree's range from
@@ -404,13 +423,16 @@ it permits `pending_attempt: null`. It never clears a marker before validation.
 
 The accepted terminal-stop branch validates provenance, attempt accounting,
 immutable history, canonical recovery event shape, commit range, and ledger
-state before bookkeeping. A reported failed attempt requires the matching
-committed `failed` marker while validation runs; a marker that is active,
-missing, mismatched, prematurely cleared, or otherwise unreconciled is invalid.
-Its worktree may retain only a bounded failed-attempt diff named by the report;
-any other dirt is invalid. After complete validation, root clears the failed
-marker while preserving usage and the stop disposition. A valid `BLOCKED`
-report is recorded, then stops without continuation or fallback.
+state before bookkeeping. A pre-attempt `direction-required` stop requires
+`pending_attempt: null`, unchanged usage, and evidence that no reservation,
+edit, or recovery commit occurred; root records its event without clearing a
+marker. A reported failed attempt instead requires the matching committed
+`failed` marker while validation runs; a marker that is active, missing,
+mismatched, prematurely cleared, or otherwise unreconciled is invalid. Its
+worktree may retain only a bounded failed-attempt diff named by the report; any
+other dirt is invalid. After complete validation, root clears the failed marker
+while preserving usage and the stop disposition. A valid `BLOCKED` report is
+recorded, then stops without continuation or fallback.
 `DONE_WITH_CONCERNS` uses this terminal branch when it reports an unresolved
 direction-required or failed-attempt disposition; otherwise it may use the
 success branch only when every success invariant passes.
