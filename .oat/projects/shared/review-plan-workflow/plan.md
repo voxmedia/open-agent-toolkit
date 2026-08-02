@@ -3657,6 +3657,42 @@ evidence commit to the existing Stage A draft PR, run
 `gh pr ready "$STAGE_A_PR_NUMBER"`, and stop until its merge is externally
 confirmed.
 
+#### Recovery p06-t06-r01: Integrate the current Stage A base
+
+**Finding:** Draft PR #190 became conflicting after upstream PR #189 advanced
+`oat-project-implement` independently to version 2.2.4 and published the
+lockstep packages at 0.2.28.
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: manifest-owned provider views reported by `oat sync --scope all`
+- Modify: `.oat/sync/manifest.json`
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/state.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Integrate** Merge current `origin/main` without rewriting history.
+Preserve upstream and review-plan validation additions, retain Stage A package
+version 0.2.29, advance `oat-project-implement` to 2.2.5, and update every
+task-owned version pin.
+
+**Step 2: Regenerate** Run canonical provider sync and bundled-asset tooling;
+do not hand-edit generated mirrors.
+
+**Step 3: Verify** Run focused canonical/version/sync tests, clean provider
+sync dry-run, lockstep version validation, package/build checks, and full
+`pnpm release:validate`.
+
+**Step 4: Commit** `chore(p06-t06): integrate current main`
+
 ### Task p06-t07: Publish Stage A and start the soak
 
 **Files:**

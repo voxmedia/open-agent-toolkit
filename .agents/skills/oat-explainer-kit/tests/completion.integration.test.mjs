@@ -1,12 +1,16 @@
 import assert from 'node:assert/strict';
+import { execFile as execFileCallback } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import test, { afterEach } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 
+import { createBrowserProbeSession } from '../../explainer-kit/scripts/lib/browser-runtime.mjs';
 import { runOatExplainer } from '../scripts/run.mjs';
 
+const execFile = promisify(execFileCallback);
 const repoRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '../../../..',
@@ -43,11 +47,16 @@ const authorCallbackPath = resolve(
   repoRoot,
   '.agents/skills/oat-explainer-kit/references/author-callback.md',
 );
+const visualReviewCallbackPath = resolve(
+  repoRoot,
+  '.agents/skills/oat-explainer-kit/references/visual-review-callback.md',
+);
 const completionSkill = await readFile(completionSkillPath, 'utf8');
 const lifecycleContract = await readFile(lifecycleContractPath, 'utf8');
 const closeoutReference = await readFile(closeoutReferencePath, 'utf8');
 const adapterSkill = await readFile(adapterSkillPath, 'utf8');
 const authorCallback = await readFile(authorCallbackPath, 'utf8');
+const visualReviewCallback = await readFile(visualReviewCallbackPath, 'utf8');
 
 function sectionBetween(source, start, end) {
   const startIndex = source.indexOf(start);
@@ -188,7 +197,7 @@ test('author guidance carries briefs, evidence, artistic inputs, and expansion p
   assert.match(adapterSkill, /`references\/author-callback\.md`/);
   assert.match(
     adapterSkill,
-    /construct exactly\s+one provider-neutral author seam in both modes/,
+    /Construct exactly\s+one provider-neutral author seam in both modes/,
   );
   assert.match(authorCallback, /`explainer-kit\.author-request\/v2`/);
   assert.match(authorCallback, /`brief`/);
@@ -197,12 +206,38 @@ test('author guidance carries briefs, evidence, artistic inputs, and expansion p
   assert.match(authorCallback, /`theme`/);
   assert.match(authorCallback, /`shell`/);
   assert.match(authorCallback, /`proposedArtifacts`/);
-  assert.match(authorCallback, /`profileId`/);
-  assert.match(authorCallback, /both interactive and unattended modes/);
+  assert.match(authorCallback, /`plannedArtifact`/);
+  assert.match(
+    authorCallback,
+    /Interactive invocations use the same author\s+contract/,
+  );
   assert.match(
     lifecycleContract,
     /Every adapter run in both interactive and unattended modes must provide exactly\s+one provider-neutral author seam/,
   );
+});
+
+test('adapter guidance exposes first-class browser and visual-review providers', () => {
+  for (const input of [
+    'browserSession',
+    'browserSessionModulePath',
+    'visualCritic',
+    'visualCriticModulePath',
+  ]) {
+    const pattern = new RegExp(`\`${input}\``);
+    assert.match(adapterSkill, pattern);
+    assert.match(lifecycleContract, pattern);
+    assert.match(visualReviewCallback, pattern);
+  }
+  assert.match(visualReviewCallback, /canonical 320, 768, and 1440\s+widths/);
+  assert.match(visualReviewCallback, /launched `Browser` instance/);
+  assert.match(visualReviewCallback, /rejected by unattended\s+project-recap/);
+  assert.match(
+    visualReviewCallback,
+    /request's exact `requestId` and `requestHash`/,
+  );
+  assert.match(visualReviewCallback, /produces `built-needs-review`/);
+  assert.match(lifecycleContract, /distinct\s+callback identities/);
 });
 
 test('passes only the selected shared-project recap to archive and supports no-recap completion', () => {
@@ -378,6 +413,20 @@ test('the documented author seam turns lifecycle evidence into a rich recap', as
     'built-not-durable',
     JSON.stringify(built.result.result.errors),
   );
+  const reviewedSources = built.factBase.sources.filter(({ id }) =>
+    ['plan', 'design', 'spec', 'implementation', 'summary'].includes(id),
+  );
+  assert.equal(reviewedSources.length, 5);
+  for (const source of reviewedSources) {
+    assert.equal(source.repository, 'acme/completion-provenance');
+    assert.equal(source.revision, built.revision);
+    assert.match(
+      source.url,
+      new RegExp(
+        `^https://github\\.com/acme/completion-provenance/blob/${built.revision}/`,
+      ),
+    );
+  }
 
   // Every brief-declared section is present, so coverage is earned rather than
   // waived by a warning.
@@ -446,19 +495,7 @@ test('a thin author fails the same richness check the rich one passes', async ()
     decisions: ['Checkpoint each partition.'],
     components: [['ingest-worker', 'Streams partitions.']],
     checks: [['pnpm test', 'passing']],
-    author: async (request) => ({
-      schemaVersion: 'explainer-kit.author-result/v2',
-      artifactId: request.artifactId,
-      content: {
-        markdown:
-          '# Project recap\n\nThe project shipped and the tests passed.\n',
-      },
-      provenance: {
-        authorId: 'thin-lifecycle-author',
-        generatedAt: '2026-07-20T12:00:00.000Z',
-        method: 'provider-neutral-callback',
-      },
-    }),
+    author: thinLifecycleAuthor,
   });
 
   assert.equal(
@@ -469,7 +506,6 @@ test('a thin author fails the same richness check the rich one passes', async ()
   for (const warning of [
     'guideline-narrative-coverage-missing',
     'guideline-structured-depth-missing',
-    'guideline-architecture-diagram-missing',
   ]) {
     assert.ok(
       thin.result.result.warnings.includes(warning),
@@ -488,6 +524,98 @@ const REQUIRED_NARRATIVE = [
   'validation-evidence',
   'outcome',
 ];
+
+async function completionPlanSet({ recipe, factBase }) {
+  const sourceIds = factBase.sources
+    .map(({ id }) => id)
+    .filter((id) => !id.startsWith('critic:'));
+  return {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'completion-evidence-recap',
+    recipe: { id: recipe.id, version: recipe.version },
+    sourceIds,
+    ledger: {
+      terminology: [{ term: 'project', meaning: 'The tracked project.' }],
+      statuses: [{ subject: 'completion', value: 'passed' }],
+      numbers: [{ subject: 'checks', value: 3, unit: 'checks' }],
+    },
+    portfolio: recipe.floor.map((artifact) => ({
+      artifactId: artifact.id,
+      artifactType: artifact.type,
+      profileId: 'recipe-floor',
+      required: true,
+      sourceIds,
+      draft: `Compose ${artifact.id} from completion evidence.`,
+      visualIntent: `Use the planned ${artifact.type} medium.`,
+    })),
+  };
+}
+
+async function completionVisualCritic(request) {
+  return {
+    schemaVersion: 'explainer-kit.visual-review-result/v1',
+    reviewId: 'completion-evidence-visual-review',
+    requestId: request.requestId,
+    requestHash: request.requestHash,
+    reviewedAt: '2026-07-20T12:00:00.000Z',
+    disposition: 'pass',
+    artifactIds: request.renderedArtifacts.map(({ artifactId }) => artifactId),
+    findings: [],
+  };
+}
+
+async function thinLifecycleAuthor(request) {
+  let content =
+    '# Project recap\n\nThe project shipped and the tests passed.\n';
+  if (request.authoring === 'html') {
+    content =
+      request.artifactType === 'diagram'
+        ? request.shell
+            .replaceAll('{{THEME_CSS}}', '')
+            .replaceAll('{{TITLE}}', 'Thin architecture')
+            .replaceAll('{{DESCRIPTION}}', 'One component.')
+            .replaceAll('{{DIAGRAM}}', '<g data-node="worker"></g>')
+            .replaceAll('{{LEGEND}}', '<span>worker</span>')
+        : request.artifactType === 'deck'
+          ? request.shell
+              .replaceAll('{{THEME_CSS}}', '')
+              .replaceAll('{{TITLE}}', 'Thin deck')
+              .replaceAll('{{DESCRIPTION}}', 'One outcome.')
+              .replaceAll(
+                '{{SLIDES}}',
+                '<section class="slide"><div class="slide__content"><h1>Project shipped</h1></div></section>',
+              )
+          : request.shell
+              .replaceAll('{{THEME_CSS}}', '')
+              .replaceAll('{{TITLE}}', 'Project recap')
+              .replaceAll(
+                '{{DESCRIPTION}}',
+                'The project shipped and the tests passed.',
+              )
+              .replaceAll('{{EYEBROW}}', 'Project recap')
+              .replaceAll(
+                '{{NAVIGATION}}',
+                '<a href="#original-request">Original request</a>',
+              )
+              .replaceAll(
+                '{{CONTENT}}',
+                '<section id="original-request"><h2>Original request</h2><p>The project shipped and the tests passed.</p></section>',
+              )
+              .replaceAll('{{FOOTER}}', 'Thin lifecycle recap.');
+  }
+  return {
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: request.artifactId,
+    content: {
+      [request.authoring]: withCohesionMarker(content, request.authoring),
+    },
+    provenance: {
+      authorId: 'thin-lifecycle-author',
+      generatedAt: '2026-07-20T12:00:00.000Z',
+      method: 'provider-neutral-callback',
+    },
+  };
+}
 
 async function recapFromEvidence({
   slug,
@@ -512,45 +640,94 @@ async function recapFromEvidence({
   )) {
     await writeFile(join(projectRoot, name), content);
   }
-
-  const result = await runOatExplainer({
-    adapterRoot: SOURCE_ADAPTER_ROOT,
-    userSkillsRoot: SOURCE_SKILLS_ROOT,
-    repoRoot: repoRootFixture,
-    invocation: 'project',
-    activeProject: '.oat/projects/shared/demo',
-    recipe: 'project-recap',
-    slug,
-    author,
-    critic: async () => ({
-      criticId: 'autonomy-check-critic',
-      executedAt: '2026-07-20T12:00:00.000Z',
-      findings: [],
-    }),
-    getConfig: async (key) => ({
-      status: 'ok',
-      key,
-      value:
-        key === 'explainers.defaults.palette'
-          ? 'neutral'
-          : key === 'explainers.defaults.visualProfile'
-            ? 'clean'
-            : key.startsWith('workflow.')
-              ? 'ask'
-              : null,
-      source: 'default',
-    }),
-    mode: 'unattended',
+  await execFile('git', ['init', '--quiet'], { cwd: repoRootFixture });
+  await execFile(
+    'git',
+    [
+      'remote',
+      'add',
+      'origin',
+      'https://github.com/acme/completion-provenance.git',
+    ],
+    { cwd: repoRootFixture },
+  );
+  await execFile('git', ['add', '.'], { cwd: repoRootFixture });
+  await execFile('git', ['commit', '--quiet', '-m', 'fixture'], {
+    cwd: repoRootFixture,
+    env: {
+      ...process.env,
+      GIT_AUTHOR_NAME: 'Completion Fixture',
+      GIT_AUTHOR_EMAIL: 'completion@example.com',
+      GIT_COMMITTER_NAME: 'Completion Fixture',
+      GIT_COMMITTER_EMAIL: 'completion@example.com',
+    },
   });
-  const hubPath = result.manifest.artifacts?.find(
-    ({ id }) => id === 'project-recap',
-  )?.renderedPath;
-  assert.ok(hubPath, JSON.stringify(result.result));
+  const { stdout: revisionOutput } = await execFile(
+    'git',
+    ['rev-parse', 'HEAD'],
+    { cwd: repoRootFixture },
+  );
+  const revision = revisionOutput.trim();
 
-  return {
-    result,
-    hub: await readFile(join(result.result.runRoot, hubPath), 'utf8'),
-  };
+  const browserSession = await createBrowserProbeSession();
+  assert.equal(
+    browserSession.available,
+    true,
+    `installed Chromium unavailable: ${browserSession.reason}`,
+  );
+  try {
+    const result = await runOatExplainer({
+      adapterRoot: SOURCE_ADAPTER_ROOT,
+      userSkillsRoot: SOURCE_SKILLS_ROOT,
+      repoRoot: repoRootFixture,
+      invocation: 'project',
+      activeProject: '.oat/projects/shared/demo',
+      recipe: 'project-recap',
+      slug,
+      author,
+      planSet: completionPlanSet,
+      critic: async () => ({
+        criticId: 'autonomy-check-critic',
+        executedAt: '2026-07-20T12:00:00.000Z',
+        findings: [],
+      }),
+      browserSession,
+      visualCritic: completionVisualCritic,
+      getConfig: async (key) => ({
+        status: 'ok',
+        key,
+        value:
+          key === 'explainers.defaults.palette'
+            ? 'neutral'
+            : key === 'explainers.defaults.visualProfile'
+              ? 'clean'
+              : key.startsWith('workflow.')
+                ? 'ask'
+                : null,
+        source: 'default',
+      }),
+      mode: 'unattended',
+    });
+    assert.ok(result.manifest, JSON.stringify(result.result));
+    const hubPath = result.manifest.artifacts?.find(
+      ({ id }) => id === 'project-recap',
+    )?.renderedPath;
+    assert.ok(hubPath, JSON.stringify(result.result));
+
+    return {
+      result,
+      hub: await readFile(join(result.result.runRoot, hubPath), 'utf8'),
+      factBase: JSON.parse(
+        await readFile(
+          join(result.result.runRoot, 'source', 'fact-base.json'),
+          'utf8',
+        ),
+      ),
+      revision,
+    };
+  } finally {
+    await browserSession.close();
+  }
 }
 
 function lifecycleArtifacts({ decisions, components, checks }) {
@@ -570,7 +747,7 @@ function lifecycleArtifacts({ decisions, components, checks }) {
  */
 async function authorFromLifecycleEvidence(request) {
   assert.equal(request.schemaVersion, 'explainer-kit.author-request/v2');
-  assert.equal(request.authoring, 'markdown');
+  assert.equal(request.authoring, 'html');
   assert.ok(request.brief.length > 0, 'the request must carry a brief');
 
   const intent = briefIntent(request.brief);
@@ -664,7 +841,18 @@ async function authorFromLifecycleEvidence(request) {
     schemaVersion: 'explainer-kit.author-result/v2',
     artifactId: request.artifactId,
     content: {
-      markdown: `# ${title(request.artifactId)}\n\n${sections.join('\n')}`,
+      [request.authoring]: withCohesionMarker(
+        request.authoring === 'markdown'
+          ? `# ${title(request.artifactId)}\n\n${sections.join('\n')}`
+          : lifecycleEvidenceHtml(request, {
+              intent,
+              evidence,
+              decisions,
+              components,
+              checks,
+            }),
+        request.authoring,
+      ),
     },
     provenance: {
       authorId: 'evidence-derived-lifecycle-author',
@@ -672,6 +860,95 @@ async function authorFromLifecycleEvidence(request) {
       method: 'provider-neutral-callback',
     },
   };
+}
+
+function withCohesionMarker(content, authoring) {
+  const marker = 'project passed 3 checks';
+  return authoring === 'html'
+    ? content.includes('</body>')
+      ? content.replace('</body>', `<p>${marker}</p></body>`)
+      : `${content}<p>${marker}</p>`
+    : `${content}\n\n${marker}\n`;
+}
+
+function lifecycleEvidenceHtml(
+  request,
+  { intent, evidence, decisions, components, checks },
+) {
+  if (request.artifactType === 'diagram') {
+    const nodes = components
+      .map(
+        ({ name }, index) =>
+          `<g${index === 0 ? ' id="as-built-architecture"' : ''} data-node="${name}" class="node"><rect x="60" y="${60 + index * 160}" width="260" height="80" rx="8"></rect><text x="84" y="${106 + index * 160}">${name}</text></g>`,
+      )
+      .join('');
+    return request.shell
+      .replaceAll('{{THEME_CSS}}', '')
+      .replaceAll('{{TITLE}}', title(request.artifactId))
+      .replaceAll('{{DESCRIPTION}}', firstSentence(evidence.summary))
+      .replaceAll('{{DIAGRAM}}', nodes)
+      .replaceAll(
+        '{{LEGEND}}',
+        components.map(({ name }) => `<span>${name}</span>`).join(''),
+      );
+  }
+  if (request.artifactType === 'deck') {
+    return request.shell
+      .replaceAll('{{THEME_CSS}}', '')
+      .replaceAll('{{TITLE}}', title(request.artifactId))
+      .replaceAll('{{DESCRIPTION}}', firstSentence(evidence.summary))
+      .replaceAll(
+        '{{SLIDES}}',
+        `<section class="slide"><div class="slide__content"><h1>${firstSentence(evidence.summary)}</h1><ul>${decisions.map((decision) => `<li>${decision}</li>`).join('')}</ul></div></section><section id="outcome" class="slide"><div class="slide__content"><h2>Validation evidence</h2><ul>${checks.map(({ command, observed }) => `<li>${command}: ${observed}</li>`).join('')}</ul></div></section>`,
+      );
+  }
+
+  const content = REQUIRED_NARRATIVE.map((id) => {
+    let structure = `<p>${intent.get(id) ?? `Derived from the ${id} evidence.`}</p>`;
+    if (id === 'original-request') {
+      structure += `<ul>${bulletsUnder(evidence.plan, 'Constraints')
+        .map((line) => `<li>${line}</li>`)
+        .join(
+          '',
+        )}</ul><ol class="timeline"><li>${firstSentence(evidence.plan)}</li><li>${firstSentence(evidence.summary)}</li></ol>`;
+    } else if (id === 'key-agent-decisions') {
+      structure += `<ul>${decisions
+        .map((decision) => `<li>${decision}</li>`)
+        .join('')}</ul>`;
+    } else if (id === 'as-built-architecture') {
+      structure += `<svg class="narrative-diagram" data-direction="TD">${components
+        .map(({ name }) => `<text class="diagram-node-label">${name}</text>`)
+        .join('')}</svg>`;
+    } else if (id === 'implementation-record') {
+      structure += `<table><thead><tr><th>Component</th><th>Change</th></tr></thead><tbody>${components
+        .map(({ name, role }) => `<tr><td>${name}</td><td>${role}</td></tr>`)
+        .join('')}</tbody></table>`;
+    } else if (id === 'validation-evidence') {
+      structure += `<table><thead><tr><th>Check</th><th>Observed</th></tr></thead><tbody>${checks
+        .map(
+          ({ command, observed }) =>
+            `<tr><td>${command}</td><td>${observed}</td></tr>`,
+        )
+        .join('')}</tbody></table>`;
+    } else if (id === 'outcome') {
+      structure += `<aside class="callout callout--note">${firstSentence(evidence.summary)}</aside>`;
+    }
+    return `<section id="${id}"><h2>${title(id)}</h2>${structure}</section>`;
+  }).join('');
+
+  return request.shell
+    .replaceAll('{{THEME_CSS}}', '')
+    .replaceAll('{{TITLE}}', title(request.artifactId))
+    .replaceAll('{{DESCRIPTION}}', firstSentence(evidence.summary))
+    .replaceAll('{{EYEBROW}}', 'Project recap')
+    .replaceAll(
+      '{{NAVIGATION}}',
+      REQUIRED_NARRATIVE.map((id) => `<a href="#${id}">${title(id)}</a>`).join(
+        '',
+      ),
+    )
+    .replaceAll('{{CONTENT}}', content)
+    .replaceAll('{{FOOTER}}', 'Authored from lifecycle evidence.');
 }
 
 function briefIntent(brief) {

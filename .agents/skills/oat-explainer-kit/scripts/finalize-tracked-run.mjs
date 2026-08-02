@@ -1,9 +1,12 @@
+import { createHash } from 'node:crypto';
 import { readFile, realpath } from 'node:fs/promises';
-import { relative, resolve, sep } from 'node:path';
+import { join, relative, resolve, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const MODES = new Set(['dedicated', 'completion-bookkeeping']);
 const ARTIFACT_COMMIT_TOKEN = '$ARTIFACT_COMMIT';
 const SHA_PATTERN = /^[a-f0-9]{40}$/;
+const PACKAGE_COVERAGE_VERSION = 'explainer-kit.package-coverage/v2';
 
 export async function planTrackedRunFinalization(request, context = {}) {
   assertRequest(request);
@@ -21,10 +24,16 @@ export async function planTrackedRunFinalization(request, context = {}) {
       'Finalization requires an explainer-kit.manifest/v1 record.',
     );
   }
+  if (manifest.outcome === 'built-needs-review') {
+    throw new Error(
+      'built-needs-review requires a passing visual review before finalization.',
+    );
+  }
+  const packageCoverage = await loadPackageCoverage(context.coreRoot);
 
-  const immutablePaths = immutablePackagePaths(manifest).map((path) =>
-    toRepoPath(repoRoot, resolveRunPath(runRoot, path)),
-  );
+  const immutablePaths = (
+    await immutablePackagePaths(manifest, runRoot, packageCoverage)
+  ).map((path) => toRepoPath(repoRoot, resolveRunPath(runRoot, path)));
   const mutablePaths = [
     toRepoPath(repoRoot, manifestPath),
     toRepoPath(repoRoot, resolveRunPath(runRoot, manifest.buildRecord?.path)),
@@ -245,7 +254,7 @@ function commitCommands(paths, subject) {
   ];
 }
 
-function immutablePackagePaths(manifest) {
+async function immutablePackagePaths(manifest, runRoot, packageCoverage) {
   if (
     !manifest.immutableHashes ||
     typeof manifest.immutableHashes !== 'object' ||
@@ -257,7 +266,85 @@ function immutablePackagePaths(manifest) {
   if (paths.length === 0) {
     throw new Error('Manifest does not identify a complete immutable package.');
   }
+  const verifiedBytes = new Map();
+  for (const path of paths) {
+    const expected = manifest.immutableHashes[path];
+    if (!/^sha256:[a-f0-9]{64}$/.test(expected)) {
+      throw new Error(`Manifest has an invalid immutable hash for ${path}.`);
+    }
+    const bytes = await readFile(resolveRunPath(runRoot, path));
+    const actual = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+    if (actual !== expected) {
+      throw new Error(`Immutable package hash mismatch for ${path}.`);
+    }
+    verifiedBytes.set(path, bytes);
+  }
+  const runMode =
+    manifest.recipe?.id === 'project-recap'
+      ? verifiedRunMode(verifiedBytes.get('run-request.json'))
+      : undefined;
+  const required = packageCoverage.requiredImmutablePackagePaths(manifest, {
+    runMode,
+  });
+  const missing = required.filter(
+    (path) => !(path in manifest.immutableHashes),
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `Manifest immutable hashes do not cover the canonical package: ${missing.join(', ')}.`,
+    );
+  }
+  await packageCoverage.validateImmutablePackageEvidence(manifest, {
+    runMode,
+    read: (path) => verifiedBytes.get(path),
+  });
   return paths;
+}
+
+function verifiedRunMode(bytes) {
+  if (!Buffer.isBuffer(bytes)) {
+    throw new Error(
+      'Manifest must include hash-verified run-request.json before package coverage is evaluated.',
+    );
+  }
+  let request;
+  try {
+    request = JSON.parse(bytes.toString('utf8'));
+  } catch {
+    throw new Error(
+      'Hash-verified run-request.json must contain valid JSON before package coverage is evaluated.',
+    );
+  }
+  if (!['interactive', 'unattended'].includes(request?.mode)) {
+    throw new Error(
+      'Hash-verified run-request.json must declare interactive or unattended mode.',
+    );
+  }
+  return request.mode;
+}
+
+async function loadPackageCoverage(coreRoot) {
+  const root = await realpathRequired(coreRoot, 'coreRoot');
+  const modulePath = join(root, 'scripts', 'lib', 'package-coverage.mjs');
+  let loaded;
+  try {
+    loaded = await import(pathToFileURL(modulePath).href);
+  } catch (loadError) {
+    throw new Error(
+      `Compatible explainer package coverage could not be loaded from coreRoot: ${loadError.message}`,
+      { cause: loadError },
+    );
+  }
+  if (
+    loaded.PACKAGE_COVERAGE_VERSION !== PACKAGE_COVERAGE_VERSION ||
+    typeof loaded.requiredImmutablePackagePaths !== 'function' ||
+    typeof loaded.validateImmutablePackageEvidence !== 'function'
+  ) {
+    throw new Error(
+      `coreRoot must provide ${PACKAGE_COVERAGE_VERSION} package coverage.`,
+    );
+  }
+  return loaded;
 }
 
 function resolveRunPath(runRoot, path) {

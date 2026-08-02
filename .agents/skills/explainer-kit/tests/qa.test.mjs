@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { test } from 'node:test';
+import { dirname, join } from 'node:path';
+import { mock, test } from 'node:test';
 
 import {
+  createFixtureBrowserProbeSession,
   RUNTIME_UNAVAILABLE_REASONS,
   resolveHeadlessRuntime,
 } from '../scripts/lib/browser-runtime.mjs';
+import { decodeBrowserPng } from '../scripts/lib/png.mjs';
 import {
   GUIDELINE_WARNING_IDS,
   REPRESENTATIVE_WIDTHS,
@@ -22,7 +25,12 @@ import {
 import { evaluateExpansionProposals } from '../scripts/lib/recipes.mjs';
 import { renderArtifact } from '../scripts/lib/render.mjs';
 import { resolveTheme } from '../scripts/lib/theme.mjs';
+import {
+  cohesionEvidenceFromLedger,
+  runVisualReview,
+} from '../scripts/lib/visual-review.mjs';
 import { runRenderQaCli, runRenderQaStage } from '../scripts/render-qa.mjs';
+import { png } from './fixtures/png.mjs';
 
 const fixture = (
   body = '<h1>System overview</h1><p>Ready.</p>',
@@ -420,6 +428,7 @@ test('accepts representative output from every bundled renderer', async () => {
 
 test('runs browser probe contract at representative widths with reduced motion', async () => {
   const calls = [];
+  const observations = [];
   const report = await runBrowserProbes({
     artifacts: [{ id: 'page', type: 'hub', html: fixture() }],
     probe: async (request) => {
@@ -431,6 +440,11 @@ test('runs browser probe contract at representative widths with reduced motion',
         keyboard: { tab: true },
       };
     },
+    onProbeResult: (observation) => {
+      observations.push(structuredClone(observation));
+      observation.viewport.width = 0;
+      observation.result.pageOverflowX = true;
+    },
   });
 
   assert.deepEqual(
@@ -439,7 +453,209 @@ test('runs browser probe contract at representative widths with reduced motion',
   );
   assert.ok(calls.every(({ reducedMotion }) => reducedMotion === 'reduce'));
   assert.ok(calls.every(({ evaluate }) => typeof evaluate === 'string'));
+  assert.deepEqual(
+    observations.map(({ artifactId, artifactType, viewport }) => ({
+      artifactId,
+      artifactType,
+      width: viewport.width,
+    })),
+    REPRESENTATIVE_WIDTHS.map((width) => ({
+      artifactId: 'page',
+      artifactType: 'hub',
+      width,
+    })),
+  );
   assert.deepEqual(report, { valid: true, issues: [], probes: calls.length });
+});
+
+test('refuses retained browser evidence without a trusted session identity', async (t) => {
+  const evidenceRoot = await mkdtemp(
+    join(tmpdir(), 'explainer-qa-untrusted-evidence-'),
+  );
+  t.after(() => rm(evidenceRoot, { recursive: true, force: true }));
+
+  await assert.rejects(
+    runBrowserProbes({
+      artifacts: [{ id: 'project-recap', type: 'hub', html: fixture() }],
+      evidenceRoot,
+      requireEvidence: true,
+      probe: async () => ({
+        pageOverflowX: false,
+        clippedX: [],
+        reducedMotion: true,
+        keyboard: { tab: true },
+      }),
+    }),
+    /trusted browser session.*retained evidence/i,
+  );
+});
+
+test('retains bounded screenshot and metrics evidence at all recap viewports', async (t) => {
+  const evidenceRoot = await mkdtemp(join(tmpdir(), 'explainer-qa-evidence-'));
+  t.after(() => rm(evidenceRoot, { recursive: true, force: true }));
+  const report = await runBrowserProbes({
+    artifacts: [{ id: 'project-recap', type: 'hub', html: fixture() }],
+    evidenceRoot,
+    requireEvidence: true,
+    browserSession: createFixtureBrowserProbeSession({
+      probe: async (request) => {
+        await mkdir(join(evidenceRoot, 'qa/browser/project-recap'), {
+          recursive: true,
+        });
+        await writeFile(
+          request.screenshotPath,
+          png(request.viewport.width, request.viewport.height),
+        );
+        return {
+          pageOverflowX: false,
+          clippedX: [],
+          viewportClipped: [],
+          unreadableHeadings: [],
+          animationsDisabled: true,
+          reducedMotion: true,
+          keyboard: { tab: true },
+        };
+      },
+    }),
+  });
+
+  assert.deepEqual(
+    report.evidence.map(
+      ({ artifactId, viewport, width, screenshotPath, metricsPath }) => ({
+        artifactId,
+        viewport,
+        width,
+        screenshotPath,
+        metricsPath,
+      }),
+    ),
+    [
+      {
+        artifactId: 'project-recap',
+        viewport: 'mobile',
+        width: 320,
+        screenshotPath: 'qa/browser/project-recap/mobile.png',
+        metricsPath: 'qa/browser/project-recap/mobile.json',
+      },
+      {
+        artifactId: 'project-recap',
+        viewport: 'tablet',
+        width: 768,
+        screenshotPath: 'qa/browser/project-recap/tablet.png',
+        metricsPath: 'qa/browser/project-recap/tablet.json',
+      },
+      {
+        artifactId: 'project-recap',
+        viewport: 'desktop',
+        width: 1440,
+        screenshotPath: 'qa/browser/project-recap/desktop.png',
+        metricsPath: 'qa/browser/project-recap/desktop.json',
+      },
+    ],
+  );
+  for (const evidence of report.evidence) {
+    const metrics = JSON.parse(
+      await readFile(join(evidenceRoot, evidence.metricsPath), 'utf8'),
+    );
+    assert.equal(metrics.schemaVersion, 'explainer-kit.browser-evidence/v2');
+    assert.equal(metrics.artifactId, 'project-recap');
+    assert.equal(metrics.viewport, evidence.viewport);
+    assert.deepEqual(metrics.runtime, {
+      kind: 'fixture',
+      name: 'chromium',
+      version: 'deterministic-fixture',
+    });
+    assert.equal(metrics.captureIdentity, evidence.captureIdentity);
+    assert.match(metrics.captureIdentity, /^sha256:[a-f0-9]{64}$/);
+    assert.equal('screenshotBytes' in metrics, false);
+  }
+  assert.equal(
+    new Set(report.evidence.map(({ captureIdentity }) => captureIdentity)).size,
+    1,
+  );
+});
+
+test('rejects partial required recap browser evidence while lower tiers remain explicit', async (t) => {
+  const evidenceRoot = await mkdtemp(join(tmpdir(), 'explainer-qa-partial-'));
+  t.after(() => rm(evidenceRoot, { recursive: true, force: true }));
+  const artifact = { id: 'project-recap', type: 'hub', html: fixture() };
+  const probe = async (request) => {
+    if (request.viewport.width !== 768) {
+      await mkdir(join(evidenceRoot, 'qa/browser/project-recap'), {
+        recursive: true,
+      });
+      await writeFile(
+        request.screenshotPath,
+        png(request.viewport.width, request.viewport.height),
+      );
+    }
+    return {
+      pageOverflowX: false,
+      clippedX: [],
+      reducedMotion: true,
+      keyboard: { tab: true },
+    };
+  };
+
+  const required = await runBrowserProbes({
+    artifacts: [artifact],
+    evidenceRoot,
+    requireEvidence: true,
+    browserSession: createFixtureBrowserProbeSession({ probe }),
+  });
+  assert.equal(required.valid, false);
+  assert.ok(
+    required.issues.some(
+      ({ code, width }) => code === 'browser-evidence-missing' && width === 768,
+    ),
+  );
+
+  const lowerTier = await runBrowserProbes({
+    artifacts: [artifact],
+    widths: [320],
+    probe: async () => ({
+      pageOverflowX: false,
+      clippedX: [],
+      reducedMotion: true,
+      keyboard: { tab: true },
+    }),
+  });
+  assert.equal(lowerTier.valid, true);
+  assert.equal('evidence' in lowerTier, false);
+});
+
+test('rejects non-PNG and viewport-mismatched screenshot evidence', async (t) => {
+  for (const [label, screenshot] of [
+    ['text', () => Buffer.from('not a png')],
+    ['dimensions', ({ width, height }) => png(width + 1, height)],
+  ]) {
+    const evidenceRoot = await mkdtemp(
+      join(tmpdir(), `explainer-qa-${label}-`),
+    );
+    t.after(() => rm(evidenceRoot, { recursive: true, force: true }));
+    const report = await runBrowserProbes({
+      artifacts: [{ id: 'project-recap', type: 'hub', html: fixture() }],
+      evidenceRoot,
+      requireEvidence: true,
+      browserSession: createFixtureBrowserProbeSession({
+        probe: async (request) => {
+          await mkdir(dirname(request.screenshotPath), { recursive: true });
+          await writeFile(request.screenshotPath, screenshot(request.viewport));
+          return {
+            pageOverflowX: false,
+            clippedX: [],
+            viewportClipped: [],
+            unreadableHeadings: [],
+            animationsDisabled: true,
+            reducedMotion: true,
+            keyboard: { tab: true },
+          };
+        },
+      }),
+    });
+    assert.equal(report.valid, false, label);
+    assert.equal(report.evidence.length, 0, label);
+  }
 });
 
 test('browser probes reject page and inner-container x-axis clipping', async () => {
@@ -772,6 +988,70 @@ test('rejects inconsistent terminology, numeric claims and statuses', () => {
   }
 });
 
+test('rejects recap QA when applicable ledger claims are empty or unobserved', async () => {
+  const setPlan = {
+    recipe: { id: 'project-recap' },
+    ledger: {
+      terminology: [{ term: 'config-blind core', meaning: 'Runtime.' }],
+      statuses: [],
+      numbers: [{ subject: 'source sets', value: 7, unit: 'sets' }],
+    },
+  };
+  const report = await auditArtifactSet({
+    artifacts: [{ id: 'hub', type: 'hub', html: fixture() }],
+    setPlan,
+  });
+  assert.equal(report.valid, false);
+  assert.ok(report.issues.some(({ code }) => code === 'cohesion-ledger-empty'));
+  assert.ok(
+    report.issues.some(({ code }) => code === 'cohesion-claim-unobserved'),
+  );
+});
+
+test('does not observe ledger claims inside unrelated words or numbers', async () => {
+  const report = await auditArtifactSet({
+    artifacts: [
+      {
+        id: 'hub',
+        type: 'hub',
+        html: '<main><p>The score is already 13.</p></main>',
+      },
+    ],
+    setPlan: {
+      recipe: { id: 'project-recap' },
+      ledger: {
+        terminology: [{ term: 'core', meaning: 'Runtime.' }],
+        statuses: [{ subject: 'release', value: 'ready' }],
+        numbers: [{ subject: 'artifact count', value: 3, unit: 'artifacts' }],
+      },
+    },
+  });
+
+  assert.equal(report.valid, false);
+  assert.equal(
+    report.issues.filter(({ code }) => code === 'cohesion-claim-unobserved')
+      .length,
+    3,
+  );
+});
+
+test('observes numeric ledger claims before ordinary punctuation', () => {
+  const [artifact] = cohesionEvidenceFromLedger(
+    [{ id: 'hub', html: '<p>Processed 231, with 231.</p>' }],
+    {
+      ledger: {
+        terminology: [],
+        statuses: [],
+        numbers: [{ subject: 'processed records', value: 231 }],
+      },
+    },
+  );
+
+  assert.deepEqual(artifact.cohesion.numericClaims, {
+    'processed records': 231,
+  });
+});
+
 test('composes structural, cohesion and optional browser checks', async () => {
   const report = await auditArtifactSet({
     artifacts: [
@@ -793,6 +1073,140 @@ test('composes structural, cohesion and optional browser checks', async () => {
   assert.equal(report.valid, true);
   assert.equal(report.browser, null);
   assert.equal(report.artifacts.length, 2);
+});
+
+test('independent visual review binds the full rendered set and actionable rubric findings', async (t) => {
+  const plan = {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'review-set',
+    recipe: { id: 'project-recap', version: '1' },
+    sourceIds: ['project'],
+    ledger: {
+      terminology: [{ term: 'core', meaning: 'Runtime boundary.' }],
+      statuses: [{ subject: 'quality', value: 'reviewed' }],
+      numbers: [{ subject: 'artifacts', value: 3, unit: 'artifacts' }],
+    },
+    portfolio: ['hub', 'architecture', 'deck'].map((artifactId) => ({
+      artifactId,
+      artifactType: artifactId === 'deck' ? 'deck' : 'hub',
+      profileId: 'recipe-floor',
+      required: true,
+      sourceIds: ['project'],
+      draft: `Compose ${artifactId}.`,
+      visualIntent: `Make ${artifactId} clear.`,
+    })),
+  };
+  const rendered = plan.portfolio.map(({ artifactId }) => ({
+    artifactId,
+    renderedPath: `site/${artifactId}/index.html`,
+  }));
+  const viewportSizes = {
+    mobile: [320, 640],
+    tablet: [768, 1024],
+    desktop: [1440, 900],
+  };
+  const browserSession = createFixtureBrowserProbeSession({
+    probe: async () => ({}),
+  });
+  const evidence = rendered.flatMap(({ artifactId }) =>
+    ['mobile', 'tablet', 'desktop'].map((viewport) => {
+      const bytes = png(...viewportSizes[viewport]);
+      return {
+        artifactId,
+        viewport,
+        screenshotPath: `qa/browser/${artifactId}/${viewport}.png`,
+        decodedScreenshotHash: decodeBrowserPng(bytes).decodedHash,
+        metricsPath: `qa/browser/${artifactId}/${viewport}.json`,
+        runtime: browserSession.runtime,
+        captureIdentity: browserSession.captureIdentity,
+      };
+    }),
+  );
+  const runRoot = await mkdtemp(join(tmpdir(), 'explainer-visual-review-'));
+  t.after(() => rm(runRoot, { recursive: true, force: true }));
+  for (const { renderedPath } of rendered) {
+    await mkdir(dirname(join(runRoot, renderedPath)), { recursive: true });
+    await writeFile(
+      join(runRoot, renderedPath),
+      '<p>core reviewed 3 artifacts</p>',
+    );
+  }
+  for (const { screenshotPath, metricsPath } of evidence) {
+    await mkdir(dirname(join(runRoot, screenshotPath)), { recursive: true });
+    const viewport = evidence.find(
+      (item) => item.screenshotPath === screenshotPath,
+    ).viewport;
+    const size = viewportSizes[viewport];
+    await writeFile(join(runRoot, screenshotPath), png(...size));
+    await writeFile(join(runRoot, metricsPath), '{}');
+  }
+  const visualCritic = mock.fn(async (request) => ({
+    schemaVersion: 'explainer-kit.visual-review-result/v1',
+    reviewId: 'visual-review-1',
+    requestId: request.requestId,
+    requestHash: request.requestHash,
+    reviewedAt: '2026-07-17T20:00:00Z',
+    disposition: 'fail',
+    artifactIds: request.renderedArtifacts.map(({ artifactId }) => artifactId),
+    findings: [
+      {
+        artifactId: 'hub',
+        rubric: 'first-viewport',
+        severity: 'important',
+        evidence: 'The outcome is below the first viewport.',
+        correction: 'Move the outcome into the lead panel.',
+      },
+    ],
+  }));
+
+  const originalMobile = png(...viewportSizes.mobile);
+  const decodedMobile = decodeBrowserPng(originalMobile);
+  const reshapedMobile = png(640, 320, { pixels: decodedMobile.pixels });
+  assert.equal(
+    decodeBrowserPng(reshapedMobile).pixelHash,
+    decodedMobile.pixelHash,
+  );
+  await writeFile(join(runRoot, evidence[0].screenshotPath), reshapedMobile);
+  await assert.rejects(
+    runVisualReview({
+      plan,
+      rendered,
+      evidence,
+      visualCritic,
+      runRoot,
+    }),
+    /decoded screenshot hash/i,
+  );
+  assert.equal(visualCritic.mock.callCount(), 0);
+  await writeFile(join(runRoot, evidence[0].screenshotPath), originalMobile);
+
+  const review = await runVisualReview({
+    plan,
+    rendered,
+    evidence,
+    visualCritic,
+    runRoot,
+  });
+
+  assert.equal(visualCritic.mock.callCount(), 1);
+  assert.deepEqual(
+    review.request.renderedArtifacts.map(({ artifactId }) => artifactId),
+    ['hub', 'architecture', 'deck'],
+  );
+  assert.ok(
+    review.request.renderedArtifacts.every(
+      ({ evidence: artifactEvidence }) => artifactEvidence.length === 3,
+    ),
+  );
+  const retainedMobile = review.request.renderedArtifacts[0].evidence[0];
+  assert.equal(
+    retainedMobile.screenshotHash,
+    `sha256:${createHash('sha256').update(originalMobile).digest('hex')}`,
+  );
+  assert.notEqual(retainedMobile.screenshotHash, decodedMobile.decodedHash);
+  assert.equal('decodedScreenshotHash' in retainedMobile, false);
+  assert.equal(review.result.disposition, 'fail');
+  assert.equal(review.result.findings[0].artifactId, 'hub');
 });
 
 test('CLI reads an explicit request and returns machine-readable QA', async () => {

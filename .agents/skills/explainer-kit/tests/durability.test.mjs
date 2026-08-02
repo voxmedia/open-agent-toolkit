@@ -261,6 +261,35 @@ test('preserves built-not-durable when publish verification is incomplete', asyn
   assert.equal('publishReceipt' in manifest, false);
 });
 
+test('rejects durability evidence while visual review is still required', async () => {
+  const fixture = await createRun();
+  fixture.manifest.outcome = 'built-needs-review';
+  fixture.buildRecord.outcome = 'built-needs-review';
+  fixture.buildRecord.stages[5] = {
+    ...fixture.buildRecord.stages[5],
+    status: 'warned',
+    warnings: ['visual-review-required:critic-failed'],
+  };
+  await writeRecords(fixture.runRoot, fixture.manifest, fixture.buildRecord);
+
+  await assert.rejects(
+    recordDurability({
+      schemaVersion: 'explainer-kit.durability-evidence/v1',
+      manifestPath: join(fixture.runRoot, 'manifest.json'),
+      evidence: {
+        kind: 'commit',
+        repoRoot: fixture.runRoot,
+        commit: 'a'.repeat(40),
+        paths: ['site/index.html'],
+      },
+    }),
+    /built-needs-review.*visual review.*before durability/i,
+  );
+  const records = await readRecords(fixture.runRoot);
+  assert.equal(records.manifest.outcome, 'built-needs-review');
+  assert.equal(records.buildRecord.outcome, 'built-needs-review');
+});
+
 test('appends evidence and supersedes prior relocated commit evidence', async () => {
   const fixture = await createCommittedRun();
   fixture.manifest.artifacts[0].durableEvidence = [

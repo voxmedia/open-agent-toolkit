@@ -60,6 +60,8 @@ export async function runRenderQaStage({
   artifacts,
   browserProbe,
   widths,
+  evidenceRoot,
+  requireBrowserEvidence,
 } = {}) {
   assertStageInput(siteDir, artifacts);
   // Render QA is opt-in: the stage drives a probe the caller supplies and never
@@ -79,10 +81,19 @@ export async function runRenderQaStage({
     artifacts,
     probe: browserProbe,
     widths,
+    evidenceRoot,
+    requireBrowserEvidence,
   });
 }
 
-async function probeSiteArtifacts({ siteDir, artifacts, probe, widths }) {
+async function probeSiteArtifacts({
+  siteDir,
+  artifacts,
+  probe,
+  widths,
+  evidenceRoot,
+  requireBrowserEvidence,
+}) {
   return withSiteServer(siteDir, async (origin) => {
     const probeArtifacts = await Promise.all(
       artifacts.map(async (artifact) => {
@@ -105,6 +116,8 @@ async function probeSiteArtifacts({ siteDir, artifacts, probe, widths }) {
       artifacts: probeArtifacts,
       probe,
       ...(widths && { widths }),
+      ...(evidenceRoot && { evidenceRoot }),
+      ...(requireBrowserEvidence && { requireEvidence: true }),
     });
     return {
       valid: true,
@@ -112,6 +125,7 @@ async function probeSiteArtifacts({ siteDir, artifacts, probe, widths }) {
       warnings: renderQaWarningIds(browser.issues),
       issues: browser.issues,
       probes: browser.probes,
+      ...(browser.evidence && { evidence: browser.evidence }),
     };
   });
 }
@@ -176,16 +190,30 @@ export function selectReleaseVisualMatrix() {
 export async function runReleaseVisualMatrix({
   matrix = selectReleaseVisualMatrix(),
   browserProbe,
+  browserSession,
+  evidenceRoot,
+  onProbeResult,
 } = {}) {
   if (!Array.isArray(matrix) || matrix.length === 0) {
     throw new TypeError('Release visual QA requires a non-empty matrix.');
   }
-  if (typeof browserProbe !== 'function') {
-    throw new TypeError('Release visual QA requires a browser probe callback.');
+  if (browserSession !== undefined && browserProbe !== undefined) {
+    throw new TypeError(
+      'Release visual QA accepts either a trusted browser session or a bare non-retaining probe, not both.',
+    );
+  }
+  if (browserSession === undefined && typeof browserProbe !== 'function') {
+    throw new TypeError(
+      'Release visual QA requires a trusted browser session or browser probe callback.',
+    );
+  }
+  if (onProbeResult !== undefined && typeof onProbeResult !== 'function') {
+    throw new TypeError('Release visual QA probe observer must be a callback.');
   }
 
   const issues = [];
   const cases = [];
+  const evidence = [];
   for (const entry of matrix) {
     const { theme } = await resolveTheme({
       palette: entry.palette,
@@ -208,25 +236,30 @@ export async function runReleaseVisualMatrix({
         },
       ],
       widths: entry.viewports,
-      browserProbe: async (request) => {
-        const result = await browserProbe(request);
+      ...(browserSession === undefined ? { browserProbe } : { browserSession }),
+      onProbeResult: async (observation) => {
         if (
           entry.artifact.type === 'deck' &&
-          request.scenario === 'default' &&
-          result?.deckLayout?.flow !== 'horizontal'
+          observation.scenario === 'default' &&
+          observation.result?.deckLayout?.flow !== 'horizontal'
         ) {
           issues.push({
             artifactId: entry.id,
-            width: request.viewport.width,
+            width: observation.viewport.width,
             scenario: 'default',
             code: 'deck-horizontal-layout',
             message: 'Interactive deck must page horizontally by default.',
           });
         }
-        return result;
+        await onProbeResult?.(observation);
       },
+      ...(evidenceRoot && {
+        evidenceRoot,
+        requireBrowserEvidence: true,
+      }),
     });
     issues.push(...report.issues);
+    evidence.push(...(report.browser?.evidence ?? []));
     cases.push({
       id: entry.id,
       artifactType: entry.artifact.type,
@@ -238,7 +271,12 @@ export async function runReleaseVisualMatrix({
     });
   }
 
-  return { valid: issues.length === 0, issues, cases };
+  return {
+    valid: issues.length === 0,
+    issues,
+    cases,
+    ...(evidenceRoot && { evidence }),
+  };
 }
 
 export async function runRenderQaCli(

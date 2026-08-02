@@ -24,7 +24,13 @@
       "minItems": 1
     },
     "outcome": {
-      "enum": ["built-durable", "built-not-durable", "failed", "incomplete"]
+      "enum": [
+        "built-durable",
+        "built-not-durable",
+        "built-needs-review",
+        "failed",
+        "incomplete"
+      ]
     }
   },
   "$defs": {

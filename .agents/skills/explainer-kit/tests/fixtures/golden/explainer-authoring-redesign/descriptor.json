@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "explainer-kit.golden-fixture/v2",
+  "id": "explainer-authoring-redesign",
+  "title": "Archived Explainer Kit authoring redesign",
+  "inputPath": "source-input.json",
+  "sharedRubricPath": "rubric.json",
+  "sharedRubricSha256": "sha256:7c15893cea765d474446dfeca25761751a57f8e0081595b1b9698e5559dd89dd",
+  "purpose": "Rebuild a dense archived project recap without an active project, moving branch, or machine-local source.",
+  "sourceIds": ["archived-summary"],
+  "retainedFiles": [
+    {
+      "path": "source-input.json",
+      "sha256": "sha256:6301d4183cf0d0cf9bf1952a95f8e72c993c09deee48794475ed8229b8e911f4",
+      "role": "golden-input",
+      "mediaType": "application/json",
+      "sourceIds": ["archived-summary"]
+    },
+    {
+      "path": "evidence/source-record.json",
+      "sha256": "sha256:9fa802f45b3939ff717f2e61aafc6bfea69f4cab5de3876368fa9299708756b5",
+      "role": "source-evidence",
+      "mediaType": "application/json",
+      "sourceIds": ["archived-summary"]
+    }
+  ]
+}

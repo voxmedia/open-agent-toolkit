@@ -733,8 +733,8 @@ describe('validateOatSkills', () => {
 
   it('tracks the current explainer skill family versions', async () => {
     for (const [skillName, expectedVersion] of [
-      ['explainer-kit', '2.0.1'],
-      ['oat-explainer-kit', '1.0.3'],
+      ['explainer-kit', '2.0.3'],
+      ['oat-explainer-kit', '1.0.5'],
     ]) {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
@@ -743,6 +743,25 @@ describe('validateOatSkills', () => {
         expectedVersion,
       );
     }
+  });
+
+  it('keeps the explainer skill family on the trusted browser-session contract', async () => {
+    const [coreContract, adapterSkill] = await Promise.all([
+      readRepoFile(
+        '.agents/skills/explainer-kit/scripts/lib/package-coverage.mjs',
+      ),
+      readRepoFile('.agents/skills/oat-explainer-kit/SKILL.md'),
+    ]);
+
+    expect(coreContract).toContain('explainer-kit.package-coverage/v2');
+    expect(coreContract).toContain(
+      'export async function validateImmutablePackageEvidence',
+    );
+    expect(adapterSkill).toContain('`browserSession`');
+    expect(adapterSkill).toContain('`browserSessionModulePath`');
+    expect(adapterSkill).toMatch(
+      /Bare browser callbacks and caller-authored runtime metadata\s+are rejected/,
+    );
   });
 
   it('keeps agent-instructions delta analysis aligned with numbered steps', async () => {
@@ -1432,7 +1451,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.2.4',
+        version: '2.2.5',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -1785,7 +1804,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.5');
   });
 
   it('requires classified resolver calls and effective terminal reviewer notices before launch', async () => {
@@ -1820,7 +1839,7 @@ describe('validateOatSkills', () => {
     );
 
     expect(phase).toMatch(
-      /Phase Scope:[\s\S]{0,1200}task_class:[\s\S]{0,300}classification_source:[\s\S]{0,300}classification_rationale:/i,
+      /Phase Scope:[\s\S]{0,2200}task_class:[\s\S]{0,300}classification_source:[\s\S]{0,300}classification_rationale:/i,
     );
     expect(phase).toMatch(
       /effective\s+(?:resolved\s+)?target[\s\S]{0,260}recommendationVersion|recommendationVersion[\s\S]{0,260}effective\s+(?:resolved\s+)?target/i,
@@ -2118,7 +2137,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.5');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -2290,7 +2309,7 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.0.10'],
+      ['.agents/agents/oat-phase-implementer.md', '1.0.11'],
       ['.agents/agents/oat-reviewer.md', '1.2.1'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.4.1'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.0'],
@@ -2544,12 +2563,12 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.10');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.11');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.4');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.5');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -2583,6 +2602,584 @@ describe('validateOatSkills', () => {
     expect(perPhase).toMatch(/Ordinary tasks do not require per-task workers/i);
     expect(perPhase).toMatch(/optional bounded child/i);
     expect(perPhase).toMatch(/exactly one append-only commit in plan\s+order/i);
+  });
+
+  it('requires tiered task prevention before every planned commit', async () => {
+    const agent = await readRepoFile('.agents/agents/oat-phase-implementer.md');
+    const taskExecution = agent.slice(
+      agent.indexOf('### 2. Execute Tasks in Plan Order'),
+      agent.indexOf('### 3. Phase-Wide Self-Review'),
+    );
+
+    expect(taskExecution).toMatch(
+      /format[\s\S]{0,220}declared task verification[\s\S]{0,260}discoverable[\s\S]{0,120}proportionate[\s\S]{0,220}before commit/i,
+    );
+    expect(taskExecution).toMatch(
+      /emitted output[\s\S]{0,160}build\/test configuration[\s\S]{0,220}scoped (?:build|test)[\s\S]{0,180}before commit/i,
+    );
+    expect(taskExecution).toMatch(
+      /broad repository (?:tests|builds)[\s\S]{0,220}phase[\s\S]{0,180}disproportionate/i,
+    );
+    expect(taskExecution).toMatch(
+      /prevention[\s\S]{0,160}(?:does not consume|without consuming)[\s\S]{0,160}recovery attempt/i,
+    );
+  });
+
+  it('defines dedicated bounded phase recovery and zero-limit behavior', async () => {
+    const implement = await readRawRepoFile(implementSkillPath);
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const state = await readRepoFile('.oat/templates/state.md');
+    const lifecycle = `${implement}\n${phase}`;
+
+    for (const content of [state, lifecycle]) {
+      expect(content).toContain('oat_phase_recovery_policy');
+      expect(content).toMatch(/default_attempt_limit:\s*10/);
+      expect(content).toMatch(/phase_attempt_limits:/);
+    }
+    expect(lifecycle).toMatch(
+      /default[\s\S]{0,100}10[\s\S]{0,180}phase-specific[\s\S]{0,180}0[\s\S]{0,40}20/i,
+    );
+    expect(lifecycle).toMatch(
+      /project default[\s\S]{0,120}(?:limit|value)[\s\S]{0,80}`?0`?[\s\S]{0,240}stop[\s\S]{0,160}without edit[\s\S]{0,80}commit[\s\S]{0,100}consum[\s\S]{0,180}fallback/i,
+    );
+    expect(lifecycle).toMatch(
+      /phase-specific[\s\S]{0,120}(?:limit|override)[\s\S]{0,80}`?0`?[\s\S]{0,240}stop[\s\S]{0,160}without edit[\s\S]{0,80}commit[\s\S]{0,100}consum[\s\S]{0,180}fallback/i,
+    );
+    expect(phase).toMatch(
+      /Phase Scope:[\s\S]{0,2600}phase_recovery_limit:[\s\S]{0,160}phase_recovery_attempts_used:[\s\S]{0,500}original_request_id:[\s\S]{0,400}dispatch_target:/i,
+    );
+  });
+
+  it('authorizes only mechanically bounded same-target append-only recovery', async () => {
+    const agent = await readRepoFile('.agents/agents/oat-phase-implementer.md');
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const contract = `${agent}\n${phase}`;
+
+    for (const defectClass of [
+      'lint',
+      'type',
+      'test',
+      'build',
+      'composition',
+    ]) {
+      expect(contract, `${defectClass} automatic recovery`).toMatch(
+        new RegExp(
+          `${defectClass}[\\s\\S]{0,320}(?:automatic|eligible|recover|continu)`,
+          'i',
+        ),
+      );
+    }
+    expect(contract).toMatch(
+      /accepted task commit[\s\S]{0,220}immutable[\s\S]{0,220}same history position/i,
+    );
+    expect(contract).toMatch(
+      /one append-only recovery commit[\s\S]{0,180}(?:per|for each)\s+successful\s+attempt/i,
+    );
+    expect(contract).toMatch(
+      /mechanically related failures[\s\S]{0,220}same\s+verification\s+command[\s\S]{0,220}one\s+atomic[\s\S]{0,160}attempt[\s\S]{0,120}commit/i,
+    );
+    expect(contract).toMatch(
+      /independent failures[\s\S]{0,180}separate attempts[\s\S]{0,120}commits/i,
+    );
+    expect(contract).toMatch(
+      /attempt[\s\S]{0,120}consumed[\s\S]{0,180}before edit|before editing[\s\S]{0,180}consume(?:s|d)? one attempt/i,
+    );
+    expect(contract).toMatch(
+      /failed edit[\s\S]{0,100}commit[\s\S]{0,120}re-verification[\s\S]{0,180}consume[\s\S]{0,160}no successful recovery commit/i,
+    );
+    expect(contract).toMatch(
+      /three (?:recovery )?events[\s\S]{0,180}(?:elevated|warning)[\s\S]{0,180}continue/i,
+    );
+  });
+
+  it('pins flake handling, provenance, recovery events, and fail-closed stops', async () => {
+    const agent = await readRepoFile('.agents/agents/oat-phase-implementer.md');
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const dispatch = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
+    );
+    const contract = `${agent}\n${phase}\n${dispatch}`;
+
+    expect(contract).toMatch(
+      /one no-edit rerun[\s\S]{0,180}(?:without|does not)[\s\S]{0,160}(?:attempt consumption|consume an attempt)/i,
+    );
+    expect(contract).toMatch(
+      /repeated unexplained failure[\s\S]{0,220}ambiguous[\s\S]{0,160}stop[\s\S]{0,120}without edit/i,
+    );
+    expect(contract).toMatch(
+      /fresh same-target[\s\S]{0,220}original request[\s\S]{0,220}`continuation_events`/i,
+    );
+    expect(contract).toMatch(
+      /exact target[\s\S]{0,180}(?:lost|cannot continue)[\s\S]{0,180}stop/i,
+    );
+    expect(contract).toMatch(
+      /original request[\s\S]{0,160}original commit[\s\S]{0,160}defect class[\s\S]{0,160}discovered by[\s\S]{0,160}disposition[\s\S]{0,160}authorization[\s\S]{0,160}attempt[\s\S]{0,160}dispatch target[\s\S]{0,160}recovery commit[\s\S]{0,160}verification[\s\S]{0,160}reason/i,
+    );
+    expect(contract).toMatch(
+      /exactly one (?:canonical )?recovery event[\s\S]{0,240}recovered[\s\S]{0,120}direction-required[\s\S]{0,120}failed-attempt/i,
+    );
+    expect(contract).toMatch(
+      /defect count[\s\S]{0,120}prompt count[\s\S]{0,160}successful repair count[\s\S]{0,180}independent/i,
+    );
+
+    for (const stop of [
+      'ambiguous',
+      'architecture',
+      'security',
+      'product',
+      'requirements',
+      'non-mechanical',
+      'destructive',
+      'retry exhaustion',
+      'dirty worktree',
+      'cannot establish correctness',
+      'missing original-request',
+      'missing exact-target',
+      'unverifiable commit range',
+      'malformed recovery event',
+      'governance cap',
+    ]) {
+      expect(contract, `${stop} stop boundary`).toMatch(
+        new RegExp(`${stop}[\\s\\S]{0,260}(?:stop|block|direction)`, 'i'),
+      );
+    }
+    expect(contract).toMatch(
+      /implementation recovery[\s\S]{0,260}(?:must not|does not|never)[\s\S]{0,180}route escalation/i,
+    );
+  });
+
+  it('preserves attempt usage, immutable history, and unchanged governance loops', async () => {
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const dispatch = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
+    );
+    const contract = `${phase}\n${dispatch}`;
+
+    expect(contract).toMatch(
+      /Add N attempts[\s\S]{0,180}used_attempts \+ N[\s\S]{0,160}phase_attempt_limits[\s\S]{0,140}20[\s\S]{0,200}(?:do not|never)[\s\S]{0,80}reset/i,
+    );
+    expect(contract).toMatch(
+      /extension[\s\S]{0,180}preserve[\s\S]{0,120}exact implementation target/i,
+    );
+    expect(contract).toMatch(
+      /amend[\s\S]{0,80}reset[\s\S]{0,80}rebase[\s\S]{0,80}squash[\s\S]{0,180}invalid/i,
+    );
+    expect(contract).toMatch(
+      /dirty worktree[\s\S]{0,180}unverifiable\s+commit\s+range[\s\S]{0,180}missing\s+provenance[\s\S]{0,180}malformed\s+recovery\s+event[\s\S]{0,260}block/i,
+    );
+    expect(contract).toMatch(
+      /review-fix[\s\S]{0,120}gate[\s\S]{0,180}`oat_orchestration_retry_limit`[\s\S]{0,220}unchanged/i,
+    );
+    expect(contract).toMatch(
+      /three-cycle review[\s\S]{0,180}(?:cap|governance)[\s\S]{0,180}unchanged/i,
+    );
+
+    const baseCapture = 'PHASE_BASE_HEAD=$(git rev-parse HEAD)';
+    const baseIndex = phase.indexOf(baseCapture);
+    const scopeIndex = phase.indexOf('Send one self-contained Phase Scope');
+    expect(baseIndex).toBeGreaterThan(-1);
+    expect(scopeIndex).toBeGreaterThan(baseIndex);
+    expect(phase.slice(baseIndex, scopeIndex)).not.toMatch(
+      /dispatch|launch|spawn/i,
+    );
+  });
+
+  it('defines an isolated fresh same-target recovery continuation mode', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const recover = agent.slice(agent.indexOf('## Mode: Recover'));
+
+    expect(agent).toMatch(
+      /mode[\s\S]{0,160}`implement`[\s\S]{0,80}`fix`[\s\S]{0,80}`recover`/i,
+    );
+    expect(recover).toMatch(
+      /continuation\s+of\s+a\s+post-commit\s+recovery\s+attempt/i,
+    );
+    for (const field of [
+      'original_request_id',
+      'continuation_event',
+      'recovery_base_head',
+      'original_task_id',
+      'original_commit',
+      'defect_class',
+      'discovered_by',
+      'bounded_correction_scope',
+      'bounded_files',
+      'phase_recovery_limit',
+      'phase_recovery_attempts_used',
+      'pending_attempt',
+      'focused_verification',
+      'phase_verification',
+      'dispatch_target',
+      'dispatch_axes',
+      'dispatch_stamp',
+    ]) {
+      expect(recover, `recover input ${field}`).toContain(field);
+    }
+    expect(recover).toMatch(
+      /must\s+not\s+replay[\s\S]{0,180}planned\s+tasks[\s\S]{0,180}(?:must\s+not|does\s+not)[\s\S]{0,180}review\s+artifact/i,
+    );
+    expect(recover).toMatch(
+      /HEAD\s+exactly\s+equals[\s\S]{0,160}`recovery_base_head`[\s\S]{0,260}(?:original commit|`original_commit`)[\s\S]{0,220}same\s+history\s+position/i,
+    );
+    expect(recover).toMatch(
+      /exact launcher-owned target[\s\S]{0,220}(?:must|equals|matches)[\s\S]{0,180}original target/i,
+    );
+    expect(recover).toMatch(/Phase Recovery Continuation Report/);
+    expect(recover).toMatch(
+      /Original request ID:[\s\S]{0,120}Continuation event:[\s\S]{0,120}Original task\/commit:[\s\S]{0,160}Attempt:[\s\S]{0,160}Dispatch target:[\s\S]{0,160}Dispatch stamp:[\s\S]{0,160}Recovery commit:[\s\S]{0,120}Verification:/i,
+    );
+  });
+
+  it('makes handle continuity alternatives compatible with exact-target recovery', async () => {
+    const contracts = [
+      [
+        'phase agent',
+        await readRawRepoFile('.agents/agents/oat-phase-implementer.md'),
+      ],
+      [
+        'phase root',
+        await readRawRepoFile(
+          '.agents/skills/oat-project-implement/references/phase-execution.md',
+        ),
+      ],
+    ] as const;
+
+    for (const [name, contract] of contracts) {
+      expect(contract, `${name} exact-target invariant`).toMatch(
+        /exact target[\s\S]{0,220}(?:must remain|remains)[\s\S]{0,160}unchanged[\s\S]{0,80}bindable[\s\S]{0,180}regardless of handle/i,
+      );
+      expect(contract, `${name} same-handle branch`).toMatch(
+        /handle[\s\S]{0,120}(?:available|resumable)[\s\S]{0,220}same-handle\s+continuation/i,
+      );
+      expect(contract, `${name} fresh-recover branch`).toMatch(
+        /handle[\s\S]{0,160}(?:unavailable|unresumable|cannot be resumed)[\s\S]{0,260}unchanged[\s\S]{0,120}bindable\s+exact\s+target[\s\S]{0,260}lifecycle-authorized\s+recover\s+scope[\s\S]{0,220}reconciled\s+pending\s+attempt[\s\S]{0,220}continuation\s+linkage[\s\S]{0,260}(?:fresh\s+)?`?mode:\s*recover`?/i,
+      );
+      expect(contract, `${name} target-loss branch`).toMatch(
+        /(?:lost|unbindable)\s+exact\s+target[\s\S]{0,220}direction-required[\s\S]{0,220}no\s+fallback/i,
+      );
+      expect(contract, `${name} handle-only eligibility`).toMatch(
+        /handle\s+unavailability\s+alone[\s\S]{0,220}(?:does not|must not)[\s\S]{0,160}(?:ineligible|block|stop)/i,
+      );
+      expect(contract, `${name} contradictory conjunction`).not.toMatch(
+        /accepted implementation handle and exact (?:launcher-owned dispatch )?target[\s\S]{0,80}remain (?:available|intact)/i,
+      );
+    }
+  });
+
+  it('uses one monotonic durable per-phase attempt ledger across resumes', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const state = await readRepoFile('.oat/templates/state.md');
+    const contract = `${phase}\n${agent}`;
+
+    expect(state).toMatch(
+      /phase_attempt_usage:[\s\S]{0,260}pNN:[\s\S]{0,160}used_attempts:\s*0[\s\S]{0,160}pending_attempt:/i,
+    );
+    expect(contract).toMatch(
+      /authoritative[\s\S]{0,180}`?phase_attempt_usage`?[\s\S]{0,220}state\.md/i,
+    );
+    expect(contract).toMatch(
+      /atomic[\s\S]{0,180}increment[\s\S]{0,180}used_attempts[\s\S]{0,220}pending_attempt[\s\S]{0,220}before edit/i,
+    );
+    expect(contract).toMatch(
+      /nonzero[\s\S]{0,160}used_attempts[\s\S]{0,220}(?:resume|continu)/i,
+    );
+    expect(contract).toMatch(
+      /pending attempt[\s\S]{0,260}reconcile[\s\S]{0,220}(?:same attempt|must not consume another)/i,
+    );
+    expect(contract).toMatch(
+      /unreconciled[\s\S]{0,220}(?:reject|block|stop)[\s\S]{0,180}resume/i,
+    );
+    expect(contract).toMatch(
+      /used_attempts[\s\S]{0,160}(?:equal to|>=|at least)[\s\S]{0,120}phase_recovery_limit[\s\S]{0,220}exhaust/i,
+    );
+    expect(contract).toMatch(
+      /interruption[\s\S]{0,260}(?:preserve|survive)[\s\S]{0,220}(?:consumed|usage|attempt)/i,
+    );
+  });
+
+  it('defines an ordered recovery ledger handoff transition matrix', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const normalizedAgent = agent.replaceAll('`', '').replaceAll(/\s+/g, ' ');
+    const verifier = phase.slice(
+      phase.indexOf('#### Verify the Phase Report'),
+      phase.indexOf('### Per-Phase Review'),
+    );
+    const normalizedVerifier = verifier.replaceAll(/\s+/g, ' ');
+
+    const agentReservation = normalizedAgent.indexOf(
+      'Before the first code edit for a new recovery attempt',
+    );
+    const agentTerminalMark = normalizedAgent.indexOf(
+      'pre-commit pass atomically marks the pending entry completed',
+      agentReservation,
+    );
+    const agentAuthoritativeRerun = normalizedAgent.indexOf(
+      'Immediately rerun both checks against committed HEAD',
+      agentTerminalMark,
+    );
+    const agentCommittedHandoff = normalizedAgent.indexOf(
+      'committed pre-bookkeeping terminal handoff',
+      agentAuthoritativeRerun,
+    );
+    const agentRootClear = normalizedAgent.indexOf(
+      'Root clears an attempted-recovery marker',
+      agentCommittedHandoff,
+    );
+    expect(
+      [
+        agentReservation,
+        agentTerminalMark,
+        agentAuthoritativeRerun,
+        agentCommittedHandoff,
+        agentRootClear,
+      ],
+      'phase-agent reservation → candidate marker → authoritative rerun → committed handoff → root clear order',
+    ).toEqual(
+      [
+        ...new Set([
+          agentReservation,
+          agentTerminalMark,
+          agentAuthoritativeRerun,
+          agentCommittedHandoff,
+          agentRootClear,
+        ]),
+      ].sort((left, right) => left - right),
+    );
+    expect(agentReservation).toBeGreaterThan(-1);
+
+    const matrixStart = normalizedVerifier.indexOf(
+      'Pre-bookkeeping terminal handoff matrix',
+    );
+    const directionRequiredValidation = normalizedVerifier.indexOf(
+      '| `direction-required` before any attempt |',
+      matrixStart,
+    );
+    const recoveredValidation = normalizedVerifier.indexOf(
+      '| Recovery reported as `recovered` |',
+      directionRequiredValidation,
+    );
+    const failedValidation = normalizedVerifier.indexOf(
+      '| Recovery reported as `failed-attempt` |',
+      recoveredValidation,
+    );
+    const rejectionRows = normalizedVerifier.indexOf(
+      '| Attempt reported with `pending_attempt: null` |',
+      failedValidation,
+    );
+    const validatedClear = normalizedVerifier.indexOf(
+      'Only after a selected `recovered` or `failed-attempt` row validates completely may root bookkeeping clear `pending_attempt`',
+      rejectionRows,
+    );
+    const settledState = normalizedVerifier.indexOf(
+      'The post-bookkeeping result is the only settled state for an attempted recovery',
+      validatedClear,
+    );
+    expect(
+      [
+        matrixStart,
+        directionRequiredValidation,
+        recoveredValidation,
+        failedValidation,
+        rejectionRows,
+        validatedClear,
+        settledState,
+      ],
+      'root pre-bookkeeping matrix → validation → clear → settled order',
+    ).toEqual(
+      [
+        ...new Set([
+          matrixStart,
+          directionRequiredValidation,
+          recoveredValidation,
+          failedValidation,
+          rejectionRows,
+          validatedClear,
+          settledState,
+        ]),
+      ].sort((left, right) => left - right),
+    );
+    expect(matrixStart).toBeGreaterThan(-1);
+
+    expect(verifier).toMatch(
+      /\|\s*No recovery attempt reported\s*\|\s*`pending_attempt: null`[\s\S]{0,360}success may continue/i,
+    );
+    expect(verifier).toMatch(
+      /\|\s*`direction-required` before any attempt\s*\|\s*`pending_attempt: null`[\s\S]{0,520}canonical `direction-required` event[\s\S]{0,360}unchanged usage[\s\S]{0,360}no reservation, edit, or recovery commit[\s\S]{0,360}record the event[\s\S]{0,180}stop/i,
+    );
+    expect(verifier).toMatch(
+      /\|\s*Recovery reported as `recovered`\s*\|\s*Matching committed `completed` marker[\s\S]{0,520}immutable original history[\s\S]{0,360}recovery commit[\s\S]{0,360}exact target and axes[\s\S]{0,360}canonical `recovered` event[\s\S]{0,360}attempt count[\s\S]{0,360}verification/i,
+    );
+    expect(verifier).toMatch(
+      /\|\s*Recovery reported as `failed-attempt`\s*\|\s*Matching committed `failed` marker[\s\S]{0,520}terminal-stop report[\s\S]{0,360}event[\s\S]{0,360}immutable history[\s\S]{0,360}accounting[\s\S]{0,360}stop disposition/i,
+    );
+    for (const invalid of [
+      'Attempt reported with `pending_attempt: null`',
+      'Terminal status or identity mismatch',
+      'Marker status `active`',
+      'Any other unreconciled or contradictory state',
+    ]) {
+      expect(verifier, invalid).toMatch(
+        new RegExp(
+          `\\|\\s*${invalid.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|[\\s\\S]{0,520}fail closed[\\s\\S]{0,240}no bookkeeping`,
+          'i',
+        ),
+      );
+    }
+    expect(normalizedVerifier).toContain(
+      'Only after a selected `recovered` or `failed-attempt` row validates completely may root bookkeeping clear `pending_attempt`, append the validated canonical event, and preserve monotonic `used_attempts`.',
+    );
+    expect(normalizedVerifier).toContain(
+      'For `failed-attempt`, clearing must also preserve the terminal-stop disposition and then stop.',
+    );
+    expect(normalizedVerifier).toContain(
+      'only for a Phase Implementation Report, verify each planned task commit is exactly one append-only commit in plan order',
+    );
+    expect(normalizedVerifier).toContain(
+      'never require a Phase Recovery Continuation Report to replay or restate all planned task outcomes',
+    );
+    expect(normalizedVerifier).toContain(
+      'for each reported attempted recovery (`recovered` or `failed-attempt`)',
+    );
+    expect(normalizedVerifier).toContain(
+      'for a pre-attempt `direction-required` event',
+    );
+  });
+
+  it('makes committed-tree verification authoritative for recovery outcomes', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const recover = agent.slice(
+      agent.indexOf('## Mode: Recover'),
+      agent.indexOf('## Mode: Fix'),
+    );
+    const normalizedRecover = recover.replaceAll(/\s+/g, ' ');
+
+    expect(normalizedRecover).toMatch(
+      /run `focused_verification` and `phase_verification` before creating a candidate commit/i,
+    );
+    expect(normalizedRecover).toMatch(
+      /mark the pending entry `completed`[\s\S]{0,240}append-only candidate recovery commit/i,
+    );
+    expect(normalizedRecover).toMatch(
+      /rerun `focused_verification` and `phase_verification` against the committed HEAD[\s\S]{0,180}authoritative/i,
+    );
+    expect(normalizedRecover).toMatch(
+      /failure[\s\S]{0,180}replace `completed` with `failed`[\s\S]{0,220}ledger-only transition/i,
+    );
+    expect(normalizedRecover).toMatch(/claim no successful recovery commit/i);
+  });
+
+  it('distinguishes a reserved final attempt from a new exhausted attempt', async () => {
+    const contracts = [
+      [
+        'phase root',
+        await readRawRepoFile(
+          '.agents/skills/oat-project-implement/references/phase-execution.md',
+        ),
+      ],
+      [
+        'phase agent',
+        await readRawRepoFile('.agents/agents/oat-phase-implementer.md'),
+      ],
+    ] as const;
+
+    for (const [name, contract] of contracts) {
+      expect(
+        contract,
+        `${name} completes a reconciled final reservation`,
+      ).toMatch(
+        /limit\s*=\s*1[\s\S]{0,120}used\s*=\s*1[\s\S]{0,220}(?:fully|complete)[\s-]*reconcil(?:ed|iation)[\s\S]{0,180}matching\s+`?pending_attempt`?[\s\S]{0,260}continue[\s\S]{0,180}finish[\s\S]{0,160}same\s+(?:reserved\s+)?attempt[\s\S]{0,220}(?:without|must not)[\s\S]{0,100}(?:increment|consume)/i,
+      );
+      expect(contract, `${name} refuses a new exhausted reservation`).toMatch(
+        /limit\s*=\s*1[\s\S]{0,120}used\s*=\s*1[\s\S]{0,220}no\s+`?pending_attempt`?[\s\S]{0,260}direction-required[\s\S]{0,180}before\s+edit[\s\S]{0,220}no\s+(?:new\s+)?reservation[\s\S]{0,180}no\s+fallback/i,
+      );
+    }
+  });
+
+  it('gives the isolated phase agent the exact canonical recovery event schema', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const heading = '### Recovery Event {event-id}';
+    const labels = [
+      '- Phase/task:',
+      '- Original request:',
+      '- Original commit:',
+      '- Defect class:',
+      '- Discovered by:',
+      '- Disposition:',
+      '- Authorization:',
+      '- Attempt:',
+      '- Dispatch target:',
+      '- Recovery commit:',
+      '- Verification:',
+      '- Reason:',
+    ];
+
+    let previous = agent.indexOf(heading);
+    expect(previous).toBeGreaterThan(-1);
+    for (const label of labels) {
+      const index = agent.indexOf(label, previous + 1);
+      expect(index, `${label} ordering`).toBeGreaterThan(previous);
+      previous = index;
+    }
+    expect(agent).toContain(
+      'Defect class: lint | type | test | build | composition | other',
+    );
+    expect(agent).toContain(
+      'Disposition: recovered | direction-required | failed-attempt',
+    );
+    expect(agent).toContain(
+      'Authorization: phase-standing | operator-extension | operator-scope',
+    );
+  });
+
+  it('validates accepted phase reports through an explicit status matrix', async () => {
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const verifier = phase.slice(
+      phase.indexOf('#### Verify the Phase Report'),
+      phase.indexOf('### Per-Phase Review'),
+    );
+
+    expect(verifier).toMatch(/status matrix/i);
+    expect(verifier).toMatch(
+      /\|\s*`DONE`\s*\|[\s\S]{0,160}accepted success[\s\S]{0,160}continue/i,
+    );
+    expect(verifier).toMatch(
+      /\|\s*`DONE_WITH_CONCERNS`\s*\|[\s\S]{0,260}accepted success[\s\S]{0,260}accepted terminal stop/i,
+    );
+    expect(verifier).toMatch(
+      /\|\s*`BLOCKED`\s*\|[\s\S]{0,180}accepted terminal stop/i,
+    );
+    expect(verifier).toMatch(
+      /accepted terminal-stop branch[\s\S]{0,280}provenance[\s\S]{0,180}attempt accounting[\s\S]{0,180}immutable history[\s\S]{0,180}(?:event shape|canonical recovery event)/i,
+    );
+    expect(verifier).toMatch(
+      /`BLOCKED`[\s\S]{0,260}stop[\s\S]{0,180}(?:without|never)[\s\S]{0,160}continuation[\s\S]{0,160}fallback/i,
+    );
   });
 
   it('documents adaptive named ceilings and exact task-worker dispatch', async () => {
@@ -2883,7 +3480,7 @@ describe('validateOatSkills', () => {
       ['oat-project-review-provide', '1.4.1'],
       ['oat-project-review-receive', '1.6.0'],
       ['oat-project-review-receive-remote', '1.5.0'],
-      ['oat-project-implement', '2.2.4'],
+      ['oat-project-implement', '2.2.5'],
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
       ['oat-project-complete', '1.6.0'],
@@ -3972,7 +4569,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.2.4'],
+      ['oat-project-implement', '2.2.5'],
       ['oat-project-review-provide', '1.4.1'],
       ['oat-project-review-provide-remote', '1.1.1'],
     ] as const;
@@ -4042,7 +4639,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(engine).toMatch(/^version:\s*1\.2\.1$/m);
+    expect(engine).toMatch(/^version:\s*1\.2\.2$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(adapter).toMatch(/^version:\s*1\.1\.3$/m);
@@ -4088,6 +4685,35 @@ describe('validateOatSkills', () => {
       expect(content, path).toContain(adapterPath);
       expect(content, path).toContain(enginePath);
     }
+  });
+
+  it('separates accepted-launch fallback from caller-authorized recovery', async () => {
+    const engine = await readRepoFile(
+      '.agents/skills/oat-dispatch-subagents/SKILL.md',
+    );
+    const recovery = engine.slice(engine.indexOf('## Acceptance and Recovery'));
+
+    expect(recovery).toMatch(
+      /accepted launch[\s\S]{0,180}terminal for automatic replacement eligibility/i,
+    );
+    expect(recovery).toMatch(
+      /route[\s\S]{0,80}model[\s\S]{0,80}provider[\s\S]{0,160}replacement[\s\S]{0,160}forbidden fallback/i,
+    );
+    expect(recovery).toMatch(
+      /same-target[\s\S]{0,180}bounded recovery[\s\S]{0,220}continuation/i,
+    );
+    expect(recovery).toMatch(
+      /caller-specific lifecycle contract[\s\S]{0,280}scope[\s\S]{0,120}exact target[\s\S]{0,120}numeric budget[\s\S]{0,120}(?:canonical )?record[\s\S]{0,120}stop conditions/i,
+    );
+    expect(recovery).toMatch(
+      /scope-expanding[\s\S]{0,160}consequential[\s\S]{0,200}(?:operator|user) direction/i,
+    );
+    expect(recovery).toMatch(
+      /default-deny[\s\S]{0,220}oat-project-implement[\s\S]{0,400}wave[\s\S]{0,80}execution[\s\S]{0,160}autonomous projects[\s\S]{0,160}cloud-project[\s\S]{0,80}orchestration[\s\S]{0,160}reviewers/i,
+    );
+    expect(recovery).toMatch(
+      /no post-acceptance outcome[\s\S]{0,180}(?:another|replacement) route eligible/i,
+    );
   });
 
   it('loads generic guidance and exactly one active-provider mechanics reference', async () => {

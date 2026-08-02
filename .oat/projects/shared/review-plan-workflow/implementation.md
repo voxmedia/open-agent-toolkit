@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - p06-t06 external dogfood and GitHub operations require operator authorization
+  - p06-t06 Remote structured Tier 1 posting requires separate operator approval
 oat_last_updated: 2026-08-02
 oat_current_task_id: p06-t06
 oat_generated: false
@@ -1632,8 +1632,43 @@ plus 129 smoke tests, and all five builds passed. The CLI tarball contained
 packed test paths. Release validation passed all five public packages and 65
 visual measurements.
 
-**Next:** Stop before p06-t06 pending explicit authorization for its dogfood and
-GitHub operations.
+### Task p06-t06: Validate and dogfood explicit enforce
+
+**Status:** in_progress
+**Preflight:** The focused config, review, gate, skill, and bundle matrix passed
+741 tests across 11 files.
+**Fixture:** Created a detached fixture at candidate HEAD `5714b61d`; local
+configuration resolved `workflow.reviewPlanMode=enforce` from `local`.
+**Draft PR:** [#190](https://github.com/voxmedia/open-agent-toolkit/pull/190)
+opened with the planned Stage A title and body.
+
+#### Recovery p06-t06-r01: Integrate the current Stage A base
+
+**Status:** completed
+**Commit:** integration merge commit
+**Finding:** The candidate push exposed that upstream PR #189 independently
+advanced `oat-project-implement` to 2.2.4, so the changed Stage A canonical skill
+no longer had a merge-base-relative version increment. Draft PR #190 was
+conflicting with current main.
+**Operator disposition:** Authorized a non-rewriting merge of current main,
+Stage A package version 0.2.29, canonical skill version 2.2.5 with task-owned
+pins, canonical provider/bundle regeneration, verification, normal push,
+fixture refresh, and Local artifact Tier 1 only.
+**Outcome:** Merged current main without rewriting history, retained package
+version 0.2.29, combined both validation expansions, advanced the shared
+canonical skill and six task-owned pins to 2.2.5, and regenerated all
+manifest-owned provider views and bundles.
+**Verification:** Three changed canonical skill bumps validated against main;
+291 focused canonical, provider, sync, bundle, and package-contract tests
+passed. Provider sync dry-run was clean and lockstep version validation passed.
+Workspace check and type-check each passed 10 tasks; 4,100 package tests and 131
+smoke tests passed; all five package builds, 10 lint tasks, 10 format tasks, and
+all six docs builds passed. Release validation passed five public packages and
+65 visual measurements.
+
+**Next:** Refresh the detached enforce fixture at the integrated candidate,
+rerun the focused p06-t06 preflight, run Local artifact Tier 1, and stop before
+Remote structured Tier 1 posting.
 
 ## Orchestration Runs
 

@@ -1,7 +1,7 @@
 ---
 id: BL-260727-ship-mit-notices-inside
 title: Ship MIT notices inside distributed packages
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - explainer-kit
 assignee: null
 created: 2026-07-27T04:19:38.490Z
-updated: 2026-07-27T04:19:38.490Z
+updated: '2026-07-28T02:28:23Z'
 associated_issues: []
 external_plans: []
 ---

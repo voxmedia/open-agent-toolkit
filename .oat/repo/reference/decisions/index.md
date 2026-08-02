@@ -10,15 +10,24 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260731-canonical-policy               | 2026-07-31 | accepted | Canonical policy with generated provider parity                         | -      |
+| DR-260731-dedicated-bounded-recovery     | 2026-07-31 | accepted | Dedicated bounded recovery state                                        | -      |
+| DR-260731-immutable-append-only-same     | 2026-07-31 | accepted | Immutable append-only same-target recovery                              | -      |
+| DR-260731-tiered-prevention              | 2026-07-31 | accepted | Tiered prevention with observable recovery                              | -      |
+| DR-260729-adaptive-recaps-share-one      | 2026-07-29 | accepted | Adaptive recaps share one immutable set plan                            | -      |
 | DR-260729-additive-dispatch-reports      | 2026-07-29 | accepted | Additive dispatch reports                                               | -      |
 | DR-260729-classification-only-provenance | 2026-07-29 | accepted | Classification-only provenance                                          | -      |
-| DR-260729-effective-target-reviewer      | 2026-07-29 | accepted | Effective-target reviewer notices                                       | -      |
-| DR-260729-provider-neutral-selection     | 2026-07-29 | accepted | Provider-neutral selection warnings                                     | -      |
 | DR-260729-classification-reports-but     | 2026-07-29 | accepted | Classification reports but does not skip                                | -      |
 | DR-260729-default-narrowing              | 2026-07-29 | accepted | Default narrowing with explicit opt-out                                 | -      |
 | DR-260729-dual-durable-review-provenance | 2026-07-29 | accepted | Dual durable review provenance                                          | -      |
+| DR-260729-effective-target-reviewer      | 2026-07-29 | accepted | Effective-target reviewer notices                                       | -      |
 | DR-260729-lineage-qualified-guarded      | 2026-07-29 | accepted | Lineage-qualified guarded ranges                                        | -      |
 | DR-260729-narrowed-coverage-is-inherited | 2026-07-29 | accepted | Narrowed coverage is inherited explicitly                               | -      |
+| DR-260729-non-linear-graphs-use          | 2026-07-29 | accepted | Non-linear graphs use the artistic path                                 | -      |
+| DR-260729-provider-neutral-selection     | 2026-07-29 | accepted | Provider-neutral selection warnings                                     | -      |
+| DR-260729-resume-accepts-authenticated   | 2026-07-29 | accepted | Resume accepts authenticated current tokens only                        | -      |
+| DR-260729-unattended-recap-publication   | 2026-07-29 | accepted | Unattended recap publication requires trusted browser review            | -      |
+| DR-260729-visual-correction-is-capped-at | 2026-07-29 | accepted | Visual correction is capped at one pass                                 | -      |
 | DR-260726-core-shell-scripts-are-hash    | 2026-07-26 | accepted | Core shell scripts are hash-pinned                                      | -      |
 | DR-260726-expansion-artifacts-get-id     | 2026-07-26 | accepted | Expansion artifacts get ID-bearing paths                                | -      |
 | DR-260726-explainer-authoring-is-two     | 2026-07-26 | accepted | Explainer authoring is two-path with a caller-owned author seam         | -      |

@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.set-plan/v1",
+  "title": "SetPlanV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "planId",
+    "recipe",
+    "sourceIds",
+    "ledger",
+    "portfolio"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "explainer-kit.set-plan/v1" },
+    "planId": { "$ref": "#/$defs/safeId" },
+    "recipe": { "$ref": "#/$defs/recipe" },
+    "sourceIds": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/safeId" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "ledger": { "$ref": "#/$defs/ledger" },
+    "portfolio": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/portfolioEntry" },
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "safeId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "$ref": "#/$defs/safeId" },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Shared cohesion claims. A fully empty ledger explicitly identifies a lower-tier plan without applicable shared claims; adaptive recap review requires every group to be non-empty and observed.",
+      "required": ["terminology", "statuses", "numbers"],
+      "properties": {
+        "terminology": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/termEntry" },
+          "uniqueItems": true
+        },
+        "statuses": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/statusEntry" },
+          "uniqueItems": true
+        },
+        "numbers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/numberEntry" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "termEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["term", "meaning"],
+      "properties": {
+        "term": { "type": "string", "minLength": 1 },
+        "meaning": { "type": "string", "minLength": 1 }
+      }
+    },
+    "statusEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject", "value"],
+      "properties": {
+        "subject": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "minLength": 1 }
+      }
+    },
+    "numberEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject", "value", "unit"],
+      "properties": {
+        "subject": { "type": "string", "minLength": 1 },
+        "value": { "type": "number" },
+        "unit": { "type": "string", "minLength": 1 }
+      }
+    },
+    "portfolioEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "artifactType",
+        "profileId",
+        "required",
+        "sourceIds",
+        "draft",
+        "visualIntent"
+      ],
+      "properties": {
+        "artifactId": { "$ref": "#/$defs/safeId" },
+        "artifactType": {
+          "enum": ["hub", "diagram", "explainer", "deck", "catalog"]
+        },
+        "profileId": { "$ref": "#/$defs/safeId" },
+        "required": { "type": "boolean" },
+        "sourceIds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/safeId" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "draft": { "type": "string", "minLength": 1 },
+        "visualIntent": { "type": "string", "minLength": 1 },
+        "justification": { "$ref": "#/$defs/justification" }
+      }
+    },
+    "justification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "sourceIds", "rationale"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "status-change",
+            "rollout-complexity",
+            "source-backed-detail"
+          ]
+        },
+        "sourceIds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/safeId" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -34,12 +34,14 @@ const TOKEN_PATTERN = /{{([A-Z][A-Z_]*)}}/g;
 export async function renderArtifact({
   recipeArtifact,
   content,
+  factBase,
   theme,
   renderStrategy,
   publicBaseUrl,
 }) {
   assertRecipeArtifact(recipeArtifact);
   assertContent(content, recipeArtifact);
+  assertFactBase(factBase);
   assertTheme(theme);
   assertRenderStrategy(renderStrategy);
 
@@ -52,6 +54,7 @@ export async function renderArtifact({
   const sections = content.sections.map((section) => ({
     ...section,
     anchor: section.id,
+    backlinks: sourceBacklinksForSection(factBase, section.id),
     ...prepareSectionMarkdown(section.content, theme),
   }));
   const links = content.artifactLinks ?? [];
@@ -109,12 +112,32 @@ export function substituteTemplate(template, values) {
     throw new Error(`Unresolved template token: ${missing[0]}.`);
   }
 
-  const rendered = template.replace(TOKEN_PATTERN, (_, key) => values[key]);
+  const normalizedTemplate = normalizeEmptySubstitutionWhitespace(
+    template,
+    values,
+  );
+  const rendered = normalizedTemplate.replace(
+    TOKEN_PATTERN,
+    (_, key) => values[key],
+  );
   const unresolved = rendered.match(TOKEN_PATTERN)?.[1];
   if (unresolved) {
     throw new Error(`Unresolved template token: ${unresolved}.`);
   }
   return rendered;
+}
+
+function normalizeEmptySubstitutionWhitespace(template, values) {
+  let normalized = template;
+  let previous;
+  do {
+    previous = normalized;
+    normalized = normalized.replace(
+      /[ \t]*{{([A-Z][A-Z_]*)}}[ \t]*(?=\r?$)/gm,
+      (match, key) => (values[key] === '' ? '' : match),
+    );
+  } while (normalized !== previous);
+  return normalized;
 }
 
 function templateValues({
@@ -193,6 +216,7 @@ function templateValues({
                 `<span>${escapeHtml(section.title ?? humanize(section.id))}</span>`,
             )
             .join(''),
+          renderSourceBacklinks(sections.flatMap(({ backlinks }) => backlinks)),
           renderRelatedLinks(links, content.slug, renderedPath, baseUrl),
         ].join(''),
       };
@@ -217,7 +241,7 @@ function renderSections(sections, { tour = false } = {}) {
       const tourAttributes = tour
         ? ` data-active-nodes="node-${index + 1}" data-active-edges=""`
         : '';
-      return `<section id="${escapeAttribute(section.anchor)}"${tourAttributes}><h2>${escapeHtml(section.title ?? humanize(section.id))}</h2>${renderMarkdownNodes(section.ast.children)}</section>`;
+      return `<section id="${escapeAttribute(section.anchor)}"${tourAttributes}><h2>${escapeHtml(section.title ?? humanize(section.id))}</h2>${renderMarkdownNodes(section.ast.children)}${renderSourceBacklinks(section.backlinks)}</section>`;
     })
     .join('');
 }
@@ -349,7 +373,7 @@ function renderSlides(sections, links, slug, renderedPath, baseUrl) {
   const slides = sections
     .map(
       (section) =>
-        `<section class="slide" id="${escapeAttribute(section.anchor)}"><div class="slide__content"><h2>${escapeHtml(section.title ?? humanize(section.id))}</h2><p>${escapeHtml(section.content)}</p></div></section>`,
+        `<section class="slide" id="${escapeAttribute(section.anchor)}"><div class="slide__content"><h2>${escapeHtml(section.title ?? humanize(section.id))}</h2><p>${escapeHtml(section.content)}</p>${renderSourceBacklinks(section.backlinks)}</div></section>`,
     )
     .join('');
   const related = renderRelatedLinks(links, slug, renderedPath, baseUrl);
@@ -385,6 +409,38 @@ function renderRelatedLinks(links, slug, renderedPath, baseUrl) {
       return `<a href="${escapeAttribute(href)}">${escapeHtml(link.label)}</a>`;
     })
     .join(' ');
+}
+
+function sourceBacklinksForSection(factBase, sectionId) {
+  if (factBase === undefined) return [];
+  return [...factBase.claims, ...factBase.unresolvedClaims]
+    .filter(
+      (claim) =>
+        claim.sections === undefined || claim.sections.includes(sectionId),
+    )
+    .flatMap((claim) =>
+      claim.citations
+        .filter(({ url }) => typeof url === 'string')
+        .map((citation) => ({
+          claimId: claim.id,
+          claimText: claim.text,
+          repository: citation.repository,
+          path: citation.path,
+          lineRange: citation.lineRange,
+          url: citation.url,
+        })),
+    );
+}
+
+function renderSourceBacklinks(backlinks) {
+  if (backlinks.length === 0) return '';
+  const items = backlinks
+    .map(
+      (backlink) =>
+        `<li><span>${escapeHtml(backlink.claimText)}</span> <a href="${escapeAttribute(backlink.url)}">${escapeHtml(`${backlink.repository}/${backlink.path}:L${backlink.lineRange.start}${backlink.lineRange.end === backlink.lineRange.start ? '' : `-L${backlink.lineRange.end}`}`)}</a></li>`,
+    )
+    .join('');
+  return `<aside class="source-backlinks" aria-label="Sources"><h3>Sources</h3><ul>${items}</ul></aside>`;
 }
 
 export function artifactPath(artifact, slug) {
@@ -556,6 +612,14 @@ function assertContent(content, recipeArtifact) {
         'Artifact cross-links must use typed artifact targets.',
       );
     }
+  }
+}
+
+function assertFactBase(factBase) {
+  if (factBase === undefined) return;
+  const validation = validateContract('fact-base', factBase);
+  if (!validation.valid) {
+    throw new TypeError('Renderer requires a validated fact base.');
   }
 }
 

@@ -1,8 +1,8 @@
 ---
 oat_current_task: p06-t06
-oat_last_commit: 6458acfd5391e570f770740db6a2d0aace7f02e0
+oat_last_commit: 5714b61dc92e3d472cf1b611c5cbe14989be4476
 oat_blockers:
-  - p06-t06 external dogfood and GitHub operations require operator authorization
+  - p06-t06 Remote structured Tier 1 posting requires separate operator approval
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -76,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T14:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T14:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -86,7 +86,7 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 6 awaiting p06-t06 authorization
+**Status:** Phase 6 Stage A integration recovery
 **Started:** 2026-07-29
 **Last Updated:** 2026-08-02
 
@@ -131,8 +131,13 @@ artifacts in the packed CLI because the publish build used the normal
 test-aware TypeScript config. The operator authorized bounded recovery
 `p06-t05-r01` to add a build-only config while preserving the explicit
 compile-time fixture in normal type-checking. The recovery and full release
-validation now pass. p06-t06 remains unstarted and requires separate external
-authorization.
+validation now pass. The operator authorized p06-t06 through its first remote
+posting gate. Draft PR #190 exposed an upstream version collision after PR #189
+advanced `oat-project-implement` to 2.2.4 and published package version 0.2.28.
+The operator authorized bounded integration recovery `p06-t06-r01`: merge
+current main, retain Stage A 0.2.29, advance the shared skill to 2.2.5,
+regenerate owned views, refresh the detached enforce fixture, and stop before
+Remote structured Tier 1 posting.
 
 ## Artifacts
 
@@ -285,14 +290,18 @@ authorization.
 - ✓ p06-t05 completed at `6458acfd`
 - ⚠ p06-t05 release validation found packed CLI test artifacts
 - ✓ Bounded recovery p06-t05-r01 passed clean build and release validation
-- → Stop before p06-t06 pending external authorization
+- ✓ p06-t06 focused preflight passed 741 tests across 11 files
+- ✓ Draft Stage A PR #190 opened; detached enforce fixture created
+- ⚠ Upstream PR #189 caused a canonical skill version collision
+- ✓ Bounded integration recovery p06-t06-r01 verification passed
+- → Refresh the integrated enforce fixture and run Local Tier 1
 
 ## Blockers
 
-p06-t06 requires external dogfood and GitHub operations that are not authorized
-by the bounded p06-t05 recovery.
+p06-t06 Remote structured Tier 1 posting requires separate explicit approval
+after integration recovery and the Local artifact Tier 1 row pass.
 
 ## Next Milestone
 
-Obtain explicit authorization before starting p06-t06's external dogfood and
-GitHub operations.
+Integrate current main, refresh the detached enforce fixture, run Local artifact
+Tier 1, and stop before Remote structured Tier 1 posting.

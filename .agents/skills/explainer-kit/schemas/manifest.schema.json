@@ -49,6 +49,11 @@
           "items": { "$ref": "#/$defs/safeRelativePath" },
           "minItems": 1,
           "uniqueItems": true
+        },
+        "backlinks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sourceBacklink" },
+          "uniqueItems": true
         }
       }
     },
@@ -69,7 +74,13 @@
     },
     "immutableHashes": { "$ref": "#/$defs/hashMap" },
     "outcome": {
-      "enum": ["built-durable", "built-not-durable", "failed", "incomplete"]
+      "enum": [
+        "built-durable",
+        "built-not-durable",
+        "built-needs-review",
+        "failed",
+        "incomplete"
+      ]
     },
     "buildRecord": {
       "type": "object",
@@ -106,8 +117,21 @@
     },
     "hashMap": {
       "type": "object",
+      "description": "Raw-byte SHA-256 coverage for the complete immutable package, including required browser, cohesion, visual-review attempt, and revision evidence.",
       "propertyNames": { "$ref": "#/$defs/safeRelativePath" },
       "additionalProperties": { "$ref": "#/$defs/hash" }
+    },
+    "sourceBacklink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceId", "url"],
+      "properties": {
+        "sourceId": { "type": "string", "minLength": 1 },
+        "url": {
+          "type": "string",
+          "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/blob/[a-f0-9]{40}/[^\\s?#]+#L[1-9][0-9]*(?:-L[1-9][0-9]*)?$"
+        }
+      }
     },
     "failure": {
       "type": "object",

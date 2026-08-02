@@ -1,6 +1,6 @@
 ---
 name: explainer-kit
-version: 2.0.1
+version: 2.0.3
 description: Use when building destination-neutral visual explainer artifacts from explicit, versioned inputs.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, mcp__*
@@ -84,6 +84,11 @@ artifacts. It accepts only a schema-valid
 overlap, retains each validated result under `source/author/` and its content
 under `source/content/<artifact>.md` or `.html`, and never prompts.
 
+Authors follow the bundled medium-specific rules in
+`references/visual-authoring.md`. They do not require a home-directory plugin:
+an optional installed visual-explainer capability may enhance composition, but
+the bundled briefs, shells, and guidance are the complete unattended baseline.
+
 Markdown content is parsed to a validated AST and rendered through the themed
 block library, including GFM tables and task lists, GFM alert callouts, fenced
 `timeline` blocks, and fenced `diagram` blocks rendered to inline SVG at build
@@ -137,10 +142,18 @@ guideline misses, rejected over-limit proposals, and render-QA layout findings â
 append stable warning IDs to the manifest's `warnings[]` and let the run
 succeed.
 
+Visual critics use the independent whole-set rubric in
+`references/visual-review.md`, which separates review judgment from
+medium-specific authoring rules.
+
 Render QA is opt-in. It runs only against an injected `browserProbe`, and the
 core never launches a browser of its own â€” reviewing the rendered output in a
-browser is the generating agent's job. Without a probe the stage records
-`render-qa-skipped-no-probe` and the run continues.
+browser is the generating agent's job. Unattended project recaps require both
+complete browser evidence and an independent visual-critic `pass`. A missing
+probe or critic, a terminal critic failure, or an unresolved correction records
+`built-needs-review`: built artifacts and review evidence remain available, but
+durability and publishing callbacks are not invoked. Other runs without a probe
+record `render-qa-skipped-no-probe` and continue.
 
 See `references/contracts.md` for source formats, callback modules, retained
 intermediates, and result semantics.
@@ -149,6 +162,8 @@ Durability and publishing run only when the request selects them and the caller
 supplies the matching callback. The core does not create commits, discover
 destinations, or publish automatically. A successful build remains
 `built-not-durable` until caller-supplied evidence is verified.
+`built-needs-review` is terminal but cannot receive durability evidence or be
+published.
 
 ## Progress Indicators
 

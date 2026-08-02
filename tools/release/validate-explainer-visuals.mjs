@@ -2,13 +2,12 @@
 
 import { randomBytes } from 'node:crypto';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
-import { createServer } from 'node:http';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import {
-  launchInstalledChromium,
-  probeRenderedPage,
+  assertBrowserProbeSession,
+  createBrowserProbeSession,
 } from '../../.agents/skills/explainer-kit/scripts/lib/browser-runtime.mjs';
 import {
   runReleaseVisualMatrix,
@@ -25,63 +24,40 @@ export {
 
 export async function runExplainerVisualValidation({
   matrix = selectReleaseVisualMatrix(),
-  launchBrowser = launchInstalledChromium,
+  createBrowserSession = createBrowserProbeSession,
+  evidenceRoot,
 } = {}) {
-  const browser = await launchBrowser();
-  const pages = new Map();
-  const server = createServer((request, response) => {
-    const html = pages.get(request.url);
-    if (html === undefined) {
-      response.writeHead(404).end('not found');
-      return;
-    }
-    response.writeHead(200, {
-      'content-type': 'text/html; charset=utf-8',
-      'cache-control': 'no-store',
-    });
-    response.end(html);
-  });
-  const address = await listen(server);
+  const browserSession = await createBrowserSession();
+  if (!browserSession?.available) {
+    throw new Error(
+      `No trusted browser session is available (${browserSession?.reason ?? 'unknown reason'}).`,
+    );
+  }
+  assertBrowserProbeSession(browserSession);
   const measurements = [];
 
   try {
     const report = await runReleaseVisualMatrix({
       matrix,
-      browserProbe: async (request) => {
-        const route = `/${randomBytes(12).toString('hex')}.html`;
-        pages.set(route, request.artifact.html);
-        try {
-          const result = await probeRenderedPage(
-            browser,
-            `http://127.0.0.1:${address.port}${route}`,
-            request,
-          );
-          measurements.push({
-            artifactId: request.artifact.id,
-            artifactType: request.artifact.type,
-            scenario: request.scenario,
-            viewport: request.viewport,
-            result,
-          });
-          return result;
-        } finally {
-          pages.delete(route);
-        }
-      },
+      browserSession,
+      onProbeResult: (measurement) => measurements.push(measurement),
+      ...(evidenceRoot && { evidenceRoot }),
     });
     return {
       schemaVersion: 'explainer-kit.visual-validation/v1',
       valid: report.valid,
       browser: {
-        name: 'Chromium',
-        version: browser.version(),
+        ...structuredClone(browserSession.runtime),
+        capture: structuredClone(browserSession.capture),
+        captureIdentity: browserSession.captureIdentity,
       },
       matrixCases: report.cases,
       measurements,
+      ...(report.evidence && { evidence: report.evidence }),
       issues: report.issues,
     };
   } finally {
-    await Promise.allSettled([browser.close(), closeServer(server)]);
+    await browserSession.close?.();
   }
 }
 
@@ -91,8 +67,14 @@ export async function runExplainerVisualValidationCli(
 ) {
   let output;
   try {
-    output = parseArguments(argv).output;
-    const result = await runExplainerVisualValidation(options);
+    output = resolve(parseArguments(argv).output);
+    const evidenceRoot = resolve(dirname(output), 'explainer-visual-evidence');
+    await rm(evidenceRoot, { recursive: true, force: true });
+    await mkdir(evidenceRoot, { recursive: true });
+    const result = await runExplainerVisualValidation({
+      ...options,
+      evidenceRoot,
+    });
     await writeJsonAtomic(resolve(output), result);
     process.stdout.write(
       `${JSON.stringify({
@@ -118,20 +100,6 @@ export async function runExplainerVisualValidationCli(
     );
     return 1;
   }
-}
-
-function listen(server) {
-  return new Promise((resolveListen, reject) => {
-    server.once('error', reject);
-    server.listen(0, '127.0.0.1', () => {
-      server.off('error', reject);
-      resolveListen(server.address());
-    });
-  });
-}
-
-function closeServer(server) {
-  return new Promise((resolveClose) => server.close(resolveClose));
 }
 
 function parseArguments(argv) {

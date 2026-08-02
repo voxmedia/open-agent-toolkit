@@ -16,6 +16,9 @@ copying their content here. -->
   mandatory configured implementation exit-gate closeout boundary.
 - [Project Reviews](../../../apps/oat-docs/docs/workflows/projects/reviews.md)
   defines phase review gates and producer aggregation behavior.
+- [Implementation Execution](../../../apps/oat-docs/docs/workflows/projects/implementation-execution.md)
+  defines tiered pre-commit prevention, bounded same-target append-only
+  recovery, numeric attempt accounting, and direction-required boundaries.
 - [Dispatch Policy](../../../apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md)
   defines candidate ladders, named ceilings, and exact task dispatch.
 - [Orchestration Model](../../../apps/oat-docs/docs/workflows/projects/orchestration-model.md)
@@ -31,6 +34,25 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.28` adds tiered task-level defect prevention and bounded
+  same-target post-commit recovery without weakening accepted-launch
+  terminality. A dedicated per-phase numeric budget, committed terminal ledger
+  handoff, immutable recovery commits, and canonical recovery events make
+  attempts fail-closed and auditable; generated Claude, Codex, and Cursor views
+  are validated for equivalent behavior. Existing installations update with
+  `oat tools update` followed by `oat sync --scope all`.
+- CLI `0.2.27` closes the Explainer Kit golden visual recovery: one immutable
+  adaptive set plans a hub, architecture view, and deck from a shared claim
+  ledger; artistic routing preserves exact branch, fan-in, cycle, node, edge,
+  direction, and label semantics; lifecycle sources resolve to commit-pinned
+  canonical backlinks; and each initiative emits a manifest-derived catalog.
+  Unattended recaps require a trusted launched-Chromium session and independent
+  critic, retain engine/version identity and decoded PNG evidence through
+  finalization and archive validation, and permit at most one correction.
+  Authenticated `ekrt2` resume tokens bind the complete canonical request.
+  Three portable real-Chromium golden cases, five public package payloads, and
+  the 65-measurement release visual gate pass. Additional visual workflows
+  remain separately tracked as `BL-260728-additional-visual-workflows`.
 - CLI `0.2.26` makes managed-capped implementation and fix dispatches
   auditable without changing compatibility exit behavior. Dispatch Report V1
   now carries provider-neutral task classification, applicable Codex task
