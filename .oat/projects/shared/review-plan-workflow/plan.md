@@ -3706,6 +3706,31 @@ then prove the real enforce preparation path accepts the refreshed candidate.
 
 **Step 3: Commit** `fix(p06-t06): repair plan review obligations`
 
+#### Recovery p06-t06-r03: Stabilize review CI checks
+
+**Finding:** PR #190 CI exposed two platform/load-sensitive test setups while
+the same focused tests passed locally: inode reuse could defeat the
+unlink-then-create identity replacement fixture, and one broker lifecycle test
+could exceed its 20-second test-only timeout under CI load.
+
+**Recovery files:**
+
+- Modify: `packages/cli/src/review/artifact-staging.test.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.test.ts`
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/state.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Stabilize** Create the replacement artifact while the original inode
+still exists, then remove the original and rename the replacement into place.
+Increase only the one-shot broker lifecycle test timeout to 40 seconds.
+
+**Step 2: Verify** Repeat both focused files, then run CLI type-check, lint,
+format, package tests, and applicable workspace gates. Change no production
+behavior.
+
+**Step 3: Commit** `test(p06-t06): stabilize review CI checks`
+
 ### Task p06-t07: Publish Stage A and start the soak
 
 **Files:**

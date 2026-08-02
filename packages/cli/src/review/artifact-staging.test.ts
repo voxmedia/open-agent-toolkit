@@ -4,6 +4,7 @@ import {
   lstat,
   mkdir,
   readFile,
+  rename,
   rm,
   symlink,
   writeFile,
@@ -77,9 +78,11 @@ describe('private artifact staging', () => {
   it('rejects inode and link replacement before descriptor snapshot', async () => {
     const root = await privateRoot();
     const draft = await createArtifactDraft(root);
+    const replacement = join(root, 'replacement.md');
     await writeFile(draft.path, artifact());
+    await writeFile(replacement, artifact(), { mode: 0o600 });
     await rm(draft.path);
-    await writeFile(draft.path, artifact(), { mode: 0o600 });
+    await rename(replacement, draft.path);
     await expect(snapshotArtifactDraft(draft, accounting())).rejects.toThrow(
       /identity/,
     );

@@ -1698,6 +1698,29 @@ task entry.
 recovery, push both commits, and require terminal passing PR checks before
 refreshing the enforce fixture.
 
+#### Recovery p06-t06-r03: Stabilize review CI checks
+
+**Status:** completed
+**Commit:** `test(p06-t06): stabilize review CI checks`
+**Finding:** PR #190 CI failed the artifact replacement identity fixture when
+Linux reused the unlinked inode and timed out the one-shot broker lifecycle test
+under parallel load. Both files passed a 14-test focused local rerun.
+**Operator disposition:** Authorized only a deterministic replacement fixture
+that exists concurrently with the original inode and a timeout increase from
+20 to 40 seconds on that single broker test. Production behavior, other
+timeouts, and unrelated CI tests remain excluded.
+**Outcome:** The artifact replacement fixture now creates a distinct file while
+the original inode still exists, then renames it into the draft path. Only the
+one-shot broker lifecycle test timeout increased from 20 to 40 seconds.
+Production code was unchanged.
+**Verification:** Three repeated focused runs passed 42/42 tests. CLI
+type-check, lint, and format passed; its full suite passed 3,982 tests across 323
+files. Workspace check and type-check each passed 10 tasks; package suites
+passed 4,100 tests, smoke passed 131 tests, and all five builds passed.
+
+**Next:** Push both recovery commits and wait for terminal passing PR CI and
+release-dry-run checks before refreshing the enforce fixture.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_

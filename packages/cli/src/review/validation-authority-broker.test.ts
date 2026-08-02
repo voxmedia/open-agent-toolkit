@@ -402,7 +402,7 @@ describe('validation authority broker', () => {
       },
     });
     expect(root).not.toContain('OAT_REVIEW_AUTHORITY_KEY');
-  }, 20_000);
+  }, 40_000);
 
   it('binds receipt-correlated delegated dossiers before output validation', async () => {
     const { broker, store, socketPath } = await fixture(undefined, true);

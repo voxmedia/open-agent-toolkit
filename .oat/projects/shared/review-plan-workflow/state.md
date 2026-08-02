@@ -1,6 +1,6 @@
 ---
 oat_current_task: p06-t06
-oat_last_commit: 4c510bcb2b12931c5c38d726113d302fa529171d
+oat_last_commit: 16d5f86a7099435f75ab3f6ec930f849dbf766ff
 oat_blockers:
   - p06-t06 Remote structured Tier 1 posting requires separate operator approval
 associated_issues:
@@ -76,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T15:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T16:57:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -143,7 +143,10 @@ p05-t04 and p05-t05 contained mechanically identical malformed unchanged
 regression-witness entries in their `Files` blocks. The operator authorized
 bounded artifact-only recovery `p06-t06-r02`. Full-project parsing then exposed
 four equivalent unchanged-symlink entries in p05-t15, and the operator extended
-the same recovery to the complete six-entry mechanical cleanup.
+the same recovery to the complete six-entry mechanical cleanup. PR CI also
+reported platform/load-sensitive failures in artifact replacement setup and a
+single broker lifecycle timeout. The operator separately authorized test-only
+stabilization recovery `p06-t06-r03` without production changes.
 
 ## Artifacts
 
@@ -304,7 +307,8 @@ the same recovery to the complete six-entry mechanical cleanup.
 - ⚠ Local Tier 1 preparation rejected malformed p05-t04/p05-t05 Files entries
 - ⚠ Full-plan parsing found four equivalent p05-t15 unchanged-symlink entries
 - ✓ Bounded six-entry recovery p06-t06-r02 passed full-plan parsing
-- → Complete authorized test-only CI stabilization before Local Tier 1
+- ✓ Test-only CI stabilization p06-t06-r03 passed local workspace gates
+- → Push both recoveries and require terminal passing PR checks
 
 ## Blockers
 
