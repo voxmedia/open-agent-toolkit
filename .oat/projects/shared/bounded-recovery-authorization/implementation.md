@@ -541,7 +541,8 @@ fresh review loop.
   `98d03cd1425461a691fea80e7252b9db6116269b`
 - Updated the existing implementation-execution page with the committed
   terminal-marker handoff, validation-before-clear ordering, settled-state
-  definition, release `0.2.27`, and canonical provider-regeneration guidance.
+  definition, final release `0.2.28`, and canonical provider-regeneration
+  guidance.
 - Repo reference commit:
   `56f94e8a0bfbd6a1647b01f15b6a8e46e5961660`
 - Validation: `pnpm check`, `pnpm build:docs`, file formatting, and
@@ -1056,7 +1057,7 @@ Track test execution during implementation.
   outcomes.
 - Matching Cursor, Codex, and Claude phase-agent materializations plus semantic
   parity coverage, public implementation/migration documentation, autonomy
-  prompt-site inventory coverage, and the lockstep `0.2.27` public package
+  prompt-site inventory coverage, and the lockstep `0.2.28` public package
   release boundary.
 
 **Behavioral changes (user-facing):**
@@ -1093,7 +1094,7 @@ Track test execution during implementation.
 - `pnpm lint`, `pnpm format`, `pnpm build:docs`, `pnpm check`,
   `pnpm type-check`, `pnpm test`, and `pnpm build` passed in the Phase 4
   pre-commit and clean post-commit verification chains.
-- `pnpm release:validate` passed repeatedly and validated all five `0.2.27`
+- `pnpm release:validate` passed repeatedly and validated all five `0.2.28`
   public-package tarballs plus visual validation.
 - Phase 5 added ordered transition-matrix and provider-parity coverage; 163
   focused tests, 61 skill validations, and full pre/post-commit repository and

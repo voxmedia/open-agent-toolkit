@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "explainer-kit.golden-input/v1",
+  "id": "explainer-authoring-redesign",
+  "title": "Explainer authoring redesign recap",
+  "sourceRevision": "sha256-pinned",
+  "sources": [
+    {
+      "id": "archived-summary",
+      "kind": "retained-repository-source",
+      "locator": "evidence/source-record.json",
+      "sha256": "sha256:9fa802f45b3939ff717f2e61aafc6bfea69f4cab5de3876368fa9299708756b5"
+    }
+  ],
+  "claims": [
+    {
+      "id": "A-1",
+      "text": "Recipe policy selects the path through expansion profiles; the author does not.",
+      "sourceId": "archived-summary",
+      "sourceClaimId": "A-1"
+    },
+    {
+      "id": "A-2",
+      "text": "Explainer authoring is two-path with a caller-owned author seam.",
+      "sourceId": "archived-summary",
+      "sourceClaimId": "A-2"
+    },
+    {
+      "id": "A-3",
+      "text": "No gate could see the styling surface.",
+      "sourceId": "archived-summary",
+      "sourceClaimId": "A-3"
+    },
+    {
+      "id": "A-4",
+      "text": "Final gates: core 231, adapter 59, release 44 (1 env-gated skip), smoke 129, plus `release:validate`, `release:check-versions`, `lint`, and `type-check`.",
+      "sourceId": "archived-summary",
+      "sourceClaimId": "A-4"
+    }
+  ],
+  "topology": {
+    "kind": "authoring-workflow",
+    "nodes": [
+      "fact-base",
+      "recipe-policy",
+      "narrative-author",
+      "artistic-author",
+      "render",
+      "browser-review",
+      "publish"
+    ],
+    "edges": [
+      ["fact-base", "recipe-policy"],
+      ["recipe-policy", "narrative-author"],
+      ["recipe-policy", "artistic-author"],
+      ["narrative-author", "render"],
+      ["artistic-author", "render"],
+      ["render", "browser-review"],
+      ["browser-review", "publish"]
+    ]
+  },
+  "readerQuestions": [
+    "Why did fixed-slot authoring fail?",
+    "What changed in the shipped architecture?",
+    "Which evidence proves the redesign and its remaining gap?"
+  ]
+}

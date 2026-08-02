@@ -12,6 +12,8 @@ DISPATCH_MATRIX_RECOMMENDATION_SOURCE="${REPO_ROOT}/$(node "${INVENTORY}" --get 
 rm -rf "${ASSETS}"
 mkdir -p "${ASSETS}/skills" "${ASSETS}/agents" "${ASSETS}/templates" "${ASSETS}/scripts" "${ASSETS}/docs" "${ASSETS}/migration" "${ASSETS}/config"
 
+cp "${REPO_ROOT}/NOTICES.md" "${ASSETS}/NOTICES.md"
+
 while IFS= read -r skill; do
   [ -n "${skill}" ] || continue
   cp -RL "${REPO_ROOT}/.agents/skills/${skill}" "${ASSETS}/skills/"

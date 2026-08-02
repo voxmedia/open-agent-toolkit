@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "explainer-kit.retained-source/v1",
+  "id": "architecture-record",
+  "kind": "retained-synthetic-source",
+  "claims": [
+    {
+      "id": "N-1",
+      "text": "The intake router sends accepted events to both enrichment and audit branches."
+    },
+    {
+      "id": "N-2",
+      "text": "Enrichment and policy results join before publication."
+    },
+    {
+      "id": "N-3",
+      "text": "Failed publication enters a bounded retry loop through the retry queue."
+    }
+  ],
+  "topology": {
+    "kind": "branched-fan-in-cycle",
+    "nodes": [
+      "intake",
+      "router",
+      "enrichment",
+      "audit",
+      "policy",
+      "join",
+      "publish",
+      "retry"
+    ],
+    "edges": [
+      ["intake", "router"],
+      ["router", "enrichment"],
+      ["router", "audit"],
+      ["enrichment", "join"],
+      ["audit", "policy"],
+      ["policy", "join"],
+      ["join", "publish"],
+      ["publish", "retry"],
+      ["retry", "router"]
+    ],
+    "requiredStructures": [
+      {
+        "type": "branch",
+        "from": "router",
+        "to": ["enrichment", "audit"]
+      },
+      {
+        "type": "fan-in",
+        "from": ["enrichment", "policy"],
+        "to": "join"
+      },
+      {
+        "type": "cycle",
+        "path": ["router", "enrichment", "join", "publish", "retry", "router"]
+      }
+    ]
+  }
+}

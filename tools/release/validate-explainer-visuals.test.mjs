@@ -26,7 +26,9 @@ afterEach(async () => {
   );
 });
 
-test('drives a real installed Chromium browser for every declared deck scenario', async () => {
+test('drives a trusted Chromium session and retains evidence for every declared deck scenario', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'explainer-visual-evidence-'));
+  tempRoots.push(root);
   const matrix = [
     selectReleaseVisualMatrix().find(
       ({ artifact, renderStrategy }) =>
@@ -34,16 +36,29 @@ test('drives a real installed Chromium browser for every declared deck scenario'
     ),
   ].map((entry) => ({ ...entry, viewports: [320] }));
 
-  const result = await runExplainerVisualValidation({ matrix });
+  const result = await runExplainerVisualValidation({
+    matrix,
+    evidenceRoot: join(root, 'evidence'),
+  });
 
   assert.equal(result.schemaVersion, 'explainer-kit.visual-validation/v1');
   assert.equal(result.valid, true, JSON.stringify(result.issues));
+  assert.equal(result.browser.kind, 'launched');
   assert.match(result.browser.name, /chrom|chrome/i);
   assert.deepEqual(
     new Set(result.measurements.map(({ scenario }) => scenario)),
     new Set(['default', 'no-js', 'print']),
   );
   assert.equal(result.measurements.length, 3);
+  assert.equal(result.evidence.length, 1);
+  assert.ok(
+    result.evidence.every(
+      ({ runtime }) =>
+        runtime.kind === result.browser.kind &&
+        runtime.name === result.browser.name &&
+        runtime.version === result.browser.version,
+    ),
+  );
   assert.ok(
     result.measurements.every(
       ({ viewport, result: measurement }) =>
@@ -143,7 +158,7 @@ test('fails closed and emits no successful report when Chromium is unavailable',
   await assert.rejects(
     runExplainerVisualValidation({
       matrix: [selectReleaseVisualMatrix()[0]],
-      launchBrowser: async () => {
+      createBrowserSession: async () => {
         throw new Error('browser executable missing');
       },
     }),
@@ -158,13 +173,39 @@ test('CLI removes a stale successful report when Chromium is unavailable', async
   await writeFile(output, '{"valid":true}\n');
 
   const exitCode = await runExplainerVisualValidationCli(['--output', output], {
-    launchBrowser: async () => {
+    createBrowserSession: async () => {
       throw new Error('browser executable missing');
     },
   });
 
   assert.equal(exitCode, 1);
   await assert.rejects(readFile(output), { code: 'ENOENT' });
+});
+
+test('rejects an unbranded browser session instead of trusting a wrapper', async () => {
+  await assert.rejects(
+    runExplainerVisualValidation({
+      matrix: [selectReleaseVisualMatrix()[0]],
+      createBrowserSession: async () => ({
+        available: true,
+        runtime: {
+          kind: 'launched',
+          name: 'Forged Chromium',
+          version: '0.0.0',
+        },
+        capture: {
+          available: true,
+          fallback: false,
+          provider: 'playwright-screenshot',
+        },
+        probe: async () => {
+          throw new Error('forged session probe must not run');
+        },
+        close: async () => {},
+      }),
+    }),
+    /trusted browser session/i,
+  );
 });
 
 test('CLI retains machine-readable browser measurements', async () => {

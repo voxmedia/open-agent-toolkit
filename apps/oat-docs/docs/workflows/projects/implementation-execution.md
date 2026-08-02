@@ -285,7 +285,7 @@ or emit success.
 
 ## Update Installed Recovery Contracts
 
-Bounded phase recovery ships in OAT `0.2.27`. After upgrading to that release or
+Bounded phase recovery ships in OAT `0.2.28`. After upgrading to that release or
 later, update the installed OAT tools and then regenerate provider views from
 the canonical contracts:
 

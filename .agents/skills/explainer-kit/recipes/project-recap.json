@@ -15,7 +15,7 @@
     {
       "id": "project-recap",
       "type": "hub",
-      "authoring": "markdown",
+      "authoring": "html",
       "template": "house-style",
       "required": true,
       "briefRef": "briefs/project-recap.md",
@@ -27,37 +27,64 @@
         "validation-evidence",
         "outcome"
       ]
+    },
+    {
+      "id": "architecture",
+      "type": "diagram",
+      "authoring": "html",
+      "template": "diagram-shell",
+      "required": true,
+      "briefRef": "briefs/supporting-diagram.md",
+      "requiredNarrative": ["as-built-architecture"]
+    },
+    {
+      "id": "deck",
+      "type": "deck",
+      "authoring": "html",
+      "template": "deck-shell",
+      "required": true,
+      "briefRef": "briefs/walkthrough-deck.md",
+      "requiredNarrative": ["outcome"]
     }
   ],
   "expansion": {
     "profiles": [
       {
-        "profileId": "supporting-diagram",
-        "type": "diagram",
+        "profileId": "status-view",
+        "type": "explainer",
         "authoring": "html",
-        "briefRef": "briefs/supporting-diagram.md",
-        "shell": "diagram-shell",
-        "maxCount": 4
+        "briefRef": "briefs/project-recap.md",
+        "shell": "house-style",
+        "maxCount": 1,
+        "allowedJustificationKinds": ["status-change"]
+      },
+      {
+        "profileId": "rollout-view",
+        "type": "explainer",
+        "authoring": "html",
+        "briefRef": "briefs/project-recap.md",
+        "shell": "house-style",
+        "maxCount": 1,
+        "allowedJustificationKinds": ["rollout-complexity"]
       },
       {
         "profileId": "deep-dive",
         "type": "explainer",
         "authoring": "markdown",
         "briefRef": "briefs/deep-dive.md",
-        "maxCount": 3
-      },
-      {
-        "profileId": "walkthrough-deck",
-        "type": "deck",
-        "authoring": "html",
-        "briefRef": "briefs/walkthrough-deck.md",
-        "shell": "deck-shell",
-        "maxCount": 1
+        "maxCount": 3,
+        "allowedJustificationKinds": ["source-backed-detail"]
       }
     ],
     "limits": {
-      "maxArtifacts": 6
+      "maxArtifacts": 5
     }
+  },
+  "fallback": {
+    "mode": "deterministic-markdown",
+    "selection": "explicit",
+    "authoring": "markdown",
+    "scope": "portfolio"
   },
   "discoveryLimits": {
     "consecutiveNoNewFindingsRounds": 2,

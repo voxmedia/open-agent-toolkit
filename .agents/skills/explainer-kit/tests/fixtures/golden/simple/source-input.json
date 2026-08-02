@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "explainer-kit.golden-input/v1",
+  "id": "simple",
+  "title": "Atlas Index recap",
+  "sourceRevision": "sha256-pinned",
+  "sources": [
+    {
+      "id": "project-record",
+      "kind": "retained-repository-source",
+      "locator": "evidence/source-record.json",
+      "sha256": "sha256:2b973e08276605f79ce3f978359dd15543ca44571762f7d798422ecae03f5811"
+    }
+  ],
+  "claims": [
+    {
+      "id": "S-1",
+      "text": "Nightly full rebuilds were replaced by incremental indexing with no change to the public query contract.",
+      "sourceId": "project-record",
+      "sourceClaimId": "F-101"
+    },
+    {
+      "id": "S-2",
+      "text": "Checkpoints are partition-local, index writes are idempotent, and the full rebuild survives as a recovery path.",
+      "sourceId": "project-record",
+      "sourceClaimId": "F-102"
+    },
+    {
+      "id": "S-3",
+      "text": "A checkpointed change reader feeds idempotent workers, and a scheduled audit samples both sides for drift.",
+      "sourceId": "project-record",
+      "sourceClaimId": "F-103"
+    }
+  ],
+  "topology": {
+    "kind": "linear-with-audit",
+    "nodes": [
+      "change-reader",
+      "batch-queue",
+      "index-worker",
+      "search-index",
+      "drift-audit"
+    ],
+    "edges": [
+      ["change-reader", "batch-queue"],
+      ["batch-queue", "index-worker"],
+      ["index-worker", "search-index"],
+      ["search-index", "drift-audit"]
+    ]
+  },
+  "readerQuestions": [
+    "What changed?",
+    "How does indexing recover?",
+    "What proves the cutover is safe?"
+  ]
+}

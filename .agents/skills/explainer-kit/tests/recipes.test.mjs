@@ -8,8 +8,10 @@ import {
   recipeExpansion,
   recipeFloor,
   recipeRequiredNarrative,
+  selectRecipeAuthoring,
   shouldStopDiscovery,
   validateContentModel,
+  validatePlannedPortfolio,
   validateRecipe,
   validateSourceBindings,
 } from '../scripts/lib/recipes.mjs';
@@ -115,19 +117,47 @@ test('bundled v2 recipes preserve floors and declare bounded expansion policy', 
       floor: {
         id: 'project-recap',
         type: 'hub',
-        authoring: 'markdown',
+        authoring: 'html',
         template: 'house-style',
         briefRef: 'briefs/project-recap.md',
         requiredNarrative: RECAP_SECTIONS,
       },
-      profiles: [
+      additionalFloor: [
         {
-          profileId: 'supporting-diagram',
+          id: 'architecture',
           type: 'diagram',
           authoring: 'html',
+          template: 'diagram-shell',
           briefRef: 'briefs/supporting-diagram.md',
-          shell: 'diagram-shell',
-          maxCount: 4,
+          requiredNarrative: ['as-built-architecture'],
+        },
+        {
+          id: 'deck',
+          type: 'deck',
+          authoring: 'html',
+          template: 'deck-shell',
+          briefRef: 'briefs/walkthrough-deck.md',
+          requiredNarrative: ['outcome'],
+        },
+      ],
+      profiles: [
+        {
+          profileId: 'status-view',
+          type: 'explainer',
+          authoring: 'html',
+          briefRef: 'briefs/project-recap.md',
+          shell: 'house-style',
+          maxCount: 1,
+          allowedJustificationKinds: ['status-change'],
+        },
+        {
+          profileId: 'rollout-view',
+          type: 'explainer',
+          authoring: 'html',
+          briefRef: 'briefs/project-recap.md',
+          shell: 'house-style',
+          maxCount: 1,
+          allowedJustificationKinds: ['rollout-complexity'],
         },
         {
           profileId: 'deep-dive',
@@ -135,17 +165,10 @@ test('bundled v2 recipes preserve floors and declare bounded expansion policy', 
           authoring: 'markdown',
           briefRef: 'briefs/deep-dive.md',
           maxCount: 3,
-        },
-        {
-          profileId: 'walkthrough-deck',
-          type: 'deck',
-          authoring: 'html',
-          briefRef: 'briefs/walkthrough-deck.md',
-          shell: 'deck-shell',
-          maxCount: 1,
+          allowedJustificationKinds: ['source-backed-detail'],
         },
       ],
-      maxArtifacts: 6,
+      maxArtifacts: 5,
     },
     'program-recap': {
       floor: {
@@ -238,14 +261,23 @@ test('bundled v2 recipes preserve floors and declare bounded expansion policy', 
     const expansion = recipeExpansion(recipe);
 
     assert.equal(recipe.version, '1', id);
-    assert.equal(floor.length, 1, id);
-    assert.deepEqual(floor[0], { ...expected.floor, required: true }, id);
+    assert.equal(floor.length, 1 + (expected.additionalFloor?.length ?? 0), id);
+    assert.deepEqual(
+      floor,
+      [expected.floor, ...(expected.additionalFloor ?? [])].map((artifact) => ({
+        ...artifact,
+        required: true,
+      })),
+      id,
+    );
     assert.deepEqual(expansion.profiles, expected.profiles, id);
     assert.equal(expansion.limits.maxArtifacts, expected.maxArtifacts, id);
 
     for (const briefRef of [
-      floor[0].briefRef,
-      ...expansion.profiles.map((profile) => profile.briefRef),
+      ...floor.map(({ briefRef: floorBriefRef }) => floorBriefRef),
+      ...expansion.profiles.map(
+        ({ briefRef: profileBriefRef }) => profileBriefRef,
+      ),
     ]) {
       briefRefs.add(briefRef);
       assert.ok(
@@ -636,11 +668,157 @@ test('project recap binds exactly one project source set', () => {
 
 test('project recap declares all six accountability sections', () => {
   const recipe = loadRecipe('project-recap', '1');
-  const artifact = recipeFloor(recipe)[0];
+  const artifact = recipeFloor(recipe).find(({ id }) => id === 'project-recap');
   assert.deepEqual(
     recipeRequiredNarrative(recipe, artifact.id),
     RECAP_SECTIONS,
   );
+});
+
+test('project recap exposes an explicit deterministic Markdown fallback', () => {
+  const recipe = loadRecipe('project-recap', '1');
+  assert.deepEqual(recipe.fallback, {
+    mode: 'deterministic-markdown',
+    selection: 'explicit',
+    authoring: 'markdown',
+    scope: 'portfolio',
+  });
+
+  assert.deepEqual(
+    recipeFloor(selectRecipeAuthoring(recipe)),
+    recipeFloor(recipe),
+    'default selection remains artistic',
+  );
+
+  const fallback = selectRecipeAuthoring(recipe, 'deterministic-markdown');
+  assert.ok(
+    recipeFloor(fallback).every(({ authoring }) => authoring === 'markdown'),
+  );
+  assert.ok(
+    fallback.expansion.profiles.every(
+      ({ authoring, shell }) => authoring === 'markdown' && shell === undefined,
+    ),
+  );
+
+  const openPolicy = structuredClone(recipe);
+  openPolicy.fallback.automatic = true;
+  assert.throws(
+    () => validateRecipe(openPolicy, 'open-fallback'),
+    /fallback has unknown or missing keys/,
+  );
+});
+
+test('project recap requires the adaptive visual minimum and source-backed optional profiles', () => {
+  const recipe = loadRecipe('project-recap', '1');
+  assert.deepEqual(
+    recipeFloor(recipe).map(({ id, type, authoring, template, required }) => ({
+      id,
+      type,
+      authoring,
+      template,
+      required,
+    })),
+    [
+      {
+        id: 'project-recap',
+        type: 'hub',
+        authoring: 'html',
+        template: 'house-style',
+        required: true,
+      },
+      {
+        id: 'architecture',
+        type: 'diagram',
+        authoring: 'html',
+        template: 'diagram-shell',
+        required: true,
+      },
+      {
+        id: 'deck',
+        type: 'deck',
+        authoring: 'html',
+        template: 'deck-shell',
+        required: true,
+      },
+    ],
+  );
+  assert.deepEqual(
+    recipeExpansion(recipe).profiles.map(
+      ({ profileId, allowedJustificationKinds }) => ({
+        profileId,
+        allowedJustificationKinds,
+      }),
+    ),
+    [
+      {
+        profileId: 'status-view',
+        allowedJustificationKinds: ['status-change'],
+      },
+      {
+        profileId: 'rollout-view',
+        allowedJustificationKinds: ['rollout-complexity'],
+      },
+      {
+        profileId: 'deep-dive',
+        allowedJustificationKinds: ['source-backed-detail'],
+      },
+    ],
+  );
+
+  const optional = {
+    artifactId: 'migration-status',
+    artifactType: 'explainer',
+    profileId: 'status-view',
+    required: false,
+    sourceIds: ['implementation'],
+    draft: 'Show the current migration status.',
+    visualIntent: 'Make status legible at a glance.',
+    justification: {
+      kind: 'status-change',
+      sourceIds: ['implementation'],
+      rationale: 'The source records a material status transition.',
+    },
+  };
+  assert.deepEqual(validatePlannedPortfolio(recipe, [optional]), {
+    valid: true,
+    errors: [],
+  });
+  for (const [label, mutate] of [
+    [
+      'wrong kind',
+      (artifact) => {
+        artifact.justification.kind = 'rollout-complexity';
+      },
+    ],
+    [
+      'missing justification',
+      (artifact) => {
+        delete artifact.justification;
+      },
+    ],
+  ]) {
+    const artifact = structuredClone(optional);
+    mutate(artifact);
+    const result = validatePlannedPortfolio(recipe, [artifact]);
+    assert.equal(result.valid, false, label);
+  }
+});
+
+test('an expansion profile without a justification allowlist accepts source-backed kinds', () => {
+  const optional = {
+    artifactId: 'runtime-map',
+    profileId: 'supporting-diagram',
+    justification: {
+      kind: 'architecture-complexity',
+      sourceIds: ['project'],
+      rationale: 'The source describes multiple runtime boundaries.',
+    },
+  };
+
+  assert.deepEqual(validatePlannedPortfolio(recipeV2(), [optional]), {
+    valid: true,
+    errors: [],
+  });
 });
 
 test('program recap binds one program and requires its six birdseye sections', () => {

@@ -38,7 +38,8 @@ consequential stop boundary.
 - Regenerated Claude, Codex, and Cursor provider views and added relational
   contract, provider-parity, and autonomy-inventory coverage.
 - Published the workflow and migration guidance, then advanced all five public
-  packages and bundled inventory in lockstep from `0.2.26` to `0.2.27`.
+  packages and bundled inventory in lockstep from `0.2.26` to `0.2.28` after
+  merge-time release reconciliation.
 
 ## Key Decisions
 
@@ -94,7 +95,7 @@ consequential stop boundary.
 
 ## Integration Notes
 
-- Released assets are in public package version `0.2.27`.
+- Released assets are in public package version `0.2.28`.
 - Existing installations must run `oat tools update` and then
   `oat sync --scope all` before global phase agents use the new contracts.
 - `oat_phase_recovery_policy` is independent of

@@ -68,11 +68,14 @@ export function parseDiagram(source) {
     return degraded('Diagram requires at least one node declaration or edge.');
   }
 
+  const topology = analyzeTopology([...nodes.values()], edges);
   return {
     valid: true,
     direction: headerMatch[1],
     nodes: [...nodes.values()],
     edges,
+    inlineSupported: topology.kind === 'linear',
+    topology,
     warnings: [],
   };
 }
@@ -86,14 +89,39 @@ export function renderDiagram(source, { theme } = {}) {
       degraded: true,
     };
   }
+  if (!parsed.inlineSupported) {
+    const features = parsed.topology.features.join(', ');
+    return {
+      html: `<div class="diagram-fallback" role="note"><p class="diagram-warning">${escapeHtml(`Non-linear diagram topology (${features}) requires artistic composition.`)}</p><pre><code>${escapeHtml(source)}</code></pre></div>`,
+      warnings: [
+        {
+          code: 'non-linear-diagram-reroute',
+          message: `Non-linear diagram topology (${features}) requires artistic composition.`,
+        },
+      ],
+      degraded: true,
+      reroute: {
+        target: 'artistic',
+        source,
+        graph: {
+          direction: parsed.direction,
+          nodes: structuredClone(parsed.nodes),
+          edges: structuredClone(parsed.edges),
+        },
+        topology: structuredClone(parsed.topology),
+      },
+    };
+  }
 
   const horizontal = parsed.direction === 'LR';
   const nodeWidth = 180;
   const nodeHeight = 72;
   const gap = 90;
   const margin = 50;
+  const nodeById = new Map(parsed.nodes.map((node) => [node.id, node]));
+  const orderedNodes = parsed.topology.order.map((id) => nodeById.get(id));
   const positions = new Map(
-    parsed.nodes.map((node, index) => [
+    orderedNodes.map((node, index) => [
       node.id,
       horizontal
         ? { x: margin + index * (nodeWidth + gap), y: margin }
@@ -102,14 +130,14 @@ export function renderDiagram(source, { theme } = {}) {
   );
   const width = horizontal
     ? margin * 2 +
-      parsed.nodes.length * nodeWidth +
-      (parsed.nodes.length - 1) * gap
+      orderedNodes.length * nodeWidth +
+      (orderedNodes.length - 1) * gap
     : margin * 2 + nodeWidth;
   const height = horizontal
     ? margin * 2 + nodeHeight
     : margin * 2 +
-      parsed.nodes.length * nodeHeight +
-      (parsed.nodes.length - 1) * gap;
+      orderedNodes.length * nodeHeight +
+      (orderedNodes.length - 1) * gap;
   const markerId = `diagram-arrow-${stableHash(source)}`;
   const mode = theme?.modes?.[theme.defaultMode];
   const panel = mode?.surface?.panel ?? '#ffffff';
@@ -126,7 +154,7 @@ export function renderDiagram(source, { theme } = {}) {
       }),
     )
     .join('');
-  const nodes = parsed.nodes
+  const nodes = orderedNodes
     .map((node) =>
       renderNode(node, positions.get(node.id), { nodeWidth, nodeHeight }),
     )
@@ -142,6 +170,206 @@ export function renderDiagram(source, { theme } = {}) {
     warnings: [],
     degraded: false,
   };
+}
+
+export function graphSemanticsForArtisticAuthor(diagrams) {
+  if (
+    !Array.isArray(diagrams) ||
+    diagrams.some(({ valid }) => valid !== true)
+  ) {
+    throw topologyError(
+      'Planner-owned artistic diagrams must use the supported graph grammar.',
+    );
+  }
+  return diagrams
+    .filter(({ inlineSupported }) => inlineSupported === false)
+    .map(({ direction, nodes, edges, topology }) =>
+      deepFreeze({
+        direction,
+        nodes: structuredClone(nodes),
+        edges: structuredClone(edges),
+        topology: structuredClone(topology),
+      }),
+    );
+}
+
+export function assertAuthoredGraphSemantics(html, graphSemantics) {
+  if (
+    typeof html !== 'string' ||
+    !Array.isArray(graphSemantics) ||
+    graphSemantics.length !== 1
+  ) {
+    throw topologyError(
+      'Artistic graph validation requires one unambiguous planned graph.',
+    );
+  }
+  const [planned] = graphSemantics;
+  const tags = html.match(/<[^>]+>/g) ?? [];
+  const directionTags = tags.filter((tag) => tag.includes('data-direction'));
+  const observedDirections = directionTags.flatMap((tag) =>
+    attributeValues(tag, 'data-direction'),
+  );
+  if (
+    directionTags.length !== 1 ||
+    observedDirections.length !== 1 ||
+    observedDirections[0] !== planned.direction
+  ) {
+    throw topologyError(
+      'Authored graph direction does not exactly match the planned graph.',
+    );
+  }
+
+  const nodeTags = tags.filter((tag) => tag.includes('data-node'));
+  const observedNodes = nodeTags.map((tag) => {
+    const id = canonicalAttribute(tag, 'data-node', {
+      pattern: new RegExp(`^${ID_PATTERN}$`),
+    });
+    const label = canonicalAttribute(tag, 'data-node-label');
+    const shape = canonicalAttribute(tag, 'data-node-shape', {
+      allowed: ['rectangle', 'rounded', 'diamond'],
+    });
+    const explicit = canonicalAttribute(tag, 'data-node-explicit', {
+      allowed: ['true', 'false'],
+    });
+    return canonicalTuple([id, label, shape, explicit]);
+  });
+  const edgeTags = tags.filter((tag) =>
+    ['data-from', 'data-to', 'data-edge-kind', 'data-edge-label'].some((name) =>
+      tag.includes(name),
+    ),
+  );
+  const observedEdges = edgeTags.map((tag) => {
+    const from = canonicalAttribute(tag, 'data-from', {
+      pattern: new RegExp(`^${ID_PATTERN}$`),
+    });
+    const to = canonicalAttribute(tag, 'data-to', {
+      pattern: new RegExp(`^${ID_PATTERN}$`),
+    });
+    const kind = canonicalAttribute(tag, 'data-edge-kind', {
+      allowed: ['arrow', 'line'],
+    });
+    const label = canonicalAttribute(tag, 'data-edge-label');
+    return canonicalTuple([from, to, kind, label]);
+  });
+
+  const expectedNodes = planned.nodes.map(({ id, label, shape, explicit }) =>
+    canonicalTuple([id, escapeAttribute(label), shape, String(explicit)]),
+  );
+  const expectedEdges = planned.edges.map(({ from, to, kind, label }) =>
+    canonicalTuple([from, to, kind, escapeAttribute(label)]),
+  );
+  if (
+    !sameMultiset(observedNodes, expectedNodes) ||
+    !sameMultiset(observedEdges, expectedEdges)
+  ) {
+    throw topologyError(
+      'Authored graph node or edge multiset does not exactly match the planned graph.',
+    );
+  }
+}
+
+function analyzeTopology(nodes, edges) {
+  const nodeIds = nodes.map(({ id }) => id);
+  const incoming = new Map(nodeIds.map((id) => [id, []]));
+  const outgoing = new Map(nodeIds.map((id) => [id, []]));
+  for (const edge of edges) {
+    outgoing.get(edge.from).push(edge.to);
+    incoming.get(edge.to).push(edge.from);
+  }
+
+  const branchNodes = nodeIds.filter((id) => outgoing.get(id).length > 1);
+  const fanInNodes = nodeIds.filter((id) => incoming.get(id).length > 1);
+  const cycle = hasDirectedCycle(nodeIds, outgoing);
+  const connected = isWeaklyConnected(nodeIds, incoming, outgoing);
+  const features = [
+    ...(branchNodes.length > 0 ? ['branch'] : []),
+    ...(fanInNodes.length > 0 ? ['fan-in'] : []),
+    ...(cycle ? ['cycle'] : []),
+    ...(!connected ? ['disconnected'] : []),
+  ];
+  const order =
+    features.length === 0 ? linearOrder(nodeIds, incoming, outgoing) : [];
+  if (features.length === 0 && order.length !== nodeIds.length) {
+    features.push('non-linear');
+  }
+
+  return {
+    kind: features.length === 0 ? 'linear' : 'non-linear',
+    features,
+    branchNodes,
+    fanInNodes,
+    cycle,
+    order: features.length === 0 ? order : [],
+  };
+}
+
+function hasDirectedCycle(nodeIds, outgoing) {
+  const visiting = new Set();
+  const visited = new Set();
+  const visit = (id) => {
+    if (visiting.has(id)) return true;
+    if (visited.has(id)) return false;
+    visiting.add(id);
+    for (const next of outgoing.get(id)) {
+      if (visit(next)) return true;
+    }
+    visiting.delete(id);
+    visited.add(id);
+    return false;
+  };
+  return nodeIds.some((id) => visit(id));
+}
+
+function isWeaklyConnected(nodeIds, incoming, outgoing) {
+  if (nodeIds.length <= 1) return true;
+  const seen = new Set();
+  const pending = [nodeIds[0]];
+  while (pending.length > 0) {
+    const id = pending.pop();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    pending.push(...incoming.get(id), ...outgoing.get(id));
+  }
+  return seen.size === nodeIds.length;
+}
+
+function linearOrder(nodeIds, incoming, outgoing) {
+  if (nodeIds.length === 1 && incoming.get(nodeIds[0]).length === 0) {
+    return [...nodeIds];
+  }
+  const starts = nodeIds.filter(
+    (id) => incoming.get(id).length === 0 && outgoing.get(id).length === 1,
+  );
+  const ends = nodeIds.filter(
+    (id) => incoming.get(id).length === 1 && outgoing.get(id).length === 0,
+  );
+  const middleIsLinear = nodeIds
+    .filter((id) => !starts.includes(id) && !ends.includes(id))
+    .every(
+      (id) => incoming.get(id).length === 1 && outgoing.get(id).length === 1,
+    );
+  if (
+    starts.length !== 1 ||
+    ends.length !== 1 ||
+    !middleIsLinear ||
+    edgesFor(outgoing) !== nodeIds.length - 1
+  ) {
+    return [];
+  }
+  const order = [];
+  let current = starts[0];
+  while (current !== undefined && !order.includes(current)) {
+    order.push(current);
+    current = outgoing.get(current)[0];
+  }
+  return order;
+}
+
+function edgesFor(outgoing) {
+  return [...outgoing.values()].reduce(
+    (total, targets) => total + targets.length,
+    0,
+  );
 }
 
 function parseNode(value) {
@@ -176,7 +404,7 @@ function renderNode(node, position, { nodeWidth, nodeHeight }) {
   } else {
     shape = `<rect class="diagram-node-shape" x="${position.x}" y="${position.y}" width="${nodeWidth}" height="${nodeHeight}"${node.shape === 'rounded' ? ' rx="24"' : ''}></rect>`;
   }
-  return `<g class="diagram-node" data-node="${escapeAttribute(node.id)}">${shape}<text class="diagram-node-label" x="${centerX}" y="${centerY}">${escapeHtml(node.label)}</text></g>`;
+  return `<g class="diagram-node" data-node="${escapeAttribute(node.id)}" data-node-label="${escapeAttribute(node.label)}" data-node-shape="${node.shape}" data-node-explicit="${String(node.explicit)}">${shape}<text class="diagram-node-label" x="${centerX}" y="${centerY}">${escapeHtml(node.label)}</text></g>`;
 }
 
 function renderEdge(
@@ -195,7 +423,7 @@ function renderEdge(
   const label = edge.label
     ? `<text class="diagram-edge-label" x="${(start.x + end.x) / 2}" y="${(start.y + end.y) / 2 - 8}">${escapeHtml(edge.label)}</text>`
     : '';
-  return `<g class="diagram-connection" data-from="${escapeAttribute(edge.from)}" data-to="${escapeAttribute(edge.to)}"><path class="diagram-edge" d="M ${start.x} ${start.y} L ${end.x} ${end.y}"${edge.kind === 'arrow' ? ` marker-end="url(#${markerId})"` : ''}></path>${label}</g>`;
+  return `<g class="diagram-connection" data-from="${escapeAttribute(edge.from)}" data-to="${escapeAttribute(edge.to)}" data-edge-kind="${edge.kind}" data-edge-label="${escapeAttribute(edge.label)}"><path class="diagram-edge" d="M ${start.x} ${start.y} L ${end.x} ${end.y}"${edge.kind === 'arrow' ? ` marker-end="url(#${markerId})"` : ''}></path>${label}</g>`;
 }
 
 function degraded(message) {
@@ -221,6 +449,55 @@ function stableHash(value) {
     hash = Math.imul(hash, 16777619);
   }
   return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+function attributeValues(tag, name) {
+  return [
+    ...tag.matchAll(
+      new RegExp(`(?:^|\\s)${name}\\s*=\\s*(["'])([^"'<>]*)\\1`, 'g'),
+    ),
+  ].map((match) => match[2]);
+}
+
+function canonicalAttribute(tag, name, { pattern, allowed } = {}) {
+  const values = attributeValues(tag, name);
+  if (
+    values.length !== 1 ||
+    (pattern && !pattern.test(values[0])) ||
+    (allowed && !allowed.includes(values[0]))
+  ) {
+    throw topologyError(
+      `Authored graph contains a malformed or ambiguous ${name} observation.`,
+    );
+  }
+  return values[0];
+}
+
+function canonicalTuple(values) {
+  return JSON.stringify(values);
+}
+
+function sameMultiset(actual, expected) {
+  return (
+    actual.length === expected.length &&
+    [...actual]
+      .sort()
+      .every((value, index) => value === [...expected].sort()[index])
+  );
+}
+
+function topologyError(message) {
+  const error = new Error(message);
+  error.code = 'E_DIAGRAM_TOPOLOGY';
+  return error;
+}
+
+function deepFreeze(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const child of Object.values(value)) deepFreeze(child);
+  }
+  return value;
 }
 
 function escapeHtml(value) {

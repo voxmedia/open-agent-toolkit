@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "explainer-kit.golden-fixture/v2",
+  "id": "simple",
+  "title": "Simple incremental-indexing project",
+  "inputPath": "source-input.json",
+  "sharedRubricPath": "rubric.json",
+  "sharedRubricSha256": "sha256:7c15893cea765d474446dfeca25761751a57f8e0081595b1b9698e5559dd89dd",
+  "purpose": "Baseline viewport-sized lead evidence, cohesive set planning, source coverage, and bounded review.",
+  "sourceIds": ["project-record"],
+  "retainedFiles": [
+    {
+      "path": "source-input.json",
+      "sha256": "sha256:3f1e94512f66626674b84262d9f216328b0e7531593e1bb0818e73e95a532f2b",
+      "role": "golden-input",
+      "mediaType": "application/json",
+      "sourceIds": ["project-record"]
+    },
+    {
+      "path": "evidence/source-record.json",
+      "sha256": "sha256:2b973e08276605f79ce3f978359dd15543ca44571762f7d798422ecae03f5811",
+      "role": "source-evidence",
+      "mediaType": "application/json",
+      "sourceIds": ["project-record"]
+    }
+  ]
+}

@@ -144,7 +144,7 @@ test('uploads additively with MIME/cache metadata and skips matching declared ob
   const fixture = await createFixture();
   const harness = fakeDestination({
     existingHashes: new Map([
-      ['published/initiatives/demo/catalog.json', fixture.hashes.catalog],
+      ['published/initiatives/demo/index.html', fixture.hashes.html],
     ]),
   });
 
@@ -164,12 +164,9 @@ test('uploads additively with MIME/cache metadata and skips matching declared ob
   assert.equal(artifactPuts.length, 1);
   assert.equal(
     argument(artifactPuts[0], '--key'),
-    'published/initiatives/demo/index.html',
+    'published/initiatives/demo/catalog.json',
   );
-  assert.equal(
-    argument(artifactPuts[0], '--content-type'),
-    'text/html; charset=utf-8',
-  );
+  assert.equal(argument(artifactPuts[0], '--content-type'), 'application/json');
   assert.equal(
     argument(artifactPuts[0], '--cache-control'),
     'public, max-age=300',
@@ -246,14 +243,43 @@ test('uses explicit index URLs, writes receipt hashes, and records sentinel clea
       },
       {
         relativePath: 'site/initiatives/demo/catalog.json',
-        hash: fixture.hashes.catalog,
+        hash: receipt.artifacts[1].hash,
       },
     ],
+  );
+  const catalog = JSON.parse(
+    harness.objects.get('published/initiatives/demo/catalog.json').Body,
+  );
+  assert.deepEqual(
+    catalog.artifacts.map(({ id, hash, url }) => ({ id, hash, url })),
+    [
+      {
+        id: 'hub',
+        hash: fixture.hashes.html,
+        url: 'https://cdn.example.com/published/initiatives/demo/index.html',
+      },
+    ],
+  );
+  assert.deepEqual(catalog.sourceBacklinks, fixture.manifest.source.backlinks);
+  assert.equal(
+    receipt.artifacts[1].hash,
+    hashBytes(
+      harness.objects.get('published/initiatives/demo/catalog.json').Body,
+    ),
   );
   assert.deepEqual(
     JSON.parse(await readFile(fixture.receiptPath, 'utf8')),
     receipt,
   );
+  const publishedKeys = harness.calls
+    .filter(
+      (call) =>
+        call[1] === 's3api' &&
+        call[2] === 'put-object' &&
+        !argument(call, '--key').includes('sentinel'),
+    )
+    .map((call) => argument(call, '--key'));
+  assert.equal(publishedKeys.at(-1), 'published/initiatives/demo/catalog.json');
 });
 
 test('rejects a successful public response whose bytes do not match the manifest', async () => {
@@ -272,6 +298,24 @@ test('rejects a successful public response whose bytes do not match the manifest
       approved: true,
       ...harness.dependencies,
       httpGet,
+    }),
+    (error) => error.code === 'E_PUBLISH_VERIFY',
+  );
+  await assert.rejects(readFile(fixture.receiptPath), { code: 'ENOENT' });
+});
+
+test('emits no successful receipt when the generated catalog is missing', async () => {
+  const fixture = await createFixture();
+  const harness = fakeDestination();
+
+  await assert.rejects(
+    publishS3Static(fixture.request, {
+      approved: true,
+      ...harness.dependencies,
+      httpGet: async (url) =>
+        url.endsWith('/catalog.json')
+          ? { status: 404, headers: {}, body: Buffer.from('missing') }
+          : harness.dependencies.httpGet(url),
     }),
     (error) => error.code === 'E_PUBLISH_VERIFY',
   );
@@ -308,10 +352,6 @@ test('hash-verifies binary public payloads without text coercion', async () => {
       'https://cdn.example.com/published/initiatives/demo/index.html',
       await readFile(join(fixture.siteRoot, 'initiatives/demo/index.html')),
     ],
-    [
-      'https://cdn.example.com/published/initiatives/demo/catalog.json',
-      await readFile(join(fixture.siteRoot, 'initiatives/demo/catalog.json')),
-    ],
     ['https://cdn.example.com/published/initiatives/demo/pixel.png', binary],
   ]);
 
@@ -330,7 +370,10 @@ test('hash-verifies binary public payloads without text coercion', async () => {
                   ? 'application/json'
                   : 'text/html; charset=utf-8',
             },
-            body: bodies.get(url),
+            body:
+              bodies.get(url) ??
+              harness.objects.get('published/initiatives/demo/catalog.json')
+                ?.Body,
           },
   });
 
@@ -429,12 +472,9 @@ async function createFixture() {
   const siteRoot = join(runRoot, 'site');
   await mkdir(join(siteRoot, 'initiatives/demo'), { recursive: true });
   const htmlPath = join(siteRoot, 'initiatives/demo/index.html');
-  const catalogPath = join(siteRoot, 'initiatives/demo/catalog.json');
   await writeFile(htmlPath, '<!doctype html><title>Demo</title>\n');
-  await writeFile(catalogPath, '{"title":"Demo"}\n');
   const hashes = {
     html: await fileHash(htmlPath),
-    catalog: await fileHash(catalogPath),
   };
   const manifest = {
     schemaVersion: 'explainer-kit.manifest/v1',
@@ -446,6 +486,12 @@ async function createFixture() {
       factBasePath: 'source/fact-base.json',
       factBaseHash: `sha256:${'a'.repeat(64)}`,
       inputHashes: {},
+      backlinks: [
+        {
+          sourceId: 'implementation',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/implementation.md#L4-L9`,
+        },
+      ],
     },
     theme: {
       path: 'theme.resolved.json',
@@ -463,16 +509,6 @@ async function createFixture() {
         hash: hashes.html,
         rebuildable: false,
       },
-      {
-        id: 'catalog',
-        type: 'catalog',
-        contentPath: 'source/content/catalog.md',
-        status: 'built',
-        renderedPath: 'site/initiatives/demo/catalog.json',
-        mediaType: 'application/json',
-        hash: hashes.catalog,
-        rebuildable: false,
-      },
     ],
     immutableHashes: {
       'run-request.json': `sha256:${'a'.repeat(64)}`,
@@ -480,10 +516,8 @@ async function createFixture() {
       'source/fact-base.json': `sha256:${'a'.repeat(64)}`,
       'source/fact-base.md': `sha256:${'a'.repeat(64)}`,
       'source/content/hub.md': `sha256:${'c'.repeat(64)}`,
-      'source/content/catalog.md': `sha256:${'d'.repeat(64)}`,
       'theme.resolved.json': `sha256:${'b'.repeat(64)}`,
       'site/initiatives/demo/index.html': hashes.html,
-      'site/initiatives/demo/catalog.json': hashes.catalog,
     },
     outcome: 'built-not-durable',
     buildRecord: {
@@ -533,6 +567,9 @@ function fakeDestination({
           : 'text/html; charset=utf-8',
         CacheControl: 'public, max-age=300',
         Metadata: { 'explainer-sha256': hash.slice('sha256:'.length) },
+        Body: key.endsWith('.json')
+          ? Buffer.from('{}\n')
+          : Buffer.from('<!doctype html><title>Demo</title>\n'),
       },
     ]),
   );
@@ -559,6 +596,7 @@ function fakeDestination({
         Metadata: {
           'explainer-sha256': argument(call, '--metadata').split('=')[1],
         },
+        Body: await readFile(argument(call, '--body')),
       });
     }
     return { stdout: '{}', stderr: '' };
@@ -566,6 +604,10 @@ function fakeDestination({
   const httpGet = async (url) => {
     urls.push(url);
     const sentinel = url.includes('sentinel');
+    const key = `published/${new URL(url).pathname
+      .split('/published/')[1]
+      ?.replace(/^\/+/, '')}`;
+    const object = objects.get(key);
     return {
       status: sentinel ? publicSentinelStatus : 200,
       headers: {
@@ -577,12 +619,13 @@ function fakeDestination({
       },
       body: sentinel
         ? Buffer.from('explainer-kit sentinel\n')
-        : url.endsWith('.json')
-          ? Buffer.from('{"title":"Demo"}\n')
-          : Buffer.from('<!doctype html><title>Demo</title>\n'),
+        : (object?.Body ??
+          (url.endsWith('.json')
+            ? Buffer.from('{}\n')
+            : Buffer.from('<!doctype html><title>Demo</title>\n'))),
     };
   };
-  return { calls, urls, dependencies: { command, httpGet } };
+  return { calls, urls, objects, dependencies: { command, httpGet } };
 }
 
 function argument(call, flag) {
@@ -591,9 +634,11 @@ function argument(call, flag) {
 }
 
 async function fileHash(path) {
-  return `sha256:${createHash('sha256')
-    .update(await readFile(path))
-    .digest('hex')}`;
+  return hashBytes(await readFile(path));
+}
+
+function hashBytes(bytes) {
+  return `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 }
 
 async function unexpectedCommand() {

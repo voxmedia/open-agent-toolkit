@@ -12,7 +12,7 @@ import {
 } from './resolve-config.mjs';
 import { resolveExplainerOutputRoot } from './resolve-paths.mjs';
 
-const MINIMUM_CORE_VERSION = '2.0.0';
+export const MINIMUM_CORE_VERSION = '2.0.3';
 const ADAPTER_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export async function runOatExplainer({
@@ -32,10 +32,18 @@ export async function runOatExplainer({
   defaultMode,
   renderStrategy,
   retainRawArtDirection = false,
+  planSet,
+  planSetModulePath,
   author,
   authorModulePath,
   critic,
   criticModulePath,
+  browserSession,
+  browserSessionModulePath,
+  browserProbe,
+  browserProbeModulePath,
+  visualCritic,
+  visualCriticModulePath,
   coreOptions = {},
 }) {
   const compatibility = await checkCoreCompatibility({
@@ -51,6 +59,14 @@ export async function runOatExplainer({
       compatibility.code === 'missing'
         ? 'E_CORE_MISSING'
         : 'E_CORE_INCOMPATIBLE';
+    error.compatibility = compatibility;
+    throw error;
+  }
+  if (!supportsAdaptiveSetPlanning(compatibility.installedVersion)) {
+    const error = new Error(
+      `Installed explainer-kit ${compatibility.installedVersion} does not provide adaptive set planning. Run \`oat tools update --pack utility --scope user\`.`,
+    );
+    error.code = 'E_CORE_INCOMPATIBLE';
     error.compatibility = compatibility;
     throw error;
   }
@@ -73,6 +89,7 @@ export async function runOatExplainer({
   const projectRoot = resolve(repoRoot, activeProject);
   const bound = await bindProjectSources({
     projectRoot,
+    repoRoot,
     recipe,
     suppliedFactBasePath,
   });
@@ -115,16 +132,53 @@ export async function runOatExplainer({
     authorModulePath,
     coreOptions,
   });
+  const lifecycleSetPlanner = await resolveLifecycleSetPlanner({
+    planSet,
+    planSetModulePath,
+    coreOptions,
+    required: recipe === 'project-recap' && mode === 'unattended',
+  });
   const lifecycleCritic = await resolveLifecycleCritic({
     critic,
     criticModulePath,
     coreOptions,
   });
+  const reviewProvidersRequired =
+    recipe === 'project-recap' && mode === 'unattended';
+  const lifecycleBrowserSession = await resolveLifecycleBrowserSession({
+    core,
+    browserSession,
+    browserSessionModulePath,
+    browserProbe,
+    browserProbeModulePath,
+    coreOptions,
+    required: reviewProvidersRequired,
+  });
+  const lifecycleVisualCritic = await resolveLifecycleVisualCritic({
+    visualCritic,
+    visualCriticModulePath,
+    coreOptions,
+    required: reviewProvidersRequired,
+  });
+  assertDistinctProviderRoles({
+    author: lifecycleAuthor,
+    factCritic: lifecycleCritic,
+    browserProbe: lifecycleBrowserSession?.probe,
+    visualCritic: lifecycleVisualCritic,
+  });
   const result = await core.runExplainer(request, {
     ...coreOptions,
+    ...(lifecycleSetPlanner && { planSet: lifecycleSetPlanner }),
     ...(lifecycleAuthor && { author: lifecycleAuthor }),
     ...(lifecycleCritic && { critic: lifecycleCritic }),
+    ...(lifecycleBrowserSession && {
+      browserSession: lifecycleBrowserSession,
+    }),
+    ...(lifecycleVisualCritic && { visualCritic: lifecycleVisualCritic }),
     ...(bound.sourceLoader && { sourceLoader: bound.sourceLoader }),
+    ...(bound.sourceProvenance && {
+      sourceProvenance: bound.sourceProvenance,
+    }),
     reviewedSource: bound.reviewedSource,
   });
   const criticContractError = result?.errors?.find(
@@ -143,6 +197,74 @@ export async function runOatExplainer({
     marking: result.marking ?? null,
     outputRoot,
   };
+}
+
+export function supportsAdaptiveSetPlanning(version) {
+  if (typeof version !== 'string') return false;
+  const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-|$)/);
+  if (!match) return false;
+  const [major, minor, patch] = match.slice(1).map(Number);
+  return (
+    major === 2 &&
+    (minor > 0 ||
+      (minor === 0 && patch >= Number(MINIMUM_CORE_VERSION.split('.')[2])))
+  );
+}
+
+async function resolveLifecycleSetPlanner({
+  planSet,
+  planSetModulePath,
+  coreOptions,
+  required,
+}) {
+  if (coreOptions?.planSet !== undefined) {
+    throw new TypeError(
+      'coreOptions.planSet is not supported at the OAT adapter boundary; supply planSet directly.',
+    );
+  }
+  if (planSet !== undefined && typeof planSet !== 'function') {
+    throw new TypeError('planSet must be a function when supplied.');
+  }
+  if (planSet !== undefined && planSetModulePath !== undefined) {
+    throw new Error(
+      'Supply only one provider-neutral set planner callback or set planner module entry point.',
+    );
+  }
+  if (planSet === undefined && planSetModulePath === undefined) {
+    if (!required) return null;
+    const error = new Error(
+      'Unattended OAT project recaps require exactly one provider-neutral set planner callback or set planner module entry point.',
+    );
+    error.code = 'E_SET_PLANNER_REQUIRED';
+    throw error;
+  }
+  if (planSetModulePath === undefined) {
+    return planSet;
+  }
+  if (
+    typeof planSetModulePath !== 'string' ||
+    planSetModulePath.trim().length === 0
+  ) {
+    throw new TypeError('planSetModulePath must be a non-empty path.');
+  }
+
+  let plannerModule;
+  try {
+    plannerModule = await import(
+      pathToFileURL(resolve(planSetModulePath.trim())).href
+    );
+  } catch (cause) {
+    throw new Error(
+      `Unable to load provider-neutral set planner module at ${planSetModulePath}.`,
+      { cause },
+    );
+  }
+  if (typeof plannerModule.planSet !== 'function') {
+    throw new TypeError(
+      'Provider-neutral set planner module must export a planSet function.',
+    );
+  }
+  return plannerModule.planSet;
 }
 
 async function resolveLifecycleAuthor({
@@ -255,7 +377,7 @@ async function resolveLifecycleCritic({
   if (!callback) {
     return null;
   }
-  return async (request) => {
+  const wrapped = async (request) => {
     const result = await callback(request);
     if (
       !result ||
@@ -273,6 +395,206 @@ async function resolveLifecycleCritic({
     }
     return result;
   };
+  return markProviderIdentity(wrapped, callback);
+}
+
+async function resolveLifecycleBrowserSession({
+  core,
+  browserSession,
+  browserSessionModulePath,
+  browserProbe,
+  browserProbeModulePath,
+  coreOptions,
+  required,
+}) {
+  if (coreOptions?.browserProbe !== undefined) {
+    throw new TypeError(
+      'coreOptions.browserProbe is not supported at the OAT adapter boundary; supply browserSession directly.',
+    );
+  }
+  if (browserProbe !== undefined || browserProbeModulePath !== undefined) {
+    throw new TypeError(
+      'Bare browserProbe callbacks are not supported at the OAT adapter boundary; supply a branded browserSession created by createBrowserProbeSession().',
+    );
+  }
+  if (coreOptions?.browserSession !== undefined) {
+    throw new TypeError(
+      'coreOptions.browserSession is not supported at the OAT adapter boundary; supply browserSession directly.',
+    );
+  }
+  if (browserSession !== undefined && browserSessionModulePath !== undefined) {
+    throw new Error(
+      'Supply only one browser session descriptor or browser session module entry point.',
+    );
+  }
+  let resolvedSession = browserSession;
+  if (browserSessionModulePath !== undefined) {
+    if (
+      typeof browserSessionModulePath !== 'string' ||
+      browserSessionModulePath.trim().length === 0
+    ) {
+      throw new TypeError('browserSessionModulePath must be a non-empty path.');
+    }
+    let sessionModule;
+    try {
+      sessionModule = await import(
+        pathToFileURL(resolve(browserSessionModulePath.trim())).href
+      );
+    } catch (cause) {
+      throw new Error(
+        `Unable to load browser session module at ${browserSessionModulePath}.`,
+        { cause },
+      );
+    }
+    resolvedSession = sessionModule.browserSession;
+  }
+  if (!resolvedSession) {
+    if (!required) return null;
+    const error = new Error(
+      'Unattended OAT project recaps require exactly one branded launched-Chromium browser session descriptor or browser session module entry point.',
+    );
+    error.code = 'E_BROWSER_PROBE_REQUIRED';
+    throw error;
+  }
+  if (typeof core.assertBrowserProbeSession !== 'function') {
+    const error = new Error(
+      'Compatible explainer-kit does not export browser session validation.',
+    );
+    error.code = 'E_CORE_INCOMPATIBLE';
+    throw error;
+  }
+  try {
+    return core.assertBrowserProbeSession(resolvedSession, {
+      allowFixture: !required,
+    });
+  } catch (cause) {
+    const error = new Error(
+      `Browser session validation failed: ${cause?.message ?? String(cause)}`,
+      { cause },
+    );
+    error.code = 'E_BROWSER_PROBE_REQUIRED';
+    throw error;
+  }
+}
+
+async function resolveLifecycleVisualCritic({
+  visualCritic,
+  visualCriticModulePath,
+  coreOptions,
+  required,
+}) {
+  if (coreOptions?.visualCritic !== undefined) {
+    throw new TypeError(
+      'coreOptions.visualCritic is not supported at the OAT adapter boundary; supply visualCritic directly.',
+    );
+  }
+  const callback = await resolveProviderCallback({
+    callback: visualCritic,
+    modulePath: visualCriticModulePath,
+    exportName: 'visualCritic',
+    label: 'visual critic',
+  });
+  if (!callback) {
+    if (!required) return null;
+    const error = new Error(
+      'Unattended OAT project recaps require exactly one provider-neutral visual critic callback or visual critic module entry point.',
+    );
+    error.code = 'E_VISUAL_CRITIC_REQUIRED';
+    throw error;
+  }
+  const wrapped = async (request, evidenceInput) => {
+    const result = await callback(request, evidenceInput);
+    if (
+      !result ||
+      typeof result !== 'object' ||
+      result.schemaVersion !== 'explainer-kit.visual-review-result/v1' ||
+      typeof result.reviewId !== 'string' ||
+      !/^[a-z0-9][a-z0-9._-]*$/.test(result.reviewId) ||
+      result.requestId !== request?.requestId ||
+      result.requestHash !== request?.requestHash ||
+      typeof result.reviewedAt !== 'string' ||
+      Number.isNaN(Date.parse(result.reviewedAt)) ||
+      !['pass', 'correct', 'fail'].includes(result.disposition) ||
+      !Array.isArray(result.artifactIds) ||
+      result.artifactIds.length !== request?.renderedArtifacts?.length ||
+      result.artifactIds.some(
+        (artifactId, index) =>
+          artifactId !== request.renderedArtifacts[index]?.artifactId,
+      ) ||
+      !Array.isArray(result.findings) ||
+      result.findings.some((finding) => !finding || typeof finding !== 'object')
+    ) {
+      throw new Error(
+        'Provider-neutral visual critic result does not match the visual review result contract.',
+      );
+    }
+    return result;
+  };
+  return markProviderIdentity(wrapped, callback);
+}
+
+async function resolveProviderCallback({
+  callback,
+  modulePath,
+  exportName,
+  label,
+}) {
+  if (callback !== undefined && typeof callback !== 'function') {
+    throw new TypeError(`${exportName} must be a function when supplied.`);
+  }
+  if (callback !== undefined && modulePath !== undefined) {
+    throw new Error(
+      `Supply only one provider-neutral ${label} callback or ${label} module entry point.`,
+    );
+  }
+  if (modulePath === undefined) return callback ?? null;
+  if (typeof modulePath !== 'string' || modulePath.trim().length === 0) {
+    throw new TypeError(`${exportName}ModulePath must be a non-empty path.`);
+  }
+  let providerModule;
+  try {
+    providerModule = await import(
+      pathToFileURL(resolve(modulePath.trim())).href
+    );
+  } catch (cause) {
+    throw new Error(
+      `Unable to load provider-neutral ${label} module at ${modulePath}.`,
+      { cause },
+    );
+  }
+  if (typeof providerModule[exportName] !== 'function') {
+    throw new TypeError(
+      `Provider-neutral ${label} module must export a ${exportName} function.`,
+    );
+  }
+  return providerModule[exportName];
+}
+
+const PROVIDER_IDENTITY = Symbol('oat-explainer-provider-identity');
+
+function markProviderIdentity(wrapper, callback) {
+  Object.defineProperty(wrapper, PROVIDER_IDENTITY, { value: callback });
+  return wrapper;
+}
+
+function providerIdentity(callback) {
+  return callback?.[PROVIDER_IDENTITY] ?? callback;
+}
+
+function assertDistinctProviderRoles(callbacks) {
+  const entries = Object.entries(callbacks).filter(([, callback]) => callback);
+  for (let left = 0; left < entries.length; left += 1) {
+    for (let right = left + 1; right < entries.length; right += 1) {
+      if (
+        providerIdentity(entries[left][1]) ===
+        providerIdentity(entries[right][1])
+      ) {
+        throw new Error(
+          `Provider roles ${entries[left][0]} and ${entries[right][0]} must use distinct callback identities.`,
+        );
+      }
+    }
+  }
 }
 
 async function readManifest(result, request) {

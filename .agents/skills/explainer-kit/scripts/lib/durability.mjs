@@ -27,6 +27,11 @@ export async function recordDurability(request, options = {}) {
   const buildRecord = await readJson(buildRecordPath);
   assertValid('build-record', buildRecord);
   assertValid('manifest', manifest, { buildRecord });
+  if (manifest.outcome === 'built-needs-review') {
+    throw new Error(
+      'built-needs-review requires a passing visual review before durability attestation.',
+    );
+  }
   if (
     manifest.outcome !== 'built-not-durable' &&
     manifest.outcome !== 'built-durable'
@@ -175,6 +180,13 @@ export async function verifyRebuildability(artifact, runRoot) {
 }
 
 async function verifyEvidence(evidence, context) {
+  const immutableErrors = await verifyImmutablePackage(
+    context.runRoot,
+    context.manifest,
+  );
+  if (immutableErrors.length > 0) {
+    return { verified: false, errors: immutableErrors };
+  }
   const replayErrors = [];
   for (const artifact of context.manifest.artifacts) {
     if (artifact.status === 'built' && artifact.rebuildable === true) {
@@ -191,6 +203,29 @@ async function verifyEvidence(evidence, context) {
   return evidence.kind === 'commit'
     ? verifyCommitEvidence(evidence, context)
     : verifyPublishEvidence(evidence, context);
+}
+
+async function verifyImmutablePackage(runRoot, manifest) {
+  const errors = [];
+  for (const [path, expectedHash] of Object.entries(manifest.immutableHashes)) {
+    try {
+      const bytes = await readFile(joinWithin(runRoot, path));
+      const actualHash = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+      if (actualHash !== expectedHash) {
+        errors.push(
+          error('hash-mismatch', `Immutable package hash changed for ${path}.`),
+        );
+      }
+    } catch (caught) {
+      errors.push(
+        error(
+          'missing-path',
+          `Immutable package evidence ${path} is unavailable: ${errorMessage(caught)}`,
+        ),
+      );
+    }
+  }
+  return errors;
 }
 
 async function verifyCommitEvidence(evidence, { runRoot, manifest }) {

@@ -3,9 +3,14 @@ import { mock, test } from 'node:test';
 
 import { validateContract } from '../scripts/lib/contracts.mjs';
 import { processFactBase } from '../scripts/lib/fact-base.mjs';
+import {
+  canonicalGithubBlobBacklink,
+  parseCanonicalGithubBlobUrl,
+} from '../scripts/lib/source-backlinks.mjs';
 
 const HASH_A = `sha256:${'a'.repeat(64)}`;
 const HASH_B = `sha256:${'b'.repeat(64)}`;
+const COMMIT_SHA = '0123456789abcdef0123456789abcdef01234567';
 const NOW = '2026-07-17T20:00:00Z';
 
 function source(id, overrides = {}) {
@@ -69,6 +74,30 @@ test('supplied mode performs only consistency and freshness checks', async () =>
   assert.equal(validateContract('fact-base', result.factBase).valid, true);
 });
 
+test('preserves a git source revision without treating it as a GitHub backlink', async () => {
+  const factBase = suppliedFactBase({
+    sources: [
+      source('plan', {
+        kind: 'git',
+        revision: COMMIT_SHA,
+      }),
+    ],
+  });
+
+  const result = await processFactBase(
+    {
+      mode: 'supplied',
+      freshnessPolicy: 'live-wins',
+      factBase,
+    },
+    { now: NOW },
+  );
+
+  assert.equal(result.factBase.sources[0].revision, COMMIT_SHA);
+  assert.equal(result.factBase.sources[0].url, undefined);
+  assert.equal(validateContract('fact-base', result.factBase).valid, true);
+});
+
 test('supplied mode reports staleness and rejects inconsistent citations', async () => {
   const stale = suppliedFactBase({
     sources: [
@@ -99,6 +128,176 @@ test('supplied mode reports staleness and rejects inconsistent citations', async
     }),
     /unknown source/i,
   );
+});
+
+test('derives encoded immutable GitHub backlinks from reviewed source provenance', async () => {
+  const result = await processFactBase(
+    {
+      mode: 'federated',
+      freshnessPolicy: 'live-wins',
+      sourceDocuments: [
+        {
+          source: source('plan', {
+            repository: 'acme/project-recaps',
+            revision: COMMIT_SHA,
+            path: 'docs/Project plans/phase #4.md',
+            lineRange: { start: 10, end: 24 },
+          }),
+          claims: [
+            {
+              id: 'status',
+              text: 'Phase four is complete.',
+              lineRange: { start: 17, end: 19 },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      now: NOW,
+      critic: async () => ({
+        criticId: 'contract-critic',
+        executedAt: NOW,
+        findings: [],
+      }),
+    },
+  );
+  const expectedUrl =
+    'https://github.com/acme/project-recaps/blob/0123456789abcdef0123456789abcdef01234567/docs/Project%20plans/phase%20%234.md#L17-L19';
+
+  assert.deepEqual(
+    {
+      repository: result.factBase.sources[0].repository,
+      revision: result.factBase.sources[0].revision,
+      path: result.factBase.sources[0].path,
+      lineRange: result.factBase.sources[0].lineRange,
+      url: result.factBase.sources[0].url,
+      locator: result.factBase.sources[0].locator,
+    },
+    {
+      repository: 'acme/project-recaps',
+      revision: COMMIT_SHA,
+      path: 'docs/Project plans/phase #4.md',
+      lineRange: { start: 10, end: 24 },
+      url: 'https://github.com/acme/project-recaps/blob/0123456789abcdef0123456789abcdef01234567/docs/Project%20plans/phase%20%234.md#L10-L24',
+      locator:
+        'https://github.com/acme/project-recaps/blob/0123456789abcdef0123456789abcdef01234567/docs/Project%20plans/phase%20%234.md#L10-L24',
+    },
+  );
+  assert.deepEqual(result.factBase.claims[0].citations, [
+    {
+      sourceId: 'plan',
+      locator: expectedUrl,
+      repository: 'acme/project-recaps',
+      revision: COMMIT_SHA,
+      path: 'docs/Project plans/phase #4.md',
+      lineRange: { start: 17, end: 19 },
+      url: expectedUrl,
+    },
+  ]);
+  assert.equal(validateContract('fact-base', result.factBase).valid, true);
+});
+
+test('rejects moving revisions and local-path backlink provenance', async () => {
+  for (const provenance of [
+    {
+      repository: 'acme/project-recaps',
+      revision: 'main',
+      path: 'docs/plan.md',
+      lineRange: { start: 1, end: 2 },
+    },
+    {
+      repository: 'acme/project-recaps',
+      revision: COMMIT_SHA,
+      path: '/Users/example/project/plan.md',
+      lineRange: { start: 1, end: 2 },
+    },
+    {
+      repository: 'acme/project-recaps',
+      revision: COMMIT_SHA,
+      path: 'docs/plan.md',
+      lineRange: { start: 5, end: 4 },
+    },
+  ]) {
+    await assert.rejects(
+      processFactBase(
+        {
+          mode: 'federated',
+          freshnessPolicy: 'live-wins',
+          sourceDocuments: [
+            {
+              source: source('plan', provenance),
+              claims: [{ id: 'status', text: 'Ready.' }],
+            },
+          ],
+        },
+        {
+          now: NOW,
+          critic: async () => ({
+            criticId: 'contract-critic',
+            executedAt: NOW,
+            findings: [],
+          }),
+        },
+      ),
+      /repository|commit|relative|line range|provenance/i,
+    );
+  }
+});
+
+test('rejects noncanonical backlink paths, partial tuples, and tuple URL drift', async () => {
+  const canonical = {
+    repository: 'acme/project-recaps',
+    revision: COMMIT_SHA,
+    path: 'docs/phase 4/plan.md',
+    lineRange: { start: 12, end: 19 },
+  };
+  const url = canonicalGithubBlobBacklink(canonical);
+  assert.deepEqual(parseCanonicalGithubBlobUrl(url), {
+    ...canonical,
+    url,
+  });
+
+  for (const mutatedUrl of [
+    `https://github.com/acme/project-recaps/blob/${COMMIT_SHA}/../main/plan.md#L1`,
+    `https://github.com/acme/project-recaps/blob/${COMMIT_SHA}/%2e%2e/main/plan.md#L1`,
+    `https://github.com/acme/project-recaps/blob/${COMMIT_SHA}/docs//plan.md#L1`,
+    `https://github.com/acme/project-recaps/blob/${COMMIT_SHA}/docs/%2Fplan.md#L1`,
+    `https://github.com/acme/project-recaps/blob/${COMMIT_SHA}/docs/%70lan.md#L1`,
+    'https://github.com/acme/project-recaps/blob/main/docs/plan.md#L1',
+    `https://github.com/acme/project-recaps/blob/${COMMIT_SHA}/docs/plan.md#L19-L12`,
+  ]) {
+    assert.throws(
+      () => parseCanonicalGithubBlobUrl(mutatedUrl),
+      /canonical|commit|path|line/i,
+      mutatedUrl,
+    );
+  }
+
+  for (const mutate of [
+    (citation) => delete citation.revision,
+    (citation) => {
+      citation.url = citation.url.replace('/plan.md', '/other.md');
+    },
+  ]) {
+    const factBase = suppliedFactBase();
+    factBase.claims[0].citations[0] = {
+      sourceId: 'plan',
+      locator: url,
+      ...canonical,
+      url,
+    };
+    mutate(factBase.claims[0].citations[0]);
+    await assert.rejects(
+      processFactBase({
+        mode: 'supplied',
+        freshnessPolicy: 'live-wins',
+        factBase,
+      }),
+      /backlink|provenance|canonical|tuple/i,
+    );
+    assert.equal(validateContract('fact-base', factBase).valid, false);
+  }
 });
 
 test('federated mode applies authoritative and fresher source precedence with citations', async () => {

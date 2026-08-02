@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { execFile as execFileCallback } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
   mkdir,
   mkdtemp,
@@ -11,12 +13,19 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { afterEach, test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { promisify } from 'node:util';
 
-import { bindProjectSources } from '../scripts/bind-project-sources.mjs';
+import { createBrowserProbeSession } from '../../explainer-kit/scripts/lib/browser-runtime.mjs';
+import { png } from '../../explainer-kit/tests/fixtures/png.mjs';
+import {
+  bindProjectSources,
+  resolveReviewedRepository,
+} from '../scripts/bind-project-sources.mjs';
 import { explainerModeForIntent } from '../scripts/resolve-intent.mjs';
 import { runOatExplainer } from '../scripts/run.mjs';
 
 const tempDirs = [];
+
 const SOURCE_SKILLS_ROOT = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '..',
@@ -24,6 +33,7 @@ const SOURCE_SKILLS_ROOT = resolve(
 );
 const SOURCE_REPO_ROOT = resolve(SOURCE_SKILLS_ROOT, '..', '..');
 const SOURCE_ADAPTER_ROOT = join(SOURCE_SKILLS_ROOT, 'oat-explainer-kit');
+const execFile = promisify(execFileCallback);
 
 afterEach(async () => {
   await Promise.all(
@@ -31,7 +41,7 @@ afterEach(async () => {
   );
 });
 
-async function createFixture({ coreVersion = '2.0.0' } = {}) {
+async function createFixture({ coreVersion = '2.0.3' } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'oat-explainer-run-'));
   tempDirs.push(root);
   const repoRoot = join(root, 'repo');
@@ -65,6 +75,18 @@ async function createFixture({ coreVersion = '2.0.0' } = {}) {
         import { mkdir, writeFile } from 'node:fs/promises';
         import { join } from 'node:path';
 
+        export function assertBrowserProbeSession(session) {
+          if (
+            !session ||
+            typeof session.probe !== 'function' ||
+            session.runtime?.kind !== 'launched' ||
+            session.runtime?.name !== 'chromium'
+          ) {
+            throw new TypeError('Fixture core requires a launched Chromium session.');
+          }
+          return session;
+        }
+
         export async function runExplainer(request, options) {
           await writeFile(${JSON.stringify(coreInvocationMarker)}, 'invoked\\n', {
             flag: 'a',
@@ -75,9 +97,27 @@ async function createFixture({ coreVersion = '2.0.0' } = {}) {
               loaded.push(await options.sourceLoader(source));
             }
           }
+          const setPlan =
+            typeof options.planSet === 'function'
+              ? await options.planSet({
+                  recipe: request.recipe,
+                  factBase: request.factBase,
+                })
+              : null;
+          const plannedArtifacts = setPlan?.portfolio ?? [
+            { artifactId: request.recipe.id },
+          ];
           const authored =
             typeof options.author === 'function'
-              ? await options.author({ artifact: { id: request.recipe.id } })
+              ? await Promise.all(
+                  plannedArtifacts.map((plannedArtifact) =>
+                    options.author({
+                      artifact: { id: plannedArtifact.artifactId },
+                      plannedArtifact,
+                      setContext: setPlan,
+                    }),
+                  ),
+                )
               : null;
           const runRoot = join(request.outputRoot, request.slug);
           const manifestPath = join(runRoot, 'manifest.json');
@@ -114,12 +154,45 @@ async function createFixture({ coreVersion = '2.0.0' } = {}) {
                 : 'human-approved',
             warnings: ['core-warning'],
             reviewedSource: options.reviewedSource,
+            sourceProvenance: options.sourceProvenance,
             authored,
+            providerSeams: {
+              browserSession:
+                options.browserSession?.runtime?.kind === 'launched' &&
+                typeof options.browserSession?.probe === 'function',
+              visualCritic: typeof options.visualCritic === 'function',
+            },
           };
         }
       `,
     );
   }
+  await execFile('git', ['init', '--quiet'], { cwd: repoRoot });
+  await execFile(
+    'git',
+    ['remote', 'add', 'origin', 'git@github.com:acme/project-recaps.git'],
+    { cwd: repoRoot },
+  );
+  await execFile('git', ['add', '.'], { cwd: repoRoot });
+  await execFile(
+    'git',
+    [
+      '-c',
+      'user.name=Explainer Test',
+      '-c',
+      'user.email=explainer@example.com',
+      'commit',
+      '--quiet',
+      '-m',
+      'fixture',
+    ],
+    { cwd: repoRoot },
+  );
+  const { stdout: reviewedCommitOutput } = await execFile(
+    'git',
+    ['rev-parse', 'HEAD'],
+    { cwd: repoRoot },
+  );
 
   return {
     root,
@@ -129,12 +202,109 @@ async function createFixture({ coreVersion = '2.0.0' } = {}) {
     userSkillsRoot,
     coreRoot,
     coreInvocationMarker,
+    reviewedCommit: reviewedCommitOutput.trim(),
   };
 }
 
 async function fixtureAuthor({ artifact }) {
   return { source: 'fixture', artifactId: artifact.id };
 }
+
+async function fixturePlanSet({ recipe }) {
+  return {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'fixture-adaptive-recap',
+    recipe,
+    sourceIds: ['plan'],
+    ledger: {
+      terminology: [{ term: 'project', meaning: 'The tracked project.' }],
+      statuses: [{ subject: 'implementation', value: 'validated' }],
+      numbers: [{ subject: 'required artifacts', value: 3, unit: 'artifacts' }],
+    },
+    portfolio: ['project-recap', 'architecture', 'deck'].map(
+      (artifactId, index) => ({
+        artifactId,
+        artifactType: ['hub', 'diagram', 'deck'][index],
+        profileId: 'recipe-floor',
+        required: true,
+        sourceIds: ['plan'],
+        draft: `Compose ${artifactId}.`,
+        visualIntent: `Use the planned ${artifactId} medium.`,
+      }),
+    ),
+  };
+}
+
+async function completeBrowserProbe(request) {
+  if (request.screenshotPath) {
+    await mkdir(dirname(request.screenshotPath), { recursive: true });
+    await writeFile(
+      request.screenshotPath,
+      png(request.viewport.width, request.viewport.height),
+    );
+  }
+  return {
+    pageOverflowX: false,
+    clippedX: [],
+    viewportClipped: [],
+    unreadableHeadings: [],
+    animationsDisabled: true,
+    reducedMotion: true,
+    keyboard: {
+      tab: true,
+      arrows: {
+        ArrowLeft: true,
+        ArrowRight: true,
+        ArrowUp: true,
+        ArrowDown: true,
+      },
+    },
+    ...(request.scenario !== 'default' && {
+      deckLayout: {
+        flow: 'vertical',
+        overflowX: request.scenario === 'print' ? 'visible' : 'auto',
+      },
+    }),
+  };
+}
+
+async function passingVisualCritic(request) {
+  return {
+    schemaVersion: 'explainer-kit.visual-review-result/v1',
+    reviewId: 'adapter-core-visual-review',
+    requestId: request.requestId,
+    requestHash: request.requestHash,
+    reviewedAt: '2026-07-18T00:00:00.000Z',
+    disposition: 'pass',
+    artifactIds: request.renderedArtifacts.map(({ artifactId }) => artifactId),
+    findings: [],
+  };
+}
+
+function launchedSession(probe = completeBrowserProbe) {
+  return Object.freeze({
+    available: true,
+    runtime: Object.freeze({
+      kind: 'launched',
+      name: 'chromium',
+      version: 'fixture-core-chromium',
+    }),
+    capture: Object.freeze({
+      format: 'png',
+      fullPage: false,
+      reducedMotion: 'reduce',
+      animationsDisabled: true,
+    }),
+    captureIdentity: `sha256:${'a'.repeat(64)}`,
+    probe,
+    close: async () => {},
+  });
+}
+
+const REQUIRED_REVIEW_PROVIDERS = {
+  browserSession: launchedSession(),
+  visualCritic: passingVisualCritic,
+};
 
 function getConfig(key) {
   return Promise.resolve({
@@ -152,11 +322,51 @@ function getConfig(key) {
   });
 }
 
+test('resolves a full reviewed commit and canonical GitHub repository identity', async () => {
+  const calls = [];
+  const command = async (file, args, options) => {
+    calls.push({ file, args, options });
+    return {
+      stdout:
+        args[0] === 'rev-parse'
+          ? '0123456789abcdef0123456789abcdef01234567\n'
+          : 'git@github.com:acme/project-recaps.git\n',
+      stderr: '',
+    };
+  };
+
+  assert.deepEqual(await resolveReviewedRepository('/repo', { command }), {
+    repository: 'acme/project-recaps',
+    repositoryUrl: 'https://github.com/acme/project-recaps',
+    revision: '0123456789abcdef0123456789abcdef01234567',
+  });
+  assert.deepEqual(
+    calls.map(({ file, args, options }) => [file, args, options.cwd]),
+    [
+      ['git', ['rev-parse', 'HEAD'], '/repo'],
+      ['git', ['config', '--get', 'remote.origin.url'], '/repo'],
+    ],
+  );
+
+  await assert.rejects(
+    resolveReviewedRepository('/repo', {
+      command: async (_file, args) => ({
+        stdout:
+          args[0] === 'rev-parse'
+            ? 'main\n'
+            : 'https://github.com/acme/project-recaps.git\n',
+      }),
+    }),
+    /full commit sha/i,
+  );
+});
+
 test('binds approved OAT artifacts to one project source role', async () => {
   const fixture = await createFixture();
 
   const bound = await bindProjectSources({
     projectRoot: fixture.projectRoot,
+    repoRoot: fixture.repoRoot,
     recipe: 'project-recap',
   });
   const canonicalProjectRoot = await realpath(fixture.projectRoot);
@@ -175,16 +385,63 @@ test('binds approved OAT artifacts to one project source role', async () => {
   );
   assert.deepEqual(bound.reviewedSource, {
     kind: 'approved-oat-artifacts',
-    locator: canonicalProjectRoot,
+    locator: 'https://github.com/acme/project-recaps',
+    repository: 'acme/project-recaps',
+    repositoryUrl: 'https://github.com/acme/project-recaps',
+    revision: fixture.reviewedCommit,
+  });
+  assert.deepEqual(bound.sourceProvenance.implementation, {
+    repository: 'acme/project-recaps',
+    revision: fixture.reviewedCommit,
+    path: '.oat/projects/shared/demo/implementation.md',
+    lineRange: { start: 1, end: 3 },
   });
   const loaded = await bound.sourceLoader(bound.factBase.sources[3]);
+  const implementationBytes = await readFile(
+    join(canonicalProjectRoot, 'implementation.md'),
+  );
   assert.deepEqual(loaded.claims, [
     {
       id: 'implementation',
       text: '# Implementation\n\nCore integration passed.',
       locator: join(canonicalProjectRoot, 'implementation.md'),
+      lineRange: { start: 1, end: 3 },
     },
   ]);
+  assert.equal(
+    loaded.sourceHash,
+    `sha256:${createHash('sha256').update(implementationBytes).digest('hex')}`,
+  );
+});
+
+test('rejects dirty and untracked OAT artifacts at the reviewed Git boundary', async () => {
+  const dirty = await createFixture();
+  await writeFile(
+    join(dirty.projectRoot, 'plan.md'),
+    '# Plan\n\nUncommitted replacement.\n',
+  );
+  await assert.rejects(
+    bindProjectSources({
+      projectRoot: dirty.projectRoot,
+      repoRoot: dirty.repoRoot,
+      recipe: 'project-recap',
+    }),
+    /working tree|reviewed git blob|mismatch/i,
+  );
+
+  const untracked = await createFixture();
+  const relativePlan = '.oat/projects/shared/demo/plan.md';
+  await execFile('git', ['rm', '--cached', '--quiet', relativePlan], {
+    cwd: untracked.repoRoot,
+  });
+  await assert.rejects(
+    bindProjectSources({
+      projectRoot: untracked.projectRoot,
+      repoRoot: untracked.repoRoot,
+      recipe: 'project-recap',
+    }),
+    /tracked|reviewed git blob/i,
+  );
 });
 
 test('binds plan/design/spec for project explainers', async () => {
@@ -240,10 +497,10 @@ test('normalizes one request, invokes a cross-scope installed core, and propagat
     slug: 'demo-recap',
     getConfig,
     author: fixtureAuthor,
+    planSet: fixturePlanSet,
+    ...REQUIRED_REVIEW_PROVIDERS,
     mode: 'unattended',
   });
-  const canonicalProjectRoot = await realpath(fixture.projectRoot);
-
   assert.equal(
     adapterResult.request.schemaVersion,
     'explainer-kit.run-request/v1',
@@ -261,7 +518,16 @@ test('normalizes one request, invokes a cross-scope installed core, and propagat
   assert.deepEqual(adapterResult.result.warnings, ['core-warning']);
   assert.deepEqual(adapterResult.result.reviewedSource, {
     kind: 'approved-oat-artifacts',
-    locator: canonicalProjectRoot,
+    locator: 'https://github.com/acme/project-recaps',
+    repository: 'acme/project-recaps',
+    repositoryUrl: 'https://github.com/acme/project-recaps',
+    revision: fixture.reviewedCommit,
+  });
+  assert.deepEqual(adapterResult.result.sourceProvenance.plan, {
+    repository: 'acme/project-recaps',
+    revision: fixture.reviewedCommit,
+    path: '.oat/projects/shared/demo/plan.md',
+    lineRange: { start: 1, end: 3 },
   });
   assert.equal(basename(adapterResult.compatibility.coreRoot), 'explainer-kit');
 });
@@ -270,7 +536,6 @@ test('resolves curated style through the real CLI-backed config path', async () 
   const fixture = await createFixture();
   const binRoot = join(fixture.root, 'bin');
   await mkdir(binRoot, { recursive: true });
-  await mkdir(join(fixture.repoRoot, '.git'));
   await writeFile(
     join(fixture.repoRoot, '.oat', 'config.json'),
     `${JSON.stringify({
@@ -308,6 +573,8 @@ trap 'rmdir "$lock"' EXIT INT TERM
       recipe: 'project-recap',
       slug: 'cli-config-style',
       author: fixtureAuthor,
+      planSet: fixturePlanSet,
+      ...REQUIRED_REVIEW_PROVIDERS,
       mode: 'unattended',
     });
 
@@ -319,6 +586,7 @@ trap 'rmdir "$lock"' EXIT INT TERM
 
 test('passes direct and module authors through the adapter boundary', async () => {
   const directFixture = await createFixture();
+  const directRequests = [];
   const directResult = await runOatExplainer({
     adapterRoot: directFixture.adapterRoot,
     userSkillsRoot: directFixture.userSkillsRoot,
@@ -328,21 +596,35 @@ test('passes direct and module authors through the adapter boundary', async () =
     recipe: 'project-recap',
     slug: 'direct-author',
     getConfig,
-    author: async ({ artifact }) => ({
-      source: 'direct',
-      artifactId: artifact.id,
-    }),
+    author: async (request) => {
+      directRequests.push(request);
+      return {
+        source: 'direct',
+        artifactId: request.artifact.id,
+      };
+    },
+    planSet: fixturePlanSet,
     mode: 'interactive',
   });
-  assert.deepEqual(directResult.result.authored, {
-    source: 'direct',
-    artifactId: 'project-recap',
-  });
+  assert.deepEqual(
+    directResult.result.authored.map(({ artifactId }) => artifactId),
+    ['project-recap', 'architecture', 'deck'],
+  );
   assert.equal(directResult.result.marking, 'human-approved');
   assert.equal(directResult.marking, 'human-approved');
+  assert.equal(directRequests.length, 3);
+  assert.equal(
+    directRequests.every(
+      ({ setContext }) =>
+        JSON.stringify(setContext) ===
+        JSON.stringify(directRequests[0].setContext),
+    ),
+    true,
+  );
 
   const moduleFixture = await createFixture();
   const authorModulePath = join(moduleFixture.root, 'author.mjs');
+  const planSetModulePath = join(moduleFixture.root, 'plan-set.mjs');
   await writeFile(
     authorModulePath,
     `export async function author({ artifact }) {
@@ -350,6 +632,7 @@ test('passes direct and module authors through the adapter boundary', async () =
 }
 `,
   );
+  await writeValidPlanSetModule(planSetModulePath);
   const moduleResult = await runOatExplainer({
     adapterRoot: moduleFixture.adapterRoot,
     userSkillsRoot: moduleFixture.userSkillsRoot,
@@ -360,11 +643,181 @@ test('passes direct and module authors through the adapter boundary', async () =
     slug: 'module-author',
     getConfig,
     authorModulePath,
+    planSetModulePath,
+    ...REQUIRED_REVIEW_PROVIDERS,
     mode: 'unattended',
   });
-  assert.deepEqual(moduleResult.result.authored, {
-    source: 'module',
-    artifactId: 'project-recap',
+  assert.deepEqual(
+    moduleResult.result.authored.map(({ artifactId }) => artifactId),
+    ['project-recap', 'architecture', 'deck'],
+  );
+});
+
+test('passes first-class direct and module browser and visual-review providers', async () => {
+  const directFixture = await createFixture();
+  const direct = await runOatExplainer({
+    adapterRoot: directFixture.adapterRoot,
+    userSkillsRoot: directFixture.userSkillsRoot,
+    repoRoot: directFixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'direct-review-providers',
+    getConfig,
+    author: fixtureAuthor,
+    planSet: fixturePlanSet,
+    browserSession: launchedSession(),
+    visualCritic: passingVisualCritic,
+    mode: 'unattended',
+  });
+  assert.deepEqual(direct.result.providerSeams, {
+    browserSession: true,
+    visualCritic: true,
+  });
+
+  const moduleFixture = await createFixture();
+  const browserSessionModulePath = join(
+    moduleFixture.root,
+    'browser-session.mjs',
+  );
+  const visualCriticModulePath = join(moduleFixture.root, 'visual-critic.mjs');
+  await writeFile(
+    browserSessionModulePath,
+    `export const browserSession = {
+  available: true,
+  runtime: { kind: 'launched', name: 'chromium', version: 'module-fixture' },
+  probe: async () => ({}),
+};
+`,
+  );
+  await writeFile(
+    visualCriticModulePath,
+    'export async function visualCritic() { return {}; }\n',
+  );
+  const fromModules = await runOatExplainer({
+    adapterRoot: moduleFixture.adapterRoot,
+    userSkillsRoot: moduleFixture.userSkillsRoot,
+    repoRoot: moduleFixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'module-review-providers',
+    getConfig,
+    author: fixtureAuthor,
+    planSet: fixturePlanSet,
+    browserSessionModulePath,
+    visualCriticModulePath,
+    mode: 'unattended',
+  });
+  assert.deepEqual(fromModules.result.providerSeams, {
+    browserSession: true,
+    visualCritic: true,
+  });
+});
+
+test('rejects missing, invalid, conflicting, and reused review providers before core invocation', async () => {
+  const fixture = await createFixture();
+  const invalidBrowserModule = join(fixture.root, 'invalid-browser.mjs');
+  const invalidVisualModule = join(fixture.root, 'invalid-visual.mjs');
+  await writeFile(
+    invalidBrowserModule,
+    'export const browserProbe = "invalid";\n',
+  );
+  await writeFile(
+    invalidVisualModule,
+    'export const visualCritic = "invalid";\n',
+  );
+  const context = {
+    adapterRoot: fixture.adapterRoot,
+    userSkillsRoot: fixture.userSkillsRoot,
+    repoRoot: fixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'review-provider-contract',
+    getConfig,
+    author: fixtureAuthor,
+    planSet: fixturePlanSet,
+    mode: 'unattended',
+  };
+
+  await assert.rejects(
+    runOatExplainer(context),
+    (error) => error.code === 'E_BROWSER_PROBE_REQUIRED',
+  );
+  await assert.rejects(
+    runOatExplainer({ ...context, browserSession: launchedSession() }),
+    (error) => error.code === 'E_VISUAL_CRITIC_REQUIRED',
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      browserSessionModulePath: invalidBrowserModule,
+      visualCritic: passingVisualCritic,
+    }),
+    (error) => error.code === 'E_BROWSER_PROBE_REQUIRED',
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      browserSession: launchedSession(),
+      visualCriticModulePath: invalidVisualModule,
+    }),
+    /visual critic module must export a visualCritic function/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      browserSession: launchedSession(),
+      browserSessionModulePath: invalidBrowserModule,
+      visualCritic: passingVisualCritic,
+    }),
+    /only one.*browser session/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      browserSession: launchedSession(),
+      visualCritic: passingVisualCritic,
+      visualCriticModulePath: invalidVisualModule,
+    }),
+    /only one.*visual critic/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      browserSession: launchedSession(),
+      visualCritic: passingVisualCritic,
+      coreOptions: { browserProbe: completeBrowserProbe },
+    }),
+    /coreOptions\.browserProbe is not supported/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      browserSession: launchedSession(),
+      visualCritic: passingVisualCritic,
+      coreOptions: { visualCritic: passingVisualCritic },
+    }),
+    /coreOptions\.visualCritic is not supported/i,
+  );
+
+  const sharedProvider = async () => ({});
+  for (const reuse of [
+    { author: sharedProvider, visualCritic: sharedProvider },
+    { critic: sharedProvider, visualCritic: sharedProvider },
+  ]) {
+    await assert.rejects(
+      runOatExplainer({
+        ...context,
+        ...REQUIRED_REVIEW_PROVIDERS,
+        ...reuse,
+      }),
+      /provider roles .* must use distinct callback identities/i,
+    );
+  }
+  await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
+    code: 'ENOENT',
   });
 });
 
@@ -382,6 +835,7 @@ test('rejects missing, invalid, and conflicting author module inputs at the adap
     slug: 'author-contract',
     getConfig,
     author: fixtureAuthor,
+    planSet: fixturePlanSet,
     mode: 'unattended',
   };
 
@@ -434,6 +888,7 @@ test('rejects an omitted unattended author before invoking the core', async () =
       recipe: 'project-recap',
       slug: 'missing-author',
       getConfig,
+      planSet: fixturePlanSet,
       mode: 'unattended',
     }),
     /unattended.*exactly one.*author/i,
@@ -456,11 +911,57 @@ test('rejects an omitted author in both modes before invoking the core', async (
         recipe: 'project-recap',
         slug: `${mode}-no-author`,
         getConfig,
+        planSet: fixturePlanSet,
         mode,
       }),
       (error) => error.code === 'E_AUTHOR_REQUIRED',
     );
   }
+  await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
+    code: 'ENOENT',
+  });
+});
+
+test('requires exactly one adaptive set planner for unattended project recaps', async () => {
+  const fixture = await createFixture();
+  const invalidModulePath = join(fixture.root, 'invalid-plan-set.mjs');
+  await writeFile(invalidModulePath, 'export const planSet = "invalid";\n');
+  const context = {
+    adapterRoot: fixture.adapterRoot,
+    userSkillsRoot: fixture.userSkillsRoot,
+    repoRoot: fixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'planner-contract',
+    getConfig,
+    author: fixtureAuthor,
+    mode: 'unattended',
+  };
+
+  await assert.rejects(
+    runOatExplainer(context),
+    (error) => error.code === 'E_SET_PLANNER_REQUIRED',
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      planSet: fixturePlanSet,
+      planSetModulePath: invalidModulePath,
+    }),
+    /only one.*set planner/i,
+  );
+  await assert.rejects(
+    runOatExplainer({ ...context, planSetModulePath: invalidModulePath }),
+    /set planner module must export a planSet function/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      coreOptions: { planSet: fixturePlanSet },
+    }),
+    /coreOptions\.planSet is not supported/i,
+  );
   await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
     code: 'ENOENT',
   });
@@ -476,11 +977,19 @@ test('completion recap intents always select unattended explainer mode', () => {
   );
 });
 
-test('loads a validated provider-neutral critic module and runs the actual bundled core', async () => {
+test('loads a validated provider-neutral critic module and runs the actual bundled core', async (t) => {
   const fixture = await createFixture();
+  const browserSession = await createBrowserProbeSession();
+  if (!browserSession.available) {
+    t.skip(`installed Chromium unavailable: ${browserSession.reason}`);
+    return;
+  }
+  t.after(() => browserSession.close());
   const authorModulePath = join(fixture.root, 'lifecycle-author.mjs');
+  const planSetModulePath = join(fixture.root, 'lifecycle-plan-set.mjs');
   const criticModulePath = join(fixture.root, 'lifecycle-critic.mjs');
   await writeValidAuthorModule(authorModulePath);
+  await writeValidPlanSetModule(planSetModulePath);
   await writeFile(
     criticModulePath,
     `
@@ -508,11 +1017,15 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
     recipe: 'project-recap',
     slug: 'actual-core-recap',
     authorModulePath,
+    planSetModulePath,
     criticModulePath,
+    browserSession,
+    visualCritic: passingVisualCritic,
     getConfig,
     mode: 'unattended',
   });
   const criticModule = await import(pathToFileURL(criticModulePath).href);
+  const authorModule = await import(pathToFileURL(authorModulePath).href);
   const factBase = JSON.parse(
     await readFile(
       join(adapterResult.result.runRoot, 'source', 'fact-base.json'),
@@ -526,11 +1039,33 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
     'explainer-kit.manifest/v1',
   );
   assert.equal(criticModule.getCalls().length, 1);
+  const authorCalls = authorModule.getCalls();
+  assert.deepEqual(
+    authorCalls.map(({ artifactId }) => artifactId),
+    ['project-recap', 'architecture', 'deck'],
+  );
+  assert.equal(
+    authorCalls.every(
+      ({ setContext }) =>
+        JSON.stringify(setContext) ===
+        JSON.stringify(authorCalls[0].setContext),
+    ),
+    true,
+  );
+  assert.equal(
+    authorCalls.every(
+      ({ hasBrief, hasShell, hasVisualAuthoringGuidance }) =>
+        hasBrief && hasShell && hasVisualAuthoringGuidance,
+    ),
+    true,
+  );
   assert.ok(
     factBase.sources.some(({ id }) => id === 'critic:lifecycle-test-critic'),
   );
   assert.deepEqual(adapterResult.manifest.source.authorResultPaths, [
     'source/author/project-recap.json',
+    'source/author/architecture.json',
+    'source/author/deck.json',
   ]);
 });
 
@@ -559,6 +1094,7 @@ test('rejects invalid critic module and callback contracts at the adapter bounda
     slug: 'critic-contract',
     getConfig,
     author: fixtureAuthor,
+    planSet: fixturePlanSet,
     mode: 'unattended',
   };
 
@@ -607,6 +1143,8 @@ test('passes a supplied fact base through the normalized adapter request', async
     suppliedFactBasePath: factBasePath,
     getConfig,
     author: fixtureAuthor,
+    planSet: fixturePlanSet,
+    ...REQUIRED_REVIEW_PROVIDERS,
     mode: 'unattended',
   });
   const canonicalFactBasePath = await realpath(factBasePath);
@@ -631,6 +1169,8 @@ test('propagates failed core results when no manifest was produced', async () =>
     slug: 'core-failure',
     getConfig,
     author: fixtureAuthor,
+    planSet: fixturePlanSet,
+    ...REQUIRED_REVIEW_PROVIDERS,
     mode: 'unattended',
   });
 
@@ -641,10 +1181,11 @@ test('propagates failed core results when no manifest was produced', async () =>
   ]);
 });
 
-test('fails closed for missing and 1.x installed cores', async () => {
+test('fails closed for missing cores and cores without adaptive set capability', async () => {
   for (const [coreVersion, pattern] of [
     [null, /install utility --scope user/i],
     ['1.9.9', /update --pack utility --scope user/i],
+    ['2.0.1', /adaptive set planning/i],
   ]) {
     const fixture = await createFixture({ coreVersion });
     await assert.rejects(
@@ -706,21 +1247,92 @@ test('does not inspect ambient private configuration', async () => {
 async function writeValidAuthorModule(path) {
   await writeFile(
     path,
-    `export async function author(request) {
+    `const calls = [];
+
+export async function author(request) {
+  calls.push({
+    artifactId: request.artifactId,
+    setContext: structuredClone(request.setContext),
+    plannedArtifact: structuredClone(request.plannedArtifact),
+    hasBrief: typeof request.brief === 'string' && request.brief.length > 0,
+    hasShell: typeof request.shell === 'string' && request.shell.length > 0,
+    hasVisualAuthoringGuidance:
+      typeof request.visualAuthoringGuidance === 'string' &&
+      ['representation', 'hierarchy', 'responsive navigation', 'table', 'diagram', 'deck']
+        .every((topic) => request.visualAuthoringGuidance.toLowerCase().includes(topic)),
+  });
+  const sections = (request.floor?.requiredNarrative ?? [])
+    .map((id) => \`<section id="\${id}"><h2>\${id}</h2><p>Validated evidence.</p></section>\`)
+    .join('');
+  const replacements = {
+    THEME_CSS: '',
+    TITLE: 'Lifecycle-authored recap',
+    DESCRIPTION: 'A provider-neutral adaptive recap.',
+    EYEBROW: 'Project recap',
+    NAVIGATION: '',
+    CONTENT: sections,
+    FOOTER: 'Generated from approved OAT artifacts.',
+    DIAGRAM:
+      '<g id="as-built-architecture" class="node"><rect x="20" y="20" width="240" height="80"></rect><text x="40" y="65">Architecture</text></g>',
+    LEGEND: '<span>Architecture</span>',
+    SLIDES:
+      '<section id="outcome" class="slide"><div class="slide__content"><h1>Outcome</h1><p>Validated.</p></div></section>',
+  };
+  let html = request.shell;
+  for (const [token, value] of Object.entries(replacements)) {
+    html = html.replaceAll(\`{{\${token}}}\`, value);
+  }
+  html += '<p>project validated 3 artifacts</p>';
   return {
     schemaVersion: 'explainer-kit.author-result/v2',
     artifactId: request.artifactId,
-    content: {
-      markdown: '# Lifecycle-authored recap\\n\\n' +
-        request.floor.requiredNarrative.map((id, index) =>
-          \`## \${id.replaceAll('-', ' ')}\\n\\nSection \${index + 1} explains validated evidence and its project impact.\`
-        ).join('\\n\\n'),
-    },
+    content: { html },
     provenance: {
       authorId: 'adapter-lifecycle-author',
       generatedAt: '2026-07-20T12:00:00.000Z',
       method: 'provider-neutral-module',
     },
+  };
+}
+
+export function getCalls() {
+  return calls;
+}
+`,
+  );
+}
+
+async function writeValidPlanSetModule(path) {
+  await writeFile(
+    path,
+    `export async function planSet({ recipe, factBase }) {
+  const sourceIds = factBase.sources
+    .map(({ id }) => id)
+    .filter((id) => !id.startsWith('critic:'));
+  const floor = recipe.floor ?? [
+    { id: 'project-recap', type: 'hub' },
+    { id: 'architecture', type: 'diagram' },
+    { id: 'deck', type: 'deck' },
+  ];
+  return {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'adapter-lifecycle-recap',
+    recipe: { id: recipe.id, version: recipe.version },
+    sourceIds,
+    ledger: {
+      terminology: [{ term: 'project', meaning: 'The tracked project.' }],
+      statuses: [{ subject: 'implementation', value: 'validated' }],
+      numbers: [{ subject: 'required artifacts', value: 3, unit: 'artifacts' }],
+    },
+    portfolio: floor.map((artifact) => ({
+      artifactId: artifact.id,
+      artifactType: artifact.type,
+      profileId: 'recipe-floor',
+      required: true,
+      sourceIds,
+      draft: \`Compose the planned \${artifact.id} artifact.\`,
+      visualIntent: \`Use the selected \${artifact.type} medium.\`,
+    })),
   };
 }
 `,

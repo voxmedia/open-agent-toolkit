@@ -2,12 +2,16 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
+import { validateContract } from '../scripts/lib/contracts.mjs';
 import { verifyRebuildability } from '../scripts/lib/durability.mjs';
+import { requiredImmutablePackagePaths } from '../scripts/lib/records.mjs';
 
 const tempDirs = [];
+const skillRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 afterEach(async () => {
   await Promise.all(
@@ -87,6 +91,132 @@ test('rejects a rebuildable claim when a hashed source changes', async () => {
 
   assert.equal(result.verified, false);
   assert.match(result.reason, /input hash/i);
+});
+
+test('bundles self-contained visual authoring and review guidance', async () => {
+  const [skill, authoring, review] = await Promise.all([
+    readFile(join(skillRoot, 'SKILL.md'), 'utf8'),
+    readFile(join(skillRoot, 'references/visual-authoring.md'), 'utf8'),
+    readFile(join(skillRoot, 'references/visual-review.md'), 'utf8'),
+  ]);
+
+  assert.match(skill, /^version: 2\.0\.3$/m);
+  assert.match(skill, /references\/visual-authoring\.md/);
+  assert.match(skill, /references\/visual-review\.md/);
+  for (const [name, guidance] of [
+    ['authoring', authoring],
+    ['review', review],
+  ]) {
+    assert.doesNotMatch(
+      guidance,
+      /\/Users\/|~\/|\.agents\/skills\/visual-explainer/,
+    );
+    assert.match(guidance, /optional/i, name);
+  }
+  for (const topic of [
+    /representation/i,
+    /hierarchy/i,
+    /diagram/i,
+    /deck/i,
+    /table/i,
+    /responsive navigation/i,
+  ]) {
+    assert.match(authoring, topic);
+  }
+  assert.match(review, /first viewport/i);
+  assert.match(review, /medium fit/i);
+  assert.match(review, /pass|correct|fail/i);
+});
+
+test('requires complete retained set-plan and visual-review recap coverage', () => {
+  const hash = `sha256:${'a'.repeat(64)}`;
+  const setPlanPaths = [
+    'source/set-plan/request.json',
+    'source/set-plan/result.json',
+    'source/set-plan/ledger.json',
+    'source/set-plan/portfolio.json',
+    'source/set-plan/drafts.json',
+  ];
+  const reviewPaths = [
+    'qa/visual-review/attempt-1/request.json',
+    'qa/visual-review/attempt-1/result.json',
+    ...['mobile', 'tablet', 'desktop'].flatMap((viewport) => [
+      `qa/browser/project-recap/${viewport}.png`,
+      `qa/browser/project-recap/${viewport}.json`,
+      `qa/visual-review/attempt-1/evidence/project-recap/${viewport}.png`,
+      `qa/visual-review/attempt-1/evidence/project-recap/${viewport}.json`,
+    ]),
+  ];
+  const manifest = {
+    schemaVersion: 'explainer-kit.manifest/v1',
+    runId: 'run-1',
+    slug: 'project-recap',
+    recipe: { id: 'project-recap', version: '1' },
+    createdAt: '2026-07-17T20:00:00Z',
+    source: {
+      factBasePath: 'source/fact-base.json',
+      factBaseHash: hash,
+      inputHashes: {},
+      authorResultPaths: ['source/author/project-recap.json'],
+    },
+    theme: {
+      path: 'theme.resolved.json',
+      hash,
+      derived: false,
+    },
+    artifacts: [
+      {
+        id: 'project-recap',
+        type: 'explainer',
+        contentPath: 'source/content/project-recap.md',
+        renderedPath: 'site/index.html',
+        mediaType: 'text/html',
+        status: 'built',
+        hash,
+        rebuildable: false,
+      },
+    ],
+    immutableHashes: Object.fromEntries(
+      [
+        'run-request.json',
+        'source/content-approval.json',
+        'source/fact-base.json',
+        'source/fact-base.md',
+        'source/author/project-recap.json',
+        'source/content/project-recap.md',
+        'theme.resolved.json',
+        'site/index.html',
+        ...setPlanPaths,
+        ...reviewPaths,
+      ].map((path) => [path, hash]),
+    ),
+    outcome: 'built-not-durable',
+    buildRecord: { path: 'build-record.json', hash },
+    warnings: [],
+  };
+
+  assert.equal(validateContract('manifest', manifest).valid, true);
+  assert.equal(
+    Object.keys(manifest.immutableHashes).some((path) =>
+      path.includes('resume-token'),
+    ),
+    false,
+    'the external resume token must not become a persisted trust anchor',
+  );
+  delete manifest.immutableHashes[setPlanPaths.at(-1)];
+  assert.ok(
+    validateContract('manifest', manifest).errors.some(
+      ({ code }) => code === 'immutable-package-incomplete',
+    ),
+  );
+  manifest.immutableHashes[setPlanPaths.at(-1)] = hash;
+  delete manifest.immutableHashes[reviewPaths.at(-1)];
+  assert.deepEqual(
+    requiredImmutablePackagePaths(manifest, { runMode: 'unattended' }).filter(
+      (path) => !(path in manifest.immutableHashes),
+    ),
+    [reviewPaths.at(-1)],
+  );
 });
 
 async function fileHash(path) {

@@ -1,4 +1,8 @@
 import { canonicalHash, validateContract } from './contracts.mjs';
+import {
+  canonicalGithubBlobBacklink,
+  validateCanonicalGithubBlobTuple,
+} from './source-backlinks.mjs';
 
 const FACT_BASE_VERSION = 'explainer-kit.fact-base/v1';
 const DEFAULT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
@@ -31,7 +35,9 @@ export async function processFactBase(binding, options = {}) {
 }
 
 function processSupplied(binding, { now, maxAgeMs }) {
-  const factBase = structuredClone(binding.factBase);
+  const factBase = normalizeFactBaseBacklinks(
+    structuredClone(binding.factBase),
+  );
   if (!factBase || typeof factBase !== 'object') {
     throw new Error('Supplied mode requires a factBase object.');
   }
@@ -87,7 +93,9 @@ async function processFederated(binding, { critic, now }) {
     );
   }
 
-  const sources = documents.map(({ source }) => structuredClone(source));
+  const sources = documents.map(({ source }) =>
+    normalizeSourceBacklink(structuredClone(source)),
+  );
   assertUniqueNonEmptyIds(sources, 'source');
   const sourceById = new Map(sources.map((source) => [source.id, source]));
   const observations = collectObservations(documents, sourceById);
@@ -266,6 +274,7 @@ function collectObservations(documents, sourceById) {
         text: claim.text,
         source: sourceById.get(document.source.id),
         locator: claim.locator ?? document.source.locator,
+        ...(claim.lineRange && { lineRange: structuredClone(claim.lineRange) }),
         ...(claim.sections && { sections: [...claim.sections] }),
       });
       observations.set(claim.id, entries);
@@ -366,10 +375,9 @@ function resolveObservations(claimId, entries) {
 }
 
 function citationsFor(entries) {
-  const citations = entries.map(({ source, locator }) => ({
-    sourceId: source.id,
-    locator,
-  }));
+  const citations = entries.map(({ source, locator, lineRange }) =>
+    citationForSource(source, { locator, lineRange }),
+  );
   return uniqueCitations(citations);
 }
 
@@ -432,8 +440,7 @@ function integrateCriticFindings({
         locator: `critic-finding:${finding.claimId}`,
       },
       ...finding.sourceIds.map((sourceId) => ({
-        sourceId,
-        locator: sourceById.get(sourceId).locator,
+        ...citationForSource(sourceById.get(sourceId)),
       })),
     ]);
     const existingUnresolved = unresolvedClaims.find(
@@ -498,6 +505,135 @@ function uniqueCitations(citations) {
         ]),
     ).values(),
   ];
+}
+
+function normalizeFactBaseBacklinks(factBase) {
+  if (!factBase || typeof factBase !== 'object') return factBase;
+  if (
+    !Array.isArray(factBase.sources) ||
+    !Array.isArray(factBase.claims) ||
+    !Array.isArray(factBase.unresolvedClaims)
+  ) {
+    return factBase;
+  }
+  factBase.sources = factBase.sources.map((source) =>
+    source && typeof source === 'object'
+      ? normalizeSourceBacklink(source)
+      : source,
+  );
+  const sourceById = new Map(
+    factBase.sources
+      .filter((source) => source && typeof source === 'object')
+      .map((source) => [source.id, source]),
+  );
+  for (const claim of [...factBase.claims, ...factBase.unresolvedClaims]) {
+    if (
+      !claim ||
+      typeof claim !== 'object' ||
+      !Array.isArray(claim.citations)
+    ) {
+      continue;
+    }
+    claim.citations = claim.citations.map((citation) => {
+      if (!citation || typeof citation !== 'object') return citation;
+      const source = sourceById.get(citation.sourceId);
+      return source ? citationForSource(source, citation) : citation;
+    });
+  }
+  return factBase;
+}
+
+function normalizeSourceBacklink(source) {
+  const declaresBacklink = declaresBacklinkTuple(source);
+  if (!declaresBacklink) return source;
+  const url = canonicalGithubBlobBacklink(source);
+  if (source.url !== undefined && source.url !== url) {
+    throw new Error(
+      'GitHub backlink provenance URL does not match its canonical tuple.',
+    );
+  }
+  return {
+    ...source,
+    kind: 'github',
+    locator: url,
+    url,
+  };
+}
+
+function citationForSource(source, citation = {}) {
+  if (source.url === undefined && !declaresBacklinkTuple(citation)) {
+    return {
+      sourceId: source.id,
+      locator: citation.locator ?? source.locator,
+    };
+  }
+  if (source.url === undefined) {
+    if (!validateCanonicalGithubBlobTuple(citation)) {
+      throw new Error(
+        'GitHub citation backlink requires one complete canonical provenance tuple.',
+      );
+    }
+    return {
+      sourceId: source.id,
+      locator: citation.url,
+      repository: citation.repository,
+      revision: citation.revision,
+      path: citation.path,
+      lineRange: structuredClone(citation.lineRange),
+      url: citation.url,
+    };
+  }
+  if (
+    declaresBacklinkTuple(citation) &&
+    ['repository', 'revision', 'path', 'url'].some(
+      (field) => citation[field] !== undefined,
+    )
+  ) {
+    const supplied = {
+      repository: citation.repository,
+      revision: citation.revision,
+      path: citation.path,
+      lineRange: citation.lineRange,
+      url: citation.url,
+    };
+    if (
+      !validateCanonicalGithubBlobTuple(supplied) ||
+      supplied.repository !== source.repository ||
+      supplied.revision !== source.revision ||
+      supplied.path !== source.path
+    ) {
+      throw new Error(
+        'GitHub citation backlink does not match its canonical source tuple.',
+      );
+    }
+  }
+  const range = citation.lineRange ?? source.lineRange;
+  const tuple = {
+    repository: source.repository,
+    revision: source.revision,
+    path: source.path,
+    lineRange: range,
+  };
+  const url = canonicalGithubBlobBacklink(tuple);
+  return {
+    sourceId: source.id,
+    locator: url,
+    repository: source.repository,
+    revision: source.revision,
+    path: source.path,
+    lineRange: structuredClone(range),
+    url,
+  };
+}
+
+function declaresBacklinkTuple(value) {
+  return (
+    value &&
+    typeof value === 'object' &&
+    ['repository', 'path', 'lineRange', 'url'].some(
+      (field) => value[field] !== undefined,
+    )
+  );
 }
 
 function validSections(sections) {

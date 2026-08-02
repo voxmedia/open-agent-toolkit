@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 
 const RECIPE_SCHEMA_V2 = 'explainer-kit.recipe/v2';
-const RECIPE_V2_ROOT_KEYS = [
+const RECIPE_V2_REQUIRED_ROOT_KEYS = [
   'discoveryLimits',
   'expansion',
   'floor',
@@ -10,6 +10,7 @@ const RECIPE_V2_ROOT_KEYS = [
   'sourceRoles',
   'version',
 ];
+const RECIPE_V2_ROOT_KEYS = [...RECIPE_V2_REQUIRED_ROOT_KEYS, 'fallback'];
 const SOURCE_ROLE_KEYS = [
   'accepts',
   'maxBindings',
@@ -34,9 +35,14 @@ const PROFILE_REQUIRED_KEYS = [
   'profileId',
   'type',
 ];
-const PROFILE_KEYS = [...PROFILE_REQUIRED_KEYS, 'shell'];
+const PROFILE_KEYS = [
+  ...PROFILE_REQUIRED_KEYS,
+  'allowedJustificationKinds',
+  'shell',
+];
 const EXPANSION_LIMIT_KEYS = ['maxArtifacts', 'maxPerType'];
 const DISCOVERY_LIMIT_KEYS = ['consecutiveNoNewFindingsRounds', 'maxRounds'];
+const FALLBACK_KEYS = ['authoring', 'mode', 'scope', 'selection'];
 const SOURCE_KINDS = new Set([
   'file',
   'directory',
@@ -79,6 +85,54 @@ export function loadRecipe(id, version) {
     throw error;
   }
   return structuredClone(recipe);
+}
+
+export function selectRecipeAuthoring(recipe, mode = 'artistic') {
+  const selected = structuredClone(recipe);
+  if (mode === 'artistic') {
+    return selected;
+  }
+  if (selected.fallback?.mode !== mode) {
+    const error = new Error(
+      `Recipe ${selected.id}@${selected.version} does not support recap mode ${mode}`,
+    );
+    error.code = 'E_RECIPE_UNSUPPORTED';
+    throw error;
+  }
+
+  selected.floor = selected.floor.map((artifact) => ({
+    ...artifact,
+    authoring: selected.fallback.authoring,
+  }));
+  selected.expansion.profiles = selected.expansion.profiles.map(
+    ({ shell: _shell, ...profile }) => ({
+      ...profile,
+      authoring: selected.fallback.authoring,
+    }),
+  );
+  return selected;
+}
+
+export function resolveDiagramRenderingRoute(recipe, artifact, diagrams) {
+  if (
+    !recipe ||
+    typeof recipe !== 'object' ||
+    !artifact ||
+    typeof artifact !== 'object' ||
+    !Array.isArray(diagrams)
+  ) {
+    throw new TypeError(
+      'Diagram routing requires a recipe, artifact, and diagram analyses.',
+    );
+  }
+  const supported = diagrams.filter(({ valid }) => valid === true);
+  if (
+    supported.length === 0 ||
+    supported.every(({ inlineSupported }) => inlineSupported === true)
+  ) {
+    return 'inline';
+  }
+  return artifact.authoring === 'html' ? 'artistic' : 'reject';
 }
 
 export function recipeFloor(recipe) {
@@ -304,6 +358,54 @@ export function validateContentModel(recipe, contentModel) {
   return { valid: errors.length === 0, errors };
 }
 
+export function validatePlannedPortfolio(recipe, portfolio) {
+  const errors = [];
+  if (!Array.isArray(portfolio)) {
+    return { valid: false, errors: ['Planned portfolio must be an array'] };
+  }
+  const floorIds = new Set(recipeFloor(recipe).map(({ id }) => id));
+  const expansion = recipeExpansion(recipe);
+  const profiles = new Map(
+    expansion.profiles.map((profile) => [profile.profileId, profile]),
+  );
+  const counts = new Map();
+  let optionalCount = 0;
+
+  for (const artifact of portfolio) {
+    if (floorIds.has(artifact?.artifactId)) continue;
+    optionalCount += 1;
+    const profile = profiles.get(artifact?.profileId);
+    if (!profile) {
+      errors.push(`Unknown planned profile: ${artifact?.profileId}`);
+      continue;
+    }
+    counts.set(profile.profileId, (counts.get(profile.profileId) ?? 0) + 1);
+    if (!isObject(artifact.justification)) {
+      errors.push(
+        `Optional artifact ${artifact.artifactId} requires a source-backed justification`,
+      );
+      continue;
+    }
+    if (
+      profile.allowedJustificationKinds !== undefined &&
+      !profile.allowedJustificationKinds.includes(artifact.justification.kind)
+    ) {
+      errors.push(
+        `Optional artifact ${artifact.artifactId} justification ${artifact.justification.kind} is not allowed for ${profile.profileId}`,
+      );
+    }
+  }
+  if (optionalCount > expansion.limits.maxArtifacts) {
+    errors.push('Planned portfolio exceeds the recipe optional-artifact limit');
+  }
+  for (const [profileId, count] of counts) {
+    if (count > profiles.get(profileId).maxCount) {
+      errors.push(`Planned portfolio exceeds the ${profileId} profile limit`);
+    }
+  }
+  return { valid: errors.length === 0, errors };
+}
+
 export function shouldStopDiscovery(recipe, findingsByRound) {
   if (
     !Array.isArray(findingsByRound) ||
@@ -329,7 +431,12 @@ export function shouldStopDiscovery(recipe, findingsByRound) {
 export function validateRecipe(recipe, file = 'recipe') {
   assertObject(recipe, `${file} recipe`);
   if (recipe.schemaVersion === RECIPE_SCHEMA_V2) {
-    assertExactKeys(recipe, RECIPE_V2_ROOT_KEYS, `${file} recipe`);
+    assertAllowedKeys(
+      recipe,
+      RECIPE_V2_ROOT_KEYS,
+      RECIPE_V2_REQUIRED_ROOT_KEYS,
+      `${file} recipe`,
+    );
     validateV2Shape(recipe, file);
   } else {
     assert(false, `${file} has unsupported schemaVersion`);
@@ -367,6 +474,22 @@ export function validateRecipe(recipe, file = 'recipe') {
     );
   }
   assertUnique(roleNames, `${file} source role names`);
+
+  if ('fallback' in recipe) {
+    assert(
+      recipe.id === 'project-recap',
+      `${file} fallback is allowed only for project-recap`,
+    );
+    assertObject(recipe.fallback, `${file} fallback`);
+    assertExactKeys(recipe.fallback, FALLBACK_KEYS, `${file} fallback`);
+    assert(
+      recipe.fallback.mode === 'deterministic-markdown' &&
+        recipe.fallback.selection === 'explicit' &&
+        recipe.fallback.authoring === 'markdown' &&
+        recipe.fallback.scope === 'portfolio',
+      `${file} has an unsupported fallback policy`,
+    );
+  }
 
   validateDiscoveryLimits(recipe.discoveryLimits, file);
   return recipe;
@@ -435,6 +558,12 @@ function validateV2Shape(recipe, file) {
       `${file} expansion profile briefRef`,
     );
     assertFiniteCount(profile.maxCount, `${file} expansion profile maxCount`);
+    if ('allowedJustificationKinds' in profile) {
+      assertUniqueNonEmptyStrings(
+        profile.allowedJustificationKinds,
+        `${file} expansion profile allowedJustificationKinds`,
+      );
+    }
     if (profile.authoring === 'html' || 'shell' in profile) {
       assertNonEmptyString(
         profile.shell,

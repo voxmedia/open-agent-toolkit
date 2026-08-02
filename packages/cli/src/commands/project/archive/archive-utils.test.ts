@@ -26,6 +26,7 @@ import {
   resolveArchiveProjectTarget,
   resolveLocalArchiveProjectPath,
   resolvePrimaryRepoRoot,
+  verifySelectedProjectRecapForArchive,
 } from './archive-utils';
 
 describe('archive utils', () => {
@@ -52,24 +53,35 @@ describe('archive utils', () => {
     projectPath: string,
     {
       distinctCanonicalHashes = false,
+      includeReviewEvidence,
+      mode = 'unattended',
       outcome = 'built-not-durable',
       recipeId = 'project-recap',
       runName = 'selected-run',
+      sourceBacklinks,
     }: {
       distinctCanonicalHashes?: boolean;
-      outcome?: 'built-not-durable' | 'failed' | 'incomplete';
+      includeReviewEvidence?: boolean;
+      mode?: 'interactive' | 'unattended';
+      outcome?:
+        | 'built-not-durable'
+        | 'built-needs-review'
+        | 'failed'
+        | 'incomplete';
       recipeId?: string;
       runName?: string;
+      sourceBacklinks?: unknown;
     } = {},
   ): Promise<{
     relativeRunPath: string;
     runRoot: string;
     manifestPath: string;
+    immutableCount: number;
   }> {
     const relativeRunPath = join('explainers', 'project-recap', runName);
     const runRoot = join(projectPath, relativeRunPath);
-    const files = {
-      'run-request.json': '{"mode":"unattended"}\n',
+    const files: Record<string, string | Buffer> = {
+      'run-request.json': `${JSON.stringify({ mode })}\n`,
       'source/fact-base.json': '{"claims":[]}\n',
       'source/fact-base.md': '# Facts\n',
       'source/content-approval.json': '{"status":"approved"}\n',
@@ -78,17 +90,160 @@ describe('archive utils', () => {
       'theme.resolved.json': '{"name":"neutral"}\n',
       'site/index.html': `<h1>${runName}</h1>\n`,
     };
+    if (outcome === 'built-not-durable') {
+      for (const path of [
+        'source/set-plan/request.json',
+        'source/set-plan/result.json',
+        'source/set-plan/ledger.json',
+        'source/set-plan/portfolio.json',
+        'source/set-plan/drafts.json',
+      ]) {
+        files[path] = '{}\n';
+      }
+    }
+    const retainReviewEvidence =
+      includeReviewEvidence ??
+      (mode === 'unattended' && outcome === 'built-not-durable');
+    if (retainReviewEvidence) {
+      const runtime = {
+        kind: 'launched',
+        name: 'chromium',
+        version: '123.0.6312.0',
+      };
+      const capture = {
+        format: 'png',
+        fullPage: false,
+        reducedMotion: 'reduce',
+        animationsDisabled: true,
+      };
+      const captureIdentity = canonicalHash({ runtime, capture });
+      const renderedHash = hashContent(files['site/index.html']);
+      const plan = {
+        schemaVersion: 'explainer-kit.set-plan/v1',
+        planId: 'recap-plan',
+        recipe: { id: 'project-recap', version: '1' },
+        sourceIds: ['plan'],
+        ledger: {
+          terminology: [{ term: 'recap', meaning: 'The project recap.' }],
+          statuses: [{ subject: 'review', value: 'passed' }],
+          numbers: [{ subject: 'artifacts', value: 1, unit: 'artifact' }],
+        },
+        portfolio: [
+          {
+            artifactId: 'recap',
+            artifactType: 'hub',
+            profileId: 'recap-hub',
+            required: true,
+            sourceIds: ['plan'],
+            draft: 'Summarize the completed project.',
+            visualIntent: 'Lead with the reviewed outcome.',
+          },
+        ],
+      };
+      const evidence = [];
+      for (const viewport of ['mobile', 'tablet', 'desktop']) {
+        const screenshot = Buffer.from([
+          0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+        ]);
+        const metrics = `${JSON.stringify({
+          schemaVersion: 'explainer-kit.browser-evidence/v2',
+          artifactId: 'recap',
+          viewport,
+          scenario: 'default',
+          runtime,
+          capture,
+          captureIdentity,
+          metrics: {
+            pageOverflowX: false,
+            clippedX: [],
+            viewportClipped: [],
+            unreadableHeadings: [],
+          },
+        })}\n`;
+        const screenshotPath = `qa/browser/recap/${viewport}.png`;
+        const metricsPath = `qa/browser/recap/${viewport}.json`;
+        files[screenshotPath] = screenshot;
+        files[metricsPath] = metrics;
+        files[`qa/visual-review/attempt-1/evidence/recap/${viewport}.png`] =
+          screenshot;
+        files[`qa/visual-review/attempt-1/evidence/recap/${viewport}.json`] =
+          metrics;
+        evidence.push({
+          viewport,
+          screenshotPath,
+          screenshotHash: hashContent(screenshot),
+          metricsPath,
+          metricsHash: hashContent(metrics),
+          captureIdentity,
+        });
+      }
+      const requestPayload = {
+        schemaVersion: 'explainer-kit.visual-review-request/v1',
+        browserRuntime: runtime,
+        captureIdentity,
+        plan,
+        renderedArtifacts: [
+          {
+            artifactId: 'recap',
+            renderedPath: 'site/index.html',
+            renderedHash,
+            cohesionObservations: [
+              {
+                artifactId: 'recap',
+                contentHash: renderedHash,
+                group: 'terminology',
+                claim: 'recap',
+                value: 'recap',
+              },
+              {
+                artifactId: 'recap',
+                contentHash: renderedHash,
+                group: 'statuses',
+                claim: 'review',
+                value: 'passed',
+              },
+              {
+                artifactId: 'recap',
+                contentHash: renderedHash,
+                group: 'numericClaims',
+                claim: 'artifacts',
+                value: 1,
+              },
+            ],
+            evidence,
+          },
+        ],
+      };
+      const requestHash = canonicalHash(requestPayload);
+      const reviewRequest = {
+        ...requestPayload,
+        requestId: `visual-review-${requestHash.replace(/^sha256:/, '')}`,
+        requestHash,
+      };
+      files['qa/visual-review/attempt-1/request.json'] =
+        `${JSON.stringify(reviewRequest)}\n`;
+      files['qa/visual-review/attempt-1/result.json'] = `${JSON.stringify({
+        schemaVersion: 'explainer-kit.visual-review-result/v1',
+        reviewId: 'archive-review',
+        requestId: reviewRequest.requestId,
+        requestHash,
+        reviewedAt: '2026-04-01T12:34:56.000Z',
+        disposition: 'pass',
+        artifactIds: ['recap'],
+        findings: [],
+      })}\n`;
+    }
 
     for (const [relativePath, contents] of Object.entries(files)) {
       const target = join(runRoot, relativePath);
       await mkdir(dirname(target), { recursive: true });
-      await writeFile(target, contents, 'utf8');
+      await writeFile(target, contents);
     }
 
     const immutableHashes = Object.fromEntries(
       Object.entries(files).map(([relativePath, contents]) => [
         relativePath,
-        `sha256:${createHash('sha256').update(contents).digest('hex')}`,
+        hashContent(contents),
       ]),
     );
     const manifestPath = join(runRoot, 'manifest.json');
@@ -107,6 +262,9 @@ describe('archive utils', () => {
             : immutableHashes['source/fact-base.json'],
           inputHashes: {},
           authorResultPaths: ['source/author/recap.json'],
+          ...(sourceBacklinks !== undefined && {
+            backlinks: sourceBacklinks,
+          }),
         },
         theme: {
           path: 'theme.resolved.json',
@@ -139,7 +297,12 @@ describe('archive utils', () => {
     );
     await writeFile(join(runRoot, 'build-record.json'), '{}\n', 'utf8');
 
-    return { relativeRunPath, runRoot, manifestPath };
+    return {
+      relativeRunPath,
+      runRoot,
+      manifestPath,
+      immutableCount: Object.keys(immutableHashes).length,
+    };
   }
 
   it('builds a repo-scoped remote archive URI', () => {
@@ -373,7 +536,7 @@ describe('archive utils', () => {
         exportRoot,
         manifest: {
           relativePath: 'manifest.json',
-          verifiedArtifactCount: 8,
+          verifiedArtifactCount: selected.immutableCount,
         },
       });
       await expect(
@@ -410,9 +573,138 @@ describe('archive utils', () => {
       { timestamp: () => '2026-04-01T12:34:56Z' },
     );
 
-    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(8);
+    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(
+      recap.immutableCount,
+    );
     await expect(access(projectPath)).rejects.toThrow();
   });
+
+  it('archives a successful interactive recap without visual-review evidence', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      mode: 'interactive',
+    });
+
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+
+    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(
+      recap.immutableCount,
+    );
+    await expect(access(projectPath)).rejects.toThrow();
+  });
+
+  it('rejects partial interactive review evidence and an unverified mode change', async () => {
+    const repoRoot = await createRepoRoot();
+    const partialProject = join(
+      repoRoot,
+      '.oat',
+      'projects',
+      'shared',
+      'partial',
+    );
+    await mkdir(partialProject, { recursive: true });
+    const partial = await createRecapPackage(partialProject, {
+      mode: 'interactive',
+    });
+    const partialPath = 'qa/browser/recap/mobile.png';
+    const partialContents = 'partial\n';
+    await mkdir(dirname(join(partial.runRoot, partialPath)), {
+      recursive: true,
+    });
+    await writeFile(join(partial.runRoot, partialPath), partialContents);
+    const partialManifest = JSON.parse(
+      await readFile(partial.manifestPath, 'utf8'),
+    ) as { immutableHashes: Record<string, string> };
+    partialManifest.immutableHashes[partialPath] =
+      `sha256:${createHash('sha256').update(partialContents).digest('hex')}`;
+    await writeFile(
+      partial.manifestPath,
+      `${JSON.stringify(partialManifest)}\n`,
+    );
+
+    await expect(
+      archiveProjectOnCompletion({
+        repoRoot,
+        projectPath: partialProject,
+        projectName: 'partial',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: partial.relativeRunPath,
+        s3SyncOnComplete: false,
+      }),
+    ).rejects.toThrow(
+      /incomplete visual-review evidence chain|screenshot evidence.*missing.*metrics/i,
+    );
+
+    const mutatedProject = join(
+      repoRoot,
+      '.oat',
+      'projects',
+      'shared',
+      'mutated',
+    );
+    await mkdir(mutatedProject, { recursive: true });
+    const mutated = await createRecapPackage(mutatedProject);
+    await writeFile(
+      join(mutated.runRoot, 'run-request.json'),
+      '{"mode":"interactive"}\n',
+    );
+
+    await expect(
+      archiveProjectOnCompletion({
+        repoRoot,
+        projectPath: mutatedProject,
+        projectName: 'mutated',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: mutated.relativeRunPath,
+        s3SyncOnComplete: false,
+      }),
+    ).rejects.toThrow(/hash verification failed.*run-request\.json/i);
+  });
+
+  it.each(['failed', 'incomplete'] as const)(
+    'rejects partial review evidence retained by a %s package',
+    async (outcome) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', outcome);
+      await mkdir(projectPath, { recursive: true });
+      const recap = await createRecapPackage(projectPath, { outcome });
+      const partialPath = 'qa/review-gate/attempt-1-error.json';
+      const partialContents = '{"code":"E_VISUAL_REVIEW"}\n';
+      await mkdir(dirname(join(recap.runRoot, partialPath)), {
+        recursive: true,
+      });
+      await writeFile(join(recap.runRoot, partialPath), partialContents);
+      const manifest = JSON.parse(
+        await readFile(recap.manifestPath, 'utf8'),
+      ) as { immutableHashes: Record<string, string> };
+      manifest.immutableHashes[partialPath] =
+        `sha256:${createHash('sha256').update(partialContents).digest('hex')}`;
+      await writeFile(recap.manifestPath, `${JSON.stringify(manifest)}\n`);
+
+      await expect(
+        archiveProjectOnCompletion({
+          repoRoot,
+          projectPath,
+          projectName: outcome,
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        }),
+      ).rejects.toThrow(/incomplete visual-review evidence chain/i);
+    },
+  );
 
   it('preserves existing behavior when no recap run is selected', async () => {
     const repoRoot = await createRepoRoot();
@@ -502,6 +794,54 @@ describe('archive utils', () => {
     await expect(access(projectPath)).resolves.toBeUndefined();
   });
 
+  it('refuses to export a recap whose visual review gate is unresolved', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      outcome: 'built-needs-review',
+    });
+
+    await expect(
+      archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      }),
+    ).rejects.toThrow(/built-needs-review.*visual review.*before archival/i);
+
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('rejects an incomplete immutable visual-review evidence chain', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    const manifest = JSON.parse(await readFile(recap.manifestPath, 'utf8')) as {
+      immutableHashes: Record<string, string>;
+    };
+    delete manifest.immutableHashes['qa/visual-review/attempt-1/result.json'];
+    await writeFile(recap.manifestPath, `${JSON.stringify(manifest)}\n`);
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      ),
+    ).rejects.toThrow(/incomplete visual-review evidence chain/i);
+  });
+
   it('fails without overwrite when the recap destination already exists', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
@@ -584,6 +924,120 @@ describe('archive utils', () => {
       'project-recaps',
     );
     expect(await readdir(exportParent)).toEqual([]);
+  });
+
+  it('accepts canonical immutable GitHub source backlinks', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      sourceBacklinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs/phase%204/plan.md#L12-L19`,
+        },
+      ],
+    });
+
+    await expect(
+      verifySelectedProjectRecapForArchive(projectPath, recap.relativeRunPath),
+    ).resolves.toBeUndefined();
+  });
+
+  it.each([
+    {
+      name: 'an unknown backlink key',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/plan.md#L1`,
+          branch: 'main',
+        },
+      ],
+    },
+    {
+      name: 'a moving branch revision',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: 'https://github.com/acme/project/blob/main/plan.md#L1',
+        },
+      ],
+    },
+    {
+      name: 'a non-GitHub source URL',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://example.com/acme/project/blob/${'1'.repeat(40)}/plan.md#L1`,
+        },
+      ],
+    },
+    {
+      name: 'an invalid line range',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/plan.md#L19-L12`,
+        },
+      ],
+    },
+    {
+      name: 'a literal dot segment that normalizes to a moving ref',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/../main/plan.md#L1`,
+        },
+      ],
+    },
+    {
+      name: 'an encoded dot segment that normalizes to a moving ref',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/%2e%2e/main/plan.md#L1`,
+        },
+      ],
+    },
+    {
+      name: 'an empty path segment',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs//plan.md#L1`,
+        },
+      ],
+    },
+    {
+      name: 'a decoded slash path segment',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs/%2Fplan.md#L1`,
+        },
+      ],
+    },
+    {
+      name: 'noncanonical encoding of an unreserved character',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs/%70lan.md#L1`,
+        },
+      ],
+    },
+  ])('rejects source backlinks with $name', async ({ backlinks }) => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      sourceBacklinks: backlinks,
+    });
+
+    await expect(
+      verifySelectedProjectRecapForArchive(projectPath, recap.relativeRunPath),
+    ).rejects.toThrow(/manifest contract/i);
   });
 
   it.each([
@@ -1624,3 +2078,23 @@ describe('archive utils', () => {
     });
   });
 });
+
+function hashContent(value: string | Buffer): string {
+  return `sha256:${createHash('sha256').update(value).digest('hex')}`;
+}
+
+function canonicalHash(value: unknown): string {
+  return hashContent(JSON.stringify(canonicalize(value)));
+}
+
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, entry]) => [key, canonicalize(entry)]),
+    );
+  }
+  return value;
+}
