@@ -1746,7 +1746,7 @@ terminal and does not authorize replacement, fallback, or remote posting.
 
 #### Recovery p06-t06-r04: Expose partial-phase review planning
 
-**Status:** in_progress
+**Status:** completed
 **Prior terminal:** Accepted blocked run
 `28539d55590d5ad673f0e1bd1ad365ec` remains authoritative and terminal; it is
 not resumed, replaced, relabeled, or treated as a passing review.
@@ -1801,6 +1801,45 @@ release validation passed.
 **Next:** Push the review-bookkeeping and fix commits, require green CI and
 release dry run, refresh the detached enforce fixture, and hand the exact fresh
 re-review range through p06-t06 to the root coordinator.
+
+#### Recovery p06-t06-r06: Unify command evidence digests
+
+**Status:** in_progress
+**Prior review:** Narrowed Local Tier 1 run
+`11e75c4b2ff7d9332c094a8a44c81d3c` reviewed
+`b4f40fbc2590d3f8ad4aeffd9c88e738e8c5f389..cd165ab62a4c1359c9ad4550db83791821f27f94`
+and found 0 Critical, 0 Important, 0 Medium, and 0 Minor findings, substantively
+resolving the prior Medium.
+**Terminal accounting:** Launcher validation rejected
+`/reviewAccounting/evidence/2/commandResultDigest`. The pointer is outside the
+closed repair allowlist, so the run is terminal accounting-invalid. No artifact
+was published; its private artifact and terminal files were deleted. It is not
+passing and must not be relabeled, resumed, or replaced at the same HEAD.
+**Operator disposition:** Authorized one bounded recovery that centralizes
+canonical SHA-256 command-result digests over exactly
+`{ scopeRefs, provenance, result }`, aligns primary and delegated validation,
+updates test and lifecycle fixtures, adds deterministic reviewer guidance and
+asset contracts, regenerates provider views and bundles without another
+PR-scoped version bump, runs all release-candidate gates, and returns a fresh
+range for root-owned Local Tier 1 only.
+**Implementation:** Added one typed digest helper used by both output and worker
+dossier validation; updated primary, delegated, lifecycle, and type fixtures;
+and documented the exact formula plus a provider-portable Node computation
+recipe in canonical reviewer guidance.
+**Verification:** The focused canonical JSON, digest, output-validator,
+worker-dossier, schema, lifecycle, type, sync, bundle, and reviewer-contract
+suite passed 222/222 tests across 11 files; the generated-view contract rerun
+passed 39/39. Workspace check and type-check each passed 10 tasks. Package
+suites passed 4,118 tests, smoke passed 131 tests, all five package builds,
+10 lint tasks, 10 format tasks, and all six docs builds passed. Release
+validation passed five lockstep 0.2.29 public packages and 65 visual
+measurements; provider sync dry-run reported no drift. Canonical reviewer
+version remains 1.2.1 with no repeated-edit bump.
+
+**Next:** Commit and push the bounded recovery, require terminal passing CI and
+release dry run, refresh the detached enforce fixture, rerun the 756-test
+p06-t06 preflight, and return the fresh narrowed range to the root. Do not
+launch Local Tier 1 from this recovery.
 
 ## Orchestration Runs
 

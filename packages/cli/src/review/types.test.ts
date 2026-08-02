@@ -8,6 +8,7 @@ import type {
 } from '@review/index';
 import { describe, expect, it } from 'vitest';
 
+import { commandResultDigest } from './command-result-digest';
 import {
   DIRECT_REVIEW_CLAIM_KINDS,
   PROVENANCE_EVIDENCE_STRATEGIES,
@@ -470,7 +471,7 @@ const evidence = {
   provenance: 'host',
   digest: 'evidence-digest',
   commandId: command.id,
-  commandResultDigest: 'command-result-digest',
+  commandResultDigest: commandResultDigest(command),
 } satisfies ReviewEvidenceRefV1;
 
 const accounting = {

@@ -11,8 +11,10 @@ import {
   evaluateWholeDiffEligibility,
 } from './budget';
 import { executeCommandInvocation } from './command-invocation';
+import { commandResultDigest } from './command-result-digest';
 import type {
   ReviewAccountingV1,
+  ReviewCommandEvidenceV1,
   ReviewPlanV1,
   ReviewerTerminalV1,
   ValidatedWorkerCoverageProjectionV1,
@@ -201,7 +203,7 @@ function reviewPlan(
         seamObligationIds: [],
         risk: 'low',
         evidenceClass: 'deterministic',
-        strategy: 'inventory',
+        strategy: 'command',
         checks: ['verify'],
         delegated: true,
         independenceRationale: 'Independent deterministic verification.',
@@ -261,7 +263,7 @@ function workerDossier(
   outcome: 'complete' | 'partial' = 'complete',
 ): WorkerDossierV1 {
   const verification = laneId === 'verification-lane';
-  return {
+  const dossier: WorkerDossierV1 = {
     schemaVersion: 1,
     runId,
     planDigest,
@@ -272,32 +274,49 @@ function workerDossier(
     inspectedObligationIds:
       outcome === 'complete' && !verification ? ['p02-t01'] : [],
     commands: [],
-    evidence: verification
-      ? [
-          {
-            id: 'inventory-1',
-            kind: 'inventory',
-            locator: 'inventory:verification-lane',
-            scopeRefs: [
-              {
-                bucket: 'lane',
-                bucketId: 'verification-lane',
-                pathIndexes: [0],
-              },
-            ],
-            provenance: 'validated inventory executor',
-            digest: 'inventory-digest',
-            commandId: null,
-            commandResultDigest: null,
-          },
-        ]
-      : [],
+    evidence: [],
     candidateFindings: [],
     uncoveredObligationIds:
       outcome === 'partial' && !verification ? ['p02-t01'] : [],
     uncertainty:
       outcome === 'partial' ? ['Worker stopped before inspection.'] : [],
   };
+  if (verification) {
+    const command: ReviewCommandEvidenceV1 = {
+      id: 'verification-command',
+      command: 'pnpm test',
+      cwd: '.',
+      scopeRefs: [
+        {
+          bucket: 'lane',
+          bucketId: 'verification-lane',
+          pathIndexes: [0],
+        },
+      ],
+      provenance: {
+        runner: 'worker',
+        invocationDigest: 'verification-invocation',
+        capturedAt: '2026-08-02T20:00:00.000Z',
+      },
+      result: {
+        status: 'completed',
+        exitCode: 0,
+        outputDigest: 'verification-output',
+      },
+    };
+    dossier.commands.push(command);
+    dossier.evidence.push({
+      id: 'verification-command-evidence',
+      kind: 'command',
+      locator: 'command:verification-command',
+      scopeRefs: command.scopeRefs,
+      provenance: 'validated command executor',
+      digest: 'command-evidence-digest',
+      commandId: command.id,
+      commandResultDigest: commandResultDigest(command),
+    });
+  }
+  return dossier;
 }
 
 function terminal(

@@ -5,6 +5,7 @@ import {
   evaluateWholeDiffEligibility,
 } from './budget';
 import { hashCanonicalJson } from './canonical-json';
+import { commandResultDigest } from './command-result-digest';
 import { validateReviewPlan } from './plan-validator';
 import type {
   PreparedReviewContextV1,
@@ -149,8 +150,8 @@ function completeDossier(): WorkerDossierV1 {
     uncoveredObligationIds: [],
     uncertainty: [],
   };
-  dossier.evidence[0]!.commandResultDigest = hashCanonicalJson(
-    dossier.commands[0]!.result,
+  dossier.evidence[0]!.commandResultDigest = commandResultDigest(
+    dossier.commands[0]!,
   );
   return dossier;
 }
@@ -359,7 +360,7 @@ function acceptedDossier(
     provenance: 'validated command executor',
     digest: 'evidence-digest',
     commandId: command.id,
-    commandResultDigest: hashCanonicalJson(command.result),
+    commandResultDigest: commandResultDigest(command),
   });
   return dossier;
 }
@@ -569,6 +570,35 @@ describe('worker dossier validation', () => {
       ]),
     );
   });
+
+  it.each([
+    [
+      'result-only',
+      (dossier: WorkerDossierV1) =>
+        hashCanonicalJson(dossier.commands[0]!.result),
+    ],
+    [
+      'output-only',
+      (dossier: WorkerDossierV1) => {
+        const result = dossier.commands[0]!.result;
+        return hashCanonicalJson(
+          result.status === 'completed' ? result.outputDigest : null,
+        );
+      },
+    ],
+  ] as const)(
+    'rejects %s delegated command evidence digests',
+    (_label, digestFor) => {
+      const dossier = completeDossier();
+      dossier.evidence[0]!.commandResultDigest = digestFor(dossier);
+
+      expect(validateWorkerDossier(plan(), 'plan-digest', dossier)).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ code: 'command-result-digest-mismatch' }),
+        ]),
+      );
+    },
+  );
 
   it('requires explicit uncertainty and coherent uncovered coverage for partial dossiers', () => {
     const noUncertainty = completeDossier();

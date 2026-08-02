@@ -77,7 +77,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T20:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T21:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -148,6 +148,15 @@ the same recovery to the complete six-entry mechanical cleanup. PR CI also
 reported platform/load-sensitive failures in artifact replacement setup and a
 single broker lifecycle timeout. The operator separately authorized test-only
 stabilization recovery `p06-t06-r03` without production changes.
+The narrowed Local Tier 1 run `11e75c4b2ff7d9332c094a8a44c81d3c`
+substantively resolved the prior Medium with no findings over
+`b4f40fbc2590d3f8ad4aeffd9c88e738e8c5f389..cd165ab62a4c1359c9ad4550db83791821f27f94`,
+but launcher accounting validation rejected its command-result digest. That
+run is terminal accounting-invalid: no artifact was published, its private
+artifact and terminal files were deleted, and it must not be relabeled,
+resumed, or replaced at the same HEAD. The operator authorized bounded
+recovery `p06-t06-r06` to unify the canonical command-evidence digest before a
+new root-owned Local Tier 1 review on a fresh range.
 
 ## Artifacts
 
@@ -314,7 +323,11 @@ stabilization recovery `p06-t06-r03` without production changes.
 - ✓ Authorized p06-t06-r04 planning-contract recovery passed Local Tier 1
 - ⚠ Local Tier 1 found one Medium cross-phase input-classification defect
 - ✓ Bounded p06-t06-r05 schema fix passed release-candidate verification
-- → Root reruns Local Tier 1 through p06-t06 on the fresh fix range
+- ⚠ Narrowed Local Tier 1 resolved the Medium but was terminal
+  accounting-invalid
+- ✓ Bounded p06-t06-r06 digest recovery passed release-candidate verification
+- → Push p06-t06-r06, await green checks, refresh the fixture, then root reruns
+  Local Tier 1 on the fresh range
 
 ## Blockers
 
@@ -323,5 +336,6 @@ after the fresh Local artifact Tier 1 re-review passes.
 
 ## Next Milestone
 
-Push p06-t06-r05, require green PR checks, and have the root rerun Local Tier 1
-through p06-t06 before any Remote structured Tier 1 posting.
+Complete and push p06-t06-r06, require green PR checks and release dry run,
+refresh the detached enforce fixture, and have the root rerun Local Tier 1
+through p06-t06 on the fresh range before any Remote structured Tier 1 posting.

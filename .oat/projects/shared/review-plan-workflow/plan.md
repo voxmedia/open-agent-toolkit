@@ -3797,6 +3797,48 @@ release-candidate workspace gates.
 **Step 3: Commit**
 `fix(p06-t06): reject cross-phase review boundaries`
 
+#### Recovery p06-t06-r06: Unify command evidence digests
+
+**Finding:** Narrowed Local Tier 1 run
+`11e75c4b2ff7d9332c094a8a44c81d3c` found no review findings over
+`b4f40fbc2590d3f8ad4aeffd9c88e738e8c5f389..cd165ab62a4c1359c9ad4550db83791821f27f94`,
+but launcher accounting validation rejected
+`/reviewAccounting/evidence/2/commandResultDigest`. Primary output validation
+hashed command scope, provenance, and terminal result while worker-dossier
+validation hashed only the result, and canonical reviewer guidance did not
+state the required formula.
+
+**Recovery files:**
+
+- Add: `packages/cli/src/review/command-result-digest.ts`
+- Add: `packages/cli/src/review/command-result-digest.test.ts`
+- Modify: `packages/cli/src/review/output-validator.ts`
+- Modify: `packages/cli/src/review/output-validator.test.ts`
+- Modify: `packages/cli/src/review/worker-dossier.ts`
+- Modify: `packages/cli/src/review/worker-dossier.test.ts`
+- Modify: lifecycle and type fixtures for command evidence
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: reviewer asset contract tests
+- Regenerate: manifest-owned provider views and CLI bundles
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/state.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Implement** Add one typed canonical SHA-256 helper over exactly
+`{ scopeRefs, provenance, result }` and use it for both primary and delegated
+command evidence. Document a deterministic provider-portable recipe in the
+canonical reviewer and reject result-only, output-only, and wrong digests.
+Preserve the closed accounting repair allowlist and accepted-handle terminal
+rules.
+
+**Step 2: Verify** Prove primary and delegated evidence share the exact digest
+contract across unit, lifecycle, type, coordinator, generated-asset, workspace,
+docs, sync, bundle, and release gates. Keep public packages lockstep at
+unpublished 0.2.29 and do not add another canonical skill version bump.
+
+**Step 3: Commit**
+`fix(p06-t06): unify command evidence digests`
+
 ### Task p06-t07: Publish Stage A and start the soak
 
 **Files:**

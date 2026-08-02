@@ -1,4 +1,5 @@
-import { hashCanonicalJson, parseStrictJson } from './canonical-json';
+import { parseStrictJson } from './canonical-json';
+import { commandResultDigest } from './command-result-digest';
 import type {
   ReviewCommandEvidenceV1,
   ReviewEvidenceRefV1,
@@ -533,7 +534,7 @@ export function validateWorkerDossier(
   const commandResultDigests = new Map(
     dossier.commands.map((command) => [
       command.id,
-      hashCanonicalJson(command.result),
+      commandResultDigest(command),
     ]),
   );
   const evidenceIdSet = new Set(evidenceIds);

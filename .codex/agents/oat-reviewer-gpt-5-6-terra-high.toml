@@ -191,6 +191,22 @@ or absence claims, conflicts, and cross-lane gaps; verifies deterministic
 results through command, scope, provenance, and result; and samples positive
 coverage according to the plan.
 
+Before emitting any direct or delegated `kind: command` evidence, compute
+`commandResultDigest` as the lowercase SHA-256 hex digest of the canonical JSON
+object `{ scopeRefs: command.scopeRefs, provenance: command.provenance, result:
+command.result }`. Those are the only three top-level fields. Canonical JSON
+sorts every object's keys recursively, preserves array order, and emits compact
+JSON with no extra whitespace. A result-only digest, an output-only digest, or
+a digest of the full command record is invalid. The branch-local validators use
+`commandResultDigest` from
+`packages/cli/src/review/command-result-digest.ts`; reviewers can compute the
+identical value by piping one complete command record as JSON to this
+provider-portable Node recipe:
+
+```bash
+node -e 'const fs=require("node:fs"),{createHash}=require("node:crypto");const c=JSON.parse(fs.readFileSync(0,"utf8"));const j=v=>v===null||typeof v==="boolean"||typeof v==="string"?JSON.stringify(v):typeof v==="number"&&Number.isFinite(v)?JSON.stringify(v):Array.isArray(v)?"["+v.map(j).join(",")+"]":v&&typeof v==="object"?"{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+j(v[k])).join(",")+"}":(()=>{throw new Error("value is not representable as JSON")})();process.stdout.write(createHash("sha256").update(j({scopeRefs:c.scopeRefs,provenance:c.provenance,result:c.result})).digest("hex")+"\\n")'
+```
+
 An accepted worker timeout or failure never authorizes a replacement launch.
 The accepted primary continuation may complete only the paths and obligations
 already listed in that lane's `primaryContingency`, without launching another

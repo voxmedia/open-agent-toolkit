@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { hashCanonicalJson } from './canonical-json';
+import { commandResultDigest } from './command-result-digest';
 import {
   validateReviewOutput,
   type ReviewOutputValidationContext,
@@ -27,11 +28,7 @@ function fixture(): {
     },
     result: { status: 'completed', exitCode: 0, outputDigest: 'output' },
   };
-  const commandResultDigest = hashCanonicalJson({
-    scopeRefs: command.scopeRefs,
-    provenance: command.provenance,
-    result: command.result,
-  });
+  const digest = commandResultDigest(command);
   const accounting: ReviewAccountingV1 & { completion: 'complete' } = {
     schemaVersion: 1,
     receipt: 'receipt',
@@ -49,7 +46,7 @@ function fixture(): {
         provenance: 'host',
         digest: 'evidence',
         commandId: command.id,
-        commandResultDigest,
+        commandResultDigest: digest,
       },
     ],
     lanes: [
@@ -226,6 +223,34 @@ describe('review output validation', () => {
         outputDigest: expect.stringMatching(/^[0-9a-f]{64}$/),
       },
     );
+  });
+
+  it.each([
+    [
+      'result-only',
+      (command: ReviewCommandEvidenceV1) => hashCanonicalJson(command.result),
+    ],
+    [
+      'output-only',
+      (command: ReviewCommandEvidenceV1) =>
+        hashCanonicalJson(
+          command.result.status === 'completed'
+            ? command.result.outputDigest
+            : null,
+        ),
+    ],
+    ['wrong', () => 'wrong'],
+  ] as const)('rejects %s command evidence digests', (_label, digestFor) => {
+    const { context, terminal } = fixture();
+    const accounting = terminal.reviewAccounting;
+    if (accounting === null) throw new Error('fixture accounting is missing');
+    const command = accounting.lanes[0]!.commands[0]!;
+    const evidence = accounting.evidence[0]!;
+    if (evidence.kind !== 'command')
+      throw new Error('fixture evidence is not command');
+    evidence.commandResultDigest = digestFor(command);
+
+    expect(errorCodes(context, terminal)).toContain('digest-mismatch');
   });
 
   it.each([

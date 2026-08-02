@@ -137,6 +137,27 @@ describe('review skill contracts', () => {
     }
   });
 
+  it('pins canonical command evidence digests in every reviewer view', () => {
+    for (const path of [
+      '.agents/agents/oat-reviewer.md',
+      '.claude/agents/oat-reviewer.md',
+      '.cursor/agents/oat-reviewer.md',
+      '.cursor/agents/oat-reviewer-gpt-5-6-sol-high.md',
+    ]) {
+      const content = readRepoFile(path);
+      const normalized = content.replace(/\s+/g, ' ');
+      expect(normalized, path).toContain(
+        '{ scopeRefs: command.scopeRefs, provenance: command.provenance, result: command.result }',
+      );
+      expect(content, path).toContain(
+        'packages/cli/src/review/command-result-digest.ts',
+      );
+      expect(content, path).toContain(
+        'createHash("sha256").update(j({scopeRefs:c.scopeRefs,provenance:c.provenance,result:c.result}))',
+      );
+    }
+  });
+
   it('makes Tier 3 a receipt-bound selective inline continuation', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-review-provide/SKILL.md',

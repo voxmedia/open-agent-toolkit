@@ -1,4 +1,5 @@
 import { canonicalizeJson, hashCanonicalJson } from './canonical-json';
+import { commandResultDigest } from './command-result-digest';
 import type {
   ArtifactFindingProjectionV1,
   PlanValidationReceiptV1,
@@ -41,14 +42,6 @@ function add(
 
 function same(left: unknown, right: unknown): boolean {
   return canonicalizeJson(left) === canonicalizeJson(right);
-}
-
-function commandResultDigest(command: ReviewCommandEvidenceV1): string {
-  return hashCanonicalJson({
-    scopeRefs: command.scopeRefs,
-    provenance: command.provenance,
-    result: command.result,
-  });
 }
 
 function validateExactBucketIds(
