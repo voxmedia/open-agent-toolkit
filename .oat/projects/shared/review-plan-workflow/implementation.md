@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: p05-t08
+oat_current_task_id: p05-t15
 oat_generated: false
 ---
 
@@ -30,11 +30,11 @@ oat_generated: false
 | Phase 2 | completed   | 55    | 55/55     |
 | Phase 3 | completed   | 10    | 10/10     |
 | Phase 4 | completed   | 27    | 27/27     |
-| Phase 5 | in_progress | 14    | 7/14      |
+| Phase 5 | in_progress | 15    | 14/15     |
 | Phase 6 | pending     | 7     | 0/7       |
 | Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 112/132 tasks completed
+**Total:** 119/133 tasks completed
 
 ## Execution Configuration
 
@@ -1423,6 +1423,55 @@ errors.
 
 **Next:** Resume the Phase 5 implementer at p05-t08, complete the seven bounded
 review fixes, then independently re-review the fix range.
+
+### Task p05-t08: (review I1) Complete gate-child correlation forwarding
+
+**Status:** completed
+**Commit:** `c410d4b9`
+**Verification:** 176 focused tests passed.
+
+### Task p05-t09: (review M1) Invoke pre-start rejection cleanup
+
+**Status:** completed
+**Commit:** `17685a17`
+**Verification:** 223 focused tests passed.
+
+### Task p05-t10: (review M2) Preserve structured budget diagnostics
+
+**Status:** completed
+**Commit:** `5e4e52e5`
+**Verification:** 21 focused tests passed.
+
+### Task p05-t11: (review m1) Remove unreachable legacy projection scaffolding
+
+**Status:** completed
+**Commit:** `340c32b5`
+**Verification:** 12 focused tests passed.
+
+### Task p05-t12: (review m2) Use launcher authority in failure translation
+
+**Status:** completed
+**Commit:** `ca467797`
+**Verification:** 4 focused tests passed.
+
+### Task p05-t13: (review m3) Restore gate failure envelope diagnostics
+
+**Status:** completed
+**Commit:** `c4a9037d`
+**Verification:** 214 focused tests passed.
+
+### Task p05-t14: (review m4) Align regression-witness file manifests
+
+**Status:** completed
+**Commit:** `3228861f`
+**Verification:** Exact-range diff check passed.
+
+### Task p05-t15: Recover gate-correlation prompt-site inventory
+
+**Status:** pending
+**Operator disposition:** Authorized one narrow inventory recovery and Phase 5
+re-review on 2026-08-02. Map the four correlation-forwarding prompt sites to
+`NG`, rerun the inventory and full suites, then re-review.
 
 ## Orchestration Runs
 

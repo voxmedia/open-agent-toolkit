@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t08
-oat_last_commit: 73dcc324048553477f5e226ee8cc10259d512caa
+oat_current_task: p05-t15
+oat_last_commit: 3228861fe31cea23f5393c9db47b1c4d1d68e7e9
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T03:08:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T03:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,7 +85,7 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 5 review fixes
+**Status:** Phase 5 inventory recovery
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
@@ -112,6 +112,9 @@ Tasks p05-t05 through p05-t07 and independent root verification now pass.
 The independent Phase 5 review found one Important production correlation gap,
 two Medium gaps, and four bounded Minor issues. All seven findings are converted
 to p05-t08 through p05-t14.
+All seven review fixes pass focused verification, but the full suite found four
+new correlation-forwarding prompt sites missing from the canonical autonomy
+inventory. The operator authorized narrow p05-t15 recovery and re-review.
 
 ## Artifacts
 
@@ -243,7 +246,11 @@ to p05-t08 through p05-t14.
 - ⚠ PJM doctor has four pre-existing layout warnings and no errors
 - ⚠ Phase 5 review found 1 Important, 2 Medium, and 4 Minor findings
 - ✓ Converted every finding to p05-t08 through p05-t14
-- → Resume implementation at p05-t08
+- ✓ p05-t08 through p05-t14 completed at `3228861f`
+- ✓ Combined review-fix union passed 423 tests
+- ⚠ Full CLI suite has one inventory-only failure for four unmapped sites
+- ✓ Operator authorized p05-t15 inventory recovery and re-review
+- → Execute p05-t15
 
 ## Blockers
 
@@ -251,4 +258,5 @@ None.
 
 ## Next Milestone
 
-Complete p05-t08 through p05-t14, then independently re-review the fix range.
+Complete p05-t15, rerun the full suite, then independently re-review Phase 5
+fixes.

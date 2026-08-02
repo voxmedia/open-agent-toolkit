@@ -3307,6 +3307,36 @@ weakening regression evidence.
 
 **Step 5: Commit** `docs(p05-t14): align Phase 5 file manifests`
 
+### Task p05-t15: Recover gate-correlation prompt-site inventory
+
+**Files:**
+
+- Modify: `.agents/docs/autonomy-contract.md`
+- Modify: `.agents/skills/oat-project-implement/references/docs/autonomy-contract.md`
+- Modify: `.agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md`
+- Modify: `.agents/skills/oat-project-document/references/docs/autonomy-contract.md`
+- Modify: `.agents/skills/oat-project-pr-final/references/docs/autonomy-contract.md`
+
+**Step 1: Reproduce** Run the autonomy inventory test and confirm p05-t08 added
+unmapped sites `e8d1e36a647b`, `8843a9f20fa9`, `b6f80a4fb993`, and
+`71390f5b13ac`.
+
+**Step 2: Implement** Map all four sites to `NG`. They forward launcher-owned
+gate correlation IDs from prompt/environment channels into preparation input;
+they do not request user authorization or alter the coordinator's authority.
+Keep the canonical contract and its four required embedded copies
+byte-identical.
+
+**Step 3: Format** Run
+`pnpm exec oxfmt --write ".agents/docs/autonomy-contract.md" ".agents/skills/oat-project-implement/references/docs/autonomy-contract.md" ".agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md" ".agents/skills/oat-project-document/references/docs/autonomy-contract.md" ".agents/skills/oat-project-pr-final/references/docs/autonomy-contract.md"`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts`.
+Expected: all prompt sites are mapped and every required embedded contract is
+byte-identical.
+
+**Step 5: Commit** `chore(p05-t15): map gate correlation forwarding`
+
 ---
 
 ## Phase 6: Documentation, Provider Sync, and Compatibility Release
@@ -3814,11 +3844,11 @@ rewriting either historical result as passed.
 - Phase 2: 55 tasks - authoritative metadata, validation runtime, and review fixes
 - Phase 3: 10 tasks - reviewer planning, selective evidence, and review fixes
 - Phase 4: 27 tasks - accounting, repair, coordinator adoption, compatibility, and review fixes
-- Phase 5: 14 tasks - gate diagnostics, timeout, compatibility mode, and review fixes
+- Phase 5: 15 tasks - gate diagnostics, timeout, compatibility mode, and review fixes
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 132 tasks**
+**Total: 133 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.
