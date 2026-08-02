@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: p04-t26
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | in_progress | 27    | 25/27     |
-| Phase 5 | pending     | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | completed | 10    | 10/10     |
+| Phase 4 | in_review | 27    | 27/27     |
+| Phase 5 | pending   | 7     | 0/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 103/125 tasks completed
+**Total:** 105/125 tasks completed
 
 ## Execution Configuration
 
@@ -971,6 +971,20 @@ coverage.
 internal non-gate prompt site while preserving byte-identical embedded
 contracts.
 
+### Task p04-t26: (cycle-6 I1) Type exact commands in the planning payload
+
+**Status:** completed
+**Commit:** `a53761b4`
+**Outcome:** Preserved exact `ReviewCommandInvocationV1` structures for all four
+planning payload commands.
+
+### Task p04-t27: (cycle-6 M1) Cover the defensive launch-attempt invariant
+
+**Status:** completed
+**Commit:** `078c2642`
+**Outcome:** Added a direct store integrity test that varies only persisted
+launch-attempt identity and proves fail-closed, non-mutating rejection.
+
 ### Phase Verification
 
 - Focused Phase 4 union passed 253 tests.
@@ -1013,6 +1027,11 @@ contracts.
   3,913 CLI tests plus 129 smoke tests.
 - Root independently reran the inventory and sibling-attempt lifecycle tests,
   package gates, formatting, and the full workspace suite successfully.
+- p04-t26 and p04-t27 passed 17 focused tests, design search, package
+  type-check/lint, workspace formatting, exact-range diff checks, 3,914 CLI
+  tests, and 129 smoke tests.
+- Root independently reran all 17 focused tests and the full workspace suite
+  with the same passing results.
 
 ### Review Received: p04
 
@@ -1253,8 +1272,10 @@ the full test suite pass.
 one bounded alignment cycle for p04-t26 and p04-t27 and one independent cycle-7
 re-review.
 
-**Next:** Execute p04-t26 and p04-t27, then run the authorized cycle-7
-re-review.
+**Fix completion:** p04-t26 and p04-t27 completed at `078c2642`; implementer and
+independent root verification passed.
+
+**Next:** Run the authorized cycle-7 re-review.
 
 ---
 

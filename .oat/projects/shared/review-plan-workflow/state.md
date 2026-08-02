@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t26
-oat_last_commit: 394b49f36a4fceb6ef943ec27373a631728d8e55
+oat_current_task: null
+oat_last_commit: 078c2642bde1326cda171fa6c6f095124cb649e8
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T01:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T01:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,7 +85,7 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 4 cycle-7 alignment authorized
+**Status:** Phase 4 cycle-7 re-review pending
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
@@ -99,7 +99,7 @@ Important design-alignment gap and one Medium test-coverage gap. The override is
 extended by the operator for p04-t23, p04-t24, one narrow verification recovery,
 and one cycle-6 re-review. Full verification passes, but cycle 6 found two
 remaining acceptance-definition gaps. The operator authorized p04-t26,
-p04-t27, and one cycle-7 re-review.
+p04-t27, and one cycle-7 re-review. Both fixes and full verification pass.
 
 ## Artifacts
 
@@ -217,7 +217,9 @@ p04-t27, and one cycle-7 re-review.
 - ✓ Runtime sibling rejection, non-mutation, and all tests remain green
 - ✓ Operator authorized p04-t26, p04-t27, and one cycle-7 re-review
 - ✓ Aligned p04-t24 public-process acceptance with the reachable boundary
-- → Execute p04-t26
+- ✓ p04-t26 and p04-t27 completed at `078c2642`
+- ✓ Implementer and root suites pass 17 focused, 3,914 CLI, and 129 smoke tests
+- → Run the authorized cycle-7 re-review
 
 ## Blockers
 
@@ -225,5 +227,4 @@ None.
 
 ## Next Milestone
 
-Complete p04-t26 and p04-t27, root-verify the design and defensive invariant,
-then run the authorized cycle-7 re-review.
+Run the authorized cycle-7 re-review over p04-t26 and p04-t27.
