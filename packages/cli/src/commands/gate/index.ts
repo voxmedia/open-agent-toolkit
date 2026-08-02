@@ -841,7 +841,7 @@ function resolveGateExecTimeout(input: {
 
   const scope = input.reviewScope?.trim().toLowerCase() ?? '';
   if (reviewType === 'artifact') {
-    return { timeoutMs: 900_000, source: 'scope-default' };
+    return { timeoutMs: 1_200_000, source: 'scope-default' };
   }
   if (reviewType === 'code') {
     if (/^p\d+-t\d+$/.test(scope)) {

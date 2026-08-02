@@ -6127,6 +6127,42 @@ describe('oat gate', () => {
     expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: expected });
   });
 
+  it.each(['final', 'p01', 'p01-p03', 'p01-t02', 'plan', 'design'])(
+    'uses the 20-minute artifact default for %s',
+    async (scope) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner();
+      const markers: Record<string, unknown>[] = [];
+      await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        writeGateRunMarker: async (_path, marker) => {
+          markers.push(marker);
+          return true;
+        },
+        args: [
+          '--target',
+          'codex-default',
+          '--review-type',
+          'artifact',
+          '--review-scope',
+          scope,
+          'Review',
+        ],
+      });
+      expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: 1_200_000 });
+      expect(markers).toEqual([
+        expect.objectContaining({
+          budgetMs: 1_200_000,
+          budgetSource: 'scope-default',
+        }),
+      ]);
+    },
+  );
+
   it('uses config before env and env before scope defaults', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
@@ -6206,7 +6242,7 @@ describe('oat gate', () => {
       expect.stringContaining('OAT_GATE_EXEC_TIMEOUT_MS'),
     ]);
     expect(capture.info).toContain(
-      'Running gate target codex-default (codex); timeout=900000ms (source=scope-default).',
+      'Running gate target codex-default (codex); timeout=1200000ms (source=scope-default).',
     );
   });
 
