@@ -4087,6 +4087,7 @@ B post-publication bookkeeping PR.
 | p05    | code     | fixes_completed | 2026-08-02 | reviews/archived/p05-review-2026-08-02T040734Z.md           | 222cf87033c5df7543dfcab79b5d74347916182f | auto       | -           |
 | p05    | code     | passed          | 2026-08-02 | reviews/archived/p05-review-2026-08-02T042820Z.md           | ea56909da8c68bd544a711854c8a9491b5feaa8a | auto       | -           |
 | p06    | code     | fixes_completed | 2026-08-02 | reviews/p06-review-2026-08-02T203307Z.md                    | b4f40fbc2590d3f8ad4aeffd9c88e738e8c5f389 | manual     | -           |
+| p06    | code     | received        | 2026-08-02 | reviews/p06-review-2026-08-02T215230Z.md                    | ac04878c56265ebbd828264483ddfc66f389b4e4 | manual     | -           |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
