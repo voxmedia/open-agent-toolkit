@@ -56,26 +56,37 @@ interface LifecycleFixture {
   >['preparation'];
 }
 
+interface LifecycleFixtureOptions {
+  gateRunId?: string;
+  launchAttemptId?: string;
+  shared?: Pick<LifecycleFixture, 'root' | 'validationRoot' | 'key'>;
+}
+
 async function lifecycleFixture(
   sink: 'artifact' | 'structured',
+  options: LifecycleFixtureOptions = {},
 ): Promise<LifecycleFixture> {
-  const root = await mkdtemp(join(tmpdir(), `oat-dossier-${sink}-`));
-  roots.push(root);
-  await exec('git', ['init', '-q'], { cwd: root });
-  await exec('git', ['config', 'user.email', 'test@example.com'], {
-    cwd: root,
-  });
-  await exec('git', ['config', 'user.name', 'Test'], { cwd: root });
-  await writeFile(join(root, 'a.ts'), 'before\n');
-  await writeFile(join(root, 'b.ts'), 'before\n');
-  await exec('git', ['add', '.'], { cwd: root });
-  await exec('git', ['commit', '-qm', 'base'], { cwd: root });
+  const root =
+    options.shared?.root ??
+    (await mkdtemp(join(tmpdir(), `oat-dossier-${sink}-`)));
+  if (options.shared === undefined) {
+    roots.push(root);
+    await exec('git', ['init', '-q'], { cwd: root });
+    await exec('git', ['config', 'user.email', 'test@example.com'], {
+      cwd: root,
+    });
+    await exec('git', ['config', 'user.name', 'Test'], { cwd: root });
+    await writeFile(join(root, 'a.ts'), 'before\n');
+    await writeFile(join(root, 'b.ts'), 'before\n');
+    await exec('git', ['add', '.'], { cwd: root });
+    await exec('git', ['commit', '-qm', 'base'], { cwd: root });
+    await writeFile(join(root, 'a.ts'), 'after\n');
+    await writeFile(join(root, 'b.ts'), 'after\n');
+    await exec('git', ['commit', '-qam', 'head'], { cwd: root });
+  }
   const baseSha = (
-    await exec('git', ['rev-parse', 'HEAD'], { cwd: root })
+    await exec('git', ['rev-parse', 'HEAD~1'], { cwd: root })
   ).stdout.trim();
-  await writeFile(join(root, 'a.ts'), 'after\n');
-  await writeFile(join(root, 'b.ts'), 'after\n');
-  await exec('git', ['commit', '-qam', 'head'], { cwd: root });
   const headSha = (
     await exec('git', ['rev-parse', 'HEAD'], { cwd: root })
   ).stdout.trim();
@@ -85,11 +96,12 @@ async function lifecycleFixture(
   );
   roots.push(socketDirectory);
   const socketPath = join(socketDirectory, 'broker.sock');
-  const validationRoot = await mkdtemp(
-    join(tmpdir(), 'oat-dossier-validation-'),
-  );
-  roots.push(validationRoot);
-  const key = Buffer.alloc(32, sink === 'artifact' ? 31 : 32);
+  const validationRoot =
+    options.shared?.validationRoot ??
+    (await mkdtemp(join(tmpdir(), 'oat-dossier-validation-')));
+  if (options.shared === undefined) roots.push(validationRoot);
+  const key =
+    options.shared?.key ?? Buffer.alloc(32, sink === 'artifact' ? 31 : 32);
   const sourceEntry = resolve('src/index.ts');
   const broker = await startPreparedValidationAuthorityBroker({
     socketPath,
@@ -107,8 +119,14 @@ async function lifecycleFixture(
         workflowMode: 'spec-driven',
         range: { baseSha, headSha },
         sink,
-        invocation: 'manual',
+        invocation: options.gateRunId === undefined ? 'manual' : 'gate',
         budget: { totalMs: 120_000, source: 'test' },
+        ...(options.gateRunId === undefined
+          ? {}
+          : {
+              gateRunId: options.gateRunId,
+              launchAttemptId: options.launchAttemptId,
+            }),
         obligationSources: {
           plan: { source: planSource, path: 'plan.md' },
           implementation: null,
@@ -647,9 +665,17 @@ describe('branch-local worker dossier lifecycle', () => {
     30_000,
   );
 
-  it('fails closed for wrong run, receipt, sibling attempt, and replacement', async () => {
-    const fixture = await lifecycleFixture('structured');
-    const sibling = await lifecycleFixture('structured');
+  it('fails closed for wrong receipt, run/plan mismatch, sibling attempt, and replacement', async () => {
+    const gateRunId = 'shared-gate-run';
+    const fixture = await lifecycleFixture('structured', {
+      gateRunId,
+      launchAttemptId: 'current-launch-attempt',
+    });
+    const sibling = await lifecycleFixture('structured', {
+      gateRunId,
+      launchAttemptId: 'sibling-launch-attempt',
+      shared: fixture,
+    });
     const receipt = await prepareEvidence(fixture);
     const siblingReceipt = await prepareEvidence(sibling);
     const dossier = workerDossier(
@@ -658,29 +684,22 @@ describe('branch-local worker dossier lifecycle', () => {
       'review-lane',
     );
 
-    const wrongRun = await executeCommandInvocation(
-      binderInvocation(
-        fixture,
-        receipt.token,
-        sibling.preparation.preparation.runId,
-      ),
-      {
-        cwd: resolve('..', '..'),
-        stdin: JSON.stringify({
-          ...dossier,
-          runId: sibling.preparation.preparation.runId,
-        }),
-      },
-    );
-    expect(wrongRun.exitCode).not.toBe(0);
+    expect(fixture.preparation.preparation.correlation).toEqual({
+      gateRunId,
+      launchAttemptId: 'current-launch-attempt',
+    });
+    expect(sibling.preparation.preparation.correlation).toEqual({
+      gateRunId,
+      launchAttemptId: 'sibling-launch-attempt',
+    });
 
-    const wrongReceipt = await bind(fixture, siblingReceipt.token, dossier);
+    const wrongReceipt = await bind(fixture, 'wrong-receipt-token', dossier);
     expect(wrongReceipt.exitCode).toBe(1);
     expect(wrongReceipt.envelope.error?.code).toBe(
       'worker-dossier-receipt-mismatch',
     );
 
-    const siblingAttempt = await bind(
+    const runPlanMismatch = await bind(
       fixture,
       receipt.token,
       workerDossier(
@@ -689,10 +708,30 @@ describe('branch-local worker dossier lifecycle', () => {
         'review-lane',
       ),
     );
-    expect(siblingAttempt.exitCode).toBe(1);
-    expect(siblingAttempt.envelope.error?.code).toBe(
+    expect(runPlanMismatch.exitCode).toBe(1);
+    expect(runPlanMismatch.envelope.error?.code).toBe(
       'worker-dossier-validation-failed',
     );
+
+    const siblingAttempt = await bind(
+      fixture,
+      siblingReceipt.token,
+      workerDossier(
+        sibling.preparation.preparation.runId,
+        siblingReceipt.planDigest,
+        'review-lane',
+      ),
+    );
+    expect(siblingAttempt.exitCode).toBe(1);
+    expect(siblingAttempt.envelope.error?.code).toBe(
+      'worker-dossier-receipt-mismatch',
+    );
+    await expect(
+      fixture.store.readRun(fixture.preparation.preparation.runId),
+    ).resolves.toMatchObject({ state: { workerCoverage: [] } });
+    await expect(
+      sibling.store.readRun(sibling.preparation.preparation.runId),
+    ).resolves.toMatchObject({ state: { workerCoverage: [] } });
 
     const accepted = await bind(fixture, receipt.token, dossier);
     expect(accepted.exitCode).toBe(0);
