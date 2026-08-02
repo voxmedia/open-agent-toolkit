@@ -1679,10 +1679,10 @@ interface ReviewPlanningPayload {
   review_plan_contract: 1;
   review_preparation: ReviewPreparationV1;
   artifact_draft_path: string | null;
-  artifact_checkpoint_command: string;
-  validate_plan_command: string;
-  begin_evidence_command: string;
-  bind_worker_dossier_command: string;
+  artifact_checkpoint_command: ReviewCommandInvocationV1;
+  validate_plan_command: ReviewCommandInvocationV1;
+  begin_evidence_command: ReviewCommandInvocationV1;
+  bind_worker_dossier_command: ReviewCommandInvocationV1;
 }
 ```
 
