@@ -175,6 +175,8 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
 
+**Review plan compatibility:** Before any direct phase review, resolve `workflow.reviewPlanMode` from effective configuration (default `legacy`). `legacy` preserves the existing path, creates no validation state or receipt, and marks output `legacy-unvalidated`. `enforce` runs capability and resolved-budget preflight before model launch; 120,000 ms and unbounded/null are valid, while a lower budget returns `review-budget-below-minimum` with source, value, floor, and remedies to raise the timeout or explicitly select temporary `legacy`. Never silently downgrade or launch a replacement. Gate and checkpoint/final aliases inherit this mode and create no duplicate review context.
+
 ### Route Loading Contract
 
 Do not read every implementation reference at skill start. Load exactly one

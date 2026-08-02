@@ -1907,7 +1907,7 @@ describe('validateOatSkills', () => {
     // rule, which governs the case where the root does not dispatch and so
     // never loads the dispatch reference. The structural assertions below
     // still enforce that step bodies stay out of the entry.
-    expect(entry.split('\n').length).toBeLessThanOrEqual(234);
+    expect(entry.split('\n').length).toBeLessThanOrEqual(246);
     for (const path of implementReferencePaths) {
       expect(entry).toContain(`references/${path}`);
     }
@@ -5245,5 +5245,25 @@ describe('validateOatSkills', () => {
     expect(content).not.toContain('oat backlog generate-id');
     expect(content).not.toContain('oat backlog regenerate-index');
     expect(content).not.toContain('ITEM_PATH=');
+  });
+
+  it('requires every canonical review coordinator to resolve compatibility mode', async () => {
+    for (const path of [
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+      '.agents/skills/oat-project-implement/SKILL.md',
+    ]) {
+      const content = await readRepoFile(path);
+      expect(content, path).toContain('workflow.reviewPlanMode');
+      expect(content, path).toContain('legacy-unvalidated');
+      expect(content, path).toContain('review-budget-below-minimum');
+      expect(content, path).toMatch(/120,000 ms/);
+      expect(content, path).toMatch(
+        /(?:never\s+silently|without\s+silent)\s+downgrade/i,
+      );
+      expect(content, path).toMatch(
+        /duplicate (?:validation |review )?context/i,
+      );
+    }
   });
 });

@@ -56,6 +56,30 @@ function expectValidReportContext(command: string): void {
 }
 
 describe('review skill contracts', () => {
+  it('pins compatibility mode behavior across direct coordinators', () => {
+    for (const path of [
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+      '.agents/skills/oat-project-implement/SKILL.md',
+    ]) {
+      const content = readRepoFile(path);
+      expect(content, path).toContain('workflow.reviewPlanMode');
+      expect(content, path).toContain('legacy-unvalidated');
+      expect(content, path).toContain('review-budget-below-minimum');
+      expect(content, path).toMatch(/120,000 ms/);
+      expect(content, path).toMatch(/before\s+(?:any\s+)?model\s+launch/i);
+      expect(content, path).toMatch(
+        /(?:never\s+silently|without\s+silent)\s+downgrade/i,
+      );
+      expect(content, path).toMatch(
+        /(?:indirect|Gate and checkpoint\/final) aliases inherit/i,
+      );
+      expect(content, path).toMatch(
+        /duplicate (?:validation |review )?context/i,
+      );
+    }
+  });
+
   it('pins the canonical reviewer plan-first evidence boundary', () => {
     const content = readRepoFile('.agents/agents/oat-reviewer.md');
     const normalizedContent = content.replace(/\s+/g, ' ');

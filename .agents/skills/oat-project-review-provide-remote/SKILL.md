@@ -308,6 +308,17 @@ Detection:
 - Codex multi-agent: verify `[features] multi_agent = true`; if the host requires explicit authorization before `spawn_agent`, announce `authorization required` and ask one concise confirmation before selecting a lower tier. If authorized -> Tier 1; if declined -> Tier 2/3 fallback.
 - If the runtime can dispatch reviewer work -> Tier 1. If subagent dispatch is unavailable -> Tier 2. If the user requests inline / confirms a fresh session -> Tier 3.
 
+Before every direct Tier 1 or Tier 3 rail, resolve
+`workflow.reviewPlanMode` from effective configuration (default `legacy`).
+`legacy` uses the existing remote path, creates no validation state or receipt,
+and marks output `legacy-unvalidated`. `enforce` must complete capability and
+resolved-budget preflight before any model launch. Accept 120,000 ms or an
+unbounded/null budget; below the floor return
+`review-budget-below-minimum` with source, value, floor, and both remedies:
+raise the timeout or explicitly select temporary `legacy`. Missing capability
+or a short budget blocks without silent downgrade, replacement, or fallback.
+Indirect aliases inherit this branch and create no duplicate context.
+
 **Step 5b: Tier 1 — `oat-reviewer` in structured-output mode (preferred).**
 
 Before dispatch, invoke launcher-owned `oat review prepare-context` with sink

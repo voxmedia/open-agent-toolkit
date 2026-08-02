@@ -785,6 +785,22 @@ Detection logic:
 - If the user explicitly requests inline or confirms they are already in a fresh session, use **Tier 3** only when the guarded inline route is valid.
 - Gate-originated review skips fresh-session handoff instructions and immediately uses the first target-preserving route available from Step 6.0. If none exists, fail closed.
 
+**Review plan compatibility mode (before every direct Tier 1 or Tier 3 rail):**
+
+Resolve `workflow.reviewPlanMode` from effective configuration. The default is
+`legacy`.
+
+- In `legacy`, use the existing review path, create no review validation state
+  or receipt, and mark the resulting output `legacy-unvalidated`.
+- In `enforce`, run capability and resolved-budget preflight before any model
+  launch. A budget of 120,000 ms or an unbounded/null budget is valid; a lower
+  budget fails with `review-budget-below-minimum`, including source, value,
+  floor, and both remedies (raise the timeout or explicitly select temporary
+  `legacy`). Missing capability or budget failure blocks the rail. Never
+  silently downgrade to `legacy`, Tier 2, or another coordinator.
+- Indirect gate and checkpoint/final aliases inherit this resolved branch and
+  must not create a duplicate validation context.
+
 **Step 6b: Tier 1 — Subagent (if available)**
 
 First, pre-compute the final review artifact path using Step 7 naming
