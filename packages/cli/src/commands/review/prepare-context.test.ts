@@ -114,6 +114,95 @@ describe('createReviewPrepareContextCommand', () => {
     expect(JSON.parse(write.mock.calls[0]?.[0] as string).ok).toBe(true);
   });
 
+  it('forwards complete gate correlation from the environment', async () => {
+    const brokerPrepare = vi.fn(async () => prepared);
+    const write = vi.fn();
+    const command = createReviewPrepareContextCommand({
+      stdin: Readable.from([
+        JSON.stringify({ ...baseInput, invocation: 'gate' }),
+      ]),
+      write,
+      setExitCode: vi.fn(),
+      brokerPrepare,
+      processEnv: {
+        OAT_GATE_RUN_ID: 'gate-run',
+        OAT_GATE_LAUNCH_ATTEMPT_ID: 'launch-attempt',
+      },
+    });
+
+    await command.parseAsync(['node', 'oat', 'prepare-context']);
+
+    expect(brokerPrepare).toHaveBeenCalledWith(
+      expect.objectContaining({
+        preparationInput: expect.objectContaining({
+          invocation: 'gate',
+          gateRunId: 'gate-run',
+          launchAttemptId: 'launch-attempt',
+        }),
+      }),
+    );
+    expect(JSON.parse(write.mock.calls[0]?.[0] as string).ok).toBe(true);
+  });
+
+  it.each([
+    {
+      name: 'partial environment',
+      input: { ...baseInput, invocation: 'gate' },
+      processEnv: { OAT_GATE_RUN_ID: 'gate-run' },
+    },
+    {
+      name: 'mismatched input and environment',
+      input: {
+        ...baseInput,
+        invocation: 'gate',
+        gateRunId: 'gate-run',
+        launchAttemptId: 'input-attempt',
+      },
+      processEnv: {
+        OAT_GATE_RUN_ID: 'gate-run',
+        OAT_GATE_LAUNCH_ATTEMPT_ID: 'environment-attempt',
+      },
+    },
+  ])('rejects $name without downgrading', async ({ input, processEnv }) => {
+    const brokerPrepare = vi.fn();
+    const write = vi.fn();
+    const command = createReviewPrepareContextCommand({
+      stdin: Readable.from([JSON.stringify(input)]),
+      write,
+      setExitCode: vi.fn(),
+      brokerPrepare,
+      processEnv,
+    });
+
+    await command.parseAsync(['node', 'oat', 'prepare-context']);
+
+    expect(brokerPrepare).not.toHaveBeenCalled();
+    expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
+      ok: false,
+      error: { code: 'invalid-prepare-context-input' },
+    });
+  });
+
+  it('does not apply gate environment correlation to manual input', async () => {
+    const brokerPrepare = vi.fn(async () => prepared);
+    const command = createReviewPrepareContextCommand({
+      stdin: Readable.from([JSON.stringify(baseInput)]),
+      write: vi.fn(),
+      setExitCode: vi.fn(),
+      brokerPrepare,
+      processEnv: {
+        OAT_GATE_RUN_ID: 'gate-run',
+        OAT_GATE_LAUNCH_ATTEMPT_ID: 'launch-attempt',
+      },
+    });
+
+    await command.parseAsync(['node', 'oat', 'prepare-context']);
+
+    expect(brokerPrepare).toHaveBeenCalledWith(
+      expect.objectContaining({ preparationInput: normalizedInput }),
+    );
+  });
+
   it('pairs budgets and emits metadata without numeric telemetry', async () => {
     const write = vi.fn();
     const prepare = vi.fn(async () => prepared);
@@ -178,6 +267,7 @@ describe('createReviewPrepareContextCommand', () => {
         setExitCode: vi.fn(),
         prepare: vi.fn(),
         createDependencies: () => ({}) as never,
+        processEnv: {},
       });
 
       await command.parseAsync(['node', 'oat', 'prepare-context']);

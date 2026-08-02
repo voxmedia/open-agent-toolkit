@@ -801,6 +801,15 @@ Resolve `workflow.reviewPlanMode` from effective configuration. The default is
 - Indirect gate and checkpoint/final aliases inherit this resolved branch and
   must not create a duplicate validation context.
 
+For an enforce-mode gate invocation, keep `invocation: "gate"` and pass the
+exact gate correlation tuple to `oat review prepare-context`. Read
+`gateRunId` / `launchAttemptId` from the prompt fields `oat_gate_run_id` /
+`oat_gate_launch_attempt_id`, or from `OAT_GATE_RUN_ID` /
+`OAT_GATE_LAUNCH_ATTEMPT_ID` when the prompt fields are unavailable. When both
+channels are present, they must match exactly. A partial or mismatched tuple is
+terminal input failure; never downgrade the invocation to `manual` or `auto`.
+Manual and auto invocations continue to pass no gate correlation.
+
 **Step 6b: Tier 1 — Subagent (if available)**
 
 First, pre-compute the final review artifact path using Step 7 naming

@@ -77,6 +77,14 @@ describe('review skill contracts', () => {
       expect(content, path).toMatch(
         /duplicate (?:validation |review )?context/i,
       );
+      expect(content, path).toContain('oat_gate_launch_attempt_id');
+      expect(content, path).toContain('OAT_GATE_LAUNCH_ATTEMPT_ID');
+      expect(content, path).toMatch(
+        /partial or mismatched tuple[\s\S]*never downgrade/i,
+      );
+      expect(content, path).toContain(
+        'Manual and auto invocations continue to pass no gate correlation.',
+      );
     }
   });
 

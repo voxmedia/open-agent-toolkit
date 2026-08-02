@@ -177,6 +177,15 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 **Review plan compatibility:** Before any direct phase review, resolve `workflow.reviewPlanMode` from effective configuration (default `legacy`). `legacy` preserves the existing path, creates no validation state or receipt, and marks output `legacy-unvalidated`. `enforce` runs capability and resolved-budget preflight before model launch; 120,000 ms and unbounded/null are valid, while a lower budget returns `review-budget-below-minimum` with source, value, floor, and remedies to raise the timeout or explicitly select temporary `legacy`. Never silently downgrade or launch a replacement. Gate and checkpoint/final aliases inherit this mode and create no duplicate review context.
 
+For an enforce-mode gate invocation, keep `invocation: "gate"` and pass the
+exact gate correlation tuple to `oat review prepare-context`. Read
+`gateRunId` / `launchAttemptId` from the prompt fields `oat_gate_run_id` /
+`oat_gate_launch_attempt_id`, or from `OAT_GATE_RUN_ID` /
+`OAT_GATE_LAUNCH_ATTEMPT_ID` when the prompt fields are unavailable. When both
+channels are present, they must match exactly. A partial or mismatched tuple is
+terminal input failure; never downgrade the invocation to `manual` or `auto`.
+Manual and auto invocations continue to pass no gate correlation.
+
 ### Route Loading Contract
 
 Do not read every implementation reference at skill start. Load exactly one

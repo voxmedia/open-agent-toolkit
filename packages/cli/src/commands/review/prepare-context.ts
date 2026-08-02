@@ -33,6 +33,7 @@ interface PrepareContextCommandDependencies {
   ) => PrepareReviewContextDependencies;
   launcherInvocation: { executable: string; argvPrefix: string[] };
   brokerPrepare: typeof launchValidationAuthorityBroker;
+  processEnv: NodeJS.ProcessEnv;
 }
 
 const activeLaunch = currentGateCliLaunch();
@@ -52,11 +53,69 @@ const DEFAULT_DEPENDENCIES: PrepareContextCommandDependencies = {
     throw new Error('direct preparation dependencies must be injected');
   },
   brokerPrepare: launchValidationAuthorityBroker,
+  processEnv: process.env,
 };
 
-function parsePrepareInput(value: unknown): PrepareReviewContextInput {
+function withGateCorrelation(
+  value: unknown,
+  environment: NodeJS.ProcessEnv,
+): unknown {
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    Array.isArray(value) ||
+    !('invocation' in value) ||
+    value.invocation !== 'gate'
+  ) {
+    return value;
+  }
+  const input = value as Record<string, unknown>;
+  const validCorrelationValue = (candidate: unknown) =>
+    candidate === undefined ||
+    candidate === null ||
+    typeof candidate === 'string';
+  if (
+    !validCorrelationValue(input.gateRunId) ||
+    !validCorrelationValue(input.launchAttemptId)
+  ) {
+    throw new ReviewSchemaError('gate correlation input is invalid');
+  }
+  const inputGateRunId =
+    typeof input.gateRunId === 'string' ? input.gateRunId : null;
+  const inputLaunchAttemptId =
+    typeof input.launchAttemptId === 'string' ? input.launchAttemptId : null;
+  const envGateRunId = environment['OAT_GATE_RUN_ID'] ?? null;
+  const envLaunchAttemptId = environment['OAT_GATE_LAUNCH_ATTEMPT_ID'] ?? null;
+  const inputComplete =
+    inputGateRunId !== null && inputLaunchAttemptId !== null;
+  const environmentComplete =
+    envGateRunId !== null && envLaunchAttemptId !== null;
+  if (
+    (inputGateRunId === null) !== (inputLaunchAttemptId === null) ||
+    (envGateRunId === null) !== (envLaunchAttemptId === null) ||
+    (inputComplete &&
+      environmentComplete &&
+      (inputGateRunId !== envGateRunId ||
+        inputLaunchAttemptId !== envLaunchAttemptId))
+  ) {
+    throw new ReviewSchemaError('gate correlation channels do not match');
+  }
+  if (inputComplete || !environmentComplete) return value;
+  return {
+    ...input,
+    gateRunId: envGateRunId,
+    launchAttemptId: envLaunchAttemptId,
+  };
+}
+
+function parsePrepareInput(
+  value: unknown,
+  environment: NodeJS.ProcessEnv,
+): PrepareReviewContextInput {
   try {
-    const parsed = parsePrepareReviewContextInputV1(value);
+    const parsed = parsePrepareReviewContextInputV1(
+      withGateCorrelation(value, environment),
+    );
     allocateReviewTimeBudget({
       totalMs: parsed.budget?.totalMs ?? null,
       source: parsed.budget?.source ?? null,
@@ -108,6 +167,7 @@ export function createReviewPrepareContextCommand(
         operation: async () => {
           const input = parsePrepareInput(
             await readBoundedJsonStdin(dependencies.stdin),
+            dependencies.processEnv,
           );
           return projectPrepareResult(
             useBroker

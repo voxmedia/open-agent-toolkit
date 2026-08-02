@@ -319,6 +319,15 @@ raise the timeout or explicitly select temporary `legacy`. Missing capability
 or a short budget blocks without silent downgrade, replacement, or fallback.
 Indirect aliases inherit this branch and create no duplicate context.
 
+For an enforce-mode gate invocation, keep `invocation: "gate"` and pass the
+exact gate correlation tuple to `oat review prepare-context`. Read
+`gateRunId` / `launchAttemptId` from the prompt fields `oat_gate_run_id` /
+`oat_gate_launch_attempt_id`, or from `OAT_GATE_RUN_ID` /
+`OAT_GATE_LAUNCH_ATTEMPT_ID` when the prompt fields are unavailable. When both
+channels are present, they must match exactly. A partial or mismatched tuple is
+terminal input failure; never downgrade the invocation to `manual` or `auto`.
+Manual and auto invocations continue to pass no gate correlation.
+
 **Step 5b: Tier 1 — `oat-reviewer` in structured-output mode (preferred).**
 
 Before dispatch, invoke launcher-owned `oat review prepare-context` with sink
