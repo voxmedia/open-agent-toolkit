@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 42d3cf946a5fd16127126485654f0ec8d97b1cd8
+oat_current_task: p06-t01
+oat_last_commit: 44330dace8354f6292a42043bdca2ad358c5c52a
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T04:24:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T04:35:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,7 +85,7 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 5 final re-review pending
+**Status:** Phase 6 documentation approval pending
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
@@ -120,6 +120,8 @@ Cycle-2 re-review passed with no Critical, Important, or Medium findings and
 confirmed all prior findings resolved. Its two bounded Minor findings are
 converted to p05-t16 and p05-t17 under auto-review policy.
 p05-t16 and corrected p05-t17 now pass all focused and phase-wide gates.
+Cycle-3 re-review passed with zero findings; Phase 5 is complete. Phase 6 begins
+at p06-t01's required documentation delta approval gate.
 
 ## Artifacts
 
@@ -262,7 +264,9 @@ p05-t16 and corrected p05-t17 now pass all focused and phase-wide gates.
 - ✓ p05-t16 completed at `8a56416a`
 - ✓ Corrected p05-t17 with recovery commit `42d3cf94`
 - ✓ Root passed 225 focused and 3,947 CLI tests plus all workspace gates
-- → Run the final bounded Phase 5 re-review
+- ✓ Cycle-3 Phase 5 re-review passed with zero findings
+- ✓ Phase 5 complete
+- → Produce the p06-t01 documentation delta for approval
 
 ## Blockers
 
@@ -270,4 +274,4 @@ None.
 
 ## Next Milestone
 
-Run the final bounded Phase 5 re-review.
+Approve the p06-t01 documentation delta before authored docs are edited.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: null
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | completed | 55    | 55/55     |
-| Phase 3 | completed | 10    | 10/10     |
-| Phase 4 | completed | 27    | 27/27     |
-| Phase 5 | in_review | 17    | 17/17     |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | completed   | 55    | 55/55     |
+| Phase 3 | completed   | 10    | 10/10     |
+| Phase 4 | completed   | 27    | 27/27     |
+| Phase 5 | completed   | 17    | 17/17     |
+| Phase 6 | in_progress | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
 **Total:** 122/135 tasks completed
 
@@ -1314,7 +1314,7 @@ independent root verification passed.
 
 ## Phase 5: Gate Diagnostics and Compatibility
 
-**Status:** in_review
+**Status:** completed
 **Started:** 2026-08-02
 
 ### Task p05-t01: Add reviewPlanMode configuration
@@ -1534,6 +1534,41 @@ workspace type-check, lint, formatting, check, build, and exact-range diff
 checks.
 
 **Next:** Run the final bounded Phase 5 re-review.
+
+### Review Received: p05 (cycle 3)
+
+**Date:** 2026-08-02
+**Review artifact:** `reviews/archived/p05-review-2026-08-02T042820Z.md`
+
+**Verdict:** Passed
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Prior findings resolved:** p05-t16 preserves the stable refusal envelope
+without deleting accepted state, and p05-t17's recovery leaves p04-t25
+byte-identical while aligning only p05-t15.
+
+**Phase disposition:** Passed at reviewed head
+`ea56909da8c68bd544a711854c8a9491b5feaa8a`; proceed to Phase 6.
+
+---
+
+## Phase 6: Documentation, Provider Sync, and Compatibility Release
+
+**Status:** in_progress
+**Started:** 2026-08-02
+
+### Task p06-t01: Document review workflow behavior
+
+**Status:** awaiting documentation delta approval
+
+**Next:** Produce the p06-t01 documentation delta analysis and obtain explicit
+user approval before editing.
 
 ## Orchestration Runs
 
