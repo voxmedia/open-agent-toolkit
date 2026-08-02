@@ -121,6 +121,27 @@ non-null `handoff`, the host must run or hand off to
 artifact path by itself is not receive eligibility. Until receive runs for a
 receive-eligible result, the artifact is only produced, not consumed.
 
+### Plan-first coordinator commands
+
+Enforce-mode review coordinators use seven public `oat review` commands in a
+fixed lifecycle:
+
+1. `prepare-context` creates the authoritative changed-file and obligation
+   context.
+2. `checkpoint-artifacts` seals required lifecycle-artifact intake.
+3. `validate-plan` validates `ReviewPlanV1` and returns an opaque receipt.
+4. `begin-evidence` authorizes content evidence with that receipt.
+5. `bind-worker-dossier` binds accepted delegated coverage when applicable.
+6. `validate-output` validates the complete or blocked reviewer terminal.
+7. `publish-output` publishes an accepted artifact snapshot exactly once.
+
+These commands use strict JSON envelopes. Exit `0` means success, exit `1`
+means an input or validation failure, and exit `2` means an unexpected
+system/runtime failure. Both failure exits emit `ok: false` unless serialization
+itself is impossible. Coordinators should use the exact executable and argument
+arrays returned by preparation rather than resolving another `oat` from
+`PATH`.
+
 Gate-originated artifacts also copy the configured invocation record that the
 CLI places in the review prompt:
 
@@ -318,6 +339,15 @@ Correct the stored project declaration or reviewer output routing and run a new
 gate instead. Invocation-only mismatch continues to use
 `artifact_validation_failed`; correct the exact configured invocation fields
 and rerun the gate for successful revalidation before receive.
+
+An enforce-mode reviewer that finishes without valid final accounting returns
+`status: review_failed` with
+`outcome: review_complete_accounting_invalid` and the same value in
+`failure.kind`. This terminal subtype is non-actionable:
+`receiveEligible: false`, `artifactPath: null`, and `handoff: null`. Its failure
+record includes validation and repair attempt counts plus a safe pointer to a
+minimal temporary diagnostic. It is not a provider failure, an empty pass, or a
+reason to publish or receive a review.
 
 **Drive gates through `oat gate review`, not raw provider invocation.** An
 orchestrator that hand-rolls the review (for example, calling
@@ -676,8 +706,33 @@ All configured values must be integer milliseconds from `1,000` through
 `14,400,000`. Invalid persisted values are ignored with a warning and
 resolution continues to the next source. Code reviews at `final`, phase
 (`pNN`), or phase-range (`pNN-pMM`) scope default to 1,800,000 ms (30 minutes).
-Task-scoped code reviews (`pNN-tNN`) and artifact reviews default to 900,000 ms
-(15 minutes). Startup output reports both the resolved value and source.
+Task-scoped code reviews (`pNN-tNN`) default to 900,000 ms (15 minutes).
+Artifact reviews default to 1,200,000 ms (20 minutes) across scopes and
+providers. Startup output reports both the resolved value and source.
+
+Enforce mode adds a separate preflight floor: a resolved finite review budget
+must be at least 120,000 ms (120 seconds). This does not change the general
+1,000 ms configuration minimum. A lower resolved budget fails before reviewer
+launch with `review-budget-below-minimum`; the diagnostic reports its source,
+value, floor, and two remedies:
+
+1. Raise the configured review timeout to at least 120,000 ms.
+2. Explicitly select temporary `legacy` review-plan mode.
+
+There is no silent downgrade from `enforce`. To migrate safely, inspect the
+resolved timeout source, correct the narrowest owning layer, and rerun the
+review. For a temporary rollback while investigating coordinator compatibility:
+
+```bash
+oat config set workflow.reviewPlanMode legacy --local
+oat config get workflow.reviewPlanMode --json
+```
+
+Use `--shared` for a repository-wide compatibility decision or `--user` for a
+personal fallback. Remove or replace the temporary override with `enforce`
+after the incompatibility is fixed, then verify the resolved value and source
+again. Legacy mode bypasses plan validation; it is a rollback path, not an
+equivalent enforced review.
 
 Example migration from the former single environment override:
 
@@ -686,7 +741,7 @@ Example migration from the former single environment override:
   "workflow": {
     "gateTimeouts": {
       "code": 2400000,
-      "artifact": 900000
+      "artifact": 1200000
     },
     "gates": {
       "execTargets": {
