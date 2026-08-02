@@ -1,8 +1,7 @@
 ---
 oat_current_task: p05-t05
 oat_last_commit: c9c24d999f8c143a7ee9d70eef10bb2c6fbb9eed
-oat_blockers:
-  - p05-t05 requires persisted terminal classification outside its declared files
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -76,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T02:18:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T02:22:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -86,7 +85,7 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 5 blocked at p05-t05
+**Status:** Phase 5 implementation resumed at p05-t05
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
@@ -108,6 +107,7 @@ Tasks p05-t01 through p05-t04 are complete. p05-t05 cannot distinguish accepted
 reviewer `BLOCKED` from accounting-invalid completion because both persist only
 as terminal phase; the correct fix requires a narrow validation-state scope
 expansion.
+The operator authorized that bounded state-model expansion on 2026-08-02.
 
 ## Artifacts
 
@@ -233,14 +233,14 @@ expansion.
 - ✓ p05-t01 through p05-t04 completed at `c9c24d99`
 - ⚠ p05-t05 requires persisted terminal classification beyond its declared
   gate-only files
-- → Obtain bounded scope-expansion approval, then resume p05-t05
+- ✓ Operator authorized the bounded p05-t05 scope expansion
+- → Resume p05-t05 through p05-t07
 
 ## Blockers
 
-- p05-t05 cannot safely classify terminal validation state without extending
-  `validation-store.ts` and `commands/review/validate-output.ts` plus tests.
+None.
 
 ## Next Milestone
 
-Authorize and implement the narrow p05-t05 terminal-classification expansion,
-then complete p05-t06 and p05-t07.
+Implement the authorized p05-t05 terminal-classification expansion, then
+complete p05-t06 and p05-t07.

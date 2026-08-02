@@ -3051,6 +3051,10 @@ Expected: translation never scans run directories or crosses attempts.
 - Modify: `packages/cli/src/commands/gate/index.ts`
 - Modify: `packages/cli/src/commands/gate/index.test.ts`
 - Modify: `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+- Modify: `packages/cli/src/commands/review/validate-output.ts`
+- Modify: `packages/cli/src/commands/review/validate-output.test.ts`
 
 **Step 1: Write test (RED)** Exact receipts yield
 `review_complete_accounting_invalid` with all three IDs, attempt counts, safe
@@ -3058,13 +3062,16 @@ pointer, null artifact/handoff, and false eligibility; preserve timeout,
 BLOCKED, correlation, and artifact-validation envelopes.
 
 **Step 2: Implement (GREEN)** Add tuple-based terminal resolver, minimal
-diagnostic materialization, parent cleanup, and typed translation.
+diagnostic materialization, parent cleanup, and typed translation. Persist the
+minimal terminal classification required to distinguish accepted reviewer
+`BLOCKED` from accounting-invalid completion; do not infer terminal class from
+attempt count or collapse existing terminal outcomes.
 
 **Step 3: Format** Run the documented package formatter:
 `pnpm --filter @open-agent-toolkit/cli format:fix`
 
 **Step 4: Verify** Run:
-`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-plan-failure.test.ts src/commands/gate/index.test.ts src/commands/gate/gate-hardening.integration.test.ts`
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-plan-failure.test.ts src/commands/gate/index.test.ts src/commands/gate/gate-hardening.integration.test.ts src/review/validation-store.test.ts src/commands/review/validate-output.test.ts`
 Expected: every terminal class remains distinguishable and non-actionable.
 
 **Step 5: Commit** `fix(p05-t05): translate accounting invalid gates`

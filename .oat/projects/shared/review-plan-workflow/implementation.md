@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p05-t05 requires persisted terminal classification outside its declared files
+oat_blockers: []
 oat_last_updated: 2026-08-01
 oat_current_task_id: p05-t05
 oat_generated: false
@@ -25,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | completed | 55    | 55/55     |
-| Phase 3 | completed | 10    | 10/10     |
-| Phase 4 | completed | 27    | 27/27     |
-| Phase 5 | blocked   | 7     | 4/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | completed   | 55    | 55/55     |
+| Phase 3 | completed   | 10    | 10/10     |
+| Phase 4 | completed   | 27    | 27/27     |
+| Phase 5 | in_progress | 7     | 4/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
 **Total:** 109/125 tasks completed
 
@@ -1315,7 +1314,7 @@ independent root verification passed.
 
 ## Phase 5: Gate Diagnostics and Compatibility
 
-**Status:** blocked
+**Status:** in_progress
 **Started:** 2026-08-02
 
 ### Task p05-t01: Add reviewPlanMode configuration
@@ -1344,7 +1343,7 @@ independent root verification passed.
 
 ### Task p05-t05: Translate accounting-invalid gate completion
 
-**Status:** blocked
+**Status:** in_progress
 **Blocker:** Valid reviewer `BLOCKED` terminals and non-repairable or exhausted
 accounting-invalid completion both persist only as `phase: terminal`.
 Implementing the declared gate-only translation would therefore risk
@@ -1352,8 +1351,8 @@ misclassifying a valid `BLOCKED` outcome. Correct discrimination requires a
 persisted terminal classification in `validation-store.ts`, populated by
 `commands/review/validate-output.ts`, with focused tests.
 
-**Next:** Obtain approval for the narrow p05-t05 state-model scope expansion,
-then resume through p05-t07.
+**Operator disposition:** Authorized the narrow p05-t05 state-model expansion on
+2026-08-02. Resume p05-t05 through p05-t07.
 
 ## Orchestration Runs
 
