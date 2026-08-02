@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: p05-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | completed   | 27    | 27/27     |
-| Phase 5 | in_progress | 7     | 4/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | completed | 10    | 10/10     |
+| Phase 4 | completed | 27    | 27/27     |
+| Phase 5 | in_review | 7     | 7/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 109/125 tasks completed
+**Total:** 112/125 tasks completed
 
 ## Execution Configuration
 
@@ -1314,7 +1314,7 @@ independent root verification passed.
 
 ## Phase 5: Gate Diagnostics and Compatibility
 
-**Status:** in_progress
+**Status:** in_review
 **Started:** 2026-08-02
 
 ### Task p05-t01: Add reviewPlanMode configuration
@@ -1343,7 +1343,7 @@ independent root verification passed.
 
 ### Task p05-t05: Translate accounting-invalid gate completion
 
-**Status:** in_progress
+**Status:** completed
 **Blocker:** Valid reviewer `BLOCKED` terminals and non-repairable or exhausted
 accounting-invalid completion both persist only as `phase: terminal`.
 Implementing the declared gate-only translation would therefore risk
@@ -1353,6 +1353,40 @@ persisted terminal classification in `validation-store.ts`, populated by
 
 **Operator disposition:** Authorized the narrow p05-t05 state-model expansion on
 2026-08-02. Resume p05-t05 through p05-t07.
+
+**Commit:** `ca14ccb2`
+**Outcome:** Persisted minimal terminal classification and translated
+accounting-invalid completion without collapsing accepted reviewer `BLOCKED`,
+timeout, correlation, or artifact-validation outcomes.
+**Verification:** 232 task tests and type-check passed.
+
+### Task p05-t06: Create tracked enforce-default rollout item
+
+**Status:** completed
+**Commit:** `9f948305`
+**Outcome:** Added the fixed-ID Stage A/Stage B rollout item and regenerated the
+PJM backlog index.
+**Verification:** PJM doctor reported no errors and four pre-existing
+repository-layout warnings.
+
+### Task p05-t07: Raise the built-in artifact review timeout
+
+**Status:** completed
+**Commit:** `7f79337b`
+**Outcome:** Raised only the built-in artifact-review default to 1,200,000 ms
+while preserving code-review defaults, bounds, and override precedence.
+**Verification:** 205 focused tests passed.
+
+### Phase Verification
+
+- Implementer phase-wide verification passed 3,939 CLI tests across 323 files,
+  workspace type-check, lint, formatting, and exact-range checks.
+- Root independently passed the 238-test terminal/gate union, all 3,939 CLI
+  tests, workspace type-check, lint, formatting, and range diff checks.
+- PJM doctor remains warning-only with four pre-existing layout warnings and no
+  PJM errors.
+
+**Next:** Run the independent Phase 5 code review.
 
 ## Orchestration Runs
 

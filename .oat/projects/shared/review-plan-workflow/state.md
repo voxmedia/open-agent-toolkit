@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t05
-oat_last_commit: c9c24d999f8c143a7ee9d70eef10bb2c6fbb9eed
+oat_current_task: null
+oat_last_commit: 7f79337b889fc00058a50b40db6476d40adfdcae
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T02:22:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T02:48:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,7 +85,7 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 5 implementation resumed at p05-t05
+**Status:** Phase 5 review pending
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
@@ -108,6 +108,7 @@ reviewer `BLOCKED` from accounting-invalid completion because both persist only
 as terminal phase; the correct fix requires a narrow validation-state scope
 expansion.
 The operator authorized that bounded state-model expansion on 2026-08-02.
+Tasks p05-t05 through p05-t07 and independent root verification now pass.
 
 ## Artifacts
 
@@ -234,7 +235,10 @@ The operator authorized that bounded state-model expansion on 2026-08-02.
 - ⚠ p05-t05 requires persisted terminal classification beyond its declared
   gate-only files
 - ✓ Operator authorized the bounded p05-t05 scope expansion
-- → Resume p05-t05 through p05-t07
+- ✓ p05-t05 through p05-t07 completed at `7f79337b`
+- ✓ Root passed 238 focused and 3,939 CLI tests plus type/lint/format gates
+- ⚠ PJM doctor has four pre-existing layout warnings and no errors
+- → Run the independent Phase 5 review
 
 ## Blockers
 
@@ -242,5 +246,4 @@ None.
 
 ## Next Milestone
 
-Implement the authorized p05-t05 terminal-classification expansion, then
-complete p05-t06 and p05-t07.
+Run the independent Phase 5 code review over all seven tasks.
