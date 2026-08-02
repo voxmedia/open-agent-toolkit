@@ -2,7 +2,11 @@ import {
   type AccountingInvalidTerminalReceipt,
   ValidationStore,
 } from '@review/validation-store';
-import { launcherValidationStoreRoot } from '@review/validation-store-authority';
+import {
+  launcherValidationStoreAuthority,
+  launcherValidationStoreRoot,
+  type ValidationStoreAuthority,
+} from '@review/validation-store-authority';
 
 export interface ReviewAccountingInvalidFailure {
   status: 'review_failed';
@@ -39,11 +43,21 @@ function isMissingTerminalReceipt(error: unknown): boolean {
   );
 }
 
+export function createReviewPlanFailureStore(
+  dependencies: {
+    root: () => string;
+    authority: () => ValidationStoreAuthority;
+  } = {
+    root: launcherValidationStoreRoot,
+    authority: launcherValidationStoreAuthority,
+  },
+): ValidationStore {
+  return new ValidationStore(dependencies.root(), dependencies.authority());
+}
+
 export async function resolveReviewPlanFailure(
   input: { gateRunId: string; launchAttemptId: string },
-  store: AccountingInvalidTerminalStore = new ValidationStore(
-    launcherValidationStoreRoot(),
-  ),
+  store: AccountingInvalidTerminalStore = createReviewPlanFailureStore(),
 ): Promise<ReviewAccountingInvalidFailure | null> {
   let receipt: AccountingInvalidTerminalReceipt;
   try {

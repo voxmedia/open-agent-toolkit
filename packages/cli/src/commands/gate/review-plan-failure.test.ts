@@ -1,8 +1,23 @@
+import { ephemeralValidationStoreAuthority } from '@review/validation-store-authority';
 import { describe, expect, it, vi } from 'vitest';
 
-import { resolveReviewPlanFailure } from './review-plan-failure';
+import {
+  createReviewPlanFailureStore,
+  resolveReviewPlanFailure,
+} from './review-plan-failure';
 
 describe('review plan failure translation', () => {
+  it('constructs the resolver store with explicit authority', () => {
+    const root = vi.fn(() => '/private/launcher-validation');
+    const authority = vi.fn(() => ephemeralValidationStoreAuthority());
+
+    const store = createReviewPlanFailureStore({ root, authority });
+
+    expect(root).toHaveBeenCalledOnce();
+    expect(authority).toHaveBeenCalledOnce();
+    expect(store.root).toBe('/private/launcher-validation');
+  });
+
   it('translates an exact accounting-invalid receipt and retains diagnostics', async () => {
     const receipt = {
       schemaVersion: 1 as const,
