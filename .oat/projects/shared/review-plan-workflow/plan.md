@@ -3569,6 +3569,35 @@ Expected: all public package versions are lockstep.
 
 **Step 5: Commit** `chore(p06-t05): bump compatibility packages`
 
+#### Recovery p06-t05-r01: Exclude tests from the CLI publish build
+
+**Finding:** `pnpm release:validate` found `dist/**/*.test.*` artifacts in the
+packed CLI after p06-t05. The normal CLI `tsconfig.json` intentionally includes
+`src/review/types.test.ts` as a compile-time contract fixture, so removing that
+fixture would weaken Phase 1 verification.
+
+**Files:**
+
+- Create: `packages/cli/tsconfig.build.json`
+- Modify: `packages/cli/package.json`
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/state.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Implement** Add a build-only config that extends the test-aware
+package config but resets `files` to an empty list, then point both `tsc` and
+`tsc-alias` at it. Extend the package clean script to remove the build config's
+incremental cache. Preserve the normal type-check configuration unchanged.
+
+**Step 2: Format** Run the documented repository formatter:
+`pnpm format:fix`.
+
+**Step 3: Verify** Clean generated output, build the CLI, confirm no
+`dist/**/*.test.*` output, run normal type-check and the focused review contract
+tests, inspect the packed CLI paths, and run `pnpm release:validate`.
+
+**Step 4: Commit** `fix(p06-t05): exclude tests from CLI package build`
+
 ### Task p06-t06: Validate and dogfood explicit enforce
 
 **Files:**

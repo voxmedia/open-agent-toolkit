@@ -1,7 +1,8 @@
 ---
-oat_current_task: p06-t03
-oat_last_commit: 7f990afcbfa577b2c559eb2323cbf6451e7cad54
-oat_blockers: []
+oat_current_task: p06-t06
+oat_last_commit: 6458acfd5391e570f770740db6a2d0aace7f02e0
+oat_blockers:
+  - p06-t06 external dogfood and GitHub operations require operator authorization
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -75,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T13:15:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T14:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,9 +86,9 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 6 asset versioning
+**Status:** Phase 6 awaiting p06-t06 authorization
 **Started:** 2026-07-29
-**Last Updated:** 2026-07-31
+**Last Updated:** 2026-08-02
 
 ## Current Phase
 
@@ -125,6 +126,13 @@ at p06-t01's required documentation delta approval gate.
 p06-t01 and p06-t02 are complete. The operator authorized p06-t03's two
 verification files to normalize contract pins to exactly one
 merge-base-relative canonical version bump.
+p06-t03 through p06-t05 are complete. `pnpm release:validate` then found test
+artifacts in the packed CLI because the publish build used the normal
+test-aware TypeScript config. The operator authorized bounded recovery
+`p06-t05-r01` to add a build-only config while preserving the explicit
+compile-time fixture in normal type-checking. The recovery and full release
+validation now pass. p06-t06 remains unstarted and requires separate external
+authorization.
 
 ## Artifacts
 
@@ -272,13 +280,19 @@ merge-base-relative canonical version bump.
 - ✓ p06-t01 completed at `335e4c09`
 - ✓ p06-t02 completed at `7f990afc`
 - ✓ Operator authorized p06-t03 contract-pin scope
-- → Execute p06-t03 through p06-t05
+- ✓ p06-t03 completed at `4197abd5`
+- ✓ p06-t04 completed at `c5ce012f`
+- ✓ p06-t05 completed at `6458acfd`
+- ⚠ p06-t05 release validation found packed CLI test artifacts
+- ✓ Bounded recovery p06-t05-r01 passed clean build and release validation
+- → Stop before p06-t06 pending external authorization
 
 ## Blockers
 
-None.
+p06-t06 requires external dogfood and GitHub operations that are not authorized
+by the bounded p06-t05 recovery.
 
 ## Next Milestone
 
-Complete canonical versioning, provider synchronization, and lockstep package
-version preparation through p06-t05.
+Obtain explicit authorization before starting p06-t06's external dogfood and
+GitHub operations.

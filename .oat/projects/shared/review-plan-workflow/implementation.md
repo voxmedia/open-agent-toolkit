@@ -1,16 +1,17 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
-oat_last_updated: 2026-08-01
-oat_current_task_id: p06-t03
+oat_blockers:
+  - p06-t06 external dogfood and GitHub operations require operator authorization
+oat_last_updated: 2026-08-02
+oat_current_task_id: p06-t06
 oat_generated: false
 ---
 
 # Implementation: review-plan-workflow
 
 **Started:** 2026-07-29
-**Last Updated:** 2026-07-31
+**Last Updated:** 2026-08-02
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -31,10 +32,10 @@ oat_generated: false
 | Phase 3 | completed   | 10    | 10/10     |
 | Phase 4 | completed   | 27    | 27/27     |
 | Phase 5 | completed   | 17    | 17/17     |
-| Phase 6 | in_progress | 7     | 2/7       |
+| Phase 6 | in_progress | 7     | 5/7       |
 | Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 124/135 tasks completed
+**Total:** 127/135 tasks completed
 
 ## Execution Configuration
 
@@ -1585,13 +1586,54 @@ state, migration, and rollback. The regenerated index had no diff.
 
 ### Task p06-t03: Bump changed canonical asset versions once
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** `4197abd5`
 **Operator disposition:** Authorized adding the two declared verification suites
 to the task boundary so pinned versions match exactly one merge-base-relative
 bump: reviewer 1.2.1, review-provide 1.4.1, remote 1.1.1, and implement 2.2.4.
+**Verification:** Both canonical-version and review-skill contract suites passed.
 
-**Next:** Normalize canonical versions and contract pins, then continue through
-p06-t05.
+### Task p06-t04: Synchronize provider views and bundled assets
+
+**Status:** completed
+**Commit:** `c5ce012f`
+**Outcome:** Regenerated manifest-owned provider views and bundled assets from
+the versioned canonical review assets.
+**Verification:** Provider codecs, sync behavior, bundle consistency, and clean
+sync dry-run passed.
+
+### Task p06-t05: Advance the Stage A lockstep package version
+
+**Status:** completed
+**Commit:** `6458acfd`
+**Outcome:** Advanced all five public packages and bundled version registry to
+0.2.29 with lockfile-only synchronization.
+**Verification:** Lockstep version validation passed. Full release validation
+then found packed `dist/**/*.test.*` artifacts and triggered bounded recovery
+`p06-t05-r01`.
+
+#### Recovery p06-t05-r01: Exclude tests from the CLI publish build
+
+**Status:** completed
+**Commit:** bounded recovery commit
+**Finding:** The publish build inherited the normal config's explicit
+`src/review/types.test.ts` compile-time fixture and emitted test artifacts.
+**Operator disposition:** Authorized a build-only TypeScript config and package
+script update, plus this bounded bookkeeping record. Runtime, tests, versions,
+lockfile, docs, provider views, and external state remain out of scope.
+**Outcome:** Added `tsconfig.build.json`, routed both build commands through it,
+and taught the package clean script to remove its incremental cache. The normal
+test-aware config remains unchanged.
+**Verification:** Clean CLI build emitted 353 JavaScript files and zero
+`dist/**/*.test.*` paths. Normal type-check listed the explicit fixture; 171
+focused contract tests passed. Workspace check, type-check, 4,065 package tests
+plus 129 smoke tests, and all five builds passed. The CLI tarball contained
+1,436 paths, including `dist/index.js` and the version registry, with zero
+packed test paths. Release validation passed all five public packages and 65
+visual measurements.
+
+**Next:** Stop before p06-t06 pending explicit authorization for its dogfood and
+GitHub operations.
 
 ## Orchestration Runs
 
