@@ -3021,7 +3021,8 @@ Expected: inventory-wide mode behavior is pinned.
 
 - Modify: `packages/cli/src/commands/gate/index.ts`
 - Modify: `packages/cli/src/commands/gate/index.test.ts`
-- Modify: `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+- Unchanged regression witness:
+  `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
 - Modify: `packages/cli/src/review/validation-store.ts`
 - Modify: `packages/cli/src/review/validation-store.test.ts`
 
@@ -3050,7 +3051,8 @@ Expected: translation never scans run directories or crosses attempts.
 - Create: `packages/cli/src/commands/gate/review-plan-failure.test.ts`
 - Modify: `packages/cli/src/commands/gate/index.ts`
 - Modify: `packages/cli/src/commands/gate/index.test.ts`
-- Modify: `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+- Unchanged regression witness:
+  `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
 - Modify: `packages/cli/src/review/validation-store.ts`
 - Modify: `packages/cli/src/review/validation-store.test.ts`
 - Modify: `packages/cli/src/commands/review/validate-output.ts`
