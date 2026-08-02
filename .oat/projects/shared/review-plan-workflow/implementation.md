@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: p05-t15
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | completed   | 27    | 27/27     |
-| Phase 5 | in_progress | 15    | 14/15     |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | completed | 10    | 10/10     |
+| Phase 4 | completed | 27    | 27/27     |
+| Phase 5 | in_review | 15    | 15/15     |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 119/133 tasks completed
+**Total:** 120/133 tasks completed
 
 ## Execution Configuration
 
@@ -1314,7 +1314,7 @@ independent root verification passed.
 
 ## Phase 5: Gate Diagnostics and Compatibility
 
-**Status:** in_progress
+**Status:** in_review
 **Started:** 2026-08-02
 
 ### Task p05-t01: Add reviewPlanMode configuration
@@ -1468,10 +1468,22 @@ review fixes, then independently re-review the fix range.
 
 ### Task p05-t15: Recover gate-correlation prompt-site inventory
 
-**Status:** pending
+**Status:** completed
 **Operator disposition:** Authorized one narrow inventory recovery and Phase 5
 re-review on 2026-08-02. Map the four correlation-forwarding prompt sites to
 `NG`, rerun the inventory and full suites, then re-review.
+
+**Commit:** `862830d6`
+**Outcome:** Mapped all four internal correlation-forwarding prompt sites to
+`NG` in the canonical autonomy inventory while preserving byte-identical
+embedded contracts.
+**Verification:** Implementer and root independently passed all 4 inventory
+tests and the full 3,945-test CLI suite. The combined review-fix union passed
+423 tests; type-check, lint, formatting, build, check, and diff gates passed.
+
+**Fix completion:** p05-t08 through p05-t15 completed at `862830d6`.
+
+**Next:** Run the independent Phase 5 fix-range re-review.
 
 ## Orchestration Runs
 

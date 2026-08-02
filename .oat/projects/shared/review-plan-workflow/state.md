@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t15
-oat_last_commit: 3228861fe31cea23f5393c9db47b1c4d1d68e7e9
+oat_current_task: null
+oat_last_commit: 862830d61d77b4c69e8dcb1c37c3919d115efce8
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T03:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T04:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,7 +85,7 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 5 inventory recovery
+**Status:** Phase 5 re-review pending
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
@@ -115,6 +115,7 @@ to p05-t08 through p05-t14.
 All seven review fixes pass focused verification, but the full suite found four
 new correlation-forwarding prompt sites missing from the canonical autonomy
 inventory. The operator authorized narrow p05-t15 recovery and re-review.
+p05-t15 and full implementer/root verification now pass.
 
 ## Artifacts
 
@@ -250,7 +251,9 @@ inventory. The operator authorized narrow p05-t15 recovery and re-review.
 - ✓ Combined review-fix union passed 423 tests
 - ⚠ Full CLI suite has one inventory-only failure for four unmapped sites
 - ✓ Operator authorized p05-t15 inventory recovery and re-review
-- → Execute p05-t15
+- ✓ p05-t15 completed at `862830d6`
+- ✓ Implementer and root full CLI suites pass 3,945 tests
+- → Run the Phase 5 fix-range re-review
 
 ## Blockers
 
@@ -258,5 +261,4 @@ None.
 
 ## Next Milestone
 
-Complete p05-t15, rerun the full suite, then independently re-review Phase 5
-fixes.
+Run the independent Phase 5 fix-range re-review.
