@@ -112,6 +112,17 @@ describe('review capability preflight', () => {
       errors: [
         {
           code: 'review-budget-below-minimum',
+          message:
+            'Review budget is below the enforced 120-second minimum. Raise the configured timeout or explicitly select temporary legacy review mode.',
+          details: {
+            source: 'scope-default',
+            valueMs: 119_999,
+            minimumMs: 120_000,
+            remedies: [
+              'raise the configured review timeout to at least 120000 ms',
+              'explicitly set workflow.reviewPlanMode to legacy temporarily',
+            ],
+          },
         },
       ],
     });

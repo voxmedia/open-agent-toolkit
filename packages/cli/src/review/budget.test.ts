@@ -51,6 +51,9 @@ describe('outer review time allocation', () => {
       throw new Error('expected allocation to fail');
     } catch (error) {
       expect(error).toBeInstanceOf(ReviewDomainError);
+      expect((error as ReviewDomainError).message).toBe(
+        'Review budget is below the enforced 120-second minimum. Raise the configured timeout or explicitly select temporary legacy review mode.',
+      );
       expect((error as ReviewDomainError).details).toEqual({
         source: 'scope-default',
         valueMs: 119_999,

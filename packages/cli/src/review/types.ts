@@ -579,5 +579,9 @@ export interface ReviewPlanPreflightInput {
 export interface ReviewPlanPreflightResult {
   ok: boolean;
   capabilities: ReviewPlanCapabilities;
-  errors: Array<{ code: string; message: string }>;
+  errors: Array<{
+    code: string;
+    message: string;
+    details?: Record<string, unknown>;
+  }>;
 }

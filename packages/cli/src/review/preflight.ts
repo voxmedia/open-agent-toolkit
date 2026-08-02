@@ -92,6 +92,11 @@ export function preflightReviewPlan(
       errors.push({
         code: error.code,
         message: error.message,
+        ...(typeof error.details === 'object' &&
+        error.details !== null &&
+        !Array.isArray(error.details)
+          ? { details: error.details }
+          : {}),
       });
     } else {
       throw error;
