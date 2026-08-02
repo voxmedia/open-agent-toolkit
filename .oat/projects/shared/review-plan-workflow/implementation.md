@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: p06-t01
+oat_current_task_id: p06-t03
 oat_generated: false
 ---
 
@@ -31,10 +31,10 @@ oat_generated: false
 | Phase 3 | completed   | 10    | 10/10     |
 | Phase 4 | completed   | 27    | 27/27     |
 | Phase 5 | completed   | 17    | 17/17     |
-| Phase 6 | in_progress | 7     | 0/7       |
+| Phase 6 | in_progress | 7     | 2/7       |
 | Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 122/135 tasks completed
+**Total:** 124/135 tasks completed
 
 ## Execution Configuration
 
@@ -1565,10 +1565,33 @@ byte-identical while aligning only p05-t15.
 
 ### Task p06-t01: Document review workflow behavior
 
-**Status:** awaiting documentation delta approval
+**Status:** completed
+**Commit:** `335e4c09`
+**Outcome:** Documented plan-first review ordering, direct phase adoption,
+launcher-owned repair, reviewer `BLOCKED` semantics, and independent
+review/checkpoint/gate boundaries across the four approved workflow pages.
+**Verification:** Docs formatting and lint passed; no navigation or generated
+index change.
 
-**Next:** Produce the p06-t01 documentation delta analysis and obtain explicit
-user approval before editing.
+### Task p06-t02: Document CLI, config, gate, and directory contracts
+
+**Status:** completed
+**Commit:** `7f990afc`
+**Outcome:** Documented review commands and JSON exits, `reviewPlanMode`, timeout
+defaults and precedence, accounting-invalid completion, temporary validation
+state, migration, and rollback. The regenerated index had no diff.
+**Verification:** 720 links checked with none broken; docs formatting, lint, and
+6/6 build tasks passed.
+
+### Task p06-t03: Bump changed canonical asset versions once
+
+**Status:** in_progress
+**Operator disposition:** Authorized adding the two declared verification suites
+to the task boundary so pinned versions match exactly one merge-base-relative
+bump: reviewer 1.2.1, review-provide 1.4.1, remote 1.1.1, and implement 2.2.4.
+
+**Next:** Normalize canonical versions and contract pins, then continue through
+p06-t05.
 
 ## Orchestration Runs
 

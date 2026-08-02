@@ -3470,6 +3470,8 @@ Expected: generated index, links, and docs build pass.
 - Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
 - Modify: `.agents/skills/oat-project-review-provide-remote/SKILL.md`
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
 
 **Step 1: Write check (RED)** Diff each canonical asset against the merge base;
 require exactly one frontmatter version increment for every changed agent/skill
