@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 862830d61d77b4c69e8dcb1c37c3919d115efce8
+oat_current_task: p05-t16
+oat_last_commit: 3acb1a129b7908dbfe435d1b3dad7d3ec4892255
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T04:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T04:14:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,7 +85,7 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 5 re-review pending
+**Status:** Phase 5 final minor fixes
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
@@ -116,6 +116,9 @@ All seven review fixes pass focused verification, but the full suite found four
 new correlation-forwarding prompt sites missing from the canonical autonomy
 inventory. The operator authorized narrow p05-t15 recovery and re-review.
 p05-t15 and full implementer/root verification now pass.
+Cycle-2 re-review passed with no Critical, Important, or Medium findings and
+confirmed all prior findings resolved. Its two bounded Minor findings are
+converted to p05-t16 and p05-t17 under auto-review policy.
 
 ## Artifacts
 
@@ -253,7 +256,9 @@ p05-t15 and full implementer/root verification now pass.
 - ✓ Operator authorized p05-t15 inventory recovery and re-review
 - ✓ p05-t15 completed at `862830d6`
 - ✓ Implementer and root full CLI suites pass 3,945 tests
-- → Run the Phase 5 fix-range re-review
+- ✓ Cycle-2 re-review resolved all prior findings and passed blocking criteria
+- ✓ Converted two residual Minor findings to p05-t16 and p05-t17
+- → Execute p05-t16 and p05-t17
 
 ## Blockers
 
@@ -261,4 +266,4 @@ None.
 
 ## Next Milestone
 
-Run the independent Phase 5 fix-range re-review.
+Complete p05-t16 and p05-t17, then run the final bounded Phase 5 re-review.

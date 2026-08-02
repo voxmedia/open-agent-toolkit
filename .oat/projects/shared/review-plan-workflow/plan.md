@@ -3337,6 +3337,56 @@ byte-identical.
 
 **Step 5: Commit** `chore(p05-t15): map gate correlation forwarding`
 
+### Task p05-t16: (cycle-2 m1) Preserve refusal envelopes after acceptance
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Step 1: Write test (RED)** Simulate an out-of-contract refusal emitted after
+the accepted handle is bound. Require the canonical
+`review_did_not_complete` refusal envelope to remain the operator-visible
+result, accepted state to remain undeleted, and no unexpected-failure envelope
+to replace it.
+
+**Step 2: Implement (GREEN)** Scope pre-start cleanup so accepted attempts are a
+deliberate no-op and ensure cleanup cannot replace the already-determined refusal
+outcome. Preserve fail-closed exit behavior and genuine pre-start exact-pair
+deletion.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/review/validation-store.test.ts`
+Expected: genuine pre-start state is deleted, accepted state is retained, and
+both refusal paths emit the stable refusal envelope.
+
+**Step 5: Commit** `fix(p05-t16): preserve accepted refusal envelope`
+
+### Task p05-t17: (cycle-2 m2) Align inventory symlink manifests
+
+**Files:**
+
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+
+**Step 1: Inspect** Confirm the four embedded autonomy-contract paths in
+p05-t15 are symlinks to `.agents/docs/autonomy-contract.md` and only the
+canonical file appears in the task diff.
+
+**Step 2: Implement** Mark each embedded path as an unchanged symlink to the
+canonical contract while retaining byte-identity verification in the task.
+
+**Step 3: Format** Run:
+`pnpm exec oxfmt .oat/projects/shared/review-plan-workflow/plan.md`.
+
+**Step 4: Verify** Run `git diff --check`.
+Expected: p05-t15's manifest matches the one-file implementation diff and
+retains all embedded-contract verification.
+
+**Step 5: Commit** `docs(p05-t17): align inventory symlink manifests`
+
 ---
 
 ## Phase 6: Documentation, Provider Sync, and Compatibility Release
@@ -3817,6 +3867,7 @@ B post-publication bookkeeping PR.
 | p04    | code     | fixes_completed | 2026-08-02 | reviews/p04-review-2026-08-02T004000Z.md                    | 394b49f36a4fceb6ef943ec27373a631728d8e55 | auto       | -           |
 | p04    | code     | passed          | 2026-08-02 | reviews/archived/p04-review-2026-08-02T015504Z.md           | 8efec9d971513d2850a48792d3910d0f47d19b6d | manual     | -           |
 | p05    | code     | fixes_completed | 2026-08-02 | reviews/archived/p05-review-2026-08-02T030045Z.md           | 8a8aab7eb4dfc90906fe22b2f3ba460c5216e405 | auto       | -           |
+| p05    | code     | fixes_added     | 2026-08-02 | reviews/archived/p05-review-2026-08-02T040734Z.md           | 222cf87033c5df7543dfcab79b5d74347916182f | auto       | -           |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -3844,11 +3895,11 @@ rewriting either historical result as passed.
 - Phase 2: 55 tasks - authoritative metadata, validation runtime, and review fixes
 - Phase 3: 10 tasks - reviewer planning, selective evidence, and review fixes
 - Phase 4: 27 tasks - accounting, repair, coordinator adoption, compatibility, and review fixes
-- Phase 5: 15 tasks - gate diagnostics, timeout, compatibility mode, and review fixes
+- Phase 5: 17 tasks - gate diagnostics, timeout, compatibility mode, and review fixes
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 133 tasks**
+**Total: 135 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.

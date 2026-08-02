@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: null
+oat_current_task_id: p05-t16
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | completed | 55    | 55/55     |
-| Phase 3 | completed | 10    | 10/10     |
-| Phase 4 | completed | 27    | 27/27     |
-| Phase 5 | in_review | 15    | 15/15     |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | completed   | 55    | 55/55     |
+| Phase 3 | completed   | 10    | 10/10     |
+| Phase 4 | completed   | 27    | 27/27     |
+| Phase 5 | in_progress | 17    | 15/17     |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 120/133 tasks completed
+**Total:** 120/135 tasks completed
 
 ## Execution Configuration
 
@@ -1314,7 +1314,7 @@ independent root verification passed.
 
 ## Phase 5: Gate Diagnostics and Compatibility
 
-**Status:** in_review
+**Status:** in_progress
 **Started:** 2026-08-02
 
 ### Task p05-t01: Add reviewPlanMode configuration
@@ -1484,6 +1484,42 @@ tests and the full 3,945-test CLI suite. The combined review-fix union passed
 **Fix completion:** p05-t08 through p05-t15 completed at `862830d6`.
 
 **Next:** Run the independent Phase 5 fix-range re-review.
+
+### Review Received: p05 (cycle 2)
+
+**Date:** 2026-08-02
+**Review artifact:** `reviews/archived/p05-review-2026-08-02T040734Z.md`
+
+**Verdict:** Passed with two Minor findings
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**Prior findings resolved:** All cycle-1 findings and p05-t15 inventory
+recovery are independently resolved with complete focused and workspace gates.
+
+**Finding disposition map:**
+
+- m1 (cleanup after an accepted-handle refusal can replace the refusal envelope
+  with unexpected failure) → p05-t16.
+- m2 (p05-t15 lists four unchanged symlink copies as modifications) → p05-t17.
+
+**New tasks added:** p05-t16 and p05-t17 under the auto-review minor-fix policy.
+
+### Task p05-t16: (cycle-2 m1) Preserve refusal envelopes after acceptance
+
+**Status:** pending
+
+### Task p05-t17: (cycle-2 m2) Align inventory symlink manifests
+
+**Status:** pending
+
+**Next:** Complete p05-t16 and p05-t17, then run the final bounded Phase 5
+re-review.
 
 ## Orchestration Runs
 
