@@ -468,6 +468,76 @@ describe('validation state and gate correlation', () => {
     ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
+  it('retains a minimal accounting-invalid diagnostic and deletes parent state', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const store = new ValidationStore(join(parent, 'store'));
+    const gatePreparation = delegatedGatePreparation();
+    const created = await store.createRun({
+      preparation: gatePreparation,
+      artifactDraft: false,
+    });
+    await store.bindGateCorrelation(
+      'gate-run',
+      'current-attempt',
+      created.runId,
+    );
+    const tokens = await issueCommandCapabilities(store, created.runId);
+    await bindAcceptedHandle(store, created.runId, 'accepted-handle');
+    const context = await checkpointArtifactsLoaded(
+      { runId: created.runId, checkpointToken: tokens.checkpointToken },
+      { store, telemetryAdapter: null, telemetryAdapterId: null },
+    );
+    const validated = await validateAndReceiptPlan(
+      {
+        runId: created.runId,
+        commandToken: tokens.planToken,
+        plan: delegatedPlan(context),
+      },
+      { store },
+    );
+    if (!validated.valid) throw new Error('expected valid plan');
+    await beginEvidence(
+      { runId: created.runId, receipt: validated.receipt.token },
+      { store },
+    );
+    await store.updateRun(created.runId, (state) => {
+      state.phase = 'terminal';
+      state.output = {
+        immutableSubstanceDigest: 'a'.repeat(64),
+        attempts: 3,
+        terminalClassification: 'accounting-invalid',
+      };
+      return state;
+    });
+
+    await store.recordAccountingInvalidTerminal(created.runId);
+    const receipt = await store.resolveAccountingInvalidTerminal(
+      'gate-run',
+      'current-attempt',
+    );
+    expect(receipt).toEqual({
+      schemaVersion: 1,
+      gateRunId: 'gate-run',
+      launchAttemptId: 'current-attempt',
+      validationRunId: created.runId,
+      validationAttempts: 3,
+      repairAttempts: 2,
+    });
+
+    const diagnosticPath = await store.retainTerminalDiagnostic(receipt);
+    expect(JSON.parse(await readFile(diagnosticPath, 'utf8'))).toEqual({
+      ...receipt,
+      kind: 'review_complete_accounting_invalid',
+    });
+    await expect(store.readRun(created.runId)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    await expect(
+      store.resolveGateCorrelation('gate-run', 'current-attempt'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
   it('deletes only a pre-start rejected pair and permits a fresh attempt', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
     roots.push(parent);

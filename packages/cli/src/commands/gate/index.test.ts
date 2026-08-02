@@ -36,6 +36,7 @@ import type {
 import { currentGateCliRoot, type GateRouteReceipt } from './branch-local-cli';
 import { extractStructuredRefusal } from './child-process';
 import { createGateCommand, selectExecTarget } from './index';
+import { resolveReviewPlanFailure as resolveReviewPlanFailureFromDisk } from './review-plan-failure';
 import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
 
 interface HarnessOptions {
@@ -45,6 +46,7 @@ interface HarnessOptions {
   createGateActivityProbe?: () => Promise<GateActivityProbe | null>;
   runProcess?: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
+  resolveReviewPlanFailure?: typeof resolveReviewPlanFailureFromDisk;
   writeDiagnostic?: (message: string) => void;
   writeGateRunMarker?: (
     path: string,
@@ -157,6 +159,8 @@ function createHarness(options: HarnessOptions): {
     ...(options.parseReviewGateVerdict
       ? { parseReviewGateVerdict: options.parseReviewGateVerdict }
       : {}),
+    resolveReviewPlanFailure:
+      options.resolveReviewPlanFailure ?? (async () => null),
     ...(options.writeGateRunMarker
       ? { writeGateRunMarker: options.writeGateRunMarker }
       : {}),
@@ -381,6 +385,7 @@ async function runReviewGate(options: {
   processEnv?: NodeJS.ProcessEnv;
   runProcess: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
+  resolveReviewPlanFailure?: typeof resolveReviewPlanFailureFromDisk;
   writeDiagnostic?: (message: string) => void;
   writeGateRunMarker?: HarnessOptions['writeGateRunMarker'];
   removeGateRunMarker?: HarnessOptions['removeGateRunMarker'];
@@ -397,6 +402,7 @@ async function runReviewGate(options: {
     processEnv: options.processEnv,
     runProcess: options.runProcess,
     parseReviewGateVerdict: options.parseReviewGateVerdict,
+    resolveReviewPlanFailure: options.resolveReviewPlanFailure,
     writeDiagnostic: options.writeDiagnostic,
     writeGateRunMarker: options.writeGateRunMarker,
     removeGateRunMarker: options.removeGateRunMarker,
@@ -3758,6 +3764,55 @@ describe('oat gate', () => {
       stdio: 'pipe',
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('emits accounting-invalid completion before artifact discovery', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner();
+    const resolveReviewPlanFailure = vi.fn(
+      async (input: { gateRunId: string; launchAttemptId: string }) => ({
+        status: 'review_failed' as const,
+        failure: {
+          kind: 'review_complete_accounting_invalid' as const,
+          ...input,
+          validationRunId: 'validation-run',
+          validationAttempts: 3,
+          repairAttempts: 2,
+          diagnosticPath: '/private/diagnostic.json',
+        },
+        artifactPath: null,
+        receiveEligible: false as const,
+        handoff: null,
+      }),
+    );
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      resolveReviewPlanFailure,
+    });
+
+    expect(resolveReviewPlanFailure).toHaveBeenCalledWith({
+      gateRunId: expect.any(String),
+      launchAttemptId: expect.any(String),
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      failure: {
+        kind: 'review_complete_accounting_invalid',
+        validationRunId: 'validation-run',
+        validationAttempts: 3,
+        repairAttempts: 2,
+        diagnosticPath: '/private/diagnostic.json',
+      },
+      artifactPath: null,
+      receiveEligible: false,
+      handoff: null,
+    });
+    expect(process.exitCode).toBe(1);
   });
 
   it('runs gate review through an explicit target, annotates the prompt, and blocks on Important findings', async () => {

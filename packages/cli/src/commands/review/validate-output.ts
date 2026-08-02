@@ -129,7 +129,7 @@ export async function validateStoredReviewOutput(
   }
 
   let result: OutputValidationResult | undefined;
-  await store.updateRun(input.runId, (current) => {
+  const updatedRun = await store.updateRun(input.runId, (current) => {
     if (
       current.receipt === null ||
       current.plan === null ||
@@ -163,6 +163,7 @@ export async function validateStoredReviewOutput(
       artifactBytesBase64,
     );
     current.output.attempts++;
+    current.output.terminalClassification = null;
     if (current.output.immutableSubstanceDigest === null) {
       current.output.immutableSubstanceDigest = immutableSubstanceDigest;
     } else if (
@@ -179,6 +180,7 @@ export async function validateStoredReviewOutput(
         ],
       };
       current.phase = 'terminal';
+      current.output.terminalClassification = 'accounting-invalid';
       return current;
     }
 
@@ -197,6 +199,8 @@ export async function validateStoredReviewOutput(
     if (result.valid) {
       current.phase =
         input.terminal.status === 'complete' ? 'accepted' : 'terminal';
+      current.output.terminalClassification =
+        input.terminal.status === 'blocked' ? 'reviewer-blocked' : null;
       if (
         input.terminal.status === 'complete' &&
         artifactSnapshot !== undefined
@@ -218,9 +222,18 @@ export async function validateStoredReviewOutput(
           isAccountingRepairablePointer(error.pointer),
         );
       current.phase = repairable ? 'accounting_repair' : 'terminal';
+      current.output.terminalClassification = repairable
+        ? null
+        : 'accounting-invalid';
     }
     return current;
   });
+  if (
+    updatedRun.state.output.terminalClassification === 'accounting-invalid' &&
+    updatedRun.state.preparation.correlation.gateRunId !== null
+  ) {
+    await store.recordAccountingInvalidTerminal(input.runId);
+  }
   if (result === undefined) {
     throw new Error('output validation transition produced no result');
   }

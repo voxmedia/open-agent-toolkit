@@ -71,6 +71,7 @@ export interface ValidationRunState {
   output: {
     immutableSubstanceDigest: string | null;
     attempts: number;
+    terminalClassification?: 'reviewer-blocked' | 'accounting-invalid' | null;
   };
   acceptedSnapshot: {
     id: string;
@@ -89,6 +90,15 @@ export interface StoredValidationRun {
   draftDevice: number | null;
   draftInode: number | null;
   state: ValidationRunState;
+}
+
+export interface AccountingInvalidTerminalReceipt {
+  schemaVersion: 1;
+  gateRunId: string;
+  launchAttemptId: string;
+  validationRunId: string;
+  validationAttempts: number;
+  repairAttempts: number;
 }
 
 const NOFOLLOW =
@@ -130,13 +140,31 @@ function parseValidationRunState(
   value: unknown,
   runId: string,
 ): ValidationRunState {
-  const normalizedValue =
+  let normalizedValue =
     typeof value === 'object' &&
     value !== null &&
     !Array.isArray(value) &&
     !('workerCoverage' in value)
       ? { ...value, workerCoverage: [] }
       : value;
+  if (
+    typeof normalizedValue === 'object' &&
+    normalizedValue !== null &&
+    !Array.isArray(normalizedValue) &&
+    'output' in normalizedValue &&
+    typeof normalizedValue.output === 'object' &&
+    normalizedValue.output !== null &&
+    !Array.isArray(normalizedValue.output) &&
+    !('terminalClassification' in normalizedValue.output)
+  ) {
+    normalizedValue = {
+      ...normalizedValue,
+      output: {
+        ...normalizedValue.output,
+        terminalClassification: null,
+      },
+    };
+  }
   const state = exactKeys(
     normalizedValue,
     [
@@ -397,7 +425,7 @@ function parseValidationRunState(
   }
   const output = exactKeys(
     state.output,
-    ['immutableSubstanceDigest', 'attempts'],
+    ['immutableSubstanceDigest', 'attempts', 'terminalClassification'],
     'validation output state',
   );
   if (
@@ -406,7 +434,10 @@ function parseValidationRunState(
     (output.attempts as number) > 3 ||
     (output.immutableSubstanceDigest !== null &&
       (typeof output.immutableSubstanceDigest !== 'string' ||
-        !/^[0-9a-f]{64}$/.test(output.immutableSubstanceDigest)))
+        !/^[0-9a-f]{64}$/.test(output.immutableSubstanceDigest))) ||
+    ![null, 'reviewer-blocked', 'accounting-invalid'].includes(
+      output.terminalClassification as string | null,
+    )
   ) {
     throw new Error('validation output state is invalid');
   }
@@ -414,12 +445,17 @@ function parseValidationRunState(
   const immutableSubstanceDigest = output.immutableSubstanceDigest as
     | string
     | null;
+  const terminalClassification = output.terminalClassification as
+    | 'reviewer-blocked'
+    | 'accounting-invalid'
+    | null;
   if (
     (attempts === 0) !== (immutableSubstanceDigest === null) ||
     (phase === 'accounting_repair' && (attempts < 1 || attempts > 2)) ||
     ((phase === 'accepted' || phase === 'terminal') && attempts < 1) ||
     (!['accounting_repair', 'accepted', 'terminal'].includes(phase) &&
-      attempts !== 0)
+      attempts !== 0) ||
+    (phase !== 'terminal' && terminalClassification !== null)
   ) {
     throw new Error('validation output phase is incoherent');
   }
@@ -483,7 +519,11 @@ function parseValidationRunState(
     receipt,
     workerCoverage,
     planValidationAttempts: state.planValidationAttempts as number,
-    output: { immutableSubstanceDigest, attempts },
+    output: {
+      immutableSubstanceDigest,
+      attempts,
+      terminalClassification,
+    },
     acceptedSnapshot,
   };
 }
@@ -692,17 +732,36 @@ export class ValidationStore {
     return join(this.root, `run-${runId}`);
   }
 
-  private correlationPath(gateRunId: string, launchAttemptId: string): string {
+  private correlationDigest(
+    gateRunId: string,
+    launchAttemptId: string,
+  ): string {
     if (
       !/^[A-Za-z0-9_-]{1,128}$/.test(gateRunId) ||
       !/^[A-Za-z0-9_-]{1,128}$/.test(launchAttemptId)
     ) {
       throw new Error('gate correlation IDs are malformed');
     }
-    const tupleDigest = createHash('sha256')
+    return createHash('sha256')
       .update(JSON.stringify([gateRunId, launchAttemptId]))
       .digest('hex');
-    return join(this.root, `correlation-${tupleDigest}.json`);
+  }
+
+  private correlationPath(gateRunId: string, launchAttemptId: string): string {
+    return join(
+      this.root,
+      `correlation-${this.correlationDigest(gateRunId, launchAttemptId)}.json`,
+    );
+  }
+
+  private terminalReceiptPath(
+    gateRunId: string,
+    launchAttemptId: string,
+  ): string {
+    return join(
+      this.root,
+      `terminal-${this.correlationDigest(gateRunId, launchAttemptId)}.json`,
+    );
   }
 
   async createRun(input: {
@@ -747,7 +806,11 @@ export class ValidationStore {
         receipt: null,
         workerCoverage: [],
         planValidationAttempts: 0,
-        output: { immutableSubstanceDigest: null, attempts: 0 },
+        output: {
+          immutableSubstanceDigest: null,
+          attempts: 0,
+          terminalClassification: null,
+        },
         acceptedSnapshot: null,
       };
       const statePath = join(runDirectory, 'state.json');
@@ -1010,6 +1073,122 @@ export class ValidationStore {
     } finally {
       await handle.close();
     }
+  }
+
+  async recordAccountingInvalidTerminal(runId: string): Promise<void> {
+    await this.withLock(async (assertOwnership) => {
+      const run = await this.readRun(runId, new Date(0));
+      const { correlation } = run.state.preparation;
+      if (
+        run.state.phase !== 'terminal' ||
+        run.state.output.terminalClassification !== 'accounting-invalid' ||
+        correlation.gateRunId === null ||
+        run.state.receipt === null ||
+        run.state.receipt.validationRunId !== runId
+      ) {
+        throw new Error(
+          'accounting-invalid terminal receipt state is incoherent',
+        );
+      }
+      const receipt: AccountingInvalidTerminalReceipt = {
+        schemaVersion: 1,
+        gateRunId: correlation.gateRunId,
+        launchAttemptId: correlation.launchAttemptId,
+        validationRunId: runId,
+        validationAttempts: run.state.output.attempts,
+        repairAttempts: run.state.output.attempts - 1,
+      };
+      await assertOwnership();
+      await writeExclusive(
+        this.terminalReceiptPath(receipt.gateRunId, receipt.launchAttemptId),
+        `${JSON.stringify(receipt)}\n`,
+      );
+    });
+  }
+
+  async resolveAccountingInvalidTerminal(
+    gateRunId: string,
+    launchAttemptId: string,
+  ): Promise<AccountingInvalidTerminalReceipt> {
+    const handle = await open(
+      this.terminalReceiptPath(gateRunId, launchAttemptId),
+      constants.O_RDONLY | NOFOLLOW,
+    );
+    try {
+      const info = await handle.stat();
+      if (!info.isFile() || info.nlink !== 1 || info.mode & 0o077) {
+        throw new Error('accounting-invalid terminal receipt is unsafe');
+      }
+      const receipt = exactKeys(
+        JSON.parse(await handle.readFile('utf8')),
+        [
+          'schemaVersion',
+          'gateRunId',
+          'launchAttemptId',
+          'validationRunId',
+          'validationAttempts',
+          'repairAttempts',
+        ],
+        'accounting-invalid terminal receipt',
+      );
+      if (
+        receipt.schemaVersion !== 1 ||
+        receipt.gateRunId !== gateRunId ||
+        receipt.launchAttemptId !== launchAttemptId ||
+        typeof receipt.validationRunId !== 'string' ||
+        !Number.isSafeInteger(receipt.validationAttempts) ||
+        (receipt.validationAttempts as number) < 1 ||
+        (receipt.validationAttempts as number) > 3 ||
+        receipt.repairAttempts !== (receipt.validationAttempts as number) - 1
+      ) {
+        throw new Error('accounting-invalid terminal receipt is invalid');
+      }
+      return receipt as unknown as AccountingInvalidTerminalReceipt;
+    } finally {
+      await handle.close();
+    }
+  }
+
+  async retainTerminalDiagnostic(
+    receipt: AccountingInvalidTerminalReceipt,
+  ): Promise<string> {
+    return this.withLock(async (assertOwnership) => {
+      const current = await this.resolveAccountingInvalidTerminal(
+        receipt.gateRunId,
+        receipt.launchAttemptId,
+      );
+      if (canonicalizeJson(current) !== canonicalizeJson(receipt)) {
+        throw new Error('accounting-invalid terminal receipt changed');
+      }
+      const diagnosticPath = join(
+        this.root,
+        `diagnostic-${this.correlationDigest(
+          receipt.gateRunId,
+          receipt.launchAttemptId,
+        )}.json`,
+      );
+      await assertOwnership();
+      await writeExclusive(
+        diagnosticPath,
+        `${JSON.stringify({
+          ...receipt,
+          kind: 'review_complete_accounting_invalid',
+        })}\n`,
+      );
+      await rm(
+        this.correlationPath(receipt.gateRunId, receipt.launchAttemptId),
+        { force: true },
+      );
+      await rm(this.runDirectory(receipt.validationRunId), {
+        recursive: true,
+        force: true,
+      });
+      await rm(
+        this.terminalReceiptPath(receipt.gateRunId, receipt.launchAttemptId),
+        { force: true },
+      );
+      return diagnosticPath;
+    });
   }
 
   async deletePreStartRejectedGateRun(

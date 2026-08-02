@@ -72,6 +72,9 @@ function terminal(): ReviewerTerminalV1 {
 function validationState() {
   return {
     phase: 'evidence_started',
+    preparation: {
+      correlation: { gateRunId: null, launchAttemptId: 'launch' },
+    },
     draft: null as {
       path: string;
       device: number;
@@ -123,7 +126,14 @@ function validationState() {
       classifications: [],
     },
     workerCoverage: [] as ValidatedWorkerCoverageProjectionV1[],
-    output: { immutableSubstanceDigest: null, attempts: 0 },
+    output: {
+      immutableSubstanceDigest: null,
+      attempts: 0,
+      terminalClassification: null as
+        | 'reviewer-blocked'
+        | 'accounting-invalid'
+        | null,
+    },
     acceptedSnapshot: null as {
       id: string;
       bytesBase64: string;
@@ -146,6 +156,7 @@ function fakeStore(state: ReturnType<typeof validationState>) {
         return { state };
       },
     ),
+    recordAccountingInvalidTerminal: vi.fn(async () => {}),
     get state() {
       return state;
     },
@@ -304,6 +315,7 @@ describe('validate-output command', () => {
 
   it('persists immutable substance and terminalizes the third failed submission', async () => {
     const state = validationState();
+    state.preparation.correlation.gateRunId = 'gate-run';
     const store = fakeStore(state);
     const invalid = terminal();
     invalid.reviewAccounting.receipt = 'wrong';
@@ -337,10 +349,18 @@ describe('validate-output command', () => {
     });
     expect(store.state).toMatchObject({
       phase: 'terminal',
-      output: { attempts: 2 },
+      output: {
+        attempts: 2,
+        terminalClassification: 'accounting-invalid',
+      },
     });
+    expect(store.recordAccountingInvalidTerminal).toHaveBeenCalledWith(
+      'validation-run-1',
+    );
 
-    const cappedStore = fakeStore(validationState());
+    const cappedState = validationState();
+    cappedState.preparation.correlation.gateRunId = 'gate-run';
+    const cappedStore = fakeStore(cappedState);
     for (let attempt = 1; attempt <= 3; attempt++) {
       await validateStoredReviewOutput(
         { runId: 'validation-run-1', terminal: invalid },
@@ -349,6 +369,9 @@ describe('validate-output command', () => {
       expect(cappedStore.state.output.attempts).toBe(attempt);
     }
     expect(cappedStore.state.phase).toBe('terminal');
+    expect(cappedStore.state.output.terminalClassification).toBe(
+      'accounting-invalid',
+    );
     await expect(
       validateStoredReviewOutput(
         { runId: 'validation-run-1', terminal: invalid },
@@ -407,5 +430,7 @@ describe('validate-output command', () => {
       ),
     ).resolves.toMatchObject({ valid: true });
     expect(store.state.phase).toBe('terminal');
+    expect(store.state.output.terminalClassification).toBe('reviewer-blocked');
+    expect(store.recordAccountingInvalidTerminal).not.toHaveBeenCalled();
   });
 });

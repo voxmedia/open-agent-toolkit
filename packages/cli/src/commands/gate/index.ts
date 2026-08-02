@@ -85,6 +85,7 @@ import {
   type ProcessRunOptions,
   type ProcessRunResult,
 } from './child-process';
+import { resolveReviewPlanFailure } from './review-plan-failure';
 import {
   parseReviewGateVerdict,
   severityDisplayName,
@@ -121,6 +122,7 @@ interface GateCommandDependencies {
     options: ProcessRunOptions,
   ) => Promise<ProcessRunResult>;
   parseReviewGateVerdict: typeof parseReviewGateVerdict;
+  resolveReviewPlanFailure: typeof resolveReviewPlanFailure;
   appendProjectLog: typeof appendProjectLog;
   processEnv: NodeJS.ProcessEnv;
   writeGateRunMarker: (
@@ -372,6 +374,7 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   readGateRouteReceipt,
   runProcess: runChildProcess,
   parseReviewGateVerdict,
+  resolveReviewPlanFailure,
   appendProjectLog,
   processEnv: process.env,
   writeGateRunMarker,
@@ -3285,6 +3288,25 @@ async function runReviewGate(
         ...routeReceipt,
       })}\n`,
     );
+    const reviewPlanFailure = await dependencies.resolveReviewPlanFailure({
+      gateRunId: runId,
+      launchAttemptId,
+    });
+    if (reviewPlanFailure !== null) {
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'review_failed';
+        projectLogFinalization.exitCode = 1;
+      }
+      if (context.json) {
+        context.logger.json(reviewPlanFailure);
+      } else {
+        context.logger.error(
+          `Review completed without valid accounting. Diagnostic: ${reviewPlanFailure.failure.diagnosticPath}`,
+        );
+      }
+      process.exitCode = 1;
+      return;
+    }
     const childExitCode = childResult.exitCode;
     const refusal = childResult.refusal;
     const writeRefusalFailure = (): boolean => {
