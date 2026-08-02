@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - p05-t05 requires persisted terminal classification outside its declared files
 oat_last_updated: 2026-08-01
-oat_current_task_id: p05-t01
+oat_current_task_id: p05-t05
 oat_generated: false
 ---
 
@@ -24,17 +25,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | completed   | 27    | 27/27     |
-| Phase 5 | in_progress | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | completed | 10    | 10/10     |
+| Phase 4 | completed | 27    | 27/27     |
+| Phase 5 | blocked   | 7     | 4/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 105/125 tasks completed
+**Total:** 109/125 tasks completed
 
 ## Execution Configuration
 
@@ -1314,8 +1315,45 @@ independent root verification passed.
 
 ## Phase 5: Gate Diagnostics and Compatibility
 
-**Status:** in_progress
+**Status:** blocked
 **Started:** 2026-08-02
+
+### Task p05-t01: Add reviewPlanMode configuration
+
+**Status:** completed
+**Commit:** `82d91c3d`
+**Verification:** 315 focused tests passed.
+
+### Task p05-t02: Enforce capability and 120-second preflight
+
+**Status:** completed
+**Commit:** `b0ef5878`
+**Verification:** 21 focused tests passed.
+
+### Task p05-t03: Wire mode resolution through every coordinator
+
+**Status:** completed
+**Commit:** `c8fb06c1`
+**Verification:** 161 focused tests passed.
+
+### Task p05-t04: Bind gate and validation runs by exact tuple
+
+**Status:** completed
+**Commit:** `c9c24d99`
+**Verification:** 221 focused tests passed.
+
+### Task p05-t05: Translate accounting-invalid gate completion
+
+**Status:** blocked
+**Blocker:** Valid reviewer `BLOCKED` terminals and non-repairable or exhausted
+accounting-invalid completion both persist only as `phase: terminal`.
+Implementing the declared gate-only translation would therefore risk
+misclassifying a valid `BLOCKED` outcome. Correct discrimination requires a
+persisted terminal classification in `validation-store.ts`, populated by
+`commands/review/validate-output.ts`, with focused tests.
+
+**Next:** Obtain approval for the narrow p05-t05 state-model scope expansion,
+then resume through p05-t07.
 
 ## Orchestration Runs
 

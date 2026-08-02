@@ -1,7 +1,8 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: 30cf260dd4e601e38b256483540aa33a3481749c
-oat_blockers: []
+oat_current_task: p05-t05
+oat_last_commit: c9c24d999f8c143a7ee9d70eef10bb2c6fbb9eed
+oat_blockers:
+  - p05-t05 requires persisted terminal classification outside its declared files
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -75,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T02:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T02:18:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,7 +86,7 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 5 implementation
+**Status:** Phase 5 blocked at p05-t05
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
@@ -103,6 +104,10 @@ p04-t27, and one cycle-7 re-review. Both fixes and full verification pass.
 The independent cycle-7 review passed with no Critical, Important, or Medium
 findings. Its one optional Minor hardening suggestion is deferred with a
 specific guard-divergence trigger; Phase 5 is now active.
+Tasks p05-t01 through p05-t04 are complete. p05-t05 cannot distinguish accepted
+reviewer `BLOCKED` from accounting-invalid completion because both persist only
+as terminal phase; the correct fix requires a narrow validation-state scope
+expansion.
 
 ## Artifacts
 
@@ -225,12 +230,17 @@ specific guard-divergence trigger; Phase 5 is now active.
 - ✓ Cycle-7 independent review passed at `8efec9d9`
 - ✓ Deferred one optional Minor test-hardening suggestion with rationale
 - ✓ Phase 4 complete
-- → Execute Phase 5 starting at p05-t01
+- ✓ p05-t01 through p05-t04 completed at `c9c24d99`
+- ⚠ p05-t05 requires persisted terminal classification beyond its declared
+  gate-only files
+- → Obtain bounded scope-expansion approval, then resume p05-t05
 
 ## Blockers
 
-None.
+- p05-t05 cannot safely classify terminal validation state without extending
+  `validation-store.ts` and `commands/review/validate-output.ts` plus tests.
 
 ## Next Milestone
 
-Complete Phase 5 gate diagnostics and compatibility tasks.
+Authorize and implement the narrow p05-t05 terminal-classification expansion,
+then complete p05-t06 and p05-t07.
