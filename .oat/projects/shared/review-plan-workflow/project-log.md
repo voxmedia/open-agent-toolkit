@@ -136,6 +136,10 @@ phase_blocked: operator-authorized cycle-4 review failed and the override is exh
 
 phase_blocked: operator-authorized cycle-5 review found two bounded residual gaps and the override is exhausted; see reviews/p04-review-2026-08-01T004400Z.md
 
+### 2026-08-02 · structural · oat-project-implement · p04
+
+phase_blocked: operator-authorized cycle-6 review found two acceptance-definition gaps and the override is exhausted; see reviews/p04-review-2026-08-02T004000Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -1215,6 +1215,38 @@ and independent root verification passed.
 
 **Next:** Run the authorized cycle-6 re-review.
 
+### Review Received: p04 (cycle 6)
+
+**Date:** 2026-08-02
+**Review artifact:** `reviews/p04-review-2026-08-02T004000Z.md`
+
+**Verdict:** Failed
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Finding summary:**
+
+- `ReviewPlanningPayload` still types the four exact command invocations as
+  strings, contradicting the aligned design model and adjacent prose.
+- The public sibling-attempt process case proves fail-closed token rejection but
+  cannot isolate the defensive stored launch-attempt comparison.
+
+**Prior finding resolution:** p04-t25 is complete. The cycle-5 Important and
+Medium findings remain partially resolved; runtime rejection, non-mutation, and
+the full test suite pass.
+
+**Review-limit disposition:** The operator-authorized cycle-6 override is
+exhausted. No additional artifact/test alignment or review cycle may start
+without explicit operator disposition.
+
+**Next:** Await operator disposition for the two remaining acceptance-definition
+gaps.
+
 ---
 
 ## Orchestration Runs
