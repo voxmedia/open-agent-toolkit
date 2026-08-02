@@ -195,6 +195,7 @@ interface GateTimeoutResolution {
 
 interface GateRunMarker {
   runId: string;
+  launchAttemptId: string;
   targetId: string;
   runtime: string;
   reviewType: string | null;
@@ -295,6 +296,7 @@ interface GateDiversityMetadata {
 
 interface GateInvocationMetadata {
   readonly runId: string;
+  readonly launchAttemptId: string;
   readonly targetId: string;
   readonly runtime: string;
   readonly model: string | 'provider-default' | 'unknown';
@@ -472,6 +474,7 @@ function normalizedTargetInvocation(
 
 function createGateInvocationMetadata(
   runId: string,
+  launchAttemptId: string,
   selected: SelectedExecTarget,
 ): GateInvocationMetadata {
   const configuredInvocation = normalizedTargetInvocation(selected.target);
@@ -489,6 +492,7 @@ function createGateInvocationMetadata(
 
   return Object.freeze({
     runId,
+    launchAttemptId,
     targetId: selected.id,
     runtime: selected.target.runtime,
     ...configuredInvocation,
@@ -567,6 +571,7 @@ function gateInvocationPromptContext(
   const frontmatter = YAML.stringify({
     oat_gate_headless: true,
     oat_gate_run_id: invocation.runId,
+    oat_gate_launch_attempt_id: invocation.launchAttemptId,
     oat_gate_target: invocation.targetId,
     oat_gate_runtime: invocation.runtime,
     oat_invocation_model: invocation.model,
@@ -3109,6 +3114,7 @@ async function runReviewGate(
   dependencies: GateCommandDependencies,
 ): Promise<void> {
   const runId = randomUUID();
+  const launchAttemptId = randomUUID();
   let runMarkerPath: string | undefined;
   let runMarkerWritten = false;
   let branchLocalGateCli: BranchLocalGateCli | undefined;
@@ -3152,7 +3158,11 @@ async function runReviewGate(
       context,
       dependencies,
     );
-    const gateInvocation = createGateInvocationMetadata(runId, selected);
+    const gateInvocation = createGateInvocationMetadata(
+      runId,
+      launchAttemptId,
+      selected,
+    );
     const rawPersisted = await readRawGateTimeoutLayers({
       repoRoot,
       userConfigDir,
@@ -3213,6 +3223,7 @@ async function runReviewGate(
       runMarkerPath,
       {
         runId,
+        launchAttemptId,
         targetId: selected.id,
         runtime: selected.target.runtime,
         reviewType: options.reviewType?.trim() || null,
@@ -3252,6 +3263,7 @@ async function runReviewGate(
           OAT_GATE_HEADLESS: '1',
           OAT_NON_INTERACTIVE: '1',
           OAT_GATE_RUN_ID: runId,
+          OAT_GATE_LAUNCH_ATTEMPT_ID: launchAttemptId,
           OAT_GATE_RUNTIME: gateInvocation.runtime,
           OAT_INVOCATION_MODEL: gateInvocation.model,
           OAT_GATE_CLI_PATH: branchLocalGateCli.cliPath,

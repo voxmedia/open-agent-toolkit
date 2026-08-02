@@ -1012,6 +1012,32 @@ export class ValidationStore {
     }
   }
 
+  async deletePreStartRejectedGateRun(
+    gateRunId: string,
+    launchAttemptId: string,
+  ): Promise<void> {
+    await this.withLock(async (assertOwnership) => {
+      const runId = await this.resolveGateCorrelation(
+        gateRunId,
+        launchAttemptId,
+      );
+      const run = await this.readRun(runId, new Date(0));
+      if (
+        run.state.phase !== 'prepared' ||
+        run.state.acceptedHandleDigest !== null
+      ) {
+        throw new Error(
+          'accepted gate launch attempt cannot be replaced or deleted',
+        );
+      }
+      await assertOwnership();
+      await rm(this.correlationPath(gateRunId, launchAttemptId), {
+        force: true,
+      });
+      await rm(this.runDirectory(runId), { recursive: true, force: true });
+    });
+  }
+
   async deleteRun(runId: string): Promise<void> {
     await this.withLock(async (assertOwnership) => {
       const run = await this.readRun(runId, new Date(0));

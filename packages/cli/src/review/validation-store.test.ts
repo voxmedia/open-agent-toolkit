@@ -468,6 +468,70 @@ describe('validation state and gate correlation', () => {
     ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
+  it('deletes only a pre-start rejected pair and permits a fresh attempt', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const store = new ValidationStore(join(parent, 'store'));
+    const rejected = preparation('rejectedattempt1');
+    rejected.invocation = 'gate';
+    rejected.correlation = {
+      gateRunId: 'gate-retry',
+      launchAttemptId: 'attempt-1',
+    };
+    await store.createRun({ preparation: rejected, artifactDraft: false });
+    await store.bindGateCorrelation('gate-retry', 'attempt-1', rejected.runId);
+
+    await store.deletePreStartRejectedGateRun('gate-retry', 'attempt-1');
+    await expect(
+      store.resolveGateCorrelation('gate-retry', 'attempt-1'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+
+    const replacement = preparation('replacementtry01');
+    replacement.invocation = 'gate';
+    replacement.correlation = {
+      gateRunId: 'gate-retry',
+      launchAttemptId: 'attempt-2',
+    };
+    await store.createRun({ preparation: replacement, artifactDraft: false });
+    await store.bindGateCorrelation(
+      'gate-retry',
+      'attempt-2',
+      replacement.runId,
+    );
+    await expect(
+      store.resolveGateCorrelation('gate-retry', 'attempt-2'),
+    ).resolves.toBe(replacement.runId);
+  });
+
+  it('forbids deleting an accepted gate attempt as a replacement', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const store = new ValidationStore(join(parent, 'store'));
+    const accepted = preparation('acceptedattempt1');
+    accepted.invocation = 'gate';
+    accepted.correlation = {
+      gateRunId: 'accepted-gate',
+      launchAttemptId: 'accepted-attempt',
+    };
+    await store.createRun({ preparation: accepted, artifactDraft: false });
+    await store.bindGateCorrelation(
+      'accepted-gate',
+      'accepted-attempt',
+      accepted.runId,
+    );
+    await store.updateRun(accepted.runId, (state) => {
+      state.acceptedHandleDigest = 'accepted';
+      return state;
+    });
+
+    await expect(
+      store.deletePreStartRejectedGateRun('accepted-gate', 'accepted-attempt'),
+    ).rejects.toThrow(/cannot be replaced/);
+    await expect(
+      store.resolveGateCorrelation('accepted-gate', 'accepted-attempt'),
+    ).resolves.toBe(accepted.runId);
+  });
+
   it('encodes colliding tuples injectively', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
     roots.push(parent);

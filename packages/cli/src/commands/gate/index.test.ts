@@ -5082,6 +5082,7 @@ describe('oat gate', () => {
       OAT_GATE_HEADLESS: '1',
       OAT_NON_INTERACTIVE: '1',
       OAT_GATE_RUN_ID: capture.jsonPayloads[0]?.runId,
+      OAT_GATE_LAUNCH_ATTEMPT_ID: expect.stringMatching(/^[0-9a-f-]{36}$/),
       OAT_GATE_RUNTIME: promptRuntime,
       OAT_INVOCATION_MODEL: promptModel,
       OAT_GATE_CLI_PATH: expect.stringContaining('/oat-gate-runs/'),
