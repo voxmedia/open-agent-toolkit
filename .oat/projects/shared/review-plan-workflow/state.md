@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 7f79337b889fc00058a50b40db6476d40adfdcae
+oat_current_task: p05-t08
+oat_last_commit: 73dcc324048553477f5e226ee8cc10259d512caa
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T02:48:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T03:08:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,7 +85,7 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 5 review pending
+**Status:** Phase 5 review fixes
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
@@ -109,6 +109,9 @@ as terminal phase; the correct fix requires a narrow validation-state scope
 expansion.
 The operator authorized that bounded state-model expansion on 2026-08-02.
 Tasks p05-t05 through p05-t07 and independent root verification now pass.
+The independent Phase 5 review found one Important production correlation gap,
+two Medium gaps, and four bounded Minor issues. All seven findings are converted
+to p05-t08 through p05-t14.
 
 ## Artifacts
 
@@ -238,7 +241,9 @@ Tasks p05-t05 through p05-t07 and independent root verification now pass.
 - ✓ p05-t05 through p05-t07 completed at `7f79337b`
 - ✓ Root passed 238 focused and 3,939 CLI tests plus type/lint/format gates
 - ⚠ PJM doctor has four pre-existing layout warnings and no errors
-- → Run the independent Phase 5 review
+- ⚠ Phase 5 review found 1 Important, 2 Medium, and 4 Minor findings
+- ✓ Converted every finding to p05-t08 through p05-t14
+- → Resume implementation at p05-t08
 
 ## Blockers
 
@@ -246,4 +251,4 @@ None.
 
 ## Next Milestone
 
-Run the independent Phase 5 code review over all seven tasks.
+Complete p05-t08 through p05-t14, then independently re-review the fix range.

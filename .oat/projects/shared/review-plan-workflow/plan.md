@@ -3125,6 +3125,186 @@ and code-scope budgets remain unchanged.
 
 **Step 5: Commit** `fix(p05-t07): extend artifact review timeout`
 
+### Task p05-t08: (review I1) Complete gate-child correlation forwarding
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/review/prepare-context.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide-remote/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Write test (RED)** Drive gate correlation through real
+`prepare-context`, validation output, and accounting-invalid gate translation.
+Require gate invocation to forward the exact gate-run and launch-attempt IDs
+from prompt frontmatter or the `OAT_GATE_RUN_ID` /
+`OAT_GATE_LAUNCH_ATTEMPT_ID` environment contract; reject partial or mismatched
+correlation without downgrade.
+
+**Step 2: Implement (GREEN)** Complete the child half of the correlation
+handshake in the canonical coordinator owners and preparation boundary. Preserve
+manual/auto behavior and forbid silent fallback from explicit gate invocation.
+Defer one-time skill version bumps and provider synchronization to p06-t03 and
+p06-t04.
+
+**Step 3: Format** Run `pnpm format:fix`.
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review/prepare-context.test.ts src/commands/gate/gate-hardening.integration.test.ts src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
+Expected: the exact tuple round-trips end to end and accounting-invalid
+translation is reachable.
+
+**Step 5: Commit** `fix(p05-t08): complete gate correlation handshake`
+
+### Task p05-t09: (review M1) Invoke pre-start rejection cleanup
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+
+**Step 1: Write test (RED)** Prove a pre-start role/launch rejection deletes
+the exact gate/attempt correlation pair before retry while tolerating legacy
+mode with no prepared run.
+
+**Step 2: Implement (GREEN)** Call
+`deletePreStartRejectedGateRun(gateRunId, launchAttemptId)` from the gate
+parent's pre-start rejection path before replacement; preserve accepted-launch
+immutability and unrelated cleanup.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/review/validation-store.test.ts`
+Expected: rejected attempts are deleted by the production path and retries use
+fresh IDs.
+
+**Step 5: Commit** `fix(p05-t09): clean rejected gate attempts`
+
+### Task p05-t10: (review M2) Preserve structured budget diagnostics
+
+**Files:**
+
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/preflight.ts`
+- Modify: `packages/cli/src/review/preflight.test.ts`
+- Modify: `packages/cli/src/review/budget.test.ts`
+
+**Step 1: Write test (RED)** Require preflight errors to preserve diagnostic
+`source`, `valueMs`, `minimumMs`, and both remedies.
+
+**Step 2: Implement (GREEN)** Add optional structured details to
+`ReviewPlanPreflightResult.errors` and forward `ReviewDomainError.details`
+without weakening the stable code/message contract.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/preflight.test.ts src/review/budget.test.ts`
+Expected: source, offending value, floor, and remedies survive preflight.
+
+**Step 5: Commit** `fix(p05-t10): preserve preflight diagnostics`
+
+### Task p05-t11: (review m1) Remove unreachable legacy projection scaffolding
+
+**Files:**
+
+- Modify: `packages/cli/src/review/preflight.ts`
+- Modify: `packages/cli/src/review/preflight.test.ts`
+
+**Step 1: Write test (RED)** Keep legacy preflight behavior pinned without
+depending on an uncalled projection helper.
+
+**Step 2: Implement (GREEN)** Remove `projectLegacyReviewOutput`; retain the
+canonical skill-owned `legacy-unvalidated` projection until a production code
+consumer exists.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/preflight.test.ts`
+Expected: legacy mode remains compatible and no unreachable helper remains.
+
+**Step 5: Commit** `refactor(p05-t11): remove unused legacy projection`
+
+### Task p05-t12: (review m2) Use launcher authority in failure translation
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/review-plan-failure.ts`
+- Modify: `packages/cli/src/commands/gate/review-plan-failure.test.ts`
+
+**Step 1: Write test (RED)** Require the default production resolver to use
+launcher-owned validation-store authority.
+
+**Step 2: Implement (GREEN)** Construct the translator's `ValidationStore` with
+`launcherValidationStoreAuthority()` explicitly.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-plan-failure.test.ts`
+Expected: production translation never depends on ephemeral test authority.
+
+**Step 5: Commit** `fix(p05-t12): use launcher validation authority`
+
+### Task p05-t13: (review m3) Restore gate failure envelope diagnostics
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+- Modify: `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+
+**Step 1: Write test (RED)** Require accounting-invalid `review_failed`
+envelopes to include top-level `runId`, `outcome`, and `message` alongside the
+typed failure and non-actionable receive fields.
+
+**Step 2: Implement (GREEN)** Restore the common review-failure diagnostics
+without changing the typed accounting-invalid subtype or correlation IDs.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/gate-hardening.integration.test.ts`
+Expected: consumers retain common correlation/diagnostic fields and the
+accounting-invalid subtype remains non-actionable.
+
+**Step 5: Commit** `fix(p05-t13): restore gate failure diagnostics`
+
+### Task p05-t14: (review m4) Align regression-witness file manifests
+
+**Files:**
+
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+
+**Step 1: Inspect** Confirm
+`packages/cli/src/commands/gate/gate-hardening.integration.test.ts` remained
+unchanged in p05-t04 and p05-t05 while its seven cases passed.
+
+**Step 2: Implement** Annotate the p05-t04 and p05-t05 file entries as
+unchanged regression witnesses rather than declared modifications.
+
+**Step 3: Format** Run:
+`pnpm exec oxfmt .oat/projects/shared/review-plan-workflow/plan.md`.
+
+**Step 4: Verify** Run:
+`git diff --check`.
+Expected: the task manifests match the shipped implementation history without
+weakening regression evidence.
+
+**Step 5: Commit** `docs(p05-t14): align Phase 5 file manifests`
+
 ---
 
 ## Phase 6: Documentation, Provider Sync, and Compatibility Release
@@ -3604,7 +3784,7 @@ B post-publication bookkeeping PR.
 | p04    | code     | fixes_completed | 2026-08-01 | reviews/p04-review-2026-08-01T004400Z.md                    | 96c3a5ef711005f9cde07c30ca2a86075286821d | auto       | -           |
 | p04    | code     | fixes_completed | 2026-08-02 | reviews/p04-review-2026-08-02T004000Z.md                    | 394b49f36a4fceb6ef943ec27373a631728d8e55 | auto       | -           |
 | p04    | code     | passed          | 2026-08-02 | reviews/archived/p04-review-2026-08-02T015504Z.md           | 8efec9d971513d2850a48792d3910d0f47d19b6d | manual     | -           |
-| p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p05    | code     | fixes_added     | 2026-08-02 | reviews/archived/p05-review-2026-08-02T030045Z.md           | 8a8aab7eb4dfc90906fe22b2f3ba460c5216e405 | auto       | -           |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -3631,12 +3811,12 @@ rewriting either historical result as passed.
 - Phase 1: 13 tasks - baseline, contracts, portability seams
 - Phase 2: 55 tasks - authoritative metadata, validation runtime, and review fixes
 - Phase 3: 10 tasks - reviewer planning, selective evidence, and review fixes
-- Phase 4: 19 tasks - accounting, repair, coordinator adoption, compatibility, and review fixes
-- Phase 5: 7 tasks - gate diagnostics, timeout, and compatibility mode
+- Phase 4: 27 tasks - accounting, repair, coordinator adoption, compatibility, and review fixes
+- Phase 5: 14 tasks - gate diagnostics, timeout, compatibility mode, and review fixes
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 117 tasks**
+**Total: 132 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.

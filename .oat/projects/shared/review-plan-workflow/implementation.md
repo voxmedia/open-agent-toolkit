@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: null
+oat_current_task_id: p05-t08
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | completed | 55    | 55/55     |
-| Phase 3 | completed | 10    | 10/10     |
-| Phase 4 | completed | 27    | 27/27     |
-| Phase 5 | in_review | 7     | 7/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | completed   | 55    | 55/55     |
+| Phase 3 | completed   | 10    | 10/10     |
+| Phase 4 | completed   | 27    | 27/27     |
+| Phase 5 | in_progress | 14    | 7/14      |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 112/125 tasks completed
+**Total:** 112/132 tasks completed
 
 ## Execution Configuration
 
@@ -1314,7 +1314,7 @@ independent root verification passed.
 
 ## Phase 5: Gate Diagnostics and Compatibility
 
-**Status:** in_review
+**Status:** in_progress
 **Started:** 2026-08-02
 
 ### Task p05-t01: Add reviewPlanMode configuration
@@ -1387,6 +1387,42 @@ while preserving code-review defaults, bounds, and override precedence.
   PJM errors.
 
 **Next:** Run the independent Phase 5 code review.
+
+### Review Received: p05
+
+**Date:** 2026-08-02
+**Review artifact:** `reviews/archived/p05-review-2026-08-02T030045Z.md`
+
+**Verdict:** Failed
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 2
+- Minor: 4
+
+**Finding disposition map:**
+
+- I1 (gate launch-attempt correlation is published but never consumed) →
+  p05-t08.
+- M1 (pre-start rejection cleanup has no production caller) → p05-t09.
+- M2 (preflight drops structured budget diagnostic details) → p05-t10.
+- m1 (legacy projection helper is unreachable scaffolding) → p05-t11.
+- m2 (failure translation uses ephemeral test authority) → p05-t12.
+- m3 (accounting-invalid envelope omits common diagnostics) → p05-t13.
+- m4 (p05-t04/p05-t05 manifests declare an unchanged regression witness) →
+  p05-t14.
+
+**New tasks added:** p05-t08 through p05-t14.
+
+**Accepted implementation:** The authorized terminal-classification expansion,
+legacy migration, timeout defaults, configuration, and rollout item are sound.
+The four PJM warnings remain unrelated pre-existing layout warnings with no PJM
+errors.
+
+**Next:** Resume the Phase 5 implementer at p05-t08, complete the seven bounded
+review fixes, then independently re-review the fix range.
 
 ## Orchestration Runs
 
