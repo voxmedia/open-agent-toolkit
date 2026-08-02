@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | completed | 55    | 55/55     |
-| Phase 3 | completed | 10    | 10/10     |
-| Phase 4 | in_review | 27    | 27/27     |
-| Phase 5 | pending   | 7     | 0/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | completed   | 55    | 55/55     |
+| Phase 3 | completed   | 10    | 10/10     |
+| Phase 4 | completed   | 27    | 27/27     |
+| Phase 5 | in_progress | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
 **Total:** 105/125 tasks completed
 
@@ -809,7 +809,7 @@ automatic fix iteration, then independently re-review the updated range.
 
 ## Phase 4: Output Accounting and Coordinator Integration
 
-**Status:** in_review
+**Status:** completed
 **Started:** 2026-07-31
 
 ### Task p04-t01: Parse exact artifact accounting grammar
@@ -1277,7 +1277,45 @@ independent root verification passed.
 
 **Next:** Run the authorized cycle-7 re-review.
 
+### Review Received: p04 (cycle 7)
+
+**Date:** 2026-08-02
+**Review artifact:**
+`reviews/archived/p04-review-2026-08-02T015504Z.md`
+
+**Verdict:** Passed
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 1
+
+**Prior findings resolved:**
+
+- I1: the planning payload now preserves all four exact structured command
+  invocations.
+- M1: the direct validation-store test isolates the defensive launch-attempt
+  clause and proves full-state non-mutation.
+
+**Finding disposition map:**
+
+- m1 (the discrimination proof depends implicitly on the matching
+  `beginEvidence` guard) → deferred as optional maintainability hardening. The
+  current test satisfies p04-t27, the reviewer found no production risk, and a
+  second positive-control lifecycle would duplicate substantial fixture setup.
+  Reconsider if the receipt-identity guards diverge or are reordered.
+
+**Phase disposition:** Passed at reviewed head
+`8efec9d971513d2850a48792d3910d0f47d19b6d`; proceed to Phase 5.
+
 ---
+
+## Phase 5: Gate Diagnostics and Compatibility
+
+**Status:** in_progress
+**Started:** 2026-08-02
 
 ## Orchestration Runs
 
