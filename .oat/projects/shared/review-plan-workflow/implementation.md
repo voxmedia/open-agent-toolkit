@@ -1670,6 +1670,34 @@ all six docs builds passed. Release validation passed five public packages and
 rerun the focused p06-t06 preflight, run Local artifact Tier 1, and stop before
 Remote structured Tier 1 posting.
 
+#### Recovery p06-t06-r02: Repair malformed plan obligations
+
+**Status:** completed
+**Commit:** `fix(p06-t06): repair plan review obligations`
+**Finding:** The integrated focused preflight passed 756 tests across 11 files,
+but enforced Local artifact Tier 1 preparation stopped before reviewer launch
+with `p05-t04 has a malformed Files block terminator`. Inspection found the
+same invalid unchanged regression-witness continuation in p05-t05. The first
+full-project parser run then found four equivalent unchanged-symlink
+continuations in p05-t15.
+**Operator disposition:** Authorized removal of only those two malformed Files
+entries while preserving the regression test in both verification commands,
+plus required bookkeeping, focused preparation validation, a separate commit
+and push, fixture refresh, and Local artifact Tier 1 only. A second
+authorization extended this recovery to the four p05-t15 unchanged-symlink
+entries while preserving their paths in the documented format and verification
+commands and preserving the p05-t17 historical explanation.
+**Outcome:** Removed six unchanged-only continuation entries from task `Files`
+blocks and relabeled the three nested recovery manifests as `Recovery files` so
+they do not create duplicate task obligation blocks.
+**Verification:** 40 focused obligation/preparation tests passed across three
+files. Full-project parsing completed with nine p06 obligations and no malformed
+task entry.
+
+**Next:** Complete the separately authorized test-only CI stabilization
+recovery, push both commits, and require terminal passing PR checks before
+refreshing the enforce fixture.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_

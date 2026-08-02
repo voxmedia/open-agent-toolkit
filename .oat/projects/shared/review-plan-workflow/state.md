@@ -1,6 +1,6 @@
 ---
 oat_current_task: p06-t06
-oat_last_commit: 5714b61dc92e3d472cf1b611c5cbe14989be4476
+oat_last_commit: 4c510bcb2b12931c5c38d726113d302fa529171d
 oat_blockers:
   - p06-t06 Remote structured Tier 1 posting requires separate operator approval
 associated_issues:
@@ -76,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T14:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T15:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -137,7 +137,13 @@ advanced `oat-project-implement` to 2.2.4 and published package version 0.2.28.
 The operator authorized bounded integration recovery `p06-t06-r01`: merge
 current main, retain Stage A 0.2.29, advance the shared skill to 2.2.5,
 regenerate owned views, refresh the detached enforce fixture, and stop before
-Remote structured Tier 1 posting.
+Remote structured Tier 1 posting. The integrated focused preflight passed 756
+tests, but Local Tier 1 preparation failed closed before reviewer launch because
+p05-t04 and p05-t05 contained mechanically identical malformed unchanged
+regression-witness entries in their `Files` blocks. The operator authorized
+bounded artifact-only recovery `p06-t06-r02`. Full-project parsing then exposed
+four equivalent unchanged-symlink entries in p05-t15, and the operator extended
+the same recovery to the complete six-entry mechanical cleanup.
 
 ## Artifacts
 
@@ -294,7 +300,11 @@ Remote structured Tier 1 posting.
 - ✓ Draft Stage A PR #190 opened; detached enforce fixture created
 - ⚠ Upstream PR #189 caused a canonical skill version collision
 - ✓ Bounded integration recovery p06-t06-r01 verification passed
-- → Refresh the integrated enforce fixture and run Local Tier 1
+- ✓ Integrated p06-t06 focused preflight passed 756 tests across 11 files
+- ⚠ Local Tier 1 preparation rejected malformed p05-t04/p05-t05 Files entries
+- ⚠ Full-plan parsing found four equivalent p05-t15 unchanged-symlink entries
+- ✓ Bounded six-entry recovery p06-t06-r02 passed full-plan parsing
+- → Complete authorized test-only CI stabilization before Local Tier 1
 
 ## Blockers
 
@@ -303,5 +313,5 @@ after integration recovery and the Local artifact Tier 1 row pass.
 
 ## Next Milestone
 
-Integrate current main, refresh the detached enforce fixture, run Local artifact
-Tier 1, and stop before Remote structured Tier 1 posting.
+Stabilize the two authorized CI tests, push both recoveries, require passing PR
+checks, then refresh the detached enforce fixture and run Local artifact Tier 1.

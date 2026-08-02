@@ -3021,8 +3021,6 @@ Expected: inventory-wide mode behavior is pinned.
 
 - Modify: `packages/cli/src/commands/gate/index.ts`
 - Modify: `packages/cli/src/commands/gate/index.test.ts`
-- Unchanged regression witness:
-  `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
 - Modify: `packages/cli/src/review/validation-store.ts`
 - Modify: `packages/cli/src/review/validation-store.test.ts`
 
@@ -3051,8 +3049,6 @@ Expected: translation never scans run directories or crosses attempts.
 - Create: `packages/cli/src/commands/gate/review-plan-failure.test.ts`
 - Modify: `packages/cli/src/commands/gate/index.ts`
 - Modify: `packages/cli/src/commands/gate/index.test.ts`
-- Unchanged regression witness:
-  `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
 - Modify: `packages/cli/src/review/validation-store.ts`
 - Modify: `packages/cli/src/review/validation-store.test.ts`
 - Modify: `packages/cli/src/commands/review/validate-output.ts`
@@ -3312,14 +3308,6 @@ weakening regression evidence.
 **Files:**
 
 - Modify: `.agents/docs/autonomy-contract.md`
-- Unchanged symlink to the canonical contract:
-  `.agents/skills/oat-project-implement/references/docs/autonomy-contract.md`
-- Unchanged symlink to the canonical contract:
-  `.agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md`
-- Unchanged symlink to the canonical contract:
-  `.agents/skills/oat-project-document/references/docs/autonomy-contract.md`
-- Unchanged symlink to the canonical contract:
-  `.agents/skills/oat-project-pr-final/references/docs/autonomy-contract.md`
 
 **Step 1: Reproduce** Run the autonomy inventory test and confirm p05-t08 added
 unmapped sites `e8d1e36a647b`, `8843a9f20fa9`, `b6f80a4fb993`, and
@@ -3576,7 +3564,7 @@ packed CLI after p06-t05. The normal CLI `tsconfig.json` intentionally includes
 `src/review/types.test.ts` as a compile-time contract fixture, so removing that
 fixture would weaken Phase 1 verification.
 
-**Files:**
+**Recovery files:**
 
 - Create: `packages/cli/tsconfig.build.json`
 - Modify: `packages/cli/package.json`
@@ -3663,7 +3651,7 @@ confirmed.
 `oat-project-implement` independently to version 2.2.4 and published the
 lockstep packages at 0.2.28.
 
-**Files:**
+**Recovery files:**
 
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
 - Modify: `packages/cli/src/validation/skills.test.ts`
@@ -3692,6 +3680,31 @@ sync dry-run, lockstep version validation, package/build checks, and full
 `pnpm release:validate`.
 
 **Step 4: Commit** `chore(p06-t06): integrate current main`
+
+#### Recovery p06-t06-r02: Repair malformed plan obligations
+
+**Finding:** Enforced Local artifact Tier 1 preparation failed closed before
+reviewer launch because p05-t04 and p05-t05 each listed an unchanged regression
+witness inside the task `Files` block using a malformed continuation entry.
+Full-project parsing then found four equivalent unchanged-symlink continuation
+entries in p05-t15.
+
+**Recovery files:**
+
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/state.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Repair** Remove only the six malformed unchanged-witness/symlink
+entries. Preserve `gate-hardening.integration.test.ts` in the p05-t04 and
+p05-t05 verification commands and preserve all four p05-t15 symlinks in its
+documented formatting command and verification contract without classifying
+them as modified obligations.
+
+**Step 2: Verify** Run focused obligation parsing and review preparation tests,
+then prove the real enforce preparation path accepts the refreshed candidate.
+
+**Step 3: Commit** `fix(p06-t06): repair plan review obligations`
 
 ### Task p06-t07: Publish Stage A and start the soak
 
