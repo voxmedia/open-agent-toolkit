@@ -679,6 +679,9 @@ describe(
         `${result.stdout}\n${result.stderr}`,
       ).toMatchObject({
         status: 'review_failed',
+        runId: expect.any(String),
+        outcome: 'review_complete_accounting_invalid',
+        message: 'Review completed without valid accounting.',
         failure: {
           kind: 'review_complete_accounting_invalid',
           gateRunId: expect.any(String),

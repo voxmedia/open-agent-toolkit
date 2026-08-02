@@ -90,7 +90,10 @@ import {
   type ProcessRunOptions,
   type ProcessRunResult,
 } from './child-process';
-import { resolveReviewPlanFailure } from './review-plan-failure';
+import {
+  type ReviewAccountingInvalidFailure,
+  resolveReviewPlanFailure,
+} from './review-plan-failure';
 import {
   parseReviewGateVerdict,
   severityDisplayName,
@@ -3325,17 +3328,37 @@ async function runReviewGate(
         ...routeReceipt,
       })}\n`,
     );
-    const reviewPlanFailure = await dependencies.resolveReviewPlanFailure({
-      gateRunId: runId,
-      launchAttemptId,
-    });
+    let reviewPlanFailure: ReviewAccountingInvalidFailure | null;
+    try {
+      reviewPlanFailure = await dependencies.resolveReviewPlanFailure({
+        gateRunId: runId,
+        launchAttemptId,
+      });
+    } catch (error) {
+      if (
+        !(
+          error instanceof Error &&
+          error.message.includes(
+            'OAT_REVIEW_AUTHORITY_KEY is required for review state authority',
+          )
+        )
+      ) {
+        throw error;
+      }
+      reviewPlanFailure = null;
+    }
     if (reviewPlanFailure !== null) {
       if (projectLogFinalization) {
         projectLogFinalization.status = 'review_failed';
         projectLogFinalization.exitCode = 1;
       }
       if (context.json) {
-        context.logger.json(reviewPlanFailure);
+        context.logger.json({
+          ...reviewPlanFailure,
+          runId,
+          outcome: 'review_complete_accounting_invalid',
+          message: 'Review completed without valid accounting.',
+        });
       } else {
         context.logger.error(
           `Review completed without valid accounting. Diagnostic: ${reviewPlanFailure.failure.diagnosticPath}`,

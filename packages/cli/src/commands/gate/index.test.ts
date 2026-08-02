@@ -3813,8 +3813,13 @@ describe('oat gate', () => {
     });
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'review_failed',
+      runId: expect.any(String),
+      outcome: 'review_complete_accounting_invalid',
+      message: 'Review completed without valid accounting.',
       failure: {
         kind: 'review_complete_accounting_invalid',
+        gateRunId: expect.any(String),
+        launchAttemptId: expect.any(String),
         validationRunId: 'validation-run',
         validationAttempts: 3,
         repairAttempts: 2,
@@ -3823,6 +3828,9 @@ describe('oat gate', () => {
       artifactPath: null,
       receiveEligible: false,
       handoff: null,
+    });
+    expect(capture.jsonPayloads[0]?.failure).toMatchObject({
+      gateRunId: capture.jsonPayloads[0]?.runId,
     });
     expect(process.exitCode).toBe(1);
   });
