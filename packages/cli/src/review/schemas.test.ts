@@ -40,6 +40,21 @@ describe('prepare review input schema', () => {
     expect(parsePrepareReviewContextInputV1(preparationInput)).toEqual(
       preparationInput,
     );
+    expect(
+      parsePrepareReviewContextInputV1({
+        ...preparationInput,
+        throughTaskId: 'p02-t01',
+      }),
+    ).toMatchObject({ scope: 'p02', throughTaskId: 'p02-t01' });
+  });
+
+  it('rejects a through-task from a different phase', () => {
+    expect(() =>
+      parsePrepareReviewContextInputV1({
+        ...preparationInput,
+        throughTaskId: 'p03-t01',
+      }),
+    ).toThrow('$/throughTaskId must belong to phase scope p02');
   });
 
   it.each([

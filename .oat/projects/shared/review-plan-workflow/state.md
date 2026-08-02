@@ -1,9 +1,9 @@
 ---
 oat_current_task: p06-t06
-oat_last_commit: f0496750aaff867a2895382e0587b0fb78fcf6dd
+oat_last_commit: fd7a86048e316c8a1ab3de1b6ab62e51af659d04
 oat_blockers:
   - p06-t06 Remote structured Tier 1 posting requires separate operator approval
-  - p06-t06 fresh Local artifact Tier 1 awaits review-planning recovery checks
+  - p06-t06 fresh Local artifact Tier 1 re-review required after boundary fix
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -77,7 +77,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T20:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T20:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -311,14 +311,17 @@ stabilization recovery `p06-t06-r03` without production changes.
 - ✓ Test-only CI stabilization p06-t06-r03 passed local workspace gates
 - ✓ PR CI and release dry run passed at final candidate
 - ⚠ Local artifact Tier 1 blocked before evidence authorization
-- → Complete authorized p06-t06-r04 planning-contract recovery
+- ✓ Authorized p06-t06-r04 planning-contract recovery passed Local Tier 1
+- ⚠ Local Tier 1 found one Medium cross-phase input-classification defect
+- ✓ Bounded p06-t06-r05 schema fix passed release-candidate verification
+- → Root reruns Local Tier 1 through p06-t06 on the fresh fix range
 
 ## Blockers
 
 p06-t06 Remote structured Tier 1 posting requires separate explicit approval
-after integration recovery and the Local artifact Tier 1 row pass.
+after the fresh Local artifact Tier 1 re-review passes.
 
 ## Next Milestone
 
-Complete p06-t06-r04, require green PR checks, and run a fresh Local Tier 1
+Push p06-t06-r05, require green PR checks, and have the root rerun Local Tier 1
 through p06-t06 before any Remote structured Tier 1 posting.

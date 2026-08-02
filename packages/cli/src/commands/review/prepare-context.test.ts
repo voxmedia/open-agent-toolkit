@@ -225,6 +225,32 @@ describe('createReviewPrepareContextCommand', () => {
     );
   });
 
+  it('rejects a cross-phase through-task as input without broker preparation', async () => {
+    const brokerPrepare = vi.fn();
+    const write = vi.fn();
+    const setExitCode = vi.fn();
+    const command = createReviewPrepareContextCommand({
+      stdin: Readable.from([
+        JSON.stringify({ ...baseInput, throughTaskId: 'p03-t01' }),
+      ]),
+      write,
+      setExitCode,
+      brokerPrepare,
+    });
+
+    await command.parseAsync(['node', 'oat', 'prepare-context']);
+
+    expect(brokerPrepare).not.toHaveBeenCalled();
+    expect(setExitCode).toHaveBeenCalledWith(1);
+    expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
+      ok: false,
+      error: {
+        category: 'input',
+        code: 'invalid-prepare-context-input',
+      },
+    });
+  });
+
   it('pairs budgets and emits metadata without numeric telemetry', async () => {
     const write = vi.fn();
     const prepare = vi.fn(async () => prepared);

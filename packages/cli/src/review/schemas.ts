@@ -546,6 +546,14 @@ export function parsePrepareReviewContextInputV1(
       '$/throughTaskId requires a phase scope and task ID',
     );
   }
+  if (
+    typeof input['throughTaskId'] === 'string' &&
+    input['throughTaskId'].slice(0, 3) !== input['scope']
+  ) {
+    throw new ReviewSchemaError(
+      `$/throughTaskId must belong to phase scope ${input['scope']}`,
+    );
+  }
   enumValue(
     input['workflowMode'],
     ['spec-driven', 'quick', 'import'],

@@ -1634,7 +1634,7 @@ visual measurements.
 
 ### Task p06-t06: Validate and dogfood explicit enforce
 
-**Status:** in_progress
+**Status:** reviewed_with_medium
 **Preflight:** The focused config, review, gate, skill, and bundle matrix passed
 741 tests across 11 files.
 **Fixture:** Created a detached fixture at candidate HEAD `5714b61d`; local
@@ -1768,8 +1768,39 @@ docs build, and five-package release validation passed. Public packages remain
 lockstep at unpublished 0.2.29 and changed canonical skill versions remain
 exactly one patch above `origin/main`.
 
-**Next:** Commit and push the bounded recovery, wait for PR checks, and hand
-the fresh Local Tier 1 boundary to the root review coordinator.
+**Review:** Local artifact Tier 1 completed at reviewed HEAD
+`b4f40fbc2590d3f8ad4aeffd9c88e738e8c5f389` over
+`5526ea242070e575482085c3840395aafb7c36d4..b4f40fbc2590d3f8ad4aeffd9c88e738e8c5f389`.
+Artifact `reviews/p06-review-2026-08-02T203307Z.md` reported one Medium
+cross-phase input-classification defect and no other findings.
+
+**Next:** Complete bounded Local Tier 1 fix p06-t06-r05 and return the fresh
+re-review boundary to the root coordinator.
+
+#### Recovery p06-t06-r05: Reject cross-phase review boundaries
+
+**Status:** completed
+**Review artifact:** `reviews/p06-review-2026-08-02T203307Z.md`
+**Finding:** `parsePrepareReviewContextInputV1` accepted scope `p02` with
+through-task `p03-t01`, allowing a plain obligation-selection error to be
+masked as a system-category exit-2 failure.
+**Operator disposition:** Authorized only schema-boundary phase matching,
+same/cross-phase unit and command regressions, the distinct review-fix
+bookkeeping record, normal push/check wait, fixture refresh, and root-owned
+Local Tier 1 re-review.
+**Outcome:** Non-null `throughTaskId` now must carry the exact selected phase
+prefix. Cross-phase input returns category `input`, code
+`invalid-prepare-context-input`, and exit 1 without broker preparation.
+Obligation selection, generic masking, runtime authority, and unrelated scope
+semantics are unchanged.
+**Verification:** Focused schema, obligation, and prepare-context coverage
+passed 105/105 tests. CLI type-check, lint, and format passed. Workspace check,
+type-check, all 4,110 tests, build, lint, format, docs build, and five-package
+release validation passed.
+
+**Next:** Push the review-bookkeeping and fix commits, require green CI and
+release dry run, refresh the detached enforce fixture, and hand the exact fresh
+re-review range through p06-t06 to the root coordinator.
 
 ## Orchestration Runs
 
