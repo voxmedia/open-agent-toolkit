@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { preflightReviewPlan, projectLegacyReviewOutput } from './preflight';
+import { preflightReviewPlan } from './preflight';
 import type { ReviewPlanCapabilities, ReviewSink } from './types';
 
 function capabilities(
@@ -86,14 +86,21 @@ describe('review capability preflight', () => {
   });
 
   it('preserves the legacy path without capability enforcement', () => {
+    const provided = capabilities({
+      supportsAcceptedContinuation: false,
+      supportsPrivateArtifactStaging: false,
+    });
     const result = preflightReviewPlan(
-      { invocation: 'gate', sink: 'artifact', mode: 'legacy' },
-      capabilities({
-        supportsAcceptedContinuation: false,
-        supportsPrivateArtifactStaging: false,
-      }),
+      {
+        invocation: 'gate',
+        sink: 'artifact',
+        mode: 'legacy',
+        budgetMs: 1,
+        budgetSource: 'legacy',
+      },
+      provided,
     );
-    expect(result).toMatchObject({ ok: true, errors: [] });
+    expect(result).toEqual({ ok: true, capabilities: provided, errors: [] });
   });
 
   it('rejects a 119,999 ms enforce budget before launch without downgrading', () => {
@@ -145,12 +152,4 @@ describe('review capability preflight', () => {
       ).toMatchObject({ ok: true, errors: [] });
     },
   );
-
-  it('marks legacy output without creating validation state', () => {
-    const output = projectLegacyReviewOutput({ findings: [] });
-    expect(output).toEqual({
-      findings: [],
-      validationStatus: 'legacy-unvalidated',
-    });
-  });
 });

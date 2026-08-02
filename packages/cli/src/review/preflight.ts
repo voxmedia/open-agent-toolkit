@@ -11,12 +11,6 @@ export interface ReviewPlanLaunchPreflightInput extends ReviewPlanPreflightInput
   budgetSource?: string | null;
 }
 
-export function projectLegacyReviewOutput<T extends Record<string, unknown>>(
-  output: T,
-): T & { validationStatus: 'legacy-unvalidated' } {
-  return { ...output, validationStatus: 'legacy-unvalidated' };
-}
-
 const COMMON_CAPABILITIES = [
   'supportsAcceptedContinuation',
   'supportsArtifactCheckpoint',
