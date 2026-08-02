@@ -138,10 +138,10 @@ unwired reference implementation, not an additional coordinator.
    whole-diff without starting a diff child. Otherwise a capped child counts
    and discards diff bytes; cap or timeout produces a lower-bound estimate.
 5. Preparation creates `ReviewPreparationV1`, writes private run state, and
-   returns launcher-owned checkpoint/validation `ReviewCommandInvocationV1`
-   values. Each invocation identifies one executable, an argv array, and its
-   stdin mode; opaque checkpoint state is not embedded in reviewer-readable
-   context.
+   returns launcher-owned checkpoint, validation, evidence, and worker-dossier
+   `ReviewCommandInvocationV1` values. Each invocation identifies one
+   executable, an argv array, and its stdin mode; opaque checkpoint state is not
+   embedded in reviewer-readable context.
 6. The provider/skill runtime launches the reviewer. On acceptance, it binds
    the opaque handle ID to the run before any mutation command is accepted and
    retains that continuation for checkpoint and repair.
@@ -159,14 +159,21 @@ unwired reference implementation, not an additional coordinator.
     that receipt. The coordinator atomically records `evidence_started`; only
     then may the reviewer load evidence according to the plan. Inline and
     delegated paths use the same sequence.
-12. The reviewer returns findings plus compact `ReviewAccountingV1`.
-13. The coordinator validates the output. On failure, it sends precise errors
+12. The accepted primary retains each complete or partial `WorkerDossierV1` and,
+    before returning `ReviewerTerminalV1`, executes the preparation-supplied
+    `bindWorkerDossier` invocation with its exact executable and argv, replacing
+    only the receipt placeholder and sending the bounded dossier as JSON stdin.
+    The coordinator correlates the receipt, run, plan, and launch attempt before
+    persisting worker coverage. No parent reconstruction or ambient command path
+    may perform this binding.
+13. The reviewer returns findings plus compact `ReviewAccountingV1`.
+14. The coordinator validates the output. On failure, it sends precise errors
     through the same accepted continuation for at most two accounting-only
     repairs.
-14. Valid complete output proceeds to the rail's existing artifact, GitHub
+15. Valid complete output proceeds to the rail's existing artifact, GitHub
     posting, ledger, gate, or receive flow. Valid blocked-incomplete accounting
     proceeds only through the existing non-actionable `BLOCKED` path.
-15. The coordinator cleans up accepted and ordinary terminal runs after sink
+16. The coordinator cleans up accepted and ordinary terminal runs after sink
     translation. Accounting-invalid runs are reduced to a private diagnostic
     receipt retained until TTL. The gate parent and expired-context reaper cover
     killed-child and process-crash paths.
@@ -741,7 +748,7 @@ type PreparedReviewContextV1 = Omit<ReviewPreparationV1, 'timeBudget'> & {
 interface ReviewCommandInvocationV1 {
   executable: string;
   argv: string[];
-  stdin: 'none' | 'review-plan-json';
+  stdin: 'none' | 'review-plan-json' | 'worker-dossier-json';
 }
 
 interface PrepareReviewContextResultV1 {
@@ -751,6 +758,7 @@ interface PrepareReviewContextResultV1 {
     checkpointArtifacts: ReviewCommandInvocationV1;
     validatePlan: ReviewCommandInvocationV1;
     beginEvidence: ReviewCommandInvocationV1;
+    bindWorkerDossier: ReviewCommandInvocationV1;
   };
 }
 ```
@@ -776,12 +784,13 @@ interface PrepareReviewContextResultV1 {
   live pair, and deletes the index with run state.
 - Preparation creates distinct checkpoint and plan-validation command
   capabilities bound to validation run and launch-attempt IDs; begin-evidence
-  later uses the one-shot plan receipt as its capability. These secrets appear
-  only in launcher-owned invocation argv, are enabled only after accepted-handle
-  binding, and are excluded from preparation/context digests, logs, and
-  reviewer-authored JSON. Consumers execute the supplied executable and argv
-  directly without shell parsing and provide stdin only when its discriminant
-  requires `review-plan-json`.
+  and worker-dossier binding later use the one-shot plan receipt as their
+  capability. These secrets appear only in launcher-owned invocation argv, are
+  enabled only after accepted-handle binding, and are excluded from
+  preparation/context digests, logs, and reviewer-authored JSON. Consumers
+  execute the supplied executable and argv directly without shell parsing or an
+  ambient command lookup and provide stdin only when its discriminant requires
+  `review-plan-json` or `worker-dossier-json`.
 - `PreparedReviewContextV1` is created exactly once after artifact intake;
   plan validation requires it.
 - Legacy runs do not create preparation/context records or receipts.
@@ -1673,6 +1682,7 @@ interface ReviewPlanningPayload {
   artifact_checkpoint_command: string;
   validate_plan_command: string;
   begin_evidence_command: string;
+  bind_worker_dossier_command: string;
 }
 ```
 
@@ -1682,8 +1692,12 @@ one. The checkpoint command contains the opaque preparation token. The
 validation command contains the run ID and a distinct opaque command token; it
 loads the sealed context digest from private state. The begin-evidence command
 contains a receipt placeholder; the reviewer may substitute only the opaque
-receipt returned by successful validation. Exact argv fixtures verify all three
-commands.
+receipt returned by successful validation. The worker-dossier command contains
+that same receipt placeholder and the validation run ID; the accepted primary
+substitutes only the receipt and sends one bounded `WorkerDossierV1` using the
+`worker-dossier-json` stdin mode before returning `ReviewerTerminalV1`. Exact
+executable and argv fixtures verify all four commands, including the
+branch-local worker-dossier binder and its lack of any ambient command path.
 
 The trusted `prepare-context` JSON result and accepted-reviewer planning payload
 necessarily carry the generated `ReviewCommandInvocationV1` values and their
