@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { preflightReviewPlan } from './preflight';
+import { preflightReviewPlan, projectLegacyReviewOutput } from './preflight';
 import type { ReviewPlanCapabilities, ReviewSink } from './types';
 
 function capabilities(
@@ -94,5 +94,52 @@ describe('review capability preflight', () => {
       }),
     );
     expect(result).toMatchObject({ ok: true, errors: [] });
+  });
+
+  it('rejects a 119,999 ms enforce budget before launch without downgrading', () => {
+    const result = preflightReviewPlan(
+      {
+        invocation: 'gate',
+        sink: 'artifact',
+        mode: 'enforce',
+        budgetMs: 119_999,
+        budgetSource: 'scope-default',
+      },
+      capabilities(),
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      errors: [
+        {
+          code: 'review-budget-below-minimum',
+        },
+      ],
+    });
+  });
+
+  it.each([120_000, null])(
+    'accepts enforce budget %s when capabilities are complete',
+    (budgetMs) => {
+      expect(
+        preflightReviewPlan(
+          {
+            invocation: 'manual',
+            sink: 'artifact',
+            mode: 'enforce',
+            budgetMs,
+            budgetSource: budgetMs === null ? null : 'scope-default',
+          },
+          capabilities(),
+        ),
+      ).toMatchObject({ ok: true, errors: [] });
+    },
+  );
+
+  it('marks legacy output without creating validation state', () => {
+    const output = projectLegacyReviewOutput({ findings: [] });
+    expect(output).toEqual({
+      findings: [],
+      validationStatus: 'legacy-unvalidated',
+    });
   });
 });

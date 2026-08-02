@@ -1,8 +1,21 @@
+import { allocateReviewTimeBudget } from './budget';
+import { ReviewDomainError } from './errors';
 import type {
   ReviewPlanCapabilities,
   ReviewPlanPreflightInput,
   ReviewPlanPreflightResult,
 } from './types';
+
+export interface ReviewPlanLaunchPreflightInput extends ReviewPlanPreflightInput {
+  budgetMs?: number | null;
+  budgetSource?: string | null;
+}
+
+export function projectLegacyReviewOutput<T extends Record<string, unknown>>(
+  output: T,
+): T & { validationStatus: 'legacy-unvalidated' } {
+  return { ...output, validationStatus: 'legacy-unvalidated' };
+}
 
 const COMMON_CAPABILITIES = [
   'supportsAcceptedContinuation',
@@ -12,7 +25,7 @@ const COMMON_CAPABILITIES = [
 ] as const satisfies readonly (keyof ReviewPlanCapabilities)[];
 
 export function preflightReviewPlan(
-  input: ReviewPlanPreflightInput,
+  input: ReviewPlanLaunchPreflightInput,
   capabilities: ReviewPlanCapabilities,
   _reviewerSelfReport?: unknown,
 ): ReviewPlanPreflightResult {
@@ -66,6 +79,23 @@ export function preflightReviewPlan(
       code: 'unexpected-telemetry-adapter-id',
       message: 'Unavailable telemetry cannot name an adapter.',
     });
+  }
+
+  try {
+    allocateReviewTimeBudget({
+      totalMs: input.budgetMs ?? null,
+      source: input.budgetSource ?? null,
+      startedAtMs: 0,
+    });
+  } catch (error) {
+    if (error instanceof ReviewDomainError) {
+      errors.push({
+        code: error.code,
+        message: error.message,
+      });
+    } else {
+      throw error;
+    }
   }
 
   return { ok: errors.length === 0, capabilities, errors };

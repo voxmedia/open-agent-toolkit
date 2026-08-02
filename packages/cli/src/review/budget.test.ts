@@ -10,6 +10,7 @@ import {
   MIN_PLANNING_MS,
   MIN_RECONCILIATION_MS,
 } from './budget';
+import { ReviewDomainError } from './errors';
 import type { ChangeMapV1, ContextBudgetTelemetry } from './types';
 
 describe('outer review time allocation', () => {
@@ -25,13 +26,41 @@ describe('outer review time allocation', () => {
 
   it('rejects 119,999 ms without changing the general gate minimum', () => {
     expect(MIN_ENFORCED_REVIEW_BUDGET_MS).toBe(120_000);
-    expect(() =>
+    try {
       allocateReviewTimeBudget({
         totalMs: 119_999,
         source: 'gate',
         startedAtMs: 0,
-      }),
-    ).toThrow('review-budget-below-minimum');
+      });
+      throw new Error('expected allocation to fail');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ReviewDomainError);
+      expect((error as ReviewDomainError).code).toBe(
+        'review-budget-below-minimum',
+      );
+    }
+  });
+
+  it('reports the source, value, floor, and both migration remedies', () => {
+    try {
+      allocateReviewTimeBudget({
+        totalMs: 119_999,
+        source: 'scope-default',
+        startedAtMs: 0,
+      });
+      throw new Error('expected allocation to fail');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ReviewDomainError);
+      expect((error as ReviewDomainError).details).toEqual({
+        source: 'scope-default',
+        valueMs: 119_999,
+        minimumMs: 120_000,
+        remedies: [
+          'raise the configured review timeout to at least 120000 ms',
+          'explicitly set workflow.reviewPlanMode to legacy temporarily',
+        ],
+      });
+    }
   });
 
   it('preserves every named floor at 120 seconds', () => {

@@ -39,8 +39,17 @@ export function allocateReviewTimeBudget(input: {
     throw new ReviewDomainError({
       category: 'input',
       code: 'review-budget-below-minimum',
-      message: 'review-budget-below-minimum',
-      details: { minimumMs: MIN_ENFORCED_REVIEW_BUDGET_MS },
+      message:
+        'Review budget is below the enforced 120-second minimum. Raise the configured timeout or explicitly select temporary legacy review mode.',
+      details: {
+        source: input.source,
+        valueMs: input.totalMs,
+        minimumMs: MIN_ENFORCED_REVIEW_BUDGET_MS,
+        remedies: [
+          'raise the configured review timeout to at least 120000 ms',
+          'explicitly set workflow.reviewPlanMode to legacy temporarily',
+        ],
+      },
     });
   }
   if (!input.source) {
