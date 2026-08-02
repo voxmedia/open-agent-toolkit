@@ -1,6 +1,6 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-08-01
 oat_current_task_id: null
@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status        | Tasks | Completed |
-| ------------ | ------------- | ----- | --------- |
-| Phase 1      | review_failed | 2     | 2/2       |
-| Phase p-rev1 | passed        | 1     | 1/1       |
-| Phase 2      | passed        | 1     | 1/1       |
-| Phase 3      | passed        | 2     | 2/2       |
-| Phase p-rev2 | passed        | 1     | 1/1       |
-| Phase 4      | passed        | 1     | 1/1       |
-| Phase 5      | passed        | 1     | 1/1       |
-| Phase p-rev3 | passed        | 1     | 1/1       |
+| Phase        | Status          | Tasks | Completed |
+| ------------ | --------------- | ----- | --------- |
+| Phase 1      | review_failed   | 2     | 2/2       |
+| Phase p-rev1 | passed          | 1     | 1/1       |
+| Phase 2      | passed          | 1     | 1/1       |
+| Phase 3      | passed          | 2     | 2/2       |
+| Phase p-rev2 | passed          | 1     | 1/1       |
+| Phase 4      | passed          | 1     | 1/1       |
+| Phase 5      | passed          | 1     | 1/1       |
+| Phase p-rev3 | fixes_completed | 2     | 2/2       |
 
-**Total:** 10/10 tasks completed
+**Total:** 11/11 tasks completed
 
 ---
 
@@ -617,8 +617,27 @@ sync parity, and autonomy inventory; all 61 OAT skills validated.
 passed CI, release dry-run, and Cursor Bugbot. All four review threads are
 resolved and no new unresolved finding was reported.
 
-**Next:** Refresh the configured final implementation gate, then request final
-`p-rev3` HiLL approval for the revised mergeable delta.
+### Remote Review Bookkeeping Correction
+
+**Date:** 2026-08-02
+**Finding:** M1 — incomplete clean review bookkeeping
+**Task:** `p-rev3-t02`
+
+The first clean-review receipt advanced the existing `p-rev3` row by scope,
+changed its artifact identity, and labeled a project-log entry as a remote
+receive without creating the required event-distinct archived evidence.
+
+**Correction:**
+
+- Restored the original `p-rev3` Reviews event identity.
+- Added event-distinct archived artifacts for the initial feedback receive, the
+  clean re-review, and the bookkeeping finding.
+- Appended distinct Reviews events keyed by scope, type, and artifact.
+- Preserved the earlier project-log entry and appended a superseding
+  correction.
+
+**Next:** Push `p-rev3-t02` and receive the remote Bugbot re-review before
+refreshing the final implementation gate.
 
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 

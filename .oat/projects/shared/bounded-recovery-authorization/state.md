@@ -72,19 +72,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/189 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T01:11:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T01:17:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: bounded-recovery-authorization
 
-**Status:** PR feedback revision reviewed; final lifecycle gate pending
+**Status:** Remote review bookkeeping fix implemented; re-review pending
 **Started:** 2026-07-31
 **Last Updated:** 2026-08-01
 
 ## Current Phase
 
-Implementation - revision p-rev3 reviewed; final lifecycle gate pending
+Implementation - revision p-rev3 bookkeeping re-review pending
 
 ## Artifacts
 
@@ -147,6 +147,8 @@ Implementation - revision p-rev3 reviewed; final lifecycle gate pending
 - ✓ PR feedback revision `p-rev3-t01` implemented
 - ✓ Full repository, docs, and release validation passed
 - ✓ Remote Bugbot re-review passed with no unresolved threads
+- ✓ Remote review bookkeeping correction `p-rev3-t02` implemented
+- ⧗ Latest Bugbot re-review pending
 - ⧗ Refreshed final lifecycle gate and `p-rev3` HiLL approval pending
 
 ## Blockers
@@ -155,4 +157,4 @@ None
 
 ## Next Milestone
 
-Refresh the final implementation gate, then request `p-rev3` HiLL approval
+Push `p-rev3-t02`, receive Bugbot re-review, then refresh the final gate
