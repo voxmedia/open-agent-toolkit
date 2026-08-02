@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t25
-oat_last_commit: 1bb35fba251f20f04cc4748c361c17c15a095b89
+oat_current_task: null
+oat_last_commit: 394b49f36a4fceb6ef943ec27373a631728d8e55
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T00:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T00:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,7 +85,7 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 4 cycle-6 recovery authorized
+**Status:** Phase 4 cycle-6 re-review pending
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
@@ -97,7 +97,7 @@ p04-t20 through p04-t22; all three fixes and independent root verification now
 pass. The cycle-5 review resolved the production findings but found one
 Important design-alignment gap and one Medium test-coverage gap. The override is
 extended by the operator for p04-t23, p04-t24, one narrow verification recovery,
-and one cycle-6 re-review.
+and one cycle-6 re-review. All fixes and full verification now pass.
 
 ## Artifacts
 
@@ -208,7 +208,10 @@ and one cycle-6 re-review.
 - ⚠ Isolated full suite passed 3,912/3,913; p04-t20 added one unmapped internal
   prompt site
 - ✓ Operator authorized bounded p04-t25 inventory recovery
-- → Execute p04-t25
+- ✓ p04-t25 completed at `394b49f3`
+- ✓ Implementer and root full workspace suites pass 3,913 CLI and 129 smoke
+  tests
+- → Run the authorized cycle-6 re-review
 
 ## Blockers
 
@@ -216,5 +219,4 @@ None.
 
 ## Next Milestone
 
-Complete p04-t25, rerun full workspace verification, then run the authorized
-cycle-6 re-review.
+Run the authorized cycle-6 re-review over p04-t23 through p04-t25.

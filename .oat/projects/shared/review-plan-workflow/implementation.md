@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: p04-t25
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | in_progress | 25    | 24/25     |
-| Phase 5 | pending     | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | completed | 10    | 10/10     |
+| Phase 4 | in_review | 25    | 25/25     |
+| Phase 5 | pending   | 7     | 0/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 102/123 tasks completed
+**Total:** 103/123 tasks completed
 
 ## Execution Configuration
 
@@ -965,7 +965,11 @@ coverage.
 
 ### Task p04-t25: Recover autonomy prompt-site inventory
 
-**Status:** pending
+**Status:** completed
+**Commit:** `394b49f3`
+**Outcome:** Classified the p04-t20 terminal-accounting instruction as an
+internal non-gate prompt site while preserving byte-identical embedded
+contracts.
 
 ### Phase Verification
 
@@ -1003,6 +1007,12 @@ coverage.
   diff checks.
 - Root independently reran the same 250 lifecycle, coordinator, command, skill,
   and validation tests plus package and workspace gates.
+- p04-t23 and p04-t24 passed design, process-lifecycle, type-check, lint, build,
+  formatting, and exact-range checks.
+- p04-t25 passed the four autonomy inventory tests and a full workspace run with
+  3,913 CLI tests plus 129 smoke tests.
+- Root independently reran the inventory and sibling-attempt lifecycle tests,
+  package gates, formatting, and the full workspace suite successfully.
 
 ### Review Received: p04
 
@@ -1200,8 +1210,10 @@ an unmapped internal prompt site introduced by p04-t20.
 **Recovery authorization:** On 2026-08-01 the operator authorized p04-t25 as a
 bounded mechanical recovery before the cycle-6 re-review.
 
-**Next:** Execute p04-t25, rerun full verification, then run the authorized
-cycle-6 re-review.
+**Fix completion:** p04-t23 through p04-t25 completed at `394b49f3`; implementer
+and independent root verification passed.
+
+**Next:** Run the authorized cycle-6 re-review.
 
 ---
 
