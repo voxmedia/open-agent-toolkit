@@ -1,6 +1,6 @@
 ---
 name: oat-dispatch-subagents
-version: 1.2.1
+version: 1.2.2
 description: Use when an OAT skill or workflow needs provider-neutral selection, launch, recovery, or evidence for bounded subagent work without project lifecycle policy.
 disable-model-invocation: true
 user-invocable: false
@@ -385,18 +385,31 @@ a declared class floor.
 - An accepted launch is terminal for automatic replacement eligibility.
 - Completion, failure, timeout, interruption, `BLOCKED`, and contract refusal
   are post-acceptance outcomes; none makes another route eligible.
+- Automatic route, model, provider, or worker replacement after acceptance is
+  forbidden fallback. No post-acceptance outcome makes another route eligible.
 - A wrapper failure or payload rejection before child start is a pre-start
   rejection. A new recorded selection is allowed only within caller retry
   policy.
 - Continuing the same accepted child through its valid handle is allowed.
   Record continuation separately and preserve selectors and route.
+- Same-target bounded recovery is a continuation rather than fallback only when
+  a caller-specific lifecycle contract explicitly authorizes it. That contract
+  must supply the bounded scope, exact target, numeric budget, canonical
+  recording, and stop conditions before launch. It may allow either
+  continuation through the accepted handle or an explicitly linked fresh
+  same-target launch when the original handle cannot be resumed.
+- Standing recovery authority is default-deny. `oat-project-implement` may
+  establish it through its complete caller-specific lifecycle contract; wave
+  execution, autonomous projects, cloud-project orchestration, reviewers, and
+  every other consumer remain outside that grant unless their own future
+  contract independently defines the complete boundary.
+- Scope-expanding or consequential recovery requires new operator direction.
+  The same applies to ambiguous, destructive, or retry-exhausted work.
 - A caller may cancel accepted handles only after it proves that the enclosing
   run itself is invalid under caller-owned containment or integrity policy.
   Record `invalid-run-abort` and the invalidating evidence. Cancellation never
   makes another route eligible and never authorizes replacement, fallback, or
   a successful child outcome.
-- Operator-authorized recovery is a new explicit action, never automatic
-  fallback.
 - Runtime identity is optional corroboration. Missing runtime identity does not
   invalidate launcher-owned configured invocation evidence.
 

@@ -306,6 +306,26 @@ an ordered matrix route:
   entry before retrying, up to the last available route entry and within
   `oat_orchestration_retry_limit`.
 
+#### Phase Recovery Target Continuity
+
+The route-level advancement above applies only to root-owned review-fix and gate
+loops. It does not apply to implementation recovery after a planned task has
+committed. Implementation recovery must never use route escalation or choose a
+new model, provider, route, or worker. It resumes the accepted phase handle at
+the launcher-owned exact target.
+
+When the host cannot resume that handle, the lifecycle contract may authorize a
+fresh same-target recovery launch only with the original request ID, unchanged
+target and dispatch axes, durable attempt budget, bounded scope, canonical
+recovery event, and a `continuation_events` link. Exact-target loss, missing
+original-request provenance, or inability to bind the same target stops for
+direction without fallback.
+
+`oat_phase_recovery_policy` is independent from
+`oat_orchestration_retry_limit`. Review-fix and gate loops keep their existing
+route escalation and retry accounting; the three-cycle review governance cap
+is unchanged.
+
 #### Dispatch Report V1 contract
 
 Every implementation, fix, and review resolver invocation MUST pass explicit
@@ -647,6 +667,7 @@ When the skill is invoked with `--dry-run`:
    Project:   {PROJECT_PATH}
    Tier:      {1 | 2}
    Retry:     {N}
+   Phase recovery: default={0-20}; overrides={pNN: 0-20 | none}
 
    Schedule:
      [1] p01 (sequential)

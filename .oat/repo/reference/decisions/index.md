@@ -10,6 +10,10 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260731-canonical-policy               | 2026-07-31 | accepted | Canonical policy with generated provider parity                         | -      |
+| DR-260731-dedicated-bounded-recovery     | 2026-07-31 | accepted | Dedicated bounded recovery state                                        | -      |
+| DR-260731-immutable-append-only-same     | 2026-07-31 | accepted | Immutable append-only same-target recovery                              | -      |
+| DR-260731-tiered-prevention              | 2026-07-31 | accepted | Tiered prevention with observable recovery                              | -      |
 | DR-260729-adaptive-recaps-share-one      | 2026-07-29 | accepted | Adaptive recaps share one immutable set plan                            | -      |
 | DR-260729-additive-dispatch-reports      | 2026-07-29 | accepted | Additive dispatch reports                                               | -      |
 | DR-260729-classification-only-provenance | 2026-07-29 | accepted | Classification-only provenance                                          | -      |

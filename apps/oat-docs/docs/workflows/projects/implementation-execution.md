@@ -16,6 +16,10 @@ and updates project state.
   in dependency order.
 - **Task boundary:** each task still produces exactly one bounded, verified
   commit.
+- **Prevention boundary:** formatting, declared task verification, and
+  applicable cheap checks run before the task commit.
+- **Recovery boundary:** an eligible post-commit defect may produce a separate
+  same-target recovery commit under the phase's bounded recovery authority.
 - **Review boundary:** the root dispatches one independent reviewer after the
   phase report.
 - **Fix boundary:** blocking findings return to the original phase handle when
@@ -78,7 +82,138 @@ once, and directly executes each task in plan order. For every task it:
 6. verifies the commit, file boundary, tests, and clean worktree.
 
 After all tasks, it runs phase-wide verification and returns a compact report.
-It does not dispatch the phase reviewer or mutate project bookkeeping.
+It does not dispatch the phase reviewer or mutate general project bookkeeping.
+While it owns the worktree, it may atomically update only the active phase's
+authoritative `oat_phase_recovery_policy.phase_attempt_usage.<pNN>` entry. The
+phase returns with a matching committed `completed` or `failed` terminal marker
+still present. The root validates that marker against the report, recovery
+event, immutable history, attempt accounting, exact target, and verification
+before clearing it. Only the post-validation null marker is the settled ledger
+state; a premature clear or contradictory marker fails closed.
+
+## Prevent Defects Before Commit
+
+Prevention is the first recovery control. Before each planned task commit, the
+phase implementer runs checks in this order:
+
+1. format every changed file;
+2. run the task's declared verification;
+3. run every repository-discovered cheap check that applies to the changed
+   surface and is proportionate to the task; and
+4. run a discoverable scoped build or test when the task changes emitted
+   output, build or test configuration, packaging, or equivalent behavior.
+
+Broad repository tests and builds may remain phase-level when running them for
+every task would be disproportionate. These broader checks verify that the
+phase's task outputs compose correctly. A correction made before the planned
+task commit is prevention and does not consume a recovery attempt.
+
+## Recover After Commit
+
+When declared task, transition, or phase verification finds a post-commit
+defect, OAT classifies it before editing. Automatic recovery proceeds only when
+the correction is mechanically bounded, unambiguous, in phase, non-destructive,
+and verifiable, and when the exact launcher-owned implementation target and
+original-request provenance remain intact. Architecture, security, product,
+requirements, public-behavior, credential, protected-branch, destructive, or
+non-mechanical scope changes require operator direction.
+
+The accepted task commit remains immutable. For an eligible defect, the phase
+implementer reserves an attempt in the authoritative phase ledger, applies the
+bounded correction, and runs focused and phase checks before a candidate commit.
+After those checks pass, the implementer commits the correction with a
+`completed` pre-bookkeeping marker and immediately reruns both checks against
+the committed HEAD. Those post-commit reruns are authoritative. A pass makes
+the candidate the successful recovery commit; a failure durably transitions the
+marker to `failed` in ledger-only terminal evidence and stops without claiming
+a successful recovery. Mechanically related failures from one verification
+command may share one atomic attempt and successful commit; independent defects
+require separate attempts.
+
+Append-only history protects accepted work by requiring a new, auditable commit;
+it does not require repeated approval for a mechanical repair already covered
+by the phase's standing authority. The important distinctions are:
+
+- a **defect** is a post-commit failure discovered by declared verification;
+- an **authorization prompt** is required only at a direction-required
+  boundary, not for every eligible defect;
+- a **continuation** preserves the original request and exact target, either in
+  the accepted handle or through an explicitly linked fresh same-target
+  recovery launch; and
+- a **successful repair** produces one immutable append-only recovery commit.
+
+This recovery is not accepted-launch fallback. After a launch is accepted,
+completion, failure, timeout, interruption, `BLOCKED`, or contract refusal never
+makes another model, provider, route, or worker eligible. A fresh launch is
+permitted only when the caller-specific lifecycle contract already authorized
+bounded recovery, the accepted handle cannot resume, the exact original target
+remains bindable, a pending attempt is reconciled, and the existing
+`continuation_events` record links it to the original request.
+
+### Recovery Budget
+
+`oat_phase_recovery_policy` is dedicated to implementation recovery and is
+independent of `oat_orchestration_retry_limit`, which continues to govern
+review-fix and gate loops. The project default is `10` attempts per phase.
+Project defaults and phase-specific overrides accept integers from `0` through
+`20`; `0` disables automatic post-commit repair for that scope.
+
+Attempt usage is monotonic and durable per phase. A new attempt is consumed
+before the bounded edit begins, so a failed edit, commit, or re-verification
+cannot retry for free. An already-reconciled pending attempt may finish without
+another reservation, even when usage equals the limit. Evidence of an
+infrastructure or flaky failure permits one no-edit rerun without consuming an
+attempt; a repeated unexplained failure is ambiguous and stops without editing.
+A direction-required boundary reached before reservation leaves the pending
+marker null and usage unchanged, emits its required event, and records no edit
+or recovery commit.
+
+At three recovery events, the phase report warns about elevated recovery volume
+but may continue while every eligibility condition and the budget remain valid.
+At exhaustion, OAT stops for one explicit operator outcome:
+
+1. **Add N attempts:** set that phase's total limit to `used_attempts + N`,
+   capped at `20`, without resetting prior usage.
+2. **Authorize changed scope:** record a separate consequential or
+   scope-expanding action outside automatic recovery.
+3. **Stop:** preserve the worktree, immutable history, and evidence.
+
+### Recovery Event
+
+Every recovered, direction-required, or failed-attempt disposition emits
+exactly one event with this heading, label order, and vocabulary:
+
+```markdown
+### Recovery Event {event-id}
+
+- Phase/task: {phase and originating task when known}
+- Original request: {original_request_id}
+- Original commit: {immutable task commit}
+- Defect class: lint | type | test | build | composition | other
+- Discovered by: {exact verification command or transition check}
+- Disposition: recovered | direction-required | failed-attempt
+- Authorization: phase-standing | operator-extension | operator-scope
+- Attempt: {used}/{phase_recovery_limit}
+- Dispatch target: {exact launcher-owned implementation target}
+- Recovery commit: {sha or -}
+- Verification: {focused and relevant phase result}
+- Reason: {eligibility or stop-boundary evidence}
+```
+
+The event ledger keeps defect volume, authorization-prompt volume, continuation
+volume, and successful repair commits measurable as separate facts. A failed
+attempt still produces one event even when it produces no recovery commit.
+
+### Pre-Change Baseline
+
+The recorded pre-change baseline is nine recovery events plus two
+operator-recovery continuations. Known failures included lint, composition, and
+test-fixture defects; exact per-class counts are unavailable. The repeated
+prompts exposed a latent policy under integration-heavy verification rather
+than a recent regression. In particular, PR #176 changed phase-base anchoring
+and is explicitly excluded from causation: the root still captures a fresh
+phase base immediately before each launch, so earlier recovery commits are
+already part of the next phase's base.
 
 ### Phase reviewer
 
@@ -154,6 +289,21 @@ implementation outcome itself did not change.
 Only an allowed and fresh gate disposition can enter the pre-approval sequence,
 cross final HiLL, run the post-approval sequence, mark implementation complete,
 or emit success.
+
+## Update Installed Recovery Contracts
+
+Bounded phase recovery ships in OAT `0.2.28`. After upgrading to that release or
+later, update the installed OAT tools and then regenerate provider views from
+the canonical contracts:
+
+```bash
+oat tools update
+oat sync --scope all
+```
+
+Run the commands in that order before expecting global Claude, Codex, or Cursor
+phase agents to use the new contract. Provider assets are generated views, not
+independently maintained policy forks.
 
 ## Phase Scope
 
