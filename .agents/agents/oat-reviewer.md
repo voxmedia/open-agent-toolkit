@@ -1,6 +1,6 @@
 ---
 name: oat-reviewer
-version: 1.2.0
+version: 1.2.1
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode.
 tools: Read, Bash, Grep, Glob, Write, Task
 color: yellow
