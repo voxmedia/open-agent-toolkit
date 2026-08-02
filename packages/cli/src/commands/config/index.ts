@@ -149,6 +149,7 @@ type ConfigKey =
   | 'workflow.hillCheckpointDefault'
   | 'workflow.postImplementSequence'
   | 'workflow.reviewExecutionModel'
+  | 'workflow.reviewPlanMode'
   | 'worktrees.root';
 
 interface ConfigValue {
@@ -247,6 +248,7 @@ const KEY_ORDER: ConfigKey[] = [
   'workflow.createPrOnComplete',
   'workflow.postImplementSequence',
   'workflow.reviewExecutionModel',
+  'workflow.reviewPlanMode',
   'workflow.autoReviewAtHillCheckpoints',
   'workflow.autoNarrowReReviewScope',
   'workflow.autoArtifactReview.plan',
@@ -780,6 +782,18 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'Default execution model for the final review step in oat-project-implement: "subagent" dispatches a review subagent, "inline" runs the review in-context, "fresh-session" prints guidance for running the review in a separate session (with an escape hatch to subagent/inline). When unset, the skill prompts. Resolution: local > shared > user > default.',
   },
   {
+    key: 'workflow.reviewPlanMode',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'legacy | enforce',
+    defaultValue: 'legacy',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.reviewPlanMode <legacy|enforce>',
+    description:
+      'Controls plan-first review enforcement. Legacy preserves the compatibility path; enforce requires capability and validation preflight. Resolution: local > shared > user > default.',
+  },
+  {
     key: 'workflow.autoReviewAtHillCheckpoints',
     group: 'Workflow Preferences (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
@@ -1182,6 +1196,7 @@ const WORKFLOW_ENUM_VALUES = {
   'workflow.hillCheckpointDefault': ['every', 'final'],
   'workflow.postImplementSequence': ['wait', 'summary', 'pr', 'docs-pr'],
   'workflow.reviewExecutionModel': ['subagent', 'inline', 'fresh-session'],
+  'workflow.reviewPlanMode': ['legacy', 'enforce'],
   'workflow.designMode': ['collaborative', 'selective', 'draft'],
   'workflow.dispatchPolicy.mode': [...VALID_DISPATCH_POLICY_MODES],
   'workflow.dispatchPolicy.policy': [...VALID_MANAGED_DISPATCH_POLICIES],

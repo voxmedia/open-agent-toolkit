@@ -342,6 +342,47 @@ describe('resolveEffectiveConfig', () => {
   });
 
   describe('workflow preferences', () => {
+    it('defaults review plan mode to legacy', async () => {
+      const repoRoot = await createRepoRoot();
+      const userConfigDir = await createUserConfigDir();
+      const result = await resolveEffectiveConfig(repoRoot, userConfigDir, {});
+
+      expect(result.resolved['workflow.reviewPlanMode']).toEqual({
+        value: 'legacy',
+        source: 'default',
+      });
+    });
+
+    it('resolves review plan mode with local over shared over user precedence', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: { reviewPlanMode: 'legacy' },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: { reviewPlanMode: 'enforce' },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: { reviewPlanMode: 'legacy' },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.reviewPlanMode']).toEqual({
+        value: 'enforce',
+        source: 'local',
+      });
+    });
+
     it('resolves post-implementation sequences atomically without merging boundaries', async () => {
       const result = await resolveEffectiveConfig(
         '/repo',
