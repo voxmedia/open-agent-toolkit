@@ -70,6 +70,51 @@ The project review skills are model-invokable only for explicit user asks and co
 
 The common rule is offer-and-confirm: the model may recognize the request and propose the matching workflow skill, but must ask before mutating project artifacts or starting a review.
 
+## Plan-first review execution
+
+In enforce mode, every direct project review follows one coordinator-owned
+sequence:
+
+1. Prepare the authoritative review context and changed-file inventory.
+2. Read the required lifecycle artifacts, then checkpoint artifact intake.
+3. Create and validate one `ReviewPlanV1`, retaining its opaque validation
+   receipt.
+4. Cross the `beginEvidence` transition with that receipt.
+5. Load source and content-level diff evidence selectively according to the
+   validated plan.
+6. Validate final accounting before publishing an artifact, recording a Reviews
+   row, appending the project log, or committing review bookkeeping.
+
+This contract proves that a validated plan exists before the declared evidence
+transition and that final accounting matches the authoritative file set. It
+does not mechanically prove the order in which a provider used its file-reading
+tools.
+
+The same sequence applies to a native reviewer subagent and to an eligible
+inline reviewer. A native launch keeps its launcher-owned accepted handle for
+the full review. Inline execution treats the current planning parent as that
+accepted continuation. Fresh-session execution must preserve the same exact
+managed target and coordinator controls; it is not a downgrade path.
+Checkpoint, final, and configured-gate aliases inherit the direct review's
+validation context rather than creating another authoritative context.
+
+Only an accepted complete terminal can pass into publication and bookkeeping.
+If terminal validation reports only accounting-encoding errors, the coordinator
+may request at most two accounting-only repairs through the same accepted
+handle. Those repairs cannot change findings, severity, evidence, verdict,
+claims, commands, uncertainty, strategy, or budget.
+
+Two terminal outcomes are deliberately non-actionable:
+
+- Reviewer `BLOCKED` means the accepted reviewer could not establish complete
+  coverage. It is a blocking review outcome, not an empty pass.
+- `review_complete_accounting_invalid` means terminal accounting remained
+  invalid after a non-repairable error or the bounded repair attempts.
+
+Neither outcome permits a fallback or replacement reviewer, artifact
+publication, a Reviews ledger row, project-log append, bookkeeping commit, or a
+passing interpretation.
+
 ## Remote provide
 
 `oat-review-provide-remote` (ad-hoc) and `oat-project-review-provide-remote` (project-scoped) let an agent on one machine review a GitHub PR opened from another machine and post the review back to GitHub. They mirror the existing `*-receive-remote` skills, closing the local-vs-remote × provide-vs-receive matrix.
