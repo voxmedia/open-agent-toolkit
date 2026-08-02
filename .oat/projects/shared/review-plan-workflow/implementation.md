@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: null
+oat_current_task_id: p04-t26
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | completed | 55    | 55/55     |
-| Phase 3 | completed | 10    | 10/10     |
-| Phase 4 | in_review | 25    | 25/25     |
-| Phase 5 | pending   | 7     | 0/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | completed   | 55    | 55/55     |
+| Phase 3 | completed   | 10    | 10/10     |
+| Phase 4 | in_progress | 27    | 25/27     |
+| Phase 5 | pending     | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 103/123 tasks completed
+**Total:** 103/125 tasks completed
 
 ## Execution Configuration
 
@@ -1240,12 +1240,21 @@ and independent root verification passed.
 Medium findings remain partially resolved; runtime rejection, non-mutation, and
 the full test suite pass.
 
-**Review-limit disposition:** The operator-authorized cycle-6 override is
-exhausted. No additional artifact/test alignment or review cycle may start
-without explicit operator disposition.
+**New tasks added:** p04-t26 and p04-t27
 
-**Next:** Await operator disposition for the two remaining acceptance-definition
-gaps.
+**Finding disposition map:**
+
+- I1 (`ReviewPlanningPayload` collapses exact command invocations to strings) →
+  p04-t26 (`artifact_alignment_required`).
+- M1 (public sibling rejection cannot isolate the defensive launch-attempt
+  clause) → p04-t27 (`test_and_acceptance_alignment_required`).
+
+**Review-limit disposition:** On 2026-08-02 the operator explicitly authorized
+one bounded alignment cycle for p04-t26 and p04-t27 and one independent cycle-7
+re-review.
+
+**Next:** Execute p04-t26 and p04-t27, then run the authorized cycle-7
+re-review.
 
 ---
 

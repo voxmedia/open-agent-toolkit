@@ -2817,9 +2817,12 @@ correlation.
 **Step 2: Implement** Create two gate preparations with one shared gate-run ID
 and distinct launch-attempt IDs. Submit the sibling attempt's receipt and
 dossier through the current run's exact preparation-supplied branch-local
-binder, assert the stable launch-attempt rejection, and prove neither run's
-worker coverage mutates. Retain the distinct wrong-receipt, replacement,
-post-output replay, and idempotence cases.
+binder, assert stable sibling-receipt rejection, and prove neither run's worker
+coverage mutates. Retain the distinct wrong-receipt, replacement, post-output
+replay, and idempotence cases. The public binder selects the current run and
+validates the opaque token first, so this process test must not claim to isolate
+the defensive stored launch-attempt comparison; p04-t27 covers that invariant
+directly.
 
 **Step 3: Format** Run
 `pnpm exec oxfmt --write "packages/cli/src/review/bind-worker-dossier.lifecycle.integration.test.ts"`.
@@ -2827,7 +2830,8 @@ post-output replay, and idempotence cases.
 **Step 4: Verify** Run
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/bind-worker-dossier.lifecycle.integration.test.ts`.
 Expected: the process suite distinguishes sibling launch-attempt rejection from
-cross-run receipt and run/plan mismatch rejection.
+random wrong-token and run/plan mismatch rejection without claiming an
+unreachable public subcondition.
 
 **Step 5: Commit** `test(p04-t24): cover sibling launch attempts`
 
@@ -2859,6 +2863,65 @@ Expected: all prompt sites are mapped and the canonical contract remains
 byte-identical to all required embedded copies.
 
 **Step 5: Commit** `chore(p04-t25): map review continuation check`
+
+### Task p04-t26: (cycle-6 I1) Type exact commands in the planning payload
+
+**Files:**
+
+- Modify: `.oat/projects/shared/review-plan-workflow/design.md`
+
+**Step 1: Reproduce** Compare `ReviewPlanningPayload` with the authoritative
+`PrepareReviewContextResultV1.commands` model and show that its four command
+fields are still typed as strings despite requiring exact executable, argv, and
+stdin values.
+
+**Step 2: Implement** Type `checkpoint_command`, `validate_plan_command`,
+`begin_evidence_command`, and `bind_worker_dossier_command` as
+`ReviewCommandInvocationV1`, or replace them with one named exact-command
+projection preserving `executable`, `argv`, and `stdin`. Keep the payload
+provider-neutral, shell-free, and consistent with the adjacent command-routing
+prose. Do not change code.
+
+**Step 3: Format** Run
+`pnpm exec oxfmt --write ".oat/projects/shared/review-plan-workflow/design.md"`.
+
+**Step 4: Verify** Run
+`pnpm exec oxfmt --check ".oat/projects/shared/review-plan-workflow/design.md"` and
+search every `ReviewPlanningPayload` command field for string typing.
+Expected: no authoritative payload boundary collapses exact command invocations
+to ambient command strings.
+
+**Step 5: Commit** `docs(p04-t26): type exact planning commands`
+
+### Task p04-t27: (cycle-6 M1) Cover the defensive launch-attempt invariant
+
+**Files:**
+
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+
+**Step 1: Reproduce** Demonstrate that valid public binder traffic cannot vary
+only the stored receipt's `launchAttemptId`: broker routing selects a run and
+opaque receipt-token validation rejects a sibling receipt before the defensive
+stored-correlation clause.
+
+**Step 2: Implement** Retain p04-t24 as public fail-closed sibling-receipt
+coverage and add a direct validation-store integrity test that varies only the
+stored receipt `launchAttemptId` against the preparation correlation. Assert
+`worker-dossier-receipt-mismatch` and prove worker coverage and output attempts
+remain unchanged. Keep all other receipt, context, plan, assignment, handle,
+gate-run, and dossier inputs valid so the test discriminates the exact
+defensive clause.
+
+**Step 3: Format** Run
+`pnpm exec oxfmt --write "packages/cli/src/review/validation-store.test.ts"`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-store.test.ts src/review/bind-worker-dossier.lifecycle.integration.test.ts`.
+Expected: the public process test proves real sibling rejection and
+non-mutation, while the direct store test independently proves the otherwise
+unreachable launch-attempt integrity clause.
+
+**Step 5: Commit** `test(p04-t27): cover launch attempt invariant`
 
 ---
 
@@ -3532,7 +3595,7 @@ B post-publication bookkeeping PR.
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/archived/p04-review-2026-07-31T171500Z.md           | 78790a61d41cf209be15dcf98645105ccb799d57 | auto       | -           |
 | p04    | code     | fixes_completed | 2026-07-31 | reviews/p04-review-2026-07-31T214700Z.md                    | 100d7493db8e4b0c74139862ddc2b7ac29709317 | auto       | -           |
 | p04    | code     | fixes_completed | 2026-08-01 | reviews/p04-review-2026-08-01T004400Z.md                    | 96c3a5ef711005f9cde07c30ca2a86075286821d | auto       | -           |
-| p04    | code     | received        | 2026-08-02 | reviews/p04-review-2026-08-02T004000Z.md                    | 394b49f36a4fceb6ef943ec27373a631728d8e55 | auto       | -           |
+| p04    | code     | fixes_added     | 2026-08-02 | reviews/p04-review-2026-08-02T004000Z.md                    | 394b49f36a4fceb6ef943ec27373a631728d8e55 | auto       | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p07    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
