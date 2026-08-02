@@ -16,8 +16,25 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { bindAcceptedHandle } from './command-capabilities';
-import type { ReviewPreparationV1 } from './types';
+import {
+  allocateReviewTimeBudget,
+  evaluateWholeDiffEligibility,
+} from './budget';
+import {
+  bindAcceptedHandle,
+  issueCommandCapabilities,
+} from './command-capabilities';
+import {
+  beginEvidence,
+  checkpointArtifactsLoaded,
+  validateAndReceiptPlan,
+} from './review-lifecycle';
+import type {
+  PreparedReviewContextV1,
+  ReviewPlanV1,
+  ReviewPreparationV1,
+  WorkerDossierV1,
+} from './types';
 import { ValidationStore } from './validation-store';
 import { ValidationStoreAuthority } from './validation-store-authority';
 
@@ -63,6 +80,169 @@ function preparation(runId = 'abcdefghijklmnop'): ReviewPreparationV1 {
     preparationDigest: 'preparation',
     createdAt: '2026-01-01T00:00:00.000Z',
     expiresAt: '2099-01-01T00:00:00.000Z',
+  };
+}
+
+function delegatedGatePreparation(): ReviewPreparationV1 {
+  const value = preparation('launchintegrity1');
+  value.invocation = 'gate';
+  value.correlation = {
+    gateRunId: 'gate-run',
+    launchAttemptId: 'current-attempt',
+  };
+  value.changeMap = {
+    files: [
+      {
+        path: 'a.ts',
+        status: 'modified',
+        isBinary: false,
+        additions: 1,
+        deletions: 1,
+        generatedHint: false,
+        bookkeepingHint: false,
+      },
+      {
+        path: 'b.ts',
+        status: 'modified',
+        isBinary: false,
+        additions: 1,
+        deletions: 1,
+        generatedHint: false,
+        bookkeepingHint: false,
+      },
+    ],
+    totals: {
+      files: 2,
+      additions: 2,
+      deletions: 2,
+      binaryFiles: 0,
+      numstatChangedLines: 4,
+      numstatTokenDenialEstimate: 1,
+      patchBytes: 40,
+      patchByteLowerBound: null,
+      patchEstimateState: 'exact',
+      patchCountingSkippedReason: null,
+      estimatedPatchTokens: 10,
+    },
+  };
+  value.obligations = [
+    {
+      id: 'FR1',
+      kind: 'requirement',
+      source: 'test',
+      summary: 'Inspect the delegated review path.',
+      expectedPaths: ['a.ts'],
+      expectedChecks: ['inspect'],
+    },
+    {
+      id: 'FR2',
+      kind: 'requirement',
+      source: 'test',
+      summary: 'Run deterministic verification.',
+      expectedPaths: ['b.ts'],
+      expectedChecks: ['verify'],
+    },
+  ];
+  value.timeBudget = allocateReviewTimeBudget({
+    totalMs: 120_000,
+    source: 'test',
+    startedAtMs: Date.now(),
+  }).time;
+  return value;
+}
+
+function delegatedPlan(context: PreparedReviewContextV1): ReviewPlanV1 {
+  const time = context.budget.time!;
+  const timeAllocation = allocateReviewTimeBudget({
+    totalMs: time.totalMs,
+    source: time.source,
+    startedAtMs: time.deadlineMs - time.totalMs,
+  }).allocation;
+  return {
+    schemaVersion: 1,
+    runId: context.runId,
+    contextDigest: context.contextDigest,
+    strategy: 'delegated',
+    lanes: [
+      {
+        id: 'review-lane',
+        paths: ['a.ts'],
+        primaryObligationIds: ['FR1'],
+        seamObligationIds: [],
+        risk: 'low',
+        evidenceClass: 'semantic',
+        strategy: 'path-diff',
+        checks: ['inspect'],
+        delegated: true,
+        independenceRationale: 'Independent bounded review lane.',
+        substantial: true,
+        substantialityRationale: 'Owns the review path.',
+        deadlineMs: timeAllocation.planningDeadlineMs + 1,
+        dossier: { contractVersion: 1, partialAllowed: true },
+        replay: 'sample',
+        primaryContingency: {
+          allowed: true,
+          paths: ['a.ts'],
+          obligationIds: ['FR1'],
+        },
+      },
+      {
+        id: 'verification-lane',
+        paths: ['b.ts'],
+        primaryObligationIds: ['FR2'],
+        seamObligationIds: [],
+        risk: 'low',
+        evidenceClass: 'deterministic',
+        strategy: 'inventory',
+        checks: ['verify'],
+        delegated: true,
+        independenceRationale: 'Independent deterministic verification.',
+        substantial: true,
+        substantialityRationale: 'Owns the verification boundary.',
+        deadlineMs: timeAllocation.planningDeadlineMs + 1,
+        dossier: { contractVersion: 1, partialAllowed: true },
+        replay: 'accept-provenance',
+        primaryContingency: {
+          allowed: false,
+          paths: [],
+          obligationIds: [],
+        },
+      },
+    ],
+    classifications: [],
+    crossLaneInvariants: [],
+    delegationEconomics: {
+      independentLaneIds: ['review-lane', 'verification-lane'],
+      nonReplayedLaneIds: ['verification-lane'],
+      expectedSavings: ['Bounded concurrent inspection.'],
+      coordinationCosts: ['One dossier reconciliation.'],
+      decisionRationale: 'Delegation is bounded.',
+      decision: 'delegate',
+    },
+    verificationBoundary: {
+      requiredClaims: [
+        { kind: 'promoted-finding', mode: 'direct' },
+        { kind: 'consequential-absence', mode: 'direct' },
+        { kind: 'worker-conflict', mode: 'direct' },
+        { kind: 'cross-lane-gap', mode: 'direct' },
+      ],
+      positiveCoverage: {
+        mode: 'sample',
+        laneIds: ['review-lane', 'verification-lane'],
+        rationale: 'Sample both delegated lanes.',
+      },
+      deterministicAcceptance: {
+        mode: 'provenance',
+        requiredFields: ['command', 'cwd', 'scopeRefs', 'provenance', 'result'],
+      },
+    },
+    wholeDiff: evaluateWholeDiffEligibility({
+      changeMap: context.changeMap,
+      contextBudget: context.budget.context,
+      coherentLaneCount: 1,
+      hasConsequentialSeam: false,
+    }),
+    timeAllocation,
   };
 }
 
@@ -351,6 +531,81 @@ describe('validation state and gate correlation', () => {
     await expect(
       store.resolveGateCorrelation('gate', 'attempt'),
     ).rejects.toThrow(/does not match/);
+  });
+
+  it('rejects a stored receipt launch-attempt mismatch without mutation', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const authority = new ValidationStoreAuthority(Buffer.alloc(32, 13));
+    const store = new ValidationStore(join(parent, 'store'), authority);
+    const gatePreparation = delegatedGatePreparation();
+    const created = await store.createRun({
+      preparation: gatePreparation,
+      artifactDraft: false,
+    });
+    const tokens = await issueCommandCapabilities(store, created.runId);
+    await bindAcceptedHandle(store, created.runId, 'accepted-handle');
+    const context = await checkpointArtifactsLoaded(
+      { runId: created.runId, checkpointToken: tokens.checkpointToken },
+      { store, telemetryAdapter: null, telemetryAdapterId: null },
+    );
+    const validated = await validateAndReceiptPlan(
+      {
+        runId: created.runId,
+        commandToken: tokens.planToken,
+        plan: delegatedPlan(context),
+      },
+      { store },
+    );
+    if (!validated.valid) {
+      throw new Error(
+        `expected valid plan: ${JSON.stringify(validated.errors)}`,
+      );
+    }
+    await beginEvidence(
+      { runId: created.runId, receipt: validated.receipt.token },
+      { store },
+    );
+
+    const before = (await store.readRun(created.runId)).state;
+    const expectedTampered = structuredClone(before);
+    expectedTampered.receipt!.launchAttemptId = 'sibling-attempt';
+    await store.updateRun(created.runId, (state) => {
+      state.receipt!.launchAttemptId = 'sibling-attempt';
+      return state;
+    });
+    expect((await store.readRun(created.runId)).state).toEqual(
+      expectedTampered,
+    );
+
+    const dossier: WorkerDossierV1 = {
+      schemaVersion: 1,
+      runId: created.runId,
+      planDigest: validated.receipt.planDigest,
+      laneId: 'review-lane',
+      outcome: 'complete',
+      inspectedPaths: ['a.ts'],
+      inspectedObligationIds: ['FR1'],
+      commands: [],
+      evidence: [],
+      candidateFindings: [],
+      uncoveredObligationIds: [],
+      uncertainty: [],
+    };
+    await expect(
+      store.bindValidatedWorkerDossier(created.runId, {
+        receipt: validated.receipt.token,
+        dossier,
+      }),
+    ).rejects.toMatchObject({ code: 'worker-dossier-receipt-mismatch' });
+
+    const after = (await store.readRun(created.runId)).state;
+    expect(after).toEqual(expectedTampered);
+    expect(after).toMatchObject({
+      phase: 'evidence_started',
+      workerCoverage: [],
+      output: { immutableSubstanceDigest: null, attempts: 0 },
+    });
   });
 
   it('rejects authenticated malformed telemetry and incoherent phases', async () => {
