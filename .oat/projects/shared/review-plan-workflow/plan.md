@@ -2831,6 +2831,35 @@ cross-run receipt and run/plan mismatch rejection.
 
 **Step 5: Commit** `test(p04-t24): cover sibling launch attempts`
 
+### Task p04-t25: Recover autonomy prompt-site inventory
+
+**Files:**
+
+- Modify: `.agents/docs/autonomy-contract.md`
+- Modify: `.agents/skills/oat-project-implement/references/docs/autonomy-contract.md`
+- Modify: `.agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md`
+- Modify: `.agents/skills/oat-project-document/references/docs/autonomy-contract.md`
+- Modify: `.agents/skills/oat-project-pr-final/references/docs/autonomy-contract.md`
+
+**Step 1: Reproduce** Run the full workspace suite or the autonomy inventory
+test and confirm the p04-t20 internal terminal-accounting instruction is
+reported as unmapped site `5243e42e5e73`.
+
+**Step 2: Implement** Map `5243e42e5e73` to `NG` for
+`oat-project-review-provide/SKILL.md` because it is an internal
+accepted-continuation consistency check, not a user authorization gate. Keep
+the canonical contract and its four required embedded copies byte-identical.
+
+**Step 3: Format** Run
+`pnpm exec oxfmt --write ".agents/docs/autonomy-contract.md" ".agents/skills/oat-project-implement/references/docs/autonomy-contract.md" ".agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md" ".agents/skills/oat-project-document/references/docs/autonomy-contract.md" ".agents/skills/oat-project-pr-final/references/docs/autonomy-contract.md"`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts`.
+Expected: all prompt sites are mapped and the canonical contract remains
+byte-identical to all required embedded copies.
+
+**Step 5: Commit** `chore(p04-t25): map review continuation check`
+
 ---
 
 ## Phase 5: Gate Diagnostics and Compatibility

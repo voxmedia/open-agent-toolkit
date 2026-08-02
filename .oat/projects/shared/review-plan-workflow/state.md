@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t23
-oat_last_commit: 96c3a5ef711005f9cde07c30ca2a86075286821d
+oat_current_task: p04-t25
+oat_last_commit: 1bb35fba251f20f04cc4748c361c17c15a095b89
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-01T23:58:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T00:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,7 +85,7 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 4 cycle-6 fixes authorized
+**Status:** Phase 4 cycle-6 recovery authorized
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
@@ -96,7 +96,8 @@ two Critical, one Important, and one Medium issue. The operator authorized
 p04-t20 through p04-t22; all three fixes and independent root verification now
 pass. The cycle-5 review resolved the production findings but found one
 Important design-alignment gap and one Medium test-coverage gap. The override is
-extended by the operator for p04-t23, p04-t24, and one cycle-6 re-review.
+extended by the operator for p04-t23, p04-t24, one narrow verification recovery,
+and one cycle-6 re-review.
 
 ## Artifacts
 
@@ -202,7 +203,12 @@ extended by the operator for p04-t23, p04-t24, and one cycle-6 re-review.
 - ✓ All cycle-4 production-wiring findings are resolved
 - ✓ Operator authorized p04-t23, p04-t24, and one cycle-6 re-review
 - ✓ Converted both residual findings to bounded tasks
-- → Execute p04-t23
+- ✓ p04-t23 and p04-t24 completed at `1bb35fba`
+- ✓ Focused lifecycle, design, type-check, lint, build, and format checks pass
+- ⚠ Isolated full suite passed 3,912/3,913; p04-t20 added one unmapped internal
+  prompt site
+- ✓ Operator authorized bounded p04-t25 inventory recovery
+- → Execute p04-t25
 
 ## Blockers
 
@@ -210,5 +216,5 @@ None.
 
 ## Next Milestone
 
-Complete p04-t23 and p04-t24, root-verify the aligned design and exact sibling
-attempt lifecycle, then run the authorized cycle-6 re-review.
+Complete p04-t25, rerun full workspace verification, then run the authorized
+cycle-6 re-review.

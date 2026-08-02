@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: p04-t23
+oat_current_task_id: p04-t25
 oat_generated: false
 ---
 
@@ -29,12 +29,12 @@ oat_generated: false
 | Phase 1 | completed   | 13    | 13/13     |
 | Phase 2 | completed   | 55    | 55/55     |
 | Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | in_progress | 24    | 22/24     |
+| Phase 4 | in_progress | 25    | 24/25     |
 | Phase 5 | pending     | 7     | 0/7       |
 | Phase 6 | pending     | 7     | 0/7       |
 | Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 100/122 tasks completed
+**Total:** 102/123 tasks completed
 
 ## Execution Configuration
 
@@ -948,6 +948,25 @@ phase review and updated its canonical skill contract.
 the real branch-local binder, broker/store transition, and final output
 validation, including mis-correlation and replay rejection.
 
+### Task p04-t23: (cycle-5 I1) Align the binder command design contract
+
+**Status:** completed
+**Commit:** `cd32ba2c`
+**Outcome:** Aligned the authoritative command model, lifecycle flow, and exact
+fixture language with `bindWorkerDossier` and `worker-dossier-json`.
+
+### Task p04-t24: (cycle-5 M1) Cover sibling launch-attempt rejection
+
+**Status:** completed
+**Commit:** `1bb35fba`
+**Outcome:** Added shared-gate, distinct-launch-attempt process fixtures and
+separated sibling-attempt rejection from wrong-receipt and run/plan mismatch
+coverage.
+
+### Task p04-t25: Recover autonomy prompt-site inventory
+
+**Status:** pending
+
 ### Phase Verification
 
 - Focused Phase 4 union passed 253 tests.
@@ -1173,8 +1192,16 @@ resolved pending the exact sibling-attempt correlation case.
 one bounded fix cycle for p04-t23 and p04-t24 and one independent cycle-6
 re-review.
 
-**Next:** Execute p04-t23 and p04-t24, then run the authorized cycle-6
-re-review.
+**Fix progress:** p04-t23 and p04-t24 completed at `1bb35fba`; focused tests,
+formatting, type-check, lint, build, and exact-range checks passed. An isolated
+full workspace rerun passed 3,912 of 3,913 tests and traced the sole failure to
+an unmapped internal prompt site introduced by p04-t20.
+
+**Recovery authorization:** On 2026-08-01 the operator authorized p04-t25 as a
+bounded mechanical recovery before the cycle-6 re-review.
+
+**Next:** Execute p04-t25, rerun full verification, then run the authorized
+cycle-6 re-review.
 
 ---
 
