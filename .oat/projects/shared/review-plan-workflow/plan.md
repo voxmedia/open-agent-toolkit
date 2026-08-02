@@ -2840,10 +2840,14 @@ unreachable public subcondition.
 **Files:**
 
 - Modify: `.agents/docs/autonomy-contract.md`
-- Modify: `.agents/skills/oat-project-implement/references/docs/autonomy-contract.md`
-- Modify: `.agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md`
-- Modify: `.agents/skills/oat-project-document/references/docs/autonomy-contract.md`
-- Modify: `.agents/skills/oat-project-pr-final/references/docs/autonomy-contract.md`
+- Unchanged symlink to the canonical contract:
+  `.agents/skills/oat-project-implement/references/docs/autonomy-contract.md`
+- Unchanged symlink to the canonical contract:
+  `.agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md`
+- Unchanged symlink to the canonical contract:
+  `.agents/skills/oat-project-document/references/docs/autonomy-contract.md`
+- Unchanged symlink to the canonical contract:
+  `.agents/skills/oat-project-pr-final/references/docs/autonomy-contract.md`
 
 **Step 1: Reproduce** Run the full workspace suite or the autonomy inventory
 test and confirm the p04-t20 internal terminal-accounting instruction is
