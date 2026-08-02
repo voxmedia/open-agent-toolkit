@@ -664,21 +664,21 @@ Commit: `fix(oat): resolve recovery contract review gaps`
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                             | Reviewed Head                            | Invocation | Gate Target          |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
-| p01    | code     | received        | 2026-07-31 | reviews/archived/p01-review-2026-07-31T175303Z.md    | a2d875bb379941301c3ed811b40cfee7a40148e8 | auto       | -                    |
-| p-rev1 | code     | passed          | 2026-07-31 | reviews/archived/p-rev1-review-2026-07-31T191244Z.md | 53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc | auto       | -                    |
-| p02    | code     | passed          | 2026-07-31 | reviews/archived/p02-review-2026-07-31T193213Z.md    | 395fca50e96ec4f895d3b9ad828b0900f67ce95e | auto       | -                    |
-| p03    | code     | passed          | 2026-07-31 | reviews/archived/p03-review-2026-07-31T200025Z.md    | 4f6d934b955b030dfacb06ae91e2e81d92c3b30a | auto       | -                    |
-| p-rev2 | code     | passed          | 2026-07-31 | reviews/archived/p-rev2-review-2026-07-31T213539Z.md | 0adcee7f8e143221e14b6f50579ab35e9bc0425a | auto       | -                    |
-| p04    | code     | passed          | 2026-07-31 | reviews/archived/p04-review-2026-07-31T215112Z.md    | 0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c | auto       | -                    |
-| p05    | code     | passed          | 2026-07-31 | reviews/archived/p05-review-2026-07-31T222411Z.md    | 0eaaf85a1926607a3d864fca21791ee4637c91ce | auto       | -                    |
-| final  | code     | passed          | 2026-07-31 | reviews/archived/final-review-2026-07-31T223213Z.md  | cd7fd7aef3d39c6c545ac8d4f62017ae710e7b1b | auto       | -                    |
-| spec   | artifact | pending         | -          | -                                                    | -                                        | -          | -                    |
-| design | artifact | passed          | 2026-07-31 | user-approved lightweight design                     | -                                        | manual     | -                    |
-| plan   | artifact | passed          | 2026-07-31 | structured review rounds 1-3                         | -                                        | auto       | -                    |
-| final  | code     | passed          | 2026-07-31 | reviews/archived/final-review-2026-07-31T224851Z.md  | 7aec7f31ec00c8949ab2f96a005256efbcb316a1 | gate       | cursor-fable-5-xhigh |
-| p-rev3 | code     | fixes_completed | 2026-08-01 | PR #189 Bugbot review threads                        | 796c000da3f61441b89ea5a4d1c5ddb676904f22 | auto       | cursor-bugbot        |
+| Scope  | Type     | Status   | Date       | Artifact                                             | Reviewed Head                            | Invocation | Gate Target          |
+| ------ | -------- | -------- | ---------- | ---------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
+| p01    | code     | received | 2026-07-31 | reviews/archived/p01-review-2026-07-31T175303Z.md    | a2d875bb379941301c3ed811b40cfee7a40148e8 | auto       | -                    |
+| p-rev1 | code     | passed   | 2026-07-31 | reviews/archived/p-rev1-review-2026-07-31T191244Z.md | 53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc | auto       | -                    |
+| p02    | code     | passed   | 2026-07-31 | reviews/archived/p02-review-2026-07-31T193213Z.md    | 395fca50e96ec4f895d3b9ad828b0900f67ce95e | auto       | -                    |
+| p03    | code     | passed   | 2026-07-31 | reviews/archived/p03-review-2026-07-31T200025Z.md    | 4f6d934b955b030dfacb06ae91e2e81d92c3b30a | auto       | -                    |
+| p-rev2 | code     | passed   | 2026-07-31 | reviews/archived/p-rev2-review-2026-07-31T213539Z.md | 0adcee7f8e143221e14b6f50579ab35e9bc0425a | auto       | -                    |
+| p04    | code     | passed   | 2026-07-31 | reviews/archived/p04-review-2026-07-31T215112Z.md    | 0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c | auto       | -                    |
+| p05    | code     | passed   | 2026-07-31 | reviews/archived/p05-review-2026-07-31T222411Z.md    | 0eaaf85a1926607a3d864fca21791ee4637c91ce | auto       | -                    |
+| final  | code     | passed   | 2026-07-31 | reviews/archived/final-review-2026-07-31T223213Z.md  | cd7fd7aef3d39c6c545ac8d4f62017ae710e7b1b | auto       | -                    |
+| spec   | artifact | pending  | -          | -                                                    | -                                        | -          | -                    |
+| design | artifact | passed   | 2026-07-31 | user-approved lightweight design                     | -                                        | manual     | -                    |
+| plan   | artifact | passed   | 2026-07-31 | structured review rounds 1-3                         | -                                        | auto       | -                    |
+| final  | code     | passed   | 2026-07-31 | reviews/archived/final-review-2026-07-31T224851Z.md  | 7aec7f31ec00c8949ab2f96a005256efbcb316a1 | gate       | cursor-fable-5-xhigh |
+| p-rev3 | code     | passed   | 2026-08-02 | PR #189 Bugbot re-review                             | d5b830ec2676bb8ccf19a72c6fff51a309575fa8 | auto       | cursor-bugbot        |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -712,8 +712,9 @@ cell; never truncate a widened row back to five columns.
 
 **Total: 10 tasks**
 
-Implementation revision in progress: the p-rev3 fix and full validation are
-complete; remote Bugbot re-review remains.
+Implementation revision in progress: the p-rev3 fix, full validation, and
+remote Bugbot re-review passed; the refreshed final lifecycle gate and p-rev3
+HiLL approval remain.
 
 ---
 

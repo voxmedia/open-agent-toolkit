@@ -1,6 +1,6 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-review-provide
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-01
 oat_current_task_id: null
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status          | Tasks | Completed |
-| ------------ | --------------- | ----- | --------- |
-| Phase 1      | review_failed   | 2     | 2/2       |
-| Phase p-rev1 | passed          | 1     | 1/1       |
-| Phase 2      | passed          | 1     | 1/1       |
-| Phase 3      | passed          | 2     | 2/2       |
-| Phase p-rev2 | passed          | 1     | 1/1       |
-| Phase 4      | passed          | 1     | 1/1       |
-| Phase 5      | passed          | 1     | 1/1       |
-| Phase p-rev3 | fixes_completed | 1     | 1/1       |
+| Phase        | Status        | Tasks | Completed |
+| ------------ | ------------- | ----- | --------- |
+| Phase 1      | review_failed | 2     | 2/2       |
+| Phase p-rev1 | passed        | 1     | 1/1       |
+| Phase 2      | passed        | 1     | 1/1       |
+| Phase 3      | passed        | 2     | 2/2       |
+| Phase p-rev2 | passed        | 1     | 1/1       |
+| Phase 4      | passed        | 1     | 1/1       |
+| Phase 5      | passed        | 1     | 1/1       |
+| Phase p-rev3 | passed        | 1     | 1/1       |
 
 **Total:** 10/10 tasks completed
 
@@ -613,8 +613,12 @@ sync parity, and autonomy inventory; all 61 OAT skills validated.
 `pnpm build`, `pnpm lint`, `pnpm format`, `pnpm build:docs`, and
 `pnpm release:validate` passed.
 
-**Next:** Commit and push the revision, then receive the remote Bugbot
-re-review.
+**Remote re-review:** Commit `d5b830ec2676bb8ccf19a72c6fff51a309575fa8`
+passed CI, release dry-run, and Cursor Bugbot. All four review threads are
+resolved and no new unresolved finding was reported.
+
+**Next:** Refresh the configured final implementation gate, then request final
+`p-rev3` HiLL approval for the revised mergeable delta.
 
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 
