@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-01
-oat_current_task_id: p05-t16
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | completed   | 27    | 27/27     |
-| Phase 5 | in_progress | 17    | 15/17     |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | completed | 10    | 10/10     |
+| Phase 4 | completed | 27    | 27/27     |
+| Phase 5 | in_review | 17    | 17/17     |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 120/135 tasks completed
+**Total:** 122/135 tasks completed
 
 ## Execution Configuration
 
@@ -1314,7 +1314,7 @@ independent root verification passed.
 
 ## Phase 5: Gate Diagnostics and Compatibility
 
-**Status:** in_progress
+**Status:** in_review
 **Started:** 2026-08-02
 
 ### Task p05-t01: Add reviewPlanMode configuration
@@ -1512,14 +1512,28 @@ recovery are independently resolved with complete focused and workspace gates.
 
 ### Task p05-t16: (cycle-2 m1) Preserve refusal envelopes after acceptance
 
-**Status:** pending
+**Status:** completed
+**Commit:** `8a56416a`
+**Outcome:** Accepted-handle refusals preserve the stable refusal envelope and
+accepted state while genuine pre-start refusals still delete the exact pair.
+**Verification:** 225 focused tests passed.
 
 ### Task p05-t17: (cycle-2 m2) Align inventory symlink manifests
 
-**Status:** pending
+**Status:** completed
+**Commit:** `4f32eaa5`
+**Recovery commit:** `42d3cf94`
+**Outcome:** The initial task commit annotated the identical p04-t25 manifest.
+The recovery commit restored p04-t25 exactly and applied the unchanged-symlink
+annotations only to p05-t15.
+**Verification:** The net range from p05-t16's parent changes only the intended
+p05-t15 manifest; formatting and diff checks pass.
 
-**Next:** Complete p05-t16 and p05-t17, then run the final bounded Phase 5
-re-review.
+**Phase verification:** Root passed 225 focused tests, 3,947 CLI tests,
+workspace type-check, lint, formatting, check, build, and exact-range diff
+checks.
+
+**Next:** Run the final bounded Phase 5 re-review.
 
 ## Orchestration Runs
 
