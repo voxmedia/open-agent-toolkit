@@ -11,7 +11,6 @@ import {
   allocateReviewTimeBudget,
   evaluateWholeDiffEligibility,
 } from './budget';
-import { collectChangeMap } from './change-map';
 import { executeCommandInvocation } from './command-invocation';
 import type { ReviewPlanV1, WorkerDossierV1 } from './types';
 import {
@@ -761,15 +760,21 @@ describe('validation authority broker', () => {
       `${checkpoint.stderr}\n${JSON.stringify(prepared.commands.checkpointArtifacts)}`,
     ).toBe(0);
     const checkpointEnvelope = JSON.parse(checkpoint.stdout) as {
-      result: { contextDigest: string };
+      result: {
+        contextDigest: string;
+        planning: {
+          obligations: Array<{ id: string }>;
+          derivedPolicy: {
+            wholeDiff: {
+              singleLane: ReviewPlanV1['wholeDiff'];
+            };
+          };
+        };
+      };
     };
-    const changeMap = await collectChangeMap({
-      repoRoot: root,
-      baseSha,
-      headSha,
-      remainingTokens: null,
-      outerBudgetMs: null,
-    });
+    expect(checkpointEnvelope.result.planning.obligations).toEqual([
+      expect.objectContaining({ id: 'p02-t01' }),
+    ]);
     const validate = await executeCommandInvocation(
       prepared.commands.validatePlan,
       {
@@ -777,12 +782,8 @@ describe('validation authority broker', () => {
           plan(
             prepared.validationRunId,
             checkpointEnvelope.result.contextDigest,
-            evaluateWholeDiffEligibility({
-              changeMap,
-              contextBudget: null,
-              coherentLaneCount: 1,
-              hasConsequentialSeam: false,
-            }),
+            checkpointEnvelope.result.planning.derivedPolicy.wholeDiff
+              .singleLane,
           ),
         ),
         environment: process.env,

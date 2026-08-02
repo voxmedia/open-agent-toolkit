@@ -303,6 +303,7 @@ export function parseDeferredFindingObligations(
 export interface CollectReviewObligationsInput {
   workflowMode: 'spec-driven' | 'quick' | 'import';
   scope: string;
+  throughTaskId?: string | null;
   plan: { source: Buffer | string; path: string };
   spec?: { source: Buffer | string; path: string };
   implementation?: { source: Buffer | string; path: string } | null;
@@ -316,17 +317,41 @@ export async function collectReviewObligations(
     input.plan.path,
   );
   let selected: ReviewObligationV1[];
+  if (input.throughTaskId && !/^p\d{2}$/.test(input.scope)) {
+    throw new Error('through-task boundary requires a phase review scope');
+  }
   if (/^p\d{2}-t\d{2}$/.test(input.scope)) {
     selected = planTasks.filter((task) => task.id === input.scope);
     if (selected.length !== 1) {
       throw new Error(`unknown review task scope: ${input.scope}`);
     }
   } else if (/^p\d{2}$/.test(input.scope)) {
-    selected = planTasks.filter((task) =>
+    const phaseTasks = planTasks.filter((task) =>
       task.id.startsWith(`${input.scope}-`),
     );
-    if (selected.length === 0) {
+    if (phaseTasks.length === 0) {
       throw new Error(`unknown review phase scope: ${input.scope}`);
+    }
+    if (input.throughTaskId) {
+      if (!input.throughTaskId.startsWith(`${input.scope}-t`)) {
+        throw new Error(
+          `through-task ${input.throughTaskId} does not belong to ${input.scope}`,
+        );
+      }
+      const boundaryIndex = phaseTasks.findIndex(
+        (task) => task.id === input.throughTaskId,
+      );
+      if (boundaryIndex < 0) {
+        throw new Error(
+          `unknown through-task boundary: ${input.throughTaskId}`,
+        );
+      }
+      selected = phaseTasks.slice(0, boundaryIndex + 1);
+      if (selected.length === 0) {
+        throw new Error('through-task boundary produced an empty phase prefix');
+      }
+    } else {
+      selected = phaseTasks;
     }
   } else if (input.scope === 'final') {
     if (input.workflowMode === 'spec-driven') {

@@ -139,8 +139,12 @@ commands and validators remain authoritative.
    obligations, prior-evidence navigation hints, and the existing outer budget
    without reading source files or content-level diffs.
 2. **Artifact checkpoint (`checkpointArtifacts`)** — Execute the one-shot
-   launcher-owned checkpoint command after artifact intake. Use the returned
-   sealed context and post-artifact budget as the only planning context.
+   launcher-owned checkpoint command after artifact intake. Use only its
+   immutable `planning` projection as planning context: the metadata-only
+   ChangeMap, selected obligations, prior-evidence hints, budget, and exact
+   derived whole-diff/time-allocation policy. Select `singleLane` or
+   `multipleLanes` whole-diff policy from the final lane topology. Never
+   reconstruct these fields from Git or the filesystem.
 3. **Validated plan (`ReviewPlanV1`)** — Create one plan that assigns every
    authoritative path and obligation exactly once, records classifications and
    cross-lane seams, and selects whole-diff, selective-inline, or delegated

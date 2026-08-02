@@ -214,6 +214,61 @@ describe('exact scope obligation collection', () => {
     expect(result.map(({ id }) => id)).toEqual(['p02-t01', 'p02-t02']);
   });
 
+  it('selects an inclusive partial-phase prefix through a named task', async () => {
+    const input = await sources();
+    const result = await collectReviewObligations({
+      workflowMode: 'spec-driven',
+      scope: 'p02',
+      throughTaskId: 'p02-t01',
+      ...input,
+      implementation: null,
+    });
+    expect(result.map(({ id }) => id)).toEqual(['p02-t01']);
+  });
+
+  it('selects the real p06 implemented prefix without p06-t07', async () => {
+    const project = new URL(
+      '../../../../.oat/projects/shared/review-plan-workflow/',
+      import.meta.url,
+    );
+    const result = await collectReviewObligations({
+      workflowMode: 'spec-driven',
+      scope: 'p06',
+      throughTaskId: 'p06-t06',
+      plan: {
+        source: await readFile(new URL('plan.md', project)),
+        path: 'plan.md',
+      },
+      implementation: {
+        source: await readFile(new URL('implementation.md', project)),
+        path: 'implementation.md',
+      },
+    });
+    expect(result.map(({ id }) => id)).toContain('p06-t06');
+    expect(result.map(({ id }) => id)).not.toContain('p06-t07');
+  });
+
+  it.each([
+    ['final', 'p02-t01', /requires a phase/],
+    ['p02-t01', 'p02-t01', /requires a phase/],
+    ['p02', 'p03-t01', /does not belong/],
+    ['p02', 'p02-t99', /unknown through-task/],
+  ])(
+    'rejects incompatible boundary %s through %s',
+    async (scope, throughTaskId, error) => {
+      const input = await sources();
+      await expect(
+        collectReviewObligations({
+          workflowMode: 'spec-driven',
+          scope,
+          throughTaskId,
+          ...input,
+          implementation: null,
+        }),
+      ).rejects.toThrow(error);
+    },
+  );
+
   it('selects Requirement Index rows for spec-driven final', async () => {
     const input = await sources();
     const result = await collectReviewObligations({

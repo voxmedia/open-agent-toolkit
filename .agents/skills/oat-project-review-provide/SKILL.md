@@ -75,6 +75,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 ```
 oat-project-review-provide code p02          # Code review for phase
+oat-project-review-provide code p02 through=p02-t03 # Inclusive implemented phase prefix
 oat-project-review-provide code p02-p03      # Code review for contiguous phase range
 oat-project-review-provide code p02-t03      # Code review for task
 oat-project-review-provide code final        # Final code review
@@ -141,6 +142,8 @@ If validation passes, derive `{project-name}` as basename of `PROJECT_PATH`. Sum
 
 - Parse `$ARGUMENTS[0]` as review type: `code` or `artifact`
 - Parse `$ARGUMENTS[1]` as scope token
+- Parse optional `through=pNN-tNN` only with a matching phase scope. Pass it as
+  `throughTaskId`; omission preserves full-phase behavior.
 
 **If no arguments — infer from project state:**
 
@@ -816,7 +819,8 @@ First, pre-compute the final review artifact path using Step 7 naming
 conventions, but do not create that discoverable file. For enforce-mode code
 review, invoke launcher-owned `oat review prepare-context` before dispatch and
 retain its validation run, private artifact draft path, and command
-invocations. The reviewer receives only the private draft path.
+invocations. Include the explicit `throughTaskId` or `null` in preparation.
+The reviewer receives the private draft path and exact command descriptors.
 
 Then spawn the reviewer:
 
@@ -915,8 +919,12 @@ Use this exact contract:
    re-review, keep the exact narrowed range and inherited-coverage provenance.
 3. **Artifact checkpoint (`checkpointArtifacts`)** — After artifact intake,
    execute the supplied one-shot checkpoint command from this accepted
-   continuation. Use its sealed `PreparedReviewContextV1` and post-artifact
-   budget; never supply self-reported token counts.
+   continuation. Construct the plan only from its immutable `planning`
+   projection: metadata-only ChangeMap, selected obligations, prior-evidence
+   hints, budget, and exact derived policy values. Select the exact
+   `singleLane` or `multipleLanes` whole-diff entry from final lane topology.
+   Never reconstruct these from the filesystem or supply self-reported token
+   counts.
 4. **Validated plan (`ReviewPlanV1`)** — Build one compact inline plan that
    assigns every authoritative path and obligation, records the mandatory
    delegation economics and verification boundary, and records a

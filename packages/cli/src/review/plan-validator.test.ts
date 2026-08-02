@@ -524,8 +524,20 @@ describe('review plan policy and projection', () => {
           code: 'classification-cannot-skip-inspection',
         }),
         expect.objectContaining({ code: 'invalid-exclusion-authority' }),
-        expect.objectContaining({ code: 'whole-diff-policy-drift' }),
-        expect.objectContaining({ code: 'time-allocation-policy-drift' }),
+        expect.objectContaining({
+          code: 'whole-diff-policy-drift',
+          details: expect.objectContaining({
+            expected: expect.any(Object),
+            submitted: expect.any(Object),
+          }),
+        }),
+        expect.objectContaining({
+          code: 'time-allocation-policy-drift',
+          details: expect.objectContaining({
+            expected: null,
+            submitted: expect.any(Object),
+          }),
+        }),
       ]),
     );
   });

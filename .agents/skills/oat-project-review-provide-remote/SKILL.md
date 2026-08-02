@@ -83,10 +83,12 @@ Use step indicators:
 ```
 oat-project-review-provide-remote [code <scope>|artifact <scope>]
                                   [--pr <N>] [--project <path>]
+                                  [--through-task <pNN-tNN>]
                                   [--no-checkout] [--narrow|--no-narrow]
 ```
 
 - `code <scope>` / `artifact <scope>`: review type and scope token. Scope tokens: `pNN`, `pNN-tNN`, `pNN-pMM`, `final`, or `artifact <name>`. When omitted, infer from PR state (default `code` with the phase scope; `final` when the implementation is complete).
+- `--through-task <pNN-tNN>`: inclusive implemented prefix boundary for a matching `pNN` code scope. Pass it as `throughTaskId`; reject it for task, range, final, or artifact scopes.
 - `--pr <N>`: target PR number. When omitted, auto-detect from the current branch.
 - `--project <path>`: explicit OAT project directory. Takes precedence over the diff scan. Required when the diff touches zero or multiple projects' `state.md`.
 - `--no-checkout`: skip the ephemeral worktree and review from `gh pr diff` only (degraded context; project artifacts read from `gh` blob fetches instead of the checkout).

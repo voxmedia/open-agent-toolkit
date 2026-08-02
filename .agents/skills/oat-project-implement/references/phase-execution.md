@@ -483,6 +483,11 @@ preparation-supplied `bindWorkerDossier` invocation with its exact executable
 and argv array, replace only `__OAT_PLAN_RECEIPT__` with the retained receipt,
 and provide exactly that dossier as bounded JSON stdin. Identical retries are
 idempotent. A not-delegated inline lane has no dossier and remains unchanged.
+
+When this direct review covers an implemented prefix before later tasks in the
+same phase, pass the plan-declared inclusive current task as `throughTaskId`.
+Never infer that boundary from implementation status; omission intentionally
+reviews every task in the phase.
 Never invoke ambient `oat`, reconstruct a dossier from terminal digests, or
 transfer a full dossier to the parent. Only after applicable dossiers are bound
 may the accepted handle return one `ReviewerTerminalV1`.

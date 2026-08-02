@@ -498,7 +498,11 @@ function parsePreparationSource(value: unknown, pointer: string) {
 export function parsePrepareReviewContextInputV1(
   value: unknown,
 ): PrepareReviewContextInputV1 {
-  const input = object(value, '$');
+  const rawInput = object(value, '$');
+  const input =
+    'throughTaskId' in rawInput
+      ? rawInput
+      : { ...rawInput, throughTaskId: null };
   keys(
     input,
     [
@@ -506,6 +510,7 @@ export function parsePrepareReviewContextInputV1(
       'repoRoot',
       'project',
       'scope',
+      'throughTaskId',
       'workflowMode',
       'range',
       'sink',
@@ -530,6 +535,16 @@ export function parsePrepareReviewContextInputV1(
   string(input['scope'], '$/scope');
   if (!/^(?:p\d{2}(?:-t\d{2})?|final)$/.test(input['scope'])) {
     throw new ReviewSchemaError('$/scope has an invalid value');
+  }
+  nullableString(input['throughTaskId'], '$/throughTaskId');
+  if (
+    typeof input['throughTaskId'] === 'string' &&
+    (!/^p\d{2}$/.test(input['scope']) ||
+      !/^p\d{2}-t\d{2}$/.test(input['throughTaskId']))
+  ) {
+    throw new ReviewSchemaError(
+      '$/throughTaskId requires a phase scope and task ID',
+    );
   }
   enumValue(
     input['workflowMode'],
@@ -600,6 +615,7 @@ const PREPARATION_KEYS = [
   'mode',
   'project',
   'scope',
+  'throughTaskId',
   'invocation',
   'sink',
   'correlation',
@@ -622,6 +638,7 @@ function parsePreparationFields(value: JsonObject, pointer: string): void {
     throw new ReviewSchemaError(`${pointer}/mode must be enforce`);
   string(value['project'], `${pointer}/project`);
   string(value['scope'], `${pointer}/scope`);
+  nullableString(value['throughTaskId'], `${pointer}/throughTaskId`);
   enumValue(
     value['invocation'],
     ['manual', 'auto', 'gate'],
@@ -664,7 +681,11 @@ function parsePreparationFields(value: JsonObject, pointer: string): void {
 }
 
 export function parseReviewPreparationV1(value: unknown): ReviewPreparationV1 {
-  const preparation = object(value, '$');
+  const rawPreparation = object(value, '$');
+  const preparation =
+    'throughTaskId' in rawPreparation
+      ? rawPreparation
+      : { ...rawPreparation, throughTaskId: null };
   keys(preparation, [...PREPARATION_KEYS, 'timeBudget'], '$');
   parsePreparationFields(preparation, '$');
   parseTimeBudget(preparation['timeBudget'], '$/timeBudget');
@@ -674,7 +695,11 @@ export function parseReviewPreparationV1(value: unknown): ReviewPreparationV1 {
 export function parsePreparedReviewContextV1(
   value: unknown,
 ): PreparedReviewContextV1 {
-  const context = object(value, '$');
+  const rawContext = object(value, '$');
+  const context =
+    'throughTaskId' in rawContext
+      ? rawContext
+      : { ...rawContext, throughTaskId: null };
   keys(
     context,
     [

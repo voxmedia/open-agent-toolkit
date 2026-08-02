@@ -1561,7 +1561,7 @@ byte-identical while aligning only p05-t15.
 
 ## Phase 6: Documentation, Provider Sync, and Compatibility Release
 
-**Status:** in_progress
+**Status:** implementation_verified
 **Started:** 2026-08-02
 
 ### Task p06-t01: Document review workflow behavior
@@ -1720,6 +1720,56 @@ passed 4,100 tests, smoke passed 131 tests, and all five builds passed.
 
 **Next:** Push both recovery commits and wait for terminal passing PR CI and
 release-dry-run checks before refreshing the enforce fixture.
+
+#### p06-t06 Local artifact Tier 1 attempt
+
+**Status:** blocked before evidence
+**Candidate:** `f0496750aaff867a2895382e0587b0fb78fcf6dd`
+**Validation run:** `28539d55590d5ad673f0e1bd1ad365ec`
+**Preparation digest:**
+`f3703b9348cf19e0e76547b0460891b414451ef9490a84ef47278fc839ea358b`
+**Dispatch target:** `oat-reviewer-gpt-5-6-sol-high`
+(`gpt-5.6-sol-high`, managed `high`, `review-target`, `matrix-pinned`)
+**Terminal:** `blocked` with `blocked-incomplete` accounting. Plan validation
+exhausted its attempt limit before evidence authorization: the checkpoint did
+not expose the sealed ChangeMap, obligations, budget, or whole-diff policy
+needed to construct the plan; validation then reported
+`whole-diff-policy-drift`, unexpectedly required excluded obligation p06-t07,
+and returned `plan-validation-attempt-limit` on retry.
+**Artifact:** None. The private draft remained empty, no discoverable p06 review
+artifact was published, and there is no artifact digest or actionable verdict.
+Launcher output validation returned `output-validation-phase-invalid` because
+the run never reached `evidence_started`.
+
+**Next:** Stop before Remote structured Tier 1. The accepted blocked reviewer is
+terminal and does not authorize replacement, fallback, or remote posting.
+
+#### Recovery p06-t06-r04: Expose partial-phase review planning
+
+**Status:** in_progress
+**Prior terminal:** Accepted blocked run
+`28539d55590d5ad673f0e1bd1ad365ec` remains authoritative and terminal; it is
+not resumed, replaced, relabeled, or treated as a passing review.
+**Operator disposition:** Authorized a full contract recovery adding explicit
+inclusive partial-phase scope through p06-t06, safe sealed checkpoint planning
+projection, actionable exact-policy retry details, canonical coordinator
+alignment, generated asset refresh, and a fresh Local Tier 1 run only after
+green PR checks.
+**Implementation:** Added backward-compatible `throughTaskId` preparation
+identity, prefix obligation selection, checkpoint planning projection, exact
+whole-diff/time-allocation expected-versus-submitted errors, and canonical
+local/remote/direct review syntax.
+**Verification:** Focused schema, obligation, prepare/checkpoint, validator,
+lifecycle, broker, coordinator, and real-p06 tests passed 110/110. Provider
+sync and dry-run reported no drift. Workspace check and type-check passed; the
+full workspace test retry passed all 4,108 tests including 3,990 CLI tests
+after one unrelated visual-companion HTTP smoke flake. Build, lint, format,
+docs build, and five-package release validation passed. Public packages remain
+lockstep at unpublished 0.2.29 and changed canonical skill versions remain
+exactly one patch above `origin/main`.
+
+**Next:** Commit and push the bounded recovery, wait for PR checks, and hand
+the fresh Local Tier 1 boundary to the root review coordinator.
 
 ## Orchestration Runs
 

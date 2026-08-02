@@ -17,6 +17,7 @@ export interface PlanValidationError {
   code: string;
   pointer: string;
   message: string;
+  details?: Record<string, unknown>;
 }
 
 function exactOwnershipErrors(
@@ -583,6 +584,11 @@ export function validateReviewPlan(
       code: 'whole-diff-policy-drift',
       pointer: '/wholeDiff',
       message: 'whole-diff fields differ from sealed policy',
+      details: {
+        topology: plan.lanes.length === 1 ? 'singleLane' : 'multipleLanes',
+        expected: eligibility,
+        submitted: plan.wholeDiff,
+      },
     });
   }
   if (plan.strategy === 'whole-diff-inline' && !eligibility.allowed) {
@@ -621,6 +627,10 @@ export function validateReviewPlan(
       code: 'time-allocation-policy-drift',
       pointer: '/timeAllocation',
       message: 'time allocation differs from the sealed outer budget',
+      details: {
+        expected: expectedAllocation,
+        submitted: plan.timeAllocation,
+      },
     });
   }
   errors.push(...validateLaneDeadlines(plan, expectedAllocation));

@@ -3612,19 +3612,19 @@ Before remote rows, push the candidate branch and open its draft release PR:
 Obtain the remote skill's explicit posting approval separately for each remote
 row; one approval does not carry to another. Then run this matrix:
 
-| Rail                               | Exact invocation                                                                                                                                                                                                 | Fixture and scope                             | Required sink and terminal result                                                    | Evidence and cleanup                                                                   |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| Local artifact Tier 1              | Invoke `oat-project-review-provide code p06` with exact Tier 1 dispatch                                                                                                                                          | `$DOGFOOD_PROJECT`; reviewed HEAD through p06 | Published local review artifact from a `complete` terminal                           | Record run ID, reviewed HEAD, artifact digest, and verdict in `implementation.md`      |
-| Remote structured Tier 1           | Invoke `oat-project-review-provide-remote code final --pr "$STAGE_A_PR_NUMBER" --project ".oat/projects/shared/review-plan-workflow"` with exact Tier 1 dispatch                                                 | Stage A draft PR; full PR range               | One posted structured GitHub PR review from a `complete` terminal                    | Record PR review URL and dispatch report; remote skill removes its ephemeral worktree  |
-| Local artifact Tier 3              | Invoke `oat-project-review-provide code p06` with an explicit inline/Tier 3 request                                                                                                                              | `$DOGFOOD_PROJECT`; reviewed HEAD through p06 | Published local review artifact from a validated `complete` inline terminal          | Record artifact digest and verdict; retain no untracked fixture edits                  |
-| Remote structured Tier 3           | Invoke `oat-project-review-provide-remote code final --pr "$STAGE_A_PR_NUMBER" --project ".oat/projects/shared/review-plan-workflow"` with an explicit inline/Tier 3 request                                     | Stage A draft PR; full PR range               | One posted validated inline GitHub PR review from a `complete` terminal              | Record PR review URL and terminal subtype; remote skill removes its ephemeral worktree |
-| Direct implementation phase review | Invoke the root-owned `oat-project-implement` phase-review contract for `p06`                                                                                                                                    | `$DOGFOOD_PROJECT`; p06 commit range          | Published local artifact and exact p06 code-review event from a `complete` terminal  | Record artifact digest, event identity, and verdict in `implementation.md`             |
-| Gate review                        | From `$DOGFOOD_ROOT/repo`, run `pnpm run cli:source -- --json gate review --project "$DOGFOOD_PROJECT" --review-type code --review-scope p06 --exit-nonzero-on important '$oat-project-review-provide code p06'` | `$DOGFOOD_PROJECT`; p06 commit range          | Corroborated `ok`, `receiveEligible: true`, non-null artifact, and non-null handoff  | Record gate run ID, target, handoff, artifact digest, and disposition                  |
-| Checkpoint alias                   | Invoke `oat-project-review-provide code p01-p06` through the implementation checkpoint path                                                                                                                      | `$DOGFOOD_PROJECT`; contiguous p01-p06 range  | Published local artifact with exact `p01-p06` scope from a `complete` terminal       | Record invocation alias, event identity, reviewed range, and verdict                   |
-| Final alias                        | Invoke `oat-project-review-provide code final` through the implementation final path                                                                                                                             | `$DOGFOOD_PROJECT`; full implementation range | Published local artifact with exact `final` scope from a `complete` terminal         | Record invocation alias, event identity, reviewed range, and verdict                   |
-| Injected local `BLOCKED`           | Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/local-coordinator.integration.test.ts`                                                                                                     | Fake accepted local continuation              | `blocked-incomplete`; no discoverable artifact, actionable verdict, or passing event | Record the blocked-case test name and result                                           |
-| Injected remote `BLOCKED`          | Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/__integration__/project/project-rail.test.ts`                                                                                       | Fake accepted remote continuation             | `blocked-incomplete`; no GitHub post or structured pass                              | Record the blocked-case test name and result                                           |
-| Injected gate `BLOCKED`            | Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/gate-hardening.integration.test.ts`                                                                                                 | Correlated fake gate attempt                  | `status: blocked`, `receiveEligible: false`, null artifact, and null handoff         | Record the gate fixture name and envelope                                              |
+| Rail                               | Exact invocation                                                                                                                                                                                                                 | Fixture and scope                                 | Required sink and terminal result                                                    | Evidence and cleanup                                                                   |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| Local artifact Tier 1              | Invoke `oat-project-review-provide code p06 through=p06-t06` with exact Tier 1 dispatch                                                                                                                                          | `$DOGFOOD_PROJECT`; reviewed HEAD through p06-t06 | Published local review artifact from a `complete` terminal                           | Record run ID, reviewed HEAD, artifact digest, and verdict in `implementation.md`      |
+| Remote structured Tier 1           | Invoke `oat-project-review-provide-remote code final --pr "$STAGE_A_PR_NUMBER" --project ".oat/projects/shared/review-plan-workflow"` with exact Tier 1 dispatch                                                                 | Stage A draft PR; full PR range                   | One posted structured GitHub PR review from a `complete` terminal                    | Record PR review URL and dispatch report; remote skill removes its ephemeral worktree  |
+| Local artifact Tier 3              | Invoke `oat-project-review-provide code p06 through=p06-t06` with an explicit inline/Tier 3 request                                                                                                                              | `$DOGFOOD_PROJECT`; reviewed HEAD through p06-t06 | Published local review artifact from a validated `complete` inline terminal          | Record artifact digest and verdict; retain no untracked fixture edits                  |
+| Remote structured Tier 3           | Invoke `oat-project-review-provide-remote code final --pr "$STAGE_A_PR_NUMBER" --project ".oat/projects/shared/review-plan-workflow"` with an explicit inline/Tier 3 request                                                     | Stage A draft PR; full PR range                   | One posted validated inline GitHub PR review from a `complete` terminal              | Record PR review URL and terminal subtype; remote skill removes its ephemeral worktree |
+| Direct implementation phase review | Invoke the root-owned `oat-project-implement` phase-review contract for `p06` through `p06-t06`                                                                                                                                  | `$DOGFOOD_PROJECT`; p06-t01..p06-t06 commit range | Published local artifact and exact p06 code-review event from a `complete` terminal  | Record artifact digest, event identity, and verdict in `implementation.md`             |
+| Gate review                        | From `$DOGFOOD_ROOT/repo`, run `pnpm run cli:source -- --json gate review --project "$DOGFOOD_PROJECT" --review-type code --review-scope p06 --exit-nonzero-on important '$oat-project-review-provide code p06 through=p06-t06'` | `$DOGFOOD_PROJECT`; p06-t01..p06-t06 commit range | Corroborated `ok`, `receiveEligible: true`, non-null artifact, and non-null handoff  | Record gate run ID, target, handoff, artifact digest, and disposition                  |
+| Checkpoint alias                   | Invoke `oat-project-review-provide code p01-p06` through the implementation checkpoint path                                                                                                                                      | `$DOGFOOD_PROJECT`; contiguous p01-p06 range      | Published local artifact with exact `p01-p06` scope from a `complete` terminal       | Record invocation alias, event identity, reviewed range, and verdict                   |
+| Final alias                        | Invoke `oat-project-review-provide code final` through the implementation final path                                                                                                                                             | `$DOGFOOD_PROJECT`; full implementation range     | Published local artifact with exact `final` scope from a `complete` terminal         | Record invocation alias, event identity, reviewed range, and verdict                   |
+| Injected local `BLOCKED`           | Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/local-coordinator.integration.test.ts`                                                                                                                     | Fake accepted local continuation                  | `blocked-incomplete`; no discoverable artifact, actionable verdict, or passing event | Record the blocked-case test name and result                                           |
+| Injected remote `BLOCKED`          | Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/__integration__/project/project-rail.test.ts`                                                                                                       | Fake accepted remote continuation                 | `blocked-incomplete`; no GitHub post or structured pass                              | Record the blocked-case test name and result                                           |
+| Injected gate `BLOCKED`            | Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/gate-hardening.integration.test.ts`                                                                                                                 | Correlated fake gate attempt                      | `status: blocked`, `receiveEligible: false`, null artifact, and null handoff         | Record the gate fixture name and envelope                                              |
 
 Copy the evidence rows into `implementation.md`, then run
 `git worktree remove --force "$DOGFOOD_ROOT/repo" && rm -rf "$DOGFOOD_ROOT"`.
@@ -3730,6 +3730,43 @@ format, package tests, and applicable workspace gates. Change no production
 behavior.
 
 **Step 3: Commit** `test(p06-t06): stabilize review CI checks`
+
+#### Recovery p06-t06-r04: Expose partial-phase review planning
+
+**Finding:** Accepted Local Tier 1 run
+`28539d55590d5ad673f0e1bd1ad365ec` blocked before evidence because phase scope
+included future p06-t07 while checkpoint output withheld the safe sealed fields
+needed to construct exact derived policy values.
+
+**Recovery files:**
+
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/schemas.ts`
+- Modify: `packages/cli/src/review/obligations.ts`
+- Modify: `packages/cli/src/review/prepare-context.ts`
+- Modify: `packages/cli/src/review/plan-validator.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.ts`
+- Modify: `packages/cli/src/commands/review/checkpoint-artifacts.ts`
+- Modify: focused tests for the contracts above
+- Modify: canonical local, remote, reviewer, and implementation assets
+- Regenerate: manifest-owned provider views and CLI bundles
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/state.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Implement** Add an explicit inclusive `throughTaskId` boundary,
+publish the immutable planning projection at checkpoint, and return exact
+expected/submitted derived-policy drift details. Preserve full-phase behavior
+when the boundary is omitted and preserve the two-attempt/accepted-terminal
+rules.
+
+**Step 2: Verify** Prove partial/default scope behavior, safe public-only plan
+construction, policy feedback, coordinator contracts, provider parity, and all
+workspace/release gates. Refresh the detached enforce fixture only after PR
+checks pass.
+
+**Step 3: Commit**
+`fix(p06-t06): expose partial-phase review planning`
 
 ### Task p06-t07: Publish Stage A and start the soak
 

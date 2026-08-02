@@ -1,8 +1,9 @@
 ---
 oat_current_task: p06-t06
-oat_last_commit: 16d5f86a7099435f75ab3f6ec930f849dbf766ff
+oat_last_commit: f0496750aaff867a2895382e0587b0fb78fcf6dd
 oat_blockers:
   - p06-t06 Remote structured Tier 1 posting requires separate operator approval
+  - p06-t06 fresh Local artifact Tier 1 awaits review-planning recovery checks
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -76,7 +77,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T16:57:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-02T20:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -308,7 +309,9 @@ stabilization recovery `p06-t06-r03` without production changes.
 - ⚠ Full-plan parsing found four equivalent p05-t15 unchanged-symlink entries
 - ✓ Bounded six-entry recovery p06-t06-r02 passed full-plan parsing
 - ✓ Test-only CI stabilization p06-t06-r03 passed local workspace gates
-- → Push both recoveries and require terminal passing PR checks
+- ✓ PR CI and release dry run passed at final candidate
+- ⚠ Local artifact Tier 1 blocked before evidence authorization
+- → Complete authorized p06-t06-r04 planning-contract recovery
 
 ## Blockers
 
@@ -317,5 +320,5 @@ after integration recovery and the Local artifact Tier 1 row pass.
 
 ## Next Milestone
 
-Stabilize the two authorized CI tests, push both recoveries, require passing PR
-checks, then refresh the detached enforce fixture and run Local artifact Tier 1.
+Complete p06-t06-r04, require green PR checks, and run a fresh Local Tier 1
+through p06-t06 before any Remote structured Tier 1 posting.

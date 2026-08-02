@@ -32,6 +32,7 @@ const baseInput = {
 
 const normalizedInput = {
   ...baseInput,
+  throughTaskId: null,
   gateRunId: undefined,
   launchAttemptId: undefined,
   obligationSources: {
@@ -203,6 +204,27 @@ describe('createReviewPrepareContextCommand', () => {
     );
   });
 
+  it('forwards an explicit inclusive through-task boundary', async () => {
+    const brokerPrepare = vi.fn(async () => prepared);
+    const command = createReviewPrepareContextCommand({
+      stdin: Readable.from([
+        JSON.stringify({ ...baseInput, throughTaskId: 'p02-t01' }),
+      ]),
+      write: vi.fn(),
+      setExitCode: vi.fn(),
+      brokerPrepare,
+    });
+    await command.parseAsync(['node', 'oat', 'prepare-context']);
+    expect(brokerPrepare).toHaveBeenCalledWith(
+      expect.objectContaining({
+        preparationInput: expect.objectContaining({
+          scope: 'p02',
+          throughTaskId: 'p02-t01',
+        }),
+      }),
+    );
+  });
+
   it('pairs budgets and emits metadata without numeric telemetry', async () => {
     const write = vi.fn();
     const prepare = vi.fn(async () => prepared);
@@ -247,6 +269,8 @@ describe('createReviewPrepareContextCommand', () => {
   it('rejects malformed nested input and policy failures as exit one', async () => {
     for (const input of [
       { ...baseInput, budget: { totalMs: 1000 } },
+      { ...baseInput, scope: 'final', throughTaskId: 'p02-t01' },
+      { ...baseInput, scope: 'p02-t01', throughTaskId: 'p02-t01' },
       { ...baseInput, invocation: 'gate' },
       {
         ...baseInput,

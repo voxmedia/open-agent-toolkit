@@ -133,6 +133,7 @@ export interface PrepareReviewContextInputV1 {
   repoRoot: string;
   project: string;
   scope: string;
+  throughTaskId?: string | null;
   workflowMode: 'spec-driven' | 'quick' | 'import';
   range: { baseSha: string; headSha: string };
   sink: ReviewSink;
@@ -167,6 +168,7 @@ export interface ReviewPreparationV1 {
   mode: 'enforce';
   project: string;
   scope: string;
+  throughTaskId?: string | null;
   invocation: ReviewInvocation;
   sink: ReviewSink;
   correlation: {
@@ -197,6 +199,22 @@ export type PreparedReviewContextV1 = Omit<
   artifactCheckpointAt: string;
   contextDigest: string;
 };
+
+export interface ReviewPlanningProjectionV1 {
+  schemaVersion: 1;
+  contextDigest: string;
+  changeMap: ChangeMapV1;
+  obligations: ReviewObligationV1[];
+  priorEvidence: PriorReviewEvidenceV1[];
+  budget: ReviewBudgetV1;
+  derivedPolicy: {
+    wholeDiff: {
+      singleLane: ReviewPlanV1['wholeDiff'];
+      multipleLanes: ReviewPlanV1['wholeDiff'];
+    };
+    timeAllocation: ReviewPlanV1['timeAllocation'];
+  };
+}
 
 export interface PrepareReviewContextResultV1 {
   preparation: ReviewPreparationV1;

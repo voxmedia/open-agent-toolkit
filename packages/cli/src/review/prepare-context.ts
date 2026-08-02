@@ -36,6 +36,7 @@ export interface PrepareReviewContextInput {
   repoRoot: string;
   project: string;
   scope: string;
+  throughTaskId?: string | null;
   workflowMode: 'spec-driven' | 'quick' | 'import';
   range: { baseSha: string; headSha: string };
   sink: ReviewSink;
@@ -138,6 +139,7 @@ export async function prepareReviewContext(
       ...input.obligationSources,
       workflowMode: input.workflowMode,
       scope: input.scope,
+      throughTaskId: input.throughTaskId ?? null,
     }),
   ]);
   const priorEvidence = adaptPriorReviewEvidence({
@@ -155,6 +157,7 @@ export async function prepareReviewContext(
     mode: 'enforce' as const,
     project: input.project,
     scope: input.scope,
+    throughTaskId: input.throughTaskId ?? null,
     invocation: input.invocation,
     sink: input.sink,
     correlation: {

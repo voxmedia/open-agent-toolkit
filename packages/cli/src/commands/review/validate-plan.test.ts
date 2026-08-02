@@ -114,7 +114,15 @@ describe('createReviewValidatePlanCommand', () => {
       validate: vi.fn(async () => ({
         valid: false,
         errors: [
-          { code: 'missing-path-owner', pointer: '/lanes', message: 'missing' },
+          {
+            code: 'whole-diff-policy-drift',
+            pointer: '/wholeDiff',
+            message: 'drift',
+            details: {
+              expected: { allowed: false, reason: 'sealed' },
+              submitted: { allowed: false, reason: 'guessed' },
+            },
+          },
         ],
       })),
       lifecycle: {} as never,
@@ -136,7 +144,18 @@ describe('createReviewValidatePlanCommand', () => {
     expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
       ok: false,
       error: { category: 'validation', code: 'invalid-review-plan' },
-      result: { valid: false, errors: [{ code: 'missing-path-owner' }] },
+      result: {
+        valid: false,
+        errors: [
+          {
+            code: 'whole-diff-policy-drift',
+            details: {
+              expected: { allowed: false, reason: 'sealed' },
+              submitted: { allowed: false, reason: 'guessed' },
+            },
+          },
+        ],
+      },
     });
   });
 

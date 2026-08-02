@@ -5,14 +5,23 @@ import { describe, expect, it, vi } from 'vitest';
 import { createReviewCheckpointArtifactsCommand } from './checkpoint-artifacts';
 
 describe('createReviewCheckpointArtifactsCommand', () => {
-  it('passes exact correlation input and hides numeric telemetry', async () => {
+  it('returns the safe sealed planning projection without capabilities', async () => {
     const write = vi.fn();
     const checkpoint = vi.fn(async () => {
       return {
         runId: 'run-1',
         contextDigest: 'context-digest',
         postArtifactTelemetryEvidenceDigest: 'telemetry-digest',
-        budget: { context: { remainingTokens: 90_000 } },
+        changeMap: {
+          files: [],
+          totals: {
+            estimatedPatchTokens: null,
+            patchEstimateState: 'coarse-denied',
+          },
+        },
+        obligations: [],
+        priorEvidence: [],
+        budget: { time: null, context: null },
       } as unknown as PreparedReviewContextV1;
     });
     const setExitCode = vi.fn();
@@ -47,9 +56,40 @@ describe('createReviewCheckpointArtifactsCommand', () => {
         phase: 'artifacts_loaded',
         contextDigest: 'context-digest',
         postArtifactTelemetryEvidenceDigest: 'telemetry-digest',
+        planning: {
+          schemaVersion: 1,
+          contextDigest: 'context-digest',
+          changeMap: {
+            files: [],
+            totals: {
+              estimatedPatchTokens: null,
+              patchEstimateState: 'coarse-denied',
+            },
+          },
+          obligations: [],
+          priorEvidence: [],
+          budget: { time: null, context: null },
+          derivedPolicy: {
+            wholeDiff: {
+              singleLane: {
+                allowed: false,
+                estimatedTokens: null,
+                evidenceBudgetTokens: null,
+                reason: 'missing post-artifact context telemetry',
+              },
+              multipleLanes: {
+                allowed: false,
+                estimatedTokens: null,
+                evidenceBudgetTokens: null,
+                reason: 'missing post-artifact context telemetry',
+              },
+            },
+            timeAllocation: null,
+          },
+        },
       },
     });
-    expect(output).not.toContain('remainingTokens');
+    expect(output).not.toContain('secret-token');
   });
 
   it('requires the exact trusted argv contract', async () => {
@@ -73,6 +113,51 @@ describe('createReviewCheckpointArtifactsCommand', () => {
     ).rejects.toMatchObject({ code: 'commander.missingMandatoryOptionValue' });
 
     expect(checkpoint).not.toHaveBeenCalled();
+  });
+
+  it('publishes exact whole-diff policy with present telemetry', async () => {
+    const write = vi.fn();
+    const command = createReviewCheckpointArtifactsCommand({
+      write,
+      setExitCode: vi.fn(),
+      checkpoint: vi.fn(async () => {
+        return {
+          runId: 'run-1',
+          contextDigest: 'context-digest',
+          postArtifactTelemetryEvidenceDigest: 'telemetry-digest',
+          changeMap: {
+            files: [],
+            totals: { estimatedPatchTokens: 10, patchEstimateState: 'exact' },
+          },
+          obligations: [],
+          priorEvidence: [],
+          budget: {
+            time: null,
+            context: { evidenceBudgetTokens: 100 },
+          },
+        } as unknown as PreparedReviewContextV1;
+      }),
+      lifecycle: {} as never,
+    });
+    await command.parseAsync([
+      'node',
+      'oat',
+      'checkpoint-artifacts',
+      '--run-id',
+      'run-1',
+      '--checkpoint-token',
+      'secret-token',
+      '--json',
+    ]);
+    expect(
+      JSON.parse(write.mock.calls[0]?.[0] as string).result.planning
+        .derivedPolicy.wholeDiff.singleLane,
+    ).toEqual({
+      allowed: true,
+      estimatedTokens: 10,
+      evidenceBudgetTokens: 100,
+      reason: 'whole diff is eligible',
+    });
   });
 
   it('emits safe exit-one lifecycle rejections', async () => {

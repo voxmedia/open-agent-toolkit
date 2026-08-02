@@ -146,6 +146,7 @@ function projectPrepareResult(result: PrepareReviewContextResultV1) {
   return {
     validationRunId: result.preparation.runId,
     preparationDigest: result.preparation.preparationDigest,
+    throughTaskId: result.preparation.throughTaskId,
     artifactDraftPath: result.artifactDraftPath,
     correlation: result.preparation.correlation,
     range: result.preparation.range,

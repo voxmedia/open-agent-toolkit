@@ -1,8 +1,15 @@
 import {
+  allocateReviewTimeBudget,
+  evaluateWholeDiffEligibility,
+} from '@review/budget';
+import {
   checkpointArtifactsLoaded,
   type ReviewLifecycleDependencies,
 } from '@review/review-lifecycle';
-import type { PreparedReviewContextV1 } from '@review/types';
+import type {
+  PreparedReviewContextV1,
+  ReviewPlanningProjectionV1,
+} from '@review/types';
 import { requestValidationAuthorityBroker } from '@review/validation-authority-broker';
 import { Command } from 'commander';
 
@@ -71,12 +78,46 @@ export function createReviewCheckpointArtifactsCommand(
                   lifecycleInput,
                   dependencies.lifecycle ?? dependencies.createLifecycle(),
                 );
+            const time = context.budget.time;
+            const planning: ReviewPlanningProjectionV1 = {
+              schemaVersion: 1,
+              contextDigest: context.contextDigest,
+              changeMap: context.changeMap,
+              obligations: context.obligations,
+              priorEvidence: context.priorEvidence,
+              budget: context.budget,
+              derivedPolicy: {
+                wholeDiff: {
+                  singleLane: evaluateWholeDiffEligibility({
+                    changeMap: context.changeMap,
+                    contextBudget: context.budget.context,
+                    coherentLaneCount: 1,
+                    hasConsequentialSeam: false,
+                  }),
+                  multipleLanes: evaluateWholeDiffEligibility({
+                    changeMap: context.changeMap,
+                    contextBudget: context.budget.context,
+                    coherentLaneCount: 2,
+                    hasConsequentialSeam: false,
+                  }),
+                },
+                timeAllocation:
+                  time === null
+                    ? null
+                    : allocateReviewTimeBudget({
+                        totalMs: time.totalMs,
+                        source: time.source,
+                        startedAtMs: time.deadlineMs - time.totalMs,
+                      }).allocation,
+              },
+            };
             return {
               validationRunId: context.runId,
               phase: 'artifacts_loaded' as const,
               contextDigest: context.contextDigest,
               postArtifactTelemetryEvidenceDigest:
                 context.postArtifactTelemetryEvidenceDigest,
+              planning,
             };
           },
         });

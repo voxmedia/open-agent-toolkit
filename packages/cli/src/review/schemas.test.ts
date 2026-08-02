@@ -18,6 +18,7 @@ const preparationInput = {
   repoRoot: '/repo',
   project: '.oat/projects/shared/demo',
   scope: 'p02',
+  throughTaskId: null,
   workflowMode: 'spec-driven',
   range: { baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40) },
   sink: 'structured',
