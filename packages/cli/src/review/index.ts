@@ -22,8 +22,15 @@ export { preflightReviewPlan } from './preflight';
 export {
   parsePreparedReviewContextV1,
   parseReviewPreparationV1,
+  parseReviewerTerminalIngressV1,
+  parseReviewerTerminalOverlayV1,
   ReviewSchemaError,
 } from './schemas';
+export {
+  assembleReviewerTerminal,
+  ReviewTerminalAssemblyError,
+  type ReviewerTerminalAssemblyContextV1,
+} from './terminal-assembly';
 export {
   type FindingSeverity,
   type StructuredFinding,
@@ -48,4 +55,6 @@ export type {
   ReviewPlanPreflightResult,
   ReviewProgress,
   ReviewSink,
+  ReviewerTerminalIngressV1,
+  ReviewerTerminalOverlayV1,
 } from './types';

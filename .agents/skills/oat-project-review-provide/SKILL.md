@@ -843,20 +843,21 @@ When the host accepts the reviewer, bind and retain that exact accepted handle
 for the full coordinator lifetime. The accepted reviewer performs required
 artifact intake, invokes the supplied `checkpointArtifacts`, submits
 `ReviewPlanV1` through `validate-plan`, retains its exact
-`PlanValidationReceiptV1` and launcher-owned `ReviewAccountingSeedV1`, and
-invokes `begin-evidence` before selective content evidence. The accepted
-continuation must copy seed identity and assignment fields exactly and
-instantiate every seeded direct and positive-coverage verification requirement;
-it must never reconstruct terminal accounting from the plan or receipt. Keep
-every complete or partial `WorkerDossierV1` inside this
+`PlanValidationReceiptV1` for evidence authorization and dossier binding, and
+invokes `begin-evidence` before selective content evidence. Keep every complete
+or partial `WorkerDossierV1` inside this
 accepted primary continuation. As each dossier is accepted, and before
 terminal return, the continuation must execute the preparation-supplied
 `bindWorkerDossier` invocation with its exact executable, argv array, and
 absolute cwd, replace only `__OAT_PLAN_RECEIPT__` with the retained receipt,
 and write exactly that dossier as bounded JSON stdin. Only after applicable
-dossiers are bound may it return `ReviewerTerminalV1`. Never invoke ambient
-`oat`, override descriptor cwd, reconstruct a dossier from terminal digests,
-or hand a full dossier back to the parent launcher.
+dossiers are bound may it return `ReviewerTerminalOverlayV1`: terminal
+substance, mutable outcomes, evidence, budget observations, selectors, and
+typed verification-slot inputs. It must not retain/copy compatibility
+`ReviewAccountingSeedV1` or supply immutable identity, paths, obligations,
+policy, completion, or claim kind/mode. Never invoke ambient `oat`, override
+descriptor cwd, reconstruct a dossier from terminal digests, or hand a full
+dossier back to the parent launcher.
 Retain that exact accepted reviewer handle for its typed terminal; never launch
 a replacement after accepted timeout, blocked, malformed, or
 accounting-invalid output.
@@ -866,8 +867,10 @@ After the subagent completes:
 - Confirm its terminal accounts only for dossiers already bound inside the
   accepted continuation. Identical retries there are idempotent; a
   not-delegated inline lane has no dossier. The parent must not reconstruct or
-  submit a dossier from `ReviewerTerminalV1` digests.
-- Submit the complete terminal through launcher-owned `validate-output`.
+  submit a dossier from terminal digest fields.
+- Submit the compact overlay through launcher-owned `validate-output`; the
+  launcher strictly parses and assembles canonical `ReviewerTerminalV1` from
+  sealed state before validation, including after context compaction.
 - If and only if every error points into the closed accounting allowlist, offer
   at most two same-handle accounting repair turns through the retained handle.
   Substance mutation or exhausted repair yields
@@ -942,12 +945,9 @@ Use this exact contract:
    selective-inline or eligible whole-diff-inline evidence strategy. Submit it
    with the supplied `validate-plan` command. One rejected plan may be
    corrected once before evidence.
-5. **Validated accounting seed (`PlanValidationReceiptV1` +
-   `ReviewAccountingSeedV1`)** — Retain the exact `receipt` and
-   `accountingSeed` returned by the launcher-owned validator. Copy the seed's
-   identity, lane/classification assignment, and complete verification boundary
-   into terminal construction without reconstruction or omission. Do not infer
-   acceptance from reviewer-authored digests.
+5. **Plan receipt (`PlanValidationReceiptV1`)** — Retain the exact receipt only
+   for evidence authorization and dossier binding. Treat
+   `ReviewAccountingSeedV1` as a compatibility response, not reviewer state.
 6. **Evidence transition (`beginEvidence`)** — Execute the supplied
    begin-evidence command with the seeded receipt. Do not read source files or
    content-level diffs unless this atomic transition succeeds.
@@ -966,16 +966,18 @@ Use this exact contract:
    that dossier as bounded JSON stdin. Never use ambient `oat`, override
    descriptor cwd, or reconstruct a dossier from a terminal digest. Identical
    retries are idempotent. A not-delegated inline lane has no dossier.
-9. **Typed terminal (`ReviewerTerminalV1`)** — Only after applicable dossiers
+9. **Typed overlay (`ReviewerTerminalOverlayV1`)** — Only after applicable dossiers
    are bound, apply the full canonical `oat-reviewer` checklist, reconcile
    evidence, and return one complete or blocked terminal from this same
    continuation. Complete output carries the dispatch-selected candidate and
-   `ReviewAccountingV1`; blocked output carries blocked-incomplete accounting
-   and no actionable candidate.
+   mutable overlay accounting; blocked output carries no actionable candidate.
+   Artifact drafts embed that exact overlay accounting object; the launcher
+   materializes canonical `ReviewAccountingV1` into the immutable snapshot.
 10. **Output validation (`validate-output`)** — Run the launcher-owned output
-    validator before translating to the artifact sink. For an artifact
-    candidate, require the private draft path and immutable embedded accounting
-    snapshot to equal the terminal envelope.
+    validator, which assembles canonical `ReviewerTerminalV1` from sealed state
+    even after context compaction, before translating to the artifact sink. For
+    an artifact candidate, require the private draft path and immutable embedded
+    accounting snapshot to equal the terminal envelope.
 11. **Bounded repair** — If and only if all validation errors point into the
     closed encoding allowlist, perform at most two same-handle accounting repair
     turns in this accepted inline continuation. Preserve the immutable substance

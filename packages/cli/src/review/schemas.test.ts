@@ -7,6 +7,8 @@ import {
   parsePlanValidationReceiptV1,
   parsePreparedReviewContextV1,
   parseReviewCommandInvocationV1,
+  parseReviewerTerminalIngressV1,
+  parseReviewerTerminalOverlayV1,
   parseReviewerTerminalV1,
   parseReviewPreparationV1,
   parseReviewPlanV1,
@@ -528,7 +530,71 @@ function structuredTerminal(
   };
 }
 
+function terminalOverlay(): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    contract: 'reviewer-terminal-overlay/v1',
+    status: 'complete',
+    candidate: {
+      kind: 'structured',
+      review: {
+        summary: 'No issues found.',
+        findings: [],
+        verification_commands: ['pnpm test'],
+      },
+    },
+    reviewAccounting: {
+      evidence: [],
+      lanes: [],
+      classifications: [],
+      verification: {
+        promotedFindings: [],
+        consequentialAbsence: null,
+        workerConflict: null,
+        crossLaneGap: null,
+        positiveCoverage: [],
+        deterministicResults: [],
+      },
+      budget: {
+        evidenceStoppedAt: null,
+        outputReservePreserved: true,
+      },
+    },
+  };
+}
+
 describe('plan, receipt, and terminal schemas', () => {
+  it('strictly parses overlay and legacy terminal ingress', () => {
+    expect(parseReviewerTerminalOverlayV1(terminalOverlay())).toMatchObject({
+      contract: 'reviewer-terminal-overlay/v1',
+      status: 'complete',
+    });
+    expect(parseReviewerTerminalIngressV1(terminalOverlay())).toMatchObject({
+      contract: 'reviewer-terminal-overlay/v1',
+    });
+    expect(parseReviewerTerminalIngressV1(structuredTerminal())).toMatchObject({
+      status: 'complete',
+      reviewAccounting: { completion: 'complete' },
+    });
+  });
+
+  it.each([
+    ['unknown field', { unknown: true }],
+    ['receipt', { receipt: 'reviewer-authored' }],
+    ['context digest', { contextDigest: 'reviewer-authored' }],
+    ['paths', { paths: ['src/fabricated.ts'] }],
+    ['completion', { completion: 'complete' }],
+  ])('rejects overlay accounting with %s', (_name, immutableField) => {
+    const overlay = terminalOverlay();
+    Object.assign(
+      overlay['reviewAccounting'] as Record<string, unknown>,
+      immutableField,
+    );
+    expect(() => parseReviewerTerminalOverlayV1(overlay)).toThrow(
+      /unknown field/,
+    );
+  });
+
   it('strictly parses launcher-derived artifact finding projections', () => {
     const projection = {
       schemaVersion: 1,

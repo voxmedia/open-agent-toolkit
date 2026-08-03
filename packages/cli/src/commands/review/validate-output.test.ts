@@ -6,6 +6,7 @@ import { Readable } from 'node:stream';
 import { createArtifactDraft } from '@review/artifact-staging';
 import type {
   ReviewAccountingV1,
+  ReviewerTerminalOverlayV1,
   ReviewerTerminalV1,
   ValidatedWorkerCoverageProjectionV1,
 } from '@review/types';
@@ -66,6 +67,49 @@ function terminal(): ReviewerTerminalV1 {
       review: { summary: 'done', findings: [], verification_commands: [] },
     },
     reviewAccounting: accounting(),
+  };
+}
+
+function terminalOverlay(): ReviewerTerminalOverlayV1 {
+  const full = accounting();
+  return {
+    schemaVersion: 1,
+    contract: 'reviewer-terminal-overlay/v1',
+    status: 'complete',
+    candidate: {
+      kind: 'structured',
+      review: { summary: 'done', findings: [], verification_commands: [] },
+    },
+    reviewAccounting: {
+      evidence: structuredClone(full.evidence),
+      lanes: full.lanes.map((lane) => ({
+        laneId: lane.id,
+        inspectionCoverage: lane.inspectionCoverage,
+        uninspectedPathIndexes: [...lane.uninspectedPathIndexes],
+        uncoveredObligationIds: [...lane.uncoveredObligationIds],
+        commands: structuredClone(lane.commands),
+        evidenceRefIds: [...lane.evidenceRefIds],
+        uncertainty: [...lane.uncertainty],
+        primaryCompletion: structuredClone(lane.primaryCompletion),
+      })),
+      classifications: full.classifications.map((classification) => ({
+        classificationId: classification.id,
+        outcome: classification.outcome,
+        inspectionCoverage: classification.inspectionCoverage,
+        uninspectedPathIndexes: [...classification.uninspectedPathIndexes],
+        commands: structuredClone(classification.commands),
+        uncertainty: [...classification.uncertainty],
+      })),
+      verification: {
+        promotedFindings: [],
+        consequentialAbsence: null,
+        workerConflict: null,
+        crossLaneGap: null,
+        positiveCoverage: [],
+        deterministicResults: [],
+      },
+      budget: structuredClone(full.budget),
+    },
   };
 }
 
@@ -205,6 +249,26 @@ describe('validate-output command', () => {
     });
   });
 
+  it('accepts strict overlay ingress through the command boundary', async () => {
+    const validate = vi.fn(async () => ({
+      valid: true as const,
+      outputDigest: 'digest',
+    }));
+    await createValidateOutputCommand({
+      stdin: Readable.from([JSON.stringify(terminalOverlay())]),
+      write: vi.fn(),
+      setExitCode: vi.fn(),
+      validate,
+    }).parseAsync(args());
+
+    expect(validate).toHaveBeenCalledWith({
+      runId: 'validation-run-1',
+      terminal: expect.objectContaining({
+        contract: 'reviewer-terminal-overlay/v1',
+      }),
+    });
+  });
+
   it('uses exit one for validation rejection with typed result', async () => {
     const write = vi.fn();
     const setExitCode = vi.fn();
@@ -259,6 +323,19 @@ describe('validate-output command', () => {
         error: { category: 'input', code: 'review-output-schema-invalid' },
       },
     );
+
+    const invalidOverlay = terminalOverlay() as unknown as Record<
+      string,
+      Record<string, unknown>
+    >;
+    invalidOverlay['reviewAccounting']!['receipt'] = 'forbidden';
+    await createValidateOutputCommand({
+      stdin: Readable.from([JSON.stringify(invalidOverlay)]),
+      write: vi.fn(),
+      setExitCode: vi.fn(),
+      validate,
+    }).parseAsync(args());
+    expect(validate).not.toHaveBeenCalled();
   });
 
   it('requires canonical equality between artifact and envelope accounting', async () => {
@@ -310,6 +387,200 @@ describe('validate-output command', () => {
     ).toMatchObject({
       valid: false,
       errors: [{ code: 'schema-error' }],
+    });
+  });
+
+  it('assembles structured and artifact overlays from sealed state', async () => {
+    const structuredStore = fakeStore(validationState());
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: terminalOverlay() },
+        structuredStore as never,
+      ),
+    ).resolves.toMatchObject({ valid: true });
+    expect(structuredStore.state.phase).toBe('accepted');
+
+    const root = join(
+      tmpdir(),
+      `oat-validate-overlay-${process.pid}-${Date.now()}`,
+    );
+    roots.push(root);
+    await mkdir(root, { mode: 0o700 });
+    const draft = await createArtifactDraft(root);
+    const overlay = terminalOverlay();
+    await writeFile(
+      draft.path,
+      `Findings: 0 critical, 0 important, 0 medium, 0 minor\n\n## Review Accounting\n\n\`\`\`json\n${JSON.stringify(overlay.reviewAccounting)}\n\`\`\`\n`,
+    );
+    overlay.candidate = {
+      kind: 'artifact-draft',
+      privateDraftPath: draft.path,
+    };
+    const artifactStore = fakeStore({ ...validationState(), draft });
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: overlay },
+        artifactStore as never,
+      ),
+    ).resolves.toMatchObject({ valid: true });
+    expect(artifactStore.state.acceptedSnapshot?.accounting).toEqual(
+      accounting(),
+    );
+    expect(
+      Buffer.from(
+        artifactStore.state.acceptedSnapshot!.bytesBase64,
+        'base64',
+      ).toString('utf8'),
+    ).toContain('"receipt":"receipt"');
+  });
+
+  it('counts overlay join failures as bounded repair submissions', async () => {
+    const store = fakeStore(validationState());
+    const overlay = terminalOverlay();
+    overlay.reviewAccounting.lanes[0]!.laneId = 'unknown';
+
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: overlay },
+        store as never,
+      ),
+    ).resolves.toMatchObject({
+      valid: false,
+      errors: [{ code: 'unknown-overlay-selector' }],
+    });
+    expect(store.state).toMatchObject({
+      phase: 'accounting_repair',
+      output: { attempts: 1 },
+    });
+
+    await validateStoredReviewOutput(
+      { runId: 'validation-run-1', terminal: overlay },
+      store as never,
+    );
+    await validateStoredReviewOutput(
+      { runId: 'validation-run-1', terminal: overlay },
+      store as never,
+    );
+    expect(store.state).toMatchObject({
+      phase: 'terminal',
+      output: {
+        attempts: 3,
+        terminalClassification: 'accounting-invalid',
+      },
+    });
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: overlay },
+        store as never,
+      ),
+    ).rejects.toMatchObject({ code: 'output-attempt-limit' });
+  });
+
+  it('freezes review substance before an overlay join repair', async () => {
+    const store = fakeStore(validationState());
+    const overlay = terminalOverlay();
+    overlay.reviewAccounting.lanes[0]!.laneId = 'unknown';
+    await validateStoredReviewOutput(
+      { runId: 'validation-run-1', terminal: overlay },
+      store as never,
+    );
+
+    const changed = structuredClone(overlay);
+    if (changed.status === 'complete') {
+      changed.candidate.review.summary = 'changed during repair';
+    }
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: changed },
+        store as never,
+      ),
+    ).resolves.toMatchObject({
+      valid: false,
+      errors: [{ code: 'immutable-substance-mismatch' }],
+    });
+    expect(store.state).toMatchObject({
+      phase: 'terminal',
+      output: {
+        attempts: 2,
+        terminalClassification: 'accounting-invalid',
+      },
+    });
+  });
+
+  it('repairs only overlay-authored mutable accounting on the same run', async () => {
+    const store = fakeStore(validationState());
+    const invalid = terminalOverlay();
+    invalid.reviewAccounting.lanes[0]!.uninspectedPathIndexes = [0];
+
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: invalid },
+        store as never,
+      ),
+    ).resolves.toMatchObject({ valid: false });
+    expect(store.state).toMatchObject({
+      phase: 'accounting_repair',
+      output: { attempts: 1 },
+    });
+
+    const repaired = structuredClone(invalid);
+    repaired.reviewAccounting.lanes[0]!.uninspectedPathIndexes = [];
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: repaired },
+        store as never,
+      ),
+    ).resolves.toMatchObject({ valid: true });
+    expect(store.state).toMatchObject({
+      phase: 'accepted',
+      output: { attempts: 2 },
+    });
+  });
+
+  it('repairs overlay accounting in an artifact without changing its substance', async () => {
+    const root = join(
+      tmpdir(),
+      `oat-validate-overlay-repair-${process.pid}-${Date.now()}`,
+    );
+    roots.push(root);
+    await mkdir(root, { mode: 0o700 });
+    const draft = await createArtifactDraft(root);
+    const invalid = terminalOverlay();
+    invalid.reviewAccounting.lanes[0]!.uninspectedPathIndexes = [0];
+    invalid.candidate = {
+      kind: 'artifact-draft',
+      privateDraftPath: draft.path,
+    };
+    const artifact = (overlay: ReviewerTerminalOverlayV1) =>
+      `# Review\n\nFindings: 0 critical, 0 important, 0 medium, 0 minor\n\n## Review Accounting\n\n\`\`\`json\n${JSON.stringify(overlay.reviewAccounting)}\n\`\`\`\n`;
+    await writeFile(draft.path, artifact(invalid));
+    const store = fakeStore({ ...validationState(), draft });
+
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: invalid },
+        store as never,
+      ),
+    ).resolves.toMatchObject({ valid: false });
+    expect(store.state).toMatchObject({
+      phase: 'accounting_repair',
+      output: { attempts: 1 },
+    });
+
+    const repaired = structuredClone(invalid);
+    repaired.reviewAccounting.lanes[0]!.uninspectedPathIndexes = [];
+    await writeFile(draft.path, artifact(repaired));
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: repaired },
+        store as never,
+      ),
+    ).resolves.toMatchObject({ valid: true });
+    expect(store.state).toMatchObject({
+      phase: 'accepted',
+      draft: null,
+      output: { attempts: 2 },
+      acceptedSnapshot: { publication: 'available' },
     });
   });
 

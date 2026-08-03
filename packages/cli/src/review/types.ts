@@ -550,6 +550,55 @@ export interface ReviewAccountingV1 {
   };
 }
 
+export interface ReviewerVerificationClaimOverlayV1 {
+  claimId: string;
+  laneIds: string[];
+  disposition: ReviewClaimVerificationV1['disposition'];
+  evidenceRefIds: string[];
+}
+
+export interface ReviewerPromotedFindingOverlayV1 extends ReviewerVerificationClaimOverlayV1 {
+  findingId: string | null;
+}
+
+export interface ReviewerPositiveCoverageOverlayV1 {
+  claimId: string;
+  laneId: string;
+  disposition: ReviewClaimVerificationV1['disposition'];
+  evidenceRefIds: string[];
+}
+
+export interface ReviewerAccountingOverlayV1 {
+  evidence: ReviewEvidenceRefV1[];
+  lanes: Array<{
+    laneId: string;
+    inspectionCoverage: ReviewAccountingV1['lanes'][number]['inspectionCoverage'];
+    uninspectedPathIndexes: number[];
+    uncoveredObligationIds: string[];
+    commands: ReviewCommandEvidenceV1[];
+    evidenceRefIds: string[];
+    uncertainty: string[];
+    primaryCompletion: ReviewAccountingV1['lanes'][number]['primaryCompletion'];
+  }>;
+  classifications: Array<{
+    classificationId: string;
+    outcome: ReviewAccountingV1['classifications'][number]['outcome'];
+    inspectionCoverage: ReviewAccountingV1['classifications'][number]['inspectionCoverage'];
+    uninspectedPathIndexes: number[];
+    commands: ReviewCommandEvidenceV1[];
+    uncertainty: string[];
+  }>;
+  verification: {
+    promotedFindings: ReviewerPromotedFindingOverlayV1[];
+    consequentialAbsence: ReviewerVerificationClaimOverlayV1 | null;
+    workerConflict: ReviewerVerificationClaimOverlayV1 | null;
+    crossLaneGap: ReviewerVerificationClaimOverlayV1 | null;
+    positiveCoverage: ReviewerPositiveCoverageOverlayV1[];
+    deterministicResults: ReviewerVerificationClaimOverlayV1[];
+  };
+  budget: ReviewAccountingV1['budget'];
+}
+
 export interface StructuredFinding {
   id: string;
   severity: 'critical' | 'important' | 'medium' | 'minor';
@@ -599,6 +648,27 @@ export type ReviewerTerminalV1 =
         completion: 'blocked-incomplete';
       };
     };
+
+export type ReviewerTerminalOverlayV1 =
+  | {
+      schemaVersion: 1;
+      contract: 'reviewer-terminal-overlay/v1';
+      status: 'complete';
+      candidate: ReviewCandidateV1;
+      reviewAccounting: ReviewerAccountingOverlayV1;
+    }
+  | {
+      schemaVersion: 1;
+      contract: 'reviewer-terminal-overlay/v1';
+      status: 'blocked';
+      reason: string;
+      diagnostics: string[];
+      reviewAccounting: ReviewerAccountingOverlayV1;
+    };
+
+export type ReviewerTerminalIngressV1 =
+  | ReviewerTerminalV1
+  | ReviewerTerminalOverlayV1;
 
 export type ReviewOutput = ReviewerTerminalV1;
 

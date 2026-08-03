@@ -24,6 +24,7 @@ import type {
   ReviewAccountingSeedV1,
   ReviewPlanV1,
   ReviewPreparationV1,
+  ReviewerTerminalOverlayV1,
   ReviewerTerminalV1,
   ValidatedWorkerCoverageProjectionV1,
   WorkerDossierV1,
@@ -390,6 +391,69 @@ function invalidAccountingTerminal(summary = 'reviewed'): ReviewerTerminalV1 {
   };
 }
 
+function terminalOverlayWithoutSeed(): ReviewerTerminalOverlayV1 {
+  const terminal = invalidAccountingTerminal('assembled from sealed state');
+  if (terminal.status !== 'complete') throw new Error('invalid test terminal');
+  const lane = terminal.reviewAccounting.lanes[0]!;
+  const claims = new Map(
+    terminal.reviewAccounting.verification.map((claim) => [claim.kind, claim]),
+  );
+  const overlayClaim = (kind: string) => {
+    const claim = claims.get(
+      kind as (typeof terminal.reviewAccounting.verification)[number]['kind'],
+    )!;
+    return {
+      claimId: claim.claimId,
+      laneIds: [...claim.laneIds],
+      disposition: claim.disposition,
+      evidenceRefIds: [...claim.evidenceRefIds],
+    };
+  };
+  return {
+    schemaVersion: 1,
+    contract: 'reviewer-terminal-overlay/v1',
+    status: 'complete',
+    candidate: structuredClone(terminal.candidate),
+    reviewAccounting: {
+      evidence: structuredClone(terminal.reviewAccounting.evidence),
+      lanes: [
+        {
+          laneId: lane.id,
+          inspectionCoverage: lane.inspectionCoverage,
+          uninspectedPathIndexes: [...lane.uninspectedPathIndexes],
+          uncoveredObligationIds: [...lane.uncoveredObligationIds],
+          commands: structuredClone(lane.commands),
+          evidenceRefIds: [...lane.evidenceRefIds],
+          uncertainty: [...lane.uncertainty],
+          primaryCompletion: structuredClone(lane.primaryCompletion),
+        },
+      ],
+      classifications: [],
+      verification: {
+        promotedFindings: [
+          {
+            ...overlayClaim('promoted-finding'),
+            findingId: null,
+          },
+        ],
+        consequentialAbsence: overlayClaim('consequential-absence'),
+        workerConflict: overlayClaim('worker-conflict'),
+        crossLaneGap: overlayClaim('cross-lane-gap'),
+        positiveCoverage: [
+          {
+            claimId: 'positive',
+            laneId: 'legacy-lane',
+            disposition: 'verified',
+            evidenceRefIds: ['evidence-1'],
+          },
+        ],
+        deterministicResults: [],
+      },
+      budget: structuredClone(terminal.reviewAccounting.budget),
+    },
+  };
+}
+
 function terminalFromAccountingSeed(
   seed: ReviewAccountingSeedV1,
 ): ReviewerTerminalV1 {
@@ -532,6 +596,30 @@ function delegatedTerminal(
 }
 
 describe('validation recovery integration', () => {
+  it('validates an overlay from stored state after the transient seed is unavailable', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validation-overlay-state-'));
+    roots.push(root);
+    const fixture = await lifecycleSnapshots(root);
+    const overlay = terminalOverlayWithoutSeed();
+
+    await expect(
+      validateStoredReviewOutput(
+        { runId: fixture.created.runId, terminal: overlay },
+        fixture.store,
+      ),
+    ).resolves.toMatchObject({ valid: true });
+    await expect(
+      fixture.store.readRun(fixture.created.runId),
+    ).resolves.toMatchObject({
+      state: {
+        phase: 'accepted',
+        output: { attempts: 1 },
+      },
+    });
+    expect(overlay.reviewAccounting).not.toHaveProperty('receipt');
+    expect(overlay.reviewAccounting.lanes[0]).not.toHaveProperty('paths');
+  });
+
   it('repairs reconstructed terminal accounting from the launcher-owned seed', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validation-seed-repair-'));
     roots.push(root);

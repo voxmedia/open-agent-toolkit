@@ -2,11 +2,14 @@ import { randomBytes } from 'node:crypto';
 
 import { extractArtifactFindingProjection } from '@review/artifact-accounting';
 import {
+  ArtifactDraftIdentityError,
+  readArtifactDraftBytes,
   snapshotArtifactDraft,
   type ArtifactDraft,
   type ArtifactSnapshot,
 } from '@review/artifact-staging';
 import {
+  immutableReviewOverlaySubstanceDigest,
   immutableReviewSubstanceDigest,
   isAccountingRepairablePointer,
 } from '@review/coordinator-contract';
@@ -14,9 +17,18 @@ import {
   validateReviewOutput,
   type OutputValidationResult,
 } from '@review/output-validator';
-import { parseReviewerTerminalV1, ReviewSchemaError } from '@review/schemas';
+import {
+  parseReviewerTerminalIngressV1,
+  ReviewSchemaError,
+} from '@review/schemas';
+import {
+  assembleReviewerTerminal,
+  ReviewTerminalAssemblyError,
+} from '@review/terminal-assembly';
 import type {
   ArtifactFindingProjectionV1,
+  ReviewerAccountingOverlayV1,
+  ReviewerTerminalIngressV1,
   ReviewerTerminalV1,
 } from '@review/types';
 import { ValidationStore } from '@review/validation-store';
@@ -38,7 +50,7 @@ interface ValidateOutputCommandDependencies {
   setExitCode: (code: number) => void;
   validate: (input: {
     runId: string;
-    terminal: ReviewerTerminalV1;
+    terminal: ReviewerTerminalIngressV1;
   }) => Promise<OutputValidationResult>;
 }
 
@@ -50,7 +62,7 @@ function createDefaultStore(): ValidationStore {
 }
 
 export async function validateStoredReviewOutput(
-  input: { runId: string; terminal: ReviewerTerminalV1 },
+  input: { runId: string; terminal: ReviewerTerminalIngressV1 },
   store: ValidationStore = createDefaultStore(),
 ): Promise<OutputValidationResult> {
   const run = await store.readRun(input.runId);
@@ -75,7 +87,31 @@ export async function validateStoredReviewOutput(
     });
   }
 
+  let terminal: ReviewerTerminalV1 | undefined;
+  let assemblyError: ReviewTerminalAssemblyError | undefined;
+  let authoredOverlay: ReviewerAccountingOverlayV1 | undefined;
+  const overlayIngress =
+    'contract' in input.terminal ? input.terminal : undefined;
+  const isOverlayIngress = overlayIngress !== undefined;
+  if (overlayIngress !== undefined) {
+    try {
+      terminal = assembleReviewerTerminal(overlayIngress, {
+        receipt: state.receipt,
+        plan: state.plan,
+        assignment: state.assignment,
+        workerCoverage: state.workerCoverage,
+      });
+      authoredOverlay = overlayIngress.reviewAccounting;
+    } catch (error) {
+      if (!(error instanceof ReviewTerminalAssemblyError)) throw error;
+      assemblyError = error;
+    }
+  } else {
+    terminal = input.terminal as ReviewerTerminalV1;
+  }
+
   let artifactFindingProjection: ArtifactFindingProjectionV1 | undefined;
+  let authoredArtifactBytesBase64: string | undefined;
   let artifactBytesBase64: string | undefined;
   let artifactSnapshot: ArtifactSnapshot | undefined;
   let artifactError: OutputValidationResult | null = null;
@@ -99,28 +135,39 @@ export async function validateStoredReviewOutput(
       };
     } else {
       try {
-        const snapshot = await snapshotArtifactDraft(
-          {
-            path: state.draft.path,
-            device: state.draft.device,
-            inode: state.draft.inode,
-          } satisfies ArtifactDraft,
-          input.terminal.reviewAccounting,
-        );
-        artifactFindingProjection = extractArtifactFindingProjection(
-          Buffer.from(snapshot.bytesBase64, 'base64'),
-        );
-        artifactBytesBase64 = snapshot.bytesBase64;
-        artifactSnapshot = snapshot;
-      } catch {
+        const draft = {
+          path: state.draft.path,
+          device: state.draft.device,
+          inode: state.draft.inode,
+        } satisfies ArtifactDraft;
+        authoredArtifactBytesBase64 = (
+          await readArtifactDraftBytes(draft)
+        ).toString('base64');
+        if (terminal !== undefined) {
+          const snapshot = await snapshotArtifactDraft(
+            draft,
+            terminal.reviewAccounting,
+            authoredOverlay,
+          );
+          artifactFindingProjection = extractArtifactFindingProjection(
+            Buffer.from(snapshot.bytesBase64, 'base64'),
+          );
+          artifactBytesBase64 = snapshot.bytesBase64;
+          artifactSnapshot = snapshot;
+        }
+      } catch (error) {
+        const identityFailure = error instanceof ArtifactDraftIdentityError;
         artifactError = {
           valid: false,
           errors: [
             {
               code: 'schema-error',
-              pointer: '/reviewAccounting',
-              message:
-                'artifact accounting or private draft identity failed validation',
+              pointer: identityFailure
+                ? '/candidate/privateDraftPath'
+                : '/reviewAccounting',
+              message: identityFailure
+                ? 'artifact private draft identity failed validation'
+                : 'artifact accounting failed validation',
             },
           ],
         };
@@ -158,10 +205,12 @@ export async function validateStoredReviewOutput(
       });
     }
 
-    const immutableSubstanceDigest = immutableReviewSubstanceDigest(
-      input.terminal,
-      artifactBytesBase64,
-    );
+    const immutableSubstanceDigest = isOverlayIngress
+      ? immutableReviewOverlaySubstanceDigest(
+          overlayIngress!,
+          artifactBytesBase64 ?? authoredArtifactBytesBase64,
+        )
+      : immutableReviewSubstanceDigest(terminal!, artifactBytesBase64);
     current.output.attempts++;
     current.output.terminalClassification = null;
     if (current.output.immutableSubstanceDigest === null) {
@@ -185,6 +234,18 @@ export async function validateStoredReviewOutput(
     }
 
     result =
+      (assemblyError === undefined
+        ? null
+        : {
+            valid: false as const,
+            errors: [
+              {
+                code: assemblyError.code,
+                pointer: assemblyError.pointer,
+                message: assemblyError.message,
+              },
+            ],
+          }) ??
       artifactError ??
       validateReviewOutput(
         {
@@ -194,17 +255,16 @@ export async function validateStoredReviewOutput(
           workerCoverage: current.workerCoverage,
           artifactFindingProjection,
         },
-        input.terminal,
+        terminal!,
       );
     if (result.valid) {
-      current.phase =
-        input.terminal.status === 'complete' ? 'accepted' : 'terminal';
+      if (terminal === undefined) {
+        throw new Error('terminal assembly succeeded without a terminal');
+      }
+      current.phase = terminal.status === 'complete' ? 'accepted' : 'terminal';
       current.output.terminalClassification =
-        input.terminal.status === 'blocked' ? 'reviewer-blocked' : null;
-      if (
-        input.terminal.status === 'complete' &&
-        artifactSnapshot !== undefined
-      ) {
+        terminal.status === 'blocked' ? 'reviewer-blocked' : null;
+      if (terminal.status === 'complete' && artifactSnapshot !== undefined) {
         current.acceptedSnapshot = {
           id: randomBytes(32).toString('hex'),
           bytesBase64: artifactSnapshot.bytesBase64,
@@ -219,7 +279,9 @@ export async function validateStoredReviewOutput(
         current.output.attempts < 3 &&
         result.errors.length > 0 &&
         result.errors.every((error) =>
-          isAccountingRepairablePointer(error.pointer),
+          isOverlayIngress
+            ? /^\/reviewAccounting(?:\/|$)/.test(error.pointer)
+            : isAccountingRepairablePointer(error.pointer),
         );
       current.phase = repairable ? 'accounting_repair' : 'terminal';
       current.output.terminalClassification = repairable
@@ -249,15 +311,16 @@ const DEFAULT_DEPENDENCIES: ValidateOutputCommandDependencies = {
   validate: (input) => validateStoredReviewOutput(input),
 };
 
-function parseTerminal(value: unknown): ReviewerTerminalV1 {
+function parseTerminal(value: unknown): ReviewerTerminalIngressV1 {
   try {
-    return parseReviewerTerminalV1(value);
+    return parseReviewerTerminalIngressV1(value);
   } catch (error) {
     if (!(error instanceof ReviewSchemaError)) throw error;
     throw new ReviewJsonCommandError({
       category: 'input',
       code: 'review-output-schema-invalid',
-      message: 'validate-output stdin does not match ReviewerTerminalV1',
+      message:
+        'validate-output stdin does not match ReviewerTerminalOverlayV1 or ReviewerTerminalV1',
     });
   }
 }

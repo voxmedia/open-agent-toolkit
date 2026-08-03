@@ -1843,7 +1843,7 @@ launch Local Tier 1 from this recovery.
 
 #### Recovery p06-t06-r07: Preserve trusted command working directories
 
-**Status:** in_progress
+**Status:** completed
 **Remote terminal:** Authorized Remote structured Tier 1 at reviewed HEAD
 `2e2403ad9dd6e609e05cc19000fe2a916f61ac29` accepted target
 `oat-reviewer-gpt-5-6-sol-high`. Validation run
@@ -1981,6 +1981,43 @@ full rerun passed without code changes.
 **Next:** Commit and push the bounded recovery, require green PR checks, refresh
 the detached enforce fixture, then run one fresh root-owned Remote Tier 1 at the
 new HEAD and stop before POST with the exact accepted body and verdict.
+
+#### Recovery p06-t06-r10: Assemble terminal accounting in the launcher
+
+**Status:** in_progress
+**Failed run:** Fresh Remote structured Tier 1 at
+`55a6728245649149850ed90371887b07439b050f` reached planning and evidence, but
+validation run `2dcce690b70e2c144e31a52dd2ff4079` showed that retaining and
+copying the complete 209-path accounting seed remained context-fragile. The run
+is terminal and non-actionable; it is not resumed, replaced, or relabeled.
+**Operator disposition:** Authorized one dirty-worktree recovery that preserves
+the interrupted implementation, moves immutable terminal construction into the
+launcher, keeps legacy full-terminal ingress temporarily compatible, regenerates
+owned views/assets without another PR-scoped skill version bump, updates project
+bookkeeping, creates one recovery commit, and stops without push, review,
+readiness, merge, publication, or p06-t07/Stage B work.
+**Implementation:** Added strict `ReviewerTerminalOverlayV1` parsing and pure
+sealed-state assembly. The reviewer supplies only candidate/block substance,
+mutable outcomes, evidence, typed verification-slot inputs, and budget
+observations. The launcher derives identity, assignments, classification policy,
+worker outcomes, completion, and claim kind/mode; rejects inexact selectors;
+materializes canonical artifact accounting only in the immutable snapshot; and
+keeps full-terminal validation as defense in depth. Assembly failures now consume
+the existing three-submission/two-repair budget, while structured and artifact
+substance remains frozen across same-handle repair.
+**Verification:** Passed 325 focused tests across 11 files, including strict
+assembly/schema, dual-ingress structured and artifact validation, artifact
+identity/materialization, recovery, skill/assets, direct coordinator ordering,
+and the 209-path no-seed regression. CLI type-check, lint, and format pass.
+Repository formatting and asset generation pass.
+`pnpm run cli -- sync --scope all --dry-run` reports no changes, and
+`pnpm release:validate` passes all five lockstep 0.2.29 public packages plus
+visual validation.
+
+**Next:** Root independently reviews the recovery commit, runs full workspace,
+docs, and release gates, pushes only after acceptance, waits for green checks,
+refreshes the detached enforce fixture, and decides the next root-owned Remote
+Tier 1 action. p06-t06 and p06-t07 remain unadvanced.
 
 ## Orchestration Runs
 

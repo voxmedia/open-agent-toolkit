@@ -153,17 +153,11 @@ authoritative.
    cross-lane seams, and selects whole-diff, selective-inline, or delegated
    evidence. Submit it through the launcher-owned plan validator. One rejected
    plan may be corrected once before evidence; do not self-authorize it.
-4. **Validated accounting seed (`PlanValidationReceiptV1` +
-   `ReviewAccountingSeedV1`)** — Retain both `receipt` and `accountingSeed`
-   returned for the validated plan. The seed is launcher-owned and is the only
-   source for terminal receipt/digest/strategy identity, immutable lane and
-   classification assignments, required direct claim kinds, positive-coverage
-   lane IDs, and deterministic acceptance fields. Copy those fields exactly;
-   never reconstruct, re-sort, summarize, or omit them. Create an evidenced
-   terminal verification claim for every required direct kind and every seeded
-   positive-coverage lane.
+4. **Plan receipt (`PlanValidationReceiptV1`)** — Retain the exact receipt only
+   for `beginEvidence` and dossier binding. Do not retain or copy
+   `ReviewAccountingSeedV1`; it remains a compatibility response only.
 5. **Evidence transition (`beginEvidence`)** — Invoke the launcher-owned
-   begin-evidence command with the seeded receipt from the already-accepted
+   begin-evidence command with the retained receipt from the already-accepted
    continuation. Do not read source files or content-level diffs before
    `beginEvidence` succeeds.
 6. **Selective evidence execution** — Inspect high-consequence seams first and
@@ -223,17 +217,31 @@ already listed in that lane's `primaryContingency`, without launching another
 worker and only while the validated evidence/output budget permits it.
 Otherwise record the lane as uncovered and return blocked-incomplete.
 
-After evidence and reconciliation, return exactly one `ReviewerTerminalV1`
-from the same accepted continuation. A complete terminal contains the
-dispatch-selected candidate and `ReviewAccountingV1`; a blocked terminal
-contains no candidate or actionable verdict, states its reason and diagnostics,
-and carries `ReviewAccountingV1` with `completion: blocked-incomplete`. Both
-artifact and structured sinks use this terminal before sink translation. The
-reviewer must copy every launcher-owned identity and assignment field from the
-retained `accountingSeed` and satisfy its complete verification boundary rather
-than reconstructing either from the plan, receipt, filesystem, or memory. The
+After evidence and reconciliation, return exactly one
+`ReviewerTerminalOverlayV1` from the same accepted continuation. A complete
+overlay contains the dispatch-selected candidate and compact mutable accounting;
+a blocked overlay contains no candidate or actionable verdict and states its
+reason and diagnostics. Use the dedicated promoted-finding, required-direct,
+positive-coverage, and deterministic-result slots; never author claim
+`kind`/`mode`. For artifact output, embed the exact overlay accounting object in
+the private draft. The launcher materializes canonical full accounting into the
+immutable snapshot before validation or publication. Same-handle repair may
+change only overlay-authored accounting fields allowed by launcher errors. The
 reviewer cannot validate its own terminal or launch a replacement after
 acceptance.
+
+Use each structured finding's exact ID as its promoted-finding selector. For
+artifact output, select each finding as
+`artifact:{critical|important|medium|minor}:{1-based severity ordinal}` in that
+severity order, matching the launcher's stable output-local projection. Preserve
+one promoted-finding slot per finding; when there are no findings and the slot is
+required, return one `findingId: null` claim with `disposition: rejected`.
+
+Never supply receipt/digests/strategy, authoritative paths or obligations,
+classification policy, completion, or claim kind/mode. The launcher joins
+selectors to sealed state, fills typed claim slots, derives completion, and
+emits canonical `ReviewerTerminalV1`. This remains required after context
+compaction: no immutable terminal field is reconstructed from memory.
 
 ## Artifact Hygiene
 
@@ -566,25 +574,26 @@ Run these to verify the implementation:
 ```
 
 For enforce-mode code reviews, replace every placeholder below with the
-validated terminal's canonical `ReviewAccountingV1`. Emit this same block for
-complete and blocked-incomplete artifact-mode results; blocked results remain
-non-actionable and must not imply a passing verdict.
+reviewer's compact `ReviewerAccountingOverlayV1`. The launcher replaces this
+private-draft block with canonical `ReviewAccountingV1` in the immutable
+snapshot. Emit the overlay block for complete and blocked artifact-mode results;
+blocked results remain non-actionable and must not imply a passing verdict.
 
 ## Review Accounting
 
 ```json
 {
-  "schemaVersion": 1,
-  "receipt": "{opaque receipt}",
-  "contextDigest": "{context digest}",
-  "planDigest": "{plan digest}",
-  "assignmentDigest": "{assignment digest}",
-  "strategy": "{whole-diff-inline | selective-inline | delegated}",
-  "completion": "{complete | blocked-incomplete}",
   "evidence": [],
   "lanes": [],
   "classifications": [],
-  "verification": [],
+  "verification": {
+    "promotedFindings": [],
+    "consequentialAbsence": null,
+    "workerConflict": null,
+    "crossLaneGap": null,
+    "positiveCoverage": [],
+    "deterministicResults": []
+  },
   "budget": {
     "evidenceStoppedAt": null,
     "outputReservePreserved": null

@@ -5,7 +5,7 @@ import {
   type AccountingValidationError,
   type ReviewOutputValidationContext,
 } from './output-validator';
-import type { ReviewerTerminalV1 } from './types';
+import type { ReviewerTerminalOverlayV1, ReviewerTerminalV1 } from './types';
 
 export interface ReviewerContinuation {
   repairAccounting(input: {
@@ -61,7 +61,7 @@ function normalizedSubstance(terminal: ReviewerTerminalV1): ReviewerTerminalV1 {
 
 function normalizedArtifactSubstance(
   bytesBase64: string,
-  accounting: ReviewerTerminalV1['reviewAccounting'],
+  accounting: unknown,
 ): string {
   const source = normalizeMarkdownSource(Buffer.from(bytesBase64, 'base64'));
   const lines = source.split('\n');
@@ -102,6 +102,33 @@ export function immutableReviewSubstanceDigest(
             artifactBytesBase64,
             normalized.reviewAccounting,
           ),
+        },
+  );
+}
+
+export function immutableReviewOverlaySubstanceDigest(
+  terminal: ReviewerTerminalOverlayV1,
+  artifactBytesBase64?: string,
+): string {
+  const terminalSubstance =
+    terminal.status === 'complete'
+      ? {
+          schemaVersion: terminal.schemaVersion,
+          status: terminal.status,
+          candidate: structuredClone(terminal.candidate),
+        }
+      : {
+          schemaVersion: terminal.schemaVersion,
+          status: terminal.status,
+          reason: terminal.reason,
+          diagnostics: [...terminal.diagnostics],
+        };
+  return hashCanonicalJson(
+    artifactBytesBase64 === undefined
+      ? terminalSubstance
+      : {
+          terminal: terminalSubstance,
+          artifact: normalizedArtifactSubstance(artifactBytesBase64, {}),
         },
   );
 }

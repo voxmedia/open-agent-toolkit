@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-plan
 oat_blockers: []
-oat_last_updated: 2026-07-30
+oat_last_updated: 2026-08-03
 oat_generated: false
 oat_template: false
 ---
@@ -31,6 +31,15 @@ review artifact. It does introduce short-TTL, run-scoped validation state under
 the operating-system temporary directory. That state binds context, plan
 receipt, output validation, progress breadcrumbs, and rejected-output
 diagnostics without entering any review resolver or project ledger.
+
+### p06-t06-r10 Recovery Context
+
+Remote validation run `2dcce690b70e2c144e31a52dd2ff4079` demonstrated that
+the p06-t06-r09 seed still required the reviewer to reconstruct launcher-owned
+terminal identity and assignments. The operator authorized p06-t06-r10 to make
+canonical reviewer ingress a strict mutable overlay and move deterministic full
+terminal assembly into launcher validation. This bounded recovery preserves
+legacy full-terminal compatibility and does not advance p06-t06 or p06-t07.
 
 ## Architecture
 
@@ -161,21 +170,25 @@ unwired reference implementation, not an additional coordinator.
     then may the reviewer load evidence according to the plan. Inline and
     delegated paths use the same sequence.
 12. The accepted primary retains each complete or partial `WorkerDossierV1` and,
-    before returning `ReviewerTerminalV1`, executes the preparation-supplied
+    before returning `ReviewerTerminalOverlayV1`, executes the preparation-supplied
     `bindWorkerDossier` invocation with its exact executable and argv, replacing
     only the receipt placeholder and sending the bounded dossier as JSON stdin.
     The coordinator correlates the receipt, run, plan, and launch attempt before
     persisting worker coverage. No parent reconstruction or ambient command path
     may perform this binding.
-13. Successful plan validation also returns launcher-owned
-    `ReviewAccountingSeedV1`. The accepted continuation copies its exact
-    receipt/digest/strategy identity, immutable assignment projection, and
-    complete verification boundary into terminal construction instead of
-    reconstructing them from model memory.
-14. The reviewer returns findings plus compact `ReviewAccountingV1`.
-15. The coordinator validates the output. On failure, it sends precise errors
-    through the same accepted continuation for at most two accounting-only
-    repairs.
+13. Successful plan validation temporarily continues to return
+    `ReviewAccountingSeedV1` for compatibility, but canonical reviewer guidance
+    neither retains nor copies it.
+14. The reviewer returns findings or a block reason plus compact mutable
+    `ReviewerAccountingOverlayV1`. It supplies selectors and typed verification
+    slots, never receipt/digests/strategy, authoritative assignments,
+    classification policy, completion, or claim kind/mode.
+15. The coordinator strictly parses the overlay, loads sealed receipt, plan,
+    assignment, and worker coverage, and deterministically assembles canonical
+    `ReviewerTerminalV1`. Assembly precedes artifact materialization, immutable
+    substance freeze, and defense-in-depth output validation. On failure, it
+    sends precise errors through the same accepted continuation for at most two
+    accounting-only repairs and three total submissions.
 16. Valid complete output proceeds to the rail's existing artifact, GitHub
     posting, ledger, gate, or receive flow. Valid blocked-incomplete accounting
     proceeds only through the existing non-actionable `BLOCKED` path.
@@ -1234,12 +1247,12 @@ interface ReviewAccountingSeedV1 {
 }
 ```
 
-The seed is derived only after the plan and canonical assignment projection are
-accepted. It is a launcher-owned terminal-construction projection, not a second
-authority: output validation still compares every copied field against sealed
-state. Reviewers copy the identity and assignment fields exactly and create
-evidenced terminal claims for every seeded direct kind and positive-coverage
-lane. They do not reconstruct, omit, or re-sort those fields.
+The seed remains a temporary compatibility response derived after the plan and
+canonical assignment projection are accepted. It is not a second authority, and
+canonical reviewer guidance neither retains nor copies it. New terminal
+construction loads the sealed receipt, plan, assignment, and worker coverage
+directly in the launcher; legacy full-terminal ingress remains subject to the
+existing defense-in-depth identity and assignment comparisons.
 
 ### ReviewAccountingV1
 
@@ -1318,25 +1331,25 @@ interface ReviewAccountingV1 {
 }
 ```
 
-Before offering repair, the coordinator computes
-`immutableReviewSubstanceDigest` over the normalized review summary/verdict,
-all finding IDs/content/severity/locations, terminal status/reason, and every
-`ReviewAccountingV1` field except this closed repair allowlist:
+Legacy full-terminal ingress computes `immutableReviewSubstanceDigest` over the
+normalized review summary/verdict, all finding IDs/content/severity/locations,
+terminal status/reason, and every `ReviewAccountingV1` field except this closed
+repair allowlist:
 
 - receipt/context/plan/assignment digest fields;
 - lane path and obligation assignment arrays and uncovered/index arrays;
 - primary-completion path and obligation arrays; and
 - classification path and uninspected-index arrays.
 
-Strategy, completion, evidence records, command/provenance/results, dossier
-digests, lane/classification/primary outcomes, uncertainty, classification
-reasons and checks, verification claim identity/kind/mode/disposition, budget
-disposition, every evidence-reference relationship, findings, severity, and
-verdict are immutable. The coordinator
-offers repair only when the initial output is parseable enough to compute this
-digest and every validation error points into the allowlist. Each repair must
-preserve the digest byte-for-byte; otherwise it terminalizes immediately as
-accounting invalid.
+For overlay ingress, the coordinator freezes terminal candidate or block
+substance and the private artifact body while normalizing out the embedded
+accounting block. Only reviewer-authored overlay accounting may change in
+response to accounting-scoped launcher errors; assembled identity, assignments,
+classification policy, completion, and claim kind/mode are never reviewer
+inputs. Selector-assembly failures consume one of three total submissions and
+permit at most two same-handle repairs. A substance change, identity failure,
+non-accounting error, or exhausted submission terminalizes immediately as
+accounting invalid. The legacy allowlist remains unchanged during compatibility.
 
 Paths are sorted and stored once. Partial lane coverage references indexes into
 the lane path array instead of repeating path strings. The validator compares
@@ -1410,6 +1423,72 @@ type ReviewCandidateV1 =
       review: StructuredFindings;
     };
 
+interface ReviewerVerificationClaimOverlayV1 {
+  claimId: string;
+  laneIds: string[];
+  disposition: 'verified' | 'rejected' | 'unresolved';
+  evidenceRefIds: string[];
+}
+
+interface ReviewerPromotedFindingOverlayV1 extends ReviewerVerificationClaimOverlayV1 {
+  findingId: string | null;
+}
+
+interface ReviewerPositiveCoverageOverlayV1 {
+  claimId: string;
+  laneId: string;
+  disposition: 'verified' | 'rejected' | 'unresolved';
+  evidenceRefIds: string[];
+}
+
+interface ReviewerAccountingOverlayV1 {
+  evidence: ReviewEvidenceRefV1[];
+  lanes: Array<{
+    laneId: string;
+    inspectionCoverage: 'all' | 'partial' | 'none';
+    uninspectedPathIndexes: number[];
+    uncoveredObligationIds: string[];
+    commands: ReviewCommandEvidenceV1[];
+    evidenceRefIds: string[];
+    uncertainty: string[];
+    primaryCompletion: ReviewAccountingV1['lanes'][number]['primaryCompletion'];
+  }>;
+  classifications: Array<{
+    classificationId: string;
+    outcome: 'complete' | 'partial' | 'uncovered' | 'excluded';
+    inspectionCoverage: 'all' | 'partial' | 'none' | 'excluded';
+    uninspectedPathIndexes: number[];
+    commands: ReviewCommandEvidenceV1[];
+    uncertainty: string[];
+  }>;
+  verification: {
+    promotedFindings: ReviewerPromotedFindingOverlayV1[];
+    consequentialAbsence: ReviewerVerificationClaimOverlayV1 | null;
+    workerConflict: ReviewerVerificationClaimOverlayV1 | null;
+    crossLaneGap: ReviewerVerificationClaimOverlayV1 | null;
+    positiveCoverage: ReviewerPositiveCoverageOverlayV1[];
+    deterministicResults: ReviewerVerificationClaimOverlayV1[];
+  };
+  budget: ReviewAccountingV1['budget'];
+}
+
+type ReviewerTerminalOverlayV1 =
+  | {
+      schemaVersion: 1;
+      contract: 'reviewer-terminal-overlay/v1';
+      status: 'complete';
+      candidate: ReviewCandidateV1;
+      reviewAccounting: ReviewerAccountingOverlayV1;
+    }
+  | {
+      schemaVersion: 1;
+      contract: 'reviewer-terminal-overlay/v1';
+      status: 'blocked';
+      reason: string;
+      diagnostics: string[];
+      reviewAccounting: ReviewerAccountingOverlayV1;
+    };
+
 type ReviewerTerminalV1 =
   | {
       schemaVersion: 1;
@@ -1430,13 +1509,21 @@ type ReviewerTerminalV1 =
 type ReviewOutput = ReviewerTerminalV1;
 ```
 
-Every accepted child and inline adapter returns `ReviewerTerminalV1` in
-`enforce` before sink translation; legacy mode and non-code review types keep
-their existing schemas. The structured sink projects a complete candidate to
-its existing `StructuredFindings` flow only after validation. The artifact sink
-writes complete candidates under the private validation-run staging directory,
-validates the embedded accounting against the envelope copy, and atomically
-publishes to the project review tree only after acceptance.
+Every accepted child and inline adapter returns
+`ReviewerTerminalOverlayV1` in `enforce`. The launcher joins exact lane,
+classification, positive-coverage, and finding selectors to sealed state in
+sealed order; duplicate, unknown, missing, or extra selectors fail closed.
+Typed verification slots derive claim kind and mode while retaining one direct
+claim per promoted finding and deterministic command provenance. Legacy
+`ReviewerTerminalV1` ingress remains temporarily compatible and non-code review
+types keep their existing schemas.
+
+The structured sink projects a complete assembled candidate to its existing
+`StructuredFindings` flow only after validation. The artifact sink accepts the
+overlay accounting in the private draft, verifies it against the overlay
+envelope, materializes canonical full accounting in the immutable snapshot, and
+atomically publishes to the project review tree only after acceptance. Draft
+path, descriptor, inode, link, and permission protections are unchanged.
 
 A blocked variant contains no candidate, actionable findings, or verdict. Any
 provider-created draft associated with it is deleted after private diagnostics
@@ -1577,12 +1664,15 @@ checkpoint/validation or after terminal state are rejected.
 oat review validate-output --run-id <id> --stdin --json
 ```
 
-Stdin is the complete `ReviewerTerminalV1`. For an artifact candidate, the
-validator requires `privateDraftPath` to equal the stored draft path, extracts
-the versioned accounting block from its immutable snapshot, and requires
-canonical equality with `reviewAccounting` in the terminal. For a structured
-candidate or blocked terminal, it validates the in-band object directly.
-Input size is bounded before strict JSON parsing.
+Stdin is strict `ReviewerTerminalOverlayV1` or temporarily compatible full
+`ReviewerTerminalV1`. After parsing and state load, overlay ingress is assembled
+from sealed receipt, plan, assignment, and worker coverage before artifact
+snapshotting, substance freeze, and output validation. For an artifact
+candidate, the validator requires `privateDraftPath` to equal the stored draft
+path, requires canonical equality between the private-draft overlay block and
+the overlay envelope, and materializes canonical `ReviewAccountingV1` only in
+the immutable accepted snapshot. Structured and blocked overlays use the same
+assembly and validator. Input size is bounded before strict JSON parsing.
 
 **Output:**
 
@@ -1745,7 +1835,8 @@ contains a receipt placeholder; the reviewer may substitute only the opaque
 receipt returned by successful validation. The worker-dossier command contains
 that same receipt placeholder and the validation run ID; the accepted primary
 substitutes only the receipt and sends one bounded `WorkerDossierV1` using the
-`worker-dossier-json` stdin mode before returning `ReviewerTerminalV1`. Exact
+`worker-dossier-json` stdin mode before returning
+`ReviewerTerminalOverlayV1`. Exact
 executable, argv, and cwd fixtures verify all four commands, including the
 branch-local worker-dossier binder and its lack of any ambient command path
 or caller-cwd dependency.

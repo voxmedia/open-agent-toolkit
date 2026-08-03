@@ -15,6 +15,9 @@ import type {
   ReviewObligationV1,
   ReviewPlanV1,
   ReviewPreparationV1,
+  ReviewerAccountingOverlayV1,
+  ReviewerTerminalIngressV1,
+  ReviewerTerminalOverlayV1,
   ReviewerTerminalV1,
 } from './types';
 
@@ -1466,6 +1469,211 @@ function parseClaimVerification(value: unknown, pointer: string): void {
   stringArray(claim['evidenceRefIds'], `${pointer}/evidenceRefIds`);
 }
 
+function parseOverlayVerificationClaim(
+  value: unknown,
+  pointer: string,
+  includeFindingId: boolean,
+): void {
+  const claim = object(value, pointer);
+  keys(
+    claim,
+    includeFindingId
+      ? ['claimId', 'findingId', 'laneIds', 'disposition', 'evidenceRefIds']
+      : ['claimId', 'laneIds', 'disposition', 'evidenceRefIds'],
+    pointer,
+  );
+  string(claim['claimId'], `${pointer}/claimId`);
+  if (includeFindingId) {
+    nullableString(claim['findingId'], `${pointer}/findingId`);
+  }
+  stringArray(claim['laneIds'], `${pointer}/laneIds`);
+  enumValue(
+    claim['disposition'],
+    ['verified', 'rejected', 'unresolved'],
+    `${pointer}/disposition`,
+  );
+  stringArray(claim['evidenceRefIds'], `${pointer}/evidenceRefIds`);
+}
+
+function parseReviewerAccountingOverlayV1(
+  value: unknown,
+  pointer: string,
+): ReviewerAccountingOverlayV1 {
+  const accounting = object(value, pointer);
+  keys(
+    accounting,
+    ['evidence', 'lanes', 'classifications', 'verification', 'budget'],
+    pointer,
+  );
+  array(accounting['evidence'], `${pointer}/evidence`).forEach(
+    (evidence, index) =>
+      parseEvidenceRef(evidence, `${pointer}/evidence/${index}`),
+  );
+  array(accounting['lanes'], `${pointer}/lanes`).forEach((entry, index) => {
+    const at = `${pointer}/lanes/${index}`;
+    const lane = object(entry, at);
+    keys(
+      lane,
+      [
+        'laneId',
+        'inspectionCoverage',
+        'uninspectedPathIndexes',
+        'uncoveredObligationIds',
+        'commands',
+        'evidenceRefIds',
+        'uncertainty',
+        'primaryCompletion',
+      ],
+      at,
+    );
+    string(lane['laneId'], `${at}/laneId`);
+    enumValue(
+      lane['inspectionCoverage'],
+      ['all', 'partial', 'none'],
+      `${at}/inspectionCoverage`,
+    );
+    array(
+      lane['uninspectedPathIndexes'],
+      `${at}/uninspectedPathIndexes`,
+    ).forEach((pathIndex, itemIndex) =>
+      safeNumber(pathIndex, `${at}/uninspectedPathIndexes/${itemIndex}`),
+    );
+    stringArray(lane['uncoveredObligationIds'], `${at}/uncoveredObligationIds`);
+    array(lane['commands'], `${at}/commands`).forEach((command, itemIndex) =>
+      parseCommandEvidence(command, `${at}/commands/${itemIndex}`),
+    );
+    stringArray(lane['evidenceRefIds'], `${at}/evidenceRefIds`);
+    stringArray(lane['uncertainty'], `${at}/uncertainty`);
+    parsePrimaryCompletion(
+      lane['primaryCompletion'],
+      `${at}/primaryCompletion`,
+    );
+  });
+  array(accounting['classifications'], `${pointer}/classifications`).forEach(
+    (entry, index) => {
+      const at = `${pointer}/classifications/${index}`;
+      const classification = object(entry, at);
+      keys(
+        classification,
+        [
+          'classificationId',
+          'outcome',
+          'inspectionCoverage',
+          'uninspectedPathIndexes',
+          'commands',
+          'uncertainty',
+        ],
+        at,
+      );
+      string(classification['classificationId'], `${at}/classificationId`);
+      enumValue(
+        classification['outcome'],
+        ['complete', 'partial', 'uncovered', 'excluded'],
+        `${at}/outcome`,
+      );
+      enumValue(
+        classification['inspectionCoverage'],
+        ['all', 'partial', 'none', 'excluded'],
+        `${at}/inspectionCoverage`,
+      );
+      array(
+        classification['uninspectedPathIndexes'],
+        `${at}/uninspectedPathIndexes`,
+      ).forEach((pathIndex, itemIndex) =>
+        safeNumber(pathIndex, `${at}/uninspectedPathIndexes/${itemIndex}`),
+      );
+      array(classification['commands'], `${at}/commands`).forEach(
+        (command, itemIndex) =>
+          parseCommandEvidence(command, `${at}/commands/${itemIndex}`),
+      );
+      stringArray(classification['uncertainty'], `${at}/uncertainty`);
+    },
+  );
+  const verification = object(
+    accounting['verification'],
+    `${pointer}/verification`,
+  );
+  keys(
+    verification,
+    [
+      'promotedFindings',
+      'consequentialAbsence',
+      'workerConflict',
+      'crossLaneGap',
+      'positiveCoverage',
+      'deterministicResults',
+    ],
+    `${pointer}/verification`,
+  );
+  array(
+    verification['promotedFindings'],
+    `${pointer}/verification/promotedFindings`,
+  ).forEach((claim, index) =>
+    parseOverlayVerificationClaim(
+      claim,
+      `${pointer}/verification/promotedFindings/${index}`,
+      true,
+    ),
+  );
+  for (const field of [
+    'consequentialAbsence',
+    'workerConflict',
+    'crossLaneGap',
+  ] as const) {
+    if (verification[field] !== null) {
+      parseOverlayVerificationClaim(
+        verification[field],
+        `${pointer}/verification/${field}`,
+        false,
+      );
+    }
+  }
+  array(
+    verification['positiveCoverage'],
+    `${pointer}/verification/positiveCoverage`,
+  ).forEach((entry, index) => {
+    const at = `${pointer}/verification/positiveCoverage/${index}`;
+    const claim = object(entry, at);
+    keys(claim, ['claimId', 'laneId', 'disposition', 'evidenceRefIds'], at);
+    string(claim['claimId'], `${at}/claimId`);
+    string(claim['laneId'], `${at}/laneId`);
+    enumValue(
+      claim['disposition'],
+      ['verified', 'rejected', 'unresolved'],
+      `${at}/disposition`,
+    );
+    stringArray(claim['evidenceRefIds'], `${at}/evidenceRefIds`);
+  });
+  array(
+    verification['deterministicResults'],
+    `${pointer}/verification/deterministicResults`,
+  ).forEach((claim, index) =>
+    parseOverlayVerificationClaim(
+      claim,
+      `${pointer}/verification/deterministicResults/${index}`,
+      false,
+    ),
+  );
+  const budget = object(accounting['budget'], `${pointer}/budget`);
+  keys(
+    budget,
+    ['evidenceStoppedAt', 'outputReservePreserved'],
+    `${pointer}/budget`,
+  );
+  if (budget['evidenceStoppedAt'] !== null) {
+    isoDate(budget['evidenceStoppedAt'], `${pointer}/budget/evidenceStoppedAt`);
+  }
+  if (
+    budget['outputReservePreserved'] !== null &&
+    typeof budget['outputReservePreserved'] !== 'boolean'
+  ) {
+    throw new ReviewSchemaError(
+      `${pointer}/budget/outputReservePreserved must be boolean or null`,
+    );
+  }
+  return accounting as unknown as ReviewerAccountingOverlayV1;
+}
+
 function parseAccounting(
   value: unknown,
   pointer: string,
@@ -1631,6 +1839,94 @@ export function parseArtifactFindingProjectionV1(
     nextOrdinal.set(severity, ordinal + 1);
   });
   return projection as unknown as ArtifactFindingProjectionV1;
+}
+
+function parseOverlayCandidate(value: unknown, pointer: string): void {
+  const candidate = object(value, pointer);
+  if (candidate['kind'] === 'artifact-draft') {
+    keys(candidate, ['kind', 'privateDraftPath'], pointer);
+    string(candidate['privateDraftPath'], `${pointer}/privateDraftPath`);
+    if (!(candidate['privateDraftPath'] as string).startsWith('/')) {
+      throw new ReviewSchemaError(
+        `${pointer}/privateDraftPath must be absolute`,
+      );
+    }
+    return;
+  }
+  if (candidate['kind'] !== 'structured') {
+    throw new ReviewSchemaError(`${pointer}/kind has an invalid value`);
+  }
+  keys(candidate, ['kind', 'review'], pointer);
+  const review = object(candidate['review'], `${pointer}/review`);
+  keys(
+    review,
+    ['summary', 'findings', 'verification_commands'],
+    `${pointer}/review`,
+  );
+  if (typeof review['summary'] !== 'string') {
+    throw new ReviewSchemaError(`${pointer}/review/summary must be a string`);
+  }
+  array(review['findings'], `${pointer}/review/findings`).forEach(
+    (finding, index) =>
+      parseStructuredFinding(finding, `${pointer}/review/findings/${index}`),
+  );
+  stringArray(
+    review['verification_commands'],
+    `${pointer}/review/verification_commands`,
+  );
+}
+
+export function parseReviewerTerminalOverlayV1(
+  value: unknown,
+): ReviewerTerminalOverlayV1 {
+  const terminal = object(value, '$');
+  if (terminal['status'] === 'complete') {
+    keys(
+      terminal,
+      ['schemaVersion', 'contract', 'status', 'candidate', 'reviewAccounting'],
+      '$',
+    );
+    parseOverlayCandidate(terminal['candidate'], '$/candidate');
+  } else if (terminal['status'] === 'blocked') {
+    keys(
+      terminal,
+      [
+        'schemaVersion',
+        'contract',
+        'status',
+        'reason',
+        'diagnostics',
+        'reviewAccounting',
+      ],
+      '$',
+    );
+    string(terminal['reason'], '$/reason');
+    stringArray(terminal['diagnostics'], '$/diagnostics');
+  } else {
+    throw new ReviewSchemaError('$/status has an invalid value');
+  }
+  if (terminal['schemaVersion'] !== 1) {
+    throw new ReviewSchemaError('$/schemaVersion must be 1');
+  }
+  if (terminal['contract'] !== 'reviewer-terminal-overlay/v1') {
+    throw new ReviewSchemaError(
+      '$/contract must be reviewer-terminal-overlay/v1',
+    );
+  }
+  parseReviewerAccountingOverlayV1(
+    terminal['reviewAccounting'],
+    '$/reviewAccounting',
+  );
+  return terminal as unknown as ReviewerTerminalOverlayV1;
+}
+
+export function parseReviewerTerminalIngressV1(
+  value: unknown,
+): ReviewerTerminalIngressV1 {
+  const terminal = object(value, '$');
+  return 'contract' in terminal
+    ? parseReviewerTerminalOverlayV1(terminal)
+    : parseReviewerTerminalV1(terminal);
 }
 
 export function parseReviewerTerminalV1(value: unknown): ReviewerTerminalV1 {

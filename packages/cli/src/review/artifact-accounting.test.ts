@@ -9,6 +9,7 @@ import {
   MAX_REVIEW_ACCOUNTING_BYTES,
   parseStrictReviewAccountingJson,
 } from './artifact-accounting';
+import { parseReviewerTerminalOverlayV1 } from './schemas';
 import type { ReviewAccountingV1 } from './types';
 
 function accounting(
@@ -119,7 +120,7 @@ describe('artifact accounting grammar', () => {
     ).toThrow(/schemaVersion/);
   });
 
-  it('round-trips the canonical reviewer template without weakening counts', () => {
+  it('strictly parses the canonical reviewer overlay template without weakening counts', () => {
     const reviewer = readFileSync(
       join(import.meta.dirname, '../../../../.agents/agents/oat-reviewer.md'),
       'utf8',
@@ -128,21 +129,21 @@ describe('artifact accounting grammar', () => {
       /^## Review Accounting\n\n?```json\n([\s\S]*?)\n```$/m,
     );
     expect(template).not.toBeNull();
-    const concreteJson = template![1]!
-      .replace('{opaque receipt}', 'receipt')
-      .replace('{context digest}', 'context')
-      .replace('{plan digest}', 'plan')
-      .replace('{assignment digest}', 'assignment')
-      .replace(
-        '{whole-diff-inline | selective-inline | delegated}',
-        'selective-inline',
-      )
-      .replace('{complete | blocked-incomplete}', 'complete');
     expect(
-      extractReviewAccounting(
-        `## Review Accounting\n\n\`\`\`json\n${concreteJson}\n\`\`\`\n`,
-      ),
-    ).toMatchObject({ schemaVersion: 1, completion: 'complete' });
+      parseReviewerTerminalOverlayV1({
+        schemaVersion: 1,
+        contract: 'reviewer-terminal-overlay/v1',
+        status: 'complete',
+        candidate: {
+          kind: 'structured',
+          review: { summary: '', findings: [], verification_commands: [] },
+        },
+        reviewAccounting: JSON.parse(template![1]!),
+      }),
+    ).toMatchObject({
+      contract: 'reviewer-terminal-overlay/v1',
+      reviewAccounting: { evidence: [], lanes: [], classifications: [] },
+    });
     expect(reviewer).toMatch(
       /Findings:\s*\{N\} critical,\s*\{N\} important,\s*\{N\} medium,\s*\{N\} minor/,
     );

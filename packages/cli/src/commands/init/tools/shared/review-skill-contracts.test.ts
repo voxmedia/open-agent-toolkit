@@ -96,9 +96,9 @@ describe('review skill contracts', () => {
       'checkpointArtifacts',
       'ReviewPlanV1',
       'PlanValidationReceiptV1',
-      'ReviewAccountingSeedV1',
       'beginEvidence',
       'Selective evidence execution',
+      'ReviewerTerminalOverlayV1',
     ];
     let previousIndex = -1;
 
@@ -125,10 +125,22 @@ describe('review skill contracts', () => {
     expect(normalizedContent).toContain(
       'An accepted worker timeout or failure never authorizes a replacement launch.',
     );
+    expect(content).toContain('ReviewerTerminalOverlayV1');
     expect(content).toContain('ReviewerTerminalV1');
     expect(content.match(/^## Review Accounting$/gm)).toHaveLength(1);
     expect(content).toMatch(
-      /^## Review Accounting\n(?:\n)?```json\n\{[\s\S]*?"schemaVersion": 1[\s\S]*?\n\}\n```$/m,
+      /^## Review Accounting\n(?:\n)?```json\n\{[\s\S]*?"promotedFindings": \[\][\s\S]*?\n\}\n```$/m,
+    );
+    expect(
+      content.match(
+        /^## Review Accounting\n(?:\n)?```json\n([\s\S]*?)\n```$/m,
+      )?.[1],
+    ).not.toContain('"receipt"');
+    expect(normalizedContent).toContain(
+      '`artifact:{critical|important|medium|minor}:{1-based severity ordinal}`',
+    );
+    expect(normalizedContent).toContain(
+      'one promoted-finding slot per finding',
     );
     expect(content).toMatch(
       /Findings:\s*\{N\} critical,\s*\{N\} important,\s*\{N\} medium,\s*\{N\} minor/,
@@ -179,7 +191,7 @@ describe('review skill contracts', () => {
     }
   });
 
-  it('pins launcher-owned accounting seeds across review coordinators', () => {
+  it('pins launcher-owned terminal assembly across review coordinators', () => {
     for (const path of [
       '.agents/agents/oat-reviewer.md',
       '.agents/skills/oat-project-review-provide/SKILL.md',
@@ -188,15 +200,15 @@ describe('review skill contracts', () => {
     ]) {
       const normalized = readRepoFile(path).replace(/\s+/g, ' ');
       expect(normalized, path).toContain('ReviewAccountingSeedV1');
+      expect(normalized, path).toContain('ReviewerTerminalOverlayV1');
+      expect(normalized, path).toMatch(/compatibility (?:response|output)/i);
       expect(normalized, path).toMatch(
-        /copy[\s\S]{0,120}(?:identity|seed)[\s\S]{0,160}(?:assignment|lane\/classification)/i,
+        /(?:must not|never|do not)[\s\S]{0,40}retains?(?:\/cop(?:y|ies)| or copy)/i,
       );
       expect(normalized, path).toMatch(
-        /(?:every|complete)[\s\S]{0,120}(?:direct|verification)[\s\S]{0,120}positive-coverage/i,
+        /launcher[\s\S]*(?:joins|assembl)[\s\S]*(?:sealed state|canonical)/i,
       );
-      expect(normalized, path).toMatch(
-        /never|must not[\s\S]{0,120}reconstruct/i,
-      );
+      expect(normalized, path).toMatch(/after context compaction/i);
     }
   });
 
@@ -215,10 +227,11 @@ describe('review skill contracts', () => {
       'checkpointArtifacts',
       'ReviewPlanV1',
       'PlanValidationReceiptV1',
-      'ReviewAccountingSeedV1',
       'beginEvidence',
       'Selective evidence',
       'bindWorkerDossier',
+      'ReviewerTerminalOverlayV1',
+      'validate-output',
       'ReviewerTerminalV1',
     ];
     let previousIndex = -1;
@@ -259,11 +272,11 @@ describe('review skill contracts', () => {
         'accepted handle',
         'checkpointArtifacts',
         'validate-plan',
-        'ReviewAccountingSeedV1',
         'begin-evidence',
         'bindWorkerDossier',
-        'ReviewerTerminalV1',
+        'ReviewerTerminalOverlayV1',
         'validate-output',
+        'ReviewerTerminalV1',
         'same-handle accounting repair',
         'publish-output',
         'bookkeeping',
@@ -321,7 +334,7 @@ describe('review skill contracts', () => {
     for (const rail of rails) {
       const normalized = rail.replace(/\s+/g, ' ');
       expect(normalized).toMatch(
-        /prepare-context[\s\S]*accepted handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*ReviewAccountingSeedV1[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*StructuredFindings[\s\S]*finding mapping[\s\S]*GitHub post/i,
+        /prepare-context[\s\S]*accepted handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalOverlayV1[\s\S]*validate-output[\s\S]*ReviewerTerminalV1[\s\S]*same-handle accounting repair[\s\S]*StructuredFindings[\s\S]*finding mapping[\s\S]*GitHub post/i,
       );
       expect(normalized).toMatch(
         /Accepted timeout,[\s\S]*BLOCKED[\s\S]*malformed[\s\S]*accounting-invalid[\s\S]*non-actionable/i,
@@ -343,7 +356,7 @@ describe('review skill contracts', () => {
     );
     const normalized = content.replace(/\s+/g, ' ');
     expect(normalized).toMatch(
-      /direct phase review[\s\S]*prepare-context[\s\S]*accepted reviewer handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*ReviewAccountingSeedV1[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*publishAcceptedArtifact[\s\S]*bookkeeping/i,
+      /direct phase review[\s\S]*prepare-context[\s\S]*accepted reviewer handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalOverlayV1[\s\S]*validate-output[\s\S]*ReviewerTerminalV1[\s\S]*same-handle accounting repair[\s\S]*publishAcceptedArtifact[\s\S]*bookkeeping/i,
     );
     expect(normalized).toContain('preparation-supplied');
     expect(normalized).toContain('{ executable, argv, cwd, stdin }');

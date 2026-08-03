@@ -341,8 +341,9 @@ in structured-output mode. This mirrors the tested wrapper at
 
 - Set `oat_output_mode: structured` in the dispatch payload (the flag
   `.agents/agents/oat-reviewer.md` recognizes). In enforce mode the reviewer
-  returns a `ReviewerTerminalV1` whose accepted complete candidate contains
-  `StructuredFindings`; it writes NO artifact under `reviews/`.
+  returns a `ReviewerTerminalOverlayV1` whose accepted complete candidate
+  contains `StructuredFindings`; the launcher later assembles the canonical full
+  terminal, and the reviewer writes NO artifact under `reviews/`.
 - Include the project context (`oat_project`, `oat_review_scope`, `oat_review_head_sha`), the Review Scope metadata block, a pointer to the posted-review-body schema (`design.md` → Data Models → Posted-review-body), and the resolved narrowing range (`<prior_sha>..<HEAD>` or none).
 - If a worktree was resolved in Step 2, include its path so the reviewer reads from the checkout.
 - For Cursor concrete managed dispatch, invoke
@@ -351,12 +352,9 @@ in structured-output mode. This mirrors the tested wrapper at
 - On host acceptance, bind and retain the exact accepted handle. The reviewer
   performs required artifact intake, invokes supplied `checkpointArtifacts`,
   submits `ReviewPlanV1` through `validate-plan`, retains the exact
-  `PlanValidationReceiptV1` and launcher-owned `ReviewAccountingSeedV1`, and
-  invokes `begin-evidence` before selective content evidence. Terminal
-  construction copies the seed's identity and immutable lane/classification
-  assignments exactly and instantiates every seeded direct and
-  positive-coverage verification requirement; it never reconstructs those
-  fields from the plan or receipt. Every supplied command descriptor is the launcher-owned
+  `PlanValidationReceiptV1` only for evidence authorization and dossier binding,
+  treats `ReviewAccountingSeedV1` as compatibility output, and invokes
+  `begin-evidence` before selective content evidence. Every supplied command descriptor is the launcher-owned
   `{ executable, argv, cwd, stdin }` contract: execute it in its required
   absolute `cwd`; never use the reviewer's ambient working directory and never
   change cwd to repair branch-local alias resolution.
@@ -365,11 +363,17 @@ in structured-output mode. This mirrors the tested wrapper at
   executes the preparation-supplied `bindWorkerDossier` invocation with its
   exact executable, argv array, and absolute cwd, replaces only
   `__OAT_PLAN_RECEIPT__`, and supplies exactly that dossier as bounded JSON
-  stdin. It must do this before returning one `ReviewerTerminalV1`. Never
-  invoke ambient `oat`, override descriptor cwd, reconstruct a dossier from
-  terminal digests, or hand a full dossier to the parent launcher.
+  stdin. It must do this before returning one `ReviewerTerminalOverlayV1` with
+  compact substance, mutable outcomes, evidence, selectors, budget
+  observations, and typed verification-slot inputs. It never retains/copies the
+  seed or supplies immutable identity, paths, obligations, classification
+  policy, completion, or claim kind/mode. Never invoke ambient `oat`, override
+  descriptor cwd, reconstruct a dossier from terminal digests, or hand a full
+  dossier to the parent launcher.
   Identical retries are idempotent; not-delegated inline lanes have no dossier.
-  Then submit the terminal envelope through launcher-owned `validate-output`.
+  Then submit the overlay envelope through launcher-owned `validate-output`,
+  which strictly parses and assembles canonical `ReviewerTerminalV1` from
+  sealed state before validation, including after context compaction.
   If and only if
   every validation error is accounting-allowlisted, perform at most two
   same-handle accounting repair turns with frozen review substance.
@@ -390,12 +394,10 @@ review and the managed-target guard permits it, invoke
 `oat review prepare-context` with sink `structured`, then bind the current
 planning parent as the accepted handle. Perform required artifact intake; invoke supplied
 `checkpointArtifacts`; submit `ReviewPlanV1` through `validate-plan`; retain the
-exact `PlanValidationReceiptV1` and launcher-owned
-`ReviewAccountingSeedV1`; copy its identity and immutable assignments exactly,
-instantiate its complete direct and positive-coverage verification boundary,
-and invoke `begin-evidence` with its receipt before selective, path-scoped
-content evidence. Never reconstruct terminal accounting from the plan or
-receipt. Execute every exact
+exact `PlanValidationReceiptV1` only for evidence authorization and dossier
+binding; treat `ReviewAccountingSeedV1` as compatibility output; and invoke
+`begin-evidence` with the receipt before selective, path-scoped content
+evidence. Execute every exact
 `{ executable, argv, cwd, stdin }` descriptor in its required absolute `cwd`;
 never use the ambient working directory or change cwd to repair alias
 resolution. Keep every applicable complete or partial
@@ -403,8 +405,12 @@ resolution. Keep every applicable complete or partial
 the preparation-supplied `bindWorkerDossier` exact executable, argv array, and
 absolute cwd with only `__OAT_PLAN_RECEIPT__` replaced and the dossier as
 bounded JSON stdin. Do not use ambient `oat`; not-delegated inline lanes remain
-unchanged. Only after binding, return one `ReviewerTerminalV1`, then run
-`validate-output` and permit at most two same-handle accounting
+unchanged. Only after binding, return one `ReviewerTerminalOverlayV1` with
+compact mutable accounting and typed verification-slot inputs. Never supply
+immutable terminal identity, assignment paths/obligations, classification
+policy, completion, or claim kind/mode. Then run `validate-output`, which
+assembles canonical `ReviewerTerminalV1` from sealed state even after context
+compaction, and permit at most two same-handle accounting
 repair turns. Only a validated complete structured terminal may
 project `StructuredFindings` and proceed to finding mapping, body construction,
 confirmation, or GitHub posting. Accepted timeout, `BLOCKED`, malformed, or

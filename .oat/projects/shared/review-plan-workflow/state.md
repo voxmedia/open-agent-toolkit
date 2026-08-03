@@ -1,8 +1,8 @@
 ---
 oat_current_task: p06-t06
-oat_last_commit: 25f7a8e0f7d27508e844f88b4d63f19dc66567f6
+oat_last_commit: 55a6728245649149850ed90371887b07439b050f
 oat_blockers:
-  - p06-t06 accounting-seed recovery must be committed, pushed, and green before the root-owned Remote structured Tier 1 retry
+  - p06-t06 launcher-assembly recovery must be committed, pushed, and green before the root-owned Remote structured Tier 1 retry
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -76,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-03T02:51:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-03T14:13:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -185,9 +185,18 @@ receipt/assignment values and omitted mandatory `worker-conflict` and
 created. The operator authorized bounded recovery `p06-t06-r09` to return a
 launcher-owned accounting seed with exact validated identity, assignments, and
 verification requirements before one fresh root-owned Remote Tier 1 retry at a
-new HEAD. That recovery now passes focused contracts, the complete 4,007-test
-CLI suite, all 131 smoke tests, workspace and docs gates, asset-sync dry-run,
-and release validation. It is ready to commit and push.
+new HEAD. That recovery passed focused contracts, the complete 4,007-test CLI
+suite, all 131 smoke tests, workspace and docs gates, asset-sync dry-run, and
+release validation before commit `55a67282`.
+The fresh retry reached evidence and returned terminal output, but validation
+run `2dcce690b70e2c144e31a52dd2ff4079` was terminal accounting-invalid because
+the reviewer still had to retain and reconstruct launcher-owned terminal
+fields from the seed. No mapping, body, payload, post, or GitHub review was
+created. The operator authorized recovery `p06-t06-r10` to replace canonical
+reviewer ingress with a strict mutable overlay and assemble the full
+`ReviewerTerminalV1` deterministically inside launcher validation. The
+recovery preserves temporary full-terminal compatibility and does not advance
+p06-t06 or p06-t07.
 
 ## Artifacts
 
@@ -369,16 +378,25 @@ and release validation. It is ready to commit and push.
   reconstructed accounting identity/assignments and two omitted required claims
 - ✓ Bounded p06-t06-r09 accounting-seed recovery passed focused, workspace,
   docs, sync, bundle, and release validation
-- → Commit and push p06-t06-r09, await green checks, refresh the fixture, then
-  root retries Remote Tier 1 at the new HEAD
+- ⚠ Accepted Remote Tier 1 at `55a67282` reached evidence but validation run
+  `2dcce690b70e2c144e31a52dd2ff4079` terminalized on reviewer reconstruction
+  of launcher-owned terminal state
+- ✓ Operator authorized bounded p06-t06-r10 launcher-owned assembly recovery
+- ✓ p06-t06-r10 focused verification passes 325 tests across 11 files plus CLI
+  type-check, lint, format, provider sync, asset generation, sync dry-run, and
+  release validation
+- → Root independently reviews p06-t06-r10 and runs full workspace, docs, and
+  release gates before push; p06-t06 and p06-t07 remain unadvanced
 
 ## Blockers
 
 p06-t06 requires the root-owned, already-authorized Remote structured Tier 1
-retry only after p06-t06-r09 is committed, pushed, and green at a new HEAD.
+retry only after p06-t06-r10 is committed, independently verified, pushed, and
+green at a new HEAD.
 
 ## Next Milestone
 
-Commit and push p06-t06-r09, require green PR checks and release dry run, refresh
-the detached enforce fixture, and return the exact full-PR range and new HEAD
-for the root-owned Remote structured Tier 1 retry.
+Root independently reviews p06-t06-r10, runs the full workspace, docs, and
+release gates, pushes only after acceptance, requires green PR checks, refreshes
+the detached enforce fixture, and then decides the next root-owned Remote Tier
+1 action. p06-t06 and p06-t07 remain unadvanced.

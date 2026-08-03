@@ -476,13 +476,11 @@ path but pass only the private draft path and supplied command invocations to
 the reviewer. On host acceptance, bind and retain the exact accepted reviewer
 handle. That handle performs required artifact intake, invokes
 `checkpointArtifacts`, submits `ReviewPlanV1` through `validate-plan`, retains
-the exact `PlanValidationReceiptV1` and launcher-owned
-`ReviewAccountingSeedV1`, invokes `begin-evidence`, executes selective evidence,
-and keeps every accepted complete or partial `WorkerDossierV1` inside the same
-continuation. Terminal construction must copy the seed's identity and immutable
-lane/classification assignments exactly and instantiate every seeded direct and
-positive-coverage verification requirement; it must not reconstruct those
-fields from the plan or receipt. Every supplied command descriptor is the launcher-owned
+the exact `PlanValidationReceiptV1` only for evidence authorization and dossier
+binding, invokes `begin-evidence`, executes selective evidence, and keeps every
+accepted complete or partial `WorkerDossierV1` inside the same continuation.
+It treats `ReviewAccountingSeedV1` as compatibility output rather than reviewer
+state. Every supplied command descriptor is the launcher-owned
 `{ executable, argv, cwd, stdin }` contract: execute it in its required
 absolute `cwd`; never use the reviewer's ambient working directory and never
 change cwd to repair branch-local alias resolution. As each applicable dossier
@@ -498,10 +496,17 @@ Never infer that boundary from implementation status; omission intentionally
 reviews every task in the phase.
 Never invoke ambient `oat`, reconstruct a dossier from terminal digests, or
 transfer a full dossier to the parent. Only after applicable dossiers are bound
-may the accepted handle return one `ReviewerTerminalV1`.
+may the accepted handle return one `ReviewerTerminalOverlayV1` with terminal
+substance, mutable outcomes, evidence, selectors, budget observations, and
+typed verification-slot inputs. It must not retain/copy the seed or supply
+immutable identity, paths, obligations, classification policy, completion, or
+claim kind/mode.
 
-Submit the terminal through launcher-owned `validate-output`. If and only if
-all errors are within the closed encoding allowlist, offer at most two
+Submit the overlay through launcher-owned `validate-output`; the launcher
+strictly parses and assembles canonical `ReviewerTerminalV1` from sealed state
+before artifact snapshot handling or validation, including after context
+compaction. If and only if all errors are within the closed encoding allowlist,
+offer at most two
 same-handle accounting repair turns with immutable review substance. Only an
 accepted complete terminal may call `publishAcceptedArtifact` with the
 validated immutable snapshot. After publication, continue to artifact

@@ -3,9 +3,12 @@ import { constants } from 'node:fs';
 import { lstat, mkdir, open, rename, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import { extractReviewAccounting } from './artifact-accounting';
+import {
+  extractReviewAccounting,
+  materializeReviewAccounting,
+} from './artifact-accounting';
 import { canonicalizeJson } from './canonical-json';
-import type { ReviewAccountingV1 } from './types';
+import type { ReviewAccountingV1, ReviewerAccountingOverlayV1 } from './types';
 
 const NOFOLLOW =
   'O_NOFOLLOW' in constants ? constants.O_NOFOLLOW : (0 as number);
@@ -24,6 +27,13 @@ export interface ArtifactSnapshot {
 
 export interface ArtifactPublicationHooks {
   beforeCommit?: (temporaryPath: string) => Promise<void>;
+}
+
+export class ArtifactDraftIdentityError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = 'ArtifactDraftIdentityError';
+  }
 }
 
 function digest(bytes: Buffer): string {
@@ -54,12 +64,12 @@ export async function createArtifactDraft(
   }
 }
 
-export async function snapshotArtifactDraft(
+export async function readArtifactDraftBytes(
   draft: ArtifactDraft,
-  envelopeAccounting: ReviewAccountingV1,
-): Promise<ArtifactSnapshot> {
-  const handle = await open(draft.path, constants.O_RDONLY | NOFOLLOW);
+): Promise<Buffer> {
+  let handle;
   try {
+    handle = await open(draft.path, constants.O_RDONLY | NOFOLLOW);
     const info = await handle.stat();
     if (
       !info.isFile() ||
@@ -68,26 +78,47 @@ export async function snapshotArtifactDraft(
       info.ino !== draft.inode ||
       info.mode & 0o077
     ) {
-      throw new Error('artifact draft identity mismatch');
+      throw new ArtifactDraftIdentityError('artifact draft identity mismatch');
     }
-    const bytes = await handle.readFile();
-    const embeddedAccounting = extractReviewAccounting(bytes);
-    if (
-      canonicalizeJson(embeddedAccounting) !==
-      canonicalizeJson(envelopeAccounting)
-    ) {
-      throw new Error(
-        'embedded artifact accounting does not match the terminal envelope',
-      );
-    }
-    return Object.freeze({
-      bytesBase64: bytes.toString('base64'),
-      digest: digest(bytes),
-      accounting: structuredClone(embeddedAccounting),
+    return await handle.readFile();
+  } catch (error) {
+    if (error instanceof ArtifactDraftIdentityError) throw error;
+    throw new ArtifactDraftIdentityError('artifact draft identity mismatch', {
+      cause: error,
     });
   } finally {
-    await handle.close();
+    await handle?.close();
   }
+}
+
+export async function snapshotArtifactDraft(
+  draft: ArtifactDraft,
+  envelopeAccounting: ReviewAccountingV1,
+  authoredOverlay?: ReviewerAccountingOverlayV1,
+): Promise<ArtifactSnapshot> {
+  const authoredBytes = await readArtifactDraftBytes(draft);
+  const bytes =
+    authoredOverlay === undefined
+      ? authoredBytes
+      : materializeReviewAccounting(
+          authoredBytes,
+          authoredOverlay,
+          envelopeAccounting,
+        );
+  const embeddedAccounting = extractReviewAccounting(bytes);
+  if (
+    canonicalizeJson(embeddedAccounting) !==
+    canonicalizeJson(envelopeAccounting)
+  ) {
+    throw new Error(
+      'embedded artifact accounting does not match the terminal envelope',
+    );
+  }
+  return Object.freeze({
+    bytesBase64: bytes.toString('base64'),
+    digest: digest(bytes),
+    accounting: structuredClone(embeddedAccounting),
+  });
 }
 
 export async function publishAcceptedArtifact(

@@ -1,11 +1,16 @@
 import { createHash } from 'node:crypto';
 
-import { hashCanonicalJson, parseStrictJson } from './canonical-json';
+import {
+  canonicalizeJson,
+  hashCanonicalJson,
+  parseStrictJson,
+} from './canonical-json';
 import { normalizeMarkdownSource } from './markdown-grammar';
 import { parseReviewerTerminalV1 } from './schemas';
 import type {
   ArtifactFindingProjectionV1,
   ReviewAccountingV1,
+  ReviewerAccountingOverlayV1,
   ReviewerTerminalV1,
 } from './types';
 
@@ -67,9 +72,12 @@ export function parseStrictReviewAccountingJson(
   return terminal.reviewAccounting;
 }
 
-export function extractReviewAccounting(
-  source: Buffer | string,
-): ReviewAccountingV1 {
+function extractAccountingBlock(source: Buffer | string): {
+  lines: string[];
+  openingIndex: number;
+  closingIndex: number;
+  json: string;
+} {
   const normalized = normalizeMarkdownSource(source);
   const lines = normalized.split('\n');
   const headings = accountingHeadings(lines);
@@ -109,7 +117,45 @@ export function extractReviewAccounting(
       );
     }
   }
-  return parseStrictReviewAccountingJson(json);
+  return { lines, openingIndex, closingIndex, json };
+}
+
+export function extractReviewAccounting(
+  source: Buffer | string,
+): ReviewAccountingV1 {
+  return parseStrictReviewAccountingJson(extractAccountingBlock(source).json);
+}
+
+export function materializeReviewAccounting(
+  source: Buffer | string,
+  authoredOverlay: ReviewerAccountingOverlayV1,
+  canonicalAccounting: ReviewAccountingV1,
+): Buffer {
+  const { lines, openingIndex, closingIndex, json } =
+    extractAccountingBlock(source);
+  if (
+    canonicalizeJson(parseStrictJson(json)) !==
+    canonicalizeJson(authoredOverlay)
+  ) {
+    throw new Error(
+      'embedded artifact overlay accounting does not match the terminal envelope',
+    );
+  }
+  const materialized = Buffer.from(
+    [
+      ...lines.slice(0, openingIndex + 1),
+      canonicalizeJson(canonicalAccounting),
+      ...lines.slice(closingIndex),
+    ].join('\n'),
+    'utf8',
+  );
+  if (
+    canonicalizeJson(extractReviewAccounting(materialized)) !==
+    canonicalizeJson(canonicalAccounting)
+  ) {
+    throw new Error('materialized artifact accounting is not canonical');
+  }
+  return materialized;
 }
 
 const FINDING_SEVERITIES = [

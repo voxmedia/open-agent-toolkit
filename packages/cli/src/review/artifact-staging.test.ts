@@ -19,7 +19,7 @@ import {
   publishAcceptedArtifact,
   snapshotArtifactDraft,
 } from './artifact-staging';
-import type { ReviewAccountingV1 } from './types';
+import type { ReviewAccountingV1, ReviewerAccountingOverlayV1 } from './types';
 
 const roots: string[] = [];
 
@@ -42,6 +42,23 @@ function accounting(): ReviewAccountingV1 {
 
 function artifact(value = accounting()): string {
   return `# Review\n\n## Review Accounting\n\n\`\`\`json\n${JSON.stringify(value)}\n\`\`\`\n`;
+}
+
+function accountingOverlay(): ReviewerAccountingOverlayV1 {
+  return {
+    evidence: [],
+    lanes: [],
+    classifications: [],
+    verification: {
+      promotedFindings: [],
+      consequentialAbsence: null,
+      workerConflict: null,
+      crossLaneGap: null,
+      positiveCoverage: [],
+      deterministicResults: [],
+    },
+    budget: { evidenceStoppedAt: null, outputReservePreserved: null },
+  };
 }
 
 async function privateRoot(): Promise<string> {
@@ -103,6 +120,27 @@ describe('private artifact staging', () => {
         receipt: 'different',
       }),
     ).rejects.toThrow(/accounting/i);
+  });
+
+  it('materializes overlay-authored accounting only in the immutable snapshot', async () => {
+    const root = await privateRoot();
+    const draft = await createArtifactDraft(root);
+    const overlay = accountingOverlay();
+    await writeFile(draft.path, artifact(overlay as never));
+
+    const snapshot = await snapshotArtifactDraft(draft, accounting(), overlay);
+    const snapshotSource = Buffer.from(snapshot.bytesBase64, 'base64').toString(
+      'utf8',
+    );
+    expect(snapshot.accounting).toEqual(accounting());
+    expect(snapshotSource).toContain('"receipt":"receipt"');
+    expect(await readFile(draft.path, 'utf8')).toBe(artifact(overlay as never));
+    await expect(
+      snapshotArtifactDraft(draft, accounting(), {
+        ...overlay,
+        budget: { ...overlay.budget, outputReservePreserved: true },
+      }),
+    ).rejects.toThrow(/overlay accounting/i);
   });
 
   it('rechecks snapshot digest and publishes only validated bytes atomically', async () => {

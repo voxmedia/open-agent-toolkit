@@ -857,7 +857,7 @@ describe('validateOatSkills', () => {
 
     expect(boundary).toBeDefined();
     expect(boundary).toMatch(
-      /Required artifact intake[\s\S]*checkpointArtifacts[\s\S]*ReviewPlanV1[\s\S]*PlanValidationReceiptV1[\s\S]*beginEvidence[\s\S]*Selective evidence execution/,
+      /Required artifact intake[\s\S]*checkpointArtifacts[\s\S]*ReviewPlanV1[\s\S]*PlanValidationReceiptV1[\s\S]*beginEvidence[\s\S]*Selective evidence execution[\s\S]*ReviewerTerminalOverlayV1[\s\S]*ReviewerTerminalV1/,
     );
     expect(normalizedBoundary).toContain(
       'Do not read source files or content-level diffs before `beginEvidence` succeeds.',
@@ -871,13 +871,11 @@ describe('validateOatSkills', () => {
     expect(boundary).toMatch(
       /accepted worker timeout or failure[\s\S]{0,180}never[\s\S]{0,100}replacement launch/i,
     );
-    expect(boundary).toMatch(
-      /ReviewerTerminalV1[\s\S]{0,220}complete terminal[\s\S]{0,220}blocked terminal/i,
-    );
+    expect(boundary).toMatch(/complete\s+overlay[\s\S]*blocked\s+overlay/i);
 
     expect(content.match(/^## Review Accounting$/gm)).toHaveLength(1);
     expect(content).toMatch(
-      /^## Review Accounting\n(?:\n)?```json\n\{[\s\S]*?"schemaVersion": 1[\s\S]*?\n\}\n```$/m,
+      /^## Review Accounting\n(?:\n)?```json\n\{[\s\S]*?"promotedFindings": \[\][\s\S]*?\n\}\n```$/m,
     );
     expect(content).not.toMatch(
       /(?:unconditionally|always|first)\s+(?:read|load)[^\n]*(?:source|content-level diff)/i,
@@ -895,7 +893,7 @@ describe('validateOatSkills', () => {
 
     expect(tier3).toBeDefined();
     expect(tier3).toMatch(
-      /prepare-context[\s\S]*Required artifact intake[\s\S]*checkpointArtifacts[\s\S]*ReviewPlanV1[\s\S]*PlanValidationReceiptV1[\s\S]*beginEvidence[\s\S]*Selective evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1/,
+      /prepare-context[\s\S]*Required artifact intake[\s\S]*checkpointArtifacts[\s\S]*ReviewPlanV1[\s\S]*PlanValidationReceiptV1[\s\S]*beginEvidence[\s\S]*Selective evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalOverlayV1[\s\S]*validate-output[\s\S]*ReviewerTerminalV1/,
     );
     expect(normalizedTier3).toContain(
       'The current planning parent is the accepted inline continuation.',
@@ -921,7 +919,7 @@ describe('validateOatSkills', () => {
     ]) {
       expect(rail).toBeDefined();
       expect(rail).toMatch(
-        /prepare-context[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*StructuredFindings[\s\S]*GitHub post/i,
+        /prepare-context[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalOverlayV1[\s\S]*validate-output[\s\S]*ReviewerTerminalV1[\s\S]*StructuredFindings[\s\S]*GitHub post/i,
       );
       expect(rail).toMatch(
         /Accepted timeout[\s\S]*BLOCKED[\s\S]*malformed[\s\S]*accounting-invalid[\s\S]*non-actionable/i,
@@ -938,7 +936,7 @@ describe('validateOatSkills', () => {
     );
     const content = `${entry}\n${reference}`.replace(/\s+/g, ' ');
     expect(content).toMatch(
-      /direct phase review[\s\S]*prepare-context[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*publishAcceptedArtifact/i,
+      /direct phase review[\s\S]*prepare-context[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalOverlayV1[\s\S]*validate-output[\s\S]*ReviewerTerminalV1[\s\S]*publishAcceptedArtifact/i,
     );
     expect(content).toContain(
       'Gate and checkpoint/final aliases inherit this coordinator; they do not create another authoritative context.',

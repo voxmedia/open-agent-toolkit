@@ -3988,6 +3988,57 @@ code changes.
 **Step 3: Commit**
 `fix(p06-t06): seed validated terminal accounting`
 
+#### Recovery p06-t06-r10: Assemble terminal accounting in the launcher
+
+**Finding:** Fresh Remote structured Tier 1 at
+`55a6728245649149850ed90371887b07439b050f` completed planning and evidence, but
+validation run `2dcce690b70e2c144e31a52dd2ff4079` demonstrated that requiring
+the reviewer to retain and copy a 209-path accounting seed remained
+context-fragile. The run is terminal and non-actionable; it created no accepted
+review or post.
+
+**Recovery files:**
+
+- Add: `packages/cli/src/review/terminal-assembly.ts`
+- Add: `packages/cli/src/review/terminal-assembly.test.ts`
+- Modify: overlay schema/types, output validation, artifact staging/accounting,
+  coordinator contracts, exports, and focused CLI regressions
+- Modify: canonical reviewer, local/remote provide, and direct phase coordinator
+  guidance
+- Regenerate: manifest-owned provider views and CLI assets
+- Modify: `.oat/projects/shared/review-plan-workflow/design.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/state.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Implement** Add strict versioned `ReviewerTerminalOverlayV1`. The
+reviewer authors only the candidate or block reason plus mutable outcomes,
+evidence, verification-slot inputs, and budget observations. Deterministically
+join exact selectors to sealed receipt, plan, assignment, and worker coverage in
+launcher order; derive immutable identity, assignments, classification policy,
+completion, and verification kind/mode. Reject duplicate, unknown, missing, and
+extra selectors before artifact materialization or defense-in-depth validation.
+Keep legacy full terminals temporarily compatible.
+
+**Step 2: Preserve lifecycle safety** Count assembly failures inside the existing
+three-submission/two-repair limit, freeze structured and artifact substance
+across same-handle repair, and preserve complete/blocked, delegated dossier,
+contingency, registry, classification, coverage, and gate semantics. Accept
+overlay accounting in private artifact drafts, materialize canonical full
+accounting only in the immutable accepted snapshot, and preserve path,
+descriptor, inode, link, and permission protections.
+
+**Step 3: Verify and regenerate** Cover 209 paths without retaining the seed,
+typed promoted/direct/positive/deterministic claims, exact selector joins,
+structured and artifact dual ingress, fail-closed assembly, bounded repair, and
+artifact parity. Run all focused production and canonical contract tests, CLI
+type-check/lint/format, provider sync, CLI asset generation, sync dry-run, and
+diff checks. Keep lockstep packages at 0.2.29 and do not repeat PR-scoped skill
+version bumps.
+
+**Step 4: Commit**
+`fix(p06-t06): assemble terminal accounting in launcher`
+
 ### Task p06-t07: Publish Stage A and start the soak
 
 **Files:**
