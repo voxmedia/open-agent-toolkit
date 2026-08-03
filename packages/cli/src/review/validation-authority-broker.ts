@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { chmod, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { createConnection, createServer, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
-import { basename, dirname, join } from 'node:path';
+import { basename, dirname, isAbsolute, join } from 'node:path';
 
 import { parseStrictJson } from './canonical-json';
 import { DefaultGitChangeMapAdapter } from './change-map';
@@ -72,7 +72,11 @@ type VersionedBrokerRequest = BrokerRequest & { schemaVersion: 1 };
 
 interface BrokerStartup {
   input: PrepareReviewContextInput;
-  launcherInvocation: { executable: string; argvPrefix: string[] };
+  launcherInvocation: {
+    executable: string;
+    argvPrefix: string[];
+    cwd: string;
+  };
 }
 
 interface AcceptedContinuationBinding {
@@ -216,6 +220,9 @@ export async function startPreparedValidationAuthorityBroker(
 async function startPreparedValidationAuthorityBrokerInternal(
   input: StartPreparedBrokerInput,
 ): Promise<PreparedBroker> {
+  if (!isAbsolute(input.startup.launcherInvocation.cwd)) {
+    throw new Error('validation authority launcher cwd must be absolute');
+  }
   const authority = new ValidationStoreAuthority(input.key);
   const store = new ValidationStore(
     input.validationRoot ??
@@ -230,6 +237,7 @@ async function startPreparedValidationAuthorityBrokerInternal(
       telemetryAdapterId: null,
       commandExecutable: input.startup.launcherInvocation.executable,
       commandArgvPrefix: input.startup.launcherInvocation.argvPrefix,
+      commandCwd: input.startup.launcherInvocation.cwd,
     }),
     input.socketPath,
   );
@@ -379,9 +387,16 @@ async function startPreparedValidationAuthorityBrokerInternal(
 
 export async function launchValidationAuthorityBroker(input: {
   preparationInput: PrepareReviewContextInput;
-  launcherInvocation: { executable: string; argvPrefix: string[] };
+  launcherInvocation: {
+    executable: string;
+    argvPrefix: string[];
+    cwd: string;
+  };
   environment?: NodeJS.ProcessEnv;
 }): Promise<PrepareReviewContextResultV1> {
+  if (!isAbsolute(input.launcherInvocation.cwd)) {
+    throw new Error('validation authority launcher cwd must be absolute');
+  }
   const environment = input.environment ?? process.env;
   const key = consumeLauncherValidationAuthorityKey(environment);
   let socketDirectory: string | undefined;
@@ -400,6 +415,7 @@ export async function launchValidationAuthorityBroker(input: {
         socketPath,
       ],
       {
+        cwd: input.launcherInvocation.cwd,
         detached: true,
         env: reviewerSafeEnvironment(environment),
         shell: false,

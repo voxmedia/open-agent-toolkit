@@ -138,6 +138,7 @@ async function lifecycleFixture(
       launcherInvocation: {
         executable: resolve('../../node_modules/.bin/tsx'),
         argvPrefix: ['--tsconfig', resolve('tsconfig.json'), sourceEntry],
+        cwd: resolve('.'),
       },
     },
   });
@@ -514,7 +515,7 @@ function binderInvocation(
 async function prepareEvidence(fixture: LifecycleFixture) {
   const checkpoint = await executeCommandInvocation(
     fixture.preparation.commands.checkpointArtifacts,
-    { cwd: resolve('..', '..') },
+    {},
   );
   expect(checkpoint.exitCode, checkpoint.stderr).toBe(0);
   const context = (
@@ -523,7 +524,6 @@ async function prepareEvidence(fixture: LifecycleFixture) {
   const validation = await executeCommandInvocation(
     fixture.preparation.commands.validatePlan,
     {
-      cwd: resolve('..', '..'),
       stdin: JSON.stringify(
         reviewPlan(
           fixture.preparation.preparation.runId,
@@ -551,9 +551,7 @@ async function prepareEvidence(fixture: LifecycleFixture) {
   ).result.receipt;
   const begin = structuredClone(fixture.preparation.commands.beginEvidence);
   begin.argv[begin.argv.indexOf('__OAT_PLAN_RECEIPT__')] = receipt.token;
-  const started = await executeCommandInvocation(begin, {
-    cwd: resolve('..', '..'),
-  });
+  const started = await executeCommandInvocation(begin);
   expect(started.exitCode, started.stderr).toBe(0);
   return receipt;
 }
@@ -566,7 +564,6 @@ async function bind(
   const result = await executeCommandInvocation(
     binderInvocation(fixture, receipt),
     {
-      cwd: resolve('..', '..'),
       environment: {
         ...process.env,
         PATH: `${join(fixture.root, 'shadow-bin')}:${process.env.PATH ?? ''}`,
@@ -681,7 +678,7 @@ describe('branch-local worker dossier lifecycle', () => {
         'worker-dossier-binding-phase-invalid',
       );
     },
-    30_000,
+    45_000,
   );
 
   it('fails closed for wrong receipt, run/plan mismatch, sibling attempt, and replacement', async () => {

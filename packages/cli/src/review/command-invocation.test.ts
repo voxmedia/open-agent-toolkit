@@ -12,6 +12,7 @@ describe('portable command invocation', () => {
     ];
     const result = await executeCommandInvocation({
       executable: process.execPath,
+      cwd: process.cwd(),
       argv: [
         '-e',
         'process.stdout.write(JSON.stringify(process.argv.slice(1)))',
@@ -28,6 +29,7 @@ describe('portable command invocation', () => {
     await expect(
       executeCommandInvocation({
         executable: process.execPath,
+        cwd: process.cwd(),
         argv: ['-e', 'process.exit(0)'],
         stdin: 'review-plan-json',
       }),
@@ -38,6 +40,7 @@ describe('portable command invocation', () => {
     const result = await executeCommandInvocation(
       {
         executable: process.execPath,
+        cwd: process.cwd(),
         argv: [
           '-e',
           "process.stdout.write(process.env.OAT_REVIEW_AUTHORITY_KEY ?? 'absent')",
@@ -52,5 +55,21 @@ describe('portable command invocation', () => {
       },
     );
     expect(result).toMatchObject({ exitCode: 0, stdout: 'absent' });
+  });
+
+  it('uses descriptor cwd and rejects out-of-band drift', async () => {
+    const invocation = {
+      executable: process.execPath,
+      argv: ['-e', 'process.stdout.write(process.cwd())'],
+      cwd: '/',
+      stdin: 'none' as const,
+    };
+    await expect(executeCommandInvocation(invocation)).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: '/',
+    });
+    await expect(
+      executeCommandInvocation(invocation, { cwd: process.cwd() }),
+    ).rejects.toThrow(/cwd mismatch/);
   });
 });

@@ -140,8 +140,9 @@ unwired reference implementation, not an additional coordinator.
 5. Preparation creates `ReviewPreparationV1`, writes private run state, and
    returns launcher-owned checkpoint, validation, evidence, and worker-dossier
    `ReviewCommandInvocationV1` values. Each invocation identifies one
-   executable, an argv array, and its stdin mode; opaque checkpoint state is not
-   embedded in reviewer-readable context.
+   executable, an argv array, a required absolute launcher-owned working
+   directory, and its stdin mode; opaque checkpoint state is not embedded in
+   reviewer-readable context.
 6. The provider/skill runtime launches the reviewer. On acceptance, it binds
    the opaque handle ID to the run before any mutation command is accepted and
    retains that continuation for checkpoint and repair.
@@ -748,6 +749,7 @@ type PreparedReviewContextV1 = Omit<ReviewPreparationV1, 'timeBudget'> & {
 interface ReviewCommandInvocationV1 {
   executable: string;
   argv: string[];
+  cwd: string;
   stdin: 'none' | 'review-plan-json' | 'worker-dossier-json';
 }
 
@@ -788,8 +790,9 @@ interface PrepareReviewContextResultV1 {
   capability. These secrets appear only in launcher-owned invocation argv, are
   enabled only after accepted-handle binding, and are excluded from
   preparation/context digests, logs, and reviewer-authored JSON. Consumers
-  execute the supplied executable and argv directly without shell parsing or an
-  ambient command lookup and provide stdin only when its discriminant requires
+  execute the supplied executable and argv directly in the descriptor's
+  required absolute cwd without shell parsing, an ambient command lookup, or a
+  caller-cwd override, and provide stdin only when its discriminant requires
   `review-plan-json` or `worker-dossier-json`.
 - `PreparedReviewContextV1` is created exactly once after artifact intake;
   plan validation requires it.
@@ -1696,8 +1699,9 @@ receipt returned by successful validation. The worker-dossier command contains
 that same receipt placeholder and the validation run ID; the accepted primary
 substitutes only the receipt and sends one bounded `WorkerDossierV1` using the
 `worker-dossier-json` stdin mode before returning `ReviewerTerminalV1`. Exact
-executable and argv fixtures verify all four commands, including the
-branch-local worker-dossier binder and its lack of any ambient command path.
+executable, argv, and cwd fixtures verify all four commands, including the
+branch-local worker-dossier binder and its lack of any ambient command path
+or caller-cwd dependency.
 
 The trusted `prepare-context` JSON result and accepted-reviewer planning payload
 necessarily carry the generated `ReviewCommandInvocationV1` values and their

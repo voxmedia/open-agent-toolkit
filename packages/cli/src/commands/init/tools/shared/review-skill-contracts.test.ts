@@ -158,6 +158,26 @@ describe('review skill contracts', () => {
     }
   });
 
+  it('pins launcher-owned working directories across review coordinators', () => {
+    for (const path of [
+      '.agents/agents/oat-reviewer.md',
+      '.cursor/agents/oat-reviewer-gpt-5-6-sol-high.md',
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    ]) {
+      const normalized = readRepoFile(path).replace(/\s+/g, ' ');
+      expect(normalized, path).toContain('{ executable, argv, cwd, stdin }');
+      expect(normalized, path).toMatch(/required absolute `?cwd`?/);
+      expect(normalized, path).toMatch(
+        /never (?:substitute|use)[\s\S]{0,100}ambient working directory/i,
+      );
+      expect(normalized, path).toMatch(
+        /never[\s\S]{0,100}change cwd to repair[\s\S]{0,80}alias resolution/i,
+      );
+    }
+  });
+
   it('makes Tier 3 a receipt-bound selective inline continuation', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-review-provide/SKILL.md',
@@ -237,7 +257,8 @@ describe('review skill contracts', () => {
         'No discoverable artifact, Reviews row, project log, or bookkeeping commit',
       );
       expect(normalized).toContain('preparation-supplied');
-      expect(normalized).toContain('exact executable and argv array');
+      expect(normalized).toContain('exact executable, argv array, and');
+      expect(normalized).toContain('absolute cwd');
       expect(normalized).toContain('__OAT_PLAN_RECEIPT__');
       expect(normalized).toContain('bounded JSON stdin');
       expect(normalized).toContain('ambient `oat`');
@@ -283,7 +304,8 @@ describe('review skill contracts', () => {
       );
       expect(normalized).toMatch(/never launch(?:es)? a replacement/i);
       expect(normalized).toContain('preparation-supplied');
-      expect(normalized).toContain('exact executable and argv array');
+      expect(normalized).toContain('exact executable, argv array, and');
+      expect(normalized).toContain('absolute cwd');
       expect(normalized).toContain('__OAT_PLAN_RECEIPT__');
       expect(normalized).toContain('bounded JSON stdin');
       expect(normalized).toContain('ambient `oat`');
@@ -300,7 +322,8 @@ describe('review skill contracts', () => {
       /direct phase review[\s\S]*prepare-context[\s\S]*accepted reviewer handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*publishAcceptedArtifact[\s\S]*bookkeeping/i,
     );
     expect(normalized).toContain('preparation-supplied');
-    expect(normalized).toContain('exact executable and argv array');
+    expect(normalized).toContain('{ executable, argv, cwd, stdin }');
+    expect(normalized).toContain('required absolute `cwd`');
     expect(normalized).toContain('__OAT_PLAN_RECEIPT__');
     expect(normalized).toContain('bounded JSON stdin');
     expect(normalized).toContain(

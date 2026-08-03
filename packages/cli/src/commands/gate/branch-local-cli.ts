@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 export interface GateCliLaunch {
   command: string;
   args: string[];
-  cwd?: string;
+  cwd: string;
 }
 
 export interface BranchLocalGateCli {
@@ -49,7 +49,7 @@ export function currentGateCliLaunch(
       ...resolveCurrentLoaderArgs(input.execArgv ?? process.execArgv),
       entrypoint,
     ],
-    cwd: input.cwd ?? process.cwd(),
+    cwd: resolve(input.cwd ?? process.cwd()),
   };
 }
 

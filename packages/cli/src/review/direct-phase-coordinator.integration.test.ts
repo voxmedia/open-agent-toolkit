@@ -44,7 +44,8 @@ describe('direct phase review coordinator integration', () => {
       'Blocked or accounting-invalid output remains non-actionable',
     );
     expect(review).toContain('preparation-supplied');
-    expect(review).toContain('exact executable and argv array');
+    expect(review).toContain('{ executable, argv, cwd, stdin }');
+    expect(review).toContain('required absolute `cwd`');
     expect(review).toContain('__OAT_PLAN_RECEIPT__');
     expect(review).toContain('bounded JSON stdin');
     expect(review).toContain('ambient `oat`');

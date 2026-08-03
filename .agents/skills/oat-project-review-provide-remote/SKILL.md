@@ -352,14 +352,18 @@ in structured-output mode. This mirrors the tested wrapper at
   performs required artifact intake, invokes supplied `checkpointArtifacts`,
   submits `ReviewPlanV1` through `validate-plan`, retains
   `PlanValidationReceiptV1`, and invokes `begin-evidence` before selective
-  content evidence.
+  content evidence. Every supplied command descriptor is the launcher-owned
+  `{ executable, argv, cwd, stdin }` contract: execute it in its required
+  absolute `cwd`; never use the reviewer's ambient working directory and never
+  change cwd to repair branch-local alias resolution.
 - Keep every applicable complete or partial `WorkerDossierV1` inside the
   accepted primary continuation. As each dossier is accepted, the continuation
   executes the preparation-supplied `bindWorkerDossier` invocation with its
-  exact executable and argv array, replaces only `__OAT_PLAN_RECEIPT__`, and
-  supplies exactly that dossier as bounded JSON stdin. It must do this before
-  returning one `ReviewerTerminalV1`. Never invoke ambient `oat`, reconstruct a
-  dossier from terminal digests, or hand a full dossier to the parent launcher.
+  exact executable, argv array, and absolute cwd, replaces only
+  `__OAT_PLAN_RECEIPT__`, and supplies exactly that dossier as bounded JSON
+  stdin. It must do this before returning one `ReviewerTerminalV1`. Never
+  invoke ambient `oat`, override descriptor cwd, reconstruct a dossier from
+  terminal digests, or hand a full dossier to the parent launcher.
   Identical retries are idempotent; not-delegated inline lanes have no dossier.
   Then submit the terminal envelope through launcher-owned `validate-output`.
   If and only if
@@ -383,13 +387,16 @@ review and the managed-target guard permits it, invoke
 planning parent as the accepted handle. Perform required artifact intake; invoke supplied
 `checkpointArtifacts`; submit `ReviewPlanV1` through `validate-plan`; retain
 `PlanValidationReceiptV1`; and invoke `begin-evidence` before selective,
-path-scoped content evidence. Keep every applicable complete or partial
+path-scoped content evidence. Execute every exact
+`{ executable, argv, cwd, stdin }` descriptor in its required absolute `cwd`;
+never use the ambient working directory or change cwd to repair alias
+resolution. Keep every applicable complete or partial
 `WorkerDossierV1` in this same continuation and, as each is accepted, execute
-the preparation-supplied `bindWorkerDossier` exact executable and argv array
-with only `__OAT_PLAN_RECEIPT__` replaced and the dossier as bounded JSON stdin.
-Do not use ambient `oat`; not-delegated inline lanes remain unchanged. Only
-after binding, return one `ReviewerTerminalV1`, then run `validate-output` and
-permit at most two same-handle accounting
+the preparation-supplied `bindWorkerDossier` exact executable, argv array, and
+absolute cwd with only `__OAT_PLAN_RECEIPT__` replaced and the dossier as
+bounded JSON stdin. Do not use ambient `oat`; not-delegated inline lanes remain
+unchanged. Only after binding, return one `ReviewerTerminalV1`, then run
+`validate-output` and permit at most two same-handle accounting
 repair turns. Only a validated complete structured terminal may
 project `StructuredFindings` and proceed to finding mapping, body construction,
 confirmation, or GitHub posting. Accepted timeout, `BLOCKED`, malformed, or

@@ -29,9 +29,17 @@ interface PrepareContextCommandDependencies {
   ) => Promise<PrepareReviewContextResultV1>;
   createDependencies: (
     input: PrepareReviewContextInput,
-    launcherInvocation: { executable: string; argvPrefix: string[] },
+    launcherInvocation: {
+      executable: string;
+      argvPrefix: string[];
+      cwd: string;
+    },
   ) => PrepareReviewContextDependencies;
-  launcherInvocation: { executable: string; argvPrefix: string[] };
+  launcherInvocation: {
+    executable: string;
+    argvPrefix: string[];
+    cwd: string;
+  };
   brokerPrepare: typeof launchValidationAuthorityBroker;
   processEnv: NodeJS.ProcessEnv;
 }
@@ -48,6 +56,7 @@ const DEFAULT_DEPENDENCIES: PrepareContextCommandDependencies = {
   launcherInvocation: {
     executable: activeLaunch.command,
     argvPrefix: activeLaunch.args,
+    cwd: activeLaunch.cwd,
   },
   createDependencies: (_input, _launcherInvocation) => {
     throw new Error('direct preparation dependencies must be injected');

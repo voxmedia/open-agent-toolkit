@@ -478,11 +478,15 @@ handle. That handle performs required artifact intake, invokes
 `checkpointArtifacts`, submits `ReviewPlanV1` through `validate-plan`, retains
 `PlanValidationReceiptV1`, invokes `begin-evidence`, executes selective
 evidence, and keeps every accepted complete or partial `WorkerDossierV1` inside
-the same continuation. As each applicable dossier is accepted, execute the
-preparation-supplied `bindWorkerDossier` invocation with its exact executable
-and argv array, replace only `__OAT_PLAN_RECEIPT__` with the retained receipt,
-and provide exactly that dossier as bounded JSON stdin. Identical retries are
-idempotent. A not-delegated inline lane has no dossier and remains unchanged.
+the same continuation. Every supplied command descriptor is the launcher-owned
+`{ executable, argv, cwd, stdin }` contract: execute it in its required
+absolute `cwd`; never use the reviewer's ambient working directory and never
+change cwd to repair branch-local alias resolution. As each applicable dossier
+is accepted, execute the preparation-supplied `bindWorkerDossier` invocation
+with its exact executable, argv array, and cwd, replace only
+`__OAT_PLAN_RECEIPT__` with the retained receipt, and provide exactly that
+dossier as bounded JSON stdin. Identical retries are idempotent. A
+not-delegated inline lane has no dossier and remains unchanged.
 
 When this direct review covers an implemented prefix before later tasks in the
 same phase, pass the plan-declared inclusive current task as `throughTaskId`.

@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -43,6 +43,13 @@ describe('branch-local gate CLI', () => {
       args: ['--import', loaderArgs[1], '/checkout/packages/cli/src/index.ts'],
       cwd: '/checkout',
     });
+    expect(
+      currentGateCliLaunch({
+        argv: ['node', '/checkout/packages/cli/src/index.ts'],
+        execPath: '/runtime/node',
+        cwd: 'relative-checkout',
+      }).cwd,
+    ).toBe(resolve('relative-checkout'));
   });
 
   it('creates an executable shim for the exact running checkout launch', async () => {

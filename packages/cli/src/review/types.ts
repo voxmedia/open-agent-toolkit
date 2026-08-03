@@ -230,6 +230,7 @@ export interface PrepareReviewContextResultV1 {
 export interface ReviewCommandInvocationV1 {
   executable: string;
   argv: string[];
+  cwd: string;
   stdin: 'none' | 'review-plan-json' | 'worker-dossier-json';
 }
 

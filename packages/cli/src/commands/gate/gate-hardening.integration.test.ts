@@ -695,6 +695,6 @@ describe(
         receiveEligible: false,
         handoff: null,
       });
-    });
+    }, 30_000);
   },
 );

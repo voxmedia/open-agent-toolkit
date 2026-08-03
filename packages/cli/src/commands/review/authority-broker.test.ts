@@ -17,7 +17,11 @@ describe('createReviewAuthorityBrokerCommand', () => {
     const command = createReviewAuthorityBrokerCommand({
       readStartup: vi.fn(async () => ({
         input: { repoRoot: '/repo' },
-        launcherInvocation: { executable: '/node', argvPrefix: ['/oat'] },
+        launcherInvocation: {
+          executable: '/node',
+          argvPrefix: ['/oat'],
+          cwd: '/branch',
+        },
       })) as never,
       readKey: vi.fn(async () => key),
       readAcceptedContinuation: vi.fn(async () => ({

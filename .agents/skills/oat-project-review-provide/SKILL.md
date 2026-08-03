@@ -821,6 +821,10 @@ review, invoke launcher-owned `oat review prepare-context` before dispatch and
 retain its validation run, private artifact draft path, and command
 invocations. Include the explicit `throughTaskId` or `null` in preparation.
 The reviewer receives the private draft path and exact command descriptors.
+Each descriptor is the launcher-owned
+`{ executable, argv, cwd, stdin }` contract. Execute it with the required
+absolute `cwd`; never substitute the reviewer's ambient working directory or
+change cwd to repair branch-local alias resolution.
 
 Then spawn the reviewer:
 
@@ -843,11 +847,12 @@ artifact intake, invokes the supplied `checkpointArtifacts`, submits
 content evidence. Keep every complete or partial `WorkerDossierV1` inside this
 accepted primary continuation. As each dossier is accepted, and before
 terminal return, the continuation must execute the preparation-supplied
-`bindWorkerDossier` invocation with its exact executable and argv array, replace
-only `__OAT_PLAN_RECEIPT__` with the retained receipt, and write exactly that
-dossier as bounded JSON stdin. Only after applicable dossiers are bound may it
-return `ReviewerTerminalV1`. Never invoke ambient `oat`, reconstruct a dossier
-from terminal digests, or hand a full dossier back to the parent launcher.
+`bindWorkerDossier` invocation with its exact executable, argv array, and
+absolute cwd, replace only `__OAT_PLAN_RECEIPT__` with the retained receipt,
+and write exactly that dossier as bounded JSON stdin. Only after applicable
+dossiers are bound may it return `ReviewerTerminalV1`. Never invoke ambient
+`oat`, override descriptor cwd, reconstruct a dossier from terminal digests,
+or hand a full dossier back to the parent launcher.
 Retain that exact accepted reviewer handle for its typed terminal; never launch
 a replacement after accepted timeout, blocked, malformed, or
 accounting-invalid output.
@@ -902,8 +907,10 @@ route or block.
 When inline is allowed, use the following contract. The current planning parent
 is the accepted inline continuation. Do not launch a replacement reviewer or
 introduce another coordinator. The launcher-owned commands and validators
-remain authoritative; execute their supplied executable and argument arrays
-directly.
+remain authoritative. Execute every exact
+`{ executable, argv, cwd, stdin }` descriptor in its required absolute `cwd`;
+never use the ambient working directory or change cwd to repair alias
+resolution.
 
 Use this exact contract:
 
@@ -947,11 +954,11 @@ Use this exact contract:
    estimate keeps the review inline but requires path-scoped evidence.
 8. **Delegated dossier binding (`bindWorkerDossier`)** — Keep every applicable
    complete or partial `WorkerDossierV1` in this accepted continuation. As each
-   dossier is accepted, execute the preparation-supplied exact executable and
-   argv array, replace only `__OAT_PLAN_RECEIPT__`, and provide that dossier as
-   bounded JSON stdin. Never use ambient `oat` or reconstruct a dossier from a
-   terminal digest. Identical retries are idempotent. A not-delegated inline
-   lane has no dossier.
+   dossier is accepted, execute the preparation-supplied exact executable, argv
+   array, and absolute cwd, replace only `__OAT_PLAN_RECEIPT__`, and provide
+   that dossier as bounded JSON stdin. Never use ambient `oat`, override
+   descriptor cwd, or reconstruct a dossier from a terminal digest. Identical
+   retries are idempotent. A not-delegated inline lane has no dossier.
 9. **Typed terminal (`ReviewerTerminalV1`)** — Only after applicable dossiers
    are bound, apply the full canonical `oat-reviewer` checklist, reconcile
    evidence, and return one complete or blocked terminal from this same

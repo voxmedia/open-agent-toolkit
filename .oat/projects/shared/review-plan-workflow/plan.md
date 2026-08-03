@@ -3839,6 +3839,55 @@ unpublished 0.2.29 and do not add another canonical skill version bump.
 **Step 3: Commit**
 `fix(p06-t06): unify command evidence digests`
 
+#### Recovery p06-t06-r07: Preserve trusted command working directories
+
+**Finding:** Authorized Remote structured Tier 1 at
+`2e2403ad9dd6e609e05cc19000fe2a916f61ac29` accepted target
+`oat-reviewer-gpt-5-6-sol-high` for full PR range
+`5f76ade91b4b2da7bb8ce5b53960325d9e189952..2e2403ad9dd6e609e05cc19000fe2a916f61ac29`
+with no prior remote reviews. Validation run
+`300862e10f3048224321eede6165e8e1` and preparation digest
+`5c065ccc8e79b6664f44700cc3b22d83b1617d9601c92a581cd7d04df2d940f5`
+blocked before plan or evidence because an exact checkpoint invocation could
+not resolve `@app/command-context`. `currentGateCliLaunch()` resolved a trusted
+cwd, but prepare-context dropped it from command descriptors.
+
+**Recovery files:**
+
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/schemas.ts`
+- Modify: `packages/cli/src/review/command-capabilities.ts`
+- Modify: `packages/cli/src/review/command-invocation.ts`
+- Modify: `packages/cli/src/review/prepare-context.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.ts`
+- Modify: `packages/cli/src/commands/gate/branch-local-cli.ts`
+- Modify: focused command, schema, capability, broker, prepare, lifecycle,
+  transport, and coordinator tests
+- Modify: canonical reviewer, local/remote provide, and direct phase
+  coordinator guidance
+- Regenerate: manifest-owned provider views and CLI bundles
+- Modify: `.oat/projects/shared/review-plan-workflow/design.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/state.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Implement** Add required absolute launcher-owned `cwd` to every
+`ReviewCommandInvocationV1`, preserve it through prepare and broker transport,
+spawn the broker and lifecycle commands in it, and reject missing, relative,
+unknown, or out-of-band cwd drift. Preserve executable, argv, stdin, command
+capabilities, accepted-handle terminal rules, and shell-free execution.
+
+**Step 2: Verify** Prove source/tsx lifecycle commands resolve branch-local
+aliases from descriptor cwd when invoked by an unrelated caller, broker spawn
+and command projections preserve cwd, local/remote/direct coordinator guidance
+requires the exact four-field descriptor, and all workspace, docs, sync,
+bundle, release, CI, and detached-fixture gates pass. Keep public packages at
+lockstep 0.2.29 and do not repeat PR-scoped canonical asset version bumps.
+
+**Step 3: Commit**
+`fix(p06-t06): preserve review command working directories`
+
 ### Task p06-t07: Publish Stage A and start the soak
 
 **Files:**

@@ -1804,7 +1804,7 @@ re-review range through p06-t06 to the root coordinator.
 
 #### Recovery p06-t06-r06: Unify command evidence digests
 
-**Status:** in_progress
+**Status:** implemented
 **Prior review:** Narrowed Local Tier 1 run
 `11e75c4b2ff7d9332c094a8a44c81d3c` reviewed
 `b4f40fbc2590d3f8ad4aeffd9c88e738e8c5f389..cd165ab62a4c1359c9ad4550db83791821f27f94`
@@ -1840,6 +1840,53 @@ version remains 1.2.1 with no repeated-edit bump.
 release dry run, refresh the detached enforce fixture, rerun the 756-test
 p06-t06 preflight, and return the fresh narrowed range to the root. Do not
 launch Local Tier 1 from this recovery.
+
+#### Recovery p06-t06-r07: Preserve trusted command working directories
+
+**Status:** in_progress
+**Remote terminal:** Authorized Remote structured Tier 1 at reviewed HEAD
+`2e2403ad9dd6e609e05cc19000fe2a916f61ac29` accepted target
+`oat-reviewer-gpt-5-6-sol-high`. Validation run
+`300862e10f3048224321eede6165e8e1`, preparation digest
+`5c065ccc8e79b6664f44700cc3b22d83b1617d9601c92a581cd7d04df2d940f5`,
+covered full PR range
+`5f76ade91b4b2da7bb8ce5b53960325d9e189952..2e2403ad9dd6e609e05cc19000fe2a916f61ac29`;
+there were no prior remote reviews.
+**Failure:** The accepted reviewer blocked before plan or evidence because the
+exact checkpoint invocation could not resolve `@app/command-context`.
+Validate-output returned phase-invalid. No body, payload, or post was created;
+GitHub PR reviews remained zero. The ephemeral worktree and validation state
+were cleaned. The accepted run is terminal and is not resumed, replaced, or
+relabeled at the same HEAD.
+**Root cause:** `currentGateCliLaunch()` retained `{ command, args, cwd }`, but
+prepare-context narrowed it to executable and argv prefix.
+`ReviewCommandInvocationV1` and its parser therefore omitted trusted cwd and
+made exact descriptors depend on the reviewer's ambient directory.
+**Operator disposition:** Authorized only required absolute launcher-owned cwd
+preservation through strict schemas, capability issuance, prepare/broker
+transport and spawning, coordinator execution/guidance, focused and full
+verification, normal push/check wait, detached-fixture refresh, and a
+root-owned Remote Tier 1 retry at the resulting new HEAD.
+**Implementation:** Added required absolute cwd to exact invocation contracts,
+made descriptor cwd authoritative during execution, rejected caller cwd drift,
+threaded branch-local cwd through prepare and broker startup, and aligned
+canonical reviewer/local/remote/direct coordinator guidance.
+**Verification:** Focused command, schema, capability, prepare, broker,
+source-lifecycle, arbitrary-caller-cwd, gate, sync, bundle, skill-contract, and
+local/direct coordinator suites passed 447/447 tests. Complete package suites
+passed 4,120 tests with bounded CLI worker concurrency, and smoke passed
+131/131. Workspace check and type-check each passed 10 tasks; all five package
+builds, 10 lint tasks, 10 format tasks, and all six docs builds passed. Release
+validation passed five lockstep 0.2.29 public packages and 65 visual
+measurements; provider sync dry-run reported no drift. The standard fully
+parallel local test command reproducibly exhausted fixed process-test timeouts,
+while every affected test passed focused or in the complete bounded-worker
+suite; no production behavior or broad runner policy was weakened.
+
+**Next:** Commit and push the bounded recovery, require passing CI and release
+dry run, refresh the detached enforce fixture, run the updated p06-t06 focused
+preflight, and return the new HEAD and exact full-PR range for root-owned Remote
+Tier 1. Do not launch or post the review from this recovery.
 
 ## Orchestration Runs
 

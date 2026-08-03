@@ -162,12 +162,14 @@ describe('review command capabilities', () => {
     const commands = renderReviewCommands({
       executable: "/tmp/oat'bin",
       argvPrefix: ['--branch', 'feature & fix'],
+      cwd: '/trusted branch',
       runId: 'run id',
       checkpointToken: "check'token",
       planToken: 'plan-token',
     });
     expect(commands.checkpointArtifacts).toEqual({
       executable: "/tmp/oat'bin",
+      cwd: '/trusted branch',
       argv: [
         '--branch',
         'feature & fix',
@@ -186,6 +188,7 @@ describe('review command capabilities', () => {
     expect(commands.beginEvidence.argv).toContain('__OAT_PLAN_RECEIPT__');
     expect(commands.bindWorkerDossier).toEqual({
       executable: "/tmp/oat'bin",
+      cwd: '/trusted branch',
       argv: [
         '--branch',
         'feature & fix',
@@ -200,5 +203,15 @@ describe('review command capabilities', () => {
       ],
       stdin: 'worker-dossier-json',
     });
+    expect(() =>
+      renderReviewCommands({
+        executable: '/tmp/oat',
+        argvPrefix: [],
+        cwd: 'relative',
+        runId: 'run',
+        checkpointToken: 'checkpoint',
+        planToken: 'plan',
+      }),
+    ).toThrow(/cwd must be an absolute path/);
   });
 });

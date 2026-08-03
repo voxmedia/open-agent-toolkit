@@ -222,6 +222,7 @@ describe('review preparation contracts', () => {
       commands: {
         checkpointArtifacts: {
           executable: process.execPath,
+          cwd: '/repo',
           argv: [
             '/repo/packages/cli/dist/index.js',
             'review',
@@ -236,6 +237,7 @@ describe('review preparation contracts', () => {
         },
         validatePlan: {
           executable: process.execPath,
+          cwd: '/repo',
           argv: [
             '/repo/packages/cli/dist/index.js',
             'review',
@@ -251,6 +253,7 @@ describe('review preparation contracts', () => {
         },
         beginEvidence: {
           executable: process.execPath,
+          cwd: '/repo',
           argv: [
             '/repo/packages/cli/dist/index.js',
             'review',
@@ -265,6 +268,7 @@ describe('review preparation contracts', () => {
         },
         bindWorkerDossier: {
           executable: process.execPath,
+          cwd: '/repo',
           argv: [
             '/repo/packages/cli/dist/index.js',
             'review',

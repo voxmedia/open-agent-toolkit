@@ -1,4 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { isAbsolute } from 'node:path';
 
 import type { ReviewCommandInvocationV1 } from './types';
 import { type ValidationRunState, ValidationStore } from './validation-store';
@@ -105,6 +106,7 @@ export function renderReviewCommands(input: {
   cli?: string;
   executable?: string;
   argvPrefix?: string[];
+  cwd: string;
   runId: string;
   checkpointToken: string;
   planToken: string;
@@ -116,12 +118,16 @@ export function renderReviewCommands(input: {
 } {
   const executable = input.executable ?? input.cli;
   if (!executable) throw new Error('review command executable is required');
+  if (!isAbsolute(input.cwd)) {
+    throw new Error('review command cwd must be an absolute path');
+  }
   const command = (
     args: string[],
     stdin: ReviewCommandInvocationV1['stdin'] = 'none',
   ): ReviewCommandInvocationV1 => ({
     executable,
     argv: [...(input.argvPrefix ?? []), ...args],
+    cwd: input.cwd,
     stdin,
   });
   return {

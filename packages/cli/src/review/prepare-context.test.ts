@@ -69,6 +69,7 @@ describe('prepareReviewContext', () => {
       telemetryAdapterId: 'host',
       commandExecutable: process.execPath,
       commandArgvPrefix: ['/repo/packages/cli/dist/index.js'],
+      commandCwd: '/repo',
       clock: clock(),
       reap: async () => {
         events.push('reap');
@@ -113,6 +114,9 @@ describe('prepareReviewContext', () => {
     expect(result.commands.checkpointArtifacts.argv[0]).toBe(
       '/repo/packages/cli/dist/index.js',
     );
+    expect(
+      Object.values(result.commands).map((invocation) => invocation.cwd),
+    ).toEqual(['/repo', '/repo', '/repo', '/repo']);
     expect(result.commands.bindWorkerDossier).toMatchObject({
       executable: process.execPath,
       stdin: 'worker-dossier-json',

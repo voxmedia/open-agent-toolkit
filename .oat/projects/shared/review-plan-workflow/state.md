@@ -2,8 +2,7 @@
 oat_current_task: p06-t06
 oat_last_commit: fd7a86048e316c8a1ab3de1b6ab62e51af659d04
 oat_blockers:
-  - p06-t06 Remote structured Tier 1 posting requires separate operator approval
-  - p06-t06 fresh Local artifact Tier 1 re-review required after boundary fix
+  - p06-t06 root-owned Remote structured Tier 1 retry required after cwd recovery
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -77,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-02T21:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-03T00:04:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -157,6 +156,16 @@ artifact and terminal files were deleted, and it must not be relabeled,
 resumed, or replaced at the same HEAD. The operator authorized bounded
 recovery `p06-t06-r06` to unify the canonical command-evidence digest before a
 new root-owned Local Tier 1 review on a fresh range.
+The subsequent authorized Remote structured Tier 1 at `2e2403ad` accepted
+target `oat-reviewer-gpt-5-6-sol-high`, but validation run
+`300862e10f3048224321eede6165e8e1` blocked before plan or evidence because the
+checkpoint descriptor dropped the trusted launcher cwd and could not resolve
+`@app/command-context`. Validate-output was phase-invalid. No body, payload,
+post, or review was created; GitHub PR reviews remained zero. The ephemeral
+worktree and validation state were cleaned. This accepted run is terminal and
+must not be resumed, replaced, or relabeled at the same HEAD. The operator
+authorized bounded recovery `p06-t06-r07` and a root-owned Remote Tier 1 retry
+only at its resulting new HEAD.
 
 ## Artifacts
 
@@ -326,16 +335,20 @@ new root-owned Local Tier 1 review on a fresh range.
 - ⚠ Narrowed Local Tier 1 resolved the Medium but was terminal
   accounting-invalid
 - ✓ Bounded p06-t06-r06 digest recovery passed release-candidate verification
-- → Push p06-t06-r06, await green checks, refresh the fixture, then root reruns
-  Local Tier 1 on the fresh range
+- ⚠ Accepted Remote Tier 1 at `2e2403ad` blocked before plan/evidence because
+  exact descriptors dropped launcher cwd
+- ✓ Bounded p06-t06-r07 cwd recovery passed focused, complete bounded-worker,
+  workspace, docs, sync, bundle, and release validation
+- → Commit and push p06-t06-r07, await green checks, refresh the fixture, then
+  root retries Remote Tier 1 at the new HEAD
 
 ## Blockers
 
-p06-t06 Remote structured Tier 1 posting requires separate explicit approval
-after the fresh Local artifact Tier 1 re-review passes.
+p06-t06 requires the root-owned, already-authorized Remote structured Tier 1
+retry only after p06-t06-r07 passes at a new HEAD.
 
 ## Next Milestone
 
-Complete and push p06-t06-r06, require green PR checks and release dry run,
-refresh the detached enforce fixture, and have the root rerun Local Tier 1
-through p06-t06 on the fresh range before any Remote structured Tier 1 posting.
+Complete and push p06-t06-r07, require green PR checks and release dry run,
+refresh the detached enforce fixture, and return the exact full-PR range and
+new HEAD for the root-owned Remote structured Tier 1 retry.

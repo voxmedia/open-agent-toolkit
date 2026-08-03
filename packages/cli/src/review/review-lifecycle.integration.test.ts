@@ -131,7 +131,7 @@ describe('review validation lifecycle integration', () => {
     const branchCandidate = join(root, 'branch-candidate.ts');
     await writeFile(
       branchCandidate,
-      "import { fileURLToPath } from 'node:url'; const candidate: string = fileURLToPath(import.meta.url); process.stdin.resume(); process.stdin.on('end', () => process.stdout.write(JSON.stringify({ candidate, argv: process.argv.slice(2) })));",
+      "import { fileURLToPath } from 'node:url'; const candidate: string = fileURLToPath(import.meta.url); process.stdin.resume(); process.stdin.on('end', () => process.stdout.write(JSON.stringify({ candidate, argv: process.argv.slice(2), cwd: process.cwd() })));",
     );
     const activeLaunch = currentGateCliLaunch({
       argv: [process.execPath, branchCandidate],
@@ -177,6 +177,7 @@ describe('review validation lifecycle integration', () => {
         telemetryAdapterId: null,
         commandExecutable: activeLaunch.command,
         commandArgvPrefix: activeLaunch.args,
+        commandCwd: activeLaunch.cwd,
         clock,
       },
     );
@@ -184,16 +185,18 @@ describe('review validation lifecycle integration', () => {
     const runId = prepared.preparation.runId;
     const oldGlobalDirectory = join(root, 'old-global');
     for (const invocation of Object.values(prepared.commands)) {
+      expect(invocation.cwd).toBe(root);
       const executed = await executeCommandInvocation(invocation, {
         environment: {
           ...process.env,
           PATH: `${oldGlobalDirectory}:${process.env.PATH ?? ''}`,
         },
-        stdin: invocation.stdin === 'review-plan-json' ? '{}' : undefined,
+        stdin: invocation.stdin === 'none' ? undefined : '{}',
       });
       expect(executed.exitCode).toBe(0);
       expect(JSON.parse(executed.stdout)).toMatchObject({
         candidate: await realpath(branchCandidate),
+        cwd: await realpath(root),
       });
     }
     await bindAcceptedHandle(store, runId, 'accepted-handle');

@@ -59,6 +59,7 @@ export interface PrepareReviewContextDependencies {
   telemetryAdapterId: string | null;
   commandExecutable: string;
   commandArgvPrefix: string[];
+  commandCwd: string;
   clock?: () => Date;
   reap?: (store: ValidationStore) => Promise<unknown>;
 }
@@ -209,6 +210,7 @@ export async function prepareReviewContext(
       commands: renderReviewCommands({
         executable: dependencies.commandExecutable,
         argvPrefix: dependencies.commandArgvPrefix,
+        cwd: dependencies.commandCwd,
         runId,
         checkpointToken: tokens.checkpointToken,
         planToken: tokens.planToken,

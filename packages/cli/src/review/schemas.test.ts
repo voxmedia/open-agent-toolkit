@@ -556,21 +556,34 @@ describe('plan, receipt, and terminal schemas', () => {
       parseReviewCommandInvocationV1({
         executable: '/branch/oat',
         argv: ['review', 'validate-plan', 'a&b'],
+        cwd: '/branch',
         stdin: 'review-plan-json',
       }),
     ).toEqual({
       executable: '/branch/oat',
       argv: ['review', 'validate-plan', 'a&b'],
+      cwd: '/branch',
       stdin: 'review-plan-json',
     });
     expect(() =>
       parseReviewCommandInvocationV1({
         executable: '/branch/oat',
         argv: [],
+        cwd: '/branch',
         stdin: 'none',
         command: 'shell text',
       }),
     ).toThrow(/unknown field/);
+    for (const cwd of [undefined, null, 42, '', 'relative/path']) {
+      expect(() =>
+        parseReviewCommandInvocationV1({
+          executable: '/branch/oat',
+          argv: [],
+          ...(cwd === undefined ? {} : { cwd }),
+          stdin: 'none',
+        }),
+      ).toThrow(/cwd/);
+    }
   });
 
   it('parses valid plan, receipt, complete, and blocked branches', () => {

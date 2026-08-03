@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { isAbsolute } from 'node:path';
 
 import type { ReviewCommandInvocationV1 } from './types';
 import { reviewerSafeEnvironment } from './validation-store-authority';
@@ -18,14 +19,22 @@ export async function executeCommandInvocation(
     stdin?: string;
   } = {},
 ): Promise<CommandInvocationResult> {
-  if (invocation.stdin === 'review-plan-json' && options.stdin === undefined) {
-    throw new Error('review plan JSON stdin is required');
+  if (!isAbsolute(invocation.cwd)) {
+    throw new Error('command invocation cwd must be an absolute path');
+  }
+  if (options.cwd !== undefined && options.cwd !== invocation.cwd) {
+    throw new Error(
+      `command invocation cwd mismatch: expected ${invocation.cwd}, received ${options.cwd}`,
+    );
+  }
+  if (invocation.stdin !== 'none' && options.stdin === undefined) {
+    throw new Error(`${invocation.stdin} stdin is required`);
   }
   if (invocation.stdin === 'none' && options.stdin !== undefined) {
     throw new Error('command invocation does not accept stdin');
   }
   const child = spawn(invocation.executable, invocation.argv, {
-    cwd: options.cwd,
+    cwd: invocation.cwd,
     env: reviewerSafeEnvironment(options.environment),
     shell: false,
     stdio: ['pipe', 'pipe', 'pipe'],

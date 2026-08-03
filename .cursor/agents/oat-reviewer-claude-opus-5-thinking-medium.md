@@ -133,10 +133,14 @@ If required artifacts for the mode are unexpectedly missing, record a workflow c
 ## Plan-First Review Boundary
 
 For every code review in enforce mode, use this exact sequence. The supplied
-launcher commands and validators are authoritative; execute their supplied
-executable and argument arrays directly, and do not recreate their validation
-or lifecycle state in reviewer prose or another coordinator. Launcher-owned
-commands and validators remain authoritative.
+launcher commands and validators are authoritative. Execute each exact
+descriptor as `{ executable, argv, cwd, stdin }`: spawn `executable` with
+`argv`, set the child working directory to the descriptor's required absolute
+`cwd`, and provide stdin only according to `stdin`. Never use the reviewer's
+ambient working directory, change cwd to repair alias resolution, invoke an
+ambient `oat`, or recreate validation or lifecycle state in reviewer prose or
+another coordinator. Launcher-owned commands and validators remain
+authoritative.
 
 1. **Required artifact intake** — Read only the mode-required lifecycle
    artifacts and the authoritative metadata-only change map. Resolve scope,

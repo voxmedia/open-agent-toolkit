@@ -12,7 +12,11 @@ import {
   evaluateWholeDiffEligibility,
 } from './budget';
 import { executeCommandInvocation } from './command-invocation';
-import type { ReviewPlanV1, WorkerDossierV1 } from './types';
+import type {
+  ReviewCommandInvocationV1,
+  ReviewPlanV1,
+  WorkerDossierV1,
+} from './types';
 import {
   requestValidationAuthorityBroker,
   startPreparedValidationAuthorityBroker,
@@ -22,6 +26,20 @@ import { ValidationStoreAuthority } from './validation-store-authority';
 
 const exec = promisify(execFile);
 const roots: string[] = [];
+
+function executeFromCallerCwd(
+  callerCwd: string,
+  invocation: ReviewCommandInvocationV1,
+  options?: Parameters<typeof executeCommandInvocation>[1],
+) {
+  const previousCwd = process.cwd();
+  process.chdir(callerCwd);
+  try {
+    return executeCommandInvocation(invocation, options);
+  } finally {
+    process.chdir(previousCwd);
+  }
+}
 
 afterEach(async () => {
   await Promise.all(
@@ -124,6 +142,7 @@ async function fixture(
       launcherInvocation: {
         executable: resolve('../../node_modules/.bin/tsx'),
         argvPrefix: ['--tsconfig', resolve('tsconfig.json'), sourceEntry],
+        cwd: resolve('.'),
       },
     },
   });
@@ -283,9 +302,7 @@ describe('validation authority broker', () => {
     ] = 'wrong-capability';
     const capabilityFailure = await executeCommandInvocation(
       invalidCheckpoint,
-      {
-        cwd: resolve('..', '..'),
-      },
+      {},
     );
     expect(capabilityFailure.exitCode).toBe(1);
     expect(JSON.parse(capabilityFailure.stdout)).toMatchObject({
@@ -295,7 +312,6 @@ describe('validation authority broker', () => {
       },
     });
     const checkpointResult = await executeCommandInvocation(checkpoint, {
-      cwd: resolve('..', '..'),
       environment: {
         ...process.env,
         OAT_REVIEW_AUTHORITY_KEY: 'must-not-reach-command',
@@ -305,9 +321,7 @@ describe('validation authority broker', () => {
       checkpointResult.exitCode,
       `${checkpointResult.stderr}\n${JSON.stringify(checkpoint)}`,
     ).toBe(0);
-    const replay = await executeCommandInvocation(checkpoint, {
-      cwd: resolve('..', '..'),
-    });
+    const replay = await executeCommandInvocation(checkpoint, {});
     expect(replay.exitCode).toBe(1);
     expect(JSON.parse(replay.stdout)).toMatchObject({
       error: {
@@ -321,7 +335,6 @@ describe('validation authority broker', () => {
     const context = (await store.readRun(broker.preparation.preparation.runId))
       .state.context!;
     const validateResult = await executeCommandInvocation(validate, {
-      cwd: resolve('..', '..'),
       stdin: JSON.stringify(
         plan(
           broker.preparation.preparation.runId,
@@ -349,9 +362,7 @@ describe('validation authority broker', () => {
     const receiptIndex = begin.argv.indexOf('__OAT_PLAN_RECEIPT__');
     const invalidBegin = structuredClone(begin);
     invalidBegin.argv[receiptIndex] = 'wrong-receipt-token';
-    const receiptFailure = await executeCommandInvocation(invalidBegin, {
-      cwd: resolve('..', '..'),
-    });
+    const receiptFailure = await executeCommandInvocation(invalidBegin, {});
     expect(receiptFailure.exitCode).toBe(1);
     expect(JSON.parse(receiptFailure.stdout)).toMatchObject({
       error: {
@@ -371,7 +382,6 @@ describe('validation authority broker', () => {
     });
     begin.argv[receiptIndex] = validateEnvelope.result.receipt.token;
     const beginResult = await executeCommandInvocation(begin, {
-      cwd: resolve('..', '..'),
       environment: {
         ...process.env,
         OAT_REVIEW_AUTHORITY_KEY: 'must-not-reach-command',
@@ -390,9 +400,7 @@ describe('validation authority broker', () => {
     await expect(stat(socketDirectory)).rejects.toMatchObject({
       code: 'ENOENT',
     });
-    const transportFailure = await executeCommandInvocation(begin, {
-      cwd: resolve('..', '..'),
-    });
+    const transportFailure = await executeCommandInvocation(begin, {});
     expect(transportFailure.exitCode).toBe(2);
     expect(JSON.parse(transportFailure.stdout)).toMatchObject({
       error: {
@@ -408,7 +416,7 @@ describe('validation authority broker', () => {
     const runId = broker.preparation.preparation.runId;
     const checkpoint = await executeCommandInvocation(
       broker.preparation.commands.checkpointArtifacts,
-      { cwd: resolve('..', '..') },
+      {},
     );
     expect(checkpoint.exitCode, checkpoint.stderr).toBe(0);
     const context = (await store.readRun(runId)).state.context!;
@@ -431,7 +439,7 @@ describe('validation authority broker', () => {
     );
     const validated = await executeCommandInvocation(
       broker.preparation.commands.validatePlan,
-      { cwd: resolve('..', '..'), stdin: JSON.stringify(candidate) },
+      { stdin: JSON.stringify(candidate) },
     );
     expect(validated.exitCode, `${validated.stderr}\n${validated.stdout}`).toBe(
       0,
@@ -443,9 +451,7 @@ describe('validation authority broker', () => {
     ).result.receipt;
     const begin = structuredClone(broker.preparation.commands.beginEvidence);
     begin.argv[begin.argv.indexOf('__OAT_PLAN_RECEIPT__')] = receipt.token;
-    const started = await executeCommandInvocation(begin, {
-      cwd: resolve('..', '..'),
-    });
+    const started = await executeCommandInvocation(begin, {});
     expect(started.exitCode, started.stderr).toBe(0);
 
     const dossier = workerDossier(runId, receipt.planDigest);
@@ -593,6 +599,7 @@ describe('validation authority broker', () => {
           launcherInvocation: {
             executable: resolve('../../node_modules/.bin/tsx'),
             argvPrefix: ['--tsconfig', resolve('tsconfig.json'), sourceEntry],
+            cwd: resolve('.'),
           },
         },
       }),
@@ -687,7 +694,7 @@ describe('validation authority broker', () => {
 
     const checkpoint = await executeCommandInvocation(
       broker.preparation.commands.checkpointArtifacts,
-      { cwd: resolve('..', '..') },
+      {},
     );
     expect(checkpoint.exitCode, checkpoint.stderr).toBe(0);
     await broker.close();
@@ -699,10 +706,12 @@ describe('validation authority broker', () => {
     const sourceInvocation = {
       executable: resolve('../../node_modules/.bin/tsx'),
       argv: ['--tsconfig', resolve('tsconfig.json'), resolve('src/index.ts')],
+      cwd: resolve('.'),
     };
     const prepare = await runSourceCommand(
       sourceInvocation.executable,
       [...sourceInvocation.argv, 'review', 'prepare-context'],
+      sourceInvocation.cwd,
       JSON.stringify({
         schemaVersion: 1,
         repoRoot: root,
@@ -737,6 +746,14 @@ describe('validation authority broker', () => {
       };
     };
     const prepared = preparedEnvelope.result;
+    expect(
+      Object.values(prepared.commands).map((invocation) => invocation.cwd),
+    ).toEqual([
+      sourceInvocation.cwd,
+      sourceInvocation.cwd,
+      sourceInvocation.cwd,
+      sourceInvocation.cwd,
+    ]);
     expect(prepare.stdout).not.toContain('accepted-handle');
     const brokerSocket =
       prepared.commands.checkpointArtifacts.argv[
@@ -751,7 +768,8 @@ describe('validation authority broker', () => {
     const pinnedClosed = waitForSocketClose(pinned);
     pinned.write('{"schemaVersion":1');
 
-    const checkpoint = await executeCommandInvocation(
+    const checkpoint = await executeFromCallerCwd(
+      root,
       prepared.commands.checkpointArtifacts,
       { environment: process.env },
     );
@@ -775,7 +793,8 @@ describe('validation authority broker', () => {
     expect(checkpointEnvelope.result.planning.obligations).toEqual([
       expect.objectContaining({ id: 'p02-t01' }),
     ]);
-    const validate = await executeCommandInvocation(
+    const validate = await executeFromCallerCwd(
+      root,
       prepared.commands.validatePlan,
       {
         stdin: JSON.stringify(
@@ -796,7 +815,7 @@ describe('validation authority broker', () => {
     const begin = structuredClone(prepared.commands.beginEvidence);
     const receiptIndex = begin.argv.indexOf('__OAT_PLAN_RECEIPT__');
     begin.argv[receiptIndex] = validateEnvelope.result.receipt.token;
-    const started = await executeCommandInvocation(begin, {
+    const started = await executeFromCallerCwd(root, begin, {
       environment: process.env,
     });
     expect(started.exitCode, started.stderr).toBe(0);
@@ -817,6 +836,7 @@ describe('validation authority broker', () => {
     const adversary = await executeCommandInvocation(
       {
         executable: process.execPath,
+        cwd: resolve('.'),
         argv: [
           '-e',
           "const fs=require('fs'); const p=process.argv[1]; const s=fs.readFileSync(p,'utf8'); fs.writeFileSync(p,s.replace('\"phase\":\"prepared\"','\"phase\":\"evidence_started\"')); process.stdout.write(process.env.OAT_REVIEW_AUTHORITY_KEY ?? 'absent')",
@@ -847,11 +867,12 @@ describe('validation authority broker', () => {
 async function runSourceCommand(
   executable: string,
   argv: string[],
+  cwd: string,
   stdin: string,
   environment: NodeJS.ProcessEnv,
 ): Promise<{ exitCode: number | null; stdout: string; stderr: string }> {
   const child = spawn(executable, argv, {
-    cwd: resolve('..', '..'),
+    cwd,
     env: environment,
     shell: false,
     stdio: ['pipe', 'pipe', 'pipe'],

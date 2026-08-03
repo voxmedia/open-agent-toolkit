@@ -58,21 +58,25 @@ const prepared = {
   commands: {
     checkpointArtifacts: {
       executable: process.execPath,
+      cwd: '/branch',
       argv: ['/branch/oat.js', 'review', 'checkpoint-artifacts'],
       stdin: 'none',
     },
     validatePlan: {
       executable: process.execPath,
+      cwd: '/branch',
       argv: ['/branch/oat.js', 'review', 'validate-plan'],
       stdin: 'review-plan-json',
     },
     beginEvidence: {
       executable: process.execPath,
+      cwd: '/branch',
       argv: ['/branch/oat.js', 'review', 'begin-evidence'],
       stdin: 'none',
     },
     bindWorkerDossier: {
       executable: process.execPath,
+      cwd: '/branch',
       argv: [
         '/branch/oat.js',
         'review',
@@ -99,6 +103,7 @@ describe('createReviewPrepareContextCommand', () => {
       launcherInvocation: {
         executable: process.execPath,
         argvPrefix: ['/branch/oat.js'],
+        cwd: '/branch',
       },
     });
 
@@ -109,6 +114,7 @@ describe('createReviewPrepareContextCommand', () => {
       launcherInvocation: {
         executable: process.execPath,
         argvPrefix: ['/branch/oat.js'],
+        cwd: '/branch',
       },
     });
     expect(createDependencies).not.toHaveBeenCalled();
@@ -265,6 +271,7 @@ describe('createReviewPrepareContextCommand', () => {
       launcherInvocation: {
         executable: process.execPath,
         argvPrefix: ['/branch/oat.js'],
+        cwd: '/branch',
       },
     });
 
@@ -274,6 +281,7 @@ describe('createReviewPrepareContextCommand', () => {
     expect(createDependencies).toHaveBeenCalledWith(normalizedInput, {
       executable: process.execPath,
       argvPrefix: ['/branch/oat.js'],
+      cwd: '/branch',
     });
     expect(setExitCode).toHaveBeenCalledWith(0);
     const output = write.mock.calls[0]?.[0] as string;

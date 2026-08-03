@@ -44,7 +44,8 @@ describe('local review coordinator integration contract', () => {
     );
     expect(rail).toContain('never reads or re-snapshots the reviewer draft');
     expect(rail).toContain('preparation-supplied');
-    expect(rail).toContain('exact executable and argv array');
+    expect(rail).toContain('{ executable, argv, cwd, stdin }');
+    expect(rail).toContain('required absolute `cwd`');
     expect(rail).toContain('__OAT_PLAN_RECEIPT__');
     expect(rail).toContain('bounded JSON stdin');
     expect(rail).toContain('ambient `oat`');
@@ -56,7 +57,7 @@ describe('local review coordinator integration contract', () => {
       ' ',
     );
     expect(tier1).toContain(
-      'Never invoke ambient `oat`, reconstruct a dossier from terminal digests, or hand a full dossier back to the parent launcher.',
+      'Never invoke ambient `oat`, override descriptor cwd, reconstruct a dossier from terminal digests, or hand a full dossier back to the parent launcher.',
     );
     expect(tier1).toContain(
       'The parent must not reconstruct or submit a dossier from `ReviewerTerminalV1` digests.',

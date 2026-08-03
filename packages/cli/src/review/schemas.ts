@@ -29,13 +29,25 @@ export function parseReviewCommandInvocationV1(
   value: unknown,
 ): ReviewCommandInvocationV1 {
   const invocation = object(value, '$');
-  keys(invocation, ['executable', 'argv', 'stdin'], '$');
+  keys(invocation, ['executable', 'argv', 'cwd', 'stdin'], '$');
   string(invocation['executable'], '$/executable');
   const argv = stringArray(invocation['argv'], '$/argv');
-  enumValue(invocation['stdin'], ['none', 'review-plan-json'], '$/stdin');
+  string(invocation['cwd'], '$/cwd');
+  if (
+    (invocation['cwd'] as string).length === 0 ||
+    !isAbsolute(invocation['cwd'] as string)
+  ) {
+    throw new ReviewSchemaError('$/cwd must be an absolute path');
+  }
+  enumValue(
+    invocation['stdin'],
+    ['none', 'review-plan-json', 'worker-dossier-json'],
+    '$/stdin',
+  );
   return {
     executable: invocation['executable'] as string,
     argv,
+    cwd: invocation['cwd'] as string,
     stdin: invocation['stdin'] as ReviewCommandInvocationV1['stdin'],
   };
 }

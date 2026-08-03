@@ -555,7 +555,7 @@ describe('CLI command integration', () => {
     await mkdir(ambient);
     await writeFile(
       candidate,
-      'process.stdout.write(JSON.stringify({ candidate: __filename, argv: process.argv.slice(2) }))',
+      'process.stdout.write(JSON.stringify({ candidate: __filename, argv: process.argv.slice(2), cwd: process.cwd() }))',
     );
     await writeFile(join(ambient, 'oat'), 'older global installation');
 
@@ -563,6 +563,7 @@ describe('CLI command integration', () => {
       {
         executable: process.execPath,
         argv: [candidate, 'review', 'checkpoint-artifacts'],
+        cwd: root,
         stdin: 'none',
       },
       {
@@ -577,6 +578,7 @@ describe('CLI command integration', () => {
     expect(JSON.parse(result.stdout)).toEqual({
       candidate: await realpath(candidate),
       argv: ['review', 'checkpoint-artifacts'],
+      cwd: await realpath(root),
     });
   });
 
