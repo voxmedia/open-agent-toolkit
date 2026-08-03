@@ -119,15 +119,6 @@ function fixture(): {
         disposition: 'verified',
         evidenceRefIds: ['evidence-1'],
       },
-      {
-        claimId: 'claim-deterministic',
-        kind: 'deterministic-result',
-        findingId: null,
-        laneIds: ['lane-1'],
-        mode: 'provenance',
-        disposition: 'verified',
-        evidenceRefIds: ['evidence-1'],
-      },
     ],
     budget: { evidenceStoppedAt: null, outputReservePreserved: null },
   };
@@ -148,7 +139,7 @@ function fixture(): {
       },
       plan: {
         strategy: 'selective-inline',
-        lanes: [{ id: 'lane-1', delegated: false }],
+        lanes: [{ id: 'lane-1', delegated: false, replay: 'direct-verify' }],
         verificationBoundary: {
           requiredClaims: [
             { kind: 'promoted-finding', mode: 'direct' },

@@ -330,6 +330,28 @@ function terminal(
   reviewCoverage: ValidatedWorkerCoverageProjectionV1,
   verificationCoverage: ValidatedWorkerCoverageProjectionV1,
 ): ReviewerTerminalV1 {
+  const verificationCommand: ReviewCommandEvidenceV1 = {
+    id: 'verification-command',
+    command: 'pnpm test',
+    cwd: '.',
+    scopeRefs: [
+      {
+        bucket: 'lane',
+        bucketId: 'verification-lane',
+        pathIndexes: [0],
+      },
+    ],
+    provenance: {
+      runner: 'worker',
+      invocationDigest: 'verification-invocation',
+      capturedAt: '2026-08-02T20:00:00.000Z',
+    },
+    result: {
+      status: 'completed',
+      exitCode: 0,
+      outputDigest: 'verification-output',
+    },
+  };
   const evidence = {
     id: 'evidence-1',
     kind: 'source' as const,
@@ -359,7 +381,19 @@ function terminal(
     assignmentDigest: receipt.assignmentDigest,
     strategy: 'delegated',
     completion: 'complete',
-    evidence: [evidence],
+    evidence: [
+      evidence,
+      {
+        id: 'verification-command-evidence',
+        kind: 'command',
+        locator: 'command:verification-command',
+        scopeRefs: structuredClone(verificationCommand.scopeRefs),
+        provenance: 'validated command executor',
+        digest: 'command-evidence-digest',
+        commandId: verificationCommand.id,
+        commandResultDigest: commandResultDigest(verificationCommand),
+      },
+    ],
     lanes: [
       {
         id: 'review-lane',
@@ -401,7 +435,7 @@ function terminal(
         inspectionCoverage: 'all',
         uninspectedPathIndexes: [],
         uncoveredObligationIds: [],
-        commands: [],
+        commands: [verificationCommand],
         evidenceRefIds: ['evidence-1'],
         uncertainty: [],
         primaryCompletion: {
@@ -443,6 +477,15 @@ function terminal(
         mode: 'sample',
         disposition: 'verified',
         evidenceRefIds: ['evidence-1'],
+      },
+      {
+        claimId: 'verification-deterministic',
+        kind: 'deterministic-result',
+        findingId: null,
+        laneIds: ['verification-lane'],
+        mode: 'provenance',
+        disposition: 'verified',
+        evidenceRefIds: ['verification-command-evidence'],
       },
     ],
     budget: { evidenceStoppedAt: null, outputReservePreserved: null },
@@ -678,7 +721,7 @@ describe('branch-local worker dossier lifecycle', () => {
         'worker-dossier-binding-phase-invalid',
       );
     },
-    45_000,
+    90_000,
   );
 
   it('fails closed for wrong receipt, run/plan mismatch, sibling attempt, and replacement', async () => {

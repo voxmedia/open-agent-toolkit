@@ -139,7 +139,9 @@ function validationState() {
     },
     plan: {
       strategy: 'selective-inline' as const,
-      lanes: [{ id: 'lane', delegated: false }],
+      lanes: [
+        { id: 'lane', delegated: false, replay: 'direct-verify' as const },
+      ],
       verificationBoundary: {
         requiredClaims: [],
         positiveCoverage: {
@@ -581,6 +583,116 @@ describe('validate-output command', () => {
       draft: null,
       output: { attempts: 2 },
       acceptedSnapshot: { publication: 'available' },
+    });
+  });
+
+  it('records malformed artifact accounting as a terminal typed rejection', async () => {
+    const root = join(
+      tmpdir(),
+      `oat-validate-overlay-malformed-${process.pid}-${Date.now()}`,
+    );
+    roots.push(root);
+    await mkdir(root, { mode: 0o700 });
+    const draft = await createArtifactDraft(root);
+    const overlay = terminalOverlay();
+    overlay.candidate = {
+      kind: 'artifact-draft',
+      privateDraftPath: draft.path,
+    };
+    await writeFile(
+      draft.path,
+      'Findings: 0 critical, 0 important, 0 medium, 0 minor\n\n## Review Accounting\n\n```json\n{not-json}\n```\n',
+    );
+    const store = fakeStore({ ...validationState(), draft });
+
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: overlay },
+        store as never,
+      ),
+    ).resolves.toMatchObject({
+      valid: false,
+      errors: [{ pointer: '/candidate' }],
+    });
+    expect(store.state).toMatchObject({
+      phase: 'terminal',
+      output: {
+        attempts: 1,
+        terminalClassification: 'accounting-invalid',
+      },
+    });
+  });
+
+  it('terminalizes immutable artifact finding projection errors immediately', async () => {
+    const root = join(
+      tmpdir(),
+      `oat-validate-overlay-findings-${process.pid}-${Date.now()}`,
+    );
+    roots.push(root);
+    await mkdir(root, { mode: 0o700 });
+    const draft = await createArtifactDraft(root);
+    const overlay = terminalOverlay();
+    overlay.candidate = {
+      kind: 'artifact-draft',
+      privateDraftPath: draft.path,
+    };
+    await writeFile(
+      draft.path,
+      `# Review\n\n## Review Accounting\n\n\`\`\`json\n${JSON.stringify(overlay.reviewAccounting)}\n\`\`\`\n`,
+    );
+    const store = fakeStore({ ...validationState(), draft });
+
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: overlay },
+        store as never,
+      ),
+    ).resolves.toMatchObject({
+      valid: false,
+      errors: [{ pointer: '/candidate' }],
+    });
+    expect(store.state).toMatchObject({
+      phase: 'terminal',
+      output: {
+        attempts: 1,
+        terminalClassification: 'accounting-invalid',
+      },
+    });
+  });
+
+  it('keeps parseable artifact overlay mismatches accounting-repairable', async () => {
+    const root = join(
+      tmpdir(),
+      `oat-validate-overlay-mismatch-${process.pid}-${Date.now()}`,
+    );
+    roots.push(root);
+    await mkdir(root, { mode: 0o700 });
+    const draft = await createArtifactDraft(root);
+    const overlay = terminalOverlay();
+    overlay.candidate = {
+      kind: 'artifact-draft',
+      privateDraftPath: draft.path,
+    };
+    const embedded = structuredClone(overlay.reviewAccounting);
+    embedded.budget.outputReservePreserved = true;
+    await writeFile(
+      draft.path,
+      `Findings: 0 critical, 0 important, 0 medium, 0 minor\n\n## Review Accounting\n\n\`\`\`json\n${JSON.stringify(embedded)}\n\`\`\`\n`,
+    );
+    const store = fakeStore({ ...validationState(), draft });
+
+    await expect(
+      validateStoredReviewOutput(
+        { runId: 'validation-run-1', terminal: overlay },
+        store as never,
+      ),
+    ).resolves.toMatchObject({
+      valid: false,
+      errors: [{ pointer: '/reviewAccounting' }],
+    });
+    expect(store.state).toMatchObject({
+      phase: 'accounting_repair',
+      output: { attempts: 1 },
     });
   });
 

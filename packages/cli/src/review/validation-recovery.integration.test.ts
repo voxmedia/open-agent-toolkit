@@ -14,6 +14,7 @@ import {
   bindAcceptedHandle,
   issueCommandCapabilities,
 } from './command-capabilities';
+import { commandResultDigest } from './command-result-digest';
 import {
   beginEvidence,
   checkpointArtifactsLoaded,
@@ -530,6 +531,28 @@ function delegatedTerminal(
     `${coverage.outcome} delegated review`,
   );
   if (terminal.status !== 'complete') throw new Error('invalid test terminal');
+  const verificationCommand = {
+    id: 'verification-command',
+    command: 'pnpm test',
+    cwd: '.',
+    scopeRefs: [
+      {
+        bucket: 'lane' as const,
+        bucketId: 'verification-lane',
+        pathIndexes: [0],
+      },
+    ],
+    provenance: {
+      runner: 'launcher',
+      invocationDigest: 'verification-invocation',
+      capturedAt: '2026-08-03T14:00:00.000Z',
+    },
+    result: {
+      status: 'completed' as const,
+      exitCode: 0,
+      outputDigest: 'verification-output',
+    },
+  };
   terminal.reviewAccounting.receipt = state.receipt!.token;
   terminal.reviewAccounting.contextDigest = state.receipt!.contextDigest;
   terminal.reviewAccounting.planDigest = state.receipt!.planDigest;
@@ -577,7 +600,7 @@ function delegatedTerminal(
     inspectionCoverage: 'all',
     uninspectedPathIndexes: [],
     uncoveredObligationIds: [],
-    commands: [],
+    commands: [verificationCommand],
     evidenceRefIds: ['evidence-1'],
     uncertainty: [],
     primaryCompletion: {
@@ -587,6 +610,25 @@ function delegatedTerminal(
       commands: [],
       evidenceRefIds: [],
     },
+  });
+  terminal.reviewAccounting.evidence.push({
+    id: 'verification-command-evidence',
+    kind: 'command',
+    locator: 'pnpm test',
+    scopeRefs: structuredClone(verificationCommand.scopeRefs),
+    provenance: 'launcher',
+    digest: 'verification-evidence',
+    commandId: verificationCommand.id,
+    commandResultDigest: commandResultDigest(verificationCommand),
+  });
+  terminal.reviewAccounting.verification.push({
+    claimId: 'verification-deterministic',
+    kind: 'deterministic-result',
+    findingId: null,
+    laneIds: ['verification-lane'],
+    mode: 'provenance',
+    disposition: 'verified',
+    evidenceRefIds: ['verification-command-evidence'],
   });
   const positive = terminal.reviewAccounting.verification.find(
     (claim) => claim.kind === 'positive-coverage-sample',

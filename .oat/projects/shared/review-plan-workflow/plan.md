@@ -4018,7 +4018,9 @@ join exact selectors to sealed receipt, plan, assignment, and worker coverage in
 launcher order; derive immutable identity, assignments, classification policy,
 completion, and verification kind/mode. Reject duplicate, unknown, missing, and
 extra selectors before artifact materialization or defense-in-depth validation.
-Keep legacy full terminals temporarily compatible.
+Require one lane-scoped command-provenance slot per sealed
+`accept-provenance` lane, and emit promoted-finding and deterministic slots in
+candidate/plan order. Keep legacy full terminals temporarily compatible.
 
 **Step 2: Preserve lifecycle safety** Count assembly failures inside the existing
 three-submission/two-repair limit, freeze structured and artifact substance
@@ -4027,14 +4029,19 @@ contingency, registry, classification, coverage, and gate semantics. Accept
 overlay accounting in private artifact drafts, materialize canonical full
 accounting only in the immutable accepted snapshot, and preserve path,
 descriptor, inode, link, and permission protections.
+Record malformed accounting and finding-projection failures as immutable,
+non-repairable typed artifact rejections before terminalizing; keep parseable
+overlay/envelope accounting mismatches inside bounded repair.
 
 **Step 3: Verify and regenerate** Cover 209 paths without retaining the seed,
 typed promoted/direct/positive/deterministic claims, exact selector joins,
 structured and artifact dual ingress, fail-closed assembly, bounded repair, and
-artifact parity. Run all focused production and canonical contract tests, CLI
-type-check/lint/format, provider sync, CLI asset generation, sync dry-run, and
-diff checks. Keep lockstep packages at 0.2.29 and do not repeat PR-scoped skill
-version bumps.
+artifact parity. Include missing and cross-lane deterministic provenance,
+reversed finding selectors, malformed accounting markup, and immutable finding
+projection failures. Run all focused production and canonical contract tests,
+CLI type-check/lint/format, provider sync, CLI asset generation, sync dry-run,
+and diff checks. Keep lockstep packages at 0.2.29 and do not repeat PR-scoped
+skill version bumps.
 
 **Step 4: Commit**
 `fix(p06-t06): assemble terminal accounting in launcher`

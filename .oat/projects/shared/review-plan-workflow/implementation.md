@@ -1984,7 +1984,7 @@ new HEAD and stop before POST with the exact accepted body and verdict.
 
 #### Recovery p06-t06-r10: Assemble terminal accounting in the launcher
 
-**Status:** in_progress
+**Status:** reviewed_pending_commit
 **Failed run:** Fresh Remote structured Tier 1 at
 `55a6728245649149850ed90371887b07439b050f` reached planning and evidence, but
 validation run `2dcce690b70e2c144e31a52dd2ff4079` showed that retaining and
@@ -2013,11 +2013,30 @@ Repository formatting and asset generation pass.
 `pnpm run cli -- sync --scope all --dry-run` reports no changes, and
 `pnpm release:validate` passes all five lockstep 0.2.29 public packages plus
 visual validation.
+**Independent review remediation:** Root review found four actionable gaps:
+sealed `accept-provenance` lanes did not require exact lane-scoped deterministic
+claims; malformed artifact accounting could throw before attempt accounting;
+immutable finding-projection failures were misclassified as repairable
+accounting; and promoted-finding claims retained reviewer order. The remediation
+requires one command-provenance slot per sealed lane, validates command and
+evidence scope, emits deterministic and finding claims in sealed order, records
+malformed artifact structure as a typed terminal rejection, and keeps only a
+parseable overlay/envelope mismatch repairable. Canonical reviewer guidance and
+generated provider views now state the same provenance contract.
+**Post-review verification:** Added seven targeted provenance, ordering, and
+artifact-failure regressions; the focused terminal/recovery suites pass 159
+tests and the process-level lifecycle suites pass 11 tests. The complete
+workspace test run passes all packages and smoke tests, including 4,040 CLI
+tests. `pnpm check`, `pnpm type-check`, `pnpm build`, `pnpm lint`,
+`pnpm format`, `pnpm build:docs`, provider sync, asset generation, and
+`pnpm release:validate` all pass. Two process-heavy tests now use 90-second
+per-test ceilings after repeated full-suite-only timeouts; their focused runtime
+remains under 26 seconds for the combined files.
 
-**Next:** Root independently reviews the recovery commit, runs full workspace,
-docs, and release gates, pushes only after acceptance, waits for green checks,
-refreshes the detached enforce fixture, and decides the next root-owned Remote
-Tier 1 action. p06-t06 and p06-t07 remain unadvanced.
+**Next:** Commit the independent-review remediation separately from the existing
+recovery commit, push only after explicit authorization, wait for green checks,
+refresh the detached enforce fixture, and decide the next root-owned Remote Tier
+1 action. p06-t06 and p06-t07 remain unadvanced.
 
 ## Orchestration Runs
 

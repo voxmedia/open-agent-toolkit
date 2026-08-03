@@ -16,6 +16,15 @@ import type {
 
 export const MAX_REVIEW_ACCOUNTING_BYTES = 1_048_576;
 
+export class ArtifactAccountingOverlayMismatchError extends Error {
+  constructor() {
+    super(
+      'embedded artifact overlay accounting does not match the terminal envelope',
+    );
+    this.name = 'ArtifactAccountingOverlayMismatchError';
+  }
+}
+
 function accountingHeadings(lines: readonly string[]): number[] {
   const headings: number[] = [];
   let fence: { character: '`' | '~'; length: number } | null = null;
@@ -137,9 +146,7 @@ export function materializeReviewAccounting(
     canonicalizeJson(parseStrictJson(json)) !==
     canonicalizeJson(authoredOverlay)
   ) {
-    throw new Error(
-      'embedded artifact overlay accounting does not match the terminal envelope',
-    );
+    throw new ArtifactAccountingOverlayMismatchError();
   }
   const materialized = Buffer.from(
     [

@@ -14,7 +14,9 @@ import type {
 export interface ReviewerTerminalAssemblyContextV1 {
   receipt: PlanValidationReceiptV1;
   plan: Pick<ReviewPlanV1, 'strategy' | 'verificationBoundary'> & {
-    lanes: Array<Pick<ReviewPlanV1['lanes'][number], 'id' | 'delegated'>>;
+    lanes: Array<
+      Pick<ReviewPlanV1['lanes'][number], 'id' | 'delegated' | 'replay'>
+    >;
   };
   assignment: ValidatedAssignmentProjectionV1;
   workerCoverage: ValidatedWorkerCoverageProjectionV1[];
@@ -34,6 +36,42 @@ export class ReviewTerminalAssemblyError extends Error {
 
 function fail(code: string, pointer: string, message: string): never {
   throw new ReviewTerminalAssemblyError(code, pointer, message);
+}
+
+const ARTIFACT_FINDING_SEVERITY_ORDER = new Map([
+  ['critical', 0],
+  ['important', 1],
+  ['medium', 2],
+  ['minor', 3],
+]);
+
+function comparePromotedFindingSelectors(
+  left: ReviewerVerificationClaimOverlayV1 & { findingId: string | null },
+  right: ReviewerVerificationClaimOverlayV1 & { findingId: string | null },
+): number {
+  const artifactSelector = /^artifact:(critical|important|medium|minor):(\d+)$/;
+  const leftArtifact =
+    left.findingId === null ? null : artifactSelector.exec(left.findingId);
+  const rightArtifact =
+    right.findingId === null ? null : artifactSelector.exec(right.findingId);
+  if (leftArtifact !== null && rightArtifact !== null) {
+    return (
+      ARTIFACT_FINDING_SEVERITY_ORDER.get(leftArtifact[1]!)! -
+        ARTIFACT_FINDING_SEVERITY_ORDER.get(rightArtifact[1]!)! ||
+      Number(leftArtifact[2]) - Number(rightArtifact[2])
+    );
+  }
+  const leftId = left.findingId ?? '';
+  const rightId = right.findingId ?? '';
+  return leftId < rightId
+    ? -1
+    : leftId > rightId
+      ? 1
+      : left.claimId < right.claimId
+        ? -1
+        : left.claimId > right.claimId
+          ? 1
+          : 0;
 }
 
 function exactSelectorMap<T>(
@@ -149,16 +187,8 @@ function assembleVerification(
         }
         seenFindingIds.add(claim.findingId);
       }
-      verification.push({
-        claimId: claim.claimId,
-        kind: 'promoted-finding',
-        findingId: claim.findingId,
-        laneIds: [...claim.laneIds],
-        mode: 'direct',
-        disposition: claim.disposition,
-        evidenceRefIds: [...claim.evidenceRefIds],
-      });
     });
+    let promotedFindings = [...overlay.promotedFindings];
     if (
       terminal.status === 'complete' &&
       terminal.candidate.kind === 'structured'
@@ -187,7 +217,35 @@ function assembleVerification(
           'promoted-finding selectors do not match structured findings',
         );
       }
+      const claimByFindingId = new Map(
+        overlay.promotedFindings
+          .filter(
+            (
+              claim,
+            ): claim is typeof claim & {
+              findingId: string;
+            } => claim.findingId !== null,
+          )
+          .map((claim) => [claim.findingId, claim]),
+      );
+      promotedFindings =
+        findingIds.length === 0
+          ? promotedFindings
+          : findingIds.map((findingId) => claimByFindingId.get(findingId)!);
+    } else {
+      promotedFindings.sort(comparePromotedFindingSelectors);
     }
+    promotedFindings.forEach((claim) =>
+      verification.push({
+        claimId: claim.claimId,
+        kind: 'promoted-finding',
+        findingId: claim.findingId,
+        laneIds: [...claim.laneIds],
+        mode: 'direct',
+        disposition: claim.disposition,
+        evidenceRefIds: [...claim.evidenceRefIds],
+      }),
+    );
   } else if (overlay.promotedFindings.length > 0) {
     fail(
       'extra-overlay-selector',
@@ -249,14 +307,31 @@ function assembleVerification(
     });
   });
 
-  overlay.deterministicResults.forEach((claim, index) => {
-    const pointer = `/reviewAccounting/verification/deterministicResults/${index}`;
-    validateLaneBindings(claim.laneIds, knownLaneIds, `${pointer}/laneIds`);
+  const deterministicLaneIds = context.plan.lanes
+    .filter((lane) => lane.delegated && lane.replay === 'accept-provenance')
+    .map((lane) => lane.id);
+  const deterministicByLane = exactSelectorMap(
+    overlay.deterministicResults,
+    deterministicLaneIds,
+    (claim) => {
+      if (claim.laneIds.length !== 1) {
+        fail(
+          'overlay-selector-mismatch',
+          '/reviewAccounting/verification/deterministicResults',
+          'each deterministic result must select exactly one sealed provenance lane',
+        );
+      }
+      return claim.laneIds[0]!;
+    },
+    '/reviewAccounting/verification/deterministicResults',
+  );
+  deterministicLaneIds.forEach((laneId) => {
+    const claim = deterministicByLane.get(laneId)!;
     verification.push({
       claimId: claim.claimId,
       kind: 'deterministic-result',
       findingId: null,
-      laneIds: [...claim.laneIds],
+      laneIds: [laneId],
       mode: 'provenance',
       disposition: claim.disposition,
       evidenceRefIds: [...claim.evidenceRefIds],

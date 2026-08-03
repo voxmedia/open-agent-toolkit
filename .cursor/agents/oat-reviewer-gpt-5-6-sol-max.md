@@ -583,6 +583,13 @@ reviewer's compact `ReviewerAccountingOverlayV1`. The launcher replaces this
 private-draft block with canonical `ReviewAccountingV1` in the immutable
 snapshot. Emit the overlay block for complete and blocked artifact-mode results;
 blocked results remain non-actionable and must not imply a passing verdict.
+Author exactly one `deterministicResults` entry for each delegated plan lane
+whose sealed replay policy is `accept-provenance`, in any authoring order. Each
+entry selects only that lane and references bound command evidence whose
+evidence and command scope both name that lane. Do not emit deterministic slots
+for sampled, directly replayed, or inline lanes. The launcher rejects missing,
+extra, duplicate, multi-lane, or cross-lane provenance slots and emits accepted
+claims in sealed lane order.
 
 ## Review Accounting
 

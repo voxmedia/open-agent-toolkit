@@ -1,6 +1,9 @@
 import { randomBytes } from 'node:crypto';
 
-import { extractArtifactFindingProjection } from '@review/artifact-accounting';
+import {
+  ArtifactAccountingOverlayMismatchError,
+  extractArtifactFindingProjection,
+} from '@review/artifact-accounting';
 import {
   ArtifactDraftIdentityError,
   readArtifactDraftBytes,
@@ -111,8 +114,8 @@ export async function validateStoredReviewOutput(
   }
 
   let artifactFindingProjection: ArtifactFindingProjectionV1 | undefined;
-  let authoredArtifactBytesBase64: string | undefined;
   let artifactBytesBase64: string | undefined;
+  let artifactDigestBytesBase64: string | undefined;
   let artifactSnapshot: ArtifactSnapshot | undefined;
   let artifactError: OutputValidationResult | null = null;
   if (
@@ -134,26 +137,67 @@ export async function validateStoredReviewOutput(
         ],
       };
     } else {
+      let authoredBytesBase64: string | undefined;
       try {
         const draft = {
           path: state.draft.path,
           device: state.draft.device,
           inode: state.draft.inode,
         } satisfies ArtifactDraft;
-        authoredArtifactBytesBase64 = (
-          await readArtifactDraftBytes(draft)
-        ).toString('base64');
+        authoredBytesBase64 = (await readArtifactDraftBytes(draft)).toString(
+          'base64',
+        );
+        if (overlayIngress !== undefined) {
+          immutableReviewOverlaySubstanceDigest(
+            overlayIngress,
+            authoredBytesBase64,
+          );
+          artifactDigestBytesBase64 = authoredBytesBase64;
+        }
         if (terminal !== undefined) {
-          const snapshot = await snapshotArtifactDraft(
-            draft,
-            terminal.reviewAccounting,
-            authoredOverlay,
-          );
-          artifactFindingProjection = extractArtifactFindingProjection(
-            Buffer.from(snapshot.bytesBase64, 'base64'),
-          );
-          artifactBytesBase64 = snapshot.bytesBase64;
-          artifactSnapshot = snapshot;
+          try {
+            const snapshot = await snapshotArtifactDraft(
+              draft,
+              terminal.reviewAccounting,
+              authoredOverlay,
+            );
+            artifactBytesBase64 = snapshot.bytesBase64;
+            artifactDigestBytesBase64 = snapshot.bytesBase64;
+            artifactSnapshot = snapshot;
+            try {
+              artifactFindingProjection = extractArtifactFindingProjection(
+                Buffer.from(snapshot.bytesBase64, 'base64'),
+              );
+            } catch {
+              artifactError = {
+                valid: false,
+                errors: [
+                  {
+                    code: 'schema-error',
+                    pointer: '/candidate',
+                    message: 'artifact finding projection failed validation',
+                  },
+                ],
+              };
+            }
+          } catch (error) {
+            artifactError = {
+              valid: false,
+              errors: [
+                {
+                  code: 'schema-error',
+                  pointer:
+                    error instanceof ArtifactAccountingOverlayMismatchError
+                      ? '/reviewAccounting'
+                      : '/candidate',
+                  message:
+                    error instanceof ArtifactAccountingOverlayMismatchError
+                      ? 'artifact accounting failed validation'
+                      : 'artifact structure failed validation',
+                },
+              ],
+            };
+          }
         }
       } catch (error) {
         const identityFailure = error instanceof ArtifactDraftIdentityError;
@@ -164,10 +208,10 @@ export async function validateStoredReviewOutput(
               code: 'schema-error',
               pointer: identityFailure
                 ? '/candidate/privateDraftPath'
-                : '/reviewAccounting',
+                : '/candidate',
               message: identityFailure
                 ? 'artifact private draft identity failed validation'
-                : 'artifact accounting failed validation',
+                : 'artifact structure failed validation',
             },
           ],
         };
@@ -208,7 +252,7 @@ export async function validateStoredReviewOutput(
     const immutableSubstanceDigest = isOverlayIngress
       ? immutableReviewOverlaySubstanceDigest(
           overlayIngress!,
-          artifactBytesBase64 ?? authoredArtifactBytesBase64,
+          artifactDigestBytesBase64,
         )
       : immutableReviewSubstanceDigest(terminal!, artifactBytesBase64);
     current.output.attempts++;
@@ -234,6 +278,7 @@ export async function validateStoredReviewOutput(
     }
 
     result =
+      artifactError ??
       (assemblyError === undefined
         ? null
         : {
@@ -246,7 +291,6 @@ export async function validateStoredReviewOutput(
               },
             ],
           }) ??
-      artifactError ??
       validateReviewOutput(
         {
           receipt: current.receipt,

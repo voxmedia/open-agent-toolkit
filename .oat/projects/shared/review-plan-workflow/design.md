@@ -1372,7 +1372,10 @@ For `kind: command`, the evidence record's `commandId` must resolve to a command
 record and `commandResultDigest` must equal the canonical digest of that
 record's scope, provenance, and terminal result. Every
 `deterministic-result` claim must reference at least one such bound command
-evidence record.
+evidence record. Each delegated lane whose sealed replay policy is
+`accept-provenance` requires exactly one deterministic-result slot selecting
+only that lane. Both the evidence record and bound command must scope that lane;
+sampled, directly replayed, and inline lanes permit no deterministic slot.
 
 Valid outcome combinations are a validator-owned discriminated matrix:
 
@@ -1514,9 +1517,10 @@ Every accepted child and inline adapter returns
 classification, positive-coverage, and finding selectors to sealed state in
 sealed order; duplicate, unknown, missing, or extra selectors fail closed.
 Typed verification slots derive claim kind and mode while retaining one direct
-claim per promoted finding and deterministic command provenance. Legacy
-`ReviewerTerminalV1` ingress remains temporarily compatible and non-code review
-types keep their existing schemas.
+claim per promoted finding in candidate order and one lane-scoped deterministic
+command provenance claim per sealed `accept-provenance` lane in plan order.
+Legacy `ReviewerTerminalV1` ingress remains temporarily compatible and non-code
+review types keep their existing schemas.
 
 The structured sink projects a complete assembled candidate to its existing
 `StructuredFindings` flow only after validation. The artifact sink accepts the
@@ -1524,6 +1528,11 @@ overlay accounting in the private draft, verifies it against the overlay
 envelope, materializes canonical full accounting in the immutable snapshot, and
 atomically publishes to the project review tree only after acceptance. Draft
 path, descriptor, inode, link, and permission protections are unchanged.
+Malformed accounting markup and finding-projection failures are immutable
+artifact-structure errors: validation records the attempt as a typed rejection
+and terminalizes without offering accounting repair. A parseable embedded
+overlay/envelope mismatch remains accounting-repairable because the body can be
+normalized without changing review substance.
 
 A blocked variant contains no candidate, actionable findings, or verdict. Any
 provider-created draft associated with it is deleted after private diagnostics

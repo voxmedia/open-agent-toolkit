@@ -385,18 +385,26 @@ p06-t06 or p06-t07.
 - ✓ p06-t06-r10 focused verification passes 325 tests across 11 files plus CLI
   type-check, lint, format, provider sync, asset generation, sync dry-run, and
   release validation
-- → Root independently reviews p06-t06-r10 and runs full workspace, docs, and
-  release gates before push; p06-t06 and p06-t07 remain unadvanced
+- ✓ Independent review found and remediated four launcher-assembly gaps:
+  deterministic provenance exactness/scope, malformed artifact attempt
+  accounting, immutable artifact error classification, and canonical finding
+  order
+- ✓ Seven targeted regressions, 159 focused terminal/recovery tests, 11
+  process-level lifecycle tests, all 4,040 CLI tests, complete workspace/smoke
+  tests, workspace/docs builds, lint, type-check, format, sync, and release
+  validation pass after remediation
+- → Commit the review remediation separately, then push only after explicit
+  authorization; p06-t06 and p06-t07 remain unadvanced
 
 ## Blockers
 
 p06-t06 requires the root-owned, already-authorized Remote structured Tier 1
-retry only after p06-t06-r10 is committed, independently verified, pushed, and
-green at a new HEAD.
+retry only after the p06-t06-r10 review remediation is committed, pushed with
+explicit authorization, and green at a new HEAD.
 
 ## Next Milestone
 
-Root independently reviews p06-t06-r10, runs the full workspace, docs, and
-release gates, pushes only after acceptance, requires green PR checks, refreshes
-the detached enforce fixture, and then decides the next root-owned Remote Tier
-1 action. p06-t06 and p06-t07 remain unadvanced.
+Commit the independently reviewed p06-t06-r10 remediation separately, push only
+after explicit authorization, require green PR checks, refresh the detached
+enforce fixture, and then decide the next root-owned Remote Tier 1 action.
+p06-t06 and p06-t07 remain unadvanced.

@@ -20,7 +20,9 @@ export interface AccountingValidationError {
 export interface ReviewOutputValidationContext {
   receipt: PlanValidationReceiptV1;
   plan: Pick<ReviewPlanV1, 'strategy' | 'verificationBoundary'> & {
-    lanes: Array<Pick<ReviewPlanV1['lanes'][number], 'id' | 'delegated'>>;
+    lanes: Array<
+      Pick<ReviewPlanV1['lanes'][number], 'id' | 'delegated' | 'replay'>
+    >;
   };
   assignment: ValidatedAssignmentProjectionV1;
   workerCoverage?: ValidatedWorkerCoverageProjectionV1[];
@@ -516,6 +518,59 @@ function validateRegistries(
         'invalid-claim-disposition',
         pointer,
         'deterministic result requires command evidence',
+      );
+    }
+  });
+
+  const provenanceLaneIds = context.plan.lanes
+    .filter((lane) => lane.delegated && lane.replay === 'accept-provenance')
+    .map((lane) => lane.id);
+  const provenanceLanes = new Set(provenanceLaneIds);
+  const deterministicClaims = accounting.verification
+    .map((claim, index) => ({ claim, index }))
+    .filter(({ claim }) => claim.kind === 'deterministic-result');
+  deterministicClaims.forEach(({ claim, index }) => {
+    const pointer = `/reviewAccounting/verification/${index}`;
+    const laneId = claim.laneIds.length === 1 ? claim.laneIds[0] : undefined;
+    if (laneId === undefined || !provenanceLanes.has(laneId)) {
+      add(
+        errors,
+        'invalid-deterministic-provenance',
+        `${pointer}/laneIds`,
+        'deterministic result must select exactly one sealed provenance lane',
+      );
+      return;
+    }
+    const hasScopedCommandEvidence = claim.evidenceRefIds.some((evidenceId) => {
+      const entry = evidence.get(evidenceId);
+      if (entry?.kind !== 'command') return false;
+      const command = commands.get(entry.commandId);
+      if (command === undefined) return false;
+      const scopesLane = (
+        refs: ReviewCommandEvidenceV1['scopeRefs'],
+      ): boolean =>
+        refs.some((ref) => ref.bucket === 'lane' && ref.bucketId === laneId);
+      return scopesLane(entry.scopeRefs) && scopesLane(command.scopeRefs);
+    });
+    if (!hasScopedCommandEvidence) {
+      add(
+        errors,
+        'invalid-deterministic-provenance',
+        pointer,
+        `deterministic result for lane ${laneId} requires command evidence scoped to that lane`,
+      );
+    }
+  });
+  provenanceLaneIds.forEach((laneId) => {
+    const matching = deterministicClaims.filter(
+      ({ claim }) => claim.laneIds.length === 1 && claim.laneIds[0] === laneId,
+    );
+    if (matching.length !== 1) {
+      add(
+        errors,
+        'missing-deterministic-provenance',
+        '/reviewAccounting/verification',
+        `sealed provenance lane ${laneId} requires exactly one deterministic result`,
       );
     }
   });

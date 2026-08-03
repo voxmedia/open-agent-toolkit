@@ -67,8 +67,12 @@ function fixture(pathCount = 2): {
     plan: {
       strategy: 'delegated',
       lanes: [
-        { id: 'lane-delegated', delegated: true },
-        { id: 'lane-inline', delegated: false },
+        {
+          id: 'lane-delegated',
+          delegated: true,
+          replay: 'accept-provenance',
+        },
+        { id: 'lane-inline', delegated: false, replay: 'direct-verify' },
       ],
       verificationBoundary: {
         requiredClaims: [
@@ -386,14 +390,14 @@ describe('reviewer terminal assembly', () => {
     overlay.reviewAccounting.verification.promotedFindings = [
       {
         ...structuredClone(template),
-        claimId: 'claim-promoted-1',
-        findingId: 'finding-1',
+        claimId: 'claim-promoted-2',
+        findingId: 'finding-2',
         disposition: 'verified',
       },
       {
         ...structuredClone(template),
-        claimId: 'claim-promoted-2',
-        findingId: 'finding-2',
+        claimId: 'claim-promoted-1',
+        findingId: 'finding-1',
         disposition: 'verified',
       },
     ];
@@ -497,6 +501,21 @@ describe('reviewer terminal assembly', () => {
       'missing-overlay-selector',
     ],
     [
+      'missing deterministic provenance slot',
+      (overlay: ReviewerTerminalOverlayV1) => {
+        overlay.reviewAccounting.verification.deterministicResults = [];
+      },
+      'missing-overlay-selector',
+    ],
+    [
+      'deterministic result for a replayed lane',
+      (overlay: ReviewerTerminalOverlayV1) => {
+        overlay.reviewAccounting.verification.deterministicResults[0]!.laneIds =
+          ['lane-inline'];
+      },
+      'unknown-overlay-selector',
+    ],
+    [
       'duplicate promoted finding selector',
       (overlay: ReviewerTerminalOverlayV1) => {
         const promoted =
@@ -533,6 +552,71 @@ describe('reviewer terminal assembly', () => {
         code,
       }),
     );
+  });
+
+  it('requires deterministic command evidence scoped to its sealed provenance lane', () => {
+    const { context, overlay } = fixture();
+    const delegated = overlay.reviewAccounting.lanes.find(
+      (lane) => lane.laneId === 'lane-delegated',
+    )!;
+    const command = delegated.commands[0]!;
+    command.scopeRefs = [
+      { bucket: 'lane', bucketId: 'lane-inline', pathIndexes: [0] },
+    ];
+    const evidence = overlay.reviewAccounting.evidence[0]!;
+    evidence.scopeRefs = structuredClone(command.scopeRefs);
+    if (evidence.kind !== 'command') throw new Error('invalid test fixture');
+    evidence.commandResultDigest = commandResultDigest(command);
+
+    const result = validateReviewOutput(
+      validationContext(context),
+      assembleReviewerTerminal(overlay, context),
+    );
+    expect(result).toMatchObject({
+      valid: false,
+      errors: [{ code: 'invalid-deterministic-provenance' }],
+    });
+  });
+
+  it('emits deterministic provenance slots in sealed lane order', () => {
+    const { context, overlay } = fixture();
+    context.plan.lanes.splice(1, 0, {
+      id: 'lane-delegated-2',
+      delegated: true,
+      replay: 'accept-provenance',
+    });
+    context.assignment.lanes.splice(1, 0, {
+      ...structuredClone(context.assignment.lanes[0]!),
+      id: 'lane-delegated-2',
+      paths: ['src/delegated-2.ts'],
+    });
+    context.workerCoverage.push({
+      ...structuredClone(context.workerCoverage[0]!),
+      laneId: 'lane-delegated-2',
+      dossierDigest: 'e'.repeat(64),
+    });
+    overlay.reviewAccounting.lanes.push({
+      ...structuredClone(overlay.reviewAccounting.lanes[1]!),
+      laneId: 'lane-delegated-2',
+    });
+    const deterministic =
+      overlay.reviewAccounting.verification.deterministicResults[0]!;
+    overlay.reviewAccounting.verification.deterministicResults = [
+      {
+        ...structuredClone(deterministic),
+        claimId: 'claim-deterministic-2',
+        laneIds: ['lane-delegated-2'],
+      },
+      deterministic,
+    ];
+
+    expect(
+      assembleReviewerTerminal(overlay, context)
+        .reviewAccounting.verification.filter(
+          (claim) => claim.kind === 'deterministic-result',
+        )
+        .map((claim) => claim.laneIds[0]),
+    ).toEqual(['lane-delegated', 'lane-delegated-2']);
   });
 
   it('defensively clones all immutable and authored arrays', () => {

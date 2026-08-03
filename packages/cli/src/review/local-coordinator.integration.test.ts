@@ -30,14 +30,16 @@ describe('local review coordinator integration contract', () => {
   ])('%s validates before publishing or bookkeeping', (_, start, end) => {
     const rail = section(start, end).replace(/\s+/g, ' ');
     const binding = rail.indexOf('bindWorkerDossier');
-    const terminal = rail.indexOf('ReviewerTerminalV1');
+    const overlay = rail.indexOf('ReviewerTerminalOverlayV1');
     const validation = rail.indexOf('validate-output');
+    const terminal = rail.indexOf('ReviewerTerminalV1', validation);
     const publication = rail.indexOf('publish-output');
     const bookkeeping = rail.indexOf('bookkeeping');
     expect(binding).toBeGreaterThanOrEqual(0);
-    expect(terminal).toBeGreaterThan(binding);
-    expect(validation).toBeGreaterThan(terminal);
-    expect(publication).toBeGreaterThan(validation);
+    expect(overlay).toBeGreaterThan(binding);
+    expect(validation).toBeGreaterThan(overlay);
+    expect(terminal).toBeGreaterThan(validation);
+    expect(publication).toBeGreaterThan(terminal);
     expect(bookkeeping).toBeGreaterThan(publication);
     expect(rail).toContain(
       'oat review publish-output --run-id <id> --destination <final-path> --json',
@@ -60,7 +62,7 @@ describe('local review coordinator integration contract', () => {
       'Never invoke ambient `oat`, override descriptor cwd, reconstruct a dossier from terminal digests, or hand a full dossier back to the parent launcher.',
     );
     expect(tier1).toContain(
-      'The parent must not reconstruct or submit a dossier from `ReviewerTerminalV1` digests.',
+      'The parent must not reconstruct or submit a dossier from terminal digest fields.',
     );
   });
 
