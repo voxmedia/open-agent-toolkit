@@ -1942,6 +1942,46 @@ release dry run, refresh the detached enforce fixture, and return the new HEAD
 and exact full-PR range for root-owned Remote Tier 1. Do not launch or post the
 review from this recovery.
 
+#### Recovery p06-t06-r09: Seed validated terminal accounting
+
+**Status:** completed
+**Remote terminal:** Fresh Remote structured Tier 1 at reviewed HEAD
+`25f7a8e0f7d27508e844f88b4d63f19dc66567f6` and full PR range
+`5f76ade91b4b2da7bb8ce5b53960325d9e189952..25f7a8e0f7d27508e844f88b4d63f19dc66567f6`
+accepted target `oat-reviewer-gpt-5-6-sol-high`. Validation run
+`c74279a0c893b05e2dbc1e062da01e29` completed checkpoint, plan validation,
+evidence authorization, and evidence collection.
+**Failure:** Terminal construction reconstructed five receipt/assignment values
+instead of retaining sealed values and omitted required `worker-conflict` and
+`cross-lane-gap` verification claims. Mixed repairable and non-repairable
+errors correctly terminalized the run as accounting-invalid. No mapping, body,
+payload, post, or GitHub review was created, and the accepted run is not
+resumed, replaced, or relabeled at the same HEAD.
+**Operator disposition:** Authorized a bounded launcher-owned accounting seed
+returned with successful plan validation, exact seed consumption across
+structured/local/direct reviewers, end-to-end terminal and retry regressions,
+full release gates, and one fresh Remote Tier 1 retry at the resulting new
+HEAD. Posting still requires presentation and final confirmation of an accepted
+body/verdict payload.
+**Implementation:** `validate-plan` now returns `ReviewAccountingSeedV1` derived
+from the accepted receipt, canonical assignment projection, and validated
+verification boundary. Canonical coordinator guidance requires exact seed
+copying and complete direct/positive-coverage claim instantiation. Focused unit,
+broker, command, lifecycle, recovery, and generated-asset contracts cover seed
+identity, immutability, transport, mandatory claims, and same-handle repair.
+**Verification:** Focused seed, broker, command, lifecycle, recovery, direct
+coordinator, generated-asset, and skill-contract suites pass. `pnpm check`,
+`pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm lint`, `pnpm format`,
+`pnpm build:docs`, and `pnpm release:validate` pass. The successful workspace
+test includes 4,007 CLI tests and 131 smoke tests. Asset sync dry-run reports
+no drift. The first workspace test attempt encountered load-sensitive timeouts
+after 4,002 CLI tests passed; all affected files passed in isolation and the
+full rerun passed without code changes.
+
+**Next:** Commit and push the bounded recovery, require green PR checks, refresh
+the detached enforce fixture, then run one fresh root-owned Remote Tier 1 at the
+new HEAD and stop before POST with the exact accepted body and verdict.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_

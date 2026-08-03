@@ -73,6 +73,11 @@ describe('createReviewValidatePlanCommand', () => {
     const validate = vi.fn(async () => ({
       valid: true as const,
       receipt: { token: 'receipt-1' },
+      accountingSeed: {
+        schemaVersion: 1,
+        receipt: 'receipt-1',
+        strategy: 'selective-inline',
+      },
     }));
     const command = createReviewValidatePlanCommand({
       stdin: Readable.from([JSON.stringify(plan)]),
@@ -100,7 +105,15 @@ describe('createReviewValidatePlanCommand', () => {
     );
     expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
       ok: true,
-      result: { valid: true, receipt: { token: 'receipt-1' } },
+      result: {
+        valid: true,
+        receipt: { token: 'receipt-1' },
+        accountingSeed: {
+          schemaVersion: 1,
+          receipt: 'receipt-1',
+          strategy: 'selective-inline',
+        },
+      },
     });
   });
 

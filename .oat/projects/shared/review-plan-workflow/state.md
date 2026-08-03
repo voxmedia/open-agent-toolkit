@@ -1,8 +1,8 @@
 ---
 oat_current_task: p06-t06
-oat_last_commit: fd7a86048e316c8a1ab3de1b6ab62e51af659d04
+oat_last_commit: 25f7a8e0f7d27508e844f88b4d63f19dc66567f6
 oat_blockers:
-  - p06-t06 root-owned Remote structured Tier 1 retry required after cwd recovery
+  - p06-t06 accounting-seed recovery must be committed, pushed, and green before the root-owned Remote structured Tier 1 retry
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -76,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-03T00:04:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-03T02:51:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -88,7 +88,7 @@ oat_project_explainer:
 
 **Status:** Phase 6 Stage A integration recovery
 **Started:** 2026-07-29
-**Last Updated:** 2026-08-02
+**Last Updated:** 2026-08-03
 
 ## Current Phase
 
@@ -176,6 +176,18 @@ PR review; ephemeral state was cleaned, and it must not be resumed, replaced,
 or relabeled at the same HEAD. The operator authorized bounded correction
 `p06-t06-r08` to anchor source review command resolution at the CLI package
 root before another root-owned Remote Tier 1 retry.
+That retry at `25f7a8e0` accepted the same target and successfully completed
+checkpoint, plan validation, evidence authorization, and evidence collection.
+Validation run `c74279a0c893b05e2dbc1e062da01e29` then became terminal
+accounting-invalid because terminal construction reconstructed five
+receipt/assignment values and omitted mandatory `worker-conflict` and
+`cross-lane-gap` claims. No mapping, body, payload, post, or GitHub review was
+created. The operator authorized bounded recovery `p06-t06-r09` to return a
+launcher-owned accounting seed with exact validated identity, assignments, and
+verification requirements before one fresh root-owned Remote Tier 1 retry at a
+new HEAD. That recovery now passes focused contracts, the complete 4,007-test
+CLI suite, all 131 smoke tests, workspace and docs gates, asset-sync dry-run,
+and release validation. It is ready to commit and push.
 
 ## Artifacts
 
@@ -351,16 +363,22 @@ root before another root-owned Remote Tier 1 retry.
   workspace, docs, sync, bundle, and release validation
 - ⚠ Accepted Remote Tier 1 at `36a5e0cb` preserved the ephemeral repo cwd but
   source/tsx checkpoint alias resolution still failed
-- → Complete p06-t06-r08 source-resolution anchoring, push and await green
-  checks, refresh the fixture, then root retries Remote Tier 1 at the new HEAD
+- ✓ Bounded p06-t06-r08 source-resolution anchoring passed focused, full,
+  release, CI, and detached-fixture gates
+- ⚠ Accepted Remote Tier 1 at `25f7a8e0` reached evidence but terminalized on
+  reconstructed accounting identity/assignments and two omitted required claims
+- ✓ Bounded p06-t06-r09 accounting-seed recovery passed focused, workspace,
+  docs, sync, bundle, and release validation
+- → Commit and push p06-t06-r09, await green checks, refresh the fixture, then
+  root retries Remote Tier 1 at the new HEAD
 
 ## Blockers
 
 p06-t06 requires the root-owned, already-authorized Remote structured Tier 1
-retry only after p06-t06-r08 passes at a new HEAD.
+retry only after p06-t06-r09 is committed, pushed, and green at a new HEAD.
 
 ## Next Milestone
 
-Complete and push p06-t06-r08, require green PR checks and release dry run,
-refresh the detached enforce fixture, and return the exact full-PR range and
-new HEAD for the root-owned Remote structured Tier 1 retry.
+Commit and push p06-t06-r09, require green PR checks and release dry run, refresh
+the detached enforce fixture, and return the exact full-PR range and new HEAD
+for the root-owned Remote structured Tier 1 retry.

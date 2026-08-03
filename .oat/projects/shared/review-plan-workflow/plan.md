@@ -3933,6 +3933,61 @@ PR-scoped canonical asset version bumps.
 **Step 3: Commit**
 `fix(p06-t06): anchor source review command resolution`
 
+#### Recovery p06-t06-r09: Seed validated terminal accounting
+
+**Finding:** Fresh Remote structured Tier 1 at
+`25f7a8e0f7d27508e844f88b4d63f19dc66567f6` successfully completed checkpoint,
+plan validation, evidence authorization, and evidence collection. Validation
+run `c74279a0c893b05e2dbc1e062da01e29` then became terminal
+accounting-invalid because reviewer-authored terminal construction reconstructed
+five receipt/assignment values and omitted mandatory `worker-conflict` and
+`cross-lane-gap` claims. No finding mapping, body, payload, post, or GitHub
+review was created.
+
+**Recovery files:**
+
+- Add: `packages/cli/src/review/accounting-seed.ts`
+- Add: `packages/cli/src/review/accounting-seed.test.ts`
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/index.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.ts`
+- Modify: focused lifecycle, broker, command, recovery, type, and coordinator
+  tests
+- Modify: canonical reviewer, local/remote provide, and direct phase
+  coordinator guidance
+- Regenerate: manifest-owned provider views and CLI bundles
+- Modify: `.oat/projects/shared/review-plan-workflow/design.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/state.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Implement** Return launcher-owned `ReviewAccountingSeedV1` beside the
+accepted plan receipt. Derive exact terminal identity, immutable lane and
+classification assignments, and the complete validated verification boundary
+from sealed receipt/plan/assignment state. Require every structured, local, and
+direct reviewer path to copy the seed without reconstruction and to instantiate
+every required direct and positive-coverage claim. Keep final output validation
+authoritative and preserve the closed same-handle repair allowlist.
+
+**Step 2: Verify** Prove seed derivation cannot alias stored arrays; real broker
+validate-plan output carries the seed; a terminal built from the seed satisfies
+all mandatory claims; repairable reconstructed identity/assignment values
+recover on the same accepted run; local, remote, direct, generated-asset,
+workspace, docs, sync, bundle, release, CI, and detached-fixture gates pass.
+Keep lockstep public packages at unpublished 0.2.29 and do not repeat
+PR-scoped canonical asset version bumps.
+
+**Recovery result:** Completed. Focused seed, broker, command, lifecycle,
+recovery, and generated-asset contracts pass. The full workspace test passes
+with 4,007 CLI tests and 131 smoke tests; check, type-check, build, lint, format,
+docs build, release validation, and asset-sync dry-run also pass. The first
+full test attempt exposed load-sensitive timeouts after 4,002 CLI tests passed;
+all affected files passed when isolated and the complete rerun passed without
+code changes.
+
+**Step 3: Commit**
+`fix(p06-t06): seed validated terminal accounting`
+
 ### Task p06-t07: Publish Stage A and start the soak
 
 **Files:**

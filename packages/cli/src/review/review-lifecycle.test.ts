@@ -358,6 +358,24 @@ describe('receipt-bound evidence authorization', () => {
       validationRunId: context.runId,
       contextDigest: context.contextDigest,
     });
+    expect(accepted.accountingSeed).toEqual({
+      schemaVersion: 1,
+      receipt: accepted.receipt.token,
+      contextDigest: accepted.receipt.contextDigest,
+      planDigest: accepted.receipt.planDigest,
+      assignmentDigest: accepted.receipt.assignmentDigest,
+      strategy: 'whole-diff-inline',
+      lanes: [
+        {
+          id: 'lane',
+          paths: [],
+          primaryObligationIds: [],
+          seamObligationIds: [],
+        },
+      ],
+      classifications: [],
+      verificationBoundary: validPlan(context).verificationBoundary,
+    });
     await expect(
       beginEvidence(
         { runId: context.runId, receipt: accepted.receipt.token },

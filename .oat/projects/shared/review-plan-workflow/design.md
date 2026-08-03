@@ -167,14 +167,19 @@ unwired reference implementation, not an additional coordinator.
     The coordinator correlates the receipt, run, plan, and launch attempt before
     persisting worker coverage. No parent reconstruction or ambient command path
     may perform this binding.
-13. The reviewer returns findings plus compact `ReviewAccountingV1`.
-14. The coordinator validates the output. On failure, it sends precise errors
+13. Successful plan validation also returns launcher-owned
+    `ReviewAccountingSeedV1`. The accepted continuation copies its exact
+    receipt/digest/strategy identity, immutable assignment projection, and
+    complete verification boundary into terminal construction instead of
+    reconstructing them from model memory.
+14. The reviewer returns findings plus compact `ReviewAccountingV1`.
+15. The coordinator validates the output. On failure, it sends precise errors
     through the same accepted continuation for at most two accounting-only
     repairs.
-15. Valid complete output proceeds to the rail's existing artifact, GitHub
+16. Valid complete output proceeds to the rail's existing artifact, GitHub
     posting, ledger, gate, or receive flow. Valid blocked-incomplete accounting
     proceeds only through the existing non-actionable `BLOCKED` path.
-16. The coordinator cleans up accepted and ordinary terminal runs after sink
+17. The coordinator cleans up accepted and ordinary terminal runs after sink
     translation. Accounting-invalid runs are reduced to a private diagnostic
     receipt retained until TTL. The gate parent and expired-context reaper cover
     killed-child and process-crash paths.
@@ -1199,6 +1204,43 @@ canonical SHA-256 digest of the provider adapter's opaque accepted handle ID;
 the raw ID is retained only by the adapter and never logged or passed in
 reviewer-authored JSON. Receipt issuance requires that binding to exist.
 
+### ReviewAccountingSeedV1
+
+```typescript
+interface ReviewAccountingSeedV1 {
+  schemaVersion: 1;
+  receipt: string;
+  contextDigest: string;
+  planDigest: string;
+  assignmentDigest: string;
+  strategy: ReviewStrategy;
+  lanes: Array<{
+    id: string;
+    paths: string[];
+    primaryObligationIds: string[];
+    seamObligationIds: string[];
+  }>;
+  classifications: Array<{
+    id: string;
+    kind: ReviewClassificationV1['kind'];
+    reason: string;
+    paths: string[];
+    planDisposition: ReviewClassificationV1['disposition'];
+    strategy: ReviewClassificationV1['strategy'];
+    plannedChecks: string[];
+    exclusionAuthority: string | null;
+  }>;
+  verificationBoundary: ReviewPlanV1['verificationBoundary'];
+}
+```
+
+The seed is derived only after the plan and canonical assignment projection are
+accepted. It is a launcher-owned terminal-construction projection, not a second
+authority: output validation still compares every copied field against sealed
+state. Reviewers copy the identity and assignment fields exactly and create
+evidenced terminal claims for every seeded direct kind and positive-coverage
+lane. They do not reconstruct, omit, or re-sort those fields.
+
 ### ReviewAccountingV1
 
 ```typescript
@@ -1497,7 +1539,8 @@ oat review validate-plan \
   --json
 ```
 
-**Output:** `PlanValidationReceiptV1`.
+**Output:** `{ valid: true, receipt: PlanValidationReceiptV1, accountingSeed:
+ReviewAccountingSeedV1 }`.
 
 **Rules:**
 

@@ -21,6 +21,7 @@ import {
 } from './review-lifecycle';
 import type {
   PreparedReviewContextV1,
+  ReviewAccountingSeedV1,
   ReviewPlanV1,
   ReviewPreparationV1,
   ReviewerTerminalV1,
@@ -290,6 +291,7 @@ async function lifecycleSnapshots(root: string, delegated = false) {
     created,
     prepared,
     artifactsLoaded,
+    validated,
     planValidated,
     evidenceStarted,
   };
@@ -388,6 +390,73 @@ function invalidAccountingTerminal(summary = 'reviewed'): ReviewerTerminalV1 {
   };
 }
 
+function terminalFromAccountingSeed(
+  seed: ReviewAccountingSeedV1,
+): ReviewerTerminalV1 {
+  const terminal = invalidAccountingTerminal();
+  if (terminal.status !== 'complete') throw new Error('invalid test terminal');
+  terminal.reviewAccounting.receipt = seed.receipt;
+  terminal.reviewAccounting.contextDigest = seed.contextDigest;
+  terminal.reviewAccounting.planDigest = seed.planDigest;
+  terminal.reviewAccounting.assignmentDigest = seed.assignmentDigest;
+  terminal.reviewAccounting.strategy = seed.strategy;
+  terminal.reviewAccounting.lanes = seed.lanes.map((lane) => ({
+    ...structuredClone(lane),
+    workerOutcome: 'not-delegated',
+    dossierDigest: null,
+    inspectionCoverage: 'all',
+    uninspectedPathIndexes: [],
+    uncoveredObligationIds: [],
+    commands: [],
+    evidenceRefIds: ['evidence-1'],
+    uncertainty: [],
+    primaryCompletion: {
+      outcome: 'not-needed',
+      completedPathIndexes: [],
+      completedObligationIds: [],
+      commands: [],
+      evidenceRefIds: [],
+    },
+  }));
+  terminal.reviewAccounting.classifications = seed.classifications.map(
+    (classification) => ({
+      ...structuredClone(classification),
+      outcome:
+        classification.planDisposition === 'justified-exclusion'
+          ? 'excluded'
+          : 'complete',
+      inspectionCoverage:
+        classification.planDisposition === 'justified-exclusion'
+          ? 'excluded'
+          : 'all',
+      uninspectedPathIndexes: [],
+      commands: [],
+      uncertainty: [],
+    }),
+  );
+  terminal.reviewAccounting.verification = [
+    ...seed.verificationBoundary.requiredClaims.map(({ kind, mode }) => ({
+      claimId: `required-${kind}`,
+      kind,
+      findingId: null,
+      laneIds: seed.lanes.map((lane) => lane.id),
+      mode,
+      disposition: 'rejected' as const,
+      evidenceRefIds: ['evidence-1'],
+    })),
+    {
+      claimId: 'positive-coverage',
+      kind: 'positive-coverage-sample',
+      findingId: null,
+      laneIds: [...seed.verificationBoundary.positiveCoverage.laneIds],
+      mode: seed.verificationBoundary.positiveCoverage.mode,
+      disposition: 'verified',
+      evidenceRefIds: ['evidence-1'],
+    },
+  ];
+  return terminal;
+}
+
 function delegatedTerminal(
   state: ValidationRunState,
   coverage: ValidatedWorkerCoverageProjectionV1,
@@ -463,6 +532,56 @@ function delegatedTerminal(
 }
 
 describe('validation recovery integration', () => {
+  it('repairs reconstructed terminal accounting from the launcher-owned seed', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validation-seed-repair-'));
+    roots.push(root);
+    const fixture = await lifecycleSnapshots(root);
+    const malformed = terminalFromAccountingSeed(
+      fixture.validated.accountingSeed,
+    );
+    malformed.reviewAccounting.receipt = 'reconstructed-receipt';
+    malformed.reviewAccounting.lanes[0]!.paths = ['reconstructed-path.ts'];
+
+    await expect(
+      validateStoredReviewOutput(
+        { runId: fixture.created.runId, terminal: malformed },
+        fixture.store,
+      ),
+    ).resolves.toMatchObject({
+      valid: false,
+      errors: expect.arrayContaining([
+        expect.objectContaining({ code: 'receipt-mismatch' }),
+        expect.objectContaining({ code: 'assignment-mismatch' }),
+      ]),
+    });
+    await expect(
+      fixture.store.readRun(fixture.created.runId),
+    ).resolves.toMatchObject({ state: { phase: 'accounting_repair' } });
+
+    const repaired = terminalFromAccountingSeed(
+      fixture.validated.accountingSeed,
+    );
+    expect(
+      repaired.reviewAccounting.verification
+        .filter(({ mode }) => mode === 'direct')
+        .map(({ kind }) => kind),
+    ).toEqual([
+      'promoted-finding',
+      'consequential-absence',
+      'worker-conflict',
+      'cross-lane-gap',
+    ]);
+    await expect(
+      validateStoredReviewOutput(
+        { runId: fixture.created.runId, terminal: repaired },
+        fixture.store,
+      ),
+    ).resolves.toMatchObject({ valid: true });
+    await expect(
+      fixture.store.readRun(fixture.created.runId),
+    ).resolves.toMatchObject({ state: { phase: 'accepted' } });
+  });
+
   it.each(['complete', 'partial'] as const)(
     'accepts delegated %s output after real-store dossier binding',
     async (outcome) => {

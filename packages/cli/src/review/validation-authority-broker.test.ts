@@ -358,8 +358,29 @@ describe('validation authority broker', () => {
       `${validateResult.stderr}\n${validateResult.stdout}`,
     ).toBe(0);
     const validateEnvelope = JSON.parse(validateResult.stdout) as {
-      result: { receipt: { token: string } };
+      result: {
+        receipt: { token: string };
+        accountingSeed: {
+          receipt: string;
+          lanes: Array<{ id: string; primaryObligationIds: string[] }>;
+          verificationBoundary: {
+            requiredClaims: Array<{ kind: string }>;
+          };
+        };
+      };
     };
+    expect(validateEnvelope.result.accountingSeed).toMatchObject({
+      receipt: validateEnvelope.result.receipt.token,
+      lanes: [{ id: 'lane-1', primaryObligationIds: ['p02-t01'] }],
+      verificationBoundary: {
+        requiredClaims: [
+          { kind: 'promoted-finding' },
+          { kind: 'consequential-absence' },
+          { kind: 'worker-conflict' },
+          { kind: 'cross-lane-gap' },
+        ],
+      },
+    });
     const receiptIndex = begin.argv.indexOf('__OAT_PLAN_RECEIPT__');
     const invalidBegin = structuredClone(begin);
     invalidBegin.argv[receiptIndex] = 'wrong-receipt-token';

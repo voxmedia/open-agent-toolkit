@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 
+import { buildReviewAccountingSeed } from './accounting-seed';
 import { buildContextBudget } from './budget';
 import { hashCanonicalJson } from './canonical-json';
 import {
@@ -23,6 +24,7 @@ import {
 import type {
   PlanValidationReceiptV1,
   PreparedReviewContextV1,
+  ReviewAccountingSeedV1,
   ReviewPlanV1,
 } from './types';
 import { ValidationStore } from './validation-store';
@@ -124,7 +126,11 @@ export async function validateAndReceiptPlan(
   input: { runId: string; commandToken: string; plan: ReviewPlanV1 },
   dependencies: Pick<ReviewLifecycleDependencies, 'store' | 'clock'>,
 ): Promise<
-  | { valid: true; receipt: PlanValidationReceiptV1 }
+  | {
+      valid: true;
+      receipt: PlanValidationReceiptV1;
+      accountingSeed: ReviewAccountingSeedV1;
+    }
   | { valid: false; errors: PlanValidationError[] }
 > {
   const run = await mapReviewBoundaryErrors(() =>
@@ -203,7 +209,11 @@ export async function validateAndReceiptPlan(
       return state;
     }),
   );
-  return { valid: true, receipt: structuredClone(receipt) };
+  return {
+    valid: true,
+    receipt: structuredClone(receipt),
+    accountingSeed: buildReviewAccountingSeed(receipt, input.plan, projection),
+  };
 }
 
 export async function beginEvidence(

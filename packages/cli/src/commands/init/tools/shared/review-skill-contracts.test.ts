@@ -96,6 +96,7 @@ describe('review skill contracts', () => {
       'checkpointArtifacts',
       'ReviewPlanV1',
       'PlanValidationReceiptV1',
+      'ReviewAccountingSeedV1',
       'beginEvidence',
       'Selective evidence execution',
     ];
@@ -178,6 +179,27 @@ describe('review skill contracts', () => {
     }
   });
 
+  it('pins launcher-owned accounting seeds across review coordinators', () => {
+    for (const path of [
+      '.agents/agents/oat-reviewer.md',
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    ]) {
+      const normalized = readRepoFile(path).replace(/\s+/g, ' ');
+      expect(normalized, path).toContain('ReviewAccountingSeedV1');
+      expect(normalized, path).toMatch(
+        /copy[\s\S]{0,120}(?:identity|seed)[\s\S]{0,160}(?:assignment|lane\/classification)/i,
+      );
+      expect(normalized, path).toMatch(
+        /(?:every|complete)[\s\S]{0,120}(?:direct|verification)[\s\S]{0,120}positive-coverage/i,
+      );
+      expect(normalized, path).toMatch(
+        /never|must not[\s\S]{0,120}reconstruct/i,
+      );
+    }
+  });
+
   it('makes Tier 3 a receipt-bound selective inline continuation', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-review-provide/SKILL.md',
@@ -193,6 +215,7 @@ describe('review skill contracts', () => {
       'checkpointArtifacts',
       'ReviewPlanV1',
       'PlanValidationReceiptV1',
+      'ReviewAccountingSeedV1',
       'beginEvidence',
       'Selective evidence',
       'bindWorkerDossier',
@@ -236,6 +259,7 @@ describe('review skill contracts', () => {
         'accepted handle',
         'checkpointArtifacts',
         'validate-plan',
+        'ReviewAccountingSeedV1',
         'begin-evidence',
         'bindWorkerDossier',
         'ReviewerTerminalV1',
@@ -297,7 +321,7 @@ describe('review skill contracts', () => {
     for (const rail of rails) {
       const normalized = rail.replace(/\s+/g, ' ');
       expect(normalized).toMatch(
-        /prepare-context[\s\S]*accepted handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*StructuredFindings[\s\S]*finding mapping[\s\S]*GitHub post/i,
+        /prepare-context[\s\S]*accepted handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*ReviewAccountingSeedV1[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*StructuredFindings[\s\S]*finding mapping[\s\S]*GitHub post/i,
       );
       expect(normalized).toMatch(
         /Accepted timeout,[\s\S]*BLOCKED[\s\S]*malformed[\s\S]*accounting-invalid[\s\S]*non-actionable/i,
@@ -319,7 +343,7 @@ describe('review skill contracts', () => {
     );
     const normalized = content.replace(/\s+/g, ' ');
     expect(normalized).toMatch(
-      /direct phase review[\s\S]*prepare-context[\s\S]*accepted reviewer handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*publishAcceptedArtifact[\s\S]*bookkeeping/i,
+      /direct phase review[\s\S]*prepare-context[\s\S]*accepted reviewer handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*ReviewAccountingSeedV1[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*publishAcceptedArtifact[\s\S]*bookkeeping/i,
     );
     expect(normalized).toContain('preparation-supplied');
     expect(normalized).toContain('{ executable, argv, cwd, stdin }');

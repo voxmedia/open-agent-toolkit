@@ -476,9 +476,13 @@ path but pass only the private draft path and supplied command invocations to
 the reviewer. On host acceptance, bind and retain the exact accepted reviewer
 handle. That handle performs required artifact intake, invokes
 `checkpointArtifacts`, submits `ReviewPlanV1` through `validate-plan`, retains
-`PlanValidationReceiptV1`, invokes `begin-evidence`, executes selective
-evidence, and keeps every accepted complete or partial `WorkerDossierV1` inside
-the same continuation. Every supplied command descriptor is the launcher-owned
+the exact `PlanValidationReceiptV1` and launcher-owned
+`ReviewAccountingSeedV1`, invokes `begin-evidence`, executes selective evidence,
+and keeps every accepted complete or partial `WorkerDossierV1` inside the same
+continuation. Terminal construction must copy the seed's identity and immutable
+lane/classification assignments exactly and instantiate every seeded direct and
+positive-coverage verification requirement; it must not reconstruct those
+fields from the plan or receipt. Every supplied command descriptor is the launcher-owned
 `{ executable, argv, cwd, stdin }` contract: execute it in its required
 absolute `cwd`; never use the reviewer's ambient working directory and never
 change cwd to repair branch-local alias resolution. As each applicable dossier

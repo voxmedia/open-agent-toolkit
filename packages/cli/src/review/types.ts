@@ -380,6 +380,32 @@ export interface PlanValidationReceiptV1 {
   expiresAt: string;
 }
 
+export interface ReviewAccountingSeedV1 {
+  schemaVersion: 1;
+  receipt: string;
+  contextDigest: string;
+  planDigest: string;
+  assignmentDigest: string;
+  strategy: ReviewStrategy;
+  lanes: Array<{
+    id: string;
+    paths: string[];
+    primaryObligationIds: string[];
+    seamObligationIds: string[];
+  }>;
+  classifications: Array<{
+    id: string;
+    kind: ReviewClassificationV1['kind'];
+    reason: string;
+    paths: string[];
+    planDisposition: ReviewClassificationV1['disposition'];
+    strategy: ReviewClassificationV1['strategy'];
+    plannedChecks: string[];
+    exclusionAuthority: string | null;
+  }>;
+  verificationBoundary: ReviewPlanV1['verificationBoundary'];
+}
+
 export interface ReviewScopeRefV1 {
   bucket: 'lane' | 'classification';
   bucketId: string;

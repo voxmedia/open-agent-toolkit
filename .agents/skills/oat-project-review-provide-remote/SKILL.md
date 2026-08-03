@@ -350,9 +350,13 @@ in structured-output mode. This mirrors the tested wrapper at
   not substitute base `oat-reviewer` or add a concrete model argument.
 - On host acceptance, bind and retain the exact accepted handle. The reviewer
   performs required artifact intake, invokes supplied `checkpointArtifacts`,
-  submits `ReviewPlanV1` through `validate-plan`, retains
-  `PlanValidationReceiptV1`, and invokes `begin-evidence` before selective
-  content evidence. Every supplied command descriptor is the launcher-owned
+  submits `ReviewPlanV1` through `validate-plan`, retains the exact
+  `PlanValidationReceiptV1` and launcher-owned `ReviewAccountingSeedV1`, and
+  invokes `begin-evidence` before selective content evidence. Terminal
+  construction copies the seed's identity and immutable lane/classification
+  assignments exactly and instantiates every seeded direct and
+  positive-coverage verification requirement; it never reconstructs those
+  fields from the plan or receipt. Every supplied command descriptor is the launcher-owned
   `{ executable, argv, cwd, stdin }` contract: execute it in its required
   absolute `cwd`; never use the reviewer's ambient working directory and never
   change cwd to repair branch-local alias resolution.
@@ -385,9 +389,13 @@ in structured-output mode. This mirrors the tested wrapper at
 review and the managed-target guard permits it, invoke
 `oat review prepare-context` with sink `structured`, then bind the current
 planning parent as the accepted handle. Perform required artifact intake; invoke supplied
-`checkpointArtifacts`; submit `ReviewPlanV1` through `validate-plan`; retain
-`PlanValidationReceiptV1`; and invoke `begin-evidence` before selective,
-path-scoped content evidence. Execute every exact
+`checkpointArtifacts`; submit `ReviewPlanV1` through `validate-plan`; retain the
+exact `PlanValidationReceiptV1` and launcher-owned
+`ReviewAccountingSeedV1`; copy its identity and immutable assignments exactly,
+instantiate its complete direct and positive-coverage verification boundary,
+and invoke `begin-evidence` with its receipt before selective, path-scoped
+content evidence. Never reconstruct terminal accounting from the plan or
+receipt. Execute every exact
 `{ executable, argv, cwd, stdin }` descriptor in its required absolute `cwd`;
 never use the ambient working directory or change cwd to repair alias
 resolution. Keep every applicable complete or partial

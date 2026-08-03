@@ -842,9 +842,13 @@ The `oat-reviewer` agent definition contains the full review process, mode contr
 When the host accepts the reviewer, bind and retain that exact accepted handle
 for the full coordinator lifetime. The accepted reviewer performs required
 artifact intake, invokes the supplied `checkpointArtifacts`, submits
-`ReviewPlanV1` through `validate-plan`, retains its
-`PlanValidationReceiptV1`, and invokes `begin-evidence` before selective
-content evidence. Keep every complete or partial `WorkerDossierV1` inside this
+`ReviewPlanV1` through `validate-plan`, retains its exact
+`PlanValidationReceiptV1` and launcher-owned `ReviewAccountingSeedV1`, and
+invokes `begin-evidence` before selective content evidence. The accepted
+continuation must copy seed identity and assignment fields exactly and
+instantiate every seeded direct and positive-coverage verification requirement;
+it must never reconstruct terminal accounting from the plan or receipt. Keep
+every complete or partial `WorkerDossierV1` inside this
 accepted primary continuation. As each dossier is accepted, and before
 terminal return, the continuation must execute the preparation-supplied
 `bindWorkerDossier` invocation with its exact executable, argv array, and
@@ -938,11 +942,14 @@ Use this exact contract:
    selective-inline or eligible whole-diff-inline evidence strategy. Submit it
    with the supplied `validate-plan` command. One rejected plan may be
    corrected once before evidence.
-5. **Validation receipt (`PlanValidationReceiptV1`)** — Retain the opaque
-   receipt returned by the launcher-owned validator. Do not infer acceptance
-   from reviewer-authored digests.
+5. **Validated accounting seed (`PlanValidationReceiptV1` +
+   `ReviewAccountingSeedV1`)** — Retain the exact `receipt` and
+   `accountingSeed` returned by the launcher-owned validator. Copy the seed's
+   identity, lane/classification assignment, and complete verification boundary
+   into terminal construction without reconstruction or omission. Do not infer
+   acceptance from reviewer-authored digests.
 6. **Evidence transition (`beginEvidence`)** — Execute the supplied
-   begin-evidence command with that receipt. Do not read source files or
+   begin-evidence command with the seeded receipt. Do not read source files or
    content-level diffs unless this atomic transition succeeds.
 7. **Selective evidence** — Inspect consequential seams first, then use
    path-scoped diffs and targeted source context according to the validated

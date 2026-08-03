@@ -150,11 +150,17 @@ authoritative.
    cross-lane seams, and selects whole-diff, selective-inline, or delegated
    evidence. Submit it through the launcher-owned plan validator. One rejected
    plan may be corrected once before evidence; do not self-authorize it.
-4. **Validation receipt (`PlanValidationReceiptV1`)** — Retain the opaque
-   receipt returned for the validated plan. It is bound to the validation run,
-   accepted handle, context, plan, and assignment projection.
+4. **Validated accounting seed (`PlanValidationReceiptV1` +
+   `ReviewAccountingSeedV1`)** — Retain both `receipt` and `accountingSeed`
+   returned for the validated plan. The seed is launcher-owned and is the only
+   source for terminal receipt/digest/strategy identity, immutable lane and
+   classification assignments, required direct claim kinds, positive-coverage
+   lane IDs, and deterministic acceptance fields. Copy those fields exactly;
+   never reconstruct, re-sort, summarize, or omit them. Create an evidenced
+   terminal verification claim for every required direct kind and every seeded
+   positive-coverage lane.
 5. **Evidence transition (`beginEvidence`)** — Invoke the launcher-owned
-   begin-evidence command with that receipt from the already-accepted
+   begin-evidence command with the seeded receipt from the already-accepted
    continuation. Do not read source files or content-level diffs before
    `beginEvidence` succeeds.
 6. **Selective evidence execution** — Inspect high-consequence seams first and
@@ -220,6 +226,9 @@ dispatch-selected candidate and `ReviewAccountingV1`; a blocked terminal
 contains no candidate or actionable verdict, states its reason and diagnostics,
 and carries `ReviewAccountingV1` with `completion: blocked-incomplete`. Both
 artifact and structured sinks use this terminal before sink translation. The
+reviewer must copy every launcher-owned identity and assignment field from the
+retained `accountingSeed` and satisfy its complete verification boundary rather
+than reconstructing either from the plan, receipt, filesystem, or memory. The
 reviewer cannot validate its own terminal or launch a replacement after
 acceptance.
 

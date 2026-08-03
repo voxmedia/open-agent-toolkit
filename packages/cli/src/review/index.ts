@@ -41,6 +41,7 @@ export type {
   ReviewCliEnvelope,
   ReviewCliError,
   ReviewErrorCategory,
+  ReviewAccountingSeedV1,
   ReviewInvocation,
   ReviewPlanCapabilities,
   ReviewPlanPreflightInput,

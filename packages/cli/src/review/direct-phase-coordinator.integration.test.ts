@@ -26,6 +26,7 @@ describe('direct phase review coordinator integration', () => {
       'accepted reviewer handle',
       'checkpointArtifacts',
       'validate-plan',
+      'ReviewAccountingSeedV1',
       'begin-evidence',
       'bindWorkerDossier',
       'ReviewerTerminalV1',
