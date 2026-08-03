@@ -69,6 +69,7 @@ describe('ValidationStoreAuthority', () => {
     expect(
       reviewerSafeEnvironment({
         OAT_REVIEW_AUTHORITY_KEY: 'must-not-leak',
+        TSX_TSCONFIG_PATH: 'packages/cli/tsconfig.json',
         SAFE: 'visible',
       }),
     ).toEqual({ SAFE: 'visible' });

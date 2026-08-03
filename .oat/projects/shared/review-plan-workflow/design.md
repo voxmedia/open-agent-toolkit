@@ -794,6 +794,10 @@ interface PrepareReviewContextResultV1 {
   required absolute cwd without shell parsing, an ambient command lookup, or a
   caller-cwd override, and provide stdin only when its discriminant requires
   `review-plan-json` or `worker-dossier-json`.
+- For source/tsx review lifecycle commands, launcher preparation sets that cwd
+  to the CLI package root containing the source entrypoint's `tsconfig.json`;
+  repository operational context remains the explicit `repoRoot` preparation
+  input. Packaged/dist launches retain their launcher cwd.
 - `PreparedReviewContextV1` is created exactly once after artifact intake;
   plan validation requires it.
 - Legacy runs do not create preparation/context records or receipts.

@@ -7,6 +7,7 @@ import { canonicalizeJson, parseStrictJson } from './canonical-json';
 
 const AUTHORITY_KEY_ENV = 'OAT_REVIEW_AUTHORITY_KEY';
 const VALIDATION_ROOT_ENV = 'OAT_REVIEW_VALIDATION_ROOT';
+const TSX_TSCONFIG_PATH_ENV = 'TSX_TSCONFIG_PATH';
 
 interface AuthenticatedStateEnvelope {
   schemaVersion: 1;
@@ -114,6 +115,7 @@ export function reviewerSafeEnvironment(
 ): NodeJS.ProcessEnv {
   const safe = { ...environment };
   delete safe[AUTHORITY_KEY_ENV];
+  delete safe[TSX_TSCONFIG_PATH_ENV];
   return safe;
 }
 

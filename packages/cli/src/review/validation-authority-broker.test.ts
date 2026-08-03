@@ -13,6 +13,7 @@ import {
 } from './budget';
 import { executeCommandInvocation } from './command-invocation';
 import type {
+  PrepareReviewContextResultV1,
   ReviewCommandInvocationV1,
   ReviewPlanV1,
   WorkerDossierV1,
@@ -700,14 +701,15 @@ describe('validation authority broker', () => {
     await broker.close();
   });
 
-  it('runs the real source lifecycle after prepare exits without sharing authority', async () => {
+  it('runs the pnpm source lifecycle from an unrelated repo without sharing authority', async () => {
     const { root, validationRoot, baseSha, headSha } =
       await repositoryFixture();
     const sourceInvocation = {
-      executable: resolve('../../node_modules/.bin/tsx'),
-      argv: ['--tsconfig', resolve('tsconfig.json'), resolve('src/index.ts')],
-      cwd: resolve('.'),
+      executable: 'pnpm',
+      argv: ['--silent', 'run', 'cli:source', '--'],
+      cwd: resolve('../..'),
     };
+    const sourceCommandCwd = resolve('.');
     const prepare = await runSourceCommand(
       sourceInvocation.executable,
       [...sourceInvocation.argv, 'review', 'prepare-context'],
@@ -738,7 +740,7 @@ describe('validation authority broker', () => {
         OAT_REVIEW_VALIDATION_ROOT: validationRoot,
       },
     );
-    expect(prepare.exitCode, prepare.stderr).toBe(0);
+    expect(prepare.exitCode, `${prepare.stderr}\n${prepare.stdout}`).toBe(0);
     const preparedEnvelope = JSON.parse(prepare.stdout) as {
       result: {
         validationRunId: string;
@@ -749,10 +751,10 @@ describe('validation authority broker', () => {
     expect(
       Object.values(prepared.commands).map((invocation) => invocation.cwd),
     ).toEqual([
-      sourceInvocation.cwd,
-      sourceInvocation.cwd,
-      sourceInvocation.cwd,
-      sourceInvocation.cwd,
+      sourceCommandCwd,
+      sourceCommandCwd,
+      sourceCommandCwd,
+      sourceCommandCwd,
     ]);
     expect(prepare.stdout).not.toContain('accepted-handle');
     const brokerSocket =

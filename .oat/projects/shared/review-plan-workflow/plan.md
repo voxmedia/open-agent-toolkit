@@ -3888,6 +3888,51 @@ lockstep 0.2.29 and do not repeat PR-scoped canonical asset version bumps.
 **Step 3: Commit**
 `fix(p06-t06): preserve review command working directories`
 
+#### Recovery p06-t06-r08: Anchor source review command resolution
+
+**Finding:** The fresh Remote structured Tier 1 at
+`36a5e0cb6e000fe092863e774a4db76cd554c2bd` covered full PR range
+`5f76ade91b4b2da7bb8ce5b53960325d9e189952..36a5e0cb6e000fe092863e774a4db76cd554c2bd`.
+Validation run `f7c91a39f94eda5bc54f966c944084c6` and preparation
+digest `8716b9db6b072869842c3c1faa0b79a885f191a2022c322c2b33d017dc4848c8`
+preserved an absolute ephemeral worktree cwd, but the accepted checkpoint still
+failed `ERR_MODULE_NOT_FOUND` for `@app/command-context`. The accepted reviewer
+terminal was schema-invalid, so no mapping, body, payload, post, or PR review
+was created. Ephemeral state was cleaned, and the run remains terminal at that
+HEAD.
+
+**Recovery files:**
+
+- Modify: `packages/cli/src/commands/review/prepare-context.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/review/validation-store-authority.ts`
+- Modify: `packages/cli/src/review/validation-store-authority.test.ts`
+- Modify: `packages/cli/src/review/validation-authority-broker.test.ts`
+- Modify: `.oat/projects/shared/review-plan-workflow/design.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/state.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Implement** For the exact source/tsx CLI entrypoint only, derive the
+launcher-owned command cwd from the CLI package root that contains its
+`tsconfig.json`; retain the existing cwd for packaged/dist launches and keep
+repository operational context in preparation input. Remove the inherited
+tsx CLI's relative config hint from reviewer-safe child environments so it
+cannot override descriptor-cwd config discovery. Do not change gate route cwd,
+add shell parsing, or permit caller/reviewer cwd repair.
+
+**Step 2: Verify** Invoke the real source CLI through
+`pnpm run cli:source -- ...`, capture its emitted lifecycle descriptors, and
+execute them from an unrelated ephemeral repository using only exact
+executable, argv, cwd, and stdin. Prove all issued commands share the
+CLI-package cwd, packaged launch cwd remains unchanged, strict cwd drift remains
+rejected, and focused, workspace, docs, sync, release, CI, and detached-fixture
+gates pass. Keep public packages at lockstep 0.2.29 and do not repeat
+PR-scoped canonical asset version bumps.
+
+**Step 3: Commit**
+`fix(p06-t06): anchor source review command resolution`
+
 ### Task p06-t07: Publish Stage A and start the soak
 
 **Files:**

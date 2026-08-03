@@ -1888,6 +1888,60 @@ dry run, refresh the detached enforce fixture, run the updated p06-t06 focused
 preflight, and return the new HEAD and exact full-PR range for root-owned Remote
 Tier 1. Do not launch or post the review from this recovery.
 
+#### Recovery p06-t06-r08: Anchor source review command resolution
+
+**Status:** completed
+**Remote terminal:** Fresh Remote structured Tier 1 at reviewed HEAD
+`36a5e0cb6e000fe092863e774a4db76cd554c2bd` accepted target
+`oat-reviewer-gpt-5-6-sol-high`. Validation run
+`f7c91a39f94eda5bc54f966c944084c6`, preparation digest
+`8716b9db6b072869842c3c1faa0b79a885f191a2022c322c2b33d017dc4848c8`,
+covered full PR range
+`5f76ade91b4b2da7bb8ce5b53960325d9e189952..36a5e0cb6e000fe092863e774a4db76cd554c2bd`.
+**Failure:** Exact descriptors preserved an absolute ephemeral worktree cwd,
+but checkpoint still failed `ERR_MODULE_NOT_FOUND` for
+`@app/command-context`. The accepted reviewer terminal was schema-invalid, so
+there was no mapping, body, payload, post, or PR review. PR reviews remained
+zero and ephemeral state was cleaned. The accepted run is terminal and is not
+resumed, replaced, or relabeled at the same HEAD.
+**Root cause:** The source command
+`tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts` consumes
+`--tsconfig`; `currentGateCliLaunch()` can retain only Node loader hooks and
+the source entrypoint. p06-t06-r07 therefore preserved the operational repo cwd
+rather than the CLI package root required for automatic tsx config discovery.
+The inherited relative `TSX_TSCONFIG_PATH` could also override discovery after
+the cwd was corrected.
+**Operator disposition:** Authorized only a narrow source-review launch
+correction: derive immutable launcher cwd from the CLI source entrypoint,
+retain packaged/dist and gate behavior, keep repo context explicit in
+preparation input, remove the inherited tsx config hint from reviewer-safe
+children, prove the real pnpm source lifecycle from an unrelated repo, and run
+the full candidate gates before a root-owned Remote Tier 1 retry at a new HEAD.
+**Implementation:** Prepare-context now recognizes only the exact CLI source
+entrypoint and anchors review broker/lifecycle cwd at its package root;
+packaged/dist launches retain their original cwd. Reviewer-safe child
+environments discard the consumed tsx CLI config hint so descriptor cwd owns
+config discovery. The end-to-end regression invokes
+`pnpm run cli:source -- review prepare-context`, captures the real emitted
+descriptors, executes the complete checkpoint/validate/begin lifecycle from an
+unrelated ephemeral repo, and verifies one shared package-root cwd.
+**Verification:** Focused source-launch, branch-local, prepare, schema,
+capability, broker, command-lifecycle, local coordinator, and remote coordinator
+suites passed 146/146 tests. The complete CLI suite passed 4,003/4,003 with
+four bounded workers and smoke passed 131/131. The standard unrestricted
+workspace test command reproduced fixed-timeout contention in three
+process-heavy files after 3,999 passes; every affected file passed focused or
+in the bounded complete suite, with no timeout change. Workspace check,
+type-check, lint, and format each passed 10 tasks; all five package builds and
+all six docs builds passed. Provider sync dry-run reported no drift. Release
+validation passed all five lockstep 0.2.29 public packages and 65 visual
+measurements.
+
+**Next:** Commit and push the bounded correction, require passing CI and
+release dry run, refresh the detached enforce fixture, and return the new HEAD
+and exact full-PR range for root-owned Remote Tier 1. Do not launch or post the
+review from this recovery.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_

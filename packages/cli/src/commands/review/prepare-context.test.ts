@@ -1,9 +1,13 @@
+import { resolve } from 'node:path';
 import { Readable } from 'node:stream';
 
 import type { PrepareReviewContextResultV1 } from '@review/types';
 import { describe, expect, it, vi } from 'vitest';
 
-import { createReviewPrepareContextCommand } from './prepare-context';
+import {
+  createReviewPrepareContextCommand,
+  normalizeReviewCommandLaunch,
+} from './prepare-context';
 
 const baseInput = {
   schemaVersion: 1,
@@ -90,6 +94,27 @@ const prepared = {
 } as unknown as PrepareReviewContextResultV1;
 
 describe('createReviewPrepareContextCommand', () => {
+  it('anchors source launches without changing packaged launch cwd', () => {
+    const sourceLaunch = {
+      command: process.execPath,
+      args: ['--import', 'tsx', resolve('src/index.ts')],
+      cwd: '/ephemeral/repo',
+    };
+    expect(normalizeReviewCommandLaunch(sourceLaunch)).toEqual({
+      ...sourceLaunch,
+      cwd: resolve('.'),
+    });
+
+    const packagedLaunch = {
+      command: '/opt/oat/bin/node',
+      args: ['/opt/oat/dist/index.js'],
+      cwd: '/ephemeral/repo',
+    };
+    expect(normalizeReviewCommandLaunch(packagedLaunch)).toEqual(
+      packagedLaunch,
+    );
+  });
+
   it('uses the launcher broker by default without constructing local authority', async () => {
     const brokerPrepare = vi.fn(async () => prepared);
     const createDependencies = vi.fn();

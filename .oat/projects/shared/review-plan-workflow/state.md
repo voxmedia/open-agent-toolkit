@@ -166,6 +166,16 @@ worktree and validation state were cleaned. This accepted run is terminal and
 must not be resumed, replaced, or relabeled at the same HEAD. The operator
 authorized bounded recovery `p06-t06-r07` and a root-owned Remote Tier 1 retry
 only at its resulting new HEAD.
+That retry at `36a5e0cb` accepted the same target for full PR range
+`5f76ade9..36a5e0cb`, but validation run
+`f7c91a39f94eda5bc54f966c944084c6` still failed checkpoint alias resolution.
+The exact descriptors retained the ephemeral repo cwd while tsx had consumed
+its relative `--tsconfig` option, leaving loader hooks to resolve the wrong
+config. Its schema-invalid terminal created no mapping, body, payload, post, or
+PR review; ephemeral state was cleaned, and it must not be resumed, replaced,
+or relabeled at the same HEAD. The operator authorized bounded correction
+`p06-t06-r08` to anchor source review command resolution at the CLI package
+root before another root-owned Remote Tier 1 retry.
 
 ## Artifacts
 
@@ -339,16 +349,18 @@ only at its resulting new HEAD.
   exact descriptors dropped launcher cwd
 - ✓ Bounded p06-t06-r07 cwd recovery passed focused, complete bounded-worker,
   workspace, docs, sync, bundle, and release validation
-- → Commit and push p06-t06-r07, await green checks, refresh the fixture, then
-  root retries Remote Tier 1 at the new HEAD
+- ⚠ Accepted Remote Tier 1 at `36a5e0cb` preserved the ephemeral repo cwd but
+  source/tsx checkpoint alias resolution still failed
+- → Complete p06-t06-r08 source-resolution anchoring, push and await green
+  checks, refresh the fixture, then root retries Remote Tier 1 at the new HEAD
 
 ## Blockers
 
 p06-t06 requires the root-owned, already-authorized Remote structured Tier 1
-retry only after p06-t06-r07 passes at a new HEAD.
+retry only after p06-t06-r08 passes at a new HEAD.
 
 ## Next Milestone
 
-Complete and push p06-t06-r07, require green PR checks and release dry run,
+Complete and push p06-t06-r08, require green PR checks and release dry run,
 refresh the detached enforce fixture, and return the exact full-PR range and
 new HEAD for the root-owned Remote structured Tier 1 retry.

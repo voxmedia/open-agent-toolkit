@@ -1,4 +1,9 @@
-import { currentGateCliLaunch } from '@commands/gate/branch-local-cli';
+import { resolve } from 'node:path';
+
+import {
+  currentGateCliLaunch,
+  type GateCliLaunch,
+} from '@commands/gate/branch-local-cli';
 import { allocateReviewTimeBudget } from '@review/budget';
 import {
   type PrepareReviewContextDependencies,
@@ -44,7 +49,28 @@ interface PrepareContextCommandDependencies {
   processEnv: NodeJS.ProcessEnv;
 }
 
-const activeLaunch = currentGateCliLaunch();
+const REVIEW_SOURCE_ENTRYPOINT = resolve(import.meta.dirname, '../../index.ts');
+const REVIEW_SOURCE_PACKAGE_ROOT = resolve(
+  REVIEW_SOURCE_ENTRYPOINT,
+  '..',
+  '..',
+);
+
+export function normalizeReviewCommandLaunch(
+  launch: GateCliLaunch,
+): GateCliLaunch {
+  const entrypoint = launch.args.at(-1);
+  return {
+    ...launch,
+    cwd:
+      entrypoint !== undefined &&
+      resolve(launch.cwd, entrypoint) === REVIEW_SOURCE_ENTRYPOINT
+        ? REVIEW_SOURCE_PACKAGE_ROOT
+        : launch.cwd,
+  };
+}
+
+const activeLaunch = normalizeReviewCommandLaunch(currentGateCliLaunch());
 
 const DEFAULT_DEPENDENCIES: PrepareContextCommandDependencies = {
   stdin: process.stdin,
