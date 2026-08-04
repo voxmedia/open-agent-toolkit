@@ -4111,6 +4111,22 @@ workspace tests/build/docs gates, and `pnpm release:validate`.
 **Step 6: Commit**
 `fix(p06-t06): close accepted review lifecycle gaps`
 
+#### Recovery p06-t06-r12: Stabilize broker process tests under CI load
+
+**Finding:** The first CI run for `23cca2eb9` passed release validation but three
+process-level validation-authority-broker tests exceeded local-only 15-second
+and default five-second test ceilings under shared runner load. The failures
+were timeouts, not assertion failures; the same 20-test file passed locally.
+
+**Step 1: Implement** Apply bounded 30-second and 15-second ceilings to the
+affected multi-process tests without changing production behavior or CI
+configuration.
+
+**Step 2: Verify** Run the broker test file with `CI=1` and one worker, then rely
+on the pushed PR check for the full shared-runner matrix.
+
+**Step 3: Commit** `test(p06-t06): stabilize broker process timeouts`
+
 ### Task p06-t07: Publish Stage A and start the soak
 
 **Files:**

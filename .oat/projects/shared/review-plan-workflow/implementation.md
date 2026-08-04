@@ -2104,9 +2104,16 @@ already passed focused and now use the established 15-second load ceiling. The
 unchanged autonomy inventory correctly rejected one new non-gate prompt phrase;
 the canonical hash inventory now records it as `NG`.
 
-**Next:** Review the uncommitted recovery diff, then commit and push only with
-explicit operator authorization. Require green PR checks before a fresh
-root-owned Remote structured Tier 1 run. p06-t06 and p06-t07 remain unadvanced.
+**Post-push CI recovery:** Commit `23cca2eb9` was pushed with all pre-push checks
+green. Its first PR CI run passed release dry-run but three process-level broker
+tests exceeded their local-only 15-second and default five-second ceilings
+under shared runner load. Recovery `p06-t06-r12` raises only those bounded test
+ceilings to 30 and 15 seconds. The complete broker file passes 20/20 with
+`CI=1` and one worker.
+
+**Next:** Commit and push p06-t06-r12, then require green PR checks before a
+fresh root-owned Remote structured Tier 1 run. p06-t06 and p06-t07 remain
+unadvanced.
 
 ## Orchestration Runs
 

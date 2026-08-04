@@ -76,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-04T00:33:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-04T01:01:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -208,8 +208,11 @@ severity-correlated unique finding IDs. Two independent defect reviews found and
 closed eleven additional crash, concurrency, expiry, cleanup, and contract-test
 gaps; final verification reported no blocking findings.
 Focused, full workspace, smoke, build, docs, sync, and lockstep 0.2.30 release
-validation pass. The recovery remains uncommitted; p06-t06 and p06-t07 remain
-unadvanced.
+validation pass. Recovery commit `23cca2eb9` is pushed. Its first PR CI run
+passed release dry-run but timed out three process-level broker tests under
+shared runner load. Recovery `p06-t06-r12` applies bounded test-only timeouts;
+the broker file passes 20/20 under `CI=1` with one worker. p06-t06 and p06-t07
+remain unadvanced.
 
 ## Artifacts
 
@@ -417,18 +420,18 @@ unadvanced.
 - ✓ Full verification passes 4,102 CLI tests, 77 control-plane tests, 41 docs
   package tests, 131 smoke tests, all workspace/docs gates, provider sync, and
   lockstep 0.2.30 release validation with 65 visual measurements
-- → Review and commit p06-t06-r11, then push only after explicit authorization;
-  p06-t06 and p06-t07 remain unadvanced
+- ✓ p06-t06-r11 committed and pushed at `23cca2eb9`
+- → p06-t06-r12 stabilizes three CI-only broker process timeouts; focused broker
+  verification passes 20/20 and full PR CI must turn green
 
 ## Blockers
 
-p06-t06 requires p06-t06-r11 to be reviewed, committed, pushed with explicit
-authorization, and green before a fresh root-owned Remote structured Tier 1
-run at the new HEAD.
+p06-t06 requires p06-t06-r12 to be committed, pushed, and green before a fresh
+root-owned Remote structured Tier 1 run at the new HEAD.
 
 ## Next Milestone
 
-Review and commit p06-t06-r11, push only after explicit authorization, require
-green PR checks, refresh the detached enforce fixture, and then run a fresh
-root-owned Remote structured Tier 1 action.
+Commit and push p06-t06-r12, require green PR checks, refresh the detached
+enforce fixture, and then run a fresh root-owned Remote structured Tier 1
+action.
 p06-t06 and p06-t07 remain unadvanced.

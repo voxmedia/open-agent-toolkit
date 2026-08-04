@@ -377,7 +377,7 @@ describe('validation authority broker', () => {
       broker.preparation.coordinatorCommands!.cleanupValidationRun,
     );
     await broker.closed;
-  }, 15_000);
+  }, 30_000);
 
   it('reopens bind capability after a transient mutation failure', async () => {
     let attempts = 0;
@@ -470,7 +470,7 @@ describe('validation authority broker', () => {
       broker.preparation.coordinatorCommands!.cleanupValidationRun,
     );
     await broker.closed;
-  });
+  }, 15_000);
 
   it('explicit cleanup removes the exact gate run, correlation, and transport', async () => {
     const gate = {
@@ -597,7 +597,7 @@ describe('validation authority broker', () => {
     expect((await first).exitCode).toBe(0);
     await broker.closed;
     expect(deleteRun).toHaveBeenCalledTimes(1);
-  });
+  }, 15_000);
 
   it('treats cleanup of an already deleted exact run as successful', async () => {
     const { broker, store } = await fixture();
