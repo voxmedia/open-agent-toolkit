@@ -1,20 +1,26 @@
 import { execFile, spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { createConnection } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   allocateReviewTimeBudget,
   evaluateWholeDiffEligibility,
 } from './budget';
-import { executeCommandInvocation } from './command-invocation';
+import { bindAcceptedHandle } from './command-capabilities';
+import {
+  executeCommandInvocation,
+  executeCoordinatorCommandInvocation,
+} from './command-invocation';
 import type {
   PrepareReviewContextResultV1,
   ReviewCommandInvocationV1,
+  ReviewCoordinatorCommandInvocationV1,
   ReviewPlanV1,
   WorkerDossierV1,
 } from './types';
@@ -102,8 +108,13 @@ async function fixture(
     connectionReadTimeoutMs?: number;
     shutdownTimeoutMs?: number;
     expiryMs?: number;
+    sink?: 'artifact' | 'structured';
+    bindAcceptedHandle?: typeof bindAcceptedHandle;
   },
   delegated = false,
+  bind = true,
+  deleteRun?: (store: ValidationStore, runId: string) => Promise<void>,
+  gateCorrelation?: { gateRunId: string; launchAttemptId: string },
 ) {
   const {
     root,
@@ -119,11 +130,18 @@ async function fixture(
     socketPath,
     key,
     validationRoot,
-    acceptedContinuation: {
+    coordinatorCapabilities: {
       schemaVersion: 1,
-      handleId: 'accepted-handle',
+      bindToken: 'bind-capability-token',
+      cleanupToken: 'cleanup-capability-token',
     },
-    timings,
+    bindAcceptedHandle: timings?.bindAcceptedHandle,
+    deleteRun,
+    timings: {
+      connectionReadTimeoutMs: timings?.connectionReadTimeoutMs,
+      shutdownTimeoutMs: timings?.shutdownTimeoutMs,
+      expiryMs: timings?.expiryMs,
+    },
     startup: {
       input: {
         repoRoot: root,
@@ -131,8 +149,9 @@ async function fixture(
         scope: 'p02-t01',
         workflowMode: 'spec-driven',
         range: { baseSha, headSha },
-        sink: 'structured',
-        invocation: 'manual',
+        sink: timings?.sink ?? 'structured',
+        invocation: gateCorrelation ? 'gate' : 'manual',
+        ...(gateCorrelation ?? {}),
         budget: delegated ? { totalMs: 120_000, source: 'test' } : null,
         obligationSources: {
           plan: { source: planSource, path: 'plan.md' },
@@ -151,6 +170,17 @@ async function fixture(
     validationRoot,
     new ValidationStoreAuthority(key),
   );
+  if (bind) {
+    const invocation =
+      broker.preparation.coordinatorCommands!.bindAcceptedContinuation;
+    const bound = await executeCoordinatorCommandInvocation(invocation, {
+      stdin: JSON.stringify({
+        schemaVersion: 1,
+        handleId: 'accepted-handle',
+      }),
+    });
+    expect(bound.exitCode, `${bound.stderr}\n${bound.stdout}`).toBe(0);
+  }
   return {
     root,
     validationRoot,
@@ -287,6 +317,299 @@ function workerDossier(
 }
 
 describe('validation authority broker', () => {
+  it('stays unbound until the coordinator binds the exact accepted handle', async () => {
+    const { broker, store } = await fixture(undefined, false, false);
+    const runId = broker.preparation.preparation.runId;
+    const reviewerCommands = broker.preparation.commands;
+    expect((await store.readRun(runId)).state.acceptedHandleDigest).toBeNull();
+    expect(reviewerCommands).not.toHaveProperty('bindAcceptedContinuation');
+    expect(reviewerCommands).not.toHaveProperty('cleanupValidationRun');
+    expect(JSON.stringify(reviewerCommands)).not.toContain(
+      '--coordinator-token',
+    );
+
+    const prematureCheckpoint = await executeCommandInvocation(
+      reviewerCommands.checkpointArtifacts,
+    );
+    expect(prematureCheckpoint.exitCode).toBe(1);
+    expect((await store.readRun(runId)).state).toMatchObject({
+      phase: 'prepared',
+      acceptedHandleDigest: null,
+      capabilities: { checkpointUsed: false },
+    });
+
+    const bind =
+      broker.preparation.coordinatorCommands!.bindAcceptedContinuation;
+    const wrong = structuredClone(bind);
+    wrong.argv[wrong.argv.indexOf('--coordinator-token') + 1] =
+      'wrong-coordinator-token';
+    const rejected = await executeCoordinatorCommandInvocation(wrong, {
+      stdin: JSON.stringify({ schemaVersion: 1, handleId: 'host-handle' }),
+    });
+    expect(rejected.exitCode).toBe(1);
+    const wrongRun = structuredClone(bind);
+    wrongRun.argv[wrongRun.argv.indexOf('--run-id') + 1] = 'wrongrunidentifier';
+    const wrongRunRejected = await executeCoordinatorCommandInvocation(
+      wrongRun,
+      {
+        stdin: JSON.stringify({ schemaVersion: 1, handleId: 'host-handle' }),
+      },
+    );
+    expect(wrongRunRejected.exitCode).toBe(1);
+
+    const accepted = await executeCoordinatorCommandInvocation(bind, {
+      stdin: JSON.stringify({ schemaVersion: 1, handleId: 'host-handle' }),
+    });
+    expect(accepted.exitCode, accepted.stderr).toBe(0);
+    expect((await store.readRun(runId)).state.acceptedHandleDigest).toBe(
+      createHash('sha256').update('host-handle').digest('hex'),
+    );
+
+    const replay = await executeCoordinatorCommandInvocation(bind, {
+      stdin: JSON.stringify({ schemaVersion: 1, handleId: 'host-handle' }),
+    });
+    expect(replay.exitCode).toBe(1);
+    expect(JSON.parse(replay.stdout)).toMatchObject({
+      error: { code: 'coordinator-capability-rejected' },
+    });
+
+    await executeCoordinatorCommandInvocation(
+      broker.preparation.coordinatorCommands!.cleanupValidationRun,
+    );
+    await broker.closed;
+  }, 15_000);
+
+  it('reopens bind capability after a transient mutation failure', async () => {
+    let attempts = 0;
+    const bindMutation = vi.fn(
+      async (store: ValidationStore, runId: string, handleId: string) => {
+        attempts++;
+        if (attempts === 1) throw new Error('injected bind failure');
+        return bindAcceptedHandle(store, runId, handleId);
+      },
+    );
+    const { broker, store } = await fixture(
+      { bindAcceptedHandle: bindMutation },
+      false,
+      false,
+    );
+    const invocation =
+      broker.preparation.coordinatorCommands!.bindAcceptedContinuation;
+    const input = {
+      stdin: JSON.stringify({
+        schemaVersion: 1,
+        handleId: 'retry-handle',
+      }),
+    };
+
+    const failed = await executeCoordinatorCommandInvocation(invocation, input);
+    expect(failed.exitCode).toBe(2);
+    expect(
+      (await store.readRun(broker.preparation.preparation.runId)).state
+        .acceptedHandleDigest,
+    ).toBeNull();
+    const retried = await executeCoordinatorCommandInvocation(
+      invocation,
+      input,
+    );
+    expect(retried.exitCode, retried.stderr).toBe(0);
+    const replay = await executeCoordinatorCommandInvocation(invocation, input);
+    expect(replay.exitCode).toBe(1);
+    expect(bindMutation).toHaveBeenCalledTimes(2);
+
+    await executeCoordinatorCommandInvocation(
+      broker.preparation.coordinatorCommands!.cleanupValidationRun,
+    );
+    await broker.closed;
+  }, 15_000);
+
+  it('rejects concurrent bind capability use while one mutation is in flight', async () => {
+    let release!: () => void;
+    const barrier = new Promise<void>((resolveBarrier) => {
+      release = resolveBarrier;
+    });
+    let entered!: () => void;
+    const started = new Promise<void>((resolveStarted) => {
+      entered = resolveStarted;
+    });
+    const bindMutation = vi.fn(
+      async (store: ValidationStore, runId: string, handleId: string) => {
+        entered();
+        await barrier;
+        return bindAcceptedHandle(store, runId, handleId);
+      },
+    );
+    const { broker } = await fixture(
+      { bindAcceptedHandle: bindMutation },
+      false,
+      false,
+    );
+    const invocation =
+      broker.preparation.coordinatorCommands!.bindAcceptedContinuation;
+    const input = {
+      stdin: JSON.stringify({
+        schemaVersion: 1,
+        handleId: 'concurrent-handle',
+      }),
+    };
+    const first = executeCoordinatorCommandInvocation(invocation, input);
+    await started;
+    const concurrent = await executeCoordinatorCommandInvocation(
+      invocation,
+      input,
+    );
+    expect(concurrent.exitCode).toBe(1);
+    expect(JSON.parse(concurrent.stdout)).toMatchObject({
+      error: { code: 'coordinator-capability-rejected' },
+    });
+    release();
+    expect((await first).exitCode).toBe(0);
+    expect(bindMutation).toHaveBeenCalledTimes(1);
+
+    await executeCoordinatorCommandInvocation(
+      broker.preparation.coordinatorCommands!.cleanupValidationRun,
+    );
+    await broker.closed;
+  });
+
+  it('explicit cleanup removes the exact gate run, correlation, and transport', async () => {
+    const gate = {
+      gateRunId: 'gate-run-exact',
+      launchAttemptId: 'launch-attempt-exact',
+    };
+    const { broker, store, socketDirectory } = await fixture(
+      undefined,
+      false,
+      true,
+      undefined,
+      gate,
+    );
+    const runId = broker.preparation.preparation.runId;
+    await expect(
+      store.resolveGateCorrelation(gate.gateRunId, gate.launchAttemptId),
+    ).resolves.toBe(runId);
+
+    const cleanup = await executeCoordinatorCommandInvocation(
+      broker.preparation.coordinatorCommands!.cleanupValidationRun,
+    );
+    expect(cleanup.exitCode, cleanup.stderr).toBe(0);
+    await broker.closed;
+    await expect(store.readRun(runId)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    await expect(
+      store.resolveGateCorrelation(gate.gateRunId, gate.launchAttemptId),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(stat(socketDirectory)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+  }, 15_000);
+
+  it.each(['missing', 'replaced'] as const)(
+    'explicit cleanup removes a run whose draft is %s',
+    async (draftState) => {
+      const gate = {
+        gateRunId: `gate-explicit-${draftState}`,
+        launchAttemptId: `attempt-explicit-${draftState}`,
+      };
+      const { broker, store } = await fixture(
+        { sink: 'artifact' },
+        false,
+        false,
+        undefined,
+        gate,
+      );
+      const draftPath = broker.preparation.artifactDraftPath!;
+      await rm(draftPath);
+      if (draftState === 'replaced') await writeFile(draftPath, 'replacement');
+
+      const cleanup = await executeCoordinatorCommandInvocation(
+        broker.preparation.coordinatorCommands!.cleanupValidationRun,
+      );
+      expect(cleanup.exitCode, cleanup.stderr).toBe(0);
+      await broker.closed;
+      await expect(
+        store.readRun(broker.preparation.preparation.runId),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+      await expect(
+        store.resolveGateCorrelation(gate.gateRunId, gate.launchAttemptId),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+    },
+  );
+
+  it('reopens cleanup capability after a transient deletion failure', async () => {
+    let attempts = 0;
+    const deleteRun = vi.fn(async (store: ValidationStore, runId: string) => {
+      attempts++;
+      if (attempts === 1) throw new Error('injected deletion failure');
+      await store.deleteRun(runId);
+    });
+    const { broker, store, socketDirectory } = await fixture(
+      undefined,
+      false,
+      true,
+      deleteRun,
+    );
+    const invocation =
+      broker.preparation.coordinatorCommands!.cleanupValidationRun;
+
+    const failed = await executeCoordinatorCommandInvocation(invocation);
+    expect(failed.exitCode).toBe(2);
+    await expect(stat(socketDirectory)).resolves.toBeDefined();
+    await expect(
+      store.readRun(broker.preparation.preparation.runId),
+    ).resolves.toBeDefined();
+
+    const retried = await executeCoordinatorCommandInvocation(invocation);
+    expect(retried.exitCode, retried.stderr).toBe(0);
+    await broker.closed;
+    expect(deleteRun).toHaveBeenCalledTimes(2);
+    await expect(stat(socketDirectory)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+  }, 15_000);
+
+  it('rejects concurrent cleanup capability use while deletion is in flight', async () => {
+    let release!: () => void;
+    const barrier = new Promise<void>((resolveBarrier) => {
+      release = resolveBarrier;
+    });
+    let entered!: () => void;
+    const started = new Promise<void>((resolveStarted) => {
+      entered = resolveStarted;
+    });
+    const deleteRun = vi.fn(async (store: ValidationStore, runId: string) => {
+      entered();
+      await barrier;
+      await store.deleteRun(runId);
+    });
+    const { broker } = await fixture(undefined, false, true, deleteRun);
+    const invocation =
+      broker.preparation.coordinatorCommands!.cleanupValidationRun;
+    const first = executeCoordinatorCommandInvocation(invocation);
+    await started;
+    const concurrent = await executeCoordinatorCommandInvocation(invocation);
+    expect(concurrent.exitCode).toBe(1);
+    expect(JSON.parse(concurrent.stdout)).toMatchObject({
+      error: { code: 'coordinator-capability-rejected' },
+    });
+    release();
+    expect((await first).exitCode).toBe(0);
+    await broker.closed;
+    expect(deleteRun).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats cleanup of an already deleted exact run as successful', async () => {
+    const { broker, store } = await fixture();
+    const runId = broker.preparation.preparation.runId;
+    await store.deleteRun(runId);
+    const cleanup = await executeCoordinatorCommandInvocation(
+      broker.preparation.coordinatorCommands!.cleanupValidationRun,
+    );
+    expect(cleanup.exitCode, cleanup.stderr).toBe(0);
+    await broker.closed;
+  });
+
   it('runs every one-shot lifecycle command in a separate keyless process', async () => {
     const { root, broker, store, socketDirectory, socketPath } = await fixture({
       connectionReadTimeoutMs: 5_000,
@@ -417,11 +740,21 @@ describe('validation authority broker', () => {
         phase: 'evidence_started',
       },
     });
+    await expect(
+      store.readRun(broker.preparation.preparation.runId),
+    ).resolves.toBeDefined();
+    const cleanup = await executeCoordinatorCommandInvocation(
+      broker.preparation.coordinatorCommands!.cleanupValidationRun,
+    );
+    expect(cleanup.exitCode, `${cleanup.stderr}\n${cleanup.stdout}`).toBe(0);
     await withinDeadline(broker.closed, 500);
     await withinDeadline(pinnedClosed, 500);
     await expect(stat(socketDirectory)).rejects.toMatchObject({
       code: 'ENOENT',
     });
+    await expect(
+      store.readRun(broker.preparation.preparation.runId),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
     const transportFailure = await executeCommandInvocation(begin, {});
     expect(transportFailure.exitCode).toBe(2);
     expect(JSON.parse(transportFailure.stdout)).toMatchObject({
@@ -538,11 +871,21 @@ describe('validation authority broker', () => {
     await withinDeadline(slowClosed, 500);
     await readDeadlineFixture.broker.close();
 
-    const expiryFixture = await fixture({
-      connectionReadTimeoutMs: 5_000,
-      shutdownTimeoutMs: 50,
-      expiryMs: 50,
-    });
+    const expiryGate = {
+      gateRunId: 'gate-run-expiry',
+      launchAttemptId: 'launch-attempt-expiry',
+    };
+    const expiryFixture = await fixture(
+      {
+        connectionReadTimeoutMs: 5_000,
+        shutdownTimeoutMs: 50,
+        expiryMs: 50,
+      },
+      false,
+      false,
+      undefined,
+      expiryGate,
+    );
     const pinned = createConnection(expiryFixture.socketPath);
     pinned.on('error', () => undefined);
     await waitForSocketConnect(pinned);
@@ -553,6 +896,70 @@ describe('validation authority broker', () => {
     await expect(stat(expiryFixture.socketDirectory)).rejects.toMatchObject({
       code: 'ENOENT',
     });
+    await expect(
+      expiryFixture.store.readRun(
+        expiryFixture.broker.preparation.preparation.runId,
+      ),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(
+      expiryFixture.store.resolveGateCorrelation(
+        expiryGate.gateRunId,
+        expiryGate.launchAttemptId,
+      ),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it.each(['missing', 'replaced'] as const)(
+    'expiry removes a run whose draft is %s before closing transport',
+    async (draftState) => {
+      const gate = {
+        gateRunId: `gate-expiry-${draftState}`,
+        launchAttemptId: `attempt-expiry-${draftState}`,
+      };
+      const expired = await fixture(
+        { expiryMs: 150, shutdownTimeoutMs: 50, sink: 'artifact' },
+        false,
+        false,
+        undefined,
+        gate,
+      );
+      const draftPath = expired.broker.preparation.artifactDraftPath!;
+      await rm(draftPath);
+      if (draftState === 'replaced') await writeFile(draftPath, 'replacement');
+
+      await withinDeadline(expired.broker.closed, 500);
+      await expect(
+        expired.store.readRun(expired.broker.preparation.preparation.runId),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+      await expect(
+        expired.store.resolveGateCorrelation(
+          gate.gateRunId,
+          gate.launchAttemptId,
+        ),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+      await expect(stat(expired.socketDirectory)).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+    },
+  );
+
+  it('always closes expiry transport when exact run deletion fails', async () => {
+    const deleteRun = vi.fn(async () => {
+      throw new Error('injected deletion failure');
+    });
+    const expired = await fixture(
+      { shutdownTimeoutMs: 50, expiryMs: 25 },
+      false,
+      false,
+      deleteRun,
+    );
+    const runId = expired.broker.preparation.preparation.runId;
+    await withinDeadline(expired.broker.closed, 500);
+    expect(deleteRun).toHaveBeenCalledWith(expired.store, runId);
+    await expect(stat(expired.socketDirectory)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    await expect(expired.store.readRun(runId)).resolves.toBeDefined();
   });
 
   it('preserves expiry as a typed broker domain rejection', async () => {
@@ -598,9 +1005,10 @@ describe('validation authority broker', () => {
         socketPath,
         key: Buffer.alloc(32, 19),
         validationRoot,
-        acceptedContinuation: {
+        coordinatorCapabilities: {
           schemaVersion: 1,
-          handleId: 'accepted-handle',
+          bindToken: 'bind-capability-token',
+          cleanupToken: 'cleanup-capability-token',
         },
         startup: {
           input: {
@@ -766,6 +1174,10 @@ describe('validation authority broker', () => {
       result: {
         validationRunId: string;
         commands: PrepareReviewContextResultV1['commands'];
+        coordinatorCommands: {
+          bindAcceptedContinuation: ReviewCoordinatorCommandInvocationV1;
+          cleanupValidationRun: ReviewCoordinatorCommandInvocationV1;
+        };
       };
     };
     const prepared = preparedEnvelope.result;
@@ -778,6 +1190,11 @@ describe('validation authority broker', () => {
       sourceCommandCwd,
     ]);
     expect(prepare.stdout).not.toContain('accepted-handle');
+    expect(prepared.commands).not.toHaveProperty('bindAcceptedContinuation');
+    expect(prepared.commands).not.toHaveProperty('cleanupValidationRun');
+    expect(JSON.stringify(prepared.commands)).not.toContain(
+      '--coordinator-token',
+    );
     const brokerSocket =
       prepared.commands.checkpointArtifacts.argv[
         prepared.commands.checkpointArtifacts.argv.indexOf('--broker-socket') +
@@ -791,6 +1208,16 @@ describe('validation authority broker', () => {
     const pinnedClosed = waitForSocketClose(pinned);
     pinned.write('{"schemaVersion":1');
 
+    const bind = await executeCoordinatorCommandInvocation(
+      prepared.coordinatorCommands.bindAcceptedContinuation,
+      {
+        stdin: JSON.stringify({
+          schemaVersion: 1,
+          handleId: 'source-accepted-handle',
+        }),
+      },
+    );
+    expect(bind.exitCode, `${bind.stderr}\n${bind.stdout}`).toBe(0);
     const checkpoint = await executeFromCallerCwd(
       root,
       prepared.commands.checkpointArtifacts,
@@ -846,6 +1273,10 @@ describe('validation authority broker', () => {
       ok: true,
       result: { phase: 'evidence_started' },
     });
+    const cleanup = await executeCoordinatorCommandInvocation(
+      prepared.coordinatorCommands.cleanupValidationRun,
+    );
+    expect(cleanup.exitCode, `${cleanup.stderr}\n${cleanup.stdout}`).toBe(0);
     await withinDeadline(pinnedClosed, 2_000);
     await expect(stat(brokerSocketDirectory)).rejects.toMatchObject({
       code: 'ENOENT',

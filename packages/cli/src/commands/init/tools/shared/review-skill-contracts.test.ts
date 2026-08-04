@@ -269,7 +269,7 @@ describe('review skill contracts', () => {
       const normalized = tier.replace(/\s+/g, ' ');
       const ordered = [
         'prepare-context',
-        'accepted handle',
+        name === 'Tier 1' ? 'accepted handle' : 'bindAcceptedContinuation',
         'checkpointArtifacts',
         'validate-plan',
         'begin-evidence',
@@ -280,6 +280,7 @@ describe('review skill contracts', () => {
         'same-handle accounting repair',
         'publish-output',
         'bookkeeping',
+        'cleanupValidationRun',
       ];
       let prior = -1;
       for (const marker of ordered) {
@@ -299,6 +300,7 @@ describe('review skill contracts', () => {
       expect(normalized).toContain('__OAT_PLAN_RECEIPT__');
       expect(normalized).toContain('bounded JSON stdin');
       expect(normalized).toContain('ambient `oat`');
+      expect(normalized).toContain('coordinatorCommands');
     }
   });
 
@@ -334,7 +336,7 @@ describe('review skill contracts', () => {
     for (const rail of rails) {
       const normalized = rail.replace(/\s+/g, ' ');
       expect(normalized).toMatch(
-        /prepare-context[\s\S]*accepted handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalOverlayV1[\s\S]*validate-output[\s\S]*ReviewerTerminalV1[\s\S]*same-handle accounting repair[\s\S]*StructuredFindings[\s\S]*finding mapping[\s\S]*GitHub post/i,
+        /prepare-context[\s\S]*(?:accepted handle|current planning parent)[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalOverlayV1[\s\S]*validate-output[\s\S]*ReviewerTerminalV1[\s\S]*same-handle accounting repair[\s\S]*StructuredFindings[\s\S]*finding mapping[\s\S]*GitHub post/i,
       );
       expect(normalized).toMatch(
         /Accepted timeout,[\s\S]*BLOCKED[\s\S]*malformed[\s\S]*accounting-invalid[\s\S]*non-actionable/i,
@@ -346,23 +348,31 @@ describe('review skill contracts', () => {
       expect(normalized).toContain('__OAT_PLAN_RECEIPT__');
       expect(normalized).toContain('bounded JSON stdin');
       expect(normalized).toContain('ambient `oat`');
+      expect(normalized).toContain('cleanupValidationRun');
+      expect(normalized).toContain('coordinatorCommands');
     }
     expect(rails[1]).not.toMatch(/read all files in the review scope/i);
   });
 
   it('makes direct phase review a shared validated artifact coordinator', () => {
-    const content = readRepoFile(
-      '.agents/skills/oat-project-implement/SKILL.md',
-    );
+    const content = [
+      readRepoFile('.agents/skills/oat-project-implement/SKILL.md'),
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/phase-execution.md',
+      ),
+    ].join('\n');
     const normalized = content.replace(/\s+/g, ' ');
     expect(normalized).toMatch(
-      /direct phase review[\s\S]*prepare-context[\s\S]*accepted reviewer handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalOverlayV1[\s\S]*validate-output[\s\S]*ReviewerTerminalV1[\s\S]*same-handle accounting repair[\s\S]*publishAcceptedArtifact[\s\S]*bookkeeping/i,
+      /direct phase review[\s\S]*prepare-context[\s\S]*accepted reviewer handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalOverlayV1[\s\S]*validate-output[\s\S]*ReviewerTerminalV1[\s\S]*same-handle accounting repair[\s\S]*publish-output[\s\S]*bookkeeping[\s\S]*cleanupValidationRun/i,
     );
     expect(normalized).toContain('preparation-supplied');
     expect(normalized).toContain('{ executable, argv, cwd, stdin }');
     expect(normalized).toContain('required absolute `cwd`');
     expect(normalized).toContain('__OAT_PLAN_RECEIPT__');
     expect(normalized).toContain('bounded JSON stdin');
+    expect(normalized).toContain(
+      'neither coordinator descriptor may enter reviewer input',
+    );
     expect(normalized).toContain(
       'Gate and checkpoint/final aliases inherit this coordinator; they do not create another authoritative context.',
     );

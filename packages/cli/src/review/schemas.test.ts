@@ -7,6 +7,7 @@ import {
   parsePlanValidationReceiptV1,
   parsePreparedReviewContextV1,
   parseReviewCommandInvocationV1,
+  parseReviewCoordinatorCommandInvocationV1,
   parseReviewerTerminalIngressV1,
   parseReviewerTerminalOverlayV1,
   parseReviewerTerminalV1,
@@ -224,6 +225,30 @@ describe('preparation schemas', () => {
       'context-digest',
     );
   });
+
+  it.each([
+    ['overlay', terminalOverlay, parseReviewerTerminalOverlayV1],
+    ['legacy terminal', structuredTerminal, parseReviewerTerminalV1],
+  ] as const)(
+    'rejects duplicate finding IDs in %s ingress',
+    (_name, make, parse) => {
+      const terminal = make();
+      const review = (
+        terminal['candidate'] as Record<string, Record<string, unknown>>
+      )['review']!;
+      const finding = {
+        id: 'I1',
+        severity: 'important',
+        title: 'Duplicate ID',
+        file: null,
+        line: null,
+        body: 'The ID is duplicated.',
+        fix_guidance: null,
+      };
+      review['findings'] = [finding, { ...finding }];
+      expect(() => parse(terminal)).toThrow(/duplicates finding ID I1/);
+    },
+  );
 
   it.each([
     [
@@ -579,6 +604,33 @@ describe('plan, receipt, and terminal schemas', () => {
   });
 
   it.each([
+    ['overlay', terminalOverlay, parseReviewerTerminalOverlayV1],
+    ['legacy terminal', structuredTerminal, parseReviewerTerminalV1],
+  ] as const)(
+    'rejects severity-mismatched IDs in %s ingress',
+    (_name, make, parse) => {
+      const terminal = make();
+      const review = (
+        terminal['candidate'] as Record<string, Record<string, unknown>>
+      )['review']!;
+      review['findings'] = [
+        {
+          id: 'M1',
+          severity: 'important',
+          title: 'Mismatched ID',
+          file: null,
+          line: null,
+          body: 'The ID prefix does not match.',
+          fix_guidance: null,
+        },
+      ];
+      expect(() => parse(terminal)).toThrow(
+        /id must match severity and use a positive ordinal/,
+      );
+    },
+  );
+
+  it.each([
     ['unknown field', { unknown: true }],
     ['receipt', { receipt: 'reviewer-authored' }],
     ['context digest', { contextDigest: 'reviewer-authored' }],
@@ -650,6 +702,16 @@ describe('plan, receipt, and terminal schemas', () => {
         }),
       ).toThrow(/cwd/);
     }
+    const coordinator = {
+      executable: '/branch/oat',
+      argv: ['review', 'bind-accepted-continuation'],
+      cwd: '/branch',
+      stdin: 'accepted-continuation-json',
+    };
+    expect(parseReviewCoordinatorCommandInvocationV1(coordinator)).toEqual(
+      coordinator,
+    );
+    expect(() => parseReviewCommandInvocationV1(coordinator)).toThrow(/stdin/);
   });
 
   it('parses valid plan, receipt, complete, and blocked branches', () => {

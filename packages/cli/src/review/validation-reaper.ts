@@ -52,17 +52,14 @@ export async function reapExpiredValidationState(
       scanned++;
       const runId = entry.name.slice(4);
       try {
-        const run = await store.readRun(runId, new Date(0));
-        if (Date.parse(run.state.preparation.expiresAt) <= now.getTime()) {
-          await store.deleteRun(runId);
-          deleted++;
-        }
+        if (await store.deleteRunIfExpired(runId, now)) deleted++;
       } catch {
         // Corrupt or unsafe entries are not followed or removed by the reaper.
       }
     } else if (
       entry.isFile() &&
-      entry.name.startsWith('terminal-') &&
+      (entry.name.startsWith('terminal-') ||
+        entry.name.startsWith('diagnostic-')) &&
       entry.name.endsWith('.json')
     ) {
       scanned++;
@@ -91,7 +88,7 @@ export async function reapExpiredValidationState(
           await handle.close();
         }
       } catch {
-        // Ignore malformed terminal receipts and continue the bounded sweep.
+        // Ignore malformed retained receipts and continue the bounded sweep.
       }
     }
   }

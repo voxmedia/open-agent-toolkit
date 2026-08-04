@@ -26,6 +26,7 @@ describe('review plan failure translation', () => {
       validationRunId: 'validation-run',
       validationAttempts: 3,
       repairAttempts: 2,
+      expiresAt: '2099-01-01T00:00:00.000Z',
     };
     const store = {
       resolveAccountingInvalidTerminal: vi.fn(async () => receipt),

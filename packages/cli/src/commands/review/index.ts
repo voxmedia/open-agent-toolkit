@@ -2,8 +2,10 @@ import { Command } from 'commander';
 
 import { createReviewAuthorityBrokerCommand } from './authority-broker';
 import { createReviewBeginEvidenceCommand } from './begin-evidence';
+import { createReviewBindAcceptedContinuationCommand } from './bind-accepted-continuation';
 import { createReviewBindWorkerDossierCommand } from './bind-worker-dossier';
 import { createReviewCheckpointArtifactsCommand } from './checkpoint-artifacts';
+import { createReviewCleanupValidationRunCommand } from './cleanup-validation-run';
 import { createReviewLatestCommand } from './latest';
 import { createReviewPrepareContextCommand } from './prepare-context';
 import { createPublishOutputCommand } from './publish-output';
@@ -15,6 +17,8 @@ export function createReviewCommand(): Command {
     .description('OAT review artifact commands')
     .addCommand(createReviewLatestCommand())
     .addCommand(createReviewAuthorityBrokerCommand(), { hidden: true })
+    .addCommand(createReviewBindAcceptedContinuationCommand(), { hidden: true })
+    .addCommand(createReviewCleanupValidationRunCommand(), { hidden: true })
     .addCommand(createReviewPrepareContextCommand())
     .addCommand(createReviewCheckpointArtifactsCommand())
     .addCommand(createReviewValidatePlanCommand())

@@ -1,26 +1,31 @@
 import { createReadStream } from 'node:fs';
 
+import { parseStrictJson } from '@review/canonical-json';
 import {
+  parseCoordinatorBrokerCapabilities,
   startPreparedValidationAuthorityBroker,
-  type AcceptedContinuationBinding,
   type BrokerStartup,
+  type CoordinatorBrokerCapabilities,
 } from '@review/validation-authority-broker';
 import { Command } from 'commander';
 
 interface AuthorityBrokerCommandDependencies {
   readStartup: () => Promise<BrokerStartup>;
   readKey: () => Promise<Buffer>;
-  readAcceptedContinuation: () => Promise<AcceptedContinuationBinding>;
+  readCoordinatorCapabilities: () => Promise<CoordinatorBrokerCapabilities>;
   write: (output: string) => void;
   start: typeof startPreparedValidationAuthorityBroker;
 }
 
 const DEFAULT_DEPENDENCIES: AuthorityBrokerCommandDependencies = {
-  readStartup: async () => JSON.parse(await readDescriptor(3)) as BrokerStartup,
+  readStartup: async () =>
+    parseStrictJson(await readDescriptor(3)) as BrokerStartup,
   readKey: async () =>
     Buffer.from((await readDescriptor(4)).trim(), 'base64url'),
-  readAcceptedContinuation: async () =>
-    JSON.parse(await readDescriptor(5)) as AcceptedContinuationBinding,
+  readCoordinatorCapabilities: async () =>
+    parseCoordinatorBrokerCapabilities(
+      parseStrictJson(await readDescriptor(5)),
+    ),
   write: (output) => process.stdout.write(output),
   start: startPreparedValidationAuthorityBroker,
 };
@@ -47,7 +52,8 @@ export function createReviewAuthorityBrokerCommand(
           socketPath: options.socket,
           key,
           startup: await dependencies.readStartup(),
-          acceptedContinuation: await dependencies.readAcceptedContinuation(),
+          coordinatorCapabilities:
+            await dependencies.readCoordinatorCapabilities(),
         });
         dependencies.write(
           `${JSON.stringify({ ok: true, result: broker.preparation })}\n`,

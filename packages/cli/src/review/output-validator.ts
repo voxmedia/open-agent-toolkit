@@ -1,5 +1,6 @@
 import { canonicalizeJson, hashCanonicalJson } from './canonical-json';
 import { commandResultDigest } from './command-result-digest';
+import { findingIdMatchesSeverity } from './structured-finding-identity';
 import type {
   ArtifactFindingProjectionV1,
   PlanValidationReceiptV1,
@@ -372,6 +373,14 @@ function validateRegistries(
     terminal.candidate.kind === 'structured'
   ) {
     terminal.candidate.review.findings.forEach((finding, index) => {
+      if (!findingIdMatchesSeverity(finding.id, finding.severity)) {
+        add(
+          errors,
+          'invalid-finding-id',
+          `/candidate/review/findings/${index}/id`,
+          `finding ID ${finding.id} does not match severity ${finding.severity}`,
+        );
+      }
       if (findingIds.has(finding.id)) {
         add(
           errors,

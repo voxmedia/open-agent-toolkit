@@ -1,7 +1,10 @@
 import { spawn } from 'node:child_process';
 import { isAbsolute } from 'node:path';
 
-import type { ReviewCommandInvocationV1 } from './types';
+import type {
+  ReviewCommandInvocationV1,
+  ReviewCoordinatorCommandInvocationV1,
+} from './types';
 import { reviewerSafeEnvironment } from './validation-store-authority';
 
 export interface CommandInvocationResult {
@@ -18,6 +21,28 @@ export async function executeCommandInvocation(
     environment?: NodeJS.ProcessEnv;
     stdin?: string;
   } = {},
+): Promise<CommandInvocationResult> {
+  return executeInvocation(invocation, options);
+}
+
+export async function executeCoordinatorCommandInvocation(
+  invocation: ReviewCoordinatorCommandInvocationV1,
+  options: {
+    cwd?: string;
+    environment?: NodeJS.ProcessEnv;
+    stdin?: string;
+  } = {},
+): Promise<CommandInvocationResult> {
+  return executeInvocation(invocation, options);
+}
+
+async function executeInvocation(
+  invocation: ReviewCommandInvocationV1 | ReviewCoordinatorCommandInvocationV1,
+  options: {
+    cwd?: string;
+    environment?: NodeJS.ProcessEnv;
+    stdin?: string;
+  },
 ): Promise<CommandInvocationResult> {
   if (!isAbsolute(invocation.cwd)) {
     throw new Error('command invocation cwd must be an absolute path');

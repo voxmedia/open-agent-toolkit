@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { chmod, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { createConnection, createServer, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -26,6 +26,7 @@ import {
 import { parseReviewPlanV1 } from './schemas';
 import type {
   PrepareReviewContextResultV1,
+  ReviewCoordinatorCommandInvocationV1,
   ReviewPlanV1,
   WorkerDossierV1,
 } from './types';
@@ -45,6 +46,17 @@ const BROKER_DIRECTORY_PREFIX = 'oat-review-authority-';
 const BROKER_SOCKET_FILENAME = 'broker.sock';
 
 type BrokerRequest =
+  | {
+      action: 'bind-accepted-continuation';
+      runId: string;
+      coordinatorToken: string;
+      handleId: string;
+    }
+  | {
+      action: 'cleanup-validation-run';
+      runId: string;
+      coordinatorToken: string;
+    }
   | {
       action: 'checkpoint';
       runId: string;
@@ -79,9 +91,32 @@ interface BrokerStartup {
   };
 }
 
-interface AcceptedContinuationBinding {
+interface CoordinatorBrokerCapabilities {
   schemaVersion: 1;
-  handleId: string;
+  bindToken: string;
+  cleanupToken: string;
+}
+
+export function parseCoordinatorBrokerCapabilities(
+  value: unknown,
+): CoordinatorBrokerCapabilities {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error('coordinator broker capabilities are invalid');
+  }
+  const record = value as Record<string, unknown>;
+  if (
+    Object.keys(record).sort().join(',') !==
+      'bindToken,cleanupToken,schemaVersion' ||
+    record.schemaVersion !== 1
+  ) {
+    throw new Error('coordinator broker capabilities are invalid');
+  }
+  assertBrokerToken(record.bindToken);
+  assertBrokerToken(record.cleanupToken);
+  if (record.bindToken === record.cleanupToken) {
+    throw new Error('coordinator broker capabilities must be distinct');
+  }
+  return record as unknown as CoordinatorBrokerCapabilities;
 }
 
 type BrokerResponse =
@@ -101,7 +136,18 @@ interface BrokerStartupResponse {
 function brokerCommands(
   result: PrepareReviewContextResultV1,
   socketPath: string,
+  capabilities: CoordinatorBrokerCapabilities,
+  launcherInvocation: BrokerStartup['launcherInvocation'],
 ): PrepareReviewContextResultV1 {
+  const command = (
+    args: string[],
+    stdin: ReviewCoordinatorCommandInvocationV1['stdin'],
+  ): ReviewCoordinatorCommandInvocationV1 => ({
+    executable: launcherInvocation.executable,
+    argv: [...launcherInvocation.argvPrefix, ...args],
+    cwd: launcherInvocation.cwd,
+    stdin,
+  });
   return {
     ...result,
     commands: Object.fromEntries(
@@ -113,6 +159,37 @@ function brokerCommands(
         },
       ]),
     ) as PrepareReviewContextResultV1['commands'],
+    coordinatorCommands: {
+      bindAcceptedContinuation: command(
+        [
+          'review',
+          'bind-accepted-continuation',
+          '--run-id',
+          result.preparation.runId,
+          '--coordinator-token',
+          capabilities.bindToken,
+          '--broker-socket',
+          socketPath,
+          '--stdin',
+          '--json',
+        ],
+        'accepted-continuation-json',
+      ),
+      cleanupValidationRun: command(
+        [
+          'review',
+          'cleanup-validation-run',
+          '--run-id',
+          result.preparation.runId,
+          '--coordinator-token',
+          capabilities.cleanupToken,
+          '--broker-socket',
+          socketPath,
+          '--json',
+        ],
+        'none',
+      ),
+    },
   };
 }
 
@@ -191,8 +268,10 @@ interface StartPreparedBrokerInput {
   socketPath: string;
   key: Uint8Array;
   startup: BrokerStartup;
-  acceptedContinuation: AcceptedContinuationBinding;
+  coordinatorCapabilities: CoordinatorBrokerCapabilities;
   validationRoot?: string;
+  bindAcceptedHandle?: typeof bindAcceptedHandle;
+  deleteRun?: (store: ValidationStore, runId: string) => Promise<void>;
   timings?: {
     connectionReadTimeoutMs?: number;
     shutdownTimeoutMs?: number;
@@ -240,11 +319,8 @@ async function startPreparedValidationAuthorityBrokerInternal(
       commandCwd: input.startup.launcherInvocation.cwd,
     }),
     input.socketPath,
-  );
-  await bindAcceptedHandle(
-    store,
-    preparation.preparation.runId,
-    input.acceptedContinuation.handleId,
+    input.coordinatorCapabilities,
+    input.startup.launcherInvocation,
   );
   await mkdir(join(input.socketPath, '..'), { recursive: true });
   await rm(input.socketPath, { force: true });
@@ -265,6 +341,23 @@ async function startPreparedValidationAuthorityBrokerInternal(
   };
   const server = createServer({ allowHalfOpen: true });
   const sockets = new Set<Socket>();
+  const runId = preparation.preparation.runId;
+  const bindTokenDigest = secretDigest(input.coordinatorCapabilities.bindToken);
+  const cleanupTokenDigest = secretDigest(
+    input.coordinatorCapabilities.cleanupToken,
+  );
+  let bindCapabilityState: CoordinatorCapabilityState = 'fresh';
+  let cleanupCapabilityState: CoordinatorCapabilityState = 'fresh';
+  const bindHandle = input.bindAcceptedHandle ?? bindAcceptedHandle;
+  const deleteRun = () => {
+    return (
+      input.deleteRun ??
+      ((targetStore, targetRunId) => targetStore.deleteRun(targetRunId))
+    )(store, runId).catch((error: unknown) => {
+      if (isMissingFileError(error)) return;
+      throw error;
+    });
+  };
   const shutdownTimeoutMs =
     input.timings?.shutdownTimeoutMs ?? DEFAULT_SHUTDOWN_TIMEOUT_MS;
   let shutdownPromise: Promise<void> | undefined;
@@ -297,6 +390,61 @@ async function startPreparedValidationAuthorityBrokerInternal(
       );
       const lifecycle = { store };
       switch (request.action) {
+        case 'bind-accepted-continuation':
+          verifyCoordinatorCapability({
+            expectedRunId: runId,
+            requestRunId: request.runId,
+            expectedTokenDigest: bindTokenDigest,
+            token: request.coordinatorToken,
+            state: bindCapabilityState,
+          });
+          bindCapabilityState = 'in-flight';
+          try {
+            const acceptedHandleDigest = await bindHandle(
+              store,
+              runId,
+              request.handleId,
+            );
+            bindCapabilityState = 'consumed';
+            response = {
+              schemaVersion: 1,
+              ok: true,
+              result: {
+                validationRunId: runId,
+                acceptedHandleDigest,
+              },
+            };
+          } catch (error) {
+            bindCapabilityState = 'fresh';
+            throw error;
+          }
+          break;
+        case 'cleanup-validation-run':
+          verifyCoordinatorCapability({
+            expectedRunId: runId,
+            requestRunId: request.runId,
+            expectedTokenDigest: cleanupTokenDigest,
+            token: request.coordinatorToken,
+            state: cleanupCapabilityState,
+          });
+          cleanupCapabilityState = 'in-flight';
+          try {
+            await deleteRun();
+            cleanupCapabilityState = 'consumed';
+            closeAfterResponse = true;
+            response = {
+              schemaVersion: 1,
+              ok: true,
+              result: {
+                validationRunId: runId,
+                cleaned: true,
+              },
+            };
+          } catch (error) {
+            cleanupCapabilityState = 'fresh';
+            throw error;
+          }
+          break;
         case 'checkpoint':
           response = {
             schemaVersion: 1,
@@ -316,17 +464,11 @@ async function startPreparedValidationAuthorityBrokerInternal(
           };
           break;
         case 'begin':
-          {
-            const result = await beginEvidence(request, lifecycle);
-            const run = await store.readRun(request.runId);
-            response = {
-              schemaVersion: 1,
-              ok: true,
-              result,
-            };
-            closeAfterResponse =
-              run.state.plan?.lanes.every((lane) => !lane.delegated) ?? true;
-          }
+          response = {
+            schemaVersion: 1,
+            ok: true,
+            result: await beginEvidence(request, lifecycle),
+          };
           break;
         case 'bind-worker-dossier':
           response = {
@@ -348,9 +490,12 @@ async function startPreparedValidationAuthorityBrokerInternal(
         error: serializeReviewError(error),
       };
     }
-    await writeSocketResponse(socket, response);
-    if (closeAfterResponse) {
-      await closeBroker();
+    try {
+      await writeSocketResponse(socket, response);
+    } finally {
+      if (closeAfterResponse) {
+        await closeBroker();
+      }
     }
   };
   server.on('connection', (socket) => {
@@ -374,7 +519,11 @@ async function startPreparedValidationAuthorityBrokerInternal(
     input.timings?.expiryMs ??
     Math.max(1, Date.parse(preparation.preparation.expiresAt) - Date.now());
   const expiry = setTimeout(() => {
-    closeBroker().catch(() => undefined);
+    void deleteRun()
+      .catch(() => undefined)
+      .finally(() => {
+        void closeBroker().catch(() => undefined);
+      });
   }, expiresInMs);
   expiry.unref();
   closed.finally(() => clearTimeout(expiry)).catch(() => undefined);
@@ -399,6 +548,11 @@ export async function launchValidationAuthorityBroker(input: {
   }
   const environment = input.environment ?? process.env;
   const key = consumeLauncherValidationAuthorityKey(environment);
+  const coordinatorCapabilities: CoordinatorBrokerCapabilities = {
+    schemaVersion: 1,
+    bindToken: randomBytes(32).toString('base64url'),
+    cleanupToken: randomBytes(32).toString('base64url'),
+  };
   let socketDirectory: string | undefined;
   let child: ReturnType<typeof spawn> | undefined;
   try {
@@ -424,12 +578,12 @@ export async function launchValidationAuthorityBroker(input: {
     );
     const startup = child.stdio[3] as NodeJS.WritableStream | null;
     const authority = child.stdio[4] as NodeJS.WritableStream | null;
-    const acceptedContinuation = (
+    const coordinator = (
       child.stdio as unknown as Array<
         NodeJS.ReadableStream | NodeJS.WritableStream | null | undefined
       >
     )[5] as NodeJS.WritableStream | null | undefined;
-    if (!startup || !authority || !acceptedContinuation || !child.stdout) {
+    if (!startup || !authority || !coordinator || !child.stdout) {
       throw new Error('validation authority broker pipes are unavailable');
     }
     await Promise.all([
@@ -441,19 +595,13 @@ export async function launchValidationAuthorityBroker(input: {
         } satisfies BrokerStartup),
       ),
       writeStartupPipe(authority, key.toString('base64url')),
-      writeStartupPipe(
-        acceptedContinuation,
-        JSON.stringify({
-          schemaVersion: 1,
-          handleId: randomBytes(32).toString('base64url'),
-        } satisfies AcceptedContinuationBinding),
-      ),
+      writeStartupPipe(coordinator, JSON.stringify(coordinatorCapabilities)),
     ]);
     const result = await readBrokerStartupResponse(child);
     for (const stream of [
       startup,
       authority,
-      acceptedContinuation,
+      coordinator,
       child.stdout,
       child.stderr,
     ]) {
@@ -564,7 +712,7 @@ async function readBrokerStartupResponse(
   });
 }
 
-export type { AcceptedContinuationBinding, BrokerRequest, BrokerStartup };
+export type { BrokerRequest, BrokerStartup, CoordinatorBrokerCapabilities };
 
 async function readBrokerRequest(
   socket: Socket,
@@ -622,14 +770,22 @@ function parseBrokerRequest(value: unknown): VersionedBrokerRequest {
     throw new Error('broker request schema version is invalid');
   }
   if (
-    !['checkpoint', 'validate', 'begin', 'bind-worker-dossier'].includes(
-      String(request.action),
-    )
+    ![
+      'bind-accepted-continuation',
+      'cleanup-validation-run',
+      'checkpoint',
+      'validate',
+      'begin',
+      'bind-worker-dossier',
+    ].includes(String(request.action))
   ) {
     throw new Error('broker request action is invalid');
   }
   const action = request.action as BrokerRequest['action'];
   const expectedKeys = {
+    'bind-accepted-continuation':
+      'action,coordinatorToken,handleId,runId,schemaVersion',
+    'cleanup-validation-run': 'action,coordinatorToken,runId,schemaVersion',
     checkpoint: 'action,checkpointToken,runId,schemaVersion',
     validate: 'action,commandToken,plan,runId,schemaVersion',
     begin: 'action,receipt,runId,schemaVersion',
@@ -643,6 +799,21 @@ function parseBrokerRequest(value: unknown): VersionedBrokerRequest {
     !/^[A-Za-z0-9_-]{16,128}$/.test(request.runId)
   ) {
     throw new Error('broker request run ID is invalid');
+  }
+  if (action === 'bind-accepted-continuation') {
+    assertBrokerToken(request.coordinatorToken);
+    if (
+      typeof request.handleId !== 'string' ||
+      request.handleId.length === 0 ||
+      Buffer.byteLength(request.handleId, 'utf8') > 4096
+    ) {
+      throw new Error('accepted continuation handle is invalid');
+    }
+    return request as VersionedBrokerRequest;
+  }
+  if (action === 'cleanup-validation-run') {
+    assertBrokerToken(request.coordinatorToken);
+    return request as VersionedBrokerRequest;
   }
   if (action === 'checkpoint') {
     assertBrokerToken(request.checkpointToken);
@@ -676,6 +847,43 @@ function assertBrokerToken(value: unknown): asserts value is string {
   if (typeof value !== 'string' || !/^[A-Za-z0-9_-]{16,256}$/.test(value)) {
     throw new Error('broker request token is invalid');
   }
+}
+
+function secretDigest(value: string): Buffer {
+  return createHash('sha256').update(value).digest();
+}
+
+type CoordinatorCapabilityState = 'fresh' | 'in-flight' | 'consumed';
+
+function verifyCoordinatorCapability(input: {
+  expectedRunId: string;
+  requestRunId: string;
+  expectedTokenDigest: Buffer;
+  token: string;
+  state: CoordinatorCapabilityState;
+}): void {
+  const actual = secretDigest(input.token);
+  if (
+    input.state !== 'fresh' ||
+    input.requestRunId !== input.expectedRunId ||
+    actual.byteLength !== input.expectedTokenDigest.byteLength ||
+    !timingSafeEqual(actual, input.expectedTokenDigest)
+  ) {
+    throw new ReviewDomainError({
+      category: 'contract',
+      code: 'coordinator-capability-rejected',
+      message: 'review coordinator capability was rejected',
+    });
+  }
+}
+
+function isMissingFileError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'ENOENT'
+  );
 }
 
 function parseBrokerResponse(value: unknown): BrokerResponse {

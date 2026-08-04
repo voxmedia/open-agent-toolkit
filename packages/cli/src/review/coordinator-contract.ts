@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { canonicalizeJson, hashCanonicalJson } from './canonical-json';
 import { normalizeMarkdownSource } from './markdown-grammar';
 import {
@@ -8,6 +10,7 @@ import {
 import type { ReviewerTerminalOverlayV1, ReviewerTerminalV1 } from './types';
 
 export interface ReviewerContinuation {
+  handleId: string;
   repairAccounting(input: {
     attempt: number;
     errors: AccountingValidationError[];
@@ -187,6 +190,27 @@ export async function validateAndRepair(
         accepted: false,
         code: 'review_complete_accounting_invalid',
         errors: validation.errors,
+        repairAttempts,
+      };
+    }
+
+    const continuationHandleDigest = createHash('sha256')
+      .update(session.continuation.handleId)
+      .digest('hex');
+    if (
+      continuationHandleDigest !== session.context.receipt.acceptedHandleDigest
+    ) {
+      return {
+        accepted: false,
+        code: 'review_complete_accounting_invalid',
+        errors: [
+          {
+            code: 'continuation-handle-mismatch',
+            pointer: '/',
+            message:
+              'accounting repair continuation does not match the accepted reviewer handle',
+          },
+        ],
         repairAttempts,
       };
     }

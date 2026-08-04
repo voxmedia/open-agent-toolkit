@@ -315,6 +315,7 @@ export async function validateStoredReviewOutput(
           digest: artifactSnapshot.digest,
           accounting: structuredClone(artifactSnapshot.accounting),
           publication: 'available',
+          publicationIntent: null,
         };
         current.draft = null;
       }

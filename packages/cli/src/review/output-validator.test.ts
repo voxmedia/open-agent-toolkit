@@ -373,7 +373,7 @@ describe('review output validation', () => {
           verification_commands: [],
           findings: [
             {
-              id: 'finding-1',
+              id: 'm1',
               severity: 'minor',
               title: 'one',
               file: null,
@@ -382,7 +382,7 @@ describe('review output validation', () => {
               fix_guidance: null,
             },
             {
-              id: 'finding-1',
+              id: 'm1',
               severity: 'minor',
               title: 'two',
               file: null,
@@ -395,6 +395,28 @@ describe('review output validation', () => {
       };
     }
     expect(errorCodes(context, terminal)).toContain(code);
+  });
+
+  it('rejects finding IDs that do not match severity', () => {
+    const { context, terminal } = fixture();
+    if (
+      terminal.status !== 'complete' ||
+      terminal.candidate.kind !== 'structured'
+    ) {
+      throw new Error('invalid test fixture');
+    }
+    terminal.candidate.review.findings = [
+      {
+        id: 'M1',
+        severity: 'minor',
+        title: 'Mismatched ID',
+        file: null,
+        line: null,
+        body: '',
+        fix_guidance: null,
+      },
+    ];
+    expect(errorCodes(context, terminal)).toContain('invalid-finding-id');
   });
 
   it('rejects broken references and invalid claim dispositions', () => {

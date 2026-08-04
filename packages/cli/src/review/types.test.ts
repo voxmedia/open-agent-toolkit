@@ -283,6 +283,7 @@ describe('review preparation contracts', () => {
           stdin: 'worker-dossier-json',
         },
       },
+      coordinatorCommands: null,
     } satisfies PrepareReviewContextResultV1;
 
     expect(context.budget.context?.evidenceBudgetTokens).toBe(130_000);

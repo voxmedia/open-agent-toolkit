@@ -24,9 +24,10 @@ describe('createReviewAuthorityBrokerCommand', () => {
         },
       })) as never,
       readKey: vi.fn(async () => key),
-      readAcceptedContinuation: vi.fn(async () => ({
+      readCoordinatorCapabilities: vi.fn(async () => ({
         schemaVersion: 1,
-        handleId: 'accepted-handle',
+        bindToken: 'bind-capability-token',
+        cleanupToken: 'cleanup-capability-token',
       })),
       write,
       start: start as never,
@@ -47,9 +48,10 @@ describe('createReviewAuthorityBrokerCommand', () => {
       expect.objectContaining({
         socketPath: '/tmp/broker.sock',
         key,
-        acceptedContinuation: {
+        coordinatorCapabilities: {
           schemaVersion: 1,
-          handleId: 'accepted-handle',
+          bindToken: 'bind-capability-token',
+          cleanupToken: 'cleanup-capability-token',
         },
       }),
     );

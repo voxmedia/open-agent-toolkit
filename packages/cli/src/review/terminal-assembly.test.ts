@@ -375,29 +375,27 @@ describe('reviewer terminal assembly', () => {
     ) {
       throw new Error('invalid test fixture');
     }
-    overlay.candidate.review.findings = ['finding-1', 'finding-2'].map(
-      (id, index) => ({
-        id,
-        severity: 'important' as const,
-        title: `Finding ${index + 1}`,
-        file: `src/path-${index}.ts`,
-        line: index + 1,
-        body: 'Body',
-        fix_guidance: null,
-      }),
-    );
+    overlay.candidate.review.findings = ['I1', 'I2'].map((id, index) => ({
+      id,
+      severity: 'important' as const,
+      title: `Finding ${index + 1}`,
+      file: `src/path-${index}.ts`,
+      line: index + 1,
+      body: 'Body',
+      fix_guidance: null,
+    }));
     const template = overlay.reviewAccounting.verification.promotedFindings[0]!;
     overlay.reviewAccounting.verification.promotedFindings = [
       {
         ...structuredClone(template),
         claimId: 'claim-promoted-2',
-        findingId: 'finding-2',
+        findingId: 'I2',
         disposition: 'verified',
       },
       {
         ...structuredClone(template),
         claimId: 'claim-promoted-1',
-        findingId: 'finding-1',
+        findingId: 'I1',
         disposition: 'verified',
       },
     ];
@@ -409,12 +407,12 @@ describe('reviewer terminal assembly', () => {
         .map(({ findingId, kind, mode }) => ({ findingId, kind, mode })),
     ).toEqual([
       {
-        findingId: 'finding-1',
+        findingId: 'I1',
         kind: 'promoted-finding',
         mode: 'direct',
       },
       {
-        findingId: 'finding-2',
+        findingId: 'I2',
         kind: 'promoted-finding',
         mode: 'direct',
       },
@@ -520,7 +518,7 @@ describe('reviewer terminal assembly', () => {
       (overlay: ReviewerTerminalOverlayV1) => {
         const promoted =
           overlay.reviewAccounting.verification.promotedFindings[0]!;
-        promoted.findingId = 'finding-1';
+        promoted.findingId = 'I1';
         overlay.reviewAccounting.verification.promotedFindings.push(
           structuredClone(promoted),
         );
@@ -530,7 +528,7 @@ describe('reviewer terminal assembly', () => {
         ) {
           overlay.candidate.review.findings = [
             {
-              id: 'finding-1',
+              id: 'I1',
               severity: 'important',
               title: 'Finding',
               file: 'src/path-0.ts',

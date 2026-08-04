@@ -148,13 +148,16 @@ unwired reference implementation, not an additional coordinator.
    and discards diff bytes; cap or timeout produces a lower-bound estimate.
 5. Preparation creates `ReviewPreparationV1`, writes private run state, and
    returns launcher-owned checkpoint, validation, evidence, and worker-dossier
-   `ReviewCommandInvocationV1` values. Each invocation identifies one
+   `ReviewCommandInvocationV1` values plus separate launcher-only accepted-handle
+   binding and cleanup descriptors. Each invocation identifies one
    executable, an argv array, a required absolute launcher-owned working
    directory, and its stdin mode; opaque checkpoint state is not embedded in
    reviewer-readable context.
-6. The provider/skill runtime launches the reviewer. On acceptance, it binds
-   the opaque handle ID to the run before any mutation command is accepted and
-   retains that continuation for checkpoint and repair.
+6. The provider/skill runtime launches the reviewer. On acceptance, it executes
+   the launcher-only binding descriptor with the exact opaque host handle ID
+   before any reviewer mutation command is accepted and retains that
+   continuation for checkpoint and repair. Coordinator descriptors and
+   capabilities never enter reviewer input.
 7. The reviewer reads required current lifecycle artifacts, consumes normalized
    prior evidence from preparation, then records the artifact checkpoint. The
    coordinator queries host telemetry and returns immutable
@@ -771,6 +774,13 @@ interface ReviewCommandInvocationV1 {
   stdin: 'none' | 'review-plan-json' | 'worker-dossier-json';
 }
 
+interface ReviewCoordinatorCommandInvocationV1 {
+  executable: string;
+  argv: string[];
+  cwd: string;
+  stdin: 'none' | 'accepted-continuation-json';
+}
+
 interface PrepareReviewContextResultV1 {
   preparation: ReviewPreparationV1;
   artifactDraftPath: string | null;
@@ -780,6 +790,10 @@ interface PrepareReviewContextResultV1 {
     beginEvidence: ReviewCommandInvocationV1;
     bindWorkerDossier: ReviewCommandInvocationV1;
   };
+  coordinatorCommands: {
+    bindAcceptedContinuation: ReviewCoordinatorCommandInvocationV1;
+    cleanupValidationRun: ReviewCoordinatorCommandInvocationV1;
+  } | null;
 }
 ```
 
@@ -1682,6 +1696,15 @@ path, requires canonical equality between the private-draft overlay block and
 the overlay envelope, and materializes canonical `ReviewAccountingV1` only in
 the immutable accepted snapshot. Structured and blocked overlays use the same
 assembly and validator. Input size is bounded before strict JSON parsing.
+
+An accepted artifact snapshot persists a normalized absolute publication
+destination, a random reservation identity, and the committed destination
+device/inode. Publication writes and verifies a reservation-owned same-directory
+proof file, atomically hard-links it to the absent destination, persists
+`consumed`, and then removes only the identity-matching proof. Same-destination
+`consuming` and `consumed` retries reconcile interrupted process execution;
+different destinations and legacy reservations without a recorded destination
+fail closed. Publication never adopts or overwrites an unrelated destination.
 
 **Output:**
 

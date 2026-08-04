@@ -187,6 +187,7 @@ function projectPrepareResult(result: PrepareReviewContextResultV1) {
     range: result.preparation.range,
     expiresAt: result.preparation.expiresAt,
     commands: result.commands,
+    coordinatorCommands: result.coordinatorCommands,
   };
 }
 

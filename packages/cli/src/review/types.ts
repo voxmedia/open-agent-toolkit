@@ -225,6 +225,10 @@ export interface PrepareReviewContextResultV1 {
     beginEvidence: ReviewCommandInvocationV1;
     bindWorkerDossier: ReviewCommandInvocationV1;
   };
+  coordinatorCommands: {
+    bindAcceptedContinuation: ReviewCoordinatorCommandInvocationV1;
+    cleanupValidationRun: ReviewCoordinatorCommandInvocationV1;
+  } | null;
 }
 
 export interface ReviewCommandInvocationV1 {
@@ -232,6 +236,13 @@ export interface ReviewCommandInvocationV1 {
   argv: string[];
   cwd: string;
   stdin: 'none' | 'review-plan-json' | 'worker-dossier-json';
+}
+
+export interface ReviewCoordinatorCommandInvocationV1 {
+  executable: string;
+  argv: string[];
+  cwd: string;
+  stdin: 'none' | 'accepted-continuation-json';
 }
 
 export type ReviewStrategy =

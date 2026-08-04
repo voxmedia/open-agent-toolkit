@@ -117,6 +117,11 @@ describe('prepareReviewContext', () => {
     expect(
       Object.values(result.commands).map((invocation) => invocation.cwd),
     ).toEqual(['/repo', '/repo', '/repo', '/repo']);
+    expect(result.coordinatorCommands).toBeNull();
+    expect(
+      (await deps.store.readRun(result.preparation.runId)).state
+        .acceptedHandleDigest,
+    ).toBeNull();
     expect(result.commands.bindWorkerDossier).toMatchObject({
       executable: process.execPath,
       stdin: 'worker-dossier-json',

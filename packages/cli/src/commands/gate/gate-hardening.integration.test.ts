@@ -1,6 +1,14 @@
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -151,6 +159,27 @@ if (preparedCall.result.status !== 0 || !preparedCall.envelope.ok) {
   process.exit(21);
 }
 const prepared = preparedCall.envelope.result;
+writeFileSync(
+  join(process.env.HOME, 'coordinator-cleanup.json'),
+  JSON.stringify({
+    invocation: prepared.coordinatorCommands.cleanupValidationRun,
+    validationRunId: prepared.validationRunId,
+    gateRunId: process.env.OAT_GATE_RUN_ID,
+    launchAttemptId: process.env.OAT_GATE_LAUNCH_ATTEMPT_ID,
+  }),
+);
+const bindCall = invoke(
+  prepared.coordinatorCommands.bindAcceptedContinuation.executable,
+  prepared.coordinatorCommands.bindAcceptedContinuation.argv,
+  {
+    schemaVersion: 1,
+    handleId: 'gate-correlation-runtime-handle',
+  },
+);
+if (bindCall.result.status !== 0 || !bindCall.envelope.ok) {
+  process.stderr.write(bindCall.result.stderr || bindCall.result.stdout);
+  process.exit(27);
+}
 const checkpointCall = invoke(
   prepared.commands.checkpointArtifacts.executable,
   prepared.commands.checkpointArtifacts.argv,
@@ -663,38 +692,100 @@ describe(
         cwd: fixture.root,
         encoding: 'utf8',
       }).trim();
-      const result = await runGate(fixture, {
-        env: {
-          OAT_REVIEW_AUTHORITY_KEY: randomBytes(32).toString('base64url'),
-          OAT_REVIEW_VALIDATION_ROOT: join(fixture.home, 'validation'),
-          TSX_TSCONFIG_PATH: join(repoRoot, 'packages/cli/tsconfig.json'),
-          FAKE_GATE_BASE_SHA: baseSha,
-          FAKE_GATE_HEAD_SHA: headSha,
-        },
-      });
+      const validationRoot = join(fixture.home, 'validation');
+      const cleanupPath = join(fixture.home, 'coordinator-cleanup.json');
+      const authorityKey = randomBytes(32).toString('base64url');
+      let diagnosticPath = '';
+      try {
+        const result = await runGate(fixture, {
+          env: {
+            OAT_REVIEW_AUTHORITY_KEY: authorityKey,
+            OAT_REVIEW_VALIDATION_ROOT: validationRoot,
+            TSX_TSCONFIG_PATH: join(repoRoot, 'packages/cli/tsconfig.json'),
+            FAKE_GATE_BASE_SHA: baseSha,
+            FAKE_GATE_HEAD_SHA: headSha,
+          },
+        });
 
-      expect(result.exitCode, `${result.stdout}\n${result.stderr}`).toBe(1);
-      expect(
-        result.payload,
-        `${result.stdout}\n${result.stderr}`,
-      ).toMatchObject({
-        status: 'review_failed',
-        runId: expect.any(String),
-        outcome: 'review_complete_accounting_invalid',
-        message: 'Review completed without valid accounting.',
-        failure: {
+        expect(result.exitCode, `${result.stdout}\n${result.stderr}`).toBe(1);
+        expect(
+          result.payload,
+          `${result.stdout}\n${result.stderr}`,
+        ).toMatchObject({
+          status: 'review_failed',
+          runId: expect.any(String),
+          outcome: 'review_complete_accounting_invalid',
+          message: 'Review completed without valid accounting.',
+          failure: {
+            kind: 'review_complete_accounting_invalid',
+            gateRunId: expect.any(String),
+            launchAttemptId: expect.any(String),
+            validationRunId: expect.any(String),
+            validationAttempts: 1,
+            repairAttempts: 0,
+            diagnosticPath: expect.any(String),
+          },
+          artifactPath: null,
+          receiveEligible: false,
+          handoff: null,
+        });
+        diagnosticPath = String(
+          (result.payload?.failure as { diagnosticPath?: unknown })
+            .diagnosticPath,
+        );
+        expect(
+          JSON.parse(await readFile(diagnosticPath, 'utf8')),
+        ).toMatchObject({
           kind: 'review_complete_accounting_invalid',
-          gateRunId: expect.any(String),
-          launchAttemptId: expect.any(String),
-          validationRunId: expect.any(String),
-          validationAttempts: 1,
-          repairAttempts: 0,
-          diagnosticPath: expect.any(String),
-        },
-        artifactPath: null,
-        receiveEligible: false,
-        handoff: null,
-      });
+          validationRunId: (
+            result.payload?.failure as { validationRunId?: unknown }
+          ).validationRunId,
+          expiresAt: expect.any(String),
+        });
+      } finally {
+        const cleanupSource = await readFile(cleanupPath, 'utf8');
+        const cleanup = JSON.parse(cleanupSource) as {
+          invocation: {
+            executable: string;
+            argv: string[];
+            cwd: string;
+          };
+          validationRunId: string;
+          gateRunId: string;
+          launchAttemptId: string;
+        };
+        const socketIndex =
+          cleanup.invocation.argv.indexOf('--broker-socket') + 1;
+        const socketPath = cleanup.invocation.argv[socketIndex]!;
+        await expect(access(socketPath)).resolves.toBeUndefined();
+        const cleanupResult = spawnSync(
+          cleanup.invocation.executable,
+          cleanup.invocation.argv,
+          {
+            cwd: cleanup.invocation.cwd,
+            encoding: 'utf8',
+            env: {
+              ...process.env,
+              OAT_REVIEW_AUTHORITY_KEY: authorityKey,
+              OAT_REVIEW_VALIDATION_ROOT: validationRoot,
+              NO_UPDATE_NOTIFIER: '1',
+            },
+          },
+        );
+        expect(
+          cleanupResult.status,
+          cleanupResult.stderr || cleanupResult.stdout,
+        ).toBe(0);
+        await expect(access(dirname(socketPath))).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        const retainedEntries = await readdir(validationRoot);
+        expect(retainedEntries).not.toContain(`run-${cleanup.validationRunId}`);
+        expect(
+          retainedEntries.some((entry) => entry.startsWith('correlation-')),
+        ).toBe(false);
+        await expect(access(diagnosticPath)).resolves.toBeUndefined();
+      }
     }, 30_000);
   },
 );

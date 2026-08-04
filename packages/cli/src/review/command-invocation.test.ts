@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { executeCommandInvocation } from './command-invocation';
+import {
+  executeCommandInvocation,
+  executeCoordinatorCommandInvocation,
+} from './command-invocation';
 
 describe('portable command invocation', () => {
   it('round-trips shell metacharacters without a shell', async () => {
@@ -32,6 +35,14 @@ describe('portable command invocation', () => {
         cwd: process.cwd(),
         argv: ['-e', 'process.exit(0)'],
         stdin: 'review-plan-json',
+      }),
+    ).rejects.toThrow(/stdin is required/);
+    await expect(
+      executeCoordinatorCommandInvocation({
+        executable: process.execPath,
+        cwd: process.cwd(),
+        argv: ['-e', 'process.exit(0)'],
+        stdin: 'accepted-continuation-json',
       }),
     ).rejects.toThrow(/stdin is required/);
   });

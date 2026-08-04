@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.4.1
+version: 1.4.2
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -820,7 +820,9 @@ conventions, but do not create that discoverable file. For enforce-mode code
 review, invoke launcher-owned `oat review prepare-context` before dispatch and
 retain its validation run, private artifact draft path, and command
 invocations. Include the explicit `throughTaskId` or `null` in preparation.
-The reviewer receives the private draft path and exact command descriptors.
+Retain `coordinatorCommands` only in the launcher; never include them in the
+reviewer prompt or payload. The reviewer receives the private draft path and
+only the exact descriptors under `commands`.
 Each descriptor is the launcher-owned
 `{ executable, argv, cwd, stdin }` contract. Execute it with the required
 absolute `cwd`; never substitute the reviewer's ambient working directory or
@@ -839,8 +841,14 @@ Then spawn the reviewer:
 
 The `oat-reviewer` agent definition contains the full review process, mode contract, severity categories, artifact template, and critical rules. No additional instructions need to be injected.
 
-When the host accepts the reviewer, bind and retain that exact accepted handle
-for the full coordinator lifetime. The accepted reviewer performs required
+When the host accepts the reviewer, retain that exact accepted handle for the
+full coordinator lifetime and immediately execute launcher-retained
+`coordinatorCommands.bindAcceptedContinuation` with its exact executable, argv,
+and absolute cwd plus exact bounded stdin
+`{"schemaVersion":1,"handleId":"<accepted-handle>"}`. Do not allow the reviewer
+to execute `checkpointArtifacts` until binding succeeds; an unbound checkpoint
+is non-consuming and may be retried only after this same accepted handle is
+bound. The accepted reviewer performs required
 artifact intake, invokes the supplied `checkpointArtifacts`, submits
 `ReviewPlanV1` through `validate-plan`, retains its exact
 `PlanValidationReceiptV1` for evidence authorization and dossier binding, and
@@ -882,7 +890,12 @@ After the subagent completes:
   then the Step 9/9.5 bookkeeping.
 - Blocked or accounting-invalid output remains non-actionable. No discoverable
   artifact, Reviews row, project log, or bookkeeping commit may be created.
-  Delete the private draft and stop. Never infer a pass from absent findings.
+  Never infer a pass from absent findings.
+- In coordinator `finally`, after publication/bookkeeping or terminal diagnostic
+  translation has finished, execute launcher-retained
+  `coordinatorCommands.cleanupValidationRun` exactly once. Treat cleanup failure
+  as a lifecycle blocker; never expose either coordinator descriptor to the
+  reviewer.
 
 **Step 6c: Tier 2 — Fresh Session (recommended fallback)**
 
@@ -925,8 +938,10 @@ Use this exact contract:
    `prepare-context` command for the authoritative range, sink, invocation, and
    already-resolved outer budget. Treat its changed-file set, metadata-only
    ChangeMap, obligations, run identity, and command invocations as
-   authoritative. Bind the current planning parent as the accepted handle and
-   retain it for all continuation and repair turns.
+   authoritative. Keep `coordinatorCommands` launcher-only, execute
+   `bindAcceptedContinuation` with exact bounded JSON for the current planning
+   parent's opaque handle, and retain that same handle for all continuation and
+   repair turns. Do not execute any reviewer command before binding succeeds.
 2. **Required artifact intake** — Re-read the mode-required lifecycle artifacts
    from scratch. Use `FILES_CHANGED` only as the authoritative path inventory;
    do not read source files or content-level diffs yet. For a narrowed
@@ -988,10 +1003,13 @@ Use this exact contract:
     `oat review publish-output --run-id <id> --destination <final-path> --json`
     for the final Step 7 path and then continue with artifact orchestration
     validation and bookkeeping. The command consumes the exact private accepted
-    snapshot once and never reads or re-snapshots the reviewer draft. Blocked or
-    accounting-invalid output remains non-actionable. No discoverable artifact,
-    Reviews row, project log, or bookkeeping commit may be created; delete the
-    private draft and stop.
+    snapshot once and never reads or re-snapshots the reviewer draft. Identical
+    same-destination retries reconcile an interrupted publication; a different
+    destination remains forbidden. Blocked or accounting-invalid output remains
+    non-actionable. No discoverable artifact, Reviews row, project log, or
+    bookkeeping commit may be created. In coordinator `finally`, after every
+    terminal side effect or diagnostic translation, execute launcher-retained
+    `cleanupValidationRun`; cleanup failure is a lifecycle blocker.
 
 ### Step 7: Determine Review Artifact Path
 
@@ -1027,7 +1045,8 @@ If running inline (Tier 3), execute the review into the launcher-created
 private draft only. Do not write the Step 7 discoverable path directly.
 Step 6d validates the terminal and embedded accounting snapshot, then publishes
 the accepted snapshot atomically. If validation does not accept a complete
-terminal, delete the private draft and skip Steps 8.5, 9, and 9.5.
+terminal, skip Steps 8.5, 9, and 9.5; launcher-owned final cleanup removes the
+private run and draft after terminal translation.
 
 **Review checklist (from oat-reviewer):**
 

@@ -14,7 +14,7 @@ import {
   stat,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import { extractReviewAccounting } from './artifact-accounting';
@@ -44,6 +44,13 @@ import {
   type ValidationStoreAuthority,
 } from './validation-store-authority';
 import { parseWorkerDossierV1, validateWorkerDossier } from './worker-dossier';
+
+export interface AcceptedArtifactPublicationIntent {
+  destination: string;
+  reservationId: string;
+  destinationDevice: number | null;
+  destinationInode: number | null;
+}
 
 export interface ValidationRunState {
   schemaVersion: 1;
@@ -79,6 +86,7 @@ export interface ValidationRunState {
     digest: string;
     accounting: import('./types').ReviewAccountingV1;
     publication: 'available' | 'consuming' | 'consumed';
+    publicationIntent: AcceptedArtifactPublicationIntent | null;
   } | null;
 }
 
@@ -99,6 +107,7 @@ export interface AccountingInvalidTerminalReceipt {
   validationRunId: string;
   validationAttempts: number;
   repairAttempts: number;
+  expiresAt: string;
 }
 
 const NOFOLLOW =
@@ -106,6 +115,15 @@ const NOFOLLOW =
 const EXCLUSIVE_WRITE =
   constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | NOFOLLOW;
 const LOCK_LEASE_MS = 30_000;
+
+function isMissingFileError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'ENOENT'
+  );
+}
 
 function processIsAlive(pid: number): boolean {
   try {
@@ -461,9 +479,23 @@ function parseValidationRunState(
   }
   let acceptedSnapshot: ValidationRunState['acceptedSnapshot'] = null;
   if (state.acceptedSnapshot !== null) {
+    const normalizedSnapshot =
+      typeof state.acceptedSnapshot === 'object' &&
+      state.acceptedSnapshot !== null &&
+      !Array.isArray(state.acceptedSnapshot) &&
+      !('publicationIntent' in state.acceptedSnapshot)
+        ? { ...state.acceptedSnapshot, publicationIntent: null }
+        : state.acceptedSnapshot;
     const snapshot = exactKeys(
-      state.acceptedSnapshot,
-      ['id', 'bytesBase64', 'digest', 'accounting', 'publication'],
+      normalizedSnapshot,
+      [
+        'id',
+        'bytesBase64',
+        'digest',
+        'accounting',
+        'publication',
+        'publicationIntent',
+      ],
       'accepted artifact snapshot',
     );
     if (
@@ -491,6 +523,49 @@ function parseValidationRunState(
     ) {
       throw new Error('accepted artifact snapshot accounting is invalid');
     }
+    let publicationIntent: AcceptedArtifactPublicationIntent | null = null;
+    if (snapshot.publicationIntent !== null) {
+      const intent = exactKeys(
+        snapshot.publicationIntent,
+        [
+          'destination',
+          'reservationId',
+          'destinationDevice',
+          'destinationInode',
+        ],
+        'accepted artifact publication intent',
+      );
+      if (
+        typeof intent.destination !== 'string' ||
+        !isAbsolute(intent.destination) ||
+        resolve(intent.destination) !== intent.destination ||
+        typeof intent.reservationId !== 'string' ||
+        !/^[0-9a-f]{64}$/.test(intent.reservationId) ||
+        (intent.destinationDevice !== null &&
+          (!Number.isSafeInteger(intent.destinationDevice) ||
+            (intent.destinationDevice as number) < 0)) ||
+        (intent.destinationInode !== null &&
+          (!Number.isSafeInteger(intent.destinationInode) ||
+            (intent.destinationInode as number) < 0)) ||
+        (intent.destinationDevice === null) !==
+          (intent.destinationInode === null)
+      ) {
+        throw new Error('accepted artifact publication intent is invalid');
+      }
+      publicationIntent =
+        intent as unknown as AcceptedArtifactPublicationIntent;
+    }
+    if (
+      (snapshot.publication === 'available' && publicationIntent !== null) ||
+      (snapshot.publication === 'consuming' &&
+        publicationIntent !== null &&
+        publicationIntent.destinationDevice !== null) ||
+      (snapshot.publication === 'consumed' &&
+        publicationIntent !== null &&
+        publicationIntent.destinationDevice === null)
+    ) {
+      throw new Error('accepted artifact publication state is incoherent');
+    }
     acceptedSnapshot = {
       id: snapshot.id,
       bytesBase64: snapshot.bytesBase64,
@@ -500,6 +575,7 @@ function parseValidationRunState(
         | 'available'
         | 'consuming'
         | 'consumed',
+      publicationIntent,
     };
   }
   if (acceptedSnapshot !== null && phase !== 'accepted') {
@@ -541,13 +617,16 @@ async function writeExclusive(path: string, content: string): Promise<void> {
 export class ValidationStore {
   readonly root: string;
   readonly #authority: ValidationStoreAuthority;
+  readonly #clock: () => Date;
 
   constructor(
     root = join(tmpdir(), 'oat-review-validation-v1'),
     authority = ephemeralValidationStoreAuthority(),
+    clock: () => Date = () => new Date(),
   ) {
     this.root = root;
     this.#authority = authority;
+    this.#clock = clock;
   }
 
   private async ensureRoot(): Promise<void> {
@@ -840,8 +919,22 @@ export class ValidationStore {
     );
   }
 
-  async readRun(runId: string, now = new Date()): Promise<StoredValidationRun> {
+  private async readRunWithoutDraftIdentity(
+    runId: string,
+  ): Promise<StoredValidationRun> {
+    await this.ensureRoot();
     const runDirectory = this.runDirectory(runId);
+    const runInfo = await lstat(runDirectory);
+    if (!runInfo.isDirectory() || runInfo.isSymbolicLink()) {
+      throw new Error('validation run directory identity is unsafe');
+    }
+    const [resolvedRoot, resolvedRun] = await Promise.all([
+      realpath(this.root),
+      realpath(runDirectory),
+    ]);
+    if (resolvedRun !== join(resolvedRoot, `run-${runId}`)) {
+      throw new Error('validation run escaped the private root');
+    }
     const statePath = join(runDirectory, 'state.json');
     const handle = await open(statePath, constants.O_RDONLY | NOFOLLOW);
     let source: string;
@@ -855,6 +948,20 @@ export class ValidationStore {
       await handle.close();
     }
     const state = parseValidationRunState(this.#authority.open(source), runId);
+    return {
+      runId,
+      runDirectory,
+      statePath,
+      artifactDraftPath: state.draft?.path ?? null,
+      draftDevice: state.draft?.device ?? null,
+      draftInode: state.draft?.inode ?? null,
+      state,
+    };
+  }
+
+  async readRun(runId: string, now = new Date()): Promise<StoredValidationRun> {
+    const run = await this.readRunWithoutDraftIdentity(runId);
+    const { state } = run;
     if (Date.parse(state.preparation.expiresAt) <= now.getTime()) {
       throw new Error('validation state has expired');
     }
@@ -871,15 +978,7 @@ export class ValidationStore {
         throw new Error('artifact draft identity mismatch');
       }
     }
-    return {
-      runId,
-      runDirectory,
-      statePath,
-      artifactDraftPath: state.draft?.path ?? null,
-      draftDevice: state.draft?.device ?? null,
-      draftInode: state.draft?.inode ?? null,
-      state,
-    };
+    return run;
   }
 
   async updateRun(
@@ -1075,6 +1174,40 @@ export class ValidationStore {
     }
   }
 
+  private async deleteExactGateCorrelation(
+    gateRunId: string,
+    launchAttemptId: string,
+    runId: string,
+  ): Promise<void> {
+    const path = this.correlationPath(gateRunId, launchAttemptId);
+    let handle;
+    try {
+      handle = await open(path, constants.O_RDONLY | NOFOLLOW);
+    } catch (error) {
+      if (isMissingFileError(error)) return;
+      throw error;
+    }
+    let exact = false;
+    try {
+      const info = await handle.stat();
+      if (!info.isFile() || info.nlink !== 1 || info.mode & 0o077) return;
+      const record = JSON.parse(await handle.readFile('utf8')) as {
+        schemaVersion?: unknown;
+        gateRunId?: unknown;
+        launchAttemptId?: unknown;
+        runId?: unknown;
+      };
+      exact =
+        record.schemaVersion === 1 &&
+        record.gateRunId === gateRunId &&
+        record.launchAttemptId === launchAttemptId &&
+        record.runId === runId;
+    } finally {
+      await handle.close();
+    }
+    if (exact) await rm(path, { force: true });
+  }
+
   async recordAccountingInvalidTerminal(runId: string): Promise<void> {
     await this.withLock(async (assertOwnership) => {
       const run = await this.readRun(runId, new Date(0));
@@ -1097,6 +1230,7 @@ export class ValidationStore {
         validationRunId: runId,
         validationAttempts: run.state.output.attempts,
         repairAttempts: run.state.output.attempts - 1,
+        expiresAt: run.state.preparation.expiresAt,
       };
       await assertOwnership();
       await writeExclusive(
@@ -1128,6 +1262,7 @@ export class ValidationStore {
           'validationRunId',
           'validationAttempts',
           'repairAttempts',
+          'expiresAt',
         ],
         'accounting-invalid terminal receipt',
       );
@@ -1139,9 +1274,14 @@ export class ValidationStore {
         !Number.isSafeInteger(receipt.validationAttempts) ||
         (receipt.validationAttempts as number) < 1 ||
         (receipt.validationAttempts as number) > 3 ||
-        receipt.repairAttempts !== (receipt.validationAttempts as number) - 1
+        receipt.repairAttempts !== (receipt.validationAttempts as number) - 1 ||
+        typeof receipt.expiresAt !== 'string' ||
+        !Number.isFinite(Date.parse(receipt.expiresAt))
       ) {
         throw new Error('accounting-invalid terminal receipt is invalid');
+      }
+      if (Date.parse(receipt.expiresAt as string) <= this.#clock().getTime()) {
+        throw new Error('accounting-invalid terminal receipt has expired');
       }
       return receipt as unknown as AccountingInvalidTerminalReceipt;
     } finally {
@@ -1219,19 +1359,38 @@ export class ValidationStore {
 
   async deleteRun(runId: string): Promise<void> {
     await this.withLock(async (assertOwnership) => {
-      const run = await this.readRun(runId, new Date(0));
-      const correlation = run.state.preparation.correlation;
-      await assertOwnership();
-      if (correlation.gateRunId !== null) {
-        await rm(
-          this.correlationPath(
-            correlation.gateRunId,
-            correlation.launchAttemptId,
-          ),
-          { force: true },
-        );
-      }
-      await rm(run.runDirectory, { recursive: true, force: true });
+      const run = await this.readRunWithoutDraftIdentity(runId);
+      await this.deleteStoredRun(run, assertOwnership);
     });
+  }
+
+  async deleteRunIfExpired(runId: string, now: Date): Promise<boolean> {
+    if (!Number.isFinite(now.getTime())) {
+      throw new Error('validation expiry time is invalid');
+    }
+    return this.withLock(async (assertOwnership) => {
+      const run = await this.readRunWithoutDraftIdentity(runId);
+      if (Date.parse(run.state.preparation.expiresAt) > now.getTime()) {
+        return false;
+      }
+      await this.deleteStoredRun(run, assertOwnership);
+      return true;
+    });
+  }
+
+  private async deleteStoredRun(
+    run: StoredValidationRun,
+    assertOwnership: () => Promise<void>,
+  ): Promise<void> {
+    const correlation = run.state.preparation.correlation;
+    await assertOwnership();
+    if (correlation.gateRunId !== null) {
+      await this.deleteExactGateCorrelation(
+        correlation.gateRunId,
+        correlation.launchAttemptId,
+        run.runId,
+      );
+    }
+    await rm(run.runDirectory, { recursive: true, force: true });
   }
 }

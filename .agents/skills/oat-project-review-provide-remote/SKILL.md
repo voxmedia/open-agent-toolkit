@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide-remote
-version: 1.1.1
+version: 1.1.2
 description: Use when reviewing a GitHub PR opened on another machine for an active OAT project and posting findings back as a single PR review. Resolves the project from the PR diff, reads project artifacts for mode-aware review, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
@@ -334,8 +334,10 @@ Manual and auto invocations continue to pass no gate correlation.
 
 Before dispatch, invoke launcher-owned `oat review prepare-context` with sink
 `structured`, the authoritative PR range, invocation lineage, and resolved
-budget. Build the dispatch payload from that preparation and spawn the reviewer
-in structured-output mode. This mirrors the tested wrapper at
+budget. Retain `coordinatorCommands` only in the launcher and build the dispatch
+payload with only the reviewer-safe `commands`; never copy coordinator
+descriptors or capabilities into reviewer input. Spawn the reviewer in
+structured-output mode. This mirrors the tested wrapper at
 `packages/cli/src/review-remote/reviewer-dispatch.ts`
 (`buildDispatchPayload` / `dispatchStructuredReview`):
 
@@ -349,8 +351,13 @@ in structured-output mode. This mirrors the tested wrapper at
 - For Cursor concrete managed dispatch, invoke
   `providers.cursor.dispatchArgs.variant` as the exact native agent type. Do
   not substitute base `oat-reviewer` or add a concrete model argument.
-- On host acceptance, bind and retain the exact accepted handle. The reviewer
-  performs required artifact intake, invokes supplied `checkpointArtifacts`,
+- On host acceptance, retain the exact accepted handle and immediately execute
+  launcher-retained `coordinatorCommands.bindAcceptedContinuation` with its
+  exact executable, argv, and absolute cwd plus bounded stdin
+  `{"schemaVersion":1,"handleId":"<accepted-handle>"}`. Do not allow the reviewer
+  to invoke `checkpointArtifacts` before binding succeeds; an unbound checkpoint
+  is non-consuming and may be retried only after this same accepted handle is
+  bound. The reviewer performs required artifact intake, invokes supplied `checkpointArtifacts`,
   submits `ReviewPlanV1` through `validate-plan`, retains the exact
   `PlanValidationReceiptV1` only for evidence authorization and dossier binding,
   treats `ReviewAccountingSeedV1` as compatibility output, and invokes
@@ -382,6 +389,11 @@ in structured-output mode. This mirrors the tested wrapper at
   construction, confirmation, or Step 8 GitHub posting. Accepted timeout,
   `BLOCKED`, malformed terminal, or accounting-invalid output is non-actionable:
   perform no finding mapping and no GitHub post.
+- In coordinator `finally`, after accepted posting or non-actionable terminal
+  translation, execute launcher-retained
+  `coordinatorCommands.cleanupValidationRun` exactly once. Cleanup failure is a
+  lifecycle blocker. Never disclose either coordinator descriptor to the
+  reviewer.
 - Tier 2/3 is eligible only when dispatch is unavailable before launch or the
   exact native role is explicitly rejected before any reviewer starts; record
   that pre-start outcome and do not retry at Tier 1. Once accepted, never
@@ -392,7 +404,10 @@ in structured-output mode. This mirrors the tested wrapper at
 **Step 5d: Tier 3 — Inline review (fallback).** If the user insists on inline
 review and the managed-target guard permits it, invoke
 `oat review prepare-context` with sink `structured`, then bind the current
-planning parent as the accepted handle. Perform required artifact intake; invoke supplied
+planning parent by executing launcher-retained
+`coordinatorCommands.bindAcceptedContinuation` with exact bounded handle JSON.
+Keep `coordinatorCommands` out of reviewer inputs and execute no reviewer
+command until binding succeeds. Perform required artifact intake; invoke supplied
 `checkpointArtifacts`; submit `ReviewPlanV1` through `validate-plan`; retain the
 exact `PlanValidationReceiptV1` only for evidence authorization and dossier
 binding; treat `ReviewAccountingSeedV1` as compatibility output; and invoke
@@ -415,7 +430,9 @@ repair turns. Only a validated complete structured terminal may
 project `StructuredFindings` and proceed to finding mapping, body construction,
 confirmation, or GitHub posting. Accepted timeout, `BLOCKED`, malformed, or
 accounting-invalid output is non-actionable and never launches a replacement or
-fallback tier. Write NO artifact.
+fallback tier. Write NO artifact. In coordinator `finally`, after posting or
+terminal translation, execute launcher-retained `cleanupValidationRun`; cleanup
+failure is a lifecycle blocker.
 
 ### Step 6: Map Inline Comments to the Diff
 

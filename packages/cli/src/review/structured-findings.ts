@@ -1,3 +1,4 @@
+import { findingIdMatchesSeverity } from './structured-finding-identity';
 import type { StructuredFinding, StructuredFindings } from './types';
 
 export type { StructuredFinding, StructuredFindings } from './types';
@@ -36,6 +37,13 @@ function validateFinding(value: unknown, index: number): StructuredFinding {
   ) {
     throw new StructuredFindingsError(
       `${at}.severity must be one of critical|important|medium|minor.`,
+    );
+  }
+  if (
+    !findingIdMatchesSeverity(value['id'], value['severity'] as FindingSeverity)
+  ) {
+    throw new StructuredFindingsError(
+      `${at}.id must match its severity prefix and use a positive ordinal.`,
     );
   }
   if (typeof value['title'] !== 'string') {
@@ -99,11 +107,22 @@ export function validateStructuredFindings(value: unknown): StructuredFindings {
     );
   }
 
+  const findings = value['findings'].map((finding, index) =>
+    validateFinding(finding, index),
+  );
+  const findingIds = new Set<string>();
+  findings.forEach((finding, index) => {
+    if (findingIds.has(finding.id)) {
+      throw new StructuredFindingsError(
+        `findings[${index}].id duplicates finding ID ${finding.id}.`,
+      );
+    }
+    findingIds.add(finding.id);
+  });
+
   return {
     summary: value['summary'],
-    findings: value['findings'].map((finding, index) =>
-      validateFinding(finding, index),
-    ),
+    findings,
     verification_commands: commands as string[],
   };
 }

@@ -4046,6 +4046,71 @@ skill version bumps.
 **Step 4: Commit**
 `fix(p06-t06): assemble terminal accounting in launcher`
 
+#### Recovery p06-t06-r11: Close accepted review lifecycle gaps
+
+**Finding:** The accepted Remote structured Tier 1 at
+`73fa2238fa0d03f1b052f800332802108d1d33ca` completed launcher assembly and
+validation on its first authoritative submission. Its five actionable findings
+showed that the broker bound a random surrogate instead of the host-accepted
+continuation, validation state lacked deterministic coordinator cleanup,
+accepted artifact publication could remain stranded after failure, publication
+used an overwrite-capable rename after a racy destination check, and structured
+finding IDs were not correlated with severity. GitHub rejected the prepared
+`REQUEST_CHANGES` review because the authenticated operator owns PR #190; the
+operator directed the root agent to implement the validated findings directly.
+
+**Recovery files:**
+
+- Modify: validation authority broker, coordinator identity, cleanup, and reaper
+  contracts plus focused tests
+- Modify: accepted snapshot publication state, publication command, artifact
+  staging, and focused lifecycle tests
+- Modify: structured finding identity validation across direct and terminal
+  ingress plus focused tests
+- Modify: canonical local, remote, and direct-phase coordinator guidance
+- Regenerate: manifest-owned provider views and CLI assets
+- Modify: all five lockstep public package versions, generated version assets,
+  and `pnpm-lock.yaml`
+- Modify: `.oat/projects/shared/review-plan-workflow/design.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/state.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Bind and clean up exact continuations** Keep validation state unbound
+through preparation, return launcher-only one-shot bind and cleanup
+capabilities separately from reviewer commands, bind only the exact
+host-accepted continuation before checkpoint, and verify the retained
+continuation identity before repair. Delete the exact validation run and gate
+correlation from coordinator-finally, gate-parent, and expiry paths while
+preserving terminal-diagnostic ordering and bounded reaping.
+
+**Step 2: Make accepted publication recoverable and no-clobber** Persist the
+normalized publication destination with the immutable accepted snapshot, make
+same-destination consuming/consumed retries idempotent, and reject destination
+changes. Publish through a controlled same-filesystem hard-link commit that
+fails atomically when the destination exists, retains reservation-owned inode
+proof across crashes, and removes only identity-matching temporary names after
+the consumed state is durable.
+
+**Step 3: Enforce structured finding identity** Require
+`critical -> C[1-9]\d*`, `important -> I[1-9]\d*`,
+`medium -> M[1-9]\d*`, and `minor -> m[1-9]\d*` at direct structured ingress,
+terminal/overlay parsing, and defense-in-depth output validation. Preserve exact
+IDs for verification selectors and reject duplicates without normalization.
+
+**Step 4: Align and regenerate** Update lifecycle design and canonical
+coordinator guidance, bump each changed canonical skill once, regenerate all
+manifest-owned provider views and CLI assets, and advance the five public
+packages together to the next unpublished lockstep version.
+
+**Step 5: Verify** Run focused broker, coordinator, reaper, publication,
+artifact-staging, schema, terminal assembly, output-validator, skill-contract,
+and integration tests. Then run CLI type-check/lint/format, provider sync,
+workspace tests/build/docs gates, and `pnpm release:validate`.
+
+**Step 6: Commit**
+`fix(p06-t06): close accepted review lifecycle gaps`
+
 ### Task p06-t07: Publish Stage A and start the soak
 
 **Files:**

@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -18,7 +20,9 @@ function fixture(): {
       validationRunId: 'validation-run',
       gateRunId: null,
       launchAttemptId: 'launch',
-      acceptedHandleDigest: 'handle',
+      acceptedHandleDigest: createHash('sha256')
+        .update('accepted-handle')
+        .digest('hex'),
       contractVersion: 1,
       contextDigest: 'context',
       planDigest: 'plan',
@@ -121,10 +125,11 @@ function fixture(): {
 function session(
   context: ReviewOutputValidationContext,
   repairAccounting: ReviewCoordinatorSession['continuation']['repairAccounting'],
+  handleId = 'accepted-handle',
 ): ReviewCoordinatorSession {
   return {
     context,
-    continuation: { repairAccounting },
+    continuation: { handleId, repairAccounting },
     outputDeadlineMs: Date.now() + 60_000,
   };
 }
@@ -296,5 +301,32 @@ describe('immutable same-handle accounting repair', () => {
     );
     expect(result).toMatchObject({ accepted: false, repairAttempts: 2 });
     expect(repairAccounting).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects a mismatched continuation before accounting repair', async () => {
+    const { context, terminal } = fixture();
+    terminal.reviewAccounting.receipt = 'wrong';
+    const repairAccounting = vi.fn(async () => structuredClone(terminal));
+    const result = await validateAndRepair(
+      session(context, repairAccounting, 'different-handle'),
+      terminal,
+    );
+    expect(result).toMatchObject({
+      accepted: false,
+      errors: [{ code: 'continuation-handle-mismatch' }],
+      repairAttempts: 0,
+    });
+    expect(repairAccounting).not.toHaveBeenCalled();
+  });
+
+  it('does not require continuation identity when output needs no repair', async () => {
+    const { context, terminal } = fixture();
+    const repairAccounting = vi.fn(async () => structuredClone(terminal));
+    const result = await validateAndRepair(
+      session(context, repairAccounting, 'different-handle'),
+      terminal,
+    );
+    expect(result).toMatchObject({ accepted: true, repairAttempts: 0 });
+    expect(repairAccounting).not.toHaveBeenCalled();
   });
 });

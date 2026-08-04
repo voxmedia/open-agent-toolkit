@@ -1,8 +1,8 @@
 ---
 oat_current_task: p06-t06
-oat_last_commit: 55a6728245649149850ed90371887b07439b050f
+oat_last_commit: 73fa2238fa0d03f1b052f800332802108d1d33ca
 oat_blockers:
-  - p06-t06 launcher-assembly recovery must be committed, pushed, and green before the root-owned Remote structured Tier 1 retry
+  - p06-t06-r11 must be committed, pushed, and green before the root-owned Remote structured Tier 1 retry
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -76,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-03T14:13:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-04T00:33:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -197,6 +197,19 @@ reviewer ingress with a strict mutable overlay and assemble the full
 `ReviewerTerminalV1` deterministically inside launcher validation. The
 recovery preserves temporary full-terminal compatibility and does not advance
 p06-t06 or p06-t07.
+The resulting Remote structured Tier 1 at `73fa2238` completed validation with
+three Important and two Medium findings. GitHub rejected the prepared
+`REQUEST_CHANGES` event because the authenticated operator owns PR #190, so no
+review was posted. The operator directed the root agent to fix the findings
+directly. Recovery `p06-t06-r11` now binds the exact host-accepted continuation,
+adds deterministic run/correlation cleanup and receipt reaping, makes accepted
+artifact publication resumable and atomically no-clobber, and enforces
+severity-correlated unique finding IDs. Two independent defect reviews found and
+closed eleven additional crash, concurrency, expiry, cleanup, and contract-test
+gaps; final verification reported no blocking findings.
+Focused, full workspace, smoke, build, docs, sync, and lockstep 0.2.30 release
+validation pass. The recovery remains uncommitted; p06-t06 and p06-t07 remain
+unadvanced.
 
 ## Artifacts
 
@@ -393,18 +406,29 @@ p06-t06 or p06-t07.
   process-level lifecycle tests, all 4,040 CLI tests, complete workspace/smoke
   tests, workspace/docs builds, lint, type-check, format, sync, and release
   validation pass after remediation
-- → Commit the review remediation separately, then push only after explicit
-  authorization; p06-t06 and p06-t07 remain unadvanced
+- ✓ Remote structured Tier 1 at `73fa2238` completed with 3 Important and 2
+  Medium findings; self-owned PR rules prevented posting but did not invalidate
+  the accepted review
+- ✓ Operator directed direct remediation of all five findings
+- ✓ p06-t06-r11 exact-handle, cleanup/reaper, recoverable publication,
+  no-clobber, and finding-identity focused suites pass
+- ✓ Two independent defect reviews found and remediated eleven additional
+  crash/concurrency/expiry/cleanup/contract gaps; final verification was clean
+- ✓ Full verification passes 4,102 CLI tests, 77 control-plane tests, 41 docs
+  package tests, 131 smoke tests, all workspace/docs gates, provider sync, and
+  lockstep 0.2.30 release validation with 65 visual measurements
+- → Review and commit p06-t06-r11, then push only after explicit authorization;
+  p06-t06 and p06-t07 remain unadvanced
 
 ## Blockers
 
-p06-t06 requires the root-owned, already-authorized Remote structured Tier 1
-retry only after the p06-t06-r10 review remediation is committed, pushed with
-explicit authorization, and green at a new HEAD.
+p06-t06 requires p06-t06-r11 to be reviewed, committed, pushed with explicit
+authorization, and green before a fresh root-owned Remote structured Tier 1
+run at the new HEAD.
 
 ## Next Milestone
 
-Commit the independently reviewed p06-t06-r10 remediation separately, push only
-after explicit authorization, require green PR checks, refresh the detached
-enforce fixture, and then decide the next root-owned Remote Tier 1 action.
+Review and commit p06-t06-r11, push only after explicit authorization, require
+green PR checks, refresh the detached enforce fixture, and then run a fresh
+root-owned Remote structured Tier 1 action.
 p06-t06 and p06-t07 remain unadvanced.

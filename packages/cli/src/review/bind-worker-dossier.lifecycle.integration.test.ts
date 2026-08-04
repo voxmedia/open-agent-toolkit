@@ -10,7 +10,10 @@ import {
   allocateReviewTimeBudget,
   evaluateWholeDiffEligibility,
 } from './budget';
-import { executeCommandInvocation } from './command-invocation';
+import {
+  executeCommandInvocation,
+  executeCoordinatorCommandInvocation,
+} from './command-invocation';
 import { commandResultDigest } from './command-result-digest';
 import type {
   ReviewAccountingV1,
@@ -109,9 +112,10 @@ async function lifecycleFixture(
     socketPath,
     key,
     validationRoot,
-    acceptedContinuation: {
+    coordinatorCapabilities: {
       schemaVersion: 1,
-      handleId: `accepted-${sink}`,
+      bindToken: `bind-capability-${sink}`,
+      cleanupToken: `cleanup-capability-${sink}`,
     },
     startup: {
       input: {
@@ -142,6 +146,16 @@ async function lifecycleFixture(
       },
     },
   });
+  const bound = await executeCoordinatorCommandInvocation(
+    broker.preparation.coordinatorCommands!.bindAcceptedContinuation,
+    {
+      stdin: JSON.stringify({
+        schemaVersion: 1,
+        handleId: `accepted-${sink}`,
+      }),
+    },
+  );
+  expect(bound.exitCode, `${bound.stderr}\n${bound.stdout}`).toBe(0);
   brokerClosers.push(broker.close);
   return {
     root,

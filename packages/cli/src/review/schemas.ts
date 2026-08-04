@@ -1,5 +1,6 @@
 import { isAbsolute } from 'node:path';
 
+import { findingIdMatchesSeverity } from './structured-finding-identity';
 import { DIRECT_REVIEW_CLAIM_KINDS } from './types';
 import type {
   ArtifactFindingProjectionV1,
@@ -12,6 +13,7 @@ import type {
   PriorReviewEvidenceV1,
   ReviewBudgetV1,
   ReviewCommandInvocationV1,
+  ReviewCoordinatorCommandInvocationV1,
   ReviewObligationV1,
   ReviewPlanV1,
   ReviewPreparationV1,
@@ -19,6 +21,7 @@ import type {
   ReviewerTerminalIngressV1,
   ReviewerTerminalOverlayV1,
   ReviewerTerminalV1,
+  StructuredFinding,
 } from './types';
 
 export class ReviewSchemaError extends Error {
@@ -52,6 +55,33 @@ export function parseReviewCommandInvocationV1(
     argv,
     cwd: invocation['cwd'] as string,
     stdin: invocation['stdin'] as ReviewCommandInvocationV1['stdin'],
+  };
+}
+
+export function parseReviewCoordinatorCommandInvocationV1(
+  value: unknown,
+): ReviewCoordinatorCommandInvocationV1 {
+  const invocation = object(value, '$');
+  keys(invocation, ['executable', 'argv', 'cwd', 'stdin'], '$');
+  string(invocation['executable'], '$/executable');
+  const argv = stringArray(invocation['argv'], '$/argv');
+  string(invocation['cwd'], '$/cwd');
+  if (
+    (invocation['cwd'] as string).length === 0 ||
+    !isAbsolute(invocation['cwd'] as string)
+  ) {
+    throw new ReviewSchemaError('$/cwd must be an absolute path');
+  }
+  enumValue(
+    invocation['stdin'],
+    ['none', 'accepted-continuation-json'],
+    '$/stdin',
+  );
+  return {
+    executable: invocation['executable'] as string,
+    argv,
+    cwd: invocation['cwd'] as string,
+    stdin: invocation['stdin'] as ReviewCoordinatorCommandInvocationV1['stdin'],
   };
 }
 
@@ -1767,6 +1797,16 @@ function parseStructuredFinding(value: unknown, pointer: string): void {
     ['critical', 'important', 'medium', 'minor'],
     `${pointer}/severity`,
   );
+  if (
+    !findingIdMatchesSeverity(
+      finding['id'],
+      finding['severity'] as StructuredFinding['severity'],
+    )
+  ) {
+    throw new ReviewSchemaError(
+      `${pointer}/id must match severity and use a positive ordinal`,
+    );
+  }
   if (typeof finding['title'] !== 'string') {
     throw new ReviewSchemaError(`${pointer}/title must be a string`);
   }
@@ -1795,6 +1835,21 @@ function parseStructuredFinding(value: unknown, pointer: string): void {
       `${pointer}/fix_guidance must be a string or null`,
     );
   }
+}
+
+function parseStructuredFindings(value: unknown, pointer: string): void {
+  const findingIds = new Set<string>();
+  array(value, pointer).forEach((finding, index) => {
+    const findingPointer = `${pointer}/${index}`;
+    parseStructuredFinding(finding, findingPointer);
+    const findingId = (finding as Record<string, unknown>)['id'] as string;
+    if (findingIds.has(findingId)) {
+      throw new ReviewSchemaError(
+        `${findingPointer}/id duplicates finding ID ${findingId}`,
+      );
+    }
+    findingIds.add(findingId);
+  });
 }
 
 export function parseArtifactFindingProjectionV1(
@@ -1866,10 +1921,7 @@ function parseOverlayCandidate(value: unknown, pointer: string): void {
   if (typeof review['summary'] !== 'string') {
     throw new ReviewSchemaError(`${pointer}/review/summary must be a string`);
   }
-  array(review['findings'], `${pointer}/review/findings`).forEach(
-    (finding, index) =>
-      parseStructuredFinding(finding, `${pointer}/review/findings/${index}`),
-  );
+  parseStructuredFindings(review['findings'], `${pointer}/review/findings`);
   stringArray(
     review['verification_commands'],
     `${pointer}/review/verification_commands`,
@@ -1961,12 +2013,9 @@ export function parseReviewerTerminalV1(value: unknown): ReviewerTerminalV1 {
           '$/candidate/review/summary must be a string',
         );
       }
-      array(review['findings'], '$/candidate/review/findings').forEach(
-        (finding, index) =>
-          parseStructuredFinding(
-            finding,
-            `$/candidate/review/findings/${index}`,
-          ),
+      parseStructuredFindings(
+        review['findings'],
+        '$/candidate/review/findings',
       );
       stringArray(
         review['verification_commands'],

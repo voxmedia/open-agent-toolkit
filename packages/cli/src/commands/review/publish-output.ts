@@ -1,5 +1,14 @@
-import { publishAcceptedArtifact } from '@review/artifact-staging';
-import type { ArtifactSnapshot } from '@review/artifact-staging';
+import { randomBytes } from 'node:crypto';
+import { resolve } from 'node:path';
+
+import {
+  cleanupAcceptedArtifactProof,
+  publishAcceptedArtifact,
+} from '@review/artifact-staging';
+import type {
+  ArtifactPublicationIdentity,
+  ArtifactSnapshot,
+} from '@review/artifact-staging';
 import { ValidationStore } from '@review/validation-store';
 import {
   launcherValidationStoreAuthority,
@@ -24,6 +33,12 @@ export interface PublishStoredReviewOutputResult {
   destination: string;
 }
 
+export interface PublishStoredReviewOutputHooks {
+  afterReservation?: () => Promise<void>;
+  afterFilesystemCommit?: () => Promise<void>;
+  afterConsumed?: () => Promise<void>;
+}
+
 function createDefaultStore(): ValidationStore {
   return new ValidationStore(
     launcherValidationStoreRoot(),
@@ -34,11 +49,14 @@ function createDefaultStore(): ValidationStore {
 export async function publishStoredReviewOutput(
   input: { runId: string; destination: string },
   store: ValidationStore = createDefaultStore(),
+  hooks: PublishStoredReviewOutputHooks = {},
 ): Promise<PublishStoredReviewOutputResult> {
+  const destination = resolve(input.destination);
   let reserved:
     | {
         id: string;
         snapshot: ArtifactSnapshot;
+        reservationId: string;
       }
     | undefined;
   await store.updateRun(input.runId, (state) => {
@@ -56,46 +74,148 @@ export async function publishStoredReviewOutput(
         message: 'accepted output has no artifact snapshot',
       });
     }
-    if (state.acceptedSnapshot.publication !== 'available') {
+    const { acceptedSnapshot } = state;
+    if (acceptedSnapshot.publication === 'available') {
+      const reservationId = randomBytes(32).toString('hex');
+      acceptedSnapshot.publication = 'consuming';
+      acceptedSnapshot.publicationIntent = {
+        destination,
+        reservationId,
+        destinationDevice: null,
+        destinationInode: null,
+      };
+    } else if (
+      acceptedSnapshot.publicationIntent === null ||
+      acceptedSnapshot.publicationIntent.destination !== destination
+    ) {
       throw new ReviewJsonCommandError({
         category: 'contract',
         code: 'accepted-snapshot-consumed',
         message: 'accepted artifact snapshot is already reserved or consumed',
       });
     }
+    const intent = acceptedSnapshot.publicationIntent;
+    if (intent === null) {
+      throw new Error('artifact publication reservation intent is missing');
+    }
     reserved = {
-      id: state.acceptedSnapshot.id,
+      id: acceptedSnapshot.id,
       snapshot: {
-        bytesBase64: state.acceptedSnapshot.bytesBase64,
-        digest: state.acceptedSnapshot.digest,
-        accounting: structuredClone(state.acceptedSnapshot.accounting),
+        bytesBase64: acceptedSnapshot.bytesBase64,
+        digest: acceptedSnapshot.digest,
+        accounting: structuredClone(acceptedSnapshot.accounting),
       },
+      reservationId: intent.reservationId,
     };
-    state.acceptedSnapshot.publication = 'consuming';
     return state;
   });
   if (reserved === undefined) {
     throw new Error('artifact publication reservation produced no snapshot');
   }
 
-  await publishAcceptedArtifact(reserved.snapshot, input.destination);
+  const refreshPublicationIdentity =
+    async (): Promise<ArtifactPublicationIdentity | null> => {
+      let identity: ArtifactPublicationIdentity | null | undefined;
+      await store.updateRun(input.runId, (state) => {
+        if (
+          state.phase !== 'accepted' ||
+          state.acceptedSnapshot === null ||
+          state.acceptedSnapshot.id !== reserved!.id ||
+          state.acceptedSnapshot.digest !== reserved!.snapshot.digest ||
+          state.acceptedSnapshot.publicationIntent === null ||
+          state.acceptedSnapshot.publicationIntent.destination !==
+            destination ||
+          state.acceptedSnapshot.publicationIntent.reservationId !==
+            reserved!.reservationId
+        ) {
+          throw new Error('accepted artifact snapshot reservation changed');
+        }
+        const intent = state.acceptedSnapshot.publicationIntent;
+        identity =
+          intent.destinationDevice === null || intent.destinationInode === null
+            ? null
+            : {
+                device: intent.destinationDevice,
+                inode: intent.destinationInode,
+              };
+        return state;
+      });
+      if (identity === undefined) {
+        throw new Error('artifact publication identity refresh failed');
+      }
+      return identity;
+    };
+
+  await hooks.afterReservation?.();
+  let expectedIdentity = await refreshPublicationIdentity();
+  let publicationIdentity: ArtifactPublicationIdentity;
+  try {
+    publicationIdentity = await publishAcceptedArtifact(
+      reserved.snapshot,
+      destination,
+      reserved.reservationId,
+      expectedIdentity,
+    );
+  } catch (error) {
+    const recoveredIdentity = await refreshPublicationIdentity();
+    if (expectedIdentity !== null || recoveredIdentity === null) throw error;
+    expectedIdentity = recoveredIdentity;
+    publicationIdentity = await publishAcceptedArtifact(
+      reserved.snapshot,
+      destination,
+      reserved.reservationId,
+      expectedIdentity,
+    );
+  }
+  await hooks.afterFilesystemCommit?.();
   await store.updateRun(input.runId, (state) => {
     if (
       state.phase !== 'accepted' ||
       state.acceptedSnapshot === null ||
       state.acceptedSnapshot.id !== reserved!.id ||
       state.acceptedSnapshot.digest !== reserved!.snapshot.digest ||
-      state.acceptedSnapshot.publication !== 'consuming'
+      state.acceptedSnapshot.publicationIntent === null ||
+      state.acceptedSnapshot.publicationIntent.destination !== destination ||
+      state.acceptedSnapshot.publicationIntent.reservationId !==
+        reserved!.reservationId
     ) {
       throw new Error('accepted artifact snapshot reservation changed');
     }
-    state.acceptedSnapshot.publication = 'consumed';
+    const { acceptedSnapshot } = state;
+    const intent = acceptedSnapshot.publicationIntent;
+    if (intent === null) {
+      throw new Error('accepted artifact snapshot reservation changed');
+    }
+    if (acceptedSnapshot.publication === 'consuming') {
+      if (
+        intent.destinationDevice !== null ||
+        intent.destinationInode !== null
+      ) {
+        throw new Error('accepted artifact snapshot reservation changed');
+      }
+      intent.destinationDevice = publicationIdentity.device;
+      intent.destinationInode = publicationIdentity.inode;
+      acceptedSnapshot.publication = 'consumed';
+    } else if (
+      acceptedSnapshot.publication !== 'consumed' ||
+      intent.destinationDevice !== publicationIdentity.device ||
+      intent.destinationInode !== publicationIdentity.inode
+    ) {
+      throw new Error('accepted artifact snapshot reservation changed');
+    }
     return state;
   });
+  await hooks.afterConsumed?.();
+  await cleanupAcceptedArtifactProof(
+    reserved.snapshot,
+    destination,
+    reserved.reservationId,
+    publicationIdentity,
+  );
   return {
     snapshotId: reserved.id,
     digest: reserved.snapshot.digest,
-    destination: input.destination,
+    destination,
   };
 }
 

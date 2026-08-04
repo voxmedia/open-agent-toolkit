@@ -50,6 +50,42 @@ describe('structured findings validator', () => {
   });
 
   it.each([
+    ['C12', 'critical'],
+    ['I2', 'important'],
+    ['M3', 'medium'],
+    ['m4', 'minor'],
+  ] as const)('accepts %s for %s severity', (id, severity) => {
+    const value = valid();
+    value.findings = [{ ...value.findings[0]!, id, severity }];
+    expect(validateStructuredFindings(value)).toEqual(value);
+  });
+
+  it.each([
+    ['finding-1', 'important'],
+    ['I0', 'important'],
+    ['I01', 'important'],
+    ['i1', 'important'],
+    ['M1', 'minor'],
+  ] as const)('rejects finding ID %s for %s severity', (id, severity) => {
+    const value = valid();
+    value.findings = [{ ...value.findings[0]!, id, severity }];
+    expect(() => validateStructuredFindings(value)).toThrow(
+      /severity prefix and use a positive ordinal/,
+    );
+  });
+
+  it('rejects duplicate finding IDs', () => {
+    const value = valid();
+    value.findings = [
+      value.findings[0]!,
+      { ...value.findings[0]!, title: 'Second issue' },
+    ];
+    expect(() => validateStructuredFindings(value)).toThrow(
+      /duplicates finding ID I1/,
+    );
+  });
+
+  it.each([
     ['non-object', 'not-an-object'],
     ['missing summary', { findings: [], verification_commands: [] }],
     [

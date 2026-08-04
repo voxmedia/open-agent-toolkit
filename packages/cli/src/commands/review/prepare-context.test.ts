@@ -91,6 +91,32 @@ const prepared = {
       stdin: 'worker-dossier-json',
     },
   },
+  coordinatorCommands: {
+    bindAcceptedContinuation: {
+      executable: process.execPath,
+      cwd: '/branch',
+      argv: [
+        '/branch/oat.js',
+        'review',
+        'bind-accepted-continuation',
+        '--coordinator-token',
+        'bind-token',
+      ],
+      stdin: 'accepted-continuation-json',
+    },
+    cleanupValidationRun: {
+      executable: process.execPath,
+      cwd: '/branch',
+      argv: [
+        '/branch/oat.js',
+        'review',
+        'cleanup-validation-run',
+        '--coordinator-token',
+        'cleanup-token',
+      ],
+      stdin: 'none',
+    },
+  },
 } as unknown as PrepareReviewContextResultV1;
 
 describe('createReviewPrepareContextCommand', () => {
@@ -316,10 +342,14 @@ describe('createReviewPrepareContextCommand', () => {
         validationRunId: 'run-1',
         preparationDigest: 'digest',
         commands: prepared.commands,
+        coordinatorCommands: prepared.coordinatorCommands,
       },
     });
     expect(JSON.parse(output).result.commands.bindWorkerDossier).toEqual(
       prepared.commands.bindWorkerDossier,
+    );
+    expect(JSON.parse(output).result.commands).not.toHaveProperty(
+      'bindAcceptedContinuation',
     );
     expect(output).not.toContain('contextWindowTokens');
     expect(output).not.toContain('remainingTokens');

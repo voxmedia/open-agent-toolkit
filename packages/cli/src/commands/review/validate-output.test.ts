@@ -186,6 +186,12 @@ function validationState() {
       digest: string;
       accounting: ReviewAccountingV1;
       publication: 'available' | 'consuming' | 'consumed';
+      publicationIntent: {
+        destination: string;
+        reservationId: string;
+        destinationDevice: number | null;
+        destinationInode: number | null;
+      } | null;
     } | null,
   };
 }

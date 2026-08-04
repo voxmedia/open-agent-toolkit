@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import {
   access,
   lstat,
@@ -31,11 +32,12 @@ import {
 } from './review-lifecycle';
 import type {
   PreparedReviewContextV1,
+  ReviewAccountingV1,
   ReviewPlanV1,
   ReviewPreparationV1,
   WorkerDossierV1,
 } from './types';
-import { ValidationStore } from './validation-store';
+import { ValidationStore, type ValidationRunState } from './validation-store';
 import { ValidationStoreAuthority } from './validation-store-authority';
 
 const roots: string[] = [];
@@ -468,11 +470,99 @@ describe('validation state and gate correlation', () => {
     ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
-  it('retains a minimal accounting-invalid diagnostic and deletes parent state', async () => {
+  it.each(['missing', 'replaced'] as const)(
+    'deletes exact run and correlation when its artifact draft is %s',
+    async (draftState) => {
+      const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+      roots.push(parent);
+      const store = new ValidationStore(join(parent, 'store'));
+      const gatePreparation = preparation(`cleanupdraft${draftState}`);
+      gatePreparation.invocation = 'gate';
+      gatePreparation.correlation = {
+        gateRunId: `gate-${draftState}`,
+        launchAttemptId: `attempt-${draftState}`,
+      };
+      const created = await store.createRun({
+        preparation: gatePreparation,
+        artifactDraft: true,
+      });
+      await store.bindGateCorrelation(
+        gatePreparation.correlation.gateRunId!,
+        gatePreparation.correlation.launchAttemptId,
+        created.runId,
+      );
+      await rm(created.artifactDraftPath!);
+      if (draftState === 'replaced') {
+        await writeFile(created.artifactDraftPath!, 'replacement');
+      }
+      await expect(store.readRun(created.runId)).rejects.toThrow();
+
+      await expect(store.deleteRun(created.runId)).resolves.toBeUndefined();
+      await expect(access(created.runDirectory)).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+      await expect(
+        store.resolveGateCorrelation(
+          gatePreparation.correlation.gateRunId!,
+          gatePreparation.correlation.launchAttemptId,
+        ),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+    },
+  );
+
+  it('preserves a correlation record replaced with a different exact run', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
     roots.push(parent);
     const store = new ValidationStore(join(parent, 'store'));
+    const original = preparation('originalcleanup1');
+    original.invocation = 'gate';
+    original.correlation = {
+      gateRunId: 'gate-replaced-correlation',
+      launchAttemptId: 'attempt-replaced-correlation',
+    };
+    const replacement = preparation('replacementclean1');
+    replacement.invocation = 'gate';
+    replacement.correlation = { ...original.correlation };
+    await store.createRun({ preparation: original, artifactDraft: false });
+    await store.bindGateCorrelation(
+      original.correlation.gateRunId!,
+      original.correlation.launchAttemptId,
+      original.runId,
+    );
+    await store.createRun({ preparation: replacement, artifactDraft: false });
+    const correlationName = (await readdir(store.root)).find(
+      (entry) => entry.startsWith('correlation-') && entry.endsWith('.json'),
+    )!;
+    await writeFile(
+      join(store.root, correlationName),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        gateRunId: replacement.correlation.gateRunId,
+        launchAttemptId: replacement.correlation.launchAttemptId,
+        runId: replacement.runId,
+      })}\n`,
+    );
+
+    await store.deleteRun(original.runId);
+    await expect(
+      store.resolveGateCorrelation(
+        replacement.correlation.gateRunId!,
+        replacement.correlation.launchAttemptId,
+      ),
+    ).resolves.toBe(replacement.runId);
+  });
+
+  it('retains a minimal accounting-invalid diagnostic and deletes parent state', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
     const gatePreparation = delegatedGatePreparation();
+    const expiresAtMs = Date.parse(gatePreparation.expiresAt);
+    let now = new Date(expiresAtMs - 1);
+    const store = new ValidationStore(
+      join(parent, 'store'),
+      undefined,
+      () => now,
+    );
     const created = await store.createRun({
       preparation: gatePreparation,
       artifactDraft: false,
@@ -523,8 +613,22 @@ describe('validation state and gate correlation', () => {
       validationRunId: created.runId,
       validationAttempts: 3,
       repairAttempts: 2,
+      expiresAt: gatePreparation.expiresAt,
     });
 
+    now = new Date(expiresAtMs);
+    await expect(
+      store.resolveAccountingInvalidTerminal('gate-run', 'current-attempt'),
+    ).rejects.toThrow(/receipt has expired/);
+    await expect(store.retainTerminalDiagnostic(receipt)).rejects.toThrow(
+      /receipt has expired/,
+    );
+    now = new Date(expiresAtMs + 1);
+    await expect(
+      store.resolveAccountingInvalidTerminal('gate-run', 'current-attempt'),
+    ).rejects.toThrow(/receipt has expired/);
+
+    now = new Date(expiresAtMs - 1);
     const diagnosticPath = await store.retainTerminalDiagnostic(receipt);
     expect(JSON.parse(await readFile(diagnosticPath, 'utf8'))).toEqual({
       ...receipt,
@@ -829,5 +933,94 @@ describe('validation state and gate correlation', () => {
     await expect(store.readRun(created.runId)).rejects.toThrow(
       /post-checkpoint/,
     );
+  });
+
+  it('keeps legacy accepted snapshot publication states readable', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const authority = new ValidationStoreAuthority(Buffer.alloc(32, 17));
+    const store = new ValidationStore(join(parent, 'store'), authority);
+    const gatePreparation = delegatedGatePreparation();
+    const created = await store.createRun({
+      preparation: gatePreparation,
+      artifactDraft: false,
+    });
+    const tokens = await issueCommandCapabilities(store, created.runId);
+    await bindAcceptedHandle(store, created.runId, 'accepted-handle');
+    const context = await checkpointArtifactsLoaded(
+      { runId: created.runId, checkpointToken: tokens.checkpointToken },
+      { store, telemetryAdapter: null, telemetryAdapterId: null },
+    );
+    const validated = await validateAndReceiptPlan(
+      {
+        runId: created.runId,
+        commandToken: tokens.planToken,
+        plan: delegatedPlan(context),
+      },
+      { store },
+    );
+    if (!validated.valid) throw new Error('expected valid plan');
+    await beginEvidence(
+      { runId: created.runId, receipt: validated.receipt.token },
+      { store },
+    );
+    const accounting: ReviewAccountingV1 = {
+      schemaVersion: 1,
+      receipt: validated.receipt.token,
+      contextDigest: validated.receipt.contextDigest,
+      planDigest: validated.receipt.planDigest,
+      assignmentDigest: validated.receipt.assignmentDigest,
+      strategy: 'delegated',
+      completion: 'complete',
+      evidence: [],
+      lanes: [],
+      classifications: [],
+      verification: [],
+      budget: { evidenceStoppedAt: null, outputReservePreserved: null },
+    };
+    const bytes = Buffer.from(
+      `# Review\n\n## Review Accounting\n\n\`\`\`json\n${JSON.stringify(accounting)}\n\`\`\`\n`,
+    );
+    await store.updateRun(created.runId, (state) => {
+      state.phase = 'accepted';
+      state.output = {
+        immutableSubstanceDigest: 'a'.repeat(64),
+        attempts: 1,
+        terminalClassification: null,
+      };
+      state.acceptedSnapshot = {
+        id: 'b'.repeat(64),
+        bytesBase64: bytes.toString('base64'),
+        digest: createHash('sha256').update(bytes).digest('hex'),
+        accounting,
+        publication: 'available',
+        publicationIntent: null,
+      };
+      return state;
+    });
+    const current = authority.open(
+      await readFile(created.statePath, 'utf8'),
+    ) as ValidationRunState;
+
+    for (const publication of ['available', 'consuming', 'consumed'] as const) {
+      const legacy = structuredClone(current);
+      legacy.acceptedSnapshot!.publication = publication;
+      delete (
+        legacy.acceptedSnapshot as unknown as {
+          publicationIntent?: unknown;
+        }
+      ).publicationIntent;
+      await writeFile(created.statePath, authority.seal(legacy), {
+        mode: 0o600,
+      });
+      await expect(store.readRun(created.runId)).resolves.toMatchObject({
+        state: {
+          acceptedSnapshot: {
+            publication,
+            publicationIntent: null,
+          },
+        },
+      });
+    }
   });
 });

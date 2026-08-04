@@ -32,8 +32,9 @@ describe('direct phase review coordinator integration', () => {
       'validate-output',
       'ReviewerTerminalV1',
       'same-handle accounting repair',
-      'publishAcceptedArtifact',
+      'publish-output',
       'bookkeeping',
+      'cleanupValidationRun',
     ];
     let prior = -1;
     for (const marker of markers) {
@@ -50,6 +51,9 @@ describe('direct phase review coordinator integration', () => {
     expect(review).toContain('__OAT_PLAN_RECEIPT__');
     expect(review).toContain('bounded JSON stdin');
     expect(review).toContain('ambient `oat`');
+    expect(review).toContain(
+      'neither coordinator descriptor may enter reviewer input',
+    );
     expect(review).toContain(
       'A not-delegated inline lane has no dossier and remains unchanged.',
     );

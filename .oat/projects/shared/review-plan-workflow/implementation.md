@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - p06-t06 Remote structured Tier 1 posting requires separate operator approval
-oat_last_updated: 2026-08-02
+  - p06-t06-r11 must be committed and pushed before PR checks and a fresh Remote structured Tier 1 run
+oat_last_updated: 2026-08-04
 oat_current_task_id: p06-t06
 oat_generated: false
 ---
@@ -11,7 +11,7 @@ oat_generated: false
 # Implementation: review-plan-workflow
 
 **Started:** 2026-07-29
-**Last Updated:** 2026-08-02
+**Last Updated:** 2026-08-04
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -1984,7 +1984,8 @@ new HEAD and stop before POST with the exact accepted body and verdict.
 
 #### Recovery p06-t06-r10: Assemble terminal accounting in the launcher
 
-**Status:** reviewed_pending_commit
+**Status:** completed
+**Commit:** `73fa2238`
 **Failed run:** Fresh Remote structured Tier 1 at
 `55a6728245649149850ed90371887b07439b050f` reached planning and evidence, but
 validation run `2dcce690b70e2c144e31a52dd2ff4079` showed that retaining and
@@ -2037,6 +2038,75 @@ remains under 26 seconds for the combined files.
 recovery commit, push only after explicit authorization, wait for green checks,
 refresh the detached enforce fixture, and decide the next root-owned Remote Tier
 1 action. p06-t06 and p06-t07 remain unadvanced.
+
+#### Recovery p06-t06-r11: Close accepted review lifecycle gaps
+
+**Status:** implementation_verified_pending_commit
+**Accepted review run:** Remote structured Tier 1 at
+`73fa2238fa0d03f1b052f800332802108d1d33ca` completed launcher assembly and
+validation with five actionable findings: three Important and two Medium. The
+validated payload could not be posted as `REQUEST_CHANGES` because the
+authenticated operator owns PR #190; no GitHub review was created. The operator
+directed the root agent to implement the findings directly.
+
+**Finding disposition:**
+
+- I1 fixed: preparation remains unbound until launcher-only
+  `bindAcceptedContinuation` receives the exact host-accepted opaque handle.
+  Reviewer commands never contain coordinator capabilities, and same-handle
+  repair verifies the retained handle digest.
+- I2 fixed: accepted snapshot state persists normalized destination,
+  reservation, and committed inode identity. Matching `consuming`/`consumed`
+  retries reconcile interrupted publication; destination changes and unknown
+  legacy reservations fail closed.
+- I3 fixed: launcher-only final cleanup deletes the exact validation run and
+  gate correlation after terminal translation, and expiry performs the same
+  deletion attempt before closing transport. Terminal and retained diagnostic
+  receipts now carry expiry and are both reaped.
+- M1 fixed: publication uses a reservation-scoped initialization/proof protocol
+  and atomic same-filesystem hard-link commit. It never overwrites an existing
+  destination, revalidates descriptor bytes after mutation windows, serializes
+  legitimate retries, and removes only matching proof state.
+- M2 fixed: direct structured ingress, overlay/legacy terminal parsing, and
+  defense-in-depth validation require severity-correlated positive-ordinal IDs
+  and reject duplicates.
+
+**Independent review remediation:** Two read-only defect reviews and their final
+verification passes found eleven additional gaps in the first fix: draft
+identity could block cleanup, expired runs with damaged drafts could evade the
+reaper, production terminal/diagnostic receipts were not reapable, expired
+receipts remained resolvable, the gate fixture did not close broker transport,
+coordinator capability failure/concurrency state was incomplete, proof
+initialization was not crash-recoverable, concurrent proof cleanup could race,
+post-hook content was not rehashed, a delayed retry could retain stale
+publication identity, and proof content was checked after unlink. All eleven
+were remediated with focused regressions and final read-only verification
+reported no blocking findings. The final portable residual is documented: Node
+22 has no identity-conditional unlink-by-descriptor, so a hostile same-user
+directory writer can still race after the final identity check; observed drift
+fails closed and legitimate retries are serialized.
+
+**Artifacts and release metadata:** Aligned design and canonical local, remote,
+and direct-phase coordinator guidance; advanced
+`oat-project-review-provide` to 1.4.2,
+`oat-project-review-provide-remote` to 1.1.2, and
+`oat-project-implement` to 2.2.6; regenerated provider views and CLI assets; and
+advanced all five public packages to lockstep 0.2.30.
+
+**Verification:** The focused lifecycle/publication suites pass after the final
+remediation. Workspace checks and type-check pass all 10 tasks. Full tests pass 4,102
+CLI tests, 77 control-plane tests, 31 docs-transform tests, 10 docs-config tests,
+and 131 smoke tests. All five package builds, 10 lint tasks, 10 format tasks,
+all six docs builds, provider sync dry-run, five-package 0.2.30 release
+validation, and 65 visual measurements pass. One full-suite attempt exposed two
+new process-heavy broker retry tests using the default five-second ceiling; both
+already passed focused and now use the established 15-second load ceiling. The
+unchanged autonomy inventory correctly rejected one new non-gate prompt phrase;
+the canonical hash inventory now records it as `NG`.
+
+**Next:** Review the uncommitted recovery diff, then commit and push only with
+explicit operator authorization. Require green PR checks before a fresh
+root-owned Remote structured Tier 1 run. p06-t06 and p06-t07 remain unadvanced.
 
 ## Orchestration Runs
 

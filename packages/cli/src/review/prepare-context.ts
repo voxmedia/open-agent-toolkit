@@ -215,6 +215,7 @@ export async function prepareReviewContext(
         checkpointToken: tokens.checkpointToken,
         planToken: tokens.planToken,
       }),
+      coordinatorCommands: null,
     };
   } catch (error) {
     if (createdRun) await dependencies.store.deleteRun(runId);
