@@ -90,6 +90,24 @@ content sanitization is required when the source repo is private.
 separate manual skill step. Exact filing-skill shape (issues vs backlog items,
 one skill vs two) under discussion.
 
+### Question 5: Filing-skill shape and destination configuration
+
+**Q:** One filing skill or two verbs? And should filing destinations be
+configured, prompted, or both?
+**A:** One companion filing skill with per-lane routing (repo lane vs upstream
+lane), a per-destination capability preflight, and an item approval step. A
+`workflow.retro` config namespace sets the **default** filing destination per
+repo (e.g. OAT itself → backlog items; another repo → GitHub issues).
+Interactive runs confirm the configured destination ("configured as backlog
+items — file that way?") with a per-run override; autonomous/non-interactive
+runs use the config as-is without stopping to ask.
+**Decision:** Config-as-default + interactive confirmation, mirroring the
+`workflow.designMode` idiom (config consulted before prompting; non-interactive
+uses explicit signals). Explicit filing config counts as consent for
+non-interactive filing; with no config, non-interactive runs file nothing and
+leave proposals in the artifact. Sanitization always applies when the
+destination repo is public and the source repo is private.
+
 ## Solution Space
 
 Request is **exploratory**: a successful ad-hoc retro exists and is packaged as
@@ -208,13 +226,20 @@ safety-net offer
 7. **Sequencing:** Retro is an optional `postApproval` step in
    `workflow.postImplementSequence`; runs after final HiLL approval, before
    completion. Requires CLI config expansion (lockstep package bump accepted).
-8. **Autonomy split:** Artifact generation may auto-run when configured;
-   promotions and upstream filings stay human-gated (proposal-only in
-   autonomous runs).
-9. **Upstream filing:** No auto issue creation from the retro. Companion
-   manually-run filing skill(s) with per-destination capability preflight,
-   artifact-driven issue extraction, and user approval before creating
-   anything.
+8. **Autonomy split:** Artifact generation may auto-run when configured.
+   Filing/promotions require consent — a live human approval in interactive
+   runs, or explicit `workflow.retro` filing config in non-interactive runs.
+   With no filing config, autonomous runs leave proposals in the artifact and
+   file nothing.
+9. **Upstream filing:** No auto issue creation from the retro skill itself.
+   One companion filing skill with per-lane routing (repo lane → host repo
+   issues or backlog items; upstream lane → OAT issues, collapsing into the
+   repo lane when the host repo is OAT), per-destination capability preflight,
+   artifact-driven item extraction, and an approval step. Lanes with no
+   available destination are reported loudly, never dropped silently.
+10. **Filing configuration:** `workflow.retro` config sets per-repo default
+    filing destinations. Interactive runs confirm with per-run override;
+    non-interactive runs use config as-is.
 
 ## Constraints
 
@@ -258,12 +283,13 @@ safety-net offer
 - Evidence-audit automation skill — handoff lists as future-only.
 - CLI evidence helpers — deferred unless inventory pain appears during
   implementation.
+- Per-item destination retargeting during the filing approval step (v1 routes
+  per lane; item-level overrides only if the need shows up in practice).
+- Thin verb-alias wrappers (`file-issues` / `file-backlog-items`) that preset
+  the routing answer — only if muscle-memory demand appears.
 
 ## Open Questions
 
-- **Filing-skill shape:** One filing skill with per-lane destination routing,
-  or two verbs (file-issues / file-backlog-items)? How does the backlog
-  variant report upstream items it cannot file from a non-OAT repo?
 - **Promotion posture:** Propose durable repo promotions only, or also apply
   narrowly scoped docs/instruction edits when approved in-session?
 - **Validation strategy:** Dogfood against an existing OAT project in this
