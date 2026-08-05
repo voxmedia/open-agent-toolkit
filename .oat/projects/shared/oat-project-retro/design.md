@@ -287,8 +287,16 @@ Mirrors the existing summary preflight: detect
 `{PROJECT_PATH}/references/project-retro.md`. When missing in an interactive
 run, one offer: "No project retro exists. Generate one before completing?"
 When present (any register state), no offer — at most a one-line note if
-registers show unapplied/unfiled items. Autonomous completion never offers
-(config-gated generation belongs to the sequence step).
+registers show unapplied/unfiled items.
+
+The offer gates on **how the completion run itself executes**, not on how
+implementation ran. Autonomously-implemented projects usually end their
+unattended portion at the PR and get completed later by a human in an
+interactive session — the offer fires normally there, so autonomous projects
+are still caught by the safety net. Only a completion that itself executes
+non-interactively (e.g. a wave closeout's autonomous deferral branch,
+`OAT_AUTONOMOUS=1`) skips the offer; for that case, config-gated generation
+via the `retro` sequence step is the consented path.
 
 ### Docs
 
