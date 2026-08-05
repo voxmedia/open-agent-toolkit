@@ -191,15 +191,16 @@ for v1, while keeping the handoff's never-auto-run rule.
 
 ## Deferred Ideas
 
-- Lifecycle offer wiring after summary / before complete — candidate for a
-  follow-up if Approach 1 is chosen.
 - Optional `references/oat-upstream-feedback.md` split when upstream items are
   numerous — handoff already marks this optional.
 - Evidence-audit automation skill — handoff lists as future-only.
+- CLI evidence helpers — deferred unless inventory pain appears during
+  implementation.
 
 ## Open Questions
 
-- **Delivery scope:** Skill-only v1 vs lifecycle offer wiring vs CLI helpers?
+- **Offer points:** Which lifecycle skills should offer retro — summary only,
+  complete/closeout only, or both (skip second offer if retro already exists)?
 - **Promotion posture:** Propose durable repo promotions only, or also apply
   narrowly scoped docs/instruction edits when approved in-session?
 - **Validation strategy:** Dogfood against an existing OAT project in this
@@ -229,12 +230,12 @@ for v1, while keeping the handoff's never-auto-run rule.
   - **Impact:** Medium
   - **Mitigation Ideas:** Keep required dual lanes + core sections; allow
     domain-learning sections to shrink or omit.
-- **Lifecycle coupling creep:** Wiring offer points too early expands review
-  surface.
+- **Lifecycle coupling creep:** Offer wiring expands review surface across
+  adjacent skills.
   - **Likelihood:** Medium
-  - **Impact:** Low–Medium
-  - **Mitigation Ideas:** Prefer skill-only v1 unless discoverability is
-    required immediately.
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Keep changes to offer/prompt language only; no
+    auto-run; limit touch points to the agreed lifecycle skills.
 
 ## Next Steps
 
