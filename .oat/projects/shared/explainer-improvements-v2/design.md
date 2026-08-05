@@ -120,8 +120,10 @@ that invokes the adapter (project completion/approval flow).
   leverage, repetition, diagram semantics, and cohesion; the Cyclone deck and
   diagram become a bundled negative fixture.
 - **Recipe floor change (changed, core):** `project-recap` keeps only the hub
-  as floor; diagram and deck move to planner-justified expansion with
-  distinct-reader-question justification kinds.
+  as floor; every other artifact — explainer views, diagrams, and decks —
+  is planner-justified expansion requiring a distinct reader question and
+  sufficient supporting evidence (diagram and deck join the existing
+  justified expansion profiles).
 - **Lifecycle ordering and correction (changed, adapter + OAT lifecycle):**
   recap gate must record a terminal outcome before final approval completes;
   `built-needs-review` auto-enters the existing bounded correction machinery;
@@ -153,7 +155,190 @@ oat lifecycle (approval waits for terminal recap outcome)
 
 ## Component Design
 
-_To be drafted._
+### 1. Adapter destination derivation (`oat-explainer-kit`)
+
+**Purpose:** Turn repository-scoped publish config into a per-invocation
+destination without the core learning OAT topology.
+
+**Responsibilities:**
+
+- Resolve the complete publish config (`provider: s3-static`, repository
+  `s3Uri` root, repository `publicBaseUrl` root, `awsRegion`, and the new
+  public-access declaration) and validate completeness before any publish
+  intent is honored; incomplete config keeps runs build-only with an explicit
+  report of what is missing.
+- Derive `<root>/projects/<project-slug>` for project invocations and pass
+  the root unchanged for repo invocations; slug segments use the same
+  encoding rules as render-time URL construction.
+- Accept the `repo` invocation at the entry point and route it through the
+  existing `resolveExplainerOutputRoot` repo branch.
+- Reject or normalize caller-supplied output roots that already end in the
+  run slug (double-nesting guard).
+
+**Interfaces:** extends the existing `resolve-config.mjs`/`run.mjs` seam; the
+core continues to receive a fully-formed publish request and never sees
+project/repo distinctions.
+
+### 2. Canonical artifact link table (core)
+
+**Purpose:** Make manifest-declared paths the only expressible internal link
+targets for authors.
+
+**Responsibilities:**
+
+- Derive, from the set plan, each artifact's site-relative `renderedPath`
+  (always explicit `index.html`).
+- Inject the table into every author request (structured and artistic):
+  artifact ID → canonical relative URL from the authoring artifact's
+  location.
+- Structured content references artifacts by ID only; the renderer resolves
+  IDs to URLs. Artistic HTML must use the provided canonical URLs verbatim.
+
+### 3. Internal-link validator (core)
+
+**Purpose:** Hard post-render gate proving every internal link resolves.
+
+**Responsibilities:**
+
+- Parse every rendered HTML artifact (not only the hub); extract local
+  `href`/`src` targets.
+- Resolve each against the artifact's own site location; require the target
+  to exist in the manifest/site tree; require explicit `index.html` for page
+  links; reject directory-style links and any target outside the site tree.
+- Fail the build with per-link findings; failures route into the bounded
+  correction path like any other build defect.
+
+### 4. Publish connector: protected destinations and complete receipts (core)
+
+**Purpose:** Honest verification for both public and protected roots; durable
+complete publication records.
+
+**Responsibilities:**
+
+- Publish-request declares `publicAccess: "public" | "protected"` (default
+  `public`, preserving current strict behavior).
+- `public`: unchanged sentinel + anonymous byte verification.
+- `protected`: skip anonymous fetches entirely; verify each uploaded object
+  via authenticated `head-object` hash/metadata comparison against the
+  manifest; record canonical public URLs unfetched, verification result
+  `verified-authenticated` per object with public fetch `skipped-protected`.
+- Receipt (`publish-receipt.json`, durable in the run package) lists every
+  artifact's ID, rendered path, S3 URI, canonical public URL, content hash,
+  and verification result. Lifecycle summaries copy the complete URL set from
+  the receipt instead of recording only the hub.
+- Published bytes always match finalized manifest hashes; no
+  publication-time transformation exists anywhere in the connector.
+
+### 5. Structured content contracts and renderers (core)
+
+**Purpose:** Move layout ownership from authors to versioned core renderers.
+
+**Responsibilities:**
+
+- Define artifact-specific structured content contracts:
+  - **hub:** ordered sections, evidence tables, cards, callouts, artifact
+    references (by ID);
+  - **deck:** slides each declaring purpose, layout archetype (outcome hero,
+    before/after, architecture, decision/trade-off, evidence scoreboard,
+    comparison, next action), headline, evidence, optional
+    comparison/visual, action;
+  - **diagram:** nodes, groups/containers, edges with labels, layout
+    direction, emphasis — semantic graph data, no author-supplied
+    coordinates.
+- Renderers own layout, typography, spacing, responsive behavior, print,
+  reduced-motion, and components; diagram rendering extends the existing
+  deterministic graph machinery with auto-fit viewBox, containers/swimlanes,
+  edge labels, overlap/crossing detection, content-aware spacing, and
+  zoom/pan only when the graph exceeds the viewport.
+- Deterministic deck anti-filler checks: repeated title-plus-paragraph
+  slides, excessive empty space, duplicated slide-position text, lack of
+  visual variation, overflow, presentation-distance legibility.
+- Artistic (free-form HTML) authoring remains available where recipes allow
+  it, but always passes the link validator and visual review; standard recipe
+  artifacts default to structured contracts.
+
+### 6. Role-based type system (core)
+
+**Purpose:** Deterministic, intentional typography without external active
+content.
+
+**Responsibilities:**
+
+- Roles: display, heading, body, UI, annotation, mono — each with weights,
+  tracking, line heights, and measures; medium-specific scales for pages,
+  decks, and SVG labels.
+- Deterministic high-quality font stacks by default; bundled licensed fonts
+  only if licensing allows redistribution inside self-contained artifacts (a
+  plan-time decision; stacks are the floor).
+- Tokens flow through curated styles and the resolved theme bundle so replay
+  stays deterministic.
+
+### 7. Visual review rubric v2 (core)
+
+**Purpose:** Catch design mediocrity, not just clipping.
+
+**Responsibilities:**
+
+- Extend the visual-review request/result contracts to require scored
+  findings on: intentional typography, hierarchy, composition/balance,
+  information density, medium leverage, template repetition, diagram
+  semantics, cross-artifact cohesion.
+- Verdict vocabulary distinguishes `pass` (design-quality bar met) from
+  `correct` (legible/unclipped but weak) and failing states; the Cyclone
+  deck/diagram screenshots ship as a bundled negative fixture that must not
+  receive `pass`.
+- Existing accessibility, keyboard, reduced-motion, print, and mobile checks
+  are unchanged and remain necessary conditions.
+
+### 8. Recipe v2: hub floor (core)
+
+**Purpose:** Content-adaptive artifact selection.
+
+**Responsibilities:**
+
+- `project-recap` floor shrinks to the hub; explainer views, diagrams, and
+  decks become planner-justified expansion requiring a distinct reader
+  question and sufficient supporting evidence.
+- The set planner records each justification in the set plan; redundant or
+  filler artifacts are rejected at planning time.
+- Other recipes are audited for the same contradiction but changed only where
+  the same defect exists.
+
+### 9. Lifecycle ordering, bounded correction, failure evidence (adapter + OAT lifecycle)
+
+**Purpose:** Flag-not-block lifecycle with honest durable records.
+
+**Responsibilities:**
+
+- When recap intent resolves to `generate`, final approval cannot complete
+  until the recap gate records a terminal outcome; `built-needs-review` is a
+  valid terminal outcome.
+- `built-needs-review` automatically enters the existing bounded
+  one-correction-then-final-review machinery; residual findings after the cap
+  are durably recorded and flagged, and the lifecycle proceeds.
+- Publication stays quality-gated: flagged runs publish only after passing
+  review or explicit operator override.
+- Failed/superseded runs leave a compact durable failure record (run ID,
+  recipe, outcome, error class, timestamps, pointer to superseding run);
+  bulky diagnostics are intentionally archived or deleted per policy, never
+  left as untracked-only evidence.
+- The `request.sourceIds is not iterable` failure is root-caused at the
+  adapter/core request boundary and covered by a shape-validation regression
+  test.
+
+### 10. Secondary path-contract fixes (core + adapter)
+
+**Purpose:** Close the audit's remaining gaps.
+
+**Responsibilities:**
+
+- Reconcile `publicBaseUrl` residence (`durability.publish` vs top-level
+  request field) into one documented location consumed consistently by all
+  render and publish paths.
+- Render-time and publish-time URL construction share one segment-encoding
+  helper.
+- Double-nesting guard (component 1) and repo-invocation unblock (component
+  1. are the adapter-side halves of this cleanup.
 
 ## Data Models
 
