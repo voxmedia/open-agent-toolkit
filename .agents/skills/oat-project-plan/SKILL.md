@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.4.3
+version: 1.4.4
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -371,8 +371,11 @@ oat config adopt dispatch-matrix --user
 Adoption fills missing cells but preserves explicit values. Re-run the resolver
 and the completeness check. An incomplete or missing ladder after adoption
 blocks readiness; do not overwrite explicit cells, infer a fallback, or mark
-the plan ready. Non-interactive setup also blocks on a missing or incomplete
-ladder.
+the plan ready. Ordinary non-interactive setup blocks on a missing or
+incomplete ladder. When `OAT_AUTONOMOUS=1`, follow the shared contract's
+owner-first autonomous resolution, run exactly one adoption against the
+selected existing config scope, and block only if no authorized scope resolves
+or the post-adoption ladder remains incomplete.
 
 The owning scope stores only the reusable ladders. A project-specific active
 policy or ceiling must not be written to user `~/.oat/config.json`.

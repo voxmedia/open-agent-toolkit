@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.4.8
+version: 1.4.9
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 oat_gateable: true
@@ -257,8 +257,11 @@ oat config adopt dispatch-matrix --user
 
 Adoption preserves explicit cells. Re-run the resolver and completeness check.
 An incomplete or missing ladder after adoption blocks readiness; do not
-overwrite explicit cells or infer provider defaults. Non-interactive import
-also blocks on a missing or incomplete ladder.
+overwrite explicit cells or infer provider defaults. Ordinary non-interactive
+import blocks on a missing or incomplete ladder. When `OAT_AUTONOMOUS=1`,
+follow the shared contract's owner-first autonomous resolution, run exactly
+one adoption against the selected existing config scope, and block only if no
+authorized scope resolves or the post-adoption ladder remains incomplete.
 
 The selected scope owns only reusable ladders. A project-specific active policy
 or ceiling must not be written to user `~/.oat/config.json`. Resolve or ask

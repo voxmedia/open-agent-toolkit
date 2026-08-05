@@ -1,6 +1,6 @@
 ---
 name: oat-project-autonomous
-version: 1.0.5
+version: 1.0.6
 description: Use when a user explicitly asks to run an OAT project autonomously end-to-end. Activates session-only autonomy, resumes the correct lifecycle phase, and drives the existing OAT skills through final PR or a reported boundary.
 argument-hint: '<goal | project-slug | ticket-ref>'
 disable-model-invocation: true
@@ -72,6 +72,8 @@ waits.
 - Selecting quick or spec-driven mode from the review-density rule.
 - Invoking existing OAT lifecycle and dispatch skills in their required order.
 - Auto-resolving only the gates authorized by the autonomy contract.
+- Selecting an existing dispatch-ladder config owner through the canonical
+  owner-first fallback order and adopting the bundled matrix once.
 - Committing and pushing completed phase boundaries, subject to repository
   policy, and reporting explicit boundary stops.
 
@@ -296,6 +298,16 @@ autonomy signals.
 Invoke each lifecycle skill by name and let it own its complete workflow,
 artifacts, gates, commits, and state transitions. Re-read project status after
 each return and route to the next earliest incomplete owner.
+
+When planning finds an incomplete dispatch ladder, apply the gate inventory's
+autonomous ownership resolution instead of treating ordinary non-interactive
+behavior as authoritative. Preserve an existing effective ladder owner. If no
+owner resolves, prefer an existing user config, then an existing repo-local
+config; use shared config only as the final existing-config fallback when
+repository-policy authority already permits that write. Run exactly one
+matching `oat config adopt dispatch-matrix` command and re-run the reviewer
+preflight. Block only when no authorized existing scope is available or the
+ladder remains incomplete after adoption.
 
 At every required artifact or code review:
 

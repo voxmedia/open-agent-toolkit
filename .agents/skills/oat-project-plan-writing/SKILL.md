@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.17
+version: 1.2.18
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -102,7 +102,8 @@ asking to write anything:
 | Claude          | haiku, sonnet                                                  | sonnet                                                                                                         | opus                                                        | fable                                  |
 | Cursor (opaque) | `gpt-5.6-luna-low`, `gpt-5.6-luna-medium`, `gpt-5.6-luna-high` | `gpt-5.6-luna-xhigh`, `gpt-5.6-terra-low`, `gpt-5.6-terra-medium`, `gpt-5.6-terra-high`, `gpt-5.6-terra-xhigh` | `gpt-5.6-sol-low`, `gpt-5.6-sol-medium`, `gpt-5.6-sol-high` | `gpt-5.6-sol-xhigh`, `gpt-5.6-sol-max` |
 
-Ask the user to select the owning scope explicitly before any adoption write:
+In an interactive run, ask the user to select the owning scope explicitly
+before any adoption write:
 
 1. **Shared repository** - team-owned `.oat/config.json`; run
    `oat config adopt dispatch-matrix --shared`.
@@ -118,13 +119,30 @@ project's named ceiling is a separate project-state constraint. A
 project-specific active policy or ceiling must not be written to user
 `~/.oat/config.json`.
 
+In an autonomous run (`OAT_AUTONOMOUS=1`), resolve ownership without prompting:
+
+1. Run `oat config get workflow.dispatchCeiling --json`. When its effective
+   source is `local`, `shared`, or `user`, keep that existing ladder owner.
+2. When no ladder owner resolves, select the first existing personal config in
+   this order: the existing user config `~/.oat/config.json`, then the existing
+   repo-local config `.oat/config.local.json`.
+3. Use shared `.oat/config.json` only as the final existing-config fallback and
+   only when the run already has repository-policy authority to modify it.
+   Otherwise report the repository-policy boundary.
+4. Run exactly one matching adoption command, record the selected scope and
+   source evidence, then re-run the reviewer preflight resolver.
+
+This ownership lookup may inspect source attribution and file existence; it
+must not hand-merge raw config values or replace the effective resolver
+boundary. In ordinary non-interactive mode without `OAT_AUTONOMOUS=1`, an
+incomplete ladder or missing effective cells block readiness rather than
+choosing a scope.
+
 Adoption preserves explicit cells. After adoption, re-run the reviewer
 preflight resolver and re-check `ladderCompleteness.complete` and
 `ladderCompleteness.missingCells`. If preserved legacy or partial cells still
 leave effective cells incomplete or missing, identify those cells and block;
-do not overwrite, infer, or mark the plan implementation-ready. In
-non-interactive mode, incomplete or missing effective cells block readiness
-without choosing an ownership scope.
+do not overwrite, infer, or mark the plan implementation-ready.
 
 ### Reviewer Ceiling Contract
 

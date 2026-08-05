@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.3.4
+version: 2.3.5
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -556,8 +556,11 @@ The selected scope owns only the reusable ladders. A project-specific active
 policy or ceiling must not be written to user `~/.oat/config.json`.
 Adoption preserves explicit cells, so re-run the resolver and completeness
 check. An incomplete or missing ladder after adoption blocks readiness; do not
-overwrite explicit cells or silently infer a fallback. Non-interactive setup
-also blocks on a missing or incomplete ladder.
+overwrite explicit cells or silently infer a fallback. Ordinary non-interactive
+setup blocks on a missing or incomplete ladder. When `OAT_AUTONOMOUS=1`, follow
+the shared contract's owner-first autonomous resolution, run exactly one
+adoption against the selected existing config scope, and block only if no
+authorized scope resolves or the post-adoption ladder remains incomplete.
 
 Then resolve the named ceiling in this order:
 

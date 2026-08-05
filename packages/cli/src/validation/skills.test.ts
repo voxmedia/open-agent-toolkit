@@ -1337,7 +1337,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.3',
+        version: '1.4.4',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -1345,7 +1345,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.4',
+        version: '2.3.5',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -2184,7 +2184,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.17');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.18');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -2219,7 +2219,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.5'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.3'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.4'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.5'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -2328,7 +2328,46 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.17');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.18');
+  });
+
+  it('auto-resolves dispatch-ladder ownership only under explicit autonomy', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const autonomous = await readRepoFile(
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+    );
+    const gateInventory = await readRepoFile(
+      '.agents/skills/oat-project-autonomous/references/gate-inventory.md',
+    );
+
+    expect(shared).toContain('oat config get workflow.dispatchCeiling --json');
+    expect(shared).toMatch(
+      /OAT_AUTONOMOUS=1[\s\S]{0,900}existing user config[\s\S]{0,180}repo-local[\s\S]{0,500}shared/i,
+    );
+    expect(shared).toMatch(
+      /run exactly one matching adoption command[\s\S]{0,180}re-run the reviewer preflight resolver/i,
+    );
+    expect(shared).toMatch(
+      /non-interactive mode without `OAT_AUTONOMOUS=1`[\s\S]{0,180}blocks?/i,
+    );
+    expect(autonomous).toMatch(
+      /preserve an existing effective ladder owner[\s\S]{0,400}existing user config[\s\S]{0,140}existing repo-local\s+config/i,
+    );
+    expect(autonomous).toMatch(
+      /run exactly one\s+matching `oat config adopt dispatch-matrix` command[\s\S]{0,120}re-run the reviewer\s+preflight/i,
+    );
+    for (const gateId of ['QS-08', 'PLAN-05', 'IMPORT-05']) {
+      const row = gateInventory
+        .split('\n')
+        .find((line) => line.includes(`| ${gateId}`));
+      expect(row, `${gateId} autonomous ownership row`).toBeDefined();
+      expect(row).toContain('existing user config');
+      expect(row).toContain('repo-local config');
+      expect(row).toContain('authorized shared config');
+      expect(row).toContain('`auto-resolve`');
+    }
   });
 
   it('adopts ladders and records named maximum ceilings in every planning path', async () => {
@@ -3379,7 +3418,7 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.17'],
+      ['oat-project-plan-writing', '1.2.18'],
       ['oat-project-review-provide', '1.4.0'],
       ['oat-project-review-receive', '1.6.0'],
       ['oat-project-review-receive-remote', '1.5.0'],
@@ -4453,10 +4492,10 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.17'],
-      ['oat-project-plan', '1.4.3'],
-      ['oat-project-quick-start', '2.3.4'],
-      ['oat-project-import-plan', '1.4.8'],
+      ['oat-project-plan-writing', '1.2.18'],
+      ['oat-project-plan', '1.4.4'],
+      ['oat-project-quick-start', '2.3.5'],
+      ['oat-project-import-plan', '1.4.9'],
       ['oat-project-review-provide', '1.4.0'],
     ] as const;
 
@@ -5280,7 +5319,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
