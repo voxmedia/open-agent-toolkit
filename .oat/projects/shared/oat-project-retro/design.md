@@ -206,8 +206,20 @@ and status writeback.
   writeback into the artifact.
 - Loud reporting of undeliverable lanes ("4 upstream items have no
   destination here; file them as OAT issues or run from the OAT repo").
-- Duplicate check before filing upstream issues (`gh search issues` by title
-  against the upstream repo).
+- Duplicate check before filing, per destination type: issue destinations via
+  `gh search issues` (title/keywords against the target repo); backlog
+  destinations by scanning the target backlog's `items/*.md` plus
+  `archived/`/`completed.md` (so recently closed work isn't refiled).
+  Suspected duplicates are presented alongside the item in the approval step
+  with four dispositions — **strengthen** the existing one (default when
+  applicable: comment on the existing issue with this run's evidence, or
+  append an evidence/insight note to the existing backlog item file and
+  regenerate the index), file anyway as new, skip, or just link the existing
+  issue/item as the register item's `Destination`. Strengthened and linked
+  items record the existing destination and get status `filed`. Nothing is
+  silently dropped or silently double-filed; strengthening a public issue
+  from a private source repo goes through the same sanitization pass as
+  filing.
 - Sanitization verification before anything posts to a public repo from a
   private source repo: no verbatim log excerpts, no internal URLs/hostnames,
   no credential-shaped strings.
