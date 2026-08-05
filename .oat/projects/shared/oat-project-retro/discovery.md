@@ -39,10 +39,11 @@ Grounding handoff imported from
 
 ### Question 1: Delivery scope for v1
 
-**Q:** Pending — whether v1 is skill-only, or also wires optional offer points
-into adjacent lifecycle skills (`summary` / `complete`).
-**A:** _Awaiting user_
-**Decision:** _Pending_
+**Q:** Whether v1 is skill-only, or also wires optional offer points into
+adjacent lifecycle skills (`summary` / `complete`).
+**A:** Skill + lifecycle offer wiring — adjacent skills may offer a retro
+step after summary or before complete; still never auto-run.
+**Decision:** Use Approach 2 for v1.
 
 ## Solution Space
 
@@ -90,14 +91,57 @@ policy; likely overkill before the skill exists.
 
 ### Chosen Direction
 
-**Approach:** Approach 1 recommended (skill-only v1, handoff-faithful)
-**Rationale:** Handoff is implementation-ready for a skill; dual-lane retro
-value does not require lifecycle wiring or CLI helpers to land first.
-**User validated:** No — awaiting confirmation
+**Approach:** Approach 2 — Skill + lifecycle offer wiring
+**Rationale:** User selected discoverability at natural lifecycle checkpoints
+for v1, while keeping the handoff's never-auto-run rule.
+**User validated:** Yes
 
 ## Options Considered
 
-_Pending after approach confirmation._
+### Option A: Offer after summary only
+
+**Description:** `oat-project-summary` ends by offering an optional retro.
+
+**Pros:**
+
+- Natural reflective moment right after institutional memory is written
+- Smaller blast radius than touching complete/closeout
+
+**Cons:**
+
+- Operators who skip summary never see the offer
+
+**Chosen:** Pending Question 2
+
+### Option B: Offer on completion/closeout path only
+
+**Description:** Offer retro before archive/complete.
+
+**Pros:**
+
+- Catches projects that skip summary
+- Last chance before artifacts freeze
+
+**Cons:**
+
+- Complete flow is already dense; another offer may be easy to dismiss
+
+**Chosen:** Pending Question 2
+
+### Option C: Offer at both summary and completion path
+
+**Description:** Both skills can offer; second offer skipped if retro already exists.
+
+**Pros:**
+
+- Best discoverability
+- Idempotent if gated on missing `references/project-retro.md`
+
+**Cons:**
+
+- Touches more lifecycle surface area
+
+**Chosen:** Pending Question 2
 
 ## Key Decisions
 
@@ -106,11 +150,12 @@ _Pending after approach confirmation._
    focused on continuous improvement feedback (host repo + upstream OAT).
 3. **Grounding source:** Use the wp-platform handoff and reference retro as
    primary design input rather than re-deriving the method.
-4. **Invocation policy (from handoff, provisional):** Explicit user request or
-   confirmation only — never auto-run merely because implementation/summary
-   completed.
+4. **Invocation policy:** Explicit user request or confirmation only — never
+   auto-run merely because implementation/summary completed.
 5. **Output location (from handoff, provisional):**
    `{PROJECT_PATH}/references/project-retro.md` with dual feedback lanes.
+6. **Delivery scope:** Approach 2 — ship the skill and wire optional offer
+   points into adjacent lifecycle skills. Offers only; no auto-run.
 
 ## Constraints
 
