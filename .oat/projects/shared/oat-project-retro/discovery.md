@@ -161,6 +161,16 @@ sources used, register rollup status) so the completion offer, apply mode,
 and filing skill can cheaply detect retro state. A `project-retro.md`
 template lives in `.oat/templates/` alongside other lifecycle templates.
 
+### Question 9: Docs surface
+
+**Q:** Full docs in v1, or skill + AGENTS mention only?
+**A:** Full docs.
+**Decision:** v1 ships oat-docs updates alongside the code: lifecycle page
+(new post-approval `retro` step), CLI config reference (`workflow.retro.*`
+keys and the sequence step), a workflows entry for the retro skill, and
+AGENTS/skill-index mentions. The five-package lockstep bump already applies,
+so documentation lands in the same release.
+
 ## Solution Space
 
 Request is **exploratory**: a successful ad-hoc retro exists and is packaged as
@@ -322,7 +332,12 @@ safety-net offer
 - Retro output is a durable project artifact useful for continuous improvement.
 - Feedback is actionable and routed (host repo vs upstream OAT) when relevant.
 - Skill contract matches the handoff quality bar: evidence-first, dual lanes,
-  environment-aware session review, no auto-invocation.
+  environment-aware session review, no unsolicited auto-invocation.
+- Retro is configurable as a post-approval sequence step; completion path
+  offers it as a safety net; apply and filing dispositions work as decided.
+- Full docs ship in v1 (lifecycle, config reference, workflows entry).
+- Acceptance: a live dogfood retro run against a completed OAT project in
+  this repo produces a useful artifact.
 - Reference handoff/example artifacts remain available under this project's
   `references/` for implementation.
 
@@ -350,8 +365,8 @@ safety-net offer
 
 ## Open Questions
 
-- **Docs surface:** Does v1 include oat-docs pages / workflow index updates, or
-  skill + AGENTS mention only?
+- None remaining — all discovery questions resolved (see Clarifying
+  Questions 1–9).
 
 ## Assumptions
 
