@@ -17,126 +17,149 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Review the recent explainer projects and make further improvements. The
+operator will supply a handoff document with feedback that should drive
+scope. Prior project trees to use as context:
+
+- archived `explainer-kit` (public skill family foundation)
+- shared `explainer-improvements` (golden unattended recap recovery; PR open)
+
+Ambiguity class: **exploratory** until the handoff feedback is ingested and
+scope converges.
+
+## Prior Project Context (reviewed)
+
+### explainer-kit (archived)
+
+Shipped the public skill family: destination-neutral `explainer-kit` core plus
+thin `oat-explainer-kit` adapter. Established recipes, curated styles, fact-base
+pipeline, content approval, rendering/visual QA, additive publish, and archive
+hash semantics. Revision 1 hardened unattended authoring, curated styles, and
+immutable-hash/archive correctness.
+
+### explainer-improvements (shared; PR open)
+
+Restored golden-quality unattended project recaps on top of that foundation:
+
+- Adaptive recaps share one immutable set plan (hub + architecture + deck +
+  optional source-backed artifacts).
+- Unattended publication requires trusted Chromium browser evidence and an
+  independent whole-set visual critic, with a hard one-correction cap.
+- Non-linear graphs detect and artistically reroute; backlinks and catalog
+  publishing hardened; approval resume requires authenticated current tokens
+  only (legacy resume compatibility traded away).
+- All three real-Chromium golden benchmarks passed; 62 tasks complete;
+  PR [#188](https://github.com/voxmedia/open-agent-toolkit/pull/188) open.
+
+Explicit P2 leftover from that project (still open backlog):
+
+- `BL-260728-additional-visual-workflows` — evaluate diff review, plan review,
+  fact-check, dashboards, complex tables, and richer compositions based on
+  observed demand. Intentionally outside the golden-recap recovery path.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Handoff feedback document
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Please provide the handoff doc with feedback that should drive v2
+scope (path, paste, or attach).
+**A:** _awaiting operator_
+**Decision:** Scope, priorities, and success criteria will be derived from
+that feedback plus the prior-project context above; do not invent a
+improvement slate from the project name alone.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+_Deferred until handoff feedback arrives. Candidate framings (not yet
+validated):_
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+1. **Feedback-driven quality pass** — triage handoff findings into a bounded
+   fix/improvement plan on the existing golden-recap runtime.
+2. **Expand visual workflows** — pick up
+   `BL-260728-additional-visual-workflows` (or a subset) once demand is clear
+   from feedback.
+3. **Hybrid** — close critical feedback first, then a small workflow expansion
+   only if the handoff explicitly asks for it.
 
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+Recommendation pending handoff content; lean toward (1) or (3) unless the
+handoff is primarily recipe expansion.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** TBD after handoff
+**Rationale:** Operator indicated feedback will define further improvements
+**User validated:** No — waiting on handoff doc
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+_TBD after handoff feedback is reviewed._
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Workflow mode:** Quick-start (operator-selected via
+   `oat-project-quick-start`).
+2. **Baseline:** Build on shipped explainer-kit + explainer-improvements
+   outcomes; do not reopen settled foundation decisions unless feedback
+   requires it.
+3. **Scope source of truth:** Operator handoff feedback document (not yet
+   received).
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve destination-neutral core / OAT-adapter boundary unless feedback
+  requires a deliberate change.
+- Preserve trusted browser-review and bounded visual-correction contracts for
+  unattended adaptive recaps unless feedback explicitly revisits them.
+- Public package changes remain under the five-package lockstep release
+  policy; skill version bumps follow repo skill-sync rules.
+- Prefer outcome-oriented discovery; keep implementation detail for design/plan.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- _TBD from handoff feedback_ — at minimum: prioritized, verifiable
+  improvements with clear acceptance evidence and no silent regression of
+  golden-recap conformance.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Rebuilding the original personal-kit private wrapper as a public deliverable
+- Open-ended visual recipe expansion without demand evidence (unless handoff
+  explicitly prioritizes specific workflows)
+- Reopening legacy `ekrt1` resume compatibility (explicitly traded away)
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- `BL-260728-additional-visual-workflows` candidates remain deferred unless the
+  handoff elevates specific workflows with observed demand.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Handoff content:** What feedback items are in-scope for v2 vs backlog vs
+  wont-fix?
+- **PR #188 relationship:** Does v2 land as follow-on commits on the open PR,
+  a new PR after merge, or a revise pass on explainer-improvements?
+- **Depth:** Is this a bounded quality/fix pass, a recipe expansion, or
+  something that should promote to spec-driven?
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- The open explainer-improvements PR represents the intended baseline to
+  improve upon (or revise against).
+- The handoff doc will be the primary driver of prioritization over the open
+  P2 backlog item.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Scope drift without handoff:** Inventing improvements from prior summaries
+  alone could miss the operator's actual pain points.
+  - **Likelihood:** High if we proceed without the doc
+  - **Impact:** High
+  - **Mitigation Ideas:** Gate solution-space convergence and planning on
+    ingesting the handoff.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+1. Ingest operator handoff feedback document.
+2. Converge solution space and get explicit direction buy-in.
+3. Complete discovery → design-depth decision → plan for
+   `oat-project-implement`.
