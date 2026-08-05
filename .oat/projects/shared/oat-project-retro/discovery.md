@@ -125,6 +125,19 @@ apply guidance ships with the skill rather than being re-derived per run.
 Promotions in the artifact form a checkable register so apply runs are
 idempotent and partial applies resume cleanly.
 
+### Question 7: Validation strategy
+
+**Q:** How do we prove the skill works before shipping — dogfood run, shape
+check against the reference retro, or both?
+**A:** Dogfood on a real completed project in this repo. The WordPress
+reference retro (`references/project-retro.example.md`) serves as **guiding
+principles** — a quality exemplar and starting point for the retro
+contents/template discussion — not a rigid conformance target.
+**Decision:** Acceptance gate is a live retro run against a completed OAT
+project in this repo. The retro template/contents are derived from the
+reference retro's structure, adapted to the register/filing machinery decided
+above (template discussion captured separately).
+
 ## Solution Space
 
 Request is **exploratory**: a successful ad-hoc retro exists and is packaged as
@@ -314,8 +327,8 @@ safety-net offer
 
 ## Open Questions
 
-- **Validation strategy:** Dogfood against an existing OAT project in this
-  repo, against the imported reference retro shape, or both?
+- **Retro template contents:** Which sections are required core vs conditional,
+  using the reference retro as the starting point? (In discussion.)
 - **Docs surface:** Does v1 include oat-docs pages / workflow index updates, or
   skill + AGENTS mention only?
 
