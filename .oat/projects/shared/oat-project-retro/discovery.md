@@ -45,6 +45,13 @@ adjacent lifecycle skills (`summary` / `complete`).
 step after summary or before complete; still never auto-run.
 **Decision:** Use Approach 2 for v1.
 
+### Question 2: Offer points
+
+**Q:** Which lifecycle skills should offer retro — summary only,
+complete/closeout only, or both?
+**A:** _Awaiting user — tradeoff outline presented._
+**Decision:** _Pending._
+
 ## Solution Space
 
 Request is **exploratory**: a successful ad-hoc retro exists and is packaged as
