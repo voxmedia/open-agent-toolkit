@@ -108,6 +108,23 @@ non-interactive filing; with no config, non-interactive runs file nothing and
 leave proposals in the artifact. Sanitization always applies when the
 destination repo is public and the source repo is private.
 
+### Question 6: Promotion posture (durable repo promotions)
+
+**Q:** When the retro identifies durable repo promotions (docs, AGENTS, rules
+edits, decision records), should the skill propose only, or also apply?
+**A:** Both, mode-dependent. Manually triggered: generate the retro, then ask
+at the end whether to apply the promotions. Autonomously triggered: governed
+by a `workflow.retro.apply` setting (`auto | ask`, default `ask`; `ask`
+means propose-only in non-interactive runs). Additionally, the skill supports
+a standalone **apply mode** — invoked via an apply flag or natural language
+("apply the retro findings") — which skips generation, locates the existing
+retro artifact in the active project, and applies its promotion register.
+**Decision:** One skill, two entry modes (generate, apply). The skill package
+carries the apply procedure as a progressive-disclosure reference file, so
+apply guidance ships with the skill rather than being re-derived per run.
+Promotions in the artifact form a checkable register so apply runs are
+idempotent and partial applies resume cleanly.
+
 ## Solution Space
 
 Request is **exploratory**: a successful ad-hoc retro exists and is packaged as
@@ -240,6 +257,13 @@ safety-net offer
 10. **Filing configuration:** `workflow.retro` config sets per-repo default
     filing destinations. Interactive runs confirm with per-run override;
     non-interactive runs use config as-is.
+11. **Promotion apply modes:** Interactive generate runs end with an
+    apply-now offer. `workflow.retro.apply` (`auto | ask`, default `ask`)
+    governs autonomous runs. A standalone apply mode consumes an existing
+    retro artifact's promotion register without regenerating the retro; the
+    apply procedure ships inside the skill as a progressive-disclosure
+    reference. Applying promotions (repo-local edits) is distinct from filing
+    (issues/backlog items), which stays with the companion filing skill.
 
 ## Constraints
 
@@ -290,8 +314,6 @@ safety-net offer
 
 ## Open Questions
 
-- **Promotion posture:** Propose durable repo promotions only, or also apply
-  narrowly scoped docs/instruction edits when approved in-session?
 - **Validation strategy:** Dogfood against an existing OAT project in this
   repo, against the imported reference retro shape, or both?
 - **Docs surface:** Does v1 include oat-docs pages / workflow index updates, or
