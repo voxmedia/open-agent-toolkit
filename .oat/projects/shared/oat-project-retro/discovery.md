@@ -138,6 +138,29 @@ project in this repo. The retro template/contents are derived from the
 reference retro's structure, adapted to the register/filing machinery decided
 above (template discussion captured separately).
 
+### Question 8: Retro template contents
+
+**Q:** Which sections are required core vs conditional, using the reference
+retro's 16-section structure as the starting point?
+**A:** User approved the proposed core/conditional split.
+**Decision:** Required core (every retro): Executive Summary; Evidence and
+Review Method (honesty contract — unavailable sources stated explicitly);
+Outcome Snapshot; What Went Well; Challenges and Struggles; Where We Changed
+Course; Repo Improvements as a **promotion register** with per-item status
+(`proposed / approved / applied / rejected`) plus filing candidates; OAT
+Upstream Feedback as a first-class lane (required even when empty; items are
+sanitized ready-to-file drafts with filing status); Reflections (run-specific).
+Conditional (when evidence warrants): Decision Register + Rejected/Superseded
+Alternatives (feeds `oat decision new`); New Architecture Patterns; Domain
+Learnings; Gotchas for Humans / for Autonomous Agents; Remaining Boundaries
+and Follow-Ups. Structural changes vs the reference: the upstream lane is
+explicit rather than folded into Challenges/Remaining Boundaries prose, and
+both registers use machine-scannable item structure with status fields. The
+artifact carries frontmatter (source project, generation date, evidence
+sources used, register rollup status) so the completion offer, apply mode,
+and filing skill can cheaply detect retro state. A `project-retro.md`
+template lives in `.oat/templates/` alongside other lifecycle templates.
+
 ## Solution Space
 
 Request is **exploratory**: a successful ad-hoc retro exists and is packaged as
@@ -327,8 +350,6 @@ safety-net offer
 
 ## Open Questions
 
-- **Retro template contents:** Which sections are required core vs conditional,
-  using the reference retro as the starting point? (In discussion.)
 - **Docs surface:** Does v1 include oat-docs pages / workflow index updates, or
   skill + AGENTS mention only?
 
