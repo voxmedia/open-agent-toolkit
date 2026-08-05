@@ -121,22 +121,36 @@ project-specific active policy or ceiling must not be written to user
 
 In an autonomous run (`OAT_AUTONOMOUS=1`), resolve ownership without prompting:
 
-1. Run `oat config get workflow.dispatchCeiling --json`. When its effective
-   source is `local`, `shared`, or `user`, keep that existing ladder owner.
-2. When no ladder owner resolves, select the first existing personal config in
-   this order: the existing user config `~/.oat/config.json`, then the existing
-   repo-local config `.oat/config.local.json`.
-3. Use shared `.oat/config.json` only as the final existing-config fallback and
-   only when the run already has repository-policy authority to modify it.
-   Otherwise report the repository-policy boundary.
-4. Run exactly one matching adoption command, record the selected scope and
-   source evidence, then re-run the reviewer preflight resolver.
+1. Run `oat config list --json`. Treat a scope as an existing ladder owner only
+   when source attribution comes from an explicit matrix-cell key matching
+   `workflow.dispatchCeiling.providers.<provider>.<tier>`. Choose the
+   highest-precedence such source (`local`, then `shared`, then `user`). A
+   `workflow.dispatchCeiling.preset`, `recommendationVersion`, aggregate source,
+   or provider-level scalar such as
+   `workflow.dispatchCeiling.providers.<provider>` is not ladder-owner evidence.
+2. Build the candidate order with the existing explicit matrix-cell owner first
+   when one resolves, then append each remaining existing scope without
+   duplication in this order: user config `~/.oat/config.json`, repo-local
+   config `.oat/config.local.json`, then shared `.oat/config.json`. Consider
+   shared only when repository-policy authority already permits that write.
+3. Before selecting a scope, inspect only the raw dispatch-ceiling shapes in
+   that scope and higher-precedence scopes. The scope is adoption-compatible
+   only when the recommendation can fill the preflight's missing provider/tier
+   cells without preserving a provider-level scalar in the selected scope or
+   being shadowed by one at higher precedence. A lower-precedence scalar is not
+   an obstacle when the selected scope writes the provider matrix above it.
+4. Select the first adoption-compatible authorized scope. If none exists, name
+   the conflicting scalar paths and report the repository-policy boundary
+   before any write.
+5. Run exactly one matching adoption command, record the explicit-cell owner
+   evidence or fallback evidence and selected scope, then re-run the reviewer
+   preflight resolver.
 
 This ownership lookup may inspect source attribution and file existence; it
-must not hand-merge raw config values or replace the effective resolver
-boundary. In ordinary non-interactive mode without `OAT_AUTONOMOUS=1`, an
-incomplete ladder or missing effective cells block readiness rather than
-choosing a scope.
+may inspect raw config only for the scalar compatibility check above. It must
+not hand-merge config values or replace the effective resolver boundary. In
+ordinary non-interactive mode without `OAT_AUTONOMOUS=1`, an incomplete ladder
+or missing effective cells block readiness rather than choosing a scope.
 
 Adoption preserves explicit cells. After adoption, re-run the reviewer
 preflight resolver and re-check `ladderCompleteness.complete` and

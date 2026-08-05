@@ -2342,30 +2342,42 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-autonomous/references/gate-inventory.md',
     );
 
-    expect(shared).toContain('oat config get workflow.dispatchCeiling --json');
-    expect(shared).toMatch(
-      /OAT_AUTONOMOUS=1[\s\S]{0,900}existing user config[\s\S]{0,180}repo-local[\s\S]{0,500}shared/i,
+    expect(shared).toContain('oat config list --json');
+    expect(shared).toContain(
+      'workflow.dispatchCeiling.providers.<provider>.<tier>',
     );
     expect(shared).toMatch(
-      /run exactly one matching adoption command[\s\S]{0,180}re-run the reviewer preflight resolver/i,
+      /preset[\s\S]{0,180}provider-level scalar[\s\S]{0,180}not ladder-owner evidence/i,
+    );
+    expect(shared).toMatch(
+      /OAT_AUTONOMOUS=1[\s\S]{0,1000}user config[\s\S]{0,180}repo-local[\s\S]{0,500}shared/i,
+    );
+    expect(shared).toMatch(
+      /adoption-compatible[\s\S]{0,400}provider-level scalar[\s\S]{0,240}higher precedence[\s\S]{0,500}before any write/i,
+    );
+    expect(shared).toMatch(
+      /run exactly one matching adoption command[\s\S]{0,320}re-run the reviewer\s+preflight resolver/i,
     );
     expect(shared).toMatch(
       /non-interactive mode without `OAT_AUTONOMOUS=1`[\s\S]{0,180}blocks?/i,
     );
     expect(autonomous).toMatch(
-      /preserve an existing effective ladder owner[\s\S]{0,400}existing user config[\s\S]{0,140}existing repo-local\s+config/i,
+      /explicit[\s\S]{0,160}providers\.<provider>\.<tier>[\s\S]{0,400}existing user config[\s\S]{0,140}existing repo-local\s+config/i,
     );
     expect(autonomous).toMatch(
-      /run exactly one\s+matching `oat config adopt dispatch-matrix` command[\s\S]{0,120}re-run the reviewer\s+preflight/i,
+      /before writing[\s\S]{0,300}provider scalar[\s\S]{0,220}higher precedence[\s\S]{0,220}block without mutation/i,
+    );
+    expect(autonomous).toMatch(
+      /run exactly one\s+matching\s+`oat config adopt dispatch-matrix` command[\s\S]{0,120}re-run the reviewer\s+preflight/i,
     );
     for (const gateId of ['QS-08', 'PLAN-05', 'IMPORT-05']) {
       const row = gateInventory
         .split('\n')
         .find((line) => line.includes(`| ${gateId}`));
       expect(row, `${gateId} autonomous ownership row`).toBeDefined();
-      expect(row).toContain('existing user config');
-      expect(row).toContain('repo-local config');
-      expect(row).toContain('authorized shared config');
+      expect(row).toContain('explicit matrix-cell owner');
+      expect(row).toContain('scalar-blocked');
+      expect(row).toContain('stop before writing');
       expect(row).toContain('`auto-resolve`');
     }
   });

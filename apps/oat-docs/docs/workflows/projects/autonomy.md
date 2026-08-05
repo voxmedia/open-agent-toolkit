@@ -69,21 +69,29 @@ resolution and provenance.
 ### Dispatch-ladder ownership
 
 An incomplete reusable dispatch ladder is auto-resolvable when an authorized
-existing config scope is available. Autonomous planning keeps the effective
-ladder's current owner. When no owner resolves, it selects the first existing
-personal config in this order:
+adoption-compatible config scope is available. Autonomous planning recognizes
+an existing owner only from explicit
+`workflow.dispatchCeiling.providers.<provider>.<tier>` matrix-cell provenance.
+An aggregate config source, preset, recommendation version, or provider-level
+scalar is not owner evidence. When no explicit-cell owner resolves, planning
+checks existing personal config in this order:
 
 1. user config (`~/.oat/config.json`);
 2. repo-local config (`.oat/config.local.json`);
 3. shared config (`.oat/config.json`), only when repository policy already
    authorizes that write.
 
+Before writing, planning rejects a candidate that would preserve a
+provider-level scalar in that scope or remain shadowed by one at higher
+precedence. It tries the next authorized compatible scope and stops without
+mutation when none remains.
+
 The planner runs exactly one matching `oat config adopt dispatch-matrix`
-command, records the source and selected scope, and re-runs dispatch preflight.
-Explicit cells remain unchanged. No authorized existing scope, or a ladder
-that remains incomplete after adoption, is still a repository-policy boundary.
-`OAT_NON_INTERACTIVE=1` without `OAT_AUTONOMOUS=1` does not select a scope and
-continues to fail closed.
+command, records cell-source and compatibility evidence plus the selected
+scope, and re-runs dispatch preflight. Explicit cells remain unchanged. No
+authorized compatible scope, or a ladder that remains incomplete after
+adoption, is still a repository-policy boundary. `OAT_NON_INTERACTIVE=1`
+without `OAT_AUTONOMOUS=1` does not select a scope and continues to fail closed.
 
 ## Review contract
 

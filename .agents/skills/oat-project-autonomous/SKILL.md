@@ -301,13 +301,17 @@ each return and route to the next earliest incomplete owner.
 
 When planning finds an incomplete dispatch ladder, apply the gate inventory's
 autonomous ownership resolution instead of treating ordinary non-interactive
-behavior as authoritative. Preserve an existing effective ladder owner. If no
-owner resolves, prefer an existing user config, then an existing repo-local
-config; use shared config only as the final existing-config fallback when
-repository-policy authority already permits that write. Run exactly one
-matching `oat config adopt dispatch-matrix` command and re-run the reviewer
-preflight. Block only when no authorized existing scope is available or the
-ladder remains incomplete after adoption.
+behavior as authoritative. Preserve only an owner proven by explicit
+`workflow.dispatchCeiling.providers.<provider>.<tier>` matrix-cell attribution;
+an aggregate source, preset, recommendation version, or provider-level scalar
+is not owner evidence. If no owner resolves, prefer an existing user config,
+then an existing repo-local config; use shared config only as the final
+existing-config fallback when repository-policy authority already permits that
+write. Before writing, skip any candidate that preserves a provider scalar or
+is shadowed by one at higher precedence, and block without mutation when no
+authorized adoption-compatible scope remains. Run exactly one matching
+`oat config adopt dispatch-matrix` command and re-run the reviewer preflight.
+Block when the ladder remains incomplete after adoption.
 
 At every required artifact or code review:
 
