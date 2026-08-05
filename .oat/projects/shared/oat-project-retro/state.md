@@ -34,6 +34,10 @@ oat_phase_status: complete
 #         - { harness: cursor, model: gpt-5.5-xhigh }
 #   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 oat_workflow_mode: quick
 oat_workflow_origin: native
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -76,7 +80,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:27:39.069Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-05T22:52:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-05T23:11:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
