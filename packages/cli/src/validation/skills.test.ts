@@ -2331,7 +2331,7 @@ describe('validateOatSkills', () => {
     expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.18');
   });
 
-  it('auto-resolves dispatch-ladder ownership only under explicit autonomy', async () => {
+  it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
     const shared = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
@@ -2342,12 +2342,12 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-autonomous/references/gate-inventory.md',
     );
 
-    expect(shared).toContain('oat config list --json');
-    expect(shared).toContain(
-      'workflow.dispatchCeiling.providers.<provider>.<tier>',
+    expect(shared).not.toContain('oat config list --json');
+    expect(shared).toMatch(
+      /fixed order: user config\s+`~\/\.oat\/config\.json`, repo-local config `\.oat\/config\.local\.json`, then shared\s+config/i,
     );
     expect(shared).toMatch(
-      /preset[\s\S]{0,180}provider-level scalar[\s\S]{0,180}not ladder-owner evidence/i,
+      /do not ask which scope to use[\s\S]{0,100}do\s+not reorder candidates/i,
     );
     expect(shared).toMatch(
       /OAT_AUTONOMOUS=1[\s\S]{0,1000}user config[\s\S]{0,180}repo-local[\s\S]{0,500}shared/i,
@@ -2356,16 +2356,19 @@ describe('validateOatSkills', () => {
       /adoption-compatible[\s\S]{0,400}provider-level scalar[\s\S]{0,240}higher precedence[\s\S]{0,500}before any write/i,
     );
     expect(shared).toMatch(
+      /explicit matrix cells remain[\s\S]{0,180}provenance does not choose the persistence scope/i,
+    );
+    expect(shared).toMatch(
       /run exactly one matching adoption command[\s\S]{0,320}re-run the reviewer\s+preflight resolver/i,
     );
     expect(shared).toMatch(
       /non-interactive mode without `OAT_AUTONOMOUS=1`[\s\S]{0,180}blocks?/i,
     );
     expect(autonomous).toMatch(
-      /explicit[\s\S]{0,160}providers\.<provider>\.<tier>[\s\S]{0,400}existing user config[\s\S]{0,140}existing repo-local\s+config/i,
+      /fixed order[\s\S]{0,100}user config[\s\S]{0,100}repo-local config[\s\S]{0,100}authorized shared config[\s\S]{0,220}do not prompt[\s\S]{0,180}matrix-cell provenance/i,
     );
     expect(autonomous).toMatch(
-      /before writing[\s\S]{0,300}provider scalar[\s\S]{0,220}higher precedence[\s\S]{0,220}block without mutation/i,
+      /before\s+writing[\s\S]{0,400}provider[\s-]+scalar[\s\S]{0,320}higher precedence[\s\S]{0,320}block without\s+mutation/i,
     );
     expect(autonomous).toMatch(
       /run exactly one\s+matching\s+`oat config adopt dispatch-matrix` command[\s\S]{0,120}re-run the reviewer\s+preflight/i,
@@ -2374,8 +2377,10 @@ describe('validateOatSkills', () => {
       const row = gateInventory
         .split('\n')
         .find((line) => line.includes(`| ${gateId}`));
-      expect(row, `${gateId} autonomous ownership row`).toBeDefined();
-      expect(row).toContain('explicit matrix-cell owner');
+      expect(row, `${gateId} autonomous scope row`).toBeDefined();
+      expect(row).toContain('Check existing user, local');
+      expect(row).toContain('without prompting');
+      expect(row).toContain('provenance-based reordering');
       expect(row).toContain('scalar-blocked');
       expect(row).toContain('stop before writing');
       expect(row).toContain('`auto-resolve`');

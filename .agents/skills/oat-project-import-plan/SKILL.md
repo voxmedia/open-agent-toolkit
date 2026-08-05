@@ -259,9 +259,10 @@ Adoption preserves explicit cells. Re-run the resolver and completeness check.
 An incomplete or missing ladder after adoption blocks readiness; do not
 overwrite explicit cells or infer provider defaults. Ordinary non-interactive
 import blocks on a missing or incomplete ladder. When `OAT_AUTONOMOUS=1`,
-follow the shared contract's owner-first autonomous resolution, run exactly
-one adoption against the selected existing config scope, and block only if no
-authorized scope resolves or the post-adoption ladder remains incomplete.
+follow the shared contract's deterministic user-first existing-scope
+resolution, run exactly one adoption against the selected config scope, and
+block only if no authorized compatible scope exists or the post-adoption ladder
+remains incomplete.
 
 The selected scope owns only reusable ladders. A project-specific active policy
 or ceiling must not be written to user `~/.oat/config.json`. Resolve or ask

@@ -66,15 +66,12 @@ The canonical autonomy contract and exhaustive gate inventory
 `references/docs/autonomy-contract.md`) map each prompt to its autonomous
 resolution and provenance.
 
-### Dispatch-ladder ownership
+### Dispatch-ladder scope selection
 
 An incomplete reusable dispatch ladder is auto-resolvable when an authorized
-adoption-compatible config scope is available. Autonomous planning recognizes
-an existing owner only from explicit
-`workflow.dispatchCeiling.providers.<provider>.<tier>` matrix-cell provenance.
-An aggregate config source, preset, recommendation version, or provider-level
-scalar is not owner evidence. When no explicit-cell owner resolves, planning
-checks existing personal config in this order:
+adoption-compatible config scope is available. Autonomous planning checks
+config-file existence in this fixed order without prompting or reordering from
+effective value or matrix-cell provenance:
 
 1. user config (`~/.oat/config.json`);
 2. repo-local config (`.oat/config.local.json`);
@@ -83,15 +80,16 @@ checks existing personal config in this order:
 
 Before writing, planning rejects a candidate that would preserve a
 provider-level scalar in that scope or remain shadowed by one at higher
-precedence. It tries the next authorized compatible scope and stops without
-mutation when none remains.
+precedence. It always tries the next authorized compatible candidate and stops
+without mutation only when none remains.
 
 The planner runs exactly one matching `oat config adopt dispatch-matrix`
-command, records cell-source and compatibility evidence plus the selected
-scope, and re-runs dispatch preflight. Explicit cells remain unchanged. No
-authorized compatible scope, or a ladder that remains incomplete after
-adoption, is still a repository-policy boundary. `OAT_NON_INTERACTIVE=1`
-without `OAT_AUTONOMOUS=1` does not select a scope and continues to fail closed.
+command, records file-existence and compatibility evidence plus the selected
+scope, and re-runs dispatch preflight. Existing explicit cells remain unchanged;
+their provenance does not select the persistence scope. No authorized
+compatible scope, or a ladder that remains incomplete after adoption, is still
+a repository-policy boundary. `OAT_NON_INTERACTIVE=1` without
+`OAT_AUTONOMOUS=1` does not select a scope and continues to fail closed.
 
 ## Review contract
 

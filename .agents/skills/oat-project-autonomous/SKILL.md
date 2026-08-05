@@ -72,8 +72,9 @@ waits.
 - Selecting quick or spec-driven mode from the review-density rule.
 - Invoking existing OAT lifecycle and dispatch skills in their required order.
 - Auto-resolving only the gates authorized by the autonomy contract.
-- Selecting an existing dispatch-ladder config owner through the canonical
-  owner-first fallback order and adopting the bundled matrix once.
+- Selecting the first existing compatible dispatch-ladder config scope through
+  the canonical user → local → authorized-shared order and adopting the bundled
+  matrix once.
 - Committing and pushing completed phase boundaries, subject to repository
   policy, and reporting explicit boundary stops.
 
@@ -301,15 +302,14 @@ each return and route to the next earliest incomplete owner.
 
 When planning finds an incomplete dispatch ladder, apply the gate inventory's
 autonomous ownership resolution instead of treating ordinary non-interactive
-behavior as authoritative. Preserve only an owner proven by explicit
-`workflow.dispatchCeiling.providers.<provider>.<tier>` matrix-cell attribution;
-an aggregate source, preset, recommendation version, or provider-level scalar
-is not owner evidence. If no owner resolves, prefer an existing user config,
-then an existing repo-local config; use shared config only as the final
-existing-config fallback when repository-policy authority already permits that
-write. Before writing, skip any candidate that preserves a provider scalar or
-is shadowed by one at higher precedence, and block without mutation when no
-authorized adoption-compatible scope remains. Run exactly one matching
+behavior as authoritative. Check config-file existence in this fixed order:
+user config, repo-local config, authorized shared config. Do not prompt or
+reorder candidates from effective value or matrix-cell provenance. Before
+writing, test each existing candidate in order, skip any that preserves a
+provider scalar or is shadowed by one at higher precedence, and block without
+mutation only when no authorized adoption-compatible scope remains. Existing
+explicit matrix cells are preserved by adoption; their provenance does not
+choose the persistence scope. Run exactly one matching
 `oat config adopt dispatch-matrix` command and re-run the reviewer preflight.
 Block when the ladder remains incomplete after adoption.
 

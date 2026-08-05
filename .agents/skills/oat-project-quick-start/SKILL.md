@@ -558,9 +558,10 @@ Adoption preserves explicit cells, so re-run the resolver and completeness
 check. An incomplete or missing ladder after adoption blocks readiness; do not
 overwrite explicit cells or silently infer a fallback. Ordinary non-interactive
 setup blocks on a missing or incomplete ladder. When `OAT_AUTONOMOUS=1`, follow
-the shared contract's owner-first autonomous resolution, run exactly one
-adoption against the selected existing config scope, and block only if no
-authorized scope resolves or the post-adoption ladder remains incomplete.
+the shared contract's deterministic user-first existing-scope resolution, run
+exactly one adoption against the selected config scope, and block only if no
+authorized compatible scope exists or the post-adoption ladder remains
+incomplete.
 
 Then resolve the named ceiling in this order:
 
