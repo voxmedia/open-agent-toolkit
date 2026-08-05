@@ -58,6 +58,19 @@ writeFileSync(
   `${JSON.stringify(versions, null, 2)}\n`,
   'utf8',
 );
+
+writeFileSync(
+  join(assetsRoot, 'bundle-metadata.json'),
+  `${JSON.stringify(
+    {
+      schemaVersion: 1,
+      oatVersion: versions.cli,
+    },
+    null,
+    2,
+  )}\n`,
+  'utf8',
+);
 EOF
 
 # Bundle OAT documentation for core pack (oat-docs skill)

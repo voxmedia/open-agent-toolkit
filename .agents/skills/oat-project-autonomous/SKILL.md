@@ -1,6 +1,6 @@
 ---
 name: oat-project-autonomous
-version: 1.0.5
+version: 1.0.6
 description: Use when a user explicitly asks to run an OAT project autonomously end-to-end. Activates session-only autonomy, resumes the correct lifecycle phase, and drives the existing OAT skills through final PR or a reported boundary.
 argument-hint: '<goal | project-slug | ticket-ref>'
 disable-model-invocation: true
@@ -72,6 +72,9 @@ waits.
 - Selecting quick or spec-driven mode from the review-density rule.
 - Invoking existing OAT lifecycle and dispatch skills in their required order.
 - Auto-resolving only the gates authorized by the autonomy contract.
+- Selecting the first existing compatible dispatch-ladder config scope through
+  the canonical user → local → authorized-shared order and adopting the bundled
+  matrix once.
 - Committing and pushing completed phase boundaries, subject to repository
   policy, and reporting explicit boundary stops.
 
@@ -296,6 +299,19 @@ autonomy signals.
 Invoke each lifecycle skill by name and let it own its complete workflow,
 artifacts, gates, commits, and state transitions. Re-read project status after
 each return and route to the next earliest incomplete owner.
+
+When planning finds an incomplete dispatch ladder, apply the gate inventory's
+autonomous ownership resolution instead of treating ordinary non-interactive
+behavior as authoritative. Check config-file existence in this fixed order:
+user config, repo-local config, authorized shared config. Do not prompt or
+reorder candidates from effective value or matrix-cell provenance. Before
+writing, test each existing candidate in order, skip any that preserves a
+provider scalar or is shadowed by one at higher precedence, and block without
+mutation only when no authorized adoption-compatible scope remains. Existing
+explicit matrix cells are preserved by adoption; their provenance does not
+choose the persistence scope. Run exactly one matching
+`oat config adopt dispatch-matrix` command and re-run the reviewer preflight.
+Block when the ladder remains incomplete after adoption.
 
 At every required artifact or code review:
 

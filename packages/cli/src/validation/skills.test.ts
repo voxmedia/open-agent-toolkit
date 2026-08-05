@@ -1337,7 +1337,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.3',
+        version: '1.4.4',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -1345,7 +1345,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.4',
+        version: '2.3.5',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -2184,7 +2184,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.17');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.18');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -2219,7 +2219,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.5'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.3'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.4'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.5'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -2328,7 +2328,63 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.17');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.18');
+  });
+
+  it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const autonomous = await readRepoFile(
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+    );
+    const gateInventory = await readRepoFile(
+      '.agents/skills/oat-project-autonomous/references/gate-inventory.md',
+    );
+
+    expect(shared).not.toContain('oat config list --json');
+    expect(shared).toMatch(
+      /fixed order: user config\s+`~\/\.oat\/config\.json`, repo-local config `\.oat\/config\.local\.json`, then shared\s+config/i,
+    );
+    expect(shared).toMatch(
+      /do not ask which scope to use[\s\S]{0,100}do\s+not reorder candidates/i,
+    );
+    expect(shared).toMatch(
+      /OAT_AUTONOMOUS=1[\s\S]{0,1000}user config[\s\S]{0,180}repo-local[\s\S]{0,500}shared/i,
+    );
+    expect(shared).toMatch(
+      /adoption-compatible[\s\S]{0,400}provider-level scalar[\s\S]{0,240}higher precedence[\s\S]{0,500}before any write/i,
+    );
+    expect(shared).toMatch(
+      /explicit matrix cells remain[\s\S]{0,180}provenance does not choose the persistence scope/i,
+    );
+    expect(shared).toMatch(
+      /run exactly one matching adoption command[\s\S]{0,320}re-run the reviewer\s+preflight resolver/i,
+    );
+    expect(shared).toMatch(
+      /non-interactive mode without `OAT_AUTONOMOUS=1`[\s\S]{0,180}blocks?/i,
+    );
+    expect(autonomous).toMatch(
+      /fixed order[\s\S]{0,100}user config[\s\S]{0,100}repo-local config[\s\S]{0,100}authorized shared config[\s\S]{0,220}do not prompt[\s\S]{0,180}matrix-cell provenance/i,
+    );
+    expect(autonomous).toMatch(
+      /before\s+writing[\s\S]{0,400}provider[\s-]+scalar[\s\S]{0,320}higher precedence[\s\S]{0,320}block without\s+mutation/i,
+    );
+    expect(autonomous).toMatch(
+      /run exactly one\s+matching\s+`oat config adopt dispatch-matrix` command[\s\S]{0,120}re-run the reviewer\s+preflight/i,
+    );
+    for (const gateId of ['QS-08', 'PLAN-05', 'IMPORT-05']) {
+      const row = gateInventory
+        .split('\n')
+        .find((line) => line.includes(`| ${gateId}`));
+      expect(row, `${gateId} autonomous scope row`).toBeDefined();
+      expect(row).toContain('Check existing user, local');
+      expect(row).toContain('without prompting');
+      expect(row).toContain('provenance-based reordering');
+      expect(row).toContain('scalar-blocked');
+      expect(row).toContain('stop before writing');
+      expect(row).toContain('`auto-resolve`');
+    }
   });
 
   it('adopts ladders and records named maximum ceilings in every planning path', async () => {
@@ -3379,7 +3435,7 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.17'],
+      ['oat-project-plan-writing', '1.2.18'],
       ['oat-project-review-provide', '1.4.0'],
       ['oat-project-review-receive', '1.6.0'],
       ['oat-project-review-receive-remote', '1.5.0'],
@@ -4453,10 +4509,10 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.17'],
-      ['oat-project-plan', '1.4.3'],
-      ['oat-project-quick-start', '2.3.4'],
-      ['oat-project-import-plan', '1.4.8'],
+      ['oat-project-plan-writing', '1.2.18'],
+      ['oat-project-plan', '1.4.4'],
+      ['oat-project-quick-start', '2.3.5'],
+      ['oat-project-import-plan', '1.4.9'],
       ['oat-project-review-provide', '1.4.0'],
     ] as const;
 
@@ -5280,7 +5336,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
