@@ -49,8 +49,46 @@ step after summary or before complete; still never auto-run.
 
 **Q:** Which lifecycle skills should offer retro — summary only,
 complete/closeout only, or both?
-**A:** _Awaiting user — tradeoff outline presented._
-**Decision:** _Pending._
+**A:** Superseded by the sequencing discussion (Question 3): retro evidence is
+only complete after final approval (revise cycles, summary refreshes, operator
+corrections are retro input), so a summary-time offer is premature.
+**Decision:** Retro becomes an optional post-approval sequence step, plus a
+safety-net offer in the completion path when no retro artifact exists. No
+summary-time offer.
+
+### Question 3: Sequencing and autonomous runs
+
+**Q:** Where does retro fit in `workflow.postImplementSequence`
+(`{ preApproval, postApproval }`), and should it auto-run in autonomous
+workflows?
+**A:** Retro is a `postApproval` step — the first moment the full run history
+(including the approval/feedback tail) exists, and still before completion
+freezes artifacts. In autonomous runs the retro **artifact generation** may
+auto-run when explicitly configured; **acting** on the retro (durable repo
+promotions, upstream filings) stays human-gated and is recorded as proposals
+inside the artifact.
+**Decision:** Add retro as an optional post-implement sequence step
+(post-approval). Explicit config counts as consent, refining the handoff's
+"never auto-run" rule to "never auto-run without explicit config or user
+confirmation." Accepted scope consequence: CLI config surface grows
+(publishable-package change, five-package lockstep version bump).
+
+### Question 4: Upstream feedback filing
+
+**Q:** Should the retro automatically create GitHub issues in the OAT repo for
+upstream feedback?
+**A:** No auto-creation from the retro skill. Instead, companion manually-run
+filing skill(s) take a retro artifact as input (default: active project's
+retro, optional explicit path), run a capability preflight per destination
+(issues enabled? credentials sufficient?), extract feedback into proposed
+issues/items, present the breakdown, and file only what the user approves.
+Facts gathered: `voxmedia/open-agent-toolkit` is public with **issues
+disabled** (prerequisite to enable); local `gh` auth suffices once enabled;
+autonomous cross-repo filing would need a fine-grained PAT. Public-repo
+content sanitization is required when the source repo is private.
+**Decision:** Retro emits sanitized, ready-to-file feedback items; filing is a
+separate manual skill step. Exact filing-skill shape (issues vs backlog items,
+one skill vs two) under discussion.
 
 ## Solution Space
 
@@ -117,8 +155,9 @@ for v1, while keeping the handoff's never-auto-run rule.
 **Cons:**
 
 - Operators who skip summary never see the offer
+- Premature: retro evidence completes only after final approval
 
-**Chosen:** Pending Question 2
+**Chosen:** No
 
 ### Option B: Offer on completion/closeout path only
 
@@ -133,7 +172,8 @@ for v1, while keeping the handoff's never-auto-run rule.
 
 - Complete flow is already dense; another offer may be easy to dismiss
 
-**Chosen:** Pending Question 2
+**Chosen:** Yes — as a safety-net offer when no retro artifact exists,
+complementing the configured post-approval sequence step (Question 3)
 
 ### Option C: Offer at both summary and completion path
 
@@ -147,8 +187,10 @@ for v1, while keeping the handoff's never-auto-run rule.
 **Cons:**
 
 - Touches more lifecycle surface area
+- Summary-time half is premature per the Question 3 sequencing insight
 
-**Chosen:** Pending Question 2
+**Chosen:** No — superseded by post-approval sequence step + completion
+safety-net offer
 
 ## Key Decisions
 
@@ -157,12 +199,22 @@ for v1, while keeping the handoff's never-auto-run rule.
    focused on continuous improvement feedback (host repo + upstream OAT).
 3. **Grounding source:** Use the wp-platform handoff and reference retro as
    primary design input rather than re-deriving the method.
-4. **Invocation policy:** Explicit user request or confirmation only — never
-   auto-run merely because implementation/summary completed.
+4. **Invocation policy:** Explicit user request, confirmation, or explicit
+   config opt-in — never auto-run otherwise.
 5. **Output location (from handoff, provisional):**
    `{PROJECT_PATH}/references/project-retro.md` with dual feedback lanes.
 6. **Delivery scope:** Approach 2 — ship the skill and wire optional offer
-   points into adjacent lifecycle skills. Offers only; no auto-run.
+   points into adjacent lifecycle skills. Offers only; no unsolicited auto-run.
+7. **Sequencing:** Retro is an optional `postApproval` step in
+   `workflow.postImplementSequence`; runs after final HiLL approval, before
+   completion. Requires CLI config expansion (lockstep package bump accepted).
+8. **Autonomy split:** Artifact generation may auto-run when configured;
+   promotions and upstream filings stay human-gated (proposal-only in
+   autonomous runs).
+9. **Upstream filing:** No auto issue creation from the retro. Companion
+   manually-run filing skill(s) with per-destination capability preflight,
+   artifact-driven issue extraction, and user approval before creating
+   anything.
 
 ## Constraints
 
@@ -191,10 +243,13 @@ for v1, while keeping the handoff's never-auto-run rule.
 
 ## Out of Scope
 
-- Auto-running retro on project completion.
+- Unsolicited auto-running of retro (without config opt-in or confirmation).
+- Auto-filing GitHub issues without user approval in the filing skill.
 - Replacing `oat-project-summary` or `oat-wrap-up`.
 - Building a general multi-project weekly retro product.
-- Broad CLI/package work unless later explicitly expanded (Approach 3).
+- Enabling issues on `voxmedia/open-agent-toolkit` (repo-settings prerequisite,
+  handled outside this project).
+- CLI evidence helpers beyond the post-implement sequence step addition.
 
 ## Deferred Ideas
 
@@ -206,8 +261,9 @@ for v1, while keeping the handoff's never-auto-run rule.
 
 ## Open Questions
 
-- **Offer points:** Which lifecycle skills should offer retro — summary only,
-  complete/closeout only, or both (skip second offer if retro already exists)?
+- **Filing-skill shape:** One filing skill with per-lane destination routing,
+  or two verbs (file-issues / file-backlog-items)? How does the backlog
+  variant report upstream items it cannot file from a non-OAT repo?
 - **Promotion posture:** Propose durable repo promotions only, or also apply
   narrowly scoped docs/instruction edits when approved in-session?
 - **Validation strategy:** Dogfood against an existing OAT project in this
