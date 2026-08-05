@@ -342,12 +342,100 @@ content.
 
 ## Data Models
 
-_To be drafted._
+All contracts are versioned JSON Schemas under `explainer-kit/schemas/`,
+following the existing `explainer-kit.<name>/vN` convention. New versions are
+additive where possible; consumers reject unknown schema versions as today.
+
+- **Publish request (revised):** adds `publicAccess: "public" | "protected"`
+  (default `public`). Roots remain credential-free; no other trust-model
+  fields change.
+- **Publish receipt (revised):** per-artifact entries gain canonical public
+  URL and a structured verification result
+  (`verified-anonymous | verified-authenticated | skipped-protected` plus the
+  compared hash). Receipt remains atomic and durable in the run package.
+- **Author request (revised):** gains the canonical artifact link table
+  (artifact ID → site-relative canonical URL from the authoring artifact's
+  location) and, for structured artifacts, the structured-content contract
+  reference in place of full-HTML instructions.
+- **Structured content contracts (new):** three schemas —
+  `hub-content/v1`, `deck-content/v1` (slides with archetype enum),
+  `diagram-content/v1` (semantic graph: nodes, groups, edges, labels,
+  direction, emphasis). Author results carry structured content for standard
+  artifacts; artistic artifacts keep the existing HTML result shape.
+- **Set plan (revised):** expansion entries for diagram/deck/explainer views
+  carry the planner's justification (reader question + evidence pointers);
+  hub remains the only floor entry for `project-recap`.
+- **Visual review request/result (v2):** request enumerates rubric
+  dimensions; result requires per-dimension scored findings and a verdict
+  that separates `pass` from `correct`.
+- **Failure record (new):** compact durable record for failed/superseded
+  runs — run ID, recipe, terminal outcome, error class, timestamps, pointer
+  to any superseding run. Lives in the durable project tree, not untracked
+  scratch space.
+- **Type tokens (revised theme):** role-based typography tokens
+  (display/heading/body/UI/annotation/mono, per-medium scales) join the
+  resolved theme bundle so replay stays deterministic.
 
 ## Error Handling
 
-_To be drafted._
+- **Incomplete publish config:** the adapter reports exactly which fields are
+  missing (provider, roots, region) and the run proceeds build-only; no
+  partial publication is attempted.
+- **Protected-root misdeclaration:** a root declared `public` that returns
+  401/403 during verification fails closed exactly as today (sentinel
+  failure aborts before artifact upload). A root declared `protected` never
+  makes anonymous requests, so there is no 401 to misinterpret.
+- **Link validation failures:** reported per link with source artifact,
+  offending href, and expected canonical target; the build fails and the run
+  routes into bounded correction, not publication.
+- **Request-shape failures (`sourceIds` class):** the adapter/core request
+  boundary validates shape before content processing and reports the exact
+  field and expected type; regression coverage pins the original failing
+  shape.
+- **Bounded correction exhaustion:** residual findings are durably recorded
+  in the run package and surfaced as flags; terminal outcome
+  `built-needs-review` propagates to the lifecycle without blocking approval.
+- **Failed runs:** always leave the compact failure record; diagnostic bulk
+  follows the archive-or-delete policy and is never the only evidence.
 
 ## Testing Strategy
 
-_To be drafted._
+Tests live beside the existing suites (`explainer-kit/tests/`,
+`oat-explainer-kit/tests/`) and run under `node:test` as today. The handoff's
+required test matrix maps as:
+
+- **Path derivation (unit, adapter):** local output roots for
+  project/repo/direct invocations; remote destination derivation including
+  `/projects/<slug>` composition, repo passthrough, double-nesting guard,
+  and shared segment encoding.
+- **Invocation fixtures (integration, adapter):** end-to-end project and
+  repository invocation fixtures exercising the unblocked repo entry point.
+- **Link validation (unit + fixture, core):** the exact broken links from the
+  Cyclone hub (`../architecture/`, `../deck/`) as failing fixtures; passing
+  fixtures with canonical `index.html` targets; validation across all
+  artifacts, not only the hub.
+- **Publication (integration, core):** explicit `index.html` in every object
+  path; project-prefix placement; manifest-hash byte equality; receipt
+  completeness (every artifact's URLs, hash, verification result);
+  protected-root behavior (no anonymous fetch, authenticated verification,
+  `skipped-protected` recording); declared-public 401/403 still fails
+  closed; credential-hygiene assertions on requests, manifests, logs,
+  receipts.
+- **Request-shape regression (unit, adapter/core boundary):** the
+  `request.sourceIds is not iterable` shape pinned as a failing input that
+  now yields a structured validation error.
+- **Structured rendering (unit + golden, core):** renderer output for each
+  contract; deck anti-filler checks as deterministic unit tests; diagram
+  semantic-layout properties (auto-fit, labels, overlap detection).
+- **Golden fixtures (visual, core):** desktop/tablet/mobile (320/768/1440)
+  golden fixtures for hub, diagram, and deck rendered from structured
+  content; existing three golden benchmarks stay green throughout.
+- **Negative visual-quality fixture (core):** the Cyclone deck and diagram
+  bundled as a rubric-v2 fixture whose review must yield `correct`, not
+  `pass`.
+- **Lifecycle (integration, adapter):** gate-ordering invariant (approval
+  waits for terminal outcome); auto-entry into bounded correction from
+  `built-needs-review`; failure-record creation on failed runs; flagged runs
+  blocked from publication without override.
+- **Release gates:** five-package lockstep validation (`pnpm release:validate`)
+  and canonical-skill version bumps with provider sync, per repo policy.
