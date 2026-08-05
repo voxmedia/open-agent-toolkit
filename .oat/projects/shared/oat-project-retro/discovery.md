@@ -17,111 +17,84 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Create an OAT **project retro skill** that runs at the end of an OAT project and
+produces a retro artifact. The skill should review available project evidence —
+session logs, project log, OAT execution log, and related project artifacts —
+then synthesize room for improvement so there is a continuous feedback loop:
+
+1. **Host repository feedback** — improvements for the repo where the project ran
+2. **Upstream OAT feedback** — improvements to send back to Open Agent Toolkit
+   (workflows, CLI tooling, skills, etc.) when warranted
+
+Earlier session context also pointed at a wp-platform PR commit as a possible
+reference/handoff source to pull into this project's `references/` directory:
+https://github.com/voxmedia/wp-platform/pull/5333/changes/3179025e5d2dfe28cc977013f80b8528a28fbcf4
+
+User indicated a handoff document will be provided next; discovery is paused
+until that arrives.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
-
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+_Pending handoff and follow-up Q&A._
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+_Pending handoff. Will explore approaches after reference material is available._
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+_Pending discovery completion._
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Workflow:** Use quick-start (`oat-project-quick-start`) for this project.
+2. **Outcome shape:** Deliverable is a retro skill + generated retro artifact
+   focused on continuous improvement feedback (host repo + upstream OAT).
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Prefer evidence from real project execution surfaces (session logs, project
+  log, execution log, related artifacts) over speculative recommendations.
+- Separate host-repo vs upstream-OAT feedback clearly when both apply.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- A runnable retro skill exists that can be invoked at end of an OAT project.
+- Retro output is a durable artifact useful for continuous improvement.
+- Feedback is actionable and routed (host repo vs upstream OAT) when relevant.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+_To be refined after handoff._
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+_None yet._
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Handoff contents:** What reference material / prior work is in the pending
+  handoff, and how much of the retro skill shape is already decided there?
+- **Reference import:** Should the linked wp-platform PR commit files be pulled
+  into `.oat/projects/shared/oat-project-retro/references/` as discovery inputs?
+- **Trigger point:** Is retro always post-project (wrap-up / PR-final adjacent),
+  or also invocable mid-project?
+- **Artifact destination:** Where should the retro artifact live (project dir,
+  repo reference surface, both)?
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- The skill will primarily consume existing OAT project telemetry/logs rather
+  than inventing a new logging subsystem in this project.
+- Upstream feedback is optional and only emitted when evidence warrants it.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Thin evidence:** Some projects may lack rich session/execution logs.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Degrade gracefully; document missing sources in the
+    retro artifact instead of fabricating findings.
 
 ## Next Steps
 
