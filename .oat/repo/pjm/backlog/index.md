@@ -4,7 +4,7 @@
 
 ## Curated Overview
 
-- Project retrospectives now ship in CLI `0.2.29` as a post-approval-only
+- Project retrospectives now ship in CLI `0.2.30` as a post-approval-only
   lifecycle capability. The retro artifact separates repo-local promotions
   from upstream feedback in machine-scannable registers; generation, apply,
   and filing remain consent-aware through interactive gates or explicit

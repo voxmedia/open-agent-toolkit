@@ -118,10 +118,10 @@ resolution complete; plan handed to implementation.
 
 ### p05 — Acceptance and Release
 
-| Task    | Status   | Commit                   | Outcome                                                             |
-| ------- | -------- | ------------------------ | ------------------------------------------------------------------- |
-| p05-t01 | complete | `77c9a90cb`, `b4a978b8b` | Dogfooded generate/apply with explicit consent and no filing write. |
-| p05-t02 | complete | `95370f44c`              | Bumped all public packages to 0.2.29 and passed release validation. |
+| Task    | Status   | Commit                   | Outcome                                                               |
+| ------- | -------- | ------------------------ | --------------------------------------------------------------------- |
+| p05-t01 | complete | `77c9a90cb`, `b4a978b8b` | Dogfooded generate/apply with explicit consent and no filing write.   |
+| p05-t02 | complete | `95370f44c`              | Initially bumped all public packages to 0.2.29 and passed validation. |
 
 ---
 
@@ -308,6 +308,10 @@ configured-invocation evidence.
 - Narrowed final review round 2 passed with no blocking findings. Its one Minor
   timestamp observation was corrected during review receipt; implementation is
   complete and ready for lifecycle closeout.
+- PR #192 CI found that `origin/main` had independently reached public package
+  version `0.2.29`, so this branch no longer contained a release-policy bump.
+  The five public packages were advanced together to `0.2.30`, the bundled
+  version asset was regenerated, and the final validation sequence was rerun.
 
 ---
 
@@ -345,7 +349,7 @@ Track test execution during implementation.
 - Dogfooded the workflow on `explainer-improvements`, applied one explicitly
   approved lifecycle-instruction promotion, and made no filing or external
   write.
-- Bumped the five public packages in lockstep to `0.2.29`; final check,
+- Bumped the five public packages in lockstep to `0.2.30`; final check,
   type-check, test, build, docs, lint/format, package validation, and visual
   validation gates passed.
 

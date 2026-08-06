@@ -34,7 +34,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.29` adds evidence-grounded project retrospectives to the lifecycle
+- CLI `0.2.30` adds evidence-grounded project retrospectives to the lifecycle
   tail. `retro` is a post-approval-only closeout step; `oat-project-retro`
   generates and idempotently applies machine-scannable promotion findings, and
   `oat-project-retro-file` files consented repo or upstream feedback after

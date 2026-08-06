@@ -35,7 +35,7 @@ separate paths for repo-local improvements and upstream toolkit feedback.
   safety-net when a retro is missing.
 - Registered and bundled the new skills and template, published lifecycle,
   configuration, artifact, and skill-catalog documentation, and advanced the
-  five public packages in lockstep to `0.2.29`.
+  five public packages in lockstep to `0.2.30`.
 - Dogfooded generation and apply behavior on the completed
   `explainer-improvements` project. One explicitly approved promotion was
   applied; no external filing write was performed.
