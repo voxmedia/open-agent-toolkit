@@ -663,7 +663,7 @@ describe('post-implementation sequence contracts', () => {
       'Resume from the first incomplete stored step, including a partially completed noncanonical order.',
     );
     expect(normalized).toContain(
-      'Every `summary`, `document`, and `pr` child receives the authoritative snapshot',
+      'Every `summary`, `document`, `pr`, and `retro` child receives the authoritative snapshot',
     );
     expect(normalized).toContain(
       'merge state updates without replacing `oat_post_implement_sequence`',
