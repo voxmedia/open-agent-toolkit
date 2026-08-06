@@ -204,11 +204,12 @@ The core executes:
 The internal-reference gate uses a bounded tokenizer/classifier rather than a
 general HTML parser. Relative references resolve from the current explicit file
 with an isolated HTTPS base, then must bind exactly to the manifest/site tree.
-Fragments must exist in the target document. Safe base64 image data references
-and same-document fragments are classified separately. A malformed or
-unresolved reference fails `E_INTERNAL_REFERENCE`; after the one correction is
-exhausted, the QA stage retains that finding and durability and publication
-remain ineligible.
+Referenced fragments must resolve to exactly one ID in the target document;
+unused duplicate renderer-generated IDs do not fail indexing. Safe base64 image
+data references and same-document fragments are classified separately. A
+malformed, unresolved, or ambiguous reference fails `E_INTERNAL_REFERENCE`;
+after the one correction is exhausted, including after visual correction, the
+QA stage retains that finding and durability and publication remain ineligible.
 
 An incomplete interactive result includes
 `approval.resumeToken: "ekrt2:<64 lowercase hex characters>"`. The token is an

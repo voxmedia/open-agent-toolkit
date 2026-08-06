@@ -117,8 +117,10 @@ durability — so a reviewer approves rendered artifacts and the complete warnin
 set, not raw prose. The reference gate resolves `href`, `src`, `srcset`,
 fragments, and safe embedded references against explicit manifest/site-tree
 files. It may invoke the existing correction author once, then rerenders and
-revalidates before any browser or visual review. An exhausted
-`E_INTERNAL_REFERENCE` finding fails closed and cannot reach durability.
+revalidates before any browser or visual review. A later visual correction also
+rerenders and passes through the validation-only reference gate without
+receiving another correction attempt. An exhausted `E_INTERNAL_REFERENCE`
+finding fails closed and cannot reach durability.
 
 Interactive runs stop with an `incomplete` outcome once artifacts are built and
 checked. Review the rendered `site/` tree, the sources under `source/content/`,

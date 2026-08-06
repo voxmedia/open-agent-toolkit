@@ -519,6 +519,10 @@ async function auditRenderedArtifacts(
       }
       state.correctionAttempted = true;
       await applyVisualCorrection(state, options, now);
+      const correctedReferences = validateRenderedInternalReferences(state);
+      if (!correctedReferences.valid) {
+        throw internalReferenceError(correctedReferences.errors);
+      }
       const correctedArtifacts = state.rendered.map((artifact) => ({
         id: artifact.artifactId,
         type: artifact.type,
@@ -597,15 +601,7 @@ async function auditRenderedArtifacts(
 }
 
 async function enforceInternalReferenceGate(state, options, now) {
-  const validate = () =>
-    validateInternalReferences({
-      artifacts: state.rendered.map((artifact) => ({
-        artifactId: artifact.artifactId,
-        renderedPath: artifact.renderedPath,
-        html: artifact.html,
-      })),
-      manifestPaths: state.artifacts.map(({ renderedPath }) => renderedPath),
-    });
+  const validate = () => validateRenderedInternalReferences(state);
   const initial = validate();
   if (initial.valid) return;
 
@@ -670,6 +666,17 @@ async function enforceInternalReferenceGate(state, options, now) {
   if (!final.valid) {
     throw internalReferenceError(final.errors);
   }
+}
+
+function validateRenderedInternalReferences(state) {
+  return validateInternalReferences({
+    artifacts: state.rendered.map((artifact) => ({
+      artifactId: artifact.artifactId,
+      renderedPath: artifact.renderedPath,
+      html: artifact.html,
+    })),
+    manifestPaths: state.artifacts.map(({ renderedPath }) => renderedPath),
+  });
 }
 
 async function installCorrectedArtifact(state, artifactIndex, item) {

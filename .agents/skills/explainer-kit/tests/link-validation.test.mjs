@@ -41,6 +41,37 @@ test('accepts explicit files, relative paths, fragments, srcset, and safe embedd
   });
 });
 
+test('allows unused duplicate diagram IDs and resolves only unambiguous fragments', () => {
+  const valid = site();
+  valid.artifacts[0].html = `
+    <main>
+      <svg><defs><clipPath id="diagram-clip"></clipPath></defs></svg>
+      <svg><defs><clipPath id="diagram-clip"></clipPath></defs></svg>
+      <section id="unique-target"></section>
+      <a href="#unique-target">Unique target</a>
+    </main>
+  `;
+  assert.deepEqual(validateInternalReferences(valid), {
+    valid: true,
+    errors: [],
+  });
+
+  const ambiguous = site();
+  ambiguous.artifacts[0].html = `
+    <main>
+      <svg id="diagram-root"></svg>
+      <svg id="diagram-root"></svg>
+      <a href="#diagram-root">Ambiguous target</a>
+    </main>
+  `;
+  const result = validateInternalReferences(ambiguous);
+  assert.equal(result.valid, false);
+  assert.ok(
+    result.errors.some(({ code }) => code === 'ambiguous-fragment'),
+    JSON.stringify(result.errors),
+  );
+});
+
 test('rejects directory links, traversal, missing files and fragments', () => {
   for (const [reference, code] of [
     ['../../diagrams/demo/system/', 'directory-reference'],

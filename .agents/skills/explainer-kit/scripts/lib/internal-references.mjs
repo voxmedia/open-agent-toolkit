@@ -83,26 +83,21 @@ export function validateInternalReferences({ artifacts, manifestPaths } = {}) {
       });
       continue;
     }
-    const ids = new Set();
+    const idCounts = new Map();
     for (const element of parsed.elements) {
       for (const attribute of element.attributes) {
         if (attribute.name === 'id') {
-          if (!attribute.value || ids.has(attribute.value)) {
-            add(
-              artifact.artifactId,
-              'malformed-fragment-target',
-              'Fragment target IDs must be non-empty and unique per document.',
-              { renderedPath: artifact.renderedPath },
-            );
-          }
-          ids.add(attribute.value);
+          idCounts.set(
+            attribute.value,
+            (idCounts.get(attribute.value) ?? 0) + 1,
+          );
         }
         if (REFERENCE_ATTRIBUTES.has(attribute.name)) {
           referenceCount += 1;
         }
       }
     }
-    idsByPath.set(artifact.renderedPath, ids);
+    idsByPath.set(artifact.renderedPath, idCounts);
     tokenized.push({ artifact, elements: parsed.elements });
   }
   if (referenceCount > MAX_REFERENCES) {
@@ -312,11 +307,19 @@ function validateReference({
       );
       return;
     }
-    if (!fragment || !idsByPath.get(targetPath)?.has(fragment)) {
+    const targetCount = idsByPath.get(targetPath)?.get(fragment) ?? 0;
+    if (!fragment || targetCount === 0) {
       add(
         artifact.artifactId,
         'missing-fragment',
         'Internal reference fragment does not exist in the target document.',
+        { ...detail, targetPath, fragment },
+      );
+    } else if (targetCount > 1) {
+      add(
+        artifact.artifactId,
+        'ambiguous-fragment',
+        'Internal reference fragment resolves to multiple targets in the target document.',
         { ...detail, targetPath, fragment },
       );
     }

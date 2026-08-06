@@ -1179,6 +1179,96 @@ test('one bounded reference correction rerenders and revalidates before review',
   assert.ok(events.indexOf('durability') > events.indexOf('correct'));
 });
 
+test('visual correction with a missing target fails before another review or external work', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const events = [];
+  const browserProbe = mock.fn(async (probeRequest) => {
+    events.push('browser');
+    return retainingBrowserProbe(probeRequest);
+  });
+  const visualCritic = mock.fn(async (reviewRequest) => {
+    events.push('critic');
+    return {
+      schemaVersion: 'explainer-kit.visual-review-result/v1',
+      reviewId: 'recap-review-1',
+      requestId: reviewRequest.requestId,
+      requestHash: reviewRequest.requestHash,
+      reviewedAt: NOW,
+      disposition: 'correct',
+      artifactIds: reviewRequest.renderedArtifacts.map(
+        ({ artifactId }) => artifactId,
+      ),
+      findings: [
+        {
+          artifactId: 'project-recap',
+          rubric: 'first-viewport',
+          severity: 'important',
+          evidence: 'The project outcome is below the fold.',
+          correction: 'Move the outcome into the lead panel.',
+        },
+      ],
+    };
+  });
+  const correctArtifact = mock.fn(async (authorRequestValue) => {
+    events.push('correct');
+    const corrected = authorResult(authorRequestValue);
+    corrected.content[authorRequestValue.authoring] +=
+      '<a href="../../missing/index.html">Missing target</a>';
+    return corrected;
+  });
+  const durability = mock.fn(async () => {
+    events.push('durability');
+  });
+  const publish = mock.fn(async () => {
+    events.push('publish');
+  });
+
+  const result = await runExplainerCore(
+    {
+      ...fixture.request,
+      durability: {
+        strategy: 'publish',
+        publish: {
+          schemaVersion: 'explainer-kit.publish-request/v1',
+          provider: 's3-static',
+          s3Uri: 's3://example-bucket/explainers',
+          publicBaseUrl: 'https://docs.example.com/explainers',
+          awsRegion: 'us-east-1',
+          siteRoot: join(fixture.outputRoot, 'project-recap-demo/site'),
+          manifestPath: join(
+            fixture.outputRoot,
+            'project-recap-demo/manifest.json',
+          ),
+        },
+      },
+    },
+    {
+      author: async (authorRequestValue) => authorResult(authorRequestValue),
+      planSet: async (plannerRequest) => plannedSet(plannerRequest),
+      browserSession: fixtureBrowserSession(browserProbe),
+      visualCritic,
+      correctArtifact,
+      durability,
+      publish,
+      now: () => NOW,
+    },
+  );
+
+  assert.equal(result.outcome, 'failed');
+  assert.equal(result.errors[0].code, 'E_INTERNAL_REFERENCE');
+  assert.equal(visualCritic.mock.callCount(), 1);
+  assert.equal(correctArtifact.mock.callCount(), 1);
+  assert.equal(durability.mock.callCount(), 0);
+  assert.equal(publish.mock.callCount(), 0);
+  assert.deepEqual(events.slice(events.indexOf('correct') + 1), []);
+  const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
+  assert.equal(record.stages.find(({ id }) => id === 'qa').status, 'failed');
+  assert.match(
+    record.stages.find(({ id }) => id === 'qa').error.message,
+    /missing-target/,
+  );
+});
+
 test('resume rejects a changed fact-base binding', async () => {
   const fixture = await suppliedFixture();
   const interactiveRequest = { ...fixture.request, mode: 'interactive' };
