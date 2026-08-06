@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-06
-oat_current_task_id: p03-t04
+oat_current_task_id: p03-t10
 oat_generated: false
 ---
 
@@ -234,11 +234,11 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | ----- | ----------- | ----- | --------- |
 | p01   | completed   | 6     | 6/6       |
 | p02   | completed   | 2     | 2/2       |
-| p03   | in progress | 9     | 3/9       |
+| p03   | in progress | 11    | 9/11      |
 | p04   | pending     | 3     | 0/3       |
 | p05   | pending     | 3     | 0/3       |
 
-**Total:** 11/23 tasks completed
+**Total:** 17/25 tasks completed
 
 ---
 
@@ -278,12 +278,14 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | p03-t01 | completed | 58a9fd2 + c9a0aee |
 | p03-t02 | completed | cd65ad8           |
 | p03-t03 | completed | 74d3d09           |
-| p03-t04 | pending   | -                 |
-| p03-t05 | pending   | -                 |
-| p03-t06 | pending   | -                 |
-| p03-t07 | pending   | -                 |
-| p03-t08 | pending   | -                 |
-| p03-t09 | pending   | -                 |
+| p03-t04 | completed | c2aa4336          |
+| p03-t05 | completed | b9be685           |
+| p03-t06 | completed | a3c56bb           |
+| p03-t07 | completed | 38ca2e4           |
+| p03-t08 | completed | 2e6519a           |
+| p03-t09 | completed | df0e904           |
+| p03-t10 | pending   | -                 |
+| p03-t11 | pending   | -                 |
 
 ### Recovery Event p03-recovery-001
 
@@ -304,6 +306,35 @@ Operator disposition recorded in the conversation and reflected in the plan's
   mechanical mismatch after p03 raised the core compatibility floor; p05-t03
   retains ownership of lockstep public-package version bumps and release
   validation.
+
+### Recovery Event p03-recovery-002
+
+- Phase/task: p03 / p03-t01
+- Original request: explainer-improvements-v2-p03-review-fixes
+- Original commit: 58a9fd294e8dfc83d398d43789c4f68c7092609c
+- Defect class: composition
+- Discovered by:
+  `node --test .agents/skills/explainer-kit/tests/*.test.mjs .agents/skills/oat-explainer-kit/tests/*.test.mjs`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 2/2
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Reservation head: df0e90417fb386f9d16a7ab39fe3beb40ddfa84f
+- Recovery commit: 01d3c99075aa09ea5fb49b801d4deca1d5f3c51e
+- Verification: the rebuildability regression and focused/direct p03 suites
+  passed 231/231; release/smoke suites passed 31/31; `pnpm check`,
+  `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm lint`, `pnpm format`,
+  and `git diff --check` passed serially. The broad skill glob remained
+  nonzero only for 27 inherited `E_BROWSER_PROBE` failures in
+  `e2e-recap.test.mjs`; the p03 fix range changes neither that fixture nor its
+  trusted-browser enforcement path.
+- Reason: p03-t01 correctly raised explainer-kit to 2.1.0, but one
+  rebuildability assertion still expected 2.0.3. The bounded recovery aligned
+  that stale assertion without changing runtime behavior.
+- Ledger settlement: root validated the committed `completed` marker against
+  event `p03-recovery-002`, attempt 2, reservation head `df0e904`, and recovery
+  commit `01d3c99`. After recording this canonical event, `pending_attempt` was
+  cleared while monotonic `used_attempts: 2` was preserved.
 
 ## Phase 4: Lifecycle and bounded recovery
 
@@ -500,10 +531,74 @@ Chronological log of implementation progress.
   tests define the live boundary; p03-t09 updates both canonical references
   while retaining explicit v1 replay.
 
-**Next:** Execute review-fix tasks via `oat-project-implement`, starting with
-p03-t04. After all six tasks complete, update this exact artifact-bound review
-event to `fixes_completed`, then run a fix-task-scoped p03 re-review and receive
-that new event to reach `passed`.
+**Resolution:**
+
+- p03-t04 through p03-t09 landed in `c2aa4336`, `b9be685`, `a3c56bb`,
+  `38ca2e4`, `2e6519a`, and `df0e904`.
+- This exact artifact-bound review event is now `fixes_completed`.
+- The focused re-review at `01d3c99` confirmed all six original findings are
+  resolved and identified one bookkeeping item plus two Minor follow-ups.
+
+### Review Received: p03 re-review
+
+**Date:** 2026-08-06
+**Review artifact:**
+`reviews/archived/p03-review-2026-08-06T224958Z.md`
+**Reviewed head:** `01d3c99075aa09ea5fb49b801d4deca1d5f3c51e`
+**Invocation:** manual
+**Review cycle:** 2 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 2
+
+**Original finding status:**
+
+- C1, C2, I1, I2, M1, and M2 from the first p03 review are resolved in the
+  landed p03-t04 through p03-t09 commits.
+
+**Finding disposition map:**
+
+- M1 → resolved directly in lifecycle bookkeeping: marked p03-t04 through
+  p03-t09 complete, reconciled p03 and project totals, recorded
+  p03-recovery-002, settled its completed pending marker, and advanced the
+  first artifact-bound p03 review event to `fixes_completed`. No code task was
+  created.
+- m1 → converted to p03-t10 (Minor): classify schema-valid but
+  non-normalizable publish-receipt v2 roots as `E_PUBLISH`, retain fail-closed
+  publication state, and preserve query/fragment policy plus v1 replay.
+- m2 → converted to p03-t11 (Minor): explicitly document
+  `explainer-kit.publish-summary/v2` evidence and reduced v1 summary replay,
+  pinned by a focused guidance assertion.
+
+**New tasks added:** p03-t10, p03-t11
+
+**Accepted non-functional deviation:**
+
+- p03-t08 planned
+  `fix(p03-t08): validate private wrapper receipts one to one` but landed as
+  `test(p03-t08): enforce private wrapper receipt coverage` in `2e6519a`. The
+  commit substantively implements the planned shared-validator fixture change
+  and mutation coverage; the subject difference changes no behavior or task
+  identity and is accepted.
+
+**Verification evidence:**
+
+- Implementation/recovery: focused/direct p03 suites passed 231/231;
+  release/smoke suites passed 31/31; repository `check`, `type-check`, `test`,
+  `build`, `lint`, `format`, and diff checks passed.
+- Re-review: focused core/connector/durability/contract/rebuildability/adapter
+  suites passed 175/175; release/acceptance/wrapper/publish-boundary suites
+  passed 31/31.
+- The broad skill glob still reports exactly 27 inherited
+  `E_BROWSER_PROBE` failures from the legacy trusted-browser recap fixtures.
+  They are outside the p03 changed test and enforcement paths and are not p03
+  blockers.
+
+**Next:** Execute p03-t10, then p03-t11, through `oat-project-implement`.
 
 ---
 
@@ -517,6 +612,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p02-t02       | phase review      | initial and corrected output revalidate                        | visual-correction branch initially bypassed the gate; unused duplicate SVG IDs were rejected | correction commit revalidates visual output and resolves only referenced fragments | committed implementation and passing focused review | 27 legacy browser-session failures remain outside p02 |
 | plan revision | operator decision | structured renderer and golden matrix                          | executable kernel plus prose-led creative layer                                              | original plan overengineered judgment-oriented work                                | revised `design.md` and `plan.md`                   | golden-suite audit tracked separately                 |
 | p03 review M2 | shipped guidance  | adapter omits `publicAccess`; wrappers produce only receipt v1 | adapter emits request v2 and wrappers consume complete receipt v2 with v1 replay             | executable immutable contracts and compatibility tests supersede stale prose       | p03 implementation at reviewed head `c9a0aee`       | p03-t09 aligns both canonical references              |
+| p03-t08       | plan commit step  | `fix(p03-t08): validate private wrapper receipts one to one`   | `test(p03-t08): enforce private wrapper receipt coverage`                                    | landed commit implements the planned validator reuse and mutation coverage         | commit `2e6519a` and focused p03 re-review          | accepted; no code follow-up                           |
 
 ## Test Results
 
@@ -526,6 +622,12 @@ Track test execution during implementation.
 | ----- | ---------------------------------------------------- | ------ | ------ | -------------------------------------------------- |
 | 1     | adapter/core focused suites; CLI tests; lint; format | passed | 0      | p01-t01–p01-t06 complete; focused re-review passed |
 | 2     | declared p02 union; lint; format                     | passed | 0      | 176/176; focused re-review passed                  |
+| 3     | focused/direct p03; release/smoke; repository gates  | passed | 0      | 231/231 + 31/31; re-review passed original fixes   |
+
+The broad explainer skill glob is separately nonzero for 27 inherited
+`E_BROWSER_PROBE` failures in legacy recap fixtures. Focused p03 suites and all
+repository gates pass; the inherited broad-glob failures are not counted as
+p03 task failures.
 
 ## Final Summary (for PR/docs)
 

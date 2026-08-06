@@ -517,6 +517,81 @@ git add .agents/skills/oat-explainer-kit/references/lifecycle-contract.md .agent
 git commit -m "docs(p03-t09): document v2 publication compatibility"
 ```
 
+### Task p03-t10: (review) Classify invalid v2 publication roots as publish failures
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Step 1: Write focused integration test (RED)**
+
+Add a callback-boundary case whose publish-receipt v2 is schema-valid but whose
+`roots.publicBaseUrl` cannot be normalized because it contains a query. Prove
+the run fails closed with `outcome: failed`, the publish-scoped `E_PUBLISH`
+code, and no recorded publication state instead of leaking a bare `E_RUN`.
+Retain the existing public URL query/fragment rejection policy and valid
+publish-receipt v1 replay coverage.
+
+**Step 2: Implement fix (GREEN)**
+
+Catch catalog derivation failure in `publicationValidationContext` and rethrow
+it through the repository's coded publish-error path. Do not relax URL
+normalization, receipt cross-record validation, query/fragment policy, or v1
+replay.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs && pnpm lint && pnpm format`
+
+Expected: the focused non-normalizable v2 root reports `E_PUBLISH` and records
+no publication; valid public/protected v2 callbacks, query/fragment policy, and
+v1 replay remain green.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs
+git commit -m "fix(p03-t10): classify invalid publication roots as publish failures"
+```
+
+### Task p03-t11: (review) Document publication summary v1/v2 compatibility
+
+**Files:**
+
+- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+
+**Step 1: Write focused guidance assertion (RED)**
+
+Require the lifecycle contract to name
+`explainer-kit.publish-summary/v2`, enumerate its retained source identity,
+rendered path, S3 URI, canonical public URL, hash, and object/public
+verification evidence, and state that publish-receipt v1 replay yields the
+reduced `explainer-kit.publish-summary/v1` shape.
+
+**Step 2: Update guidance (GREEN)**
+
+Document the v2 lifecycle handoff without destination reinterpretation and make
+the v1/v2 summary compatibility rule explicit. Do not imply that either
+immutable summary shape is mutated in place.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs && pnpm lint && pnpm format`
+
+Expected: the focused guidance assertion passes and the lifecycle contract
+explicitly documents v2 production plus reduced v1 replay compatibility.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-explainer-kit/references/lifecycle-contract.md .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs
+git commit -m "docs(p03-t11): document publication summary compatibility"
+```
+
 ---
 
 ## Phase 4: Lifecycle and bounded recovery
@@ -748,7 +823,8 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 | p02           | code     | fixes_completed | 2026-08-06 | reviews/archived/p02-review-2026-08-06T201258Z.md                                                 | fde1437beb821c68f8fe972d4ac1c4425d20e7ef | manual     | -                        |
 | p02           | code     | passed          | 2026-08-06 | reviews/archived/p02-review-2026-08-06T202708Z.md                                                 | 3f0dfe5e3131ee2ef12bd06cf4eb842566b50ca9 | manual     | -                        |
 | p03           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
-| p03           | code     | fixes_added     | 2026-08-06 | reviews/archived/p03-review-2026-08-06T213553Z.md                                                 | c9a0aeead5bce79a5e31bd6ce247e80a64ec1800 | manual     | -                        |
+| p03           | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T213553Z.md                                                 | c9a0aeead5bce79a5e31bd6ce247e80a64ec1800 | manual     | -                        |
+| p03           | code     | fixes_added     | 2026-08-06 | reviews/archived/p03-review-2026-08-06T224958Z.md                                                 | 01d3c99075aa09ea5fb49b801d4deca1d5f3c51e | manual     | -                        |
 | p04           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | p05           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | final         | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
@@ -782,11 +858,11 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 
 - Phase 1: 6 tasks — adapter paths, destinations, and credential hygiene
 - Phase 2: 2 tasks — canonical links and hard validation
-- Phase 3: 9 tasks — publication verification, receipts, and review fixes
+- Phase 3: 11 tasks — publication verification, receipts, and review fixes
 - Phase 4: 3 tasks — lifecycle ordering and bounded recovery
 - Phase 5: 3 tasks — prose-led authoring, docs, and release closure
 
-**Total: 23 tasks**
+**Total: 25 tasks**
 
 ## References
 

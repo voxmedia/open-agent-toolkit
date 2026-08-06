@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t04
-oat_last_commit: c9a0aeead5bce79a5e31bd6ce247e80a64ec1800
+oat_current_task: p03-t10
+oat_last_commit: 01d3c99075aa09ea5fb49b801d4deca1d5f3c51e
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -21,16 +21,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p03:
       used_attempts: 2
-      pending_attempt:
-        attempt: 2
-        event_id: p03-recovery-002
-        original_request_id: explainer-improvements-v2-p03-review-fixes
-        original_task_id: p03-t01
-        original_commit: 58a9fd294e8dfc83d398d43789c4f68c7092609c
-        discovered_by: node --test .agents/skills/explainer-kit/tests/*.test.mjs .agents/skills/oat-explainer-kit/tests/*.test.mjs
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: df0e90417fb386f9d16a7ab39fe3beb40ddfa84f
-        status: completed
+      pending_attempt: null
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -81,7 +72,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T21:48:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T22:56:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -93,9 +84,10 @@ oat_generated: false
 
 ## Current Phase
 
-Phases p01 and p02 are complete. Phase p03 implementation and its authorized
-recovery are complete through p03-t03. Manual review added six sequential fix
-tasks; implementation resumes at p03-t04.
+Phases p01 and p02 are complete. Phase p03 is complete through p03-t09,
+including both authorized recovery attempts. The focused p03 re-review confirmed
+all six original findings resolved and added two sequential Minor follow-ups;
+implementation resumes at p03-t10.
 
 ## Artifacts
 
@@ -103,7 +95,7 @@ tasks; implementation resumes at p03-t04.
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
-- **Plan:** `plan.md` (5 phases / 23 tasks; p03 review fixes queued)
+- **Plan:** `plan.md` (5 phases / 25 tasks; p03-t10 and p03-t11 queued)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -117,10 +109,12 @@ tasks; implementation resumes at p03-t04.
 - ✓ Delta-focused artifact review corrections applied
 - ✓ Bounded correction verification passed with no findings
 - ✓ p02 canonical links and internal-reference gate passed review
-- ✓ p03-t01 through p03-t03 implemented at reviewed head `c9a0aee`
-- ✓ Authorized recovery recorded and settled at 1/1 attempts
-- ✓ Manual p03 review received; all six findings converted without deferral
-- ⧗ p03-t04 complete-v2-receipt durability fix next
+- ✓ p03-t01 through p03-t09 implemented at re-reviewed head `01d3c99`
+- ✓ Both authorized recoveries recorded; `used_attempts: 2` preserved and the
+  completed p03-recovery-002 pending marker settled
+- ✓ All six original p03 findings confirmed resolved in focused re-review
+- ✓ p03 re-review received; bookkeeping reconciled and two Minor tasks added
+- ⧗ p03-t10 publish-scoped callback error classification next
 
 ## Blockers
 
@@ -128,5 +122,5 @@ None
 
 ## Next Milestone
 
-Implement p03-t04: make complete publish-receipt v2 evidence
-durability-eligible.
+Implement p03-t10: classify schema-valid non-normalizable v2 publication roots
+as publish-scoped failures without weakening URL policy or v1 replay.
