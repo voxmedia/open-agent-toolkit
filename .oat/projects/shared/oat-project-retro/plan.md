@@ -394,7 +394,7 @@ Expected: markdownlint and docs build pass; new page reachable in nav
 **Step 4: Commit**
 
 ```bash
-git add apps/oat-docs AGENTS.md CLAUDE.md
+git add apps/oat-docs AGENTS.md
 git commit -m "docs(p04-t02): add retro workflow documentation page and AGENTS mention"
 ```
 
@@ -451,8 +451,8 @@ Expected: Full CI gate order passes
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/oat-project-retro .agents/skills/oat-project-retro-file .oat/templates/project-retro.md "{completed-project}/references/project-retro.md" "{completed-project}/state.md"
-# plus any specific fix paths surfaced by the run — enumerate them; do not use `git add -A`
+git add .agents/skills/oat-project-retro .agents/skills/oat-project-retro-file .oat/templates/project-retro.md "{completed-project}/references/project-retro.md"
+# plus the target project's project-log entry and any specific fix paths surfaced by the run — enumerate them; do not use `git add -A`
 git commit -m "test(p05-t02): dogfood retro acceptance run and fixes"
 ```
 
