@@ -87,6 +87,42 @@ oat_current_task_id: p-rev1-t02
     });
   });
 
+  it('normalizes canonical revision phases and task ids', () => {
+    const planContent = `## Phase p-rev1: Revision 1
+
+### Task prev1-t01: Keep retro state coherent
+### Task prev1-t02: Distinguish duplicate candidates
+### Task prev2-t01: Task from a different revision
+### Task p-rev1t03: Malformed legacy task id
+`;
+
+    const implementationContent = `---
+oat_current_task_id: prev1-t02
+---
+
+### Task prev1-t01: Keep retro state coherent
+**Status:** completed
+
+### Task prev1-t02: Distinguish duplicate candidates
+**Status:** pending
+`;
+
+    expect(parseTaskProgress(planContent, implementationContent)).toEqual({
+      total: 2,
+      completed: 1,
+      currentTaskId: 'prev1-t02',
+      phases: [
+        {
+          phaseId: 'p-rev1',
+          name: 'Revision 1',
+          total: 2,
+          completed: 1,
+          isRevision: true,
+        },
+      ],
+    });
+  });
+
   it('parses completed tasks from verbose implementation sections', () => {
     const planContent = `## Phase 1: Package and Types
 
