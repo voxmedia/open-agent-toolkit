@@ -30,7 +30,8 @@ oat_template: false
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user — deferred to `oat-project-implement` start; `oat_plan_hill_phases` is intentionally unset until then
+- [x] Confirmed HiLL checkpoints at `oat-project-implement` start — final phase
+      `p05`, with automatic checkpoint review enabled
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
 
@@ -529,22 +530,22 @@ git commit -m "chore(p05-t02): lockstep public package version bump for retro fe
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status      | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target              |
-| ------ | -------- | ----------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
-| p01    | code     | passed      | 2026-08-06 | reviews/p01-review-2026-08-06T020751Z.md           | 057b0ae189d81ee9f5aef8e7c4c506d312dc5b7f | manual     | -                        |
-| p02    | code     | pending     | -          | -                                                  | -                                        | -          | -                        |
-| p03    | code     | fixes_added | 2026-08-06 | reviews/p03-review-2026-08-06T020753Z.md           | b738aff6f1cea9247df76b4bbcc4ba87a4361a4c | manual     | -                        |
-| p04    | code     | pending     | -          | -                                                  | -                                        | -          | -                        |
-| p05    | code     | pending     | -          | -                                                  | -                                        | -          | -                        |
-| final  | code     | pending     | -          | -                                                  | -                                        | -          | -                        |
-| spec   | artifact | pending     | -          | -                                                  | -                                        | -          | -                        |
-| design | artifact | pending     | -          | -                                                  | -                                        | -          | -                        |
-| plan   | artifact | passed      | 2026-08-05 | structured (in-memory)                             | -                                        | auto       | -                        |
-| plan   | artifact | passed      | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T012151Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received    | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T004058Z.md | -                                        | -          | -                        |
-| plan   | artifact | received    | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005234Z.md | -                                        | -          | -                        |
-| plan   | artifact | received    | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005256Z.md | -                                        | -          | -                        |
-| plan   | artifact | received    | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T012151Z.md | -                                        | -          | -                        |
+| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | passed   | 2026-08-06 | reviews/p01-review-2026-08-06T020751Z.md           | 057b0ae189d81ee9f5aef8e7c4c506d312dc5b7f | manual     | -                        |
+| p02    | code     | passed   | 2026-08-06 | reviews/p02-review-2026-08-06T023410Z.md           | d141d58308f4ec607b5ae0d82330ac46bbd0f771 | manual     | -                        |
+| p03    | code     | passed   | 2026-08-06 | reviews/p03-review-2026-08-06T022404Z.md           | b5c91169ea3155c7b606c196a7f2efbf9602b369 | manual     | -                        |
+| p04    | code     | passed   | 2026-08-06 | reviews/p04-review-2026-08-06T025204Z.md           | 21d6aa65d0342cef7e8fad402305b6c49777fadd | manual     | -                        |
+| p05    | code     | passed   | 2026-08-06 | reviews/p05-review-2026-08-06T042130Z.md           | 83f3d6a2134898e0234ee4fe40cb428386fee070 | manual     | -                        |
+| final  | code     | pending  | -          | -                                                  | -                                        | -          | -                        |
+| spec   | artifact | pending  | -          | -                                                  | -                                        | -          | -                        |
+| design | artifact | pending  | -          | -                                                  | -                                        | -          | -                        |
+| plan   | artifact | passed   | 2026-08-05 | structured (in-memory)                             | -                                        | auto       | -                        |
+| plan   | artifact | passed   | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T012151Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T004058Z.md | -                                        | -          | -                        |
+| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005234Z.md | -                                        | -          | -                        |
+| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005256Z.md | -                                        | -          | -                        |
+| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T012151Z.md | -                                        | -          | -                        |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

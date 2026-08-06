@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-06
-oat_current_task_id: p01-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -72,15 +72,15 @@ resolution complete; plan handed to implementation.
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 2     | 2/2       |
-| p02   | complete    | 4     | 4/4       |
-| p03   | complete    | 2     | 2/2       |
-| p04   | complete    | 2     | 2/2       |
-| p05   | in_progress | 2     | 0/2       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 2     | 2/2       |
+| p02   | complete | 4     | 4/4       |
+| p03   | complete | 2     | 2/2       |
+| p04   | complete | 2     | 2/2       |
+| p05   | complete | 2     | 2/2       |
 
-**Total:** 10/12 tasks completed
+**Total:** 12/12 tasks completed
 
 ---
 
@@ -118,10 +118,10 @@ resolution complete; plan handed to implementation.
 
 ### p05 — Acceptance and Release
 
-| Task    | Status  | Commit | Outcome |
-| ------- | ------- | ------ | ------- |
-| p05-t01 | pending | -      | -       |
-| p05-t02 | pending | -      | -       |
+| Task    | Status   | Commit                   | Outcome                                                             |
+| ------- | -------- | ------------------------ | ------------------------------------------------------------------- |
+| p05-t01 | complete | `77c9a90cb`, `b4a978b8b` | Dogfooded generate/apply with explicit consent and no filing write. |
+| p05-t02 | complete | `95370f44c`              | Bumped all public packages to 0.2.29 and passed release validation. |
 
 ---
 
@@ -239,6 +239,9 @@ configured-invocation evidence.
   CI/build/release sequence passed, root independently reconfirmed
   `pnpm release:validate`, and final HiLL review round 1 was dispatched against
   the exact three-commit phase range.
+- p05 HiLL review passed with no findings and was integrated through
+  `a10798d35`. All 12 implementation tasks are complete; terminal lifecycle
+  artifacts were reconciled before the whole-project final review.
 
 ---
 
@@ -265,7 +268,20 @@ Track test execution during implementation.
 
 ## Final Summary (for PR/docs)
 
-_Fill after implementation completes._
+- Added a machine-scannable retrospective template plus `oat-project-retro`
+  generate/apply and `oat-project-retro-file` filing workflows with explicit
+  evidence honesty, consent, idempotency, and dual-lane register contracts.
+- Added `retro` as a post-approval-only closeout step, a normalized
+  `workflow.retro` configuration namespace, and an interactive completion
+  safety-net that does not alter autonomous defaults.
+- Registered and bundled the new assets, documented the lifecycle and
+  configuration surfaces, and added a dedicated workflow guide.
+- Dogfooded the workflow on `explainer-improvements`, applied one explicitly
+  approved lifecycle-instruction promotion, and made no filing or external
+  write.
+- Bumped the five public packages in lockstep to `0.2.29`; final check,
+  type-check, test, build, docs, lint/format, package validation, and visual
+  validation gates passed.
 
 ## References
 
