@@ -125,6 +125,58 @@ resolution complete; plan handed to implementation.
 
 ---
 
+## Machine-readable Task Completion Ledger
+
+### Task p01-t01: Accept retro as postApproval-only sequence step
+
+**Status:** completed
+
+### Task p01-t02: Add workflow.retro config namespace
+
+**Status:** completed
+
+### Task p02-t01: Add the project-retro artifact template
+
+**Status:** completed
+
+### Task p02-t02: Add the oat-project-retro skill
+
+**Status:** completed
+
+### Task p02-t03: Add the oat-project-retro-file skill
+
+**Status:** completed
+
+### Task p02-t04: Register skill/template in manifest and bundle inventory
+
+**Status:** completed
+
+### Task p03-t01: Dispatch retro from the closeout sequence
+
+**Status:** completed
+
+### Task p03-t02: Offer retro at interactive completion when absent
+
+**Status:** completed
+
+### Task p04-t01: Update lifecycle and configuration reference docs
+
+**Status:** completed
+
+### Task p04-t02: Add retro workflow docs and navigation
+
+**Status:** completed
+
+### Task p05-t01: Dogfood acceptance run
+
+**Status:** completed
+
+### Task p05-t02: Lockstep version bump and final release validation
+
+**Status:** completed
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
