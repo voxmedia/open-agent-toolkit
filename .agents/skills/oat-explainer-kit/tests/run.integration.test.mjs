@@ -322,6 +322,22 @@ function getConfig(key) {
   });
 }
 
+function getPublishConfig(key) {
+  const values = {
+    'explainers.publish.provider': 's3-static',
+    'explainers.publish.s3Uri': 's3://bucket/repositories/demo',
+    'explainers.publish.publicBaseUrl':
+      'https://docs.example.com/repositories/demo',
+    'explainers.publish.awsRegion': 'us-east-1',
+  };
+  return Promise.resolve({
+    status: 'ok',
+    key,
+    value: values[key] ?? (key.startsWith('workflow.') ? 'ask' : null),
+    source: key in values ? 'shared' : 'default',
+  });
+}
+
 test('resolves a full reviewed commit and canonical GitHub repository identity', async () => {
   const calls = [];
   const command = async (file, args, options) => {
@@ -1153,6 +1169,69 @@ test('passes a supplied fact base through the normalized adapter request', async
     mode: 'supplied',
     path: canonicalFactBasePath,
     freshnessPolicy: 'live-wins',
+  });
+});
+
+test('runs repository explainers from a supplied fact base without consulting the active project', async () => {
+  const fixture = await createFixture();
+  const factBasePath = join(fixture.root, 'repository-facts.json');
+  await writeFile(
+    factBasePath,
+    '{"schemaVersion":"explainer-kit.fact-base/v1"}',
+  );
+
+  const adapterResult = await runOatExplainer({
+    adapterRoot: fixture.adapterRoot,
+    userSkillsRoot: fixture.userSkillsRoot,
+    repoRoot: fixture.repoRoot,
+    invocation: 'repo',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-explainer',
+    slug: 'repository-overview',
+    suppliedFactBasePath: factBasePath,
+    getConfig: getPublishConfig,
+    author: fixtureAuthor,
+    mode: 'unattended',
+  });
+
+  assert.equal(
+    adapterResult.outputRoot,
+    join(await realpath(fixture.repoRoot), '.oat/repo/reference/explainers'),
+  );
+  assert.deepEqual(adapterResult.destination, {
+    s3Uri: 's3://bucket/repositories/demo',
+    publicBaseUrl: 'https://docs.example.com/repositories/demo',
+  });
+  assert.equal(adapterResult.request.durability.strategy, 'none');
+  assert.deepEqual(adapterResult.result.reviewedSource, {
+    kind: 'approved-fact-base',
+    locator: 'https://github.com/acme/project-recaps',
+    repository: 'acme/project-recaps',
+    repositoryUrl: 'https://github.com/acme/project-recaps',
+    revision: fixture.reviewedCommit,
+  });
+});
+
+test('fails closed when a repository invocation omits its supplied fact base', async () => {
+  const fixture = await createFixture();
+
+  await assert.rejects(
+    runOatExplainer({
+      adapterRoot: fixture.adapterRoot,
+      userSkillsRoot: fixture.userSkillsRoot,
+      repoRoot: fixture.repoRoot,
+      invocation: 'repo',
+      activeProject: '.oat/projects/shared/demo',
+      recipe: 'project-explainer',
+      slug: 'repository-overview',
+      getConfig,
+      author: fixtureAuthor,
+      mode: 'unattended',
+    }),
+    /repository invocation requires.*supplied fact base/i,
+  );
+  await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
+    code: 'ENOENT',
   });
 });
 

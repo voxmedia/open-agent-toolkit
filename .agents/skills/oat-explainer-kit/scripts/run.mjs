@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 
 import { readFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { bindProjectSources } from './bind-project-sources.mjs';
+import {
+  bindProjectSources,
+  bindRepositorySources,
+} from './bind-project-sources.mjs';
 import { checkCoreCompatibility } from './check-core.mjs';
+import { deriveExplainerDestination } from './derive-destination.mjs';
 import {
   resolveExplainerConfig,
   toExplainerRunRequest,
@@ -81,18 +85,39 @@ export async function runOatExplainer({
     invocation,
     activeProject,
   });
-  if (invocation !== 'project' || !activeProject) {
+  const destination = resolvedConfig.publish
+    ? deriveExplainerDestination({
+        invocation,
+        ...(invocation === 'project' && {
+          projectSlug: basename(activeProject),
+        }),
+        s3Uri: resolvedConfig.publish.s3Uri,
+        publicBaseUrl: resolvedConfig.publish.publicBaseUrl,
+      })
+    : null;
+  let bound;
+  if (invocation === 'project') {
+    if (!activeProject) {
+      throw new Error(
+        'Project artifact binding requires an activeProject input.',
+      );
+    }
+    bound = await bindProjectSources({
+      projectRoot: resolve(repoRoot, activeProject),
+      repoRoot,
+      recipe,
+      suppliedFactBasePath,
+    });
+  } else if (invocation === 'repo') {
+    bound = await bindRepositorySources({
+      repoRoot,
+      suppliedFactBasePath,
+    });
+  } else {
     throw new Error(
-      'Project artifact binding requires a project invocation and activeProject.',
+      'The OAT adapter accepts project or repository invocations; direct callers invoke the core with an explicit output root.',
     );
   }
-  const projectRoot = resolve(repoRoot, activeProject);
-  const bound = await bindProjectSources({
-    projectRoot,
-    repoRoot,
-    recipe,
-    suppliedFactBasePath,
-  });
   const request = toExplainerRunRequest({
     resolvedConfig,
     recipe,
@@ -196,6 +221,7 @@ export async function runOatExplainer({
     result,
     marking: result.marking ?? null,
     outputRoot,
+    destination,
   };
 }
 

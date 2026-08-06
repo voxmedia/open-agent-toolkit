@@ -86,6 +86,18 @@ The resolved callback is passed only as the `author` option to
 `run-request.json`, or another retained data contract. Interactive runs use the
 same author contract and differ only at the later approval gate.
 
+## Repository invocation sources
+
+A repository invocation must provide `suppliedFactBasePath`. The adapter binds
+that validated fact-base input with provenance from the exact reviewed
+repository revision returned by `resolveReviewedRepository`; it never resolves
+or reads an active project for this invocation. Missing supplied input fails
+closed before core invocation with an actionable requirement.
+
+Repository runs write beneath `.oat/repo/reference/explainers/<run-slug>/` and
+use repository-level publish roots unchanged. Project invocations retain their
+approved lifecycle-artifact binding and project-local output behavior.
+
 ## Browser and visual-review execution
 
 Every unattended `project-recap` must provide exactly one browser-evidence
