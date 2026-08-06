@@ -58,6 +58,15 @@ escalated to the operator.
   design aligned to service-checksum verification and split verification
   fields).
 
+- **Attempt 5** (`artifact-plan-review-2026-08-06T013953Z.md`): attempt-4
+  findings confirmed resolved; 2 Important + 2 Medium new — executable recap
+  fixtures (`e2e-recap.test.mjs`, adapter completion fixture) missing from
+  the structured-authoring/hub-floor tasks (fixed in p05-t06/p06-t01),
+  package-coverage smoke consumer missing from p06-t05 (fixed, with CLI build
+  prerequisite in verification), link-validator parser strategy undefined
+  (fixed: bounded fail-closed tokenizer, no new dependency), contradictory
+  receipt verification shapes (fixed: single structured object/public shape).
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 

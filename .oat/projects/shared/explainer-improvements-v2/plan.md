@@ -345,11 +345,20 @@ missing explicit `index.html`, link escaping the site tree, valid canonical
 links pass, external `https://` links ignored, `src` attributes covered, and
 validation runs across hub, diagram, and deck fixtures (not only the hub).
 
+**Parsing strategy (explicit — no new runtime dependency):** a bounded
+deterministic attribute tokenizer implemented inside the skill (skill scripts
+run standalone under Node with no npm dependencies), reusing the existing
+`html-safety.mjs` scanning seam where its tokenization applies. The
+malformed-HTML contract is fail-closed: markup the tokenizer cannot
+unambiguously scan (unterminated tags/attributes, ambiguous quoting) is
+itself a validation failure with its own finding class, covered by dedicated
+malformed-markup fixtures.
+
 **Step 2: Implement (GREEN)**
 
-Parser-based extraction of local `href`/`src`; resolution against the source
-artifact's site location; manifest/site-tree existence check; per-link
-structured findings.
+Bounded tokenizer extraction of local `href`/`src`; resolution against the
+source artifact's site location; manifest/site-tree existence check; per-link
+structured findings; fail-closed malformed-markup handling.
 
 **Step 3: Verify**
 
@@ -522,15 +531,25 @@ git commit -m "feat(p03-t02): verify protected destinations via authenticated ob
 
 The connector emits a **new receipt version**
 (`explainer-kit.publish-receipt/v2`) listing, for every published artifact:
-ID, rendered path, S3 URI, canonical public URL, content hash, and structured
-verification result
-(`verified-anonymous | verified-authenticated | skipped-protected`).
-The per-artifact verification result is a **structured object with separate
-fields for object-byte verification and public-URL verification** (plus the
-compared service checksum/hash) — one enum cannot express the protected case,
-where the object is `verified-authenticated` while the public fetch is
-`skipped-protected`. Schema and negative tests prove protected receipts
-record both facts and public receipts preserve anonymous byte verification.
+ID, rendered path, S3 URI, canonical public URL, content hash, and a
+**structured per-artifact verification object** (one shape, no flat enum):
+
+```json
+"verification": {
+  "object": {
+    "status": "verified-anonymous | verified-authenticated",
+    "checksum": "<compared service checksum or response-byte SHA-256>"
+  },
+  "public": { "status": "verified | skipped-protected" }
+}
+```
+
+Public receipts record `object.status: verified-anonymous` (response-byte
+hash) with `public.status: verified`; protected receipts record
+`object.status: verified-authenticated` (service checksum) with
+`public.status: skipped-protected` — both facts always representable. Schema
+and negative tests prove protected receipts record both facts and public
+receipts preserve anonymous byte verification.
 Contract-dependency propagation is in scope: the contract registry
 (`contracts.mjs`) registers v2 with version dispatch, and the durability
 reader — which currently validates receipts through the generic
@@ -1043,6 +1062,8 @@ git commit -m "feat(p05-t05): render diagrams from semantic graph content"
 - Modify: `.agents/skills/explainer-kit/recipes/project-recap.json`
 - Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs` (currently asserts every author request is HTML)
+- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` (lifecycle author fixture exercises the new structured default; retains a deliberate v2 HTML replay case)
 
 **Step 1: Write test (RED)**
 
@@ -1051,19 +1072,22 @@ git commit -m "feat(p05-t05): render diagrams from semantic graph content"
 declared in the `author-request/v3` contract created in p02-t01 — the
 structured-authoring fields land in v3, never retrofitted onto v2); the core
 renderers render them; artistic authoring remains available only where the
-recipe declares it. End-to-end structured run passes link validation, browser
+recipe declares it. Executable recap fixtures migrate with the default: the
+end-to-end recap suite and the adapter lifecycle integration fixture exercise
+the structured default while keeping a deliberate `author-result/v2` HTML
+replay case. End-to-end structured run passes link validation, browser
 evidence, and visual review; retained v2 HTML-authoring replay still
 validates.
 
 **Step 2: Implement (GREEN)**
 
 Recipe authoring switch, v3 author-request structured-content fields,
-author-request construction, render dispatch.
+author-request construction, render dispatch, recap fixture migration.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs && pnpm lint && pnpm format`
-Expected: green; lint and format clean (phase touches `.agents/skills/**`)
+Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs && pnpm lint && pnpm format`
+Expected: green (every changed test file executes); lint and format clean
 
 **Step 4: Commit**
 
@@ -1087,6 +1111,7 @@ git commit -m "feat(p05-t06): author standard recap artifacts through structured
 - Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/briefs/project-recap.md`
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs` (currently asserts the three-artifact floor)
 
 **Step 1: Write test (RED)**
 
@@ -1112,7 +1137,7 @@ set-plan reference update, planner enforcement, registry and docs updates.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs`
+Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
 Expected: green
 
 **Step 4: Commit**
@@ -1255,6 +1280,7 @@ through every shipped consumer outside the two core seams.
 - Modify: `tools/release/run-explainer-rc.test.mjs` (and `run-explainer-rc.integration.test.mjs` where affected)
 - Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs` (assert v1 replay and v2 emission)
 - Modify: `tools/smoke/explainer-kit/fixtures/private-wrapper.mjs` (accepts receipt v1 and v2)
+- Modify: `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs` (callback migrates to the structured/new-contract defaults — currently emits `set-plan/v1`, assumes the three-artifact floor, renders from `request.shell`, and returns HTML `author-result/v2` and `visual-review-result/v1` — while retaining explicit legacy replay coverage where appropriate)
 - Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs` (visual-review result acceptance: v1 and v2)
 - Modify: `.agents/skills/oat-explainer-kit/references/author-callback.md` (author v2/v3)
 - Modify: `.agents/skills/oat-explainer-kit/references/visual-review-callback.md` (visual-review v1/v2)
@@ -1284,8 +1310,8 @@ implementation; callback reference migration; fixture updates.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs tools/release/validate-explainer-acceptance.test.mjs tools/release/run-explainer-rc.test.mjs && pnpm lint && pnpm format`
-Expected: adapter, smoke, and release-tool focused suites green; lint and format clean (touches `tools/smoke` and `.agents/skills/**`)
+Run: `pnpm --filter @open-agent-toolkit/cli build && node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs tools/smoke/explainer-kit/package-coverage-consumers.test.mjs tools/release/validate-explainer-acceptance.test.mjs tools/release/run-explainer-rc.test.mjs && pnpm lint && pnpm format`
+Expected: adapter, smoke (including package-coverage, which requires the CLI `dist` build), and release-tool focused suites green; lint and format clean (touches `tools/smoke` and `.agents/skills/**`)
 
 **Step 4: Commit**
 
@@ -1380,7 +1406,7 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T005429Z.md (4 Important + 2 Medium resolved in artifact)                                | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T012159Z.md                                                                                       | -             | -          | -                        |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012720Z.md (3 Important + 1 Medium resolved in plan and design)                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T013953Z.md                                                                                       | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T013953Z.md (2 Important + 2 Medium resolved in artifact)                                | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
