@@ -17,11 +17,20 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 0
   phase_attempt_limits:
-    p03: 1
+    p03: 2
   phase_attempt_usage:
     p03:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: p03-recovery-002
+        original_request_id: explainer-improvements-v2-p03-review-fixes
+        original_task_id: p03-t01
+        original_commit: 58a9fd294e8dfc83d398d43789c4f68c7092609c
+        discovered_by: node --test .agents/skills/explainer-kit/tests/*.test.mjs .agents/skills/oat-explainer-kit/tests/*.test.mjs
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: df0e90417fb386f9d16a7ab39fe3beb40ddfa84f
+        status: completed
 oat_dispatch_policy:
   mode: managed
   policy: high
