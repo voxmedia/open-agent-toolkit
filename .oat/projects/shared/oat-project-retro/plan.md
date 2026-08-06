@@ -60,7 +60,7 @@ RED/GREEN/Refactor is used where work is testable (p01, p02-t04); skill/template
 
 **Step 1: Write test (RED)**
 
-Add cases: structured sequences accept `'retro'` in `preApproval` and in `postApproval`; duplicate-step rejection still applies across arrays; legacy strings (`wait`/`summary`/`pr`/`docs-pr`) normalize exactly as before with no retro; sequence-contracts test covers the widened vocabulary.
+Add cases: structured sequences accept `'retro'` in `postApproval`; structured sequences containing `'retro'` in `preApproval` are **rejected** (normalization returns `undefined` for the whole structured value, same handling as other invalid shapes — a pre-approval retro would run before the approval/feedback tail exists, violating the discovery Question 3 evidence boundary); duplicate-step rejection still applies across arrays; legacy strings (`wait`/`summary`/`pr`/`docs-pr`) normalize exactly as before with no retro; sequence-contracts test covers the widened vocabulary including the rejected pre-approval shape.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts`
 Expected: New cases fail (RED)
@@ -70,7 +70,9 @@ Expected: New cases fail (RED)
 ```typescript
 // packages/cli/src/config/oat-config.ts
 export type WorkflowPostImplementStep = 'summary' | 'document' | 'pr' | 'retro';
-// VALID_POST_IMPLEMENT_STEPS gains 'retro'; legacy map unchanged
+// VALID_POST_IMPLEMENT_STEPS gains 'retro'; legacy map unchanged.
+// normalizeWorkflowPostImplementSequence additionally rejects structured
+// values whose preApproval array contains 'retro' (postApproval-only step).
 ```
 
 Run: same vitest command
@@ -89,7 +91,7 @@ Expected: No errors
 
 ```bash
 git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts
-git commit -m "feat(p01-t01): accept retro post-implement sequence step"
+git commit -m "feat(p01-t01): accept retro as postApproval-only sequence step"
 ```
 
 ---
@@ -375,16 +377,17 @@ git commit -m "docs(p04-t01): document retro sequence step and workflow.retro co
 **Files:**
 
 - Create: `apps/oat-docs/docs/workflows/projects/retro.md` (final path per docs-app nav conventions — check `apps/oat-docs/AGENTS.md` before placing)
+- Modify: `apps/oat-docs/docs/workflows/projects/index.md` (authored `## Contents` map — add the `.md`-suffixed link to the new page)
 - Modify: `apps/oat-docs/index.md` (generated — via `oat docs generate-index` only)
 - Modify: `AGENTS.md` (repo root — one-line lifecycle mention)
 
 **Step 1: Author**
 
-New page covering the retro skill pair: generate mode (evidence sources, honesty contract, registers), apply mode (natural-language entry, idempotent register processing), filing skill (preflight matrix, destinations, dedupe dispositions incl. strengthen), and the summary-vs-retro distinction table from the handoff. Wire nav per docs-app conventions; regenerate the docs index with `pnpm run cli -- docs generate-index` (never hand-edit). Add a one-line mention of the retro post-approval step and skill pair to root `AGENTS.md` lifecycle prose (near the Agent Workflow section); do NOT add a skill inventory entry — the skills_system section prohibits duplicating inventories.
+New page covering the retro skill pair: generate mode (evidence sources, honesty contract, registers), apply mode (natural-language entry, idempotent register processing), filing skill (preflight matrix, destinations, dedupe dispositions incl. strengthen), and the summary-vs-retro distinction table from the handoff. Link the page from the authored `## Contents` section of `apps/oat-docs/docs/workflows/projects/index.md` using the `.md`-suffixed relative link (the generated `apps/oat-docs/index.md` does not replace the authored source map); regenerate the generated docs index with `pnpm run cli -- docs generate-index` (never hand-edit). Add a one-line mention of the retro post-approval step and skill pair to root `AGENTS.md` lifecycle prose (near the Agent Workflow section); do NOT add a skill inventory entry — the skills_system section prohibits duplicating inventories.
 
 **Step 2: Format**
 
-Run: `pnpm exec oxfmt --write apps/oat-docs/docs/workflows/projects/retro.md AGENTS.md`
+Run: `pnpm exec oxfmt --write apps/oat-docs/docs/workflows/projects/retro.md apps/oat-docs/docs/workflows/projects/index.md AGENTS.md`
 
 **Step 3: Verify**
 
@@ -400,9 +403,43 @@ git commit -m "docs(p04-t02): add retro workflow documentation page and AGENTS m
 
 ---
 
-## Phase 5: Release and Acceptance
+## Phase 5: Acceptance and Release
 
-### Task p05-t01: Lockstep version bump and release validation
+### Task p05-t01: Dogfood acceptance run
+
+**Files:**
+
+- Create: `{completed-project}/references/project-retro.md` (target project chosen at execution; prefer a completed project in this repo with a rich project log)
+- Modify: fixes to any p02/p03 artifacts where the dogfood run surfaces defects
+
+**Consent boundary:** The apply-mode exercise mutates real repo files, so it requires per-item human approval in-session (discovery Question 6 / Key Decision 8 — plan approval is not item approval). Interactive execution: present the selected promotion item and get explicit approval before applying. Non-interactive execution: do not apply to arbitrary targets; use a pre-approved reversible target (a scratch/fixture promotion item added to the dogfood retro for this purpose), and record the cleanup in the same commit.
+
+**Step 1: Execute**
+
+Run `oat-project-retro` generate mode against a completed OAT project in this repo. Then exercise apply mode on at least one promotion register item (within the consent boundary above), and run `oat-project-retro-file` through its preflight matrix (filing execution may stop at the approval step or target a scratch destination — no unsanctioned public writes).
+
+**Step 2: Evaluate**
+
+Judge the artifact against `references/retro-quality-bar.md` and the reference retro's guiding principles: evidence-first with honest unavailability, dual lanes explicit (upstream present even if "none identified"), registers machine-scannable, statuses/rollups consistent after apply.
+
+**Step 3: Fix, format, and verify**
+
+Apply fixes for any defects found (skill wording, template gaps, register-format mismatches). Re-run the failing portion until clean. Format every touched path with a file-scoped write command (e.g. `pnpm exec oxfmt --write <touched .md paths>`).
+
+Run: `pnpm lint && pnpm format && pnpm check && pnpm type-check && pnpm test && pnpm build`
+Expected: Skills-covering lint/format plus the full CI gate order pass
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-retro .agents/skills/oat-project-retro-file .oat/templates/project-retro.md "{completed-project}/references/project-retro.md"
+# plus the target project's project-log entry and any specific fix paths surfaced by the run — enumerate them; do not use `git add -A`
+git commit -m "test(p05-t01): dogfood retro acceptance run and fixes"
+```
+
+---
+
+### Task p05-t02: Lockstep version bump and final release validation
 
 **Files:**
 
@@ -410,50 +447,18 @@ git commit -m "docs(p04-t02): add retro workflow documentation page and AGENTS m
 
 **Step 1: Implement**
 
-Bump all five public package versions together (shipped CLI functionality + bundled assets changed). Confirm each canonical skill changed in this PR (`oat-project-retro`, `oat-project-retro-file` at `1.0.0`; bumped `oat-project-implement`, `oat-project-complete`) carries exactly one version bump in the final diff.
+Runs after the dogfood task so release validation covers the final shipped state, including any dogfood fixes. Bump all five public package versions together (shipped CLI functionality + bundled assets changed). Confirm each canonical skill changed in this PR (`oat-project-retro`, `oat-project-retro-file` at `1.0.0`; bumped `oat-project-implement`, `oat-project-complete`) carries exactly one version bump in the final PR diff.
 
 **Step 2: Verify**
 
 Run: `pnpm release:validate`
-Expected: Release dry-run passes
+Expected: Release dry-run passes against the final shipped state (if any later fix touches publishable packages or bundled assets after this task, re-run this validation before the PR)
 
 **Step 3: Commit**
 
 ```bash
 git add packages
-git commit -m "chore(p05-t01): lockstep public package version bump for retro feature"
-```
-
----
-
-### Task p05-t02: Dogfood acceptance run
-
-**Files:**
-
-- Create: `{completed-project}/references/project-retro.md` (target project chosen at execution; prefer a completed project in this repo with a rich project log)
-- Modify: fixes to any p02/p03 artifacts where the dogfood run surfaces defects
-
-**Step 1: Execute**
-
-Run `oat-project-retro` generate mode against a completed OAT project in this repo. Then exercise apply mode on at least one promotion register item, and run `oat-project-retro-file` through its preflight matrix (filing execution may stop at the approval step or target a scratch destination — no unsanctioned public writes).
-
-**Step 2: Evaluate**
-
-Judge the artifact against `references/retro-quality-bar.md` and the reference retro's guiding principles: evidence-first with honest unavailability, dual lanes explicit (upstream present even if "none identified"), registers machine-scannable, statuses/rollups consistent after apply.
-
-**Step 3: Fix and verify**
-
-Apply fixes for any defects found (skill wording, template gaps, register-format mismatches). Re-run the failing portion until clean.
-
-Run: `pnpm check && pnpm type-check && pnpm test && pnpm build`
-Expected: Full CI gate order passes
-
-**Step 4: Commit**
-
-```bash
-git add .agents/skills/oat-project-retro .agents/skills/oat-project-retro-file .oat/templates/project-retro.md "{completed-project}/references/project-retro.md"
-# plus the target project's project-log entry and any specific fix paths surfaced by the run — enumerate them; do not use `git add -A`
-git commit -m "test(p05-t02): dogfood retro acceptance run and fixes"
+git commit -m "chore(p05-t02): lockstep public package version bump for retro feature"
 ```
 
 ---
@@ -464,18 +469,18 @@ git commit -m "test(p05-t02): dogfood retro acceptance run and fixes"
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p05    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | passed   | 2026-08-05 | structured (in-memory)                             | -             | auto       | -           |
-| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T002316Z.md | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target              |
+| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ------------------------ |
+| p01    | code     | pending         | -          | -                                                  | -             | -          | -                        |
+| p02    | code     | pending         | -          | -                                                  | -             | -          | -                        |
+| p03    | code     | pending         | -          | -                                                  | -             | -          | -                        |
+| p04    | code     | pending         | -          | -                                                  | -             | -          | -                        |
+| p05    | code     | pending         | -          | -                                                  | -             | -          | -                        |
+| final  | code     | pending         | -          | -                                                  | -             | -          | -                        |
+| spec   | artifact | pending         | -          | -                                                  | -             | -          | -                        |
+| design | artifact | pending         | -          | -                                                  | -             | -          | -                        |
+| plan   | artifact | passed          | 2026-08-05 | structured (in-memory)                             | -             | auto       | -                        |
+| plan   | artifact | fixes_completed | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T002316Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -502,7 +507,7 @@ cell; never truncate a widened row back to five columns.
 - Phase 2: 4 tasks - Template, retro skill, filing skill, pack registration
 - Phase 3: 2 tasks - Closeout dispatch and completion offer
 - Phase 4: 2 tasks - Lifecycle/config docs and workflow page
-- Phase 5: 2 tasks - Lockstep release bump and dogfood acceptance
+- Phase 5: 2 tasks - Dogfood acceptance, then lockstep release bump + final validation
 
 **Total: 12 tasks**
 

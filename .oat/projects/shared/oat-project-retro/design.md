@@ -262,9 +262,12 @@ tool updates install it to `.oat/templates/project-retro.md`.
 
 - `WorkflowPostImplementStep` gains `'retro'`:
   `'summary' | 'document' | 'pr' | 'retro'`. `VALID_POST_IMPLEMENT_STEPS`
-  updated accordingly. `retro` is valid in either array; docs and skills
-  recommend `postApproval`. Legacy string sequences are unchanged (none maps
-  to retro).
+  updated accordingly. `retro` is a **postApproval-only** step: normalization
+  rejects a structured value whose `preApproval` array contains `retro` (same
+  handling as other invalid shapes), because a pre-approval retro would run
+  before the approval/feedback tail exists — the discovery Question 3
+  evidence boundary. Legacy string sequences are unchanged (none maps to
+  retro).
 - New `workflow.retro` namespace (schema in Data Models) with a
   `normalizeWorkflowRetroConfig` following the existing normalization
   patterns: unknown keys dropped, invalid values rejected to `undefined`,
