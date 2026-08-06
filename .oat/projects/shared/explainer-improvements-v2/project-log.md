@@ -80,6 +80,10 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 
 target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:4,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/explainer-improvements-v2/reviews/artifact-plan-review-2026-08-06T024804Z.md
 
+### 2026-08-06 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important exit=124 status=review_failed
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
