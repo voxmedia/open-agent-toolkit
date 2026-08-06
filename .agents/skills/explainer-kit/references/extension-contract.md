@@ -20,13 +20,18 @@ Private wrappers may retain presets, vault conventions, Google Docs behavior,
 and personal destinations around this seam. Those values are wrapper-owned;
 they are not OAT config keys and must not be discovered by the core.
 
-## Frozen v1 boundary
+## Frozen versioned boundary
 
 The versioned request, artifact package, manifest, build record, durability
-request, publish request, and publish receipt are the public boundary. V1 has
-no plugin registry and no mid-pipeline callback API for private destinations.
-Provider-neutral callbacks already documented by the core remain explicit run
-options; they do not transfer stage ownership to a wrapper.
+request, publish request, and publish receipt are the public boundary. New
+publication work uses the immutable `explainer-kit.publish-request/v2` and
+`explainer-kit.publish-receipt/v2` contracts. The corresponding
+`publish-request/v1` and `publish-receipt/v1` contracts remain readable for
+replay; v2 is a new contract version, not an in-place mutation of v1. The
+extension seam has no plugin registry and no mid-pipeline callback API for
+private destinations. Provider-neutral callbacks already documented by the
+core remain explicit run options; they do not transfer stage ownership to a
+wrapper.
 
 V1 readers reject unsupported contract majors and identity mismatches rather
 than guessing. Wrappers should preserve unknown future versions for diagnosis,
@@ -59,13 +64,17 @@ or private content.
 
 After the core command returns, the wrapper performs its post-run publication
 and linking work. It retains the immutable core manifest as
-`private-wrapper-manifest.json`, the complete `PublishReceiptV1` as
+`private-wrapper-manifest.json`, the complete `publish-receipt/v2` as
 `private-wrapper-publish-receipt.json`, and its sanitized wrapper result as
 `private-wrapper-result.json`. The wrapper result repeats canonical hashes for
 the request, manifest, and post-run receipt.
 
 The wrapper acceptance stage reads those post-run files separately. It
-validates the closed receipt contract, every manifest artifact/hash and
-destination, the run-unique sentinel, the manifest hash, and the core run ID
-against `private-wrapper-execution.json`. Repeating a matching hash cannot make
-a foreign or stale receipt attributable to the packaged run.
+validates the closed receipt contract, complete manifest and catalog evidence,
+every source identity, path, artifact hash, destination, and verification fact,
+the run-unique sentinel, the manifest hash, and the core run ID against
+`private-wrapper-execution.json`. Public and protected v2 receipts must each
+provide exactly one entry for every finalized manifest artifact and exactly one
+generated catalog entry. A `publish-receipt/v1` remains consumable only for
+replay. Repeating a matching hash cannot make a foreign, duplicate, incomplete,
+or stale receipt attributable to the packaged run.

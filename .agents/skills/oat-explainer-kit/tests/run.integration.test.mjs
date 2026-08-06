@@ -1271,6 +1271,19 @@ test('fails closed when a repository invocation omits its supplied fact base', a
   });
 });
 
+test('documents adapter publication v2 emission with immutable v1 replay', async () => {
+  const guidance = await readFile(
+    new URL('../references/lifecycle-contract.md', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(guidance, /publish-request\/v2/i);
+  assert.match(guidance, /publicAccess/);
+  assert.match(guidance, /publish-request\/v1.*replay/is);
+  assert.match(guidance, /publish-receipt\/v1.*replay/is);
+  assert.doesNotMatch(guidance, /does not emit that field/i);
+});
+
 test('passes only derived credential-free destination roots into core publish requests', async () => {
   const projectFixture = await createFixture();
   const projectResult = await runOatExplainer({

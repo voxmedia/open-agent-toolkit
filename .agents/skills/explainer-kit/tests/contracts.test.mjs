@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
@@ -299,6 +306,18 @@ test('accepts immutable publish request v1 replay and explicit v2 access modes',
       errors: [],
     });
   }
+});
+
+test('documents complete receipt v2 consumption and immutable v1 replay', async () => {
+  const guidance = await readFile(
+    new URL('../references/extension-contract.md', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(guidance, /publish-receipt\/v2/i);
+  assert.match(guidance, /complete.*manifest.*catalog.*evidence/i);
+  assert.match(guidance, /publish-receipt\/v1.*replay/is);
+  assert.doesNotMatch(guidance, /complete `PublishReceiptV1`/);
 });
 
 test('accepts publish receipt v1 replay and explicit v2 verification facts', () => {

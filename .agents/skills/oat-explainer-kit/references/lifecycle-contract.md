@@ -99,12 +99,16 @@ use repository-level publish roots unchanged. Project invocations retain their
 approved lifecycle-artifact binding and project-local output behavior.
 
 When publish durability is explicitly selected, the adapter constructs the
-core publish request with the per-invocation derived `s3Uri` and
-`publicBaseUrl`. The request carries no project/repository topology fields and
-no credential material. Although the adapter resolves the source-aware
-`publicAccess` declaration, it does not emit that field until the receiving
-core publish-request contract adds it; configuration never bypasses the human
-publication gate.
+core `explainer-kit.publish-request/v2` with the per-invocation derived `s3Uri`,
+`publicBaseUrl`, and source-aware `publicAccess`. New adapter runs emit this v2
+shape atomically; the request carries no project/repository topology fields and
+no credential material. The human-gated publisher returns a complete
+`explainer-kit.publish-receipt/v2`, which the core validates against the
+finalized manifest and generated catalog before the adapter forwards the
+publication summary without destination reinterpretation. The immutable
+`publish-request/v1` and `publish-receipt/v1` contracts remain supported only
+for replay; v2 does not mutate either v1 contract in place. Configuration never
+bypasses the human publication gate.
 
 ## Browser and visual-review execution
 
