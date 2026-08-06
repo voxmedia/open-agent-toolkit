@@ -170,6 +170,7 @@ configured-invocation evidence.
 | Scope              | Continuation Event                       | Original Request                            | Agent ID                               | Target                                     | Model axis                    |
 | ------------------ | ---------------------------------------- | ------------------------------------------- | -------------------------------------- | ------------------------------------------ | ----------------------------- |
 | p03 review round 1 | `oat-project-retro-p03-review-r1-fix-01` | `oat-project-retro-impl-p03-20260806T0152Z` | `40ee9cc3-78bb-4c3e-b443-07d9002e374f` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
+| p02 review round 1 | `oat-project-retro-p02-review-r1-fix-01` | `oat-project-retro-impl-p02-20260806T0152Z` | `c9e01a7e-e760-4006-89dd-a56e4aaeba0c` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
 
 <!-- orchestration-runs-end -->
 
@@ -185,6 +186,9 @@ configured-invocation evidence.
 - Schedule validated: `[p01, p02, p03]` parallel group → `p04` → `p05`.
 - HiLL checkpoints: final phase only (`p05`) from workflow config.
 - Auto-review at HiLL checkpoints: enabled from workflow config.
+- p02 review round 1 failed with 0 Critical, 2 Important, 3 Medium findings.
+  Review artifact committed on the p02 branch at `808405e9`; bounded fix
+  continuation 1 resumed the accepted p02 implementer handle.
 
 ---
 
@@ -195,6 +199,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | Task / Review      | Source Artifact | Planned / Documented             | Actual / Accepted                                                                    | Reason                                                                                                                            | Source of Truth                       | Follow-up                                               |
 | ------------------ | --------------- | -------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------- |
 | p03 review round 1 | `plan.md`       | Three lifecycle skill files only | Added bounded review-fix authority for two contract tests and the autonomy inventory | Required mechanical maintenance for p03 version bumps and scanner-matched non-gate sites was omitted from the original file lists | Updated `plan.md` review-fix boundary | Resume the exact p03 implementer target, then re-review |
+| p02 review round 1 | `plan.md`       | Four p02 task boundaries         | Added bounded authority for four existing retro contract files and one focused test  | Review exposed resumability, non-interactive filing, schema, rollup, and provenance gaps not explicit in the original task steps  | Updated `plan.md` review-fix boundary | Resume the exact p02 implementer target, then re-review |
 
 ## Test Results
 
