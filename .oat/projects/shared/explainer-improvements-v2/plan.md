@@ -5,1899 +5,556 @@ oat_blockers: []
 oat_last_updated: 2026-08-06
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p07'] # phases to pause AFTER completing (empty = every phase)
+oat_plan_hill_phases: ['p05'] # pause after the final phase
 oat_auto_review_at_hill_checkpoints: true
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: quick # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_parallel_groups: [] # fully sequential
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
 oat_template: false
 ---
 
 # Implementation Plan: explainer-improvements-v2
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> Revised after p01 to use a thin executable safety kernel and a prose-led
+> creative layer. Execute with `oat-project-implement`.
 
-**Goal:** Close the path-derivation, link-integrity, publication-verification,
-and lifecycle gaps exposed by the Duet Cyclone case study, and raise the visual
-floor with renderer-owned structured content, a role-based type system, and a
-design-quality visual-review rubric — per the acceptance criteria in
-`references/handoff-cyclone-case-study.md` and the approved `design.md`.
+**Goal:** Preserve the core/adapter boundary while closing the Cyclone case
+study's path, link, publication, and lifecycle integrity gaps. Raise the
+authoring and review floor through skill/recipe prose rather than a new
+structured renderer framework.
 
-**Architecture:** Changes center on the two canonical skills —
-`explainer-kit` (core) stays destination-neutral and config-blind;
-`oat-explainer-kit` (adapter) owns config resolution, invocation topology, and
-per-invocation remote destination derivation — plus three bounded satellite
-surfaces: the `oat-project-implement` completion/closeout orchestrator (recap
-approval guard), release acceptance tooling, and the wrapper smoke fixture
-(contract-version consumers). Two new hard build gates (canonical link table,
-internal-link validator) and a protected-destination publish mode preserve
-existing safety guarantees.
+**Architecture:** `explainer-kit` owns destination-neutral contracts,
+validation, durability, and publication. `oat-explainer-kit` owns OAT
+topology, config, source binding, and per-invocation destination derivation.
+Deterministic code is limited to trust-boundary invariants. Narrative,
+typography, composition, artifact selection, diagram quality, and visual
+critique remain judgment-oriented prose.
 
-**Tech Stack:** Node.js 22 ESM, `node:test`, JSON Schema, Playwright/Chromium
-(existing browser-evidence machinery), pnpm/Turborepo, S3 static publishing.
+**Tech Stack:** Node.js 22 ESM, `node:test`, JSON Schema, existing browser and
+visual-review providers, pnpm/Turborepo, S3 static publishing.
 
-**Commit Convention:** `{type}({task-id}): {description}` — e.g.,
-`feat(p01-t01): derive per-invocation publish destination`.
+**Commit Convention:** `{type}({task-id}): {description}`
 
-## Planning Checklist
+## Scope Revision
 
-- [x] Confirmed HiLL checkpoints (config `workflow.hillCheckpointDefault: final` → `p07`)
-- [x] Set `oat_plan_hill_phases` in frontmatter
-- [x] Evaluated phases for parallelism opportunities
-- [x] Set `oat_plan_parallel_groups` in frontmatter
+The operator approved this reduction on 2026-08-06 after p01:
+
+- retain executable path, link, publication, credential, and lifecycle
+  invariants;
+- remove structured hub/deck/diagram schemas and renderer engines;
+- remove semantic layout and deterministic visual-quality heuristics;
+- add no new golden-test infrastructure;
+- leave the existing 27-capture golden suite unchanged and track its
+  simplification separately;
+- express artifact strategy, typography, composition, diagram semantics, and
+  visual-review judgment in recipe/brief/skill prose.
+
+The original handoff remains the production evidence base. This approved scope
+decision supersedes its prescribed implementation mechanisms where the revised
+design explicitly says so.
+
+## Execution
+
+All phases are sequential. p01 is complete and independently reviewed. Before
+p02 begins, this revised design and plan receive one delta-focused artifact
+review for requirement coverage, safety, compatibility, and honest deferrals.
+Only Critical/Important findings block execution.
+
+RED/GREEN/Refactor is the default for executable behavior. Prose and contract
+tasks use focused conformance checks. Each task has one atomic commit; bounded
+review corrections remain append-only.
+
+## Phase 1: Adapter paths and destination derivation
+
+**Status:** completed
+**Review:** passed
+
+### Task p01-t01: Derive per-invocation publish destination (completed)
+
+**Outcome:** Project runs append encoded `projects/<slug>`; repository/direct
+runs retain repository roots.
+
+**Commit:** `84a5b4a`
+
+### Task p01-t02: Validate complete publish config (completed)
+
+**Outcome:** Partial config is build-only; complete config and source-aware
+`publicAccess` are validated through adapter and CLI surfaces.
+
+**Commit:** `3a634e0`
+
+### Task p01-t03: Accept repository explainer invocations (completed)
+
+**Outcome:** Repository runs require a supplied reviewed fact base and never
+fall back to an active project.
+
+**Commit:** `ab12256`
+
+### Task p01-t04: Reject double-nested output roots (completed)
+
+**Outcome:** The core confinement boundary rejects roots that already end in
+the run slug before directory creation.
+
+**Commit:** `aa1ec2d`
+
+### Task p01-t05: Thread derived roots into core requests (completed)
+
+**Outcome:** Core requests receive only derived roots, without OAT topology or
+premature `publicAccess`.
+
+**Commit:** `a42a385`
+
+### Task p01-t06: Reject credential-bearing publish roots (completed)
+
+**Outcome:** Credential-bearing, malformed-authority, query, fragment, and
+normalized-away delimiter forms fail before core invocation or request
+persistence.
+
+**Commits:** `fcc100f`, append-only review correction `c1d5a1b`
+
+**Verification:** Focused adapter tests, full adapter suite, CLI tests, lint,
+format, and focused re-review passed.
 
 ---
 
-## Parallelism
+## Phase 2: Canonical links and hard validation
 
-All phases run **sequentially**; no parallel groups are declared. p01
-(adapter path/destination derivation) and p02 (core link integrity) were
-previously a parallel candidate, but both now write core
-`explainer-kit/scripts/lib/records.mjs` and
-`explainer-kit/tests/records.test.mjs` (p01-t04's run-root guard;
-p02-t03's durable link-finding records), so their write sets overlap.
-Everything after was already sequential: `p03` (publication) and `p04`
-(lifecycle) both modify core `run.mjs`/records and adapter finalize seams
-that `p02`/`p01` also touch, `p05`/`p06` share core renderer, schema, theme,
-and fixture files, and `p07` (release closure) bumps skill and package
-versions repo-wide, which conflicts with every other phase by design.
+Write boundary: `.agents/skills/explainer-kit/**`.
 
----
-
-## Dispatch Profile
-
-_No explicit per-phase constraints. Runtime selection under the project's
-managed dispatch policy applies._
-
----
-
-RED/GREEN/Refactor is the default where work is testable; contract/docs tasks
-use direct verification. All tasks preserve stable `pNN-tNN` IDs, per-task
-verification, and atomic commits.
-
-## Phase 1: Adapter path and destination derivation
-
-Write boundary: `.agents/skills/oat-explainer-kit/**`, the CLI
-configuration surfaces in `packages/cli/src/config/**` and
-`packages/cli/src/commands/config/**` (p01-t02 only), and the three core
-double-nesting-guard files in p01-t04 (`records.mjs`, `fs-safe.mjs`,
-`records.test.mjs`). Phases execute sequentially (see Parallelism), so the
-`records.mjs` overlap with p02-t03 is ordered, not concurrent.
-
-### Task p01-t01: Derive per-invocation remote publish destination
+### Task p02-t01: Add canonical artifact links to author requests
 
 **Files:**
 
-- Create: `.agents/skills/oat-explainer-kit/scripts/derive-destination.mjs`
-- Create: `.agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs`
+- Core author-request construction and set-plan helpers
+- New immutable `author-request/v3` schema and registry/docs
+- Focused contract, schema, and run-integration tests
 
-**Step 1: Write test (RED)**
+**Step 1: Write tests (RED)**
 
-Unit tests: project invocation composes `<s3Root>/projects/<project-slug>` and
-`<publicRoot>/projects/<project-slug>`; repo invocation returns roots
-unchanged; direct invocation performs no derivation; slug segments are
-percent-encoded with the same rules the core uses for rendered paths
-(document the rule set in the test); trailing slashes normalized; rejects
-empty/unsafe slugs.
-
-Run: `node --test .agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs`
-Expected: fails (module missing)
+Prove each planned artifact receives a site-relative path ending in explicit
+`index.html` and each author receives correct relative links from its own
+artifact location. Retain Markdown and HTML authoring. Existing v2 requests
+must remain valid for replay.
 
 **Step 2: Implement (GREEN)**
 
-`deriveExplainerDestination({ invocation, projectSlug, s3Uri, publicBaseUrl })`
-returning derived roots. Pure function; no I/O; no OAT config access.
-
-Run: same test command
-Expected: passes
+Create the complete v3 request once, add the canonical link table, register it,
+and emit it for new runs. Do not add structured-authoring, theme, renderer, or
+set-plan contracts.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/`
-Expected: existing adapter suites remain green
+Run focused schema/contract/run tests, then `pnpm lint && pnpm format`.
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p01-t01): derive per-invocation publish destination"
+git commit -m "feat(p02-t01): provide canonical artifact links to authors"
 ```
 
----
-
-### Task p01-t02: Validate complete publish configuration with build-only fallback
+### Task p02-t02: Enforce post-render internal-link validation
 
 **Files:**
 
-- Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-config.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/references/config-contract.md`
-- Modify: `packages/cli/src/config/oat-config.ts` (config type, normalizer, effective defaults for `explainers.publish.publicAccess`)
-- Modify: `packages/cli/src/config/resolve.ts` (effective resolution)
-- Modify: `packages/cli/src/commands/config/index.ts` (command key union/catalog)
-- Modify: focused CLI config tests beside the surfaces above
+- New bounded internal-reference validator
+- Render/run gate integration and existing correction seam
+- Unit and integration tests plus contract guidance
 
-**Step 1: Write test (RED)**
+**Step 1: Write tests (RED)**
 
-Config with only `publicBaseUrl` (the Duet shape) resolves to build-only with
-a structured report naming the missing fields (`provider`, `s3Uri`,
-`awsRegion`); complete config (provider `s3-static`, repository S3 root,
-repository public root, region, optional `publicAccess`) resolves
-publish-capable; partial combinations each report exactly their gaps. The new
-`explainers.publish.publicAccess` key is a first-class CLI configuration key:
-config set/get, normalization, effective resolution, defaulting, and
-invalid-value rejection are covered by focused CLI tests — normal shared
-config must carry the declaration to the adapter, not reject or discard it.
+Cover valid explicit-file links, relative links, fragments with existing
+targets, `src`/`srcset`, and explicitly safe embedded references. Reject
+directory-style links, traversal, missing files, missing fragments, malformed
+references, and links that escape the site root.
 
-**Source-aware propagation rule (explicit):** effective config resolution
-returns default values with `source: default`. The adapter includes
-`publicAccess` in `resolvedConfig.publish` (and, in p03-t06, the core
-request) **only when its source is non-default** — an explicit config
-declaration or a runtime override. Absent config therefore emits no field
-and the core default applies; an explicit `public` declaration is emitted
-even though it equals the default. Tests cover four sources: absent,
-explicit-public, explicit-protected, and runtime override.
-
-Run: `node --test .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
-Expected: new cases fail
+Integration tests prove validation runs before browser/visual review and
+durability. One correction may rerender and revalidate; exhaustion records the
+finding and cannot become durability-eligible as clean.
 
 **Step 2: Implement (GREEN)**
 
-Completeness validation in `resolve-config.mjs`; the `publicAccess` key
-across the CLI config type, normalizer, defaults, effective resolution, and
-command key catalog; document the complete shared configuration in
-`config-contract.md`, with the explicit note that configuration alone never
-authorizes publication (human gate retained).
+Use a bounded fail-closed tokenizer/classifier; do not add an HTML parser
+dependency. Anchor resolution to the manifest and generated site tree.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/ && pnpm --filter @open-agent-toolkit/cli test`
-Expected: adapter and CLI config suites green
+Run focused validator, render, records, and integration tests, then
+`pnpm lint && pnpm format`.
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p01-t02): validate complete publish config with build-only fallback"
-```
-
----
-
-### Task p01-t03: Accept repository invocations at the adapter entry point
-
-**Files:**
-
-- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/scripts/bind-project-sources.mjs` (expose the supplied-fact-base + reviewed-repository binding for repository invocations)
-- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md` (document the repository invocation input contract)
-- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-
-**Step 1: Write test (RED)**
-
-Integration fixture: `repo` invocation routes through
-`resolveExplainerOutputRoot`'s existing repo branch to
-`.oat/repo/reference/explainers/<run-slug>/`, derives the unmodified
-repository publish roots, and completes a build-only run. Project invocation
-behavior is unchanged.
-
-**Repository invocation input contract (explicit — removing the entry-point
-rejection alone only moves the failure into `bindProjectSources`, which
-requires a project root and reads project lifecycle artifacts):** a
-repository invocation requires a caller-supplied, validated fact base
-(`suppliedFactBasePath`), bound through the existing supplied-fact-base path
-with reviewed-repository provenance from `resolveReviewedRepository`. The
-adapter never resolves an active project for a repository run — an unrelated
-active project must not become a repository run's implicit source (proven by
-a fixture with an active project present). A repository invocation without a
-supplied fact base fails closed with an actionable error naming the
-requirement. Integration cases: repo run with supplied fact base succeeds
-build-only; repo run without one fails closed; repo run ignores an existing
-active project.
-
-Run: `node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-Expected: repo fixtures fail (entry point rejects `repo`)
-
-**Step 2: Implement (GREEN)**
-
-Remove the entry-point rejection; branch source binding on invocation:
-project invocations keep `bindProjectSources` unchanged, repository
-invocations bind the required supplied fact base with reviewed-repository
-provenance (no project resolution); wire invocation through path resolution
-and destination derivation (p01-t01).
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/oat-explainer-kit/tests/`
-Expected: green
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p01-t03): accept repository explainer invocations"
-```
-
----
-
-### Task p01-t04: Guard against double-nested output roots
-
-**Files:**
-
-- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs` (core run-root boundary — `initializeRun` passes `outputRoot` and `slug` to confinement)
-- Modify: `.agents/skills/explainer-kit/scripts/lib/fs-safe.mjs` (`createConfinedRunRoot` appends the slug and creates directories)
-- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-paths.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
-
-**Step 1: Write test (RED)**
-
-A caller-supplied output root whose final segment equals the run slug is
-rejected with an actionable error (rejection is the conservative contract)
-before any directory creation. **The generic guard lives at the core run-root
-boundary** — `createConfinedRunRoot` (or its `initializeRun` call site in
-`records.mjs`) rejects a final-segment-equals-slug root before it creates the
-output directory — because direct core callers enter `runExplainer` without
-ever traversing the adapter resolver. Core tests exercise the direct-caller
-path against the core boundary; adapter tests prove project, repo, and
-direct-wrapper roots all pass the same contract and that the adapter surfaces
-the core rejection with an actionable message.
-
-**Step 2: Implement (GREEN)**
-
-Final-segment-versus-slug guard at the core confinement boundary before
-directory creation; adapter passes slug-bearing context through the
-`run.mjs` call site and the output-root resolution seam so adapter-resolved
-roots are validated identically.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/oat-explainer-kit/tests/*.test.mjs`
-Expected: green (every changed test file executes)
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p01-t04): reject double-nested explainer output roots"
-```
-
----
-
-### Task p01-t05: Pass the derived destination into the core publish request
-
-**Files:**
-
-- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
-
-**Step 1: Write test (RED)**
-
-The publish request the adapter constructs carries the derived (not raw
-configured) roots; the core never receives project/repo identifiers. Assert
-no credential material appears in the constructed request. **Sequencing
-constraint:** the configured `publicAccess` value is resolved and validated
-by p01-t02 but is NOT emitted into core publish requests in this phase — the
-current core publish-request schema rejects unknown fields
-(`additionalProperties: false`). Threading `publicAccess` happens in
-p03-t06, after p03-t01 lands core schema support. No phase-1 commit may emit
-a field the receiving contract rejects.
-
-**Step 2: Implement (GREEN)**
-
-Thread p01-t01 derivation through publish-request construction; document in
-`lifecycle-contract.md`.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/oat-explainer-kit/tests/*.test.mjs && pnpm lint && pnpm format`
-Expected: adapter suite green; lint and format clean (only these gates cover `.agents/skills/**`)
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p01-t05): thread derived destination into core publish requests"
-```
-
----
-
-### Task p01-t06: (review) Reject credentials in destination roots
-
-**Files:**
-
-- Modify: `.agents/skills/oat-explainer-kit/scripts/derive-destination.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-
-**Step 1: Reproduce the defect (RED)**
-
-Add negative tests with synthetic credential-bearing S3 and HTTPS roots.
-Assert rejection before the adapter invokes the core or persists a publish
-request. Cover userinfo, malformed authorities, queries, and fragments.
-
-**Step 2: Implement (GREEN)**
-
-Parse and validate both configured roots before deriving invocation-specific
-paths. Reject credential-bearing or malformed authority forms while preserving
-the valid project and repository destination behavior delivered by p01-t01
-through p01-t05.
-
-**Step 3: Verify**
-
-Run:
-`node --test .agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs && pnpm lint && pnpm format`
-
-Expected: negative credential fixtures fail closed before core invocation; all
-focused adapter tests, lint, and format pass.
-
-**Step 4: Commit**
-
-```bash
-git commit -m "fix(p01-t06): reject credential-bearing publish roots"
-```
-
----
-
-## Phase 2: Core link integrity
-
-Write boundary: `.agents/skills/explainer-kit/**` only.
-
-### Task p02-t01: Canonical artifact link table in author requests
-
-**Files:**
-
-- Modify: `.agents/skills/explainer-kit/scripts/run.mjs` (the live author-request construction seam — requests are built and pinned to v2 here)
-- Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
-- Create: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json` (complete final form — never modified by a later task)
-- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
-- Modify: `.agents/skills/explainer-kit/references/contracts.md`
-- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add v3 to the explicit schema-conformance inventory)
-- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
-
-**Step 1: Write test (RED)**
-
-From a set plan, the link table maps every artifact ID to its site-relative
-`renderedPath` ending in explicit `index.html`, and to the correct relative
-URL from each authoring artifact's location (e.g. hub →
-`../../diagrams/<slug>/architecture/index.html`). The link-table requirement
-is a **new contract version** (`author-request/v3`): v3 requests without the
-table fail validation, while existing `author-request/v2` payloads continue to
-validate unchanged (retained-run replay and external callback compatibility
-proven by test). The contract registry and docs list both versions.
-
-**The v3 schema is created in its complete final form and is immutable
-thereafter** — no later task may modify the file, so retained v3 requests
-never reinterpret against a changed schema. Beyond the required link table,
-the final shape declares up front: an authoring variant discriminator
-(`markdown` | `html` | `structured` — `markdown` is a live shipped mode in
-`project-explainer`, `program-recap`, the `project-recap` deep-dive
-expansion, and the `deterministic-markdown` fallback, and must not be
-dropped; `structured` carries a content-contract reference validated against
-its own registered contract at runtime), a theme reference accepting version
-1 or 2 by discriminator (theme v2 documents validate against their own
-schema when p05-t02 lands), and an embedded set plan accepting version 1 or
-2 by discriminator (set-plan v2 documents validate against their own schema
-when p06-t01 lands). Later tasks activate runtime capability for these
-fields without touching the schema; `schemas.test.mjs` gains v3 in its
-explicit identity/closed-shape inventory at this commit.
-
-**Markdown continuity is executable, not replay-only:** because new runs
-switch to v3 at this commit, integration coverage proves markdown-authored
-artifacts still complete as **new runs** under v3 — cases for
-`project-explainer`, `program-recap`, the project-recap Markdown deep-dive
-expansion, and `recapMode: deterministic-markdown` all emit valid v3
-requests and build; retained-v2 replay is covered separately and is not
-sufficient on its own.
-
-**The emitting runtime seam is in scope:** the per-request link table is
-constructed at the slug- and artifact-aware authoring seam in `run.mjs`
-(set-plan code alone knows neither the run slug nor the authoring artifact's
-rendered location), and new runs switch to emitting v3 there. An integration
-test asserts the exact hub → diagram/deck relative URLs
-(`../../diagrams/<slug>/architecture/index.html`,
-`../../decks/<slug>/deck/index.html`) in emitted requests, alongside a
-deliberate v2 replay case.
-
-**Step 2: Implement (GREEN)**
-
-Link-table derivation beside set-plan machinery; per-request table
-construction and v3 emission at the `run.mjs` authoring seam; the final v3
-schema alongside the retained v2; contract-registry, inventory, and
-documentation updates; version-dispatched validation.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs`
-Expected: green (every changed test file executes)
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p02-t01): inject canonical artifact link table into author requests"
-```
-
----
-
-### Task p02-t02: Internal-link validator library
-
-**Files:**
-
-- Create: `.agents/skills/explainer-kit/scripts/lib/link-validation.mjs`
-- Create: `.agents/skills/explainer-kit/tests/link-validation.test.mjs`
-- Create: `.agents/skills/explainer-kit/tests/fixtures/links/` (passing and failing HTML fixtures)
-
-**Step 1: Write test (RED)**
-
-Fixtures reproduce the exact Cyclone defects: `../architecture/` and
-`../deck/` from `site/initiatives/<slug>/index.html` are rejected as
-directory-style links with the expected canonical target named in the
-finding. Additional cases: unresolvable target, target missing from manifest,
-missing explicit `index.html`, link escaping the site tree, valid canonical
-links pass, external `https://` links ignored, `src` attributes covered, and
-validation runs across hub, diagram, and deck fixtures (not only the hub).
-
-**Explicit reference classifier (so the hard gate neither rejects valid
-renderer output nor skips it unproven):** the validator classifies every
-reference before applying manifest-path rules. Same-document fragments
-(`#id` — already emitted by the standard renderer) and cross-document
-fragments must resolve to an existing element ID in the target document;
-for `.../index.html#fragment`, the path portion validates against the
-manifest **and** the fragment against the target's IDs. Deliberately
-non-site references that the HTML-safety contract already permits — inline
-`data:` image sources and fragment-only SVG references — stay governed by
-HTML-safety policy and are exempt from manifest-path validation, never
-silently skipped elsewhere. Classifier fixtures: valid and missing
-same-document fragments, valid and missing cross-document fragments,
-fragment-only SVG references, embedded `data:` images, external URLs, and
-canonical manifest paths.
-
-**Parsing strategy (explicit — no new runtime dependency):** a bounded
-deterministic attribute tokenizer implemented inside the skill (skill scripts
-run standalone under Node with no npm dependencies), reusing the existing
-`html-safety.mjs` scanning seam where its tokenization applies. The
-malformed-HTML contract is fail-closed: markup the tokenizer cannot
-unambiguously scan (unterminated tags/attributes, ambiguous quoting) is
-itself a validation failure with its own finding class, covered by dedicated
-malformed-markup fixtures.
-
-**Step 2: Implement (GREEN)**
-
-Bounded tokenizer extraction of local `href`/`src`; the reference
-classifier; resolution against the source artifact's site location;
-manifest/site-tree existence check with fragment-target verification;
-per-link structured findings; fail-closed malformed-markup handling.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/link-validation.test.mjs`
-Expected: green
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p02-t02): add manifest-anchored internal-link validator"
-```
-
----
-
-### Task p02-t03: Enforce link validation as a hard post-render gate
-
-**Files:**
-
-- Modify: `.agents/skills/explainer-kit/scripts/run.mjs` (today the QA pipeline throws immediately for hard issues before browser evidence, and its correction path begins only after a hard-QA pass plus a visual `correct` disposition — link findings need an executable correction entry, not just a hard failure)
-- Modify: `.agents/skills/explainer-kit/scripts/render-qa.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs` (structured link findings recorded durably in the run record so the correction transition is auditable)
-- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
-
-**Step 1: Write test (RED)**
-
-Two integration scenarios prove the full contract, not only the negative
-half:
-
-1. **Recovery:** a run whose authored HTML contains a directory-style link
-   fails link validation after render; the structured link finding (with its
-   canonical-target suggestion) enters the shipped bounded correction seam;
-   the corrected author output rerenders; link validation reruns and passes;
-   browser evidence and visual review then run; the run becomes eligible for
-   durability. The full sequence — rebuild, link revalidation, browser
-   review, visual review, durability — is asserted in order.
-2. **Exhaustion:** output that is still invalid after the bounded correction
-   cap never reaches durability or publication, with the residual link
-   findings durably recorded.
-
-**Step 2: Implement (GREEN)**
-
-Wire the validator between render and browser evidence; route link findings
-into the existing correction state machine as a correction-eligible finding
-class (rather than an immediate unrecoverable throw); record findings and
-the correction transition in the run record.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/qa.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs`
-Expected: green
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p02-t03): gate builds on internal-link validation"
-```
-
----
-
-### Task p02-t04: Canonical-link authoring contract for artistic HTML
-
-**Files:**
-
-- Modify: `.agents/skills/explainer-kit/references/visual-authoring.md`
-- Modify: `.agents/skills/explainer-kit/briefs/project-recap.md`
-- Modify: `.agents/skills/explainer-kit/briefs/supporting-diagram.md`
-- Modify: `.agents/skills/explainer-kit/briefs/walkthrough-deck.md`
-
-**Step 1: Implement**
-
-Document that artistic authors receive the canonical link table and must use
-its URLs verbatim (or artifact IDs where the renderer resolves them);
-directory-style links are a build failure. Update briefs to reference the
-contract.
-
-**Step 2: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/templates.test.mjs && pnpm lint && pnpm format`
-Expected: green; lint and format clean (only these gates cover `.agents/skills/**`)
-
-**Step 3: Commit**
-
-```bash
-git commit -m "docs(p02-t04): require canonical link targets in artistic authoring"
+git commit -m "feat(p02-t02): gate rendered artifacts on valid internal links"
 ```
 
 ---
 
 ## Phase 3: Publication integrity
 
-### Task p03-t01: `publicAccess` declaration in the publish request
+Write boundary: core publication contracts/connectors, adapter publication
+threading, lifecycle URL summaries, and one cross-boundary acceptance fixture.
+
+### Task p03-t01: Make public-access behavior explicit and verifiable
 
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/schemas/publish-request.schema.json`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
-- Modify: `.agents/skills/explainer-kit/references/destination-contract.md`
+- New immutable `publish-request/v2` schema and registry/docs
+- Core publisher and S3 connector
+- Adapter request threading
+- Focused core/adapter tests
 
-**Step 1: Write test (RED)**
+**Step 1: Write tests (RED)**
 
-Schema accepts `publicAccess: "public" | "protected"` and defaults absent to
-`public`; invalid values rejected; declared-`public` behavior byte-identical
-to today (sentinel + anonymous verification; 401/403 still fails closed
-before artifact upload).
-
-**Fail-closed until protected behavior exists (independent-commit safety):**
-at this commit the protected verification pipeline (p03-t02) does not exist
-yet, so the connector **rejects protected execution** with an actionable
-error before any upload — a valid `publicAccess: "protected"` request must
-never fall through to the anonymous public-verification path. A dedicated
-test proves the protected-execution rejection; p03-t02 replaces the
-rejection with the authenticated verification branch and flips that test to
-the real behavior.
+Cover public and protected modes. Public mode requires exact object-byte
+verification plus anonymous public fetch. Protected mode requires authenticated
+service-computed checksum verification or authenticated download hashing and
+records public fetch as skipped-protected. Undeclared 401/403 fails closed.
+Credentials must never be persisted.
 
 **Step 2: Implement (GREEN)**
 
-Schema revision, request validation, the interim protected-execution
-rejection, and contract documentation of both modes (protected marked as
-declared-but-not-yet-executable until p03-t02).
+Thread source-aware `publicAccess` only after the core accepts v2. Preserve v1
+request replay. Keep the human publication gate and reject execution before
+upload when required verification capability is unavailable.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs`
-Expected: green
+Run focused publisher, connector, schema, adapter config, and adapter run tests,
+then `pnpm lint && pnpm format`.
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p03-t01): declare publish destination public-access mode"
+git commit -m "feat(p03-t01): verify public and protected publish destinations"
 ```
 
----
-
-### Task p03-t02: Authenticated in-bucket verification for protected destinations
+### Task p03-t02: Emit complete exact-byte publication receipts
 
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
+- New immutable `publish-receipt/v2` schema and registry/docs
+- Publisher, connector, URL composition, and lifecycle summary seams
+- Shipped receipt consumers and focused tests
 
-**Step 1: Write test (RED)**
+**Step 1: Write tests (RED)**
 
-Protected mode: no anonymous HTTP request is ever issued (assert on the
-injected fetch/client seams); every uploaded object is verified against
-**service-computed bytes, not caller-authored metadata** — upload with an
-S3-validated SHA-256 checksum and compare the service-computed checksum
-against the manifest hash (or perform an authenticated object download and
-hash the returned bytes). The existing `explainer-sha256` user metadata is
-idempotency bookkeeping only and must not satisfy verification. Required
-negative test: object bytes differ while user metadata still carries the
-expected digest — protected verification must reject it. Public URLs are
-recorded unfetched with verification result `skipped-protected` for the
-public fetch and `verified-authenticated` for the object; any checksum
-mismatch fails the publish; sentinel behavior uses authenticated verification
-only.
+Require exact one-to-one receipt coverage for every manifest artifact and each
+generated auxiliary object such as `catalog.json`. Record relative path, S3
+URI, canonical public URL, manifest hash, content type, and separate
+object/public verification facts. Public and protected modes must be
+unambiguous. V1 remains readable.
 
 **Step 2: Implement (GREEN)**
 
-Branch the verification pipeline on the declared mode with service-checksum
-byte verification, replacing p03-t01's interim protected-execution
-rejection; keep upload, additive-safety, retry, and credential-hygiene
-behavior shared.
+Upload finalized bytes unchanged, compare verification evidence to manifest
+hashes, centralize URL/path composition, and expose complete artifact URL sets
+to lifecycle summaries. Advance the adapter core-compatibility floor atomically
+when it first depends on the new core behavior.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs`
-Expected: green
+Run schema, publisher, connector, lifecycle-summary, compatibility, and shipped
+consumer tests, then `pnpm lint && pnpm format`.
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p03-t02): verify protected destinations via authenticated object checks"
+git commit -m "feat(p03-t02): record complete exact-byte publish receipts"
 ```
 
----
-
-### Task p03-t03: Complete per-artifact publish receipts
+### Task p03-t03: Prove the adapter-to-destination publication boundary
 
 **Files:**
 
-- Create: `.agents/skills/explainer-kit/schemas/publish-receipt.v2.schema.json`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/durability.mjs`
-- Modify: `.agents/skills/explainer-kit/references/contracts.md`
-- Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add publish-receipt v2 to the explicit schema-conformance inventory)
-- Modify: `tools/release/validate-explainer-acceptance.mjs` (accepts receipt v1/v2 — currently hard-rejects everything except v1)
-- Modify: `tools/release/validate-explainer-acceptance.test.mjs`
-- Modify: `tools/release/run-explainer-rc.mjs` (accepts receipt v1/v2)
-- Modify: `tools/release/run-explainer-rc.test.mjs` (and `run-explainer-rc.integration.test.mjs` where affected)
-- Modify: `tools/smoke/explainer-kit/fixtures/private-wrapper.mjs` (accepts receipt v1/v2)
-- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs` (asserts v1 replay and v2 emission)
+- One fake-destination acceptance test and minimal fixture support
 
-**Step 1: Write test (RED)**
+**Step 1: Write acceptance test (RED)**
 
-The connector emits a **new receipt version**
-(`explainer-kit.publish-receipt/v2`) listing, for every published artifact:
-ID, rendered path, S3 URI, canonical public URL, content hash, and a
-**structured per-artifact verification object** (one shape, no flat enum):
+Exercise project and repository invocations across adapter and core. Assert
+derived prefixes, explicit `index.html`, unchanged bytes, manifest/hash
+equality, canonical URLs, protected/public verification behavior, catalog
+coverage, and no credentials or topology leakage.
 
-```json
-"verification": {
-  "object": {
-    "status": "verified-anonymous | verified-authenticated",
-    "checksum": "<compared service checksum or response-byte SHA-256>"
-  },
-  "public": { "status": "verified | skipped-protected" }
-}
-```
+**Step 2: Implement only required fixture seams (GREEN)**
 
-Public receipts record `object.status: verified-anonymous` (response-byte
-hash) with `public.status: verified`; protected receipts record
-`object.status: verified-authenticated` (service checksum) with
-`public.status: skipped-protected` — both facts always representable. Schema
-and negative tests prove protected receipts record both facts and public
-receipts preserve anonymous byte verification.
-
-**Auxiliary published objects are first-class in v2 (the generated catalog
-has no manifest artifact ID):** the publisher intentionally emits
-`site/initiatives/<slug>/catalog.json` outside the manifest artifact list
-and includes it in the receipt today. The v2 shape therefore uses
-discriminated entries — manifest-artifact entries require the artifact ID;
-auxiliary-object entries (the generated catalog) carry rendered path, S3
-URI, canonical public URL, content hash, and the same structured
-verification object, without inventing a manifest ID. Cross-record
-validation requires **exact coverage**: every manifest artifact and the
-generated catalog appear in the receipt, nothing published is dropped, and
-nothing unpublished appears — covered in both public and protected modes.
-
-Contract-dependency propagation is in scope: the contract registry
-(`contracts.mjs`) registers v2 with version dispatch, and the durability
-reader — which currently validates receipts through the generic
-`publish-receipt` key — dispatches both versions. Retained
-`publish-receipt/v1` artifacts remain readable in every consumer
-(archive/durability validation), proven by compatibility tests over both
-versions. Receipt is atomic, durable in the run package, and contains no
-credential material. Published bytes are asserted equal to finalized manifest
-hashes; any transformation between manifest and upload fails.
-
-**Shipped executable receipt consumers migrate in this same commit
-(independent-commit safety):** the release acceptance validator, the RC
-runner, and the private-wrapper smoke fixture currently hard-reject
-everything except receipt v1, so v2 emission without their migration leaves
-shipped consumers unable to process this task's output. All three accept
-v1 and v2 here (validating v2's discriminated entries and exact catalog
-coverage), with retained-v1 replay proven, and the wrapper-compatibility
-smoke suite asserts v1 replay plus v2 emission.
-
-**Step 2: Implement (GREEN)**
-
-New v2 receipt schema with discriminated manifest/auxiliary entries,
-registry dispatch, and emission with retained v1 readers in
-durability/archive consumers; release-tool and smoke-fixture version
-dispatch; docs updated; no publication-time HTML transformation code path
-exists (assert by construction and test).
+Avoid new production abstractions unless the acceptance test exposes a real
+missing seam.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs tools/release/validate-explainer-acceptance.test.mjs tools/release/run-explainer-rc.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs && pnpm lint && pnpm format`
-Expected: green (every changed test file executes); lint and format clean (touches `tools/smoke`)
+Run the acceptance test and focused publication suites, then
+`pnpm lint && pnpm format`.
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p03-t03): emit complete per-artifact publish receipts"
+git commit -m "test(p03-t03): cover cross-boundary publication integrity"
 ```
 
 ---
 
-### Task p03-t04: One `publicBaseUrl` residence and one URL segment-encoding helper
+## Phase 4: Lifecycle and bounded recovery
+
+Write boundary: core request validation/records, adapter finalize seams, and
+the two project completion routes.
+
+### Task p04-t01: Validate `sourceIds` before content processing
 
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/scripts/lib/render.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/catalog.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
-- Create: `.agents/skills/explainer-kit/scripts/lib/url-segments.mjs`
-- Create: `.agents/skills/explainer-kit/tests/url-segments.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/scripts/derive-destination.mjs` (migrate p01-t01's slug encoding onto the shared helper)
-- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs` (owns the compatibility resolution that selects and dynamically imports the core root — the helper must be loaded through this seam, not a static adjacent-core import; `MINIMUM_CORE_VERSION` raised here)
-- Modify: `.agents/skills/explainer-kit/SKILL.md` (allocate the new core **minor** version for this capability set — the PR-scoped frontmatter bump lands here)
-- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (documented compatibility floor raised to the new core minor)
-- Modify: `.agents/skills/oat-explainer-kit/tests/check-core.test.mjs` (stale-core and current-core floor fixtures)
-- Modify: `.agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Request/set-plan validation seam
+- Regression unit and integration tests
 
-**Step 1: Write test (RED)**
+**Step 1: Reproduce (RED)**
 
-One shared helper produces identical segment encoding for render-time and
-publish-time URL construction (property test over slugs with spaces, unicode,
-reserved characters). All consumers of `publicBaseUrl` read one documented
-residence; the `durability.publish` vs top-level divergence is resolved and
-covered.
-
-**The compatibility floor advances with the new core dependency:** this is
-the first task where the adapter dynamically loads a new core module
-(`url-segments.mjs`), and `checkCoreCompatibility` compares only
-major/minor — so the capability set is allocated a **new core minor
-version** (bumped in `explainer-kit/SKILL.md` frontmatter in this commit),
-and the adapter raises `MINIMUM_CORE_VERSION` and its documented floor to
-that minor in the same commit. `check-core.test.mjs` proves a core at the
-old minor fails compatibility preflight (fail-closed, before any dynamic
-module load) and a core at the new minor passes; an integration fixture
-exercises the stale-core rejection end to end. Later tasks that add further
-core contracts ride the same minor; the adapter must never pass preflight
-against a core that lacks a capability it loads.
-
-**The adapter's destination derivation (p01-t01) is a consumer of the same
-helper, loaded through the compatibility seam**: adapter `run.mjs` owns the
-resolution that selects the compatible core root and dynamically imports
-core modules from it. `run.mjs` resolves `url-segments.mjs` from
-`compatibility.coreRoot` and injects (or passes) it into
-`deriveExplainerDestination`; `derive-destination.mjs` drops its own
-encoding rules and requires the injected helper. A static adjacent-core
-import is not acceptable, because it bypasses compatibility resolution. A
-cross-skill parity/property test proves adapter destination encoding and
-core artifact URL encoding produce identical segments for the same inputs —
-no second encoding implementation may remain — and an integration fixture
-exercises a selected core root that differs from the adjacent canonical
-tree.
+Pin `request.sourceIds is not iterable` with missing, scalar, null, and invalid
+IDs. Assert an actionable contract error before content processing.
 
 **Step 2: Implement (GREEN)**
 
-Extract the helper; migrate render, publish, catalog, and adapter destination
-URL construction to it (helper injected through the adapter's
-compatibility-resolved core root); reconcile `publicBaseUrl` residence with a
-documented single source; allocate the core minor version and raise the
-adapter's `MINIMUM_CORE_VERSION` plus documented floor to it.
+Normalize only valid arrays at the boundary; do not silently coerce malformed
+input or weaken provenance.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/ .agents/skills/oat-explainer-kit/tests/check-core.test.mjs .agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-Expected: full core suite, compatibility-floor, adapter parity, and compatibility-seam tests green
+Run focused contract, set-plan, and end-to-end recap tests, then
+`pnpm lint && pnpm format`.
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "fix(p03-t04): unify publicBaseUrl residence and URL segment encoding"
+git commit -m "fix(p04-t01): validate source IDs before content processing"
 ```
 
----
-
-### Task p03-t05: Complete URL sets in lifecycle summaries
+### Task p04-t02: Require a terminal recap outcome before approval
 
 **Files:**
 
-- Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+- Shared terminal-outcome guard
+- Project implementation/completion lifecycle callers
+- Route-level tests
 
-**Step 1: Write test (RED)**
+**Step 1: Write tests (RED)**
 
-When a publish receipt exists, the tracked-run finalization copies every
-artifact's public URL, S3 URI, hash, and verification result into project
-state/summary records — never only the hub.
+When recap intent is `generate`, both completion routes must reject missing or
+non-terminal outcomes. `built-clean`, `built-needs-review`, and `failed` are
+terminal. Approval waits for the outcome record, not visual perfection.
 
 **Step 2: Implement (GREEN)**
 
-Consume the receipt as the single source; assert credential hygiene.
+Use one shared guard invoked by both callers before final approval is recorded.
+Do not duplicate lifecycle policy in prose-only call sites.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/ && pnpm lint && pnpm format`
-Expected: adapter suite green; lint and format clean (phase touches `.agents/skills/**`)
+Run focused guard and route integration tests, then `pnpm lint && pnpm format`.
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p03-t05): record complete artifact URL sets in lifecycle summaries"
+git commit -m "feat(p04-t02): gate approval on terminal recap outcomes"
 ```
 
----
-
-### Task p03-t06: Thread `publicAccess` from adapter config into core publish requests
+### Task p04-t03: Bound correction and retain compact failure evidence
 
 **Files:**
 
-- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
-- Modify: `tools/release/validate-explainer-acceptance.mjs` (closed publish-request key check accepts the optional `publicAccess` field — currently rejects unknown keys)
-- Modify: `tools/release/validate-explainer-acceptance.test.mjs` (protected-request coverage included)
+- Existing correction/finalize/durability records
+- Publisher denial checks
+- Archive verification and lifecycle integration tests
 
-**Step 1: Write test (RED)**
+**Step 1: Write tests (RED)**
 
-Now that p03-t01 landed core schema support, the adapter emits the
-`publicAccess` value resolved in p01-t02 into the core publish request
-**following the source-aware rule from p01-t02**: the field is emitted only
-when its config source is non-default (explicit declaration or runtime
-override); absent config emits nothing (core default `public` applies); an
-explicit `public` declaration is emitted verbatim. The emitted request
-validates against the revised core publish-request contract; tests cover
-absent, explicit-public, explicit-protected, and runtime-override sources.
-
-**The shipped release validator migrates in this same commit
-(independent-commit safety):** its closed publish-request key check rejects
-unknown keys, so requests carrying `publicAccess` would fail release
-acceptance the moment the adapter starts emitting the field. The key check
-accepts optional `publicAccess` here, with explicit protected-request
-coverage and unchanged rejection of genuinely unknown keys.
+Prove a flagged run gets at most one rebuild/review correction. A remaining
+flag, failure, or superseded outcome retains a compact record with run identity,
+manifest hash when available, findings/error, and evidence disposition.
+Flagged/failed/superseded manifests are categorically rejected at every publish
+entry point. Clean runs remain publishable only through the human gate.
 
 **Step 2: Implement (GREEN)**
 
-Thread the resolved declaration through publish-request construction;
-accept the optional key in the release validator; document in
-`lifecycle-contract.md`.
+Reuse existing records and correction machinery where possible. Add a new
+failure-record version only if the existing durable shape cannot represent the
+required facts without ambiguity. Do not add override records or credentials.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/ tools/release/validate-explainer-acceptance.test.mjs && pnpm lint && pnpm format`
-Expected: adapter and validator suites green; lint and format clean
+Run focused correction, records, durability, archive, publisher, and completion
+integration tests, then `pnpm lint && pnpm format`.
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p03-t06): thread publicAccess into core publish requests"
+git commit -m "feat(p04-t03): bound recap correction and retain failure evidence"
 ```
 
 ---
 
-## Phase 4: Lifecycle ordering and recovery
+## Phase 5: Prose-led authoring and release closure
 
-### Task p04-t01: Root-cause and pin the `request.sourceIds` shape failure
+Write boundary: canonical skill/recipe guidance, affected docs and consumers,
+provider-linked views, and lockstep package versions.
 
-**Files:**
-
-- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/fact-base.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-
-**Step 1: Investigate**
-
-Reproduce the `request.sourceIds is not iterable` failure from the
-`project-recap-corrective-2` run shape; identify the adapter/core boundary
-that accepted the malformed request.
-
-**Step 2: Write test (RED)**
-
-Pin the exact failing request shape as a fixture; require a structured
-validation error naming the field and expected type before content
-processing begins.
-
-**Step 3: Implement (GREEN)**
-
-Shape validation at the request boundary.
-
-**Step 4: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-Expected: green
-
-**Step 5: Commit**
-
-```bash
-git commit -m "fix(p04-t01): validate request shape before content processing"
-```
-
----
-
-### Task p04-t02: Automatic bounded correction and flagged-run durability
+### Task p05-t01: Ship the prose-led project recap recipe
 
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/durability.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/package-coverage.mjs` (currently classifies `built-needs-review` as a partial outcome and returns before requiring retained visual-review evidence)
-- Modify: `.agents/skills/explainer-kit/scripts/publish.mjs` (direct publisher entry point — today `--confirm-publish` becomes `approved: true` with no manifest-outcome check)
-- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs` (connector validates request and manifest without checking the manifest outcome)
-- Modify: `.agents/skills/explainer-kit/references/contracts.md` (flagged-manifest publication denial documentation)
-- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
-- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`verifySelectedProjectRecapForArchive` unconditionally rejects `built-needs-review`, so archive-on-complete would fail the flag-not-block lifecycle at the archive boundary)
-- Modify: focused archive/push tests beside `archive-utils.ts`
-- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
+- New immutable `project-recap@2` recipe and recipe registry
+- Core and adapter skill/brief guidance
+- Focused recipe/replay and adapter tests
 
-**Step 1: Write test (RED)**
+**Step 1: Write tests (RED)**
 
-A run reaching `built-needs-review` automatically enters the existing
-one-correction-then-final-review machinery (no new loop; the cap is
-unchanged). If the re-review is clean, the run proceeds to durability as
-`built-durable`. If findings remain after the cap, the run terminates
-`built-needs-review` with residual findings durably recorded — **and that
-flagged outcome has a real durability/finalization path**: the core
-durability seam and adapter tracked-run finalization (which currently reject
-`built-needs-review`) accept the flagged terminal outcome as a distinct
-flagged-durable tier, producing a tracked, inspectable run package with
-durable residual-finding evidence. Integration tests prove: the flagged
-package is tracked and inspectable; approval may proceed after the terminal
-outcome (flag-not-block); publication remains denied for flagged runs until
-a corrected run passes browser and visual review — durable does not mean
-publishable.
-
-**Flagged durability defines a complete immutable package, not merely a
-permitted outcome.** `package-coverage.mjs` today classifies
-`built-needs-review` as partial and returns before requiring retained
-visual-review evidence, so allowing the outcome through `durability.mjs`
-alone would attest an incomplete package. Define the exact canonical package
-for flagged durability — rendered site, manifest, terminal browser evidence,
-terminal visual-review evidence, and the durable residual-finding record —
-and require coverage validation to enumerate and hash-verify all of it.
-Tests prove missing or hash-mismatched flagged evidence rejects attestation.
-
-**The flagged-durable outcome is accepted by the archive boundary.** The
-standalone completion route passes the selected terminal recap to
-`oat project archive`, but `verifySelectedProjectRecapForArchive` today
-unconditionally rejects `built-needs-review`; with archive-on-complete
-enabled the flag-not-block lifecycle would fail at that boundary. Extend the
-archive verifier and its archive/push tests so a complete, hash-verified
-flagged-durable package can be verified, re-attested, and exported — while
-remaining unpublishable.
-
-**The publication denial is enforced at every publish entry point, not just
-promised — and there is no override.** The normative handoff requires that
-corrected runs cannot publish until browser and visual review pass, so a
-flagged manifest is categorically unpublishable. The direct publisher
-(`publish.mjs`) and the `s3-static` connector today validate the request and
-manifest without checking the manifest outcome, so `--confirm-publish` alone
-could publish a flagged manifest. Both seams reject `built-needs-review`
-manifests with an actionable error naming the correction path (rebuild →
-browser review → visual review → durability → publish). Negative
-direct-publisher tests: a flagged manifest is rejected even with
-`--confirm-publish`; a corrected `built-durable` manifest publishes
-normally. Human approval remains required for publication of clean runs; it
-never substitutes for a passing review.
+V2 requires a navigational hub. Diagram, deck, or deep-dive expansion requires
+a distinct reader question, evidence, and rationale. V1 remains replayable.
+New runs emit the final v2 shape atomically.
 
 **Step 2: Implement (GREEN)**
 
-Wire auto-entry; define the flagged-durable semantics across the core
-durability, package-coverage, and adapter finalization seams; record
-residual findings in the run record; enforce categorical flagged-manifest
-rejection in `publish.mjs` and the connector seam; accept flagged-durable
-packages at the CLI archive verifier; document the flag-not-block and
-publication-denial contracts.
+Put narrative purpose, typographic roles, hierarchy, slide archetypes, diagram
+semantics, fit-to-content, density, repetition, and medium choice in prose.
+Continue authoring with Markdown or HTML. Do not add structured content,
+renderer, theme, layout, or anti-filler schemas/scripts.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs && pnpm --filter @open-agent-toolkit/cli test -- archive`
-Expected: green (every changed test file executes, including the CLI archive suite)
+Run focused recipe, contract, adapter, and recap tests, then
+`pnpm lint && pnpm format`.
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p04-t02): auto-enter bounded correction from built-needs-review"
+git commit -m "feat(p05-t01): add prose-led project recap recipe"
 ```
 
----
-
-### Task p04-t03: Durable failure records for failed and superseded runs
-
-Ordered before the approval-guard task so the versioned failure-record
-contract exists when the guard consumes it.
+### Task p05-t02: Strengthen visual-review judgment in prose
 
 **Files:**
 
-- Create: `.agents/skills/explainer-kit/schemas/failure-record.schema.json`
-- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add failure-record to the explicit schema-conformance inventory)
-- Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
+- Core/adapter critic and visual-authoring guidance
+- Existing visual-review tests
+- Targeted OAT docs pages and generated docs index
 
-**Step 1: Write test (RED)**
+**Step 1: Write focused checks (RED)**
 
-A failed run always leaves a compact durable failure record (versioned
-contract: run ID, recipe, terminal outcome, error class, timestamps,
-superseding-run pointer when a correction replaces it) inside the durable
-project tree, validated by the production contract registry; bulky
-diagnostics follow the documented archive-or-delete policy and are never the
-only evidence. Superseded runs gain the pointer when the corrected run
-finalizes.
+Require guidance to address typography, hierarchy, composition, density,
+medium leverage, template repetition, diagram semantics, and cross-artifact
+cohesion. Preserve the existing critic result contract and actionable
+`pass`/`correct` behavior.
 
 **Step 2: Implement (GREEN)**
 
-Failure-record schema, registry entry, and emission in core; adapter
-finalization places the record durably and applies the diagnostics policy.
+Update critic/skill prose and docs. Do not encode design judgment as numeric
+thresholds or deterministic geometry checks. Do not add or expand golden
+fixtures. Document the separate golden-suite simplification follow-up.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
-Expected: green (every changed test file executes)
+Run focused visual-review and guidance tests,
+`oat docs generate-index`, `pnpm check`, `pnpm build:docs`,
+`pnpm lint`, and `pnpm format`.
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p04-t03): retain durable failure records for failed runs"
+git commit -m "docs(p05-t02): strengthen prose-led visual review"
 ```
 
----
-
-### Task p04-t04: Recap gate terminal outcome before final approval
-
-Consumes the failure-record contract created in p04-t03 and the flagged/failed
-finalization support created in p04-t02 and p04-t03.
+### Task p05-t03: Synchronize versions and validate release
 
 **Files:**
 
-- Create: `.agents/skills/oat-explainer-kit/scripts/check-terminal-outcome.mjs` (shared executable terminal-outcome guard — the production seam both lifecycle routes invoke)
-- Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
-- Modify: `.agents/skills/oat-project-complete/SKILL.md` (second live completion route — currently accepts an `in_progress` project and continues when recap generation produces no valid run)
-- Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-intent.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/scripts/persist-intent.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
-- Modify: `.agents/skills/oat-explainer-kit/tests/intent.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
+- Changed canonical skill frontmatter versions
+- Provider-linked skill views generated by `oat sync --scope all`
+- Lockstep public package versions and release metadata
+- Remaining shipped guidance/consumer compatibility assertions
 
-**Step 1: Write test (RED)**
+**Step 1: Prepare release**
 
-The ordering invariant lives in an **executable production guard, not
-prose**: a new shared script, `check-terminal-outcome.mjs`, reads the
-durable terminal-outcome field and exits nonzero (with a structured reason)
-when recap intent resolved to `generate` and no terminal outcome exists;
-each accepted terminal outcome (`built-durable`, flagged
-`built-needs-review`, or a production `failure-record` document validated
-against the p04-t03 contract) allows it to pass. Both live completion
-routes invoke this same script before lifecycle mutation: the
-`oat-project-implement` completion/closeout sequence and the standalone
-`oat-project-complete` route, whose completion gate today accepts an
-`in_progress` project and continues when recap generation produces no valid
-run. The completion integration test **executes the shipped guard script
-itself** — not a test-local reimplementation and not prose-presence matching
-(the current test only pattern-matches the reference Markdown) — for four
-cases: missing outcome (blocked), clean, flagged, and validated failure
-record (all pass). It also asserts both skill routes instruct invoking the
-guard before the lifecycle mutation. Approval is never conditioned on the
-outcome being clean. (`oat-project-complete` joins the p07-t01 version-bump
-set.)
+Bump each changed canonical skill once for the final PR diff. Synchronize
+provider views. Bump all five public packages together because bundled skills
+and docs are shipped CLI assets.
 
-**The implementation-tail caller must use the revised finalizer for every
-terminal outcome, not only clean builds.** The current completion contract
-invokes tracked-run finalization only "for a successful build" and demotes
-failed outcomes to warnings — exactly the local-only evidence gap this
-project must eliminate. Revise the implementation-tail sequence in
-`completion-and-closeout.md` so the caller invokes
-`finalize-tracked-run.mjs` for clean (`built-durable`), flagged
-(`built-needs-review`), and failed outcomes **before** recording the recap
-gate terminal outcome. `completion.integration.test.mjs` must execute that
-caller/transition seam end-to-end for all three outcome classes and prove
-the flagged run package (p04-t02) or compact failure record (p04-t03) is
-committed and inspectable in the durable project tree; a direct finalizer
-unit test or prose-presence assertion alone is insufficient.
+**Step 2: Verify compatibility**
 
-**Step 2: Implement (GREEN)**
+Confirm old contract/recipe replay, new producer/consumer compatibility,
+adapter minimum-core floor, bundled assets, and repository-wide references to
+superseded versions.
 
-Durable terminal-outcome recording in the adapter intent/persistence seam;
-the shared `check-terminal-outcome.mjs` guard script; implementation-tail
-caller finalizes clean, flagged, and failed outcomes before recording the
-gate outcome; both completion routes revised to invoke the guard before
-lifecycle mutation; document in `lifecycle-contract.md` and
-`completion-and-closeout.md`.
+**Step 3: Run completion gates**
 
-**Step 3: Verify**
+Run, in order:
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/ && pnpm lint && pnpm format`
-Expected: green; lint and format clean (phase touches `.agents/skills/**`)
+1. `pnpm check`
+2. `pnpm type-check`
+3. `pnpm test`
+4. `pnpm build`
+5. `pnpm lint`
+6. `pnpm format`
+7. `pnpm build:docs`
+8. `pnpm release:validate`
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p04-t04): require terminal recap outcome before approval completes"
-```
-
----
-
-## Phase 5: Structured content contracts and renderers
-
-### Task p05-t01: Structured content schemas
-
-**Files:**
-
-- Create: `.agents/skills/explainer-kit/schemas/hub-content.v1.schema.json`
-- Create: `.agents/skills/explainer-kit/schemas/deck-content.v1.schema.json`
-- Create: `.agents/skills/explainer-kit/schemas/diagram-content.v1.schema.json`
-- Create: `.agents/skills/explainer-kit/schemas/author-result.v3.schema.json`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
-- Modify: `.agents/skills/explainer-kit/references/contracts.md`
-- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
-
-**Step 1: Write test (RED)**
-
-Hub content validates sections, evidence tables, cards, callouts, and
-artifact references (by ID only). Deck content validates slides each with
-purpose, archetype (enum: outcome-hero, before-after, architecture,
-decision-trade-off, evidence-scoreboard, comparison, next-action), headline,
-evidence, optional comparison/visual, action. Diagram content validates
-semantic nodes, groups/containers, labeled edges, layout direction, and
-emphasis — author-supplied coordinates are rejected. Structured-content
-result variants land in a **new contract version** (`author-result/v3`)
-that retains **all three live variants — `markdown`, `html`, and the new
-structured shapes** (markdown results are shipped behavior in
-`project-explainer`, `program-recap`, the project-recap deep-dive expansion,
-and the deterministic-markdown fallback); existing `author-result/v2`
-markdown and HTML payloads continue to validate unchanged (retained-run and
-callback compatibility proven by test), and v3 markdown/HTML results
-validate as new-run output. Artistic artifacts keep the HTML shape in both
-versions.
-
-**Step 2: Implement (GREEN)**
-
-Three content schemas plus the v3 author-result version alongside the
-retained v2; registry and docs updated.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/schemas.test.mjs`
-Expected: green
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p05-t01): add structured content contracts for hub, deck, diagram"
-```
-
----
-
-### Task p05-t02: Role-based type system in the theme contract
-
-**Files:**
-
-- Create: `.agents/skills/explainer-kit/schemas/theme.v2.schema.json`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/theme.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
-- Modify: `.agents/skills/explainer-kit/references/contracts.md`
-- Modify: `.agents/skills/explainer-kit/styles/` (all four curated styles)
-- Modify: `.agents/skills/explainer-kit/tests/theme.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add theme v2 to the explicit schema-conformance inventory)
-
-The author-request v3 schema already accepts theme v1/v2 by discriminator
-(final form fixed in p02-t01); this task activates v2 resolution without
-touching that schema.
-
-**Step 1: Write test (RED)**
-
-Role tokens (display, heading, body, UI, annotation, mono) with weights,
-tracking, line heights, measures, and per-medium scales (page, deck, SVG
-label) land in a **new theme contract version** (`explainer-kit.theme/v2`) —
-required role-token shapes must not tighten the published `theme/v1` in
-place. Retained `theme/v1` resolved bundles continue to validate and replay
-byte-deterministically (proven by test); new runs resolve to v2. If a
-genuinely backward-compatible additive v1 shape is proven instead, state and
-test that proof explicitly in place of the v2 allocation. Deterministic
-high-quality stacks replace generic `system-ui`/`ui-serif`/Georgia defaults
-in every curated style; no external font fetches or active content.
-
-**Step 2: Implement (GREEN)**
-
-Theme v2 schema alongside retained v1, registry dispatch, resolution logic,
-curated style updates, docs.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/theme.test.mjs .agents/skills/explainer-kit/tests/render.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs`
-Expected: green (every changed test file executes)
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p05-t02): add role-based deterministic type system"
-```
-
----
-
-### Task p05-t03: Hub structured renderer
-
-**Files:**
-
-- Create: `.agents/skills/explainer-kit/scripts/lib/render-hub.mjs`
-- Create: `.agents/skills/explainer-kit/tests/render-hub.test.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/render.mjs`
-
-**Step 1: Write test (RED)**
-
-Hub content renders sections, evidence tables, cards, callouts, and
-artifact-reference links (resolved from the canonical link table) with
-renderer-owned layout, type roles, and responsive behavior; output passes
-html-safety, accessibility, and link validation.
-
-**Step 2: Implement (GREEN)**
-
-Renderer module consuming `hub-content/v1` plus the resolved theme.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/render-hub.test.mjs .agents/skills/explainer-kit/tests/html-safety.test.mjs`
-Expected: green
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p05-t03): render hubs from structured content"
-```
-
----
-
-### Task p05-t04: Deck structured renderer with archetypes and anti-filler checks
-
-**Files:**
-
-- Create: `.agents/skills/explainer-kit/scripts/lib/render-deck.mjs`
-- Create: `.agents/skills/explainer-kit/tests/render-deck.test.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/render.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
-
-**Step 1: Write test (RED)**
-
-Each archetype renders a distinct layout; deterministic checks fail decks
-with repeated title-plus-paragraph slides, excessive empty viewport area,
-duplicated slide-position text, no meaningful visual variation across
-consecutive slides, overflow, or presentation-distance legibility failures.
-Keyboard navigation, reduced-motion, and print behavior match existing deck
-shell guarantees.
-
-**Step 2: Implement (GREEN)**
-
-Renderer plus deterministic QA checks wired into render QA.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/render-deck.test.mjs .agents/skills/explainer-kit/tests/qa.test.mjs`
-Expected: green
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p05-t04): render decks from slide archetypes with anti-filler checks"
-```
-
----
-
-### Task p05-t05: Semantic diagram renderer
-
-**Files:**
-
-- Modify: `.agents/skills/explainer-kit/scripts/lib/diagram.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/diagram.test.mjs`
-
-**Step 1: Write test (RED)**
-
-Semantic graph content renders with: ownership, dependency, sequence, and
-state-flow layout modes; auto-fit viewBox (no fixed 1200×720); labeled edges;
-containers/swimlanes; overlap and crossing detection failing the render;
-content-aware spacing; zoom/pan controls emitted only when the laid-out graph
-exceeds the viewport. Existing non-linear detection and artistic rerouting
-behavior is preserved.
-
-**Step 2: Implement (GREEN)**
-
-Extend the deterministic graph machinery; no author coordinates accepted.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/diagram.test.mjs`
-Expected: green
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p05-t05): render diagrams from semantic graph content"
-```
-
----
-
-### Task p05-t06: Structured-authoring capability through the runtime
-
-**Files:**
-
-- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs` (structured-authoring recipe validation support)
-
-**Step 1: Write test (RED)**
-
-This task delivers **structured-authoring capability without changing any
-shipped recipe or schema**: shipped-recipe activation happens atomically in
-p06-t01, where `project-recap@2` is created in its final hub-floor form, and
-the `author-request/v3` schema already declared the structured-authoring
-variant in its final form at p02-t01 (this task activates the runtime
-behavior without touching the schema file). Here, the runtime supports
-recipes whose artifacts request structured content (`authoring: structured`
-with the matching content-contract reference); the core renderers render
-them; markdown and artistic HTML authoring remain available where a recipe
-declares them.
-Recipe validation (`recipes.mjs` validation rules, not the shipped file
-list) accepts the structured authoring type. Coverage runs through
-**test-local recipe fixtures**: an integration case exercises a
-structured-authoring recipe end to end (structured request emission, render
-dispatch, link validation), and a deliberate `author-result/v2` HTML replay
-case still validates. Shipped `project-recap@1` behavior is untouched and
-proven unchanged.
-
-**Step 2: Implement (GREEN)**
-
-Author-request construction for the structured variant; render dispatch;
-recipe-validation acceptance of `authoring: structured`.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs && pnpm lint && pnpm format`
-Expected: green (every changed test file executes); lint and format clean
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p05-t06): support structured-authoring recipes through the runtime"
-```
-
----
-
-## Phase 6: Recipe floor, visual rubric v2, and fixtures
-
-### Task p06-t01: Hub-floor recipe with planner-justified expansion
-
-Creates and activates `project-recap@2` **atomically in its final form**
-(structured authoring from p05-t06's capability work plus the hub floor),
-so the version is never mutated after any run can emit it and replay stays
-deterministic.
-
-**Files:**
-
-- Create: `.agents/skills/explainer-kit/recipes/project-recap.v2.json` (`project-recap@2` in final form: structured authoring + hub floor; `project-recap@1` stays byte-for-byte unchanged for retained-run replay)
-- Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs` (register the new file in `RECIPE_FILES`; the registry keys by exact `id@version`)
-- Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-config.mjs` (adapter currently pins recipe version `1` for every new run; switch new project-recap requests to version `2`)
-- Modify: `.agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
-- Create: `.agents/skills/explainer-kit/schemas/set-plan.v2.schema.json`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
-- Modify: `.agents/skills/explainer-kit/references/contracts.md`
-- Modify: `.agents/skills/explainer-kit/briefs/project-recap.md`
-- Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add set-plan v2 to the explicit schema-conformance inventory)
-- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs` (currently asserts the three-artifact floor)
-- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs` (unattended adapter fixture still returns `set-plan/v1`)
-- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` (completion fixture still returns `set-plan/v1`)
-- Modify: `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs` (shipped smoke callback currently emits `set-plan/v1`, assumes the three-artifact floor, renders from `request.shell`, and returns HTML `author-result/v2` — its set-plan/recipe/structured-authoring migration lands with this producer, retaining explicit legacy replay coverage)
-
-**Step 1: Write test (RED)**
-
-`project-recap@2` is **created here in its final form** — structured
-authoring (capability from p05-t06) plus the hub-only floor — registered in
-`RECIPE_FILES`, and the adapter switches new project-recap requests to
-version `2` in the same commit. `project-recap@1` is never semantically
-changed; retained v1 replay (registry serves `project-recap@1` unchanged,
-`author-result/v2` HTML replay validates) and new-version emission (adapter
-emits `project-recap@2`, runtime loads it, end-to-end structured run passes
-link validation, browser evidence, and visual review) are both proven
-through the real consumers. The `project-recap@2` floor contains only the
-hub; diagram, deck, and
-explainer views are expansion entries requiring a planner justification (distinct
-reader question + evidence pointers) recorded in the set plan; unjustified or
-redundant expansion is rejected at planning time; existing expansion limits
-still apply. Justification enforcement lands in a **new set-plan version**
-(`set-plan/v2`); retained `set-plan/v1` documents continue to validate for
-replay and archive consumers (proven by test), and new runs emit v2.
-Contract-dependency propagation needs no schema change: the immutable
-`author-request/v3` shape (fixed in p02-t01) already accepts set-plan v1 or
-v2 by discriminator, so this task registers the set-plan v2 schema and
-activates emission, with end-to-end tests covering both new-run emission
-(v3 + set-plan v2) and retained replay (v2 + set-plan v1). **The live adapter consumers migrate
-atomically with the producer:** the unattended adapter fixture and the
-completion integration fixture (both of which currently return
-`set-plan/v1`) gain explicit new-run `set-plan/v2` cases alongside retained
-v1 replay cases, so the new contract works through the real adapter path at
-this task's own commit. **The shipped smoke callback migrates here too
-(independent-commit safety):** the package-coverage smoke consumer's
-callback moves to the new set-plan/recipe/structured defaults this task
-activates, with legacy replay retained, so the smoke suite passes at this
-commit rather than waiting for a later migration task. Audit the other
-three recipes and change
-only those with the same floor contradiction (document the audit result in
-the test or brief); any recipe that does change receives the same
-new-version treatment — its existing version stays byte-for-byte unchanged
-and a new registry entry carries the new floor.
-
-**Step 2: Implement (GREEN)**
-
-Recipe v2 in final form with registry entry and adapter version switch;
-set-plan v2 schema alongside retained v1; planner enforcement; registry,
-inventory, and docs updates.
-
-**Step 3: Verify**
-
-Run: `pnpm --filter @open-agent-toolkit/cli build && node --test .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs tools/smoke/explainer-kit/package-coverage-consumers.test.mjs && pnpm lint && pnpm format`
-Expected: green (every changed test file executes; package-coverage smoke requires the CLI `dist` build); lint and format clean (touches `tools/smoke`)
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p06-t01): make the hub the recap floor with justified expansion"
-```
-
----
-
-### Task p06-t02: Visual review rubric v2
-
-**Files:**
-
-- Create: `.agents/skills/explainer-kit/schemas/visual-review-request.v2.schema.json`
-- Create: `.agents/skills/explainer-kit/schemas/visual-review-result.v2.schema.json`
-- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add both visual-review v2 schemas to the explicit schema-conformance inventory)
-- Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs` (registry version dispatch — the unversioned visual-review keys currently map only to v1)
-- Modify: `.agents/skills/explainer-kit/references/visual-review.md`
-- Modify: `.agents/skills/explainer-kit/tests/visual-matrix.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs` (live adapter wrapper rejects every result except `visual-review-result/v1` — v2 acceptance lands atomically with core v2 emission)
-- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-- Modify: `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs` (shipped smoke callback currently returns `visual-review-result/v1` — its v2 migration lands with this producer, retaining v1 replay coverage)
-
-**Step 1: Write test (RED)**
-
-Rubric v2 requests enumerate the eight dimensions (intentional typography,
-hierarchy, composition/balance, information density, medium leverage,
-template repetition, diagram semantics, cross-artifact cohesion); results
-require per-dimension scored findings; verdict vocabulary separates `pass`
-(design bar met) from `correct` (legible but weak) and failing states;
-results missing dimensions are rejected. Registry propagation is in scope:
-`visual-review.mjs` emits and validates through the contract registry, so
-new runs must **emit and validate v2** while retained v1 requests/results
-still validate for replay, with request-bound result validation covering
-both versions. **The live adapter consumer migrates in the same commit:**
-the adapter wrapper's result acceptance (currently v1-only) accepts v1 and
-v2 results, exercised end to end by the adapter integration test, so core
-v2 emission works through the shipped adapter path at this task's own
-commit, and the package-coverage smoke callback migrates its
-`visual-review-result` emission to v2 (v1 replay retained) so the smoke
-suite passes at this commit. Existing accessibility, keyboard,
-reduced-motion, print, and mobile requirements remain necessary conditions.
-
-**Step 2: Implement (GREEN)**
-
-v2 schemas, registry version dispatch, v2 emission in `visual-review.mjs`,
-adapter v1/v2 result acceptance, smoke-callback migration, validation, and
-reviewer guidance.
-
-**Step 3: Verify**
-
-Run: `pnpm --filter @open-agent-toolkit/cli build && node --test .agents/skills/explainer-kit/tests/visual-matrix.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/package-coverage-consumers.test.mjs && pnpm lint && pnpm format`
-Expected: green (every changed test file executes; package-coverage smoke requires the CLI `dist` build); lint and format clean (touches `tools/smoke`)
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p06-t02): expand visual review to scored design-quality rubric"
-```
-
----
-
-### Task p06-t03: Cyclone negative visual-quality fixture with a non-vacuous oracle
-
-**Files:**
-
-- Create: `.agents/skills/explainer-kit/tests/fixtures/negative-visual/` (Cyclone deck and diagram derivatives, pinned screenshots/DOM)
-- Create: `.agents/skills/explainer-kit/scripts/lib/rubric-evidence.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/visual-matrix.test.mjs`
-
-**Step 1: Write test (RED)**
-
-Because production judgment comes from an injected `visualCritic` callback, a
-stub returning `correct` proves nothing. Add an **executable evidence seam**:
-deterministic rubric-evidence extraction that derives expected failed
-dimensions from the pinned fixture screenshots/DOM (repeated
-title-plus-paragraph slide structure, fixed-viewBox identical boxes,
-unlabeled connectors, generic type stacks). The test evaluates the fixture
-through this seam with pinned inputs and asserts (a) the derived evidence
-flags the typography, composition/density, and diagram-semantics dimensions,
-and (b) a rubric-v2 result of `pass` for this fixture is rejected **because
-the evidence contradicts it** — not because a stub is hard-coded. Expected
-verdict is `correct`. Fixture is scrubbed of Duet-proprietary content while
-preserving the structural defects.
-
-**Step 2: Implement (GREEN)**
-
-Bundle the fixture with pinned evidence inputs; implement the deterministic
-evidence extraction; wire evidence-vs-verdict contradiction rejection into
-visual-review validation and the visual matrix suite.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/visual-matrix.test.mjs`
-Expected: green
-
-**Step 4: Commit**
-
-```bash
-git commit -m "test(p06-t03): pin negative visual-quality fixture from the Cyclone case"
-```
-
----
-
-### Task p06-t04: Responsive golden fixtures and golden-benchmark preservation
-
-**Files:**
-
-- Modify: `.agents/skills/explainer-kit/tests/fixtures/golden/` (hub, diagram, deck structured-content goldens at 320/768/1440)
-- Modify: `.agents/skills/explainer-kit/tests/golden-conformance.test.mjs`
-
-**Step 1: Write test (RED)**
-
-Desktop/tablet/mobile golden fixtures for hub, diagram, and deck rendered
-from structured content; all three existing real-Chromium golden benchmarks
-(simple, non-linear, archived recap) still pass under the new renderers,
-type system, and rubric.
-
-**Step 2: Implement (GREEN)**
-
-Generate and pin the goldens; adjust benchmarks only where the new
-renderer output is the intended change (each adjustment documented).
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/golden-conformance.test.mjs .agents/skills/explainer-kit/tests/visual-matrix.test.mjs && pnpm lint && pnpm format`
-Expected: green; lint and format clean (phase touches `.agents/skills/**`)
-
-**Step 4: Commit**
-
-```bash
-git commit -m "test(p06-t04): add responsive structured-content goldens"
-```
-
----
-
-### Task p06-t05: Migrate shipped guidance and documentation consumers
-
-All new contract versions exist by the end of p06. **Executable consumer
-migrations land atomically with their producers** — release/smoke receipt
-acceptance in p03-t03, the validator's `publicAccess` key check in p03-t06,
-and the package-coverage smoke callback in p06-t01/p06-t02 — so
-intermediate commits never leave a shipped executable consumer unable to
-process a producer's output. This task carries the new versions through
-the remaining **guidance and documentation** surfaces, plus release-tool
-inventory assertions and fixtures not owned by a producer task.
-
-**Files:**
-
-- Modify: `.agents/skills/oat-explainer-kit/references/author-callback.md` (author v2/v3)
-- Modify: `.agents/skills/oat-explainer-kit/references/visual-review-callback.md` (visual-review v1/v2 — the adapter's executable v2 acceptance itself landed in p06-t02)
-- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-- Modify: `.agents/skills/explainer-kit/SKILL.md` (guidance pins `author-request/v2`/`author-result/v2`)
-- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (guidance pins old contracts and the three-artifact floor)
-- Modify: `.agents/skills/oat-wave-program/SKILL.md` (direct caller guidance on the old recap floor)
-- Modify: `.agents/skills/oat-wave-execute/SKILL.md` (direct caller guidance on non-durable `built-needs-review` semantics)
-- Modify: `.agents/skills/oat-project-summary/SKILL.md` (documented outcome set omits `built-needs-review`)
-- Modify: `apps/oat-docs/docs/workflows/skills/explainer-kit.md` (contract versions and recap floor)
-- Modify: `apps/oat-docs/docs/workflows/skills/explainer-kit-providers.md` (provider contract versions)
-- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md` (new `explainers.publish.publicAccess` key)
-- Modify: `apps/oat-docs/docs/workflows/projects/artifacts.md` (states flagged runs cannot be finalized or archived — superseded by p04-t02's flagged-durable tier)
-- Modify: any additional pages surfaced by the documentation delta analysis (candidate sweep: `reference/cli-reference.md`, `reference/troubleshooting.md`, `cli-utilities/tool-packs.md`, `workflows/skills/index.md`, `contributing/explainer-kit-verification.md`)
-- Regenerate: `apps/oat-docs/index.md` via `oat docs generate-index` (never hand-edited)
-- Modify: `tools/release/build-explainer-rc.test.mjs` (RC inventory assertions cover the new schema/recipe files)
-- Modify: affected request fixtures under the release/smoke trees
-
-**Step 1: Write test (RED)**
-
-For each versioned contract pair — publish-receipt v1/v2, theme v1/v2,
-author-request v2/v3, author-result v2/v3, set-plan v1/v2, visual-review
-v1/v2, and the `project-recap@1`/`project-recap@2` recipe pair — every
-shipped **guidance** surface documents both versions: every executable
-consumer migration already landed with its producer (receipt acceptance and
-wrapper compatibility in p03-t03, the `publicAccess` key check in p03-t06,
-adapter and smoke-callback acceptance in p06-t01/p06-t02), and this task
-verifies that coverage holds repository-wide (a sweep proves no shipped
-executable consumer still hard-rejects a new version) while migrating
-callback references, skill guidance, and docs pages. RC inventory
-assertions cover the new schema/recipe files. New-run emission and
-retained-version replay are both proven before provider sync, with every
-focused suite executed.
-
-**This migration is repository-wide, covering shipped guidance consumers,
-not only executable tooling:** canonical skill instructions that pin old
-contract versions, the three-artifact recap floor, or non-durable
-`built-needs-review` semantics (`explainer-kit`, `oat-explainer-kit`,
-`oat-wave-program`, `oat-wave-execute`); `oat-project-summary`'s documented
-outcome set (gains flagged `built-needs-review`); RC inventory assertions
-for the new schema and recipe files; and the `apps/oat-docs` explainer
-contract pages. Every canonical skill changed here joins p07-t01's
-one-bump-per-skill set and provider sync.
-
-**Docs-app changes follow the repository's docs authoring workflow
-(`apps/oat-docs/AGENTS.md`), not ad-hoc edits:** first run a documentation
-delta analysis over the enumerated pages (using `oat-project-document`
-guidance), present the delta plan and obtain user approval for substantive
-content changes, then apply the approved edits, run navigation sync, and
-regenerate the generated index with `oat docs generate-index` — the index
-is never hand-edited. Only after that do the build checks run.
-
-**Step 2: Implement (GREEN)**
-
-Callback reference migration; canonical skill guidance migration; approved
-docs-app contract-page edits with nav sync and index regeneration; RC
-inventory assertions and remaining fixture updates.
-
-**Step 3: Verify**
-
-Run: `pnpm --filter @open-agent-toolkit/cli build && node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs tools/smoke/explainer-kit/package-coverage-consumers.test.mjs tools/release/validate-explainer-acceptance.test.mjs tools/release/run-explainer-rc.test.mjs tools/release/build-explainer-rc.test.mjs && pnpm lint && pnpm format && pnpm check && pnpm build:docs`
-Expected: adapter, smoke (including package-coverage, which requires the CLI `dist` build), and release-tool focused suites green (re-run here as the repository-wide coverage sweep); lint and format clean (touches `tools/smoke` and `.agents/skills/**`); markdownlint and docs build clean (touches `apps/oat-docs/docs`)
-
-**Step 4: Commit**
-
-```bash
-git commit -m "docs(p06-t05): migrate shipped guidance and docs to new contract versions"
-```
-
----
-
-### Task p06-t06: Cross-boundary publication acceptance test
-
-Runs after p01 (destination derivation), p03 (receipts, verification,
-`publicAccess`), and p06-t05 (consumer versions) so the full production path
-exists. This is the executable proof for the incident's actual failure
-boundary: the seam between adapter derivation and core publication.
-
-**Files:**
-
-- Create: `.agents/skills/oat-explainer-kit/tests/publish-acceptance.integration.test.mjs`
-- Create: supporting fake-destination fixture beside the test (in-process fake S3/HTTP endpoints; no network, no credentials)
-
-**Step 1: Write test (RED)**
-
-One integration fixture executes a **project invocation from
-repository-level publish config through the adapter and the core publisher**
-against a fake AWS/HTTP destination, and a parallel repository invocation.
-Assertions in a single executable path:
-
-- project run object keys land under
-  `<repository-root>/projects/<project-slug>/.../index.html`; repository run
-  keys land under the unmodified repository root;
-- every published **HTML/manifest artifact** key ends in explicit
-  `index.html`; the intentional initiative catalog is asserted separately at
-  its canonical `site/initiatives/<slug>/catalog.json` key, and the
-  transient publish sentinel's lifecycle (created and removed) is accounted
-  for independently — neither may be swept into the `index.html` assertion
-  nor left unasserted;
-- protected and public `publicAccess` modes propagate to the verification
-  behavior (anonymous fetch skipped for protected; checksum verification in
-  both);
-- published bytes hash-match the finalized manifest exactly;
-- the emitted `publish-receipt` v2 lists every manifest artifact's ID,
-  rendered path, S3 URI, canonical public URL, content hash, and structured
-  verification result, plus the generated catalog as an auxiliary-object
-  entry with the same fields minus the manifest ID — with no credential
-  material anywhere in the request, receipt, or logs.
-
-**Step 2: Implement (GREEN)**
-
-No new production code expected; this task exists to prove the pieces
-compose. Fix any seam mismatch it exposes in the owning task's files.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/oat-explainer-kit/tests/publish-acceptance.integration.test.mjs && pnpm lint && pnpm format`
-Expected: green; lint and format clean
-
-**Step 4: Commit**
-
-```bash
-git commit -m "test(p06-t06): prove project-prefix publication across the adapter/core boundary"
-```
-
----
-
-## Phase 7: Release closure
-
-### Task p07-t01: Skill version bumps and provider sync
-
-**Files:**
-
-- Modify: `.agents/skills/explainer-kit/SKILL.md` (verify the coordinated core minor allocated in p03-t04 is the final PR-scoped version — no second bump unless later edits require it)
-- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (version bump; verify `MINIMUM_CORE_VERSION` and the documented floor still match the shipped core minor)
-- Modify: `.agents/skills/oat-project-implement/SKILL.md` (version bump — its completion-and-closeout reference changes in p04-t04)
-- Modify: `.agents/skills/oat-project-complete/SKILL.md` (version bump — its completion gate changes in p04-t04)
-- Modify: `.agents/skills/oat-wave-program/SKILL.md` (version bump — guidance migrated in p06-t05)
-- Modify: `.agents/skills/oat-wave-execute/SKILL.md` (version bump — guidance migrated in p06-t05)
-- Modify: `.agents/skills/oat-project-summary/SKILL.md` (version bump — outcome set updated in p06-t05)
-- Modify: `packages/cli/src/validation/skills.test.ts` (if version pins exist)
-- Regenerate: provider views via `oat sync --scope all`
-
-**Step 1: Implement**
-
-One frontmatter `version:` bump per changed canonical skill (PR-scoped) —
-every canonical skill the PR touches, including `oat-project-implement`,
-`oat-project-complete`, `oat-wave-program`, `oat-wave-execute`, and
-`oat-project-summary`. The `explainer-kit` core minor was already allocated
-in p03-t04 together with the adapter compatibility floor; this task states
-and verifies the **coordinated pair** (core `version:` ≥ adapter
-`MINIMUM_CORE_VERSION`, same minor, documented floor matching) rather than
-leaving the floor unchanged. Run `oat sync --scope all`; update any literal
-version assertions.
-
-**Step 2: Verify**
-
-Run: `pnpm --filter @open-agent-toolkit/cli test -- skills.test.ts && pnpm lint && pnpm format`
-Expected: green
-
-**Step 3: Commit**
-
-```bash
-git commit -m "chore(p07-t01): bump explainer skill versions and sync providers"
-```
-
----
-
-### Task p07-t02: Lockstep package bump and full release validation
-
-**Files:**
-
-- Modify: `packages/cli/package.json`
-- Modify: `packages/control-plane/package.json`
-- Modify: `packages/docs-config/package.json`
-- Modify: `packages/docs-theme/package.json`
-- Modify: `packages/docs-transforms/package.json`
-- Modify: `pnpm-lock.yaml`
-- Regenerate: `packages/cli/assets/public-package-versions.json` (via `pnpm build`; commit atomically with the manifests)
-
-**Step 1: Implement**
-
-Bump all five public packages in lockstep (bundled `.agents/skills` assets
-are shipped CLI functionality); run `pnpm build` so the tracked generated
-version asset regenerates from the bumped manifests, and stage it in the same
-commit.
-
-**Step 2: Verify**
-
-Run: `pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm release:validate && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts`
-Expected: all repository and release gates green, including smoke and bundle consistency
-
-**Step 3: Commit**
-
-```bash
-git commit -m "chore(p07-t02): lockstep public package bump and release validation"
+git commit -m "chore(p05-t03): synchronize explainer release versions"
 ```
 
 ---
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
+| Scope         | Type     | Status          | Date       | Artifact                                                                                          | Reviewed Head                            | Invocation | Gate Target              |
+| ------------- | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01           | code     | passed          | 2026-08-06 | reviews/archived/p01-review-2026-08-06T172134Z.md                                                 | a42a38521b33fa1127ebdd1b462a16ed632728cb | manual     | -                        |
+| p01-t06       | code     | fixes_completed | 2026-08-06 | reviews/archived/p01-t06-review-2026-08-06T173603Z.md                                             | fcc100f3f78984bc1ba285bd1fea099cda451a24 | manual     | -                        |
+| p01-t06       | code     | passed          | 2026-08-06 | reviews/archived/p01-t06-review-2026-08-06T174423Z.md                                             | c1d5a1b0994e19abb2b349b776ba3235f8955b52 | manual     | -                        |
+| p02           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
+| p03           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
+| p04           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
+| p05           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
+| final         | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
+| plan-revision | artifact | pending         | 2026-08-06 | -                                                                                                 | -                                        | manual     | -                        |
+| plan          | artifact | passed          | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed)                                     | -                                        | auto       | -                        |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T002327Z.md (4 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T004027Z.md (2 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T005429Z.md (4 Important + 2 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012159Z.md (superseded rerun; findings resolved) | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012720Z.md (3 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T013953Z.md (2 Important + 2 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T015212Z.md (2 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T021300Z.md (2 Important + 3 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T023457Z.md (4 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T024804Z.md (4 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T031926Z.md (2 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T033345Z.md (3 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T034831Z.md (2 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T040012Z.md (2 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T042235Z.md (3 Important + 2 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T043754Z.md (2 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan          | artifact | passed          | 2026-08-06 | operator acceptance after attempt-15 fixes                                                        | -                                        | operator   | -                        |
 
-| Scope   | Type     | Status          | Date       | Artifact                                                                                                                                               | Reviewed Head                            | Invocation | Gate Target              |
-| ------- | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | ---------- | ------------------------ |
-| p01     | code     | passed          | 2026-08-06 | reviews/archived/p01-review-2026-08-06T172134Z.md                                                                                                      | a42a38521b33fa1127ebdd1b462a16ed632728cb | manual     | -                        |
-| p01-t06 | code     | fixes_completed | 2026-08-06 | reviews/archived/p01-t06-review-2026-08-06T173603Z.md                                                                                                  | fcc100f3f78984bc1ba285bd1fea099cda451a24 | manual     | -                        |
-| p01-t06 | code     | passed          | 2026-08-06 | reviews/archived/p01-t06-review-2026-08-06T174423Z.md                                                                                                  | c1d5a1b0994e19abb2b349b776ba3235f8955b52 | manual     | -                        |
-| p02     | code     | pending         | -          | -                                                                                                                                                      | -                                        | -          | -                        |
-| p03     | code     | pending         | -          | -                                                                                                                                                      | -                                        | -          | -                        |
-| p04     | code     | pending         | -          | -                                                                                                                                                      | -                                        | -          | -                        |
-| p05     | code     | pending         | -          | -                                                                                                                                                      | -                                        | -          | -                        |
-| p06     | code     | pending         | -          | -                                                                                                                                                      | -                                        | -          | -                        |
-| p07     | code     | pending         | -          | -                                                                                                                                                      | -                                        | -          | -                        |
-| final   | code     | pending         | -          | -                                                                                                                                                      | -                                        | -          | -                        |
-| plan    | artifact | passed          | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed)                                                                                          | -                                        | auto       | -                        |
-| spec    | artifact | pending         | -          | -                                                                                                                                                      | -                                        | -          | -                        |
-| design  | artifact | pending         | -          | -                                                                                                                                                      | -                                        | -          | -                        |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T002327Z.md (4 Important + 1 Medium resolved in artifact)                                              | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T004027Z.md (2 Important + 1 Medium resolved in artifact; operator authorized attempt 3)               | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T005429Z.md (4 Important + 2 Medium resolved in artifact)                                              | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012159Z.md (2 Important + 1 Medium; superseded by the attempt-4 rerun, findings resolved via 012720Z) | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012720Z.md (3 Important + 1 Medium resolved in plan and design)                                       | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T013953Z.md (2 Important + 2 Medium resolved in artifact)                                              | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T015212Z.md (2 Important resolved in artifact)                                                         | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T021300Z.md (2 Important + 3 Medium resolved in artifact)                                              | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T023457Z.md (4 Important resolved in artifact)                                                         | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T024804Z.md (4 Important resolved in artifact)                                                         | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T031926Z.md (2 Important + 1 Medium resolved in artifact)                                              | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T033345Z.md (3 Important resolved in plan and design)                                                  | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T034831Z.md (2 Important resolved in artifact)                                                         | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T040012Z.md (2 Important resolved in artifact)                                                         | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T042235Z.md (3 Important + 2 Medium resolved in artifact)                                              | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T043754Z.md (2 Important + 1 Medium resolved in artifact)                                              | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan    | artifact | passed          | 2026-08-06 | operator acceptance after attempt-15 fixes: final gate round produced no structural findings; all 15 rounds' findings resolved in artifact             | -                                        | operator   | -                        |
-
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
----
+**Status values:** `pending` → `received` → `fixes_added` →
+`fixes_completed` → `passed`
 
 ## Implementation Complete
 
 **Summary:**
 
-- Phase 1: 6 tasks — adapter path and destination derivation plus review fix
-- Phase 2: 4 tasks — core link integrity
-- Phase 3: 6 tasks — publication integrity
-- Phase 4: 4 tasks — lifecycle ordering and recovery
-- Phase 5: 6 tasks — structured content contracts and renderers
-- Phase 6: 6 tasks — recipe floor, rubric v2, fixtures, consumer migration, publication acceptance
-- Phase 7: 2 tasks — release closure
+- Phase 1: 6 tasks — adapter paths, destinations, and credential hygiene
+- Phase 2: 2 tasks — canonical links and hard validation
+- Phase 3: 3 tasks — publication verification and receipts
+- Phase 4: 3 tasks — lifecycle ordering and bounded recovery
+- Phase 5: 3 tasks — prose-led authoring, docs, and release closure
 
-**Total: 34 tasks**
-
----
+**Total: 17 tasks**
 
 ## References
 
-- Design: `design.md` (approved lightweight design)
+- Design: `design.md` (revised lightweight design)
 - Discovery: `discovery.md`
-- Handoff: `references/handoff-cyclone-case-study.md` (normative acceptance criteria)
+- Handoff: `references/handoff-cyclone-case-study.md` (production evidence)
+- Implementation tracking: `implementation.md`

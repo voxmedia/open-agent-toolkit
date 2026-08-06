@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-quick-start
 oat_blockers: []
-oat_last_updated: 2026-08-05
+oat_last_updated: 2026-08-06
 oat_generated: false
 ---
 
@@ -72,6 +72,24 @@ The handoff includes explicit acceptance criteria and a required test matrix
 (path derivation, invocation fixtures, link validation including this case's
 broken links, publication verification, the `sourceIds` regression, responsive
 golden fixtures, and a negative visual-quality fixture).
+
+## Operator Scope Revision (2026-08-06)
+
+After p01 implementation, the operator concluded that the original plan
+over-specified the creative layer. The accepted direction is a thin executable
+safety kernel plus prose-led authoring and visual judgment.
+
+Executable scope remains for path/URL derivation, credential hygiene, link
+validation, manifest/hash equality, publication receipts, protected access,
+publish gating, and lifecycle ordering. Structured renderer contracts,
+general-purpose layout engines, deterministic visual-quality heuristics, and
+new golden matrices are removed. Artifact strategy, typography, composition,
+slide patterns, diagram semantics, and visual-review quality move to
+recipe/brief/skill prose.
+
+The existing golden suite remains unchanged in this project. A separate
+evidence-based follow-up will assess its unique coverage, runtime, and
+flakiness before simplification.
 
 ## Clarifying Questions
 

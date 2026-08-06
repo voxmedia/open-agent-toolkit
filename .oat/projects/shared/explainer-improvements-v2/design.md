@@ -2,450 +2,222 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-05
+oat_last_updated: 2026-08-06
 oat_generated: false
 oat_template: false
 ---
 
 # Design: explainer-improvements-v2
 
-> Lightweight quick-mode design. Requirements live in
-> `references/handoff-cyclone-case-study.md` (normative acceptance criteria)
-> and `discovery.md`.
+> Revised lightweight design. The production observations in
+> `references/handoff-cyclone-case-study.md` remain the evidence base. The
+> operator's 2026-08-06 scope decision supersedes its prescribed structured
+> renderer, deterministic visual-heuristic, and expanded golden-fixture
+> implementation details.
 
 ## Overview
 
-This project hardens the explainer pipeline's integrity contracts and raises
-its visual floor, in two largely independent tracks. Track one (integrity)
-closes the path-derivation, link-construction, publication-verification, and
-lifecycle-ordering gaps the Cyclone case study exposed: the OAT adapter gains
-per-invocation remote destination derivation (`<repository-root>/projects/
-<project-slug>` for project runs, repository root for repo runs) so the core
-can keep blindly joining site-relative paths onto whatever `s3Uri`/
-`publicBaseUrl` it is handed; the core gains a manifest-anchored post-render
-internal-link validator plus canonical artifact URLs in author requests, so
-free-form authors can no longer invent directory-style links; and publication
-gains an explicit protected-destination policy (operator-approved
-2026-08-05): a destination explicitly declared protected in config verifies
-published bytes through authenticated service-computed object checksums
-(upload with an S3-validated SHA-256 checksum and compare the stored service
-checksum against the manifest hash, or authenticated download plus byte
-hashing — never caller-authored metadata round-trips) and records canonical
-public URLs in the receipt without fetching them, marked as
-skipped-protected; undeclared destinations keep the strict credential-free
-anonymous check and fail closed on 401/403. No injected verification
-callback is built; a 401 is never treated as success — verification is
-either run and passed, or explicitly skipped by declared config and recorded
-as skipped. Published bytes must match finalized manifest hashes;
-corrections re-enter the pipeline through rebuild and review, never
-publication-time transformation.
+The explainer system will use a small executable safety kernel and a
+prose-driven creative layer.
 
-Track two (visual) shifts standard recipe artifacts from author-owned
-full-document HTML to renderer-owned structured content contracts. Authors
-supply semantic content — slides with declared archetypes, diagrams as
-semantic graph data, hub sections/cards/callouts — and versioned central
-renderers own layout, typography, spacing, responsive behavior, and
-components. A deterministic role-based type system (display/heading/body/UI/
-annotation/mono with per-medium scales) replaces the generic `system-ui`/
-`ui-serif` stacks. The `project-recap` recipe drops its three-artifact floor:
-the hub remains required, and the planner must justify a diagram or deck with
-a distinct reader question and sufficient evidence. The visual-review rubric
-expands from legibility/clipping to scored design judgment (typography,
-hierarchy, composition, density, medium leverage, repetition, diagram
-semantics, cohesion), with the case study's deck and diagram enshrined as a
-negative fixture that must yield `correct`, not `pass`.
+The executable kernel owns behavior that must be deterministic: destination
+derivation, credential hygiene, canonical internal links, post-render link
+validation, manifest/hash equality, complete publication receipts, protected
+destination verification, publication authorization, and lifecycle ordering.
+These checks remain code because guidance alone cannot guarantee them.
 
-Lifecycle changes adopt a flag-not-block stance (operator-approved
-2026-08-05). The recap gate is ordered ahead of final approval: when a recap
-resolves to `generate`, approval completion waits only for the gate to record
-a terminal outcome — and `built-needs-review` is a valid terminal outcome, so
-approval is never held hostage to visual polish. A `built-needs-review`
-result automatically enters the bounded correction path (the existing
-one-correction-then-final-review machinery): rebuild, re-review, and if still
-not clean, keep the artifact, durably record residual findings, flag them for
-the operator, and let the lifecycle proceed. Publication alone remains
-quality-gated: a flagged run is durable and inspectable but is categorically
-not publishable — publication requires a corrected run that passes browser
-and visual review, per the normative handoff. The design also
-defines a durable failed-run-evidence policy (compact failure record
-retained; bulky diagnostics intentionally archived or deleted) and adds
-regression coverage for the `request.sourceIds is not iterable`
-content-processing failure. All existing
-safety guarantees — immutable manifests, additive publishing, the human
-publish gate, credential hygiene, provenance, accessibility — carry forward
-unchanged, and nothing Duet-, VoxOps-, or bucket-specific enters the core.
+Skill and recipe prose owns behavior that requires editorial judgment:
+artifact selection, narrative purpose, typography, composition, slide
+archetypes, diagram semantics, density, medium choice, and visual critique.
+Authors continue producing Markdown or artistic HTML. This project will not add
+structured hub/deck/diagram content schemas, general-purpose renderer engines,
+semantic graph layout code, deterministic visual-quality scoring, or new
+golden-test matrices.
+
+Phase p01 already established the adapter path boundary. Project runs derive
+`<repository-root>/projects/<encoded-project-slug>`; repository and direct runs
+retain their repository roots. Credential-bearing and malformed destination
+roots are rejected before core invocation or request persistence. The
+provider-neutral core remains unaware of OAT project topology and private
+configuration.
 
 ## Architecture
 
-### System Context
+### Core: `explainer-kit`
 
-Everything lands in the two canonical skills: `.agents/skills/explainer-kit`
-(provider- and destination-neutral core) and
-`.agents/skills/oat-explainer-kit` (OAT adapter). The core continues to know
-nothing about OAT topology, Duet, VoxOps, or buckets; the adapter continues to
-own config resolution, invocation topology, and lifecycle integration. The
-recap-gate ordering invariant additionally touches the OAT lifecycle surface
-that invokes the adapter (project completion/approval flow).
+The core remains destination-neutral and config-blind. It owns:
 
-**Key Components (changed or new):**
+- versioned author and publication contracts;
+- manifest-relative artifact path composition;
+- canonical internal-link generation and validation;
+- rendering, browser evidence, visual-review orchestration, and durability;
+- immutable manifest hashes and additive publication;
+- publisher entry-point enforcement and durable receipts.
 
-- **Adapter destination derivation (new, adapter):** composes the
-  repository-scoped publish config (`s3Uri` root, `publicBaseUrl` root,
-  region, provider) with the invocation to produce the per-run destination:
-  project runs get `<root>/projects/<project-slug>`, repo runs get the root
-  unchanged. Also unblocks the existing `repo` invocation path in the entry
-  point (`resolve-paths.mjs` already supports it; `run.mjs` rejects it).
-- **Canonical artifact link table (new, core):** the set plan already names
-  every artifact; render exposes each artifact's site-relative
-  `renderedPath` (always ending `index.html`) to authors as the only legal
-  link targets — by URL or by artifact ID that the renderer resolves.
-- **Internal-link validator (new, core):** post-render pass over every HTML
-  artifact; resolves each local `href` against the source artifact's
-  location, requires the target to exist in the manifest/site tree with
-  explicit `index.html`, rejects directory-style links. Runs as a build
-  failure, not a warning.
-- **Publish connector protected-destination mode (changed, core):**
-  publish-request gains an explicit public-access declaration; protected
-  roots verify via authenticated in-bucket object hash/metadata checks and
-  record unfetched canonical public URLs; undeclared roots keep the strict
-  anonymous check. Receipt lists every artifact's ID, rendered path, S3 URI,
-  public URL, content hash, and verification result.
-- **Structured content renderers (new, core):** artifact-specific content
-  contracts (hub sections/cards/callouts, deck slides with archetypes,
-  diagrams as semantic graph data) rendered by core-owned renderers that own
-  layout, typography, spacing, and responsive behavior. Builds on the
-  existing deterministic diagram/graph machinery from explainer-improvements.
-- **Type system (new, core):** deterministic role-based tokens
-  (display/heading/body/UI/annotation/mono) with per-medium scales, consumed
-  by the renderers and curated styles.
-- **Visual review rubric v2 (changed, core):** expanded request/result
-  contract scoring typography, hierarchy, composition, density, medium
-  leverage, repetition, diagram semantics, and cohesion; the Cyclone deck and
-  diagram become a bundled negative fixture.
-- **Recipe floor change (changed, core):** `project-recap` keeps only the hub
-  as floor; every other artifact — explainer views, diagrams, and decks —
-  is planner-justified expansion requiring a distinct reader question and
-  sufficient supporting evidence (diagram and deck join the existing
-  justified expansion profiles).
-- **Lifecycle ordering and correction (changed, adapter + OAT lifecycle):**
-  recap gate must record a terminal outcome before final approval completes;
-  `built-needs-review` auto-enters the existing bounded correction machinery;
-  residual findings are durably flagged, never project-blocking; failed runs
-  leave a compact durable failure record.
+The core receives already-derived destination roots. It does not read OAT
+configuration, derive project topology, or acquire credentials.
 
-### Data Flow
+### Adapter: `oat-explainer-kit`
 
-```
-oat lifecycle (approval waits for terminal recap outcome)
-  └─ oat-explainer-kit run
-       ├─ resolve config (provider, roots, region, publicAccess)
-       ├─ resolve local output root (project|repo|direct)
-       ├─ derive remote destination (root [+ projects/<slug>])
-       └─ invoke explainer-kit core
-            ├─ plan set (hub floor; justified diagram/deck)
-            ├─ author structured content (canonical link table injected)
-            ├─ render (core-owned layout + type system)
-            ├─ validate internal links against manifest  ← new hard gate
-            ├─ browser evidence (320/768/1440)
-            ├─ visual review (rubric v2)
-            │    └─ needs-review → bounded correction → re-review
-            ├─ durability (flagged or clean; failure record if failed)
-            └─ [human gate] publish
-                 ├─ public root: anonymous byte verification
-                 ├─ protected root: authenticated in-bucket verification
-                 └─ receipt: every artifact's URLs, hash, verification
-```
+The adapter owns:
 
-## Component Design
+- OAT project/repository/direct invocation topology;
+- source binding and reviewed-repository provenance;
+- config resolution and source-aware `publicAccess`;
+- per-invocation local and remote destination derivation;
+- lifecycle summaries and completion integration.
 
-### 1. Adapter destination derivation (`oat-explainer-kit`)
+Only validated, credential-free, topology-free destination data crosses into
+the core.
 
-**Purpose:** Turn repository-scoped publish config into a per-invocation
-destination without the core learning OAT topology.
+### Lifecycle callers
 
-**Responsibilities:**
+Project completion and implementation closeout call a shared terminal-outcome
+guard. When recap generation is selected, final approval cannot complete until
+the recap records one of:
 
-- Resolve the complete publish config (`provider: s3-static`, repository
-  `s3Uri` root, repository `publicBaseUrl` root, `awsRegion`, and the new
-  public-access declaration) and validate completeness before any publish
-  intent is honored; incomplete config keeps runs build-only with an explicit
-  report of what is missing.
-- Derive `<root>/projects/<project-slug>` for project invocations and pass
-  the root unchanged for repo invocations; slug segments use the same
-  encoding rules as render-time URL construction.
-- Accept the `repo` invocation at the entry point and route it through the
-  existing `resolveExplainerOutputRoot` repo branch.
-- Reject or normalize caller-supplied output roots that already end in the
-  run slug (double-nesting guard).
+- `built-clean`;
+- `built-needs-review`;
+- `failed`.
 
-**Interfaces:** extends the existing `resolve-config.mjs`/`run.mjs` seam; the
-core continues to receive a fully-formed publish request and never sees
-project/repo distinctions.
+`built-needs-review` is durable and does not block project completion, but it is
+categorically unpublishable. One bounded correction may rebuild and re-review
+the run. A remaining failure or quality flag is recorded rather than hidden.
 
-### 2. Canonical artifact link table (core)
+### Prose-driven creative layer
 
-**Purpose:** Make manifest-declared paths the only expressible internal link
-targets for authors.
+Recipes, briefs, and skill guidance define:
 
-**Responsibilities:**
+- a required navigational hub;
+- optional diagrams, decks, or deep dives only when they answer a distinct
+  reader question supported by evidence;
+- typographic roles and hierarchy rather than a hardcoded universal type
+  engine;
+- slide archetypes as editorial patterns, not renderer enums;
+- diagram expectations such as meaningful topology, readable labels,
+  fit-to-content framing, and explicit relationships;
+- visual-review dimensions covering hierarchy, composition, density,
+  repetition, medium leverage, diagram semantics, and cross-artifact cohesion.
 
-- Derive, from the set plan, each artifact's site-relative `renderedPath`
-  (always explicit `index.html`).
-- Inject the table into every author request (structured and artistic):
-  artifact ID → canonical relative URL from the authoring artifact's
-  location.
-- Structured content references artifacts by ID only; the renderer resolves
-  IDs to URLs. Artistic HTML must use the provided canonical URLs verbatim.
+The critic continues returning the existing actionable pass/correct outcome.
+The rubric guides judgment; scripts do not pretend to measure design quality
+deterministically.
 
-### 3. Internal-link validator (core)
+## Data and Control Flows
 
-**Purpose:** Hard post-render gate proving every internal link resolves.
+### Authoring and links
 
-**Responsibilities:**
+1. The set planner chooses artifacts and assigns stable artifact IDs.
+2. The core derives each artifact's explicit site-relative path ending in
+   `index.html`.
+3. Each author request receives a canonical link table appropriate to its own
+   location.
+4. The author emits Markdown or HTML using those links.
+5. After rendering, the core validates internal `href`, `src`, and embedded
+   references against the manifest and generated site tree.
+6. Relative paths, fragments, and explicitly safe embedded references are
+   classified separately. Invalid or ambiguous references fail closed.
+7. A failed link gate may use the existing one-correction path. The corrected
+   output is rerendered and revalidated before browser or visual review.
 
-- Parse every rendered HTML artifact (not only the hub); extract local
-  `href`/`src` targets.
-- Resolve each against the artifact's own site location; require the target
-  to exist in the manifest/site tree; require explicit `index.html` for page
-  links; reject directory-style links and any target outside the site tree.
-- Fail the build with per-link findings; failures route into the bounded
-  correction path like any other build defect.
+### Publication
 
-### 4. Publish connector: protected destinations and complete receipts (core)
+1. The human publication gate remains mandatory.
+2. The adapter supplies derived roots and the explicit public-access mode.
+3. The core uploads finalized bytes without transforming them.
+4. Public destinations verify object bytes and anonymous public URLs.
+5. Protected destinations verify object bytes through authenticated
+   service-computed checksums or authenticated download hashing. Public URL
+   fetching is explicitly recorded as skipped-protected.
+6. The receipt covers every manifest artifact plus generated auxiliary objects,
+   with exact path, URI, URL, hash, and object/public verification facts.
+7. Any mismatch fails publication; it never patches the published object.
 
-**Purpose:** Honest verification for both public and protected roots; durable
-complete publication records.
+### Lifecycle
 
-**Responsibilities:**
+1. The caller records recap intent before final approval.
+2. Generation validates `sourceIds` at the contract boundary.
+3. Rendering, link validation, browser review, and visual review produce a
+   terminal outcome.
+4. A flagged run may receive one correction. Remaining findings are retained in
+   a compact durable record.
+5. Clean runs may proceed to the separate human publication gate. Flagged,
+   failed, and superseded runs cannot publish.
 
-- Publish-request declares `publicAccess: "public" | "protected"` (default
-  `public`, preserving current strict behavior).
-- `public`: unchanged sentinel + anonymous byte verification.
-- `protected`: skip anonymous fetches entirely; verify each uploaded object
-  against **service-computed bytes** — upload with an S3-validated SHA-256
-  checksum and compare the stored service checksum against the manifest hash
-  (or authenticated download plus byte hashing). Caller-authored object
-  metadata never satisfies verification. Record canonical public URLs
-  unfetched.
-- Per-artifact verification is a **structured result with separate fields**
-  for object-byte verification (`verified-anonymous | verified-authenticated`
-  plus the compared service checksum/hash) and public-URL verification
-  (`verified | skipped-protected`), so protected receipts record both facts.
-- Receipt (`publish-receipt.json`, durable in the run package) lists every
-  artifact's ID, rendered path, S3 URI, canonical public URL, content hash,
-  and the structured verification result. Lifecycle summaries copy the
-  complete URL set from the receipt instead of recording only the hub.
-- Published bytes always match finalized manifest hashes; no
-  publication-time transformation exists anywhere in the connector.
+## Versioning and Compatibility
 
-### 5. Structured content contracts and renderers (core)
+Only contract changes required by the safety kernel receive new versions:
 
-**Purpose:** Move layout ownership from authors to versioned core renderers.
+- `author-request/v3` for canonical link tables while retaining Markdown and
+  HTML authoring;
+- `publish-request/v2` for explicit public-access behavior;
+- `publish-receipt/v2` for exact object/public verification and auxiliary
+  object coverage;
+- `project-recap@2` for the hub floor and prose-led adaptive expansion;
+- a compact failure record only if existing durable records cannot represent
+  terminal failure evidence without ambiguity.
 
-**Responsibilities:**
+Existing contract and recipe versions remain readable for deterministic replay.
+New producers and all shipped consumers move atomically. The adapter's minimum
+core version advances only when it first depends on the new core contracts.
 
-- Define artifact-specific structured content contracts:
-  - **hub:** ordered sections, evidence tables, cards, callouts, artifact
-    references (by ID);
-  - **deck:** slides each declaring purpose, layout archetype (outcome hero,
-    before/after, architecture, decision/trade-off, evidence scoreboard,
-    comparison, next action), headline, evidence, optional
-    comparison/visual, action;
-  - **diagram:** nodes, groups/containers, edges with labels, layout
-    direction, emphasis — semantic graph data, no author-supplied
-    coordinates.
-- Renderers own layout, typography, spacing, responsive behavior, print,
-  reduced-motion, and components; diagram rendering extends the existing
-  deterministic graph machinery with auto-fit viewBox, containers/swimlanes,
-  edge labels, overlap/crossing detection, content-aware spacing, and
-  zoom/pan only when the graph exceeds the viewport.
-- Deterministic deck anti-filler checks: repeated title-plus-paragraph
-  slides, excessive empty space, duplicated slide-position text, lack of
-  visual variation, overflow, presentation-distance legibility.
-- Artistic (free-form HTML) authoring remains available where recipes allow
-  it, but always passes the link validator and visual review; standard recipe
-  artifacts default to structured contracts.
+## Safety Invariants
 
-### 6. Role-based type system (core)
-
-**Purpose:** Deterministic, intentional typography without external active
-content.
-
-**Responsibilities:**
-
-- Roles: display, heading, body, UI, annotation, mono — each with weights,
-  tracking, line heights, and measures; medium-specific scales for pages,
-  decks, and SVG labels.
-- Deterministic high-quality font stacks by default; bundled licensed fonts
-  only if licensing allows redistribution inside self-contained artifacts (a
-  plan-time decision; stacks are the floor).
-- Tokens flow through curated styles and the resolved theme bundle so replay
-  stays deterministic.
-
-### 7. Visual review rubric v2 (core)
-
-**Purpose:** Catch design mediocrity, not just clipping.
-
-**Responsibilities:**
-
-- Extend the visual-review request/result contracts to require scored
-  findings on: intentional typography, hierarchy, composition/balance,
-  information density, medium leverage, template repetition, diagram
-  semantics, cross-artifact cohesion.
-- Verdict vocabulary distinguishes `pass` (design-quality bar met) from
-  `correct` (legible/unclipped but weak) and failing states; the Cyclone
-  deck/diagram screenshots ship as a bundled negative fixture that must not
-  receive `pass`.
-- Existing accessibility, keyboard, reduced-motion, print, and mobile checks
-  are unchanged and remain necessary conditions.
-
-### 8. Recipe v2: hub floor (core)
-
-**Purpose:** Content-adaptive artifact selection.
-
-**Responsibilities:**
-
-- `project-recap` floor shrinks to the hub; explainer views, diagrams, and
-  decks become planner-justified expansion requiring a distinct reader
-  question and sufficient supporting evidence.
-- The set planner records each justification in the set plan; redundant or
-  filler artifacts are rejected at planning time.
-- Other recipes are audited for the same contradiction but changed only where
-  the same defect exists.
-
-### 9. Lifecycle ordering, bounded correction, failure evidence (adapter + OAT lifecycle)
-
-**Purpose:** Flag-not-block lifecycle with honest durable records.
-
-**Responsibilities:**
-
-- When recap intent resolves to `generate`, final approval cannot complete
-  until the recap gate records a terminal outcome; `built-needs-review` is a
-  valid terminal outcome.
-- `built-needs-review` automatically enters the existing bounded
-  one-correction-then-final-review machinery; residual findings after the cap
-  are durably recorded and flagged, and the lifecycle proceeds.
-- Publication stays quality-gated: flagged runs never publish; only a
-  corrected run that passes browser and visual review may publish.
-- Failed/superseded runs leave a compact durable failure record (run ID,
-  recipe, outcome, error class, timestamps, pointer to superseding run);
-  bulky diagnostics are intentionally archived or deleted per policy, never
-  left as untracked-only evidence.
-- The `request.sourceIds is not iterable` failure is root-caused at the
-  adapter/core request boundary and covered by a shape-validation regression
-  test.
-
-### 10. Secondary path-contract fixes (core + adapter)
-
-**Purpose:** Close the audit's remaining gaps.
-
-**Responsibilities:**
-
-- Reconcile `publicBaseUrl` residence (`durability.publish` vs top-level
-  request field) into one documented location consumed consistently by all
-  render and publish paths.
-- Render-time and publish-time URL construction share one segment-encoding
-  helper.
-- Double-nesting guard (component 1) and repo-invocation unblock (component
-  1. are the adapter-side halves of this cleanup.
-
-## Data Models
-
-All contracts are versioned JSON Schemas under `explainer-kit/schemas/`,
-following the existing `explainer-kit.<name>/vN` convention. New versions are
-additive where possible; consumers reject unknown schema versions as today.
-
-- **Publish request (revised):** adds `publicAccess: "public" | "protected"`
-  (default `public`). Roots remain credential-free; no other trust-model
-  fields change.
-- **Publish receipt (revised):** per-artifact entries gain canonical public
-  URL and a structured verification result with separate object-byte
-  (`verified-anonymous | verified-authenticated`, plus the compared service
-  checksum/hash) and public-URL (`verified | skipped-protected`) fields.
-  Receipt remains atomic and durable in the run package.
-- **Author request (revised):** gains the canonical artifact link table
-  (artifact ID → site-relative canonical URL from the authoring artifact's
-  location) and, for structured artifacts, the structured-content contract
-  reference in place of full-HTML instructions.
-- **Structured content contracts (new):** three schemas —
-  `hub-content/v1`, `deck-content/v1` (slides with archetype enum),
-  `diagram-content/v1` (semantic graph: nodes, groups, edges, labels,
-  direction, emphasis). Author results carry structured content for standard
-  artifacts; artistic artifacts keep the existing HTML result shape.
-- **Set plan (revised):** expansion entries for diagram/deck/explainer views
-  carry the planner's justification (reader question + evidence pointers);
-  hub remains the only floor entry for `project-recap`.
-- **Visual review request/result (v2):** request enumerates rubric
-  dimensions; result requires per-dimension scored findings and a verdict
-  that separates `pass` from `correct`.
-- **Failure record (new):** compact durable record for failed/superseded
-  runs — run ID, recipe, terminal outcome, error class, timestamps, pointer
-  to any superseding run. Lives in the durable project tree, not untracked
-  scratch space.
-- **Type tokens (revised theme):** role-based typography tokens
-  (display/heading/body/UI/annotation/mono, per-medium scales) join the
-  resolved theme bundle so replay stays deterministic.
-
-## Error Handling
-
-- **Incomplete publish config:** the adapter reports exactly which fields are
-  missing (provider, roots, region) and the run proceeds build-only; no
-  partial publication is attempted.
-- **Protected-root misdeclaration:** a root declared `public` that returns
-  401/403 during verification fails closed exactly as today (sentinel
-  failure aborts before artifact upload). A root declared `protected` never
-  makes anonymous requests, so there is no 401 to misinterpret.
-- **Link validation failures:** reported per link with source artifact,
-  offending href, and expected canonical target; the build fails and the run
-  routes into bounded correction, not publication.
-- **Request-shape failures (`sourceIds` class):** the adapter/core request
-  boundary validates shape before content processing and reports the exact
-  field and expected type; regression coverage pins the original failing
-  shape.
-- **Bounded correction exhaustion:** residual findings are durably recorded
-  in the run package and surfaced as flags; terminal outcome
-  `built-needs-review` propagates to the lifecycle without blocking approval.
-- **Failed runs:** always leave the compact failure record; diagnostic bulk
-  follows the archive-or-delete policy and is never the only evidence.
+- Publishing remains human-gated and additive.
+- Published bytes equal finalized manifest bytes.
+- No publication-time HTML or asset mutation is allowed.
+- Credentials never appear in config-derived requests, manifests, receipts,
+  logs, fixtures, or public URLs.
+- Protected public access is explicit; 401/403 is never treated as success.
+- Flagged, failed, or superseded runs are unpublishable.
+- Corrections rebuild, rerender, revalidate, and re-review.
+- The core stays provider-neutral and OAT-topology-blind.
+- Existing v1/v2 artifacts remain replayable where their contracts promise it.
 
 ## Testing Strategy
 
-Tests live beside the existing suites (`explainer-kit/tests/`,
-`oat-explainer-kit/tests/`) and run under `node:test` as today. The handoff's
-required test matrix maps as:
+Tests are proportional to the invariant:
 
-- **Path derivation (unit, adapter):** local output roots for
-  project/repo/direct invocations; remote destination derivation including
-  `/projects/<slug>` composition, repo passthrough, double-nesting guard,
-  and shared segment encoding.
-- **Invocation fixtures (integration, adapter):** end-to-end project and
-  repository invocation fixtures exercising the unblocked repo entry point.
-- **Link validation (unit + fixture, core):** the exact broken links from the
-  Cyclone hub (`../architecture/`, `../deck/`) as failing fixtures; passing
-  fixtures with canonical `index.html` targets; validation across all
-  artifacts, not only the hub.
-- **Publication (integration, core):** explicit `index.html` in every object
-  path; project-prefix placement; manifest-hash byte equality; receipt
-  completeness (every artifact's URLs, hash, verification result);
-  protected-root behavior (no anonymous fetch, authenticated verification,
-  `skipped-protected` recording); declared-public 401/403 still fails
-  closed; credential-hygiene assertions on requests, manifests, logs,
-  receipts.
-- **Request-shape regression (unit, adapter/core boundary):** the
-  `request.sourceIds is not iterable` shape pinned as a failing input that
-  now yields a structured validation error.
-- **Structured rendering (unit + golden, core):** renderer output for each
-  contract; deck anti-filler checks as deterministic unit tests; diagram
-  semantic-layout properties (auto-fit, labels, overlap detection).
-- **Golden fixtures (visual, core):** desktop/tablet/mobile (320/768/1440)
-  golden fixtures for hub, diagram, and deck rendered from structured
-  content; existing three golden benchmarks stay green throughout.
-- **Negative visual-quality fixture (core):** the Cyclone deck and diagram
-  bundled as a rubric-v2 fixture whose review must yield `correct`, not
-  `pass`.
-- **Lifecycle (integration, adapter):** gate-ordering invariant (approval
-  waits for terminal outcome); auto-entry into bounded correction from
-  `built-needs-review`; failure-record creation on failed runs; flagged runs
-  categorically blocked from publication at every publish entry point.
-- **Release gates:** five-package lockstep validation (`pnpm release:validate`)
-  and canonical-skill version bumps with provider sync, per repo policy.
+- pure unit tests for path/URL composition, credential rejection, reference
+  classification, schema validation, and receipt coverage;
+- focused integration tests for adapter-to-core request composition, hard link
+  gating, lifecycle ordering, and publication behavior;
+- one cross-boundary fake-destination acceptance test covering project and
+  repository paths, exact bytes, explicit `index.html`, protected/public modes,
+  and complete receipts;
+- narrow regression coverage for `request.sourceIds is not iterable`.
+
+This project adds no new Chromium golden matrix and does not expand the existing
+three-case, 27-capture suite. Simplifying that suite is a separate follow-up
+requiring an evidence-based coverage, runtime, and flakiness audit.
+
+Repository completion gates remain:
+
+1. `pnpm check`
+2. `pnpm type-check`
+3. `pnpm test`
+4. `pnpm build`
+
+Canonical-skill changes also run `pnpm lint` and `pnpm format`. Publishable
+package changes run `pnpm release:validate`; docs changes run
+`pnpm build:docs`.
+
+## Deliberate Non-Goals
+
+- Structured hub, deck, or diagram content schemas.
+- Renderer-owned universal layout or typography engines.
+- A general-purpose semantic graph layout/crossing engine.
+- Deterministic whitespace, density, filler, or visual-quality scoring.
+- New responsive golden fixtures or negative visual snapshot matrices.
+- Replacing the existing golden suite in this project.
+- Silent publication overrides for flagged runs.
+- Credential callbacks or persisted authentication material.
+
+## Decision Record
+
+The original design would have been robust but overengineered for the case
+study. Its renderer subsystem, visual heuristics, contract fan-out, and golden
+matrix increased maintenance and migration risk without protecting additional
+safety invariants. The revised design preserves deterministic enforcement at
+trust boundaries and moves creative quality back to the skills, recipes, and
+human/agent critic where judgment belongs.

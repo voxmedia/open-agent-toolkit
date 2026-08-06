@@ -233,14 +233,12 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | Phase | Status    | Tasks | Completed |
 | ----- | --------- | ----- | --------- |
 | p01   | completed | 6     | 6/6       |
-| p02   | pending   | 4     | 0/4       |
-| p03   | pending   | 6     | 0/6       |
-| p04   | pending   | 4     | 0/4       |
-| p05   | pending   | 6     | 0/6       |
-| p06   | pending   | 6     | 0/6       |
-| p07   | pending   | 2     | 0/2       |
+| p02   | pending   | 2     | 0/2       |
+| p03   | pending   | 3     | 0/3       |
+| p04   | pending   | 3     | 0/3       |
+| p05   | pending   | 3     | 0/3       |
 
-**Total:** 6/34 tasks completed
+**Total:** 6/17 tasks completed
 
 ---
 
@@ -267,8 +265,6 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | ------- | ------- | ------ |
 | p02-t01 | pending | -      |
 | p02-t02 | pending | -      |
-| p02-t03 | pending | -      |
-| p02-t04 | pending | -      |
 
 ## Phase 3: Publication integrity
 
@@ -279,11 +275,8 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | p03-t01 | pending | -      |
 | p03-t02 | pending | -      |
 | p03-t03 | pending | -      |
-| p03-t04 | pending | -      |
-| p03-t05 | pending | -      |
-| p03-t06 | pending | -      |
 
-## Phase 4: Lifecycle ordering and recovery
+## Phase 4: Lifecycle and bounded recovery
 
 **Status:** pending
 
@@ -292,9 +285,8 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | p04-t01 | pending | -      |
 | p04-t02 | pending | -      |
 | p04-t03 | pending | -      |
-| p04-t04 | pending | -      |
 
-## Phase 5: Structured content contracts and renderers
+## Phase 5: Prose-led authoring and release closure
 
 **Status:** pending
 
@@ -303,31 +295,6 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | p05-t01 | pending | -      |
 | p05-t02 | pending | -      |
 | p05-t03 | pending | -      |
-| p05-t04 | pending | -      |
-| p05-t05 | pending | -      |
-| p05-t06 | pending | -      |
-
-## Phase 6: Recipe floor, visual rubric v2, and fixtures
-
-**Status:** pending
-
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p06-t01 | pending | -      |
-| p06-t02 | pending | -      |
-| p06-t03 | pending | -      |
-| p06-t04 | pending | -      |
-| p06-t05 | pending | -      |
-| p06-t06 | pending | -      |
-
-## Phase 7: Release closure
-
-**Status:** pending
-
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p07-t01 | pending | -      |
-| p07-t02 | pending | -      |
 
 ---
 
@@ -396,15 +363,30 @@ Chronological log of implementation progress.
 
 **Next:** Apply the operator-approved reduced plan before p02.
 
+### Plan Revision: executable kernel + prose-led creative layer
+
+**Date:** 2026-08-06
+
+- Reduced the project from the then-current 34 tasks to 17 total tasks,
+  including the completed p01 review fix.
+- Removed structured content/theme contracts, renderer engines, semantic layout
+  code, deterministic visual-quality heuristics, and new golden matrices.
+- Preserved executable path, link, publication, credential, and lifecycle
+  invariants.
+- Kept the existing golden suite unchanged and moved simplification to a
+  separate evidence-based follow-up.
+- A delta-focused artifact review is required before p02 begins.
+
 ---
 
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact   | Planned / Documented | Actual / Accepted                               | Reason                                              | Source of Truth                                     | Follow-up |
-| ------------- | ----------------- | -------------------- | ----------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- | --------- |
-| p01-t06       | focused re-review | one task commit      | one task commit plus one append-only correction | WHATWG URL parsing normalized away empty delimiters | committed implementation and passing focused review | none      |
+| Task / Review | Source Artifact   | Planned / Documented                  | Actual / Accepted                               | Reason                                              | Source of Truth                                     | Follow-up                             |
+| ------------- | ----------------- | ------------------------------------- | ----------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- | ------------------------------------- |
+| p01-t06       | focused re-review | one task commit                       | one task commit plus one append-only correction | WHATWG URL parsing normalized away empty delimiters | committed implementation and passing focused review | none                                  |
+| plan revision | operator decision | structured renderer and golden matrix | executable kernel plus prose-led creative layer | original plan overengineered judgment-oriented work | revised `design.md` and `plan.md`                   | golden-suite audit tracked separately |
 
 ## Test Results
 

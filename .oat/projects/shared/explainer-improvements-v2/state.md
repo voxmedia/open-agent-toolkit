@@ -8,7 +8,7 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: [p05] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
@@ -71,7 +71,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T17:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T17:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -83,16 +83,16 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p01 is complete. The credential-hygiene review fix and its append-only
-normalization correction passed focused re-review.
+Phase p01 is complete. The reduced design and 17-task plan are drafted; their
+delta-focused artifact review must pass before p02 begins.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete; handoff at
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
-- **Design:** `design.md` (complete, lightweight)
-- **Plan:** `plan.md` (accepted; reduced-scope revision next)
+- **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
+- **Plan:** `plan.md` (revised to 5 phases / 17 tasks; review pending)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -102,7 +102,8 @@ normalization correction passed focused re-review.
 - ✓ Protected-destination policy and flag-not-block lifecycle stance approved
 - ✓ p01-t01 through p01-t06 implemented and independently reviewed
 - ✓ Credential-bearing and malformed publish roots fail before core invocation
-- ⧗ Apply the operator-approved reduced plan before p02
+- ✓ Operator-approved scope reduction applied to discovery, design, and plan
+- ⧗ Delta-focused artifact review before p02
 
 ## Blockers
 
@@ -110,4 +111,5 @@ None
 
 ## Next Milestone
 
-Apply and review the reduced executable-kernel/prose-led plan before p02.
+Complete the targeted revised-design/plan review, fix only blocking findings,
+then resume at p02-t01.
