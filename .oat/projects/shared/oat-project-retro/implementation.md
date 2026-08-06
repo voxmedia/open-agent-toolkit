@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Final review: retro skills lack the pnpm tool grant required by mandatory hygiene steps
 oat_last_updated: 2026-08-06
 oat_current_task_id: null
 oat_generated: false
@@ -174,11 +175,12 @@ configured-invocation evidence.
 
 #### Accepted Fix Continuations
 
-| Scope              | Continuation Event                       | Original Request                            | Agent ID                               | Target                                     | Model axis                    |
-| ------------------ | ---------------------------------------- | ------------------------------------------- | -------------------------------------- | ------------------------------------------ | ----------------------------- |
-| p03 review round 1 | `oat-project-retro-p03-review-r1-fix-01` | `oat-project-retro-impl-p03-20260806T0152Z` | `40ee9cc3-78bb-4c3e-b443-07d9002e374f` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
-| p02 review round 1 | `oat-project-retro-p02-review-r1-fix-01` | `oat-project-retro-impl-p02-20260806T0152Z` | `c9e01a7e-e760-4006-89dd-a56e4aaeba0c` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
-| p02 review round 2 | `oat-project-retro-p02-review-r2-fix-02` | `oat-project-retro-impl-p02-20260806T0152Z` | `c9e01a7e-e760-4006-89dd-a56e4aaeba0c` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
+| Scope                | Continuation Event                         | Original Request                            | Agent ID                               | Target                                     | Model axis                    |
+| -------------------- | ------------------------------------------ | ------------------------------------------- | -------------------------------------- | ------------------------------------------ | ----------------------------- |
+| p03 review round 1   | `oat-project-retro-p03-review-r1-fix-01`   | `oat-project-retro-impl-p03-20260806T0152Z` | `40ee9cc3-78bb-4c3e-b443-07d9002e374f` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
+| p02 review round 1   | `oat-project-retro-p02-review-r1-fix-01`   | `oat-project-retro-impl-p02-20260806T0152Z` | `c9e01a7e-e760-4006-89dd-a56e4aaeba0c` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
+| p02 review round 2   | `oat-project-retro-p02-review-r2-fix-02`   | `oat-project-retro-impl-p02-20260806T0152Z` | `c9e01a7e-e760-4006-89dd-a56e4aaeba0c` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
+| final review round 1 | `oat-project-retro-final-review-r1-fix-01` | `oat-project-retro-impl-p05-20260806T0256Z` | `ee172aee-a1e3-4646-bb0c-016c1ec9fe47` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
 
 <!-- orchestration-runs-end -->
 
@@ -242,6 +244,10 @@ configured-invocation evidence.
 - p05 HiLL review passed with no findings and was integrated through
   `a10798d35`. All 12 implementation tasks are complete; terminal lifecycle
   artifacts were reconciled before the whole-project final review.
+- Whole-project final review round 1 failed with one Important finding: both
+  retro skills mandate pnpm-based artifact hygiene without granting pnpm. The
+  review artifact was committed at `c28b04a0`; a three-file bounded fix was
+  authorized and resumed on the accepted p05 implementer handle.
 
 ---
 
