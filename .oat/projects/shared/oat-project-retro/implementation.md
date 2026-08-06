@@ -224,6 +224,11 @@ configured-invocation evidence.
   artifact were integrated through `0149cc565`; p05 is the remaining phase.
 - p05 was dispatched from integrated base `0a62f09aa` with an explicit stop at
   the p05-t01 per-item promotion approval boundary.
+- p05 generated the `explainer-improvements` retro at `5a177f529` and stopped
+  cleanly before apply. The user explicitly approved RP-01, “Require a terminal
+  lifecycle-artifact consistency sweep,” for the proposed local
+  `completion-and-closeout.md` mutation and retro writeback only; the accepted
+  p05 handle resumed to complete acceptance and release validation.
 
 ---
 
