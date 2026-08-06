@@ -25,12 +25,15 @@ floor with renderer-owned structured content, a role-based type system, and a
 design-quality visual-review rubric — per the acceptance criteria in
 `references/handoff-cyclone-case-study.md` and the approved `design.md`.
 
-**Architecture:** All changes land in the two canonical skills.
+**Architecture:** Changes center on the two canonical skills —
 `explainer-kit` (core) stays destination-neutral and config-blind;
 `oat-explainer-kit` (adapter) owns config resolution, invocation topology, and
-per-invocation remote destination derivation. Two new hard build gates
-(canonical link table, internal-link validator) and a protected-destination
-publish mode preserve existing safety guarantees.
+per-invocation remote destination derivation — plus three bounded satellite
+surfaces: the `oat-project-implement` completion/closeout orchestrator (recap
+approval guard), release acceptance tooling, and the wrapper smoke fixture
+(contract-version consumers). Two new hard build gates (canonical link table,
+internal-link validator) and a protected-destination publish mode preserve
+existing safety guarantees.
 
 **Tech Stack:** Node.js 22 ESM, `node:test`, JSON Schema, Playwright/Chromium
 (existing browser-evidence machinery), pnpm/Turborepo, S3 static publishing.
@@ -227,7 +230,7 @@ git commit -m "feat(p01-t04): reject double-nested explainer output roots"
 
 ---
 
-### Task p01-t05: Pass derived destination and public-access mode into the core publish request
+### Task p01-t05: Pass the derived destination into the core publish request
 
 **Files:**
 
@@ -239,9 +242,14 @@ git commit -m "feat(p01-t04): reject double-nested explainer output roots"
 **Step 1: Write test (RED)**
 
 The publish request the adapter constructs carries the derived (not raw
-configured) roots and the configured `publicAccess` value; the core never
-receives project/repo identifiers. Assert no credential material appears in
-the constructed request.
+configured) roots; the core never receives project/repo identifiers. Assert
+no credential material appears in the constructed request. **Sequencing
+constraint:** the configured `publicAccess` value is resolved and validated
+by p01-t02 but is NOT emitted into core publish requests in this phase — the
+current core publish-request schema rejects unknown fields
+(`additionalProperties: false`). Threading `publicAccess` happens in
+p03-t06, after p03-t01 lands core schema support. No phase-1 commit may emit
+a field the receiving contract rejects.
 
 **Step 2: Implement (GREEN)**
 
@@ -504,6 +512,12 @@ The connector emits a **new receipt version**
 ID, rendered path, S3 URI, canonical public URL, content hash, and structured
 verification result
 (`verified-anonymous | verified-authenticated | skipped-protected`).
+The per-artifact verification result is a **structured object with separate
+fields for object-byte verification and public-URL verification** (plus the
+compared service checksum/hash) — one enum cannot express the protected case,
+where the object is `verified-authenticated` while the public fetch is
+`skipped-protected`. Schema and negative tests prove protected receipts
+record both facts and public receipts preserve anonymous byte verification.
 Contract-dependency propagation is in scope: the contract registry
 (`contracts.mjs`) registers v2 with version dispatch, and the durability
 reader — which currently validates receipts through the generic
@@ -522,8 +536,8 @@ HTML transformation code path exists (assert by construction and test).
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs`
-Expected: green
+Run: `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs`
+Expected: green (every changed test file executes)
 
 **Step 4: Commit**
 
@@ -600,6 +614,39 @@ git commit -m "feat(p03-t05): record complete artifact URL sets in lifecycle sum
 
 ---
 
+### Task p03-t06: Thread `publicAccess` from adapter config into core publish requests
+
+**Files:**
+
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
+
+**Step 1: Write test (RED)**
+
+Now that p03-t01 landed core schema support, the adapter emits the
+`publicAccess` value resolved in p01-t02 into the core publish request;
+absent config emits nothing (core default `public` applies); the emitted
+request validates against the revised core publish-request contract.
+
+**Step 2: Implement (GREEN)**
+
+Thread the resolved declaration through publish-request construction;
+document in `lifecycle-contract.md`.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/oat-explainer-kit/tests/ && pnpm lint && pnpm format`
+Expected: adapter suite green; lint and format clean
+
+**Step 4: Commit**
+
+```bash
+git commit -m "feat(p03-t06): thread publicAccess into core publish requests"
+```
+
+---
+
 ## Phase 4: Lifecycle ordering and recovery
 
 ### Task p04-t01: Root-cause and pin the `request.sourceIds` shape failure
@@ -652,6 +699,7 @@ git commit -m "fix(p04-t01): validate request shape before content processing"
 - Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
 
 **Step 1: Write test (RED)**
@@ -678,8 +726,8 @@ run record; document the flag-not-block contract.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-Expected: green
+Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+Expected: green (every changed test file executes)
 
 **Step 4: Commit**
 
@@ -689,7 +737,53 @@ git commit -m "feat(p04-t02): auto-enter bounded correction from built-needs-rev
 
 ---
 
-### Task p04-t03: Recap gate terminal outcome before final approval
+### Task p04-t03: Durable failure records for failed and superseded runs
+
+Ordered before the approval-guard task so the versioned failure-record
+contract exists when the guard consumes it.
+
+**Files:**
+
+- Create: `.agents/skills/explainer-kit/schemas/failure-record.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
+
+**Step 1: Write test (RED)**
+
+A failed run always leaves a compact durable failure record (versioned
+contract: run ID, recipe, terminal outcome, error class, timestamps,
+superseding-run pointer when a correction replaces it) inside the durable
+project tree, validated by the production contract registry; bulky
+diagnostics follow the documented archive-or-delete policy and are never the
+only evidence. Superseded runs gain the pointer when the corrected run
+finalizes.
+
+**Step 2: Implement (GREEN)**
+
+Failure-record schema, registry entry, and emission in core; adapter
+finalization places the record durably and applies the diagnostics policy.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+Expected: green (every changed test file executes)
+
+**Step 4: Commit**
+
+```bash
+git commit -m "feat(p04-t03): retain durable failure records for failed runs"
+```
+
+---
+
+### Task p04-t04: Recap gate terminal outcome before final approval
+
+Consumes the failure-record contract created in p04-t03.
 
 **Files:**
 
@@ -708,8 +802,9 @@ completion/closeout sequence — not only in the adapter's intent
 resolver/persistence helpers. Define a durable terminal-outcome field the
 orchestrator reads and a transition guard: when recap intent resolved to
 `generate`, approval cannot advance while the field is absent, and each
-accepted terminal outcome (`built-durable`, `built-needs-review`, compact
-failure record) allows it to advance. The completion integration test must
+accepted terminal outcome (`built-durable`, flagged `built-needs-review`,
+or a production `failure-record` document validated against the p04-t03
+contract) allows it to advance. The completion integration test must
 exercise the transition guard (approval blocked without an outcome; approval
 proceeds with each terminal outcome) — asserting on reference prose alone is
 insufficient. If any other live completion route can finalize approval, it is
@@ -724,50 +819,13 @@ transition guard in the closeout orchestrator sequence; document in
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/`
-Expected: green
-
-**Step 4: Commit**
-
-```bash
-git commit -m "feat(p04-t03): require terminal recap outcome before approval completes"
-```
-
----
-
-### Task p04-t04: Durable failure records for failed and superseded runs
-
-**Files:**
-
-- Create: `.agents/skills/explainer-kit/schemas/failure-record.schema.json`
-- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
-- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
-- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
-
-**Step 1: Write test (RED)**
-
-A failed run always leaves a compact durable failure record (run ID, recipe,
-terminal outcome, error class, timestamps, superseding-run pointer when a
-correction replaces it) inside the durable project tree; bulky diagnostics
-follow the documented archive-or-delete policy and are never the only
-evidence. Superseded runs gain the pointer when the corrected run finalizes.
-
-**Step 2: Implement (GREEN)**
-
-Failure-record schema and emission in core; adapter finalization places the
-record durably and applies the diagnostics policy.
-
-**Step 3: Verify**
-
-Run: `node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs && pnpm lint && pnpm format`
+Run: `node --test .agents/skills/oat-explainer-kit/tests/ && pnpm lint && pnpm format`
 Expected: green; lint and format clean (phase touches `.agents/skills/**`)
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p04-t04): retain durable failure records for failed runs"
+git commit -m "feat(p04-t04): require terminal recap outcome before approval completes"
 ```
 
 ---
@@ -823,6 +881,7 @@ git commit -m "feat(p05-t01): add structured content contracts for hub, deck, di
 **Files:**
 
 - Create: `.agents/skills/explainer-kit/schemas/theme.v2.schema.json`
+- Modify: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json` (theme reference accepts v1 and v2)
 - Modify: `.agents/skills/explainer-kit/scripts/lib/theme.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/references/contracts.md`
@@ -1163,6 +1222,49 @@ git commit -m "test(p06-t04): add responsive structured-content goldens"
 
 ---
 
+### Task p06-t05: Migrate shipped contract consumers to the new versions
+
+All new contract versions exist by the end of p06; this task carries them
+through every shipped consumer outside the two core seams.
+
+**Files:**
+
+- Modify: `tools/release/validate-explainer-acceptance.mjs` (accept receipt v1/v2)
+- Modify: `tools/release/run-explainer-rc.mjs` (accept receipt v1/v2)
+- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs` (assert v1 replay and v2 emission)
+- Modify: `.agents/skills/oat-explainer-kit/references/author-callback.md` (author v2/v3)
+- Modify: `.agents/skills/oat-explainer-kit/references/visual-review-callback.md` (visual-review v1/v2)
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+
+**Step 1: Write test (RED)**
+
+For each versioned contract pair — publish-receipt v1/v2, theme v1/v2,
+author-request v2/v3, author-result v2/v3, set-plan v1/v2, visual-review
+v1/v2 — shipped consumers accept both versions: the release acceptance
+validator and RC runner validate v2 receipts while still reading retained v1
+receipts; the private-wrapper smoke surface proves v1 replay and v2 emission;
+adapter callback contracts and integration tests exercise the new author and
+visual-review versions end to end. New-run emission and retained-version
+replay are both proven before provider sync.
+
+**Step 2: Implement (GREEN)**
+
+Version dispatch in release tooling and smoke fixtures; adapter callback
+reference and test migration.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs && pnpm lint && pnpm format`
+Expected: green; lint and format clean (touches `tools/smoke` and `.agents/skills/**`)
+
+**Step 4: Commit**
+
+```bash
+git commit -m "feat(p06-t05): migrate shipped consumers to new contract versions"
+```
+
+---
+
 ## Phase 7: Release closure
 
 ### Task p07-t01: Skill version bumps and provider sync
@@ -1171,12 +1273,14 @@ git commit -m "test(p06-t04): add responsive structured-content goldens"
 
 - Modify: `.agents/skills/explainer-kit/SKILL.md` (version bump)
 - Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (version bump)
+- Modify: `.agents/skills/oat-project-implement/SKILL.md` (version bump — its completion-and-closeout reference changes in p04-t04)
 - Modify: `packages/cli/src/validation/skills.test.ts` (if version pins exist)
 - Regenerate: provider views via `oat sync --scope all`
 
 **Step 1: Implement**
 
-One frontmatter `version:` bump per changed canonical skill (PR-scoped);
+One frontmatter `version:` bump per changed canonical skill (PR-scoped) —
+every canonical skill the PR touches, including `oat-project-implement`;
 run `oat sync --scope all`; update any literal version assertions.
 
 **Step 2: Verify**
@@ -1243,7 +1347,7 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 | design | artifact | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T002327Z.md (4 Important + 1 Medium resolved in artifact)                                | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T004027Z.md (2 Important + 1 Medium resolved in artifact; operator authorized attempt 3) | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T005429Z.md                                                                                       | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T005429Z.md (4 Important + 2 Medium resolved in artifact)                                | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1255,13 +1359,13 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 
 - Phase 1: 5 tasks — adapter path and destination derivation
 - Phase 2: 4 tasks — core link integrity
-- Phase 3: 5 tasks — publication integrity
+- Phase 3: 6 tasks — publication integrity
 - Phase 4: 4 tasks — lifecycle ordering and recovery
 - Phase 5: 6 tasks — structured content contracts and renderers
-- Phase 6: 4 tasks — recipe floor, rubric v2, fixtures
+- Phase 6: 5 tasks — recipe floor, rubric v2, fixtures, consumer migration
 - Phase 7: 2 tasks — release closure
 
-**Total: 30 tasks**
+**Total: 32 tasks**
 
 ---
 

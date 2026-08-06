@@ -34,6 +34,19 @@ escalated to the operator.
   ↔ `set-plan/v2` reference, missing v3 author-request in p05-t06); p01-t04
   file scope cannot reach the run slug (add `run.mjs`).
 
+- **Attempt 3** (operator-authorized;
+  `artifact-plan-review-2026-08-06T005429Z.md`): attempt-2 findings confirmed
+  resolved; 4 Important + 2 Medium new — `publicAccess` emitted before core
+  schema support (fixed: threading moved to new p03-t06), contract versions
+  not propagated to shipped consumers outside the skill trees (fixed: new
+  p06-t05 migrates release tooling, smoke fixture, adapter callbacks),
+  missing `oat-project-implement` skill version bump (fixed in p07-t01),
+  receipt verification enum unable to hold both protected facts (fixed:
+  structured per-artifact object/public verification fields in p03-t03),
+  failure-record contract ordered after its consumer (fixed: p04-t03/p04-t04
+  swapped), and file-list/verify-command drift in p03-t03 and p04-t02
+  (fixed). Plan now totals 32 tasks.
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 
