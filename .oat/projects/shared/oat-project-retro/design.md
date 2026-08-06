@@ -118,7 +118,9 @@ oat-project-implement (closeout)
 
 1. Locate retro artifact in active project (or explicit path). Missing
    artifact → report and stop; never regenerate implicitly.
-2. Read promotion register; select items with status `proposed`/`approved`.
+2. Read promotion register; select items with `Disposition: apply` and status
+   `proposed`/`approved` (`Disposition: file` items belong to the filing
+   skill and are never mutated by apply mode).
 3. Apply each per the skill's bundled apply-procedure reference (docs, AGENTS,
    rules edits, decision records via `oat decision new`).
 4. Update each item's status (`applied` / `rejected` with reason); update
@@ -128,8 +130,10 @@ oat-project-implement (closeout)
 **Filing flow (`oat-project-retro-file`):**
 
 1. Resolve artifact (active project default, path override).
-2. Extract register items still unfiled (upstream register + repo-lane filing
-   candidates).
+2. Extract register items still unfiled: all UP items plus RP items with
+   `Disposition: file`, selecting on the filing status vocabulary
+   (`proposed`; re-runs skip `filed`/`rejected` and retry `no-destination`
+   when a destination has become available).
 3. Capability preflight per destination: issues enabled? credentials valid?
    backlog initialized? Report the lane × destination matrix before showing
    items.
@@ -369,7 +373,13 @@ is it settled?"
 
 ### Register item format
 
-Per-item heading blocks (not tables — items carry multi-line bodies):
+Per-item heading blocks (not tables — items carry multi-line bodies). Every
+repo-lane item carries an explicit **`Disposition`** that routes it to exactly
+one consumer: `apply` items are repo edits owned by the retro skill's apply
+mode; `file` items are tracker candidates owned by the filing skill. The
+`Type` suggests a default disposition (`docs`/`agents-instruction`/`rule`/
+`decision` → `apply`; `code-follow-up` → `file`), but the recorded
+`Disposition` field is authoritative.
 
 ```markdown
 ## Repo Improvements (Promotion Register)
@@ -377,11 +387,21 @@ Per-item heading blocks (not tables — items carry multi-line bodies):
 ### RP-01: Route Playwright reliability work to reserved stack
 
 - **Type:** agents-instruction # docs | agents-instruction | rule | decision | code-follow-up
-- **Status:** proposed # proposed | approved | applied | rejected
-- **Target:** AGENTS.md
-- **Applied-ref:** — # commit/path/URL once applied
+- **Disposition:** apply # apply | file — routes to apply mode or the filing skill
+- **Status:** proposed # apply items: proposed | approved | applied | rejected
+- **Target:** AGENTS.md # apply items: the repo path to edit
+- **Applied-ref:** — # apply items: commit/path once applied
 
 {Rationale and the concrete proposed change.}
+
+### RP-02: Track local CI credential provenance follow-up
+
+- **Type:** code-follow-up
+- **Disposition:** file # file items use the filing status vocabulary
+- **Status:** proposed # file items: proposed | filed | rejected | no-destination
+- **Destination:** — # file items: issue URL / backlog item id once filed
+
+{Tracker-ready description: problem, evidence summary, suggested direction.}
 
 ## OAT Upstream Feedback (Upstream Register)
 
@@ -397,6 +417,12 @@ Per-item heading blocks (not tables — items carry multi-line bodies):
 IDs are stable within an artifact (`RP-NN` / `UP-NN`); apply and filing modes
 mutate only `Status`, `Applied-ref`/`Destination`, and the frontmatter
 rollups.
+
+**Rollup derivation:** `oat_retro_promotions` derives from RP items with
+`Disposition: apply` (none | proposed | partial | complete as their statuses
+progress). `oat_retro_filing` derives from the union of UP items and RP items
+with `Disposition: file`. Every item therefore contributes to exactly one
+rollup, and both rollups are computable from register fields alone.
 
 ### Sequence snapshot with retro
 
