@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-05
+oat_last_updated: 2026-08-06
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -230,87 +230,102 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | in_progress | 5     | 0/5       |
+| p02   | pending     | 4     | 0/4       |
+| p03   | pending     | 6     | 0/6       |
+| p04   | pending     | 4     | 0/4       |
+| p05   | pending     | 6     | 0/6       |
+| p06   | pending     | 6     | 0/6       |
+| p07   | pending     | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/33 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Adapter path and destination derivation
 
 **Status:** in_progress
-**Started:** 2026-08-05
+**Started:** 2026-08-06
 
-### Phase Summary (fill when phase is complete)
+| Task    | Status      | Commit |
+| ------- | ----------- | ------ |
+| p01-t01 | in_progress | -      |
+| p01-t02 | pending     | -      |
+| p01-t03 | pending     | -      |
+| p01-t04 | pending     | -      |
+| p01-t05 | pending     | -      |
 
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+## Phase 2: Core link integrity
 
 **Status:** pending
-**Commit:** -
 
-**Notes:**
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p02-t01 | pending | -      |
+| p02-t02 | pending | -      |
+| p02-t03 | pending | -      |
+| p02-t04 | pending | -      |
 
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
+## Phase 3: Publication integrity
 
 **Status:** pending
-**Commit:** -
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p03-t01 | pending | -      |
+| p03-t02 | pending | -      |
+| p03-t03 | pending | -      |
+| p03-t04 | pending | -      |
+| p03-t05 | pending | -      |
+| p03-t06 | pending | -      |
+
+## Phase 4: Lifecycle ordering and recovery
+
+**Status:** pending
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p04-t01 | pending | -      |
+| p04-t02 | pending | -      |
+| p04-t03 | pending | -      |
+| p04-t04 | pending | -      |
+
+## Phase 5: Structured content contracts and renderers
+
+**Status:** pending
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p05-t01 | pending | -      |
+| p05-t02 | pending | -      |
+| p05-t03 | pending | -      |
+| p05-t04 | pending | -      |
+| p05-t05 | pending | -      |
+| p05-t06 | pending | -      |
+
+## Phase 6: Recipe floor, visual rubric v2, and fixtures
+
+**Status:** pending
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p06-t01 | pending | -      |
+| p06-t02 | pending | -      |
+| p06-t03 | pending | -      |
+| p06-t04 | pending | -      |
+| p06-t05 | pending | -      |
+| p06-t06 | pending | -      |
+
+## Phase 7: Release closure
+
+**Status:** pending
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p07-t01 | pending | -      |
+| p07-t02 | pending | -      |
 
 ---
 

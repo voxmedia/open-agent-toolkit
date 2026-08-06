@@ -1,18 +1,19 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-08-05
+oat_last_updated: 2026-08-06
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: ['p07'] # phases to pause AFTER completing (empty = every phase)
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null # e.g., references/imported-plan.md
 oat_import_source_path: null # original source path provided by user
 oat_import_provider: null # codex | cursor | claude | null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: explainer-improvements-v2
