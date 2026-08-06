@@ -1,5 +1,12 @@
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
+import {
+  catalogFromManifest,
+  initiativeCatalogPath,
+  serializeInitiativeCatalog,
+} from '../../../../.agents/skills/explainer-kit/scripts/lib/catalog.mjs';
+import { validateContract } from '../../../../.agents/skills/explainer-kit/scripts/lib/contracts.mjs';
 import { runExplainer } from '../../../../.agents/skills/explainer-kit/scripts/run.mjs';
 
 export const PERSONAL_PRESETS_EXAMPLE = Object.freeze({
@@ -177,37 +184,41 @@ async function readAuthorProvenance(runRoot, authorResultPaths) {
 }
 
 function assertConsumableReceipt(receipt, manifest) {
-  const manifestArtifacts = new Map(
-    manifest.artifacts
-      .filter(({ status }) => status === 'built')
-      .map(({ renderedPath, hash }) => [renderedPath, hash]),
-  );
   const receiptV2 =
     receipt?.schemaVersion === 'explainer-kit.publish-receipt/v2';
-  const manifestCoverage = receipt?.artifacts?.filter(
-    ({ source }) => !receiptV2 || source?.kind === 'manifest',
-  );
-  const auxiliaryCatalogs = receipt?.artifacts?.filter(
-    ({ source }) =>
-      receiptV2 && source?.kind === 'auxiliary' && source.name === 'catalog',
-  );
+  let validation;
+  try {
+    const context = { manifest };
+    if (receiptV2) {
+      const catalog = catalogFromManifest(
+        manifest,
+        receipt.roots?.publicBaseUrl,
+      );
+      context.catalogArtifact = {
+        relativePath: initiativeCatalogPath(manifest.slug),
+        hash: hashBytes(Buffer.from(serializeInitiativeCatalog(catalog))),
+      };
+    }
+    validation = validateContract('publish-receipt', receipt, context);
+  } catch {
+    throw new Error('Publish receipt does not match the wrapper core run.');
+  }
   if (
     ![
       'explainer-kit.publish-receipt/v1',
       'explainer-kit.publish-receipt/v2',
     ].includes(receipt?.schemaVersion) ||
+    !validation.valid ||
     !receipt.sentinel?.relativePath?.includes(manifest.runId) ||
     !consumableSentinel(receipt) ||
-    receipt.sentinel.deleted !== true ||
-    !Array.isArray(receipt.artifacts) ||
-    manifestCoverage.length !== manifestArtifacts.size ||
-    !manifestCoverage.every(
-      ({ relativePath, hash }) => manifestArtifacts.get(relativePath) === hash,
-    ) ||
-    (receiptV2 && auxiliaryCatalogs.length !== 1)
+    receipt.sentinel.deleted !== true
   ) {
     throw new Error('Publish receipt does not match the wrapper core run.');
   }
+}
+
+function hashBytes(bytes) {
+  return `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 }
 
 function consumableSentinel(receipt) {
