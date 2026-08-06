@@ -1,8 +1,7 @@
 ---
 oat_current_task: null
-oat_last_commit: a10798d356b44390598c19cfc6af4d89e4fd3865
-oat_blockers:
-  - Final review fix in progress for retro skill artifact-hygiene tool grants
+oat_last_commit: 74adc91cb8956124e44e2af3d7aecba6e30de595
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -93,8 +92,8 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all 12 tasks and the p05 HiLL checkpoint are complete; one
-bounded final-review fix is in progress.
+Implementation — all 12 tasks and the p05 HiLL checkpoint are complete; the
+bounded final-review fix is verified and narrowed re-review is pending.
 
 ## Artifacts
 
@@ -110,13 +109,13 @@ bounded final-review fix is in progress.
 - ✓ p01–p05 implemented and phase-reviewed
 - ✓ p05 HiLL checkpoint passed
 - ✓ Documentation and release validation complete
-- ⧗ Final review tool-grant fix and narrowed re-review in progress
+- ✓ Final review tool-grant fix verified
+- ⧗ Narrowed final re-review pending
 
 ## Blockers
 
-Retro skills must grant the pnpm commands required by their mandatory hygiene
-steps; the bounded fix and regression coverage are in progress.
+None
 
 ## Next Milestone
 
-Complete the bounded tool-grant fix and pass the narrowed final re-review.
+Pass the narrowed final re-review, then continue lifecycle closeout.

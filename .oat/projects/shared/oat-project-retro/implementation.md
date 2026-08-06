@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Final review: retro skills lack the pnpm tool grant required by mandatory hygiene steps
+oat_blockers: []
 oat_last_updated: 2026-08-06
 oat_current_task_id: null
 oat_generated: false
@@ -248,6 +247,10 @@ configured-invocation evidence.
   retro skills mandate pnpm-based artifact hygiene without granting pnpm. The
   review artifact was committed at `c28b04a0`; a three-file bounded fix was
   authorized and resumed on the accepted p05 implementer handle.
+- Final-review fix `74adc91cb` grants both retro skills `Bash(pnpm:*)` and adds
+  focused executable-contract coverage. All focused, lint/format, CI/build, and
+  release-validation gates passed after one permitted no-edit timeout rerun;
+  narrowed final re-review is pending.
 
 ---
 
