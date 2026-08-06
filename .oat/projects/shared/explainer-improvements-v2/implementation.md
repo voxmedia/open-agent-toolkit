@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-06
-oat_current_task_id: p01-t06
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -230,33 +230,34 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | in_progress | 6     | 5/6       |
-| p02   | pending     | 4     | 0/4       |
-| p03   | pending     | 6     | 0/6       |
-| p04   | pending     | 4     | 0/4       |
-| p05   | pending     | 6     | 0/6       |
-| p06   | pending     | 6     | 0/6       |
-| p07   | pending     | 2     | 0/2       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 6     | 6/6       |
+| p02   | pending   | 4     | 0/4       |
+| p03   | pending   | 6     | 0/6       |
+| p04   | pending   | 4     | 0/4       |
+| p05   | pending   | 6     | 0/6       |
+| p06   | pending   | 6     | 0/6       |
+| p07   | pending   | 2     | 0/2       |
 
-**Total:** 5/34 tasks completed
+**Total:** 6/34 tasks completed
 
 ---
 
 ## Phase 1: Adapter path and destination derivation
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-08-06
+**Completed:** 2026-08-06
 
-| Task    | Status    | Commit  |
-| ------- | --------- | ------- |
-| p01-t01 | completed | 84a5b4a |
-| p01-t02 | completed | 3a634e0 |
-| p01-t03 | completed | ab12256 |
-| p01-t04 | completed | aa1ec2d |
-| p01-t05 | completed | a42a385 |
-| p01-t06 | pending   | -       |
+| Task    | Status    | Commit            |
+| ------- | --------- | ----------------- |
+| p01-t01 | completed | 84a5b4a           |
+| p01-t02 | completed | 3a634e0           |
+| p01-t03 | completed | ab12256           |
+| p01-t04 | completed | aa1ec2d           |
+| p01-t05 | completed | a42a385           |
+| p01-t06 | completed | fcc100f + c1d5a1b |
 
 ## Phase 2: Core link integrity
 
@@ -381,7 +382,19 @@ Chronological log of implementation progress.
 
 **New tasks added:** p01-t06
 
-**Next:** Execute p01-t06, then re-review only the fix task before closing p01.
+**Resolution:**
+
+- p01-t06 landed in `fcc100f`.
+- Focused re-review found one WHATWG normalization bypass for empty delimiters.
+- The bounded append-only correction landed in `c1d5a1b`.
+- A second focused review passed with no findings.
+
+**Review artifacts:**
+
+- `reviews/archived/p01-t06-review-2026-08-06T173603Z.md`
+- `reviews/archived/p01-t06-review-2026-08-06T174423Z.md`
+
+**Next:** Apply the operator-approved reduced plan before p02.
 
 ---
 
@@ -389,18 +402,18 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact   | Planned / Documented | Actual / Accepted                               | Reason                                              | Source of Truth                                     | Follow-up |
+| ------------- | ----------------- | -------------------- | ----------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- | --------- |
+| p01-t06       | focused re-review | one task commit      | one task commit plus one append-only correction | WHATWG URL parsing normalized away empty delimiters | committed implementation and passing focused review | none      |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                            | Passed | Failed | Coverage                         |
-| ----- | ---------------------------------------------------- | ------ | ------ | -------------------------------- |
-| 1     | adapter/core focused suites; CLI tests; lint; format | passed | 0      | p01-t01–p01-t05; p01-t06 pending |
-| 2     | -                                                    | -      | -      | -                                |
+| Phase | Tests Run                                            | Passed | Failed | Coverage                                           |
+| ----- | ---------------------------------------------------- | ------ | ------ | -------------------------------------------------- |
+| 1     | adapter/core focused suites; CLI tests; lint; format | passed | 0      | p01-t01–p01-t06 complete; focused re-review passed |
+| 2     | -                                                    | -      | -      | -                                                  |
 
 ## Final Summary (for PR/docs)
 

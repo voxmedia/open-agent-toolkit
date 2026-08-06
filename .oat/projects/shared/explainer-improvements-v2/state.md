@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t06
-oat_last_commit: a42a38521b33fa1127ebdd1b462a16ed632728cb
+oat_current_task: p02-t01
+oat_last_commit: c1d5a1b0994e19abb2b349b776ba3235f8955b52
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -71,7 +71,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T17:24:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T17:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -83,9 +83,8 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p01 implementation completed tasks p01-t01 through p01-t05. Review
-receive queued p01-t06 to close credential-hygiene validation before the phase
-is re-reviewed.
+Phase p01 is complete. The credential-hygiene review fix and its append-only
+normalization correction passed focused re-review.
 
 ## Artifacts
 
@@ -93,7 +92,7 @@ is re-reviewed.
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (complete, lightweight)
-- **Plan:** `plan.md` (accepted; p01 review fix queued)
+- **Plan:** `plan.md` (accepted; reduced-scope revision next)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -101,8 +100,9 @@ is re-reviewed.
 - ✓ Discovery captured; Cyclone case-study handoff ingested
 - ✓ Lightweight design drafted collaboratively and approved
 - ✓ Protected-destination policy and flag-not-block lifecycle stance approved
-- ✓ p01-t01 through p01-t05 implemented and independently reviewed
-- ⧗ p01-t06 credential-hygiene review fix next
+- ✓ p01-t01 through p01-t06 implemented and independently reviewed
+- ✓ Credential-bearing and malformed publish roots fail before core invocation
+- ⧗ Apply the operator-approved reduced plan before p02
 
 ## Blockers
 
@@ -110,5 +110,4 @@ None
 
 ## Next Milestone
 
-Implement and re-review p01-t06, then apply the operator-approved reduced plan
-before p02.
+Apply and review the reduced executable-kernel/prose-led plan before p02.
