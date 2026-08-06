@@ -197,18 +197,22 @@ git commit -m "feat(p01-t03): accept repository explainer invocations"
 **Files:**
 
 - Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-paths.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
 
 **Step 1: Write test (RED)**
 
 A caller-supplied output root whose final segment equals the run slug is
-rejected with an actionable error (or normalized — pick rejection; it is the
-conservative contract) before any directory creation.
+rejected with an actionable error (rejection is the conservative contract)
+before any directory creation. The run slug is not visible to the current
+resolver signature, so pass it from the `run.mjs` call site into the resolver
+(or place the guard at the run boundary); cover both direct-caller roots and
+adapter-resolved roots.
 
 **Step 2: Implement (GREEN)**
 
-Guard in the output-root resolution seam, applied to direct-caller roots and
-any adapter-resolved root before core invocation.
+Guard wired through the slug-bearing call site in `run.mjs` plus the
+output-root resolution seam, applied before core invocation.
 
 **Step 3: Verify**
 
@@ -486,9 +490,12 @@ git commit -m "feat(p03-t02): verify protected destinations via authenticated ob
 - Create: `.agents/skills/explainer-kit/schemas/publish-receipt.v2.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/durability.mjs`
 - Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
 
 **Step 1: Write test (RED)**
 
@@ -496,18 +503,22 @@ The connector emits a **new receipt version**
 (`explainer-kit.publish-receipt/v2`) listing, for every published artifact:
 ID, rendered path, S3 URI, canonical public URL, content hash, and structured
 verification result
-(`verified-anonymous | verified-authenticated | skipped-protected`). Existing
-`publish-receipt/v1` artifacts remain readable wherever receipts are consumed
-(archive/durability validation), proven by test. Receipt is atomic, durable
-in the run package, and contains no credential material. Published bytes are
-asserted equal to finalized manifest hashes; any transformation between
-manifest and upload fails.
+(`verified-anonymous | verified-authenticated | skipped-protected`).
+Contract-dependency propagation is in scope: the contract registry
+(`contracts.mjs`) registers v2 with version dispatch, and the durability
+reader — which currently validates receipts through the generic
+`publish-receipt` key — dispatches both versions. Retained
+`publish-receipt/v1` artifacts remain readable in every consumer
+(archive/durability validation), proven by compatibility tests over both
+versions. Receipt is atomic, durable in the run package, and contains no
+credential material. Published bytes are asserted equal to finalized manifest
+hashes; any transformation between manifest and upload fails.
 
 **Step 2: Implement (GREEN)**
 
-New v2 receipt schema and emission with retained v1 readers; registry and
-docs updated; no publication-time HTML transformation code path exists
-(assert by construction and test).
+New v2 receipt schema, registry dispatch, and emission with retained v1
+readers in durability/archive consumers; docs updated; no publication-time
+HTML transformation code path exists (assert by construction and test).
 
 **Step 3: Verify**
 
@@ -629,14 +640,18 @@ git commit -m "fix(p04-t01): validate request shape before content processing"
 
 ---
 
-### Task p04-t02: Automatic bounded correction from `built-needs-review`
+### Task p04-t02: Automatic bounded correction and flagged-run durability
 
 **Files:**
 
 - Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/durability.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
 
 **Step 1: Write test (RED)**
@@ -645,14 +660,21 @@ A run reaching `built-needs-review` automatically enters the existing
 one-correction-then-final-review machinery (no new loop; the cap is
 unchanged). If the re-review is clean, the run proceeds to durability as
 `built-durable`. If findings remain after the cap, the run terminates
-`built-needs-review` with residual findings durably recorded and flagged —
-and the lifecycle proceeds (flag-not-block). Publication remains blocked for
-flagged runs absent explicit operator override.
+`built-needs-review` with residual findings durably recorded — **and that
+flagged outcome has a real durability/finalization path**: the core
+durability seam and adapter tracked-run finalization (which currently reject
+`built-needs-review`) accept the flagged terminal outcome as a distinct
+flagged-durable tier, producing a tracked, inspectable run package with
+durable residual-finding evidence. Integration tests prove: the flagged
+package is tracked and inspectable; approval may proceed after the terminal
+outcome (flag-not-block); publication remains denied for flagged runs unless
+the review passes or an explicit operator override is recorded.
 
 **Step 2: Implement (GREEN)**
 
-Wire auto-entry; record residual findings in the run record; document the
-flag-not-block contract.
+Wire auto-entry; define the flagged-durable semantics across the core
+durability and adapter finalization seams; record residual findings in the
+run record; document the flag-not-block contract.
 
 **Step 3: Verify**
 
@@ -800,23 +822,30 @@ git commit -m "feat(p05-t01): add structured content contracts for hub, deck, di
 
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/schemas/theme.schema.json`
+- Create: `.agents/skills/explainer-kit/schemas/theme.v2.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/theme.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/styles/` (all four curated styles)
 - Modify: `.agents/skills/explainer-kit/tests/theme.test.mjs`
 
 **Step 1: Write test (RED)**
 
-Resolved theme bundles carry role tokens (display, heading, body, UI,
-annotation, mono) with weights, tracking, line heights, measures, and
-per-medium scales (page, deck, SVG label). Deterministic high-quality stacks
-replace generic `system-ui`/`ui-serif`/Georgia defaults in every curated
-style; no external font fetches or active content; replay from a resolved
-bundle is byte-deterministic.
+Role tokens (display, heading, body, UI, annotation, mono) with weights,
+tracking, line heights, measures, and per-medium scales (page, deck, SVG
+label) land in a **new theme contract version** (`explainer-kit.theme/v2`) —
+required role-token shapes must not tighten the published `theme/v1` in
+place. Retained `theme/v1` resolved bundles continue to validate and replay
+byte-deterministically (proven by test); new runs resolve to v2. If a
+genuinely backward-compatible additive v1 shape is proven instead, state and
+test that proof explicitly in place of the v2 allocation. Deterministic
+high-quality stacks replace generic `system-ui`/`ui-serif`/Georgia defaults
+in every curated style; no external font fetches or active content.
 
 **Step 2: Implement (GREEN)**
 
-Theme schema revision, resolution logic, curated style updates.
+Theme v2 schema alongside retained v1, registry dispatch, resolution logic,
+curated style updates, docs.
 
 **Step 3: Verify**
 
@@ -937,6 +966,8 @@ git commit -m "feat(p05-t05): render diagrams from semantic graph content"
 
 - Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
+- Modify: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/recipes/project-recap.json`
 - Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
@@ -944,14 +975,18 @@ git commit -m "feat(p05-t05): render diagrams from semantic graph content"
 **Step 1: Write test (RED)**
 
 `project-recap` hub, deck, and diagram artifacts request structured content
-(`authoring: structured` with the matching contract) and are rendered by the
-core renderers; artistic authoring remains available only where the recipe
-declares it; end-to-end structured run passes link validation, browser
-evidence, and visual review stages.
+(`authoring: structured` with the matching content-contract reference,
+declared in the `author-request/v3` contract created in p02-t01 — the
+structured-authoring fields land in v3, never retrofitted onto v2); the core
+renderers render them; artistic authoring remains available only where the
+recipe declares it. End-to-end structured run passes link validation, browser
+evidence, and visual review; retained v2 HTML-authoring replay still
+validates.
 
 **Step 2: Implement (GREEN)**
 
-Recipe authoring switch, author-request construction, render dispatch.
+Recipe authoring switch, v3 author-request structured-content fields,
+author-request construction, render dispatch.
 
 **Step 3: Verify**
 
@@ -974,7 +1009,9 @@ git commit -m "feat(p05-t06): author standard recap artifacts through structured
 
 - Modify: `.agents/skills/explainer-kit/recipes/project-recap.json`
 - Create: `.agents/skills/explainer-kit/schemas/set-plan.v2.schema.json`
+- Modify: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/briefs/project-recap.md`
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
@@ -987,14 +1024,19 @@ reader question + evidence pointers) recorded in the set plan; unjustified or
 redundant expansion is rejected at planning time; existing expansion limits
 still apply. Justification enforcement lands in a **new set-plan version**
 (`set-plan/v2`); retained `set-plan/v1` documents continue to validate for
-replay and archive consumers (proven by test), and new runs emit v2. Audit
-the other three recipes and change only those with the same floor
-contradiction (document the audit result in the test or brief).
+replay and archive consumers (proven by test), and new runs emit v2.
+Contract-dependency propagation is in scope: the author-request contract
+embeds the set plan and currently pins `set-plan/v1`, so update
+`author-request.v3.schema.json` (and the registry) to accept `set-plan/v2`,
+with end-to-end tests covering both new-run emission (v3 + set-plan v2) and
+retained replay (v2 + set-plan v1). Audit the other three recipes and change
+only those with the same floor contradiction (document the audit result in
+the test or brief).
 
 **Step 2: Implement (GREEN)**
 
-Recipe v2, set-plan v2 schema alongside retained v1, planner enforcement,
-registry and docs updates.
+Recipe v2, set-plan v2 schema alongside retained v1, author-request v3
+set-plan reference update, planner enforcement, registry and docs updates.
 
 **Step 3: Verify**
 
@@ -1186,21 +1228,21 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                                                  | Reviewed Head | Invocation | Gate Target              |
-| ------ | -------- | --------------- | ---------- | --------------------------------------------------------------------------------------------------------- | ------------- | ---------- | ------------------------ |
-| p01    | code     | pending         | -          | -                                                                                                         | -             | -          | -                        |
-| p02    | code     | pending         | -          | -                                                                                                         | -             | -          | -                        |
-| p03    | code     | pending         | -          | -                                                                                                         | -             | -          | -                        |
-| p04    | code     | pending         | -          | -                                                                                                         | -             | -          | -                        |
-| p05    | code     | pending         | -          | -                                                                                                         | -             | -          | -                        |
-| p06    | code     | pending         | -          | -                                                                                                         | -             | -          | -                        |
-| p07    | code     | pending         | -          | -                                                                                                         | -             | -          | -                        |
-| final  | code     | pending         | -          | -                                                                                                         | -             | -          | -                        |
-| plan   | artifact | passed          | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed)                                             | -             | auto       | -                        |
-| spec   | artifact | pending         | -          | -                                                                                                         | -             | -          | -                        |
-| design | artifact | pending         | -          | -                                                                                                         | -             | -          | -                        |
-| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T002327Z.md (4 Important + 1 Medium resolved in artifact) | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T004027Z.md                                                        | -             | -          | -                        |
+| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                 | Reviewed Head | Invocation | Gate Target              |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------- | ------------------------ |
+| p01    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
+| p02    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
+| p03    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
+| p04    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
+| p05    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
+| p06    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
+| p07    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
+| final  | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
+| plan   | artifact | passed          | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed)                                                                            | -             | auto       | -                        |
+| spec   | artifact | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
+| design | artifact | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T002327Z.md (4 Important + 1 Medium resolved in artifact)                                | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T004027Z.md (2 Important + 1 Medium resolved in artifact; operator authorized attempt 3) | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

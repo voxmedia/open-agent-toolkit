@@ -12,6 +12,31 @@ oat_generated: false
 **Started:** 2026-08-05
 **Last Updated:** 2026-08-05
 
+## Quick-Start Exit Gate Feedback (escalation record)
+
+The configured quick-start exit gate (`oat gate review`, plan artifact scope,
+target `cursor-gpt-5-6-sol-xhigh`, `onFailure: block`, `maxAttempts: 2`)
+blocked on both attempts; attempts are exhausted and the outcome was
+escalated to the operator.
+
+- **Attempt 1** (`reviews/archived/artifact-plan-review-2026-08-06T002327Z.md`):
+  4 Important + 1 Medium — in-place schema-version tightening, metadata-only
+  protected byte verification, approval-ordering task targeting the wrong
+  orchestrator seam, vacuous negative visual fixture oracle, missing generated
+  release version asset. All five resolved in the plan artifact
+  (commit `443f e4f4`).
+- **Attempt 2** (`artifact-plan-review-2026-08-06T004027Z.md`): prior findings
+  confirmed resolved; 2 Important + 1 Medium new — flagged
+  `built-needs-review` runs lack a durability/finalization path (durability
+  and finalize seams currently reject that outcome); new contract versions not
+  propagated through registries/readers/embedding schemas
+  (receipt v1/v2 dispatch, `theme/v1` in-place tightening, `author-request`
+  ↔ `set-plan/v2` reference, missing v3 author-request in p05-t06); p01-t04
+  file scope cannot reach the run slug (add `run.mjs`).
+
+Operator disposition recorded in the conversation and reflected in the plan's
+`## Reviews` table.
+
 > This document is used to resume interrupted implementation sessions.
 >
 > Conventions:
