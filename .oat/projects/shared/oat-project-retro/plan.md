@@ -584,6 +584,182 @@ cell; never truncate a widened row back to five columns.
 
 ---
 
+## Phase p-rev1: Revision 1
+
+Source: inline dogfood feedback (2026-08-06)
+
+Execute sequentially. The tasks intentionally share the retro contracts and
+dogfood artifact, so later tasks build on earlier commits.
+
+### Task prev1-t01: (revision) Keep mutable retro state coherent
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-retro/SKILL.md`
+- Modify: `.agents/skills/oat-project-retro/references/apply-procedure.md`
+- Modify: `.agents/skills/oat-project-retro/references/retro-quality-bar.md`
+- Modify: `.agents/skills/oat-project-retro-file/SKILL.md`
+- Modify: `.oat/templates/project-retro.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts`
+- Modify: `.oat/projects/shared/oat-project-retro/references/project-retro.md`
+
+**Step 1: Add failing contract coverage**
+
+Add focused assertions for a narrow mutable current-state summary or equivalent
+derived-status surface. Proposal bodies remain immutable, but apply/file
+writeback must not leave freeform claims that contradict register fields or
+frontmatter rollups. Generation must avoid unqualified mutable status claims
+outside the registers.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/retro-skill-contracts.test.ts`
+
+Expected: the new coherence assertions fail before the contract changes.
+
+**Step 2: Implement the coherence contract**
+
+Define the exact bounded surface that apply and filing modes may refresh, keep
+proposal bodies immutable, and make generation phrase any historical status as
+generation-time evidence rather than live state. Reconcile this project's stale
+“UP-01 remains proposed” follow-up without changing the UP-01 proposal body.
+
+**Step 3: Verify and commit**
+
+Run the focused test above, file-scoped formatting, and `git diff --check`.
+
+```bash
+git add .agents/skills/oat-project-retro .agents/skills/oat-project-retro-file/SKILL.md .oat/templates/project-retro.md packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts .oat/projects/shared/oat-project-retro/references/project-retro.md
+git commit -m "fix(prev1-t01): keep retro writeback coherent"
+```
+
+### Task prev1-t02: (revision) Distinguish related duplicate candidates
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-retro-file/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts`
+- Modify: `.oat/repo/pjm/backlog/items/BL-260718-mandatory-skill-load-clause.md`
+- Create via CLI: dedicated fail-closed closeout-snapshot backlog item
+- Modify: `.oat/repo/pjm/backlog/index.md` through CLI regeneration
+- Modify: `.oat/projects/shared/oat-project-retro/references/project-retro.md`
+
+**Step 1: Tighten duplicate review**
+
+Require duplicate review to distinguish exact duplicates from merely related
+items. Recommend strengthening only when the existing title, mechanism, and
+acceptance scope already cover the proposal. When strengthening would broaden
+the tracked mechanism, recommend a new item or an explicitly approved umbrella
+retitle instead.
+
+Add focused contract coverage, then verify it fails before editing the skill.
+
+**Step 2: Repair the dogfood filing**
+
+Restore `BL-260718-mandatory-skill-load-clause` to its original skill-loading
+scope. Create a separate high-priority, task-scoped backlog item for the
+configured-plus-absent snapshot invariant using `oat backlog new`, with labels
+`lifecycle-skills`, `workflow-integrity`, and `dx`, and confirmed scope estimate
+`M`. Its acceptance criteria must require fail-closed terminal routing and
+transition-level coverage for snapshot persistence and ordered child dispatch.
+Update UP-01 to the generated destination and regenerate the managed index.
+
+**Step 3: Verify and commit**
+
+Run the focused retro contracts, `pnpm run cli -- backlog regenerate-index
+--json`, file-scoped formatting, and `git diff --check`.
+
+```bash
+git add .agents/skills/oat-project-retro-file/SKILL.md packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts .oat/repo/pjm/backlog .oat/projects/shared/oat-project-retro/references/project-retro.md
+git commit -m "fix(prev1-t02): separate related retro filings"
+```
+
+### Task prev1-t03: (revision) Make local filing receipts durable
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-retro-file/SKILL.md`
+- Modify: `.oat/templates/project-retro.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts`
+- Modify: `.oat/projects/shared/oat-project-retro/references/project-retro.md`
+
+**Step 1: Add failing durability coverage**
+
+Require local backlog filing to commit the destination side effect before
+marking the retro item filed. The subsequent writeback must record the
+destination path plus its confirmed commit receipt and report whether the
+branch is pushed, without equating local commit durability with remote
+visibility.
+
+**Step 2: Implement two-stage local writeback**
+
+Document the destination-first commit and receipt-bearing retro writeback.
+Preserve Git safety: pushing remains separately authorized. Update this
+project's UP-01 destination to reference the dedicated backlog item's confirmed
+commit.
+
+**Step 3: Verify and commit**
+
+Run the focused retro contracts, file-scoped formatting, and `git diff --check`.
+
+```bash
+git add .agents/skills/oat-project-retro-file/SKILL.md .oat/templates/project-retro.md packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts .oat/projects/shared/oat-project-retro/references/project-retro.md
+git commit -m "fix(prev1-t03): record durable local filing receipts"
+```
+
+### Task prev1-t04: (revision) Calibrate retro depth and ship revision assets
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-retro/SKILL.md`
+- Modify: `.agents/skills/oat-project-retro/references/retro-quality-bar.md`
+- Modify: `.oat/templates/project-retro.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/retro.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts`
+- Regenerate: `packages/cli/assets/skills/oat-project-retro*/**`
+- Regenerate: `packages/cli/assets/templates/project-retro.md`
+- Modify only if freshness requires: the five lockstep public package versions
+
+**Step 1: Define evidence-scaled depth**
+
+Make concise output the default without adding a new consent-bearing config
+surface. Require each section to add distinct information, prefer references
+over repeated chronology, keep small-project core sections brief, and reserve
+subsections/tables for evidence-rich projects where they improve decisions.
+Add focused contract coverage and align the workflow documentation.
+
+**Step 2: Refresh shipped assets**
+
+Regenerate bundled skill/template assets. Confirm each changed canonical skill
+has exactly one PR-scoped version increase in the final branch diff; do not
+double-bump for multiple revision edits. Recheck public-package versions
+against current `origin/main` and advance all five together only if `0.2.30`
+no longer satisfies release freshness.
+
+**Step 3: Verify and commit**
+
+Run, in order:
+
+```bash
+pnpm check
+pnpm type-check
+pnpm test
+pnpm build
+pnpm lint
+pnpm format
+pnpm build:docs
+pnpm release:validate
+```
+
+Commit all revision-owned source, docs, generated assets, and any required
+lockstep version updates:
+
+```bash
+git add .agents/skills/oat-project-retro .agents/skills/oat-project-retro-file packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts .oat/templates/project-retro.md apps/oat-docs/docs/workflows/projects/retro.md packages/cli/assets packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
+git commit -m "feat(prev1-t04): refine retrospective dogfood workflow"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -593,10 +769,11 @@ cell; never truncate a widened row back to five columns.
 - Phase 3: 2 tasks - Closeout dispatch and completion offer
 - Phase 4: 2 tasks - Lifecycle/config docs and workflow page
 - Phase 5: 2 tasks - Dogfood acceptance, then lockstep release bump + final validation
+- Revision 1: 4 tasks - Writeback coherence, duplicate scope, durable filing receipts, and concise output
 
-**Total: 12 tasks**
+**Total: 16 tasks**
 
-Ready for code review and merge.
+Revision 1 is ready for implementation.
 
 ---
 

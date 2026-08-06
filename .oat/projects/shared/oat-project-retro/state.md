@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t01
 oat_last_commit: 74adc91cb8956124e44e2af3d7aecba6e30de595
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p05'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -80,27 +80,27 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/192' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:27:39.069Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T05:29:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T22:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-retro
 
-**Status:** Implementation complete
+**Status:** Revision 1 in progress
 **Started:** 2026-08-05
 **Last Updated:** 2026-08-06
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — Revision 1 queued from post-PR dogfood feedback.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (12/12 tasks complete; final review passed)
+- **Plan:** `plan.md` (revision phase added)
+- **Implementation:** `implementation.md` (12/16 tasks complete; revision pending)
 
 ## Progress
 
@@ -111,7 +111,7 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Final review tool-grant fix verified
 - ✓ Final whole-project review passed
 - ✓ PR created
-- ⧗ Awaiting human review
+- ⧗ Revision 1 queued with four dogfood tasks
 
 ## Blockers
 
@@ -119,8 +119,6 @@ None
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Run `oat-project-implement` starting from `prev1-t01`. After all four revision
+tasks complete, return the project to `pr_open`, refresh the summary and PR, and
+dogfood the revised workflow on another project.
