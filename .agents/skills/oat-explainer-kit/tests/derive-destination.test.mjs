@@ -96,3 +96,55 @@ test('rejects unsupported invocations and malformed roots', () => {
     /s3/i,
   );
 });
+
+test('rejects credential-bearing and non-root destination URLs', () => {
+  const invalidRoots = [
+    {
+      label: 's3Uri',
+      value: 's3://synthetic-access:synthetic-secret@bucket/root',
+    },
+    {
+      label: 's3Uri',
+      value: 's3:///bucket/root',
+    },
+    {
+      label: 's3Uri',
+      value: 's3://bucket/root?synthetic-token=value',
+    },
+    {
+      label: 's3Uri',
+      value: 's3://bucket/root#synthetic-fragment',
+    },
+    {
+      label: 'publicBaseUrl',
+      value: 'https://synthetic-user:synthetic-password@docs.example.com/root',
+    },
+    {
+      label: 'publicBaseUrl',
+      value: 'https:///docs.example.com/root',
+    },
+    {
+      label: 'publicBaseUrl',
+      value: 'https://docs.example.com/root?synthetic-token=value',
+    },
+    {
+      label: 'publicBaseUrl',
+      value: 'https://docs.example.com/root#synthetic-fragment',
+    },
+  ];
+
+  for (const { label, value } of invalidRoots) {
+    assert.throws(
+      () =>
+        deriveExplainerDestination({
+          invocation: 'project',
+          projectSlug: 'demo',
+          s3Uri: label === 's3Uri' ? value : 's3://bucket/root',
+          publicBaseUrl:
+            label === 'publicBaseUrl' ? value : 'https://example.com/root',
+        }),
+      new RegExp(label, 'i'),
+      `${label} accepted invalid root ${value}`,
+    );
+  }
+});

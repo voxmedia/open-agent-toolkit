@@ -10,12 +10,8 @@ export function deriveExplainerDestination({
     throw new Error(`Unsupported explainer invocation: ${invocation}`);
   }
   const roots = {
-    s3Uri: normalizeRoot(s3Uri, 's3Uri', /^s3:\/\/[^/\s]+(?:\/.*)?$/),
-    publicBaseUrl: normalizeRoot(
-      publicBaseUrl,
-      'publicBaseUrl',
-      /^https:\/\/[^\s]+$/,
-    ),
+    s3Uri: normalizeRoot(s3Uri, 's3Uri', 's3:'),
+    publicBaseUrl: normalizeRoot(publicBaseUrl, 'publicBaseUrl', 'https:'),
   };
   if (invocation !== 'project') {
     return roots;
@@ -45,9 +41,39 @@ function encodeProjectSlug(projectSlug) {
   return encodeURIComponent(projectSlug);
 }
 
-function normalizeRoot(value, label, pattern) {
-  if (typeof value !== 'string' || !pattern.test(value.trim())) {
+function normalizeRoot(value, label, protocol) {
+  if (typeof value !== 'string') {
     throw new Error(`${label} must be a valid destination root.`);
   }
-  return value.trim().replace(/\/+$/, '');
+  const root = value.trim();
+  const authorityStart = `${protocol}//`;
+  if (!root.startsWith(authorityStart) || /\s|\\/.test(root)) {
+    throw new Error(`${label} must be a valid destination root.`);
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(root);
+  } catch {
+    throw new Error(`${label} must be a valid destination root.`);
+  }
+  const authority = root.slice(authorityStart.length).split(/[/?#]/, 1)[0];
+  const invalidS3Bucket =
+    protocol === 's3:' &&
+    (parsed.port !== '' ||
+      !/^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$/.test(parsed.hostname));
+  if (
+    parsed.protocol !== protocol ||
+    !authority ||
+    authority.includes('@') ||
+    !parsed.hostname ||
+    parsed.username ||
+    parsed.password ||
+    parsed.search ||
+    parsed.hash ||
+    invalidS3Bucket
+  ) {
+    throw new Error(`${label} must be a valid destination root.`);
+  }
+  return root.replace(/\/+$/, '');
 }

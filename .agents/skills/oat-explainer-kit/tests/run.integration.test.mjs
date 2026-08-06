@@ -50,6 +50,7 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
   const userSkillsRoot = join(root, 'home', '.agents', 'skills');
   const coreRoot = join(userSkillsRoot, 'explainer-kit');
   const coreInvocationMarker = join(root, 'core-invoked');
+  const publishRequestMarker = join(root, 'publish-request.json');
   await mkdir(projectRoot, { recursive: true });
   await mkdir(adapterRoot, { recursive: true });
   await mkdir(join(coreRoot, 'scripts'), { recursive: true });
@@ -88,6 +89,10 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
         }
 
         export async function runExplainer(request, options) {
+          await writeFile(
+            ${JSON.stringify(publishRequestMarker)},
+            JSON.stringify(request.durability?.publish ?? null),
+          );
           await writeFile(${JSON.stringify(coreInvocationMarker)}, 'invoked\\n', {
             flag: 'a',
           });
@@ -202,6 +207,7 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
     userSkillsRoot,
     coreRoot,
     coreInvocationMarker,
+    publishRequestMarker,
     reviewedCommit: reviewedCommitOutput.trim(),
   };
 }
@@ -323,6 +329,10 @@ function getConfig(key) {
 }
 
 function getPublishConfig(key) {
+  return getPublishConfigWith({})(key);
+}
+
+function getPublishConfigWith(overrides) {
   const values = {
     'explainers.publish.provider': 's3-static',
     'explainers.publish.s3Uri': 's3://bucket/repositories/demo',
@@ -330,13 +340,15 @@ function getPublishConfig(key) {
       'https://docs.example.com/repositories/demo',
     'explainers.publish.awsRegion': 'us-east-1',
     'explainers.publish.publicAccess': 'protected',
+    ...overrides,
   };
-  return Promise.resolve({
-    status: 'ok',
-    key,
-    value: values[key] ?? (key.startsWith('workflow.') ? 'ask' : null),
-    source: key in values ? 'shared' : 'default',
-  });
+  return (key) =>
+    Promise.resolve({
+      status: 'ok',
+      key,
+      value: values[key] ?? (key.startsWith('workflow.') ? 'ask' : null),
+      source: key in values ? 'shared' : 'default',
+    });
 }
 
 test('resolves a full reviewed commit and canonical GitHub repository identity', async () => {
@@ -1299,6 +1311,67 @@ test('passes only derived credential-free destination roots into core publish re
       JSON.stringify(request),
       /access[_-]?key|secret|session[_-]?token|password/i,
     );
+  }
+});
+
+test('rejects unsafe destination roots before core invocation or publish-request persistence', async () => {
+  const invalidRoots = [
+    [
+      'explainers.publish.s3Uri',
+      's3://synthetic-access:synthetic-secret@bucket/repositories/demo',
+    ],
+    ['explainers.publish.s3Uri', 's3:///bucket/repositories/demo'],
+    [
+      'explainers.publish.s3Uri',
+      's3://bucket/repositories/demo?synthetic-token=value',
+    ],
+    [
+      'explainers.publish.s3Uri',
+      's3://bucket/repositories/demo#synthetic-fragment',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https://synthetic-user:synthetic-password@docs.example.com/repositories/demo',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https:///docs.example.com/repositories/demo',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https://docs.example.com/repositories/demo?synthetic-token=value',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https://docs.example.com/repositories/demo#synthetic-fragment',
+    ],
+  ];
+
+  for (const [key, value] of invalidRoots) {
+    const fixture = await createFixture();
+    await assert.rejects(
+      runOatExplainer({
+        adapterRoot: fixture.adapterRoot,
+        userSkillsRoot: fixture.userSkillsRoot,
+        repoRoot: fixture.repoRoot,
+        invocation: 'project',
+        activeProject: '.oat/projects/shared/demo',
+        recipe: 'project-explainer',
+        slug: 'unsafe-publish-root',
+        getConfig: getPublishConfigWith({ [key]: value }),
+        author: fixtureAuthor,
+        durabilityStrategy: 'publish',
+        mode: 'unattended',
+      }),
+      /destination root|valid (?:s3:\/\/ URI|HTTPS URL)/i,
+      `${key} accepted invalid root ${value}`,
+    );
+    await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
+      code: 'ENOENT',
+    });
+    await assert.rejects(readFile(fixture.publishRequestMarker, 'utf8'), {
+      code: 'ENOENT',
+    });
   }
 });
 
