@@ -1,18 +1,31 @@
 import { parseFrontmatterRecord } from '../shared/utils/frontmatter';
 import type { TaskProgress } from '../types';
 
-const PHASE_HEADING_PATTERN = /^## Phase \d+: (.+)$/;
+const PHASE_HEADING_PATTERN = /^## Phase (\d+): (.+)$/;
 const CANONICAL_REVISION_PHASE_HEADING_PATTERN = /^## Phase (p-rev\d+): (.+)$/;
-const LEGACY_REVISION_PHASE_HEADING_PATTERN = /^## Revision Phase \d+: (.+)$/;
-const TASK_HEADING_PATTERN =
-  /^### Task ((?:p\d+|p-rev\d+|prev\d+)-t\d+): (.+)$/;
+const LEGACY_REVISION_PHASE_HEADING_PATTERN = /^## Revision Phase (\d+): (.+)$/;
+const ORDINARY_TASK_HEADING_PATTERN = /^### Task (p(\d+)-t\d+): (.+)$/;
+const CANONICAL_REVISION_TASK_HEADING_PATTERN =
+  /^### Task (prev(\d+)-t\d+): (.+)$/;
+const LEGACY_REVISION_TASK_HEADING_PATTERN =
+  /^### Task (p-rev(\d+)-t\d+): (.+)$/;
+
+type HeadingDialect = 'ordinary' | 'canonical-revision' | 'legacy-revision';
+
 interface MutablePhaseProgress {
   phaseId: string | null;
   declaredPhaseId: string | null;
+  dialect: HeadingDialect;
   name: string;
   total: number;
   completed: number;
   isRevision: boolean;
+}
+
+interface ParsedTaskHeading {
+  taskId: string;
+  phaseId: string;
+  dialect: HeadingDialect;
 }
 
 export function parseTaskProgress(
@@ -50,7 +63,8 @@ function parsePhaseProgress(
     if (phaseHeading) {
       currentPhase = {
         phaseId: null,
-        declaredPhaseId: phaseHeading.phaseId,
+        declaredPhaseId: phaseHeading.declaredPhaseId,
+        dialect: phaseHeading.dialect,
         name: phaseHeading.name,
         total: 0,
         completed: 0,
@@ -60,27 +74,21 @@ function parsePhaseProgress(
       continue;
     }
 
-    const taskMatch = line.match(TASK_HEADING_PATTERN);
-    if (!taskMatch || currentPhase == null) {
+    const taskHeading = parseTaskHeading(line);
+    if (!taskHeading || currentPhase == null) {
       continue;
     }
 
-    const taskId = taskMatch[1];
-    if (!taskId) {
-      continue;
-    }
-
-    const phaseId = normalizeTaskPhaseId(taskId);
     if (
-      currentPhase.declaredPhaseId !== null &&
-      currentPhase.declaredPhaseId !== phaseId
+      currentPhase.dialect !== taskHeading.dialect ||
+      currentPhase.declaredPhaseId !== taskHeading.phaseId
     ) {
       continue;
     }
 
-    currentPhase.phaseId ??= phaseId;
+    currentPhase.phaseId ??= taskHeading.phaseId;
     currentPhase.total += 1;
-    currentPhase.completed += completedTasks.has(taskId) ? 1 : 0;
+    currentPhase.completed += completedTasks.has(taskHeading.taskId) ? 1 : 0;
   }
 
   return phases.filter((phase) => phase.phaseId !== null);
@@ -91,9 +99,9 @@ function parseCompletedTaskIds(implementationContent: string): Set<string> {
   let currentTaskId: string | null = null;
 
   for (const line of implementationContent.split('\n')) {
-    const taskMatch = line.match(TASK_HEADING_PATTERN);
-    if (taskMatch?.[1]) {
-      currentTaskId = taskMatch[1];
+    const taskHeading = parseTaskHeading(line);
+    if (taskHeading) {
+      currentTaskId = taskHeading.taskId;
       continue;
     }
 
@@ -115,36 +123,70 @@ function parseCurrentTaskId(implementationContent: string): string | null {
 
 function parsePhaseHeading(
   line: string,
-): Pick<MutablePhaseProgress, 'phaseId' | 'name' | 'isRevision'> | null {
+): Pick<
+  MutablePhaseProgress,
+  'declaredPhaseId' | 'dialect' | 'name' | 'isRevision'
+> | null {
   const canonicalRevisionMatch = line.match(
     CANONICAL_REVISION_PHASE_HEADING_PATTERN,
   );
   if (canonicalRevisionMatch?.[1] && canonicalRevisionMatch[2]) {
     return {
-      phaseId: canonicalRevisionMatch[1],
+      declaredPhaseId: canonicalRevisionMatch[1],
+      dialect: 'canonical-revision',
       name: canonicalRevisionMatch[2],
       isRevision: true,
     };
   }
 
   const legacyRevisionMatch = line.match(LEGACY_REVISION_PHASE_HEADING_PATTERN);
-  if (legacyRevisionMatch?.[1]) {
+  if (legacyRevisionMatch?.[1] && legacyRevisionMatch[2]) {
     return {
-      phaseId: null,
-      name: legacyRevisionMatch[1],
+      declaredPhaseId: `p-rev${legacyRevisionMatch[1]}`,
+      dialect: 'legacy-revision',
+      name: legacyRevisionMatch[2],
       isRevision: true,
     };
   }
 
   const phaseMatch = line.match(PHASE_HEADING_PATTERN);
-  return phaseMatch?.[1]
-    ? { phaseId: null, name: phaseMatch[1], isRevision: false }
+  return phaseMatch?.[1] && phaseMatch[2]
+    ? {
+        declaredPhaseId: `p${phaseMatch[1].padStart(2, '0')}`,
+        dialect: 'ordinary',
+        name: phaseMatch[2],
+        isRevision: false,
+      }
     : null;
 }
 
-function normalizeTaskPhaseId(taskId: string): string {
-  const canonicalRevisionMatch = taskId.match(/^prev(\d+)-t\d+$/);
-  return canonicalRevisionMatch?.[1]
-    ? `p-rev${canonicalRevisionMatch[1]}`
-    : taskId.replace(/-t\d+$/, '');
+function parseTaskHeading(line: string): ParsedTaskHeading | null {
+  const canonicalRevisionMatch = line.match(
+    CANONICAL_REVISION_TASK_HEADING_PATTERN,
+  );
+  if (canonicalRevisionMatch?.[1] && canonicalRevisionMatch[2]) {
+    return {
+      taskId: canonicalRevisionMatch[1],
+      phaseId: `p-rev${canonicalRevisionMatch[2]}`,
+      dialect: 'canonical-revision',
+    };
+  }
+
+  const legacyRevisionMatch = line.match(LEGACY_REVISION_TASK_HEADING_PATTERN);
+  if (legacyRevisionMatch?.[1] && legacyRevisionMatch[2]) {
+    return {
+      taskId: legacyRevisionMatch[1],
+      phaseId: `p-rev${legacyRevisionMatch[2]}`,
+      dialect: 'legacy-revision',
+    };
+  }
+
+  const ordinaryMatch = line.match(ORDINARY_TASK_HEADING_PATTERN);
+  return ordinaryMatch?.[1] && ordinaryMatch[2]
+    ? {
+        taskId: ordinaryMatch[1],
+        phaseId: `p${ordinaryMatch[2]}`,
+        dialect: 'ordinary',
+      }
+    : null;
 }

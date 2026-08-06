@@ -9,6 +9,8 @@ describe('parseTaskProgress', () => {
 ### Task p01-t01: Scaffold package
 ### Task p01-t02: Parse state
 ### Task p01-t03: Scan artifacts
+### Task prev1-t04: Wrong canonical revision dialect
+### Task p02-t03: Task from a different ordinary phase
 
 ## Phase 2: API
 
@@ -61,6 +63,8 @@ oat_current_task_id: p02-t01
 
 ### Task p-rev1-t01: Address review
 ### Task p-rev1-t02: Re-run verification
+### Task prev1-t03: Wrong canonical revision dialect
+### Task p-rev2-t01: Task from a different legacy revision
 `;
 
     const implementationContent = `---
@@ -93,6 +97,7 @@ oat_current_task_id: p-rev1-t02
 ### Task prev1-t01: Keep retro state coherent
 ### Task prev1-t02: Distinguish duplicate candidates
 ### Task prev2-t01: Task from a different revision
+### Task p-rev1-t03: Wrong legacy revision dialect
 ### Task p-rev1t03: Malformed legacy task id
 `;
 
