@@ -67,6 +67,16 @@ escalated to the operator.
   (fixed: bounded fail-closed tokenizer, no new dependency), contradictory
   receipt verification shapes (fixed: single structured object/public shape).
 
+- **Attempt 6** (`artifact-plan-review-2026-08-06T015212Z.md`): attempt-5
+  findings confirmed resolved; 2 Important, 0 Medium new — p02-t01 defined
+  `author-request/v3` without scoping the emitting seam (`run.mjs` builds and
+  pins requests to v2; fixed: `run.mjs` and `run.integration.test.mjs` added
+  with exact relative-URL assertions), and no production caller was required
+  to finalize flagged/failed recap outcomes (fixed: p04-t04 revises the
+  implementation-tail sequence to finalize clean, flagged, and failed
+  outcomes before recording the gate outcome, with end-to-end integration
+  coverage for all three classes).
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 

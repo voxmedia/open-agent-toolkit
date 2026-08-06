@@ -290,11 +290,13 @@ Write boundary: `.agents/skills/explainer-kit/**` only.
 
 **Files:**
 
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs` (the live author-request construction seam — requests are built and pinned to v2 here)
 - Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
 - Create: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 
 **Step 1: Write test (RED)**
 
@@ -305,19 +307,28 @@ URL from each authoring artifact's location (e.g. hub →
 is a **new contract version** (`author-request/v3`): v3 requests without the
 table fail validation, while existing `author-request/v2` payloads continue to
 validate unchanged (retained-run replay and external callback compatibility
-proven by test). The contract registry and docs list both versions; new runs
-emit v3.
+proven by test). The contract registry and docs list both versions.
+
+**The emitting runtime seam is in scope:** the per-request link table is
+constructed at the slug- and artifact-aware authoring seam in `run.mjs`
+(set-plan code alone knows neither the run slug nor the authoring artifact's
+rendered location), and new runs switch to emitting v3 there. An integration
+test asserts the exact hub → diagram/deck relative URLs
+(`../../diagrams/<slug>/architecture/index.html`,
+`../../decks/<slug>/deck/index.html`) in emitted requests, alongside a
+deliberate v2 replay case.
 
 **Step 2: Implement (GREEN)**
 
-Link-table derivation beside set-plan machinery; new v3 schema alongside the
-retained v2; contract-registry and documentation updates; version-dispatched
-validation.
+Link-table derivation beside set-plan machinery; per-request table
+construction and v3 emission at the `run.mjs` authoring seam; new v3 schema
+alongside the retained v2; contract-registry and documentation updates;
+version-dispatched validation.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs`
-Expected: green
+Run: `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs`
+Expected: green (every changed test file executes)
 
 **Step 4: Commit**
 
@@ -815,7 +826,8 @@ git commit -m "feat(p04-t03): retain durable failure records for failed runs"
 
 ### Task p04-t04: Recap gate terminal outcome before final approval
 
-Consumes the failure-record contract created in p04-t03.
+Consumes the failure-record contract created in p04-t03 and the flagged/failed
+finalization support created in p04-t02 and p04-t03.
 
 **Files:**
 
@@ -843,11 +855,27 @@ insufficient. If any other live completion route can finalize approval, it is
 covered by the same guard. Approval is never conditioned on the outcome being
 clean.
 
+**The implementation-tail caller must use the revised finalizer for every
+terminal outcome, not only clean builds.** The current completion contract
+invokes tracked-run finalization only "for a successful build" and demotes
+failed outcomes to warnings — exactly the local-only evidence gap this
+project must eliminate. Revise the implementation-tail sequence in
+`completion-and-closeout.md` so the caller invokes
+`finalize-tracked-run.mjs` for clean (`built-durable`), flagged
+(`built-needs-review`), and failed outcomes **before** recording the recap
+gate terminal outcome. `completion.integration.test.mjs` must execute that
+caller/transition seam end-to-end for all three outcome classes and prove
+the flagged run package (p04-t02) or compact failure record (p04-t03) is
+committed and inspectable in the durable project tree; a direct finalizer
+unit test or prose-presence assertion alone is insufficient.
+
 **Step 2: Implement (GREEN)**
 
 Durable terminal-outcome recording in the adapter intent/persistence seam;
-transition guard in the closeout orchestrator sequence; document in
-`lifecycle-contract.md` and `completion-and-closeout.md`.
+implementation-tail caller finalizes clean, flagged, and failed outcomes
+before recording the gate outcome; transition guard in the closeout
+orchestrator sequence; document in `lifecycle-contract.md` and
+`completion-and-closeout.md`.
 
 **Step 3: Verify**
 
