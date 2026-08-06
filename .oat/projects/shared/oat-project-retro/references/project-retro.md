@@ -86,7 +86,7 @@ exemplars, not evidence of this run.
 
 - **Promotions:** `none`; no RP apply-items exist.
 - **Filing:** `complete`; UP-01 is filed to
-  `.oat/repo/pjm/backlog/items/BL-260718-mandatory-skill-load-clause.md`.
+  `.oat/repo/pjm/backlog/items/BL-260806-fail-closed-when-configured.md`.
 - **Unsettled items:** None.
 
 ## What Went Well
@@ -295,10 +295,10 @@ upstream register rather than duplicated as a repo filing item.
 ### UP-01: Fail closed when a configured closeout snapshot is absent
 
 - **Status:** filed
-- **Destination:** `.oat/repo/pjm/backlog/items/BL-260718-mandatory-skill-load-clause.md`
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-260806-fail-closed-when-configured.md`
 - **Sanitized:** yes
-- **Disposition-note:** Strengthened the existing lifecycle-integrity item with
-  configured-plus-absent snapshot evidence and terminal-transition coverage.
+- **Disposition-note:** Filed as a dedicated item after classifying the
+  mandatory-skill-load candidate as related rather than an exact duplicate.
 
 `workflow.postImplementSequence` configured pre-approval summary,
 documentation, and PR steps, but the run reached implementation completion

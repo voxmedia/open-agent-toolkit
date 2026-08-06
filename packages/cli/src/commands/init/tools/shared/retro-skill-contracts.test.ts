@@ -76,6 +76,21 @@ describe('retro skill content contracts', () => {
     );
   });
 
+  it('distinguishes exact duplicates from merely related candidates', () => {
+    expect(filingSkill).toMatch(
+      /exact duplicate[\s\S]*?merely related|merely related[\s\S]*?exact duplicate/i,
+    );
+    expect(filingSkill).toMatch(
+      /title[\s\S]*?mechanism[\s\S]*?acceptance scope/i,
+    );
+    expect(filingSkill).toMatch(
+      /strengthen[\s\S]*?genuine[\s\S]*?scope[\s\S]*?mechanism match/i,
+    );
+    expect(filingSkill).toMatch(
+      /broaden[\s\S]*?(?:file|create)[\s\S]*?new[\s\S]*?umbrella\s+retitle/i,
+    );
+  });
+
   it('does not invent or prompt for incomplete backlog metadata', () => {
     expect(filingSkill).toMatch(
       /non-interactive[\s\S]*?required backlog metadata[\s\S]*?no external write/i,

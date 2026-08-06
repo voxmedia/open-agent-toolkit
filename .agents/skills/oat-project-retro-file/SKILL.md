@@ -153,12 +153,27 @@ Search titles and distinguishing keywords across:
 
 Include archived/completed work so recently closed items are not refiled.
 
+Classify each candidate before choosing a disposition:
+
+- **Exact duplicate:** the existing title identifies the same outcome, its
+  tracked mechanism matches the proposed mechanism, and its acceptance scope
+  already covers the proposal.
+- **Merely related:** the item shares a subsystem, symptom, or keywords, but
+  its title, mechanism, or acceptance scope does not cover the proposal.
+
+Recommend **Strengthen** only for a genuine scope and mechanism match. If the
+new evidence would broaden the tracked mechanism or acceptance scope, recommend
+**File as new** instead, unless the user explicitly approves an umbrella
+retitle and corresponding scope change to the existing item. Search proximity
+alone never makes an item a duplicate.
+
 For a suspected duplicate in an interactive run, select one explicit
 disposition:
 
-1. **Strengthen** — default when applicable. Add this run's new evidence to
-   the existing issue as a comment, or append a concise evidence/insight note
-   to the existing backlog item and run `oat backlog regenerate-index`.
+1. **Strengthen** — default only for an exact duplicate. Add this run's new
+   evidence to the existing issue as a comment, or append a concise
+   evidence/insight note to the existing backlog item and run
+   `oat backlog regenerate-index`.
 2. **File as new** — create a separate item despite the candidate.
 3. **Skip** — leave the retro item `proposed` unless it is explicitly rejected.
 4. **Link existing** — record the existing URL/path without adding content.
