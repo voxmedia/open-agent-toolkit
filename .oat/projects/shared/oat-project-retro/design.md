@@ -464,9 +464,13 @@ Quick mode: no requirement-to-test mapping table; key levels and scenarios.
 
 ### Unit Tests (`packages/cli`)
 
-- `oat-config.test.ts` / `resolve.test.ts`: `'retro'` accepted in both
-  sequence arrays; legacy strings unchanged; `workflow.retro` normalization
-  (valid enums, invalid values dropped, `upstreamRepo` shape, layered merge).
+- `oat-config.test.ts` / `resolve.test.ts`: `'retro'` accepted in
+  `postApproval`; structured values containing `'retro'` in `preApproval`
+  rejected; legacy strings unchanged; `workflow.retro` normalization (valid
+  enums, invalid values dropped, `upstreamRepo` shape, layered merge).
+- `commands/config/index.test.ts`: the four `workflow.retro.*` leaves exposed
+  through `oat config get/set/list/describe` with nested writeback preserving
+  sibling values at every scope.
 - `post-implement-sequence-contracts.test.ts`: widened vocabulary contract.
 - Manifest tests: `oat-project-retro`, `oat-project-retro-file` in
   `WORKFLOW_SKILLS`; `project-retro.md` in `WORKFLOW_TEMPLATES`.

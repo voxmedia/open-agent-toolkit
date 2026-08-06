@@ -104,12 +104,16 @@ git commit -m "feat(p01-t01): accept retro as postApproval-only sequence step"
 - Modify: `packages/cli/src/config/oat-config.test.ts`
 - Modify: `packages/cli/src/config/resolve.ts`
 - Modify: `packages/cli/src/config/resolve.test.ts`
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
 
 **Step 1: Write test (RED)**
 
-Cases: valid `filing.repo` (`issues|backlog|none`), `filing.upstream` (`issues|none`), `apply` (`auto|ask`), `upstreamRepo` (`owner/name` shape); invalid enum values and malformed `upstreamRepo` dropped to `undefined`; unknown keys dropped; layered resolve merges `workflow.retro` with the same precedence as sibling workflow keys.
+Normalization/resolve cases: valid `filing.repo` (`issues|backlog|none`), `filing.upstream` (`issues|none`), `apply` (`auto|ask`), `upstreamRepo` (`owner/name` shape); invalid enum values and malformed `upstreamRepo` dropped to `undefined`; unknown keys dropped; layered resolve merges `workflow.retro` with the same precedence as sibling workflow keys.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts`
+Config-command cases (`commands/config/index.test.ts`): register `workflow.retro.filing.repo`, `workflow.retro.filing.upstream`, `workflow.retro.apply`, and `workflow.retro.upstreamRepo` as supported keys (`ConfigKey`, `KEY_ORDER`, catalog/describe metadata, workflow parser, nested writeback); `oat config get/set/list/describe` round-trips each key; `set` writes the nested object without dropping sibling `workflow.retro` values at local/shared/user scope; invalid values rejected with actionable errors.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/index.test.ts`
 Expected: New cases fail (RED)
 
 **Step 2: Implement (GREEN)**
@@ -128,6 +132,9 @@ export interface WorkflowRetroConfig {
 }
 // normalizeWorkflowRetroConfig(...) following existing normalization patterns;
 // OatWorkflowConfig gains retro?: WorkflowRetroConfig; resolve merge wired.
+// commands/config/index.ts: the four workflow.retro.* leaves join ConfigKey,
+// KEY_ORDER, the describe catalog, the workflow value parser, and nested
+// writeback so get/set/list/describe expose them at every scope.
 ```
 
 Run: same vitest command
@@ -145,7 +152,7 @@ Expected: No errors; full package suite green
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/config/resolve.ts packages/cli/src/config/resolve.test.ts
+git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/config/resolve.ts packages/cli/src/config/resolve.test.ts packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts
 git commit -m "feat(p01-t02): add workflow.retro config namespace"
 ```
 
@@ -429,12 +436,15 @@ Apply fixes for any defects found (skill wording, template gaps, register-format
 Run: `pnpm lint && pnpm format && pnpm check && pnpm type-check && pnpm test && pnpm build`
 Expected: Skills-covering lint/format plus the full CI gate order pass
 
-**Step 4: Commit**
+**Step 4: Record commits (conditional)**
+
+The invoked retro workflow commits its own outputs (generate mode commits the retro artifact + project-log entry; apply mode commits applied promotions) — those child-workflow commits ARE this task's primary commits. Record their SHAs in `implementation.md` for this task. Run a follow-up commit only when residual changes exist (defect fixes to skills/template, acceptance notes); on a clean run with nothing left in the working tree, do not commit again.
 
 ```bash
-git add .agents/skills/oat-project-retro .agents/skills/oat-project-retro-file .oat/templates/project-retro.md "{completed-project}/references/project-retro.md"
-# plus the target project's project-log entry and any specific fix paths surfaced by the run — enumerate them; do not use `git add -A`
-git commit -m "test(p05-t01): dogfood retro acceptance run and fixes"
+# Only when residual defect fixes or acceptance notes exist:
+git add <exact fixed paths, e.g. .agents/skills/oat-project-retro/... .agents/skills/oat-project-retro-file/SKILL.md .oat/templates/project-retro.md>
+git commit -m "test(p05-t01): dogfood acceptance fixes"
+# Never use `git add -A`.
 ```
 
 ---
@@ -443,16 +453,17 @@ git commit -m "test(p05-t01): dogfood retro acceptance run and fixes"
 
 **Files:**
 
-- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json` (and the repo's version manifest, e.g. `packages/cli/assets/public-package-versions.json` source, per release conventions)
+- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`
+- Regenerated: `packages/cli/assets/public-package-versions.json` (bundled version asset — regenerated by the build, the sixth release file in the commit)
 
 **Step 1: Implement**
 
-Runs after the dogfood task so release validation covers the final shipped state, including any dogfood fixes. Bump all five public package versions together (shipped CLI functionality + bundled assets changed). Confirm each canonical skill changed in this PR (`oat-project-retro`, `oat-project-retro-file` at `1.0.0`; bumped `oat-project-implement`, `oat-project-complete`) carries exactly one version bump in the final PR diff.
+Runs after the dogfood task so final validation covers the final shipped state, including any dogfood fixes. Bump all five public package versions together (shipped CLI functionality + bundled assets changed). Confirm each canonical skill changed in this PR (`oat-project-retro`, `oat-project-retro-file` at `1.0.0`; bumped `oat-project-implement`, `oat-project-complete`) carries exactly one version bump in the final PR diff.
 
 **Step 2: Verify**
 
-Run: `pnpm release:validate`
-Expected: Release dry-run passes against the final shipped state (if any later fix touches publishable packages or bundled assets after this task, re-run this validation before the PR)
+Run: `pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm release:validate`
+Expected: The repository's four CI gates pass against the final post-bump tree (this is the required final-tree gate run — p05-t01's run predates the version bump), then the release dry-run passes against the final shipped state. If any later fix touches publishable packages or bundled assets after this task, re-run this full sequence before the PR.
 
 **Step 3: Commit**
 
