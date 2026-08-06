@@ -119,8 +119,17 @@ export async function runOatExplainer({
       'The OAT adapter accepts project or repository invocations; direct callers invoke the core with an explicit output root.',
     );
   }
+  const requestConfig = destination
+    ? {
+        ...resolvedConfig,
+        publish: {
+          ...resolvedConfig.publish,
+          ...destination,
+        },
+      }
+    : resolvedConfig;
   const request = toExplainerRunRequest({
-    resolvedConfig,
+    resolvedConfig: requestConfig,
     recipe,
     slug,
     outputRoot,

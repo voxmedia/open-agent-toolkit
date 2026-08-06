@@ -98,6 +98,14 @@ Repository runs write beneath `.oat/repo/reference/explainers/<run-slug>/` and
 use repository-level publish roots unchanged. Project invocations retain their
 approved lifecycle-artifact binding and project-local output behavior.
 
+When publish durability is explicitly selected, the adapter constructs the
+core publish request with the per-invocation derived `s3Uri` and
+`publicBaseUrl`. The request carries no project/repository topology fields and
+no credential material. Although the adapter resolves the source-aware
+`publicAccess` declaration, it does not emit that field until the receiving
+core publish-request contract adds it; configuration never bypasses the human
+publication gate.
+
 ## Browser and visual-review execution
 
 Every unattended `project-recap` must provide exactly one browser-evidence

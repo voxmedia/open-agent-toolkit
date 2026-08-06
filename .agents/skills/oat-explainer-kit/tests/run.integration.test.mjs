@@ -329,6 +329,7 @@ function getPublishConfig(key) {
     'explainers.publish.publicBaseUrl':
       'https://docs.example.com/repositories/demo',
     'explainers.publish.awsRegion': 'us-east-1',
+    'explainers.publish.publicAccess': 'protected',
   };
   return Promise.resolve({
     status: 'ok',
@@ -1233,6 +1234,72 @@ test('fails closed when a repository invocation omits its supplied fact base', a
   await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
     code: 'ENOENT',
   });
+});
+
+test('passes only derived credential-free destination roots into core publish requests', async () => {
+  const projectFixture = await createFixture();
+  const projectResult = await runOatExplainer({
+    adapterRoot: projectFixture.adapterRoot,
+    userSkillsRoot: projectFixture.userSkillsRoot,
+    repoRoot: projectFixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-explainer',
+    slug: 'published-project',
+    getConfig: getPublishConfig,
+    author: fixtureAuthor,
+    durabilityStrategy: 'publish',
+    mode: 'unattended',
+  });
+  const projectPublish = projectResult.request.durability.publish;
+  assert.equal(
+    projectPublish.s3Uri,
+    's3://bucket/repositories/demo/projects/demo',
+  );
+  assert.equal(
+    projectPublish.publicBaseUrl,
+    'https://docs.example.com/repositories/demo/projects/demo',
+  );
+
+  const repositoryFixture = await createFixture();
+  const factBasePath = join(repositoryFixture.root, 'repository-facts.json');
+  await writeFile(
+    factBasePath,
+    '{"schemaVersion":"explainer-kit.fact-base/v1"}',
+  );
+  const repositoryResult = await runOatExplainer({
+    adapterRoot: repositoryFixture.adapterRoot,
+    userSkillsRoot: repositoryFixture.userSkillsRoot,
+    repoRoot: repositoryFixture.repoRoot,
+    invocation: 'repo',
+    recipe: 'project-explainer',
+    slug: 'published-repository',
+    suppliedFactBasePath: factBasePath,
+    getConfig: getPublishConfig,
+    author: fixtureAuthor,
+    durabilityStrategy: 'publish',
+    mode: 'unattended',
+  });
+  assert.equal(
+    repositoryResult.request.durability.publish.s3Uri,
+    's3://bucket/repositories/demo',
+  );
+  assert.equal(
+    repositoryResult.request.durability.publish.publicBaseUrl,
+    'https://docs.example.com/repositories/demo',
+  );
+
+  for (const request of [projectResult.request, repositoryResult.request]) {
+    const publish = request.durability.publish;
+    assert.equal('publicAccess' in publish, false);
+    assert.equal('invocation' in request, false);
+    assert.equal('projectSlug' in request, false);
+    assert.equal('activeProject' in request, false);
+    assert.doesNotMatch(
+      JSON.stringify(request),
+      /access[_-]?key|secret|session[_-]?token|password/i,
+    );
+  }
 });
 
 test('propagates failed core results when no manifest was produced', async () => {
