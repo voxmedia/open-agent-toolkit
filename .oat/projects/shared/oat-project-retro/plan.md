@@ -348,6 +348,20 @@ git add .agents/skills/oat-project-complete
 git commit -m "feat(p03-t02): offer retro at interactive completion when missing"
 ```
 
+### p03 Review-Fix Boundary
+
+The first root-owned p03 review found mechanically required contract maintenance
+outside the original task file lists. The bounded fix may modify only:
+
+- `packages/cli/src/validation/skills.test.ts`
+- `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- `.agents/skills/oat-project-implement/references/docs/autonomy-contract.md`
+
+It must update only the version expectations for the two p03-bumped skills,
+add focused completion safety-net assertions, and classify the two reported
+non-gate autonomy inventory sites. Verify with the review artifact's focused
+Vitest command, then `pnpm format && pnpm lint && pnpm test`.
+
 ---
 
 ## Phase 4: Documentation
@@ -482,22 +496,22 @@ git commit -m "chore(p05-t02): lockstep public package version bump for retro fe
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target              |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ------------------------ |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -                        |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -                        |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -                        |
-| p04    | code     | pending  | -          | -                                                  | -             | -          | -                        |
-| p05    | code     | pending  | -          | -                                                  | -             | -          | -                        |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -                        |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -                        |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -                        |
-| plan   | artifact | passed   | 2026-08-05 | structured (in-memory)                             | -             | auto       | -                        |
-| plan   | artifact | passed   | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T012151Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T004058Z.md | -             | -          | -                        |
-| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005234Z.md | -             | -          | -                        |
-| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005256Z.md | -             | -          | -                        |
-| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T012151Z.md | -             | -          | -                        |
+| Scope  | Type     | Status      | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | ----------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | passed      | 2026-08-06 | reviews/p01-review-2026-08-06T020751Z.md           | 057b0ae189d81ee9f5aef8e7c4c506d312dc5b7f | manual     | -                        |
+| p02    | code     | pending     | -          | -                                                  | -                                        | -          | -                        |
+| p03    | code     | fixes_added | 2026-08-06 | reviews/p03-review-2026-08-06T020753Z.md           | b738aff6f1cea9247df76b4bbcc4ba87a4361a4c | manual     | -                        |
+| p04    | code     | pending     | -          | -                                                  | -                                        | -          | -                        |
+| p05    | code     | pending     | -          | -                                                  | -                                        | -          | -                        |
+| final  | code     | pending     | -          | -                                                  | -                                        | -          | -                        |
+| spec   | artifact | pending     | -          | -                                                  | -                                        | -          | -                        |
+| design | artifact | pending     | -          | -                                                  | -                                        | -          | -                        |
+| plan   | artifact | passed      | 2026-08-05 | structured (in-memory)                             | -                                        | auto       | -                        |
+| plan   | artifact | passed      | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T012151Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received    | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T004058Z.md | -                                        | -          | -                        |
+| plan   | artifact | received    | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005234Z.md | -                                        | -          | -                        |
+| plan   | artifact | received    | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005256Z.md | -                                        | -          | -                        |
+| plan   | artifact | received    | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T012151Z.md | -                                        | -          | -                        |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

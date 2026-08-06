@@ -186,9 +186,9 @@ configured-invocation evidence.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review      | Source Artifact | Planned / Documented             | Actual / Accepted                                                                    | Reason                                                                                                                            | Source of Truth                       | Follow-up                                               |
+| ------------------ | --------------- | -------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------- |
+| p03 review round 1 | `plan.md`       | Three lifecycle skill files only | Added bounded review-fix authority for two contract tests and the autonomy inventory | Required mechanical maintenance for p03 version bumps and scanner-matched non-gate sites was omitted from the original file lists | Updated `plan.md` review-fix boundary | Resume the exact p03 implementer target, then re-review |
 
 ## Test Results
 
