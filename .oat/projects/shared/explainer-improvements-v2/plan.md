@@ -641,6 +641,12 @@ git commit -m "feat(p03-t02): verify protected destinations via authenticated ob
 - Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add publish-receipt v2 to the explicit schema-conformance inventory)
+- Modify: `tools/release/validate-explainer-acceptance.mjs` (accepts receipt v1/v2 — currently hard-rejects everything except v1)
+- Modify: `tools/release/validate-explainer-acceptance.test.mjs`
+- Modify: `tools/release/run-explainer-rc.mjs` (accepts receipt v1/v2)
+- Modify: `tools/release/run-explainer-rc.test.mjs` (and `run-explainer-rc.integration.test.mjs` where affected)
+- Modify: `tools/smoke/explainer-kit/fixtures/private-wrapper.mjs` (accepts receipt v1/v2)
+- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs` (asserts v1 replay and v2 emission)
 
 **Step 1: Write test (RED)**
 
@@ -665,6 +671,19 @@ hash) with `public.status: verified`; protected receipts record
 `public.status: skipped-protected` — both facts always representable. Schema
 and negative tests prove protected receipts record both facts and public
 receipts preserve anonymous byte verification.
+
+**Auxiliary published objects are first-class in v2 (the generated catalog
+has no manifest artifact ID):** the publisher intentionally emits
+`site/initiatives/<slug>/catalog.json` outside the manifest artifact list
+and includes it in the receipt today. The v2 shape therefore uses
+discriminated entries — manifest-artifact entries require the artifact ID;
+auxiliary-object entries (the generated catalog) carry rendered path, S3
+URI, canonical public URL, content hash, and the same structured
+verification object, without inventing a manifest ID. Cross-record
+validation requires **exact coverage**: every manifest artifact and the
+generated catalog appear in the receipt, nothing published is dropped, and
+nothing unpublished appears — covered in both public and protected modes.
+
 Contract-dependency propagation is in scope: the contract registry
 (`contracts.mjs`) registers v2 with version dispatch, and the durability
 reader — which currently validates receipts through the generic
@@ -675,16 +694,27 @@ versions. Receipt is atomic, durable in the run package, and contains no
 credential material. Published bytes are asserted equal to finalized manifest
 hashes; any transformation between manifest and upload fails.
 
+**Shipped executable receipt consumers migrate in this same commit
+(independent-commit safety):** the release acceptance validator, the RC
+runner, and the private-wrapper smoke fixture currently hard-reject
+everything except receipt v1, so v2 emission without their migration leaves
+shipped consumers unable to process this task's output. All three accept
+v1 and v2 here (validating v2's discriminated entries and exact catalog
+coverage), with retained-v1 replay proven, and the wrapper-compatibility
+smoke suite asserts v1 replay plus v2 emission.
+
 **Step 2: Implement (GREEN)**
 
-New v2 receipt schema, registry dispatch, and emission with retained v1
-readers in durability/archive consumers; docs updated; no publication-time
-HTML transformation code path exists (assert by construction and test).
+New v2 receipt schema with discriminated manifest/auxiliary entries,
+registry dispatch, and emission with retained v1 readers in
+durability/archive consumers; release-tool and smoke-fixture version
+dispatch; docs updated; no publication-time HTML transformation code path
+exists (assert by construction and test).
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs`
-Expected: green (every changed test file executes)
+Run: `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs tools/release/validate-explainer-acceptance.test.mjs tools/release/run-explainer-rc.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs && pnpm lint && pnpm format`
+Expected: green (every changed test file executes); lint and format clean (touches `tools/smoke`)
 
 **Step 4: Commit**
 
@@ -805,6 +835,8 @@ git commit -m "feat(p03-t05): record complete artifact URL sets in lifecycle sum
 - Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
+- Modify: `tools/release/validate-explainer-acceptance.mjs` (closed publish-request key check accepts the optional `publicAccess` field — currently rejects unknown keys)
+- Modify: `tools/release/validate-explainer-acceptance.test.mjs` (protected-request coverage included)
 
 **Step 1: Write test (RED)**
 
@@ -817,15 +849,23 @@ explicit `public` declaration is emitted verbatim. The emitted request
 validates against the revised core publish-request contract; tests cover
 absent, explicit-public, explicit-protected, and runtime-override sources.
 
+**The shipped release validator migrates in this same commit
+(independent-commit safety):** its closed publish-request key check rejects
+unknown keys, so requests carrying `publicAccess` would fail release
+acceptance the moment the adapter starts emitting the field. The key check
+accepts optional `publicAccess` here, with explicit protected-request
+coverage and unchanged rejection of genuinely unknown keys.
+
 **Step 2: Implement (GREEN)**
 
 Thread the resolved declaration through publish-request construction;
-document in `lifecycle-contract.md`.
+accept the optional key in the release validator; document in
+`lifecycle-contract.md`.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/ && pnpm lint && pnpm format`
-Expected: adapter suite green; lint and format clean
+Run: `node --test .agents/skills/oat-explainer-kit/tests/ tools/release/validate-explainer-acceptance.test.mjs && pnpm lint && pnpm format`
+Expected: adapter and validator suites green; lint and format clean
 
 **Step 4: Commit**
 
@@ -1360,6 +1400,7 @@ deterministic.
 - Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs` (currently asserts the three-artifact floor)
 - Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs` (unattended adapter fixture still returns `set-plan/v1`)
 - Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` (completion fixture still returns `set-plan/v1`)
+- Modify: `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs` (shipped smoke callback currently emits `set-plan/v1`, assumes the three-artifact floor, renders from `request.shell`, and returns HTML `author-result/v2` — its set-plan/recipe/structured-authoring migration lands with this producer, retaining explicit legacy replay coverage)
 
 **Step 1: Write test (RED)**
 
@@ -1388,7 +1429,12 @@ atomically with the producer:** the unattended adapter fixture and the
 completion integration fixture (both of which currently return
 `set-plan/v1`) gain explicit new-run `set-plan/v2` cases alongside retained
 v1 replay cases, so the new contract works through the real adapter path at
-this task's own commit. Audit the other three recipes and change
+this task's own commit. **The shipped smoke callback migrates here too
+(independent-commit safety):** the package-coverage smoke consumer's
+callback moves to the new set-plan/recipe/structured defaults this task
+activates, with legacy replay retained, so the smoke suite passes at this
+commit rather than waiting for a later migration task. Audit the other
+three recipes and change
 only those with the same floor contradiction (document the audit result in
 the test or brief); any recipe that does change receives the same
 new-version treatment — its existing version stays byte-for-byte unchanged
@@ -1402,8 +1448,8 @@ inventory, and docs updates.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
-Expected: green (every changed test file executes)
+Run: `pnpm --filter @open-agent-toolkit/cli build && node --test .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs tools/smoke/explainer-kit/package-coverage-consumers.test.mjs && pnpm lint && pnpm format`
+Expected: green (every changed test file executes; package-coverage smoke requires the CLI `dist` build); lint and format clean (touches `tools/smoke`)
 
 **Step 4: Commit**
 
@@ -1427,6 +1473,7 @@ git commit -m "feat(p06-t01): make the hub the recap floor with justified expans
 - Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs` (live adapter wrapper rejects every result except `visual-review-result/v1` — v2 acceptance lands atomically with core v2 emission)
 - Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Modify: `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs` (shipped smoke callback currently returns `visual-review-result/v1` — its v2 migration lands with this producer, retaining v1 replay coverage)
 
 **Step 1: Write test (RED)**
 
@@ -1443,18 +1490,21 @@ both versions. **The live adapter consumer migrates in the same commit:**
 the adapter wrapper's result acceptance (currently v1-only) accepts v1 and
 v2 results, exercised end to end by the adapter integration test, so core
 v2 emission works through the shipped adapter path at this task's own
-commit. Existing accessibility, keyboard, reduced-motion, print, and
-mobile requirements remain necessary conditions.
+commit, and the package-coverage smoke callback migrates its
+`visual-review-result` emission to v2 (v1 replay retained) so the smoke
+suite passes at this commit. Existing accessibility, keyboard,
+reduced-motion, print, and mobile requirements remain necessary conditions.
 
 **Step 2: Implement (GREEN)**
 
 v2 schemas, registry version dispatch, v2 emission in `visual-review.mjs`,
-adapter v1/v2 result acceptance, validation, and reviewer guidance.
+adapter v1/v2 result acceptance, smoke-callback migration, validation, and
+reviewer guidance.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/visual-matrix.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-Expected: green (every changed test file executes)
+Run: `pnpm --filter @open-agent-toolkit/cli build && node --test .agents/skills/explainer-kit/tests/visual-matrix.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/package-coverage-consumers.test.mjs && pnpm lint && pnpm format`
+Expected: green (every changed test file executes; package-coverage smoke requires the CLI `dist` build); lint and format clean (touches `tools/smoke`)
 
 **Step 4: Commit**
 
@@ -1539,20 +1589,19 @@ git commit -m "test(p06-t04): add responsive structured-content goldens"
 
 ---
 
-### Task p06-t05: Migrate shipped contract consumers to the new versions
+### Task p06-t05: Migrate shipped guidance and documentation consumers
 
-All new contract versions exist by the end of p06; this task carries them
-through every shipped consumer outside the two core seams.
+All new contract versions exist by the end of p06. **Executable consumer
+migrations land atomically with their producers** — release/smoke receipt
+acceptance in p03-t03, the validator's `publicAccess` key check in p03-t06,
+and the package-coverage smoke callback in p06-t01/p06-t02 — so
+intermediate commits never leave a shipped executable consumer unable to
+process a producer's output. This task carries the new versions through
+the remaining **guidance and documentation** surfaces, plus release-tool
+inventory assertions and fixtures not owned by a producer task.
 
 **Files:**
 
-- Modify: `tools/release/validate-explainer-acceptance.mjs` (accept receipt v1/v2; publish-request key check accepts optional `publicAccess`)
-- Modify: `tools/release/run-explainer-rc.mjs` (accept receipt v1/v2)
-- Modify: `tools/release/validate-explainer-acceptance.test.mjs`
-- Modify: `tools/release/run-explainer-rc.test.mjs` (and `run-explainer-rc.integration.test.mjs` where affected)
-- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs` (assert v1 replay and v2 emission)
-- Modify: `tools/smoke/explainer-kit/fixtures/private-wrapper.mjs` (accepts receipt v1 and v2)
-- Modify: `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs` (callback migrates to the structured/new-contract defaults — currently emits `set-plan/v1`, assumes the three-artifact floor, renders from `request.shell`, and returns HTML `author-result/v2` and `visual-review-result/v1` — while retaining explicit legacy replay coverage where appropriate)
 - Modify: `.agents/skills/oat-explainer-kit/references/author-callback.md` (author v2/v3)
 - Modify: `.agents/skills/oat-explainer-kit/references/visual-review-callback.md` (visual-review v1/v2 — the adapter's executable v2 acceptance itself landed in p06-t02)
 - Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
@@ -1575,16 +1624,14 @@ through every shipped consumer outside the two core seams.
 For each versioned contract pair — publish-receipt v1/v2, theme v1/v2,
 author-request v2/v3, author-result v2/v3, set-plan v1/v2, visual-review
 v1/v2, and the `project-recap@1`/`project-recap@2` recipe pair — every
-**executable** shipped consumer accepts both versions, not just
-the documentation: the release acceptance validator and RC runner validate v2
-receipts while still reading retained v1 receipts, and the validator's closed
-publish-request key check accepts the optional `publicAccess` field
-(protected-request coverage included); the private-wrapper smoke fixture
-accepts both receipt versions and the smoke suite proves v1 replay and v2
-emission; the adapter's executable version acceptance already migrated
-atomically with its producers (set-plan/recipe in p06-t01, visual-review in
-p06-t02), so this task carries the remaining reference and guidance
-surfaces; callback references document both versions. New-run emission and
+shipped **guidance** surface documents both versions: every executable
+consumer migration already landed with its producer (receipt acceptance and
+wrapper compatibility in p03-t03, the `publicAccess` key check in p03-t06,
+adapter and smoke-callback acceptance in p06-t01/p06-t02), and this task
+verifies that coverage holds repository-wide (a sweep proves no shipped
+executable consumer still hard-rejects a new version) while migrating
+callback references, skill guidance, and docs pages. RC inventory
+assertions cover the new schema/recipe files. New-run emission and
 retained-version replay are both proven before provider sync, with every
 focused suite executed.
 
@@ -1608,19 +1655,19 @@ is never hand-edited. Only after that do the build checks run.
 
 **Step 2: Implement (GREEN)**
 
-Version dispatch in release tooling and smoke fixtures; callback reference
-migration; canonical skill guidance migration; approved docs-app
-contract-page edits with nav sync and index regeneration; fixture updates.
+Callback reference migration; canonical skill guidance migration; approved
+docs-app contract-page edits with nav sync and index regeneration; RC
+inventory assertions and remaining fixture updates.
 
 **Step 3: Verify**
 
 Run: `pnpm --filter @open-agent-toolkit/cli build && node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs tools/smoke/explainer-kit/package-coverage-consumers.test.mjs tools/release/validate-explainer-acceptance.test.mjs tools/release/run-explainer-rc.test.mjs tools/release/build-explainer-rc.test.mjs && pnpm lint && pnpm format && pnpm check && pnpm build:docs`
-Expected: adapter, smoke (including package-coverage, which requires the CLI `dist` build), and release-tool focused suites green; lint and format clean (touches `tools/smoke` and `.agents/skills/**`); markdownlint and docs build clean (touches `apps/oat-docs/docs`)
+Expected: adapter, smoke (including package-coverage, which requires the CLI `dist` build), and release-tool focused suites green (re-run here as the repository-wide coverage sweep); lint and format clean (touches `tools/smoke` and `.agents/skills/**`); markdownlint and docs build clean (touches `apps/oat-docs/docs`)
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p06-t05): migrate shipped consumers to new contract versions"
+git commit -m "docs(p06-t05): migrate shipped guidance and docs to new contract versions"
 ```
 
 ---
@@ -1657,10 +1704,11 @@ Assertions in a single executable path:
   behavior (anonymous fetch skipped for protected; checksum verification in
   both);
 - published bytes hash-match the finalized manifest exactly;
-- the emitted `publish-receipt` v2 lists every artifact's ID, rendered path,
-  S3 URI, canonical public URL, content hash, and structured verification
-  result — with no credential material anywhere in the request, receipt, or
-  logs.
+- the emitted `publish-receipt` v2 lists every manifest artifact's ID,
+  rendered path, S3 URI, canonical public URL, content hash, and structured
+  verification result, plus the generated catalog as an auxiliary-object
+  entry with the same fields minus the manifest ID — with no credential
+  material anywhere in the request, receipt, or logs.
 
 **Step 2: Implement (GREEN)**
 
@@ -1783,9 +1831,9 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T031926Z.md (2 Important + 1 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T033345Z.md (3 Important resolved in plan and design)                                                  | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T034831Z.md (2 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T040012Z.md                                                                                                     | -             | -          | -                        |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T042235Z.md                                                                                                     | -             | -          | -                        |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T043754Z.md                                                                                                     | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T040012Z.md (2 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T042235Z.md (3 Important + 2 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T043754Z.md (2 Important + 1 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

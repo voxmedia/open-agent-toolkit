@@ -199,6 +199,22 @@ escalated to the operator.
   assertion is scoped to HTML/manifest artifacts with the catalog JSON and
   transient sentinel asserted separately.
 
+- **Attempt 15** (`artifact-plan-review-2026-08-06T043754Z.md`): attempt-14
+  findings confirmed resolved; 2 Important, 1 Medium new — receipt v2 could
+  not represent the generated catalog, which has no manifest artifact ID
+  (fixed: v2 uses discriminated entries — manifest-artifact entries require
+  the ID, auxiliary-object entries carry path/URI/URL/hash/verification
+  without one — with exact-coverage cross-validation over manifest artifacts
+  plus the catalog in both access modes), and executable consumer
+  migrations trailed their producers (fixed: receipt v1/v2 acceptance in
+  release tools and the private-wrapper smoke fixture moved into p03-t03,
+  the validator's `publicAccess` key check into p03-t06, and the
+  package-coverage smoke callback's set-plan/recipe and visual-review
+  migrations into p06-t01/p06-t02; p06-t05 is now guidance/docs migration
+  plus a repository-wide coverage sweep). Medium: the ledger rows for the
+  two archived reviews now point at `reviews/archived/` with their actual
+  fixes_completed disposition and gate provenance.
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 
