@@ -495,6 +495,7 @@ git commit -m "chore(p05-t02): lockstep public package version bump for retro fe
 | plan   | artifact | received        | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T004058Z.md | -             | -          | -                        |
 | plan   | artifact | received        | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005234Z.md | -             | -          | -                        |
 | plan   | artifact | received        | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005256Z.md | -             | -          | -                        |
+| plan   | artifact | received        | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T012151Z.md | -             | -          | -                        |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
