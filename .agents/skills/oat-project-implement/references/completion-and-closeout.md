@@ -708,11 +708,11 @@ oat_post_implement_sequence:
   status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
   source: configured # configured | autonomous-default
   final_phase: pNN
-  pre_approval: [summary, document, pr]
+  pre_approval: [] # replace with the exact normalized resolved array
   pre_approval_completed: []
   approval: pending # pending | approved | not_required
   approval_source: null # null | user | oat-autonomous
-  post_approval: [retro]
+  post_approval: [] # exact resolved array; add retro only when explicitly configured
   post_approval_completed: []
   failure: null
 ```
@@ -720,8 +720,10 @@ oat_post_implement_sequence:
 `source` and `approval_source` are additive provenance fields. A resumable
 snapshot created by an older skill version remains valid when either field is
 absent; do not rewrite its stored pre/post arrays merely to backfill provenance.
-The snapshot above illustrates the additive `retro` vocabulary member for a
-configured sequence; the autonomous default remains `postApproval: []`.
+The empty arrays above are consent-safe schema placeholders, not permission to
+discard a nonempty preference. Replace both with the exact normalized arrays
+resolved above. Never add `retro` unless the configured `postApproval` array
+explicitly contains it; the autonomous default remains `postApproval: []`.
 
 The snapshot is immutable for this closeout: never re-resolve
 `workflow.postImplementSequence` while it is incomplete. Iterate

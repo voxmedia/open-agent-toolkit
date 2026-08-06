@@ -671,6 +671,18 @@ describe('post-implementation sequence contracts', () => {
     expect(normalized).toContain(
       'Re-read and verify the snapshot after every child returns before recording step success',
     );
+    const persistedSnapshot = requiredSlice(
+      skill,
+      '```yaml\noat_post_implement_sequence:',
+      '\n```',
+    );
+    expect(persistedSnapshot).toContain(
+      'post_approval: [] # exact resolved array; add retro only when explicitly configured',
+    );
+    expect(persistedSnapshot).not.toContain('post_approval: [retro]');
+    expect(normalized).toContain(
+      'Never add `retro` unless the configured `postApproval` array explicitly contains it',
+    );
   });
 
   it('persists approval and failure boundaries without implicitly crossing them', () => {
