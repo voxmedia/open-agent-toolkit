@@ -148,6 +148,15 @@ config set/get, normalization, effective resolution, defaulting, and
 invalid-value rejection are covered by focused CLI tests — normal shared
 config must carry the declaration to the adapter, not reject or discard it.
 
+**Source-aware propagation rule (explicit):** effective config resolution
+returns default values with `source: default`. The adapter includes
+`publicAccess` in `resolvedConfig.publish` (and, in p03-t06, the core
+request) **only when its source is non-default** — an explicit config
+declaration or a runtime override. Absent config therefore emits no field
+and the core default applies; an explicit `public` declaration is emitted
+even though it equals the default. Tests cover four sources: absent,
+explicit-public, explicit-protected, and runtime override.
+
 Run: `node --test .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
 Expected: new cases fail
 
@@ -212,6 +221,9 @@ git commit -m "feat(p01-t03): accept repository explainer invocations"
 
 **Files:**
 
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs` (core run-root boundary — `initializeRun` passes `outputRoot` and `slug` to confinement)
+- Modify: `.agents/skills/explainer-kit/scripts/lib/fs-safe.mjs` (`createConfinedRunRoot` appends the slug and creates directories)
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-paths.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
@@ -220,20 +232,26 @@ git commit -m "feat(p01-t03): accept repository explainer invocations"
 
 A caller-supplied output root whose final segment equals the run slug is
 rejected with an actionable error (rejection is the conservative contract)
-before any directory creation. The run slug is not visible to the current
-resolver signature, so pass it from the `run.mjs` call site into the resolver
-(or place the guard at the run boundary); cover both direct-caller roots and
-adapter-resolved roots.
+before any directory creation. **The generic guard lives at the core run-root
+boundary** — `createConfinedRunRoot` (or its `initializeRun` call site in
+`records.mjs`) rejects a final-segment-equals-slug root before it creates the
+output directory — because direct core callers enter `runExplainer` without
+ever traversing the adapter resolver. Core tests exercise the direct-caller
+path against the core boundary; adapter tests prove project, repo, and
+direct-wrapper roots all pass the same contract and that the adapter surfaces
+the core rejection with an actionable message.
 
 **Step 2: Implement (GREEN)**
 
-Guard wired through the slug-bearing call site in `run.mjs` plus the
-output-root resolution seam, applied before core invocation.
+Final-segment-versus-slug guard at the core confinement boundary before
+directory creation; adapter passes slug-bearing context through the
+`run.mjs` call site and the output-root resolution seam so adapter-resolved
+roots are validated identically.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/`
-Expected: green
+Run: `node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/oat-explainer-kit/tests/`
+Expected: green (every changed test file executes)
 
 **Step 4: Commit**
 
@@ -600,6 +618,8 @@ git commit -m "feat(p03-t03): emit complete per-artifact publish receipts"
 - Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
 - Create: `.agents/skills/explainer-kit/scripts/lib/url-segments.mjs`
 - Create: `.agents/skills/explainer-kit/tests/url-segments.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/derive-destination.mjs` (migrate p01-t01's slug encoding onto the shared helper)
+- Modify: `.agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs`
 
 **Step 1: Write test (RED)**
 
@@ -609,15 +629,24 @@ reserved characters). All consumers of `publicBaseUrl` read one documented
 residence; the `durability.publish` vs top-level divergence is resolved and
 covered.
 
+**The adapter's destination derivation (p01-t01) is a consumer of the same
+helper**: `derive-destination.mjs` migrates its slug-encoding rules onto
+`url-segments.mjs`, imported via the adapter's existing resolved-core-module
+mechanism (the adapter already dynamically imports core modules by path).
+A cross-skill parity/property test proves adapter destination encoding and
+core artifact URL encoding produce identical segments for the same inputs —
+no second encoding implementation may remain.
+
 **Step 2: Implement (GREEN)**
 
-Extract the helper; migrate render, publish, and catalog URL construction to
-it; reconcile `publicBaseUrl` residence with a documented single source.
+Extract the helper; migrate render, publish, catalog, and adapter destination
+URL construction to it; reconcile `publicBaseUrl` residence with a documented
+single source.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/`
-Expected: full core suite green
+Run: `node --test .agents/skills/explainer-kit/tests/ .agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs`
+Expected: full core suite and adapter parity tests green
 
 **Step 4: Commit**
 
@@ -668,9 +697,13 @@ git commit -m "feat(p03-t05): record complete artifact URL sets in lifecycle sum
 **Step 1: Write test (RED)**
 
 Now that p03-t01 landed core schema support, the adapter emits the
-`publicAccess` value resolved in p01-t02 into the core publish request;
-absent config emits nothing (core default `public` applies); the emitted
-request validates against the revised core publish-request contract.
+`publicAccess` value resolved in p01-t02 into the core publish request
+**following the source-aware rule from p01-t02**: the field is emitted only
+when its config source is non-default (explicit declaration or runtime
+override); absent config emits nothing (core default `public` applies); an
+explicit `public` declaration is emitted verbatim. The emitted request
+validates against the revised core publish-request contract; tests cover
+absent, explicit-public, explicit-protected, and runtime-override sources.
 
 **Step 2: Implement (GREEN)**
 
@@ -1087,7 +1120,10 @@ git commit -m "feat(p05-t05): render diagrams from semantic graph content"
 - Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
 - Modify: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
-- Modify: `.agents/skills/explainer-kit/recipes/project-recap.json`
+- Create: `.agents/skills/explainer-kit/recipes/project-recap.v2.json` (`project-recap@2`; the shipped `project-recap.json` / `project-recap@1` is preserved byte-for-byte)
+- Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs` (register the new file in `RECIPE_FILES`; the registry keys by exact `id@version`)
+- Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-config.mjs` (adapter currently pins recipe version `1` for every new run; switch new project-recap requests to version `2`)
+- Modify: `.agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs` (currently asserts every author request is HTML)
@@ -1095,26 +1131,33 @@ git commit -m "feat(p05-t05): render diagrams from semantic graph content"
 
 **Step 1: Write test (RED)**
 
-`project-recap` hub, deck, and diagram artifacts request structured content
-(`authoring: structured` with the matching content-contract reference,
-declared in the `author-request/v3` contract created in p02-t01 — the
-structured-authoring fields land in v3, never retrofitted onto v2); the core
-renderers render them; artistic authoring remains available only where the
-recipe declares it. Executable recap fixtures migrate with the default: the
-end-to-end recap suite and the adapter lifecycle integration fixture exercise
-the structured default while keeping a deliberate `author-result/v2` HTML
-replay case. End-to-end structured run passes link validation, browser
-evidence, and visual review; retained v2 HTML-authoring replay still
-validates.
+The structured/hub-floor behavior lands in a **new recipe version,
+`project-recap@2`** — `project-recap@1` is never semantically changed, so
+retained-run replay that loads `project-recap@1` at runtime startup keeps its
+original HTML-authoring behavior. In `project-recap@2`, hub, deck, and
+diagram artifacts request structured content (`authoring: structured` with
+the matching content-contract reference, declared in the `author-request/v3`
+contract created in p02-t01 — the structured-authoring fields land in v3,
+never retrofitted onto v2); the core renderers render them; artistic
+authoring remains available only where the recipe declares it. The adapter
+switches new project-recap requests to version `2` at this transition.
+Executable coverage proves both directions through the real consumers:
+retained v1 replay (recipe registry serves `project-recap@1` unchanged;
+`author-result/v2` HTML replay validates) and new-version emission (adapter
+emits `project-recap@2`; runtime loads it; end-to-end structured run passes
+link validation, browser evidence, and visual review). Smoke and release
+consumers pick up the v2 recipe in p06-t05/p07 without dropping v1 from the
+registry.
 
 **Step 2: Implement (GREEN)**
 
-Recipe authoring switch, v3 author-request structured-content fields,
-author-request construction, render dispatch, recap fixture migration.
+New `project-recap@2` recipe file and registry entry; adapter version switch
+in `resolve-config.mjs`; v3 author-request structured-content fields;
+author-request construction; render dispatch; recap fixture migration.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs && pnpm lint && pnpm format`
+Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs && pnpm lint && pnpm format`
 Expected: green (every changed test file executes); lint and format clean
 
 **Step 4: Commit**
@@ -1131,7 +1174,7 @@ git commit -m "feat(p05-t06): author standard recap artifacts through structured
 
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/recipes/project-recap.json`
+- Modify: `.agents/skills/explainer-kit/recipes/project-recap.v2.json` (the `project-recap@2` recipe created in p05-t06; `project-recap@1` stays byte-for-byte unchanged for retained-run replay)
 - Create: `.agents/skills/explainer-kit/schemas/set-plan.v2.schema.json`
 - Modify: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
@@ -1143,8 +1186,8 @@ git commit -m "feat(p05-t06): author standard recap artifacts through structured
 
 **Step 1: Write test (RED)**
 
-`project-recap` floor contains only the hub; diagram, deck, and explainer
-views are expansion entries requiring a planner justification (distinct
+The `project-recap@2` floor contains only the hub; diagram, deck, and
+explainer views are expansion entries requiring a planner justification (distinct
 reader question + evidence pointers) recorded in the set plan; unjustified or
 redundant expansion is rejected at planning time; existing expansion limits
 still apply. Justification enforcement lands in a **new set-plan version**
@@ -1156,7 +1199,9 @@ embeds the set plan and currently pins `set-plan/v1`, so update
 with end-to-end tests covering both new-run emission (v3 + set-plan v2) and
 retained replay (v2 + set-plan v1). Audit the other three recipes and change
 only those with the same floor contradiction (document the audit result in
-the test or brief).
+the test or brief); any recipe that does change receives the same
+new-version treatment — its existing version stays byte-for-byte unchanged
+and a new registry entry carries the new floor.
 
 **Step 2: Implement (GREEN)**
 
@@ -1319,7 +1364,8 @@ through every shipped consumer outside the two core seams.
 
 For each versioned contract pair — publish-receipt v1/v2, theme v1/v2,
 author-request v2/v3, author-result v2/v3, set-plan v1/v2, visual-review
-v1/v2 — every **executable** shipped consumer accepts both versions, not just
+v1/v2, and the `project-recap@1`/`project-recap@2` recipe pair — every
+**executable** shipped consumer accepts both versions, not just
 the documentation: the release acceptance validator and RC runner validate v2
 receipts while still reading retained v1 receipts, and the validator's closed
 publish-request key check accepts the optional `publicAccess` field
@@ -1416,27 +1462,27 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                 | Reviewed Head | Invocation | Gate Target              |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------- | ------------------------ |
-| p01    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
-| p02    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
-| p03    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
-| p04    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
-| p05    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
-| p06    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
-| p07    | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
-| final  | code     | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
-| plan   | artifact | passed          | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed)                                                                            | -             | auto       | -                        |
-| spec   | artifact | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
-| design | artifact | pending         | -          | -                                                                                                                                        | -             | -          | -                        |
-| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T002327Z.md (4 Important + 1 Medium resolved in artifact)                                | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T004027Z.md (2 Important + 1 Medium resolved in artifact; operator authorized attempt 3) | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T005429Z.md (4 Important + 2 Medium resolved in artifact)                                | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T012159Z.md                                                                                       | -             | -          | -                        |
-| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012720Z.md (3 Important + 1 Medium resolved in plan and design)                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T013953Z.md (2 Important + 2 Medium resolved in artifact)                                | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T015212Z.md                                                                                       | -             | -          | -                        |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T021300Z.md                                                                                       | -             | -          | -                        |
+| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                               | Reviewed Head | Invocation | Gate Target              |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- | ---------- | ------------------------ |
+| p01    | code     | pending         | -          | -                                                                                                                                                      | -             | -          | -                        |
+| p02    | code     | pending         | -          | -                                                                                                                                                      | -             | -          | -                        |
+| p03    | code     | pending         | -          | -                                                                                                                                                      | -             | -          | -                        |
+| p04    | code     | pending         | -          | -                                                                                                                                                      | -             | -          | -                        |
+| p05    | code     | pending         | -          | -                                                                                                                                                      | -             | -          | -                        |
+| p06    | code     | pending         | -          | -                                                                                                                                                      | -             | -          | -                        |
+| p07    | code     | pending         | -          | -                                                                                                                                                      | -             | -          | -                        |
+| final  | code     | pending         | -          | -                                                                                                                                                      | -             | -          | -                        |
+| plan   | artifact | passed          | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed)                                                                                          | -             | auto       | -                        |
+| spec   | artifact | pending         | -          | -                                                                                                                                                      | -             | -          | -                        |
+| design | artifact | pending         | -          | -                                                                                                                                                      | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T002327Z.md (4 Important + 1 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T004027Z.md (2 Important + 1 Medium resolved in artifact; operator authorized attempt 3)               | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T005429Z.md (4 Important + 2 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012159Z.md (2 Important + 1 Medium; superseded by the attempt-4 rerun, findings resolved via 012720Z) | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012720Z.md (3 Important + 1 Medium resolved in plan and design)                                       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T013953Z.md (2 Important + 2 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T015212Z.md (2 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T021300Z.md (2 Important + 3 Medium resolved in artifact)                                                       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

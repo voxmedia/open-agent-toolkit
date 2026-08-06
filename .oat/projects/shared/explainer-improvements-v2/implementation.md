@@ -77,6 +77,21 @@ escalated to the operator.
   outcomes before recording the gate outcome, with end-to-end integration
   coverage for all three classes).
 
+- **Attempt 7** (`artifact-plan-review-2026-08-06T021300Z.md`): attempt-6
+  findings confirmed resolved; 2 Important + 3 Medium new — structured recap
+  migration changed `project-recap@1` in place (fixed: new
+  `project-recap.v2.json` / `project-recap@2` with registry entry, adapter
+  version switch in `resolve-config.mjs`, v1-replay plus v2-emission
+  coverage, and the recipe pair added to p06-t05 consumer migration),
+  double-nesting guard was adapter-only (fixed: generic guard moved to the
+  core `createConfinedRunRoot`/`initializeRun` boundary with core tests),
+  source-aware `publicAccess` propagation unstated (fixed: explicit
+  non-default-source emission rule in p01-t02/p03-t06 with four source
+  cases), adapter destination encoding outside the single-helper task (fixed:
+  `derive-destination.mjs` added to p03-t04 with cross-skill parity tests),
+  and stale Reviews-table rows pointing at archived artifacts (fixed:
+  archived paths, dispositions, and finding counts recorded).
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 
