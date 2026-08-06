@@ -1325,10 +1325,13 @@ test('rejects unsafe destination roots before core invocation or publish-request
       'explainers.publish.s3Uri',
       's3://bucket/repositories/demo?synthetic-token=value',
     ],
+    ['explainers.publish.s3Uri', 's3://bucket/repositories/demo?'],
     [
       'explainers.publish.s3Uri',
       's3://bucket/repositories/demo#synthetic-fragment',
     ],
+    ['explainers.publish.s3Uri', 's3://bucket/repositories/demo#'],
+    ['explainers.publish.s3Uri', 's3://bucket:/repositories/demo'],
     [
       'explainers.publish.publicBaseUrl',
       'https://synthetic-user:synthetic-password@docs.example.com/repositories/demo',
@@ -1343,7 +1346,19 @@ test('rejects unsafe destination roots before core invocation or publish-request
     ],
     [
       'explainers.publish.publicBaseUrl',
+      'https://docs.example.com/repositories/demo?',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
       'https://docs.example.com/repositories/demo#synthetic-fragment',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https://docs.example.com/repositories/demo#',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https://docs.example.com:/repositories/demo',
     ],
   ];
 

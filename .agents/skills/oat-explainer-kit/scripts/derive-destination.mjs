@@ -47,7 +47,12 @@ function normalizeRoot(value, label, protocol) {
   }
   const root = value.trim();
   const authorityStart = `${protocol}//`;
-  if (!root.startsWith(authorityStart) || /\s|\\/.test(root)) {
+  if (
+    !root.startsWith(authorityStart) ||
+    /\s|\\/.test(root) ||
+    root.includes('?') ||
+    root.includes('#')
+  ) {
     throw new Error(`${label} must be a valid destination root.`);
   }
 
@@ -57,23 +62,30 @@ function normalizeRoot(value, label, protocol) {
   } catch {
     throw new Error(`${label} must be a valid destination root.`);
   }
-  const authority = root.slice(authorityStart.length).split(/[/?#]/, 1)[0];
-  const invalidS3Bucket =
-    protocol === 's3:' &&
-    (parsed.port !== '' ||
-      !/^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$/.test(parsed.hostname));
+  const authority = root.slice(authorityStart.length).split('/', 1)[0];
   if (
     parsed.protocol !== protocol ||
-    !authority ||
-    authority.includes('@') ||
+    !isValidRawAuthority(authority, protocol) ||
     !parsed.hostname ||
     parsed.username ||
     parsed.password ||
     parsed.search ||
-    parsed.hash ||
-    invalidS3Bucket
+    parsed.hash
   ) {
     throw new Error(`${label} must be a valid destination root.`);
   }
   return root.replace(/\/+$/, '');
+}
+
+function isValidRawAuthority(authority, protocol) {
+  if (!authority || authority.includes('@')) {
+    return false;
+  }
+  if (protocol === 's3:') {
+    return /^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$/.test(authority);
+  }
+  if (authority.startsWith('[')) {
+    return /^\[[^\]]+\](?::\d+)?$/.test(authority);
+  }
+  return /^[^:]+(?::\d+)?$/.test(authority);
 }

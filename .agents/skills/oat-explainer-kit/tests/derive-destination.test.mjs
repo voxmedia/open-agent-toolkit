@@ -113,7 +113,19 @@ test('rejects credential-bearing and non-root destination URLs', () => {
     },
     {
       label: 's3Uri',
+      value: 's3://bucket/root?',
+    },
+    {
+      label: 's3Uri',
       value: 's3://bucket/root#synthetic-fragment',
+    },
+    {
+      label: 's3Uri',
+      value: 's3://bucket/root#',
+    },
+    {
+      label: 's3Uri',
+      value: 's3://bucket:/root',
     },
     {
       label: 'publicBaseUrl',
@@ -129,7 +141,19 @@ test('rejects credential-bearing and non-root destination URLs', () => {
     },
     {
       label: 'publicBaseUrl',
+      value: 'https://docs.example.com/root?',
+    },
+    {
+      label: 'publicBaseUrl',
       value: 'https://docs.example.com/root#synthetic-fragment',
+    },
+    {
+      label: 'publicBaseUrl',
+      value: 'https://docs.example.com/root#',
+    },
+    {
+      label: 'publicBaseUrl',
+      value: 'https://docs.example.com:/root',
     },
   ];
 
