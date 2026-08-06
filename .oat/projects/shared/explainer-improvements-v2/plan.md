@@ -246,8 +246,8 @@ Thread p01-t01 derivation through publish-request construction; document in
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/`
-Expected: green
+Run: `node --test .agents/skills/oat-explainer-kit/tests/ && pnpm lint && pnpm format`
+Expected: adapter suite green; lint and format clean (only these gates cover `.agents/skills/**`)
 
 **Step 4: Commit**
 
@@ -384,8 +384,8 @@ contract.
 
 **Step 2: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/templates.test.mjs && pnpm format`
-Expected: green; formatting clean
+Run: `node --test .agents/skills/explainer-kit/tests/templates.test.mjs && pnpm lint && pnpm format`
+Expected: green; lint and format clean (only these gates cover `.agents/skills/**`)
 
 **Step 3: Commit**
 
@@ -559,8 +559,8 @@ Consume the receipt as the single source; assert credential hygiene.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/`
-Expected: green
+Run: `node --test .agents/skills/oat-explainer-kit/tests/ && pnpm lint && pnpm format`
+Expected: adapter suite green; lint and format clean (phase touches `.agents/skills/**`)
 
 **Step 4: Commit**
 
@@ -710,8 +710,8 @@ record durably and applies the diagnostics policy.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
-Expected: green
+Run: `node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs && pnpm lint && pnpm format`
+Expected: green; lint and format clean (phase touches `.agents/skills/**`)
 
 **Step 4: Commit**
 
@@ -921,8 +921,8 @@ Recipe authoring switch, author-request construction, render dispatch.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs`
-Expected: green
+Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs && pnpm lint && pnpm format`
+Expected: green; lint and format clean (phase touches `.agents/skills/**`)
 
 **Step 4: Commit**
 
@@ -974,8 +974,8 @@ git commit -m "feat(p06-t01): make the hub the recap floor with justified expans
 
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/schemas/visual-review-request.v1.schema.json` (new v2 alongside)
-- Modify: `.agents/skills/explainer-kit/schemas/visual-review-result.v1.schema.json` (new v2 alongside)
+- Create: `.agents/skills/explainer-kit/schemas/visual-review-request.v2.schema.json`
+- Create: `.agents/skills/explainer-kit/schemas/visual-review-result.v2.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
 - Modify: `.agents/skills/explainer-kit/references/visual-review.md`
 - Modify: `.agents/skills/explainer-kit/tests/visual-matrix.test.mjs`
@@ -1061,8 +1061,8 @@ renderer output is the intended change (each adjustment documented).
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/golden-conformance.test.mjs .agents/skills/explainer-kit/tests/visual-matrix.test.mjs`
-Expected: green
+Run: `node --test .agents/skills/explainer-kit/tests/golden-conformance.test.mjs .agents/skills/explainer-kit/tests/visual-matrix.test.mjs && pnpm lint && pnpm format`
+Expected: green; lint and format clean (phase touches `.agents/skills/**`)
 
 **Step 4: Commit**
 
@@ -1134,18 +1134,19 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| p03    | code     | pending | -    | -        | -             | -          | -           |
-| p04    | code     | pending | -    | -        | -             | -          | -           |
-| p05    | code     | pending | -    | -        | -             | -          | -           |
-| p06    | code     | pending | -    | -        | -             | -          | -           |
-| p07    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| plan   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -                                                             | -             | -          | -           |
+| p02    | code     | pending | -          | -                                                             | -             | -          | -           |
+| p03    | code     | pending | -          | -                                                             | -             | -          | -           |
+| p04    | code     | pending | -          | -                                                             | -             | -          | -           |
+| p05    | code     | pending | -          | -                                                             | -             | -          | -           |
+| p06    | code     | pending | -          | -                                                             | -             | -          | -           |
+| p07    | code     | pending | -          | -                                                             | -             | -          | -           |
+| final  | code     | pending | -          | -                                                             | -             | -          | -           |
+| plan   | artifact | passed  | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed) | -             | auto       | -           |
+| spec   | artifact | pending | -          | -                                                             | -             | -          | -           |
+| design | artifact | pending | -          | -                                                             | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
