@@ -197,6 +197,9 @@ git commit -m "feat(p02-t02): gate rendered artifacts on valid internal links"
 
 ## Phase 3: Publication integrity
 
+**Status:** completed
+**Review:** passed
+
 Write boundary: core publication contracts/connectors, adapter publication
 threading and compatibility floor, lifecycle URL summaries, release/smoke
 receipt consumers, and one cross-boundary acceptance fixture.
@@ -822,9 +825,9 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 | p01-t06       | code     | passed          | 2026-08-06 | reviews/archived/p01-t06-review-2026-08-06T174423Z.md                                             | c1d5a1b0994e19abb2b349b776ba3235f8955b52 | manual     | -                        |
 | p02           | code     | fixes_completed | 2026-08-06 | reviews/archived/p02-review-2026-08-06T201258Z.md                                                 | fde1437beb821c68f8fe972d4ac1c4425d20e7ef | manual     | -                        |
 | p02           | code     | passed          | 2026-08-06 | reviews/archived/p02-review-2026-08-06T202708Z.md                                                 | 3f0dfe5e3131ee2ef12bd06cf4eb842566b50ca9 | manual     | -                        |
-| p03           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
+| p03           | code     | passed          | 2026-08-06 | reviews/archived/p03-review-2026-08-06T235124Z.md                                                 | ba66d54b697d86de0bade8863587870af75e06da | manual     | -                        |
 | p03           | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T213553Z.md                                                 | c9a0aeead5bce79a5e31bd6ce247e80a64ec1800 | manual     | -                        |
-| p03           | code     | fixes_added     | 2026-08-06 | reviews/archived/p03-review-2026-08-06T224958Z.md                                                 | 01d3c99075aa09ea5fb49b801d4deca1d5f3c51e | manual     | -                        |
+| p03           | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T224958Z.md                                                 | 01d3c99075aa09ea5fb49b801d4deca1d5f3c51e | manual     | -                        |
 | p04           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | p05           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | final         | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |

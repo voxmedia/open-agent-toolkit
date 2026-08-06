@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t10
-oat_last_commit: 01d3c99075aa09ea5fb49b801d4deca1d5f3c51e
+oat_current_task: p04-t01
+oat_last_commit: ba66d54b697d86de0bade8863587870af75e06da
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -72,7 +72,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T22:56:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T23:54:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -84,10 +84,8 @@ oat_generated: false
 
 ## Current Phase
 
-Phases p01 and p02 are complete. Phase p03 is complete through p03-t09,
-including both authorized recovery attempts. The focused p03 re-review confirmed
-all six original findings resolved and added two sequential Minor follow-ups;
-implementation resumes at p03-t10.
+Phases p01 through p03 are complete. The final p03 review passed at `ba66d54b`
+after both Minor follow-up tasks landed. Phase p04 is ready.
 
 ## Artifacts
 
@@ -95,7 +93,7 @@ implementation resumes at p03-t10.
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
-- **Plan:** `plan.md` (5 phases / 25 tasks; p03-t10 and p03-t11 queued)
+- **Plan:** `plan.md` (5 phases / 25 tasks; p04 ready)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -109,12 +107,14 @@ implementation resumes at p03-t10.
 - ✓ Delta-focused artifact review corrections applied
 - ✓ Bounded correction verification passed with no findings
 - ✓ p02 canonical links and internal-reference gate passed review
-- ✓ p03-t01 through p03-t09 implemented at re-reviewed head `01d3c99`
+- ✓ p03-t01 through p03-t11 implemented
 - ✓ Both authorized recoveries recorded; `used_attempts: 2` preserved and the
   completed p03-recovery-002 pending marker settled
 - ✓ All six original p03 findings confirmed resolved in focused re-review
-- ✓ p03 re-review received; bookkeeping reconciled and two Minor tasks added
-- ⧗ p03-t10 publish-scoped callback error classification next
+- ✓ p03-t10 and p03-t11 resolved the final error-classification and summary
+  guidance follow-ups
+- ✓ Final p03 review passed with no Critical, Important, or Medium findings
+- ⧗ p04-t01 source-ID boundary reproduction next
 
 ## Blockers
 
@@ -122,5 +122,5 @@ None
 
 ## Next Milestone
 
-Implement p03-t10: classify schema-valid non-normalizable v2 publication roots
-as publish-scoped failures without weakening URL policy or v1 replay.
+Implement p04-t01: reproduce and correct the exact `sourceIds` producer/consumer
+boundary mismatch before content processing.

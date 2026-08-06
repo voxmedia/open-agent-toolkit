@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-06
-oat_current_task_id: p03-t10
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -230,15 +230,15 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 6     | 6/6       |
-| p02   | completed   | 2     | 2/2       |
-| p03   | in progress | 11    | 9/11      |
-| p04   | pending     | 3     | 0/3       |
-| p05   | pending     | 3     | 0/3       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 6     | 6/6       |
+| p02   | completed | 2     | 2/2       |
+| p03   | completed | 11    | 11/11     |
+| p04   | pending   | 3     | 0/3       |
+| p05   | pending   | 3     | 0/3       |
 
-**Total:** 17/25 tasks completed
+**Total:** 19/25 tasks completed
 
 ---
 
@@ -270,8 +270,9 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Phase 3: Publication integrity
 
-**Status:** in progress
+**Status:** completed
 **Started:** 2026-08-06
+**Completed:** 2026-08-06
 
 | Task    | Status    | Commit            |
 | ------- | --------- | ----------------- |
@@ -284,8 +285,8 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | p03-t07 | completed | 38ca2e4           |
 | p03-t08 | completed | 2e6519a           |
 | p03-t09 | completed | df0e904           |
-| p03-t10 | pending   | -                 |
-| p03-t11 | pending   | -                 |
+| p03-t10 | completed | 4a726147          |
+| p03-t11 | completed | ba66d54b          |
 
 ### Recovery Event p03-recovery-001
 
@@ -369,6 +370,23 @@ _- Outstanding Items_
 <!-- orchestration-runs-start -->
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
+### Run 1: 2026-08-06T23:54:00Z
+
+- Branch: `explainer-improvements`
+- Tier: Tier 1 (Cursor native subagents)
+- Dispatch policy: managed `high`
+- Phases passed: 1; failed: 0; stopped: 0
+
+| Phase | Outcome | Task commits                                                      | Review                                                       | Fix iterations      |
+| ----- | ------- | ----------------------------------------------------------------- | ------------------------------------------------------------ | ------------------- |
+| p03   | passed  | `58a9fd2` through `ba66d54b` plus recoveries `c9a0aee`, `01d3c99` | cycle 3 passed at `ba66d54b697d86de0bade8863587870af75e06da` | 2 review-fix rounds |
+
+- Reviewer continuation used the already-accepted
+  `oat-reviewer-claude-opus-5-thinking-high` handle after an interactive
+  interruption; reconnaissance was not attempted.
+- Outstanding items: two non-blocking Minor polish notes are deferred below;
+  27 inherited `E_BROWSER_PROBE` recap-fixture failures remain outside p03.
 
 <!-- orchestration-runs-end -->
 
@@ -598,7 +616,47 @@ Chronological log of implementation progress.
   They are outside the p03 changed test and enforcement paths and are not p03
   blockers.
 
-**Next:** Execute p03-t10, then p03-t11, through `oat-project-implement`.
+**Resolution:** p03-t10 and p03-t11 landed in `4a726147` and `ba66d54b`;
+the final review below passed.
+
+### Review Received: p03 final re-review
+
+**Date:** 2026-08-06
+**Review artifact:**
+`reviews/archived/p03-review-2026-08-06T235124Z.md`
+**Reviewed head:** `ba66d54b697d86de0bade8863587870af75e06da`
+**Invocation:** manual
+**Review cycle:** 3 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**Resolved prior findings:**
+
+- p03-t10 now classifies schema-valid but non-normalizable v2 publication roots
+  as `E_PUBLISH`, records no publication state, and preserves v1/v2 behavior.
+- p03-t11 documents immutable publication summary v2 evidence and reduced v1
+  replay without implying in-place mutation.
+
+**Deferred Findings:**
+
+- m1 (Minor): the publisher callback observes an `incomplete` mid-publish
+  manifest before the final persist. No in-repo consumer reads this intermediate
+  state and the final manifest remains correct. Revisit if a mid-run manifest
+  consumer is introduced or package-coverage ordering changes.
+- m2 (Minor): an uncoded local write failure after successful upload can surface
+  as `E_RUN` while the build record retains `E_PUBLISH`. This remains
+  fail-closed and low-reachability. Revisit when local write-failure injection
+  or publish error-code consistency is expanded.
+
+**Disposition:** p03 passed. Both Minor findings are explicitly deferred as
+optional polish; neither blocks the phase.
+
+**Next:** Begin p04-t01.
 
 ---
 
@@ -622,7 +680,7 @@ Track test execution during implementation.
 | ----- | ---------------------------------------------------- | ------ | ------ | -------------------------------------------------- |
 | 1     | adapter/core focused suites; CLI tests; lint; format | passed | 0      | p01-t01–p01-t06 complete; focused re-review passed |
 | 2     | declared p02 union; lint; format                     | passed | 0      | 176/176; focused re-review passed                  |
-| 3     | focused/direct p03; release/smoke; repository gates  | passed | 0      | 231/231 + 31/31; re-review passed original fixes   |
+| 3     | focused/direct p03; release/smoke; repository gates  | passed | 0      | 228/228 + 31/31; final re-review passed 172/172    |
 
 The broad explainer skill glob is separately nonzero for 27 inherited
 `E_BROWSER_PROBE` failures in legacy recap fixtures. Focused p03 suites and all
