@@ -746,7 +746,17 @@ function lifecycleArtifacts({ decisions, components, checks }) {
  * fact base carried by the request it receives.
  */
 async function authorFromLifecycleEvidence(request) {
-  assert.equal(request.schemaVersion, 'explainer-kit.author-request/v2');
+  assert.equal(request.schemaVersion, 'explainer-kit.author-request/v3');
+  assert.ok(
+    request.artifactLinks.every(({ sitePath }) =>
+      sitePath.endsWith('/index.html'),
+    ),
+  );
+  assert.ok(
+    request.artifactLinks.every(
+      ({ href }) => href.endsWith('/index.html') || href === 'index.html',
+    ),
+  );
   assert.equal(request.authoring, 'html');
   assert.ok(request.brief.length > 0, 'the request must carry a brief');
 

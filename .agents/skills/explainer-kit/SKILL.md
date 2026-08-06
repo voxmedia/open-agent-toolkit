@@ -74,11 +74,13 @@ request.
 The recipe — never the author — selects each artifact's authoring path. Floor
 entries and expansion profiles declare `authoring: markdown` for the narrative
 path or `authoring: html` for the artistic path. The core invokes the author
-once per artifact with an `explainer-kit.author-request/v2` payload carrying the
+once per artifact with an `explainer-kit.author-request/v3` payload carrying the
 artifact identity and type, its authoring path, the inlined brief from
 `briefs/`, the reconciled fact base, the resolved theme, the shell source for
-artistic artifacts, and the required narrative sections for narrative floor
-artifacts. It accepts only a schema-valid
+artistic artifacts, the required narrative sections for narrative floor
+artifacts, and canonical `artifactLinks` with explicit `index.html` site paths
+and receiver-relative hrefs. Version 2 requests remain readable for replay. It
+accepts only a schema-valid
 `explainer-kit.author-result/v2` with exactly one of `content.markdown` or
 `content.html` plus non-secret provenance, rejects excessive verbatim source
 overlap, retains each validated result under `source/author/` and its content

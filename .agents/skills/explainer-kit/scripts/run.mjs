@@ -2,7 +2,7 @@
 
 import { createHash } from 'node:crypto';
 import { lstat, readFile, realpath } from 'node:fs/promises';
-import { isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { assertBrowserProbeSession } from './lib/browser-runtime.mjs';
@@ -662,13 +662,24 @@ async function applyVisualCorrection(state, options, now) {
     const previousContent = state.authoredContent.get(artifactId);
     let item;
     try {
-      item = await authorArtifact(state, artifact, correctionAuthor, trust, {
-        attempt: 1,
-        findings: structuredClone(
-          findings.filter((finding) => finding.artifactId === artifactId),
+      item = await authorArtifact(
+        state,
+        artifact,
+        correctionAuthor,
+        trust,
+        canonicalArtifactLinks(
+          state.resolvedArtifacts,
+          artifact.id,
+          state.run.slug,
         ),
-        previousContentPath: state.contentPaths.get(artifactId),
-      });
+        {
+          attempt: 1,
+          findings: structuredClone(
+            findings.filter((finding) => finding.artifactId === artifactId),
+          ),
+          previousContentPath: state.contentPaths.get(artifactId),
+        },
+      );
     } catch (error) {
       throw codedError(
         'E_VISUAL_CORRECTION',
@@ -1469,8 +1480,20 @@ async function createAuthoredContent(state, options, now) {
     errors: [],
   };
   const authored = [];
+  const artifactLinkTables = new Map(
+    artifacts.map((artifact) => [
+      artifact.id,
+      canonicalArtifactLinks(artifacts, artifact.id, state.run.slug),
+    ]),
+  );
   for (const artifact of artifacts) {
-    const item = await authorArtifact(state, artifact, author, trust);
+    const item = await authorArtifact(
+      state,
+      artifact,
+      author,
+      trust,
+      artifactLinkTables.get(artifact.id),
+    );
     if ((item.result.proposedArtifacts ?? []).length > 0) {
       throw codedError(
         'E_AUTHOR_RESULT',
@@ -1583,6 +1606,7 @@ async function authorArtifact(
   artifact,
   author,
   trust,
+  artifactLinks,
   correctionContext,
 ) {
   const [brief, visualAuthoringGuidance, shellContent] = await Promise.all([
@@ -1613,7 +1637,7 @@ async function authorArtifact(
     );
   }
   const authorRequest = {
-    schemaVersion: 'explainer-kit.author-request/v2',
+    schemaVersion: 'explainer-kit.author-request/v3',
     artifactId: artifact.id,
     artifactType: artifact.type,
     authoring: artifact.authoring,
@@ -1624,6 +1648,7 @@ async function authorArtifact(
     theme: structuredClone(state.theme),
     setContext: structuredClone(state.setPlan),
     plannedArtifact: structuredClone(artifact.plannedArtifact),
+    artifactLinks: structuredClone(artifactLinks),
     ...(graphSemantics.length > 0 && {
       graphSemantics: structuredClone(graphSemantics),
     }),
@@ -1633,7 +1658,7 @@ async function authorArtifact(
       }),
   };
   const requestValidation = validateContract(
-    'author-request/v2',
+    'author-request/v3',
     authorRequest,
   );
   if (!requestValidation.valid) {
@@ -1716,6 +1741,34 @@ async function authorArtifact(
     content,
     contentPath: `source/content/${artifact.id}.${artifact.authoring === 'markdown' ? 'md' : 'html'}`,
   };
+}
+
+function canonicalArtifactLinks(artifacts, currentArtifactId, slug) {
+  const paths = new Map(
+    artifacts.map((artifact) => [
+      artifact.id,
+      artifactPath(renderDescriptor(artifact), slug),
+    ]),
+  );
+  const currentPath = paths.get(currentArtifactId);
+  if (!currentPath) {
+    throw codedError(
+      'E_AUTHOR_REQUEST',
+      `Cannot construct canonical links for unknown artifact ${currentArtifactId}.`,
+    );
+  }
+  return artifacts.map((artifact) => {
+    const sitePath = paths.get(artifact.id);
+    const href =
+      posix.relative(posix.dirname(currentPath), sitePath) ||
+      posix.basename(sitePath);
+    return {
+      artifactId: artifact.id,
+      artifactType: artifact.type,
+      sitePath,
+      href,
+    };
+  });
 }
 
 function diagramAnalyses(markdown) {

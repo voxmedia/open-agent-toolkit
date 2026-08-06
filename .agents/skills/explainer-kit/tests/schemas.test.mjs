@@ -19,6 +19,7 @@ const schemas = {
   'publish-request': 'explainer-kit.publish-request/v1',
   'publish-receipt': 'explainer-kit.publish-receipt/v1',
   'author-request.v2': 'explainer-kit.author-request/v2',
+  'author-request.v3': 'explainer-kit.author-request/v3',
   'author-result.v2': 'explainer-kit.author-result/v2',
   'set-plan.v1': 'explainer-kit.set-plan/v1',
   'visual-review-request.v1': 'explainer-kit.visual-review-request/v1',
@@ -192,6 +193,25 @@ test('author v2 contracts require authored content and provenance', async () => 
     'self-asserted',
   ]);
   assert.equal(result.properties.provenance.additionalProperties, false);
+});
+
+test('author v3 requires a closed canonical artifact link table', async () => {
+  const request = await loadSchema('author-request.v3');
+
+  assert.ok(request.required.includes('artifactLinks'));
+  assert.equal(request.properties.authoring.enum.includes('markdown'), true);
+  assert.equal(request.properties.authoring.enum.includes('html'), true);
+  assert.equal(request.properties.artifactLinks.minItems, 1);
+  assert.equal(request.properties.artifactLinks.uniqueItems, true);
+  assert.deepEqual(request.$defs.artifactLink.required, [
+    'artifactId',
+    'artifactType',
+    'sitePath',
+    'href',
+  ]);
+  assert.equal(request.$defs.artifactLink.additionalProperties, false);
+  assert.match(request.$defs.artifactLink.properties.sitePath.pattern, /index/);
+  assert.match(request.$defs.artifactLink.properties.href.pattern, /index/);
 });
 
 test('set and visual review schemas carry closed shared context', async () => {

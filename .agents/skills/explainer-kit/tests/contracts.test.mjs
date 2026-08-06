@@ -354,6 +354,39 @@ function authorRequestV2() {
   };
 }
 
+function authorRequestV3() {
+  return {
+    ...authorRequestV2(),
+    schemaVersion: 'explainer-kit.author-request/v3',
+    artifactLinks: [
+      {
+        artifactId: 'project-recap',
+        artifactType: 'hub',
+        sitePath: 'site/initiatives/demo-project/index.html',
+        href: 'index.html',
+      },
+      {
+        artifactId: 'system-visual',
+        artifactType: 'diagram',
+        sitePath: 'site/diagrams/demo-project/system-visual/index.html',
+        href: '../../diagrams/demo-project/system-visual/index.html',
+      },
+      {
+        artifactId: 'walkthrough-deck',
+        artifactType: 'deck',
+        sitePath: 'site/decks/demo-project/walkthrough-deck/index.html',
+        href: '../../decks/demo-project/walkthrough-deck/index.html',
+      },
+      {
+        artifactId: 'runtime-deep-dive',
+        artifactType: 'explainer',
+        sitePath: 'site/explainers/demo-project/runtime-deep-dive/index.html',
+        href: '../../explainers/demo-project/runtime-deep-dive/index.html',
+      },
+    ],
+  };
+}
+
 function setPlan() {
   return {
     schemaVersion: 'explainer-kit.set-plan/v1',
@@ -573,6 +606,39 @@ test('validates author contract v2 by kind, kind+version, and schema id', () => 
       errors: [],
     });
   }
+});
+
+test('validates canonical author link tables while retaining v2 replay', () => {
+  const legacy = authorRequestV2();
+  const current = authorRequestV3();
+
+  assert.deepEqual(validateContract('author-request/v2', legacy), {
+    valid: true,
+    errors: [],
+  });
+  for (const kind of [
+    'author-request',
+    'author-request/v3',
+    'explainer-kit.author-request/v3',
+  ]) {
+    assert.deepEqual(validateContract(kind, current), {
+      valid: true,
+      errors: [],
+    });
+  }
+
+  const missingArtifact = structuredClone(current);
+  missingArtifact.artifactLinks.pop();
+  assert.ok(
+    validateContract('author-request', missingArtifact).errors.some(
+      ({ code }) => code === 'artifact-link-parity',
+    ),
+  );
+
+  const directoryStyle = structuredClone(current);
+  directoryStyle.artifactLinks[1].href =
+    '../../diagrams/demo-project/system-visual/';
+  assert.equal(validateContract('author-request', directoryStyle).valid, false);
 });
 
 test('validates provider-neutral set planning and visual review envelopes', () => {

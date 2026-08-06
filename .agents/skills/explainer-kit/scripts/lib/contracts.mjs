@@ -17,13 +17,14 @@ const SCHEMA_FILES = {
   'publish-request': 'publish-request.schema.json',
   'publish-receipt': 'publish-receipt.schema.json',
   'author-request/v2': 'author-request.v2.schema.json',
+  'author-request/v3': 'author-request.v3.schema.json',
   'author-result/v2': 'author-result.v2.schema.json',
   'set-plan': 'set-plan.v1.schema.json',
   'visual-review-request': 'visual-review-request.v1.schema.json',
   'visual-review-result': 'visual-review-result.v1.schema.json',
 };
 const DEFAULT_SCHEMA_KEYS = {
-  'author-request': 'author-request/v2',
+  'author-request': 'author-request/v3',
   'author-result': 'author-result/v2',
 };
 
@@ -547,12 +548,20 @@ function validateCrossRecord(kind, value, context, errors) {
   }
 
   if (
-    ['author-request', 'author-request/v2'].includes(kind) ||
-    value.schemaVersion === 'explainer-kit.author-request/v2'
+    ['author-request', 'author-request/v2', 'author-request/v3'].includes(
+      kind,
+    ) ||
+    [
+      'explainer-kit.author-request/v2',
+      'explainer-kit.author-request/v3',
+    ].includes(value.schemaVersion)
   ) {
     validateAuthorSetContext(value, errors);
     validateVisualAuthoringGuidance(value, errors);
     validateAuthorGraphSemantics(value, errors);
+    if (value.schemaVersion === 'explainer-kit.author-request/v3') {
+      validateAuthorArtifactLinks(value, errors);
+    }
   }
 
   if (kind === 'visual-review-request') {
@@ -1172,6 +1181,84 @@ function validateAuthorSetContext(value, errors) {
       'set-plan-drift',
       'Author request planned artifact must be identical to the shared set plan entry.',
     );
+  }
+}
+
+function validateAuthorArtifactLinks(value, errors) {
+  if (!Array.isArray(value.artifactLinks) || !isObject(value.setContext)) {
+    return;
+  }
+  const planned = Array.isArray(value.setContext.portfolio)
+    ? value.setContext.portfolio
+    : [];
+  const linksById = new Map();
+  for (const [index, link] of value.artifactLinks.entries()) {
+    if (!isObject(link)) continue;
+    if (linksById.has(link.artifactId)) {
+      add(
+        errors,
+        `$.artifactLinks[${index}].artifactId`,
+        'artifact-link-parity',
+        'Canonical artifact link IDs must be unique.',
+      );
+    }
+    linksById.set(link.artifactId, link);
+  }
+  if (
+    linksById.size !== planned.length ||
+    planned.some(
+      ({ artifactId, artifactType }) =>
+        linksById.get(artifactId)?.artifactType !== artifactType,
+    )
+  ) {
+    add(
+      errors,
+      '$.artifactLinks',
+      'artifact-link-parity',
+      'Canonical artifact links must exactly cover the planned portfolio.',
+    );
+    return;
+  }
+
+  const current = linksById.get(value.artifactId);
+  if (!current || typeof current.sitePath !== 'string') return;
+  const base = new URL(current.sitePath, 'https://explainer.invalid/');
+  for (const [index, link] of value.artifactLinks.entries()) {
+    if (
+      !isObject(link) ||
+      typeof link.href !== 'string' ||
+      typeof link.sitePath !== 'string'
+    ) {
+      continue;
+    }
+    let resolved;
+    try {
+      resolved = new URL(link.href, base);
+    } catch {
+      add(
+        errors,
+        `$.artifactLinks[${index}].href`,
+        'artifact-link-resolution',
+        'Canonical artifact href must be a valid relative reference.',
+      );
+      continue;
+    }
+    if (
+      resolved.origin !== base.origin ||
+      resolved.protocol !== 'https:' ||
+      resolved.username ||
+      resolved.password ||
+      resolved.search ||
+      resolved.hash ||
+      resolved.pathname !== `/${link.sitePath}`
+    ) {
+      add(
+        errors,
+        `$.artifactLinks[${index}].href`,
+        'artifact-link-resolution',
+        'Canonical artifact href must resolve exactly to its declared site path.',
+      );
+    }
   }
 }
 

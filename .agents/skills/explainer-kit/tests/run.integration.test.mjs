@@ -1376,8 +1376,43 @@ test('unattended author receives structured per-artifact context and retains val
   for (const authorRequest of requests) {
     assert.equal(
       authorRequest.schemaVersion,
-      'explainer-kit.author-request/v2',
+      'explainer-kit.author-request/v3',
     );
+    assert.deepEqual(
+      authorRequest.artifactLinks.map(
+        ({ artifactId, artifactType, sitePath }) => ({
+          artifactId,
+          artifactType,
+          sitePath,
+        }),
+      ),
+      [
+        {
+          artifactId: 'project-recap',
+          artifactType: 'hub',
+          sitePath: 'site/initiatives/project-recap-demo/index.html',
+        },
+        {
+          artifactId: 'architecture',
+          artifactType: 'diagram',
+          sitePath: 'site/diagrams/project-recap-demo/architecture/index.html',
+        },
+        {
+          artifactId: 'deck',
+          artifactType: 'deck',
+          sitePath: 'site/decks/project-recap-demo/deck/index.html',
+        },
+      ],
+    );
+    const selfLink = authorRequest.artifactLinks.find(
+      ({ artifactId }) => artifactId === authorRequest.artifactId,
+    );
+    assert.equal(selfLink.href, 'index.html');
+    for (const link of authorRequest.artifactLinks) {
+      assert.match(link.sitePath, /^site\/.+\/index\.html$/);
+      assert.match(link.href, /(?:^|\/)index\.html$/);
+      assert.equal(link.href.startsWith('/'), false);
+    }
     assert.match(authorRequest.brief, /Audience/i);
     for (const topic of [
       /representation/i,

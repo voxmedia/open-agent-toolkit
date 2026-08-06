@@ -34,11 +34,14 @@ Every run, interactive or unattended, also requires a provider-neutral author
 callback; a run without one fails `E_AUTHOR_REQUIRED`. An in-process caller
 supplies `options.author(request)`; a JSON-only CLI caller uses
 `--author-module author.mjs`. The core invokes it once per resolved artifact
-with an `explainer-kit.author-request/v2` payload containing the artifact
+with an `explainer-kit.author-request/v3` payload containing the artifact
 identity and type, the artifact's authoring path, the inlined brief, the bundled
 `visualAuthoringGuidance`, the reconciled fact base, the resolved theme, the
 shell source for artistic artifacts, the required narrative sections for
-narrative floor artifacts, and bounded-discovery context. The guidance is
+narrative floor artifacts, bounded-discovery context, and `artifactLinks`.
+Each canonical link entry names the planned artifact, its explicit site-relative
+path ending in `index.html`, and the relative `href` from the receiving
+artifact's own location. The guidance is
 loaded only from the installed skill's `references/visual-authoring.md`; no
 ambient or home-directory file is consulted. The callback must return an
 `explainer-kit.author-result/v2` carrying exactly one of `content.markdown` or
@@ -87,9 +90,11 @@ The set plan owns the shared terminology/status/number ledger, source coverage,
 adaptive portfolio, per-artifact draft, and visual intent. Optional entries add
 a source-backed `justification`; undeclared sources, conflicting ledger values,
 duplicate artifact IDs, and unjustified optional entries are invalid. Each
-`author-request/v2` carries the complete immutable `setContext` plus the exact
+`author-request/v3` carries the complete immutable `setContext` plus the exact
 matching `plannedArtifact`. The planner finalizes floor and expansion entries
 before authoring; author results cannot add, remove, or replace artifacts.
+Version 2 requests remain valid for deterministic replay; new runs emit only
+the complete v3 request.
 When a planner draft contains a supported non-linear graph, the request also
 carries its closed `graphSemantics` (direction, nodes, edges, and topology).
 Artistic HTML must expose one exact `data-direction`. Each planned node requires
