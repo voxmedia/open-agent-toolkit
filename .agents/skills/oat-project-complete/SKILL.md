@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.6.0
+version: 1.6.1
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -123,6 +123,22 @@ Also preflight summary status using the same freshness rules as `oat-project-sum
 - `summary.md` is `stale` when the tracking frontmatter fields `oat_summary_last_task`, `oat_summary_revision_count`, or `oat_summary_includes_revisions` no longer match `current_last_task`, `current_rev_count`, or `current_rev_list` as defined in `oat-project-summary` Step 3
 - `summary.md` is `current` when those tracking fields still match the `oat-project-summary` Step 3 comparison inputs
 
+Preflight `{PROJECT_PATH}/references/project-retro.md` alongside the summary.
+The safety-net offer is governed by how this completion run executes, not by how
+implementation ran:
+
+- Treat the run as non-interactive when `OAT_AUTONOMOUS=1` or
+  `OAT_NON_INTERACTIVE=1`; otherwise treat it as interactive.
+- When the retro is missing and this completion run is interactive, add exactly
+  one question to the batched prompt: "No project retro exists. Generate one
+  before completing?"
+- When the retro is missing and this completion run is non-interactive, skip the
+  offer. Explicitly configured `retro` in the post-implementation sequence is
+  the consented non-interactive path.
+- When the retro exists, never offer regeneration. If either
+  `oat_retro_promotions` or `oat_retro_filing` is `proposed` or `partial`, emit
+  at most one line noting that the existing retro has unsettled register items.
+
 **Questions to ask (in a single prompt):**
 
 1. **Confirm completion:** "Ready to mark **{PROJECT_NAME}** as complete?"
@@ -130,8 +146,9 @@ Also preflight summary status using the same freshness rules as `oat-project-sum
 3. **Generate or refresh summary** (only if summary status is `missing` or `stale`): present the status explicitly:
    - Missing example: "A summary has not been generated yet. Would you like me to generate it now as part of completion?"
    - Stale example: "The project summary is out of date. Would you like me to refresh it now as part of completion?"
-4. **Generate final project recap** (only when recap intent resolution returned `needsPrompt: true`): "Generate a final project recap as part of completion?"
-5. **Open PR:** "Open a PR in GitHub after generating the PR description?" — ask this only when no tracked open PR already exists.
+4. **Generate project retro** (only when the retro is missing and this completion run is interactive): "No project retro exists. Generate one before completing?"
+5. **Generate final project recap** (only when recap intent resolution returned `needsPrompt: true`): "Generate a final project recap as part of completion?"
+6. **Open PR:** "Open a PR in GitHub after generating the PR description?" — ask this only when no tracked open PR already exists.
 
 If `oat_pr_status` is `open`, do not ask the Open PR question. Set `SHOULD_OPEN_PR="false"` and treat the existing PR as already tracked.
 
@@ -142,13 +159,19 @@ Ready to complete project **{PROJECT_NAME}**?
 
 1. Archive the project after completion? (yes/no)
 2. A summary has not been generated yet. Generate it now as part of completion? (yes/no)
-3. Generate a final project recap as part of completion? (yes/no)
-4. Open a PR in GitHub? (yes/no)
+3. No project retro exists. Generate one before completing? (yes/no)
+4. Generate a final project recap as part of completion? (yes/no)
+5. Open a PR in GitHub? (yes/no)
 ```
 
 If the user declines the completion confirmation, exit gracefully.
 
-After the user accepts the completion confirmation, store the answers as `SHOULD_ARCHIVE`, `SHOULD_GENERATE_SUMMARY`, `SHOULD_GENERATE_RECAP`, and `SHOULD_OPEN_PR` for use in later steps. Persist a prompted recap answer only after that confirmation is accepted.
+After the user accepts the completion confirmation, store the answers as
+`SHOULD_ARCHIVE`, `SHOULD_GENERATE_SUMMARY`, `SHOULD_GENERATE_RETRO`,
+`SHOULD_GENERATE_RECAP`, and `SHOULD_OPEN_PR` for use in later steps. Set
+`SHOULD_GENERATE_RETRO="false"` when the retro already exists or this completion
+run is non-interactive. Persist a prompted recap answer only after that
+confirmation is accepted.
 
 If the summary status is `current`, set `SHOULD_GENERATE_SUMMARY="false"` and note that a current summary is already available.
 
@@ -272,6 +295,19 @@ Check if `{PROJECT_PATH}/summary.md` exists and whether it is current against th
 - If `summary.md` already exists and is current, note it as available. Summary.md will be:
   - Used as source for the PR description (in Step 7)
   - Preserved in the archived project directory (in Step 8)
+
+### Step 3.5.5: Retro Safety-Net
+
+When `SHOULD_GENERATE_RETRO="true"`, dispatch `oat-project-retro` in generate
+mode before any lifecycle mutation. Apply and filing behavior remains
+config-gated inside that skill.
+
+Use the host's skill-to-skill invocation when available. Do not assume
+`oat-project-retro` is a shell command on `PATH`. If dispatch is unavailable or
+generation fails, warn with the reason and continue completion; this offer is a
+safety net, not a completion gate. Never leave a partial retro artifact.
+
+When `SHOULD_GENERATE_RETRO="false"`, do not dispatch the skill.
 
 ### Step 3.6: Select Final Project Recap
 
