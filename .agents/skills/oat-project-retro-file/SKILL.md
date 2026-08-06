@@ -250,10 +250,15 @@ Recompute `oat_retro_filing` from all UP items plus RP file-items:
 - `partial`: some, but not all, items are settled;
 - `complete`: every filing item is `filed` or `rejected`.
 
+Refresh the contents of the bounded `## Current State` section from register
+fields and frontmatter rollups after recomputing the rollup.
+
 Filing mode may mutate only `Status`, `Destination`, `Sanitized`,
-`Disposition-note`, and `oat_retro_filing` on selected filing items. Do not
-alter apply-items, `Applied-ref`, `oat_retro_promotions`, or any RP
-disposition. Proposal bodies are stable and immutable after generation.
+`Disposition-note`, and `oat_retro_filing` on selected filing items, plus the
+contents of `## Current State`. Do not alter apply-items, `Applied-ref`,
+`oat_retro_promotions`, any RP disposition, proposal bodies, or any other
+narrative. Refresh `Current State` without rewriting proposal bodies. Proposal
+bodies are stable and immutable after generation.
 
 Format and commit the retro writeback with created/strengthened backlog files
 when local. GitHub destinations are represented by their recorded URLs. On
@@ -281,4 +286,5 @@ Report:
 - Public posts from private sources pass sanitization, including comments.
 - Every `filed` status has a confirmed destination.
 - Re-runs are idempotent and retry newly deliverable `no-destination` items.
-- Filing writeback updates only allowed fields and `oat_retro_filing`.
+- Filing writeback updates only allowed fields, `oat_retro_filing`, and the
+  derived `Current State` contents.

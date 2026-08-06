@@ -38,10 +38,11 @@ approval. The missing snapshot is confirmed; the internal branch that allowed
 the terminal transition remains inconclusive.
 
 Self-retrospection then found and repaired a separate Bugbot consent issue in
-the snapshot example and the resulting autonomy-inventory CI drift. PR #192 is
-clean, with CI, release dry-run, and Bugbot passing. One actionable upstream
-item remains: make configured-but-absent closeout snapshots fail closed and
-cover the terminal transition with executable regression evidence.
+the snapshot example and the resulting autonomy-inventory CI drift. At
+generation time, PR #192 was clean, with CI, release dry-run, and Bugbot
+passing. One actionable upstream item was proposed at generation time: make
+configured-but-absent closeout snapshots fail closed and cover the terminal
+transition with executable regression evidence.
 
 ## Evidence and Review Method
 
@@ -77,9 +78,16 @@ exemplars, not evidence of this run.
 | Dogfood          | Generated and applied one explicitly approved promotion on `explainer-improvements`; no external filing       |
 | Reviews          | Plan gate passed after four rounds; all phase reviews and narrowed final review passed                        |
 | Release          | Five public packages advanced to `0.2.30` after a collision with `main`                                       |
-| PR               | #192 open, mergeable, and passing CI, release dry-run, and Bugbot                                             |
+| PR               | At generation time, #192 was open, mergeable, and passing CI, release dry-run, and Bugbot                     |
 | Recovered defect | Consent-bearing snapshot example and autonomy prompt-site mappings fixed before retro generation              |
 | Remaining defect | Configured closeout can reach terminal state without a durable sequence snapshot                              |
+
+## Current State
+
+- **Promotions:** `none`; no RP apply-items exist.
+- **Filing:** `complete`; UP-01 is filed to
+  `.oat/repo/pjm/backlog/items/BL-260718-mandatory-skill-load-clause.md`.
+- **Unsettled items:** None.
 
 ## What Went Well
 
@@ -276,11 +284,11 @@ not why the automatic sequence failed. The retro preserves that distinction.
 
 ## Repo Improvements (Promotion Register)
 
-No unresolved repo-local promotion is proposed. The consent-bearing snapshot
-example and its autonomy-inventory mappings were repaired before this artifact
-was generated. Because the host repository is OAT itself, the remaining
-general lifecycle defect is recorded once in the upstream register rather than
-duplicated as a repo filing item.
+At generation time, no unresolved repo-local promotion was proposed. The
+consent-bearing snapshot example and its autonomy-inventory mappings were
+repaired before this artifact was generated. Because the host repository is
+OAT itself, the remaining general lifecycle defect was recorded once in the
+upstream register rather than duplicated as a repo filing item.
 
 ## OAT Upstream Feedback (Upstream Register)
 
@@ -309,13 +317,13 @@ item before filing.
 
 ## Remaining Boundaries and Follow-Ups
 
-- PR #192 is open and awaits human review/merge.
-- UP-01 remains proposed because no filing destination is configured.
+- At generation time, PR #192 was open and awaiting human review/merge.
+- Current register and filing status is reported only in `Current State`.
 - The precise internal mechanism that skipped snapshot creation remains
   inconclusive; the follow-up should reproduce the terminal transition rather
   than assume a cause.
-- The project-log end-of-run synthesis remains pending until project
-  completion/archive.
+- At generation time, the project-log end-of-run synthesis was pending until
+  project completion/archive.
 
 ## Reflections
 
@@ -332,4 +340,4 @@ executable state transitions and terminal checks.
 The self-retro improved the branch before merely describing it. Pausing for the
 Bugbot consent finding and the subsequent CI inventory failure kept the final
 artifact honest: the recorded outcome is the passing, reviewed head, while the
-remaining proposal is narrow, evidenced, and explicitly unresolved.
+generation-time proposal is narrow, evidenced, and explicitly unresolved.

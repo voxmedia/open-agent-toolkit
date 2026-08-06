@@ -40,6 +40,18 @@ inconclusive mechanisms.}
 {Summarize delivered scope, verification, lifecycle outcome, and material
 boundaries in a concise table or list.}
 
+## Current State
+
+<!-- This is the only mutable freeform status surface. Derive it from register
+     fields and frontmatter rollups after generation and after every apply/file
+     writeback. Consumers may replace only the contents of this section, not
+     this heading or any other narrative. Keep it concise and include
+     promotions, filing, and unsettled-item state. -->
+
+- **Promotions:** {Current promotion rollup and item state.}
+- **Filing:** {Current filing rollup and item state.}
+- **Unsettled items:** {Current IDs and next actions, or `None`.}
+
 ## What Went Well
 
 {Describe successful technical and workflow practices, grounded in evidence.}
@@ -115,8 +127,9 @@ caused them.}
        Disposition-note: rejection, recovery, or outcome detail
 
      Consumers may mutate only Status, Applied-ref or Destination, and
-     Sanitized, Disposition-note, plus the corresponding frontmatter rollup.
-     IDs, Type, Disposition, titles, and proposal bodies are stable. -->
+     Sanitized, Disposition-note, plus the corresponding frontmatter rollup and
+     Current State contents. IDs, Type, Disposition, titles, proposal bodies,
+     and all other narrative are stable. -->
 
 ### RP-01: {Actionable repo improvement}
 
@@ -145,8 +158,9 @@ caused them.}
 <!-- Stable IDs: UP-NN. Status: proposed | filed | rejected | no-destination.
      Destination records the issue URL or backlog item ID/path. Sanitized
      records whether the public-destination verification passed. Consumers may
-     mutate only Status, Destination, Sanitized, Disposition-note, and the
-     filing rollup. IDs, titles, and proposal bodies are stable. -->
+     mutate only Status, Destination, Sanitized, Disposition-note, the filing
+     rollup, and Current State contents. IDs, titles, proposal bodies, and all
+     other narrative are stable. -->
 
 No upstream feedback identified.
 

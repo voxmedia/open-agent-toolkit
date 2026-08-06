@@ -92,16 +92,24 @@ Copy `.oat/templates/project-retro.md` to the output path and render it against
 Required contracts:
 
 1. Keep all core sections and only evidence-supported conditional sections.
-2. Separate the Repo Improvements and OAT Upstream Feedback lanes.
-3. Use stable `RP-NN` and `UP-NN` item IDs.
-4. Give every RP item a `Type`, authoritative `Disposition: apply | file`, and
+2. Render `## Current State` from register fields and frontmatter rollups. This
+   is the only freeform live-status surface that apply/file writeback refreshes.
+3. Phrase status elsewhere as generation-time evidence, not as live status.
+4. Separate the Repo Improvements and OAT Upstream Feedback lanes.
+5. Use stable `RP-NN` and `UP-NN` item IDs.
+6. Give every RP item a `Type`, authoritative `Disposition: apply | file`, and
    fields/status matching that disposition.
-5. Give every register item a mutable `Disposition-note` initialized to `—`.
-6. Start every actionable item at `Status: proposed`.
-7. Keep the upstream section and its explicit empty-state line when no item is
+7. Give every register item a mutable `Disposition-note` initialized to `—`.
+8. Start every actionable item at `Status: proposed`.
+9. Keep the upstream section and its explicit empty-state line when no item is
    warranted.
-8. Derive `oat_retro_promotions` from RP apply-items and `oat_retro_filing`
-   from UP items plus RP file-items.
+10. Derive `oat_retro_promotions` from RP apply-items and `oat_retro_filing`
+    from UP items plus RP file-items.
+
+Narrative outside `## Current State` is immutable historical analysis after
+generation. It may describe an item's generation-time status when explicitly
+qualified, but it must not claim a register item "remains" or "is currently"
+in a mutable state. Proposal bodies remain immutable.
 
 Before the artifact can be considered complete:
 
@@ -156,6 +164,8 @@ Verify:
 - every RP item has a valid disposition and matching fields/status;
 - every register item has a `Disposition-note`;
 - rollups are derivable from register fields;
+- `Current State` is derived from register fields and frontmatter rollups and
+  contains no contradictory status claim;
 - `oat_retro_project` is a non-null project slug;
 - `oat_retro_generated` is a valid UTC generation timestamp;
 - no unreplaced scaffold item examples, placeholders, or brace-delimited
@@ -175,6 +185,8 @@ item as described in the apply procedure. Never stage unrelated changes.
 - Missing evidence is named; hypotheses remain hypotheses.
 - Both feedback lanes are explicit and machine-scannable.
 - Register statuses and frontmatter rollups agree.
+- `Current State` agrees with the registers and rollups; immutable historical
+  narrative does not masquerade as live status.
 - No promotion is applied or item filed without interactive approval or
   explicit non-interactive configuration.
 - The project log and commit preserve the outcome without unrelated changes.

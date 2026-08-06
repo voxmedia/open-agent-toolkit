@@ -85,7 +85,9 @@ After a successful application:
 - set `Status: applied`;
 - set `Applied-ref` to the resulting commit/path reference; and
 - clear `Disposition-note` to `—`; and
-- recompute `oat_retro_promotions` from all RP apply-items.
+- recompute `oat_retro_promotions` from all RP apply-items; and
+- refresh the bounded `## Current State` contents from register fields and
+  frontmatter rollups.
 
 On explicit rejection, set `Status: rejected` and write the reason to the
 mutable `Disposition-note` field. On transient failure, leave
@@ -94,9 +96,11 @@ execution context in `Disposition-note`, report the failure, and continue only
 when safe.
 
 Apply mode may mutate only `Status`, `Applied-ref`, `Disposition-note`, and the
-promotions rollup inside the artifact. It must not alter file-items, UP items,
-`oat_retro_filing`, item IDs, dispositions, or proposal bodies. Proposal bodies
-are stable and immutable after generation.
+promotions rollup inside the artifact, plus the contents of `## Current State`.
+It must not alter file-items, UP items, `oat_retro_filing`, item IDs,
+dispositions, proposal bodies, or any other narrative. Refresh `Current State`
+without rewriting proposal bodies. Proposal bodies are stable and immutable
+after generation.
 
 Compute `oat_retro_promotions` exactly:
 

@@ -14,6 +14,9 @@ const retroSkill = readRepoFile('.agents/skills/oat-project-retro/SKILL.md');
 const applyProcedure = readRepoFile(
   '.agents/skills/oat-project-retro/references/apply-procedure.md',
 );
+const retroQualityBar = readRepoFile(
+  '.agents/skills/oat-project-retro/references/retro-quality-bar.md',
+);
 const filingSkill = readRepoFile(
   '.agents/skills/oat-project-retro-file/SKILL.md',
 );
@@ -117,5 +120,25 @@ describe('retro skill content contracts', () => {
     );
     expect(retroSkill).toContain('`oat_retro_project`');
     expect(retroSkill).toContain('`oat_retro_generated`');
+  });
+
+  it('keeps mutable current state coherent without rewriting proposal bodies', () => {
+    for (const content of [retroSkill, retroQualityBar, retroTemplate]) {
+      expect(content).toMatch(/## Current State|`Current State`/);
+      expect(content).toMatch(
+        /register\s+fields[\s\S]*?frontmatter\s+rollups/i,
+      );
+    }
+
+    expect(retroSkill).toMatch(/generation-time evidence[\s\S]*?live status/i);
+    expect(applyProcedure).toMatch(
+      /refresh[\s\S]*?`Current State`[\s\S]*?proposal bodies/i,
+    );
+    expect(filingSkill).toMatch(
+      /refresh[\s\S]*?`Current State`[\s\S]*?proposal bodies/i,
+    );
+    expect(retroTemplate).toMatch(
+      /Consumers may replace only the contents of this section/i,
+    );
   });
 });

@@ -19,15 +19,23 @@ Every rendered retro includes:
 1. Executive Summary
 2. Evidence and Review Method
 3. Outcome Snapshot
-4. What Went Well
-5. Challenges and Struggles
-6. Where We Changed Course
-7. Repo Improvements (Promotion Register)
-8. OAT Upstream Feedback (Upstream Register)
-9. Reflections
+4. Current State
+5. What Went Well
+6. Challenges and Struggles
+7. Where We Changed Course
+8. Repo Improvements (Promotion Register)
+9. OAT Upstream Feedback (Upstream Register)
+10. Reflections
 
 The upstream section remains present with `No upstream feedback identified.`
 when evidence warrants no items.
+
+`Current State` is the narrowly bounded live-status surface. Derive it only
+from register fields and frontmatter rollups. Apply and filing writeback may
+refresh its contents, but headings, proposal bodies, and all other narrative
+remain immutable after generation. Outside this section, qualify mutable status
+as generation-time evidence; do not make unqualified claims that an item
+"remains" proposed, filed, applied, or otherwise current.
 
 ## Conditional Sections
 
@@ -57,6 +65,7 @@ empty headings or `N/A` placeholders.
 - `oat_retro_promotions` derives only from RP apply-items.
 - `oat_retro_filing` derives from UP items plus RP file-items.
 - Each item contributes to exactly one rollup.
+- `Current State` agrees with register fields and frontmatter rollups.
 
 ## Final Checks
 
