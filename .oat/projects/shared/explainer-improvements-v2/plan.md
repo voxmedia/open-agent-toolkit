@@ -188,6 +188,8 @@ git commit -m "feat(p01-t02): validate complete publish config with build-only f
 **Files:**
 
 - Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/bind-project-sources.mjs` (expose the supplied-fact-base + reviewed-repository binding for repository invocations)
+- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md` (document the repository invocation input contract)
 - Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
 
 **Step 1: Write test (RED)**
@@ -198,13 +200,30 @@ Integration fixture: `repo` invocation routes through
 repository publish roots, and completes a build-only run. Project invocation
 behavior is unchanged.
 
+**Repository invocation input contract (explicit — removing the entry-point
+rejection alone only moves the failure into `bindProjectSources`, which
+requires a project root and reads project lifecycle artifacts):** a
+repository invocation requires a caller-supplied, validated fact base
+(`suppliedFactBasePath`), bound through the existing supplied-fact-base path
+with reviewed-repository provenance from `resolveReviewedRepository`. The
+adapter never resolves an active project for a repository run — an unrelated
+active project must not become a repository run's implicit source (proven by
+a fixture with an active project present). A repository invocation without a
+supplied fact base fails closed with an actionable error naming the
+requirement. Integration cases: repo run with supplied fact base succeeds
+build-only; repo run without one fails closed; repo run ignores an existing
+active project.
+
 Run: `node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-Expected: repo fixture fails (entry point rejects `repo`)
+Expected: repo fixtures fail (entry point rejects `repo`)
 
 **Step 2: Implement (GREEN)**
 
-Remove the entry-point rejection; wire invocation through path resolution and
-destination derivation (p01-t01).
+Remove the entry-point rejection; branch source binding on invocation:
+project invocations keep `bindProjectSources` unchanged, repository
+invocations bind the required supplied fact base with reviewed-repository
+provenance (no project resolution); wire invocation through path resolution
+and destination derivation (p01-t01).
 
 **Step 3: Verify**
 
@@ -334,7 +353,10 @@ proven by test). The contract registry and docs list both versions.
 thereafter** — no later task may modify the file, so retained v3 requests
 never reinterpret against a changed schema. Beyond the required link table,
 the final shape declares up front: an authoring variant discriminator
-(`html` | `structured`, with a content-contract reference validated against
+(`markdown` | `html` | `structured` — `markdown` is a live shipped mode in
+`project-explainer`, `program-recap`, the `project-recap` deep-dive
+expansion, and the `deterministic-markdown` fallback, and must not be
+dropped; `structured` carries a content-contract reference validated against
 its own registered contract at runtime), a theme reference accepting version
 1 or 2 by discriminator (theme v2 documents validate against their own
 schema when p05-t02 lands), and an embedded set plan accepting version 1 or
@@ -342,6 +364,14 @@ schema when p05-t02 lands), and an embedded set plan accepting version 1 or
 when p06-t01 lands). Later tasks activate runtime capability for these
 fields without touching the schema; `schemas.test.mjs` gains v3 in its
 explicit identity/closed-shape inventory at this commit.
+
+**Markdown continuity is executable, not replay-only:** because new runs
+switch to v3 at this commit, integration coverage proves markdown-authored
+artifacts still complete as **new runs** under v3 — cases for
+`project-explainer`, `program-recap`, the project-recap Markdown deep-dive
+expansion, and `recapMode: deterministic-markdown` all emit valid v3
+requests and build; retained-v2 replay is covered separately and is not
+sufficient on its own.
 
 **The emitting runtime seam is in scope:** the per-request link table is
 constructed at the slug- and artifact-aware authoring seam in `run.mjs`
@@ -526,10 +556,20 @@ Schema accepts `publicAccess: "public" | "protected"` and defaults absent to
 to today (sentinel + anonymous verification; 401/403 still fails closed
 before artifact upload).
 
+**Fail-closed until protected behavior exists (independent-commit safety):**
+at this commit the protected verification pipeline (p03-t02) does not exist
+yet, so the connector **rejects protected execution** with an actionable
+error before any upload — a valid `publicAccess: "protected"` request must
+never fall through to the anonymous public-verification path. A dedicated
+test proves the protected-execution rejection; p03-t02 replaces the
+rejection with the authenticated verification branch and flips that test to
+the real behavior.
+
 **Step 2: Implement (GREEN)**
 
-Schema revision, request validation, and contract documentation of both
-modes.
+Schema revision, request validation, the interim protected-execution
+rejection, and contract documentation of both modes (protected marked as
+declared-but-not-yet-executable until p03-t02).
 
 **Step 3: Verify**
 
@@ -570,8 +610,9 @@ only.
 **Step 2: Implement (GREEN)**
 
 Branch the verification pipeline on the declared mode with service-checksum
-byte verification; keep upload, additive-safety, retry, and
-credential-hygiene behavior shared.
+byte verification, replacing p03-t01's interim protected-execution
+rejection; keep upload, additive-safety, retry, and credential-hygiene
+behavior shared.
 
 **Step 3: Verify**
 
@@ -664,7 +705,10 @@ git commit -m "feat(p03-t03): emit complete per-artifact publish receipts"
 - Create: `.agents/skills/explainer-kit/scripts/lib/url-segments.mjs`
 - Create: `.agents/skills/explainer-kit/tests/url-segments.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/derive-destination.mjs` (migrate p01-t01's slug encoding onto the shared helper)
-- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs` (owns the compatibility resolution that selects and dynamically imports the core root — the helper must be loaded through this seam, not a static adjacent-core import)
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs` (owns the compatibility resolution that selects and dynamically imports the core root — the helper must be loaded through this seam, not a static adjacent-core import; `MINIMUM_CORE_VERSION` raised here)
+- Modify: `.agents/skills/explainer-kit/SKILL.md` (allocate the new core **minor** version for this capability set — the PR-scoped frontmatter bump lands here)
+- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (documented compatibility floor raised to the new core minor)
+- Modify: `.agents/skills/oat-explainer-kit/tests/check-core.test.mjs` (stale-core and current-core floor fixtures)
 - Modify: `.agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
 
@@ -675,6 +719,19 @@ publish-time URL construction (property test over slugs with spaces, unicode,
 reserved characters). All consumers of `publicBaseUrl` read one documented
 residence; the `durability.publish` vs top-level divergence is resolved and
 covered.
+
+**The compatibility floor advances with the new core dependency:** this is
+the first task where the adapter dynamically loads a new core module
+(`url-segments.mjs`), and `checkCoreCompatibility` compares only
+major/minor — so the capability set is allocated a **new core minor
+version** (bumped in `explainer-kit/SKILL.md` frontmatter in this commit),
+and the adapter raises `MINIMUM_CORE_VERSION` and its documented floor to
+that minor in the same commit. `check-core.test.mjs` proves a core at the
+old minor fails compatibility preflight (fail-closed, before any dynamic
+module load) and a core at the new minor passes; an integration fixture
+exercises the stale-core rejection end to end. Later tasks that add further
+core contracts ride the same minor; the adapter must never pass preflight
+against a core that lacks a capability it loads.
 
 **The adapter's destination derivation (p01-t01) is a consumer of the same
 helper, loaded through the compatibility seam**: adapter `run.mjs` owns the
@@ -695,12 +752,13 @@ tree.
 Extract the helper; migrate render, publish, catalog, and adapter destination
 URL construction to it (helper injected through the adapter's
 compatibility-resolved core root); reconcile `publicBaseUrl` residence with a
-documented single source.
+documented single source; allocate the core minor version and raise the
+adapter's `MINIMUM_CORE_VERSION` plus documented floor to it.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/ .agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-Expected: full core suite, adapter parity, and compatibility-seam tests green
+Run: `node --test .agents/skills/explainer-kit/tests/ .agents/skills/oat-explainer-kit/tests/check-core.test.mjs .agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+Expected: full core suite, compatibility-floor, adapter parity, and compatibility-seam tests green
 
 **Step 4: Commit**
 
@@ -1054,10 +1112,15 @@ decision-trade-off, evidence-scoreboard, comparison, next-action), headline,
 evidence, optional comparison/visual, action. Diagram content validates
 semantic nodes, groups/containers, labeled edges, layout direction, and
 emphasis — author-supplied coordinates are rejected. Structured-content
-result variants land in a **new contract version** (`author-result/v3`);
-existing `author-result/v2` HTML payloads continue to validate unchanged
-(retained-run and callback compatibility proven by test). Artistic artifacts
-keep the HTML shape in both versions.
+result variants land in a **new contract version** (`author-result/v3`)
+that retains **all three live variants — `markdown`, `html`, and the new
+structured shapes** (markdown results are shipped behavior in
+`project-explainer`, `program-recap`, the project-recap deep-dive expansion,
+and the deterministic-markdown fallback); existing `author-result/v2`
+markdown and HTML payloads continue to validate unchanged (retained-run and
+callback compatibility proven by test), and v3 markdown/HTML results
+validate as new-run output. Artistic artifacts keep the HTML shape in both
+versions.
 
 **Step 2: Implement (GREEN)**
 
@@ -1244,7 +1307,8 @@ variant in its final form at p02-t01 (this task activates the runtime
 behavior without touching the schema file). Here, the runtime supports
 recipes whose artifacts request structured content (`authoring: structured`
 with the matching content-contract reference); the core renderers render
-them; artistic authoring remains available where a recipe declares it.
+them; markdown and artistic HTML authoring remain available where a recipe
+declares them.
 Recipe validation (`recipes.mjs` validation rules, not the shipped file
 list) accepts the structured authoring type. Coverage runs through
 **test-local recipe fixtures**: an integration case exercises a
@@ -1583,7 +1647,12 @@ Assertions in a single executable path:
 - project run object keys land under
   `<repository-root>/projects/<project-slug>/.../index.html`; repository run
   keys land under the unmodified repository root;
-- every published key ends in explicit `index.html`;
+- every published **HTML/manifest artifact** key ends in explicit
+  `index.html`; the intentional initiative catalog is asserted separately at
+  its canonical `site/initiatives/<slug>/catalog.json` key, and the
+  transient publish sentinel's lifecycle (created and removed) is accounted
+  for independently — neither may be swept into the `index.html` assertion
+  nor left unasserted;
 - protected and public `publicAccess` modes propagate to the verification
   behavior (anonymous fetch skipped for protected; checksum verification in
   both);
@@ -1617,8 +1686,8 @@ git commit -m "test(p06-t06): prove project-prefix publication across the adapte
 
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/SKILL.md` (version bump)
-- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (version bump)
+- Modify: `.agents/skills/explainer-kit/SKILL.md` (verify the coordinated core minor allocated in p03-t04 is the final PR-scoped version — no second bump unless later edits require it)
+- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (version bump; verify `MINIMUM_CORE_VERSION` and the documented floor still match the shipped core minor)
 - Modify: `.agents/skills/oat-project-implement/SKILL.md` (version bump — its completion-and-closeout reference changes in p04-t04)
 - Modify: `.agents/skills/oat-project-complete/SKILL.md` (version bump — its completion gate changes in p04-t04)
 - Modify: `.agents/skills/oat-wave-program/SKILL.md` (version bump — guidance migrated in p06-t05)
@@ -1632,7 +1701,11 @@ git commit -m "test(p06-t06): prove project-prefix publication across the adapte
 One frontmatter `version:` bump per changed canonical skill (PR-scoped) —
 every canonical skill the PR touches, including `oat-project-implement`,
 `oat-project-complete`, `oat-wave-program`, `oat-wave-execute`, and
-`oat-project-summary`; run `oat sync --scope all`; update any literal
+`oat-project-summary`. The `explainer-kit` core minor was already allocated
+in p03-t04 together with the adapter compatibility floor; this task states
+and verifies the **coordinated pair** (core `version:` ≥ adapter
+`MINIMUM_CORE_VERSION`, same minor, documented floor matching) rather than
+leaving the floor unchanged. Run `oat sync --scope all`; update any literal
 version assertions.
 
 **Step 2: Verify**

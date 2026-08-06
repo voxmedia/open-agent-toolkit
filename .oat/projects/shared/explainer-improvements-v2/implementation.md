@@ -179,6 +179,26 @@ escalated to the operator.
   p03-t03, p04-t03, p05-t01, p05-t02, p06-t01, p06-t02 — each adding its new
   schema to the explicit map at its own commit).
 
+- **Attempt 14** (`artifact-plan-review-2026-08-06T042235Z.md`): attempt-13
+  findings confirmed resolved; 3 Important, 2 Medium new — repository
+  invocation had no executable source-binding path (fixed: p01-t03 defines
+  the repository input contract — a required, validated supplied fact base
+  bound with reviewed-repository provenance, no implicit active-project
+  fallback, fail-closed without one, with success/missing-source/
+  ignores-active-project fixtures), the immutable `author-request/v3`
+  discriminator dropped the live `markdown` authoring mode (fixed: v3
+  request and `author-result/v3` retain `markdown | html | structured`,
+  with executable new-run coverage for `project-explainer`, `program-recap`,
+  the project-recap deep-dive expansion, and `deterministic-markdown`), and
+  the adapter compatibility floor never advanced with its new core
+  dependencies (fixed: p03-t04 allocates a new core minor, raises
+  `MINIMUM_CORE_VERSION` and the documented floor in the same commit, and
+  adds stale/current-core `check-core.test.mjs` fixtures; p07-t01 verifies
+  the coordinated pair). Medium: p03-t01 now rejects protected execution
+  fail-closed until p03-t02 activates it, and p06-t06's `index.html`
+  assertion is scoped to HTML/manifest artifacts with the catalog JSON and
+  transient sentinel asserted separately.
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 
