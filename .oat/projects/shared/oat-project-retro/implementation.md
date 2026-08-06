@@ -18,7 +18,7 @@ The `oat-project-quick-start` exit gate (`oat gate review`, artifact/plan,
 threshold important, maxAttempts 2) blocked twice; per `onFailure: block` the
 accumulated feedback is recorded here and escalated to the human.
 
-**Attempt 1** — `reviews/artifact-plan-review-2026-08-06T002316Z.md`
+**Attempt 1** — `reviews/archived/artifact-plan-review-2026-08-06T002316Z.md`
 (3 Important, 1 Medium; all fixed and committed in `37d94a3fb`):
 
 1. Retro accepted in `preApproval` violated the discovery Q3 evidence
@@ -31,7 +31,7 @@ accumulated feedback is recorded here and escalated to the human.
 4. Apply-mode dogfood step lacked a consent boundary → explicit per-item
    interactive approval / pre-approved reversible non-interactive target.
 
-**Attempt 2** — `reviews/artifact-plan-review-2026-08-06T004058Z.md`
+**Attempt 2** — `reviews/archived/artifact-plan-review-2026-08-06T004058Z.md`
 (2 Important; both fixed and committed in `9dc7ce5ee` under human direction):
 
 1. Repo-lane filing candidates lacked an item contract → added
@@ -41,7 +41,7 @@ accumulated feedback is recorded here and escalated to the human.
    reference entry → added as a required edit.
 
 **Attempt 3 (human-authorized re-run)** —
-`reviews/artifact-plan-review-2026-08-06T005256Z.md`
+`reviews/archived/artifact-plan-review-2026-08-06T005256Z.md`
 (3 Important, 1 Medium; all fixed and committed in `8bf8cc3d0`):
 
 1. `workflow.retro.*` absent from the `oat config` command surface →
@@ -55,7 +55,7 @@ accumulated feedback is recorded here and escalated to the human.
    aligned with postApproval-only.
 
 **Attempt 4 (human-authorized re-run)** —
-`reviews/artifact-plan-review-2026-08-06T012151Z.md`: **PASSED** (0 Critical,
+`reviews/archived/artifact-plan-review-2026-08-06T012151Z.md`: **PASSED** (0 Critical,
 0 Important, 1 Medium). The Medium (rendered retros must retire scaffold
 template metadata) was applied to p02-t02 and the dogfood assertions. Gate
 resolution complete; plan handed to implementation.
