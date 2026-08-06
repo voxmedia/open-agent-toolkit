@@ -12,6 +12,34 @@ oat_generated: false
 **Started:** 2026-08-05
 **Last Updated:** 2026-08-05
 
+## Gate Escalation Record (planning gate, attempts exhausted)
+
+The `oat-project-quick-start` exit gate (`oat gate review`, artifact/plan,
+threshold important, maxAttempts 2) blocked twice; per `onFailure: block` the
+accumulated feedback is recorded here and escalated to the human.
+
+**Attempt 1** — `reviews/artifact-plan-review-2026-08-06T002316Z.md`
+(3 Important, 1 Medium; all fixed and committed in `37d94a3fb`):
+
+1. Retro accepted in `preApproval` violated the discovery Q3 evidence
+   boundary → plan/design now specify postApproval-only with normalization
+   rejection + tests.
+2. Docs nav map (`workflows/projects/index.md`) missing from p04-t02 file
+   set → added.
+3. `pnpm release:validate` ran before dogfood fixes → p05 tasks swapped
+   (dogfood first, bump+validate last).
+4. Apply-mode dogfood step lacked a consent boundary → explicit per-item
+   interactive approval / pre-approved reversible non-interactive target.
+
+**Attempt 2** — `reviews/artifact-plan-review-2026-08-06T004058Z.md`
+(2 Important; disposition pending human direction):
+
+1. Repo-lane filing candidates lack an item contract (no
+   apply-vs-file discriminator on RP items; `code-follow-up` routing
+   ambiguous; `oat_retro_filing` rollup underivable).
+2. p04-t01 omits the existing `workflow.postImplementSequence` config
+   reference entry, which would ship stale vocabulary.
+
 > This document is used to resume interrupted implementation sessions.
 >
 > Conventions:
