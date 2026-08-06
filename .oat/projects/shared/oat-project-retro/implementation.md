@@ -32,13 +32,27 @@ accumulated feedback is recorded here and escalated to the human.
    interactive approval / pre-approved reversible non-interactive target.
 
 **Attempt 2** — `reviews/artifact-plan-review-2026-08-06T004058Z.md`
-(2 Important; disposition pending human direction):
+(2 Important; both fixed and committed in `9dc7ce5ee` under human direction):
 
-1. Repo-lane filing candidates lack an item contract (no
-   apply-vs-file discriminator on RP items; `code-follow-up` routing
-   ambiguous; `oat_retro_filing` rollup underivable).
-2. p04-t01 omits the existing `workflow.postImplementSequence` config
-   reference entry, which would ship stale vocabulary.
+1. Repo-lane filing candidates lacked an item contract → added
+   `Disposition: apply | file` to RP items with per-disposition status
+   vocabularies/fields and explicit rollup derivation.
+2. p04-t01 omitted the existing `workflow.postImplementSequence` config
+   reference entry → added as a required edit.
+
+**Attempt 3 (human-authorized re-run)** —
+`reviews/artifact-plan-review-2026-08-06T005256Z.md`
+(3 Important, 1 Medium; all fixed and committed in `8bf8cc3d0`):
+
+1. `workflow.retro.*` absent from the `oat config` command surface →
+   p01-t02 now covers `commands/config/index.ts` registration + tests.
+2. Final post-bump tree never ran the four CI gates → p05-t02 verification
+   is now the full gate order + `release:validate`; bundled version asset
+   named as the sixth release file.
+3. Dogfood task double-committed child-workflow outputs → Step 4 is now a
+   conditional residual-only commit with workflow-commit SHAs recorded.
+4. Design test-strategy sentence still said retro accepted in both arrays →
+   aligned with postApproval-only.
 
 > This document is used to resume interrupted implementation sessions.
 >
