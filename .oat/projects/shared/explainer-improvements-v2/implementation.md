@@ -165,6 +165,20 @@ escalated to the operator.
   `records.mjs`). Consequence: the p01/p02 parallel group was dropped
   (records-file overlap), so the plan is now fully sequential.
 
+- **Attempt 13** (`artifact-plan-review-2026-08-06T040012Z.md`): attempt-12
+  findings confirmed resolved; 2 Important, 0 Medium new —
+  `author-request/v3` was mutated by later tasks after runs start emitting
+  it (fixed: p02-t01 now creates the v3 schema in its complete final form —
+  canonical link table, authoring-variant discriminator, theme v1/v2 by
+  discriminator, embedded set-plan v1/v2 by discriminator — and the file is
+  immutable thereafter; p05-t02, p05-t06, and p06-t01 activate runtime
+  capability and registry acceptance without touching the schema, with
+  retained-request replay tests), and most new schemas bypassed the explicit
+  schema-conformance inventory (fixed: `tests/schemas.test.mjs` added to the
+  file list and verify command of every schema-producing task — p02-t01,
+  p03-t03, p04-t03, p05-t01, p05-t02, p06-t01, p06-t02 — each adding its new
+  schema to the explicit map at its own commit).
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 

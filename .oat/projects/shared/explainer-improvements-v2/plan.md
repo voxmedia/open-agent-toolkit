@@ -312,10 +312,11 @@ Write boundary: `.agents/skills/explainer-kit/**` only.
 
 - Modify: `.agents/skills/explainer-kit/scripts/run.mjs` (the live author-request construction seam — requests are built and pinned to v2 here)
 - Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
-- Create: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json`
+- Create: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json` (complete final form — never modified by a later task)
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add v3 to the explicit schema-conformance inventory)
 - Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 
 **Step 1: Write test (RED)**
@@ -329,6 +330,19 @@ table fail validation, while existing `author-request/v2` payloads continue to
 validate unchanged (retained-run replay and external callback compatibility
 proven by test). The contract registry and docs list both versions.
 
+**The v3 schema is created in its complete final form and is immutable
+thereafter** — no later task may modify the file, so retained v3 requests
+never reinterpret against a changed schema. Beyond the required link table,
+the final shape declares up front: an authoring variant discriminator
+(`html` | `structured`, with a content-contract reference validated against
+its own registered contract at runtime), a theme reference accepting version
+1 or 2 by discriminator (theme v2 documents validate against their own
+schema when p05-t02 lands), and an embedded set plan accepting version 1 or
+2 by discriminator (set-plan v2 documents validate against their own schema
+when p06-t01 lands). Later tasks activate runtime capability for these
+fields without touching the schema; `schemas.test.mjs` gains v3 in its
+explicit identity/closed-shape inventory at this commit.
+
 **The emitting runtime seam is in scope:** the per-request link table is
 constructed at the slug- and artifact-aware authoring seam in `run.mjs`
 (set-plan code alone knows neither the run slug nor the authoring artifact's
@@ -341,9 +355,9 @@ deliberate v2 replay case.
 **Step 2: Implement (GREEN)**
 
 Link-table derivation beside set-plan machinery; per-request table
-construction and v3 emission at the `run.mjs` authoring seam; new v3 schema
-alongside the retained v2; contract-registry and documentation updates;
-version-dispatched validation.
+construction and v3 emission at the `run.mjs` authoring seam; the final v3
+schema alongside the retained v2; contract-registry, inventory, and
+documentation updates; version-dispatched validation.
 
 **Step 3: Verify**
 
@@ -585,6 +599,7 @@ git commit -m "feat(p03-t02): verify protected destinations via authenticated ob
 - Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add publish-receipt v2 to the explicit schema-conformance inventory)
 
 **Step 1: Write test (RED)**
 
@@ -627,7 +642,7 @@ HTML transformation code path exists (assert by construction and test).
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs`
+Run: `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs`
 Expected: green (every changed test file executes)
 
 **Step 4: Commit**
@@ -909,6 +924,7 @@ contract exists when the guard consumes it.
 - Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add failure-record to the explicit schema-conformance inventory)
 - Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
@@ -930,7 +946,7 @@ finalization places the record durably and applies the diagnostics policy.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+Run: `node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
 Expected: green (every changed test file executes)
 
 **Step 4: Commit**
@@ -1066,12 +1082,16 @@ git commit -m "feat(p05-t01): add structured content contracts for hub, deck, di
 **Files:**
 
 - Create: `.agents/skills/explainer-kit/schemas/theme.v2.schema.json`
-- Modify: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json` (theme reference accepts v1 and v2)
 - Modify: `.agents/skills/explainer-kit/scripts/lib/theme.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/styles/` (all four curated styles)
 - Modify: `.agents/skills/explainer-kit/tests/theme.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add theme v2 to the explicit schema-conformance inventory)
+
+The author-request v3 schema already accepts theme v1/v2 by discriminator
+(final form fixed in p02-t01); this task activates v2 resolution without
+touching that schema.
 
 **Step 1: Write test (RED)**
 
@@ -1093,8 +1113,8 @@ curated style updates, docs.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/theme.test.mjs .agents/skills/explainer-kit/tests/render.test.mjs`
-Expected: green
+Run: `node --test .agents/skills/explainer-kit/tests/theme.test.mjs .agents/skills/explainer-kit/tests/render.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs`
+Expected: green (every changed test file executes)
 
 **Step 4: Commit**
 
@@ -1210,7 +1230,6 @@ git commit -m "feat(p05-t05): render diagrams from semantic graph content"
 
 - Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
-- Modify: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs` (structured-authoring recipe validation support)
@@ -1218,16 +1237,17 @@ git commit -m "feat(p05-t05): render diagrams from semantic graph content"
 **Step 1: Write test (RED)**
 
 This task delivers **structured-authoring capability without changing any
-shipped recipe**: shipped-recipe activation happens atomically in p06-t01,
-where `project-recap@2` is created in its final hub-floor form. Here, the
-runtime supports recipes whose artifacts request structured content
-(`authoring: structured` with the matching content-contract reference,
-declared in the `author-request/v3` contract created in p02-t01 — the
-structured-authoring fields land in v3, never retrofitted onto v2); the core
-renderers render them; artistic authoring remains available where a recipe
-declares it. Recipe validation (`recipes.mjs` validation rules, not the
-shipped file list) accepts the structured authoring type. Coverage runs
-through **test-local recipe fixtures**: an integration case exercises a
+shipped recipe or schema**: shipped-recipe activation happens atomically in
+p06-t01, where `project-recap@2` is created in its final hub-floor form, and
+the `author-request/v3` schema already declared the structured-authoring
+variant in its final form at p02-t01 (this task activates the runtime
+behavior without touching the schema file). Here, the runtime supports
+recipes whose artifacts request structured content (`authoring: structured`
+with the matching content-contract reference); the core renderers render
+them; artistic authoring remains available where a recipe declares it.
+Recipe validation (`recipes.mjs` validation rules, not the shipped file
+list) accepts the structured authoring type. Coverage runs through
+**test-local recipe fixtures**: an integration case exercises a
 structured-authoring recipe end to end (structured request emission, render
 dispatch, link validation), and a deliberate `author-result/v2` HTML replay
 case still validates. Shipped `project-recap@1` behavior is untouched and
@@ -1235,8 +1255,8 @@ proven unchanged.
 
 **Step 2: Implement (GREEN)**
 
-v3 author-request structured-content fields; author-request construction;
-render dispatch; recipe-validation acceptance of `authoring: structured`.
+Author-request construction for the structured variant; render dispatch;
+recipe-validation acceptance of `authoring: structured`.
 
 **Step 3: Verify**
 
@@ -1267,12 +1287,12 @@ deterministic.
 - Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-config.mjs` (adapter currently pins recipe version `1` for every new run; switch new project-recap requests to version `2`)
 - Modify: `.agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
 - Create: `.agents/skills/explainer-kit/schemas/set-plan.v2.schema.json`
-- Modify: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/briefs/project-recap.md`
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add set-plan v2 to the explicit schema-conformance inventory)
 - Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs` (currently asserts the three-artifact floor)
 - Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs` (unattended adapter fixture still returns `set-plan/v1`)
 - Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` (completion fixture still returns `set-plan/v1`)
@@ -1295,11 +1315,11 @@ redundant expansion is rejected at planning time; existing expansion limits
 still apply. Justification enforcement lands in a **new set-plan version**
 (`set-plan/v2`); retained `set-plan/v1` documents continue to validate for
 replay and archive consumers (proven by test), and new runs emit v2.
-Contract-dependency propagation is in scope: the author-request contract
-embeds the set plan and currently pins `set-plan/v1`, so update
-`author-request.v3.schema.json` (and the registry) to accept `set-plan/v2`,
-with end-to-end tests covering both new-run emission (v3 + set-plan v2) and
-retained replay (v2 + set-plan v1). **The live adapter consumers migrate
+Contract-dependency propagation needs no schema change: the immutable
+`author-request/v3` shape (fixed in p02-t01) already accepts set-plan v1 or
+v2 by discriminator, so this task registers the set-plan v2 schema and
+activates emission, with end-to-end tests covering both new-run emission
+(v3 + set-plan v2) and retained replay (v2 + set-plan v1). **The live adapter consumers migrate
 atomically with the producer:** the unattended adapter fixture and the
 completion integration fixture (both of which currently return
 `set-plan/v1`) gain explicit new-run `set-plan/v2` cases alongside retained
@@ -1313,8 +1333,8 @@ and a new registry entry carries the new floor.
 **Step 2: Implement (GREEN)**
 
 Recipe v2 in final form with registry entry and adapter version switch;
-set-plan v2 schema alongside retained v1; author-request v3 set-plan
-reference update; planner enforcement; registry and docs updates.
+set-plan v2 schema alongside retained v1; planner enforcement; registry,
+inventory, and docs updates.
 
 **Step 3: Verify**
 
@@ -1335,6 +1355,7 @@ git commit -m "feat(p06-t01): make the hub the recap floor with justified expans
 
 - Create: `.agents/skills/explainer-kit/schemas/visual-review-request.v2.schema.json`
 - Create: `.agents/skills/explainer-kit/schemas/visual-review-result.v2.schema.json`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs` (add both visual-review v2 schemas to the explicit schema-conformance inventory)
 - Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs` (registry version dispatch — the unversioned visual-review keys currently map only to v1)
 - Modify: `.agents/skills/explainer-kit/references/visual-review.md`
