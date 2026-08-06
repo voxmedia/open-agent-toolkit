@@ -10,6 +10,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { normalizeWorkflowPostImplementSequence } from '@config/oat-config';
 import { describe, expect, it } from 'vitest';
 
 function readImplementSkill(): string {
@@ -135,6 +136,24 @@ function requiredSlice(content: string, start: string, end: string): string {
 }
 
 describe('post-implementation sequence contracts', () => {
+  it('accepts retro only after approval in structured sequences', () => {
+    expect(
+      normalizeWorkflowPostImplementSequence({
+        preApproval: ['summary', 'pr'],
+        postApproval: ['retro'],
+      }),
+    ).toEqual({
+      preApproval: ['summary', 'pr'],
+      postApproval: ['retro'],
+    });
+    expect(
+      normalizeWorkflowPostImplementSequence({
+        preApproval: ['retro'],
+        postApproval: [],
+      }),
+    ).toBeUndefined();
+  });
+
   it('keeps non-final checkpoints and root-owned phase execution intact', () => {
     const skill = readImplementSkill();
     const normalized = normalizeWhitespace(skill);

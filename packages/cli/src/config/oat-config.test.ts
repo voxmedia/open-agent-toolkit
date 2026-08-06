@@ -779,6 +779,7 @@ describe('oat-config', () => {
       { preApproval: ['summary'], postApproval: [] },
       { preApproval: [], postApproval: ['document'] },
       { preApproval: ['summary'], postApproval: ['document', 'pr'] },
+      { preApproval: ['summary', 'pr'], postApproval: ['retro'] },
     ])(
       'accepts structured post-implementation sequence %#',
       async (sequence) => {
@@ -809,6 +810,8 @@ describe('oat-config', () => {
       { preApproval: [], postApproval: ['summary'], extra: true },
       { preApproval: ['summary', 'summary'], postApproval: [] },
       { preApproval: ['summary'], postApproval: ['summary'] },
+      { preApproval: ['retro'], postApproval: [] },
+      { preApproval: ['retro'], postApproval: ['retro'] },
     ])(
       'rejects malformed post-implementation sequence %# atomically',
       async (sequence) => {

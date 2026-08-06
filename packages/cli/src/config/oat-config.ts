@@ -83,7 +83,7 @@ export interface OatExplainersConfig {
 
 export type WorkflowHillCheckpointDefault = 'every' | 'final';
 export type WorkflowProjectLog = true | false | 'auto';
-export type WorkflowPostImplementStep = 'summary' | 'document' | 'pr';
+export type WorkflowPostImplementStep = 'summary' | 'document' | 'pr' | 'retro';
 export type WorkflowPostImplementLegacySequence =
   | 'wait'
   | 'summary'
@@ -222,6 +222,7 @@ const VALID_POST_IMPLEMENT_STEPS: readonly WorkflowPostImplementStep[] = [
   'summary',
   'document',
   'pr',
+  'retro',
 ];
 const VALID_EXPLAINER_STYLES: readonly OatExplainerStyle[] = [
   'clean-neutral',
@@ -349,6 +350,7 @@ export function normalizeWorkflowPostImplementSequence(
 
   const steps = [...value.preApproval, ...value.postApproval];
   if (
+    value.preApproval.includes('retro') ||
     !steps.every(
       (step): step is WorkflowPostImplementStep =>
         typeof step === 'string' &&
