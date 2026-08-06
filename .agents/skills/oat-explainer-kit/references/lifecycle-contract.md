@@ -110,6 +110,14 @@ publication summary without destination reinterpretation. The immutable
 for replay; v2 does not mutate either v1 contract in place. Configuration never
 bypasses the human publication gate.
 
+The adapter forwards the immutable `explainer-kit.publish-summary/v2` lifecycle
+handoff without destination reinterpretation. Every v2 artifact entry retains
+its source identity, rendered path, S3 URI, canonical public URL, content hash,
+object verification, and public verification evidence. A
+`publish-receipt/v1` replay instead yields the reduced immutable
+`explainer-kit.publish-summary/v1` shape, whose artifact entries retain only
+the relative path and public URL. Neither summary contract is mutated in place.
+
 ## Browser and visual-review execution
 
 Every unattended `project-recap` must provide exactly one browser-evidence

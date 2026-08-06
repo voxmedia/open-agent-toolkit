@@ -1282,6 +1282,19 @@ test('documents adapter publication v2 emission with immutable v1 replay', async
   assert.match(guidance, /publish-request\/v1.*replay/is);
   assert.match(guidance, /publish-receipt\/v1.*replay/is);
   assert.doesNotMatch(guidance, /does not emit that field/i);
+  assert.match(guidance, /publish-summary\/v2/i);
+  for (const evidence of [
+    /source identity/i,
+    /rendered path/i,
+    /S3 URI/i,
+    /canonical public URL/i,
+    /content hash/i,
+    /object verification/i,
+    /public verification/i,
+  ]) {
+    assert.match(guidance, evidence);
+  }
+  assert.match(guidance, /publish-receipt\/v1.*reduced.*publish-summary\/v1/is);
 });
 
 test('passes only derived credential-free destination roots into core publish requests', async () => {
