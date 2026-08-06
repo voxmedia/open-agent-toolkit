@@ -272,7 +272,7 @@ roots are validated identically.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/oat-explainer-kit/tests/`
+Run: `node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/oat-explainer-kit/tests/*.test.mjs`
 Expected: green (every changed test file executes)
 
 **Step 4: Commit**
@@ -311,13 +311,50 @@ Thread p01-t01 derivation through publish-request construction; document in
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/ && pnpm lint && pnpm format`
+Run: `node --test .agents/skills/oat-explainer-kit/tests/*.test.mjs && pnpm lint && pnpm format`
 Expected: adapter suite green; lint and format clean (only these gates cover `.agents/skills/**`)
 
 **Step 4: Commit**
 
 ```bash
 git commit -m "feat(p01-t05): thread derived destination into core publish requests"
+```
+
+---
+
+### Task p01-t06: (review) Reject credentials in destination roots
+
+**Files:**
+
+- Modify: `.agents/skills/oat-explainer-kit/scripts/derive-destination.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+
+**Step 1: Reproduce the defect (RED)**
+
+Add negative tests with synthetic credential-bearing S3 and HTTPS roots.
+Assert rejection before the adapter invokes the core or persists a publish
+request. Cover userinfo, malformed authorities, queries, and fragments.
+
+**Step 2: Implement (GREEN)**
+
+Parse and validate both configured roots before deriving invocation-specific
+paths. Reject credential-bearing or malformed authority forms while preserving
+the valid project and repository destination behavior delivered by p01-t01
+through p01-t05.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs && pnpm lint && pnpm format`
+
+Expected: negative credential fixtures fail closed before core invocation; all
+focused adapter tests, lint, and format pass.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p01-t06): reject credential-bearing publish roots"
 ```
 
 ---
@@ -1808,7 +1845,7 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 
 | Scope  | Type     | Status          | Date       | Artifact                                                                                                                                               | Reviewed Head                            | Invocation | Gate Target              |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | ---------- | ------------------------ |
-| p01    | code     | received        | 2026-08-06 | reviews/p01-review-2026-08-06T172134Z.md                                                                                                               | a42a38521b33fa1127ebdd1b462a16ed632728cb | manual     | -                        |
+| p01    | code     | fixes_added     | 2026-08-06 | reviews/archived/p01-review-2026-08-06T172134Z.md                                                                                                      | a42a38521b33fa1127ebdd1b462a16ed632728cb | manual     | -                        |
 | p02    | code     | pending         | -          | -                                                                                                                                                      | -                                        | -          | -                        |
 | p03    | code     | pending         | -          | -                                                                                                                                                      | -                                        | -          | -                        |
 | p04    | code     | pending         | -          | -                                                                                                                                                      | -                                        | -          | -                        |
@@ -1845,7 +1882,7 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 
 **Summary:**
 
-- Phase 1: 5 tasks — adapter path and destination derivation
+- Phase 1: 6 tasks — adapter path and destination derivation plus review fix
 - Phase 2: 4 tasks — core link integrity
 - Phase 3: 6 tasks — publication integrity
 - Phase 4: 4 tasks — lifecycle ordering and recovery
@@ -1853,7 +1890,7 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 - Phase 6: 6 tasks — recipe floor, rubric v2, fixtures, consumer migration, publication acceptance
 - Phase 7: 2 tasks — release closure
 
-**Total: 33 tasks**
+**Total: 34 tasks**
 
 ---
 

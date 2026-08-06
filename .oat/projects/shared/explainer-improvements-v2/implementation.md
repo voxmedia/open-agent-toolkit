@@ -3,14 +3,14 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-06
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t06
 oat_generated: false
 ---
 
 # Implementation: explainer-improvements-v2
 
 **Started:** 2026-08-05
-**Last Updated:** 2026-08-05
+**Last Updated:** 2026-08-06
 
 ## Quick-Start Exit Gate Feedback (escalation record)
 
@@ -232,7 +232,7 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
-| p01   | in_progress | 5     | 0/5       |
+| p01   | in_progress | 6     | 5/6       |
 | p02   | pending     | 4     | 0/4       |
 | p03   | pending     | 6     | 0/6       |
 | p04   | pending     | 4     | 0/4       |
@@ -240,7 +240,7 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | p06   | pending     | 6     | 0/6       |
 | p07   | pending     | 2     | 0/2       |
 
-**Total:** 0/33 tasks completed
+**Total:** 5/34 tasks completed
 
 ---
 
@@ -249,13 +249,14 @@ Operator disposition recorded in the conversation and reflected in the plan's
 **Status:** in_progress
 **Started:** 2026-08-06
 
-| Task    | Status      | Commit |
-| ------- | ----------- | ------ |
-| p01-t01 | in_progress | -      |
-| p01-t02 | pending     | -      |
-| p01-t03 | pending     | -      |
-| p01-t04 | pending     | -      |
-| p01-t05 | pending     | -      |
+| Task    | Status    | Commit  |
+| ------- | --------- | ------- |
+| p01-t01 | completed | 84a5b4a |
+| p01-t02 | completed | 3a634e0 |
+| p01-t03 | completed | ab12256 |
+| p01-t04 | completed | aa1ec2d |
+| p01-t05 | completed | a42a385 |
+| p01-t06 | pending   | -       |
 
 ## Phase 2: Core link integrity
 
@@ -349,38 +350,38 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-### 2026-08-05
+### 2026-08-06
 
-**Session Start:** {time}
+- Completed p01-t01 through p01-t05 in five task commits.
+- Verified the adapter/core focused suites, CLI tests, lint, and format against
+  committed HEAD.
+- Independent phase review found one executable defect plus stale lifecycle
+  bookkeeping and two non-reproducible plan commands.
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+### Review Received: p01
 
-**What changed (high level):**
+**Date:** 2026-08-06
+**Review artifact:** `reviews/archived/p01-review-2026-08-06T172134Z.md`
 
-- {short bullets suitable for PR/docs}
+**Findings:**
 
-**Decisions:**
+- Critical: 0
+- Important: 2
+- Medium: 1
+- Minor: 0
 
-- {Decision made and rationale}
+**Disposition:**
 
-**Follow-ups / TODO:**
+- I1 → p01-t06: reject credential-bearing or malformed publish roots before
+  core invocation or request persistence.
+- I2 → resolved in review-receive bookkeeping by reconciling the five completed
+  task commits, verification results, and resume pointer.
+- M1 → resolved in `plan.md` by replacing invalid test-directory operands with
+  the verified `*.test.mjs` glob.
 
-- {anything discovered during implementation that should be captured for later}
+**New tasks added:** p01-t06
 
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-08-05
-
-**Session Start:** {time}
-
-{Continue log...}
+**Next:** Execute p01-t06, then re-review only the fix task before closing p01.
 
 ---
 
@@ -396,10 +397,10 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                            | Passed | Failed | Coverage                         |
+| ----- | ---------------------------------------------------- | ------ | ------ | -------------------------------- |
+| 1     | adapter/core focused suites; CLI tests; lint; format | passed | 0      | p01-t01–p01-t05; p01-t06 pending |
+| 2     | -                                                    | -      | -      | -                                |
 
 ## Final Summary (for PR/docs)
 

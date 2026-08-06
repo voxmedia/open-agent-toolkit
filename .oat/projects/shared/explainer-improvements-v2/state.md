@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p01-t06
+oat_last_commit: a42a38521b33fa1127ebdd1b462a16ed632728cb
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -71,20 +71,21 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T04:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T17:24:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-improvements-v2
 
-**Status:** Design Complete
+**Status:** Implementation In Progress
 **Started:** 2026-08-05
-**Last Updated:** 2026-08-05
+**Last Updated:** 2026-08-06
 
 ## Current Phase
 
-Design complete — lightweight design approved section-by-section; plan
-generation is next.
+Phase p01 implementation completed tasks p01-t01 through p01-t05. Review
+receive queued p01-t06 to close credential-hygiene validation before the phase
+is re-reviewed.
 
 ## Artifacts
 
@@ -92,15 +93,16 @@ generation is next.
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (complete, lightweight)
-- **Plan:** `plan.md` (scaffolded template — not started)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (accepted; p01 review fix queued)
+- **Implementation:** `implementation.md` (in progress)
 
 ## Progress
 
 - ✓ Discovery captured; Cyclone case-study handoff ingested
 - ✓ Lightweight design drafted collaboratively and approved
 - ✓ Protected-destination policy and flag-not-block lifecycle stance approved
-- ⧗ Plan generation next
+- ✓ p01-t01 through p01-t05 implemented and independently reviewed
+- ⧗ p01-t06 credential-hygiene review fix next
 
 ## Blockers
 
@@ -108,5 +110,5 @@ None
 
 ## Next Milestone
 
-Generate and review the execution plan, then hand off to
-`oat-project-implement`
+Implement and re-review p01-t06, then apply the operator-approved reduced plan
+before p02.
