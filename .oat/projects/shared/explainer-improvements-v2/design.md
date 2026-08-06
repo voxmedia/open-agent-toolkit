@@ -64,8 +64,9 @@ result automatically enters the bounded correction path (the existing
 one-correction-then-final-review machinery): rebuild, re-review, and if still
 not clean, keep the artifact, durably record residual findings, flag them for
 the operator, and let the lifecycle proceed. Publication alone remains
-quality-gated: a flagged run is durable and inspectable but is not published
-until reviews pass or the operator explicitly overrides. The design also
+quality-gated: a flagged run is durable and inspectable but is categorically
+not publishable — publication requires a corrected run that passes browser
+and visual review, per the normative handoff. The design also
 defines a durable failed-run-evidence policy (compact failure record
 retained; bulky diagnostics intentionally archived or deleted) and adds
 regression coverage for the `request.sourceIds is not iterable`
@@ -324,8 +325,8 @@ content.
 - `built-needs-review` automatically enters the existing bounded
   one-correction-then-final-review machinery; residual findings after the cap
   are durably recorded and flagged, and the lifecycle proceeds.
-- Publication stays quality-gated: flagged runs publish only after passing
-  review or explicit operator override.
+- Publication stays quality-gated: flagged runs never publish; only a
+  corrected run that passes browser and visual review may publish.
 - Failed/superseded runs leave a compact durable failure record (run ID,
   recipe, outcome, error class, timestamps, pointer to superseding run);
   bulky diagnostics are intentionally archived or deleted per policy, never
@@ -445,6 +446,6 @@ required test matrix maps as:
 - **Lifecycle (integration, adapter):** gate-ordering invariant (approval
   waits for terminal outcome); auto-entry into bounded correction from
   `built-needs-review`; failure-record creation on failed runs; flagged runs
-  blocked from publication without override.
+  categorically blocked from publication at every publish entry point.
 - **Release gates:** five-package lockstep validation (`pnpm release:validate`)
   and canonical-skill version bumps with provider sync, per repo policy.

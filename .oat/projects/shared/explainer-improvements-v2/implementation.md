@@ -139,6 +139,20 @@ escalated to the operator.
   boundary was stale after the p01-t04 core-guard fix (fixed: exact-file
   disjointness documented with a sequential fallback).
 
+- **Attempt 11** (`artifact-plan-review-2026-08-06T033345Z.md`): attempt-10
+  findings confirmed resolved; 3 Important, 0 Medium new —
+  `project-recap@2` was mutated between p05-t06 and p06-t01 (fixed:
+  p05-t06 reduced to runtime structured-authoring capability via test-local
+  recipes; `project-recap@2` is created, registered, and adapter-activated
+  atomically in its final hub-floor form in p06-t01), the flagged-run
+  publish override contradicted the normative handoff criteria (fixed:
+  override removed entirely — flagged manifests are categorically rejected
+  at `publish.mjs` and the connector; design.md reconciled), and the CLI
+  archive verifier still rejected `built-needs-review` (fixed:
+  `archive-utils.ts` and archive/push tests added to p04-t02 so
+  flagged-durable packages verify and export while staying unpublishable;
+  `workflows/projects/artifacts.md` added to the docs delta).
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 

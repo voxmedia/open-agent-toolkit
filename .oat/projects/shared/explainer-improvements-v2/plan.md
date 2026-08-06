@@ -791,10 +791,10 @@ git commit -m "fix(p04-t01): validate request shape before content processing"
 - Modify: `.agents/skills/explainer-kit/scripts/lib/package-coverage.mjs` (currently classifies `built-needs-review` as a partial outcome and returns before requiring retained visual-review evidence)
 - Modify: `.agents/skills/explainer-kit/scripts/publish.mjs` (direct publisher entry point — today `--confirm-publish` becomes `approved: true` with no manifest-outcome check)
 - Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs` (connector validates request and manifest without checking the manifest outcome)
-- Create: `.agents/skills/explainer-kit/schemas/publish-override.v1.schema.json`
-- Modify: `.agents/skills/explainer-kit/schemas/publish-receipt.v2.schema.json` (created in p03-t03; receipt schemas are closed contracts, so the override reference must be declared in the schema)
-- Modify: `.agents/skills/explainer-kit/references/contracts.md` (receipt override-reference documentation)
+- Modify: `.agents/skills/explainer-kit/references/contracts.md` (flagged-manifest publication denial documentation)
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`verifySelectedProjectRecapForArchive` unconditionally rejects `built-needs-review`, so archive-on-complete would fail the flag-not-block lifecycle at the archive boundary)
+- Modify: focused archive/push tests beside `archive-utils.ts`
 - Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
@@ -817,8 +817,9 @@ durability seam and adapter tracked-run finalization (which currently reject
 flagged-durable tier, producing a tracked, inspectable run package with
 durable residual-finding evidence. Integration tests prove: the flagged
 package is tracked and inspectable; approval may proceed after the terminal
-outcome (flag-not-block); publication remains denied for flagged runs unless
-the review passes or an explicit operator override is recorded.
+outcome (flag-not-block); publication remains denied for flagged runs until
+a corrected run passes browser and visual review — durable does not mean
+publishable.
 
 **Flagged durability defines a complete immutable package, not merely a
 permitted outcome.** `package-coverage.mjs` today classifies
@@ -830,39 +831,42 @@ terminal visual-review evidence, and the durable residual-finding record —
 and require coverage validation to enumerate and hash-verify all of it.
 Tests prove missing or hash-mismatched flagged evidence rejects attestation.
 
+**The flagged-durable outcome is accepted by the archive boundary.** The
+standalone completion route passes the selected terminal recap to
+`oat project archive`, but `verifySelectedProjectRecapForArchive` today
+unconditionally rejects `built-needs-review`; with archive-on-complete
+enabled the flag-not-block lifecycle would fail at that boundary. Extend the
+archive verifier and its archive/push tests so a complete, hash-verified
+flagged-durable package can be verified, re-attested, and exported — while
+remaining unpublishable.
+
 **The publication denial is enforced at every publish entry point, not just
-promised.** The direct publisher (`publish.mjs`) and the `s3-static`
-connector today validate the request and manifest without checking the
-manifest outcome, so `--confirm-publish` alone could publish a flagged
-manifest. The publish seam rejects `built-needs-review` manifests unless a
-**versioned, durable operator-override record** (`publish-override/v1`:
-run ID, manifest hash, operator identity, reason, timestamp) validates
-against the contract registry and its manifest hash matches the finalized
-manifest exactly. The override is recorded in the publish receipt for audit;
-no credential material appears in the record. **The receipt contract carries
-the override explicitly:** receipt schemas are closed
-(`additionalProperties: false`), so `publish-receipt.v2.schema.json` (from
-p03-t03) declares a manifest-bound override reference that is required for
-flagged publications and absent for clean publications, with receipt
-validation tests for both shapes and updated contract documentation.
-Negative direct-publisher tests: flagged manifest without override is
-rejected; with a mismatched-hash override is rejected; with a valid override
-publishes and the emitted v2 receipt validates while carrying the override
-reference.
+promised — and there is no override.** The normative handoff requires that
+corrected runs cannot publish until browser and visual review pass, so a
+flagged manifest is categorically unpublishable. The direct publisher
+(`publish.mjs`) and the `s3-static` connector today validate the request and
+manifest without checking the manifest outcome, so `--confirm-publish` alone
+could publish a flagged manifest. Both seams reject `built-needs-review`
+manifests with an actionable error naming the correction path (rebuild →
+browser review → visual review → durability → publish). Negative
+direct-publisher tests: a flagged manifest is rejected even with
+`--confirm-publish`; a corrected `built-durable` manifest publishes
+normally. Human approval remains required for publication of clean runs; it
+never substitutes for a passing review.
 
 **Step 2: Implement (GREEN)**
 
 Wire auto-entry; define the flagged-durable semantics across the core
 durability, package-coverage, and adapter finalization seams; record
-residual findings in the run record; enforce the flagged-manifest check with
-override validation in `publish.mjs` and the connector seam; register
-`publish-override/v1` and the receipt v2 override reference; document the
-flag-not-block and publish-override contracts.
+residual findings in the run record; enforce categorical flagged-manifest
+rejection in `publish.mjs` and the connector seam; accept flagged-durable
+packages at the CLI archive verifier; document the flag-not-block and
+publication-denial contracts.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
-Expected: green (every changed test file executes)
+Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs && pnpm --filter @open-agent-toolkit/cli test -- archive`
+Expected: green (every changed test file executes, including the CLI archive suite)
 
 **Step 4: Commit**
 
@@ -1179,7 +1183,7 @@ git commit -m "feat(p05-t05): render diagrams from semantic graph content"
 
 ---
 
-### Task p05-t06: Switch standard recipe artifacts to structured authoring
+### Task p05-t06: Structured-authoring capability through the runtime
 
 **Files:**
 
@@ -1187,50 +1191,41 @@ git commit -m "feat(p05-t05): render diagrams from semantic graph content"
 - Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
 - Modify: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
-- Create: `.agents/skills/explainer-kit/recipes/project-recap.v2.json` (`project-recap@2`; the shipped `project-recap.json` / `project-recap@1` is preserved byte-for-byte)
-- Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs` (register the new file in `RECIPE_FILES`; the registry keys by exact `id@version`)
-- Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-config.mjs` (adapter currently pins recipe version `1` for every new run; switch new project-recap requests to version `2`)
-- Modify: `.agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
-- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs` (currently asserts every author request is HTML)
-- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` (lifecycle author fixture exercises the new structured default; retains a deliberate v2 HTML replay case)
+- Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs` (structured-authoring recipe validation support)
 
 **Step 1: Write test (RED)**
 
-The structured/hub-floor behavior lands in a **new recipe version,
-`project-recap@2`** — `project-recap@1` is never semantically changed, so
-retained-run replay that loads `project-recap@1` at runtime startup keeps its
-original HTML-authoring behavior. In `project-recap@2`, hub, deck, and
-diagram artifacts request structured content (`authoring: structured` with
-the matching content-contract reference, declared in the `author-request/v3`
-contract created in p02-t01 — the structured-authoring fields land in v3,
-never retrofitted onto v2); the core renderers render them; artistic
-authoring remains available only where the recipe declares it. The adapter
-switches new project-recap requests to version `2` at this transition.
-Executable coverage proves both directions through the real consumers:
-retained v1 replay (recipe registry serves `project-recap@1` unchanged;
-`author-result/v2` HTML replay validates) and new-version emission (adapter
-emits `project-recap@2`; runtime loads it; end-to-end structured run passes
-link validation, browser evidence, and visual review). Smoke and release
-consumers pick up the v2 recipe in p06-t05/p07 without dropping v1 from the
-registry.
+This task delivers **structured-authoring capability without changing any
+shipped recipe**: shipped-recipe activation happens atomically in p06-t01,
+where `project-recap@2` is created in its final hub-floor form. Here, the
+runtime supports recipes whose artifacts request structured content
+(`authoring: structured` with the matching content-contract reference,
+declared in the `author-request/v3` contract created in p02-t01 — the
+structured-authoring fields land in v3, never retrofitted onto v2); the core
+renderers render them; artistic authoring remains available where a recipe
+declares it. Recipe validation (`recipes.mjs` validation rules, not the
+shipped file list) accepts the structured authoring type. Coverage runs
+through **test-local recipe fixtures**: an integration case exercises a
+structured-authoring recipe end to end (structured request emission, render
+dispatch, link validation), and a deliberate `author-result/v2` HTML replay
+case still validates. Shipped `project-recap@1` behavior is untouched and
+proven unchanged.
 
 **Step 2: Implement (GREEN)**
 
-New `project-recap@2` recipe file and registry entry; adapter version switch
-in `resolve-config.mjs`; v3 author-request structured-content fields;
-author-request construction; render dispatch; recap fixture migration.
+v3 author-request structured-content fields; author-request construction;
+render dispatch; recipe-validation acceptance of `authoring: structured`.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs && pnpm lint && pnpm format`
+Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs && pnpm lint && pnpm format`
 Expected: green (every changed test file executes); lint and format clean
 
 **Step 4: Commit**
 
 ```bash
-git commit -m "feat(p05-t06): author standard recap artifacts through structured contracts"
+git commit -m "feat(p05-t06): support structured-authoring recipes through the runtime"
 ```
 
 ---
@@ -1239,9 +1234,17 @@ git commit -m "feat(p05-t06): author standard recap artifacts through structured
 
 ### Task p06-t01: Hub-floor recipe with planner-justified expansion
 
+Creates and activates `project-recap@2` **atomically in its final form**
+(structured authoring from p05-t06's capability work plus the hub floor),
+so the version is never mutated after any run can emit it and replay stays
+deterministic.
+
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/recipes/project-recap.v2.json` (the `project-recap@2` recipe created in p05-t06; `project-recap@1` stays byte-for-byte unchanged for retained-run replay)
+- Create: `.agents/skills/explainer-kit/recipes/project-recap.v2.json` (`project-recap@2` in final form: structured authoring + hub floor; `project-recap@1` stays byte-for-byte unchanged for retained-run replay)
+- Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs` (register the new file in `RECIPE_FILES`; the registry keys by exact `id@version`)
+- Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-config.mjs` (adapter currently pins recipe version `1` for every new run; switch new project-recap requests to version `2`)
+- Modify: `.agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
 - Create: `.agents/skills/explainer-kit/schemas/set-plan.v2.schema.json`
 - Modify: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
@@ -1255,7 +1258,16 @@ git commit -m "feat(p05-t06): author standard recap artifacts through structured
 
 **Step 1: Write test (RED)**
 
-The `project-recap@2` floor contains only the hub; diagram, deck, and
+`project-recap@2` is **created here in its final form** — structured
+authoring (capability from p05-t06) plus the hub-only floor — registered in
+`RECIPE_FILES`, and the adapter switches new project-recap requests to
+version `2` in the same commit. `project-recap@1` is never semantically
+changed; retained v1 replay (registry serves `project-recap@1` unchanged,
+`author-result/v2` HTML replay validates) and new-version emission (adapter
+emits `project-recap@2`, runtime loads it, end-to-end structured run passes
+link validation, browser evidence, and visual review) are both proven
+through the real consumers. The `project-recap@2` floor contains only the
+hub; diagram, deck, and
 explainer views are expansion entries requiring a planner justification (distinct
 reader question + evidence pointers) recorded in the set plan; unjustified or
 redundant expansion is rejected at planning time; existing expansion limits
@@ -1279,12 +1291,13 @@ and a new registry entry carries the new floor.
 
 **Step 2: Implement (GREEN)**
 
-Recipe v2, set-plan v2 schema alongside retained v1, author-request v3
-set-plan reference update, planner enforcement, registry and docs updates.
+Recipe v2 in final form with registry entry and adapter version switch;
+set-plan v2 schema alongside retained v1; author-request v3 set-plan
+reference update; planner enforcement; registry and docs updates.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
+Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
 Expected: green (every changed test file executes)
 
 **Step 4: Commit**
@@ -1445,6 +1458,7 @@ through every shipped consumer outside the two core seams.
 - Modify: `apps/oat-docs/docs/workflows/skills/explainer-kit.md` (contract versions and recap floor)
 - Modify: `apps/oat-docs/docs/workflows/skills/explainer-kit-providers.md` (provider contract versions)
 - Modify: `apps/oat-docs/docs/cli-utilities/configuration.md` (new `explainers.publish.publicAccess` key)
+- Modify: `apps/oat-docs/docs/workflows/projects/artifacts.md` (states flagged runs cannot be finalized or archived — superseded by p04-t02's flagged-durable tier)
 - Modify: any additional pages surfaced by the documentation delta analysis (candidate sweep: `reference/cli-reference.md`, `reference/troubleshooting.md`, `cli-utilities/tool-packs.md`, `workflows/skills/index.md`, `contributing/explainer-kit-verification.md`)
 - Regenerate: `apps/oat-docs/index.md` via `oat docs generate-index` (never hand-edited)
 - Modify: `tools/release/build-explainer-rc.test.mjs` (RC inventory assertions cover the new schema/recipe files)
@@ -1652,7 +1666,7 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T023457Z.md (4 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T024804Z.md (4 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T031926Z.md (2 Important + 1 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T033345Z.md                                                                                                     | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T033345Z.md (3 Important resolved in plan and design)                                                  | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
