@@ -4,7 +4,7 @@ version: 1.0.1
 description: Use when the user requests or confirms a project retrospective — e.g. "run the project retro", "write project-retro.md", "retrospective this project", or confirms a previously offered retro. Do NOT auto-invoke merely because implementation or summary completed. Produces references/project-retro.md from project logs, execution learnings, and session/transcript evidence, with repo improvements and OAT upstream feedback.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(pnpm:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 ---
 
 # Project Retrospective

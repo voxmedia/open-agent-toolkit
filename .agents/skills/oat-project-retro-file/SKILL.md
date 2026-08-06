@@ -4,7 +4,7 @@ version: 1.0.1
 description: Use when the user requests or confirms filing proposed feedback from a project retro into repository or upstream GitHub issues and OAT backlog items. Runs destination capability, duplicate, approval, and sanitization checks before filing, then writes destinations and statuses back to the retro artifact.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(gh:*), Bash(oat backlog:*), Bash(oat config:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(pnpm:*), Bash(gh:*), Bash(oat backlog:*), Bash(oat config:*), Glob, Grep, AskUserQuestion
 ---
 
 # File Project Retro Feedback

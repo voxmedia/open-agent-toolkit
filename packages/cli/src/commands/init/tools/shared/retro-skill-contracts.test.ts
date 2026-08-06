@@ -20,6 +20,18 @@ const filingSkill = readRepoFile(
 const retroTemplate = readRepoFile('.oat/templates/project-retro.md');
 
 describe('retro skill content contracts', () => {
+  it('authorizes each skill mandatory formatter and check path', () => {
+    for (const content of [retroSkill, filingSkill]) {
+      const allowedTools = content.match(/^allowed-tools:\s*(.+)$/m)?.[1] ?? '';
+
+      expect(content).toMatch(
+        /Before finishing or committing, format every[\s\S]*?repository's documented write\/fix formatter/i,
+      );
+      expect(content).toMatch(/Run\s+(?:the\s+)?checks\s+relevant/i);
+      expect(allowedTools.split(/,\s*/)).toContain('Bash(pnpm:*)');
+    }
+  });
+
   it('recovers interrupted decision application by exact date-independent slug', () => {
     const allowedTools =
       retroSkill.match(/^allowed-tools:\s*(.+)$/m)?.[1] ?? '';
