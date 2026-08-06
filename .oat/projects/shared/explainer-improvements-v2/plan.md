@@ -53,12 +53,19 @@ existing safety guarantees.
 ## Parallelism
 
 `p01` (adapter path/destination derivation) writes under
-`.agents/skills/oat-explainer-kit/` plus the CLI config surfaces under
-`packages/cli/src/` (p01-t02); `p02` (core link integrity) writes only
-under `.agents/skills/explainer-kit/`. Their write sets are disjoint, their
-verification suites are independent (`node --test` over their own trees), and
-neither consumes the other's outputs, so they are declared as one parallel
-group. Everything after is sequential: `p03` (publication) and `p04`
+`.agents/skills/oat-explainer-kit/`, the CLI config surfaces under
+`packages/cli/src/` (p01-t02), and three specific core files for the
+run-root double-nesting guard (p01-t04): `explainer-kit/scripts/lib/records.mjs`,
+`explainer-kit/scripts/lib/fs-safe.mjs`, and `explainer-kit/tests/records.test.mjs`.
+`p02` (core link integrity) writes core `run.mjs`, `set-plan.mjs`,
+`contracts.mjs`, `render-qa.mjs`, link-validator, schema, brief, and
+reference files, and the `contracts`/`link-validation`/`run.integration`
+test files — none of which is a p01 file. Disjointness is therefore exact-file, not subtree: both phases write
+inside `.agents/skills/explainer-kit/`, but no file appears in both write
+sets, their verification suites are independent, and neither consumes the
+other's outputs, so they are declared as one parallel group. If the parallel
+executor treats a shared skill subtree as overlapping, run p01 and p02
+sequentially instead. Everything after is sequential: `p03` (publication) and `p04`
 (lifecycle) both modify core `run.mjs`/records and adapter finalize seams that
 `p02`/`p01` also touch, `p05`/`p06` share core renderer, schema, theme, and
 fixture files, and `p07` (release closure) bumps skill and package versions
@@ -79,10 +86,12 @@ verification, and atomic commits.
 
 ## Phase 1: Adapter path and destination derivation
 
-Write boundary: `.agents/skills/oat-explainer-kit/**` plus the CLI
+Write boundary: `.agents/skills/oat-explainer-kit/**`, the CLI
 configuration surfaces in `packages/cli/src/config/**` and
-`packages/cli/src/commands/config/**` (p01-t02 only). Still disjoint from
-phase 2's core-only writes.
+`packages/cli/src/commands/config/**` (p01-t02 only), and the three core
+double-nesting-guard files in p01-t04 (`records.mjs`, `fs-safe.mjs`,
+`records.test.mjs`). Exact-file disjoint from phase 2's core writes (see
+Parallelism).
 
 ### Task p01-t01: Derive per-invocation remote publish destination
 
@@ -1241,6 +1250,8 @@ git commit -m "feat(p05-t06): author standard recap artifacts through structured
 - Modify: `.agents/skills/explainer-kit/briefs/project-recap.md`
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs` (currently asserts the three-artifact floor)
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs` (unattended adapter fixture still returns `set-plan/v1`)
+- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` (completion fixture still returns `set-plan/v1`)
 
 **Step 1: Write test (RED)**
 
@@ -1255,7 +1266,12 @@ Contract-dependency propagation is in scope: the author-request contract
 embeds the set plan and currently pins `set-plan/v1`, so update
 `author-request.v3.schema.json` (and the registry) to accept `set-plan/v2`,
 with end-to-end tests covering both new-run emission (v3 + set-plan v2) and
-retained replay (v2 + set-plan v1). Audit the other three recipes and change
+retained replay (v2 + set-plan v1). **The live adapter consumers migrate
+atomically with the producer:** the unattended adapter fixture and the
+completion integration fixture (both of which currently return
+`set-plan/v1`) gain explicit new-run `set-plan/v2` cases alongside retained
+v1 replay cases, so the new contract works through the real adapter path at
+this task's own commit. Audit the other three recipes and change
 only those with the same floor contradiction (document the audit result in
 the test or brief); any recipe that does change receives the same
 new-version treatment — its existing version stays byte-for-byte unchanged
@@ -1268,8 +1284,8 @@ set-plan reference update, planner enforcement, registry and docs updates.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
-Expected: green
+Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
+Expected: green (every changed test file executes)
 
 **Step 4: Commit**
 
@@ -1290,6 +1306,8 @@ git commit -m "feat(p06-t01): make the hub the recap floor with justified expans
 - Modify: `.agents/skills/explainer-kit/references/visual-review.md`
 - Modify: `.agents/skills/explainer-kit/tests/visual-matrix.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs` (live adapter wrapper rejects every result except `visual-review-result/v1` — v2 acceptance lands atomically with core v2 emission)
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
 
 **Step 1: Write test (RED)**
 
@@ -1302,17 +1320,21 @@ results missing dimensions are rejected. Registry propagation is in scope:
 `visual-review.mjs` emits and validates through the contract registry, so
 new runs must **emit and validate v2** while retained v1 requests/results
 still validate for replay, with request-bound result validation covering
-both versions. Existing accessibility, keyboard, reduced-motion, print, and
+both versions. **The live adapter consumer migrates in the same commit:**
+the adapter wrapper's result acceptance (currently v1-only) accepts v1 and
+v2 results, exercised end to end by the adapter integration test, so core
+v2 emission works through the shipped adapter path at this task's own
+commit. Existing accessibility, keyboard, reduced-motion, print, and
 mobile requirements remain necessary conditions.
 
 **Step 2: Implement (GREEN)**
 
 v2 schemas, registry version dispatch, v2 emission in `visual-review.mjs`,
-validation, and reviewer guidance.
+adapter v1/v2 result acceptance, validation, and reviewer guidance.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/visual-matrix.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs`
+Run: `node --test .agents/skills/explainer-kit/tests/visual-matrix.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
 Expected: green (every changed test file executes)
 
 **Step 4: Commit**
@@ -1412,16 +1434,19 @@ through every shipped consumer outside the two core seams.
 - Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs` (assert v1 replay and v2 emission)
 - Modify: `tools/smoke/explainer-kit/fixtures/private-wrapper.mjs` (accepts receipt v1 and v2)
 - Modify: `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs` (callback migrates to the structured/new-contract defaults — currently emits `set-plan/v1`, assumes the three-artifact floor, renders from `request.shell`, and returns HTML `author-result/v2` and `visual-review-result/v1` — while retaining explicit legacy replay coverage where appropriate)
-- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs` (visual-review result acceptance: v1 and v2)
 - Modify: `.agents/skills/oat-explainer-kit/references/author-callback.md` (author v2/v3)
-- Modify: `.agents/skills/oat-explainer-kit/references/visual-review-callback.md` (visual-review v1/v2)
+- Modify: `.agents/skills/oat-explainer-kit/references/visual-review-callback.md` (visual-review v1/v2 — the adapter's executable v2 acceptance itself landed in p06-t02)
 - Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/explainer-kit/SKILL.md` (guidance pins `author-request/v2`/`author-result/v2`)
 - Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (guidance pins old contracts and the three-artifact floor)
 - Modify: `.agents/skills/oat-wave-program/SKILL.md` (direct caller guidance on the old recap floor)
 - Modify: `.agents/skills/oat-wave-execute/SKILL.md` (direct caller guidance on non-durable `built-needs-review` semantics)
 - Modify: `.agents/skills/oat-project-summary/SKILL.md` (documented outcome set omits `built-needs-review`)
-- Modify: `apps/oat-docs/docs/**` explainer contract pages (still document the v1 recipe floor and v2-only provider contracts)
+- Modify: `apps/oat-docs/docs/workflows/skills/explainer-kit.md` (contract versions and recap floor)
+- Modify: `apps/oat-docs/docs/workflows/skills/explainer-kit-providers.md` (provider contract versions)
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md` (new `explainers.publish.publicAccess` key)
+- Modify: any additional pages surfaced by the documentation delta analysis (candidate sweep: `reference/cli-reference.md`, `reference/troubleshooting.md`, `cli-utilities/tool-packs.md`, `workflows/skills/index.md`, `contributing/explainer-kit-verification.md`)
+- Regenerate: `apps/oat-docs/index.md` via `oat docs generate-index` (never hand-edited)
 - Modify: `tools/release/build-explainer-rc.test.mjs` (RC inventory assertions cover the new schema/recipe files)
 - Modify: affected request fixtures under the release/smoke trees
 
@@ -1436,11 +1461,12 @@ receipts while still reading retained v1 receipts, and the validator's closed
 publish-request key check accepts the optional `publicAccess` field
 (protected-request coverage included); the private-wrapper smoke fixture
 accepts both receipt versions and the smoke suite proves v1 replay and v2
-emission; the adapter implementation (`run.mjs`, which currently accepts only
-`visual-review-result/v1`) accepts v1 and v2 results, exercised end to end by
-the adapter integration tests; callback references document both versions.
-New-run emission and retained-version replay are both proven before provider
-sync, with every focused suite executed.
+emission; the adapter's executable version acceptance already migrated
+atomically with its producers (set-plan/recipe in p06-t01, visual-review in
+p06-t02), so this task carries the remaining reference and guidance
+surfaces; callback references document both versions. New-run emission and
+retained-version replay are both proven before provider sync, with every
+focused suite executed.
 
 **This migration is repository-wide, covering shipped guidance consumers,
 not only executable tooling:** canonical skill instructions that pin old
@@ -1452,11 +1478,19 @@ for the new schema and recipe files; and the `apps/oat-docs` explainer
 contract pages. Every canonical skill changed here joins p07-t01's
 one-bump-per-skill set and provider sync.
 
+**Docs-app changes follow the repository's docs authoring workflow
+(`apps/oat-docs/AGENTS.md`), not ad-hoc edits:** first run a documentation
+delta analysis over the enumerated pages (using `oat-project-document`
+guidance), present the delta plan and obtain user approval for substantive
+content changes, then apply the approved edits, run navigation sync, and
+regenerate the generated index with `oat docs generate-index` — the index
+is never hand-edited. Only after that do the build checks run.
+
 **Step 2: Implement (GREEN)**
 
-Version dispatch in release tooling, smoke fixture, and the adapter
-implementation; callback reference migration; canonical skill guidance and
-docs-app contract-page migration; fixture updates.
+Version dispatch in release tooling and smoke fixtures; callback reference
+migration; canonical skill guidance migration; approved docs-app
+contract-page edits with nav sync and index regeneration; fixture updates.
 
 **Step 3: Verify**
 
@@ -1617,7 +1651,7 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T021300Z.md (2 Important + 3 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T023457Z.md (4 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T024804Z.md (4 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T031926Z.md                                                                                                     | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T031926Z.md (2 Important + 1 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

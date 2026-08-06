@@ -125,6 +125,20 @@ escalated to the operator.
   adapter `run.mjs` compatibility-seam injection added to p03-t04 with a
   divergent-core-root fixture).
 
+- **Attempt 10** (first run timed out at the 900s gate budget with no
+  review; rerun with `--timeout-ms 1800000` produced
+  `artifact-plan-review-2026-08-06T031926Z.md`): attempt-9 findings
+  confirmed resolved; 2 Important + 1 Medium new — new contract versions
+  were separated from live adapter consumers (fixed: set-plan/v2 adapter and
+  completion fixtures moved into p06-t01, visual-review v2 adapter
+  acceptance moved into p06-t02, p06-t05 refocused on remaining
+  guidance/release/docs consumers), the docs migration skipped the required
+  authoring workflow (fixed: p06-t05 enumerates the affected pages, adds
+  delta analysis with user approval, nav sync, and `oat docs generate-index`
+  regeneration before build checks), and the p01/p02 parallel write
+  boundary was stale after the p01-t04 core-guard fix (fixed: exact-file
+  disjointness documented with a sequential fallback).
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 
