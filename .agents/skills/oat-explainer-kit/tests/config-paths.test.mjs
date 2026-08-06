@@ -164,34 +164,123 @@ test('applies only allowed runtime overrides without mutating CLI results', asyn
   );
 });
 
-test('validates publish fields as one cross-field block', async () => {
+test('reports incomplete publish configuration and remains build-only', async () => {
   const repoRoot = await fixture();
-  const getter = configGetter({
+  const duetShape = await resolveExplainerConfig({
+    repoRoot,
+    getConfig: configGetter({
+      'explainers.publish.publicBaseUrl': {
+        value: 'https://docs.example.com/repositories/demo',
+        source: 'shared',
+      },
+    }).get,
+  });
+
+  assert.equal(duetShape.publish, null);
+  assert.deepEqual(duetShape.publishReport, {
+    mode: 'build-only',
+    publishCapable: false,
+    missing: ['provider', 's3Uri', 'awsRegion'],
+  });
+
+  for (const [entries, missing] of [
+    [
+      {
+        'explainers.publish.provider': {
+          value: 's3-static',
+          source: 'shared',
+        },
+      },
+      ['s3Uri', 'publicBaseUrl', 'awsRegion'],
+    ],
+    [
+      {
+        'explainers.publish.provider': {
+          value: 's3-static',
+          source: 'shared',
+        },
+        'explainers.publish.s3Uri': {
+          value: 's3://example-bucket/repositories/demo',
+          source: 'shared',
+        },
+        'explainers.publish.awsRegion': {
+          value: 'us-east-1',
+          source: 'shared',
+        },
+      },
+      ['publicBaseUrl'],
+    ],
+  ]) {
+    const partial = await resolveExplainerConfig({
+      repoRoot,
+      getConfig: configGetter(entries).get,
+    });
+    assert.equal(partial.publish, null);
+    assert.deepEqual(partial.publishReport.missing, missing);
+  }
+});
+
+test('resolves complete publish config and source-aware public access', async () => {
+  const repoRoot = await fixture();
+  const complete = {
     'explainers.publish.provider': {
       value: 's3-static',
       source: 'shared',
     },
     'explainers.publish.s3Uri': {
-      value: 's3://example-bucket/explainers',
+      value: 's3://example-bucket/repositories/demo/',
       source: 'shared',
     },
+    'explainers.publish.publicBaseUrl': {
+      value: 'https://docs.example.com/repositories/demo/',
+      source: 'shared',
+    },
+    'explainers.publish.awsRegion': {
+      value: 'us-east-1',
+      source: 'shared',
+    },
+  };
+
+  for (const [entry, expected] of [
+    [undefined, undefined],
+    [{ value: 'public', source: 'shared' }, 'public'],
+    [{ value: 'protected', source: 'shared' }, 'protected'],
+  ]) {
+    const resolved = await resolveExplainerConfig({
+      repoRoot,
+      getConfig: configGetter({
+        ...complete,
+        ...(entry && { 'explainers.publish.publicAccess': entry }),
+      }).get,
+    });
+    assert.deepEqual(resolved.publishReport, {
+      mode: 'publish-capable',
+      publishCapable: true,
+      missing: [],
+    });
+    assert.equal(resolved.publish.publicAccess, expected);
+  }
+
+  const override = await resolveExplainerConfig({
+    repoRoot,
+    getConfig: configGetter(complete).get,
+    runtimeOverrides: {
+      'explainers.publish.publicAccess': 'protected',
+    },
   });
+  assert.equal(override.publish.publicAccess, 'protected');
+  assert.equal(override.sources['explainers.publish.publicAccess'], 'runtime');
 
   await assert.rejects(
-    resolveExplainerConfig({ repoRoot, getConfig: getter.get }),
-    /publicBaseUrl.*awsRegion/i,
-  );
-
-  const buildOnly = await resolveExplainerConfig({
-    repoRoot,
-    getConfig: configGetter({
-      'explainers.publish.s3Uri': {
-        value: 's3://ignored-without-provider',
-        source: 'shared',
+    resolveExplainerConfig({
+      repoRoot,
+      getConfig: configGetter(complete).get,
+      runtimeOverrides: {
+        'explainers.publish.publicAccess': 'private',
       },
-    }).get,
-  });
-  assert.equal(buildOnly.publish, null);
+    }),
+    /publicAccess.*public.*protected/i,
+  );
 });
 
 test('derives active shared/local and fixed non-project output roots', async () => {
