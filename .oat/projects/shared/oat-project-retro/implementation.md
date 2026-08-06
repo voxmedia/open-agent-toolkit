@@ -165,6 +165,12 @@ configured-invocation evidence.
 | p01   | 1     | `oat-project-retro-review-p01-r1-20260806T0204Z` | `022d9f34-8a8f-4b11-8aaa-64455eb1c518` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
 | p02   | 1     | `oat-project-retro-review-p02-r1-20260806T0207Z` | `1b04e55e-e078-4297-ac9b-49f0f859a245` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
 
+#### Accepted Fix Continuations
+
+| Scope              | Continuation Event                       | Original Request                            | Agent ID                               | Target                                     | Model axis                    |
+| ------------------ | ---------------------------------------- | ------------------------------------------- | -------------------------------------- | ------------------------------------------ | ----------------------------- |
+| p03 review round 1 | `oat-project-retro-p03-review-r1-fix-01` | `oat-project-retro-impl-p03-20260806T0152Z` | `40ee9cc3-78bb-4c3e-b443-07d9002e374f` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
+
 <!-- orchestration-runs-end -->
 
 ---
