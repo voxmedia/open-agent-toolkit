@@ -163,6 +163,7 @@ configured-invocation evidence.
 | ----- | ----- | ------------------------------------------------ | -------------------------------------- | ------------------------------- | --------------------------- | ---------------- |
 | p03   | 1     | `oat-project-retro-review-p03-r1-20260806T0201Z` | `2f5dcd47-7ce2-4a52-aba7-bd805d0b4222` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
 | p01   | 1     | `oat-project-retro-review-p01-r1-20260806T0204Z` | `022d9f34-8a8f-4b11-8aaa-64455eb1c518` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+| p02   | 1     | `oat-project-retro-review-p02-r1-20260806T0207Z` | `1b04e55e-e078-4297-ac9b-49f0f859a245` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
 
 <!-- orchestration-runs-end -->
 
