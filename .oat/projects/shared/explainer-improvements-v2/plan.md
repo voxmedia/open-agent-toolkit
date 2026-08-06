@@ -266,8 +266,9 @@ Write boundary: `.agents/skills/explainer-kit/**` only.
 **Files:**
 
 - Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
-- Modify: `.agents/skills/explainer-kit/schemas/author-request.v2.schema.json`
+- Create: `.agents/skills/explainer-kit/schemas/author-request.v3.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
 
 **Step 1: Write test (RED)**
@@ -275,13 +276,18 @@ Write boundary: `.agents/skills/explainer-kit/**` only.
 From a set plan, the link table maps every artifact ID to its site-relative
 `renderedPath` ending in explicit `index.html`, and to the correct relative
 URL from each authoring artifact's location (e.g. hub →
-`../../diagrams/<slug>/architecture/index.html`). Author requests embed the
-table; requests without it fail schema validation at the new version.
+`../../diagrams/<slug>/architecture/index.html`). The link-table requirement
+is a **new contract version** (`author-request/v3`): v3 requests without the
+table fail validation, while existing `author-request/v2` payloads continue to
+validate unchanged (retained-run replay and external callback compatibility
+proven by test). The contract registry and docs list both versions; new runs
+emit v3.
 
 **Step 2: Implement (GREEN)**
 
-Link-table derivation beside set-plan machinery; author-request schema
-revision; contract validation.
+Link-table derivation beside set-plan machinery; new v3 schema alongside the
+retained v2; contract-registry and documentation updates; version-dispatched
+validation.
 
 **Step 3: Verify**
 
@@ -441,17 +447,24 @@ git commit -m "feat(p03-t01): declare publish destination public-access mode"
 **Step 1: Write test (RED)**
 
 Protected mode: no anonymous HTTP request is ever issued (assert on the
-injected fetch/client seams); every uploaded object is verified via
-authenticated `head-object` hash/metadata comparison against the manifest;
-public URLs are recorded unfetched with verification result
-`skipped-protected` for the public fetch and `verified-authenticated` for the
-object; a hash mismatch fails the publish; sentinel behavior uses
-authenticated verification only.
+injected fetch/client seams); every uploaded object is verified against
+**service-computed bytes, not caller-authored metadata** — upload with an
+S3-validated SHA-256 checksum and compare the service-computed checksum
+against the manifest hash (or perform an authenticated object download and
+hash the returned bytes). The existing `explainer-sha256` user metadata is
+idempotency bookkeeping only and must not satisfy verification. Required
+negative test: object bytes differ while user metadata still carries the
+expected digest — protected verification must reject it. Public URLs are
+recorded unfetched with verification result `skipped-protected` for the
+public fetch and `verified-authenticated` for the object; any checksum
+mismatch fails the publish; sentinel behavior uses authenticated verification
+only.
 
 **Step 2: Implement (GREEN)**
 
-Branch the verification pipeline on the declared mode; keep upload,
-additive-safety, retry, and credential-hygiene behavior shared.
+Branch the verification pipeline on the declared mode with service-checksum
+byte verification; keep upload, additive-safety, retry, and
+credential-hygiene behavior shared.
 
 **Step 3: Verify**
 
@@ -470,25 +483,31 @@ git commit -m "feat(p03-t02): verify protected destinations via authenticated ob
 
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/schemas/publish-receipt.schema.json`
+- Create: `.agents/skills/explainer-kit/schemas/publish-receipt.v2.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
 
 **Step 1: Write test (RED)**
 
-Receipt lists, for every published artifact: ID, rendered path, S3 URI,
-canonical public URL, content hash, and structured verification result
-(`verified-anonymous | verified-authenticated | skipped-protected`). Receipt
-is atomic, durable in the run package, and contains no credential material.
-Published bytes are asserted equal to finalized manifest hashes; any
-transformation between manifest and upload fails.
+The connector emits a **new receipt version**
+(`explainer-kit.publish-receipt/v2`) listing, for every published artifact:
+ID, rendered path, S3 URI, canonical public URL, content hash, and structured
+verification result
+(`verified-anonymous | verified-authenticated | skipped-protected`). Existing
+`publish-receipt/v1` artifacts remain readable wherever receipts are consumed
+(archive/durability validation), proven by test. Receipt is atomic, durable
+in the run package, and contains no credential material. Published bytes are
+asserted equal to finalized manifest hashes; any transformation between
+manifest and upload fails.
 
 **Step 2: Implement (GREEN)**
 
-Receipt schema revision and emission; no publication-time HTML transformation
-code path exists (assert by construction and test).
+New v2 receipt schema and emission with retained v1 readers; registry and
+docs updated; no publication-time HTML transformation code path exists
+(assert by construction and test).
 
 **Step 3: Verify**
 
@@ -652,6 +671,7 @@ git commit -m "feat(p04-t02): auto-enter bounded correction from built-needs-rev
 
 **Files:**
 
+- Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-intent.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/persist-intent.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
@@ -660,16 +680,25 @@ git commit -m "feat(p04-t02): auto-enter bounded correction from built-needs-rev
 
 **Step 1: Write test (RED)**
 
-When recap intent resolves to `generate`, completion cannot finalize until
-the recap records a terminal outcome; `built-durable`,
-`built-needs-review`, and a compact failure record all count as terminal;
-absence of any outcome blocks with an actionable message. Approval is never
-conditioned on the outcome being clean.
+The ordering invariant lives in the **lifecycle orchestrator seam that
+actually advances approval** — the `oat-project-implement`
+completion/closeout sequence — not only in the adapter's intent
+resolver/persistence helpers. Define a durable terminal-outcome field the
+orchestrator reads and a transition guard: when recap intent resolved to
+`generate`, approval cannot advance while the field is absent, and each
+accepted terminal outcome (`built-durable`, `built-needs-review`, compact
+failure record) allows it to advance. The completion integration test must
+exercise the transition guard (approval blocked without an outcome; approval
+proceeds with each terminal outcome) — asserting on reference prose alone is
+insufficient. If any other live completion route can finalize approval, it is
+covered by the same guard. Approval is never conditioned on the outcome being
+clean.
 
 **Step 2: Implement (GREEN)**
 
-Ordering invariant in the intent/completion seam; document in
-`lifecycle-contract.md`.
+Durable terminal-outcome recording in the adapter intent/persistence seam;
+transition guard in the closeout orchestrator sequence; document in
+`lifecycle-contract.md` and `completion-and-closeout.md`.
 
 **Step 3: Verify**
 
@@ -730,7 +759,9 @@ git commit -m "feat(p04-t04): retain durable failure records for failed runs"
 - Create: `.agents/skills/explainer-kit/schemas/hub-content.v1.schema.json`
 - Create: `.agents/skills/explainer-kit/schemas/deck-content.v1.schema.json`
 - Create: `.agents/skills/explainer-kit/schemas/diagram-content.v1.schema.json`
-- Modify: `.agents/skills/explainer-kit/schemas/author-result.v2.schema.json`
+- Create: `.agents/skills/explainer-kit/schemas/author-result.v3.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
 
 **Step 1: Write test (RED)**
@@ -741,13 +772,16 @@ purpose, archetype (enum: outcome-hero, before-after, architecture,
 decision-trade-off, evidence-scoreboard, comparison, next-action), headline,
 evidence, optional comparison/visual, action. Diagram content validates
 semantic nodes, groups/containers, labeled edges, layout direction, and
-emphasis — author-supplied coordinates are rejected. Author results carry
-structured content for standard artifacts; artistic artifacts keep the
-existing HTML shape.
+emphasis — author-supplied coordinates are rejected. Structured-content
+result variants land in a **new contract version** (`author-result/v3`);
+existing `author-result/v2` HTML payloads continue to validate unchanged
+(retained-run and callback compatibility proven by test). Artistic artifacts
+keep the HTML shape in both versions.
 
 **Step 2: Implement (GREEN)**
 
-Three schemas plus author-result revision.
+Three content schemas plus the v3 author-result version alongside the
+retained v2; registry and docs updated.
 
 **Step 3: Verify**
 
@@ -939,8 +973,9 @@ git commit -m "feat(p05-t06): author standard recap artifacts through structured
 **Files:**
 
 - Modify: `.agents/skills/explainer-kit/recipes/project-recap.json`
-- Modify: `.agents/skills/explainer-kit/schemas/set-plan.v1.schema.json`
+- Create: `.agents/skills/explainer-kit/schemas/set-plan.v2.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/briefs/project-recap.md`
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
 
@@ -950,12 +985,16 @@ git commit -m "feat(p05-t06): author standard recap artifacts through structured
 views are expansion entries requiring a planner justification (distinct
 reader question + evidence pointers) recorded in the set plan; unjustified or
 redundant expansion is rejected at planning time; existing expansion limits
-still apply. Audit the other three recipes and change only those with the
-same floor contradiction (document the audit result in the test or brief).
+still apply. Justification enforcement lands in a **new set-plan version**
+(`set-plan/v2`); retained `set-plan/v1` documents continue to validate for
+replay and archive consumers (proven by test), and new runs emit v2. Audit
+the other three recipes and change only those with the same floor
+contradiction (document the audit result in the test or brief).
 
 **Step 2: Implement (GREEN)**
 
-Recipe v2, set-plan justification fields, planner enforcement.
+Recipe v2, set-plan v2 schema alongside retained v1, planner enforcement,
+registry and docs updates.
 
 **Step 3: Verify**
 
@@ -1007,25 +1046,35 @@ git commit -m "feat(p06-t02): expand visual review to scored design-quality rubr
 
 ---
 
-### Task p06-t03: Cyclone negative visual-quality fixture
+### Task p06-t03: Cyclone negative visual-quality fixture with a non-vacuous oracle
 
 **Files:**
 
-- Create: `.agents/skills/explainer-kit/tests/fixtures/negative-visual/` (Cyclone deck and diagram derivatives)
+- Create: `.agents/skills/explainer-kit/tests/fixtures/negative-visual/` (Cyclone deck and diagram derivatives, pinned screenshots/DOM)
+- Create: `.agents/skills/explainer-kit/scripts/lib/rubric-evidence.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/visual-matrix.test.mjs`
 
 **Step 1: Write test (RED)**
 
-A rubric-v2 evaluation of the bundled Cyclone-derived deck and diagram
-fixture must not produce `pass`; expected verdict is `correct` with findings
-in typography, composition/density, and diagram-semantics dimensions.
-Fixture is scrubbed of any Duet-proprietary content while preserving the
-structural defects (title+paragraph slides, fixed-viewBox identical boxes,
-unlabeled connectors).
+Because production judgment comes from an injected `visualCritic` callback, a
+stub returning `correct` proves nothing. Add an **executable evidence seam**:
+deterministic rubric-evidence extraction that derives expected failed
+dimensions from the pinned fixture screenshots/DOM (repeated
+title-plus-paragraph slide structure, fixed-viewBox identical boxes,
+unlabeled connectors, generic type stacks). The test evaluates the fixture
+through this seam with pinned inputs and asserts (a) the derived evidence
+flags the typography, composition/density, and diagram-semantics dimensions,
+and (b) a rubric-v2 result of `pass` for this fixture is rejected **because
+the evidence contradicts it** — not because a stub is hard-coded. Expected
+verdict is `correct`. Fixture is scrubbed of Duet-proprietary content while
+preserving the structural defects.
 
 **Step 2: Implement (GREEN)**
 
-Bundle the fixture; wire the assertion into the visual matrix suite.
+Bundle the fixture with pinned evidence inputs; implement the deterministic
+evidence extraction; wire evidence-vs-verdict contradiction rejection into
+visual-review validation and the visual matrix suite.
 
 **Step 3: Verify**
 
@@ -1111,16 +1160,19 @@ git commit -m "chore(p07-t01): bump explainer skill versions and sync providers"
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
 - Modify: `pnpm-lock.yaml`
+- Regenerate: `packages/cli/assets/public-package-versions.json` (via `pnpm build`; commit atomically with the manifests)
 
 **Step 1: Implement**
 
 Bump all five public packages in lockstep (bundled `.agents/skills` assets
-are shipped CLI functionality).
+are shipped CLI functionality); run `pnpm build` so the tracked generated
+version asset regenerates from the bumped manifests, and stage it in the same
+commit.
 
 **Step 2: Verify**
 
-Run: `pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm release:validate`
-Expected: all repository and release gates green, including smoke
+Run: `pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm release:validate && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts`
+Expected: all repository and release gates green, including smoke and bundle consistency
 
 **Step 3: Commit**
 
