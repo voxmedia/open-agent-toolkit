@@ -5,6 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-08-06
 oat_phase: plan
 oat_phase_status: complete
+oat_plan_hill_phases: ['p05']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [['p01', 'p02', 'p03']] # config, assets, and lifecycle-skill edits are file-disjoint
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null

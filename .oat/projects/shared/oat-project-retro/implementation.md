@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-05
+oat_last_updated: 2026-08-06
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: oat-project-retro
 
 **Started:** 2026-08-05
-**Last Updated:** 2026-08-05
+**Last Updated:** 2026-08-06
 
 ## Gate Escalation Record (planning gate, attempts exhausted)
 
@@ -72,87 +72,56 @@ resolution complete; plan handed to implementation.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase | Status  | Tasks | Completed |
+| ----- | ------- | ----- | --------- |
+| p01   | pending | 2     | 0/2       |
+| p02   | pending | 4     | 0/4       |
+| p03   | pending | 2     | 0/2       |
+| p04   | pending | 2     | 0/2       |
+| p05   | pending | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-08-05
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Total:** 0/12 tasks completed
 
 ---
 
-### Task p01-t02: {Task Name}
+## Phase/Task Tracking
 
-**Status:** pending
-**Commit:** -
+### p01 — CLI Config Surface
 
-**Notes:**
+| Task    | Status  | Commit | Outcome |
+| ------- | ------- | ------ | ------- |
+| p01-t01 | pending | -      | -       |
+| p01-t02 | pending | -      | -       |
 
-- {Notes will be added during implementation}
+### p02 — Retro Template, Skills, and Registration
 
----
+| Task    | Status  | Commit | Outcome |
+| ------- | ------- | ------ | ------- |
+| p02-t01 | pending | -      | -       |
+| p02-t02 | pending | -      | -       |
+| p02-t03 | pending | -      | -       |
+| p02-t04 | pending | -      | -       |
 
-## Phase 2: {Phase Name}
+### p03 — Lifecycle Integration
 
-**Status:** pending
-**Started:** -
+| Task    | Status  | Commit | Outcome |
+| ------- | ------- | ------ | ------- |
+| p03-t01 | pending | -      | -       |
+| p03-t02 | pending | -      | -       |
 
-### Task p02-t01: {Task Name}
+### p04 — Documentation
 
-**Status:** pending
-**Commit:** -
+| Task    | Status  | Commit | Outcome |
+| ------- | ------- | ------ | ------- |
+| p04-t01 | pending | -      | -       |
+| p04-t02 | pending | -      | -       |
+
+### p05 — Acceptance and Release
+
+| Task    | Status  | Commit | Outcome |
+| ------- | ------- | ------ | ------- |
+| p05-t01 | pending | -      | -       |
+| p05-t02 | pending | -      | -       |
 
 ---
 
@@ -174,40 +143,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
-Chronological log of implementation progress.
+### 2026-08-06
 
-### 2026-08-05
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-08-05
-
-**Session Start:** {time}
-
-{Continue log...}
+- Implementation preflight selected Tier 1 native Cursor subagents.
+- Managed dispatch policy: `high`; p01/p02/p03 selected
+  `oat-phase-implementer-gpt-5-6-sol-medium`.
+- Schedule validated: `[p01, p02, p03]` parallel group → `p04` → `p05`.
+- HiLL checkpoints: final phase only (`p05`) from workflow config.
+- Auto-review at HiLL checkpoints: enabled from workflow config.
 
 ---
 
@@ -223,36 +166,20 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run | Result |
+| ----- | --------- | ------ |
+| p01   | -         | -      |
+| p02   | -         | -      |
+| p03   | -         | -      |
+| p04   | -         | -      |
+| p05   | -         | -      |
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+_Fill after implementation completes._
 
 ## References
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
