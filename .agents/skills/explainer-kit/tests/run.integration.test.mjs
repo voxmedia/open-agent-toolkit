@@ -4001,3 +4001,229 @@ test('invokes durability and publishing seams only when explicitly requested', a
   );
   assert.equal(durabilityResult.durable, true);
 });
+
+test('accepts only callback receipts bound to the finalized manifest and catalog', async () => {
+  for (const receiptVersion of ['v1', 'v2-public', 'v2-protected']) {
+    const fixture = await suppliedFixture();
+    const publicAccess = receiptVersion.endsWith('protected')
+      ? 'protected'
+      : 'public';
+    const publish = mock.fn(async ({ manifestPath }) => {
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      return receiptVersion === 'v1'
+        ? callbackReceiptV1(manifest)
+        : callbackReceiptV2(manifest, publicAccess);
+    });
+
+    const result = await runExplainer(
+      callbackPublishRunRequest(fixture, publicAccess, receiptVersion === 'v1'),
+      { now: () => NOW, publish },
+    );
+
+    assert.equal(publish.mock.callCount(), 1, receiptVersion);
+    assert.equal(
+      result.publication.receiptSchemaVersion,
+      `explainer-kit.publish-receipt/${receiptVersion === 'v1' ? 'v1' : 'v2'}`,
+      receiptVersion,
+    );
+    assert.equal(result.publication.publicAccess, publicAccess, receiptVersion);
+  }
+});
+
+test('rejects incomplete or contradictory v2 callback receipts before publication state', async () => {
+  const mutations = [
+    [
+      'missing manifest entry',
+      (receipt) => {
+        receipt.artifacts.shift();
+      },
+    ],
+    [
+      'duplicate entry',
+      (receipt) => {
+        const duplicate = structuredClone(receipt.artifacts[0]);
+        duplicate.contentType = 'application/octet-stream';
+        receipt.artifacts.push(duplicate);
+      },
+    ],
+    [
+      'foreign source',
+      (receipt) => {
+        receipt.artifacts[0].source.artifactId = 'foreign';
+      },
+    ],
+    [
+      'wrong hash',
+      (receipt) => {
+        receipt.artifacts[0].hash = `sha256:${'f'.repeat(64)}`;
+      },
+    ],
+    [
+      'missing catalog',
+      (receipt) => {
+        receipt.artifacts.pop();
+      },
+    ],
+  ];
+
+  for (const [label, mutate] of mutations) {
+    const fixture = await suppliedFixture();
+    const publish = mock.fn(async ({ manifestPath }) => {
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      const receipt = callbackReceiptV2(manifest, 'public');
+      mutate(receipt);
+      assert.equal(
+        validateContract('publish-receipt', receipt).valid,
+        true,
+        `${label} remains schema-valid`,
+      );
+      const catalogPath = initiativeCatalogPath(manifest.slug);
+      const catalogHash = `sha256:${createHash('sha256')
+        .update(
+          Buffer.from(
+            serializeInitiativeCatalog(
+              catalogFromManifest(manifest, receipt.roots.publicBaseUrl),
+            ),
+          ),
+        )
+        .digest('hex')}`;
+      assert.equal(
+        validateContract('publish-receipt', receipt, {
+          manifest,
+          catalogArtifact: {
+            relativePath: catalogPath,
+            hash: catalogHash,
+          },
+        }).valid,
+        false,
+        `${label} violates cross-record validation`,
+      );
+      return receipt;
+    });
+
+    const result = await runExplainer(
+      callbackPublishRunRequest(fixture, 'public'),
+      {
+        now: () => NOW,
+        publish,
+      },
+    );
+    assert.equal(result.outcome, 'failed', label);
+    assert.equal('publication' in result, false, label);
+    assert.equal(publish.mock.callCount(), 1, label);
+  }
+});
+
+function callbackPublishRunRequest(fixture, publicAccess, requestV1 = false) {
+  const schemaVersion = requestV1
+    ? 'explainer-kit.publish-request/v1'
+    : 'explainer-kit.publish-request/v2';
+  return {
+    ...fixture.request,
+    durability: {
+      strategy: 'publish',
+      publish: {
+        schemaVersion,
+        provider: 's3-static',
+        s3Uri: 's3://example-bucket/explainers',
+        publicBaseUrl: 'https://docs.example.com/explainers',
+        awsRegion: 'us-east-1',
+        ...(schemaVersion.endsWith('/v2') && { publicAccess }),
+        siteRoot: join(fixture.outputRoot, 'project-explainer-demo/site'),
+        manifestPath: join(
+          fixture.outputRoot,
+          'project-explainer-demo/manifest.json',
+        ),
+      },
+    },
+  };
+}
+
+function callbackReceiptV1(manifest) {
+  const roots = {
+    s3Uri: 's3://example-bucket/explainers',
+    publicBaseUrl: 'https://docs.example.com/explainers',
+  };
+  return {
+    schemaVersion: 'explainer-kit.publish-receipt/v1',
+    provider: 's3-static',
+    publishedAt: NOW,
+    roots,
+    sentinel: {
+      relativePath: '.sentinel',
+      uploadVerified: true,
+      publicVerified: true,
+      deleted: true,
+    },
+    artifacts: manifest.artifacts.map((artifact) => ({
+      relativePath: artifact.renderedPath,
+      hash: artifact.hash,
+      s3Uri: `${roots.s3Uri}/${artifact.renderedPath}`,
+      publicUrl: `${roots.publicBaseUrl}/${artifact.renderedPath}`,
+      httpStatus: 200,
+      contentType: artifact.mediaType,
+    })),
+  };
+}
+
+function callbackReceiptV2(manifest, publicAccess) {
+  const roots = {
+    s3Uri: 's3://example-bucket/explainers',
+    publicBaseUrl: 'https://docs.example.com/explainers',
+  };
+  const verificationFor = (hash) => ({
+    objectVerification: {
+      status: 'verified',
+      method: 'service-checksum',
+      hash,
+    },
+    publicVerification:
+      publicAccess === 'public'
+        ? { status: 'verified', httpStatus: 200, hash }
+        : { status: 'skipped-protected' },
+  });
+  const artifacts = manifest.artifacts.map((artifact) => ({
+    source: { kind: 'manifest', artifactId: artifact.id },
+    relativePath: artifact.renderedPath,
+    hash: artifact.hash,
+    s3Uri: `${roots.s3Uri}/${artifact.renderedPath.slice('site/'.length)}`,
+    publicUrl: `${roots.publicBaseUrl}/${artifact.renderedPath.slice(
+      'site/'.length,
+    )}`,
+    contentType: artifact.mediaType,
+    ...verificationFor(artifact.hash),
+  }));
+  const catalogPath = initiativeCatalogPath(manifest.slug);
+  const catalogHash = `sha256:${createHash('sha256')
+    .update(
+      Buffer.from(
+        serializeInitiativeCatalog(
+          catalogFromManifest(manifest, roots.publicBaseUrl),
+        ),
+      ),
+    )
+    .digest('hex')}`;
+  artifacts.push({
+    source: { kind: 'auxiliary', name: 'catalog' },
+    relativePath: catalogPath,
+    hash: catalogHash,
+    s3Uri: `${roots.s3Uri}/${catalogPath.slice('site/'.length)}`,
+    publicUrl: `${roots.publicBaseUrl}/${catalogPath.slice('site/'.length)}`,
+    contentType: 'application/json',
+    ...verificationFor(catalogHash),
+  });
+  const sentinelHash = `sha256:${'a'.repeat(64)}`;
+  return {
+    schemaVersion: 'explainer-kit.publish-receipt/v2',
+    provider: 's3-static',
+    publishedAt: NOW,
+    publicAccess,
+    roots,
+    sentinel: {
+      relativePath: '.sentinel',
+      ...verificationFor(sentinelHash),
+      deleted: true,
+    },
+    artifacts,
+  };
+}

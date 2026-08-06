@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -6,6 +7,7 @@ import { afterEach, test } from 'node:test';
 
 import {
   catalogFromManifest,
+  serializeInitiativeCatalog,
   validateInitiativeCatalog,
 } from '../scripts/lib/catalog.mjs';
 import {
@@ -396,40 +398,82 @@ test('requires publish receipts to cover the exact manifest and generated catalo
     finalized,
     'https://example.com/explainers',
   );
+  const catalogHash = `sha256:${createHash('sha256')
+    .update(Buffer.from(serializeInitiativeCatalog(catalog)))
+    .digest('hex')}`;
   const receipt = publishReceiptV2();
   receipt.artifacts.push({
     source: { kind: 'auxiliary', name: 'catalog' },
     relativePath: 'site/initiatives/demo-project/catalog.json',
-    hash: canonicalHash(catalog),
+    hash: catalogHash,
     s3Uri: 's3://example/explainers/initiatives/demo-project/catalog.json',
     publicUrl:
       'https://example.com/explainers/initiatives/demo-project/catalog.json',
     contentType: 'application/json',
-    objectVerification: verifiedObject(canonicalHash(catalog)),
-    publicVerification: verifiedPublic(canonicalHash(catalog)),
+    objectVerification: verifiedObject(catalogHash),
+    publicVerification: verifiedPublic(catalogHash),
   });
+  const context = {
+    manifest: finalized,
+    catalogArtifact: {
+      relativePath: 'site/initiatives/demo-project/catalog.json',
+      hash: catalogHash,
+    },
+  };
 
   assert.equal(
-    validateContract('publish-receipt', receipt, {
-      manifest: finalized,
-      catalogArtifact: {
-        relativePath: 'site/initiatives/demo-project/catalog.json',
-        hash: canonicalHash(catalog),
-      },
-    }).valid,
+    validateContract('publish-receipt', receipt, context).valid,
     true,
   );
 
-  receipt.artifacts.pop();
-  assert.ok(
-    validateContract('publish-receipt', receipt, {
-      manifest: finalized,
-      catalogArtifact: {
-        relativePath: 'site/initiatives/demo-project/catalog.json',
-        hash: canonicalHash(catalog),
+  const mutations = [
+    [
+      'missing manifest artifact',
+      (candidate) => {
+        candidate.artifacts.shift();
       },
-    }).errors.some(({ code }) => code === 'receipt-artifact-parity'),
-  );
+    ],
+    [
+      'duplicate artifact',
+      (candidate) => {
+        const duplicate = structuredClone(candidate.artifacts[0]);
+        duplicate.contentType = 'application/octet-stream';
+        candidate.artifacts.push(duplicate);
+      },
+    ],
+    [
+      'foreign source',
+      (candidate) => {
+        candidate.artifacts[0].source.artifactId = 'foreign';
+      },
+    ],
+    [
+      'wrong hash',
+      (candidate) => {
+        candidate.artifacts[0].hash = HASH_A;
+      },
+    ],
+    [
+      'missing catalog',
+      (candidate) => {
+        candidate.artifacts.pop();
+      },
+    ],
+  ];
+  for (const [label, mutate] of mutations) {
+    const candidate = structuredClone(receipt);
+    mutate(candidate);
+    assert.equal(
+      validateContract('publish-receipt', candidate).valid,
+      true,
+      `${label} remains schema-valid`,
+    );
+    assert.equal(
+      validateContract('publish-receipt', candidate, context).valid,
+      false,
+      label,
+    );
+  }
 });
 
 function authorRequestV2() {

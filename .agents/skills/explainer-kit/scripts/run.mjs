@@ -6,7 +6,11 @@ import { isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { assertBrowserProbeSession } from './lib/browser-runtime.mjs';
-import { catalogFromManifest, initiativeCatalogPath } from './lib/catalog.mjs';
+import {
+  catalogFromManifest,
+  initiativeCatalogPath,
+  serializeInitiativeCatalog,
+} from './lib/catalog.mjs';
 import {
   readContentApproval,
   resolveContentApproval,
@@ -1479,18 +1483,29 @@ async function executeDurabilityAndPublish(state, options, now) {
       'Publishing requires separately retained verified receipt evidence.',
     ],
   });
-  await persistManifest(state, now());
+  const finalizedManifest = await persistManifest(state, now());
   try {
     const receipt = await options.publish({
       request: structuredClone(state.run.request.durability.publish),
       runRoot: state.run.runRoot,
       manifestPath: state.run.manifestPath,
     });
-    const validation = validateContract('publish-receipt', receipt);
-    if (!validation.valid) {
+    const schemaValidation = validateContract('publish-receipt', receipt);
+    if (!schemaValidation.valid) {
       throw codedError(
         'E_PUBLISH',
-        `Publisher returned an invalid receipt: ${validation.errors[0].message}`,
+        `Publisher returned an invalid receipt: ${schemaValidation.errors[0].message}`,
+      );
+    }
+    const crossRecordValidation = validateContract(
+      'publish-receipt',
+      receipt,
+      publicationValidationContext(receipt, finalizedManifest),
+    );
+    if (!crossRecordValidation.valid) {
+      throw codedError(
+        'E_PUBLISH',
+        `Publisher returned an invalid receipt: ${crossRecordValidation.errors[0].message}`,
       );
     }
     state.publication = publicationSummary(receipt);
@@ -2317,6 +2332,20 @@ function publicationSummary(receipt) {
       relativePath,
       publicUrl,
     })),
+  };
+}
+
+function publicationValidationContext(receipt, manifest) {
+  if (receipt.schemaVersion !== 'explainer-kit.publish-receipt/v2') {
+    return { manifest };
+  }
+  const catalog = catalogFromManifest(manifest, receipt.roots.publicBaseUrl);
+  return {
+    manifest,
+    catalogArtifact: {
+      relativePath: initiativeCatalogPath(manifest.slug),
+      hash: hashBytes(Buffer.from(serializeInitiativeCatalog(catalog))),
+    },
   };
 }
 
