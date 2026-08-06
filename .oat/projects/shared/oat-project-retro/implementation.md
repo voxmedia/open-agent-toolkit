@@ -72,13 +72,13 @@ resolution complete; plan handed to implementation.
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----- | --------- |
-| p01   | complete | 2     | 2/2       |
-| p02   | complete | 4     | 4/4       |
-| p03   | complete | 2     | 2/2       |
-| p04   | complete | 2     | 2/2       |
-| p05   | pending  | 2     | 0/2       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | complete    | 2     | 2/2       |
+| p02   | complete    | 4     | 4/4       |
+| p03   | complete    | 2     | 2/2       |
+| p04   | complete    | 2     | 2/2       |
+| p05   | in_progress | 2     | 0/2       |
 
 **Total:** 10/12 tasks completed
 
@@ -153,6 +153,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | p02   | `oat-project-retro-impl-p02-20260806T0152Z` | `c9e01a7e-e760-4006-89dd-a56e4aaeba0c` | `.worktrees/oat-project-retro-p02` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | `not-applicable` | `native-catalog` |
 | p03   | `oat-project-retro-impl-p03-20260806T0152Z` | `40ee9cc3-78bb-4c3e-b443-07d9002e374f` | `.worktrees/oat-project-retro-p03` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | `not-applicable` | `native-catalog` |
 | p04   | `oat-project-retro-impl-p04-20260806T0242Z` | `e3b4d9f8-70de-4c54-9626-f4693708cd24` | `.worktrees/oat-project-retro-p04` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | `not-applicable` | `native-catalog` |
+| p05   | `oat-project-retro-impl-p05-20260806T0256Z` | `ee172aee-a1e3-4646-bb0c-016c1ec9fe47` | `.worktrees/oat-project-retro-p05` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | `not-applicable` | `native-catalog` |
 
 Each launch was accepted through the exact resolver-returned native role. Runtime
 identity is not observable; launcher payload and native acceptance provide
@@ -221,6 +222,8 @@ configured-invocation evidence.
   the exact two-commit phase range.
 - p04 review round 1 passed with no findings. The phase and passing review
   artifact were integrated through `0149cc565`; p05 is the remaining phase.
+- p05 was dispatched from integrated base `0a62f09aa` with an explicit stop at
+  the p05-t01 per-item promotion approval boundary.
 
 ---
 
