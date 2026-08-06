@@ -497,12 +497,13 @@ test('translates source-aware config into ExplainerRunRequestV1', async () => {
     durability: {
       strategy: 'publish',
       publish: {
-        schemaVersion: 'explainer-kit.publish-request/v1',
+        schemaVersion: 'explainer-kit.publish-request/v2',
         provider: 's3-static',
         s3Uri: 's3://example-bucket/explainers',
         publicBaseUrl: 'https://docs.example.com/explainers',
         awsRegion: 'us-east-1',
         awsProfile: 'developer',
+        publicAccess: 'public',
         siteRoot: join(outputRoot, 'demo-project/site'),
         manifestPath: join(outputRoot, 'demo-project/manifest.json'),
       },

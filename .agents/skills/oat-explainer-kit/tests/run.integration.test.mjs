@@ -41,7 +41,7 @@ afterEach(async () => {
   );
 });
 
-async function createFixture({ coreVersion = '2.0.3' } = {}) {
+async function createFixture({ coreVersion = '2.1.0' } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'oat-explainer-run-'));
   tempDirs.push(root);
   const repoRoot = join(root, 'repo');
@@ -1303,7 +1303,8 @@ test('passes only derived credential-free destination roots into core publish re
 
   for (const request of [projectResult.request, repositoryResult.request]) {
     const publish = request.durability.publish;
-    assert.equal('publicAccess' in publish, false);
+    assert.equal(publish.schemaVersion, 'explainer-kit.publish-request/v2');
+    assert.equal(publish.publicAccess, 'protected');
     assert.equal('invocation' in request, false);
     assert.equal('projectSlug' in request, false);
     assert.equal('activeProject' in request, false);
@@ -1415,11 +1416,11 @@ test('propagates failed core results when no manifest was produced', async () =>
   ]);
 });
 
-test('fails closed for missing cores and cores without adaptive set capability', async () => {
+test('fails closed for missing cores and cores below the publication floor', async () => {
   for (const [coreVersion, pattern] of [
     [null, /install utility --scope user/i],
     ['1.9.9', /update --pack utility --scope user/i],
-    ['2.0.1', /adaptive set planning/i],
+    ['2.0.1', /update --pack utility --scope user/i],
   ]) {
     const fixture = await createFixture({ coreVersion });
     await assert.rejects(

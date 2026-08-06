@@ -189,6 +189,14 @@ function publishRequest() {
   };
 }
 
+function publishRequestV2(publicAccess = 'public') {
+  return {
+    ...publishRequest(),
+    schemaVersion: 'explainer-kit.publish-request/v2',
+    publicAccess,
+  };
+}
+
 function publishReceipt() {
   return {
     schemaVersion: 'explainer-kit.publish-receipt/v1',
@@ -216,6 +224,35 @@ function publishReceipt() {
     ],
   };
 }
+
+test('accepts immutable publish request v1 replay and explicit v2 access modes', () => {
+  for (const request of [
+    publishRequest(),
+    publishRequestV2('public'),
+    publishRequestV2('protected'),
+  ]) {
+    assert.deepEqual(validateContract('publish-request', request), {
+      valid: true,
+      errors: [],
+    });
+  }
+
+  const missingAccess = publishRequestV2();
+  delete missingAccess.publicAccess;
+  assert.equal(validateContract('publish-request', missingAccess).valid, false);
+
+  const invalidAccess = publishRequestV2('private');
+  assert.equal(validateContract('publish-request', invalidAccess).valid, false);
+
+  for (const publish of [publishRequest(), publishRequestV2('protected')]) {
+    const request = runRequest();
+    request.durability = { strategy: 'publish', publish };
+    assert.deepEqual(validateContract('run-request', request), {
+      valid: true,
+      errors: [],
+    });
+  }
+});
 
 test('derives an exact, absolute initiative catalog from the finalized manifest', () => {
   const finalized = manifest();

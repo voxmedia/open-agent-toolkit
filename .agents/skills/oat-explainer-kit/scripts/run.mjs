@@ -16,7 +16,7 @@ import {
 } from './resolve-config.mjs';
 import { resolveExplainerOutputRoot } from './resolve-paths.mjs';
 
-export const MINIMUM_CORE_VERSION = '2.0.3';
+export const MINIMUM_CORE_VERSION = '2.1.0';
 const ADAPTER_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export async function runOatExplainer({
@@ -240,10 +240,11 @@ export function supportsAdaptiveSetPlanning(version) {
   const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-|$)/);
   if (!match) return false;
   const [major, minor, patch] = match.slice(1).map(Number);
+  const [minimumMajor, minimumMinor, minimumPatch] =
+    MINIMUM_CORE_VERSION.split('.').map(Number);
   return (
-    major === 2 &&
-    (minor > 0 ||
-      (minor === 0 && patch >= Number(MINIMUM_CORE_VERSION.split('.')[2])))
+    major === minimumMajor &&
+    (minor > minimumMinor || (minor === minimumMinor && patch >= minimumPatch))
   );
 }
 

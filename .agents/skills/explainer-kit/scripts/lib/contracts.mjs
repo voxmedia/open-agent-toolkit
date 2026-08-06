@@ -14,7 +14,8 @@ const SCHEMA_FILES = {
   manifest: 'manifest.schema.json',
   'build-record': 'build-record.schema.json',
   'durability-evidence': 'durability-evidence.schema.json',
-  'publish-request': 'publish-request.schema.json',
+  'publish-request/v1': 'publish-request.v1.schema.json',
+  'publish-request/v2': 'publish-request.v2.schema.json',
   'publish-receipt': 'publish-receipt.schema.json',
   'author-request/v2': 'author-request.v2.schema.json',
   'author-request/v3': 'author-request.v3.schema.json',
@@ -26,6 +27,7 @@ const SCHEMA_FILES = {
 const DEFAULT_SCHEMA_KEYS = {
   'author-request': 'author-request/v3',
   'author-result': 'author-result/v2',
+  'publish-request': 'publish-request/v2',
 };
 
 const SCHEMAS = Object.fromEntries(

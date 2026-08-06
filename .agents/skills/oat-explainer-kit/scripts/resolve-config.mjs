@@ -178,11 +178,10 @@ export function toExplainerRunRequest({
         'Publish durability requires a complete explainer publish configuration.',
       );
     }
-    const corePublishConfig = { ...resolvedConfig.publish };
-    delete corePublishConfig.publicAccess;
     durability.publish = {
-      schemaVersion: 'explainer-kit.publish-request/v1',
-      ...corePublishConfig,
+      schemaVersion: 'explainer-kit.publish-request/v2',
+      ...resolvedConfig.publish,
+      publicAccess: resolvedConfig.publish.publicAccess ?? 'public',
       siteRoot: join(outputRoot, slug, 'site'),
       manifestPath: join(outputRoot, slug, 'manifest.json'),
     };

@@ -50,8 +50,8 @@ block. If any field is absent, the adapter returns a structured build-only
 report listing every missing field and does not construct publish config.
 `awsProfile` is optional and uses the normal AWS credential chain when absent.
 `publicAccess` accepts `public` or `protected` and defaults to `public`;
-source metadata is retained so only an explicit declaration or runtime override
-is carried by the adapter. Destination roots are normalized without trailing
+source metadata is retained and the resolved mode is carried explicitly in the
+versioned core publish request. Destination roots are normalized without trailing
 slashes. Lifecycle callers must explicitly select publish durability; complete
 configuration only makes publication available and never authorizes it. The
 existing human gate remains mandatory.
@@ -73,5 +73,5 @@ core creates output.
 The adapter emits `explainer-kit.run-request/v1` with the requested recipe,
 slug, fact-base binding, mode, derived output root, resolved theme selection,
 privacy choice, and explicit durability strategy. Publish durability adds a
-complete `explainer-kit.publish-request/v1` whose `siteRoot` and
+complete `explainer-kit.publish-request/v2` whose `siteRoot` and
 `manifestPath` point inside `<outputRoot>/<slug>/`.

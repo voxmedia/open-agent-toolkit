@@ -192,21 +192,37 @@ export async function publishS3Static(request, dependencies = {}) {
       { sleep },
     );
     sentinelUploaded = true;
-    await runAws(
+    const sentinelMetadata = await readObjectMetadata(
       command,
       headObjectArgs(roots, sentinelRelativePath, awsOptions),
       { sleep },
     );
-    const sentinelResponse = await httpGet(sentinelTargetPath.publicUrl);
-    if (
-      sentinelResponse.status < 200 ||
-      sentinelResponse.status > 299 ||
-      !responseBytes(sentinelResponse.body).equals(Buffer.from(SENTINEL_BODY))
-    ) {
-      throw publishError(
-        'E_PUBLISH_ROOTS',
-        'Public root did not serve the uploaded sentinel.',
-      );
+    await verifyObjectBytes({
+      command,
+      metadata: sentinelMetadata,
+      roots,
+      relativePath: sentinelRelativePath,
+      expectedHash: fileHash(Buffer.from(SENTINEL_BODY)),
+      downloadPath: join(sentinelDirectory, 'sentinel-download.txt'),
+      awsOptions,
+      sleep,
+    });
+    const publicAccess =
+      request.schemaVersion === 'explainer-kit.publish-request/v1'
+        ? 'public'
+        : request.publicAccess;
+    if (publicAccess === 'public') {
+      const sentinelResponse = await httpGet(sentinelTargetPath.publicUrl);
+      if (
+        sentinelResponse.status < 200 ||
+        sentinelResponse.status > 299 ||
+        !responseBytes(sentinelResponse.body).equals(Buffer.from(SENTINEL_BODY))
+      ) {
+        throw publishError(
+          'E_PUBLISH_ROOTS',
+          'Public root did not serve the uploaded sentinel.',
+        );
+      }
     }
     await runAws(
       command,
@@ -238,12 +254,25 @@ export async function publishS3Static(request, dependencies = {}) {
           { sleep },
         );
       }
-      const uploadedMetadata = await runAws(
+      const uploadedMetadata = await readObjectMetadata(
         command,
         headObjectArgs(roots, artifact.publishPath, awsOptions),
         { sleep },
       );
-      assertMetadata(uploadedMetadata.stdout, artifact);
+      assertMetadata(uploadedMetadata, artifact);
+      await verifyObjectBytes({
+        command,
+        metadata: uploadedMetadata,
+        roots,
+        relativePath: artifact.publishPath,
+        expectedHash: artifact.hash,
+        downloadPath: join(
+          sentinelDirectory,
+          `object-${receiptArtifacts.length}.download`,
+        ),
+        awsOptions,
+        sleep,
+      });
       const response = await httpGet(target.publicUrl);
       if (response.status < 200 || response.status > 299) {
         throw publishError(
@@ -411,6 +440,8 @@ function putObjectArgs({
       cacheControl,
       '--metadata',
       `explainer-sha256=${hash.slice('sha256:'.length)}`,
+      '--checksum-sha256',
+      Buffer.from(hash.slice('sha256:'.length), 'hex').toString('base64'),
       '--no-cli-pager',
     ],
     awsOptions,
@@ -426,8 +457,28 @@ function headObjectArgs(roots, relativePath, awsOptions) {
       roots.bucket,
       '--key',
       objectKey(roots, relativePath),
+      '--checksum-mode',
+      'ENABLED',
       '--output',
       'json',
+      '--no-cli-pager',
+    ],
+    awsOptions,
+  );
+}
+
+function getObjectArgs(roots, relativePath, downloadPath, awsOptions) {
+  return withAwsOptions(
+    [
+      's3api',
+      'get-object',
+      '--bucket',
+      roots.bucket,
+      '--key',
+      objectKey(roots, relativePath),
+      '--checksum-mode',
+      'ENABLED',
+      downloadPath,
       '--no-cli-pager',
     ],
     awsOptions,
@@ -500,6 +551,11 @@ async function readExistingMetadata(command, args, { sleep }) {
   }
 }
 
+async function readObjectMetadata(command, args, { sleep }) {
+  const result = await runAws(command, args, { sleep });
+  return parseAwsJson(result.stdout);
+}
+
 function matchesPublishedArtifact(metadata, artifact) {
   return (
     metadata?.Metadata?.['explainer-sha256'] ===
@@ -509,20 +565,67 @@ function matchesPublishedArtifact(metadata, artifact) {
   );
 }
 
-function assertMetadata(stdout, artifact) {
-  let metadata;
-  try {
-    metadata = JSON.parse(stdout || '{}');
-  } catch {
-    throw publishError(
-      'E_PUBLISH_VERIFY',
-      'AWS returned invalid object metadata.',
-    );
-  }
+function assertMetadata(metadata, artifact) {
   if (!matchesPublishedArtifact(metadata, artifact)) {
     throw publishError(
       'E_PUBLISH_VERIFY',
       `Uploaded metadata mismatch for ${artifact.manifestPath}.`,
+    );
+  }
+}
+
+async function verifyObjectBytes({
+  command,
+  metadata,
+  roots,
+  relativePath,
+  expectedHash,
+  downloadPath,
+  awsOptions,
+  sleep,
+}) {
+  const expectedBase64 = Buffer.from(
+    expectedHash.slice('sha256:'.length),
+    'hex',
+  ).toString('base64');
+  if (typeof metadata.ChecksumSHA256 === 'string') {
+    if (metadata.ChecksumSHA256 !== expectedBase64) {
+      throw publishError(
+        'E_PUBLISH_VERIFY',
+        `Authenticated object checksum mismatch for ${relativePath}.`,
+      );
+    }
+    return;
+  }
+
+  try {
+    await runAws(
+      command,
+      getObjectArgs(roots, relativePath, downloadPath, awsOptions),
+      { sleep },
+    );
+  } catch (cause) {
+    throw publishError(
+      'E_PUBLISH_VERIFY',
+      `Authenticated object-byte verification is unavailable for ${relativePath}.`,
+      { cause },
+    );
+  }
+  if (fileHash(await readFile(downloadPath)) !== expectedHash) {
+    throw publishError(
+      'E_PUBLISH_VERIFY',
+      `Authenticated object bytes do not match ${relativePath}.`,
+    );
+  }
+}
+
+function parseAwsJson(stdout) {
+  try {
+    return JSON.parse(stdout || '{}');
+  } catch {
+    throw publishError(
+      'E_PUBLISH_VERIFY',
+      'AWS returned invalid object metadata.',
     );
   }
 }

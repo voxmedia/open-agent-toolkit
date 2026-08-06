@@ -172,6 +172,14 @@ test('uploads additively with MIME/cache metadata and skips matching declared ob
     'public, max-age=300',
   );
   assert.equal(
+    argument(artifactPuts[0], '--checksum-sha256'),
+    createHash('sha256')
+      .update(
+        harness.objects.get('published/initiatives/demo/catalog.json').Body,
+      )
+      .digest('base64'),
+  );
+  assert.equal(
     harness.calls.some((call) => call.includes('sync')),
     false,
   );
@@ -304,6 +312,26 @@ test('rejects a successful public response whose bytes do not match the manifest
   await assert.rejects(readFile(fixture.receiptPath), { code: 'ENOENT' });
 });
 
+test('fails closed when public access returns an undeclared authorization response', async () => {
+  const fixture = await createFixture();
+  const harness = fakeDestination();
+
+  await assert.rejects(
+    publishS3Static(fixture.request, {
+      approved: true,
+      ...harness.dependencies,
+      httpGet: async (url) =>
+        url.includes('sentinel')
+          ? harness.dependencies.httpGet(url)
+          : { status: 403, headers: {}, body: Buffer.from('denied') },
+    }),
+    (error) =>
+      error.code === 'E_PUBLISH_VERIFY' &&
+      /public verification failed/i.test(error.message),
+  );
+  await assert.rejects(readFile(fixture.receiptPath), { code: 'ENOENT' });
+});
+
 test('emits no successful receipt when the generated catalog is missing', async () => {
   const fixture = await createFixture();
   const harness = fakeDestination();
@@ -418,6 +446,11 @@ test('forces JSON metadata output and retries transient metadata reads', async (
   assert.ok(
     parsedMetadataCalls.every((call) => argument(call, '--output') === 'json'),
   );
+  assert.ok(
+    parsedMetadataCalls.every(
+      (call) => argument(call, '--checksum-mode') === 'ENABLED',
+    ),
+  );
 });
 
 test('rejects undeclared files and exposes no root-wide delete operation', async () => {
@@ -530,12 +563,13 @@ async function createFixture() {
   const requestPath = join(runRoot, 'publish-request.json');
   const receiptPath = join(runRoot, 'publish-receipt.json');
   const request = {
-    schemaVersion: 'explainer-kit.publish-request/v1',
+    schemaVersion: 'explainer-kit.publish-request/v2',
     provider: 's3-static',
     s3Uri: 's3://example-bucket/published/',
     publicBaseUrl: 'https://cdn.example.com/published/',
     awsRegion: 'us-east-1',
     awsProfile: 'test-profile',
+    publicAccess: 'public',
     siteRoot,
     manifestPath,
   };
@@ -561,16 +595,20 @@ function fakeDestination({
   const objects = new Map(
     [...existingHashes].map(([key, hash]) => [
       key,
-      {
-        ContentType: key.endsWith('.json')
-          ? 'application/json'
-          : 'text/html; charset=utf-8',
-        CacheControl: 'public, max-age=300',
-        Metadata: { 'explainer-sha256': hash.slice('sha256:'.length) },
-        Body: key.endsWith('.json')
+      (() => {
+        const body = key.endsWith('.json')
           ? Buffer.from('{}\n')
-          : Buffer.from('<!doctype html><title>Demo</title>\n'),
-      },
+          : Buffer.from('<!doctype html><title>Demo</title>\n');
+        return {
+          ContentType: key.endsWith('.json')
+            ? 'application/json'
+            : 'text/html; charset=utf-8',
+          CacheControl: 'public, max-age=300',
+          Metadata: { 'explainer-sha256': hash.slice('sha256:'.length) },
+          ChecksumSHA256: createHash('sha256').update(body).digest('base64'),
+          Body: body,
+        };
+      })(),
     ]),
   );
   const command = async (file, args) => {
@@ -582,22 +620,24 @@ function fakeDestination({
       if (objects.has(key)) {
         return { stdout: JSON.stringify(objects.get(key)), stderr: '' };
       }
-      if (key.includes('sentinel')) {
-        return { stdout: '{}', stderr: '' };
-      }
       throw Object.assign(new Error('Not Found'), {
         stderr: 'An error occurred (404) when calling the HeadObject operation',
       });
     }
-    if (operation === 'put-object' && !key.includes('sentinel')) {
+    if (operation === 'put-object') {
+      const body = await readFile(argument(call, '--body'));
       objects.set(key, {
         ContentType: argument(call, '--content-type'),
         CacheControl: argument(call, '--cache-control'),
         Metadata: {
           'explainer-sha256': argument(call, '--metadata').split('=')[1],
         },
-        Body: await readFile(argument(call, '--body')),
+        ChecksumSHA256: createHash('sha256').update(body).digest('base64'),
+        Body: body,
       });
+    }
+    if (operation === 'delete-object') {
+      objects.delete(key);
     }
     return { stdout: '{}', stderr: '' };
   };

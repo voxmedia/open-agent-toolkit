@@ -16,7 +16,8 @@ const schemas = {
   manifest: 'explainer-kit.manifest/v1',
   'build-record': 'explainer-kit.build-record/v1',
   'durability-evidence': 'explainer-kit.durability-evidence/v1',
-  'publish-request': 'explainer-kit.publish-request/v1',
+  'publish-request.v1': 'explainer-kit.publish-request/v1',
+  'publish-request.v2': 'explainer-kit.publish-request/v2',
   'publish-receipt': 'explainer-kit.publish-receipt/v1',
   'author-request.v2': 'explainer-kit.author-request/v2',
   'author-request.v3': 'explainer-kit.author-request/v3',
@@ -82,12 +83,25 @@ test('run request persists render strategy and complete durability input', async
     'commit',
     'publish',
   ]);
+  assert.deepEqual(schema.properties.durability.properties.publish.oneOf, [
+    { $ref: 'explainer-kit.publish-request/v1' },
+    { $ref: 'explainer-kit.publish-request/v2' },
+  ]);
   assert.deepEqual(schema.properties.recapMode.enum, [
     'artistic',
     'deterministic-markdown',
   ]);
   assert.equal(schema.$defs.sourceBinding.properties.role.minLength, 1);
   assert.equal(schema.$defs.sourceBinding.properties.sourceSetId.minLength, 1);
+});
+
+test('publish request v2 requires an explicit public access mode', async () => {
+  const schema = await loadSchema('publish-request.v2');
+  assert.ok(schema.required.includes('publicAccess'));
+  assert.deepEqual(schema.properties.publicAccess.enum, [
+    'public',
+    'protected',
+  ]);
 });
 
 test('theme identity excludes render strategy', async () => {
