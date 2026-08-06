@@ -874,6 +874,59 @@ describe('oat-config', () => {
       });
     });
 
+    it('normalizes valid workflow.retro values and drops unknown keys', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            retro: {
+              filing: { repo: 'backlog', upstream: 'issues', unknown: true },
+              apply: 'auto',
+              upstreamRepo: 'voxmedia/open-agent-toolkit',
+              unknown: true,
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+        workflow: {
+          retro: {
+            filing: { repo: 'backlog', upstream: 'issues' },
+            apply: 'auto',
+            upstreamRepo: 'voxmedia/open-agent-toolkit',
+          },
+        },
+      });
+    });
+
+    it('drops invalid workflow.retro values independently', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            archiveOnComplete: true,
+            retro: {
+              filing: { repo: 'project', upstream: 'backlog' },
+              apply: 'always',
+              upstreamRepo: 'not-a-repo',
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      await expect(readOatConfig(repoRoot)).resolves.toEqual({
+        version: 1,
+        workflow: { archiveOnComplete: true },
+      });
+    });
+
     it('reads valid workflow config from .oat/config.json', async () => {
       const repoRoot = await createRepoRoot();
       const configPath = join(repoRoot, '.oat', 'config.json');

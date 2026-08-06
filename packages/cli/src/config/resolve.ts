@@ -132,6 +132,14 @@ const DEFAULT_WORKFLOW_CONFIG = {
       projectExplainer: 'ask',
       projectRecap: 'ask',
     },
+    retro: {
+      filing: {
+        repo: null,
+        upstream: null,
+      },
+      apply: 'ask',
+      upstreamRepo: null,
+    },
   },
 } satisfies Record<string, unknown>;
 
