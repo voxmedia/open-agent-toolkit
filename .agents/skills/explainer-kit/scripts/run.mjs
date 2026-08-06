@@ -20,6 +20,7 @@ import {
 import { processFactBase } from './lib/fact-base.mjs';
 import { writeJsonAtomic, writeTextAtomic } from './lib/fs-safe.mjs';
 import { validateHtmlSafety } from './lib/html-safety.mjs';
+import { validateInternalReferences } from './lib/internal-references.mjs';
 import { parseMarkdown } from './lib/markdown.mjs';
 import {
   auditArtifactSet,
@@ -124,6 +125,7 @@ export async function runExplainer(request, options = {}) {
     visualReviewPaths: [],
     visualReviewAttempt: 0,
     reviewGateBlocked: false,
+    correctionAttempted: false,
     resumeToken: null,
     resumedApprovalStatus: null,
   };
@@ -429,6 +431,7 @@ async function auditRenderedArtifacts(
   now,
   { browserProvider, htmlSafetyErrors, qaWarnings },
 ) {
+  await enforceInternalReferenceGate(state, options, now);
   for (const artifact of state.resolvedArtifacts.filter(
     ({ authoring }) => authoring === 'html',
   )) {
@@ -508,6 +511,13 @@ async function auditRenderedArtifacts(
   } else if (visualCritic) {
     await reviewAndRetain(state, visualCritic, 1);
     if (state.visualReview.result.disposition === 'correct') {
+      if (state.correctionAttempted) {
+        throw codedError(
+          'E_VISUAL_CORRECTION',
+          'The one bounded artifact correction was already consumed by internal-reference validation.',
+        );
+      }
+      state.correctionAttempted = true;
       await applyVisualCorrection(state, options, now);
       const correctedArtifacts = state.rendered.map((artifact) => ({
         id: artifact.artifactId,
@@ -584,6 +594,145 @@ async function auditRenderedArtifacts(
     warnings,
     status: warnings.length > 0 ? 'warned' : 'passed',
   };
+}
+
+async function enforceInternalReferenceGate(state, options, now) {
+  const validate = () =>
+    validateInternalReferences({
+      artifacts: state.rendered.map((artifact) => ({
+        artifactId: artifact.artifactId,
+        renderedPath: artifact.renderedPath,
+        html: artifact.html,
+      })),
+      manifestPaths: state.artifacts.map(({ renderedPath }) => renderedPath),
+    });
+  const initial = validate();
+  if (initial.valid) return;
+
+  const correctionAuthor = options.correctArtifact ?? options.author;
+  if (typeof correctionAuthor !== 'function') {
+    throw internalReferenceError(initial.errors);
+  }
+  const trust = authorTrustContext(options, now);
+  const artifactIds = [
+    ...new Set(
+      initial.errors
+        .map(({ artifactId }) => artifactId)
+        .filter((artifactId) => typeof artifactId === 'string'),
+    ),
+  ];
+  if (artifactIds.length === 0) {
+    throw internalReferenceError(initial.errors);
+  }
+  state.correctionAttempted = true;
+  for (const artifactId of artifactIds) {
+    const artifactIndex = state.resolvedArtifacts.findIndex(
+      ({ id }) => id === artifactId,
+    );
+    if (artifactIndex < 0) {
+      throw internalReferenceError(initial.errors);
+    }
+    const artifact = state.resolvedArtifacts[artifactIndex];
+    let item;
+    try {
+      item = await authorArtifact(
+        state,
+        artifact,
+        correctionAuthor,
+        trust,
+        canonicalArtifactLinks(
+          state.resolvedArtifacts,
+          artifact.id,
+          state.run.slug,
+        ),
+        {
+          attempt: 1,
+          reason: 'internal-reference-validation',
+          findings: structuredClone(
+            initial.errors.filter(
+              ({ artifactId: findingArtifactId }) =>
+                findingArtifactId === artifactId,
+            ),
+          ),
+          previousContentPath: state.contentPaths.get(artifactId),
+        },
+      );
+    } catch (error) {
+      throw codedError(
+        'E_INTERNAL_REFERENCE',
+        `Internal-reference correction failed for ${artifactId}: ${safeMessage(error)}`,
+      );
+    }
+    await installCorrectedArtifact(state, artifactIndex, item);
+  }
+
+  const final = validate();
+  if (!final.valid) {
+    throw internalReferenceError(final.errors);
+  }
+}
+
+async function installCorrectedArtifact(state, artifactIndex, item) {
+  const artifactId = item.artifact.id;
+  await writeJsonAtomic(state.run.runRoot, item.resultPath, item.result);
+  await writeTextAtomic(state.run.runRoot, item.contentPath, item.content);
+  state.resolvedArtifacts[artifactIndex] = item.artifact;
+  state.authoredContent.set(artifactId, item.content);
+  state.contentPaths.set(artifactId, item.contentPath);
+  if (item.artifact.authoring === 'markdown') {
+    const links = expansionLinks(state.resolvedArtifacts);
+    const model = assertValidContentModel(
+      state.recipe,
+      markdownContentModel(
+        item.artifact,
+        state.run.slug,
+        item.content,
+        item.artifact.origin === 'floor' ? links : [],
+      ),
+      item.artifact,
+    );
+    const modelIndex = state.contentModels.findIndex(
+      ({ artifactId: id }) => id === artifactId,
+    );
+    state.contentModels[modelIndex] = model;
+  }
+  const rendered =
+    item.artifact.authoring === 'markdown'
+      ? await renderArtifact({
+          recipeArtifact: renderDescriptor(item.artifact),
+          content: state.contentModels.find(
+            ({ artifactId: id }) => id === artifactId,
+          ),
+          factBase: state.factBase,
+          theme: state.theme,
+          renderStrategy: state.renderStrategy,
+          ...(state.run.request.publicBaseUrl && {
+            publicBaseUrl: state.run.request.publicBaseUrl,
+          }),
+        })
+      : artisticRender(state, item.artifact);
+  await writeTextAtomic(
+    state.run.runRoot,
+    rendered.renderedPath,
+    rendered.html,
+  );
+  const renderedIndex = state.rendered.findIndex(
+    ({ artifactId: id }) => id === artifactId,
+  );
+  state.rendered[renderedIndex] = rendered;
+  state.artifacts[renderedIndex] = artifactRecord(state, rendered);
+}
+
+function internalReferenceError(errors) {
+  return codedError(
+    'E_INTERNAL_REFERENCE',
+    errors
+      .map(
+        ({ code, renderedPath, reference, message }) =>
+          `${code}: ${renderedPath ?? 'site'}${reference ? ` references ${reference}` : ''}: ${message}`,
+      )
+      .join('; '),
+  );
 }
 
 function resolveVisualCritic(options) {

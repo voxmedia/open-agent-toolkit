@@ -111,9 +111,14 @@ hub; floor artifacts keep their existing paths.
 
 ## Review, Approval, and Warnings
 
-Approval runs after theme, render, safety validation, the guideline checker, and
-render QA, immediately before publish and durability — so a reviewer approves
-rendered artifacts and the complete warning set, not raw prose.
+Approval runs after theme, render, hard internal-reference validation, safety
+validation, the guideline checker, and render QA, immediately before publish and
+durability — so a reviewer approves rendered artifacts and the complete warning
+set, not raw prose. The reference gate resolves `href`, `src`, `srcset`,
+fragments, and safe embedded references against explicit manifest/site-tree
+files. It may invoke the existing correction author once, then rerenders and
+revalidates before any browser or visual review. An exhausted
+`E_INTERNAL_REFERENCE` finding fails closed and cannot reach durability.
 
 Interactive runs stop with an `incomplete` outcome once artifacts are built and
 checked. Review the rendered `site/` tree, the sources under `source/content/`,

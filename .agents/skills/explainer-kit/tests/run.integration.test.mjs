@@ -1087,6 +1087,98 @@ test('a rejected correction that fails QA remains local and updates the build re
   assert.equal(record.stages.find(({ id }) => id === 'qa').status, 'failed');
 });
 
+test('internal-reference validation fails before browser review and durability', async () => {
+  const fixture = await suppliedFixture();
+  const browserProbe = mock.fn(layoutProbe({ pageOverflowX: false }));
+  const durability = mock.fn(async () => {});
+  const brokenAuthor = async (authorRequestValue) => {
+    const authored = authorResult(authorRequestValue);
+    authored.content.markdown += '\n[Missing](../../missing/demo/index.html)\n';
+    return authored;
+  };
+  const correctArtifact = mock.fn(brokenAuthor);
+  const result = await runExplainer(
+    {
+      ...fixture.request,
+      durability: { strategy: 'commit' },
+    },
+    {
+      author: brokenAuthor,
+      correctArtifact,
+      browserProbe,
+      durability,
+      now: () => NOW,
+    },
+  );
+
+  assert.equal(result.outcome, 'failed');
+  assert.equal(result.errors[0].code, 'E_INTERNAL_REFERENCE');
+  assert.equal(correctArtifact.mock.callCount(), 1);
+  assert.equal(browserProbe.mock.callCount(), 0);
+  assert.equal(durability.mock.callCount(), 0);
+  const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
+  assert.equal(record.stages.find(({ id }) => id === 'qa').status, 'failed');
+  assert.match(
+    record.stages.find(({ id }) => id === 'qa').error.message,
+    /missing-target/,
+  );
+});
+
+test('one bounded reference correction rerenders and revalidates before review', async () => {
+  const fixture = await suppliedFixture();
+  const events = [];
+  const browserProbe = mock.fn(async (probeRequest) => {
+    events.push(`browser:${probeRequest.viewport.width}`);
+    return layoutProbe({ pageOverflowX: false })(probeRequest);
+  });
+  const durability = mock.fn(async () => {
+    events.push('durability');
+  });
+  const correctArtifact = mock.fn(async (authorRequestValue, correction) => {
+    events.push('correct');
+    assert.equal(correction.attempt, 1);
+    assert.equal(correction.reason, 'internal-reference-validation');
+    assert.ok(
+      correction.findings.some(({ code }) => code === 'missing-target'),
+    );
+    return authorResult(authorRequestValue);
+  });
+
+  const result = await runExplainer(
+    {
+      ...fixture.request,
+      durability: { strategy: 'commit' },
+    },
+    {
+      author: async (authorRequestValue) => {
+        events.push('author');
+        const authored = authorResult(authorRequestValue);
+        authored.content.markdown +=
+          '\n[Missing](../../missing/demo/index.html)\n';
+        return authored;
+      },
+      correctArtifact,
+      browserProbe,
+      durability,
+      now: () => NOW,
+    },
+  );
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  assert.equal(correctArtifact.mock.callCount(), 1);
+  assert.ok(events.indexOf('correct') > events.indexOf('author'));
+  assert.ok(
+    events
+      .filter((event) => event.startsWith('browser:'))
+      .every((event) => events.indexOf(event) > events.indexOf('correct')),
+  );
+  assert.ok(events.indexOf('durability') > events.indexOf('correct'));
+});
+
 test('resume rejects a changed fact-base binding', async () => {
   const fixture = await suppliedFixture();
   const interactiveRequest = { ...fixture.request, mode: 'interactive' };

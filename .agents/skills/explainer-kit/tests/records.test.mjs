@@ -596,6 +596,38 @@ test('records an initial stage failure as a failed run', async () => {
   );
 });
 
+test('retains an exhausted internal-reference finding as a failed QA gate', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  for (const id of ['validate', 'fact-base', 'content', 'theme', 'render']) {
+    await updateBuildRecord(run, { id, status: 'running' });
+    await updateBuildRecord(run, { id, status: 'passed' });
+  }
+  await updateBuildRecord(run, { id: 'qa', status: 'running' });
+  const failed = await updateBuildRecord(run, {
+    id: 'qa',
+    status: 'failed',
+    error: {
+      code: 'E_INTERNAL_REFERENCE',
+      message:
+        'missing-target: site/initiatives/demo/index.html references missing/index.html',
+      recovery: [
+        'Correct the qa inputs or implementation and start a new run.',
+      ],
+    },
+  });
+
+  assert.equal(failed.outcome, 'failed');
+  assert.equal(
+    failed.stages.find(({ id }) => id === 'qa').error.code,
+    'E_INTERNAL_REFERENCE',
+  );
+  assert.equal(
+    failed.stages.find(({ id }) => id === 'durability').status,
+    'pending',
+  );
+});
+
 test('writes manifests atomically without leaving temporary siblings', async () => {
   const outputRoot = await temporaryDirectory();
   const run = await initializeRun(request(outputRoot));

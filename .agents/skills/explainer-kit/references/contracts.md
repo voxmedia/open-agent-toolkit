@@ -188,12 +188,27 @@ The core executes:
 5. author every planned artifact against the same set context
 6. render typed artifacts through the narrative renderer or validate
    agent-composed HTML, per each artifact's declared authoring path
-7. run structural and guideline QA, plus required browser and independent
+7. validate every post-render `href`, `src`, `srcset`, and embedded reference
+   against the manifest paths and generated site tree; reject directory links,
+   escapes, missing files or fragments, malformed references, and unsafe
+   embedded resources
+8. optionally apply one bounded author correction, then rerender and revalidate
+   the complete site before any browser callback
+9. run structural and guideline QA, plus required browser and independent
    visual review for unattended project recaps
-8. close any unresolved recap review gate before external persistence
-9. resolve content approval — the interactive gate pauses here, after render and
-   QA and before anything is published or persisted externally
-10. write the manifest and build record
+10. close any unresolved recap review gate before external persistence
+11. resolve content approval — the interactive gate pauses here, after render and
+    QA and before anything is published or persisted externally
+12. write the manifest and build record
+
+The internal-reference gate uses a bounded tokenizer/classifier rather than a
+general HTML parser. Relative references resolve from the current explicit file
+with an isolated HTTPS base, then must bind exactly to the manifest/site tree.
+Fragments must exist in the target document. Safe base64 image data references
+and same-document fragments are classified separately. A malformed or
+unresolved reference fails `E_INTERNAL_REFERENCE`; after the one correction is
+exhausted, the QA stage retains that finding and durability and publication
+remain ineligible.
 
 An incomplete interactive result includes
 `approval.resumeToken: "ekrt2:<64 lowercase hex characters>"`. The token is an
