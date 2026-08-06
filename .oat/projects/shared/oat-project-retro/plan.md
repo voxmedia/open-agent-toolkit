@@ -464,17 +464,18 @@ git commit -m "test(p05-t02): dogfood retro acceptance run and fixes"
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status  | Date       | Artifact               | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | ---------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -                      | -             | -          | -           |
-| p02    | code     | pending | -          | -                      | -             | -          | -           |
-| p03    | code     | pending | -          | -                      | -             | -          | -           |
-| p04    | code     | pending | -          | -                      | -             | -          | -           |
-| p05    | code     | pending | -          | -                      | -             | -          | -           |
-| final  | code     | pending | -          | -                      | -             | -          | -           |
-| spec   | artifact | pending | -          | -                      | -             | -          | -           |
-| design | artifact | pending | -          | -                      | -             | -          | -           |
-| plan   | artifact | passed  | 2026-08-05 | structured (in-memory) | -             | auto       | -           |
+| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p05    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
+| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| plan   | artifact | passed   | 2026-08-05 | structured (in-memory)                             | -             | auto       | -           |
+| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T002316Z.md | -             | -          | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
