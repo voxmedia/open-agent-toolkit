@@ -139,6 +139,17 @@ test('rejects traversal-like slugs before mutating the output root', async () =>
   assert.deepEqual(await readdir(parent), []);
 });
 
+test('rejects an output root already ending in the run slug before creating it', async () => {
+  const parent = await temporaryDirectory();
+  const outputRoot = join(parent, 'demo-project');
+
+  await assert.rejects(
+    initializeRun(request(outputRoot)),
+    /output root.*already ends.*run slug.*double-nest/i,
+  );
+  assert.deepEqual(await readdir(parent), []);
+});
+
 test('rejects an existing run-root symlink that escapes the output root', async () => {
   const outputRoot = await temporaryDirectory();
   const outside = await temporaryDirectory('explainer-records-outside-');

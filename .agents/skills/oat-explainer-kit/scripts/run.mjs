@@ -84,6 +84,7 @@ export async function runOatExplainer({
     repoRoot,
     invocation,
     activeProject,
+    slug,
   });
   const destination = resolvedConfig.publish
     ? deriveExplainerDestination({

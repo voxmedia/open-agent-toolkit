@@ -321,9 +321,45 @@ test('requires direct callers to supply their own output root', async () => {
       repoRoot,
       invocation: 'direct',
       outputRoot: join(repoRoot, 'direct-output'),
+      slug: 'demo-run',
     }),
     join(canonicalRepoRoot, 'direct-output'),
   );
+});
+
+test('applies the run-root contract to project, repo, and direct wrapper roots', async () => {
+  const repoRoot = await fixture();
+  for (const inputs of [
+    {
+      invocation: 'project',
+      activeProject: '.oat/projects/shared/demo',
+    },
+    { invocation: 'repo' },
+    {
+      invocation: 'direct',
+      outputRoot: join(repoRoot, 'direct-output'),
+    },
+  ]) {
+    await assert.doesNotReject(
+      resolveExplainerOutputRoot({
+        repoRoot,
+        slug: 'demo-run',
+        ...inputs,
+      }),
+    );
+  }
+
+  const parent = join(repoRoot, 'direct-output');
+  await assert.rejects(
+    resolveExplainerOutputRoot({
+      repoRoot,
+      invocation: 'direct',
+      outputRoot: join(parent, 'demo-run'),
+      slug: 'demo-run',
+    }),
+    /output root.*already ends.*run slug.*double-nest/i,
+  );
+  await assert.rejects(realpath(parent), { code: 'ENOENT' });
 });
 
 test('rejects traversal and symlink ancestors that escape the repository', async () => {
