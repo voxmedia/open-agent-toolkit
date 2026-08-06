@@ -153,6 +153,18 @@ escalated to the operator.
   flagged-durable packages verify and export while staying unpublishable;
   `workflows/projects/artifacts.md` added to the docs delta).
 
+- **Attempt 12** (`artifact-plan-review-2026-08-06T034831Z.md`): attempt-11
+  findings confirmed resolved; 2 Important, 0 Medium new — the link
+  validator lacked valid fragment/non-site reference classes (fixed:
+  explicit reference classifier in p02-t02 with fragment-target
+  verification, HTML-safety-governed `data:`/SVG exemptions, and classifier
+  fixtures), and the hard link gate never proved correction recovery
+  (fixed: p02-t03 gains a full recovery scenario — link finding → bounded
+  correction → rerender → revalidation → browser/visual review →
+  durability-eligible — plus an exhaustion case, with findings recorded via
+  `records.mjs`). Consequence: the p01/p02 parallel group was dropped
+  (records-file overlap), so the plan is now fully sequential.
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 

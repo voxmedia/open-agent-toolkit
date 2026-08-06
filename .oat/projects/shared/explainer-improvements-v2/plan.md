@@ -6,7 +6,7 @@ oat_last_updated: 2026-08-05
 oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_hill_phases: ['p07'] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [['p01', 'p02']] # groups of phases that run concurrently in worktrees; [] = fully sequential
+oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null # e.g., references/imported-plan.md
 oat_import_source_path: null # original source path provided by user
@@ -52,24 +52,17 @@ existing safety guarantees.
 
 ## Parallelism
 
-`p01` (adapter path/destination derivation) writes under
-`.agents/skills/oat-explainer-kit/`, the CLI config surfaces under
-`packages/cli/src/` (p01-t02), and three specific core files for the
-run-root double-nesting guard (p01-t04): `explainer-kit/scripts/lib/records.mjs`,
-`explainer-kit/scripts/lib/fs-safe.mjs`, and `explainer-kit/tests/records.test.mjs`.
-`p02` (core link integrity) writes core `run.mjs`, `set-plan.mjs`,
-`contracts.mjs`, `render-qa.mjs`, link-validator, schema, brief, and
-reference files, and the `contracts`/`link-validation`/`run.integration`
-test files — none of which is a p01 file. Disjointness is therefore exact-file, not subtree: both phases write
-inside `.agents/skills/explainer-kit/`, but no file appears in both write
-sets, their verification suites are independent, and neither consumes the
-other's outputs, so they are declared as one parallel group. If the parallel
-executor treats a shared skill subtree as overlapping, run p01 and p02
-sequentially instead. Everything after is sequential: `p03` (publication) and `p04`
-(lifecycle) both modify core `run.mjs`/records and adapter finalize seams that
-`p02`/`p01` also touch, `p05`/`p06` share core renderer, schema, theme, and
-fixture files, and `p07` (release closure) bumps skill and package versions
-repo-wide, which conflicts with every other phase by design.
+All phases run **sequentially**; no parallel groups are declared. p01
+(adapter path/destination derivation) and p02 (core link integrity) were
+previously a parallel candidate, but both now write core
+`explainer-kit/scripts/lib/records.mjs` and
+`explainer-kit/tests/records.test.mjs` (p01-t04's run-root guard;
+p02-t03's durable link-finding records), so their write sets overlap.
+Everything after was already sequential: `p03` (publication) and `p04`
+(lifecycle) both modify core `run.mjs`/records and adapter finalize seams
+that `p02`/`p01` also touch, `p05`/`p06` share core renderer, schema, theme,
+and fixture files, and `p07` (release closure) bumps skill and package
+versions repo-wide, which conflicts with every other phase by design.
 
 ---
 
@@ -90,8 +83,8 @@ Write boundary: `.agents/skills/oat-explainer-kit/**`, the CLI
 configuration surfaces in `packages/cli/src/config/**` and
 `packages/cli/src/commands/config/**` (p01-t02 only), and the three core
 double-nesting-guard files in p01-t04 (`records.mjs`, `fs-safe.mjs`,
-`records.test.mjs`). Exact-file disjoint from phase 2's core writes (see
-Parallelism).
+`records.test.mjs`). Phases execute sequentially (see Parallelism), so the
+`records.mjs` overlap with p02-t03 is ordered, not concurrent.
 
 ### Task p01-t01: Derive per-invocation remote publish destination
 
@@ -383,6 +376,21 @@ missing explicit `index.html`, link escaping the site tree, valid canonical
 links pass, external `https://` links ignored, `src` attributes covered, and
 validation runs across hub, diagram, and deck fixtures (not only the hub).
 
+**Explicit reference classifier (so the hard gate neither rejects valid
+renderer output nor skips it unproven):** the validator classifies every
+reference before applying manifest-path rules. Same-document fragments
+(`#id` — already emitted by the standard renderer) and cross-document
+fragments must resolve to an existing element ID in the target document;
+for `.../index.html#fragment`, the path portion validates against the
+manifest **and** the fragment against the target's IDs. Deliberately
+non-site references that the HTML-safety contract already permits — inline
+`data:` image sources and fragment-only SVG references — stay governed by
+HTML-safety policy and are exempt from manifest-path validation, never
+silently skipped elsewhere. Classifier fixtures: valid and missing
+same-document fragments, valid and missing cross-document fragments,
+fragment-only SVG references, embedded `data:` images, external URLs, and
+canonical manifest paths.
+
 **Parsing strategy (explicit — no new runtime dependency):** a bounded
 deterministic attribute tokenizer implemented inside the skill (skill scripts
 run standalone under Node with no npm dependencies), reusing the existing
@@ -394,9 +402,10 @@ malformed-markup fixtures.
 
 **Step 2: Implement (GREEN)**
 
-Bounded tokenizer extraction of local `href`/`src`; resolution against the
-source artifact's site location; manifest/site-tree existence check; per-link
-structured findings; fail-closed malformed-markup handling.
+Bounded tokenizer extraction of local `href`/`src`; the reference
+classifier; resolution against the source artifact's site location;
+manifest/site-tree existence check with fragment-target verification;
+per-link structured findings; fail-closed malformed-markup handling.
 
 **Step 3: Verify**
 
@@ -415,25 +424,37 @@ git commit -m "feat(p02-t02): add manifest-anchored internal-link validator"
 
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs` (today the QA pipeline throws immediately for hard issues before browser evidence, and its correction path begins only after a hard-QA pass plus a visual `correct` disposition — link findings need an executable correction entry, not just a hard failure)
 - Modify: `.agents/skills/explainer-kit/scripts/render-qa.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs` (structured link findings recorded durably in the run record so the correction transition is auditable)
 - Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 
 **Step 1: Write test (RED)**
 
-Integration: a run whose authored HTML contains a directory-style link fails
-the build after render with link findings recorded in the run record, and the
-failure routes into the bounded correction path (same machinery as visual
-findings); it never reaches durability or publication.
+Two integration scenarios prove the full contract, not only the negative
+half:
+
+1. **Recovery:** a run whose authored HTML contains a directory-style link
+   fails link validation after render; the structured link finding (with its
+   canonical-target suggestion) enters the shipped bounded correction seam;
+   the corrected author output rerenders; link validation reruns and passes;
+   browser evidence and visual review then run; the run becomes eligible for
+   durability. The full sequence — rebuild, link revalidation, browser
+   review, visual review, durability — is asserted in order.
+2. **Exhaustion:** output that is still invalid after the bounded correction
+   cap never reaches durability or publication, with the residual link
+   findings durably recorded.
 
 **Step 2: Implement (GREEN)**
 
-Wire the validator between render and browser evidence; findings feed the
-existing correction state machine.
+Wire the validator between render and browser evidence; route link findings
+into the existing correction state machine as a correction-eligible finding
+class (rather than an immediate unrecoverable throw); record findings and
+the correction transition in the run record.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/qa.test.mjs`
+Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/qa.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs`
 Expected: green
 
 **Step 4: Commit**
@@ -1667,7 +1688,7 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T024804Z.md (4 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T031926Z.md (2 Important + 1 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T033345Z.md (3 Important resolved in plan and design)                                                  | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T034831Z.md                                                                                                     | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T034831Z.md (2 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
