@@ -21,13 +21,28 @@ const retroTemplate = readRepoFile('.oat/templates/project-retro.md');
 
 describe('retro skill content contracts', () => {
   it('recovers interrupted decision application by exact date-independent slug', () => {
+    const allowedTools =
+      retroSkill.match(/^allowed-tools:\s*(.+)$/m)?.[1] ?? '';
+
+    expect(allowedTools).toMatch(/(?:^|,\s*)Glob(?:,|$)/);
+    expect(allowedTools).not.toContain('Bash(ls:*)');
     expect(applyProcedure).toContain('date-independent exact-slug');
     expect(applyProcedure).toMatch(/DR-<6 digits>-/);
+    expect(applyProcedure).toContain('Use the granted `Glob` tool');
+    expect(applyProcedure).toContain(
+      '.oat/repo/reference/decisions/DR-??????-<slug>.md',
+    );
+    expect(applyProcedure).not.toMatch(
+      /\bls\s+\.oat\/repo\/reference\/decisions/,
+    );
+    expect(applyProcedure).toMatch(
+      /zero matches[\s\S]*?create[\s\S]*?exactly one match[\s\S]*?verify[\s\S]*?recover `Applied-ref`[\s\S]*?multiple matches[\s\S]*?ambiguity error[\s\S]*?no write/i,
+    );
     expect(applyProcedure).toMatch(
       /verify[\s\S]*?(?:title|proposal)[\s\S]*?context[\s\S]*?decision[\s\S]*?consequences/i,
     );
     expect(applyProcedure).toMatch(
-      /exact-slug record[\s\S]*?recover[\s\S]*?`Applied-ref`/i,
+      /exactly one match[\s\S]*?recover[\s\S]*?`Applied-ref`/i,
     );
     expect(applyProcedure).toMatch(
       /every apply type[\s\S]*?post-side-effect recovery/i,

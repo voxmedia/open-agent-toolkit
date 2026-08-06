@@ -49,24 +49,31 @@ continues immediately, this can be written back together with the final
    Before creating it, compute the slug with the CLI's lowercase,
    ASCII-folded, hyphen-collapsed, 30-character whole-word rule (including
    trailing stop-word trimming). Perform a **date-independent exact-slug**
-   lookup for `DR-<6 digits>-<slug>.md`; never use a loose suffix glob. When
-   one exact-slug record exists, read it and verify its normalized title,
-   context, decision, and consequences represent the current proposal. If they
-   match, treat this as interrupted post-side-effect recovery: do not create a
-   duplicate, and recover `Applied-ref` from that record's ID/path. If they do
-   not match, stop for direction rather than linking an unrelated decision.
+   lookup for `DR-<6 digits>-<slug>.md`; never use a loose suffix glob.
 
-   ```bash
-   ls .oat/repo/reference/decisions/DR-??????-"<slug>".md 2>/dev/null
+   Use the granted `Glob` tool, rooted at the repository, with this pattern
+   after substituting the computed slug:
+
+   ```text
+   .oat/repo/reference/decisions/DR-??????-<slug>.md
    ```
 
-   The six `?` characters anchor the date segment to exactly six characters;
-   compare the remaining slug for exact equality.
+   The six `?` characters anchor the date segment to exactly six characters,
+   and the remaining slug must match exactly. Handle the returned paths
+   deterministically:
+   - **Zero matches:** create the record with `oat decision new`, capture its
+     reported ID/path, and verify it represents the current proposal before
+     writeback.
+   - **Exactly one match:** read it and verify its normalized title, context,
+     decision, and consequences represent the current proposal. On a match,
+     treat this as interrupted post-side-effect recovery: do not create a
+     duplicate, and recover `Applied-ref` from that record's ID/path. On a
+     proposal mismatch, stop for direction and perform no write.
+   - **Multiple matches:** stop with an ambiguity error and perform no write;
+     never choose a record by date, ordering, or convenience.
 
-   When no exact match exists, run `oat decision new`, capture its reported
-   ID/path, and verify the record represents the current proposal before
-   writeback. Use the generated record and index. Never hand-author a decision
-   ID or edit the managed index.
+   Use only the generated or verified record and managed index. Never
+   hand-author a decision ID or edit the managed index.
 
 5. **Code follow-up:** do not implement it here, even when technically small.
    A code follow-up defaults to `Disposition: file`.
