@@ -1,5 +1,5 @@
 ---
-oat_current_task: prev1-t01
+oat_current_task: p06-t01
 oat_last_commit: 74adc91cb8956124e44e2af3d7aecba6e30de595
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -100,7 +100,7 @@ Implementation — Revision 1 queued from post-PR dogfood feedback.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (revision phase added)
-- **Implementation:** `implementation.md` (12/16 tasks complete; revision pending)
+- **Implementation:** `implementation.md` (12/17 tasks complete; compatibility prerequisite in progress)
 
 ## Progress
 
@@ -111,7 +111,7 @@ Implementation — Revision 1 queued from post-PR dogfood feedback.
 - ✓ Final review tool-grant fix verified
 - ✓ Final whole-project review passed
 - ✓ PR created
-- ⧗ Revision 1 queued with four dogfood tasks
+- ⧗ Revision compatibility prerequisite plus four dogfood tasks queued
 
 ## Blockers
 
@@ -119,6 +119,7 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` starting from `prev1-t01`. After all four revision
-tasks complete, return the project to `pr_open`, refresh the summary and PR, and
-dogfood the revised workflow on another project.
+Run `oat-project-implement` starting from `p06-t01`, then continue through
+`p-rev1`. After the four revision tasks complete, return the project to
+`pr_open`, refresh the summary and PR, and dogfood the revised workflow on
+another project.

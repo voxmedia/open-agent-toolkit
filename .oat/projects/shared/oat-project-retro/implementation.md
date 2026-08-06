@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-06
-oat_current_task_id: prev1-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -79,9 +79,10 @@ resolution complete; plan handed to implementation.
 | p03    | complete    | 2     | 2/2       |
 | p04    | complete    | 2     | 2/2       |
 | p05    | complete    | 2     | 2/2       |
-| p-rev1 | in_progress | 4     | 0/4       |
+| p06    | in_progress | 1     | 0/1       |
+| p-rev1 | pending     | 4     | 0/4       |
 
-**Total:** 12/16 tasks completed
+**Total:** 12/17 tasks completed
 
 ---
 
@@ -123,6 +124,12 @@ resolution complete; plan handed to implementation.
 | ------- | -------- | ------------------------ | --------------------------------------------------------------------- |
 | p05-t01 | complete | `77c9a90cb`, `b4a978b8b` | Dogfooded generate/apply with explicit consent and no filing write.   |
 | p05-t02 | complete | `95370f44c`              | Initially bumped all public packages to 0.2.29 and passed validation. |
+
+### p06 — Revision Workflow Compatibility
+
+| Task    | Status      | Commit | Outcome |
+| ------- | ----------- | ------ | ------- |
+| p06-t01 | in_progress | -      | -       |
 
 ### p-rev1 — Revision 1
 
@@ -184,6 +191,10 @@ resolution complete; plan handed to implementation.
 ### Task p05-t02: Lockstep version bump and final release validation
 
 **Status:** completed
+
+### Task p06-t01: Parse canonical revision phases and task IDs
+
+**Status:** in_progress
 
 ### Task prev1-t01: Keep mutable retro state coherent
 
@@ -276,13 +287,16 @@ configured-invocation evidence.
 **Changes requested:**
 
 - Keep mutable register status and freeform retro narrative internally coherent.
+- Align control-plane parsing with the canonical revision phase/task shape
+  emitted by the revision workflow.
 - Distinguish exact duplicates from related items and split UP-01 into a
   dedicated `M`-sized backlog item.
 - Record a committed receipt before treating local backlog filing as durable,
   while reporting unpushed visibility honestly.
 - Make retro depth evidence-scaled and concise by default.
 
-**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`, `prev1-t04`
+**New tasks added:** `p06-t01`, `prev1-t01`, `prev1-t02`, `prev1-t03`,
+`prev1-t04`
 
 **Next:** Execute revision tasks via the `oat-project-implement` skill.
 

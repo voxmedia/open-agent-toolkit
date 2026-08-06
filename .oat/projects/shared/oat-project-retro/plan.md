@@ -584,6 +584,55 @@ cell; never truncate a widened row back to five columns.
 
 ---
 
+## Phase 6: Revision Workflow Compatibility
+
+### Task p06-t01: Parse canonical revision phases and task IDs
+
+**Files:**
+
+- Modify: `packages/control-plane/src/state/tasks.ts`
+- Modify: `packages/control-plane/src/state/tasks.test.ts`
+- Modify: `packages/control-plane/src/recommender/router.test.ts`
+
+**Step 1: Write regression tests (RED)**
+
+Add coverage proving the control-plane project-state parser recognizes the
+canonical shape emitted by `oat-project-revise`:
+
+- heading `## Phase p-rev1: Revision 1`;
+- task IDs `prev1-t01`, `prev1-t02`;
+- reported phase ID `p-rev1` with `isRevision: true`;
+- completed/current-task accounting and recommender routing.
+
+Preserve the existing legacy `## Revision Phase 1` / `p-rev1-tNN` form for
+backward compatibility.
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/tasks.test.ts src/recommender/router.test.ts
+```
+
+Expected: canonical-shape assertions fail before the parser change.
+
+**Step 2: Implement compatible parsing (GREEN)**
+
+Recognize both revision heading/task conventions, normalize both to phase ID
+`p-revN`, and keep completion/current-task parsing exact. Do not weaken ordinary
+`pNN` phase parsing or accept malformed near-matches.
+
+**Step 3: Verify and commit**
+
+Run the focused tests above, package type-check, file-scoped formatting, and
+`git diff --check`.
+
+```bash
+git add packages/control-plane/src/state/tasks.ts packages/control-plane/src/state/tasks.test.ts packages/control-plane/src/recommender/router.test.ts
+git commit -m "fix(p06-t01): parse canonical revision phases"
+```
+
+---
+
 ## Phase p-rev1: Revision 1
 
 Source: inline dogfood feedback (2026-08-06)
@@ -769,9 +818,10 @@ git commit -m "feat(prev1-t04): refine retrospective dogfood workflow"
 - Phase 3: 2 tasks - Closeout dispatch and completion offer
 - Phase 4: 2 tasks - Lifecycle/config docs and workflow page
 - Phase 5: 2 tasks - Dogfood acceptance, then lockstep release bump + final validation
+- Phase 6: 1 task - Canonical revision phase compatibility in project state
 - Revision 1: 4 tasks - Writeback coherence, duplicate scope, durable filing receipts, and concise output
 
-**Total: 16 tasks**
+**Total: 17 tasks**
 
 Revision 1 is ready for implementation.
 
