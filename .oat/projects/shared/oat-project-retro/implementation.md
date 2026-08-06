@@ -72,15 +72,15 @@ resolution complete; plan handed to implementation.
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 2     | 2/2       |
-| p02   | complete    | 4     | 4/4       |
-| p03   | complete    | 2     | 2/2       |
-| p04   | in_progress | 2     | 0/2       |
-| p05   | pending     | 2     | 0/2       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 2     | 2/2       |
+| p02   | complete | 4     | 4/4       |
+| p03   | complete | 2     | 2/2       |
+| p04   | complete | 2     | 2/2       |
+| p05   | pending  | 2     | 0/2       |
 
-**Total:** 8/12 tasks completed
+**Total:** 10/12 tasks completed
 
 ---
 
@@ -111,10 +111,10 @@ resolution complete; plan handed to implementation.
 
 ### p04 — Documentation
 
-| Task    | Status  | Commit | Outcome |
-| ------- | ------- | ------ | ------- |
-| p04-t01 | pending | -      | -       |
-| p04-t02 | pending | -      | -       |
+| Task    | Status   | Commit      | Outcome                                                      |
+| ------- | -------- | ----------- | ------------------------------------------------------------ |
+| p04-t01 | complete | `a36167fcf` | Documents retro lifecycle placement and configuration.       |
+| p04-t02 | complete | `a6f79ae4a` | Adds the retro workflow page, navigation, and repo guidance. |
 
 ### p05 — Acceptance and Release
 
@@ -219,6 +219,8 @@ configured-invocation evidence.
 - p04 implementation completed at `21d6aa65d` with a clean worktree. Root
   independently reconfirmed `pnpm check`; review round 1 was dispatched against
   the exact two-commit phase range.
+- p04 review round 1 passed with no findings. The phase and passing review
+  artifact were integrated through `0149cc565`; p05 is the remaining phase.
 
 ---
 
