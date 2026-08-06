@@ -66,6 +66,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     requiredPaths: [
       'dist/index.js',
       'assets',
+      'assets/bundle-metadata.json',
       'assets/migration/pjm-restructure.md',
       'assets/templates/decision.md',
       'assets/templates/repo-agents.md',
