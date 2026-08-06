@@ -291,6 +291,39 @@ git commit -m "feat(p02-t04): register retro skill pair and template in workflow
 
 ---
 
+### p02 review-fix boundary
+
+The root-owned p02 review found two Important and three Medium contract defects.
+A bounded continuation may modify only:
+
+- `.agents/skills/oat-project-retro/references/apply-procedure.md`
+- `.agents/skills/oat-project-retro/SKILL.md`
+- `.agents/skills/oat-project-retro-file/SKILL.md`
+- `.oat/templates/project-retro.md`
+- `packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts` (create)
+
+The continuation must:
+
+1. add exact-slug preflight and post-side-effect recovery for decision application,
+   and state the equivalent recovery requirement for every apply type;
+2. define deterministic non-interactive duplicate handling without external
+   strengthening or refiling, and safe no-action behavior when backlog metadata is
+   incomplete;
+3. add one mutable disposition-note field for rejection reasons and align both
+   consumers with the immutable-body contract;
+4. define exact promotion aggregation for empty, wholly unsettled, mixed, and wholly
+   settled registers, treating `approved` as unsettled and `rejected` as settled;
+5. reject null project/timestamp provenance and unreplaced scaffold placeholders
+   before render completion; and
+6. cover interrupted decision recovery, configured duplicate filing, incomplete
+   backlog metadata, rollup aggregation, mutable rejection notes, and render
+   provenance with focused content-contract tests.
+
+No generated provider-view or sync-manifest change is expected because the registered
+views are canonical symlinks.
+
+---
+
 ## Phase 3: Lifecycle Integration
 
 ### Task p03-t01: Dispatch `retro` from the closeout sequence
