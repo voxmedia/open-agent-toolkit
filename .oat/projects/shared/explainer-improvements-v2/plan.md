@@ -770,8 +770,13 @@ git commit -m "fix(p04-t01): validate request shape before content processing"
 - Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/durability.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/publish.mjs` (direct publisher entry point — today `--confirm-publish` becomes `approved: true` with no manifest-outcome check)
+- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs` (connector validates request and manifest without checking the manifest outcome)
+- Create: `.agents/skills/explainer-kit/schemas/publish-override.v1.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
@@ -794,15 +799,31 @@ package is tracked and inspectable; approval may proceed after the terminal
 outcome (flag-not-block); publication remains denied for flagged runs unless
 the review passes or an explicit operator override is recorded.
 
+**The publication denial is enforced at every publish entry point, not just
+promised.** The direct publisher (`publish.mjs`) and the `s3-static`
+connector today validate the request and manifest without checking the
+manifest outcome, so `--confirm-publish` alone could publish a flagged
+manifest. The publish seam rejects `built-needs-review` manifests unless a
+**versioned, durable operator-override record** (`publish-override/v1`:
+run ID, manifest hash, operator identity, reason, timestamp) validates
+against the contract registry and its manifest hash matches the finalized
+manifest exactly. The override is recorded in the publish receipt for audit;
+no credential material appears in the record. Negative direct-publisher
+tests: flagged manifest without override is rejected; with a
+mismatched-hash override is rejected; with a valid override publishes and
+the receipt carries the override reference.
+
 **Step 2: Implement (GREEN)**
 
 Wire auto-entry; define the flagged-durable semantics across the core
 durability and adapter finalization seams; record residual findings in the
-run record; document the flag-not-block contract.
+run record; enforce the flagged-manifest check with override validation in
+`publish.mjs` and the connector seam; register `publish-override/v1`;
+document the flag-not-block and publish-override contracts.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
 Expected: green (every changed test file executes)
 
 **Step 4: Commit**
@@ -865,6 +886,7 @@ finalization support created in p04-t02 and p04-t03.
 **Files:**
 
 - Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
+- Modify: `.agents/skills/oat-project-complete/SKILL.md` (second live completion route — currently accepts an `in_progress` project and continues when recap generation produces no valid run)
 - Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-intent.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/persist-intent.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
@@ -884,9 +906,15 @@ or a production `failure-record` document validated against the p04-t03
 contract) allows it to advance. The completion integration test must
 exercise the transition guard (approval blocked without an outcome; approval
 proceeds with each terminal outcome) — asserting on reference prose alone is
-insufficient. If any other live completion route can finalize approval, it is
-covered by the same guard. Approval is never conditioned on the outcome being
-clean.
+insufficient. **Both live completion routes are covered explicitly:** the
+`oat-project-implement` closeout sequence and the standalone
+`oat-project-complete` route, whose completion gate today accepts an
+`in_progress` project and continues when recap generation produces no valid
+run. `oat-project-complete`'s gate is revised so `generate` intent cannot
+cross the lifecycle mutation without a clean, flagged, or validated
+failure-record terminal outcome, and `completion.integration.test.mjs`
+exercises this route as well. Approval is never conditioned on the outcome
+being clean. (`oat-project-complete` joins the p07-t01 version-bump set.)
 
 **The implementation-tail caller must use the revised finalizer for every
 terminal outcome, not only clean builds.** The current completion contract
@@ -1358,6 +1386,13 @@ through every shipped consumer outside the two core seams.
 - Modify: `.agents/skills/oat-explainer-kit/references/author-callback.md` (author v2/v3)
 - Modify: `.agents/skills/oat-explainer-kit/references/visual-review-callback.md` (visual-review v1/v2)
 - Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/SKILL.md` (guidance pins `author-request/v2`/`author-result/v2`)
+- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (guidance pins old contracts and the three-artifact floor)
+- Modify: `.agents/skills/oat-wave-program/SKILL.md` (direct caller guidance on the old recap floor)
+- Modify: `.agents/skills/oat-wave-execute/SKILL.md` (direct caller guidance on non-durable `built-needs-review` semantics)
+- Modify: `.agents/skills/oat-project-summary/SKILL.md` (documented outcome set omits `built-needs-review`)
+- Modify: `apps/oat-docs/docs/**` explainer contract pages (still document the v1 recipe floor and v2-only provider contracts)
+- Modify: `tools/release/build-explainer-rc.test.mjs` (RC inventory assertions cover the new schema/recipe files)
 - Modify: affected request fixtures under the release/smoke trees
 
 **Step 1: Write test (RED)**
@@ -1377,20 +1412,81 @@ the adapter integration tests; callback references document both versions.
 New-run emission and retained-version replay are both proven before provider
 sync, with every focused suite executed.
 
+**This migration is repository-wide, covering shipped guidance consumers,
+not only executable tooling:** canonical skill instructions that pin old
+contract versions, the three-artifact recap floor, or non-durable
+`built-needs-review` semantics (`explainer-kit`, `oat-explainer-kit`,
+`oat-wave-program`, `oat-wave-execute`); `oat-project-summary`'s documented
+outcome set (gains flagged `built-needs-review`); RC inventory assertions
+for the new schema and recipe files; and the `apps/oat-docs` explainer
+contract pages. Every canonical skill changed here joins p07-t01's
+one-bump-per-skill set and provider sync.
+
 **Step 2: Implement (GREEN)**
 
 Version dispatch in release tooling, smoke fixture, and the adapter
-implementation; callback reference migration; fixture updates.
+implementation; callback reference migration; canonical skill guidance and
+docs-app contract-page migration; fixture updates.
 
 **Step 3: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli build && node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs tools/smoke/explainer-kit/package-coverage-consumers.test.mjs tools/release/validate-explainer-acceptance.test.mjs tools/release/run-explainer-rc.test.mjs && pnpm lint && pnpm format`
-Expected: adapter, smoke (including package-coverage, which requires the CLI `dist` build), and release-tool focused suites green; lint and format clean (touches `tools/smoke` and `.agents/skills/**`)
+Run: `pnpm --filter @open-agent-toolkit/cli build && node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs tools/smoke/explainer-kit/package-coverage-consumers.test.mjs tools/release/validate-explainer-acceptance.test.mjs tools/release/run-explainer-rc.test.mjs tools/release/build-explainer-rc.test.mjs && pnpm lint && pnpm format && pnpm check && pnpm build:docs`
+Expected: adapter, smoke (including package-coverage, which requires the CLI `dist` build), and release-tool focused suites green; lint and format clean (touches `tools/smoke` and `.agents/skills/**`); markdownlint and docs build clean (touches `apps/oat-docs/docs`)
 
 **Step 4: Commit**
 
 ```bash
 git commit -m "feat(p06-t05): migrate shipped consumers to new contract versions"
+```
+
+---
+
+### Task p06-t06: Cross-boundary publication acceptance test
+
+Runs after p01 (destination derivation), p03 (receipts, verification,
+`publicAccess`), and p06-t05 (consumer versions) so the full production path
+exists. This is the executable proof for the incident's actual failure
+boundary: the seam between adapter derivation and core publication.
+
+**Files:**
+
+- Create: `.agents/skills/oat-explainer-kit/tests/publish-acceptance.integration.test.mjs`
+- Create: supporting fake-destination fixture beside the test (in-process fake S3/HTTP endpoints; no network, no credentials)
+
+**Step 1: Write test (RED)**
+
+One integration fixture executes a **project invocation from
+repository-level publish config through the adapter and the core publisher**
+against a fake AWS/HTTP destination, and a parallel repository invocation.
+Assertions in a single executable path:
+
+- project run object keys land under
+  `<repository-root>/projects/<project-slug>/.../index.html`; repository run
+  keys land under the unmodified repository root;
+- every published key ends in explicit `index.html`;
+- protected and public `publicAccess` modes propagate to the verification
+  behavior (anonymous fetch skipped for protected; checksum verification in
+  both);
+- published bytes hash-match the finalized manifest exactly;
+- the emitted `publish-receipt` v2 lists every artifact's ID, rendered path,
+  S3 URI, canonical public URL, content hash, and structured verification
+  result — with no credential material anywhere in the request, receipt, or
+  logs.
+
+**Step 2: Implement (GREEN)**
+
+No new production code expected; this task exists to prove the pieces
+compose. Fix any seam mismatch it exposes in the owning task's files.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/oat-explainer-kit/tests/publish-acceptance.integration.test.mjs && pnpm lint && pnpm format`
+Expected: green; lint and format clean
+
+**Step 4: Commit**
+
+```bash
+git commit -m "test(p06-t06): prove project-prefix publication across the adapter/core boundary"
 ```
 
 ---
@@ -1404,14 +1500,20 @@ git commit -m "feat(p06-t05): migrate shipped consumers to new contract versions
 - Modify: `.agents/skills/explainer-kit/SKILL.md` (version bump)
 - Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (version bump)
 - Modify: `.agents/skills/oat-project-implement/SKILL.md` (version bump — its completion-and-closeout reference changes in p04-t04)
+- Modify: `.agents/skills/oat-project-complete/SKILL.md` (version bump — its completion gate changes in p04-t04)
+- Modify: `.agents/skills/oat-wave-program/SKILL.md` (version bump — guidance migrated in p06-t05)
+- Modify: `.agents/skills/oat-wave-execute/SKILL.md` (version bump — guidance migrated in p06-t05)
+- Modify: `.agents/skills/oat-project-summary/SKILL.md` (version bump — outcome set updated in p06-t05)
 - Modify: `packages/cli/src/validation/skills.test.ts` (if version pins exist)
 - Regenerate: provider views via `oat sync --scope all`
 
 **Step 1: Implement**
 
 One frontmatter `version:` bump per changed canonical skill (PR-scoped) —
-every canonical skill the PR touches, including `oat-project-implement`;
-run `oat sync --scope all`; update any literal version assertions.
+every canonical skill the PR touches, including `oat-project-implement`,
+`oat-project-complete`, `oat-wave-program`, `oat-wave-execute`, and
+`oat-project-summary`; run `oat sync --scope all`; update any literal
+version assertions.
 
 **Step 2: Verify**
 
@@ -1483,7 +1585,7 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T013953Z.md (2 Important + 2 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T015212Z.md (2 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T021300Z.md (2 Important + 3 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T023457Z.md                                                                                                     | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T023457Z.md (4 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1498,10 +1600,10 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 - Phase 3: 6 tasks — publication integrity
 - Phase 4: 4 tasks — lifecycle ordering and recovery
 - Phase 5: 6 tasks — structured content contracts and renderers
-- Phase 6: 5 tasks — recipe floor, rubric v2, fixtures, consumer migration
+- Phase 6: 6 tasks — recipe floor, rubric v2, fixtures, consumer migration, publication acceptance
 - Phase 7: 2 tasks — release closure
 
-**Total: 32 tasks**
+**Total: 33 tasks**
 
 ---
 

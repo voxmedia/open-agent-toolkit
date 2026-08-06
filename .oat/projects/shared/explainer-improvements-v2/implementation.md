@@ -92,6 +92,24 @@ escalated to the operator.
   and stale Reviews-table rows pointing at archived artifacts (fixed:
   archived paths, dispositions, and finding counts recorded).
 
+- **Attempt 8** (`artifact-plan-review-2026-08-06T023457Z.md`): attempt-7
+  findings confirmed resolved; 4 Important, 0 Medium new — the
+  `oat-project-complete` route could finalize the lifecycle without a
+  terminal recap outcome (fixed: its completion gate added to p04-t04 with
+  route-level integration coverage and a p07-t01 version bump), the
+  flagged-run publication denial was unenforced at the direct publisher
+  (fixed: `publish.mjs`/`s3-static.mjs` reject flagged manifests unless a
+  new `publish-override/v1` record bound to run ID and manifest hash
+  validates, with negative tests and receipt audit), shipped guidance
+  consumers remained on old contracts (fixed: p06-t05 expanded to canonical
+  skill guidance, wave/program callers, `oat-project-summary` outcomes, RC
+  inventory assertions, and `apps/oat-docs` contract pages, with matching
+  p07-t01 bumps), and no test crossed the adapter/core publication boundary
+  (fixed: new p06-t06 acceptance fixture proves project/repo prefixes,
+  explicit `index.html`, protected/public propagation, hash equality, and
+  receipt completeness against a fake destination). Plan now totals 33
+  tasks.
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 
