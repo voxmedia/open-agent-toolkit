@@ -64,6 +64,10 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 
 Observation: workflow.postImplementSequence configured preApproval=[summary, document, pr], but implementation finished without persisting oat_post_implement_sequence or dispatching those children; document and pr-final were run manually after final approval, and pr-final generated the missing summary as fallback. Impact: required pre-approval ordering and sequence provenance were lost even though the final artifacts now exist. Recommendation: fail closed before implementation completion when a configured sequence has no durable snapshot or incomplete pre-approval steps, and add regression coverage for this boundary. (observed on oat-project-implement 2.0 closeout contract, CLI 0.2.29)
 
+### 2026-08-06 · structural · oat-project-retro · references/project-retro.md
+
+artifact=.oat/projects/shared/oat-project-retro/references/project-retro.md evidence=project-log,lifecycle-artifacts,archived-reviews,session-transcript,github-pr-192 unavailable=oat-execution-learnings promotions=0 upstream=1 apply=deferred filing=deferred
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
