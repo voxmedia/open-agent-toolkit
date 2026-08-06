@@ -10,7 +10,7 @@ oat_retro_evidence_sources:
     status: used
   - source: session-transcript
     status: unavailable
-oat_retro_promotions: proposed
+oat_retro_promotions: complete
 oat_retro_filing: proposed
 oat_generated: true
 oat_template: false
@@ -246,9 +246,9 @@ semantics are checked, rather than being flattened into a misleading diagram.
 
 - **Type:** agents-instruction
 - **Disposition:** apply
-- **Status:** proposed
+- **Status:** applied
 - **Target:** .agents/skills/oat-project-implement/references/completion-and-closeout.md
-- **Applied-ref:** —
+- **Applied-ref:** .agents/skills/oat-project-implement/references/completion-and-closeout.md
 - **Disposition-note:** —
 
 The target project's final summary and 62/62 task table establish completion,

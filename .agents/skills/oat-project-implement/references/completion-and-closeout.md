@@ -47,6 +47,10 @@ When all plan tasks are complete (i.e., there is no next incomplete `pNN-tNN` ta
   - Verification performed (tests/lint/typecheck/build/manual)
   - Design deltas (if any)
 - This should reflect **what was actually implemented**, including any deviations from design and any review-fix work.
+- Reconcile `"$PROJECT_PATH/state.md"`, `"$PROJECT_PATH/implementation.md"`,
+  and `"$PROJECT_PATH/plan.md"` so task totals, phase statuses, current-task
+  pointers, the final summary, and test results describe the same terminal
+  evidence. Stale interim markers block closeout until corrected.
 
 Keep implementation in progress while clearing the completed task pointer:
 
