@@ -157,6 +157,12 @@ Each launch was accepted through the exact resolver-returned native role. Runtim
 identity is not observable; launcher payload and native acceptance provide
 configured-invocation evidence.
 
+#### Accepted Review Dispatches
+
+| Scope | Round | Request ID                                       | Agent ID                               | Target                          | Model axis                  | Selection reason |
+| ----- | ----- | ------------------------------------------------ | -------------------------------------- | ------------------------------- | --------------------------- | ---------------- |
+| p03   | 1     | `oat-project-retro-review-p03-r1-20260806T0201Z` | `2f5dcd47-7ce2-4a52-aba7-bd805d0b4222` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+
 <!-- orchestration-runs-end -->
 
 ---
