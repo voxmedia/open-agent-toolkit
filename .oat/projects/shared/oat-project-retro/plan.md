@@ -1,17 +1,17 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-08-05
+oat_last_updated: 2026-08-06
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: [['p01', 'p02', 'p03']] # config, assets, and lifecycle-skill edits are file-disjoint
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: oat-project-retro
@@ -202,7 +202,7 @@ git commit -m "feat(p02-t01): add project-retro artifact template"
 Per design.md Component Design and the handoff (`references/oat-project-retro-skill-handoff.md`):
 
 - Frontmatter `version: 1.0.0`; description per the handoff's suggested identity ("Do NOT auto-invoke merely because implementation or summary completed").
-- SKILL.md: mode resolution (generate vs apply; explicit flag/wording beats inference), OAT progress banner, active-project resolution, evidence inventory with availability honesty, generate flow (template scaffold, dual registers `proposed`, frontmatter rollups, complete-or-delete on interruption), consent enforcement (interactive offers; `workflow.retro.apply` and `workflow.retro.filing` gating for non-interactive; chain to filing only when filing config exists), project-log entry + artifact hygiene + commit.
+- SKILL.md: mode resolution (generate vs apply; explicit flag/wording beats inference), OAT progress banner, active-project resolution, evidence inventory with availability honesty, generate flow (template scaffold, dual registers `proposed`, frontmatter rollups, complete-or-delete on interruption, and render-time retirement of scaffold metadata — the rendered artifact sets `oat_template: false` and drops `oat_template_name` so a complete retro never carries still-a-template markers), consent enforcement (interactive offers; `workflow.retro.apply` and `workflow.retro.filing` gating for non-interactive; chain to filing only when filing config exists), project-log entry + artifact hygiene + commit.
 - `apply-procedure.md`: promotion classification (docs | agents-instruction | rule | decision | code-follow-up), the `Disposition` routing rule (apply mode processes only `Disposition: apply` items; `code-follow-up` defaults to `Disposition: file` and belongs to the filing skill — apply mode never mutates file-items), application steps per type (decision records via `oat decision new`), per-item status writeback, idempotent resume, batch-vs-per-item commit guidance.
 - `evidence-and-lanes.md`: evidence reading order from the handoff, environment detection (cloud tooling / local transcripts / none), recon lane guidance with scaling, transcript caveats (committed ledgers authoritative when transcript bodies are missing).
 - `retro-quality-bar.md`: handoff quality bar (evidence-first, confirmed vs hypothesis vs inconclusive, rejected alternatives, run-specific reflections) plus core/conditional section scaling.
@@ -427,7 +427,7 @@ Run `oat-project-retro` generate mode against a completed OAT project in this re
 
 **Step 2: Evaluate**
 
-Judge the artifact against `references/retro-quality-bar.md` and the reference retro's guiding principles: evidence-first with honest unavailability, dual lanes explicit (upstream present even if "none identified"), registers machine-scannable with every RP item carrying a valid `Disposition` and disposition-consistent status/fields, and both frontmatter rollups derivable from register fields alone (promotions ← apply-items; filing ← UP ∪ RP file-items) and consistent after the apply exercise.
+Judge the artifact against `references/retro-quality-bar.md` and the reference retro's guiding principles: evidence-first with honest unavailability, dual lanes explicit (upstream present even if "none identified"), registers machine-scannable with every RP item carrying a valid `Disposition` and disposition-consistent status/fields, both frontmatter rollups derivable from register fields alone (promotions ← apply-items; filing ← UP ∪ RP file-items) and consistent after the apply exercise, and no scaffold-only template metadata remaining on the rendered artifact (`oat_template: false`, no `oat_template_name`).
 
 **Step 3: Fix, format, and verify**
 
@@ -480,22 +480,22 @@ git commit -m "chore(p05-t02): lockstep public package version bump for retro fe
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target              |
-| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ------------------------ |
-| p01    | code     | pending         | -          | -                                                  | -             | -          | -                        |
-| p02    | code     | pending         | -          | -                                                  | -             | -          | -                        |
-| p03    | code     | pending         | -          | -                                                  | -             | -          | -                        |
-| p04    | code     | pending         | -          | -                                                  | -             | -          | -                        |
-| p05    | code     | pending         | -          | -                                                  | -             | -          | -                        |
-| final  | code     | pending         | -          | -                                                  | -             | -          | -                        |
-| spec   | artifact | pending         | -          | -                                                  | -             | -          | -                        |
-| design | artifact | pending         | -          | -                                                  | -             | -          | -                        |
-| plan   | artifact | passed          | 2026-08-05 | structured (in-memory)                             | -             | auto       | -                        |
-| plan   | artifact | fixes_completed | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T002316Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T004058Z.md | -             | -          | -                        |
-| plan   | artifact | received        | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005234Z.md | -             | -          | -                        |
-| plan   | artifact | received        | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005256Z.md | -             | -          | -                        |
-| plan   | artifact | received        | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T012151Z.md | -             | -          | -                        |
+| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target              |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ------------------------ |
+| p01    | code     | pending  | -          | -                                                  | -             | -          | -                        |
+| p02    | code     | pending  | -          | -                                                  | -             | -          | -                        |
+| p03    | code     | pending  | -          | -                                                  | -             | -          | -                        |
+| p04    | code     | pending  | -          | -                                                  | -             | -          | -                        |
+| p05    | code     | pending  | -          | -                                                  | -             | -          | -                        |
+| final  | code     | pending  | -          | -                                                  | -             | -          | -                        |
+| spec   | artifact | pending  | -          | -                                                  | -             | -          | -                        |
+| design | artifact | pending  | -          | -                                                  | -             | -          | -                        |
+| plan   | artifact | passed   | 2026-08-05 | structured (in-memory)                             | -             | auto       | -                        |
+| plan   | artifact | passed   | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T012151Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T004058Z.md | -             | -          | -                        |
+| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005234Z.md | -             | -          | -                        |
+| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T005256Z.md | -             | -          | -                        |
+| plan   | artifact | received | 2026-08-05 | reviews/artifact-plan-review-2026-08-06T012151Z.md | -             | -          | -                        |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

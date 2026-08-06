@@ -54,6 +54,12 @@ accumulated feedback is recorded here and escalated to the human.
 4. Design test-strategy sentence still said retro accepted in both arrays →
    aligned with postApproval-only.
 
+**Attempt 4 (human-authorized re-run)** —
+`reviews/artifact-plan-review-2026-08-06T012151Z.md`: **PASSED** (0 Critical,
+0 Important, 1 Medium). The Medium (rendered retros must retire scaffold
+template metadata) was applied to p02-t02 and the dogfood assertions. Gate
+resolution complete; plan handed to implementation.
+
 > This document is used to resume interrupted implementation sessions.
 >
 > Conventions:
