@@ -1134,19 +1134,20 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status  | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -                                                             | -             | -          | -           |
-| p02    | code     | pending | -          | -                                                             | -             | -          | -           |
-| p03    | code     | pending | -          | -                                                             | -             | -          | -           |
-| p04    | code     | pending | -          | -                                                             | -             | -          | -           |
-| p05    | code     | pending | -          | -                                                             | -             | -          | -           |
-| p06    | code     | pending | -          | -                                                             | -             | -          | -           |
-| p07    | code     | pending | -          | -                                                             | -             | -          | -           |
-| final  | code     | pending | -          | -                                                             | -             | -          | -           |
-| plan   | artifact | passed  | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed) | -             | auto       | -           |
-| spec   | artifact | pending | -          | -                                                             | -             | -          | -           |
-| design | artifact | pending | -          | -                                                             | -             | -          | -           |
+| Scope  | Type     | Status   | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | -------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending  | -          | -                                                             | -             | -          | -           |
+| p02    | code     | pending  | -          | -                                                             | -             | -          | -           |
+| p03    | code     | pending  | -          | -                                                             | -             | -          | -           |
+| p04    | code     | pending  | -          | -                                                             | -             | -          | -           |
+| p05    | code     | pending  | -          | -                                                             | -             | -          | -           |
+| p06    | code     | pending  | -          | -                                                             | -             | -          | -           |
+| p07    | code     | pending  | -          | -                                                             | -             | -          | -           |
+| final  | code     | pending  | -          | -                                                             | -             | -          | -           |
+| plan   | artifact | passed   | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed) | -             | auto       | -           |
+| spec   | artifact | pending  | -          | -                                                             | -             | -          | -           |
+| design | artifact | pending  | -          | -                                                             | -             | -          | -           |
+| plan   | artifact | received | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T002327Z.md            | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
