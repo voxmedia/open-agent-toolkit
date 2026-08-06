@@ -4050,6 +4050,36 @@ test('accepts only callback receipts bound to the finalized manifest and catalog
   }
 });
 
+test('classifies a non-normalizable v2 receipt root as a publish failure', async () => {
+  const fixture = await suppliedFixture();
+  const publish = mock.fn(async ({ manifestPath }) => {
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    const receipt = callbackReceiptV2(manifest, 'public');
+    receipt.roots.publicBaseUrl =
+      'https://docs.example.com/explainers?version=2';
+    assert.equal(
+      validateContract('publish-receipt', receipt).valid,
+      true,
+      'query-bearing root remains schema-valid',
+    );
+    return receipt;
+  });
+
+  const result = await runExplainer(
+    callbackPublishRunRequest(fixture, 'public'),
+    { now: () => NOW, publish },
+  );
+
+  assert.equal(result.outcome, 'failed');
+  assert.equal(
+    result.errors[0].code,
+    'E_PUBLISH',
+    JSON.stringify(result.errors),
+  );
+  assert.equal('publication' in result, false);
+  assert.equal(publish.mock.callCount(), 1);
+});
+
 test('rejects incomplete or contradictory v2 callback receipts before publication state', async () => {
   const mutations = [
     [

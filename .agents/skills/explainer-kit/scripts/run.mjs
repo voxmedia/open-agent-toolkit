@@ -1476,14 +1476,8 @@ async function executeDurabilityAndPublish(state, options, now) {
       'Publish durability was requested without an explicit publisher callback.',
     );
   }
-  await updateBuildRecord(state.run, {
-    id: 'publish',
-    status: 'warned',
-    warnings: [
-      'Publishing requires separately retained verified receipt evidence.',
-    ],
-  });
-  const finalizedManifest = await persistManifest(state, now());
+  const finalizedAt = now();
+  const finalizedManifest = await persistManifest(state, finalizedAt);
   try {
     const receipt = await options.publish({
       request: structuredClone(state.run.request.durability.publish),
@@ -1508,6 +1502,14 @@ async function executeDurabilityAndPublish(state, options, now) {
         `Publisher returned an invalid receipt: ${crossRecordValidation.errors[0].message}`,
       );
     }
+    await updateBuildRecord(state.run, {
+      id: 'publish',
+      status: 'warned',
+      warnings: [
+        'Publishing requires separately retained verified receipt evidence.',
+      ],
+    });
+    await persistManifest(state, finalizedAt);
     state.publication = publicationSummary(receipt);
   } catch (error) {
     await updateBuildRecord(state.run, {
@@ -2344,7 +2346,15 @@ function publicationValidationContext(receipt, manifest) {
   if (receipt.schemaVersion !== 'explainer-kit.publish-receipt/v2') {
     return { manifest };
   }
-  const catalog = catalogFromManifest(manifest, receipt.roots.publicBaseUrl);
+  let catalog;
+  try {
+    catalog = catalogFromManifest(manifest, receipt.roots.publicBaseUrl);
+  } catch (error) {
+    throw codedError(
+      'E_PUBLISH',
+      `Publisher returned invalid publication roots: ${safeMessage(error)}`,
+    );
+  }
   return {
     manifest,
     catalogArtifact: {
