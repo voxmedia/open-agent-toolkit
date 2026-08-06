@@ -169,13 +169,23 @@ async function createFixture({ coreVersion = '2.1.0' } = {}) {
             },
             publication: request.durability?.strategy === 'publish'
               ? {
-                  schemaVersion: 'explainer-kit.publish-summary/v1',
+                  schemaVersion: 'explainer-kit.publish-summary/v2',
                   receiptSchemaVersion: 'explainer-kit.publish-receipt/v2',
                   publicAccess: request.durability.publish.publicAccess,
                   artifacts: [
                     {
+                      source: { kind: 'manifest', artifactId: 'hub' },
                       relativePath: 'site/index.html',
+                      s3Uri: request.durability.publish.s3Uri + '/index.html',
                       publicUrl: request.durability.publish.publicBaseUrl + '/index.html',
+                      hash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                      contentType: 'text/html',
+                      objectVerification: {
+                        status: 'verified',
+                        method: 'service-checksum',
+                        hash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                      },
+                      publicVerification: { status: 'skipped-protected' },
                     },
                   ],
                 }
@@ -1286,14 +1296,24 @@ test('passes only derived credential-free destination roots into core publish re
     'https://docs.example.com/repositories/demo/projects/demo',
   );
   assert.deepEqual(projectResult.publication, {
-    schemaVersion: 'explainer-kit.publish-summary/v1',
+    schemaVersion: 'explainer-kit.publish-summary/v2',
     receiptSchemaVersion: 'explainer-kit.publish-receipt/v2',
     publicAccess: 'protected',
     artifacts: [
       {
+        source: { kind: 'manifest', artifactId: 'hub' },
         relativePath: 'site/index.html',
+        s3Uri: 's3://bucket/repositories/demo/projects/demo/index.html',
         publicUrl:
           'https://docs.example.com/repositories/demo/projects/demo/index.html',
+        hash: `sha256:${'a'.repeat(64)}`,
+        contentType: 'text/html',
+        objectVerification: {
+          status: 'verified',
+          method: 'service-checksum',
+          hash: `sha256:${'a'.repeat(64)}`,
+        },
+        publicVerification: { status: 'skipped-protected' },
       },
     ],
   });

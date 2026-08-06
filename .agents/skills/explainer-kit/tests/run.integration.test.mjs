@@ -3867,6 +3867,7 @@ test('invokes durability and publishing seams only when explicitly requested', a
   assert.equal(durability.mock.callCount(), 1);
 
   const publishFixture = await suppliedFixture();
+  let returnedReceipt;
   const publishV2 = mock.fn(async ({ manifestPath, runRoot }) => {
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
     const artifact = manifest.artifacts.find(
@@ -3951,6 +3952,7 @@ test('invokes durability and publishing seams only when explicitly requested', a
       join(runRoot, 'publish-receipt.json'),
       `${JSON.stringify(receipt, null, 2)}\n`,
     );
+    returnedReceipt = receipt;
     return receipt;
   });
   const published = await runExplainer(
@@ -3980,14 +3982,27 @@ test('invokes durability and publishing seams only when explicitly requested', a
   );
   assert.equal(publishV2.mock.callCount(), 1);
   assert.deepEqual(published.publication, {
-    schemaVersion: 'explainer-kit.publish-summary/v1',
+    schemaVersion: 'explainer-kit.publish-summary/v2',
     receiptSchemaVersion: 'explainer-kit.publish-receipt/v2',
     publicAccess: 'public',
-    artifacts: published.publication.artifacts.map(
-      ({ relativePath, publicUrl }) => ({ relativePath, publicUrl }),
-    ),
+    artifacts: returnedReceipt.artifacts,
   });
   assert.equal(published.publication.artifacts.length, 2);
+  for (const artifact of published.publication.artifacts) {
+    assert.deepEqual(
+      Object.keys(artifact).sort(),
+      [
+        'contentType',
+        'hash',
+        'objectVerification',
+        'publicUrl',
+        'publicVerification',
+        'relativePath',
+        's3Uri',
+        'source',
+      ].sort(),
+    );
+  }
   const durabilityResult = await recordDurability(
     {
       schemaVersion: 'explainer-kit.durability-evidence/v1',
@@ -4024,6 +4039,11 @@ test('accepts only callback receipts bound to the finalized manifest and catalog
     assert.equal(
       result.publication.receiptSchemaVersion,
       `explainer-kit.publish-receipt/${receiptVersion === 'v1' ? 'v1' : 'v2'}`,
+      receiptVersion,
+    );
+    assert.equal(
+      result.publication.schemaVersion,
+      `explainer-kit.publish-summary/${receiptVersion === 'v1' ? 'v1' : 'v2'}`,
       receiptVersion,
     );
     assert.equal(result.publication.publicAccess, publicAccess, receiptVersion);

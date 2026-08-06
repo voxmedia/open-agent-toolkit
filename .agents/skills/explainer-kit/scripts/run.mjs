@@ -2321,13 +2321,18 @@ function resultFor(state, error) {
 }
 
 function publicationSummary(receipt) {
+  if (receipt.schemaVersion === 'explainer-kit.publish-receipt/v2') {
+    return {
+      schemaVersion: 'explainer-kit.publish-summary/v2',
+      receiptSchemaVersion: receipt.schemaVersion,
+      publicAccess: receipt.publicAccess,
+      artifacts: receipt.artifacts.map((artifact) => structuredClone(artifact)),
+    };
+  }
   return {
     schemaVersion: 'explainer-kit.publish-summary/v1',
     receiptSchemaVersion: receipt.schemaVersion,
-    publicAccess:
-      receipt.schemaVersion === 'explainer-kit.publish-receipt/v2'
-        ? receipt.publicAccess
-        : 'public',
+    publicAccess: 'public',
     artifacts: receipt.artifacts.map(({ relativePath, publicUrl }) => ({
       relativePath,
       publicUrl,
