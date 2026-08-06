@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t01
-oat_last_commit: 74adc91cb8956124e44e2af3d7aecba6e30de595
+oat_current_task: prev1-t01
+oat_last_commit: e9c30d26b256bd43851e3ad951cb1a17fe335692
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -80,7 +80,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/192' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:27:39.069Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T22:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T23:44:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -100,7 +100,7 @@ Implementation — Revision 1 queued from post-PR dogfood feedback.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (revision phase added)
-- **Implementation:** `implementation.md` (12/17 tasks complete; compatibility prerequisite in progress)
+- **Implementation:** `implementation.md` (13/17 tasks complete; revision in progress)
 
 ## Progress
 
@@ -111,7 +111,8 @@ Implementation — Revision 1 queued from post-PR dogfood feedback.
 - ✓ Final review tool-grant fix verified
 - ✓ Final whole-project review passed
 - ✓ PR created
-- ⧗ Revision compatibility prerequisite plus four dogfood tasks queued
+- ✓ Revision compatibility prerequisite implemented and independently reviewed
+- ⧗ Four dogfood revision tasks queued
 
 ## Blockers
 
@@ -119,7 +120,6 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` starting from `p06-t01`, then continue through
-`p-rev1`. After the four revision tasks complete, return the project to
-`pr_open`, refresh the summary and PR, and dogfood the revised workflow on
-another project.
+Continue `oat-project-implement` from `prev1-t01`. After the four revision tasks
+complete, return the project to `pr_open`, refresh the summary and PR, and
+dogfood the revised workflow on another project.

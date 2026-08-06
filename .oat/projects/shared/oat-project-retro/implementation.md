@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-06
-oat_current_task_id: p06-t01
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -79,10 +79,10 @@ resolution complete; plan handed to implementation.
 | p03    | complete    | 2     | 2/2       |
 | p04    | complete    | 2     | 2/2       |
 | p05    | complete    | 2     | 2/2       |
-| p06    | in_progress | 1     | 0/1       |
-| p-rev1 | pending     | 4     | 0/4       |
+| p06    | complete    | 1     | 1/1       |
+| p-rev1 | in_progress | 4     | 0/4       |
 
-**Total:** 12/17 tasks completed
+**Total:** 13/17 tasks completed
 
 ---
 
@@ -127,9 +127,9 @@ resolution complete; plan handed to implementation.
 
 ### p06 — Revision Workflow Compatibility
 
-| Task    | Status      | Commit | Outcome |
-| ------- | ----------- | ------ | ------- |
-| p06-t01 | in_progress | -      | -       |
+| Task    | Status   | Commit                   | Outcome                                                         |
+| ------- | -------- | ------------------------ | --------------------------------------------------------------- |
+| p06-t01 | complete | `4b40ea7fa`, `e9c30d26b` | Parses canonical and legacy revision dialects without crossing. |
 
 ### p-rev1 — Revision 1
 
@@ -194,7 +194,7 @@ resolution complete; plan handed to implementation.
 
 ### Task p06-t01: Parse canonical revision phases and task IDs
 
-**Status:** in_progress
+**Status:** completed
 
 ### Task prev1-t01: Keep mutable retro state coherent
 
@@ -271,6 +271,33 @@ configured-invocation evidence.
 | p02 review round 1   | `oat-project-retro-p02-review-r1-fix-01`   | `oat-project-retro-impl-p02-20260806T0152Z` | `c9e01a7e-e760-4006-89dd-a56e4aaeba0c` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
 | p02 review round 2   | `oat-project-retro-p02-review-r2-fix-02`   | `oat-project-retro-impl-p02-20260806T0152Z` | `c9e01a7e-e760-4006-89dd-a56e4aaeba0c` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
 | final review round 1 | `oat-project-retro-final-review-r1-fix-01` | `oat-project-retro-impl-p05-20260806T0256Z` | `ee172aee-a1e3-4646-bb0c-016c1ec9fe47` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
+
+### Run 2 — 2026-08-06T23:00:00Z {#run-2}
+
+- Branch: `oat-project-retro`
+- Tier: 1 — native Cursor subagents
+- Dispatch policy: managed `high`
+- Schedule: `p06` → `p-rev1`
+- Phase recovery: no implementation recovery attempts
+
+#### Phase Outcome
+
+| Phase | Status | Task commits             | Review rounds | Fix rounds | Verification                         |
+| ----- | ------ | ------------------------ | ------------- | ---------- | ------------------------------------ |
+| p06   | passed | `4b40ea7fa`, `e9c30d26b` | 2             | 1          | 25 focused and 78 package tests pass |
+
+#### Dispatch Evidence
+
+| Action         | Request / continuation ID                            | Target                                     | Model axis                    | Result |
+| -------------- | ---------------------------------------------------- | ------------------------------------------ | ----------------------------- | ------ |
+| implementation | `oat-project-retro-rev-p06-20260806T2300Z`           | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | done   |
+| review r1      | `oat-project-retro-rev-p06-review-r1-20260806T2333Z` | `oat-reviewer-gpt-5-6-sol-high`            | `selected:gpt-5.6-sol-high`   | fail   |
+| fix r1         | `oat-project-retro-p06-review-r1-fix-01`             | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | done   |
+| review r2      | `oat-project-retro-rev-p06-review-r2-20260806T2341Z` | `oat-reviewer-gpt-5-6-sol-high`            | `selected:gpt-5.6-sol-high`   | pass   |
+
+Both reviewers reported `Reconnaissance: not-attempted`; no reviewer-local
+orchestration record was required. Runtime identity was not observable, so
+launcher-owned targets and native acceptance remain the invocation evidence.
 
 <!-- orchestration-runs-end -->
 
@@ -371,6 +398,12 @@ configured-invocation evidence.
   version `0.2.29`, so this branch no longer contained a release-policy bump.
   The five public packages were advanced together to `0.2.30`, the bundled
   version asset was regenerated, and the final validation sequence was rerun.
+- Revision preflight exposed a producer/consumer mismatch: `oat-project-revise`
+  emitted `p-revN` / `prevN-tNN`, while control-plane status recognized only
+  the legacy revision form. p06 added backward-compatible canonical parsing.
+- p06 review round 1 found one Important crossed-dialect case. The original
+  implementer added exact heading/task dialect constraints in `e9c30d26b`;
+  round 2 passed with no findings.
 
 ---
 
@@ -394,6 +427,7 @@ Track test execution during implementation.
 | p03   | Focused lifecycle skill and autonomy contracts (164 tests) | Passed |
 | p04   | Documentation check and docs build                         | Passed |
 | p05   | Full CI/build sequence and five-package release validation | Passed |
+| p06   | Control-plane focused (25) and package-wide (78) tests     | Passed |
 
 ## Final Summary (for PR/docs)
 
