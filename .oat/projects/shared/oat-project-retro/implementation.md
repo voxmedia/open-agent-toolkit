@@ -229,6 +229,11 @@ configured-invocation evidence.
   lifecycle-artifact consistency sweep,” for the proposed local
   `completion-and-closeout.md` mutation and retro writeback only; the accepted
   p05 handle resumed to complete acceptance and release validation.
+- p05-t01 completed at `456f9ac8`. The initial post-bump `pnpm test` run then
+  stopped when deterministic smoke cleanup refused an unjournaled descendant.
+  Root verified the two temporary worktrees were clean and all three matching
+  branches pointed to fixture baseline `007eeeb35`, removed only those smoke
+  resources, recorded recovery event 1, and resumed the accepted p05 handle.
 
 ---
 
