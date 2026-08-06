@@ -93,6 +93,56 @@ test('verifies every tarball, runs an allowlisted packaged entry, records exit e
   assert.deepEqual(await extractionDirectories(fixture.tempRoot), []);
 });
 
+test('directly executes packaged publish-request v2 with exact request and manifest bindings', async () => {
+  const fixture = await createFixture();
+  const request = JSON.parse(
+    await readFile(fixture.publishRequestPath, 'utf8'),
+  );
+  request.schemaVersion = 'explainer-kit.publish-request/v2';
+  request.publicAccess = 'protected';
+  await writeJson(fixture.publishRequestPath, request);
+  const recordPath = join(fixture.root, 'execution-v2.json');
+
+  await run(fixture, {
+    entry: 'scripts/publish.mjs',
+    recordPath,
+  });
+
+  const record = JSON.parse(await readFile(recordPath, 'utf8'));
+  assert.deepEqual(record.request, {
+    schemaVersion: 'explainer-kit.publish-request/v2',
+    sha256: await hashJsonFile(fixture.publishRequestPath),
+  });
+  assert.deepEqual(record.outputs.manifest, {
+    schemaVersion: 'explainer-kit.manifest/v1',
+    sha256: await hashJsonFile(fixture.publishManifestPath),
+  });
+  assert.deepEqual(record.outputs.receipt, {
+    schemaVersion: 'explainer-kit.publish-receipt/v2',
+    sha256: await hashJsonFile(fixture.receiptPath),
+  });
+  assert.equal(record.coreRunId, 'run-publish-123');
+  assert.deepEqual(await extractionDirectories(fixture.tempRoot), []);
+});
+
+test('rejects unknown direct publish request versions before packaged execution', async () => {
+  const fixture = await createFixture();
+  const request = JSON.parse(
+    await readFile(fixture.publishRequestPath, 'utf8'),
+  );
+  request.schemaVersion = 'explainer-kit.publish-request/v3';
+  await writeJson(fixture.publishRequestPath, request);
+  const marker = join(fixture.root, 'must-not-execute.marker');
+
+  const failure = await runFailure(fixture, {
+    entry: 'scripts/publish.mjs',
+    args: ['--marker', marker],
+  });
+
+  assert.equal(failure.code, 'E_EXECUTION_BINDING');
+  await assert.rejects(readFile(marker), { code: 'ENOENT' });
+});
+
 test('fails before execution when any retained tarball hash does not match', async () => {
   const fixture = await createFixture();
   const marker = join(fixture.root, 'must-not-exist.marker');
@@ -542,9 +592,35 @@ if (exitIndex >= 0) {
 } else {
   const requestPath = args[args.indexOf('--request') + 1];
   const request = JSON.parse(await readFile(requestPath, 'utf8'));
-  if (request.schemaVersion === 'explainer-kit.publish-request/v1') {
+  if ([
+    'explainer-kit.publish-request/v1',
+    'explainer-kit.publish-request/v2',
+  ].includes(request.schemaVersion)) {
     const receiptPath = args[args.indexOf('--receipt') + 1];
-    const receipt = {
+    const receipt = request.schemaVersion.endsWith('/v2') ? {
+      schemaVersion: 'explainer-kit.publish-receipt/v2',
+      provider: 's3-static',
+      publishedAt: '2026-07-18T12:00:00.000Z',
+      publicAccess: request.publicAccess,
+      roots: { s3Uri: request.s3Uri, publicBaseUrl: request.publicBaseUrl },
+      sentinel: {
+        relativePath: '.explainer-kit-sentinel/run-publish-123-0123456789abcdeffedcba9876543210.txt',
+        objectVerification: {
+          status: 'verified',
+          method: 'service-checksum',
+          hash: 'sha256:${'a'.repeat(64)}',
+        },
+        publicVerification: request.publicAccess === 'public'
+          ? {
+              status: 'verified',
+              httpStatus: 200,
+              hash: 'sha256:${'a'.repeat(64)}',
+            }
+          : { status: 'skipped-protected' },
+        deleted: true,
+      },
+      artifacts: [],
+    } : {
       schemaVersion: 'explainer-kit.publish-receipt/v1',
       provider: 's3-static',
       publishedAt: '2026-07-18T12:00:00.000Z',

@@ -345,11 +345,11 @@ async function readRequestBinding(entry, entryArgs, cwd) {
       'The packaged request could not be read for provenance binding.',
     );
   }
-  const expectedSchema =
+  const acceptedSchemas =
     entry === 'scripts/publish.mjs'
-      ? 'explainer-kit.publish-request/v1'
-      : 'explainer-kit.run-request/v1';
-  if (value?.schemaVersion !== expectedSchema) {
+      ? ['explainer-kit.publish-request/v1', 'explainer-kit.publish-request/v2']
+      : ['explainer-kit.run-request/v1'];
+  if (!acceptedSchemas.includes(value?.schemaVersion)) {
     throw new RcRunError(
       'E_EXECUTION_BINDING',
       'The packaged request schema does not match the selected entry.',
