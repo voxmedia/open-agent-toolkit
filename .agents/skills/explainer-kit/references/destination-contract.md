@@ -52,7 +52,8 @@ site-relative paths before network access. It then:
 6. verifies exact object bytes from service-computed SHA-256 evidence or an
    authenticated download hash, then additionally verifies the exact anonymous
    response bytes for public destinations; and
-7. atomically writes `explainer-kit.publish-receipt/v1`.
+7. atomically writes `explainer-kit.publish-receipt/v2` with separate
+   authenticated-object and anonymous-public verification facts.
 
 If required sentinel verification fails or its verification capability is
 unavailable, no artifact is uploaded. The connector attempts sentinel cleanup

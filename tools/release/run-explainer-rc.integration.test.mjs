@@ -163,30 +163,41 @@ function publishReceipt(manifest) {
     publicBaseUrl: 'https://cdn.example.com/explainers',
   };
   return {
-    schemaVersion: 'explainer-kit.publish-receipt/v1',
+    schemaVersion: 'explainer-kit.publish-receipt/v2',
     provider: 's3-static',
     publishedAt: '2026-07-18T12:00:00.000Z',
+    publicAccess: 'public',
     roots,
     sentinel: {
       relativePath: `.explainer-kit-sentinel/${safeRunId(manifest.runId)}-0123456789abcdeffedcba9876543210.txt`,
-      uploadVerified: true,
-      publicVerified: true,
+      objectVerification: verifiedObject(`sha256:${'a'.repeat(64)}`),
+      publicVerification: verifiedPublic(`sha256:${'a'.repeat(64)}`),
       deleted: true,
     },
     artifacts: manifest.artifacts
       .filter(({ status }) => status === 'built')
-      .map(({ renderedPath, hash, mediaType }) => {
+      .map(({ id, renderedPath, hash, mediaType }) => {
         const publishedPath = renderedPath.slice('site/'.length);
         return {
+          source: { kind: 'manifest', artifactId: id },
           relativePath: renderedPath,
           hash,
           s3Uri: `${roots.s3Uri}/${publishedPath}`,
           publicUrl: `${roots.publicBaseUrl}/${publishedPath}`,
-          httpStatus: 200,
           contentType: mediaType,
+          objectVerification: verifiedObject(hash),
+          publicVerification: verifiedPublic(hash),
         };
       }),
   };
+}
+
+function verifiedObject(hash) {
+  return { status: 'verified', method: 'service-checksum', hash };
+}
+
+function verifiedPublic(hash) {
+  return { status: 'verified', httpStatus: 200, hash };
 }
 
 function runRequest(outputRoot, factBasePath) {

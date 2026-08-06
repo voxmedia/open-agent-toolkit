@@ -238,10 +238,20 @@ test('uses explicit index URLs, writes receipt hashes, and records sentinel clea
   assert.deepEqual(receipt.sentinel, {
     relativePath:
       '.explainer-kit-sentinel/run-123-0123456789abcdeffedcba9876543210.txt',
-    uploadVerified: true,
-    publicVerified: true,
+    objectVerification: {
+      status: 'verified',
+      method: 'service-checksum',
+      hash: hashBytes(Buffer.from('explainer-kit sentinel\n')),
+    },
+    publicVerification: {
+      status: 'verified',
+      httpStatus: 200,
+      hash: hashBytes(Buffer.from('explainer-kit sentinel\n')),
+    },
     deleted: true,
   });
+  assert.equal(receipt.schemaVersion, 'explainer-kit.publish-receipt/v2');
+  assert.equal(receipt.publicAccess, 'public');
   assert.deepEqual(
     receipt.artifacts.map(({ relativePath, hash }) => ({ relativePath, hash })),
     [
@@ -288,6 +298,33 @@ test('uses explicit index URLs, writes receipt hashes, and records sentinel clea
     )
     .map((call) => argument(call, '--key'));
   assert.equal(publishedKeys.at(-1), 'published/initiatives/demo/catalog.json');
+});
+
+test('verifies protected objects without anonymous fetches and records the skip', async () => {
+  const fixture = await createFixture();
+  fixture.request.publicAccess = 'protected';
+  const harness = fakeDestination();
+
+  const receipt = await publishS3Static(fixture.request, {
+    approved: true,
+    now: () => NOW,
+    randomBytes: () => Buffer.from('0123456789abcdeffedcba9876543210', 'hex'),
+    ...harness.dependencies,
+    httpGet: unexpectedHttp,
+  });
+
+  assert.equal(receipt.publicAccess, 'protected');
+  assert.deepEqual(receipt.sentinel.publicVerification, {
+    status: 'skipped-protected',
+  });
+  assert.ok(
+    receipt.artifacts.every(
+      ({ objectVerification, publicVerification }) =>
+        objectVerification.status === 'verified' &&
+        publicVerification.status === 'skipped-protected',
+    ),
+  );
+  assert.equal(harness.urls.length, 0);
 });
 
 test('rejects a successful public response whose bytes do not match the manifest', async () => {

@@ -136,7 +136,10 @@ export async function publishS3Static(request, dependencies = {}) {
     manifest.runId,
     randomBytes,
   );
-  const sentinelTargetPath = targetPath(sentinelRelativePath, roots);
+  const sentinelTargetPath = composePublicationTarget(
+    sentinelRelativePath,
+    roots,
+  );
   const catalog = catalogFromManifest(manifest, roots.publicBaseUrl);
   const catalogValidation = validateInitiativeCatalog(
     catalog,
@@ -164,6 +167,7 @@ export async function publishS3Static(request, dependencies = {}) {
   const sentinelBodyPath = join(sentinelDirectory, 'sentinel.txt');
   const catalogBodyPath = join(sentinelDirectory, 'catalog.json');
   const catalogArtifact = {
+    source: { kind: 'auxiliary', name: 'catalog' },
     manifestPath: catalogManifestPath,
     publishPath: catalogPublishPath,
     filePath: catalogBodyPath,
@@ -197,7 +201,7 @@ export async function publishS3Static(request, dependencies = {}) {
       headObjectArgs(roots, sentinelRelativePath, awsOptions),
       { sleep },
     );
-    await verifyObjectBytes({
+    const sentinelObjectVerification = await verifyObjectBytes({
       command,
       metadata: sentinelMetadata,
       roots,
@@ -211,6 +215,7 @@ export async function publishS3Static(request, dependencies = {}) {
       request.schemaVersion === 'explainer-kit.publish-request/v1'
         ? 'public'
         : request.publicAccess;
+    let sentinelPublicVerification = { status: 'skipped-protected' };
     if (publicAccess === 'public') {
       const sentinelResponse = await httpGet(sentinelTargetPath.publicUrl);
       if (
@@ -223,6 +228,11 @@ export async function publishS3Static(request, dependencies = {}) {
           'Public root did not serve the uploaded sentinel.',
         );
       }
+      sentinelPublicVerification = {
+        status: 'verified',
+        httpStatus: sentinelResponse.status,
+        hash: fileHash(responseBytes(sentinelResponse.body)),
+      };
     }
     await runAws(
       command,
@@ -233,7 +243,7 @@ export async function publishS3Static(request, dependencies = {}) {
 
     const receiptArtifacts = [];
     for (const artifact of publicationArtifacts) {
-      const target = targetPath(artifact.publishPath, roots);
+      const target = composePublicationTarget(artifact.publishPath, roots);
       const metadata = await readExistingMetadata(
         command,
         headObjectArgs(roots, artifact.publishPath, awsOptions),
@@ -260,7 +270,7 @@ export async function publishS3Static(request, dependencies = {}) {
         { sleep },
       );
       assertMetadata(uploadedMetadata, artifact);
-      await verifyObjectBytes({
+      const objectVerification = await verifyObjectBytes({
         command,
         metadata: uploadedMetadata,
         roots,
@@ -273,45 +283,57 @@ export async function publishS3Static(request, dependencies = {}) {
         awsOptions,
         sleep,
       });
-      const response = await httpGet(target.publicUrl);
-      if (response.status < 200 || response.status > 299) {
-        throw publishError(
-          'E_PUBLISH_VERIFY',
-          `Public verification failed for ${artifact.manifestPath}.`,
-        );
-      }
-      const servedType = headerValue(response.headers, 'content-type');
-      if (!contentTypesMatch(servedType, artifact.contentType)) {
-        throw publishError(
-          'E_PUBLISH_VERIFY',
-          `Public content type mismatch for ${artifact.manifestPath}.`,
-        );
-      }
-      if (fileHash(responseBytes(response.body)) !== artifact.hash) {
-        throw publishError(
-          'E_PUBLISH_VERIFY',
-          `Public bytes do not match the manifest for ${artifact.manifestPath}.`,
-        );
+      let publicVerification = { status: 'skipped-protected' };
+      if (publicAccess === 'public') {
+        const response = await httpGet(target.publicUrl);
+        if (response.status < 200 || response.status > 299) {
+          throw publishError(
+            'E_PUBLISH_VERIFY',
+            `Public verification failed for ${artifact.manifestPath}.`,
+          );
+        }
+        const servedType = headerValue(response.headers, 'content-type');
+        if (!contentTypesMatch(servedType, artifact.contentType)) {
+          throw publishError(
+            'E_PUBLISH_VERIFY',
+            `Public content type mismatch for ${artifact.manifestPath}.`,
+          );
+        }
+        const publicHash = fileHash(responseBytes(response.body));
+        if (publicHash !== artifact.hash) {
+          throw publishError(
+            'E_PUBLISH_VERIFY',
+            `Public bytes do not match the manifest for ${artifact.manifestPath}.`,
+          );
+        }
+        publicVerification = {
+          status: 'verified',
+          httpStatus: response.status,
+          hash: publicHash,
+        };
       }
       receiptArtifacts.push({
+        source: artifact.source,
         relativePath: artifact.manifestPath,
         hash: artifact.hash,
         s3Uri: target.s3Uri,
         publicUrl: target.publicUrl,
-        httpStatus: response.status,
         contentType: artifact.contentType,
+        objectVerification,
+        publicVerification,
       });
     }
 
     const receipt = {
-      schemaVersion: 'explainer-kit.publish-receipt/v1',
+      schemaVersion: 'explainer-kit.publish-receipt/v2',
       provider: 's3-static',
       publishedAt: now(),
+      publicAccess,
       roots: { s3Uri: roots.s3Uri, publicBaseUrl: roots.publicBaseUrl },
       sentinel: {
         relativePath: sentinelRelativePath,
-        uploadVerified: true,
-        publicVerified: true,
+        objectVerification: sentinelObjectVerification,
+        publicVerification: sentinelPublicVerification,
         deleted: sentinelDeleted,
       },
       artifacts: receiptArtifacts,
@@ -404,6 +426,7 @@ async function collectArtifacts(manifest, siteRoot) {
     }
     const contentType = contentTypeFor(publishPath, entry.mediaType);
     artifacts.push({
+      source: { kind: 'manifest', artifactId: entry.id },
       manifestPath: entry.renderedPath,
       publishPath,
       filePath,
@@ -595,7 +618,11 @@ async function verifyObjectBytes({
         `Authenticated object checksum mismatch for ${relativePath}.`,
       );
     }
-    return;
+    return {
+      status: 'verified',
+      method: 'service-checksum',
+      hash: expectedHash,
+    };
   }
 
   try {
@@ -617,6 +644,11 @@ async function verifyObjectBytes({
       `Authenticated object bytes do not match ${relativePath}.`,
     );
   }
+  return {
+    status: 'verified',
+    method: 'authenticated-download',
+    hash: expectedHash,
+  };
 }
 
 function parseAwsJson(stdout) {
@@ -657,7 +689,7 @@ function objectKey(roots, relativePath) {
   return roots.keyPrefix ? `${roots.keyPrefix}/${relativePath}` : relativePath;
 }
 
-function targetPath(relativePath, roots) {
+export function composePublicationTarget(relativePath, roots) {
   const suffix = relativePath
     .split('/')
     .map((part) => encodeURIComponent(part))

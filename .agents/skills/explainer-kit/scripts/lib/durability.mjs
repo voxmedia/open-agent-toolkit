@@ -374,11 +374,7 @@ async function verifyPublishEvidence(evidence, { runRoot, manifest }) {
   const errors = validation.errors.map(({ code, message }) =>
     error(code, message),
   );
-  if (
-    receipt.sentinel?.uploadVerified !== true ||
-    receipt.sentinel?.publicVerified !== true ||
-    receipt.sentinel?.deleted !== true
-  ) {
+  if (!sentinelVerificationComplete(receipt)) {
     errors.push(
       error(
         'sentinel-verification',
@@ -419,6 +415,25 @@ async function verifyPublishEvidence(evidence, { runRoot, manifest }) {
           paths: required.map(({ renderedPath }) => renderedPath),
         },
       };
+}
+
+function sentinelVerificationComplete(receipt) {
+  if (receipt.sentinel?.deleted !== true) return false;
+  if (receipt.schemaVersion === 'explainer-kit.publish-receipt/v1') {
+    return (
+      receipt.sentinel.uploadVerified === true &&
+      receipt.sentinel.publicVerified === true
+    );
+  }
+  if (receipt.schemaVersion !== 'explainer-kit.publish-receipt/v2') {
+    return false;
+  }
+  return (
+    receipt.sentinel.objectVerification?.status === 'verified' &&
+    (receipt.publicAccess === 'public'
+      ? receipt.sentinel.publicVerification?.status === 'verified'
+      : receipt.sentinel.publicVerification?.status === 'skipped-protected')
+  );
 }
 
 function appendEvidence(artifact, evidence) {

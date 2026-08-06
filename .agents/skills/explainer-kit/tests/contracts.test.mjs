@@ -225,6 +225,51 @@ function publishReceipt() {
   };
 }
 
+function verifiedObject(hash = HASH_B) {
+  return { status: 'verified', method: 'service-checksum', hash };
+}
+
+function verifiedPublic(hash = HASH_B) {
+  return { status: 'verified', httpStatus: 200, hash };
+}
+
+function publishReceiptV2(publicAccess = 'public') {
+  return {
+    schemaVersion: 'explainer-kit.publish-receipt/v2',
+    provider: 's3-static',
+    publishedAt: NOW,
+    publicAccess,
+    roots: {
+      s3Uri: 's3://example/explainers',
+      publicBaseUrl: 'https://example.com/explainers',
+    },
+    sentinel: {
+      relativePath: '.sentinel',
+      objectVerification: verifiedObject(HASH_A),
+      publicVerification:
+        publicAccess === 'public'
+          ? verifiedPublic(HASH_A)
+          : { status: 'skipped-protected' },
+      deleted: true,
+    },
+    artifacts: [
+      {
+        source: { kind: 'manifest', artifactId: 'hub' },
+        relativePath: 'site/index.html',
+        hash: HASH_B,
+        s3Uri: 's3://example/explainers/index.html',
+        publicUrl: 'https://example.com/explainers/index.html',
+        contentType: 'text/html',
+        objectVerification: verifiedObject(),
+        publicVerification:
+          publicAccess === 'public'
+            ? verifiedPublic()
+            : { status: 'skipped-protected' },
+      },
+    ],
+  };
+}
+
 test('accepts immutable publish request v1 replay and explicit v2 access modes', () => {
   for (const request of [
     publishRequest(),
@@ -248,6 +293,19 @@ test('accepts immutable publish request v1 replay and explicit v2 access modes',
     const request = runRequest();
     request.durability = { strategy: 'publish', publish };
     assert.deepEqual(validateContract('run-request', request), {
+      valid: true,
+      errors: [],
+    });
+  }
+});
+
+test('accepts publish receipt v1 replay and explicit v2 verification facts', () => {
+  for (const receipt of [
+    publishReceipt(),
+    publishReceiptV2('public'),
+    publishReceiptV2('protected'),
+  ]) {
+    assert.deepEqual(validateContract('publish-receipt', receipt), {
       valid: true,
       errors: [],
     });
@@ -338,15 +396,17 @@ test('requires publish receipts to cover the exact manifest and generated catalo
     finalized,
     'https://example.com/explainers',
   );
-  const receipt = publishReceipt();
+  const receipt = publishReceiptV2();
   receipt.artifacts.push({
+    source: { kind: 'auxiliary', name: 'catalog' },
     relativePath: 'site/initiatives/demo-project/catalog.json',
     hash: canonicalHash(catalog),
     s3Uri: 's3://example/explainers/initiatives/demo-project/catalog.json',
     publicUrl:
       'https://example.com/explainers/initiatives/demo-project/catalog.json',
-    httpStatus: 200,
     contentType: 'application/json',
+    objectVerification: verifiedObject(canonicalHash(catalog)),
+    publicVerification: verifiedPublic(canonicalHash(catalog)),
   });
 
   assert.equal(

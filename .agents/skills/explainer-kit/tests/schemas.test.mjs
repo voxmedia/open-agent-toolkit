@@ -18,7 +18,8 @@ const schemas = {
   'durability-evidence': 'explainer-kit.durability-evidence/v1',
   'publish-request.v1': 'explainer-kit.publish-request/v1',
   'publish-request.v2': 'explainer-kit.publish-request/v2',
-  'publish-receipt': 'explainer-kit.publish-receipt/v1',
+  'publish-receipt.v1': 'explainer-kit.publish-receipt/v1',
+  'publish-receipt.v2': 'explainer-kit.publish-receipt/v2',
   'author-request.v2': 'explainer-kit.author-request/v2',
   'author-request.v3': 'explainer-kit.author-request/v3',
   'author-result.v2': 'explainer-kit.author-result/v2',
@@ -141,7 +142,7 @@ test('manifest and build record share outcomes and evidence contracts', async ()
 
 test('durability request and publish receipt declare unique path evidence', async () => {
   const durability = await loadSchema('durability-evidence');
-  const receipt = await loadSchema('publish-receipt');
+  const receipt = await loadSchema('publish-receipt.v2');
   assert.deepEqual(durability.properties.evidence.oneOf[0].required, [
     'kind',
     'repoRoot',
@@ -157,6 +158,9 @@ test('durability request and publish receipt declare unique path evidence', asyn
     receipt.$defs.artifact.properties.relativePath.$ref,
     '#/$defs/safeRelativePath',
   );
+  assert.ok(receipt.required.includes('publicAccess'));
+  assert.ok(receipt.$defs.artifact.required.includes('objectVerification'));
+  assert.ok(receipt.$defs.artifact.required.includes('publicVerification'));
 });
 
 test('author v2 contracts require authored content and provenance', async () => {

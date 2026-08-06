@@ -182,20 +182,47 @@ function assertConsumableReceipt(receipt, manifest) {
       .filter(({ status }) => status === 'built')
       .map(({ renderedPath, hash }) => [renderedPath, hash]),
   );
+  const receiptV2 =
+    receipt?.schemaVersion === 'explainer-kit.publish-receipt/v2';
+  const manifestCoverage = receipt?.artifacts?.filter(
+    ({ source }) => !receiptV2 || source?.kind === 'manifest',
+  );
+  const auxiliaryCatalogs = receipt?.artifacts?.filter(
+    ({ source }) =>
+      receiptV2 && source?.kind === 'auxiliary' && source.name === 'catalog',
+  );
   if (
-    receipt?.schemaVersion !== 'explainer-kit.publish-receipt/v1' ||
+    ![
+      'explainer-kit.publish-receipt/v1',
+      'explainer-kit.publish-receipt/v2',
+    ].includes(receipt?.schemaVersion) ||
     !receipt.sentinel?.relativePath?.includes(manifest.runId) ||
-    receipt.sentinel.uploadVerified !== true ||
-    receipt.sentinel.publicVerified !== true ||
+    !consumableSentinel(receipt) ||
     receipt.sentinel.deleted !== true ||
     !Array.isArray(receipt.artifacts) ||
-    receipt.artifacts.length !== manifestArtifacts.size ||
-    !receipt.artifacts.every(
+    manifestCoverage.length !== manifestArtifacts.size ||
+    !manifestCoverage.every(
       ({ relativePath, hash }) => manifestArtifacts.get(relativePath) === hash,
-    )
+    ) ||
+    (receiptV2 && auxiliaryCatalogs.length !== 1)
   ) {
     throw new Error('Publish receipt does not match the wrapper core run.');
   }
+}
+
+function consumableSentinel(receipt) {
+  if (receipt.schemaVersion === 'explainer-kit.publish-receipt/v1') {
+    return (
+      receipt.sentinel.uploadVerified === true &&
+      receipt.sentinel.publicVerified === true
+    );
+  }
+  return (
+    receipt.sentinel.objectVerification?.status === 'verified' &&
+    (receipt.publicAccess === 'public'
+      ? receipt.sentinel.publicVerification?.status === 'verified'
+      : receipt.sentinel.publicVerification?.status === 'skipped-protected')
+  );
 }
 
 function assertConsumableManifest(manifest, result, request) {

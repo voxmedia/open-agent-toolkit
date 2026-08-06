@@ -1481,11 +1481,19 @@ async function executeDurabilityAndPublish(state, options, now) {
   });
   await persistManifest(state, now());
   try {
-    await options.publish({
+    const receipt = await options.publish({
       request: structuredClone(state.run.request.durability.publish),
       runRoot: state.run.runRoot,
       manifestPath: state.run.manifestPath,
     });
+    const validation = validateContract('publish-receipt', receipt);
+    if (!validation.valid) {
+      throw codedError(
+        'E_PUBLISH',
+        `Publisher returned an invalid receipt: ${validation.errors[0].message}`,
+      );
+    }
+    state.publication = publicationSummary(receipt);
   } catch (error) {
     await updateBuildRecord(state.run, {
       id: 'publish',
@@ -2277,6 +2285,7 @@ function resultFor(state, error) {
     }),
     warnings: [...new Set(state.warnings)],
     discovery: state.discovery,
+    ...(state.publication && { publication: state.publication }),
     ...(state.approval && {
       approval: {
         status: state.approval.status,
@@ -2293,6 +2302,21 @@ function resultFor(state, error) {
     ...(error && {
       errors: [{ code: error.code ?? 'E_RUN', message: safeMessage(error) }],
     }),
+  };
+}
+
+function publicationSummary(receipt) {
+  return {
+    schemaVersion: 'explainer-kit.publish-summary/v1',
+    receiptSchemaVersion: receipt.schemaVersion,
+    publicAccess:
+      receipt.schemaVersion === 'explainer-kit.publish-receipt/v2'
+        ? receipt.publicAccess
+        : 'public',
+    artifacts: receipt.artifacts.map(({ relativePath, publicUrl }) => ({
+      relativePath,
+      publicUrl,
+    })),
   };
 }
 

@@ -44,29 +44,44 @@ test('private wrapper resolves personal inputs, runs the actual core, consumes i
   }));
   const publishManifest = mock.fn(
     async ({ publish, publicBaseUrl, manifest }) => ({
-      schemaVersion: 'explainer-kit.publish-receipt/v1',
+      schemaVersion: 'explainer-kit.publish-receipt/v2',
       provider: publish.provider,
       publishedAt: NOW,
+      publicAccess: 'public',
       roots: {
         s3Uri: publish.s3Uri,
         publicBaseUrl,
       },
       sentinel: {
         relativePath: `.explainer-kit-sentinel/${manifest.runId}-0123456789abcdeffedcba9876543210.txt`,
-        uploadVerified: true,
-        publicVerified: true,
+        objectVerification: verifiedObject(HASH),
+        publicVerification: verifiedPublic(HASH),
         deleted: true,
       },
-      artifacts: manifest.artifacts
-        .filter(({ status }) => status === 'built')
-        .map(({ renderedPath, hash, mediaType }) => ({
-          relativePath: renderedPath,
-          hash,
-          s3Uri: `${publish.s3Uri}/${renderedPath.slice('site/'.length)}`,
-          publicUrl: `${publicBaseUrl}/${renderedPath.slice('site/'.length)}`,
-          httpStatus: 200,
-          contentType: mediaType,
-        })),
+      artifacts: [
+        ...manifest.artifacts
+          .filter(({ status }) => status === 'built')
+          .map(({ id, renderedPath, hash, mediaType }) => ({
+            source: { kind: 'manifest', artifactId: id },
+            relativePath: renderedPath,
+            hash,
+            s3Uri: `${publish.s3Uri}/${renderedPath.slice('site/'.length)}`,
+            publicUrl: `${publicBaseUrl}/${renderedPath.slice('site/'.length)}`,
+            contentType: mediaType,
+            objectVerification: verifiedObject(hash),
+            publicVerification: verifiedPublic(hash),
+          })),
+        {
+          source: { kind: 'auxiliary', name: 'catalog' },
+          relativePath: `site/initiatives/${manifest.slug}/catalog.json`,
+          hash: HASH,
+          s3Uri: `${publish.s3Uri}/initiatives/${manifest.slug}/catalog.json`,
+          publicUrl: `${publicBaseUrl}/initiatives/${manifest.slug}/catalog.json`,
+          contentType: 'application/json',
+          objectVerification: verifiedObject(HASH),
+          publicVerification: verifiedPublic(HASH),
+        },
+      ],
     }),
   );
 
@@ -153,7 +168,7 @@ test('private wrapper resolves personal inputs, runs the actual core, consumes i
   }
   assert.equal(
     wrapped.publishReceipt.schemaVersion,
-    'explainer-kit.publish-receipt/v1',
+    'explainer-kit.publish-receipt/v2',
   );
   assert.match(
     wrapped.publishReceipt.sentinel.relativePath,
@@ -164,6 +179,14 @@ test('private wrapper resolves personal inputs, runs the actual core, consumes i
     ['stoa', 'gdocs'],
   );
 });
+
+function verifiedObject(hash) {
+  return { status: 'verified', method: 'service-checksum', hash };
+}
+
+function verifiedPublic(hash) {
+  return { status: 'verified', httpStatus: 200, hash };
+}
 
 test('skill documents freeze the pre/core/post seam and migration controls', async () => {
   const [
@@ -200,7 +223,7 @@ test('skill documents freeze the pre/core/post seam and migration controls', asy
   assert.match(adapterSkill, /references\/migration\.md/);
   assert.match(personalDraft, /https:\/\/dy4vzrzaexuy5\.cloudfront\.net/);
 
-  assert.match(coreSkill, /^version: 2\.0\.3$/m);
+  assert.match(coreSkill, /^version: 2\.1\.0$/m);
   assert.match(adapterSkill, /^version: 1\.0\.5$/m);
   assert.doesNotMatch(coreTree, /dy4vzrzaexuy5\.cloudfront\.net/);
 });

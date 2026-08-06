@@ -167,6 +167,19 @@ async function createFixture({ coreVersion = '2.1.0' } = {}) {
                 typeof options.browserSession?.probe === 'function',
               visualCritic: typeof options.visualCritic === 'function',
             },
+            publication: request.durability?.strategy === 'publish'
+              ? {
+                  schemaVersion: 'explainer-kit.publish-summary/v1',
+                  receiptSchemaVersion: 'explainer-kit.publish-receipt/v2',
+                  publicAccess: request.durability.publish.publicAccess,
+                  artifacts: [
+                    {
+                      relativePath: 'site/index.html',
+                      publicUrl: request.durability.publish.publicBaseUrl + '/index.html',
+                    },
+                  ],
+                }
+              : undefined,
           };
         }
       `,
@@ -1272,6 +1285,18 @@ test('passes only derived credential-free destination roots into core publish re
     projectPublish.publicBaseUrl,
     'https://docs.example.com/repositories/demo/projects/demo',
   );
+  assert.deepEqual(projectResult.publication, {
+    schemaVersion: 'explainer-kit.publish-summary/v1',
+    receiptSchemaVersion: 'explainer-kit.publish-receipt/v2',
+    publicAccess: 'protected',
+    artifacts: [
+      {
+        relativePath: 'site/index.html',
+        publicUrl:
+          'https://docs.example.com/repositories/demo/projects/demo/index.html',
+      },
+    ],
+  });
 
   const repositoryFixture = await createFixture();
   const factBasePath = join(repositoryFixture.root, 'repository-facts.json');

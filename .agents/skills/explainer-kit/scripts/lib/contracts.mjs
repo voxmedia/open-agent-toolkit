@@ -16,7 +16,8 @@ const SCHEMA_FILES = {
   'durability-evidence': 'durability-evidence.schema.json',
   'publish-request/v1': 'publish-request.v1.schema.json',
   'publish-request/v2': 'publish-request.v2.schema.json',
-  'publish-receipt': 'publish-receipt.schema.json',
+  'publish-receipt/v1': 'publish-receipt.v1.schema.json',
+  'publish-receipt/v2': 'publish-receipt.v2.schema.json',
   'author-request/v2': 'author-request.v2.schema.json',
   'author-request/v3': 'author-request.v3.schema.json',
   'author-result/v2': 'author-result.v2.schema.json',
@@ -28,6 +29,7 @@ const DEFAULT_SCHEMA_KEYS = {
   'author-request': 'author-request/v3',
   'author-result': 'author-result/v2',
   'publish-request': 'publish-request/v2',
+  'publish-receipt': 'publish-receipt/v2',
 };
 
 const SCHEMAS = Object.fromEntries(
@@ -985,6 +987,37 @@ function validateCrossRecord(kind, value, context, errors) {
 
   if (
     kind === 'publish-receipt' &&
+    value.schemaVersion === 'explainer-kit.publish-receipt/v2'
+  ) {
+    const sentinel = value.sentinel;
+    if (
+      sentinel?.objectVerification?.status !== 'verified' ||
+      sentinel.objectVerification.hash === undefined
+    ) {
+      add(
+        errors,
+        '$.sentinel.objectVerification',
+        'receipt-object-verification',
+        'Publish receipt sentinel requires exact authenticated object verification.',
+      );
+    }
+    const validPublic =
+      value.publicAccess === 'public'
+        ? sentinel?.publicVerification?.status === 'verified' &&
+          sentinel.publicVerification.hash === sentinel.objectVerification?.hash
+        : sentinel?.publicVerification?.status === 'skipped-protected';
+    if (!validPublic) {
+      add(
+        errors,
+        '$.sentinel.publicVerification',
+        'receipt-public-verification',
+        'Publish receipt sentinel public verification must match the declared public-access mode.',
+      );
+    }
+  }
+
+  if (
+    kind === 'publish-receipt' &&
     isObject(context.manifest) &&
     Array.isArray(value.artifacts)
   ) {
@@ -995,29 +1028,41 @@ function validateCrossRecord(kind, value, context, errors) {
         artifact.status === 'built' &&
         typeof artifact.renderedPath === 'string'
       ) {
-        expected.set(artifact.renderedPath, artifact.hash);
+        expected.set(artifact.renderedPath, {
+          hash: artifact.hash,
+          source: { kind: 'manifest', artifactId: artifact.id },
+        });
       }
     }
     if (
       isObject(context.catalogArtifact) &&
       typeof context.catalogArtifact.relativePath === 'string'
     ) {
-      expected.set(
-        context.catalogArtifact.relativePath,
-        context.catalogArtifact.hash,
-      );
+      expected.set(context.catalogArtifact.relativePath, {
+        hash: context.catalogArtifact.hash,
+        source: { kind: 'auxiliary', name: 'catalog' },
+      });
     }
     const received = new Set();
     for (const artifact of value.artifacts) {
-      if (
-        isObject(artifact) &&
-        expected.get(artifact.relativePath) !== artifact.hash
-      ) {
+      const expectedArtifact = expected.get(artifact?.relativePath);
+      if (isObject(artifact) && expectedArtifact?.hash !== artifact.hash) {
         add(
           errors,
           '$.artifacts',
           'cross-record-mismatch',
           'Publish receipt artifact does not match the manifest.',
+        );
+      }
+      if (
+        value.schemaVersion === 'explainer-kit.publish-receipt/v2' &&
+        isObject(artifact)
+      ) {
+        validatePublishReceiptV2Artifact(
+          value,
+          artifact,
+          expectedArtifact,
+          errors,
         );
       }
       if (received.has(artifact?.relativePath)) {
@@ -1041,6 +1086,62 @@ function validateCrossRecord(kind, value, context, errors) {
         'Publish receipt must exactly cover every manifest artifact and the generated catalog.',
       );
     }
+  }
+}
+
+function validatePublishReceiptV2Artifact(receipt, artifact, expected, errors) {
+  if (!expected || !deepEqual(artifact.source, expected.source)) {
+    add(
+      errors,
+      '$.artifacts',
+      'receipt-artifact-source',
+      'Publish receipt source identity does not match the manifest or generated auxiliary object.',
+    );
+  }
+  const publishPath = artifact.relativePath?.startsWith('site/')
+    ? artifact.relativePath.slice('site/'.length)
+    : artifact.relativePath;
+  const encodedPath =
+    typeof publishPath === 'string'
+      ? publishPath
+          .split('/')
+          .map((part) => encodeURIComponent(part))
+          .join('/')
+      : '';
+  const expectedS3 = `${receipt.roots?.s3Uri?.replace(/\/+$/, '')}/${publishPath}`;
+  const expectedPublic = `${receipt.roots?.publicBaseUrl?.replace(/\/+$/, '')}/${encodedPath}`;
+  if (artifact.s3Uri !== expectedS3 || artifact.publicUrl !== expectedPublic) {
+    add(
+      errors,
+      '$.artifacts',
+      'receipt-artifact-destination',
+      'Publish receipt artifact destinations must be canonical children of the receipt roots.',
+    );
+  }
+  if (
+    artifact.objectVerification?.status !== 'verified' ||
+    artifact.objectVerification?.hash !== artifact.hash
+  ) {
+    add(
+      errors,
+      '$.artifacts',
+      'receipt-object-verification',
+      'Publish receipt object verification must prove the exact artifact hash.',
+    );
+  }
+  const publicVerification = artifact.publicVerification;
+  const validPublic =
+    receipt.publicAccess === 'public'
+      ? publicVerification?.status === 'verified' &&
+        publicVerification?.hash === artifact.hash
+      : publicVerification?.status === 'skipped-protected';
+  if (!validPublic) {
+    add(
+      errors,
+      '$.artifacts',
+      'receipt-public-verification',
+      'Publish receipt public verification must match the declared public-access mode.',
+    );
   }
 }
 

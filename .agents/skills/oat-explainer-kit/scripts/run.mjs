@@ -230,6 +230,7 @@ export async function runOatExplainer({
     manifest,
     result,
     marking: result.marking ?? null,
+    publication: result.publication ?? null,
     outputRoot,
     destination,
   };

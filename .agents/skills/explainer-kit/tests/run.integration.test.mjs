@@ -3861,17 +3861,68 @@ test('invokes durability and publishing seams only when explicitly requested', a
   assert.equal(durability.mock.callCount(), 1);
 
   const publishFixture = await suppliedFixture();
-  await runExplainer(
+  const publishV2 = mock.fn(async ({ manifestPath }) => {
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    const artifact = manifest.artifacts.find(
+      ({ status }) => status === 'built',
+    );
+    return {
+      schemaVersion: 'explainer-kit.publish-receipt/v2',
+      provider: 's3-static',
+      publishedAt: NOW,
+      publicAccess: 'public',
+      roots: {
+        s3Uri: 's3://example-bucket/explainers',
+        publicBaseUrl: 'https://docs.example.com/explainers',
+      },
+      sentinel: {
+        relativePath: '.sentinel',
+        objectVerification: {
+          status: 'verified',
+          method: 'service-checksum',
+          hash: HASH,
+        },
+        publicVerification: {
+          status: 'verified',
+          httpStatus: 200,
+          hash: HASH,
+        },
+        deleted: true,
+      },
+      artifacts: [
+        {
+          source: { kind: 'manifest', artifactId: artifact.id },
+          relativePath: artifact.renderedPath,
+          hash: artifact.hash,
+          s3Uri: `s3://example-bucket/explainers/${artifact.renderedPath.slice('site/'.length)}`,
+          publicUrl: `https://docs.example.com/explainers/${artifact.renderedPath.slice('site/'.length)}`,
+          contentType: artifact.mediaType,
+          objectVerification: {
+            status: 'verified',
+            method: 'service-checksum',
+            hash: artifact.hash,
+          },
+          publicVerification: {
+            status: 'verified',
+            httpStatus: 200,
+            hash: artifact.hash,
+          },
+        },
+      ],
+    };
+  });
+  const published = await runExplainer(
     {
       ...publishFixture.request,
       durability: {
         strategy: 'publish',
         publish: {
-          schemaVersion: 'explainer-kit.publish-request/v1',
+          schemaVersion: 'explainer-kit.publish-request/v2',
           provider: 's3-static',
           s3Uri: 's3://example-bucket/explainers',
           publicBaseUrl: 'https://docs.example.com/explainers',
           awsRegion: 'us-east-1',
+          publicAccess: 'public',
           siteRoot: join(
             publishFixture.outputRoot,
             'project-explainer-demo/site',
@@ -3883,7 +3934,18 @@ test('invokes durability and publishing seams only when explicitly requested', a
         },
       },
     },
-    { now: () => NOW, publish },
+    { now: () => NOW, publish: publishV2 },
   );
-  assert.equal(publish.mock.callCount(), 1);
+  assert.equal(publishV2.mock.callCount(), 1);
+  assert.deepEqual(published.publication, {
+    schemaVersion: 'explainer-kit.publish-summary/v1',
+    receiptSchemaVersion: 'explainer-kit.publish-receipt/v2',
+    publicAccess: 'public',
+    artifacts: [
+      {
+        relativePath: published.publication.artifacts[0].relativePath,
+        publicUrl: published.publication.artifacts[0].publicUrl,
+      },
+    ],
+  });
 });

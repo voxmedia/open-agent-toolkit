@@ -17,7 +17,8 @@ release candidate passes every acceptance gate.
    Google account data, authentication choices, and personal destination
    topology in private wrapper configuration.
 4. Invoke the core once, consume only `explainer-kit.manifest/v1` and the
-   optional publish receipt, then perform Stoa notes, Google Docs sync, and
+   optional `explainer-kit.publish-receipt/v2` (while retaining v1 replay),
+   then perform Stoa notes, Google Docs sync, and
    private link maintenance as post-run work.
 
 Do not add a plugin, inject private work between core stages, or add private

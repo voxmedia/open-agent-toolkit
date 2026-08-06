@@ -405,7 +405,10 @@ async function readOutputBindings({ entry, entryArgs, exit, request, cwd }) {
   const receipt = receiptPath
     ? await readBoundJson(
         receiptPath,
-        'explainer-kit.publish-receipt/v1',
+        [
+          'explainer-kit.publish-receipt/v1',
+          'explainer-kit.publish-receipt/v2',
+        ],
         'receipt',
       )
     : null;
@@ -430,7 +433,10 @@ async function readOutputBindings({ entry, entryArgs, exit, request, cwd }) {
 async function readBoundJson(path, schemaVersion, label) {
   try {
     const value = JSON.parse(await readFile(path, 'utf8'));
-    if (value?.schemaVersion !== schemaVersion) throw new Error();
+    const accepted = Array.isArray(schemaVersion)
+      ? schemaVersion
+      : [schemaVersion];
+    if (!accepted.includes(value?.schemaVersion)) throw new Error();
     return value;
   } catch {
     throw new RcRunError(
