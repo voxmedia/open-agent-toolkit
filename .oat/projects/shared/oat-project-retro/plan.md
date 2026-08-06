@@ -5,7 +5,6 @@ oat_blockers: []
 oat_last_updated: 2026-08-05
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
 oat_plan_parallel_groups: [['p01', 'p02', 'p03']] # config, assets, and lifecycle-skill edits are file-disjoint
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null
@@ -29,8 +28,7 @@ oat_template: true
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user (default: pause after every phase; adjust `oat_plan_hill_phases` if desired)
-- [x] Set `oat_plan_hill_phases` in frontmatter (default `[]` = every phase)
+- [ ] Confirmed HiLL checkpoints with user — deferred to `oat-project-implement` start; `oat_plan_hill_phases` is intentionally unset until then
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
 
@@ -42,7 +40,7 @@ oat_template: true
 
 - **p01 (CLI config)** writes only `packages/cli/src/config/*` plus the sequence-contracts test under `packages/cli/src/commands/init/tools/shared/`. Verification is scoped vitest runs.
 - **p02 (template + skills + registration)** writes new directories `.agents/skills/oat-project-retro*/`, the new `.oat/templates/project-retro.md`, and registration lists in `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` and `packages/cli/scripts/bundle-inputs.mjs` — none of which p01 or p03 touch. Verification is manifest-scoped vitest plus a CLI build.
-- **p03 (lifecycle skill edits)** writes only two existing skill files (`oat-project-implement/references/completion-and-closeout.md`, `oat-project-complete/SKILL.md`). Verification is repo format/lint.
+- **p03 (lifecycle skill edits)** writes only three existing skill files (`oat-project-implement/references/completion-and-closeout.md`, `oat-project-implement/SKILL.md` for the version bump, `oat-project-complete/SKILL.md`). Verification is repo format/lint. Provider views under `.claude/`/`.cursor/`/`.codex/` are symlinks to canonical skills, so p02's sync output does not overlap these edits.
 
 Write sets are file-disjoint (p01 and p02 touch different files in the same `shared/` directory), and each phase verifies independently, so the three run as one parallel group. **p04 (docs)** stays sequential after the group: it documents the exact config keys from p01 and skills from p02/p03. **p05 (release + acceptance)** is last: the lockstep bump must cover all shipped changes, and the dogfood run needs the complete feature.
 
@@ -163,12 +161,16 @@ git commit -m "feat(p01-t02): add workflow.retro config namespace"
 
 Follow design.md Data Models exactly: frontmatter (`oat_retro_project`, `oat_retro_generated`, `oat_retro_evidence_sources` with per-source `status`, `oat_retro_promotions` / `oat_retro_filing` rollups, `oat_generated`, plus `oat_template: true` / `oat_template_name: project-retro` scaffold markers); core sections (Executive Summary; Evidence and Review Method; Outcome Snapshot; What Went Well; Challenges and Struggles; Where We Changed Course; Repo Improvements promotion register; OAT Upstream Feedback upstream register with explicit empty-state line; Reflections); conditional sections with include-when guidance (Decision Register + Rejected/Superseded Alternatives; New Architecture Patterns; Domain Learnings; Gotchas for Humans; Gotchas for Autonomous Agents; Remaining Boundaries and Follow-Ups); register item format with stable `RP-NN` / `UP-NN` IDs and the mutable-field contract (`Status`, `Applied-ref` / `Destination`, `Sanitized`).
 
-**Step 2: Verify**
+**Step 2: Format**
+
+Run: `pnpm exec oxfmt --write .oat/templates/project-retro.md`
+
+**Step 3: Verify**
 
 Run: `pnpm exec oxfmt --check .oat/templates/project-retro.md`
 Expected: No formatting diffs; template sections match design.md's core/conditional list one-for-one
 
-**Step 3: Commit**
+**Step 4: Commit**
 
 ```bash
 git add .oat/templates/project-retro.md
@@ -196,12 +198,16 @@ Per design.md Component Design and the handoff (`references/oat-project-retro-sk
 - `evidence-and-lanes.md`: evidence reading order from the handoff, environment detection (cloud tooling / local transcripts / none), recon lane guidance with scaling, transcript caveats (committed ledgers authoritative when transcript bodies are missing).
 - `retro-quality-bar.md`: handoff quality bar (evidence-first, confirmed vs hypothesis vs inconclusive, rejected alternatives, run-specific reflections) plus core/conditional section scaling.
 
-**Step 2: Verify**
+**Step 2: Format**
+
+Run: `pnpm exec oxfmt --write '.agents/skills/oat-project-retro/**/*.md'`
+
+**Step 3: Verify**
 
 Run: `pnpm format && pnpm lint`
 Expected: `.agents/skills` formatting and lint pass; SKILL.md cross-references to the three reference files resolve (paths exist)
 
-**Step 3: Commit**
+**Step 4: Commit**
 
 ```bash
 git add .agents/skills/oat-project-retro
@@ -220,12 +226,16 @@ git commit -m "feat(p02-t02): add oat-project-retro skill"
 
 Per design.md filing flow: frontmatter `version: 1.0.0`; artifact resolution (active project default, explicit path override); capability preflight matrix (lane × destination: issues enabled? credentials? backlog initialized?) reported before items; destination resolution (`workflow.retro.filing` default + interactive confirmation/override; non-interactive uses config as-is, files nothing without config); upstream-repo resolution (`workflow.retro.upstreamRepo`, default `voxmedia/open-agent-toolkit` in guidance; upstream lane collapses into repo lane when the host repo is the upstream repo); duplicate check per destination type (issues via `gh search issues`; backlog via `items/*.md` + `archived/` + `completed.md`) with four dispositions (strengthen — default when applicable, file as new, skip, link existing); sanitization verification for public destinations from private sources (applies to strengthen comments too); filing execution (`gh issue create`; backlog per `oat-pjm-add-backlog-item` conventions + `oat backlog regenerate-index`); per-item status + destination writeback and frontmatter rollup update; loud undeliverable-lane reporting.
 
-**Step 2: Verify**
+**Step 2: Format**
+
+Run: `pnpm exec oxfmt --write .agents/skills/oat-project-retro-file/SKILL.md`
+
+**Step 3: Verify**
 
 Run: `pnpm format && pnpm lint`
 Expected: Pass; every register mutation named in the skill maps to a field defined in the p02-t01 template
 
-**Step 3: Commit**
+**Step 4: Commit**
 
 ```bash
 git add .agents/skills/oat-project-retro-file
@@ -283,12 +293,16 @@ git commit -m "feat(p02-t04): register retro skill pair and template in workflow
 
 Per design.md Closeout sequencing integration: extend the step dispatch sentence — for every pending `retro`, dispatch `oat-project-retro` (generate mode; apply/filing behavior stays config-gated inside the skill); note `retro` as a valid additive vocabulary member wherever `summary`/`document`/`pr` step values are enumerated (snapshot examples included); leave the autonomous lifecycle-tail default `{ preApproval: [summary, document, pr], postApproval: [] }` unchanged and state explicitly that retro runs autonomously only when configured. Bump the `oat-project-implement` skill `version:` (PR-scoped bump; a later edit in this PR does not bump again).
 
-**Step 2: Verify**
+**Step 2: Format**
+
+Run: `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-implement/SKILL.md`
+
+**Step 3: Verify**
 
 Run: `pnpm format && pnpm lint`
 Expected: Pass; every step-vocabulary enumeration in the file includes `retro`; autonomous default unchanged
 
-**Step 3: Commit**
+**Step 4: Commit**
 
 ```bash
 git add .agents/skills/oat-project-implement
@@ -307,12 +321,16 @@ git commit -m "feat(p03-t01): dispatch retro step from closeout sequence"
 
 Per design.md offer section: preflight `{PROJECT_PATH}/references/project-retro.md` alongside the existing summary preflight; when missing in an interactive completion run, one offer ("No project retro exists. Generate one before completing?") that dispatches `oat-project-retro` on confirmation; when present, no offer — at most a one-line note when frontmatter rollups show `proposed`/`partial` registers; gate on the completion run's own interactivity (autonomously-implemented projects completed interactively DO get the offer; a non-interactive completion run skips it — the sequence step is the consented path). Bump the skill `version:`.
 
-**Step 2: Verify**
+**Step 2: Format**
+
+Run: `pnpm exec oxfmt --write .agents/skills/oat-project-complete/SKILL.md`
+
+**Step 3: Verify**
 
 Run: `pnpm format && pnpm lint`
 Expected: Pass; offer wording and gating match design.md; version bumped once
 
-**Step 3: Commit**
+**Step 4: Commit**
 
 ```bash
 git add .agents/skills/oat-project-complete
@@ -334,12 +352,16 @@ git commit -m "feat(p03-t02): offer retro at interactive completion when missing
 
 Lifecycle page: widen the post-implement step vocabulary to include `retro`, document the post-approval placement rationale (feedback tail exists; before completion freezes artifacts), and the completion safety-net offer. Configuration reference: `workflow.retro.filing.repo`, `workflow.retro.filing.upstream`, `workflow.retro.apply`, `workflow.retro.upstreamRepo` with defaults and consent semantics (config counts as non-interactive consent; absent config = propose-only).
 
-**Step 2: Verify**
+**Step 2: Format**
+
+Run: `pnpm exec oxfmt --write apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/cli-utilities/configuration.md`
+
+**Step 3: Verify**
 
 Run: `pnpm check`
 Expected: markdownlint over docs passes
 
-**Step 3: Commit**
+**Step 4: Commit**
 
 ```bash
 git add apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/cli-utilities/configuration.md
@@ -348,27 +370,32 @@ git commit -m "docs(p04-t01): document retro sequence step and workflow.retro co
 
 ---
 
-### Task p04-t02: Add the retro workflow docs page and regenerate the index
+### Task p04-t02: Add the retro workflow docs page, AGENTS mention, and regenerate the index
 
 **Files:**
 
 - Create: `apps/oat-docs/docs/workflows/projects/retro.md` (final path per docs-app nav conventions — check `apps/oat-docs/AGENTS.md` before placing)
 - Modify: `apps/oat-docs/index.md` (generated — via `oat docs generate-index` only)
+- Modify: `AGENTS.md` (repo root — one-line lifecycle mention)
 
 **Step 1: Author**
 
-New page covering the retro skill pair: generate mode (evidence sources, honesty contract, registers), apply mode (natural-language entry, idempotent register processing), filing skill (preflight matrix, destinations, dedupe dispositions incl. strengthen), and the summary-vs-retro distinction table from the handoff. Wire nav per docs-app conventions; regenerate the docs index with `pnpm run cli -- docs generate-index` (never hand-edit).
+New page covering the retro skill pair: generate mode (evidence sources, honesty contract, registers), apply mode (natural-language entry, idempotent register processing), filing skill (preflight matrix, destinations, dedupe dispositions incl. strengthen), and the summary-vs-retro distinction table from the handoff. Wire nav per docs-app conventions; regenerate the docs index with `pnpm run cli -- docs generate-index` (never hand-edit). Add a one-line mention of the retro post-approval step and skill pair to root `AGENTS.md` lifecycle prose (near the Agent Workflow section); do NOT add a skill inventory entry — the skills_system section prohibits duplicating inventories.
 
-**Step 2: Verify**
+**Step 2: Format**
+
+Run: `pnpm exec oxfmt --write apps/oat-docs/docs/workflows/projects/retro.md AGENTS.md`
+
+**Step 3: Verify**
 
 Run: `pnpm check && pnpm build:docs`
 Expected: markdownlint and docs build pass; new page reachable in nav
 
-**Step 3: Commit**
+**Step 4: Commit**
 
 ```bash
-git add apps/oat-docs
-git commit -m "docs(p04-t02): add retro workflow documentation page"
+git add apps/oat-docs AGENTS.md CLAUDE.md
+git commit -m "docs(p04-t02): add retro workflow documentation page and AGENTS mention"
 ```
 
 ---
@@ -424,7 +451,8 @@ Expected: Full CI gate order passes
 **Step 4: Commit**
 
 ```bash
-git add -A
+git add .agents/skills/oat-project-retro .agents/skills/oat-project-retro-file .oat/templates/project-retro.md "{completed-project}/references/project-retro.md" "{completed-project}/state.md"
+# plus any specific fix paths surfaced by the run — enumerate them; do not use `git add -A`
 git commit -m "test(p05-t02): dogfood retro acceptance run and fixes"
 ```
 
