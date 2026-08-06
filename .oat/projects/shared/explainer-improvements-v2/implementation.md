@@ -110,6 +110,21 @@ escalated to the operator.
   receipt completeness against a fake destination). Plan now totals 33
   tasks.
 
+- **Attempt 9** (`artifact-plan-review-2026-08-06T024804Z.md`): attempt-8
+  findings confirmed resolved; 4 Important, 0 Medium new (all downstream of
+  the attempt-8 fixes) — the lifecycle transition test had no executable
+  production seam (fixed: shared `check-terminal-outcome.mjs` guard script
+  invoked by both completion routes and executed directly by the integration
+  test for missing/clean/flagged/failure cases), flagged durability
+  permitted an incomplete package (fixed: `package-coverage.mjs` added to
+  p04-t02 with a canonical flagged package and hash-verified evidence),
+  the closed receipt contract could not carry the publish override (fixed:
+  `publish-receipt.v2` schema, docs, and validation tests added to p04-t02
+  with required-when-flagged/absent-when-clean shapes), and the adapter
+  could not reach the shared URL helper through its declared scope (fixed:
+  adapter `run.mjs` compatibility-seam injection added to p03-t04 with a
+  divergent-core-root fixture).
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 

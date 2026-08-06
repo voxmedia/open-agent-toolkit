@@ -619,7 +619,9 @@ git commit -m "feat(p03-t03): emit complete per-artifact publish receipts"
 - Create: `.agents/skills/explainer-kit/scripts/lib/url-segments.mjs`
 - Create: `.agents/skills/explainer-kit/tests/url-segments.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/derive-destination.mjs` (migrate p01-t01's slug encoding onto the shared helper)
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs` (owns the compatibility resolution that selects and dynamically imports the core root — the helper must be loaded through this seam, not a static adjacent-core import)
 - Modify: `.agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
 
 **Step 1: Write test (RED)**
 
@@ -630,23 +632,30 @@ residence; the `durability.publish` vs top-level divergence is resolved and
 covered.
 
 **The adapter's destination derivation (p01-t01) is a consumer of the same
-helper**: `derive-destination.mjs` migrates its slug-encoding rules onto
-`url-segments.mjs`, imported via the adapter's existing resolved-core-module
-mechanism (the adapter already dynamically imports core modules by path).
-A cross-skill parity/property test proves adapter destination encoding and
+helper, loaded through the compatibility seam**: adapter `run.mjs` owns the
+resolution that selects the compatible core root and dynamically imports
+core modules from it. `run.mjs` resolves `url-segments.mjs` from
+`compatibility.coreRoot` and injects (or passes) it into
+`deriveExplainerDestination`; `derive-destination.mjs` drops its own
+encoding rules and requires the injected helper. A static adjacent-core
+import is not acceptable, because it bypasses compatibility resolution. A
+cross-skill parity/property test proves adapter destination encoding and
 core artifact URL encoding produce identical segments for the same inputs —
-no second encoding implementation may remain.
+no second encoding implementation may remain — and an integration fixture
+exercises a selected core root that differs from the adjacent canonical
+tree.
 
 **Step 2: Implement (GREEN)**
 
 Extract the helper; migrate render, publish, catalog, and adapter destination
-URL construction to it; reconcile `publicBaseUrl` residence with a documented
-single source.
+URL construction to it (helper injected through the adapter's
+compatibility-resolved core root); reconcile `publicBaseUrl` residence with a
+documented single source.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/ .agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs`
-Expected: full core suite and adapter parity tests green
+Run: `node --test .agents/skills/explainer-kit/tests/ .agents/skills/oat-explainer-kit/tests/derive-destination.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+Expected: full core suite, adapter parity, and compatibility-seam tests green
 
 **Step 4: Commit**
 
@@ -770,9 +779,12 @@ git commit -m "fix(p04-t01): validate request shape before content processing"
 - Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/durability.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/package-coverage.mjs` (currently classifies `built-needs-review` as a partial outcome and returns before requiring retained visual-review evidence)
 - Modify: `.agents/skills/explainer-kit/scripts/publish.mjs` (direct publisher entry point — today `--confirm-publish` becomes `approved: true` with no manifest-outcome check)
 - Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs` (connector validates request and manifest without checking the manifest outcome)
 - Create: `.agents/skills/explainer-kit/schemas/publish-override.v1.schema.json`
+- Modify: `.agents/skills/explainer-kit/schemas/publish-receipt.v2.schema.json` (created in p03-t03; receipt schemas are closed contracts, so the override reference must be declared in the schema)
+- Modify: `.agents/skills/explainer-kit/references/contracts.md` (receipt override-reference documentation)
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
@@ -799,6 +811,16 @@ package is tracked and inspectable; approval may proceed after the terminal
 outcome (flag-not-block); publication remains denied for flagged runs unless
 the review passes or an explicit operator override is recorded.
 
+**Flagged durability defines a complete immutable package, not merely a
+permitted outcome.** `package-coverage.mjs` today classifies
+`built-needs-review` as partial and returns before requiring retained
+visual-review evidence, so allowing the outcome through `durability.mjs`
+alone would attest an incomplete package. Define the exact canonical package
+for flagged durability — rendered site, manifest, terminal browser evidence,
+terminal visual-review evidence, and the durable residual-finding record —
+and require coverage validation to enumerate and hash-verify all of it.
+Tests prove missing or hash-mismatched flagged evidence rejects attestation.
+
 **The publication denial is enforced at every publish entry point, not just
 promised.** The direct publisher (`publish.mjs`) and the `s3-static`
 connector today validate the request and manifest without checking the
@@ -808,18 +830,25 @@ manifest. The publish seam rejects `built-needs-review` manifests unless a
 run ID, manifest hash, operator identity, reason, timestamp) validates
 against the contract registry and its manifest hash matches the finalized
 manifest exactly. The override is recorded in the publish receipt for audit;
-no credential material appears in the record. Negative direct-publisher
-tests: flagged manifest without override is rejected; with a
-mismatched-hash override is rejected; with a valid override publishes and
-the receipt carries the override reference.
+no credential material appears in the record. **The receipt contract carries
+the override explicitly:** receipt schemas are closed
+(`additionalProperties: false`), so `publish-receipt.v2.schema.json` (from
+p03-t03) declares a manifest-bound override reference that is required for
+flagged publications and absent for clean publications, with receipt
+validation tests for both shapes and updated contract documentation.
+Negative direct-publisher tests: flagged manifest without override is
+rejected; with a mismatched-hash override is rejected; with a valid override
+publishes and the emitted v2 receipt validates while carrying the override
+reference.
 
 **Step 2: Implement (GREEN)**
 
 Wire auto-entry; define the flagged-durable semantics across the core
-durability and adapter finalization seams; record residual findings in the
-run record; enforce the flagged-manifest check with override validation in
-`publish.mjs` and the connector seam; register `publish-override/v1`;
-document the flag-not-block and publish-override contracts.
+durability, package-coverage, and adapter finalization seams; record
+residual findings in the run record; enforce the flagged-manifest check with
+override validation in `publish.mjs` and the connector seam; register
+`publish-override/v1` and the receipt v2 override reference; document the
+flag-not-block and publish-override contracts.
 
 **Step 3: Verify**
 
@@ -885,6 +914,7 @@ finalization support created in p04-t02 and p04-t03.
 
 **Files:**
 
+- Create: `.agents/skills/oat-explainer-kit/scripts/check-terminal-outcome.mjs` (shared executable terminal-outcome guard — the production seam both lifecycle routes invoke)
 - Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
 - Modify: `.agents/skills/oat-project-complete/SKILL.md` (second live completion route — currently accepts an `in_progress` project and continues when recap generation produces no valid run)
 - Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-intent.mjs`
@@ -895,26 +925,25 @@ finalization support created in p04-t02 and p04-t03.
 
 **Step 1: Write test (RED)**
 
-The ordering invariant lives in the **lifecycle orchestrator seam that
-actually advances approval** — the `oat-project-implement`
-completion/closeout sequence — not only in the adapter's intent
-resolver/persistence helpers. Define a durable terminal-outcome field the
-orchestrator reads and a transition guard: when recap intent resolved to
-`generate`, approval cannot advance while the field is absent, and each
-accepted terminal outcome (`built-durable`, flagged `built-needs-review`,
-or a production `failure-record` document validated against the p04-t03
-contract) allows it to advance. The completion integration test must
-exercise the transition guard (approval blocked without an outcome; approval
-proceeds with each terminal outcome) — asserting on reference prose alone is
-insufficient. **Both live completion routes are covered explicitly:** the
-`oat-project-implement` closeout sequence and the standalone
+The ordering invariant lives in an **executable production guard, not
+prose**: a new shared script, `check-terminal-outcome.mjs`, reads the
+durable terminal-outcome field and exits nonzero (with a structured reason)
+when recap intent resolved to `generate` and no terminal outcome exists;
+each accepted terminal outcome (`built-durable`, flagged
+`built-needs-review`, or a production `failure-record` document validated
+against the p04-t03 contract) allows it to pass. Both live completion
+routes invoke this same script before lifecycle mutation: the
+`oat-project-implement` completion/closeout sequence and the standalone
 `oat-project-complete` route, whose completion gate today accepts an
 `in_progress` project and continues when recap generation produces no valid
-run. `oat-project-complete`'s gate is revised so `generate` intent cannot
-cross the lifecycle mutation without a clean, flagged, or validated
-failure-record terminal outcome, and `completion.integration.test.mjs`
-exercises this route as well. Approval is never conditioned on the outcome
-being clean. (`oat-project-complete` joins the p07-t01 version-bump set.)
+run. The completion integration test **executes the shipped guard script
+itself** — not a test-local reimplementation and not prose-presence matching
+(the current test only pattern-matches the reference Markdown) — for four
+cases: missing outcome (blocked), clean, flagged, and validated failure
+record (all pass). It also asserts both skill routes instruct invoking the
+guard before the lifecycle mutation. Approval is never conditioned on the
+outcome being clean. (`oat-project-complete` joins the p07-t01 version-bump
+set.)
 
 **The implementation-tail caller must use the revised finalizer for every
 terminal outcome, not only clean builds.** The current completion contract
@@ -933,9 +962,10 @@ unit test or prose-presence assertion alone is insufficient.
 **Step 2: Implement (GREEN)**
 
 Durable terminal-outcome recording in the adapter intent/persistence seam;
-implementation-tail caller finalizes clean, flagged, and failed outcomes
-before recording the gate outcome; transition guard in the closeout
-orchestrator sequence; document in `lifecycle-contract.md` and
+the shared `check-terminal-outcome.mjs` guard script; implementation-tail
+caller finalizes clean, flagged, and failed outcomes before recording the
+gate outcome; both completion routes revised to invoke the guard before
+lifecycle mutation; document in `lifecycle-contract.md` and
 `completion-and-closeout.md`.
 
 **Step 3: Verify**
@@ -1586,7 +1616,7 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T015212Z.md (2 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T021300Z.md (2 Important + 3 Medium resolved in artifact)                                              | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T023457Z.md (4 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T024804Z.md                                                                                                     | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T024804Z.md (4 Important resolved in artifact)                                                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
