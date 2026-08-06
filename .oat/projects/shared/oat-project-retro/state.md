@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p05'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: complete
+oat_phase_status: pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -76,11 +76,11 @@ oat_workflow_origin: native
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/192' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:27:39.069Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T05:27:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T05:29:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -92,8 +92,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all 12 tasks, the p05 HiLL checkpoint, and final whole-project
-review are complete.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -111,6 +110,8 @@ review are complete.
 - ✓ Documentation and release validation complete
 - ✓ Final review tool-grant fix verified
 - ✓ Final whole-project review passed
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -118,4 +119,8 @@ None
 
 ## Next Milestone
 
-Continue with project summary or final PR lifecycle closeout.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
