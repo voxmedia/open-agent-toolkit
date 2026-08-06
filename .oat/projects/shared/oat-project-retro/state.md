@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p05'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: complete
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -80,20 +80,20 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:27:39.069Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T04:24:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T04:46:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-retro
 
-**Status:** Implementation — final review pending
+**Status:** Implementation complete
 **Started:** 2026-08-05
 **Last Updated:** 2026-08-06
 
 ## Current Phase
 
-Implementation — all 12 tasks and the p05 HiLL checkpoint are complete; the
-bounded final-review fix is verified and narrowed re-review is pending.
+Implementation — all 12 tasks, the p05 HiLL checkpoint, and final whole-project
+review are complete.
 
 ## Artifacts
 
@@ -101,7 +101,7 @@ bounded final-review fix is verified and narrowed re-review is pending.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (12/12 tasks complete; final review pending)
+- **Implementation:** `implementation.md` (12/12 tasks complete; final review passed)
 
 ## Progress
 
@@ -110,7 +110,7 @@ bounded final-review fix is verified and narrowed re-review is pending.
 - ✓ p05 HiLL checkpoint passed
 - ✓ Documentation and release validation complete
 - ✓ Final review tool-grant fix verified
-- ⧗ Narrowed final re-review pending
+- ✓ Final whole-project review passed
 
 ## Blockers
 
@@ -118,4 +118,4 @@ None
 
 ## Next Milestone
 
-Pass the narrowed final re-review, then continue lifecycle closeout.
+Continue with project summary or final PR lifecycle closeout.

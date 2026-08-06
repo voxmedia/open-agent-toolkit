@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-06
@@ -161,16 +161,18 @@ configured-invocation evidence.
 
 #### Accepted Review Dispatches
 
-| Scope | Round | Request ID                                       | Agent ID                               | Target                          | Model axis                  | Selection reason |
-| ----- | ----- | ------------------------------------------------ | -------------------------------------- | ------------------------------- | --------------------------- | ---------------- |
-| p03   | 1     | `oat-project-retro-review-p03-r1-20260806T0201Z` | `2f5dcd47-7ce2-4a52-aba7-bd805d0b4222` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
-| p01   | 1     | `oat-project-retro-review-p01-r1-20260806T0204Z` | `022d9f34-8a8f-4b11-8aaa-64455eb1c518` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
-| p02   | 1     | `oat-project-retro-review-p02-r1-20260806T0207Z` | `1b04e55e-e078-4297-ac9b-49f0f859a245` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
-| p03   | 2     | `oat-project-retro-review-p03-r2-20260806T0220Z` | `4a6cadc0-7249-4e72-95e2-301a83273b67` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
-| p02   | 2     | `oat-project-retro-review-p02-r2-20260806T0224Z` | `80d7f36f-93ae-43b3-8aaf-b1cc0e9662d6` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
-| p02   | 3     | `oat-project-retro-review-p02-r3-20260806T0231Z` | `14ebd7a4-adbe-4884-bacb-f5f0ad39dea1` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
-| p04   | 1     | `oat-project-retro-review-p04-r1-20260806T0248Z` | `6f6890ab-0367-4565-8558-ff9c49e3b9d1` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
-| p05   | 1     | `oat-project-retro-review-p05-r1-20260806T0418Z` | `fc130aaa-ccdb-438e-b716-945b233124c3` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+| Scope | Round | Request ID                                         | Agent ID                               | Target                          | Model axis                  | Selection reason |
+| ----- | ----- | -------------------------------------------------- | -------------------------------------- | ------------------------------- | --------------------------- | ---------------- |
+| p03   | 1     | `oat-project-retro-review-p03-r1-20260806T0201Z`   | `2f5dcd47-7ce2-4a52-aba7-bd805d0b4222` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+| p01   | 1     | `oat-project-retro-review-p01-r1-20260806T0204Z`   | `022d9f34-8a8f-4b11-8aaa-64455eb1c518` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+| p02   | 1     | `oat-project-retro-review-p02-r1-20260806T0207Z`   | `1b04e55e-e078-4297-ac9b-49f0f859a245` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+| p03   | 2     | `oat-project-retro-review-p03-r2-20260806T0220Z`   | `4a6cadc0-7249-4e72-95e2-301a83273b67` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+| p02   | 2     | `oat-project-retro-review-p02-r2-20260806T0224Z`   | `80d7f36f-93ae-43b3-8aaf-b1cc0e9662d6` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+| p02   | 3     | `oat-project-retro-review-p02-r3-20260806T0231Z`   | `14ebd7a4-adbe-4884-bacb-f5f0ad39dea1` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+| p04   | 1     | `oat-project-retro-review-p04-r1-20260806T0248Z`   | `6f6890ab-0367-4565-8558-ff9c49e3b9d1` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+| p05   | 1     | `oat-project-retro-review-p05-r1-20260806T0418Z`   | `fc130aaa-ccdb-438e-b716-945b233124c3` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+| final | 1     | `oat-project-retro-review-final-r1-20260806T0429Z` | `2f3374d5-e2aa-4584-a38e-753a4dc04bb8` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+| final | 2     | `oat-project-retro-review-final-r2-20260806T0444Z` | `2f3374d5-e2aa-4584-a38e-753a4dc04bb8` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
 
 #### Accepted Fix Continuations
 
@@ -250,7 +252,10 @@ configured-invocation evidence.
 - Final-review fix `74adc91cb` grants both retro skills `Bash(pnpm:*)` and adds
   focused executable-contract coverage. All focused, lint/format, CI/build, and
   release-validation gates passed after one permitted no-edit timeout rerun;
-  narrowed final re-review is pending.
+  narrowed final re-review was dispatched.
+- Narrowed final review round 2 passed with no blocking findings. Its one Minor
+  timestamp observation was corrected during review receipt; implementation is
+  complete and ready for lifecycle closeout.
 
 ---
 
