@@ -20,7 +20,13 @@ import {
   createBrowserProbeSession,
   createFixtureBrowserProbeSession,
 } from '../scripts/lib/browser-runtime.mjs';
+import {
+  catalogFromManifest,
+  initiativeCatalogPath,
+  serializeInitiativeCatalog,
+} from '../scripts/lib/catalog.mjs';
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
+import { recordDurability } from '../scripts/lib/durability.mjs';
 import { validateImmutablePackageEvidence } from '../scripts/lib/package-coverage.mjs';
 import { decodeBrowserPng } from '../scripts/lib/png.mjs';
 import { SET_PLAN_RECORD_PATHS } from '../scripts/lib/records.mjs';
@@ -3861,20 +3867,31 @@ test('invokes durability and publishing seams only when explicitly requested', a
   assert.equal(durability.mock.callCount(), 1);
 
   const publishFixture = await suppliedFixture();
-  const publishV2 = mock.fn(async ({ manifestPath }) => {
+  const publishV2 = mock.fn(async ({ manifestPath, runRoot }) => {
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
     const artifact = manifest.artifacts.find(
       ({ status }) => status === 'built',
     );
-    return {
+    const roots = {
+      s3Uri: 's3://example-bucket/explainers',
+      publicBaseUrl: 'https://docs.example.com/explainers',
+    };
+    const catalogPath = initiativeCatalogPath(manifest.slug);
+    const catalogHash = `sha256:${createHash('sha256')
+      .update(
+        Buffer.from(
+          serializeInitiativeCatalog(
+            catalogFromManifest(manifest, roots.publicBaseUrl),
+          ),
+        ),
+      )
+      .digest('hex')}`;
+    const receipt = {
       schemaVersion: 'explainer-kit.publish-receipt/v2',
       provider: 's3-static',
       publishedAt: NOW,
       publicAccess: 'public',
-      roots: {
-        s3Uri: 's3://example-bucket/explainers',
-        publicBaseUrl: 'https://docs.example.com/explainers',
-      },
+      roots,
       sentinel: {
         relativePath: '.sentinel',
         objectVerification: {
@@ -3908,8 +3925,33 @@ test('invokes durability and publishing seams only when explicitly requested', a
             hash: artifact.hash,
           },
         },
+        {
+          source: { kind: 'auxiliary', name: 'catalog' },
+          relativePath: catalogPath,
+          hash: catalogHash,
+          s3Uri: `${roots.s3Uri}/${catalogPath.slice('site/'.length)}`,
+          publicUrl: `${roots.publicBaseUrl}/${catalogPath.slice(
+            'site/'.length,
+          )}`,
+          contentType: 'application/json',
+          objectVerification: {
+            status: 'verified',
+            method: 'service-checksum',
+            hash: catalogHash,
+          },
+          publicVerification: {
+            status: 'verified',
+            httpStatus: 200,
+            hash: catalogHash,
+          },
+        },
       ],
     };
+    await writeFile(
+      join(runRoot, 'publish-receipt.json'),
+      `${JSON.stringify(receipt, null, 2)}\n`,
+    );
+    return receipt;
   });
   const published = await runExplainer(
     {
@@ -3941,11 +3983,21 @@ test('invokes durability and publishing seams only when explicitly requested', a
     schemaVersion: 'explainer-kit.publish-summary/v1',
     receiptSchemaVersion: 'explainer-kit.publish-receipt/v2',
     publicAccess: 'public',
-    artifacts: [
-      {
-        relativePath: published.publication.artifacts[0].relativePath,
-        publicUrl: published.publication.artifacts[0].publicUrl,
-      },
-    ],
+    artifacts: published.publication.artifacts.map(
+      ({ relativePath, publicUrl }) => ({ relativePath, publicUrl }),
+    ),
   });
+  assert.equal(published.publication.artifacts.length, 2);
+  const durabilityResult = await recordDurability(
+    {
+      schemaVersion: 'explainer-kit.durability-evidence/v1',
+      manifestPath: published.manifestPath,
+      evidence: {
+        kind: 'publish',
+        receiptPath: join(published.runRoot, 'publish-receipt.json'),
+      },
+    },
+    { now: () => NOW },
+  );
+  assert.equal(durabilityResult.durable, true);
 });

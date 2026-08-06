@@ -7,6 +7,11 @@ import { join, relative } from 'node:path';
 import { afterEach, test } from 'node:test';
 import { promisify } from 'node:util';
 
+import {
+  catalogFromManifest,
+  initiativeCatalogPath,
+  serializeInitiativeCatalog,
+} from '../scripts/lib/catalog.mjs';
 import { canonicalHash } from '../scripts/lib/contracts.mjs';
 import {
   recordDurability,
@@ -239,6 +244,86 @@ test('verifies publish receipts before recording publish evidence', async () => 
   assert.equal(buildRecord.outcome, 'built-durable');
   assert.equal(manifest.buildRecord.hash, canonicalHash(buildRecord));
   assert.equal(manifest.artifacts[0].durableEvidence[0].kind, 'publish');
+});
+
+test('accepts complete public and protected connector-shaped v2 receipts', async () => {
+  for (const publicAccess of ['public', 'protected']) {
+    const fixture = await createRun();
+    const receipt = publishReceiptV2(fixture.manifest, publicAccess);
+    await writeFile(
+      join(fixture.runRoot, 'publish-receipt.json'),
+      `${JSON.stringify(receipt, null, 2)}\n`,
+    );
+
+    const result = await recordDurability(publishRequest(fixture), {
+      now: () => NOW,
+    });
+
+    assert.equal(result.durable, true, publicAccess);
+    const { manifest, buildRecord } = await readRecords(fixture.runRoot);
+    assert.equal(manifest.outcome, 'built-durable', publicAccess);
+    assert.equal(buildRecord.outcome, 'built-durable', publicAccess);
+    assert.deepEqual(manifest.publishReceipt, {
+      path: 'publish-receipt.json',
+      hash: canonicalHash(receipt),
+    });
+  }
+});
+
+test('rejects contradictory generated-catalog evidence in v2 receipts', async () => {
+  const mutations = [
+    [
+      'path',
+      (receipt) => {
+        receipt.artifacts.at(-1).relativePath =
+          'site/initiatives/foreign/catalog.json';
+      },
+    ],
+    [
+      'source',
+      (receipt) => {
+        receipt.artifacts.at(-1).source = {
+          kind: 'manifest',
+          artifactId: 'hub',
+        };
+      },
+    ],
+    [
+      'serialized bytes hash',
+      (receipt, manifest) => {
+        const catalog = catalogFromManifest(
+          manifest,
+          receipt.roots.publicBaseUrl,
+        );
+        receipt.artifacts.at(-1).hash = bufferHash(
+          Buffer.from(JSON.stringify(catalog)),
+        );
+      },
+    ],
+    [
+      'verification',
+      (receipt) => {
+        receipt.artifacts.at(-1).objectVerification.hash = `sha256:${'f'.repeat(
+          64,
+        )}`;
+      },
+    ],
+  ];
+
+  for (const [label, mutate] of mutations) {
+    const fixture = await createRun();
+    const receipt = publishReceiptV2(fixture.manifest, 'public');
+    mutate(receipt, fixture.manifest);
+    await writeFile(
+      join(fixture.runRoot, 'publish-receipt.json'),
+      `${JSON.stringify(receipt, null, 2)}\n`,
+    );
+
+    const result = await recordDurability(publishRequest(fixture), {
+      now: () => NOW,
+    });
+    assert.equal(result.durable, false, label);
+  }
 });
 
 test('preserves built-not-durable when publish verification is incomplete', async () => {
@@ -515,6 +600,64 @@ function publishReceipt(manifest) {
   };
 }
 
+function publishReceiptV2(manifest, publicAccess) {
+  const roots = {
+    s3Uri: 's3://example/explainers',
+    publicBaseUrl: 'https://example.com/explainers',
+  };
+  const verificationFor = (hash) => ({
+    objectVerification: {
+      status: 'verified',
+      method: 'service-checksum',
+      hash,
+    },
+    publicVerification:
+      publicAccess === 'public'
+        ? { status: 'verified', httpStatus: 200, hash }
+        : { status: 'skipped-protected' },
+  });
+  const artifacts = manifest.artifacts.map((artifact) => ({
+    source: { kind: 'manifest', artifactId: artifact.id },
+    relativePath: artifact.renderedPath,
+    hash: artifact.hash,
+    s3Uri: `${roots.s3Uri}/${artifact.renderedPath.slice('site/'.length)}`,
+    publicUrl: `${roots.publicBaseUrl}/${artifact.renderedPath.slice(
+      'site/'.length,
+    )}`,
+    contentType: artifact.mediaType,
+    ...verificationFor(artifact.hash),
+  }));
+  const catalog = catalogFromManifest(manifest, roots.publicBaseUrl);
+  const catalogPath = initiativeCatalogPath(manifest.slug);
+  const catalogHash = bufferHash(
+    Buffer.from(serializeInitiativeCatalog(catalog)),
+  );
+  artifacts.push({
+    source: { kind: 'auxiliary', name: 'catalog' },
+    relativePath: catalogPath,
+    hash: catalogHash,
+    s3Uri: `${roots.s3Uri}/${catalogPath.slice('site/'.length)}`,
+    publicUrl: `${roots.publicBaseUrl}/${catalogPath.slice('site/'.length)}`,
+    contentType: 'application/json',
+    ...verificationFor(catalogHash),
+  });
+  const sentinelHash = `sha256:${'c'.repeat(64)}`;
+
+  return {
+    schemaVersion: 'explainer-kit.publish-receipt/v2',
+    provider: 's3-static',
+    publishedAt: NOW,
+    publicAccess,
+    roots,
+    sentinel: {
+      relativePath: '.sentinel',
+      ...verificationFor(sentinelHash),
+      deleted: true,
+    },
+    artifacts,
+  };
+}
+
 async function readRecords(runRoot) {
   return {
     manifest: JSON.parse(
@@ -539,9 +682,11 @@ async function writeRecords(runRoot, manifest, buildRecord) {
 }
 
 async function fileHash(path) {
-  return `sha256:${createHash('sha256')
-    .update(await readFile(path))
-    .digest('hex')}`;
+  return bufferHash(await readFile(path));
+}
+
+function bufferHash(bytes) {
+  return `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 }
 
 async function hashesFor(runRoot, paths) {

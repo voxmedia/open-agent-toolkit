@@ -4,6 +4,11 @@ import { readFile, realpath } from 'node:fs/promises';
 import { dirname, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 
+import {
+  catalogFromManifest,
+  initiativeCatalogPath,
+  serializeInitiativeCatalog,
+} from './catalog.mjs';
 import { canonicalHash, validateContract } from './contracts.mjs';
 import { writeFileAtomic, writeJsonAtomic } from './fs-safe.mjs';
 import { validateSafeRelativePath } from './safe-paths.mjs';
@@ -370,7 +375,28 @@ async function verifyPublishEvidence(evidence, { runRoot, manifest }) {
       errors: [error('publish-receipt', errorMessage(caught))],
     };
   }
-  const validation = validateContract('publish-receipt', receipt, { manifest });
+  let catalogArtifact;
+  if (receipt.schemaVersion === 'explainer-kit.publish-receipt/v2') {
+    try {
+      const catalog = catalogFromManifest(
+        manifest,
+        receipt.roots?.publicBaseUrl,
+      );
+      catalogArtifact = {
+        relativePath: initiativeCatalogPath(manifest.slug),
+        hash: bufferHash(Buffer.from(serializeInitiativeCatalog(catalog))),
+      };
+    } catch (caught) {
+      return {
+        verified: false,
+        errors: [error('publish-receipt', errorMessage(caught))],
+      };
+    }
+  }
+  const validation = validateContract('publish-receipt', receipt, {
+    manifest,
+    ...(catalogArtifact && { catalogArtifact }),
+  });
   const errors = validation.errors.map(({ code, message }) =>
     error(code, message),
   );
