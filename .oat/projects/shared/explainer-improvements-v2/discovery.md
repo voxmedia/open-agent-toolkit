@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-project-quick-start
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-06
 oat_generated: false
@@ -60,13 +60,11 @@ across five contract areas:
    correction/rebuild path; the `request.sourceIds is not iterable` failure
    needs investigation and regression coverage; failed/superseded run
    evidence needs an explicit durability policy.
-5. **Visual quality.** Hub becomes the floor artifact with content-adaptive
-   expansion; renderer-owned structured content contracts replace
-   unconstrained author HTML for standard artifacts; a real role-based type
-   system; deck slide archetypes plus deterministic anti-filler checks;
-   semantic graph-data diagram rendering with fit-to-content; expanded visual
-   review rubric so the case study's deck/diagram would receive `correct`,
-   not `pass`.
+5. **Visual quality.** The original handoff prescribed a hub floor, adaptive
+   expansion, structured rendering, role-based typography, deck patterns,
+   semantic diagrams, and stronger visual critique. The later operator revision
+   keeps those quality outcomes but supersedes the prescribed renderer,
+   deterministic-heuristic, and expanded-golden mechanisms.
 
 The handoff includes explicit acceptance criteria and a required test matrix
 (path derivation, invocation fixtures, link validation including this case's
@@ -99,8 +97,10 @@ flakiness before simplification.
 scope.
 **A:** Provided 2026-08-05 — Duet cyclone-comments-generalization case-study
 handoff (see above).
-**Decision:** Handoff is the authoritative scope driver; its acceptance
-criteria become the project success criteria.
+**Decision:** The handoff is the production evidence and outcome driver. The
+operator's 2026-08-06 scope revision is authoritative for implementation
+mechanisms and supersedes its structured-renderer and expanded-golden
+prescriptions.
 
 ## Solution Space
 
@@ -123,9 +123,10 @@ tests, and constraints from a real production run.
 
 1. **Workflow mode:** Quick-start (operator-selected via
    `oat-project-quick-start`).
-2. **Scope source of truth:** The Cyclone case-study handoff
-   (`references/handoff-cyclone-case-study.md`); its Required acceptance
-   criteria section is normative.
+2. **Scope source of truth:** The Cyclone case-study handoff defines the
+   production problems and desired outcomes. The 2026-08-06 operator revision
+   governs mechanism choice: executable safety invariants plus prose-led
+   creative judgment.
 3. **Boundary preservation:** `explainer-kit` stays destination-neutral and
    config-blind; OAT project/repository topology, per-invocation remote scope
    derivation, and config resolution live in `oat-explainer-kit`.
@@ -158,9 +159,6 @@ tests, and constraints from a real production run.
 
 ## Success Criteria
 
-The handoff's "Required acceptance criteria" section is adopted wholesale,
-grouped as:
-
 - **Path and publication:** correct local roots; adapter-derived
   `/projects/<project-slug>` remote scope; explicit `index.html` everywhere;
   every internal link resolves to a manifest-declared target; published bytes
@@ -168,15 +166,19 @@ grouped as:
   protected-public-root behavior explicit and tested; publication remains
   human-gated, additive, and credential-free.
 - **Visual quality:** content-adaptive artifact selection (hub floor);
-  renderer-owned structured layouts; deterministic role-based typography;
-  deck archetypes; semantic fit-to-content diagrams; a visual review rubric
-  that evaluates design quality — with the case-study deck/diagram as a
-  negative fixture that must not `pass`.
+  intentional typographic roles and hierarchy; purposeful slide patterns;
+  semantically meaningful, fit-to-content diagrams; and visual-review guidance
+  that catches weak hierarchy, composition, density, repetition, medium use,
+  diagram semantics, and cross-artifact cohesion. These outcomes are expressed
+  and judged through recipe/brief/skill prose rather than renderer schemas or
+  deterministic visual scoring.
 - **Lifecycle:** recap-gate-before-final-approval invariant; bounded
   correction path for `built-needs-review`; explicit failed-run evidence
   policy; corrected runs publish only after browser and visual review pass.
-- **Tests:** the handoff's full test matrix, including the `sourceIds`
-  regression and responsive golden fixtures.
+- **Tests:** focused unit/integration coverage for safety invariants, the
+  `sourceIds` regression, and one cross-boundary publication acceptance test.
+  The existing golden suite stays unchanged; no responsive or negative golden
+  matrix is added.
 
 ## Out of Scope
 
@@ -195,18 +197,6 @@ grouped as:
 
 ## Open Questions
 
-- **Protected-destination strategy:** The handoff offers three acceptable
-  resolutions for authenticated public roots (declare incompatible, injected
-  authenticated verification seam, or separate URL generation from byte
-  verification). Which to adopt is a design decision.
-- **Three-artifact product stance:** Whether project recaps keep a consistent
-  three-artifact set (with distinct-purpose enforcement) or move to
-  hub-floor adaptive expansion is a product/design choice the handoff allows
-  either way; default to hub-floor unless design surfaces a reason not to.
-- **Typography sourcing:** Bundled licensed fonts vs deterministic
-  high-quality stacks — licensing and payload implications belong to design.
-- **Failed-run evidence policy shape:** Compact durable failure record vs
-  intentional archive vs intentional deletion — pick one policy in design.
 - **PR #188 relationship:** explainer-improvements PR is still open; v2 work
   presumably lands as a new PR on top once merged. Confirm sequencing at
   implementation time.
@@ -223,20 +213,13 @@ grouped as:
 
 ## Risks
 
-- **Scope breadth:** Five contract areas across two skills plus a large test
-  matrix is a lot for one project; phases must be independently verifiable.
-  - **Likelihood:** High
-  - **Impact:** Medium
-  - **Mitigation Ideas:** Organize the plan by contract area with explicit
-    per-phase acceptance; keep the visual-system overhaul separable from the
-    path/publication fixes.
-- **Renderer-ownership migration:** Moving from author-owned HTML to
-  structured content contracts touches the authoring seam that golden recaps
-  depend on; regressions could silently degrade the shipped golden path.
+- **Prose quality drift:** Judgment-oriented guidance may be interpreted
+  inconsistently across providers or runs.
   - **Likelihood:** Medium
-  - **Impact:** High
-  - **Mitigation Ideas:** Keep golden benchmarks green throughout; add the
-    negative visual fixture before changing the rubric.
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Keep recipe and critic guidance concrete, preserve
+    the existing actionable pass/correct contract, and use focused guidance
+    conformance checks without pretending to score design deterministically.
 - **Verification-seam design:** The protected-destination resolution touches
   the destination contract's trust model; a weak choice could erode byte
   verification guarantees.
@@ -247,8 +230,8 @@ grouped as:
 
 ## Next Steps
 
-1. Design-depth decision (Step 2.5): given the architecture decisions above
-   (verification seam, structured content contracts, type system, semantic
-   diagram rendering), lightweight design or spec-driven promotion is
-   warranted before planning.
-2. Then plan generation for `oat-project-implement`.
+1. Complete the delta-focused review of the revised lightweight design and
+   17-task plan.
+2. Resume `oat-project-implement` at p02-t01.
+3. Capture a separate backlog follow-up to audit the existing golden suite's
+   unique coverage, runtime, and flakiness before any simplification.

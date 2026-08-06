@@ -71,7 +71,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T17:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T18:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -83,8 +83,9 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p01 is complete. The reduced design and 17-task plan are drafted; their
-delta-focused artifact review must pass before p02 begins.
+Phase p01 is complete. Blocking findings from the reduced design/plan review
+are corrected; one bounded verification of those corrections remains before
+p02.
 
 ## Artifacts
 
@@ -92,7 +93,7 @@ delta-focused artifact review must pass before p02 begins.
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
-- **Plan:** `plan.md` (revised to 5 phases / 17 tasks; review pending)
+- **Plan:** `plan.md` (revised to 5 phases / 17 tasks; review fixes applied)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -103,7 +104,8 @@ delta-focused artifact review must pass before p02 begins.
 - ✓ p01-t01 through p01-t06 implemented and independently reviewed
 - ✓ Credential-bearing and malformed publish roots fail before core invocation
 - ✓ Operator-approved scope reduction applied to discovery, design, and plan
-- ⧗ Delta-focused artifact review before p02
+- ✓ Delta-focused artifact review corrections applied
+- ⧗ Bounded correction verification before p02
 
 ## Blockers
 
@@ -111,5 +113,5 @@ None
 
 ## Next Milestone
 
-Complete the targeted revised-design/plan review, fix only blocking findings,
-then resume at p02-t01.
+Verify the listed artifact corrections, record the review disposition, then
+resume at p02-t01.

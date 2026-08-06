@@ -76,13 +76,16 @@ Project completion and implementation closeout call a shared terminal-outcome
 guard. When recap generation is selected, final approval cannot complete until
 the recap records one of:
 
-- `built-clean`;
+- `built-durable`;
+- `built-not-durable`;
 - `built-needs-review`;
 - `failed`.
 
-`built-needs-review` is durable and does not block project completion, but it is
-categorically unpublishable. One bounded correction may rebuild and re-review
-the run. A remaining failure or quality flag is recorded rather than hidden.
+Missing records and `incomplete` are non-terminal and block approval.
+`built-not-durable`, `built-needs-review`, and `failed` do not block project
+completion once recorded, but they are categorically unpublishable. One bounded
+correction may rebuild and re-review a flagged run. A remaining failure or
+quality flag is recorded rather than hidden.
 
 ### Prose-driven creative layer
 
@@ -141,8 +144,9 @@ deterministically.
    terminal outcome.
 4. A flagged run may receive one correction. Remaining findings are retained in
    a compact durable record.
-5. Clean runs may proceed to the separate human publication gate. Flagged,
-   failed, and superseded runs cannot publish.
+5. Review-clean `built-durable` runs may proceed to the separate human
+   publication gate. `built-not-durable`, flagged, failed, and superseded runs
+   cannot publish.
 
 ## Versioning and Compatibility
 
@@ -158,8 +162,17 @@ Only contract changes required by the safety kernel receive new versions:
   terminal failure evidence without ambiguity.
 
 Existing contract and recipe versions remain readable for deterministic replay.
-New producers and all shipped consumers move atomically. The adapter's minimum
-core version advances only when it first depends on the new core contracts.
+New producers and all shipped consumers move atomically:
+
+- author-request v3 activation includes the adapter completion callback fixture
+  that currently asserts v2;
+- publish-request v2 activation makes `run-request/v1` accept embedded publish
+  request v1/v2, advances the core version and adapter minimum-core floor, and
+  updates compatibility tests before the adapter emits v2;
+- publish-receipt v2 activation updates release and smoke readers in the same
+  task that emits v2;
+- project-recap v2 activation switches and tests the adapter's live recipe
+  selection while preserving v1 replay.
 
 ## Safety Invariants
 
@@ -208,7 +221,7 @@ package changes run `pnpm release:validate`; docs changes run
 - Renderer-owned universal layout or typography engines.
 - A general-purpose semantic graph layout/crossing engine.
 - Deterministic whitespace, density, filler, or visual-quality scoring.
-- New responsive golden fixtures or negative visual snapshot matrices.
+- Additional viewport goldens or negative visual snapshot matrices.
 - Replacing the existing golden suite in this project.
 - Silent publication overrides for flagged runs.
 - Credential callbacks or persisted authentication material.

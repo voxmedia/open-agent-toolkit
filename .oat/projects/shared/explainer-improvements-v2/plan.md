@@ -122,7 +122,8 @@ format, and focused re-review passed.
 
 ## Phase 2: Canonical links and hard validation
 
-Write boundary: `.agents/skills/explainer-kit/**`.
+Write boundary: `.agents/skills/explainer-kit/**` plus the adapter completion
+callback fixture that consumes author requests.
 
 ### Task p02-t01: Add canonical artifact links to author requests
 
@@ -131,6 +132,7 @@ Write boundary: `.agents/skills/explainer-kit/**`.
 - Core author-request construction and set-plan helpers
 - New immutable `author-request/v3` schema and registry/docs
 - Focused contract, schema, and run-integration tests
+- Adapter completion callback acceptance fixture
 
 **Step 1: Write tests (RED)**
 
@@ -147,7 +149,8 @@ set-plan contracts.
 
 **Step 3: Verify**
 
-Run focused schema/contract/run tests, then `pnpm lint && pnpm format`.
+Run:
+`node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs && pnpm lint && pnpm format`
 
 **Step 4: Commit**
 
@@ -181,8 +184,8 @@ dependency. Anchor resolution to the manifest and generated site tree.
 
 **Step 3: Verify**
 
-Run focused validator, render, records, and integration tests, then
-`pnpm lint && pnpm format`.
+Run:
+`node --test .agents/skills/explainer-kit/tests/link-validation.test.mjs .agents/skills/explainer-kit/tests/render.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs && pnpm lint && pnpm format`
 
 **Step 4: Commit**
 
@@ -195,13 +198,16 @@ git commit -m "feat(p02-t02): gate rendered artifacts on valid internal links"
 ## Phase 3: Publication integrity
 
 Write boundary: core publication contracts/connectors, adapter publication
-threading, lifecycle URL summaries, and one cross-boundary acceptance fixture.
+threading and compatibility floor, lifecycle URL summaries, release/smoke
+receipt consumers, and one cross-boundary acceptance fixture.
 
 ### Task p03-t01: Make public-access behavior explicit and verifiable
 
 **Files:**
 
 - New immutable `publish-request/v2` schema and registry/docs
+- `run-request/v1` embedded publish-request v1/v2 compatibility
+- Core version, adapter minimum-core floor, and compatibility tests/docs
 - Core publisher and S3 connector
 - Adapter request threading
 - Focused core/adapter tests
@@ -217,13 +223,15 @@ Credentials must never be persisted.
 **Step 2: Implement (GREEN)**
 
 Thread source-aware `publicAccess` only after the core accepts v2. Preserve v1
-request replay. Keep the human publication gate and reject execution before
-upload when required verification capability is unavailable.
+request replay, make `run-request/v1` accept embedded publish-request v1/v2,
+and advance the core version plus adapter minimum floor before the adapter emits
+v2. Keep the human publication gate and reject execution before upload when
+required verification capability is unavailable.
 
 **Step 3: Verify**
 
-Run focused publisher, connector, schema, adapter config, and adapter run tests,
-then `pnpm lint && pnpm format`.
+Run:
+`node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/check-core.test.mjs && pnpm lint && pnpm format`
 
 **Step 4: Commit**
 
@@ -237,6 +245,7 @@ git commit -m "feat(p03-t01): verify public and protected publish destinations"
 
 - New immutable `publish-receipt/v2` schema and registry/docs
 - Publisher, connector, URL composition, and lifecycle summary seams
+- Release validation, RC, and private-wrapper smoke receipt readers
 - Shipped receipt consumers and focused tests
 
 **Step 1: Write tests (RED)**
@@ -251,13 +260,13 @@ unambiguous. V1 remains readable.
 
 Upload finalized bytes unchanged, compare verification evidence to manifest
 hashes, centralize URL/path composition, and expose complete artifact URL sets
-to lifecycle summaries. Advance the adapter core-compatibility floor atomically
-when it first depends on the new core behavior.
+to lifecycle summaries. Migrate release and smoke readers in the same commit
+that first emits receipt v2.
 
 **Step 3: Verify**
 
-Run schema, publisher, connector, lifecycle-summary, compatibility, and shipped
-consumer tests, then `pnpm lint && pnpm format`.
+Run:
+`node --test .agents/skills/explainer-kit/tests/*.test.mjs .agents/skills/oat-explainer-kit/tests/*.test.mjs && pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm format`
 
 **Step 4: Commit**
 
@@ -285,8 +294,8 @@ missing seam.
 
 **Step 3: Verify**
 
-Run the acceptance test and focused publication suites, then
-`pnpm lint && pnpm format`.
+Run:
+`node --test .agents/skills/oat-explainer-kit/tests/publish-boundary.acceptance.test.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs && pnpm lint && pnpm format`
 
 **Step 4: Commit**
 
@@ -298,30 +307,36 @@ git commit -m "test(p03-t03): cover cross-boundary publication integrity"
 
 ## Phase 4: Lifecycle and bounded recovery
 
-Write boundary: core request validation/records, adapter finalize seams, and
-the two project completion routes.
+Write boundary: core request validation/records, correction and durability
+seams, publisher entry points/connectors, adapter finalization, CLI archive
+verification, and the two project completion routes.
 
 ### Task p04-t01: Validate `sourceIds` before content processing
 
 **Files:**
 
-- Request/set-plan validation seam
-- Regression unit and integration tests
+- Set-plan request/callback and returned-plan validation seams
+- Adapter callback fixture for the production request shape
+- Regression unit and adapter-to-core integration tests
 
 **Step 1: Reproduce (RED)**
 
-Pin `request.sourceIds is not iterable` with missing, scalar, null, and invalid
-IDs. Assert an actionable contract error before content processing.
+Reproduce the exact failing callback/request shape before choosing the fix.
+Determine whether the producer must supply top-level `sourceIds` or the callback
+must consume `factBase.sources`, and pin that boundary in an adapter-to-core
+regression. Also cover missing, scalar, null, and invalid source IDs in returned
+plans with actionable rejection before content processing.
 
 **Step 2: Implement (GREEN)**
 
-Normalize only valid arrays at the boundary; do not silently coerce malformed
-input or weaken provenance.
+Correct the observed producer/consumer mismatch at its owning boundary.
+Validate only arrays in returned plans; do not silently coerce malformed input
+or weaken provenance.
 
 **Step 3: Verify**
 
-Run focused contract, set-plan, and end-to-end recap tests, then
-`pnpm lint && pnpm format`.
+Run:
+`node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs && pnpm lint && pnpm format`
 
 **Step 4: Commit**
 
@@ -340,8 +355,9 @@ git commit -m "fix(p04-t01): validate source IDs before content processing"
 **Step 1: Write tests (RED)**
 
 When recap intent is `generate`, both completion routes must reject missing or
-non-terminal outcomes. `built-clean`, `built-needs-review`, and `failed` are
-terminal. Approval waits for the outcome record, not visual perfection.
+`incomplete` outcomes. Existing `built-durable`, `built-not-durable`,
+`built-needs-review`, and `failed` outcomes are terminal. Approval waits for
+the outcome record, not visual perfection.
 
 **Step 2: Implement (GREEN)**
 
@@ -350,7 +366,8 @@ Do not duplicate lifecycle policy in prose-only call sites.
 
 **Step 3: Verify**
 
-Run focused guard and route integration tests, then `pnpm lint && pnpm format`.
+Run:
+`node --test .agents/skills/oat-project-implement/tests/check-terminal-outcome.test.mjs .agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs && pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm format`
 
 **Step 4: Commit**
 
@@ -372,7 +389,8 @@ Prove a flagged run gets at most one rebuild/review correction. A remaining
 flag, failure, or superseded outcome retains a compact record with run identity,
 manifest hash when available, findings/error, and evidence disposition.
 Flagged/failed/superseded manifests are categorically rejected at every publish
-entry point. Clean runs remain publishable only through the human gate.
+entry point. `built-not-durable` is also unpublishable. Review-clean
+`built-durable` runs remain publishable only through the human gate.
 
 **Step 2: Implement (GREEN)**
 
@@ -382,8 +400,8 @@ required facts without ambiguity. Do not add override records or credentials.
 
 **Step 3: Verify**
 
-Run focused correction, records, durability, archive, publisher, and completion
-integration tests, then `pnpm lint && pnpm format`.
+Run:
+`node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs && pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm format`
 
 **Step 4: Commit**
 
@@ -404,13 +422,15 @@ provider-linked views, and lockstep package versions.
 
 - New immutable `project-recap@2` recipe and recipe registry
 - Core and adapter skill/brief guidance
+- Adapter recipe selection in `resolve-config.mjs`
 - Focused recipe/replay and adapter tests
 
 **Step 1: Write tests (RED)**
 
 V2 requires a navigational hub. Diagram, deck, or deep-dive expansion requires
 a distinct reader question, evidence, and rationale. V1 remains replayable.
-New runs emit the final v2 shape atomically.
+New runs emit the final v2 shape atomically, including the live adapter recipe
+selection that currently pins project recaps to v1.
 
 **Step 2: Implement (GREEN)**
 
@@ -421,8 +441,8 @@ renderer, theme, layout, or anti-filler schemas/scripts.
 
 **Step 3: Verify**
 
-Run focused recipe, contract, adapter, and recap tests, then
-`pnpm lint && pnpm format`.
+Run:
+`node --test .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs && pnpm lint && pnpm format`
 
 **Step 4: Commit**
 
@@ -453,9 +473,8 @@ fixtures. Document the separate golden-suite simplification follow-up.
 
 **Step 3: Verify**
 
-Run focused visual-review and guidance tests,
-`oat docs generate-index`, `pnpm check`, `pnpm build:docs`,
-`pnpm lint`, and `pnpm format`.
+Run:
+`node --test .agents/skills/explainer-kit/tests/qa.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs && pnpm run cli -- docs generate-index && pnpm check && pnpm build:docs && pnpm lint && pnpm format`
 
 **Step 4: Commit**
 
@@ -517,7 +536,7 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 | p04           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | p05           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | final         | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
-| plan-revision | artifact | pending         | 2026-08-06 | -                                                                                                 | -                                        | manual     | -                        |
+| plan-revision | artifact | fixes_completed | 2026-08-06 | reviews/artifact-plan-revision-review-2026-08-06T180042Z.md                                       | c33edabc017369a629ca7a3a63757cbad3d9dab9 | manual     | -                        |
 | plan          | artifact | passed          | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed)                                     | -                                        | auto       | -                        |
 | plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T002327Z.md (4 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T004027Z.md (2 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |

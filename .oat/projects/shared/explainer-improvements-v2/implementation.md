@@ -377,6 +377,28 @@ Chronological log of implementation progress.
   separate evidence-based follow-up.
 - A delta-focused artifact review is required before p02 begins.
 
+### Artifact Review Received: plan-revision
+
+**Date:** 2026-08-06
+**Review artifact:**
+`reviews/artifact-plan-revision-review-2026-08-06T180042Z.md`
+
+**Findings:** 0 Critical, 5 Important, 1 Medium, 1 Minor.
+
+**Corrections applied:**
+
+- made the operator revision authoritative throughout discovery;
+- aligned lifecycle tasks with existing terminal outcomes;
+- bound each new contract/recipe producer to live consumers and compatibility
+  floors in the same task;
+- restored exact callback/request root-cause reproduction for `sourceIds`;
+- replaced every task's prose verification placeholder with runnable commands;
+- expanded the p04 boundary to its required publisher/archive seams;
+- cleared obsolete quick-start/spec metadata.
+
+**Next:** Run one bounded verification of these listed corrections, then resume
+at p02-t01 without another broad plan-review loop.
+
 ---
 
 ## Deviations from Plan / Design
@@ -424,4 +446,5 @@ Track test execution during implementation.
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
+- Handoff: `references/handoff-cyclone-case-study.md`
