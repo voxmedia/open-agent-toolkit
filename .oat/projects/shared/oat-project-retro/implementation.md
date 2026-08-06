@@ -137,6 +137,26 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 1 — 2026-08-06T01:52:00Z {#run-1}
+
+- Branch: `oat-project-retro`
+- Tier: 1 — native Cursor subagents
+- Dispatch policy: managed `high`
+- Schedule: `[p01, p02, p03]` parallel → `p04` → `p05`
+- Phase recovery: default limit 10; p01/p02/p03 used 0
+
+#### Accepted Phase Dispatches
+
+| Phase | Request ID                                  | Agent ID                               | Worktree                           | Target                                     | Model axis                    | Effort axis      | Selection reason |
+| ----- | ------------------------------------------- | -------------------------------------- | ---------------------------------- | ------------------------------------------ | ----------------------------- | ---------------- | ---------------- |
+| p01   | `oat-project-retro-impl-p01-20260806T0152Z` | `2574684b-b97b-40df-96be-0558681f0a42` | `.worktrees/oat-project-retro-p01` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | `not-applicable` | `native-catalog` |
+| p02   | `oat-project-retro-impl-p02-20260806T0152Z` | `c9e01a7e-e760-4006-89dd-a56e4aaeba0c` | `.worktrees/oat-project-retro-p02` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | `not-applicable` | `native-catalog` |
+| p03   | `oat-project-retro-impl-p03-20260806T0152Z` | `40ee9cc3-78bb-4c3e-b443-07d9002e374f` | `.worktrees/oat-project-retro-p03` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | `not-applicable` | `native-catalog` |
+
+Each launch was accepted through the exact resolver-returned native role. Runtime
+identity is not observable; launcher payload and native acceptance provide
+configured-invocation evidence.
+
 <!-- orchestration-runs-end -->
 
 ---
