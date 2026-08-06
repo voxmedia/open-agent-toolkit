@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: 3f0dfe5e3131ee2ef12bd06cf4eb842566b50ca9
+oat_current_task: p03-t04
+oat_last_commit: c9a0aeead5bce79a5e31bd6ce247e80a64ec1800
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -21,16 +21,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p03:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: p03-recovery-001
-        original_request_id: explainer-improvements-v2-p03-publication-integrity
-        original_task_id: p03-t01
-        original_commit: 58a9fd294e8dfc83d398d43789c4f68c7092609c
-        discovered_by: pnpm test
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 74d3d091cec1b6fe98e56035056c51f4ae46e105
-        status: completed
+      pending_attempt: null
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -81,7 +72,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T20:29:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T21:48:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -93,8 +84,9 @@ oat_generated: false
 
 ## Current Phase
 
-Phases p01 and p02 are complete. Canonical author links and hard post-render
-reference validation passed focused review. Phase p03 is ready.
+Phases p01 and p02 are complete. Phase p03 implementation and its authorized
+recovery are complete through p03-t03. Manual review added six sequential fix
+tasks; implementation resumes at p03-t04.
 
 ## Artifacts
 
@@ -102,7 +94,7 @@ reference validation passed focused review. Phase p03 is ready.
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
-- **Plan:** `plan.md` (revised to 5 phases / 17 tasks; review passed)
+- **Plan:** `plan.md` (5 phases / 23 tasks; p03 review fixes queued)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -116,7 +108,10 @@ reference validation passed focused review. Phase p03 is ready.
 - ✓ Delta-focused artifact review corrections applied
 - ✓ Bounded correction verification passed with no findings
 - ✓ p02 canonical links and internal-reference gate passed review
-- ⧗ p03-t01 protected/public publication behavior next
+- ✓ p03-t01 through p03-t03 implemented at reviewed head `c9a0aee`
+- ✓ Authorized recovery recorded and settled at 1/1 attempts
+- ✓ Manual p03 review received; all six findings converted without deferral
+- ⧗ p03-t04 complete-v2-receipt durability fix next
 
 ## Blockers
 
@@ -124,4 +119,5 @@ None
 
 ## Next Milestone
 
-Implement p03-t01: explicit public-access behavior and verification.
+Implement p03-t04: make complete publish-receipt v2 evidence
+durability-eligible.

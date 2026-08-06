@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-06
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
@@ -230,15 +230,15 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 6     | 6/6       |
-| p02   | completed | 2     | 2/2       |
-| p03   | pending   | 3     | 0/3       |
-| p04   | pending   | 3     | 0/3       |
-| p05   | pending   | 3     | 0/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | completed   | 6     | 6/6       |
+| p02   | completed   | 2     | 2/2       |
+| p03   | in progress | 9     | 3/9       |
+| p04   | pending     | 3     | 0/3       |
+| p05   | pending     | 3     | 0/3       |
 
-**Total:** 8/17 tasks completed
+**Total:** 11/23 tasks completed
 
 ---
 
@@ -270,13 +270,40 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Phase 3: Publication integrity
 
-**Status:** pending
+**Status:** in progress
+**Started:** 2026-08-06
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p03-t01 | pending | -      |
-| p03-t02 | pending | -      |
-| p03-t03 | pending | -      |
+| Task    | Status    | Commit            |
+| ------- | --------- | ----------------- |
+| p03-t01 | completed | 58a9fd2 + c9a0aee |
+| p03-t02 | completed | cd65ad8           |
+| p03-t03 | completed | 74d3d09           |
+| p03-t04 | pending   | -                 |
+| p03-t05 | pending   | -                 |
+| p03-t06 | pending   | -                 |
+| p03-t07 | pending   | -                 |
+| p03-t08 | pending   | -                 |
+| p03-t09 | pending   | -                 |
+
+### Recovery Event p03-recovery-001
+
+- Phase/task: p03 / p03-t01
+- Original request: explainer-improvements-v2-p03-publication-integrity
+- Original commit: 58a9fd294e8dfc83d398d43789c4f68c7092609c
+- Defect class: composition
+- Discovered by: pnpm test
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/1
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: c9a0aeead5bce79a5e31bd6ce247e80a64ec1800
+- Verification: focused CLI validation, `pnpm test`, the p03 phase union,
+  `pnpm lint`, `pnpm format`, and `git diff --check` passed; the focused p03
+  reviewer independently validated the completed recovery marker.
+- Reason: the stale bundled explainer-kit version assertion was a bounded
+  mechanical mismatch after p03 raised the core compatibility floor; p05-t03
+  retains ownership of lockstep public-package version bumps and release
+  validation.
 
 ## Phase 4: Lifecycle and bounded recovery
 
@@ -421,17 +448,75 @@ Chronological log of implementation progress.
 - The broad e2e suite still has 27 pre-existing `E_BROWSER_PROBE` failures;
   none are caused by p02.
 
+### Phase 3: publication integrity implementation and recovery
+
+- p03-t01 through p03-t03 landed in `58a9fd2`, `cd65ad8`, and `74d3d09`.
+- The authorized p03 recovery aligned the stale bundled skill-version
+  assertion in append-only commit `c9a0aee`.
+- The completed recovery handoff was independently validated before root
+  bookkeeping settled the ledger at `used_attempts: 1` with no pending
+  attempt.
+
+### Review Received: p03
+
+**Date:** 2026-08-06
+**Review artifact:**
+`reviews/archived/p03-review-2026-08-06T213553Z.md`
+**Reviewed head:** `c9a0aeead5bce79a5e31bd6ce247e80a64ec1800`
+**Invocation:** manual
+**Review cycle:** 1 of 3
+
+**Findings:**
+
+- Critical: 2
+- Important: 2
+- Medium: 2
+- Minor: 0
+
+**Finding disposition map:**
+
+- C1 → converted to p03-t04 (Moderate): make complete public/protected receipt
+  v2 evidence durability-eligible by supplying exact generated-catalog context.
+- C2 → converted to p03-t05 (Moderate): reject missing, duplicate,
+  foreign-source, wrong-hash, and missing-catalog callback receipts before
+  publication state is recorded.
+- I1 → converted to p03-t06 (Minor): accept and directly execute packaged
+  publish-request v1 replay and v2 production with exact schema/hash binding.
+- I2 → converted to p03-t07 (Moderate): retain source identity, rendered path,
+  S3 URI, canonical URL, hash, and verification facts in lifecycle summaries.
+- M1 → converted to p03-t08 (Moderate): enforce unique one-to-one
+  manifest/catalog receipt coverage in the private-wrapper compatibility
+  reader.
+- M2 → converted to p03-t09 (Minor): align shipped lifecycle and extension
+  guidance with v2 emission/consumption and explicit v1 replay.
+
+**New tasks added:** p03-t04, p03-t05, p03-t06, p03-t07, p03-t08, p03-t09
+
+**Design drift / artifact alignment notes:**
+
+- M2 found shipped contract guidance stale relative to the validated executable
+  v2 producer/consumer behavior. The implementation is accepted as the source
+  of truth because its immutable request/receipt contracts and compatibility
+  tests define the live boundary; p03-t09 updates both canonical references
+  while retaining explicit v1 replay.
+
+**Next:** Execute review-fix tasks via `oat-project-implement`, starting with
+p03-t04. After all six tasks complete, update this exact artifact-bound review
+event to `fixes_completed`, then run a fix-task-scoped p03 re-review and receive
+that new event to reach `passed`.
+
 ---
 
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact   | Planned / Documented                    | Actual / Accepted                                                                            | Reason                                                                             | Source of Truth                                     | Follow-up                                             |
-| ------------- | ----------------- | --------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------- |
-| p01-t06       | focused re-review | one task commit                         | one task commit plus one append-only correction                                              | WHATWG URL parsing normalized away empty delimiters                                | committed implementation and passing focused review | none                                                  |
-| p02-t02       | phase review      | initial and corrected output revalidate | visual-correction branch initially bypassed the gate; unused duplicate SVG IDs were rejected | correction commit revalidates visual output and resolves only referenced fragments | committed implementation and passing focused review | 27 legacy browser-session failures remain outside p02 |
-| plan revision | operator decision | structured renderer and golden matrix   | executable kernel plus prose-led creative layer                                              | original plan overengineered judgment-oriented work                                | revised `design.md` and `plan.md`                   | golden-suite audit tracked separately                 |
+| Task / Review | Source Artifact   | Planned / Documented                                           | Actual / Accepted                                                                            | Reason                                                                             | Source of Truth                                     | Follow-up                                             |
+| ------------- | ----------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------- |
+| p01-t06       | focused re-review | one task commit                                                | one task commit plus one append-only correction                                              | WHATWG URL parsing normalized away empty delimiters                                | committed implementation and passing focused review | none                                                  |
+| p02-t02       | phase review      | initial and corrected output revalidate                        | visual-correction branch initially bypassed the gate; unused duplicate SVG IDs were rejected | correction commit revalidates visual output and resolves only referenced fragments | committed implementation and passing focused review | 27 legacy browser-session failures remain outside p02 |
+| plan revision | operator decision | structured renderer and golden matrix                          | executable kernel plus prose-led creative layer                                              | original plan overengineered judgment-oriented work                                | revised `design.md` and `plan.md`                   | golden-suite audit tracked separately                 |
+| p03 review M2 | shipped guidance  | adapter omits `publicAccess`; wrappers produce only receipt v1 | adapter emits request v2 and wrappers consume complete receipt v2 with v1 replay             | executable immutable contracts and compatibility tests supersede stale prose       | p03 implementation at reviewed head `c9a0aee`       | p03-t09 aligns both canonical references              |
 
 ## Test Results
 

@@ -303,6 +303,220 @@ Run:
 git commit -m "test(p03-t03): cover cross-boundary publication integrity"
 ```
 
+### Task p03-t04: (review) Make complete v2 receipts durability-eligible
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/durability.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Step 1: Write tests (RED)**
+
+Start from the built-in connector's real public and protected
+`publish-receipt/v2` shapes. Prove complete manifest plus generated-catalog
+evidence is durability-eligible, while wrong catalog paths, sources, serialized
+byte hashes, or verification facts fail closed.
+
+**Step 2: Implement fix (GREEN)**
+
+Derive the exact generated catalog path and serialized-byte hash from the
+finalized manifest and public root. Pass that evidence as `catalogArtifact`
+during durability cross-record validation without weakening v1 replay or exact
+manifest coverage.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs && pnpm lint && pnpm format`
+
+Expected: real public/protected v2 receipts become durability-eligible only
+when manifest and catalog evidence match exactly; all focused checks pass.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/lib/durability.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs
+git commit -m "fix(p03-t04): make complete v2 receipts durability eligible"
+```
+
+### Task p03-t05: (review) Reject incomplete callback receipts in the core
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Step 1: Write tests (RED)**
+
+At the provider-neutral callback boundary, reject schema-valid v2 receipts with
+missing, duplicate, foreign-source, wrong-hash, or missing-catalog entries.
+Retain positive public/protected callback cases and v1 replay.
+
+**Step 2: Implement fix (GREEN)**
+
+Retain finalized manifest and catalog evidence around publisher callback
+execution. Run complete cross-record validation before assigning
+`state.publication`; schema-only validation must not authorize a publication
+summary.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/publish-boundary.acceptance.test.mjs && pnpm lint && pnpm format`
+
+Expected: incomplete or contradictory callback receipts fail before publication
+state is recorded, and valid v1/v2 paths pass.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs
+git commit -m "fix(p03-t05): reject incomplete callback receipts"
+```
+
+### Task p03-t06: (review) Accept publish-request v2 in the packaged RC runner
+
+**Files:**
+
+- Modify: `tools/release/run-explainer-rc.mjs`
+- Modify: `tools/release/run-explainer-rc.test.mjs`
+
+**Step 1: Write tests (RED)**
+
+Add direct packaged-execution cases for publish-request v1 replay and v2
+production. Preserve exact request schema and manifest-hash binding in both
+cases.
+
+**Step 2: Implement fix (GREEN)**
+
+Dispatch `scripts/publish.mjs` for both supported request versions instead of
+hard-coding v1. Reject unknown versions and mismatched schema/hash evidence.
+
+**Step 3: Verify**
+
+Run:
+`node --test tools/release/run-explainer-rc.test.mjs tools/release/validate-explainer-acceptance.test.mjs && pnpm lint && pnpm format`
+
+Expected: packaged direct publication accepts valid v1 and v2 requests and
+continues to reject unsupported or incorrectly bound requests.
+
+**Step 4: Commit**
+
+```bash
+git add tools/release/run-explainer-rc.mjs tools/release/run-explainer-rc.test.mjs
+git commit -m "fix(p03-t06): accept publish request v2 in packaged RC runs"
+```
+
+### Task p03-t07: (review) Preserve complete publication evidence in lifecycle summaries
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+
+**Step 1: Write tests (RED)**
+
+Assert every lifecycle publication summary entry retains receipt source
+identity, rendered path, S3 URI, canonical public URL, content hash, and
+separate object/public verification facts through both core and adapter
+integration surfaces.
+
+**Step 2: Implement fix (GREEN)**
+
+Build lifecycle summaries from the complete validated receipt entries rather
+than reducing them to `relativePath` and `publicUrl`. Version the summary only
+if required to preserve replay compatibility; keep the adapter as a
+destination-neutral forwarder.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/publish-boundary.acceptance.test.mjs && pnpm lint && pnpm format`
+
+Expected: all required artifact and verification evidence survives the
+lifecycle handoff without adapter-owned reinterpretation.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs
+git commit -m "fix(p03-t07): preserve publication evidence in summaries"
+```
+
+### Task p03-t08: (review) Enforce one-to-one validation in the private wrapper
+
+**Files:**
+
+- Modify: `tools/smoke/explainer-kit/fixtures/private-wrapper.mjs`
+- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`
+
+**Step 1: Write tests (RED)**
+
+Add receipt-v2 mutations for duplicate coverage, missing manifest entries,
+wrong `artifactId` or source, wrong path/hash/verification facts, and missing or
+misidentified catalog evidence. Each mutation must be rejected.
+
+**Step 2: Implement fix (GREEN)**
+
+Reuse the closed receipt validator where the wrapper boundary permits it, or
+apply the same unique path/source/hash/verification/catalog invariants in the
+fixture reader. Preserve valid v1 replay and valid v2 public/protected reads.
+
+**Step 3: Verify**
+
+Run:
+`node --test tools/smoke/explainer-kit/wrapper-compatibility.test.mjs tools/smoke/explainer-kit/publish-boundary.test.mjs && pnpm lint && pnpm format`
+
+Expected: the private-wrapper compatibility oracle rejects every incomplete or
+ambiguous v2 receipt shape and accepts the supported complete shapes.
+
+**Step 4: Commit**
+
+```bash
+git add tools/smoke/explainer-kit/fixtures/private-wrapper.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs
+git commit -m "fix(p03-t08): validate private wrapper receipts one to one"
+```
+
+### Task p03-t09: (review) Document publish-request and receipt v2 compatibility
+
+**Files:**
+
+- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
+- Modify: `.agents/skills/explainer-kit/references/extension-contract.md`
+- Modify: focused contract-guidance tests for both canonical skills
+
+**Step 1: Write focused checks (RED)**
+
+Require shipped guidance to state that new adapter runs emit
+publish-request v2, wrappers consume complete publish-receipt v2 evidence, and
+v1 request/receipt replay remains supported. Reject the stale statements that
+`publicAccess` is not emitted or that wrappers produce only
+`PublishReceiptV1`.
+
+**Step 2: Implement fix (GREEN)**
+
+Align both canonical contract references with the executable v2 producer and
+consumer policy. Keep v1 replay explicit and do not imply in-place mutation of
+either immutable contract.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs && pnpm lint && pnpm format`
+
+Expected: focused guidance checks pass and shipped prose matches the live
+v2-with-v1-replay behavior.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-explainer-kit/references/lifecycle-contract.md .agents/skills/explainer-kit/references/extension-contract.md .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs
+git commit -m "docs(p03-t09): document v2 publication compatibility"
+```
+
 ---
 
 ## Phase 4: Lifecycle and bounded recovery
@@ -534,6 +748,7 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 | p02           | code     | fixes_completed | 2026-08-06 | reviews/archived/p02-review-2026-08-06T201258Z.md                                                 | fde1437beb821c68f8fe972d4ac1c4425d20e7ef | manual     | -                        |
 | p02           | code     | passed          | 2026-08-06 | reviews/archived/p02-review-2026-08-06T202708Z.md                                                 | 3f0dfe5e3131ee2ef12bd06cf4eb842566b50ca9 | manual     | -                        |
 | p03           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
+| p03           | code     | fixes_added     | 2026-08-06 | reviews/archived/p03-review-2026-08-06T213553Z.md                                                 | c9a0aeead5bce79a5e31bd6ce247e80a64ec1800 | manual     | -                        |
 | p04           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | p05           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | final         | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
@@ -567,11 +782,11 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 
 - Phase 1: 6 tasks — adapter paths, destinations, and credential hygiene
 - Phase 2: 2 tasks — canonical links and hard validation
-- Phase 3: 3 tasks — publication verification and receipts
+- Phase 3: 9 tasks — publication verification, receipts, and review fixes
 - Phase 4: 3 tasks — lifecycle ordering and bounded recovery
 - Phase 5: 3 tasks — prose-led authoring, docs, and release closure
 
-**Total: 17 tasks**
+**Total: 23 tasks**
 
 ## References
 
