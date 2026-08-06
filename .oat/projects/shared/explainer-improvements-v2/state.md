@@ -71,7 +71,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T18:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T18:12:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -83,9 +83,8 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p01 is complete. Blocking findings from the reduced design/plan review
-are corrected; one bounded verification of those corrections remains before
-p02.
+Phase p01 is complete. The reduced design and 17-task plan passed their bounded
+correction verification. Phase p02 is ready.
 
 ## Artifacts
 
@@ -93,7 +92,7 @@ p02.
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
-- **Plan:** `plan.md` (revised to 5 phases / 17 tasks; review fixes applied)
+- **Plan:** `plan.md` (revised to 5 phases / 17 tasks; review passed)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -105,7 +104,8 @@ p02.
 - ✓ Credential-bearing and malformed publish roots fail before core invocation
 - ✓ Operator-approved scope reduction applied to discovery, design, and plan
 - ✓ Delta-focused artifact review corrections applied
-- ⧗ Bounded correction verification before p02
+- ✓ Bounded correction verification passed with no findings
+- ⧗ p02-t01 canonical artifact links next
 
 ## Blockers
 
@@ -113,5 +113,4 @@ None
 
 ## Next Milestone
 
-Verify the listed artifact corrections, record the review disposition, then
-resume at p02-t01.
+Implement p02-t01: canonical artifact links in author requests.

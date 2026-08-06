@@ -381,7 +381,7 @@ Chronological log of implementation progress.
 
 **Date:** 2026-08-06
 **Review artifact:**
-`reviews/artifact-plan-revision-review-2026-08-06T180042Z.md`
+`reviews/archived/artifact-plan-revision-review-2026-08-06T180042Z.md`
 
 **Findings:** 0 Critical, 5 Important, 1 Medium, 1 Minor.
 
@@ -396,8 +396,15 @@ Chronological log of implementation progress.
 - expanded the p04 boundary to its required publisher/archive seams;
 - cleared obsolete quick-start/spec metadata.
 
-**Next:** Run one bounded verification of these listed corrections, then resume
-at p02-t01 without another broad plan-review loop.
+**Bounded verification:**
+
+- Artifact:
+  `reviews/archived/artifact-plan-revision-review-2026-08-06T181021Z.md`
+- Result: passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+- Scope was restricted to the seven listed corrections; no broad review loop
+  was reopened.
+
+**Next:** Resume implementation at p02-t01.
 
 ---
 
