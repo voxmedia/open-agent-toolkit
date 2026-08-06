@@ -149,6 +149,8 @@ If the user declines all workflows, confirm once:
 
 For multi-session or complex development tasks, use the structured agent project workflow:
 
+- The optional post-approval `retro` step uses `oat-project-retro` to generate/apply retrospectives and `oat-project-retro-file` to file tracker feedback.
+
 ### Execution Continuation
 
 This rule applies only to OAT project lifecycle execution, such as `oat-project-implement`, and OAT project review/receive flows. It does not apply to non-OAT tasks or ad-hoc work outside the OAT project workflow.

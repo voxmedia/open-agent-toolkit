@@ -12,6 +12,7 @@ Projects are where the workflow layer becomes concrete: lifecycle phases, `state
 ## Contents
 
 - [Lifecycle](lifecycle.md) - End-to-end flow from discovery through completion.
+- [Project Retrospectives](retro.md) - Generate evidence-grounded retros, apply repo improvements, and file tracker feedback.
 - [Autonomous Project Execution](autonomy.md) - Session-scoped autonomy signals, gate boundaries, review requirements, and execution learnings.
 - [OAT in Cursor Cloud](cursor-cloud.md) - Project-home, provisioning, asset-precedence, and execution-surface guidance for cloud agents.
 - [Design Modes](design-modes.md) - How full design balances collaborative, selective collaborative, and draft-and-review interaction.
