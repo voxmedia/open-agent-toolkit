@@ -14,13 +14,23 @@ oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
-# oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
-#   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
-#   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
-#   phase_attempt_usage: # authoritative monotonic per-phase attempt ledger
-#     pNN:
-#       used_attempts: 0
-#       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
+oat_phase_recovery_policy:
+  default_attempt_limit: 0
+  phase_attempt_limits:
+    p03: 1
+  phase_attempt_usage:
+    p03:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p03-recovery-001
+        original_request_id: explainer-improvements-v2-p03-publication-integrity
+        original_task_id: p03-t01
+        original_commit: 58a9fd294e8dfc83d398d43789c4f68c7092609c
+        discovered_by: pnpm test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: 74d3d091cec1b6fe98e56035056c51f4ae46e105
+        status: completed
 oat_dispatch_policy:
   mode: managed
   policy: high
