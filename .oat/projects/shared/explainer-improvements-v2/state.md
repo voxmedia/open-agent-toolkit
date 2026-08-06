@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: c1d5a1b0994e19abb2b349b776ba3235f8955b52
+oat_current_task: p03-t01
+oat_last_commit: 3f0dfe5e3131ee2ef12bd06cf4eb842566b50ca9
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -71,7 +71,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T18:12:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-06T20:29:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -83,8 +83,8 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p01 is complete. The reduced design and 17-task plan passed their bounded
-correction verification. Phase p02 is ready.
+Phases p01 and p02 are complete. Canonical author links and hard post-render
+reference validation passed focused review. Phase p03 is ready.
 
 ## Artifacts
 
@@ -105,7 +105,8 @@ correction verification. Phase p02 is ready.
 - ✓ Operator-approved scope reduction applied to discovery, design, and plan
 - ✓ Delta-focused artifact review corrections applied
 - ✓ Bounded correction verification passed with no findings
-- ⧗ p02-t01 canonical artifact links next
+- ✓ p02 canonical links and internal-reference gate passed review
+- ⧗ p03-t01 protected/public publication behavior next
 
 ## Blockers
 
@@ -113,4 +114,4 @@ None
 
 ## Next Milestone
 
-Implement p02-t01: canonical artifact links in author requests.
+Implement p03-t01: explicit public-access behavior and verification.

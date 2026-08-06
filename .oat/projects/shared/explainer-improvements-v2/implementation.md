@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-06
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -233,12 +233,12 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | Phase | Status    | Tasks | Completed |
 | ----- | --------- | ----- | --------- |
 | p01   | completed | 6     | 6/6       |
-| p02   | pending   | 2     | 0/2       |
+| p02   | completed | 2     | 2/2       |
 | p03   | pending   | 3     | 0/3       |
 | p04   | pending   | 3     | 0/3       |
 | p05   | pending   | 3     | 0/3       |
 
-**Total:** 6/17 tasks completed
+**Total:** 8/17 tasks completed
 
 ---
 
@@ -259,12 +259,14 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Phase 2: Core link integrity
 
-**Status:** pending
+**Status:** completed
+**Started:** 2026-08-06
+**Completed:** 2026-08-06
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p02-t01 | pending | -      |
-| p02-t02 | pending | -      |
+| Task    | Status    | Commit            |
+| ------- | --------- | ----------------- |
+| p02-t01 | completed | 617dea6           |
+| p02-t02 | completed | fde1437 + 3f0dfe5 |
 
 ## Phase 3: Publication integrity
 
@@ -404,7 +406,20 @@ Chronological log of implementation progress.
 - Scope was restricted to the seven listed corrections; no broad review loop
   was reopened.
 
-**Next:** Resume implementation at p02-t01.
+**Next:** Resume implementation at p03-t01.
+
+### Phase 2: canonical links and hard validation
+
+- Added immutable author-request v3 canonical link tables while preserving v2
+  replay and Markdown/HTML authoring.
+- Added a manifest/site-tree internal-reference gate with one shared correction
+  budget.
+- Initial review found visual-correction revalidation and duplicate generated
+  SVG-ID regressions; append-only correction `3f0dfe5` resolved both.
+- Passing review:
+  `reviews/archived/p02-review-2026-08-06T202708Z.md`.
+- The broad e2e suite still has 27 pre-existing `E_BROWSER_PROBE` failures;
+  none are caused by p02.
 
 ---
 
@@ -412,10 +427,11 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact   | Planned / Documented                  | Actual / Accepted                               | Reason                                              | Source of Truth                                     | Follow-up                             |
-| ------------- | ----------------- | ------------------------------------- | ----------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- | ------------------------------------- |
-| p01-t06       | focused re-review | one task commit                       | one task commit plus one append-only correction | WHATWG URL parsing normalized away empty delimiters | committed implementation and passing focused review | none                                  |
-| plan revision | operator decision | structured renderer and golden matrix | executable kernel plus prose-led creative layer | original plan overengineered judgment-oriented work | revised `design.md` and `plan.md`                   | golden-suite audit tracked separately |
+| Task / Review | Source Artifact   | Planned / Documented                    | Actual / Accepted                                                                            | Reason                                                                             | Source of Truth                                     | Follow-up                                             |
+| ------------- | ----------------- | --------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------- |
+| p01-t06       | focused re-review | one task commit                         | one task commit plus one append-only correction                                              | WHATWG URL parsing normalized away empty delimiters                                | committed implementation and passing focused review | none                                                  |
+| p02-t02       | phase review      | initial and corrected output revalidate | visual-correction branch initially bypassed the gate; unused duplicate SVG IDs were rejected | correction commit revalidates visual output and resolves only referenced fragments | committed implementation and passing focused review | 27 legacy browser-session failures remain outside p02 |
+| plan revision | operator decision | structured renderer and golden matrix   | executable kernel plus prose-led creative layer                                              | original plan overengineered judgment-oriented work                                | revised `design.md` and `plan.md`                   | golden-suite audit tracked separately                 |
 
 ## Test Results
 
@@ -424,7 +440,7 @@ Track test execution during implementation.
 | Phase | Tests Run                                            | Passed | Failed | Coverage                                           |
 | ----- | ---------------------------------------------------- | ------ | ------ | -------------------------------------------------- |
 | 1     | adapter/core focused suites; CLI tests; lint; format | passed | 0      | p01-t01–p01-t06 complete; focused re-review passed |
-| 2     | -                                                    | -      | -      | -                                                  |
+| 2     | declared p02 union; lint; format                     | passed | 0      | 176/176; focused re-review passed                  |
 
 ## Final Summary (for PR/docs)
 
