@@ -233,6 +233,26 @@ Follow `oat-pjm-add-backlog-item` conventions:
 Never hand-author an item ID or edit inside managed index markers. Capture the
 created item ID/path.
 
+Use this **destination-first** local transaction:
+
+1. Format and verify the created or strengthened backlog item and regenerated
+   index.
+2. Commit the destination side effect before setting the retro item to
+   `Status: filed`. Do not include retro writeback in this destination commit.
+3. Capture the full destination commit SHA and verify that the commit contains
+   the destination path. A command success without that path in the commit is
+   not a receipt.
+4. Determine remote visibility from the branch's configured upstream and
+   local remote-tracking state. Record exactly `pushed` when the destination
+   commit is reachable from that upstream; otherwise record `unpushed`.
+5. Only after the receipt is confirmed, write back the retro in a subsequent
+   commit with `Destination`, `Destination-receipt`, and `Remote-visibility`.
+
+Local commit durability does not imply remote visibility. Pushing is a
+separately authorized Git operation: never push implicitly, never treat filing
+consent as push authorization, and report an unpushed receipt as durable but
+local-only.
+
 For non-interactive backlog filing, all required backlog metadata — title,
 description, acceptance criteria, labels, priority, scope, and scope estimate —
 must already be explicit in the retro item. When any required backlog metadata
@@ -248,6 +268,8 @@ For each confirmed filing, strengthening, or link:
 
 - set `Status: filed`;
 - set `Destination` to the issue URL or backlog ID/path; and
+- for local backlog destinations, set `Destination-receipt` to the confirmed
+  full commit SHA and `Remote-visibility` to `pushed | unpushed`;
 - set `Disposition-note` to a concise filing/linking outcome or `—`; and
 - set `Sanitized: yes` when the public-destination check ran.
 
@@ -269,14 +291,15 @@ Refresh the contents of the bounded `## Current State` section from register
 fields and frontmatter rollups after recomputing the rollup.
 
 Filing mode may mutate only `Status`, `Destination`, `Sanitized`,
-`Disposition-note`, and `oat_retro_filing` on selected filing items, plus the
-contents of `## Current State`. Do not alter apply-items, `Applied-ref`,
+`Destination-receipt`, `Remote-visibility`, `Disposition-note`, and
+`oat_retro_filing` on selected filing items, plus the contents of
+`## Current State`. Do not alter apply-items, `Applied-ref`,
 `oat_retro_promotions`, any RP disposition, proposal bodies, or any other
 narrative. Refresh `Current State` without rewriting proposal bodies. Proposal
 bodies are stable and immutable after generation.
 
-Format and commit the retro writeback with created/strengthened backlog files
-when local. GitHub destinations are represented by their recorded URLs. On
+Format and commit the retro writeback only after a local destination commit is
+confirmed. GitHub destinations are represented by their recorded URLs. On
 re-run, skip settled items and retry only eligible statuses.
 
 ## Final Report
@@ -288,7 +311,8 @@ Report:
 - every created or existing destination;
 - all unavailable lanes with concrete unblock actions;
 - final `oat_retro_filing` rollup; and
-- commit hash when local files changed.
+- destination and writeback commit hashes when local files changed; and
+- `pushed` or `unpushed` remote visibility for every local destination receipt.
 
 ## Success Criteria
 
@@ -300,6 +324,8 @@ Report:
   explicitly.
 - Public posts from private sources pass sanitization, including comments.
 - Every `filed` status has a confirmed destination.
+- Every locally filed backlog item has a confirmed destination commit receipt
+  and explicit pushed/unpushed visibility; no push occurs implicitly.
 - Re-runs are idempotent and retry newly deliverable `no-destination` items.
 - Filing writeback updates only allowed fields, `oat_retro_filing`, and the
   derived `Current State` contents.

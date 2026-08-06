@@ -91,6 +91,24 @@ describe('retro skill content contracts', () => {
     );
   });
 
+  it('requires destination-first durable local filing receipts without implicit push', () => {
+    expect(filingSkill).toMatch(
+      /destination-first[\s\S]*?commit[\s\S]*?before[\s\S]*?Status:\s*filed/i,
+    );
+    expect(filingSkill).toMatch(
+      /verify[\s\S]*?commit[\s\S]*?contains[\s\S]*?destination/i,
+    );
+    expect(filingSkill).toMatch(
+      /pushed[\s\S]*?unpushed|unpushed[\s\S]*?pushed/i,
+    );
+    expect(filingSkill).toMatch(
+      /push[\s\S]*?separate[\s\S]*?authoriz|separate[\s\S]*?authoriz[\s\S]*?push/i,
+    );
+    expect(filingSkill).toMatch(/never[\s\S]*?push|must not[\s\S]*?push/i);
+    expect(retroTemplate).toContain('Destination-receipt');
+    expect(retroTemplate).toContain('Remote-visibility');
+  });
+
   it('does not invent or prompt for incomplete backlog metadata', () => {
     expect(filingSkill).toMatch(
       /non-interactive[\s\S]*?required backlog metadata[\s\S]*?no external write/i,

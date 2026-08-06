@@ -124,12 +124,15 @@ caused them.}
      File item fields:
        Status: proposed | filed | rejected | no-destination
        Destination: issue URL or backlog item ID/path
+       Destination-receipt: full commit SHA for a local backlog destination
+       Remote-visibility: pushed | unpushed for a local backlog destination
        Disposition-note: rejection, recovery, or outcome detail
 
      Consumers may mutate only Status, Applied-ref or Destination, and
-     Sanitized, Disposition-note, plus the corresponding frontmatter rollup and
-     Current State contents. IDs, Type, Disposition, titles, proposal bodies,
-     and all other narrative are stable. -->
+     Destination-receipt, Remote-visibility, Sanitized, Disposition-note, plus
+     the corresponding frontmatter rollup and Current State contents. IDs,
+     Type, Disposition, titles, proposal bodies, and all other narrative are
+     stable. -->
 
 ### RP-01: {Actionable repo improvement}
 
@@ -148,6 +151,8 @@ caused them.}
 - **Disposition:** file
 - **Status:** proposed
 - **Destination:** —
+- **Destination-receipt:** —
+- **Remote-visibility:** —
 - **Sanitized:** no
 - **Disposition-note:** —
 
@@ -158,9 +163,10 @@ caused them.}
 <!-- Stable IDs: UP-NN. Status: proposed | filed | rejected | no-destination.
      Destination records the issue URL or backlog item ID/path. Sanitized
      records whether the public-destination verification passed. Consumers may
-     mutate only Status, Destination, Sanitized, Disposition-note, the filing
-     rollup, and Current State contents. IDs, titles, proposal bodies, and all
-     other narrative are stable. -->
+     mutate only Status, Destination, Destination-receipt, Remote-visibility,
+     Sanitized, Disposition-note, the filing rollup, and Current State
+     contents. IDs, titles, proposal bodies, and all other narrative are
+     stable. -->
 
 No upstream feedback identified.
 
@@ -170,6 +176,8 @@ No upstream feedback identified.
 
 - **Status:** proposed
 - **Destination:** —
+- **Destination-receipt:** —
+- **Remote-visibility:** —
 - **Sanitized:** no
 - **Disposition-note:** —
 
