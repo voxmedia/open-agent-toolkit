@@ -173,6 +173,7 @@ configured-invocation evidence.
 | ------------------ | ---------------------------------------- | ------------------------------------------- | -------------------------------------- | ------------------------------------------ | ----------------------------- |
 | p03 review round 1 | `oat-project-retro-p03-review-r1-fix-01` | `oat-project-retro-impl-p03-20260806T0152Z` | `40ee9cc3-78bb-4c3e-b443-07d9002e374f` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
 | p02 review round 1 | `oat-project-retro-p02-review-r1-fix-01` | `oat-project-retro-impl-p02-20260806T0152Z` | `c9e01a7e-e760-4006-89dd-a56e4aaeba0c` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
+| p02 review round 2 | `oat-project-retro-p02-review-r2-fix-02` | `oat-project-retro-impl-p02-20260806T0152Z` | `c9e01a7e-e760-4006-89dd-a56e4aaeba0c` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` |
 
 <!-- orchestration-runs-end -->
 
@@ -200,6 +201,9 @@ configured-invocation evidence.
 - p03 review round 2 passed with no findings. The passing artifact was
   committed on the p03 branch at `02f7c0c5`; p03 is ready for integration once
   the parallel group closes.
+- p02 review round 2 left one Important capability mismatch. Its artifact was
+  committed on the p02 branch at `d0e7346e`; final bounded fix continuation 2
+  resumed the accepted p02 implementer handle.
 
 ---
 
