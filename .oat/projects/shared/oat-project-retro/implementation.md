@@ -72,15 +72,15 @@ resolution complete; plan handed to implementation.
 
 ## Progress Overview
 
-| Phase | Status  | Tasks | Completed |
-| ----- | ------- | ----- | --------- |
-| p01   | pending | 2     | 0/2       |
-| p02   | pending | 4     | 0/4       |
-| p03   | pending | 2     | 0/2       |
-| p04   | pending | 2     | 0/2       |
-| p05   | pending | 2     | 0/2       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | complete    | 2     | 2/2       |
+| p02   | complete    | 4     | 4/4       |
+| p03   | complete    | 2     | 2/2       |
+| p04   | in_progress | 2     | 0/2       |
+| p05   | pending     | 2     | 0/2       |
 
-**Total:** 0/12 tasks completed
+**Total:** 8/12 tasks completed
 
 ---
 
@@ -88,26 +88,26 @@ resolution complete; plan handed to implementation.
 
 ### p01 — CLI Config Surface
 
-| Task    | Status  | Commit | Outcome |
-| ------- | ------- | ------ | ------- |
-| p01-t01 | pending | -      | -       |
-| p01-t02 | pending | -      | -       |
+| Task    | Status   | Commit      | Outcome                                           |
+| ------- | -------- | ----------- | ------------------------------------------------- |
+| p01-t01 | complete | `22f9cf3bb` | Accepts `retro` only in `postApproval`.           |
+| p01-t02 | complete | `0deff2836` | Adds normalized, layered `workflow.retro` config. |
 
 ### p02 — Retro Template, Skills, and Registration
 
-| Task    | Status  | Commit | Outcome |
-| ------- | ------- | ------ | ------- |
-| p02-t01 | pending | -      | -       |
-| p02-t02 | pending | -      | -       |
-| p02-t03 | pending | -      | -       |
-| p02-t04 | pending | -      | -       |
+| Task    | Status   | Commit      | Outcome                                                   |
+| ------- | -------- | ----------- | --------------------------------------------------------- |
+| p02-t01 | complete | `361a32a1d` | Adds the canonical project-retro artifact template.       |
+| p02-t02 | complete | `a0de59eef` | Adds generate/apply skill and bounded recovery contracts. |
+| p02-t03 | complete | `c4ed1cf26` | Adds deterministic, consent-aware filing skill.           |
+| p02-t04 | complete | `332562c2d` | Registers and bundles the retro skill pair and template.  |
 
 ### p03 — Lifecycle Integration
 
-| Task    | Status  | Commit | Outcome |
-| ------- | ------- | ------ | ------- |
-| p03-t01 | pending | -      | -       |
-| p03-t02 | pending | -      | -       |
+| Task    | Status   | Commit      | Outcome                                           |
+| ------- | -------- | ----------- | ------------------------------------------------- |
+| p03-t01 | complete | `cedaaa91b` | Dispatches configured retro from closeout.        |
+| p03-t02 | complete | `401683191` | Adds the interactive completion safety-net offer. |
 
 ### p04 — Documentation
 
@@ -152,6 +152,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | p01   | `oat-project-retro-impl-p01-20260806T0152Z` | `2574684b-b97b-40df-96be-0558681f0a42` | `.worktrees/oat-project-retro-p01` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | `not-applicable` | `native-catalog` |
 | p02   | `oat-project-retro-impl-p02-20260806T0152Z` | `c9e01a7e-e760-4006-89dd-a56e4aaeba0c` | `.worktrees/oat-project-retro-p02` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | `not-applicable` | `native-catalog` |
 | p03   | `oat-project-retro-impl-p03-20260806T0152Z` | `40ee9cc3-78bb-4c3e-b443-07d9002e374f` | `.worktrees/oat-project-retro-p03` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | `not-applicable` | `native-catalog` |
+| p04   | `oat-project-retro-impl-p04-20260806T0242Z` | `e3b4d9f8-70de-4c54-9626-f4693708cd24` | `.worktrees/oat-project-retro-p04` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | `not-applicable` | `native-catalog` |
 
 Each launch was accepted through the exact resolver-returned native role. Runtime
 identity is not observable; launcher payload and native acceptance provide
@@ -208,6 +209,12 @@ configured-invocation evidence.
 - p02 bounded fix continuation 2 completed at `d141d5830`; the worktree was
   clean and root independently reconfirmed all 6 focused tests. Final review
   round 3 was dispatched against the full p02 range.
+- p02 review round 3 passed with no findings; all three parallel phases were
+  integrated into the root branch. The combined gate exposed one stale
+  cross-phase sequence assertion, fixed at `248a608dd`. `pnpm check`,
+  `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm lint`, and `pnpm format`
+  passed after the permitted no-edit rerun of the known gate timeout flake.
+- p04 was dispatched from the clean integrated base `248a608dd`.
 
 ---
 
@@ -226,7 +233,7 @@ Track test execution during implementation.
 
 | Phase | Tests Run                                                  | Result |
 | ----- | ---------------------------------------------------------- | ------ |
-| p01   | -                                                          | -      |
+| p01   | Integrated repository CI, lint, and format gates           | Passed |
 | p02   | Focused retro skill content contracts (6 tests)            | Passed |
 | p03   | Focused lifecycle skill and autonomy contracts (164 tests) | Passed |
 | p04   | -                                                          | -      |
