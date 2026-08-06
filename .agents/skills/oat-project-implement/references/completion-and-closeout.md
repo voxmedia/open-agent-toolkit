@@ -678,6 +678,8 @@ legacy or structured preference, normalize legacy values before snapshotting:
 `{ preApproval: ["summary"], postApproval: [] }`, `pr` → `{ preApproval:
 ["summary", "pr"], postApproval: [] }`, and `docs-pr` → `{ preApproval:
 ["summary", "document", "pr"], postApproval: [] }`.
+These legacy mappings remain unchanged. Structured preferences additionally
+accept `retro` in `postApproval`; `retro` is invalid in `preApproval`.
 
 If `OAT_AUTONOMOUS=1` and the preference is unset, use the inventory's
 autonomous lifecycle-tail default:
@@ -692,6 +694,8 @@ sequence snapshot as a configured structured value. Add
 `source: autonomous-default` to that snapshot. A configured legacy or
 structured preference remains authoritative and uses `source: configured`;
 preserve its normalized arrays and stored order exactly.
+The autonomous lifecycle-tail default remains unchanged and does not include
+`retro`; retro runs autonomously only when explicitly configured.
 
 Persist this immutable state before dispatching a child:
 
@@ -704,7 +708,7 @@ oat_post_implement_sequence:
   pre_approval_completed: []
   approval: pending # pending | approved | not_required
   approval_source: null # null | user | oat-autonomous
-  post_approval: []
+  post_approval: [retro]
   post_approval_completed: []
   failure: null
 ```
@@ -712,6 +716,8 @@ oat_post_implement_sequence:
 `source` and `approval_source` are additive provenance fields. A resumable
 snapshot created by an older skill version remains valid when either field is
 absent; do not rewrite its stored pre/post arrays merely to backfill provenance.
+The snapshot above illustrates the additive `retro` vocabulary member for a
+configured sequence; the autonomous default remains `postApproval: []`.
 
 The snapshot is immutable for this closeout: never re-resolve
 `workflow.postImplementSequence` while it is incomplete. Iterate
@@ -719,10 +725,12 @@ The snapshot is immutable for this closeout: never re-resolve
 substitute a vocabulary order. Resume from the first incomplete stored step,
 including a partially completed noncanonical order.
 
-For every pending `summary`, `document`, or `pr`, dispatch respectively
-`oat-project-summary`, `oat-project-document`, or `oat-project-pr-final`.
-Every `summary`, `document`, and `pr` child receives the authoritative snapshot
-and must merge state updates without replacing `oat_post_implement_sequence`.
+For every pending `summary`, `document`, `pr`, or `retro`, dispatch respectively
+`oat-project-summary`, `oat-project-document`, `oat-project-pr-final`, or
+`oat-project-retro`. Dispatch `retro` in generate mode; apply and filing
+behavior remains config-gated inside that skill. Every `summary`, `document`,
+`pr`, and `retro` child receives the authoritative snapshot and must merge state
+updates without replacing `oat_post_implement_sequence`.
 Re-read and verify the snapshot after every child returns before recording step
 success. If a child removed or altered it, restore the authoritative snapshot,
 record that step as failed, and stop with the boundary, failed step, and exact
