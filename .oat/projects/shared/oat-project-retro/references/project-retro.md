@@ -15,7 +15,7 @@ oat_retro_evidence_sources:
   - source: github-pr-192
     status: used
 oat_retro_promotions: none
-oat_retro_filing: proposed
+oat_retro_filing: complete
 oat_generated: true
 oat_template: false
 ---
@@ -286,10 +286,11 @@ duplicated as a repo filing item.
 
 ### UP-01: Fail closed when a configured closeout snapshot is absent
 
-- **Status:** proposed
-- **Destination:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-260718-mandatory-skill-load-clause.md`
 - **Sanitized:** yes
-- **Disposition-note:** —
+- **Disposition-note:** Strengthened the existing lifecycle-integrity item with
+  configured-plus-absent snapshot evidence and terminal-transition coverage.
 
 `workflow.postImplementSequence` configured pre-approval summary,
 documentation, and PR steps, but the run reached implementation completion
