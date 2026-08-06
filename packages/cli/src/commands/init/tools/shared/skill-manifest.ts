@@ -62,6 +62,8 @@ export const WORKFLOW_SKILLS = [
   'oat-project-promote-spec-driven',
   'oat-project-quick-start',
   'oat-project-reconcile',
+  'oat-project-retro',
+  'oat-project-retro-file',
   'oat-project-revise',
   'oat-project-review-provide',
   'oat-project-review-provide-remote',
@@ -93,6 +95,7 @@ export const WORKFLOW_TEMPLATES = [
   'implementation.md',
   'summary.md',
   'project-log.md',
+  'project-retro.md',
 ] as const;
 
 export const WORKFLOW_SCRIPTS = [
