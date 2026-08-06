@@ -168,6 +168,7 @@ configured-invocation evidence.
 | p03   | 2     | `oat-project-retro-review-p03-r2-20260806T0220Z` | `4a6cadc0-7249-4e72-95e2-301a83273b67` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
 | p02   | 2     | `oat-project-retro-review-p02-r2-20260806T0224Z` | `80d7f36f-93ae-43b3-8aaf-b1cc0e9662d6` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
 | p02   | 3     | `oat-project-retro-review-p02-r3-20260806T0231Z` | `14ebd7a4-adbe-4884-bacb-f5f0ad39dea1` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
+| p04   | 1     | `oat-project-retro-review-p04-r1-20260806T0248Z` | `6f6890ab-0367-4565-8558-ff9c49e3b9d1` | `oat-reviewer-gpt-5-6-sol-high` | `selected:gpt-5.6-sol-high` | `gate-target`    |
 
 #### Accepted Fix Continuations
 
@@ -215,6 +216,9 @@ configured-invocation evidence.
   `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm lint`, and `pnpm format`
   passed after the permitted no-edit rerun of the known gate timeout flake.
 - p04 was dispatched from the clean integrated base `248a608dd`.
+- p04 implementation completed at `21d6aa65d` with a clean worktree. Root
+  independently reconfirmed `pnpm check`; review round 1 was dispatched against
+  the exact two-commit phase range.
 
 ---
 
@@ -236,7 +240,7 @@ Track test execution during implementation.
 | p01   | Integrated repository CI, lint, and format gates           | Passed |
 | p02   | Focused retro skill content contracts (6 tests)            | Passed |
 | p03   | Focused lifecycle skill and autonomy contracts (164 tests) | Passed |
-| p04   | -                                                          | -      |
+| p04   | Documentation check and docs build                         | Passed |
 | p05   | -                                                          | -      |
 
 ## Final Summary (for PR/docs)
