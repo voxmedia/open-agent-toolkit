@@ -4,6 +4,11 @@
 
 ## Curated Overview
 
+- Project retrospectives now ship in CLI `0.2.29` as a post-approval-only
+  lifecycle capability. The retro artifact separates repo-local promotions
+  from upstream feedback in machine-scannable registers; generation, apply,
+  and filing remain consent-aware through interactive gates or explicit
+  `workflow.retro` configuration.
 - Provider-sync follow-up: the config-bug project now fails closed on symlinked
   provider ancestry; `BL-260724-support-provider-directory` tracks safe,
   manifest-aware adoption when a provider collection directory aliases its

@@ -34,6 +34,13 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.29` adds evidence-grounded project retrospectives to the lifecycle
+  tail. `retro` is a post-approval-only closeout step; `oat-project-retro`
+  generates and idempotently applies machine-scannable promotion findings, and
+  `oat-project-retro-file` files consented repo or upstream feedback after
+  destination preflight and duplicate checks. The `workflow.retro` namespace
+  controls non-interactive apply and filing behavior, while interactive
+  completion offers a missing retro as a safety net.
 - CLI `0.2.28` adds tiered task-level defect prevention and bounded
   same-target post-commit recovery without weakening accepted-launch
   terminality. A dedicated per-phase numeric budget, committed terminal ledger
