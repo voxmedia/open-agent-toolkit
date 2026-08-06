@@ -52,8 +52,9 @@ existing safety guarantees.
 
 ## Parallelism
 
-`p01` (adapter path/destination derivation) writes only under
-`.agents/skills/oat-explainer-kit/`; `p02` (core link integrity) writes only
+`p01` (adapter path/destination derivation) writes under
+`.agents/skills/oat-explainer-kit/` plus the CLI config surfaces under
+`packages/cli/src/` (p01-t02); `p02` (core link integrity) writes only
 under `.agents/skills/explainer-kit/`. Their write sets are disjoint, their
 verification suites are independent (`node --test` over their own trees), and
 neither consumes the other's outputs, so they are declared as one parallel
@@ -78,7 +79,10 @@ verification, and atomic commits.
 
 ## Phase 1: Adapter path and destination derivation
 
-Write boundary: `.agents/skills/oat-explainer-kit/**` only.
+Write boundary: `.agents/skills/oat-explainer-kit/**` plus the CLI
+configuration surfaces in `packages/cli/src/config/**` and
+`packages/cli/src/commands/config/**` (p01-t02 only). Still disjoint from
+phase 2's core-only writes.
 
 ### Task p01-t01: Derive per-invocation remote publish destination
 
@@ -127,6 +131,10 @@ git commit -m "feat(p01-t01): derive per-invocation publish destination"
 - Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-config.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/references/config-contract.md`
+- Modify: `packages/cli/src/config/oat-config.ts` (config type, normalizer, effective defaults for `explainers.publish.publicAccess`)
+- Modify: `packages/cli/src/config/resolve.ts` (effective resolution)
+- Modify: `packages/cli/src/commands/config/index.ts` (command key union/catalog)
+- Modify: focused CLI config tests beside the surfaces above
 
 **Step 1: Write test (RED)**
 
@@ -134,22 +142,27 @@ Config with only `publicBaseUrl` (the Duet shape) resolves to build-only with
 a structured report naming the missing fields (`provider`, `s3Uri`,
 `awsRegion`); complete config (provider `s3-static`, repository S3 root,
 repository public root, region, optional `publicAccess`) resolves
-publish-capable; partial combinations each report exactly their gaps.
+publish-capable; partial combinations each report exactly their gaps. The new
+`explainers.publish.publicAccess` key is a first-class CLI configuration key:
+config set/get, normalization, effective resolution, defaulting, and
+invalid-value rejection are covered by focused CLI tests — normal shared
+config must carry the declaration to the adapter, not reject or discard it.
 
 Run: `node --test .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
 Expected: new cases fail
 
 **Step 2: Implement (GREEN)**
 
-Completeness validation in `resolve-config.mjs`; document the complete shared
-configuration (including the new `explainers.publish.publicAccess`
-declaration) in `config-contract.md`, with the explicit note that
-configuration alone never authorizes publication (human gate retained).
+Completeness validation in `resolve-config.mjs`; the `publicAccess` key
+across the CLI config type, normalizer, defaults, effective resolution, and
+command key catalog; document the complete shared configuration in
+`config-contract.md`, with the explicit note that configuration alone never
+authorizes publication (human gate retained).
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/`
-Expected: green
+Run: `node --test .agents/skills/oat-explainer-kit/tests/ && pnpm --filter @open-agent-toolkit/cli test`
+Expected: adapter and CLI config suites green
 
 **Step 4: Commit**
 
@@ -1117,8 +1130,10 @@ git commit -m "feat(p06-t01): make the hub the recap floor with justified expans
 - Create: `.agents/skills/explainer-kit/schemas/visual-review-request.v2.schema.json`
 - Create: `.agents/skills/explainer-kit/schemas/visual-review-result.v2.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs` (registry version dispatch — the unversioned visual-review keys currently map only to v1)
 - Modify: `.agents/skills/explainer-kit/references/visual-review.md`
 - Modify: `.agents/skills/explainer-kit/tests/visual-matrix.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
 
 **Step 1: Write test (RED)**
 
@@ -1127,17 +1142,22 @@ hierarchy, composition/balance, information density, medium leverage,
 template repetition, diagram semantics, cross-artifact cohesion); results
 require per-dimension scored findings; verdict vocabulary separates `pass`
 (design bar met) from `correct` (legible but weak) and failing states;
-results missing dimensions are rejected. Existing accessibility, keyboard,
-reduced-motion, print, and mobile requirements remain necessary conditions.
+results missing dimensions are rejected. Registry propagation is in scope:
+`visual-review.mjs` emits and validates through the contract registry, so
+new runs must **emit and validate v2** while retained v1 requests/results
+still validate for replay, with request-bound result validation covering
+both versions. Existing accessibility, keyboard, reduced-motion, print, and
+mobile requirements remain necessary conditions.
 
 **Step 2: Implement (GREEN)**
 
-v2 schemas, validation, and reviewer guidance.
+v2 schemas, registry version dispatch, v2 emission in `visual-review.mjs`,
+validation, and reviewer guidance.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/visual-matrix.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs`
-Expected: green
+Run: `node --test .agents/skills/explainer-kit/tests/visual-matrix.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs`
+Expected: green (every changed test file executes)
 
 **Step 4: Commit**
 
@@ -1229,33 +1249,43 @@ through every shipped consumer outside the two core seams.
 
 **Files:**
 
-- Modify: `tools/release/validate-explainer-acceptance.mjs` (accept receipt v1/v2)
+- Modify: `tools/release/validate-explainer-acceptance.mjs` (accept receipt v1/v2; publish-request key check accepts optional `publicAccess`)
 - Modify: `tools/release/run-explainer-rc.mjs` (accept receipt v1/v2)
+- Modify: `tools/release/validate-explainer-acceptance.test.mjs`
+- Modify: `tools/release/run-explainer-rc.test.mjs` (and `run-explainer-rc.integration.test.mjs` where affected)
 - Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs` (assert v1 replay and v2 emission)
+- Modify: `tools/smoke/explainer-kit/fixtures/private-wrapper.mjs` (accepts receipt v1 and v2)
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs` (visual-review result acceptance: v1 and v2)
 - Modify: `.agents/skills/oat-explainer-kit/references/author-callback.md` (author v2/v3)
 - Modify: `.agents/skills/oat-explainer-kit/references/visual-review-callback.md` (visual-review v1/v2)
 - Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Modify: affected request fixtures under the release/smoke trees
 
 **Step 1: Write test (RED)**
 
 For each versioned contract pair — publish-receipt v1/v2, theme v1/v2,
 author-request v2/v3, author-result v2/v3, set-plan v1/v2, visual-review
-v1/v2 — shipped consumers accept both versions: the release acceptance
-validator and RC runner validate v2 receipts while still reading retained v1
-receipts; the private-wrapper smoke surface proves v1 replay and v2 emission;
-adapter callback contracts and integration tests exercise the new author and
-visual-review versions end to end. New-run emission and retained-version
-replay are both proven before provider sync.
+v1/v2 — every **executable** shipped consumer accepts both versions, not just
+the documentation: the release acceptance validator and RC runner validate v2
+receipts while still reading retained v1 receipts, and the validator's closed
+publish-request key check accepts the optional `publicAccess` field
+(protected-request coverage included); the private-wrapper smoke fixture
+accepts both receipt versions and the smoke suite proves v1 replay and v2
+emission; the adapter implementation (`run.mjs`, which currently accepts only
+`visual-review-result/v1`) accepts v1 and v2 results, exercised end to end by
+the adapter integration tests; callback references document both versions.
+New-run emission and retained-version replay are both proven before provider
+sync, with every focused suite executed.
 
 **Step 2: Implement (GREEN)**
 
-Version dispatch in release tooling and smoke fixtures; adapter callback
-reference and test migration.
+Version dispatch in release tooling, smoke fixture, and the adapter
+implementation; callback reference migration; fixture updates.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs && pnpm lint && pnpm format`
-Expected: green; lint and format clean (touches `tools/smoke` and `.agents/skills/**`)
+Run: `node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs tools/release/validate-explainer-acceptance.test.mjs tools/release/run-explainer-rc.test.mjs && pnpm lint && pnpm format`
+Expected: adapter, smoke, and release-tool focused suites green; lint and format clean (touches `tools/smoke` and `.agents/skills/**`)
 
 **Step 4: Commit**
 
@@ -1349,7 +1379,7 @@ git commit -m "chore(p07-t02): lockstep public package bump and release validati
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T004027Z.md (2 Important + 1 Medium resolved in artifact; operator authorized attempt 3) | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T005429Z.md (4 Important + 2 Medium resolved in artifact)                                | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T012159Z.md                                                                                       | -             | -          | -                        |
-| plan   | artifact | received        | 2026-08-06 | reviews/artifact-plan-review-2026-08-06T012720Z.md                                                                                       | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012720Z.md (3 Important + 1 Medium resolved in plan and design)                         | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

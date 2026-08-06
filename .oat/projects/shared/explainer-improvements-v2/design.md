@@ -27,9 +27,11 @@ internal-link validator plus canonical artifact URLs in author requests, so
 free-form authors can no longer invent directory-style links; and publication
 gains an explicit protected-destination policy (operator-approved
 2026-08-05): a destination explicitly declared protected in config verifies
-published bytes through authenticated in-bucket object checks (hash and
-metadata compared against the manifest) and records canonical public URLs in
-the receipt without fetching them, marked as
+published bytes through authenticated service-computed object checksums
+(upload with an S3-validated SHA-256 checksum and compare the stored service
+checksum against the manifest hash, or authenticated download plus byte
+hashing — never caller-authored metadata round-trips) and records canonical
+public URLs in the receipt without fetching them, marked as
 skipped-protected; undeclared destinations keep the strict credential-free
 anonymous check and fail closed on 401/403. No injected verification
 callback is built; a 401 is never treated as success — verification is
@@ -219,13 +221,19 @@ complete publication records.
   `public`, preserving current strict behavior).
 - `public`: unchanged sentinel + anonymous byte verification.
 - `protected`: skip anonymous fetches entirely; verify each uploaded object
-  via authenticated `head-object` hash/metadata comparison against the
-  manifest; record canonical public URLs unfetched, verification result
-  `verified-authenticated` per object with public fetch `skipped-protected`.
+  against **service-computed bytes** — upload with an S3-validated SHA-256
+  checksum and compare the stored service checksum against the manifest hash
+  (or authenticated download plus byte hashing). Caller-authored object
+  metadata never satisfies verification. Record canonical public URLs
+  unfetched.
+- Per-artifact verification is a **structured result with separate fields**
+  for object-byte verification (`verified-anonymous | verified-authenticated`
+  plus the compared service checksum/hash) and public-URL verification
+  (`verified | skipped-protected`), so protected receipts record both facts.
 - Receipt (`publish-receipt.json`, durable in the run package) lists every
   artifact's ID, rendered path, S3 URI, canonical public URL, content hash,
-  and verification result. Lifecycle summaries copy the complete URL set from
-  the receipt instead of recording only the hub.
+  and the structured verification result. Lifecycle summaries copy the
+  complete URL set from the receipt instead of recording only the hub.
 - Published bytes always match finalized manifest hashes; no
   publication-time transformation exists anywhere in the connector.
 
@@ -350,9 +358,10 @@ additive where possible; consumers reject unknown schema versions as today.
   (default `public`). Roots remain credential-free; no other trust-model
   fields change.
 - **Publish receipt (revised):** per-artifact entries gain canonical public
-  URL and a structured verification result
-  (`verified-anonymous | verified-authenticated | skipped-protected` plus the
-  compared hash). Receipt remains atomic and durable in the run package.
+  URL and a structured verification result with separate object-byte
+  (`verified-anonymous | verified-authenticated`, plus the compared service
+  checksum/hash) and public-URL (`verified | skipped-protected`) fields.
+  Receipt remains atomic and durable in the run package.
 - **Author request (revised):** gains the canonical artifact link table
   (artifact ID → site-relative canonical URL from the authoring artifact's
   location) and, for structured artifacts, the structured-content contract

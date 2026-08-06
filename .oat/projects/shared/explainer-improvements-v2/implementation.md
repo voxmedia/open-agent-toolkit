@@ -47,6 +47,17 @@ escalated to the operator.
   swapped), and file-list/verify-command drift in p03-t03 and p04-t02
   (fixed). Plan now totals 32 tasks.
 
+- **Attempt 4** (operator standing direction to iterate;
+  `artifact-plan-review-2026-08-06T012720Z.md`): attempt-3 findings confirmed
+  resolved; 3 Important + 1 Medium new — `publicAccess` missing from CLI
+  config surfaces (fixed: p01-t02 expanded to `packages/cli/src/config/**`
+  and command catalog), visual-review v2 registry dispatch missing (fixed in
+  p06-t02), executable consumers missing from p06-t05 (fixed: adapter
+  `run.mjs`, private-wrapper fixture, release-tool tests, `publicAccess`
+  key-check), and stale design.md protected-verification wording (fixed:
+  design aligned to service-checksum verification and split verification
+  fields).
+
 Operator disposition recorded in the conversation and reflected in the plan's
 `## Reviews` table.
 
