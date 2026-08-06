@@ -1,6 +1,6 @@
 ---
 name: oat-project-retro
-version: 1.0.0
+version: 1.0.1
 description: Use when the user requests or confirms a project retrospective — e.g. "run the project retro", "write project-retro.md", "retrospective this project", or confirms a previously offered retro. Do NOT auto-invoke merely because implementation or summary completed. Produces references/project-retro.md from project logs, execution learnings, and session/transcript evidence, with repo improvements and OAT upstream feedback.
 disable-model-invocation: false
 user-invocable: true
@@ -96,15 +96,26 @@ Required contracts:
 3. Use stable `RP-NN` and `UP-NN` item IDs.
 4. Give every RP item a `Type`, authoritative `Disposition: apply | file`, and
    fields/status matching that disposition.
-5. Start every actionable item at `Status: proposed`.
-6. Keep the upstream section and its explicit empty-state line when no item is
+5. Give every register item a mutable `Disposition-note` initialized to `—`.
+6. Start every actionable item at `Status: proposed`.
+7. Keep the upstream section and its explicit empty-state line when no item is
    warranted.
-7. Derive `oat_retro_promotions` from RP apply-items and `oat_retro_filing`
+8. Derive `oat_retro_promotions` from RP apply-items and `oat_retro_filing`
    from UP items plus RP file-items.
 
-Before the artifact can be considered complete, set `oat_generated: true` and
-`oat_template: false`, and remove `oat_template_name` entirely. A rendered
-artifact must never retain scaffold-only template markers.
+Before the artifact can be considered complete:
+
+- set `oat_retro_project` to the non-null project slug;
+- set `oat_retro_generated` to a non-null UTC generation timestamp in
+  `YYYY-MM-DDTHH:MM:SSZ` form;
+- reject all unreplaced scaffold item examples and placeholders, including
+  example `RP-01`/`RP-02`/`UP-01` headings, brace-delimited instructional text,
+  and template-only empty item blocks;
+- set `oat_generated: true` and `oat_template: false`; and
+- remove `oat_template_name` entirely.
+
+A rendered artifact must never retain scaffold-only template markers or null
+provenance.
 
 ### Step 4: Resolve Post-Generation Consent
 
@@ -143,7 +154,12 @@ Verify:
 - required core sections exist;
 - evidence availability is explicit;
 - every RP item has a valid disposition and matching fields/status;
+- every register item has a `Disposition-note`;
 - rollups are derivable from register fields;
+- `oat_retro_project` is a non-null project slug;
+- `oat_retro_generated` is a valid UTC generation timestamp;
+- no unreplaced scaffold item examples, placeholders, or brace-delimited
+  instructions remain;
 - rendered template metadata is retired; and
 - no unrelated implementation file changed.
 

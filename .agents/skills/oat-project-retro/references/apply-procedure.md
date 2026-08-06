@@ -46,8 +46,27 @@ continues immediately, this can be written back together with the final
    oat decision new "<title>" --status accepted --context "<context>" --decision "<decision>" --consequences "<consequences>"
    ```
 
-   Use the generated record and index. Never hand-author a decision ID or edit
-   the managed index.
+   Before creating it, compute the slug with the CLI's lowercase,
+   ASCII-folded, hyphen-collapsed, 30-character whole-word rule (including
+   trailing stop-word trimming). Perform a **date-independent exact-slug**
+   lookup for `DR-<6 digits>-<slug>.md`; never use a loose suffix glob. When
+   one exact-slug record exists, read it and verify its normalized title,
+   context, decision, and consequences represent the current proposal. If they
+   match, treat this as interrupted post-side-effect recovery: do not create a
+   duplicate, and recover `Applied-ref` from that record's ID/path. If they do
+   not match, stop for direction rather than linking an unrelated decision.
+
+   ```bash
+   ls .oat/repo/reference/decisions/DR-??????-"<slug>".md 2>/dev/null
+   ```
+
+   The six `?` characters anchor the date segment to exactly six characters;
+   compare the remaining slug for exact equality.
+
+   When no exact match exists, run `oat decision new`, capture its reported
+   ID/path, and verify the record represents the current proposal before
+   writeback. Use the generated record and index. Never hand-author a decision
+   ID or edit the managed index.
 
 5. **Code follow-up:** do not implement it here, even when technically small.
    A code follow-up defaults to `Disposition: file`.
@@ -58,15 +77,28 @@ After a successful application:
 
 - set `Status: applied`;
 - set `Applied-ref` to the resulting commit/path reference; and
+- clear `Disposition-note` to `—`; and
 - recompute `oat_retro_promotions` from all RP apply-items.
 
-On explicit rejection, set `Status: rejected` and preserve the reason in item
-prose. On transient failure, leave `Status: proposed` (or `approved` when
-approval remains valid), report the failure, and continue only when safe.
+On explicit rejection, set `Status: rejected` and write the reason to the
+mutable `Disposition-note` field. On transient failure, leave
+`Status: proposed` (or `approved` when approval remains valid), record bounded
+execution context in `Disposition-note`, report the failure, and continue only
+when safe.
 
-Apply mode may mutate only `Status`, `Applied-ref`, and the promotions rollup
-inside the artifact. It must not alter file-items, UP items,
-`oat_retro_filing`, item IDs, dispositions, or proposal bodies.
+Apply mode may mutate only `Status`, `Applied-ref`, `Disposition-note`, and the
+promotions rollup inside the artifact. It must not alter file-items, UP items,
+`oat_retro_filing`, item IDs, dispositions, or proposal bodies. Proposal bodies
+are stable and immutable after generation.
+
+Compute `oat_retro_promotions` exactly:
+
+- `none` when no apply items exist;
+- `proposed` when apply items exist and none are settled;
+- `partial` for a mix of settled and unsettled apply items; and
+- `complete` when all apply items are settled.
+
+`proposed` and `approved` are unsettled; `applied` and `rejected` are settled.
 
 ## Commit and Resume Strategy
 
@@ -80,3 +112,12 @@ inside the artifact. It must not alter file-items, UP items,
   verify the item still has the expected pre-apply status.
 - On re-run, rescan the artifact and process only remaining
   `proposed | approved` apply-items. Never repeat an `applied` item.
+
+For **every apply type**, perform post-side-effect recovery before repeating an
+eligible item: inspect the declared target for the exact proposed semantic
+change, verify the existing result represents the current proposal, and
+recover `Applied-ref` when it does. This includes docs, agent-instruction,
+rule, and decision items. A matching side effect plus missing writeback is an
+interrupted success, not permission to apply twice. A partial, divergent, or
+unverifiable target requires direction; never overwrite or claim it
+automatically.

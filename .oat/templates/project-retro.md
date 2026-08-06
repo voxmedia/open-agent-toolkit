@@ -19,9 +19,11 @@ oat_template_name: project-retro
 
 # Project Retrospective: {Project Name}
 
-<!-- Rendered artifacts must set oat_template: false and remove
-     oat_template_name. Record every inspected evidence source above with
-     status: used | unavailable. -->
+<!-- Rendered artifacts must replace oat_retro_project with a non-null project
+     slug and oat_retro_generated with a UTC YYYY-MM-DDTHH:MM:SSZ timestamp,
+     set oat_template: false, and remove oat_template_name. Record every
+     inspected evidence source above with status: used | unavailable. Remove
+     all brace-delimited placeholders and scaffold RP/UP item examples. -->
 
 ## Executive Summary
 
@@ -105,13 +107,16 @@ caused them.}
        Status: proposed | approved | applied | rejected
        Target: repository path
        Applied-ref: commit/path after application
+       Disposition-note: rejection, recovery, or outcome detail
 
      File item fields:
        Status: proposed | filed | rejected | no-destination
        Destination: issue URL or backlog item ID/path
+       Disposition-note: rejection, recovery, or outcome detail
 
      Consumers may mutate only Status, Applied-ref or Destination, and
-     Sanitized. IDs, Type, Disposition, titles, and bodies are stable. -->
+     Sanitized, Disposition-note, plus the corresponding frontmatter rollup.
+     IDs, Type, Disposition, titles, and proposal bodies are stable. -->
 
 ### RP-01: {Actionable repo improvement}
 
@@ -120,6 +125,7 @@ caused them.}
 - **Status:** proposed
 - **Target:** {repository path}
 - **Applied-ref:** —
+- **Disposition-note:** —
 
 {Rationale, evidence summary, and concrete proposed change.}
 
@@ -130,6 +136,7 @@ caused them.}
 - **Status:** proposed
 - **Destination:** —
 - **Sanitized:** no
+- **Disposition-note:** —
 
 {Problem, evidence summary, and suggested direction.}
 
@@ -138,7 +145,8 @@ caused them.}
 <!-- Stable IDs: UP-NN. Status: proposed | filed | rejected | no-destination.
      Destination records the issue URL or backlog item ID/path. Sanitized
      records whether the public-destination verification passed. Consumers may
-     mutate only Status, Destination, and Sanitized. -->
+     mutate only Status, Destination, Sanitized, Disposition-note, and the
+     filing rollup. IDs, titles, and proposal bodies are stable. -->
 
 No upstream feedback identified.
 
@@ -149,12 +157,18 @@ No upstream feedback identified.
 - **Status:** proposed
 - **Destination:** —
 - **Sanitized:** no
+- **Disposition-note:** —
 
 {Problem, evidence summary, and suggested direction.}
 -->
 
 <!-- Rollup derivation:
      oat_retro_promotions derives only from RP items with Disposition: apply.
+       `none`: no apply items exist.
+       `proposed`: apply items exist and none are settled.
+       `partial`: a mix of settled and unsettled apply items exists.
+       `complete`: all apply items are settled.
+       `proposed` and `approved` are unsettled; `applied` and `rejected` are settled.
      oat_retro_filing derives from all UP items plus RP items with
      Disposition: file.
      Each rollup is none | proposed | partial | complete and must be

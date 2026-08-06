@@ -1,6 +1,6 @@
 ---
 name: oat-project-retro-file
-version: 1.0.0
+version: 1.0.1
 description: Use when the user requests or confirms filing proposed feedback from a project retro into repository or upstream GitHub issues and OAT backlog items. Runs destination capability, duplicate, approval, and sanitization checks before filing, then writes destinations and statuses back to the retro artifact.
 disable-model-invocation: false
 user-invocable: true
@@ -124,6 +124,9 @@ These are defaults, not universal fallbacks.
 - Absent config or `none` files nothing for that lane.
 - Do not choose an alternative destination automatically.
 - Explicit filing config is consent only for that configured destination.
+- Configured destination consent authorizes creating a new item only when no
+  duplicate is found and all destination-required metadata is already present.
+  It does not authorize modifying an existing destination.
 
 Items in a lane with no usable destination become `Status: no-destination`
 only after the lane is reported loudly with the unblock action.
@@ -150,7 +153,8 @@ Search titles and distinguishing keywords across:
 
 Include archived/completed work so recently closed items are not refiled.
 
-For a suspected duplicate, select one explicit disposition:
+For a suspected duplicate in an interactive run, select one explicit
+disposition:
 
 1. **Strengthen** — default when applicable. Add this run's new evidence to
    the existing issue as a comment, or append a concise evidence/insight note
@@ -161,6 +165,17 @@ For a suspected duplicate, select one explicit disposition:
 
 Strengthened and linked items receive `Status: filed` and the existing
 `Destination`.
+
+**Deterministic non-interactive duplicate handling:** configured filing consent
+does not grant separate consent to mutate an existing destination. Do not
+strengthen, edit, comment on, or refile an external duplicate without separate
+consent recorded for that side effect. When the search result is a validated
+existing destination that unambiguously represents the current item and policy
+permits linking, safely link it without an external write: set
+`Status: filed`, copy its URL/path to `Destination`, and explain the recovery
+in `Disposition-note`. If the candidate is ambiguous or linking is not
+permitted, perform no external write, leave the item unsettled, and report the
+candidate for a future interactive disposition.
 
 ### Step 6: Sanitize Public-Destination Content
 
@@ -203,17 +218,30 @@ Follow `oat-pjm-add-backlog-item` conventions:
 Never hand-author an item ID or edit inside managed index markers. Capture the
 created item ID/path.
 
+For non-interactive backlog filing, all required backlog metadata — title,
+description, acceptance criteria, labels, priority, scope, and scope estimate —
+must already be explicit in the retro item. When any required backlog metadata
+is missing, perform **no external write**: do not prompt or invent values, leave
+the item unsettled at its current eligible status, record the missing field
+names in `Disposition-note`, and report the missing metadata. Configuration
+selects the destination; it does not supply or authorize inferred tracker
+content.
+
 ### Step 8: Write Back Statuses and Rollup
 
 For each confirmed filing, strengthening, or link:
 
 - set `Status: filed`;
 - set `Destination` to the issue URL or backlog ID/path; and
+- set `Disposition-note` to a concise filing/linking outcome or `—`; and
 - set `Sanitized: yes` when the public-destination check ran.
 
-For explicitly rejected items, set `Status: rejected`. For an unavailable
-configured lane, set `Status: no-destination` and keep `Destination: —`.
-Execution failures remain `proposed`.
+For explicitly rejected items, set `Status: rejected` and preserve the reason
+in `Disposition-note`. For an unavailable configured lane, set
+`Status: no-destination`, keep `Destination: —`, and record the unblock action
+in `Disposition-note`. Execution failures and missing-metadata cases remain
+unsettled at their current eligible status with bounded detail in
+`Disposition-note`.
 
 Recompute `oat_retro_filing` from all UP items plus RP file-items:
 
@@ -222,8 +250,10 @@ Recompute `oat_retro_filing` from all UP items plus RP file-items:
 - `partial`: some, but not all, items are settled;
 - `complete`: every filing item is `filed` or `rejected`.
 
-Do not alter apply-items, `Applied-ref`, item proposal bodies,
-`oat_retro_promotions`, or any RP disposition.
+Filing mode may mutate only `Status`, `Destination`, `Sanitized`,
+`Disposition-note`, and `oat_retro_filing` on selected filing items. Do not
+alter apply-items, `Applied-ref`, `oat_retro_promotions`, or any RP
+disposition. Proposal bodies are stable and immutable after generation.
 
 Format and commit the retro writeback with created/strengthened backlog files
 when local. GitHub destinations are represented by their recorded URLs. On
