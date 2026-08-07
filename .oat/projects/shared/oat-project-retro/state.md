@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p05'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: complete
+oat_phase_status: pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -53,8 +53,8 @@ oat_implement_exit_gate:
   reviewed_head: a6b5ea4f2b6c40bb55e1120155f9ce122eb5dffb
   implementation_base_ref: refs/remotes/origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:d941f0f7463ac22630abcd18bafb43450c0189a2181b6b0d1fe158e001cbd22e'
-  freshness_head: ea0cb49418cdb4f375dce84c3347afd53fffeeed
-  freshness_fingerprint: 'sha256:effective-delta-v1:8407e1a0764bded2f1220c018f09d7fd3b98c0ab158c3e7b27e3cae80b3ce354'
+  freshness_head: 96eccd01ef41a5e2d27f6f1c274a9baa19312ead
+  freshness_fingerprint: 'sha256:effective-delta-v1:9ddb575bbf02065be706ae63ba71137bcf3094026740d69b953de1b2a1917fc2'
   launch_state: not_started
   launch_attempt_id: null
   launch_started_at: null
@@ -74,15 +74,15 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-08-07T02:29:00Z'
+  updated_at: '2026-08-07T02:33:00Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: complete
   source: configured
   final_phase: p-rev1
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
-  approval: pending
-  approval_source: null
+  pre_approval_completed: [summary, document, pr]
+  approval: not_required
+  approval_source: policy
   post_approval: []
   post_approval_completed: []
   failure: null
@@ -91,20 +91,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/192' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:27:39.069Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-07T02:29:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-07T02:33:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-retro
 
-**Status:** Post-implementation sequence in progress
+**Status:** PR open
 **Started:** 2026-08-05
 **Last Updated:** 2026-08-07
 
 ## Current Phase
 
-Implementation complete — running configured summary, documentation, and PR
-refresh.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -123,6 +122,7 @@ refresh.
 - ✓ Final review tool-grant fix verified
 - ✓ Final whole-project review passed
 - ✓ PR created
+- ⧗ Awaiting human review
 - ✓ Revision compatibility prerequisite implemented and independently reviewed
 - ✓ Four dogfood revision tasks implemented and independently reviewed
 - ✓ All ordered CI, docs, bundle, and release-validation gates passed
@@ -133,6 +133,8 @@ None
 
 ## Next Milestone
 
-Continue the persisted post-implementation sequence from `pr`. Afterwards
-return the project to `pr_open` and dogfood the revised workflow on another
-project.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
