@@ -156,6 +156,10 @@ Accepted and verified the homogeneous-wave axis-parity fix; rebased release meta
 
 Accepted and verified the engine-first consumer-load and request-selector mapping fixes in 4d59b8f7; strengthened coverage also corrected Cursor Cloud ordering. See implementation.md.
 
+### 2026-08-07 · structural · oat-project-retro · references/project-retro.md
+
+artifact=.oat/projects/shared/subagent-orchestration/references/project-retro.md evidence=project-log,lifecycle-artifacts,repo-reference-ledgers unavailable=oat-execution-learnings,review-artifacts,session-transcript promotions=1 filing=1 apply=deferred filing=deferred
+
 ## End-of-run synthesis
 
 Overall verdict: the guidance/mechanics split shipped through all five phases, full verification, independent final review, documentation synchronization, and a refreshed cross-family exit gate with no remaining findings. Adopted adjustments included bounded fixes for autonomy/version drift, stronger contract coverage, explicit legacy-record compatibility, an operator-authorized Phase 3 recovery, and reviewed-task cherry-picks after the duplicate bootstrap-sync manifest conflict. Durable outcomes were recorded in PJM current-state/backlog surfaces and four canonical decision records; no project judgment entries or follow-up-marked observations required separate ledger or backlog graduation.
