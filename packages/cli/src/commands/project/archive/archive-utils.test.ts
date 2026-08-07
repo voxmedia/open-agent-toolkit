@@ -920,7 +920,31 @@ describe('archive utils', () => {
     },
   );
 
-  it('re-verifies terminal evidence after staging the export copy', async () => {
+  it('rejects terminal evidence symlinked outside the selected recap run', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(
+      repoRoot,
+      '.oat',
+      'projects',
+      'shared',
+      'symlinked',
+    );
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      outcome: 'failed',
+    });
+    const evidencePath = join(recap.runRoot, 'terminal-evidence.json');
+    const externalEvidencePath = join(repoRoot, 'external-evidence.json');
+    await writeFile(externalEvidencePath, await readFile(evidencePath));
+    await rm(evidencePath);
+    await symlink(externalEvidencePath, evidencePath);
+
+    await expect(
+      verifySelectedProjectRecapForArchive(projectPath, recap.relativeRunPath),
+    ).rejects.toThrow(/terminal evidence|symbolic link|run root/i);
+  });
+
+  it('rejects schema-valid terminal evidence byte substitution while staging', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'staged');
     await mkdir(projectPath, { recursive: true });
@@ -934,7 +958,10 @@ describe('archive utils', () => {
         const evidence = JSON.parse(
           await readFile(evidencePath, 'utf8'),
         ) as Record<string, unknown>;
-        evidence.manifestHash = `sha256:${'e'.repeat(64)}`;
+        evidence.error = {
+          code: 'E_RUN',
+          message: 'Schema-valid substituted failure evidence.',
+        };
         await writeFile(evidencePath, `${JSON.stringify(evidence)}\n`);
       }
     });
@@ -951,7 +978,7 @@ describe('archive utils', () => {
         },
         { copyDirectory },
       ),
-    ).rejects.toThrow(/terminal evidence/i);
+    ).rejects.toThrow(/terminal evidence|changed while staging|byte/i);
     await expect(access(projectPath)).resolves.toBeUndefined();
   });
 

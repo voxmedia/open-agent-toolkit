@@ -33,6 +33,7 @@ import {
   writeVisualRevision,
 } from '../scripts/lib/records.mjs';
 import { planExplainerSet } from '../scripts/lib/set-plan.mjs';
+import { assertTerminalEvidence } from '../scripts/lib/terminal-evidence.mjs';
 
 const HASH = `sha256:${'a'.repeat(64)}`;
 const tempDirs = [];
@@ -320,6 +321,65 @@ test('retains compact flagged and failed terminal evidence', async () => {
   }
 });
 
+test('requires meaningful evidence for every flagged or failed terminal outcome', async () => {
+  for (const outcome of ['built-needs-review', 'failed']) {
+    const outputRoot = await temporaryDirectory();
+    const run = await initializeRun(
+      request(outputRoot, { slug: `Empty ${outcome}` }),
+    );
+    const terminalManifest = { runId: run.runId, slug: run.slug, outcome };
+    const emptyEvidence = {
+      schemaVersion: 'explainer-kit.terminal-evidence/v1',
+      runId: run.runId,
+      outcome,
+      manifestHash: canonicalHash(terminalManifest),
+      findings: [],
+      evidenceDisposition: 'partial',
+    };
+
+    assert.throws(
+      () =>
+        assertTerminalEvidence(emptyEvidence, { manifest: terminalManifest }),
+      /finding|error/i,
+    );
+    await assert.rejects(
+      writeTerminalEvidence(run, {
+        outcome,
+        manifest: terminalManifest,
+        findings: [],
+        evidenceDisposition: 'partial',
+      }),
+      /finding|error/i,
+    );
+  }
+});
+
+test('normalizes primitive terminal failures into a safe bounded envelope', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(
+    request(outputRoot, { slug: 'Primitive Failure' }),
+  );
+  const terminalManifest = {
+    runId: run.runId,
+    slug: run.slug,
+    outcome: 'failed',
+  };
+
+  await writeTerminalEvidence(run, {
+    outcome: 'failed',
+    manifest: terminalManifest,
+    error: 'Authorization: Basic cHJpbWl0aXZlOnNlY3JldA==',
+    evidenceDisposition: 'retained',
+  });
+
+  const retained = await readFile(
+    join(run.runRoot, 'terminal-evidence.json'),
+    'utf8',
+  );
+  assert.doesNotMatch(retained, /cHJpbWl0aXZlOnNlY3JldA==/);
+  assert.match(retained, /\[redacted\]/);
+});
+
 test('redacts and bounds every retained terminal finding field', async () => {
   const outputRoot = await temporaryDirectory();
   const run = await initializeRun(request(outputRoot));
@@ -333,6 +393,10 @@ test('redacts and bounds every retained terminal finding field', async () => {
     'finding-token',
     'AKIAIOSFODNN7EXAMPLE',
     'credentialed-url-password',
+    'quoted-json-secret',
+    'quoted-yaml-secret',
+    'YmFzaWMtdXNlcjpiYXNpYy1zZWNyZXQ=',
+    'ghp_abcdefghijklmnopqrstuvwxyz123456',
   ];
   const oversized = 'finding-payload-'.repeat(500);
   await writeTerminalEvidence(run, {
@@ -343,8 +407,15 @@ test('redacts and bounds every retained terminal finding field', async () => {
         artifactId: `password=${secrets[0]}`,
         rubric: `token=${secrets[1]}`,
         severity: `aws_access_key_id=${secrets[2]}`,
-        evidence: `https://user:${secrets[3]}@example.com/private ${oversized}`,
-        correction: `password=${secrets[0]} ${oversized}`,
+        evidence: [
+          `https://user:${secrets[3]}@example.com/private`,
+          `{"password":"${secrets[4]}"}`,
+          `token: '${secrets[5]}'`,
+          `Authorization: Basic ${secrets[6]}`,
+          secrets[7],
+          oversized,
+        ].join(' '),
+        correction: `password=${secrets[0]} Authorization: Bearer bearer-secret ${oversized}`,
       },
     ],
     evidenceDisposition: 'retained',
@@ -381,6 +452,34 @@ test('redacts and bounds every retained terminal finding field', async () => {
     }),
     /compact shape|primitive|string/i,
   );
+});
+
+test('scrubs visual review failure fields before retention', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(
+    request(outputRoot, { slug: 'Secret Review Failure' }),
+  );
+  const error = Object.assign(
+    new Error(
+      '{"password":"review-secret"} Authorization: Basic cmV2aWV3OnNlY3JldA==',
+    ),
+    { code: 'E_VISUAL_REVIEW token=review-code-secret' },
+  );
+
+  await writeVisualReviewFailure(run, { attempt: 1, error });
+
+  const retained = await readFile(
+    join(run.runRoot, 'qa/review-gate/attempt-1-error.json'),
+    'utf8',
+  );
+  for (const secret of [
+    'review-secret',
+    'cmV2aWV3OnNlY3JldA==',
+    'review-code-secret',
+  ]) {
+    assert.equal(retained.includes(secret), false);
+  }
+  assert.match(retained, /\[redacted\]/);
 });
 
 test('supersedes retained evidence with replacement run identity and manifest hash', async () => {

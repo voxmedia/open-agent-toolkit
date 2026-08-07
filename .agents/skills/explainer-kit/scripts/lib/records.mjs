@@ -18,6 +18,8 @@ import { resolveRootConfinedPath } from './safe-paths.mjs';
 import {
   assertTerminalEvidence,
   createTerminalEvidence,
+  normalizeRetainedError,
+  scrubRetainedText,
 } from './terminal-evidence.mjs';
 
 export {
@@ -141,10 +143,21 @@ export async function updateBuildRecord(run, stage) {
     ...current,
     status: stage.status,
     outputPaths: stage.outputPaths ?? current.outputPaths,
-    warnings: stage.warnings ?? current.warnings,
+    warnings: (stage.warnings ?? current.warnings).map((warning, index) =>
+      scrubRetainedText(warning, `stage warning ${index + 1}`),
+    ),
   };
   if (stage.error !== undefined) {
-    next.error = stage.error;
+    const normalized = normalizeRetainedError(stage.error, {
+      defaultCode: 'E_STAGE',
+      defaultMessage: 'The stage failed.',
+    });
+    next.error = {
+      ...normalized,
+      recovery: (stage.error?.recovery ?? []).map((step, index) =>
+        scrubRetainedText(step, `stage recovery ${index + 1}`),
+      ),
+    };
   }
   if (stage.status === 'running' && next.startedAt === undefined) {
     next.startedAt = timestamp;
@@ -206,6 +219,17 @@ export async function writeVisualReviewAttempt(run, { attempt, review } = {}) {
       'Visual review records must contain valid bound contracts.',
     );
   }
+  const retainedResult = scrubVisualReviewResult(review.result);
+  const retainedResultValidation = validateContract(
+    'visual-review-result',
+    retainedResult,
+    { visualReviewRequest: review.request },
+  );
+  if (!retainedResultValidation.valid) {
+    throw new Error(
+      'Visual review result could not be safely normalized for retention.',
+    );
+  }
 
   const directory = `qa/visual-review/attempt-${attempt}`;
   const retainedRequest = structuredClone(review.request);
@@ -232,7 +256,7 @@ export async function writeVisualReviewAttempt(run, { attempt, review } = {}) {
   const requestPath = `${directory}/request.json`;
   const resultPath = `${directory}/result.json`;
   await writeJsonAtomic(run.runRoot, requestPath, retainedRequest);
-  await writeJsonAtomic(run.runRoot, resultPath, review.result);
+  await writeJsonAtomic(run.runRoot, resultPath, retainedResult);
   return [...paths, requestPath, resultPath];
 }
 
@@ -243,19 +267,22 @@ export async function writeVisualReviewFailure(
   assertRun(run);
   if (
     ![1, 2].includes(attempt) ||
-    !(error instanceof Error) ||
+    error === undefined ||
     !Array.isArray(evidence)
   ) {
     throw new TypeError(
-      'Visual review failures require an attempt, Error, and evidence array.',
+      'Visual review failures require an attempt, error, and evidence array.',
     );
   }
+  const normalized = normalizeRetainedError(error, {
+    defaultCode: 'E_VISUAL_REVIEW',
+    defaultMessage: 'Visual review failed.',
+  });
   const path = `qa/review-gate/attempt-${attempt}-error.json`;
   await writeJsonAtomic(run.runRoot, path, {
     schemaVersion: 'explainer-kit.visual-review-error/v1',
     attempt,
-    code: error.code ?? 'E_VISUAL_REVIEW',
-    message: error.message,
+    ...normalized,
     evidencePaths: evidence.flatMap(({ screenshotPath, metricsPath }) => [
       screenshotPath,
       metricsPath,
@@ -275,8 +302,7 @@ export async function writeTerminalEvidence(
       evidenceDisposition,
     ) ||
     !Array.isArray(findings) ||
-    findings.some((finding) => !isObject(finding)) ||
-    (error !== undefined && !isObject(error))
+    findings.some((finding) => !isObject(finding))
   ) {
     throw new TypeError('Terminal evidence has an invalid compact shape.');
   }
@@ -844,6 +870,30 @@ function assertValidContract(kind, value, context) {
       .join('; ');
     throw new Error(`Invalid ${kind}: ${details}`);
   }
+}
+
+function scrubVisualReviewResult(result) {
+  return scrubRetainedValue(result, 'visual review result');
+}
+
+function scrubRetainedValue(value, label) {
+  if (typeof value === 'string') {
+    return scrubRetainedText(value, label);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item, index) =>
+      scrubRetainedValue(item, `${label}[${index}]`),
+    );
+  }
+  if (isObject(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        key,
+        scrubRetainedValue(item, `${label}.${key}`),
+      ]),
+    );
+  }
+  return value;
 }
 
 function assertRun(run) {

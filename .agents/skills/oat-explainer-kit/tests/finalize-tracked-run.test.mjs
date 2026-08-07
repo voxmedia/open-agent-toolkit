@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
@@ -296,6 +303,40 @@ test('finalizes flagged and failed evidence without promoting either outcome', a
       errors: [],
     });
   }
+});
+
+test('rejects terminal evidence symlinked outside the tracked run', async () => {
+  const fixture = await createRun({ outcome: 'failed' });
+  const manifest = JSON.parse(await readFile(fixture.manifestPath, 'utf8'));
+  await writeTerminalEvidence(
+    {
+      runId: manifest.runId,
+      slug: manifest.slug,
+      runRoot: fixture.runRoot,
+    },
+    {
+      outcome: 'failed',
+      manifest,
+      error: { code: 'E_RUN', message: 'The run failed.' },
+      evidenceDisposition: 'retained',
+    },
+  );
+  const evidencePath = join(fixture.runRoot, 'terminal-evidence.json');
+  const externalEvidencePath = join(
+    fixture.repoRoot,
+    'external-terminal-evidence.json',
+  );
+  await writeFile(externalEvidencePath, await readFile(evidencePath));
+  await rm(evidencePath);
+  await symlink(externalEvidencePath, evidencePath);
+
+  await assert.rejects(
+    planTrackedRunFinalization(request(fixture, 'dedicated'), {
+      repoRoot: fixture.repoRoot,
+      project: 'demo',
+    }),
+    /terminal evidence|symbolic link|run root/i,
+  );
 });
 
 test('consumes production supersession evidence bound to both runs', async () => {

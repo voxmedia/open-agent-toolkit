@@ -1,3 +1,7 @@
+import { createHash } from 'node:crypto';
+import { lstat, readFile, realpath } from 'node:fs/promises';
+import { resolve } from 'node:path';
+
 import { canonicalHash, validateContract } from './contracts.mjs';
 
 export const TERMINAL_EVIDENCE_VERSION = 'explainer-kit.terminal-evidence/v1';
@@ -11,11 +15,30 @@ const FINDING_FIELDS = [
   'evidence',
   'correction',
 ];
-const SECRET_ASSIGNMENT_PATTERN =
-  /((?:(?:aws[_-]?)?(?:access[_-]?key(?:[_-]?id)?|secret[_-]?access[_-]?key|session[_-]?token)|client[_-]?secret|credentials?|password|private[_-]?key|secret[_-]?key|token)\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;&]+)/gi;
+const SECRET_FIELD =
+  '(?:(?:aws[_-]?)?(?:access[_-]?key(?:[_-]?id)?|secret[_-]?access[_-]?key|session[_-]?token)|api[_-]?key|client[_-]?secret|credentials?|password|private[_-]?key|secret[_-]?key|token)';
+const DOUBLE_QUOTED_SECRET_ASSIGNMENT_PATTERN = new RegExp(
+  `((?:["']?${SECRET_FIELD}["']?)\\s*[:=]\\s*)"(?:\\\\.|[^"\\\\])*"`,
+  'gi',
+);
+const SINGLE_QUOTED_SECRET_ASSIGNMENT_PATTERN = new RegExp(
+  `((?:["']?${SECRET_FIELD}["']?)\\s*[:=]\\s*)'(?:\\\\.|[^'\\\\])*'`,
+  'gi',
+);
+const UNQUOTED_SECRET_ASSIGNMENT_PATTERN = new RegExp(
+  `((?:["']?${SECRET_FIELD}["']?)\\s*[:=]\\s*)[^\\s,"';&}]+`,
+  'gi',
+);
 const CREDENTIALED_URL_PATTERN = /\b(https?:\/\/)([^\s/@:]+):([^\s/@]+)@/gi;
+const AUTHORIZATION_HEADER_PATTERN =
+  /(\bauthorization\s*[:=]\s*)(?:"|')?(?:basic|bearer)\s+[a-z0-9._~+/=-]+(?:"|')?/gi;
 const BEARER_TOKEN_PATTERN = /\bbearer\s+[a-z0-9._~+/=-]+/gi;
+const BASIC_TOKEN_PATTERN = /\bbasic\s+[a-z0-9+/=]{8,}/gi;
 const AWS_ACCESS_KEY_PATTERN = /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/g;
+const COMMON_TOKEN_PATTERN =
+  /\b(?:gh[pousr]_[a-z0-9_]{20,}|github_pat_[a-z0-9_]{20,}|xox[baprs]-[a-z0-9-]{10,}|sk_(?:live|test)_[a-z0-9]{16,}|eyJ[a-z0-9_-]{10,}\.[a-z0-9_-]{10,}\.[a-z0-9_-]{10,})\b/gi;
+const PRIVATE_KEY_PATTERN =
+  /-----BEGIN (?:[A-Z0-9 ]+ )?PRIVATE KEY-----[\s\S]*?-----END (?:[A-Z0-9 ]+ )?PRIVATE KEY-----/g;
 
 export function createTerminalEvidence({
   runId,
@@ -44,14 +67,8 @@ export function createTerminalEvidence({
     outcome,
     ...(manifest && { manifestHash: canonicalHash(manifest) }),
     findings: findings.map(compactFinding),
-    ...(error && {
-      error: {
-        code: serializeTerminalText(error.code ?? 'E_RUN', 'error.code'),
-        message: serializeTerminalText(
-          error.message ?? 'Run failed.',
-          'error.message',
-        ),
-      },
+    ...(error !== undefined && {
+      error: normalizeRetainedError(error),
     }),
     evidenceDisposition,
     ...(supersededBy && {
@@ -101,6 +118,18 @@ export function assertTerminalEvidence(evidence, { manifest } = {}) {
       );
     }
   }
+  if (
+    evidence?.outcome === 'built-needs-review' &&
+    (evidence.findings?.length ?? 0) === 0 &&
+    evidence.error === undefined
+  ) {
+    semanticErrors.push(
+      '$ must retain at least one finding or normalized review error for built-needs-review.',
+    );
+  }
+  if (evidence?.outcome === 'failed' && evidence.error === undefined) {
+    semanticErrors.push('$.error is required for a failed terminal outcome.');
+  }
   if (manifest) {
     if (evidence?.runId !== manifest.runId) {
       semanticErrors.push(
@@ -135,22 +164,102 @@ export function assertTerminalEvidence(evidence, { manifest } = {}) {
   return evidence;
 }
 
-export function serializeTerminalText(
-  value,
-  label = 'terminal evidence value',
-) {
+export function scrubRetainedText(value, label = 'terminal evidence value') {
   if (typeof value !== 'string') {
     throw new TypeError(`${label} must be a primitive string.`);
   }
   const redacted = value
+    .replace(PRIVATE_KEY_PATTERN, '[redacted-private-key]')
     .replace(
       CREDENTIALED_URL_PATTERN,
       (_match, protocol) => `${protocol}[redacted]@`,
     )
-    .replace(SECRET_ASSIGNMENT_PATTERN, '$1[redacted]')
+    .replace(DOUBLE_QUOTED_SECRET_ASSIGNMENT_PATTERN, '$1"[redacted]"')
+    .replace(SINGLE_QUOTED_SECRET_ASSIGNMENT_PATTERN, "$1'[redacted]'")
+    .replace(UNQUOTED_SECRET_ASSIGNMENT_PATTERN, '$1[redacted]')
+    .replace(AUTHORIZATION_HEADER_PATTERN, '$1[redacted]')
     .replace(BEARER_TOKEN_PATTERN, 'Bearer [redacted]')
-    .replace(AWS_ACCESS_KEY_PATTERN, '[redacted]');
+    .replace(BASIC_TOKEN_PATTERN, 'Basic [redacted]')
+    .replace(AWS_ACCESS_KEY_PATTERN, '[redacted]')
+    .replace(COMMON_TOKEN_PATTERN, '[redacted]');
   return redacted.slice(0, TERMINAL_EVIDENCE_MAX_TEXT_LENGTH);
+}
+
+export const serializeTerminalText = scrubRetainedText;
+
+export function normalizeRetainedError(
+  value,
+  {
+    defaultCode = 'E_RUN',
+    defaultMessage = 'Run failed with an unsupported error value.',
+  } = {},
+) {
+  let code = defaultCode;
+  let message = defaultMessage;
+  try {
+    if (value instanceof Error) {
+      code = primitiveText(value.code) ?? defaultCode;
+      message = primitiveText(value.message) ?? defaultMessage;
+    } else if (isPrimitiveText(value)) {
+      message = String(value);
+    } else if (isObject(value)) {
+      code = primitiveText(value.code) ?? defaultCode;
+      message = primitiveText(value.message) ?? defaultMessage;
+    }
+  } catch {
+    code = defaultCode;
+    message = defaultMessage;
+  }
+  return {
+    code: scrubRetainedText(
+      nonEmptyPrimitiveText(code, defaultCode),
+      'error.code',
+    ),
+    message: scrubRetainedText(
+      nonEmptyPrimitiveText(message, defaultMessage),
+      'error.message',
+    ),
+  };
+}
+
+export async function readTerminalEvidenceFile(
+  runRoot,
+  { manifest, expectedBytes, expectedHash } = {},
+) {
+  if (typeof runRoot !== 'string' || runRoot.length === 0) {
+    throw new TypeError('Terminal evidence run root must be a path string.');
+  }
+  const canonicalRunRoot = await realpath(runRoot);
+  const evidencePath = resolve(canonicalRunRoot, 'terminal-evidence.json');
+  const stats = await lstat(evidencePath);
+  if (stats.isSymbolicLink() || !stats.isFile()) {
+    throw new Error(
+      'Terminal evidence must be a regular file, not a symbolic link.',
+    );
+  }
+  const canonicalEvidencePath = await realpath(evidencePath);
+  if (canonicalEvidencePath !== evidencePath) {
+    throw new Error('Terminal evidence must remain within the run root.');
+  }
+  const bytes = await readFile(canonicalEvidencePath);
+  const hash = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+  if (expectedHash !== undefined && hash !== expectedHash) {
+    throw new Error('Terminal evidence bytes changed while staging.');
+  }
+  if (
+    expectedBytes !== undefined &&
+    !bytes.equals(Buffer.from(expectedBytes))
+  ) {
+    throw new Error('Terminal evidence bytes changed while staging.');
+  }
+  let evidence;
+  try {
+    evidence = JSON.parse(bytes.toString('utf8'));
+  } catch {
+    throw new Error('Terminal evidence must contain valid JSON.');
+  }
+  assertTerminalEvidence(evidence, { manifest });
+  return { evidence, bytes, hash };
 }
 
 function compactFinding(finding) {
@@ -201,4 +310,17 @@ function retainedTextEntries(evidence) {
 
 function isObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isPrimitiveText(value) {
+  return ['string', 'number', 'boolean', 'bigint'].includes(typeof value);
+}
+
+function primitiveText(value) {
+  return isPrimitiveText(value) ? String(value) : undefined;
+}
+
+function nonEmptyPrimitiveText(value, fallback) {
+  const text = primitiveText(value);
+  return text && text.trim().length > 0 ? text : fallback;
 }

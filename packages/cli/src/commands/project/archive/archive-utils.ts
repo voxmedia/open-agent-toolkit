@@ -1045,26 +1045,24 @@ async function readVerifiedRunMode(
 async function verifyProjectRecapTerminalEvidence(
   runRoot: string,
   manifest: ProjectRecapManifest,
-): Promise<void> {
+  expected?: { bytes: Uint8Array; hash: string },
+): Promise<{ bytes: Buffer; hash: string } | null> {
   if (!['built-needs-review', 'failed'].includes(manifest.outcome)) {
-    return;
-  }
-  let evidence: unknown;
-  try {
-    evidence = JSON.parse(
-      await readFile(join(runRoot, 'terminal-evidence.json'), 'utf8'),
-    );
-  } catch (error) {
-    throw new CliError(
-      `Selected project recap requires valid terminal evidence before archival: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    return null;
   }
   try {
     const terminalEvidence = await loadExplainerTerminalEvidence();
-    terminalEvidence.assertTerminalEvidence(evidence, { manifest });
+    const verified = await terminalEvidence.readTerminalEvidenceFile(runRoot, {
+      manifest,
+      ...(expected && {
+        expectedBytes: expected.bytes,
+        expectedHash: expected.hash,
+      }),
+    });
+    return { bytes: verified.bytes, hash: verified.hash };
   } catch (error) {
     throw new CliError(
-      `Selected project recap terminal evidence is invalid: ${error instanceof Error ? error.message : String(error)}`,
+      `Selected project recap requires valid confined terminal evidence before archival: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
@@ -1077,6 +1075,7 @@ async function loadVerifiedProjectRecap(
   manifestContents: string;
   manifest: ProjectRecapManifest;
   verifiedArtifactCount: number;
+  terminalEvidence: { bytes: Buffer; hash: string } | null;
 }> {
   const sourceRunRoot = await resolveSelectedProjectRecapRun(
     projectPath,
@@ -1147,12 +1146,16 @@ async function loadVerifiedProjectRecap(
       'Selected project recap artifact hashes do not match the immutable package.',
     );
   }
-  await verifyProjectRecapTerminalEvidence(sourceRunRoot, manifest);
+  const terminalEvidence = await verifyProjectRecapTerminalEvidence(
+    sourceRunRoot,
+    manifest,
+  );
   return {
     sourceRunRoot,
     manifestContents,
     manifest,
     verifiedArtifactCount,
+    terminalEvidence,
   };
 }
 
@@ -1180,7 +1183,7 @@ async function exportSelectedProjectRecap(
   const {
     sourceRunRoot,
     manifestContents: sourceManifestContents,
-    manifest: sourceManifest,
+    terminalEvidence: sourceTerminalEvidence,
   } = verified;
 
   const exportRoot = join(
@@ -1217,11 +1220,18 @@ async function exportSelectedProjectRecap(
         'Selected project recap manifest changed while staging the export.',
       );
     }
+    const stagedManifest = await parseProjectRecapManifest(
+      stagedManifestContents,
+    );
     const verifiedArtifactCount = await verifyProjectRecapImmutableHashes(
       temporaryRoot,
-      sourceManifest,
+      stagedManifest,
     );
-    await verifyProjectRecapTerminalEvidence(temporaryRoot, sourceManifest);
+    await verifyProjectRecapTerminalEvidence(
+      temporaryRoot,
+      stagedManifest,
+      sourceTerminalEvidence ?? undefined,
+    );
     await renamePath(temporaryRoot, exportRoot);
 
     return {

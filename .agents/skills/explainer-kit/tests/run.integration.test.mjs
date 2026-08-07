@@ -53,6 +53,29 @@ async function temporaryDirectory() {
   return directory;
 }
 
+async function assertRetainedTreeExcludes(runRoot, secrets) {
+  const retained = [];
+  async function collect(directory) {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        await collect(path);
+      } else if (entry.isFile()) {
+        retained.push(await readFile(path));
+      }
+    }
+  }
+  await collect(runRoot);
+  const combined = Buffer.concat(retained);
+  for (const secret of secrets) {
+    assert.equal(
+      combined.includes(Buffer.from(secret)),
+      false,
+      `retained run tree contains secret ${secret}`,
+    );
+  }
+}
+
 async function legacyResumeToken(runRoot, runId) {
   const tokenHash = createHash('sha256');
   tokenHash.update('explainer-kit.set-plan-resume/v1\0');
@@ -4108,6 +4131,136 @@ test('redacts and bounds terminal evidence after a late provider failure', async
   assert.ok(terminalEvidence.error.code.length <= 2_000);
   assert.ok(terminalEvidence.error.message.length <= 2_000);
   assert.match(terminalEvidence.error.message, /\[redacted\]/);
+});
+
+test('scrubs provider credentials from every retained visual, browser, and durability failure file', async (t) => {
+  const scenarios = [
+    {
+      name: 'visual critic',
+      recipe: 'project-recap',
+      configure(secret) {
+        return {
+          browserSession: fixtureBrowserSession(),
+          visualCritic: async (reviewRequest) => ({
+            schemaVersion: 'explainer-kit.visual-review-result/v1',
+            reviewId: 'credential-hygiene-review',
+            requestId: reviewRequest.requestId,
+            requestHash: reviewRequest.requestHash,
+            reviewedAt: NOW,
+            disposition: 'fail',
+            artifactIds: reviewRequest.renderedArtifacts.map(
+              ({ artifactId }) => artifactId,
+            ),
+            findings: [
+              {
+                artifactId: reviewRequest.renderedArtifacts[0].artifactId,
+                rubric: 'first-viewport',
+                severity: 'important',
+                evidence: `{"password":"${secret}"}`,
+                correction: `Authorization: Bearer ${secret}`,
+              },
+            ],
+          }),
+        };
+      },
+    },
+    {
+      name: 'browser',
+      recipe: 'project-recap',
+      configure(secret) {
+        return {
+          browserSession: fixtureBrowserSession(async () => {
+            throw new Error(
+              `Authorization: Basic ${secret} password: '${secret}'`,
+            );
+          }),
+          visualCritic: async () => {
+            throw new Error('visual critic must not run after browser failure');
+          },
+        };
+      },
+    },
+    {
+      name: 'durability',
+      recipe: 'project-explainer',
+      request: { durability: { strategy: 'commit' } },
+      configure(secret) {
+        return {
+          durability: async () => {
+            throw Object.assign(
+              new Error(`https://operator:${secret}@example.com/private`),
+              { code: `E_DURABILITY token=${secret}` },
+            );
+          },
+        };
+      },
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    await t.test(scenario.name, async () => {
+      const fixture = await suppliedFixture(scenario.recipe);
+      const secret = `${scenario.name.replaceAll(' ', '-')}-retained-secret`;
+      const result = await runExplainer(
+        { ...fixture.request, ...scenario.request },
+        {
+          planSet: async (plannerRequest) => plannedSet(plannerRequest),
+          now: () => NOW,
+          ...scenario.configure(secret),
+        },
+      );
+
+      assert.ok(['built-needs-review', 'failed'].includes(result.outcome));
+      await assertRetainedTreeExcludes(result.runRoot, [secret]);
+    });
+  }
+});
+
+test('normalizes primitive thrown values into retained failed evidence', async () => {
+  const fixture = await suppliedFixture();
+  const secret = 'primitive-throw-secret';
+  const result = await runExplainer(
+    {
+      ...fixture.request,
+      durability: { strategy: 'commit' },
+    },
+    {
+      planSet: async (plannerRequest) => plannedSet(plannerRequest),
+      durability: async () => {
+        throw `Authorization: Basic ${secret}`;
+      },
+      now: () => NOW,
+    },
+  );
+
+  assert.equal(result.outcome, 'failed');
+  const terminalEvidence = await readFile(
+    join(result.runRoot, 'terminal-evidence.json'),
+    'utf8',
+  );
+  assert.equal(terminalEvidence.includes(secret), false);
+  assert.match(terminalEvidence, /\[redacted\]/);
+});
+
+test('surfaces terminal evidence writer failures instead of dropping lifecycle evidence', async () => {
+  const fixture = await suppliedFixture();
+
+  await assert.rejects(
+    runExplainer(fixture.request, {
+      hooks: {
+        beforeStage: async (id, run) => {
+          if (id !== 'validate') return;
+          await writeFile(
+            join(run.runRoot, 'terminal-evidence.json'),
+            '{"occupied":true}\n',
+          );
+          throw new Error('trigger terminal writer failure');
+        },
+      },
+      now: () => NOW,
+    }),
+    /terminal evidence is immutable/i,
+  );
 });
 
 test('accepts only callback receipts bound to the finalized manifest and catalog', async () => {

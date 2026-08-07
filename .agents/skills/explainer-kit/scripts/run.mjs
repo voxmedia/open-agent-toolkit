@@ -66,7 +66,11 @@ import {
 import { artifactPath, renderArtifact } from './lib/render.mjs';
 import { resolveRootConfinedPath } from './lib/safe-paths.mjs';
 import { plannedArtifacts, planExplainerSet } from './lib/set-plan.mjs';
-import { serializeTerminalText } from './lib/terminal-evidence.mjs';
+import {
+  normalizeRetainedError,
+  scrubRetainedText,
+  serializeTerminalText,
+} from './lib/terminal-evidence.mjs';
 import { resolveTheme } from './lib/theme.mjs';
 import { runVisualReview } from './lib/visual-review.mjs';
 
@@ -133,6 +137,7 @@ export async function runExplainer(request, options = {}) {
     visualReviewPaths: [],
     visualReviewAttempt: 0,
     reviewGateBlocked: false,
+    reviewGateError: null,
     correctionAttempted: false,
     resumeToken: null,
     resumedApprovalStatus: null,
@@ -250,6 +255,14 @@ export async function runExplainer(request, options = {}) {
         outcome: 'built-needs-review',
         manifest,
         findings: state.visualReview?.result?.findings ?? [],
+        error:
+          state.reviewGateError ??
+          ((state.visualReview?.result?.findings?.length ?? 0) === 0
+            ? {
+                code: 'E_VISUAL_REVIEW',
+                message: 'Visual review did not pass.',
+              }
+            : undefined),
         evidenceDisposition: state.visualReview ? 'retained' : 'partial',
       });
       return resultFor(state);
@@ -272,12 +285,13 @@ export async function runExplainer(request, options = {}) {
         .then(JSON.parse)
         .catch(() => undefined);
     }
+    const retainedError = normalizeRetainedError(error);
     await writeTerminalEvidence(run, {
       outcome: 'failed',
       manifest,
-      error,
+      error: retainedError,
       evidenceDisposition: manifest ? 'retained' : 'unavailable',
-    }).catch(() => {});
+    });
     return resultFor(state, error);
   }
 }
@@ -412,6 +426,10 @@ async function executeQaStage(state, options, now) {
       }
       const warning = reviewGateWarning(reviewError);
       state.reviewGateBlocked = true;
+      state.reviewGateError = normalizeRetainedError(reviewError, {
+        defaultCode: 'E_VISUAL_REVIEW',
+        defaultMessage: 'Visual review failed.',
+      });
       state.warnings.push(warning);
       state.visualReviewPaths.push(
         ...(await writeVisualReviewFailure(state.run, {
@@ -1020,7 +1038,14 @@ function reviewGateWarning(error) {
     error?.code === 'E_VISUAL_CORRECTION'
       ? 'correction-failed'
       : 'review-chain-failed';
-  return `visual-review-required:${reason}:${String(error?.message ?? 'unknown visual review failure')}`;
+  const normalized = normalizeRetainedError(error, {
+    defaultCode: 'E_VISUAL_REVIEW',
+    defaultMessage: 'Unknown visual review failure.',
+  });
+  return scrubRetainedText(
+    `visual-review-required:${reason}:${normalized.message}`,
+    'review gate warning',
+  );
 }
 
 function artisticRender(state, artifact) {
@@ -1374,7 +1399,7 @@ export async function runExplainerCli(
           outcome: 'failed',
           errors: [
             {
-              code: error.code ?? 'E_INPUT_SCHEMA',
+              code: error?.code ?? 'E_INPUT_SCHEMA',
               message: safeMessage(error),
             },
           ],
@@ -1404,7 +1429,7 @@ async function executeStage(run, id, options, operation) {
       id,
       status: 'failed',
       error: {
-        code: error.code ?? stageErrorCode(id),
+        code: error?.code ?? stageErrorCode(id),
         message: safeMessage(error),
         recovery: [
           `Correct the ${id} inputs or implementation and start a new run.`,
@@ -1528,7 +1553,7 @@ async function executeDurabilityAndPublish(state, options, now) {
         id: 'durability',
         status: 'failed',
         error: {
-          code: error.code ?? 'E_DURABILITY',
+          code: error?.code ?? 'E_DURABILITY',
           message: safeMessage(error),
           recovery: ['Correct the durability failure and start a new run.'],
         },
@@ -1598,7 +1623,7 @@ async function executeDurabilityAndPublish(state, options, now) {
       id: 'publish',
       status: 'failed',
       error: {
-        code: error.code ?? 'E_PUBLISH',
+        code: error?.code ?? 'E_PUBLISH',
         message: safeMessage(error),
         recovery: ['Correct the publish failure and start a new run.'],
       },
@@ -1632,6 +1657,10 @@ async function persistManifest(state, createdAt) {
 
 async function persistFailureManifest(state, error, createdAt) {
   const record = JSON.parse(await readFile(state.run.buildRecordPath, 'utf8'));
+  const retainedError = normalizeRetainedError(error, {
+    defaultCode: 'E_RENDER',
+    defaultMessage: 'Rendering failed.',
+  });
   const recordedIds = new Set(state.artifacts.map(({ id }) => id));
   state.artifacts.push(
     ...recipeFloor(state.recipe)
@@ -1643,8 +1672,7 @@ async function persistFailureManifest(state, error, createdAt) {
         status: 'failed',
         rebuildable: false,
         failure: {
-          code: error.code ?? 'E_RENDER',
-          message: safeMessage(error),
+          ...retainedError,
           recovery: ['Correct the failed stage and start a new run.'],
         },
       })),
@@ -1686,7 +1714,7 @@ function manifestFor(state, buildRecord, createdAt, immutableHashes) {
       path: 'build-record.json',
       hash: canonicalHash(buildRecord),
     },
-    warnings: [...new Set(state.warnings)],
+    warnings: retainedWarnings(state.warnings),
   };
 }
 
@@ -2382,7 +2410,7 @@ function resultFor(state, error) {
     ...(state.approval?.record?.marking && {
       marking: state.approval.record.marking,
     }),
-    warnings: [...new Set(state.warnings)],
+    warnings: retainedWarnings(state.warnings),
     discovery: state.discovery,
     ...(state.publication && { publication: state.publication }),
     ...(state.approval && {
@@ -2398,8 +2426,8 @@ function resultFor(state, error) {
     ...(state.visualReview && {
       visualReview: structuredClone(state.visualReview.result),
     }),
-    ...(error && {
-      errors: [{ code: error.code ?? 'E_RUN', message: safeMessage(error) }],
+    ...(error !== undefined && {
+      errors: [normalizeRetainedError(error)],
     }),
   };
 }
@@ -2527,6 +2555,16 @@ function safeMessage(error) {
         : 'Run failed.',
     'error message',
   );
+}
+
+function retainedWarnings(warnings) {
+  return [
+    ...new Set(
+      warnings.map((warning, index) =>
+        scrubRetainedText(warning, `retained warning ${index + 1}`),
+      ),
+    ),
+  ];
 }
 
 if (

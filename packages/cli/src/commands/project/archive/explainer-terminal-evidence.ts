@@ -12,6 +12,14 @@ export interface ExplainerTerminalEvidence {
     evidence: unknown,
     context: { manifest: unknown },
   ) => unknown;
+  readTerminalEvidenceFile: (
+    runRoot: string,
+    context: {
+      manifest: unknown;
+      expectedBytes?: Uint8Array;
+      expectedHash?: string;
+    },
+  ) => Promise<{ evidence: unknown; bytes: Buffer; hash: string }>;
   writeTerminalEvidence: (
     run: { runId: string; slug: string; runRoot: string },
     input: {
@@ -56,6 +64,7 @@ async function loadGeneratedTerminalEvidence(): Promise<ExplainerTerminalEvidenc
   if (
     contract.TERMINAL_EVIDENCE_VERSION !== TERMINAL_EVIDENCE_VERSION ||
     typeof contract.assertTerminalEvidence !== 'function' ||
+    typeof contract.readTerminalEvidenceFile !== 'function' ||
     typeof records.writeTerminalEvidence !== 'function'
   ) {
     throw new CliError(
@@ -67,6 +76,8 @@ async function loadGeneratedTerminalEvidence(): Promise<ExplainerTerminalEvidenc
     TERMINAL_EVIDENCE_VERSION,
     assertTerminalEvidence:
       contract.assertTerminalEvidence as ExplainerTerminalEvidence['assertTerminalEvidence'],
+    readTerminalEvidenceFile:
+      contract.readTerminalEvidenceFile as ExplainerTerminalEvidence['readTerminalEvidenceFile'],
     writeTerminalEvidence:
       records.writeTerminalEvidence as ExplainerTerminalEvidence['writeTerminalEvidence'],
   };

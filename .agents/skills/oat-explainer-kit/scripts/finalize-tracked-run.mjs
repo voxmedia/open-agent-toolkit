@@ -26,15 +26,13 @@ export async function planTrackedRunFinalization(request, context = {}) {
     );
   }
   if (['built-needs-review', 'failed'].includes(manifest.outcome)) {
-    const terminalEvidence = JSON.parse(
-      await readFile(join(runRoot, 'terminal-evidence.json'), 'utf8'),
-    );
     const terminalEvidenceContract = await loadTerminalEvidenceContract(
       context.coreRoot,
     );
-    terminalEvidenceContract.assertTerminalEvidence(terminalEvidence, {
-      manifest,
-    });
+    const { evidence: terminalEvidence } =
+      await terminalEvidenceContract.readTerminalEvidenceFile(runRoot, {
+        manifest,
+      });
     return {
       schemaVersion: 'oat-explainer-kit.finalization-plan/v1',
       status: 'complete',
@@ -391,10 +389,11 @@ async function loadTerminalEvidenceContract(coreRoot) {
   }
   if (
     loaded.TERMINAL_EVIDENCE_VERSION !== TERMINAL_EVIDENCE_VERSION ||
-    typeof loaded.assertTerminalEvidence !== 'function'
+    typeof loaded.assertTerminalEvidence !== 'function' ||
+    typeof loaded.readTerminalEvidenceFile !== 'function'
   ) {
     throw new Error(
-      `coreRoot must provide ${TERMINAL_EVIDENCE_VERSION} validation.`,
+      `coreRoot must provide ${TERMINAL_EVIDENCE_VERSION} confined validation.`,
     );
   }
   return loaded;
