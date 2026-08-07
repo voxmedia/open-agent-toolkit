@@ -40,59 +40,71 @@ oat_dispatch_policy:
   source: project-state
 oat_workflow_mode: quick
 oat_workflow_origin: native
-# oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
-#   status: pending # pending | allowed | blocked | stale
-#   resolution: configured # configured | no_gate
-#   disposition: null # null | passed | warned | prompt_approved | no_gate
-#   config_fingerprint: '<stable hash of resolved gate declaration>'
-#   resolved_command: null
-#   resolved_description: null
-#   on_failure: block # block | prompt | warn | null
-#   max_attempts: 2
-#   attempts_completed: 0
-#   reviewed_head: null
-#   implementation_base_ref: null # exact logical base ref for effective-delta-v1
-#   implementation_fingerprint: null # new generations use sha256:effective-delta-v1:<digest>
-#   freshness_head: null # rolling accepted tree checkpoint
-#   freshness_fingerprint: null # full effective delta at freshness_head
-#   launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
-#   launch_attempt_id: null
-#   launch_started_at: null
-#   launch_result_receipt: null
-#   gate_run_marker: null
-#   gate_run_id: null
-#   envelope_status: null # ok | blocked | review_failed | other terminal status
-#   artifact: null
-#   handoff: null
-#   receive_state: not_started # not_started | intent_persisted | completed | reconciliation_required
-#   receive_correlation: null
-#   receive_source_artifact: null
-#   receive_archived_artifact: null
-#   receive_event_identity: null
-#   receive_pre_head: null
-#   receive_commit: null
-#   receive_eligible: false
-#   receive_completed: false
-#   failure: null
-#   updated_at: '2026-07-18T00:00:00Z'
+oat_implement_exit_gate:
+  status: allowed
+  resolution: no_gate
+  disposition: no_gate
+  config_fingerprint: 'sha256:0c4b0083df0ce3d6b84c52cb1254827118eb0372ec323205fef032a7d6c5a27e'
+  resolved_command: null
+  resolved_description: null
+  on_failure: null
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: a6b5ea4f2b6c40bb55e1120155f9ce122eb5dffb
+  implementation_base_ref: refs/remotes/origin/main
+  implementation_fingerprint: 'sha256:effective-delta-v1:d941f0f7463ac22630abcd18bafb43450c0189a2181b6b0d1fe158e001cbd22e'
+  freshness_head: 298452775517c7c3bc2b841965c0f59aaa526d42
+  freshness_fingerprint: 'sha256:effective-delta-v1:fd4ee6b47c56d881dc5afd08476e181b3b9693b7961c67d093f52a84d212edc4'
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-08-07T02:17:00Z'
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p-rev1
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/192' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:27:39.069Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-07T00:37:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-07T02:17:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-retro
 
-**Status:** Implementation complete
+**Status:** Post-implementation sequence in progress
 **Started:** 2026-08-05
 **Last Updated:** 2026-08-07
 
 ## Current Phase
 
-Implementation complete — Revision 1 passed independent review.
+Implementation complete — running configured summary, documentation, and PR
+refresh.
 
 ## Artifacts
 
@@ -121,6 +133,6 @@ None
 
 ## Next Milestone
 
-Run the configured post-implementation sequence in order: refresh the summary,
-reconcile documentation, and refresh the existing PR. Then return the project
-to `pr_open` and dogfood the revised workflow on another project.
+Continue the persisted post-implementation sequence from `summary`, then
+`document`, then `pr`. Afterwards return the project to `pr_open` and dogfood
+the revised workflow on another project.
