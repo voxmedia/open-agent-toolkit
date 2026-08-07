@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p05'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -76,11 +76,11 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-08-07T02:33:00Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: complete
   source: configured
   final_phase: p-rev2
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: not_required
   approval_source: null
   post_approval: []
@@ -91,19 +91,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/192' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:27:39.069Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-07T14:58:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-07T15:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-retro
 
-**Status:** Revision 2 complete; closeout in progress
+**Status:** PR open
 **Started:** 2026-08-05
 **Last Updated:** 2026-08-07
 
 ## Current Phase
 
-Post-implementation closeout — summary and documentation refreshed; PR is next.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -134,4 +134,8 @@ None
 
 ## Next Milestone
 
-Refresh the existing PR, then return the project to `pr_open`.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
