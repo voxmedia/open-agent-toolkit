@@ -80,7 +80,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p-rev2
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: not_required
   approval_source: null
   post_approval: []
@@ -91,7 +91,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/192' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:27:39.069Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-07T13:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-07T14:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -103,7 +103,7 @@ oat_generated: false
 
 ## Current Phase
 
-Post-implementation closeout — refresh summary, documentation, and PR.
+Post-implementation closeout — summary refreshed; documentation is next.
 
 ## Artifacts
 
@@ -134,5 +134,5 @@ None
 
 ## Next Milestone
 
-Run the configured post-implementation sequence: refresh the summary,
-documentation, and PR, then return the project to `pr_open`.
+Continue the configured post-implementation sequence with documentation and PR
+refresh, then return the project to `pr_open`.
