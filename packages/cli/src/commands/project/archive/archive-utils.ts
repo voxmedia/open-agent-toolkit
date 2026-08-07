@@ -634,6 +634,21 @@ interface ProjectRecapManifest {
     | 'incomplete';
 }
 
+interface ExactRunPackageCoverage {
+  permissibleRunPackagePaths: (
+    manifest: ProjectRecapManifest,
+    options?: { includeTerminalEvidence?: boolean },
+  ) => string[];
+  enforceRunPackageInventory: (
+    runRoot: string,
+    manifest: ProjectRecapManifest,
+    options?: {
+      includeTerminalEvidence?: boolean;
+      removeUnexpected?: boolean;
+    },
+  ) => Promise<string[]>;
+}
+
 async function parseProjectRecapManifest(
   contents: string,
 ): Promise<ProjectRecapManifest> {
@@ -1076,6 +1091,7 @@ async function loadVerifiedProjectRecap(
   manifest: ProjectRecapManifest;
   verifiedArtifactCount: number;
   terminalEvidence: { bytes: Buffer; hash: string } | null;
+  packagePaths: string[];
 }> {
   const sourceRunRoot = await resolveSelectedProjectRecapRun(
     projectPath,
@@ -1150,12 +1166,32 @@ async function loadVerifiedProjectRecap(
     sourceRunRoot,
     manifest,
   );
+  const exactCoverage = packageCoverage as typeof packageCoverage &
+    ExactRunPackageCoverage;
+  if (
+    typeof exactCoverage.permissibleRunPackagePaths !== 'function' ||
+    typeof exactCoverage.enforceRunPackageInventory !== 'function'
+  ) {
+    throw new CliError(
+      'Bundled explainer package coverage does not provide the exact run inventory.',
+    );
+  }
+  try {
+    await exactCoverage.enforceRunPackageInventory(sourceRunRoot, manifest, {
+      includeTerminalEvidence: terminalEvidence !== null,
+    });
+  } catch {
+    throw new CliError('Selected project recap package inventory is invalid.');
+  }
   return {
     sourceRunRoot,
     manifestContents,
     manifest,
     verifiedArtifactCount,
     terminalEvidence,
+    packagePaths: exactCoverage.permissibleRunPackagePaths(manifest, {
+      includeTerminalEvidence: terminalEvidence !== null,
+    }),
   };
 }
 
@@ -1184,6 +1220,7 @@ async function exportSelectedProjectRecap(
     sourceRunRoot,
     manifestContents: sourceManifestContents,
     terminalEvidence: sourceTerminalEvidence,
+    packagePaths,
   } = verified;
 
   const exportRoot = join(
@@ -1202,7 +1239,7 @@ async function exportSelectedProjectRecap(
 
   const temporaryRoot = `${exportRoot}.tmp-${randomUUID()}`;
   const makeDir = dependencies.ensureDir ?? ensureDir;
-  const copyProjectDirectory = dependencies.copyDirectory ?? copyDirectory;
+  const copyFile = dependencies.copySingleFile ?? copySingleFile;
   const removePath =
     dependencies.removePath ??
     (async (target, removeOptions) => rm(target, removeOptions));
@@ -1210,7 +1247,11 @@ async function exportSelectedProjectRecap(
 
   await makeDir(dirname(exportRoot));
   try {
-    await copyProjectDirectory(sourceRunRoot, temporaryRoot);
+    for (const relativePath of packagePaths) {
+      const destination = join(temporaryRoot, relativePath);
+      await makeDir(dirname(destination));
+      await copyFile(join(sourceRunRoot, relativePath), destination);
+    }
     const stagedManifestContents = await readFile(
       join(temporaryRoot, 'manifest.json'),
       'utf8',
@@ -1227,11 +1268,26 @@ async function exportSelectedProjectRecap(
       temporaryRoot,
       stagedManifest,
     );
-    await verifyProjectRecapTerminalEvidence(
+    const stagedTerminalEvidence = await verifyProjectRecapTerminalEvidence(
       temporaryRoot,
       stagedManifest,
       sourceTerminalEvidence ?? undefined,
     );
+    const exactCoverage = (await loadExplainerPackageCoverage()) as Awaited<
+      ReturnType<typeof loadExplainerPackageCoverage>
+    > &
+      ExactRunPackageCoverage;
+    try {
+      await exactCoverage.enforceRunPackageInventory(
+        temporaryRoot,
+        stagedManifest,
+        {
+          includeTerminalEvidence: stagedTerminalEvidence !== null,
+        },
+      );
+    } catch {
+      throw new CliError('Staged project recap package inventory is invalid.');
+    }
     await renamePath(temporaryRoot, exportRoot);
 
     return {

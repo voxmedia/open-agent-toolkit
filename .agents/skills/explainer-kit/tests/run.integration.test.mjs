@@ -4115,6 +4115,105 @@ test('invokes durability and publishing seams only when explicitly requested', a
   assert.equal(durabilityResult.durable, true);
 });
 
+test('confines every filesystem-capable provider boundary to the retained package inventory', async (t) => {
+  const scenarios = [
+    ['durability return', 'durability', false],
+    ['durability throw', 'durability', true],
+    ['browser return', 'browser', false],
+    ['browser throw', 'browser', true],
+    ['publisher return', 'publisher', false],
+    ['publisher throw', 'publisher', true],
+  ];
+
+  for (const [name, boundary, throws] of scenarios) {
+    await t.test(name, async () => {
+      const fixture = await suppliedFixture(
+        boundary === 'browser' ? 'project-recap' : 'project-explainer',
+      );
+      const canary = `RUN-INVENTORY-${name}-{"diagnostic":"exact bytes"}`;
+      let canaryPath;
+      let entered = false;
+      const options = { now: () => NOW };
+      let runRequest = fixture.request;
+
+      if (boundary === 'durability') {
+        runRequest = {
+          ...runRequest,
+          durability: { strategy: 'commit' },
+        };
+        options.durability = async ({ runRoot }) => {
+          entered = true;
+          canaryPath = join(runRoot, 'undeclared-provider-diagnostic.txt');
+          await writeFile(canaryPath, canary);
+          if (throws) throw new Error(canary);
+        };
+      } else if (boundary === 'browser') {
+        options.browserSession = fixtureBrowserSession(async (probeRequest) => {
+          if (!entered) {
+            entered = true;
+            canaryPath = join(
+              dirname(probeRequest.screenshotPath),
+              'undeclared-provider-diagnostic.txt',
+            );
+            await writeFile(canaryPath, canary);
+          }
+          if (throws) throw new Error(canary);
+          return retainingBrowserProbe(probeRequest);
+        });
+        options.visualCritic = async (reviewRequest) => ({
+          schemaVersion: 'explainer-kit.visual-review-result/v1',
+          reviewId: 'run-inventory-review',
+          requestId: reviewRequest.requestId,
+          requestHash: reviewRequest.requestHash,
+          reviewedAt: NOW,
+          disposition: 'pass',
+          artifactIds: reviewRequest.renderedArtifacts.map(
+            ({ artifactId }) => artifactId,
+          ),
+          findings: [],
+        });
+      } else {
+        runRequest = {
+          ...runRequest,
+          durability: {
+            strategy: 'publish',
+            publish: {
+              schemaVersion: 'explainer-kit.publish-request/v1',
+              provider: 's3-static',
+              s3Uri: 's3://example-bucket/explainers',
+              publicBaseUrl: 'https://docs.example.com/explainers',
+              awsRegion: 'us-east-1',
+              siteRoot: join(fixture.outputRoot, 'project-explainer-demo/site'),
+              manifestPath: join(
+                fixture.outputRoot,
+                'project-explainer-demo/manifest.json',
+              ),
+            },
+          },
+        };
+        options.publish = async ({ runRoot }) => {
+          entered = true;
+          canaryPath = join(runRoot, 'undeclared-provider-diagnostic.txt');
+          await writeFile(canaryPath, canary);
+          if (throws) throw new Error(canary);
+          return {};
+        };
+      }
+
+      const result = await runExplainer(runRequest, options);
+
+      assert.equal(entered, true);
+      if (boundary === 'browser') {
+        assert.ok(['built-needs-review', 'failed'].includes(result.outcome));
+      } else {
+        assert.equal(result.outcome, 'failed');
+      }
+      await assert.rejects(access(canaryPath), { code: 'ENOENT' });
+      await assertRetainedTreeExcludes(result.runRoot, [canary]);
+    });
+  }
+});
+
 test('projects late provider failures to closed terminal reasons', async () => {
   const fixture = await suppliedFixture();
   const secrets = {

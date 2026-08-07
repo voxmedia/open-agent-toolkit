@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   access,
-  cp,
+  copyFile,
   mkdir,
   mkdtemp,
   readFile,
@@ -573,8 +573,101 @@ describe('archive utils', () => {
         expect.stringMatching(/20260401-demo\.tmp-/),
         exportRoot,
       );
+      const manifest = JSON.parse(
+        await readFile(join(exportRoot, 'manifest.json'), 'utf8'),
+      ) as { immutableHashes: Record<string, string> };
+      expect(await relativeFilePaths(exportRoot)).toEqual(
+        [
+          'build-record.json',
+          'manifest.json',
+          ...(outcome === 'failed' ? ['terminal-evidence.json'] : []),
+          ...Object.keys(manifest.immutableHashes),
+        ].sort(),
+      );
     },
   );
+
+  it('rejects an undeclared exact-byte source entry instead of promoting it', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    const canary = 'ARCHIVE-SOURCE-INVENTORY-{"diagnostic":"exact bytes"}';
+    await writeFile(join(recap.runRoot, 'undeclared-provider.txt'), canary);
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      ),
+    ).rejects.toThrow(/inventory/i);
+
+    await expect(access(projectPath)).resolves.toBeUndefined();
+    await expect(
+      access(
+        join(
+          repoRoot,
+          '.oat',
+          'repo',
+          'reference',
+          'project-recaps',
+          '20260401-demo',
+        ),
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('rejects an undeclared exact-byte staged entry before export promotion', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    let stagedRoot: string | undefined;
+    const copySingleFile = vi.fn(
+      async (source: string, destination: string) => {
+        await mkdir(dirname(destination), { recursive: true });
+        await copyFile(source, destination);
+        if (!stagedRoot) {
+          let candidate = dirname(destination);
+          while (!candidate.includes('20260401-demo.tmp-')) {
+            candidate = dirname(candidate);
+          }
+          stagedRoot = candidate;
+          await writeFile(
+            join(stagedRoot, 'undeclared-staged-provider.txt'),
+            'ARCHIVE-STAGED-INVENTORY-{"diagnostic":"exact bytes"}',
+          );
+        }
+      },
+    );
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        {
+          copySingleFile,
+          timestamp: () => '2026-04-01T12:34:56Z',
+        },
+      ),
+    ).rejects.toThrow(/inventory/i);
+
+    expect(copySingleFile).toHaveBeenCalled();
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
 
   it('accepts distinct canonical object hashes while verifying complete file-byte coverage', async () => {
     const repoRoot = await createRepoRoot();
@@ -951,20 +1044,23 @@ describe('archive utils', () => {
     const recap = await createRecapPackage(projectPath, {
       outcome: 'failed',
     });
-    const copyDirectory = vi.fn(async (source: string, destination: string) => {
-      await cp(source, destination, { recursive: true });
-      if (destination.includes('.tmp-')) {
-        const evidencePath = join(destination, 'terminal-evidence.json');
-        const evidence = JSON.parse(
-          await readFile(evidencePath, 'utf8'),
-        ) as Record<string, unknown>;
-        evidence.error = {
-          code: 'E_RUN',
-          message: 'Schema-valid substituted failure evidence.',
-        };
-        await writeFile(evidencePath, `${JSON.stringify(evidence)}\n`);
-      }
-    });
+    const copySingleFile = vi.fn(
+      async (source: string, destination: string) => {
+        await mkdir(dirname(destination), { recursive: true });
+        await copyFile(source, destination);
+        if (destination.endsWith('terminal-evidence.json')) {
+          const evidencePath = destination;
+          const evidence = JSON.parse(
+            await readFile(evidencePath, 'utf8'),
+          ) as Record<string, unknown>;
+          evidence.error = {
+            code: 'E_RUN',
+            message: 'Schema-valid substituted failure evidence.',
+          };
+          await writeFile(evidencePath, `${JSON.stringify(evidence)}\n`);
+        }
+      },
+    );
 
     await expect(
       archiveProjectOnCompletion(
@@ -976,7 +1072,7 @@ describe('archive utils', () => {
           projectRecapRun: recap.relativeRunPath,
           s3SyncOnComplete: false,
         },
-        { copyDirectory },
+        { copySingleFile },
       ),
     ).rejects.toThrow(/terminal evidence|changed while staging|byte/i);
     await expect(access(projectPath)).resolves.toBeUndefined();
@@ -1049,14 +1145,15 @@ describe('archive utils', () => {
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
     await mkdir(projectPath, { recursive: true });
     const recap = await createRecapPackage(projectPath);
-    const copyDirectory = vi.fn(async (source: string, destination: string) => {
-      await cp(source, destination, { recursive: true });
-      await writeFile(
-        join(destination, 'source', 'content', 'recap.md'),
-        '# corrupted\n',
-        'utf8',
-      );
-    });
+    const copySingleFile = vi.fn(
+      async (source: string, destination: string) => {
+        await mkdir(dirname(destination), { recursive: true });
+        await copyFile(source, destination);
+        if (destination.endsWith(join('source', 'content', 'recap.md'))) {
+          await writeFile(destination, '# corrupted\n', 'utf8');
+        }
+      },
+    );
     const removePath = vi.fn(
       async (target: string, options: { recursive: true; force: true }) =>
         rm(target, options),
@@ -1073,7 +1170,7 @@ describe('archive utils', () => {
           s3SyncOnComplete: false,
         },
         {
-          copyDirectory,
+          copySingleFile,
           removePath,
           timestamp: () => '2026-04-01T12:34:56Z',
         },
@@ -1302,14 +1399,11 @@ describe('archive utils', () => {
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
     await mkdir(projectPath, { recursive: true });
     const recap = await createRecapPackage(projectPath);
-    let copyCount = 0;
-    const copyDirectory = vi.fn(async (source: string, destination: string) => {
-      copyCount += 1;
-      if (copyCount === 2) {
-        throw new Error('injected second copy failure');
-      }
-      await cp(source, destination, { recursive: true });
-    });
+    const copyDirectory = vi.fn(
+      async (_source: string, _destination: string) => {
+        throw new Error('injected archive copy failure');
+      },
+    );
     const exportRoot = join(
       repoRoot,
       '.oat',
@@ -1334,9 +1428,9 @@ describe('archive utils', () => {
           timestamp: () => '2026-04-01T12:34:56Z',
         },
       ),
-    ).rejects.toThrow('injected second copy failure');
+    ).rejects.toThrow('injected archive copy failure');
 
-    expect(copyDirectory).toHaveBeenCalledTimes(2);
+    expect(copyDirectory).toHaveBeenCalledTimes(1);
     await expect(access(projectPath)).resolves.toBeUndefined();
     await expect(access(exportRoot)).rejects.toThrow();
   });
@@ -2247,6 +2341,26 @@ describe('archive utils', () => {
 
 function hashContent(value: string | Buffer): string {
   return `sha256:${createHash('sha256').update(value).digest('hex')}`;
+}
+
+async function relativeFilePaths(
+  root: string,
+  relativeRoot = '',
+): Promise<string[]> {
+  const entries = await readdir(join(root, relativeRoot), {
+    withFileTypes: true,
+  });
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const relativePath = relativeRoot
+        ? `${relativeRoot}/${entry.name}`
+        : entry.name;
+      return entry.isDirectory()
+        ? relativeFilePaths(root, relativePath)
+        : [relativePath];
+    }),
+  );
+  return files.flat().sort();
 }
 
 function canonicalHash(value: unknown): string {

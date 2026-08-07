@@ -26,6 +26,7 @@ import { writeJsonAtomic, writeTextAtomic } from './lib/fs-safe.mjs';
 import { validateHtmlSafety } from './lib/html-safety.mjs';
 import { validateInternalReferences } from './lib/internal-references.mjs';
 import { parseMarkdown } from './lib/markdown.mjs';
+import { enforceRunPackageInventory } from './lib/package-coverage.mjs';
 import { assertManifestPublishable } from './lib/publication-policy.mjs';
 import {
   auditArtifactSet,
@@ -140,6 +141,7 @@ export async function runExplainer(request, options = {}) {
     reviewGateBlocked: false,
     reviewGateReason: null,
     correctionAttempted: false,
+    publishReceiptPath: null,
     resumeToken: null,
     resumedApprovalStatus: null,
   };
@@ -249,6 +251,11 @@ export async function runExplainer(request, options = {}) {
       if (run.request.mode === 'interactive') {
         state.resumeToken = await createSetPlanResumeToken(run);
       }
+      const manifest = await inventoryManifestFor(state, now());
+      await enforceRetainedRunPackage(state, manifest, {
+        includeManifest: false,
+        failureStage: 'qa',
+      });
       return resultFor(state);
     }
 
@@ -256,6 +263,9 @@ export async function runExplainer(request, options = {}) {
       await updateBuildRecord(run, { id: 'durability', status: 'skipped' });
       await updateBuildRecord(run, { id: 'publish', status: 'skipped' });
       const manifest = await persistManifest(state, now());
+      await enforceRetainedRunPackage(state, manifest, {
+        acceptCleanedUnexpected: true,
+      });
       await writeTerminalEvidence(run, {
         outcome: 'built-needs-review',
         manifest,
@@ -271,7 +281,17 @@ export async function runExplainer(request, options = {}) {
       now,
     );
     if (!manifestFinalized) {
-      await persistManifest(state, now());
+      const manifest = await persistManifest(state, now());
+      await enforceRetainedRunPackage(state, manifest, {
+        failureStage: 'qa',
+      });
+    } else {
+      const manifest = JSON.parse(
+        await readFile(state.run.manifestPath, 'utf8'),
+      );
+      await enforceRetainedRunPackage(state, manifest, {
+        failureStage: 'qa',
+      });
     }
     return resultFor(state);
   } catch (error) {
@@ -291,6 +311,11 @@ export async function runExplainer(request, options = {}) {
       reasons: [reason],
       evidenceDisposition: manifest ? 'retained' : 'unavailable',
     });
+    if (manifest) {
+      await enforceRetainedRunPackage(state, manifest, {
+        includeTerminalEvidence: true,
+      }).catch(() => {});
+    }
     return resultFor(state, { failed: true, reasons: [reason] });
   }
 }
@@ -1594,6 +1619,7 @@ async function executeDurabilityAndPublish(state, options, now) {
         'Commit durability was requested without a durability callback.',
       );
     }
+    let providerFailed = false;
     try {
       await options.durability({
         runRoot: state.run.runRoot,
@@ -1601,6 +1627,18 @@ async function executeDurabilityAndPublish(state, options, now) {
         buildRecordPath: state.run.buildRecordPath,
       });
     } catch {
+      providerFailed = true;
+    }
+    let inventoryFailed = false;
+    try {
+      const manifest = JSON.parse(
+        await readFile(state.run.manifestPath, 'utf8'),
+      );
+      await enforceRetainedRunPackage(state, manifest);
+    } catch {
+      inventoryFailed = true;
+    }
+    if (providerFailed || inventoryFailed) {
       await updateBuildRecord(state.run, {
         id: 'durability',
         status: 'failed',
@@ -1609,7 +1647,7 @@ async function executeDurabilityAndPublish(state, options, now) {
       throw withEvidenceReason(
         codedError('E_DURABILITY', 'Durability provider failed.'),
         'durability',
-        'provider-failure',
+        providerFailed ? 'provider-failure' : 'pipeline-failure',
       );
     }
     await updateBuildRecord(state.run, {
@@ -1631,6 +1669,7 @@ async function executeDurabilityAndPublish(state, options, now) {
   }
   const finalizedAt = now();
   const finalizedManifest = await persistManifest(state, finalizedAt);
+  let providerFailed = false;
   try {
     const buildRecord = JSON.parse(
       await readFile(state.run.buildRecordPath, 'utf8'),
@@ -1659,14 +1698,26 @@ async function executeDurabilityAndPublish(state, options, now) {
         `Publisher returned an invalid receipt: ${crossRecordValidation.errors[0].message}`,
       );
     }
+    state.publishReceiptPath = 'publish-receipt.json';
+    await writeJsonAtomic(state.run.runRoot, state.publishReceiptPath, receipt);
+    state.publication = publicationSummary(receipt);
     await updateBuildRecord(state.run, {
       id: 'publish',
       status: 'warned',
       warnings: ['publish-receipt-evidence-required'],
     });
     await persistManifest(state, finalizedAt);
-    state.publication = publicationSummary(receipt);
   } catch {
+    providerFailed = true;
+  }
+  let inventoryFailed = false;
+  try {
+    const manifest = JSON.parse(await readFile(state.run.manifestPath, 'utf8'));
+    await enforceRetainedRunPackage(state, manifest);
+  } catch {
+    inventoryFailed = true;
+  }
+  if (providerFailed || inventoryFailed) {
     await updateBuildRecord(state.run, {
       id: 'publish',
       status: 'failed',
@@ -1675,7 +1726,7 @@ async function executeDurabilityAndPublish(state, options, now) {
     throw withEvidenceReason(
       codedError('E_PUBLISH', 'Publication provider failed.'),
       'durability',
-      'provider-failure',
+      providerFailed ? 'provider-failure' : 'pipeline-failure',
     );
   }
   return true;
@@ -1683,24 +1734,67 @@ async function executeDurabilityAndPublish(state, options, now) {
 
 async function persistManifest(state, createdAt) {
   const record = JSON.parse(await readFile(state.run.buildRecordPath, 'utf8'));
-  const manifest = manifestFor(
-    state,
-    record,
-    createdAt,
-    await immutableHashesFor(state),
-  );
-  await writeManifestAtomic(state.run, manifest);
+  const immutableHashes = await immutableHashesFor(state);
+  let manifest = manifestFor(state, record, createdAt, immutableHashes);
   const publicBaseUrl =
     state.run.request.publicBaseUrl ??
     state.run.request.durability?.publish?.publicBaseUrl;
   if (publicBaseUrl) {
+    const catalogPath = initiativeCatalogPath(manifest.slug);
     await writeJsonAtomic(
       state.run.runRoot,
-      initiativeCatalogPath(manifest.slug),
+      catalogPath,
       catalogFromManifest(manifest, publicBaseUrl),
     );
+    manifest = manifestFor(state, record, createdAt, {
+      ...immutableHashes,
+      [catalogPath]: hashBytes(
+        await readFile(join(state.run.runRoot, catalogPath)),
+      ),
+    });
   }
+  await writeManifestAtomic(state.run, manifest);
   return manifest;
+}
+
+async function inventoryManifestFor(state, createdAt) {
+  const record = JSON.parse(await readFile(state.run.buildRecordPath, 'utf8'));
+  return manifestFor(state, record, createdAt, await immutableHashesFor(state));
+}
+
+async function enforceRetainedRunPackage(
+  state,
+  manifest,
+  {
+    acceptCleanedUnexpected = false,
+    failureStage,
+    includeManifest = true,
+    includeTerminalEvidence = false,
+  } = {},
+) {
+  try {
+    return await enforceRunPackageInventory(state.run.runRoot, manifest, {
+      includeManifest,
+      includeTerminalEvidence,
+      removeUnexpected: true,
+    });
+  } catch (error) {
+    if (acceptCleanedUnexpected) {
+      await enforceRunPackageInventory(state.run.runRoot, manifest, {
+        includeManifest,
+        includeTerminalEvidence,
+      });
+      return;
+    }
+    if (failureStage) {
+      await updateBuildRecord(state.run, {
+        id: failureStage,
+        status: 'failed',
+        error: true,
+      });
+    }
+    throw error;
+  }
 }
 
 async function persistFailureManifest(state, _error, createdAt) {
@@ -2402,6 +2496,7 @@ async function immutableHashesFor(state) {
       metricsPath,
     ]),
     ...state.visualReviewPaths,
+    ...(state.publishReceiptPath ? [state.publishReceiptPath] : []),
     ...(state.theme ? ['theme.resolved.json'] : []),
     ...state.artifacts
       .filter(
