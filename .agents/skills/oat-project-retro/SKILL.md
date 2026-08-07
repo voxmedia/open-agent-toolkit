@@ -156,9 +156,19 @@ All applications follow the apply procedure. Filing remains owned by
 ### Step 5: Record the Run
 
 Append a structural project-log entry with `oat project log append` when the
-project log exists. Record artifact generation, evidence limitations, counts
-for both registers, and whether apply/filing was performed, declined, skipped,
-or deferred. Never hand-edit the project log.
+project log exists. Never hand-edit the project log. Use this exact one-line
+receipt shape, with every key present exactly once:
+
+```text
+retro artifact=<path> evidence_used=<csv> evidence_unavailable=<csv> promotions=<number> upstream=<number> apply=<performed|declined|skipped|deferred> filing=<performed|declined|skipped|deferred>
+```
+
+`artifact` is the repo-relative retro path. `evidence_used` and
+`evidence_unavailable` are comma-separated source identifiers; use `none` for
+an empty set. `promotions` is the RP register count and `upstream` is the UP
+register count. `apply` is the apply action outcome and `filing` is the filing
+action outcome. Counts describe artifact contents; outcomes describe actions.
+Never reuse a count key for an outcome or encode a count in `filing`.
 
 ### Step 6: Format, Verify, and Commit
 
@@ -177,6 +187,9 @@ Verify:
 - no unreplaced scaffold item examples, placeholders, or brace-delimited
   instructions remain;
 - rendered template metadata is retired; and
+- final verification confirms the structural receipt has all required keys
+  exactly once, both register counts are numeric, and count keys are never
+  reused for action outcomes; and
 - no unrelated implementation file changed.
 
 Commit the artifact, project-log append, and any approved apply outputs. Use

@@ -316,4 +316,37 @@ describe('retro skill content contracts', () => {
 
     expect(retroSkill).toMatch(/no new[\s\S]*?config surface/i);
   });
+
+  it('defines one unambiguous structural project-log receipt', () => {
+    const receiptShape =
+      'retro artifact=<path> evidence_used=<csv> evidence_unavailable=<csv> promotions=<number> upstream=<number> apply=<performed|declined|skipped|deferred> filing=<performed|declined|skipped|deferred>';
+    const receiptLines = retroSkill
+      .split('\n')
+      .filter((line) => line.includes(receiptShape));
+
+    expect(receiptLines).toEqual([expect.stringContaining(receiptShape)]);
+
+    for (const key of [
+      'artifact',
+      'evidence_used',
+      'evidence_unavailable',
+      'promotions',
+      'upstream',
+      'apply',
+      'filing',
+    ]) {
+      expect(receiptLines[0]?.match(new RegExp(`${key}=`, 'g'))).toHaveLength(
+        1,
+      );
+    }
+
+    expect(retroSkill).toMatch(/`promotions` is the RP register count/i);
+    expect(retroSkill).toMatch(/`upstream` is the UP\s+register count/i);
+    expect(retroSkill).toMatch(/`apply` is the apply action outcome/i);
+    expect(retroSkill).toMatch(/`filing` is the filing\s+action outcome/i);
+    expect(retroSkill).toMatch(
+      /final verification[\s\S]*?required keys[\s\S]*?exactly once[\s\S]*?counts are numeric/i,
+    );
+    expect(retroSkill).not.toMatch(/filing=<number>/);
+  });
 });
