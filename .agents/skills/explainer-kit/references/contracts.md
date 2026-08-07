@@ -48,14 +48,20 @@ ambient or home-directory file is consulted. The callback must return an
 `content.html`, matching the artifact's declared authoring path, plus non-secret
 provenance. The executable callback is never persisted in `run-request.json`.
 
-Project recap requests have an explicit `recapMode`. Omitting it selects and
-persists `artistic`, which keeps the recipe's rich HTML floor. Selecting
-`deterministic-markdown` before the run applies the recipe-owned fallback to
-the complete planned portfolio, including optional expansions, while retaining
-the same adaptive hub, architecture, and deck identities. The resulting
-Markdown author records and `source/content/*.md` paths remain distinct in the
-manifest and immutable rebuild package. An artistic author failure fails the
-run; the core never silently retries or downgrades it as Markdown.
+New project recap producers select immutable `project-recap@2`. Its
+navigational hub is the only mandatory artifact. A diagram, deck, or deep dive
+is an optional expansion only when its justification states a distinct reader
+question, supporting source evidence, and the rationale for using that medium.
+Project recap requests also have an explicit `recapMode`. Omitting it selects
+and persists `artistic`, which keeps the recipe's rich HTML floor. Selecting
+`deterministic-markdown` before the run applies the recipe-owned fallback to the
+complete planned portfolio — the hub plus any accepted expansions — without
+changing its artifact identities. The resulting Markdown author records and
+`source/content/*.md` paths remain distinct in the manifest and immutable
+rebuild package. An artistic author failure fails the run; the core never
+silently retries or downgrades it as Markdown. `project-recap@1` is immutable
+replay guidance only: retained v1 requests remain readable, but current
+producers do not select it.
 
 Before artifact authoring, a caller supplies one provider-neutral `planSet`
 callback. It receives the reconciled fact base and recipe policy and returns
@@ -65,7 +71,7 @@ callback. It receives the reconciled fact base and recipe policy and returns
 {
   "schemaVersion": "explainer-kit.set-plan/v1",
   "planId": "project-recap-set",
-  "recipe": { "id": "project-recap", "version": "1" },
+  "recipe": { "id": "project-recap", "version": "2" },
   "sourceIds": ["plan"],
   "ledger": {
     "terminology": [],

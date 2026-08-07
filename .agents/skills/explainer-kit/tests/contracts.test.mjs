@@ -320,6 +320,48 @@ test('documents complete receipt v2 consumption and immutable v1 replay', async 
   assert.doesNotMatch(guidance, /complete `PublishReceiptV1`/);
 });
 
+test('documents project-recap v2 as the current producer policy with immutable v1 replay', async () => {
+  const guidance = await readFile(
+    new URL('../references/contracts.md', import.meta.url),
+    'utf8',
+  );
+  const producerPolicy = guidance.slice(
+    guidance.indexOf('New project recap producers'),
+    guidance.indexOf('Before artifact authoring'),
+  );
+
+  assert.match(
+    producerPolicy,
+    /project-recap@2[\s\S]*navigational hub[\s\S]*only mandatory artifact/i,
+  );
+  for (const requirement of [
+    /diagram/i,
+    /deck/i,
+    /deep dive/i,
+    /distinct reader\s+question/i,
+    /source evidence/i,
+    /rationale/i,
+  ]) {
+    assert.match(producerPolicy, requirement);
+  }
+  assert.match(
+    producerPolicy,
+    /project-recap@1[\s\S]*immutable\s+replay guidance/i,
+  );
+  assert.match(
+    guidance,
+    /"recipe": \{ "id": "project-recap", "version": "2" \}/,
+  );
+  assert.doesNotMatch(
+    guidance,
+    /"recipe": \{ "id": "project-recap", "version": "1" \}/,
+  );
+  assert.doesNotMatch(
+    guidance,
+    /same adaptive hub, architecture, and deck identities/i,
+  );
+});
+
 test('accepts publish receipt v1 replay and explicit v2 verification facts', () => {
   for (const receipt of [
     publishReceipt(),
