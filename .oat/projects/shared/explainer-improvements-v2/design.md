@@ -132,17 +132,21 @@ The final `terminal-evidence/v1` post-image is exact:
   and `(stage, kind, artifactId)` tuples are unique;
 - any `artifactId` must be a member of the bound run manifest.
 
-A `built-needs-review` record has at least one `finding`, `provider-failure`, or
-`pipeline-failure` reason. A `failed` record has at least one
-`provider-failure` or `pipeline-failure` reason. `evidenceDisposition:
-superseded` requires `manifestHash`, `supersededBy`, and a
-`finalization`/`superseded` reason. A superseded record replaces prior reasons
-with exactly one `{ stage: "finalization", kind: "superseded", count: 1 }`
-reason, with no `artifactId`; it does not append to a possibly full prior reason
-set. `supersededBy` is a closed object requiring only `runId` and
-`manifestHash`; its run ID is 1–2000 characters, differs from the record's run
-ID, and its hash uses the standard hash shape. Other dispositions forbid both
-`supersededBy` and `kind: superseded`.
+When `evidenceDisposition` is not `superseded`, a `built-needs-review` record
+has at least one `finding`, `provider-failure`, or `pipeline-failure` reason,
+and a `failed` record has at least one `provider-failure` or
+`pipeline-failure` reason.
+
+When `evidenceDisposition` is `superseded`, supersession rules take precedence
+over those ordinary outcome-specific reason requirements. The record preserves
+its original `built-needs-review` or `failed` outcome, requires `manifestHash`
+and `supersededBy`, and replaces all prior reasons with exactly one
+`{ stage: "finalization", kind: "superseded", count: 1 }` reason with no
+`artifactId`. It does not append to a possibly full prior reason set.
+`supersededBy` is a closed object requiring only `runId` and `manifestHash`; its
+run ID is 1–2000 characters, differs from the record's run ID, and its hash uses
+the standard hash shape. Other dispositions forbid both `supersededBy` and
+`kind: superseded`.
 
 When a manifest exists, producers and consumers require its hash even if the
 schema cannot infer filesystem availability. Legacy `findings`, `error`,

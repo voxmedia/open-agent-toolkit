@@ -770,7 +770,10 @@ For supersession, replace all prior reasons with exactly one
 `supersededBy` is exactly `{ runId, manifestHash }`, rejects extra fields,
 requires a replacement run distinct from the original, and is present if and
 only if disposition is `superseded`. Forbid `kind: superseded` for every other
-disposition.
+disposition. Supersession preserves the original `built-needs-review` or
+`failed` outcome, and these supersession rules take precedence: apply ordinary
+outcome-specific reason-kind requirements only when disposition is not
+`superseded`.
 
 Keep provider `visual-review-result/v1` ephemeral. Persist only the exact new
 `visual-review-evidence/v1` projection: `schemaVersion`, `requestHash`,
@@ -805,7 +808,9 @@ unknown nested fields, reason cardinality, per-reason and total count bounds,
 duplicate tuples, foreign artifact IDs, run/manifest binding, every
 outcome/disposition/supersession conditional, and every retained visual-review
 disposition, request-hash, and attempt-directory conditional. Include positive
-and negative cases for supersession at a prior reason total of 50.
+and negative cases for supersession at a prior reason total of 50, for
+superseding each permitted original outcome, and for enforcing ordinary
+outcome-specific reason kinds on every non-superseded record.
 
 **Step 3: Verify**
 
@@ -947,7 +952,8 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 | p03                | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T224958Z.md                                                 | 01d3c99075aa09ea5fb49b801d4deca1d5f3c51e | manual     | -                        |
 | p04                | code     | fixes_added     | 2026-08-07 | reviews/archived/p04-review-2026-08-07T021700Z.md                                                 | ba65b8258b8e0adce74cd20ba534255dbfc8fccb | manual     | -                        |
 | p04-scope-revision | artifact | fixes_completed | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T023400Z.md                         | 8f9d2c9c946404bc06bf6de2683dc3f821173ca5 | manual     | -                        |
-| p04-scope-revision | artifact | fixes_added     | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T025000Z.md                         | 35e610baa851e2693d9403587d9219c0f8bb2a23 | manual     | -                        |
+| p04-scope-revision | artifact | fixes_completed | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T025000Z.md                         | 35e610baa851e2693d9403587d9219c0f8bb2a23 | manual     | -                        |
+| p04-scope-revision | artifact | fixes_added     | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T030500Z.md                         | 26f1e8b420938b487397223ef609d1ef17d16fd4 | manual     | -                        |
 | p05                | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | final              | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | plan-revision      | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T180042Z.md                              | c33edabc017369a629ca7a3a63757cbad3d9dab9 | manual     | -                        |
