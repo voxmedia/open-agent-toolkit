@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-07
-oat_current_task_id: p05-t01
+oat_current_task_id: p05-t04
 oat_generated: false
 ---
 
@@ -230,15 +230,15 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 6     | 6/6       |
-| p02   | completed | 2     | 2/2       |
-| p03   | completed | 11    | 11/11     |
-| p04   | completed | 6     | 6/6       |
-| p05   | pending   | 3     | 0/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | completed   | 6     | 6/6       |
+| p02   | completed   | 2     | 2/2       |
+| p03   | completed   | 11    | 11/11     |
+| p04   | completed   | 6     | 6/6       |
+| p05   | in_progress | 4     | 3/4       |
 
-**Total:** 25/28 tasks completed
+**Total:** 28/29 tasks completed
 
 ---
 
@@ -431,13 +431,38 @@ configured p05 human checkpoint.
 
 ## Phase 5: Prose-led authoring and release closure
 
-**Status:** pending
+**Status:** in_progress
+**Started:** 2026-08-07
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p05-t01 | pending | -      |
-| p05-t02 | pending | -      |
-| p05-t03 | pending | -      |
+| Task    | Status    | Commit    |
+| ------- | --------- | --------- |
+| p05-t01 | completed | d61a555fa |
+| p05-t02 | completed | 5b92361d3 |
+| p05-t03 | completed | 3ed90f009 |
+| p05-t04 | pending   | -         |
+
+### Review Received: p05
+
+**Date:** 2026-08-07
+**Review artifact:** `reviews/archived/p05-review-2026-08-07T210515Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New task added:** p05-t04
+
+- I1 → p05-t04: align the shipped core contracts reference and set-plan example
+  with `project-recap@2`, while retaining v1 only as replay guidance.
+
+The executable recipe, adapter selection, visual-review prose, versions,
+provider views, docs, and release gates passed. The 74 unmanaged Cursor
+symlinks are inherited and unchanged, so they are not a p05 defect.
+
+**Next:** Execute p05-t04, then narrowly re-review this guidance fix.
 
 ---
 

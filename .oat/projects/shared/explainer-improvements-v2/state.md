@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: 098e1780b86116492073513614f64835aa470030
+oat_current_task: p05-t04
+oat_last_commit: 3ed90f009cfc8a6f1c95fcbd9185a5a18cfe00ed
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -72,7 +72,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-07T20:08:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-07T21:06:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -87,7 +87,9 @@ oat_generated: false
 Phases p01 through p04 are complete. The operator-authorized p04-t05 and
 p04-t06 fixes closed the unmanifested-file archive bypass and made every CLI
 stream canary row a genuine injection test. Their narrow re-review passed with
-no findings. The operator approved the configured p05 human checkpoint.
+no findings. The operator approved p05, and its three original tasks landed.
+The p05 review found one stale shipped core recap reference, now tracked as
+p05-t04.
 
 ## Artifacts
 
@@ -95,7 +97,7 @@ no findings. The operator approved the configured p05 human checkpoint.
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
-- **Plan:** `plan.md` (5 phases / 28 tasks; p04-t05 and p04-t06 review fixes)
+- **Plan:** `plan.md` (5 phases / 29 tasks; p05-t04 review fix)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -129,7 +131,8 @@ no findings. The operator approved the configured p05 human checkpoint.
 - ✓ p04-t05 and p04-t06 implemented and passed narrow re-review
 - ✓ p04 complete
 - ✓ p05 HiLL checkpoint approved
-- ⧗ Implement p05-t01 through p05-t03
+- ✓ p05-t01 through p05-t03 implemented; all release gates passed
+- ⧗ Align shipped core recap guidance in p05-t04
 
 ## Blockers
 
@@ -137,4 +140,4 @@ None.
 
 ## Next Milestone
 
-Implement the three prose-led authoring and release-closure tasks.
+Implement p05-t04 and narrowly re-review the guidance fix.

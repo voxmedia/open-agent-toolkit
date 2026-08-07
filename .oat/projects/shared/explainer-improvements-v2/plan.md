@@ -1026,6 +1026,42 @@ Run, in order:
 git commit -m "chore(p05-t03): synchronize explainer release versions"
 ```
 
+### Task p05-t04: (review) Align shipped core recap guidance with recipe v2
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+
+**Step 1: Write a shipped-guidance assertion (RED)**
+
+Require the current recap-mode contract paragraph and set-plan example to
+select `project-recap@2`, describe the navigational hub as the only mandatory
+artifact, and permit diagram, deck, or deep-dive expansion only for a distinct
+reader question with evidence and rationale. Require v1 to appear only as
+immutable replay guidance.
+
+**Step 2: Align the core contract reference (GREEN)**
+
+Replace the legacy fixed hub/architecture/deck language and v1 new-run example
+with the v2 prose-led policy. Preserve explicit v1 replay compatibility without
+presenting v1 as the current producer choice. Do not change recipe schemas,
+runtime selection, or visual-review contracts.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs && pnpm check && pnpm build:docs && pnpm release:validate && pnpm lint && pnpm format`
+
+Expected: shipped guidance and current producer selection agree on v2, v1
+replay remains explicit, and release/docs gates pass.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "docs(p05-t04): align recap contract with recipe v2"
+```
+
 ---
 
 ## Reviews
@@ -1047,7 +1083,7 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 | p04-scope-revision | artifact | passed          | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T173000Z.md                         | a0cd15674c2032ac62b5103077280d90d1ef70b3 | manual     | -                        |
 | p04-t04            | code     | fixes_completed | 2026-08-07 | reviews/archived/p04-t04-review-2026-08-07T185131Z.md                                             | c3ef47b71d640d4289576fad904e20e027e6935f | manual     | -                        |
 | p04-t04            | code     | passed          | 2026-08-07 | reviews/archived/p04-t04-review-2026-08-07T200546Z.md                                             | 098e1780b86116492073513614f64835aa470030 | manual     | -                        |
-| p05                | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
+| p05                | code     | fixes_added     | 2026-08-07 | reviews/archived/p05-review-2026-08-07T210515Z.md                                                 | 3ed90f009cfc8a6f1c95fcbd9185a5a18cfe00ed | manual     | -                        |
 | final              | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | plan-revision      | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T180042Z.md                              | c33edabc017369a629ca7a3a63757cbad3d9dab9 | manual     | -                        |
 | plan-revision      | artifact | passed          | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T181021Z.md                              | a8e41bbc13c9aee38312d1680ac6aec13642cae7 | manual     | -                        |
@@ -1082,9 +1118,10 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 - Phase 3: 11 tasks — publication verification, receipts, and review fixes
 - Phase 4: 6 tasks — lifecycle ordering, bounded recovery, code-only terminal
   evidence, and exact retained-package confinement
-- Phase 5: 3 tasks — prose-led authoring, docs, and release closure
+- Phase 5: 4 tasks — prose-led authoring, docs, release closure, and shipped
+  recap-contract alignment
 
-**Total: 28 tasks**
+**Total: 29 tasks**
 
 ## References
 
