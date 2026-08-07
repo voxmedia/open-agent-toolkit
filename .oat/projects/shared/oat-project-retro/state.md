@@ -82,7 +82,7 @@ oat_post_implement_sequence:
   pre_approval: [summary, document, pr]
   pre_approval_completed: [summary, document, pr]
   approval: not_required
-  approval_source: policy
+  approval_source: null
   post_approval: []
   post_approval_completed: []
   failure: null
