@@ -53,6 +53,7 @@ import {
   initializeRun,
   readSetPlanRecords,
   reopenBuildStages,
+  supersedeTerminalEvidence,
   updateBuildRecord,
   verifySetPlanResumeToken,
   writeManifestAtomic,
@@ -65,6 +66,7 @@ import {
 import { artifactPath, renderArtifact } from './lib/render.mjs';
 import { resolveRootConfinedPath } from './lib/safe-paths.mjs';
 import { plannedArtifacts, planExplainerSet } from './lib/set-plan.mjs';
+import { serializeTerminalText } from './lib/terminal-evidence.mjs';
 import { resolveTheme } from './lib/theme.mjs';
 import { runVisualReview } from './lib/visual-review.mjs';
 
@@ -278,6 +280,51 @@ export async function runExplainer(request, options = {}) {
     }).catch(() => {});
     return resultFor(state, error);
   }
+}
+
+export async function supersedeExplainerRun({ runRoot, supersededBy } = {}) {
+  if (typeof runRoot !== 'string') {
+    throw new TypeError('Supersession requires a runRoot.');
+  }
+  const confinedRunRoot = await realpath(runRoot);
+  const manifest = JSON.parse(
+    await readFile(join(confinedRunRoot, 'manifest.json'), 'utf8'),
+  );
+  if (
+    manifest?.schemaVersion !== 'explainer-kit.manifest/v1' ||
+    typeof manifest.runId !== 'string' ||
+    typeof manifest.slug !== 'string' ||
+    !['built-needs-review', 'failed'].includes(manifest.outcome)
+  ) {
+    throw new Error(
+      'Only a flagged or failed manifest can produce supersession evidence.',
+    );
+  }
+  if (
+    !supersededBy ||
+    typeof supersededBy !== 'object' ||
+    typeof supersededBy.runId !== 'string' ||
+    supersededBy.runId === manifest.runId ||
+    !/^sha256:[a-f0-9]{64}$/.test(supersededBy.manifestHash ?? '')
+  ) {
+    throw new Error(
+      'Supersession requires a distinct replacement run ID and manifest hash.',
+    );
+  }
+  await supersedeTerminalEvidence(
+    {
+      runId: manifest.runId,
+      slug: manifest.slug,
+      runRoot: confinedRunRoot,
+    },
+    { manifest, supersededBy },
+  );
+  return {
+    runId: manifest.runId,
+    outcome: manifest.outcome,
+    terminalEvidencePath: join(confinedRunRoot, 'terminal-evidence.json'),
+    supersededBy: structuredClone(supersededBy),
+  };
 }
 
 async function executeThemeStage(state, options) {
@@ -1470,11 +1517,24 @@ async function executeDurabilityAndPublish(state, options, now) {
         'Commit durability was requested without a durability callback.',
       );
     }
-    await options.durability({
-      runRoot: state.run.runRoot,
-      manifestPath: state.run.manifestPath,
-      buildRecordPath: state.run.buildRecordPath,
-    });
+    try {
+      await options.durability({
+        runRoot: state.run.runRoot,
+        manifestPath: state.run.manifestPath,
+        buildRecordPath: state.run.buildRecordPath,
+      });
+    } catch (error) {
+      await updateBuildRecord(state.run, {
+        id: 'durability',
+        status: 'failed',
+        error: {
+          code: error.code ?? 'E_DURABILITY',
+          message: safeMessage(error),
+          recovery: ['Correct the durability failure and start a new run.'],
+        },
+      });
+      throw error;
+    }
     await updateBuildRecord(state.run, {
       id: 'durability',
       status: 'warned',
@@ -2459,12 +2519,14 @@ function stageErrorCode(stage) {
 }
 
 function safeMessage(error) {
-  return (error instanceof Error ? error.message : String(error))
-    .replaceAll(
-      /(?:aws_secret_access_key|aws_session_token|password|private_key)\s*[:=]\s*\S+/gi,
-      '[redacted]',
-    )
-    .slice(0, 2000);
+  return serializeTerminalText(
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : 'Run failed.',
+    'error message',
+  );
 }
 
 if (

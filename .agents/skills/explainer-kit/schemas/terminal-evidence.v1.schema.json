@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.terminal-evidence/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "outcome",
+    "findings",
+    "evidenceDisposition"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "explainer-kit.terminal-evidence/v1"
+    },
+    "runId": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "outcome": {
+      "enum": ["built-needs-review", "failed"]
+    },
+    "manifestHash": { "$ref": "#/$defs/hash" },
+    "findings": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "error": { "$ref": "#/$defs/error" },
+    "evidenceDisposition": {
+      "enum": ["retained", "partial", "unavailable", "superseded"]
+    },
+    "supersededBy": { "$ref": "#/$defs/supersededBy" }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "boundedText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": { "$ref": "#/$defs/boundedText" },
+        "rubric": { "$ref": "#/$defs/boundedText" },
+        "severity": { "$ref": "#/$defs/boundedText" },
+        "evidence": { "$ref": "#/$defs/boundedText" },
+        "correction": { "$ref": "#/$defs/boundedText" }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "$ref": "#/$defs/boundedText" },
+        "message": { "$ref": "#/$defs/boundedText" }
+      }
+    },
+    "supersededBy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "manifestHash"],
+      "properties": {
+        "runId": { "$ref": "#/$defs/boundedText" },
+        "manifestHash": { "$ref": "#/$defs/hash" }
+      }
+    }
+  }
+}

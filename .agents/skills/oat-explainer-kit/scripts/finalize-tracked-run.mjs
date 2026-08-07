@@ -7,6 +7,7 @@ const MODES = new Set(['dedicated', 'completion-bookkeeping']);
 const ARTIFACT_COMMIT_TOKEN = '$ARTIFACT_COMMIT';
 const SHA_PATTERN = /^[a-f0-9]{40}$/;
 const PACKAGE_COVERAGE_VERSION = 'explainer-kit.package-coverage/v2';
+const TERMINAL_EVIDENCE_VERSION = 'explainer-kit.terminal-evidence/v1';
 
 export async function planTrackedRunFinalization(request, context = {}) {
   assertRequest(request);
@@ -28,8 +29,12 @@ export async function planTrackedRunFinalization(request, context = {}) {
     const terminalEvidence = JSON.parse(
       await readFile(join(runRoot, 'terminal-evidence.json'), 'utf8'),
     );
-    const canonicalHash = await loadCanonicalHash(context.coreRoot);
-    assertTerminalEvidence(terminalEvidence, manifest, canonicalHash);
+    const terminalEvidenceContract = await loadTerminalEvidenceContract(
+      context.coreRoot,
+    );
+    terminalEvidenceContract.assertTerminalEvidence(terminalEvidence, {
+      manifest,
+    });
     return {
       schemaVersion: 'oat-explainer-kit.finalization-plan/v1',
       status: 'complete',
@@ -39,6 +44,9 @@ export async function planTrackedRunFinalization(request, context = {}) {
       publicationAllowed: false,
       evidenceDisposition: terminalEvidence.evidenceDisposition,
       terminalEvidencePath: 'terminal-evidence.json',
+      ...(terminalEvidence.supersededBy && {
+        supersededBy: terminalEvidence.supersededBy,
+      }),
     };
   }
   const packageCoverage = await loadPackageCoverage(context.coreRoot);
@@ -150,9 +158,19 @@ export async function planTrackedRunFinalization(request, context = {}) {
 
 export function verifyTrackedRunFinalization(plan, observation) {
   if (plan?.status === 'complete') {
+    if (
+      !['built-durable', 'built-needs-review', 'failed'].includes(plan.outcome)
+    ) {
+      return failed([
+        error(
+          'invalid-plan',
+          'Complete finalization plan has an unsupported outcome.',
+        ),
+      ]);
+    }
     return {
       ok: true,
-      outcome: 'built-durable',
+      outcome: plan.outcome,
       pushAllowed: false,
       errors: [],
     };
@@ -359,39 +377,27 @@ async function loadPackageCoverage(coreRoot) {
   return loaded;
 }
 
-async function loadCanonicalHash(coreRoot) {
+async function loadTerminalEvidenceContract(coreRoot) {
   const root = await realpathRequired(coreRoot, 'coreRoot');
-  const modulePath = join(root, 'scripts', 'lib', 'contracts.mjs');
+  const modulePath = join(root, 'scripts', 'lib', 'terminal-evidence.mjs');
   let loaded;
   try {
     loaded = await import(pathToFileURL(modulePath).href);
   } catch (loadError) {
     throw new Error(
-      `Compatible explainer contracts could not be loaded from coreRoot: ${loadError.message}`,
+      `Compatible terminal evidence could not be loaded from coreRoot: ${loadError.message}`,
       { cause: loadError },
     );
   }
-  if (typeof loaded.canonicalHash !== 'function') {
-    throw new Error('coreRoot must provide canonicalHash().');
-  }
-  return loaded.canonicalHash;
-}
-
-function assertTerminalEvidence(evidence, manifest, canonicalHash) {
   if (
-    evidence?.schemaVersion !== 'explainer-kit.terminal-evidence/v1' ||
-    evidence.runId !== manifest.runId ||
-    evidence.outcome !== manifest.outcome ||
-    evidence.manifestHash !== canonicalHash(manifest) ||
-    !Array.isArray(evidence.findings) ||
-    !['retained', 'partial', 'unavailable'].includes(
-      evidence.evidenceDisposition,
-    )
+    loaded.TERMINAL_EVIDENCE_VERSION !== TERMINAL_EVIDENCE_VERSION ||
+    typeof loaded.assertTerminalEvidence !== 'function'
   ) {
     throw new Error(
-      'Terminal evidence does not match the flagged or failed manifest.',
+      `coreRoot must provide ${TERMINAL_EVIDENCE_VERSION} validation.`,
     );
   }
+  return loaded;
 }
 
 function resolveRunPath(runRoot, path) {

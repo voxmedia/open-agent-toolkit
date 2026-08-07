@@ -11,6 +11,8 @@ import {
   canonicalHash,
   visualReviewRequestId,
 } from '../../explainer-kit/scripts/lib/contracts.mjs';
+import { writeTerminalEvidence } from '../../explainer-kit/scripts/lib/records.mjs';
+import { supersedeExplainerRun } from '../../explainer-kit/scripts/run.mjs';
 import { png } from '../../explainer-kit/tests/fixtures/png.mjs';
 import {
   planTrackedRunFinalization as planTrackedRunFinalizationCore,
@@ -251,30 +253,85 @@ test('terminates idempotently when the same commit evidence is already durable',
   assert.deepEqual(plan.commands, []);
 });
 
-test('finalizes unresolved review evidence without making it publishable', async () => {
-  const fixture = await createRun({ outcome: 'built-needs-review' });
+test('finalizes flagged and failed evidence without promoting either outcome', async () => {
+  for (const outcome of ['built-needs-review', 'failed']) {
+    const fixture = await createRun({ outcome });
+    const manifest = JSON.parse(await readFile(fixture.manifestPath, 'utf8'));
+    await writeTerminalEvidence(
+      {
+        runId: manifest.runId,
+        slug: manifest.slug,
+        runRoot: fixture.runRoot,
+      },
+      {
+        outcome,
+        manifest,
+        findings:
+          outcome === 'built-needs-review'
+            ? [{ artifactId: 'hub', severity: 'important' }]
+            : [],
+        ...(outcome === 'failed' && {
+          error: { code: 'E_RUN', message: 'The run failed.' },
+        }),
+        evidenceDisposition: 'retained',
+      },
+    );
+
+    const plan = await planTrackedRunFinalization(
+      request(fixture, 'dedicated'),
+      {
+        repoRoot: fixture.repoRoot,
+        project: 'demo',
+      },
+    );
+    assert.equal(plan.status, 'complete');
+    assert.equal(plan.outcome, outcome);
+    assert.equal(plan.publicationAllowed, false);
+    assert.equal(plan.evidenceDisposition, 'retained');
+    assert.deepEqual(plan.commands, []);
+    assert.deepEqual(verifyTrackedRunFinalization(plan), {
+      ok: true,
+      outcome,
+      pushAllowed: false,
+      errors: [],
+    });
+  }
+});
+
+test('consumes production supersession evidence bound to both runs', async () => {
+  const fixture = await createRun({ outcome: 'failed' });
   const manifest = JSON.parse(await readFile(fixture.manifestPath, 'utf8'));
-  await writeFile(
-    join(fixture.runRoot, 'terminal-evidence.json'),
-    `${JSON.stringify({
-      schemaVersion: 'explainer-kit.terminal-evidence/v1',
+  await writeTerminalEvidence(
+    {
       runId: manifest.runId,
-      outcome: 'built-needs-review',
-      manifestHash: canonicalHash(manifest),
-      findings: [{ artifactId: 'hub', severity: 'important' }],
+      slug: manifest.slug,
+      runRoot: fixture.runRoot,
+    },
+    {
+      outcome: 'failed',
+      manifest,
+      error: { code: 'E_RUN', message: 'The original run failed.' },
       evidenceDisposition: 'retained',
-    })}\n`,
+    },
   );
+
+  const replacement = {
+    runId: 'run-replacement',
+    manifestHash: `sha256:${'c'.repeat(64)}`,
+  };
+  await supersedeExplainerRun({
+    runRoot: fixture.runRoot,
+    supersededBy: replacement,
+  });
 
   const plan = await planTrackedRunFinalization(request(fixture, 'dedicated'), {
     repoRoot: fixture.repoRoot,
     project: 'demo',
   });
   assert.equal(plan.status, 'complete');
-  assert.equal(plan.outcome, 'built-needs-review');
-  assert.equal(plan.publicationAllowed, false);
-  assert.equal(plan.evidenceDisposition, 'retained');
-  assert.deepEqual(plan.commands, []);
+  assert.equal(plan.outcome, 'failed');
+  assert.equal(plan.evidenceDisposition, 'superseded');
+  assert.deepEqual(plan.supersededBy, replacement);
 });
 
 test('loads versioned package coverage from the explicit compatible core root', async () => {
@@ -623,6 +680,8 @@ async function createRun({
 
   const manifest = {
     schemaVersion: 'explainer-kit.manifest/v1',
+    runId: 'run-recap',
+    slug: 'recap',
     recipe: { id: 'project-recap', version: '1' },
     source: {
       factBasePath: 'source/fact-base.json',

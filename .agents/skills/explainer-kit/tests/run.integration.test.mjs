@@ -4058,6 +4058,58 @@ test('invokes durability and publishing seams only when explicitly requested', a
   assert.equal(durabilityResult.durable, true);
 });
 
+test('redacts and bounds terminal evidence after a late provider failure', async () => {
+  const fixture = await suppliedFixture();
+  const secrets = {
+    password: 'correct-horse-battery-staple',
+    token: 'tok_live_terminal_evidence',
+    accessKey: 'AKIAIOSFODNN7EXAMPLE',
+    secretAccessKey: 'terminal-secret-access-key',
+    urlPassword: 'url-password-secret',
+  };
+  const oversized = 'payload-'.repeat(1_000);
+  const providerError = Object.assign(
+    new Error(
+      [
+        `password=${secrets.password}`,
+        `token=${secrets.token}`,
+        `aws_access_key_id=${secrets.accessKey}`,
+        `aws_secret_access_key=${secrets.secretAccessKey}`,
+        `https://operator:${secrets.urlPassword}@example.com/private`,
+        oversized,
+      ].join(' '),
+    ),
+    { code: `E_PROVIDER token=${secrets.token}` },
+  );
+
+  const result = await runExplainer(
+    {
+      ...fixture.request,
+      durability: { strategy: 'commit' },
+    },
+    {
+      now: () => NOW,
+      durability: async () => {
+        throw providerError;
+      },
+    },
+  );
+
+  assert.equal(result.outcome, 'failed');
+  const terminalEvidenceText = await readFile(
+    join(result.runRoot, 'terminal-evidence.json'),
+    'utf8',
+  );
+  const terminalEvidence = JSON.parse(terminalEvidenceText);
+  for (const secret of Object.values(secrets)) {
+    assert.equal(terminalEvidenceText.includes(secret), false);
+  }
+  assert.equal(terminalEvidenceText.includes(oversized), false);
+  assert.ok(terminalEvidence.error.code.length <= 2_000);
+  assert.ok(terminalEvidence.error.message.length <= 2_000);
+  assert.match(terminalEvidence.error.message, /\[redacted\]/);
+});
+
 test('accepts only callback receipts bound to the finalized manifest and catalog', async () => {
   for (const receiptVersion of ['v1', 'v2-public', 'v2-protected']) {
     const fixture = await suppliedFixture();

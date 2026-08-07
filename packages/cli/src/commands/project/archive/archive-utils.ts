@@ -34,6 +34,7 @@ import {
   type ExplainerSourceBacklinks,
   loadExplainerSourceBacklinks,
 } from './explainer-source-backlinks';
+import { loadExplainerTerminalEvidence } from './explainer-terminal-evidence';
 
 const execFileAsync = promisify(execFileCallback);
 
@@ -597,6 +598,8 @@ async function exportProjectSummary(
 
 interface ProjectRecapManifest {
   schemaVersion: 'explainer-kit.manifest/v1';
+  runId: string;
+  slug: string;
   recipe: {
     id: string;
     version: string;
@@ -1039,6 +1042,33 @@ async function readVerifiedRunMode(
   return request.mode;
 }
 
+async function verifyProjectRecapTerminalEvidence(
+  runRoot: string,
+  manifest: ProjectRecapManifest,
+): Promise<void> {
+  if (!['built-needs-review', 'failed'].includes(manifest.outcome)) {
+    return;
+  }
+  let evidence: unknown;
+  try {
+    evidence = JSON.parse(
+      await readFile(join(runRoot, 'terminal-evidence.json'), 'utf8'),
+    );
+  } catch (error) {
+    throw new CliError(
+      `Selected project recap requires valid terminal evidence before archival: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  try {
+    const terminalEvidence = await loadExplainerTerminalEvidence();
+    terminalEvidence.assertTerminalEvidence(evidence, { manifest });
+  } catch (error) {
+    throw new CliError(
+      `Selected project recap terminal evidence is invalid: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
 async function loadVerifiedProjectRecap(
   projectPath: string,
   projectRecapRun: string,
@@ -1117,6 +1147,7 @@ async function loadVerifiedProjectRecap(
       'Selected project recap artifact hashes do not match the immutable package.',
     );
   }
+  await verifyProjectRecapTerminalEvidence(sourceRunRoot, manifest);
   return {
     sourceRunRoot,
     manifestContents,
@@ -1190,6 +1221,7 @@ async function exportSelectedProjectRecap(
       temporaryRoot,
       sourceManifest,
     );
+    await verifyProjectRecapTerminalEvidence(temporaryRoot, sourceManifest);
     await renamePath(temporaryRoot, exportRoot);
 
     return {

@@ -608,6 +608,12 @@ with:
 For a shared project that was not archived, use the selected active run and
 omit `relocatedFrom`, but keep the same `completion-bookkeeping` mode.
 
+When the finalization plan is `complete` with `built-needs-review` or `failed`,
+preserve that exact outcome and skip both attestation and the evidence commit.
+These evidence-only plans are already complete for lifecycle retention and
+remain unpublishable. Call `verifyTrackedRunFinalization(...)` on the complete
+plan; it must not promote either outcome to `built-durable`.
+
 The lifecycle bookkeeping commit is the artifact commit. Call the compatible
 core's `recordDurability(...)` with the finalizer's planned request. Submit only immutable paths under `projectRecapExport.exportRoot` as commit evidence for an archived recap; `manifest.json` and `build-record.json` are mutable records and
 must not appear in that evidence path list. The successful exported-path

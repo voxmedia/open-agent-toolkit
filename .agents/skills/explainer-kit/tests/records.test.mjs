@@ -23,6 +23,7 @@ import {
   requiredImmutablePackagePaths,
   reopenBuildStages,
   SET_PLAN_RECORD_PATHS,
+  supersedeTerminalEvidence,
   updateBuildRecord,
   verifySetPlanResumeToken,
   writeManifestAtomic,
@@ -272,14 +273,14 @@ test('retains structured partial evidence for a failed visual review attempt', a
   );
 });
 
-test('retains compact flagged, failed, and superseded terminal evidence', async () => {
-  for (const outcome of ['built-needs-review', 'failed', 'superseded']) {
+test('retains compact flagged and failed terminal evidence', async () => {
+  for (const outcome of ['built-needs-review', 'failed']) {
     const outputRoot = await temporaryDirectory();
     const run = await initializeRun(request(outputRoot));
     const terminalManifest = {
       runId: run.runId,
       slug: run.slug,
-      outcome: outcome === 'superseded' ? 'failed' : outcome,
+      outcome,
     };
     const relativePath = await writeTerminalEvidence(run, {
       outcome,
@@ -292,7 +293,7 @@ test('retains compact flagged, failed, and superseded terminal evidence', async 
         outcome === 'failed'
           ? { code: 'E_QA', message: 'Review evidence was incomplete.' }
           : undefined,
-      evidenceDisposition: outcome === 'superseded' ? 'superseded' : 'retained',
+      evidenceDisposition: 'retained',
     });
 
     assert.equal(relativePath, 'terminal-evidence.json');
@@ -313,11 +314,116 @@ test('retains compact flagged, failed, and superseded terminal evidence', async 
             message: 'Review evidence was incomplete.',
           },
         }),
-        evidenceDisposition:
-          outcome === 'superseded' ? 'superseded' : 'retained',
+        evidenceDisposition: 'retained',
       },
     );
   }
+});
+
+test('redacts and bounds every retained terminal finding field', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  const terminalManifest = {
+    runId: run.runId,
+    slug: run.slug,
+    outcome: 'built-needs-review',
+  };
+  const secrets = [
+    'finding-password',
+    'finding-token',
+    'AKIAIOSFODNN7EXAMPLE',
+    'credentialed-url-password',
+  ];
+  const oversized = 'finding-payload-'.repeat(500);
+  await writeTerminalEvidence(run, {
+    outcome: 'built-needs-review',
+    manifest: terminalManifest,
+    findings: [
+      {
+        artifactId: `password=${secrets[0]}`,
+        rubric: `token=${secrets[1]}`,
+        severity: `aws_access_key_id=${secrets[2]}`,
+        evidence: `https://user:${secrets[3]}@example.com/private ${oversized}`,
+        correction: `password=${secrets[0]} ${oversized}`,
+      },
+    ],
+    evidenceDisposition: 'retained',
+  });
+
+  const retainedText = await readFile(
+    join(run.runRoot, 'terminal-evidence.json'),
+    'utf8',
+  );
+  const retained = JSON.parse(retainedText);
+  for (const secret of secrets) {
+    assert.equal(retainedText.includes(secret), false);
+  }
+  assert.equal(retainedText.includes(oversized), false);
+  assert.ok(
+    Object.values(retained.findings[0]).every(
+      (value) => typeof value === 'string' && value.length <= 2_000,
+    ),
+  );
+
+  const nestedRun = await initializeRun(
+    request(await temporaryDirectory(), { slug: 'Nested Finding' }),
+  );
+  await assert.rejects(
+    writeTerminalEvidence(nestedRun, {
+      outcome: 'built-needs-review',
+      manifest: {
+        runId: nestedRun.runId,
+        slug: nestedRun.slug,
+        outcome: 'built-needs-review',
+      },
+      findings: [{ evidence: { password: 'nested-secret' } }],
+      evidenceDisposition: 'retained',
+    }),
+    /compact shape|primitive|string/i,
+  );
+});
+
+test('supersedes retained evidence with replacement run identity and manifest hash', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  const terminalManifest = {
+    runId: run.runId,
+    slug: run.slug,
+    outcome: 'failed',
+  };
+  await writeTerminalEvidence(run, {
+    outcome: 'failed',
+    manifest: terminalManifest,
+    error: { code: 'E_RUN', message: 'Original failure.' },
+    evidenceDisposition: 'retained',
+  });
+
+  await supersedeTerminalEvidence(run, {
+    manifest: terminalManifest,
+    supersededBy: {
+      runId: 'run-replacement',
+      manifestHash: `sha256:${'b'.repeat(64)}`,
+    },
+  });
+
+  assert.deepEqual(
+    JSON.parse(
+      await readFile(join(run.runRoot, 'terminal-evidence.json'), 'utf8'),
+    ),
+    {
+      schemaVersion: 'explainer-kit.terminal-evidence/v1',
+      runId: run.runId,
+      outcome: 'failed',
+      manifestHash: canonicalHash(terminalManifest),
+      findings: [],
+      error: { code: 'E_RUN', message: 'Original failure.' },
+      evidenceDisposition: 'superseded',
+      supersededBy: {
+        runId: 'run-replacement',
+        manifestHash: `sha256:${'b'.repeat(64)}`,
+      },
+    },
+  );
 });
 
 test('defines mode-aware successful recap coverage while allowing immutable extras', () => {

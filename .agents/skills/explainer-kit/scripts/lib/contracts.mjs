@@ -24,6 +24,7 @@ const SCHEMA_FILES = {
   'set-plan': 'set-plan.v1.schema.json',
   'visual-review-request': 'visual-review-request.v1.schema.json',
   'visual-review-result': 'visual-review-result.v1.schema.json',
+  'terminal-evidence': 'terminal-evidence.v1.schema.json',
 };
 const DEFAULT_SCHEMA_KEYS = {
   'author-request': 'author-request/v3',

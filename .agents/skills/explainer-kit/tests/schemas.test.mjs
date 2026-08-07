@@ -26,6 +26,7 @@ const schemas = {
   'set-plan.v1': 'explainer-kit.set-plan/v1',
   'visual-review-request.v1': 'explainer-kit.visual-review-request/v1',
   'visual-review-result.v1': 'explainer-kit.visual-review-result/v1',
+  'terminal-evidence.v1': 'explainer-kit.terminal-evidence/v1',
 };
 
 async function loadSchema(name) {

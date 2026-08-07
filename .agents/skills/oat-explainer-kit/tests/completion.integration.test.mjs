@@ -373,6 +373,18 @@ test('uses lifecycle bookkeeping then exported recap attestation as two commits'
   );
 });
 
+test('skips attestation and evidence commits for complete terminal-evidence plans', () => {
+  assert.match(
+    completionSkill,
+    /When the finalization plan is `complete` with `built-needs-review` or `failed`,\s+preserve that exact outcome/i,
+  );
+  assert.match(completionSkill, /skip.*attestation.*evidence commit/i);
+  assert.match(
+    completionSkill,
+    /verifyTrackedRunFinalization.*must not promote.*`built-durable`/is,
+  );
+});
+
 test('supersedes active-path evidence with exported immutable path evidence', () => {
   assert.match(
     completionSkill,

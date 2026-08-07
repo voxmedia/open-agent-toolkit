@@ -15,6 +15,10 @@ import {
   validateImmutablePackageEvidence,
 } from './package-coverage.mjs';
 import { resolveRootConfinedPath } from './safe-paths.mjs';
+import {
+  assertTerminalEvidence,
+  createTerminalEvidence,
+} from './terminal-evidence.mjs';
 
 export {
   PACKAGE_COVERAGE_VERSION,
@@ -266,7 +270,7 @@ export async function writeTerminalEvidence(
 ) {
   assertRun(run);
   if (
-    !['built-needs-review', 'failed', 'superseded'].includes(outcome) ||
+    !['built-needs-review', 'failed'].includes(outcome) ||
     !['retained', 'partial', 'superseded', 'unavailable'].includes(
       evidenceDisposition,
     ) ||
@@ -293,20 +297,48 @@ export async function writeTerminalEvidence(
   } catch (caught) {
     if (caught?.code !== 'ENOENT') throw caught;
   }
-  await writeJsonAtomic(run.runRoot, path, {
-    schemaVersion: 'explainer-kit.terminal-evidence/v1',
+  const evidence = createTerminalEvidence({
     runId: run.runId,
     outcome,
-    ...(manifest && { manifestHash: canonicalHash(manifest) }),
-    findings: findings.map(compactFinding),
-    ...(error && {
-      error: {
-        code: String(error.code ?? 'E_RUN'),
-        message: String(error.message ?? 'Run failed.'),
-      },
-    }),
+    manifest,
+    findings,
+    error,
     evidenceDisposition,
   });
+  await writeJsonAtomic(run.runRoot, path, evidence);
+  return path;
+}
+
+export async function supersedeTerminalEvidence(
+  run,
+  { manifest, supersededBy } = {},
+) {
+  assertRun(run);
+  if (
+    !isObject(manifest) ||
+    manifest.runId !== run.runId ||
+    manifest.slug !== run.slug
+  ) {
+    throw new Error(
+      'Terminal evidence manifest identity does not match the run.',
+    );
+  }
+  const path = 'terminal-evidence.json';
+  const retained = JSON.parse(await readFile(join(run.runRoot, path), 'utf8'));
+  assertTerminalEvidence(retained, { manifest });
+  if (retained.evidenceDisposition === 'superseded') {
+    throw new Error('Terminal evidence is already superseded.');
+  }
+  const superseded = createTerminalEvidence({
+    runId: run.runId,
+    outcome: manifest.outcome,
+    manifest,
+    findings: retained.findings,
+    error: retained.error,
+    evidenceDisposition: 'superseded',
+    supersededBy,
+  });
+  await writeJsonAtomic(run.runRoot, path, superseded);
   return path;
 }
 
@@ -345,14 +377,6 @@ export async function writeVisualRevision(run, { artifactIds, changes } = {}) {
     changes: structuredClone(changes),
   });
   return [VISUAL_REVISION_PATH];
-}
-
-function compactFinding(finding) {
-  return Object.fromEntries(
-    ['artifactId', 'rubric', 'severity', 'evidence', 'correction']
-      .filter((key) => finding[key] !== undefined)
-      .map((key) => [key, structuredClone(finding[key])]),
-  );
 }
 
 async function copyConfinedEvidence(
