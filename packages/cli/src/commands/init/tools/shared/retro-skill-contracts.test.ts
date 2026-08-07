@@ -27,9 +27,6 @@ const retroTemplate = readRepoFile('.oat/templates/project-retro.md');
 const retroDocs = readRepoFile(
   'apps/oat-docs/docs/workflows/projects/retro.md',
 );
-const retroDesign = readRepoFile(
-  '.oat/projects/shared/oat-project-retro/design.md',
-);
 
 function readScenarioRow(content: string, scenario: string): string[] {
   const row = content
@@ -232,19 +229,19 @@ describe('retro skill content contracts', () => {
     );
   });
 
-  it('aligns the design and template with mutable filing-state contracts', () => {
+  it('keeps the durable template aligned with mutable filing-state contracts', () => {
     for (const field of [
       'Destination-receipt',
       'Remote-visibility',
       'Disposition-note',
       'Current State',
     ]) {
-      expect(retroDesign).toContain(field);
+      expect(retroTemplate).toContain(field);
     }
-    expect(retroDesign).toMatch(/destination-first/i);
-    expect(retroDesign).toMatch(/proposal bodies[\s\S]*?immutable/i);
-    expect(retroDesign).toMatch(
-      /Current State[\s\S]*?only mutable freeform narrative surface/i,
+    expect(filingSkill).toMatch(/destination-first/i);
+    expect(retroTemplate).toMatch(/proposal bodies[\s\S]*?stable/i);
+    expect(retroTemplate).toMatch(
+      /Current State[\s\S]*?only mutable freeform status surface/i,
     );
     expect(retroTemplate).toMatch(
       /GitHub[\s\S]*?Destination-receipt:\s*—[\s\S]*?Remote-visibility:\s*—/i,
@@ -473,7 +470,7 @@ describe('retro skill content contracts', () => {
       }),
     ).toBe('performed');
 
-    for (const content of [retroDesign, retroDocs]) {
+    for (const content of [retroSkill, retroDocs]) {
       const aligned = content.replace(/\s+/g, ' ');
       expect(aligned).toMatch(
         /(?:pre-action eligibility snapshot|before any[\s\S]*?eligibility snapshot)/i,
@@ -572,6 +569,15 @@ describe('retro skill content contracts', () => {
       );
     }
 
+    const recoveryIndex = applyProcedure.indexOf(
+      'Perform semantic post-side-effect recovery before appending',
+    );
+    const correctionAppendIndex = applyProcedure.indexOf(
+      'oat project log append --project "$PROJECT_PATH" \\',
+    );
+    expect(recoveryIndex).toBeGreaterThanOrEqual(0);
+    expect(correctionAppendIndex).toBeGreaterThan(recoveryIndex);
+
     expect(applyProcedure).toMatch(
       /limited to[\s\S]*?project-log[\s\S]*?does\s+not[\s\S]*?(?:new|change)[\s\S]*?RP type/i,
     );
@@ -660,28 +666,28 @@ describe('retro skill content contracts', () => {
     ]);
   });
 
-  it('aligns the lightweight design with final revision contracts', () => {
-    expect(retroDesign).toContain('--producer oat-project-retro');
-    expect(retroDesign).toContain('--ref project-retro');
+  it('keeps final revision contracts on durable shipped surfaces', () => {
+    expect(retroSkill).toContain('--producer oat-project-retro');
+    expect(retroSkill).toContain('--ref project-retro');
     for (const outcome of ['performed', 'declined', 'skipped', 'deferred']) {
-      expect(retroDesign).toContain(outcome);
+      expect(retroSkill).toContain(outcome);
     }
-    expect(retroDesign).toMatch(
-      /partial[\s\S]*?evidence famil(?:y|ies)[\s\S]*?truthful\s+source\s+entries/i,
+    expect(retroDocs).toMatch(
+      /evidence famil(?:y|ies)[\s\S]*?partial[\s\S]*?truthful\s+source\s+entries/i,
     );
-    expect(retroDesign).toMatch(
-      /derivative current-run reconnaissance transcripts[\s\S]*?not[\s\S]*?original project-run evidence/i,
+    expect(retroDocs).toMatch(
+      /derivative current-run reconnaissance transcripts[\s\S]*?not[\s\S]*?original\s+project-run evidence/i,
     );
-    expect(retroDesign).toMatch(/stable evidence anchors/i);
-    expect(retroDesign).toMatch(
+    expect(retroDocs).toMatch(/stable evidence anchors/i);
+    expect(retroQualityBar).toMatch(
       /Challenges and Struggles[\s\S]*?complete\s+incident\s+narrative/i,
     );
-    expect(retroDesign).toMatch(
-      /normalized target[\s\S]*?final path component[\s\S]*?project-log\.md/i,
+    expect(applyProcedure).toMatch(
+      /normalized target[\s\S]*?final\s+path\s+component[\s\S]*?project-log\.md/i,
     );
-    expect(retroDesign).toContain('--type feedback');
-    expect(retroDesign).toMatch(
-      /correction commit[\s\S]*?later retro-only writeback commit/i,
+    expect(applyProcedure).toContain('--type feedback');
+    expect(applyProcedure).toMatch(
+      /correction commit[\s\S]*?later retro-only writeback\s+commit/i,
     );
   });
 });

@@ -67,7 +67,14 @@ continues immediately, this can be written back together with the final
      `Retro correction id=$RP_ID original=$ORIGINAL_ENTRY_ANCHOR`, followed by
      the immutable correction text. The ID, anchor, and correction text must
      match exactly during recovery.
-   - Run the complete judgment append invocation:
+   - Perform semantic post-side-effect recovery before appending: search the
+     project log and Git state for the exact identity first line. Zero matches
+     permits one append. Exactly one match permits recovery only when the
+     original-entry anchor and full correction body are semantically exact; do
+     not append again. Multiple, partial, or divergent matches stop for
+     direction without appending.
+   - Only when recovery finds zero matches, run the complete judgment append
+     invocation exactly once:
 
      ```bash
      oat project log append --project "$PROJECT_PATH" \
@@ -77,11 +84,6 @@ continues immediately, this can be written back together with the final
        --body "$CORRECTION_BODY"
      ```
 
-   - Perform semantic post-side-effect recovery before appending: search the
-     project log and Git state for the exact identity first line. Zero matches
-     permits one append. Exactly one match permits recovery only when the
-     original-entry anchor and full correction body are semantically exact.
-     Multiple, partial, or divergent matches stop for direction.
    - Commit the project-log append without retro writeback. Verify the commit
      contains the normalized project-log path and exact correction body.
      Capture its full 40-character SHA and exact generated heading.
