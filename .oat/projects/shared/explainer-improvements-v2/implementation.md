@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-07
-oat_current_task_id: p05-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -230,15 +230,15 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 6     | 6/6       |
-| p02   | completed   | 2     | 2/2       |
-| p03   | completed   | 11    | 11/11     |
-| p04   | completed   | 6     | 6/6       |
-| p05   | in_progress | 4     | 3/4       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 6     | 6/6       |
+| p02   | completed | 2     | 2/2       |
+| p03   | completed | 11    | 11/11     |
+| p04   | completed | 6     | 6/6       |
+| p05   | completed | 4     | 4/4       |
 
-**Total:** 28/29 tasks completed
+**Total:** 29/29 tasks completed
 
 ---
 
@@ -431,15 +431,16 @@ configured p05 human checkpoint.
 
 ## Phase 5: Prose-led authoring and release closure
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-08-07
+**Completed:** 2026-08-07
 
 | Task    | Status    | Commit    |
 | ------- | --------- | --------- |
 | p05-t01 | completed | d61a555fa |
 | p05-t02 | completed | 5b92361d3 |
 | p05-t03 | completed | 3ed90f009 |
-| p05-t04 | pending   | -         |
+| p05-t04 | completed | 836d85014 |
 
 ### Review Received: p05
 
@@ -463,6 +464,11 @@ provider views, docs, and release gates passed. The 74 unmanaged Cursor
 symlinks are inherited and unchanged, so they are not a p05 defect.
 
 **Next:** Execute p05-t04, then narrowly re-review this guidance fix.
+
+The narrow re-review
+(`reviews/archived/p05-review-2026-08-07T211756Z.md`) passed with no findings.
+P05 and all 29 implementation tasks are complete. The project is ready for its
+final full review.
 
 ---
 
