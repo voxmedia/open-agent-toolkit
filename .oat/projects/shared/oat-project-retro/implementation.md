@@ -356,6 +356,33 @@ their missing durable Reviews ledger identities.
 **Next:** Re-run final review after receiving the current final-review
 bookkeeping finding.
 
+### Review Received: final
+
+**Date:** 2026-08-07
+**Review artifact:** `reviews/archived/final-review-2026-08-07T004237Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 1
+
+**Finding dispositions:**
+
+- I1 — converted and completed through root review reconciliation in
+  `9281308b`: both p-rev1 events now have durable ledger identities and their
+  consumed artifacts are archived.
+- m1 — converted and completed in `9281308b`: `plan.md` now records
+  `oat_last_updated: 2026-08-07`.
+
+**New tasks added:** None. Both findings were root-owned review-receive
+bookkeeping and were completed before this final event was received.
+
+**Deferred Findings (Medium):** None.
+
+**Next:** Run a fresh final re-review against the corrected bookkeeping head.
+
 ### 2026-08-06
 
 - Implementation preflight selected Tier 1 native Cursor subagents.

@@ -562,6 +562,7 @@ not receive another bump.
 | p-rev1 | code     | fixes_completed | 2026-08-07 | reviews/archived/p-rev1-review-2026-08-07T001216Z.md        | c95a6f616f4fca237bfbcca79d660207d8980cef | manual     | -                        |
 | p-rev1 | code     | passed          | 2026-08-07 | reviews/archived/p-rev1-review-2026-08-07T003046Z.md        | c1229f7381162e607dfcc5b08a9b1a13f0b3ce3a | manual     | -                        |
 | final  | code     | passed          | 2026-08-06 | reviews/archived/final-review-2026-08-06T044429Z.md         | 598fb8f0cc2ac00721abb6072f38508b808895e8 | manual     | -                        |
+| final  | code     | fixes_completed | 2026-08-07 | reviews/archived/final-review-2026-08-07T004237Z.md         | cd22b7f0af87c59169e9fd57c31b057f9216b6dd | manual     | -                        |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | plan   | artifact | passed          | 2026-08-05 | structured (in-memory)                                      | -                                        | auto       | -                        |
