@@ -20,6 +20,16 @@ external_plans: []
 
 Configured or autonomous closeout can reach terminal completion without a durable oat_post_implement_sequence snapshot, allowing required summary, documentation, and PR children to be skipped without provenance. Track the configured-plus-absent snapshot invariant separately from mandatory skill loading so each mechanism has focused ownership and executable evidence.
 
+## Evidence
+
+- The `oat-project-retro` run had configured pre-approval summary,
+  documentation, and PR steps, but reached implementation completion without an
+  `oat_post_implement_sequence` snapshot or recorded child dispatches.
+- Manual recovery recreated the expected outputs but could not restore their
+  ordering or provenance. The missing snapshot is confirmed; the internal skip
+  mechanism remains inconclusive, so transition coverage must begin from the
+  configured-plus-absent state rather than assume a cause.
+
 ## Acceptance Criteria
 
 - A configured or autonomous closeout cannot reach terminal completion when
