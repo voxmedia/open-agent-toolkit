@@ -103,6 +103,17 @@ Retained failure and review evidence contains only:
 - validated local artifact identifiers where needed;
 - bounded counts and fixed redaction markers.
 
+The code model is a closed pair rather than provider-supplied text:
+
+- `stage`: `planning`, `authoring`, `rendering`, `link-validation`,
+  `browser-review`, `visual-review`, `durability`, or `finalization`;
+- `kind`: `finding`, `provider-failure`, `pipeline-failure`, or `superseded`.
+
+Optional artifact IDs are validated against the run manifest. Counts are
+bounded non-negative integers. No generic message, description, evidence,
+correction, details, metadata, or arbitrary code field exists in the retained
+shape.
+
 Provider messages, descriptions, evidence prose, correction prose, serialized
 objects, token-like strings, and arbitrary thrown values are mapped to local
 codes at the provider boundary and then discarded. Consumers reject unknown

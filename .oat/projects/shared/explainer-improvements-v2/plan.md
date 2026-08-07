@@ -709,8 +709,9 @@ git commit -m "feat(p04-t03): bound recap correction and retain failure evidence
 - `.agents/skills/explainer-kit/scripts/lib/terminal-evidence.mjs`
 - `.agents/skills/explainer-kit/scripts/lib/records.mjs`
 - `.agents/skills/explainer-kit/scripts/run.mjs`
-- Adapter finalizer and CLI archive consumers only where the final closed
-  contract requires migration
+- `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
+- `packages/cli/src/commands/project/archive/explainer-terminal-evidence.ts`
+- `packages/cli/src/commands/project/archive/archive-utils.ts`
 - Focused core, adapter, archive, and retained-tree regression tests
 
 **Step 1: Write tests (RED)**
@@ -733,6 +734,14 @@ Project provider results and arbitrary thrown values to stable local codes at
 the provider boundary, preserve raw prose only ephemerally for the in-memory
 correction attempt, and discard it before any persistence or loggable return.
 Remove best-effort text scrubbing as the durable security boundary.
+
+Represent retained reasons as a closed `stage` + `kind` pair. `stage` is one of
+`planning`, `authoring`, `rendering`, `link-validation`, `browser-review`,
+`visual-review`, `durability`, or `finalization`; `kind` is one of `finding`,
+`provider-failure`, `pipeline-failure`, or `superseded`. Permit only
+manifest-validated artifact IDs and bounded counts beyond the existing
+run/manifest/outcome/disposition fields. Do not retain generic message,
+description, evidence, correction, details, metadata, or arbitrary code fields.
 
 Finalize the unreleased `terminal-evidence/v1` schema in its code-only shape and
 migrate all producers/consumers atomically. No released consumer depends on the
