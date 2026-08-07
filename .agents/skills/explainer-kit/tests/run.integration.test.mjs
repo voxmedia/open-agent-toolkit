@@ -3360,12 +3360,26 @@ test('core CLI streams exclude arbitrary provider bytes for every terminal path'
     {
       name: 'success',
       result: { outcome: 'built-not-durable', warnings: [] },
+      inject(result, canary) {
+        result.publication = {
+          schemaVersion: 'explainer-kit.publish-summary/v2',
+          providerDiagnostic: canary,
+        };
+        return result;
+      },
     },
     {
       name: 'terminally flagged',
       result: {
         outcome: 'built-needs-review',
         reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+      },
+      inject(result, canary) {
+        result.visualReview = {
+          disposition: 'correct',
+          providerFinding: canary,
+        };
+        return result;
       },
     },
     {
@@ -3374,14 +3388,19 @@ test('core CLI streams exclude arbitrary provider bytes for every terminal path'
         outcome: 'failed',
         reasons: [{ stage: 'durability', kind: 'provider-failure', count: 1 }],
       },
+      inject(result, canary) {
+        result.providerFailure = { message: canary };
+        return result;
+      },
     },
     { name: 'caught error', throws: true },
   ];
 
   for (const scenario of scenarios) {
-    const canary = `CORE-CLI-${scenario.name}-\\u0070assword: ? [exact]`;
+    const canary = `CORE-CLI-${scenario.name}-provider-secret-EXACT-BYTES`;
     const stdout = [];
     const stderr = [];
+    let entered = false;
     const exitCode = await runExplainerCli(
       ['--request', requestPath],
       {
@@ -3390,18 +3409,28 @@ test('core CLI streams exclude arbitrary provider bytes for every terminal path'
       },
       async () => {
         if (scenario.throws) {
-          throw {
+          const thrown = {
             evidenceReason: {
               stage: canary,
               kind: 'provider-failure',
               count: 1,
             },
           };
+          assert.equal(JSON.stringify(thrown).includes(canary), true);
+          entered = true;
+          throw thrown;
         }
-        return scenario.result;
+        const injected = scenario.inject(
+          structuredClone(scenario.result),
+          canary,
+        );
+        assert.equal(JSON.stringify(injected).includes(canary), true);
+        entered = true;
+        return injected;
       },
     );
     const captured = `${stdout.join('\n')}\n${stderr.join('\n')}`;
+    assert.equal(entered, true, `${scenario.name} injected its canary`);
     assert.equal(captured.includes(canary), false, scenario.name);
     assert.equal(
       exitCode,

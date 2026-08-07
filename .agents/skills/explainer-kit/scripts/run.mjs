@@ -1468,7 +1468,7 @@ export async function runExplainerCli(
     const parsed = await parseCli(argv);
     const request = JSON.parse(await readFile(parsed.requestPath, 'utf8'));
     const result = await run(request, parsed.options);
-    io.log(JSON.stringify(result, null, 2));
+    io.log(JSON.stringify(projectCliRunResult(result), null, 2));
     return result.outcome === 'failed' ? 1 : 0;
   } catch (error) {
     io.error(
@@ -1486,6 +1486,191 @@ export async function runExplainerCli(
     );
     return 1;
   }
+}
+
+function projectCliRunResult(result) {
+  if (!isObject(result)) {
+    return {
+      outcome: 'failed',
+      reasons: [evidenceReason('finalization', 'pipeline-failure')],
+    };
+  }
+  const projected = {};
+  for (const key of [
+    'runId',
+    'runRoot',
+    'manifestPath',
+    'buildRecordPath',
+    'outcome',
+    'marking',
+  ]) {
+    if (typeof result[key] === 'string') projected[key] = result[key];
+  }
+  if (Array.isArray(result.warnings)) {
+    projected.warnings = retainedWarnings(result.warnings);
+  }
+  if (isObject(result.discovery)) {
+    projected.discovery = {
+      ...(Number.isInteger(result.discovery.rounds) && {
+        rounds: result.discovery.rounds,
+      }),
+      ...(Number.isInteger(result.discovery.findingCount) && {
+        findingCount: result.discovery.findingCount,
+      }),
+      ...(['not-requested', 'two-empty-rounds', 'hard-maximum'].includes(
+        result.discovery.reason,
+      ) && { reason: result.discovery.reason }),
+    };
+  }
+  if (isObject(result.approval)) {
+    projected.approval = pickStringFields(result.approval, [
+      'status',
+      'path',
+      'marking',
+      'resumeToken',
+    ]);
+  }
+  const reasons = projectEvidenceReasons(result.reasons);
+  if (reasons.length > 0) projected.reasons = reasons;
+  const visualReview = projectVisualReviewEvidence(result.visualReview);
+  if (visualReview) projected.visualReview = visualReview;
+  const publication = projectPublicationSummaryForCli(result.publication);
+  if (publication) projected.publication = publication;
+  return projected;
+}
+
+function projectVisualReviewEvidence(value) {
+  if (!isObject(value)) return null;
+  const reasons = projectEvidenceReasons(value.reasons);
+  if (
+    value.schemaVersion !== 'explainer-kit.visual-review-evidence/v1' ||
+    typeof value.requestHash !== 'string' ||
+    ![1, 2].includes(value.attempt) ||
+    !['pass', 'correct', 'failed'].includes(value.disposition) ||
+    !Array.isArray(value.reasons) ||
+    reasons.length !== value.reasons.length
+  ) {
+    return null;
+  }
+  return {
+    schemaVersion: value.schemaVersion,
+    requestHash: value.requestHash,
+    attempt: value.attempt,
+    disposition: value.disposition,
+    reasons,
+  };
+}
+
+function projectPublicationSummaryForCli(value) {
+  if (!isObject(value)) return null;
+  if (
+    value.schemaVersion !== 'explainer-kit.publish-summary/v1' &&
+    value.schemaVersion !== 'explainer-kit.publish-summary/v2'
+  ) {
+    return null;
+  }
+  return {
+    schemaVersion: value.schemaVersion,
+    ...(typeof value.receiptSchemaVersion === 'string' && {
+      receiptSchemaVersion: value.receiptSchemaVersion,
+    }),
+    ...(typeof value.publicAccess === 'string' && {
+      publicAccess: value.publicAccess,
+    }),
+    ...(Array.isArray(value.artifacts) && {
+      artifacts: value.artifacts.map((artifact) =>
+        isObject(artifact)
+          ? {
+              ...pickStringFields(artifact, [
+                'relativePath',
+                'publicUrl',
+                's3Uri',
+                'hash',
+                'contentType',
+              ]),
+              ...(isObject(artifact.source) && {
+                source: pickStringFields(artifact.source, [
+                  'kind',
+                  'artifactId',
+                  'name',
+                ]),
+              }),
+              ...(isObject(artifact.objectVerification) && {
+                objectVerification: pickClosedVerification(
+                  artifact.objectVerification,
+                ),
+              }),
+              ...(isObject(artifact.publicVerification) && {
+                publicVerification: pickClosedVerification(
+                  artifact.publicVerification,
+                ),
+              }),
+            }
+          : {},
+      ),
+    }),
+  };
+}
+
+function pickClosedVerification(value) {
+  return {
+    ...pickStringFields(value, ['status', 'method', 'hash']),
+    ...(Number.isInteger(value.httpStatus) && {
+      httpStatus: value.httpStatus,
+    }),
+  };
+}
+
+function projectEvidenceReasons(value) {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((reason) => {
+    if (
+      !isObject(reason) ||
+      ![
+        'planning',
+        'authoring',
+        'rendering',
+        'link-validation',
+        'browser-review',
+        'visual-review',
+        'durability',
+        'finalization',
+      ].includes(reason.stage) ||
+      ![
+        'finding',
+        'provider-failure',
+        'pipeline-failure',
+        'superseded',
+      ].includes(reason.kind) ||
+      !Number.isInteger(reason.count) ||
+      reason.count < 1 ||
+      reason.count > 50
+    ) {
+      return [];
+    }
+    return [
+      {
+        stage: reason.stage,
+        kind: reason.kind,
+        ...(typeof reason.artifactId === 'string' && {
+          artifactId: reason.artifactId,
+        }),
+        count: reason.count,
+      },
+    ];
+  });
+}
+
+function pickStringFields(value, keys) {
+  return Object.fromEntries(
+    keys.flatMap((key) =>
+      typeof value[key] === 'string' ? [[key, value[key]]] : [],
+    ),
+  );
+}
+
+function isObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 async function executeStage(run, id, options, operation) {

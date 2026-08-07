@@ -1501,6 +1501,14 @@ test('adapter CLI streams exclude arbitrary provider bytes for every terminal pa
     {
       name: 'success',
       result: { result: { outcome: 'built-not-durable', warnings: [] } },
+      inject(result, canary) {
+        result.result.publication = {
+          schemaVersion: 'explainer-kit.publish-summary/v2',
+          providerDiagnostic: canary,
+        };
+        result.publication = result.result.publication;
+        return result;
+      },
     },
     {
       name: 'correctable',
@@ -1509,6 +1517,13 @@ test('adapter CLI streams exclude arbitrary provider bytes for every terminal pa
           outcome: 'built-needs-review',
           reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
         },
+      },
+      inject(result, canary) {
+        result.result.visualReview = {
+          disposition: 'correct',
+          providerFinding: canary,
+        };
+        return result;
       },
     },
     {
@@ -1519,14 +1534,19 @@ test('adapter CLI streams exclude arbitrary provider bytes for every terminal pa
           reasons: [{ stage: 'authoring', kind: 'provider-failure', count: 1 }],
         },
       },
+      inject(result, canary) {
+        result.result.providerFailure = { message: canary };
+        return result;
+      },
     },
     { name: 'caught error', throws: true },
   ];
 
   for (const scenario of scenarios) {
-    const canary = `ADAPTER-CLI-${scenario.name}-\\u0070assword: ? [exact]`;
+    const canary = `ADAPTER-CLI-${scenario.name}-provider-secret-EXACT-BYTES`;
     const stdout = [];
     const stderr = [];
+    let entered = false;
     const exitCode = await runOatExplainerCli(
       ['--context', contextPath],
       {
@@ -1534,11 +1554,23 @@ test('adapter CLI streams exclude arbitrary provider bytes for every terminal pa
         error: (value) => stderr.push(value),
       },
       async () => {
-        if (scenario.throws) throw { nested: { arbitrary: canary } };
-        return scenario.result;
+        if (scenario.throws) {
+          const thrown = { nested: { arbitrary: canary } };
+          assert.equal(JSON.stringify(thrown).includes(canary), true);
+          entered = true;
+          throw thrown;
+        }
+        const injected = scenario.inject(
+          structuredClone(scenario.result),
+          canary,
+        );
+        assert.equal(JSON.stringify(injected).includes(canary), true);
+        entered = true;
+        return injected;
       },
     );
     const captured = `${stdout.join('\n')}\n${stderr.join('\n')}`;
+    assert.equal(entered, true, `${scenario.name} injected its canary`);
     assert.equal(captured.includes(canary), false, scenario.name);
     assert.equal(
       exitCode,

@@ -672,7 +672,7 @@ export async function runOatExplainerCli(
     }
     const context = JSON.parse(await readFile(argv[1], 'utf8'));
     const result = await run(context);
-    io.log(JSON.stringify(result, null, 2));
+    io.log(JSON.stringify(projectAdapterCliResult(result), null, 2));
     return result.result.outcome === 'failed' ? 1 : 0;
   } catch {
     io.error(
@@ -693,6 +693,208 @@ export async function runOatExplainerCli(
     );
     return 1;
   }
+}
+
+function projectAdapterCliResult(value) {
+  if (!isObject(value) || !isObject(value.result)) {
+    return {
+      result: {
+        outcome: 'failed',
+        reasons: [
+          {
+            stage: 'finalization',
+            kind: 'pipeline-failure',
+            count: 1,
+          },
+        ],
+      },
+    };
+  }
+  const projected = {};
+  for (const key of ['compatibility', 'request', 'manifest', 'destination']) {
+    if (isObject(value[key])) projected[key] = structuredClone(value[key]);
+  }
+  for (const key of ['marking', 'outputRoot']) {
+    if (typeof value[key] === 'string' || value[key] === null) {
+      projected[key] = value[key];
+    }
+  }
+  projected.result = projectAdapterRunResult(value.result);
+  const publication = projectAdapterPublication(value.publication);
+  if (publication) projected.publication = publication;
+  return projected;
+}
+
+function projectAdapterRunResult(value) {
+  const projected = {};
+  for (const key of [
+    'runId',
+    'runRoot',
+    'manifestPath',
+    'buildRecordPath',
+    'outcome',
+    'marking',
+  ]) {
+    if (typeof value[key] === 'string') projected[key] = value[key];
+  }
+  if (Array.isArray(value.warnings)) {
+    projected.warnings = [
+      ...new Set(value.warnings.filter(isAdapterWarningCode)),
+    ];
+  }
+  for (const key of ['discovery', 'approval']) {
+    if (isObject(value[key])) projected[key] = structuredClone(value[key]);
+  }
+  const reasons = projectAdapterReasons(value.reasons);
+  if (reasons.length > 0) projected.reasons = reasons;
+  const visualReview = projectAdapterVisualReview(value.visualReview);
+  if (visualReview) projected.visualReview = visualReview;
+  const publication = projectAdapterPublication(value.publication);
+  if (publication) projected.publication = publication;
+  return projected;
+}
+
+function projectAdapterVisualReview(value) {
+  if (!isObject(value)) return null;
+  const reasons = projectAdapterReasons(value.reasons);
+  if (
+    value.schemaVersion !== 'explainer-kit.visual-review-evidence/v1' ||
+    typeof value.requestHash !== 'string' ||
+    ![1, 2].includes(value.attempt) ||
+    !['pass', 'correct', 'failed'].includes(value.disposition) ||
+    !Array.isArray(value.reasons) ||
+    reasons.length !== value.reasons.length
+  ) {
+    return null;
+  }
+  return {
+    schemaVersion: value.schemaVersion,
+    requestHash: value.requestHash,
+    attempt: value.attempt,
+    disposition: value.disposition,
+    reasons,
+  };
+}
+
+function projectAdapterPublication(value) {
+  if (!isObject(value)) return null;
+  if (
+    value.schemaVersion !== 'explainer-kit.publish-summary/v1' &&
+    value.schemaVersion !== 'explainer-kit.publish-summary/v2'
+  ) {
+    return null;
+  }
+  return {
+    schemaVersion: value.schemaVersion,
+    ...(typeof value.receiptSchemaVersion === 'string' && {
+      receiptSchemaVersion: value.receiptSchemaVersion,
+    }),
+    ...(typeof value.publicAccess === 'string' && {
+      publicAccess: value.publicAccess,
+    }),
+    ...(Array.isArray(value.artifacts) && {
+      artifacts: value.artifacts.map((artifact) =>
+        isObject(artifact)
+          ? {
+              ...pickAdapterStringFields(artifact, [
+                'relativePath',
+                'publicUrl',
+                's3Uri',
+                'hash',
+                'contentType',
+              ]),
+              ...(isObject(artifact.source) && {
+                source: pickAdapterStringFields(artifact.source, [
+                  'kind',
+                  'artifactId',
+                  'name',
+                ]),
+              }),
+              ...(isObject(artifact.objectVerification) && {
+                objectVerification: projectAdapterVerification(
+                  artifact.objectVerification,
+                ),
+              }),
+              ...(isObject(artifact.publicVerification) && {
+                publicVerification: projectAdapterVerification(
+                  artifact.publicVerification,
+                ),
+              }),
+            }
+          : {},
+      ),
+    }),
+  };
+}
+
+function projectAdapterVerification(value) {
+  return {
+    ...pickAdapterStringFields(value, ['status', 'method', 'hash']),
+    ...(Number.isInteger(value.httpStatus) && {
+      httpStatus: value.httpStatus,
+    }),
+  };
+}
+
+function projectAdapterReasons(value) {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((reason) => {
+    if (
+      !isObject(reason) ||
+      ![
+        'planning',
+        'authoring',
+        'rendering',
+        'link-validation',
+        'browser-review',
+        'visual-review',
+        'durability',
+        'finalization',
+      ].includes(reason.stage) ||
+      ![
+        'finding',
+        'provider-failure',
+        'pipeline-failure',
+        'superseded',
+      ].includes(reason.kind) ||
+      !Number.isInteger(reason.count) ||
+      reason.count < 1 ||
+      reason.count > 50
+    ) {
+      return [];
+    }
+    return [
+      {
+        stage: reason.stage,
+        kind: reason.kind,
+        ...(typeof reason.artifactId === 'string' && {
+          artifactId: reason.artifactId,
+        }),
+        count: reason.count,
+      },
+    ];
+  });
+}
+
+function pickAdapterStringFields(value, keys) {
+  return Object.fromEntries(
+    keys.flatMap((key) =>
+      typeof value[key] === 'string' ? [[key, value[key]]] : [],
+    ),
+  );
+}
+
+function isAdapterWarningCode(value) {
+  return (
+    typeof value === 'string' &&
+    /^(?:fact-base-freshness-warning|theme-selection-normalized|durability-evidence-required|publish-receipt-evidence-required|(?:expansion|guideline|render|qa)-[a-z0-9-]+|visual-review-required:[a-z0-9-]+|stage-reopened:[a-z0-9-]+:[0-9TZ:.-]+|missing-(?:theme-token|required-anchor):[a-z0-9-]+)$/.test(
+      value,
+    )
+  );
+}
+
+function isObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 if (
