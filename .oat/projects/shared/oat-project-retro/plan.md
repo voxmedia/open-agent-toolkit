@@ -815,6 +815,214 @@ git commit -m "feat(prev1-t04): refine retrospective dogfood workflow"
 
 ---
 
+## Phase p-rev2: Revision 2
+
+Source: inline second-dogfood feedback (2026-08-07)
+
+Execute sequentially. All four tasks refine the same retrospective generation
+and apply contracts; later tasks build on the exact terminology and tests
+established by earlier tasks.
+
+### Task prev2-t01: (revision) Define an unambiguous retro run receipt
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-retro/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts`
+
+**Step 1: Add failing receipt-schema coverage**
+
+Add focused assertions requiring the structural project-log receipt to use each
+canonical key exactly once:
+
+- `artifact=<path>`;
+- `evidence_used=<csv>`;
+- `evidence_unavailable=<csv>`;
+- `promotions=<number>`;
+- `upstream=<number>`;
+- `apply=<performed|declined|skipped|deferred>`;
+- `filing=<performed|declined|skipped|deferred>`.
+
+The contract must keep register counts distinct from action outcomes and reject
+the ambiguous second-dogfood shape where `filing` represented both.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/retro-skill-contracts.test.ts`
+
+Expected: the new canonical-key assertions fail before the skill change.
+
+**Step 2: Implement the canonical receipt**
+
+Update Step 5 of `oat-project-retro` with the exact one-line receipt shape,
+field semantics, and outcome vocabulary. Add final verification that required
+keys are present once, counts are numeric, and count keys are never reused for
+outcomes.
+
+**Step 3: Verify and commit**
+
+Run the focused retro contracts, file-scoped formatting, and
+`git diff --check`.
+
+```bash
+git add .agents/skills/oat-project-retro/SKILL.md packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts
+git commit -m "fix(prev2-t01): define retro receipt schema"
+```
+
+### Task prev2-t02: (revision) Keep retros standalone without repeated chronology
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-retro/SKILL.md`
+- Modify: `.agents/skills/oat-project-retro/references/evidence-and-lanes.md`
+- Modify: `.agents/skills/oat-project-retro/references/retro-quality-bar.md`
+- Modify: `.oat/templates/project-retro.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/retro.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts`
+
+**Step 1: Add failing narrative-contract coverage**
+
+Require a reader to understand each material incident without opening another
+artifact while still being able to audit load-bearing claims through
+unobtrusive evidence anchors. Prefer stable project-log event IDs, artifact
+headings, review paths, decision IDs, and commit IDs over line numbers.
+
+Add section-ownership assertions:
+
+- `Challenges and Struggles` owns the complete incident narrative: what
+  happened, impact, response, and result;
+- `Where We Changed Course` records only trigger, changed direction, and
+  outcome;
+- `Domain Learnings` abstracts reusable lessons without replaying chronology;
+- `Gotchas` contains future-facing instructions rather than incident summaries.
+
+Expected: focused contracts fail until the skill, quality bar, template, and
+docs encode the standalone-plus-anchor and non-duplication rules.
+
+**Step 2: Implement the standalone narrative contract**
+
+Update generation guidance and the template so evidence anchors supplement
+rather than replace explanation. Preserve evidence-scaled depth and avoid an
+arbitrary word-count target; concision comes from explaining each incident once
+and giving later sections only their distinct implication.
+
+**Step 3: Verify and commit**
+
+Run the focused retro contracts, file-scoped formatting, docs Markdown checks
+for the edited page, and `git diff --check`.
+
+```bash
+git add .agents/skills/oat-project-retro .oat/templates/project-retro.md apps/oat-docs/docs/workflows/projects/retro.md packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts
+git commit -m "docs(prev2-t02): anchor standalone retro narratives"
+```
+
+### Task prev2-t03: (revision) Inventory evidence at source-level precision
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-retro/SKILL.md`
+- Modify: `.agents/skills/oat-project-retro/references/evidence-and-lanes.md`
+- Modify: `.agents/skills/oat-project-retro/references/retro-quality-bar.md`
+- Modify: `.oat/templates/project-retro.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/retro.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts`
+
+**Step 1: Add failing source-granularity coverage**
+
+Keep the existing `used | unavailable` status vocabulary, but require source
+identifiers to be specific enough that a partial evidence family is split into
+truthful entries. For example, record `archived-review-markdown: unavailable`
+and `gate-receipts: used` instead of the misleading blanket
+`review-artifacts: unavailable`.
+
+Require reconnaissance lanes to return stable anchors and root synthesis to
+verify and preserve anchors for load-bearing claims. Do not mark derivative
+current-run reconnaissance transcripts as original project-run evidence.
+
+Expected: focused contracts fail before the inventory and rendering guidance is
+tightened.
+
+**Step 2: Implement precise inventory guidance**
+
+Align the skill, evidence reference, quality bar, template comments, and docs
+with granular source naming. Do not add a `partial` enum or a new consent/config
+surface.
+
+**Step 3: Verify and commit**
+
+Run the focused retro contracts, file-scoped formatting, docs Markdown checks,
+and `git diff --check`.
+
+```bash
+git add .agents/skills/oat-project-retro .oat/templates/project-retro.md apps/oat-docs/docs/workflows/projects/retro.md packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts
+git commit -m "fix(prev2-t03): inventory retro evidence precisely"
+```
+
+### Task prev2-t04: (revision) Route append-only project-log corrections and ship
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-retro/SKILL.md`
+- Modify: `.agents/skills/oat-project-retro/references/apply-procedure.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/retro.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts`
+- Regenerate: `packages/cli/assets/skills/oat-project-retro/**`
+- Regenerate: `packages/cli/assets/templates/project-retro.md`
+- Modify only if freshness requires: the five lockstep public package versions
+
+**Step 1: Add failing correction-routing coverage**
+
+Keep the public RP type vocabulary unchanged. Add a bounded `docs` apply
+special case for a target whose canonical path is `project-log.md`:
+
+- use `oat project log append`, never direct file editing;
+- require the proposal to identify the prior heading or event being corrected;
+- preserve the original entry;
+- perform semantic post-side-effect recovery before appending again;
+- record an `Applied-ref` only after the correction and retro writeback are
+  durably committed.
+
+Expected: focused contracts fail until the append-only route and recovery
+behavior are explicit.
+
+**Step 2: Implement and document the correction route**
+
+Update the apply procedure and workflow documentation. The special case is
+limited to project-log targets and does not introduce a new RP type, mutate
+immutable proposal bodies, or weaken the existing docs apply contract.
+
+**Step 3: Refresh shipped assets**
+
+Regenerate bundled skills and templates. Confirm every changed canonical skill
+has exactly one PR-scoped version increase in the final branch diff; do not
+double-bump for revision edits. Recheck public-package versions against current
+`origin/main` and advance all five together only if `0.2.30` no longer
+satisfies release freshness.
+
+**Step 4: Verify and commit**
+
+Run, in order:
+
+```bash
+pnpm check
+pnpm type-check
+pnpm test
+pnpm build
+pnpm lint
+pnpm format
+pnpm build:docs
+pnpm release:validate
+```
+
+Commit revision-owned source, docs, generated assets, and any required lockstep
+version updates:
+
+```bash
+git add .agents/skills/oat-project-retro packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts apps/oat-docs/docs/workflows/projects/retro.md packages/cli/assets packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
+git commit -m "feat(prev2-t04): ship second retro dogfood refinements"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -826,10 +1034,11 @@ git commit -m "feat(prev1-t04): refine retrospective dogfood workflow"
 - Phase 5: 2 tasks - Dogfood acceptance, then lockstep release bump + final validation
 - Phase 6: 1 task - Canonical revision phase compatibility in project state
 - Revision 1: 4 tasks - Writeback coherence, duplicate scope, durable filing receipts, and concise output
+- Revision 2: 4 tasks - Receipt schema, standalone evidence anchors, precise evidence inventory, and append-only correction routing
 
-**Total: 17 tasks**
+**Total: 21 tasks**
 
-Revision 1 implementation and independent phase review passed.
+Revision 2 is ready for implementation.
 
 ---
 

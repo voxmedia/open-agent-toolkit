@@ -1,9 +1,9 @@
 ---
-oat_status: complete
-oat_ready_for: null
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-07
-oat_current_task_id: null
+oat_current_task_id: prev2-t01
 oat_generated: false
 ---
 
@@ -72,17 +72,18 @@ resolution complete; plan handed to implementation.
 
 ## Progress Overview
 
-| Phase  | Status   | Tasks | Completed |
-| ------ | -------- | ----- | --------- |
-| p01    | complete | 2     | 2/2       |
-| p02    | complete | 4     | 4/4       |
-| p03    | complete | 2     | 2/2       |
-| p04    | complete | 2     | 2/2       |
-| p05    | complete | 2     | 2/2       |
-| p06    | complete | 1     | 1/1       |
-| p-rev1 | complete | 4     | 4/4       |
+| Phase  | Status      | Tasks | Completed |
+| ------ | ----------- | ----- | --------- |
+| p01    | complete    | 2     | 2/2       |
+| p02    | complete    | 4     | 4/4       |
+| p03    | complete    | 2     | 2/2       |
+| p04    | complete    | 2     | 2/2       |
+| p05    | complete    | 2     | 2/2       |
+| p06    | complete    | 1     | 1/1       |
+| p-rev1 | complete    | 4     | 4/4       |
+| p-rev2 | in_progress | 4     | 0/4       |
 
-**Total:** 17/17 tasks completed
+**Total:** 17/21 tasks completed
 
 ---
 
@@ -139,6 +140,15 @@ resolution complete; plan handed to implementation.
 | prev1-t02 | complete | `87990de0b` | Separates related filings into a dedicated backlog item.             |
 | prev1-t03 | complete | `4f6164778` | Requires durable destination receipts and honest remote visibility.  |
 | prev1-t04 | complete | `c95a6f616` | Makes output evidence-scaled and refreshes shipped revision assets.  |
+
+### p-rev2 — Revision 2
+
+| Task      | Status  | Commit | Outcome |
+| --------- | ------- | ------ | ------- |
+| prev2-t01 | pending | -      | -       |
+| prev2-t02 | pending | -      | -       |
+| prev2-t03 | pending | -      | -       |
+| prev2-t04 | pending | -      | -       |
 
 ---
 
@@ -211,6 +221,22 @@ resolution complete; plan handed to implementation.
 ### Task prev1-t04: Calibrate retro depth and ship revision assets
 
 **Status:** completed
+
+### Task prev2-t01: Define an unambiguous retro run receipt
+
+**Status:** pending
+
+### Task prev2-t02: Keep retros standalone without repeated chronology
+
+**Status:** pending
+
+### Task prev2-t03: Inventory evidence at source-level precision
+
+**Status:** pending
+
+### Task prev2-t04: Route append-only project-log corrections and ship
+
+**Status:** pending
 
 ---
 
@@ -314,6 +340,27 @@ invocation evidence. No implementation recovery attempts were used.
 ---
 
 ## Implementation Log
+
+### Revision Received: Inline Second-Dogfood Feedback
+
+**Date:** 2026-08-07
+
+**Source:** inline conversation
+
+**Changes requested:**
+
+- Define a canonical structural receipt with distinct register-count and
+  action-outcome keys.
+- Keep retros independently understandable while attaching unobtrusive stable
+  evidence anchors and removing repeated chronology.
+- Inventory evidence with source-level precision instead of blanket
+  availability claims.
+- Route project-log correction promotions through append-only CLI behavior
+  without expanding the public RP type vocabulary.
+
+**New tasks added:** `prev2-t01`, `prev2-t02`, `prev2-t03`, `prev2-t04`
+
+**Next:** Execute revision tasks via the `oat-project-implement` skill.
 
 ### Revision Received: Inline Feedback
 
