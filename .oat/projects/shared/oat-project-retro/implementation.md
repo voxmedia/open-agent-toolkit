@@ -337,6 +337,25 @@ invocation evidence. No implementation recovery attempts were used.
 
 **Next:** Execute revision tasks via the `oat-project-implement` skill.
 
+### Review Reconciliation: p-rev1
+
+**Date:** 2026-08-07
+
+**Review artifacts:**
+
+- `reviews/archived/p-rev1-review-2026-08-07T001216Z.md` — 0 Critical,
+  3 Important, 0 Medium, 0 Minor; fixes completed in `36a0776ba`,
+  `b67c885d8`, and `c1229f738`.
+- `reviews/archived/p-rev1-review-2026-08-07T003046Z.md` — passed with no
+  findings.
+
+**New tasks added:** None. The bounded review fixes and passing re-review were
+already implemented and independently verified; this reconciliation restores
+their missing durable Reviews ledger identities.
+
+**Next:** Re-run final review after receiving the current final-review
+bookkeeping finding.
+
 ### 2026-08-06
 
 - Implementation preflight selected Tier 1 native Cursor subagents.

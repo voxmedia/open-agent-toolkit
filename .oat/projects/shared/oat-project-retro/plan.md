@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-08-06
+oat_last_updated: 2026-08-07
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: ['p05']
@@ -559,6 +559,8 @@ not receive another bump.
 | p05    | code     | passed          | 2026-08-06 | reviews/archived/p05-review-2026-08-06T042130Z.md           | 83f3d6a2134898e0234ee4fe40cb428386fee070 | manual     | -                        |
 | p06    | code     | fixes_completed | 2026-08-06 | reviews/p06-review-2026-08-06T233605Z.md                    | 4b40ea7fa1ea85866627a079af283c10b6ceb057 | manual     | -                        |
 | p06    | code     | passed          | 2026-08-06 | reviews/p06-review-2026-08-06T234340Z.md                    | e9c30d26b256bd43851e3ad951cb1a17fe335692 | manual     | -                        |
+| p-rev1 | code     | fixes_completed | 2026-08-07 | reviews/archived/p-rev1-review-2026-08-07T001216Z.md        | c95a6f616f4fca237bfbcca79d660207d8980cef | manual     | -                        |
+| p-rev1 | code     | passed          | 2026-08-07 | reviews/archived/p-rev1-review-2026-08-07T003046Z.md        | c1229f7381162e607dfcc5b08a9b1a13f0b3ce3a | manual     | -                        |
 | final  | code     | passed          | 2026-08-06 | reviews/archived/final-review-2026-08-06T044429Z.md         | 598fb8f0cc2ac00721abb6072f38508b808895e8 | manual     | -                        |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
