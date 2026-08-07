@@ -402,11 +402,14 @@ sequence.
 
 **Review artifacts:**
 
-- `reviews/p-rev2-review-2026-08-07T131055Z.md` — 0 Critical, 3 Important;
+- `reviews/archived/p-rev2-review-2026-08-07T131055Z.md` — 0 Critical,
+  3 Important;
   fixes completed in `0c77d4384`.
-- `reviews/p-rev2-review-2026-08-07T133551Z.md` — 0 Critical, 1 Important;
+- `reviews/archived/p-rev2-review-2026-08-07T133551Z.md` — 0 Critical,
+  1 Important;
   fix completed in `3698f2fd1`.
-- `reviews/p-rev2-review-2026-08-07T134845Z.md` — passed with no findings.
+- `reviews/archived/p-rev2-review-2026-08-07T134845Z.md` — passed with no
+  findings.
 
 **New tasks added:** None. Both review rounds were handled as bounded
 continuations of the accepted phase implementer.

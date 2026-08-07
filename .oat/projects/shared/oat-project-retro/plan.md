@@ -561,9 +561,9 @@ not receive another bump.
 | p06    | code     | passed          | 2026-08-06 | reviews/archived/p06-review-2026-08-06T234340Z.md           | e9c30d26b256bd43851e3ad951cb1a17fe335692 | manual     | -                        |
 | p-rev1 | code     | fixes_completed | 2026-08-07 | reviews/archived/p-rev1-review-2026-08-07T001216Z.md        | c95a6f616f4fca237bfbcca79d660207d8980cef | manual     | -                        |
 | p-rev1 | code     | passed          | 2026-08-07 | reviews/archived/p-rev1-review-2026-08-07T003046Z.md        | c1229f7381162e607dfcc5b08a9b1a13f0b3ce3a | manual     | -                        |
-| p-rev2 | code     | fixes_completed | 2026-08-07 | reviews/p-rev2-review-2026-08-07T131055Z.md                 | 474320f4b09de16aa23fc92a55eebde49c323b7a | manual     | -                        |
-| p-rev2 | code     | fixes_completed | 2026-08-07 | reviews/p-rev2-review-2026-08-07T133551Z.md                 | 0c77d4384df741288191470866532ece8dedf8da | manual     | -                        |
-| p-rev2 | code     | passed          | 2026-08-07 | reviews/p-rev2-review-2026-08-07T134845Z.md                 | 3698f2fd1b8784f0d4a8bebcfe098e5f3918a91f | manual     | -                        |
+| p-rev2 | code     | fixes_completed | 2026-08-07 | reviews/archived/p-rev2-review-2026-08-07T131055Z.md        | 474320f4b09de16aa23fc92a55eebde49c323b7a | manual     | -                        |
+| p-rev2 | code     | fixes_completed | 2026-08-07 | reviews/archived/p-rev2-review-2026-08-07T133551Z.md        | 0c77d4384df741288191470866532ece8dedf8da | manual     | -                        |
+| p-rev2 | code     | passed          | 2026-08-07 | reviews/archived/p-rev2-review-2026-08-07T134845Z.md        | 3698f2fd1b8784f0d4a8bebcfe098e5f3918a91f | manual     | -                        |
 | final  | code     | passed          | 2026-08-06 | reviews/archived/final-review-2026-08-06T044429Z.md         | 598fb8f0cc2ac00721abb6072f38508b808895e8 | manual     | -                        |
 | final  | code     | fixes_completed | 2026-08-07 | reviews/archived/final-review-2026-08-07T004237Z.md         | cd22b7f0af87c59169e9fd57c31b057f9216b6dd | manual     | -                        |
 | final  | code     | passed          | 2026-08-07 | reviews/archived/final-review-2026-08-07T021157Z.md         | a6b5ea4f2b6c40bb55e1120155f9ce122eb5dffb | manual     | -                        |
