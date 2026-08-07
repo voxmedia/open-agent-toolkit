@@ -4,9 +4,9 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-07
 oat_generated: true
-oat_summary_last_task: prev1-t04
-oat_summary_revision_count: 1
-oat_summary_includes_revisions: [p-rev1]
+oat_summary_last_task: prev2-t04
+oat_summary_revision_count: 2
+oat_summary_includes_revisions: [p-rev1, p-rev2]
 ---
 
 # Summary: oat-project-retro
@@ -41,13 +41,11 @@ separate paths for repo-local improvements and upstream toolkit feedback.
   applied; no external filing write was performed.
 - Added strict control-plane support for canonical and legacy revision
   phase/task dialects without weakening ordinary phase parsing.
-- Dogfooded the workflow on this project and revised it to keep mutable status
-  coherent, distinguish exact duplicates from related work, require verified
-  destination-first local filing receipts, and scale output depth to available
-  evidence.
-- Split the observed configured-closeout defect into dedicated backlog item
-  `BL-260806-fail-closed-when-configured` with a committed local receipt and
-  explicit unpushed visibility.
+- Dogfooded the workflow twice on this project, then refined mutable-state
+  coherence, duplicate handling, verified local receipts, deterministic run
+  receipts, standalone evidence-anchored narratives, precise evidence
+  inventories, and append-only project-log correction routing. The observed
+  closeout defect became `BL-260806-fail-closed-when-configured`.
 
 ## Key Decisions
 
@@ -73,6 +71,9 @@ separate paths for repo-local improvements and upstream toolkit feedback.
 - **Mutable prose has one bounded home:** `Current State` is derived from
   register fields and frontmatter rollups. Proposal bodies and historical
   narrative remain immutable after generation.
+- **Receipt outcomes use one pre-action snapshot:** A total precedence rule
+  derives `skipped`, `declined`, `deferred`, or `performed` from initial
+  eligibility, action entry, completion, and remaining work.
 
 ## Design Deltas
 
@@ -84,9 +85,9 @@ separate paths for repo-local improvements and upstream toolkit feedback.
   contract tests and autonomy inventory updates. The final review also required
   explicit `Bash(pnpm:*)` grants so both skills could execute their mandatory
   artifact-hygiene steps.
-- Revision review aligned `design.md` with destination-first filing and added
-  scenario-specific recovery contracts for local create, strengthen, link,
-  failed-commit, no-upstream, GitHub, and rerun states.
+- Revision reviews aligned `design.md` with destination-first filing,
+  scenario-specific recovery, deterministic receipt transitions, stable
+  evidence anchors, and append-only project-log corrections.
 
 ## Notable Challenges
 
@@ -143,6 +144,10 @@ separate paths for repo-local improvements and upstream toolkit feedback.
   contracts. One bounded review-fix round repaired receipt chronology,
   local-link/rerun recovery, and design alignment; the re-review and final
   whole-project review passed.
+- **p-rev2 — Second-dogfood refinement:** Four tasks clarified receipt,
+  narrative, evidence-inventory, and project-log correction contracts. Two
+  bounded fix rounds established executable append semantics and a total
+  pre-action outcome state machine; round three passed with no findings.
 
 ## Workflow Observations
 
@@ -181,3 +186,11 @@ Phase passed after one bounded review-fix round; see reviews/p06-review-2026-08-
 ### 2026-08-07 · structural · oat-project-implement · p-rev1
 
 Phase passed after one bounded review-fix round; see reviews/p-rev1-review-2026-08-07T003046Z.md.
+
+### 2026-08-07 · general · bug · configured post-implementation sequence was skipped
+
+Promotes : configured closeout must persist its sequence snapshot and fail closed until ordered children are durably complete; the dedicated backlog item remains the implementation follow-up. (observed on OAT CLI 0.2.30)
+
+### 2026-08-07 · general · bug · configured closeout promotion correction
+
+Correction to "### 2026-08-07 · general · bug · configured post-implementation sequence was skipped", whose source heading was dropped during command serialization. Promoted from "### 2026-08-06 · project · bug · configured post-implementation sequence was skipped": configured closeout must persist its sequence snapshot and fail closed until ordered children are durably complete; the dedicated backlog item remains the implementation follow-up. (observed on OAT CLI 0.2.30)

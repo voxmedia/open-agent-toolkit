@@ -21,3 +21,11 @@ Running repository formatting concurrently with the full CLI suite caused a tran
 ### 2026-07-29 · general · friction · Generated autonomy inventory coupling
 
 Promotes the original entry "2026-07-28 · project · friction · Phase 3 autonomy inventory boundary": prompt-path edits that change autonomy gates must preserve or regenerate the associated inventory evidence, with focused inventory tests run before cleanup.
+
+### 2026-08-07 · general · bug · configured post-implementation sequence was skipped
+
+Promotes : configured closeout must persist its sequence snapshot and fail closed until ordered children are durably complete; the dedicated backlog item remains the implementation follow-up. (observed on OAT CLI 0.2.30)
+
+### 2026-08-07 · general · bug · configured closeout promotion correction
+
+Correction to "### 2026-08-07 · general · bug · configured post-implementation sequence was skipped", whose source heading was dropped during command serialization. Promoted from "### 2026-08-06 · project · bug · configured post-implementation sequence was skipped": configured closeout must persist its sequence snapshot and fail closed until ordered children are durably complete; the dedicated backlog item remains the implementation follow-up. (observed on OAT CLI 0.2.30)

@@ -12,6 +12,7 @@
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
 | DR-260807-local-filing-is-destination    | 2026-08-07 | accepted | Local filing is destination-first                                       | -      |
 | DR-260807-mutable-prose-has-one-bounded  | 2026-08-07 | accepted | Mutable prose has one bounded home                                      | -      |
+| DR-260807-receipt-outcomes-use-one-pre   | 2026-08-07 | accepted | Receipt outcomes use one pre-action snapshot                            | -      |
 | DR-260805-filing-is-a-companion-workflow | 2026-08-05 | accepted | Filing is a companion workflow                                          | -      |
 | DR-260805-generation-application         | 2026-08-05 | accepted | Generation, application, and filing have separate consent boundaries    | -      |
 | DR-260805-retrospectives-run-after       | 2026-08-05 | accepted | Retrospectives run after approval                                       | -      |

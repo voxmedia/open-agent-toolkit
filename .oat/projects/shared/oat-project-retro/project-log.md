@@ -76,6 +76,14 @@ Phase passed after one bounded review-fix round; see reviews/p06-review-2026-08-
 
 Phase passed after one bounded review-fix round; see reviews/p-rev1-review-2026-08-07T003046Z.md.
 
+### 2026-08-07 · general · bug · configured post-implementation sequence was skipped
+
+Promotes : configured closeout must persist its sequence snapshot and fail closed until ordered children are durably complete; the dedicated backlog item remains the implementation follow-up. (observed on OAT CLI 0.2.30)
+
+### 2026-08-07 · general · bug · configured closeout promotion correction
+
+Correction to "### 2026-08-07 · general · bug · configured post-implementation sequence was skipped", whose source heading was dropped during command serialization. Promoted from "### 2026-08-06 · project · bug · configured post-implementation sequence was skipped": configured closeout must persist its sequence snapshot and fail closed until ordered children are durably complete; the dedicated backlog item remains the implementation follow-up. (observed on OAT CLI 0.2.30)
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
