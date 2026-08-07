@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: oat-project-summary
 oat_blockers: []
 oat_last_updated: 2026-08-07
-oat_current_task_id: prev2-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -72,18 +72,18 @@ resolution complete; plan handed to implementation.
 
 ## Progress Overview
 
-| Phase  | Status      | Tasks | Completed |
-| ------ | ----------- | ----- | --------- |
-| p01    | complete    | 2     | 2/2       |
-| p02    | complete    | 4     | 4/4       |
-| p03    | complete    | 2     | 2/2       |
-| p04    | complete    | 2     | 2/2       |
-| p05    | complete    | 2     | 2/2       |
-| p06    | complete    | 1     | 1/1       |
-| p-rev1 | complete    | 4     | 4/4       |
-| p-rev2 | in_progress | 4     | 0/4       |
+| Phase  | Status   | Tasks | Completed |
+| ------ | -------- | ----- | --------- |
+| p01    | complete | 2     | 2/2       |
+| p02    | complete | 4     | 4/4       |
+| p03    | complete | 2     | 2/2       |
+| p04    | complete | 2     | 2/2       |
+| p05    | complete | 2     | 2/2       |
+| p06    | complete | 1     | 1/1       |
+| p-rev1 | complete | 4     | 4/4       |
+| p-rev2 | complete | 4     | 4/4       |
 
-**Total:** 17/21 tasks completed
+**Total:** 21/21 tasks completed
 
 ---
 
@@ -143,12 +143,12 @@ resolution complete; plan handed to implementation.
 
 ### p-rev2 — Revision 2
 
-| Task      | Status  | Commit | Outcome |
-| --------- | ------- | ------ | ------- |
-| prev2-t01 | pending | -      | -       |
-| prev2-t02 | pending | -      | -       |
-| prev2-t03 | pending | -      | -       |
-| prev2-t04 | pending | -      | -       |
+| Task      | Status   | Commit      | Outcome                                                         |
+| --------- | -------- | ----------- | --------------------------------------------------------------- |
+| prev2-t01 | complete | `d35dc9ed4` | Defines a deterministic structural receipt and action outcomes. |
+| prev2-t02 | complete | `556d8375c` | Keeps retros standalone with stable, unobtrusive anchors.       |
+| prev2-t03 | complete | `4f5aebb53` | Records truthful source-level evidence inventories.             |
+| prev2-t04 | complete | `474320f4b` | Adds safe append-only project-log correction routing.           |
 
 ---
 
@@ -224,19 +224,19 @@ resolution complete; plan handed to implementation.
 
 ### Task prev2-t01: Define an unambiguous retro run receipt
 
-**Status:** pending
+**Status:** completed
 
 ### Task prev2-t02: Keep retros standalone without repeated chronology
 
-**Status:** pending
+**Status:** completed
 
 ### Task prev2-t03: Inventory evidence at source-level precision
 
-**Status:** pending
+**Status:** completed
 
 ### Task prev2-t04: Route append-only project-log corrections and ship
 
-**Status:** pending
+**Status:** completed
 
 ---
 
@@ -335,6 +335,39 @@ reviewer-local orchestration record was required. Runtime identity was not
 observable, so launcher-owned targets and native acceptance remain the
 invocation evidence. No implementation recovery attempts were used.
 
+### Run 3 — 2026-08-07T12:45:00Z {#run-3}
+
+- Branch: `oat-project-retro`
+- Tier: 1 — native Cursor subagents
+- Dispatch policy: managed `high`
+- Schedule: `p-rev2`
+- Phase recovery: no implementation recovery attempts
+
+#### Phase Outcome
+
+| Phase  | Status | Task commits                                       | Review rounds | Fix rounds | Verification                                     |
+| ------ | ------ | -------------------------------------------------- | ------------- | ---------- | ------------------------------------------------ |
+| p-rev2 | passed | `d35dc9ed4`, `556d8375c`, `4f5aebb53`, `474320f4b` | 3             | 2          | 85 focused tests and all ordered full gates pass |
+
+Review-fix commits `0c77d4384` and `3698f2fd1` close the receipt,
+correction-routing, design-alignment, and outcome-transition findings. The
+passing review artifact commit is `bd28e5281`.
+
+#### Dispatch Evidence
+
+| Scope  | Action         | Request / continuation ID                              | Agent ID                               | Target                                     | Model axis                    | Result |
+| ------ | -------------- | ------------------------------------------------------ | -------------------------------------- | ------------------------------------------ | ----------------------------- | ------ |
+| p-rev2 | implementation | `oat-project-retro-rev2-implementation-20260807T1245Z` | `906de236-d8fd-4f52-b942-b2dd0912ed84` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | done   |
+| p-rev2 | review r1      | `oat-project-retro-rev2-review-r1-20260807T1307Z`      | recorded in review artifact            | `oat-reviewer-gpt-5-6-sol-high`            | `selected:gpt-5.6-sol-high`   | fail   |
+| p-rev2 | fix r1         | `oat-project-retro-p-rev2-review-r1-fix-01`            | `906de236-d8fd-4f52-b942-b2dd0912ed84` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | done   |
+| p-rev2 | review r2      | `oat-project-retro-rev2-review-r2-20260807T1332Z`      | `134a2657-9cea-4dac-9a54-29fb3c7da755` | `oat-reviewer-gpt-5-6-sol-high`            | `selected:gpt-5.6-sol-high`   | fail   |
+| p-rev2 | fix r2         | `oat-project-retro-p-rev2-review-r2-fix-02`            | `906de236-d8fd-4f52-b942-b2dd0912ed84` | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | done   |
+| p-rev2 | review r3      | `oat-project-retro-rev2-review-r3-20260807T1347Z`      | `fc92a232-c577-42b8-b4c4-fa0979d75eff` | `oat-reviewer-gpt-5-6-sol-high`            | `selected:gpt-5.6-sol-high`   | pass   |
+
+All p-rev2 reviewers reported `Reconnaissance: not-attempted`. Runtime identity
+was not observable; launcher-owned targets and native acceptance remain the
+invocation evidence.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -360,7 +393,25 @@ invocation evidence. No implementation recovery attempts were used.
 
 **New tasks added:** `prev2-t01`, `prev2-t02`, `prev2-t03`, `prev2-t04`
 
-**Next:** Execute revision tasks via the `oat-project-implement` skill.
+**Next:** Completed and independently reviewed; run the configured closeout
+sequence.
+
+### Review Reconciliation: p-rev2
+
+**Date:** 2026-08-07
+
+**Review artifacts:**
+
+- `reviews/p-rev2-review-2026-08-07T131055Z.md` — 0 Critical, 3 Important;
+  fixes completed in `0c77d4384`.
+- `reviews/p-rev2-review-2026-08-07T133551Z.md` — 0 Critical, 1 Important;
+  fix completed in `3698f2fd1`.
+- `reviews/p-rev2-review-2026-08-07T134845Z.md` — passed with no findings.
+
+**New tasks added:** None. Both review rounds were handled as bounded
+continuations of the accepted phase implementer.
+
+**Next:** Refresh summary, documentation, and PR artifacts.
 
 ### Revision Received: Inline Feedback
 
@@ -561,6 +612,7 @@ Track test execution during implementation.
 | p05    | Full CI/build sequence and five-package release validation       | Passed |
 | p06    | Control-plane focused (25) and package-wide (78) tests           | Passed |
 | p-rev1 | Retro contracts (20), full ordered gates, and release validation | Passed |
+| p-rev2 | Retro contracts (85), full ordered gates, and release validation | Passed |
 
 ## Final Summary (for PR/docs)
 
@@ -582,6 +634,12 @@ Track test execution during implementation.
 - Added exact local filing recovery rules for create, strengthen, link,
   failed-commit, no-upstream, GitHub, and rerun transitions while keeping
   proposal bodies immutable and output concise by default.
+- Defined an unambiguous structural retro receipt with pre-action eligibility
+  snapshots and deterministic performed, skipped, declined, and deferred
+  outcomes.
+- Kept retrospective narratives independently understandable while using
+  stable evidence anchors, precise evidence-source inventories, and safe
+  append-only project-log correction routing.
 - Bumped the five public packages in lockstep to `0.2.30`; final check,
   type-check, test, build, docs, lint/format, package validation, and visual
   validation gates passed.
