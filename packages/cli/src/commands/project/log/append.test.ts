@@ -202,6 +202,68 @@ describe('oat project log append', () => {
     expect(content).toContain('Dispatch completed successfully.');
   });
 
+  it.each([
+    ['performed', 'performed'],
+    ['declined', 'declined'],
+    ['skipped', 'skipped'],
+    ['deferred', 'deferred'],
+  ] as const)(
+    'accepts the canonical retro receipt with %s outcomes',
+    async (applyOutcome, filingOutcome) => {
+      const { root, projectPath, logPath } = await createRepo();
+      const { command, capture } = createHarness(root);
+      const body =
+        'retro artifact=.oat/projects/shared/demo/references/project-retro.md evidence_used=gate-receipts,project-log evidence_unavailable=archived-review-markdown promotions=2 upstream=1 ' +
+        `apply=${applyOutcome} filing=${filingOutcome}`;
+
+      await runCommand(command, [
+        '--project',
+        projectPath,
+        '--structural',
+        '--producer',
+        'oat-project-retro',
+        '--ref',
+        'project-retro',
+        '--body',
+        body,
+      ]);
+
+      await expect(readFile(logPath, 'utf8')).resolves.toContain(
+        '### 2026-07-17 · structural · oat-project-retro · project-retro',
+      );
+      await expect(readFile(logPath, 'utf8')).resolves.toContain(body);
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'appended' });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('accepts the full retro correction judgment invocation', async () => {
+    const { root, projectPath, logPath } = await createRepo();
+    const { command, capture } = createHarness(root);
+    const body =
+      'Retro correction id=RP-01 original=event-2026-07-16-review\nThe gate result was accepted after the retry.';
+
+    await runCommand(command, [
+      '--project',
+      projectPath,
+      '--type',
+      'feedback',
+      '--scope',
+      'project',
+      '--area',
+      'retro correction RP-01',
+      '--body',
+      body,
+    ]);
+
+    await expect(readFile(logPath, 'utf8')).resolves.toContain(
+      '### 2026-07-17 · project · feedback · retro correction RP-01',
+    );
+    await expect(readFile(logPath, 'utf8')).resolves.toContain(body);
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'appended' });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('adds an optional version note clause', async () => {
     const { root, logPath } = await createRepo();
     const { command } = createHarness(root);

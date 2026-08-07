@@ -812,13 +812,13 @@ describe('review skill contracts', () => {
     );
   });
 
-  it('integrates interactive completion recap policy before lifecycle mutation', () => {
+  it('integrates interactive completion recap and retro policy before lifecycle mutation', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-complete/SKILL.md',
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.1');
     expect(content).toContain(
       'Resolve `projectRecap` intent before presenting the batched completion prompt.',
     );
@@ -830,6 +830,22 @@ describe('review skill contracts', () => {
     );
     expect(content).toContain(
       'A valid persisted `oat_project_recap` decision prevents another prompt.',
+    );
+    expect(content).toContain(
+      'Preflight `{PROJECT_PATH}/references/project-retro.md` alongside the summary.',
+    );
+    expect(normalizedContent).toContain(
+      'When the retro is missing and this completion run is interactive, add exactly one question to the batched prompt: "No project retro exists. Generate one before completing?"',
+    );
+    expect(normalizedContent).toContain(
+      'When the retro is missing and this completion run is non-interactive, skip the offer.',
+    );
+    expect(content).toContain(
+      'When the retro exists, never offer regeneration.',
+    );
+    expect(content).toContain('When `SHOULD_GENERATE_RETRO="true"`, dispatch');
+    expect(normalizedContent).toContain(
+      'dispatch `oat-project-retro` in generate mode before any lifecycle mutation.',
     );
     expect(content).toMatch(
       /construct exactly one brief-aware, provider-neutral\s+author seam/,
@@ -848,11 +864,16 @@ describe('review skill contracts', () => {
     const recapIndex = normalizedContent.indexOf(
       '### Step 3.6: Select Final Project Recap',
     );
+    const retroIndex = normalizedContent.indexOf(
+      '### Step 3.5.5: Retro Safety-Net',
+    );
     const completeStateIndex = normalizedContent.indexOf(
       '### Step 5: Set Lifecycle Complete',
     );
     expect(resolveIndex).toBeGreaterThanOrEqual(0);
+    expect(retroIndex).toBeGreaterThan(resolveIndex);
     expect(recapIndex).toBeGreaterThan(resolveIndex);
+    expect(recapIndex).toBeGreaterThan(retroIndex);
     expect(completeStateIndex).toBeGreaterThan(recapIndex);
   });
 

@@ -388,6 +388,66 @@ describe('resolveEffectiveConfig', () => {
       ).toBeUndefined();
     });
 
+    it('resolves workflow.retro leaves with local over shared over user precedence', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                retro: {
+                  filing: { repo: 'backlog', upstream: 'issues' },
+                  apply: 'ask',
+                },
+              },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                retro: {
+                  filing: { repo: 'issues' },
+                  upstreamRepo: 'local/toolkit',
+                },
+              },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                retro: {
+                  filing: { repo: 'none', upstream: 'none' },
+                  apply: 'auto',
+                  upstreamRepo: 'user/toolkit',
+                },
+              },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved).toMatchObject({
+        'workflow.retro.filing.repo': {
+          value: 'issues',
+          source: 'local',
+        },
+        'workflow.retro.filing.upstream': {
+          value: 'issues',
+          source: 'shared',
+        },
+        'workflow.retro.apply': {
+          value: 'ask',
+          source: 'shared',
+        },
+        'workflow.retro.upstreamRepo': {
+          value: 'local/toolkit',
+          source: 'local',
+        },
+      });
+    });
+
     it('exposes workflow keys with source default when nothing set', async () => {
       const repoRoot = await createRepoRoot();
       const userConfigDir = await createUserConfigDir();

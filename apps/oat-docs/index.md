@@ -65,6 +65,7 @@
     - [PR Flow](workflows/projects/pr-flow.md) — PR generation inputs, outputs, artifact expectations, and frontmatter handling.
     - [Programmatic Execution](workflows/projects/programmatic-execution.md) — How OAT launches agents through provider CLI/headless surfaces — per-harness execution shapes, cross-runtime gate exec targets, credential isolation, and the launcher-owned evidence they share.
     - [Repository PR Comment Analysis](workflows/projects/repo-analysis.md) — Repository-level PR comment analysis commands for collecting and triaging review feedback.
+    - [Project Retrospectives](workflows/projects/retro.md) — Generate evidence-grounded project retrospectives, apply repo improvements, and file tracker feedback.
     - [Review Flavors](workflows/projects/review-flavors.md) — The four OAT project review flavors, when each fires in the lifecycle, and who resolves its reviewer target.
     - [Reviews](workflows/projects/reviews.md) — Review request/receive loop, status progression, severity policy, and quality gates.
     - [Project Splitting](workflows/projects/splitting.md) — How OAT splits broad discoveries or brainstorms into a coordination parent and focused child projects.

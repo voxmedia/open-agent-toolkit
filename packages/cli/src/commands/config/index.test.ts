@@ -1414,6 +1414,121 @@ describe('oat config', () => {
       );
     });
 
+    it('sets, gets, lists, and describes every workflow.retro key', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const entries = [
+        ['workflow.retro.filing.repo', 'backlog'],
+        ['workflow.retro.filing.upstream', 'issues'],
+        ['workflow.retro.apply', 'auto'],
+        ['workflow.retro.upstreamRepo', 'voxmedia/open-agent-toolkit'],
+      ] as const;
+
+      for (const [key, value] of entries) {
+        const setHarness = createHarness({ cwd: root, home });
+        await runCommand(setHarness.command, ['set', key, value]);
+        expect(process.exitCode).toBe(0);
+
+        const getHarness = createHarness({ cwd: root, home });
+        await runCommand(getHarness.command, ['get', key], ['--json']);
+        expect(getHarness.capture.jsonPayloads[0]).toMatchObject({
+          status: 'ok',
+          key,
+          value,
+          source: 'local',
+        });
+
+        const describeHarness = createHarness({ cwd: root, home });
+        await runCommand(describeHarness.command, ['describe', key]);
+        expect(describeHarness.capture.info[0]).toContain(`Key: ${key}`);
+      }
+
+      const listHarness = createHarness({ cwd: root, home });
+      await runCommand(listHarness.command, ['list']);
+      for (const [key] of entries) {
+        expect(listHarness.capture.info[0]).toContain(key);
+      }
+
+      const config = JSON.parse(
+        await readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+      );
+      expect(config.workflow.retro).toEqual({
+        filing: { repo: 'backlog', upstream: 'issues' },
+        apply: 'auto',
+        upstreamRepo: 'voxmedia/open-agent-toolkit',
+      });
+    });
+
+    it.each([
+      ['local', '--local', '.oat/config.local.json'],
+      ['shared', '--shared', '.oat/config.json'],
+      ['user', '--user', '.oat-user/config.json'],
+    ] as const)(
+      'preserves workflow.retro siblings when writing at %s scope',
+      async (scope, flag, relativePath) => {
+        const root = await createRepoRoot();
+        const home = await createHome();
+        const base =
+          scope === 'user'
+            ? join(home, '.oat')
+            : scope === 'shared'
+              ? join(root, '.oat')
+              : join(root, '.oat');
+        const path =
+          scope === 'user'
+            ? join(base, 'config.json')
+            : join(base, relativePath.split('/').at(-1)!);
+        await mkdir(base, { recursive: true });
+        await writeFile(
+          path,
+          `${JSON.stringify({
+            version: 1,
+            workflow: {
+              retro: {
+                filing: { upstream: 'issues' },
+                upstreamRepo: 'existing/toolkit',
+              },
+            },
+          })}\n`,
+          'utf8',
+        );
+
+        const harness = createHarness({ cwd: root, home });
+        await runCommand(harness.command, [
+          'set',
+          'workflow.retro.filing.repo',
+          'backlog',
+          flag,
+        ]);
+
+        expect(process.exitCode).toBe(0);
+        expect(JSON.parse(await readFile(path, 'utf8')).workflow.retro).toEqual(
+          {
+            filing: { repo: 'backlog', upstream: 'issues' },
+            upstreamRepo: 'existing/toolkit',
+          },
+        );
+      },
+    );
+
+    it.each([
+      ['workflow.retro.filing.repo', 'project', 'issues | backlog | none'],
+      ['workflow.retro.filing.upstream', 'backlog', 'issues | none'],
+      ['workflow.retro.apply', 'always', 'auto | ask'],
+      ['workflow.retro.upstreamRepo', 'not-a-repo', 'owner/name'],
+    ] as const)(
+      'rejects invalid %s value with an actionable error',
+      async (key, value, expected) => {
+        const root = await createRepoRoot();
+        const harness = createHarness({ cwd: root });
+        await runCommand(harness.command, ['set', key, value]);
+
+        expect(process.exitCode).toBe(1);
+        expect(harness.capture.error[0]).toContain(key);
+        expect(harness.capture.error[0]).toContain(expected);
+      },
+    );
+
     it('rejects invalid workflow.projectLog values', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });

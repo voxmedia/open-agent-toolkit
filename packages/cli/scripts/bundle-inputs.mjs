@@ -51,6 +51,8 @@ export const BUNDLE_INPUTS = Object.freeze({
     'oat-project-promote-spec-driven',
     'oat-project-quick-start',
     'oat-project-reconcile',
+    'oat-project-retro',
+    'oat-project-retro-file',
     'oat-project-revise',
     'oat-project-review-provide',
     'oat-project-review-provide-remote',
@@ -99,6 +101,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'implementation.md',
     'summary.md',
     'project-log.md',
+    'project-retro.md',
   ]),
   templateDirectories: Object.freeze([
     'ideas',

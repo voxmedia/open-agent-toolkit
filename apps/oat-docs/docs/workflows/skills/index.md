@@ -24,6 +24,10 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Split a broad discovery or brainstorm into child projects: `oat-project-split`
 - Retroactively capture existing work: `oat-project-capture`
 - Run or receive reviews: `oat-project-review-provide`, `oat-project-review-receive`, or the non-project review variants
+- Generate an evidence-grounded project retrospective, apply approved repo
+  improvements, or file tracker feedback: `oat-project-retro` and
+  `oat-project-retro-file`. See
+  [Project Retrospectives](../projects/retro.md).
 - Capture a scoped, shippable backlog item: `oat-pjm-add-backlog-item` directly when the work is already scoped, or `oat-brainstorm` when the thought hasn't converged yet — the brainstorm dispatcher's "scoped backlog item" destination pre-fills the title / description / acceptance criteria / scope estimate / priority from the conversation and then runs `oat-pjm-add-backlog-item` with confirmed inputs
 - Manage the repo backlog and reference docs: `oat-pjm-update-repo-reference`, `oat-pjm-review-backlog`
 - Turn a repo audit, maintainability review, backlog review, backlog directory, or backlog item into standalone external implementation plans: `oat-repo-improve`. Plans land under `.oat/repo/reference/external-plans/`; execute them directly or optionally pass one to `oat-project-import-plan` for tracked OAT execution.
@@ -74,6 +78,8 @@ Use this section when you want to choose the right OAT skill for a task. If you 
     - `oat-project-pr-progress`
     - `oat-project-pr-final`
     - `oat-project-document`
+    - `oat-project-retro`
+    - `oat-project-retro-file`
     - `oat-explainer-kit`
     - `oat-wrap-up`
     - `oat-project-complete`

@@ -4,6 +4,11 @@
 
 ## Curated Overview
 
+- Project retrospectives now ship in CLI `0.2.30` as a post-approval-only
+  lifecycle capability. The retro artifact separates repo-local promotions
+  from upstream feedback in machine-scannable registers; generation, apply,
+  and filing remain consent-aware through interactive gates or explicit
+  `workflow.retro` configuration.
 - Provider-sync follow-up: the config-bug project now fails closed on symlinked
   provider ancestry; `BL-260724-support-provider-directory` tracks safe,
   manifest-aware adoption when a provider collection directory aliases its
@@ -104,6 +109,7 @@
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                              | open   | high     | feature | L        |
 | BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts | open   | high     | task    | M        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches         | open   | high     | feature | M        |
+| BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                | open   | high     | task    | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch | open   | high     | feature | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                           | open   | high     | feature | L        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments           | open   | high     | task    | M        |
