@@ -1611,10 +1611,7 @@ export function getCalls() {
 async function writeValidPlanSetModule(path) {
   await writeFile(
     path,
-    `export async function planSet({ recipe, factBase }) {
-  const sourceIds = factBase.sources
-    .map(({ id }) => id)
-    .filter((id) => !id.startsWith('critic:'));
+    `export async function planSet({ recipe, sourceIds }) {
   const floor = recipe.floor ?? [
     { id: 'project-recap', type: 'hub' },
     { id: 'architecture', type: 'diagram' },

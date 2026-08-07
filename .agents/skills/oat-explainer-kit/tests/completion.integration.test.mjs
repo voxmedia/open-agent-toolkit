@@ -525,10 +525,7 @@ const REQUIRED_NARRATIVE = [
   'outcome',
 ];
 
-async function completionPlanSet({ recipe, factBase }) {
-  const sourceIds = factBase.sources
-    .map(({ id }) => id)
-    .filter((id) => !id.startsWith('critic:'));
+async function completionPlanSet({ recipe, sourceIds }) {
   return {
     schemaVersion: 'explainer-kit.set-plan/v1',
     planId: 'completion-evidence-recap',

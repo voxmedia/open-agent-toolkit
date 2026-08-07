@@ -14,6 +14,7 @@ export async function planExplainerSet({
     schemaVersion: 'explainer-kit.set-plan-request/v1',
     recipe: structuredClone(recipe),
     factBase: structuredClone(factBase),
+    sourceIds: structuredClone(sourceIds),
     discovery: structuredClone(discovery),
   });
   const callback =

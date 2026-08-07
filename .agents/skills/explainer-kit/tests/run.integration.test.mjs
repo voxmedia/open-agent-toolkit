@@ -1708,7 +1708,7 @@ test('plans one immutable set after facts and before every artifact author', asy
   const planSet = mock.fn(async (plannerRequest) => {
     events.push('plan');
     plannerRequests.push(plannerRequest);
-    const sourceIds = plannerRequest.factBase.sources.map(({ id }) => id);
+    const sourceIds = plannerRequest.sourceIds;
     return plannedSet(plannerRequest, [
       ...plannedSet(plannerRequest).portfolio,
       {
@@ -1756,6 +1756,7 @@ test('plans one immutable set after facts and before every artifact author', asy
     plannerRequests[0].factBase.schemaVersion,
     'explainer-kit.fact-base/v1',
   );
+  assert.deepEqual(plannerRequests[0].sourceIds, ['project']);
   assert.deepEqual(
     authorRequests.map(({ setContext }) => setContext),
     Array.from({ length: 4 }, () => authorRequests[0].setContext),
@@ -1772,6 +1773,46 @@ test('plans one immutable set after facts and before every artifact author', asy
     'source/set-plan/drafts.json',
   ]) {
     await access(join(result.runRoot, path));
+  }
+});
+
+test('rejects malformed returned-plan source IDs before authoring', async () => {
+  for (const sourceIds of [undefined, 'project', null, ['unknown']]) {
+    const fixture = await suppliedFixture('project-recap');
+    const author = mock.fn(async (authorRequest) =>
+      authorResult(authorRequest),
+    );
+
+    const result = await runExplainerCore(fixture.request, {
+      planSet: async (plannerRequest) => {
+        const plan = plannedSet(plannerRequest);
+        if (sourceIds === undefined) {
+          delete plan.sourceIds;
+        } else {
+          plan.sourceIds = sourceIds;
+          if (Array.isArray(sourceIds)) {
+            for (const artifact of plan.portfolio) {
+              artifact.sourceIds = sourceIds;
+            }
+          }
+        }
+        return plan;
+      },
+      author,
+      now: () => NOW,
+    });
+
+    assert.equal(result.outcome, 'failed');
+    assert.equal(result.errors[0]?.code, 'E_SET_PLAN');
+    assert.match(
+      result.errors[0]?.message ?? '',
+      sourceIds === undefined
+        ? /\$\.sourceIds.*required/i
+        : sourceIds === 'project' || sourceIds === null
+          ? /\$\.sourceIds.*type/i
+          : /unknown reconciled source unknown/i,
+    );
+    assert.equal(author.mock.callCount(), 0);
   }
 });
 
