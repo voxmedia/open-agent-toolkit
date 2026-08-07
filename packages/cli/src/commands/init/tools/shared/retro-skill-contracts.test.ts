@@ -24,6 +24,22 @@ const retroTemplate = readRepoFile('.oat/templates/project-retro.md');
 const retroDocs = readRepoFile(
   'apps/oat-docs/docs/workflows/projects/retro.md',
 );
+const retroDesign = readRepoFile(
+  '.oat/projects/shared/oat-project-retro/design.md',
+);
+
+function readScenarioRow(content: string, scenario: string): string[] {
+  const row = content
+    .split('\n')
+    .find((line) => line.startsWith(`| ${scenario} `));
+
+  return (
+    row
+      ?.split('|')
+      .slice(1, -1)
+      .map((cell) => cell.trim()) ?? []
+  );
+}
 
 describe('retro skill content contracts', () => {
   it('authorizes each skill mandatory formatter and check path', () => {
@@ -112,13 +128,115 @@ describe('retro skill content contracts', () => {
     expect(retroTemplate).toContain('Remote-visibility');
   });
 
+  it.each([
+    {
+      scenario: 'New local',
+      expected: [
+        'New local',
+        'Create backlog item',
+        'Separate mutation commit contains path and excludes retro',
+        'Filed only after later retro writeback',
+      ],
+    },
+    {
+      scenario: 'Strengthened local',
+      expected: [
+        'Strengthened local',
+        'Modify backlog item',
+        'Separate mutation commit contains path and excludes retro',
+        'Filed only after later retro writeback',
+      ],
+    },
+    {
+      scenario: 'Linked local',
+      expected: [
+        'Linked local',
+        'No destination mutation',
+        'Recover latest exact-path commit and verify current destination coherence',
+        'Retain or set filed only with valid recovered receipt',
+      ],
+    },
+    {
+      scenario: 'Failed local commit',
+      expected: [
+        'Failed local commit',
+        'Mutation did not commit',
+        'No receipt',
+        'Must not be filed',
+      ],
+    },
+    {
+      scenario: 'No upstream',
+      expected: [
+        'No upstream',
+        'None',
+        'Valid local receipt',
+        'Filed with `Remote-visibility: unpushed`',
+      ],
+    },
+    {
+      scenario: 'GitHub',
+      expected: [
+        'GitHub',
+        'Create or link issue',
+        'Destination URL; local receipt fields are `—`',
+        'Filed only with valid URL',
+      ],
+    },
+    {
+      scenario: 'Rerun',
+      expected: [
+        'Rerun',
+        'No new mutation',
+        'Pre-selection integrity validates destination-type state',
+        'Skip only complete valid filed items',
+      ],
+    },
+  ])(
+    'defines the $scenario filing-state transition',
+    ({ scenario, expected }) => {
+      expect(readScenarioRow(filingSkill, scenario)).toEqual(expected);
+    },
+  );
+
+  it('orders a destination-only receipt commit before retro writeback', () => {
+    expect(filingSkill).toMatch(
+      /destination commit[\s\S]*?must not contain[\s\S]*?retro/i,
+    );
+    expect(filingSkill).toContain(
+      'git merge-base --is-ancestor "$DESTINATION_COMMIT" "$WRITEBACK_COMMIT"',
+    );
+    expect(filingSkill).toMatch(
+      /destination commit[\s\S]*?predates[\s\S]*?writeback commit/i,
+    );
+  });
+
+  it('aligns the design and template with mutable filing-state contracts', () => {
+    for (const field of [
+      'Destination-receipt',
+      'Remote-visibility',
+      'Disposition-note',
+      'Current State',
+    ]) {
+      expect(retroDesign).toContain(field);
+    }
+    expect(retroDesign).toMatch(/destination-first/i);
+    expect(retroDesign).toMatch(/proposal bodies[\s\S]*?immutable/i);
+    expect(retroDesign).toMatch(
+      /Current State[\s\S]*?only mutable freeform narrative surface/i,
+    );
+    expect(retroTemplate).toMatch(
+      /GitHub[\s\S]*?Destination-receipt:\s*—[\s\S]*?Remote-visibility:\s*—/i,
+    );
+  });
+
   it('does not invent or prompt for incomplete backlog metadata', () => {
     expect(filingSkill).toMatch(
       /non-interactive[\s\S]*?required backlog metadata[\s\S]*?no external write/i,
     );
     expect(filingSkill).toMatch(/do not prompt or invent/i);
     expect(filingSkill).toMatch(
-      /leave (?:the )?item unsettled[\s\S]*?report[\s\S]*?missing metadata/i,
+      /leave\s+(?:the\s+)?item\s+unsettled[\s\S]*?report[\s\S]*?missing metadata/i,
     );
   });
 

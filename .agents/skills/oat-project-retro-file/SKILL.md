@@ -61,10 +61,34 @@ Build two lanes:
 - **Repo lane:** every RP item with `Disposition: file`.
 - **Upstream lane:** every UP item.
 
-Select items by the filing status vocabulary:
+Before ordinary selection, run a **pre-selection integrity pass** over every
+item already marked `Status: filed`:
+
+- Classify its destination as a GitHub issue URL or a canonical local backlog
+  path.
+- For GitHub, require a valid destination URL and require
+  `Destination-receipt: —` plus `Remote-visibility: —`; GitHub destinations do
+  not use local receipt fields.
+- For local backlog destinations, resolve the latest commit for the exact path
+  with `git log -1 --format=%H -- "$DESTINATION_PATH"`. Verify the path appears
+  in that commit, the current file exists, and its ID, title, mechanism, and
+  acceptance scope still represent the retro proposal. Derive remote visibility
+  from the configured upstream: no upstream or a commit not reachable from it
+  means `unpushed`; only reachability from the upstream means `pushed`.
+- A local item with a missing, stale, or invalid receipt is not skippable. Valid
+  exact-path recovery may retain `filed` and write the recovered
+  `Destination-receipt` and `Remote-visibility` without external mutation. If
+  recovery or current-destination coherence fails, it cannot remain `filed`:
+  set it back to `proposed`, clear both receipt fields to `—`, explain the
+  invalid state in `Disposition-note`, and include it in ordinary selection.
+- A malformed GitHub filed state likewise returns to `proposed`; do not preserve
+  or skip an invalid destination-type state.
+
+After the integrity pass, select by the filing status vocabulary:
 
 - Process `Status: proposed`.
-- Skip `filed` and `rejected`.
+- Skip `filed` only when its destination-type state is complete and valid.
+- Skip `rejected`.
 - Retry `no-destination` only when this run's preflight finds a destination
   that is now available.
 
@@ -186,11 +210,14 @@ does not grant separate consent to mutate an existing destination. Do not
 strengthen, edit, comment on, or refile an external duplicate without separate
 consent recorded for that side effect. When the search result is a validated
 existing destination that unambiguously represents the current item and policy
-permits linking, safely link it without an external write: set
-`Status: filed`, copy its URL/path to `Destination`, and explain the recovery
-in `Disposition-note`. If the candidate is ambiguous or linking is not
-permitted, perform no external write, leave the item unsettled, and report the
-candidate for a future interactive disposition.
+permits linking, safely link it without an external write. A GitHub link
+requires a valid URL and uses `—` for both local receipt fields. A local link
+must complete the exact-path receipt recovery and current-destination coherence
+checks from Step 2 before it may set or retain `Status: filed`. Copy the
+validated URL/path to `Destination` and explain the recovery in
+`Disposition-note`. If the candidate or receipt is ambiguous, linking is not
+permitted, or destination coherence fails, perform no external write, leave the
+item unsettled, and report the candidate for a future interactive disposition.
 
 ### Step 6: Sanitize Public-Destination Content
 
@@ -233,25 +260,49 @@ Follow `oat-pjm-add-backlog-item` conventions:
 Never hand-author an item ID or edit inside managed index markers. Capture the
 created item ID/path.
 
-Use this **destination-first** local transaction:
+Use this **destination-first** local transaction for every newly created or
+strengthened local backlog destination:
 
 1. Format and verify the created or strengthened backlog item and regenerated
    index.
 2. Commit the destination side effect before setting the retro item to
    `Status: filed`. Do not include retro writeback in this destination commit.
 3. Capture the full destination commit SHA and verify that the commit contains
-   the destination path. A command success without that path in the commit is
+   the destination path. Inspect the complete name-only commit output and
+   enforce that the destination commit must not contain `RETRO_PATH`; a
+   command success without the path, or a commit containing retro writeback, is
    not a receipt.
 4. Determine remote visibility from the branch's configured upstream and
    local remote-tracking state. Record exactly `pushed` when the destination
-   commit is reachable from that upstream; otherwise record `unpushed`.
+   commit is reachable from that upstream. No configured upstream, or a commit
+   not reachable from it, means `unpushed`.
 5. Only after the receipt is confirmed, write back the retro in a subsequent
    commit with `Destination`, `Destination-receipt`, and `Remote-visibility`.
+6. Capture the full writeback commit SHA, require it to differ from the
+   destination commit, and run
+   `git merge-base --is-ancestor "$DESTINATION_COMMIT" "$WRITEBACK_COMMIT"`.
+   This proves the destination commit predates the retro writeback commit.
+
+If the destination mutation commit fails, stop that item without retro
+writeback; a failed destination commit yields no receipt and must never yield
+`Status: filed`.
 
 Local commit durability does not imply remote visibility. Pushing is a
 separately authorized Git operation: never push implicitly, never treat filing
 consent as push authorization, and report an unpushed receipt as durable but
 local-only.
+
+The destination-type transition contract is:
+
+| Scenario            | Destination side effect | Receipt rule                                                              | Filed result                                          |
+| ------------------- | ----------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------- |
+| New local           | Create backlog item     | Separate mutation commit contains path and excludes retro                 | Filed only after later retro writeback                |
+| Strengthened local  | Modify backlog item     | Separate mutation commit contains path and excludes retro                 | Filed only after later retro writeback                |
+| Linked local        | No destination mutation | Recover latest exact-path commit and verify current destination coherence | Retain or set filed only with valid recovered receipt |
+| Failed local commit | Mutation did not commit | No receipt                                                                | Must not be filed                                     |
+| No upstream         | None                    | Valid local receipt                                                       | Filed with `Remote-visibility: unpushed`              |
+| GitHub              | Create or link issue    | Destination URL; local receipt fields are `—`                             | Filed only with valid URL                             |
+| Rerun               | No new mutation         | Pre-selection integrity validates destination-type state                  | Skip only complete valid filed items                  |
 
 For non-interactive backlog filing, all required backlog metadata — title,
 description, acceptance criteria, labels, priority, scope, and scope estimate —
@@ -270,6 +321,9 @@ For each confirmed filing, strengthening, or link:
 - set `Destination` to the issue URL or backlog ID/path; and
 - for local backlog destinations, set `Destination-receipt` to the confirmed
   full commit SHA and `Remote-visibility` to `pushed | unpushed`;
+- for GitHub destinations, set `Destination-receipt: —` and
+  `Remote-visibility: —`; these fields are local-Git metadata and never apply
+  to issue URLs;
 - set `Disposition-note` to a concise filing/linking outcome or `—`; and
 - set `Sanitized: yes` when the public-destination check ran.
 
@@ -298,9 +352,11 @@ Filing mode may mutate only `Status`, `Destination`, `Sanitized`,
 narrative. Refresh `Current State` without rewriting proposal bodies. Proposal
 bodies are stable and immutable after generation.
 
-Format and commit the retro writeback only after a local destination commit is
-confirmed. GitHub destinations are represented by their recorded URLs. On
-re-run, skip settled items and retry only eligible statuses.
+Format and commit the retro writeback only after a local destination receipt is
+confirmed. GitHub destinations are represented by their validated URLs and
+explicit `—` local receipt fields. On re-run, skip a `filed` item only after the
+pre-selection integrity pass proves its destination-type state complete and
+valid; retry all eligible unsettled statuses.
 
 ## Final Report
 

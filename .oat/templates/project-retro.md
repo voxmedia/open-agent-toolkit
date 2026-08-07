@@ -133,6 +133,13 @@ caused them.}
        Remote-visibility: pushed | unpushed for a local backlog destination
        Disposition-note: rejection, recovery, or outcome detail
 
+     Schema by destination type:
+       Local backlog + filed: Destination-receipt is a verified full commit SHA
+         and Remote-visibility is pushed | unpushed.
+       GitHub + filed: Destination is a validated issue URL,
+         Destination-receipt: —, and Remote-visibility: —.
+       Unsettled local or GitHub item: receipt fields remain —.
+
      Consumers may mutate only Status, Applied-ref or Destination, and
      Destination-receipt, Remote-visibility, Sanitized, Disposition-note, plus
      the corresponding frontmatter rollup and Current State contents. IDs,
@@ -171,7 +178,9 @@ caused them.}
      mutate only Status, Destination, Destination-receipt, Remote-visibility,
      Sanitized, Disposition-note, the filing rollup, and Current State
      contents. IDs, titles, proposal bodies, and all other narrative are
-     stable. -->
+     stable. Local filed items require a verified full commit receipt and
+     pushed | unpushed visibility. GitHub filed items require a validated URL
+     with Destination-receipt: — and Remote-visibility: —. -->
 
 No upstream feedback identified.
 

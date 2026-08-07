@@ -107,8 +107,10 @@ oat-project-implement (closeout)
 3. Optional parallel recon lanes for large runs (subagent dispatch per the
    handoff methodology; lane count scales down for small projects).
 4. Synthesize `references/project-retro.md` from the template: core sections
-   always, conditional sections only when evidence warrants.
-5. Populate both registers with status `proposed`; write frontmatter rollups.
+   always, conditional sections only when evidence warrants, concise by
+   default with each section adding distinct information.
+5. Populate both registers with status `proposed`; write frontmatter rollups
+   and derive `Current State` from register fields and those rollups.
 6. Interactive: offer apply-now, then offer filing skill when unfiled items
    exist. Non-interactive: apply if `workflow.retro.apply: auto`; chain to
    filing only when `workflow.retro.filing` config exists.
@@ -123,28 +125,47 @@ oat-project-implement (closeout)
    skill and are never mutated by apply mode).
 3. Apply each per the skill's bundled apply-procedure reference (docs, AGENTS,
    rules edits, decision records via `oat decision new`).
-4. Update each item's status (`applied` / `rejected` with reason); update
-   frontmatter rollup; commit artifact + edits together per item or as one
-   reviewed batch.
+4. Update each item's status (`applied` / `rejected` with
+   `Disposition-note`), update the frontmatter rollup, and refresh
+   `Current State`; commit artifact + edits together per item or as one reviewed
+   batch. Proposal bodies and all other freeform narrative remain immutable.
 
 **Filing flow (`oat-project-retro-file`):**
 
 1. Resolve artifact (active project default, path override).
-2. Extract register items still unfiled: all UP items plus RP items with
-   `Disposition: file`, selecting on the filing status vocabulary
-   (`proposed`; re-runs skip `filed`/`rejected` and retry `no-destination`
-   when a destination has become available).
-3. Capability preflight per destination: issues enabled? credentials valid?
+2. Before selection, validate every already-filed item by destination type.
+   GitHub requires a valid issue URL and `—` local receipt fields. Local
+   backlog destinations require a coherent current path, a verified full
+   exact-path commit receipt, and derived `pushed | unpushed` visibility. Valid
+   local recovery may retain `filed` without an external mutation; an
+   unrecoverable filed state returns to `proposed`.
+3. Extract eligible items: all UP items plus RP items with `Disposition: file`.
+   Re-runs skip `filed` only after the integrity pass proves complete state,
+   skip `rejected`, and retry newly deliverable `no-destination` items.
+4. Capability preflight per destination: issues enabled? credentials valid?
    backlog initialized? Report the lane × destination matrix before showing
    items.
-4. Resolve destinations: `workflow.retro.filing` config as default;
+5. Resolve destinations: `workflow.retro.filing` config as default;
    interactive confirmation with per-run override; non-interactive uses
    config as-is, files nothing without config.
-5. Present items; user approves per item (interactive) or all-configured
+6. Present items and classify duplicate candidates as exact or merely related;
+   user approves per item (interactive) or all-configured
    (non-interactive).
-6. File: `gh issue create` for issues; `oat backlog`-conventions item files
-   for backlog. Write back per-item filing status + created URL/path.
-7. Lanes with no available destination are reported loudly, never dropped.
+7. File GitHub issues and capture a validated URL. For a created or strengthened
+   local backlog item, commit the destination mutation first in a commit that
+   contains the destination path and excludes retro writeback. A failed
+   destination commit produces no receipt and never produces `filed`.
+8. For a linked local item, make no destination mutation; recover the latest
+   exact-path commit, verify that commit contains the path, and verify current
+   destination coherence.
+9. Derive local `Remote-visibility`: `pushed` only when the receipt is reachable
+   from the configured upstream; no upstream or no reachability is `unpushed`.
+   Pushing is never implicit.
+10. In a later retro-only writeback commit, record `Status`, `Destination`,
+    `Destination-receipt`, `Remote-visibility`, `Disposition-note`, the filing
+    rollup, and refreshed `Current State`. Verify the destination receipt commit
+    predates this writeback. GitHub items use `—` for both local receipt fields.
+11. Lanes with no available destination are reported loudly, never dropped.
 
 ## Component Design
 
@@ -161,6 +182,8 @@ oat-project-implement (closeout)
 - Dual-lane synthesis with confirmed-cause vs hypothesis vs inconclusive
   discipline; rejected alternatives recorded when they shaped outcomes.
 - Register construction (formats below) and frontmatter rollups.
+- `Current State` derivation as the only mutable freeform narrative surface;
+  status prose elsewhere is generation-time evidence.
 - Apply mode with idempotent, resumable register processing.
 - Consent enforcement: interactive offers; config-gated non-interactive
   behavior; sanitization pass whenever upstream items will leave a private
@@ -208,6 +231,8 @@ and status writeback.
 - Config-as-default destination resolution with interactive override.
 - Item presentation and approval; filing execution; per-item status + link
   writeback into the artifact.
+- Pre-selection filed-state integrity, local exact-path receipt recovery, and
+  destination-first created/strengthened local commits.
 - Loud reporting of undeliverable lanes ("4 upstream items have no
   destination here; file them as OAT issues or run from the OAT repo").
 - Duplicate check before filing, per destination type: issue destinations via
@@ -243,14 +268,23 @@ and status writeback.
 - Backlog filing follows the `oat-pjm-add-backlog-item` conventions
   (file-per-item + `oat backlog regenerate-index`); the skill does not invent
   a parallel backlog format.
+- Local backlog durability is destination-first: a destination-only mutation
+  commit precedes a separate retro writeback. GitHub URLs do not use local
+  receipt fields, and no filing authorization implies push authorization.
 - New skill starts at frontmatter `version: 1.0.0`.
 
 ### `project-retro.md` template
 
-Core sections (always present): Executive Summary; Evidence and Review
-Method; Outcome Snapshot; What Went Well; Challenges and Struggles; Where We
-Changed Course; Repo Improvements (promotion register); OAT Upstream Feedback
-(upstream register — explicit "none identified" when empty); Reflections.
+Core sections (always present): Executive Summary; Evidence and Review Method;
+Outcome Snapshot; Current State; What Went Well; Challenges and Struggles;
+Where We Changed Course; Repo Improvements (promotion register); OAT Upstream
+Feedback (upstream register — explicit "none identified" when empty);
+Reflections.
+
+`Current State` is derived from register fields and frontmatter rollups and is
+the only mutable freeform narrative surface. Apply/file consumers refresh it
+after status changes; proposal bodies and every other narrative section remain
+immutable after generation.
 
 Conditional sections (template includes them with include-when guidance):
 Decision Register + Rejected/Superseded Alternatives; New Architecture
@@ -391,6 +425,7 @@ mode; `file` items are tracker candidates owned by the filing skill. The
 - **Status:** proposed # apply items: proposed | approved | applied | rejected
 - **Target:** AGENTS.md # apply items: the repo path to edit
 - **Applied-ref:** — # apply items: commit/path once applied
+- **Disposition-note:** — # mutable rejection, recovery, or outcome detail
 
 {Rationale and the concrete proposed change.}
 
@@ -400,6 +435,10 @@ mode; `file` items are tracker candidates owned by the filing skill. The
 - **Disposition:** file # file items use the filing status vocabulary
 - **Status:** proposed # file items: proposed | filed | rejected | no-destination
 - **Destination:** — # file items: issue URL / backlog item id once filed
+- **Destination-receipt:** — # full commit SHA for a filed local backlog destination
+- **Remote-visibility:** — # pushed | unpushed for a filed local backlog destination
+- **Sanitized:** no
+- **Disposition-note:** —
 
 {Tracker-ready description: problem, evidence summary, suggested direction.}
 
@@ -409,14 +448,37 @@ mode; `file` items are tracker candidates owned by the filing skill. The
 
 - **Status:** proposed # proposed | filed | rejected | no-destination
 - **Destination:** — # issue URL / backlog item id once filed
+- **Destination-receipt:** — # local backlog only; GitHub remains —
+- **Remote-visibility:** — # local backlog only; GitHub remains —
 - **Sanitized:** yes # confirms the public-destination pass ran
+- **Disposition-note:** —
 
 {Ready-to-file issue draft: problem, evidence summary, suggested direction.}
 ```
 
-IDs are stable within an artifact (`RP-NN` / `UP-NN`); apply and filing modes
-mutate only `Status`, `Applied-ref`/`Destination`, and the frontmatter
-rollups.
+IDs are stable within an artifact (`RP-NN` / `UP-NN`). Apply mode may mutate
+only `Status`, `Applied-ref`, `Disposition-note`, the promotions rollup, and
+`Current State`. Filing mode may mutate only `Status`, `Destination`,
+`Destination-receipt`, `Remote-visibility`, `Sanitized`, `Disposition-note`,
+the filing rollup, and `Current State`. `Current State` is the only mutable
+freeform narrative surface; item IDs, titles, types, dispositions, proposal
+bodies, and all other narrative are immutable.
+
+For `Status: filed`, the destination-type schema is exact:
+
+- **Local backlog:** `Destination` is the canonical path,
+  `Destination-receipt` is a verified full exact-path commit SHA, and
+  `Remote-visibility` is `pushed | unpushed`.
+- **GitHub:** `Destination` is a validated issue URL,
+  `Destination-receipt: —`, and `Remote-visibility: —`.
+
+Created and strengthened local destinations use destination-first ordering:
+commit the destination mutation without retro writeback, verify the commit
+contains the destination path, then record that receipt in a later retro-only
+writeback commit. Linked local destinations recover the latest exact-path
+commit without external mutation. Missing or invalid local receipt state cannot
+remain `filed`; no configured upstream means `unpushed`, and no filing path
+implicitly pushes.
 
 **Rollup derivation:** `oat_retro_promotions` derives from RP items with
 `Disposition: apply` (none | proposed | partial | complete as their statuses
@@ -453,7 +515,12 @@ oat_post_implement_sequence:
   affected items keep `proposed`; lane reported loudly with the concrete
   unblock step (e.g. "issues disabled on voxmedia/open-agent-toolkit").
 - **Filing execution failure:** item keeps `proposed`, error surfaced with
-  the failed command output; no partial status writeback.
+  the failed command output; a failed local destination commit creates no
+  receipt and no `filed` writeback.
+- **Invalid legacy filed state:** run destination-type integrity before
+  skipping. A coherent local path may recover its latest exact-path commit and
+  retain `filed`; failed recovery returns the item to `proposed`. GitHub filed
+  state requires a valid URL and `—` local receipt fields.
 - **Non-interactive with no config:** generate-only; propose everything;
   exit zero with a clear "proposals recorded, nothing applied or filed"
   report.
@@ -474,6 +541,10 @@ Quick mode: no requirement-to-test mapping table; key levels and scenarios.
 - `post-implement-sequence-contracts.test.ts`: widened vocabulary contract.
 - Manifest tests: `oat-project-retro`, `oat-project-retro-file` in
   `WORKFLOW_SKILLS`; `project-retro.md` in `WORKFLOW_TEMPLATES`.
+- `retro-skill-contracts.test.ts`: mutable `Current State`, immutable proposal
+  bodies, exact-versus-related duplicate classification, and table-driven local
+  filing transitions for new, strengthened, linked, failed-commit, no-upstream,
+  GitHub, and rerun states.
 
 ### Integration / Repo Checks
 

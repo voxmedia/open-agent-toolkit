@@ -115,6 +115,28 @@ write. Non-interactive configuration does not authorize modifying an existing
 destination; an unambiguous duplicate may be linked without an external write,
 while ambiguous candidates remain unsettled for interactive review.
 
+### Local receipts and reruns
+
+Before skipping an already-filed item, the filing skill runs a pre-selection
+integrity pass. A local backlog destination is complete only when its path
+exists, its current contents still represent the retro proposal, its full
+`Destination-receipt` names the latest exact-path commit containing that path,
+and `Remote-visibility` is `pushed` or `unpushed`. A valid exact recovery may
+retain `filed` without mutating the destination. A missing or invalid local
+receipt that cannot be recovered cannot remain `filed`.
+
+New and strengthened local destinations use destination-first ordering: commit
+the destination mutation alone, verify that commit contains the backlog path
+and excludes retro writeback, then record its receipt in a later retro
+writeback commit. A failed destination commit never produces `filed`. A local
+link performs no destination mutation, but must recover and validate the latest
+exact-path commit before it can be filed.
+
+Remote visibility is independent of local durability. No configured upstream
+means `unpushed`; the skill never pushes without separate authorization.
+GitHub destinations use a validated issue URL and explicitly leave
+`Destination-receipt` and `Remote-visibility` as `—`.
+
 Public destinations receive a sanitization check when the source repository is
 private. Filing records the confirmed URL or backlog path in `Destination` and
 updates the filing rollup. Unavailable lanes and missing backlog metadata are
