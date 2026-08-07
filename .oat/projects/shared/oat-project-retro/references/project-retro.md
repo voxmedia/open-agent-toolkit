@@ -87,7 +87,7 @@ exemplars, not evidence of this run.
 - **Promotions:** `none`; no RP apply-items exist.
 - **Filing:** `complete`; UP-01 is filed to
   `.oat/repo/pjm/backlog/items/BL-260806-fail-closed-when-configured.md` with
-  destination receipt `87990de0b962b5be953e7a42bc3566b308e60aef`
+  destination receipt `b67c885d86d2ff51032c268051af1bbec6622990`
   (`unpushed`).
 - **Unsettled items:** None.
 
@@ -298,12 +298,13 @@ upstream register rather than duplicated as a repo filing item.
 
 - **Status:** filed
 - **Destination:** `.oat/repo/pjm/backlog/items/BL-260806-fail-closed-when-configured.md`
-- **Destination-receipt:** `87990de0b962b5be953e7a42bc3566b308e60aef`
+- **Destination-receipt:** `b67c885d86d2ff51032c268051af1bbec6622990`
 - **Remote-visibility:** unpushed
 - **Sanitized:** yes
 - **Disposition-note:** Filed as a dedicated item after classifying the
   mandatory-skill-load candidate as related rather than an exact duplicate;
-  the destination is locally committed and has not been pushed.
+  the destination-only evidence strengthening is locally committed and has not
+  been pushed.
 
 `workflow.postImplementSequence` configured pre-approval summary,
 documentation, and PR steps, but the run reached implementation completion
