@@ -31,6 +31,13 @@ For apply mode, follow
 [references/apply-procedure.md](references/apply-procedure.md) and skip the
 generation process below.
 
+Apply mode treats a docs item whose target canonical path is `project-log.md`
+as append-only: use `oat project log append` and never directly edit the log.
+The proposal must identify the prior heading or event being corrected and
+preserve the original entry. Perform semantic post-side-effect recovery before
+appending again, and record `Applied-ref` only after the correction and retro
+writeback are durably committed.
+
 ## Progress Indicators
 
 Print one banner and concise step indicators:

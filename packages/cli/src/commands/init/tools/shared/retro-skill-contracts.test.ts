@@ -416,4 +416,31 @@ describe('retro skill content contracts', () => {
       /root synthesis[\s\S]*?verifies[\s\S]*?load-bearing[\s\S]*?anchor[\s\S]*?preserv/i,
     );
   });
+
+  it('routes project-log documentation corrections through append-only recovery', () => {
+    for (const content of [retroSkill, applyProcedure, retroDocs]) {
+      expect(content).toMatch(/canonical path[\s\S]*?project-log\.md/i);
+      expect(content).toContain('`oat project log append`');
+      expect(content).toMatch(/never[\s\S]*?direct(?:ly)? edit/i);
+      expect(content).toMatch(
+        /prior[\s\S]*?(?:heading|event)[\s\S]*?being corrected/i,
+      );
+      expect(content).toMatch(/preserve[\s\S]*?original\s+entry/i);
+      expect(content).toMatch(
+        /semantic post-side-effect recovery[\s\S]*?before[\s\S]*?append/i,
+      );
+      expect(content).toMatch(/records? `Applied-ref` only after/i);
+      expect(content).toMatch(
+        /correction and retro\s+writeback\s+are\s+durably committed/i,
+      );
+    }
+
+    expect(applyProcedure).toMatch(
+      /limited to[\s\S]*?project-log[\s\S]*?does not[\s\S]*?(?:new|change)[\s\S]*?RP type/i,
+    );
+    expect(applyProcedure).toMatch(
+      /all other docs[\s\S]*?canonical existing page/i,
+    );
+    expect(applyProcedure).not.toContain('project-log-correction');
+  });
 });

@@ -35,6 +35,22 @@ continues immediately, this can be written back together with the final
 ## Application by Type
 
 1. **Docs:** update the canonical existing page. Avoid duplicate documents.
+   A docs item whose target canonical path is `project-log.md` is an
+   append-only correction special case:
+   - Use `oat project log append`; never directly edit `project-log.md`.
+   - Require the immutable proposal body to identify the prior heading or event
+     being corrected, and preserve the original entry.
+   - Perform semantic post-side-effect recovery before appending again: inspect
+     later entries for the exact correction, verify that any match represents
+     the proposal, and recover it instead of repeating the append. A partial,
+     divergent, or ambiguous match requires direction.
+   - Record `Applied-ref` only after the correction and retro writeback are
+     durably committed.
+
+   This special case is limited to `project-log.md` targets and does not add or
+   change the public RP type vocabulary. All other docs items continue to
+   update the canonical existing page under the normal docs apply contract.
+
 2. **Agent instruction:** choose the narrowest existing applicable
    `AGENTS.md`, skill, or provider-neutral instruction. Do not create nested
    instruction files solely for discoverability.

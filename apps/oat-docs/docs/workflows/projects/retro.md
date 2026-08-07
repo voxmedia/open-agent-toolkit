@@ -108,6 +108,14 @@ After a successful application, the skill records `Status: applied` and an
 `Applied-ref`. Re-runs skip settled items and recover an exact prior side effect
 instead of applying it twice.
 
+For a docs item whose target canonical path is `project-log.md`, apply mode uses
+`oat project log append` and never directly edits the log. The proposal must
+identify the prior heading or event being corrected and preserve the original
+entry. The skill performs semantic post-side-effect recovery before appending
+again, then records `Applied-ref` only after the correction and retro writeback
+are durably committed. This remains a bounded docs special case; it adds no RP
+type and does not weaken the normal docs apply contract.
+
 ## File tracker feedback
 
 Run `oat-project-retro-file` against the active project's retro or an explicit
