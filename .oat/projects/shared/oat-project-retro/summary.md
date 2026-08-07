@@ -2,11 +2,11 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-06
+oat_last_updated: 2026-08-07
 oat_generated: true
-oat_summary_last_task: p05-t02
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
+oat_summary_last_task: prev1-t04
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: [p-rev1]
 ---
 
 # Summary: oat-project-retro
@@ -39,6 +39,15 @@ separate paths for repo-local improvements and upstream toolkit feedback.
 - Dogfooded generation and apply behavior on the completed
   `explainer-improvements` project. One explicitly approved promotion was
   applied; no external filing write was performed.
+- Added strict control-plane support for canonical and legacy revision
+  phase/task dialects without weakening ordinary phase parsing.
+- Dogfooded the workflow on this project and revised it to keep mutable status
+  coherent, distinguish exact duplicates from related work, require verified
+  destination-first local filing receipts, and scale output depth to available
+  evidence.
+- Split the observed configured-closeout defect into dedicated backlog item
+  `BL-260806-fail-closed-when-configured` with a committed local receipt and
+  explicit unpushed visibility.
 
 ## Key Decisions
 
@@ -57,6 +66,13 @@ separate paths for repo-local improvements and upstream toolkit feedback.
 - **Filing is a companion workflow:** Retro generation records ready-to-file
   proposals but does not create issues or backlog items. The filing skill owns
   destination preflight, deduplication, sanitization, and status writeback.
+- **Local filing is destination-first:** New or strengthened local backlog
+  destinations must be committed and verified before a later retro writeback
+  may record `filed`; local links recover an exact-path receipt, and invalid
+  legacy states fail closed.
+- **Mutable prose has one bounded home:** `Current State` is derived from
+  register fields and frontmatter rollups. Proposal bodies and historical
+  narrative remain immutable after generation.
 
 ## Design Deltas
 
@@ -68,6 +84,9 @@ separate paths for repo-local improvements and upstream toolkit feedback.
   contract tests and autonomy inventory updates. The final review also required
   explicit `Bash(pnpm:*)` grants so both skills could execute their mandatory
   artifact-hygiene steps.
+- Revision review aligned `design.md` with destination-first filing and added
+  scenario-specific recovery contracts for local create, strengthen, link,
+  failed-commit, no-upstream, GitHub, and rerun states.
 
 ## Notable Challenges
 
@@ -82,6 +101,13 @@ separate paths for repo-local improvements and upstream toolkit feedback.
 - The first whole-project review found that mandatory pnpm hygiene commands
   were outside both retro skills' declared grants. A focused final fix and
   narrowed re-review closed the gap.
+- The configured post-implementation sequence originally reached terminal
+  implementation without a durable snapshot, forcing manual summary,
+  documentation, and PR recovery. The dedicated backlog item preserves the
+  fail-closed follow-up.
+- Final revision review found missing durable event identities for both p-rev1
+  review rounds. Root review-receive bookkeeping reconciled and archived the
+  artifacts before the corrected-state final pass.
 
 ## Tradeoffs Made
 
@@ -103,11 +129,20 @@ separate paths for repo-local improvements and upstream toolkit feedback.
 
 ## Follow-up Items
 
-- Upstream issue filing remains unavailable until issues are enabled on
-  `voxmedia/open-agent-toolkit`; generated retros preserve proposals meanwhile.
+- Implement `BL-260806-fail-closed-when-configured`: configured closeout must
+  persist its snapshot and fail closed until ordered children are durably
+  complete.
 - Optional future refinements include splitting a large upstream-feedback lane,
   reusable evidence-audit automation, general CLI evidence helpers, per-item
   filing retargeting, and thin filing aliases if usage justifies them.
+
+## Revision History
+
+- **p-rev1 — Dogfood revision:** Four tasks converted self-retro findings into
+  coherence, duplicate-classification, durable-receipt, and concise-output
+  contracts. One bounded review-fix round repaired receipt chronology,
+  local-link/rerun recovery, and design alignment; the re-review and final
+  whole-project review passed.
 
 ## Workflow Observations
 
@@ -130,3 +165,19 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 ### 2026-08-06 · structural · oat gate review · plan
 
 target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:0 exit=0 status=ok artifact=.oat/projects/shared/oat-project-retro/reviews/artifact-plan-review-2026-08-06T012151Z.md
+
+### 2026-08-06 · project · bug · configured post-implementation sequence was skipped
+
+Observation: workflow.postImplementSequence configured preApproval=[summary, document, pr], but implementation finished without persisting oat_post_implement_sequence or dispatching those children; document and pr-final were run manually after final approval, and pr-final generated the missing summary as fallback. Impact: required pre-approval ordering and sequence provenance were lost even though the final artifacts now exist. Recommendation: fail closed before implementation completion when a configured sequence has no durable snapshot or incomplete pre-approval steps, and add regression coverage for this boundary. (observed on oat-project-implement 2.0 closeout contract, CLI 0.2.29)
+
+### 2026-08-06 · structural · oat-project-retro · references/project-retro.md
+
+artifact=.oat/projects/shared/oat-project-retro/references/project-retro.md evidence=project-log,lifecycle-artifacts,archived-reviews,session-transcript,github-pr-192 unavailable=oat-execution-learnings promotions=0 upstream=1 apply=deferred filing=deferred
+
+### 2026-08-06 · structural · oat-project-implement · p06
+
+Phase passed after one bounded review-fix round; see reviews/p06-review-2026-08-06T234340Z.md.
+
+### 2026-08-07 · structural · oat-project-implement · p-rev1
+
+Phase passed after one bounded review-fix round; see reviews/p-rev1-review-2026-08-07T003046Z.md.
