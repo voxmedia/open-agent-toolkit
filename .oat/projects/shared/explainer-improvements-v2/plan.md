@@ -706,10 +706,18 @@ git commit -m "feat(p04-t03): bound recap correction and retain failure evidence
 **Files:**
 
 - `.agents/skills/explainer-kit/schemas/terminal-evidence.v1.schema.json`
+- `.agents/skills/explainer-kit/schemas/visual-review-evidence.v1.schema.json`
+- `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - `.agents/skills/explainer-kit/scripts/lib/terminal-evidence.mjs`
 - `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- `.agents/skills/explainer-kit/scripts/lib/package-coverage.mjs`
 - `.agents/skills/explainer-kit/scripts/run.mjs`
+- `.agents/skills/explainer-kit/tests/schemas.test.mjs`
 - `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
+- `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
+- `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
 - `packages/cli/src/commands/project/archive/explainer-terminal-evidence.ts`
 - `packages/cli/src/commands/project/archive/archive-utils.ts`
 - Focused core, adapter, archive, and retained-tree regression tests
@@ -723,16 +731,22 @@ export, or returned loggable result. Reproduce the final review's nested JSON,
 double-escaped key, YAML complex-key, and standalone-token examples, but make
 the invariant independent of a finite credential-pattern inventory.
 
+Run both core and adapter CLI entry points with captured stdout/stderr and assert
+the exact canary bytes are absent from each stream. Include successful,
+correctable, terminally flagged, provider-failed, and caught-error paths.
+
 Require terminal evidence and returned lifecycle summaries to contain only
 closed locally generated reason/finding codes, validated local identifiers,
-bounded counts, outcomes/dispositions, and fixed markers. Unknown or free-text
-fields fail schema/semantic validation.
+bounded positive counts, and outcomes/dispositions. Unknown or diagnostic
+free-text fields fail schema/semantic validation.
 
 **Step 2: Implement (GREEN)**
 
-Project provider results and arbitrary thrown values to stable local codes at
-the provider boundary, preserve raw prose only ephemerally for the in-memory
-correction attempt, and discard it before any persistence or loggable return.
+Project provider diagnostic/review results and arbitrary thrown values to stable
+local codes at the provider boundary, preserve raw diagnostic prose only
+ephemerally for the in-memory correction attempt, and discard it before any
+persistence or loggable return. Intended authored artifact content remains in
+scope and continues through its existing source, validation, and review gates.
 Remove best-effort text scrubbing as the durable security boundary.
 
 Represent retained reasons as a closed `stage` + `kind` pair. `stage` is one of
@@ -743,15 +757,40 @@ manifest-validated artifact IDs and bounded counts beyond the existing
 run/manifest/outcome/disposition fields. Do not retain generic message,
 description, evidence, correction, details, metadata, or arbitrary code fields.
 
+Implement the exact `terminal-evidence/v1` post-image from `design.md`: required
+`schemaVersion`, `runId`, `outcome`, `reasons`, and `evidenceDisposition`;
+optional `manifestHash` and conditional `supersededBy`; 1–50 unique reason
+tuples with integer counts from 1–50 and total count at most 50; manifest
+artifact membership; outcome/kind constraints; and supersession conditionals.
+Reject every legacy or unknown nested field.
+
+Keep provider `visual-review-result/v1` ephemeral. Persist only the exact new
+`visual-review-evidence/v1` projection: `schemaVersion`, `requestHash`,
+`attempt`, `disposition`, and `reasons`, with `pass`/`correct`/`failed`
+cardinality and reason-kind conditionals defined in `design.md`. Migrate
+`package-coverage.mjs`, retained review-attempt records, archive fixtures, and
+lifecycle guidance atomically while preserving request/hash identity and the
+successful-package terminal-pass requirement.
+
 Finalize the unreleased `terminal-evidence/v1` schema in its code-only shape and
 migrate all producers/consumers atomically. No released consumer depends on the
 superseded pre-release shape, so do not mint or ship an unsafe compatibility
 version. Archive/finalizer readers reject unknown free-text fields.
 
+Replace adapter message-based branching and raw caught-error serialization with
+the same locally generated stage/kind projection. Returned core/adapter results
+and CLI stdout/stderr may expose closed codes and structural facts only.
+
+Add schema/semantic coverage for registry resolution, forbidden legacy and
+unknown nested fields, reason cardinality, per-reason and total count bounds,
+duplicate tuples, foreign artifact IDs, run/manifest binding, every
+outcome/disposition/supersession conditional, and every retained visual-review
+disposition conditional.
+
 **Step 3: Verify**
 
 Run:
-`node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs .agents/skills/oat-project-implement/tests/check-terminal-outcome.test.mjs .agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs && pnpm --dir packages/cli exec vitest run src/commands/project/archive/archive-utils.test.ts && pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm lint && pnpm format`
+`node --test .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs .agents/skills/oat-project-implement/tests/check-terminal-outcome.test.mjs .agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs && pnpm --dir packages/cli exec vitest run src/commands/project/archive/archive-utils.test.ts && pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm lint && pnpm format`
 
 **Step 4: Commit**
 
@@ -876,39 +915,40 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 
 ## Reviews
 
-| Scope         | Type     | Status          | Date       | Artifact                                                                                          | Reviewed Head                            | Invocation | Gate Target              |
-| ------------- | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
-| p01           | code     | passed          | 2026-08-06 | reviews/archived/p01-review-2026-08-06T172134Z.md                                                 | a42a38521b33fa1127ebdd1b462a16ed632728cb | manual     | -                        |
-| p01-t06       | code     | fixes_completed | 2026-08-06 | reviews/archived/p01-t06-review-2026-08-06T173603Z.md                                             | fcc100f3f78984bc1ba285bd1fea099cda451a24 | manual     | -                        |
-| p01-t06       | code     | passed          | 2026-08-06 | reviews/archived/p01-t06-review-2026-08-06T174423Z.md                                             | c1d5a1b0994e19abb2b349b776ba3235f8955b52 | manual     | -                        |
-| p02           | code     | fixes_completed | 2026-08-06 | reviews/archived/p02-review-2026-08-06T201258Z.md                                                 | fde1437beb821c68f8fe972d4ac1c4425d20e7ef | manual     | -                        |
-| p02           | code     | passed          | 2026-08-06 | reviews/archived/p02-review-2026-08-06T202708Z.md                                                 | 3f0dfe5e3131ee2ef12bd06cf4eb842566b50ca9 | manual     | -                        |
-| p03           | code     | passed          | 2026-08-06 | reviews/archived/p03-review-2026-08-06T235124Z.md                                                 | ba66d54b697d86de0bade8863587870af75e06da | manual     | -                        |
-| p03           | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T213553Z.md                                                 | c9a0aeead5bce79a5e31bd6ce247e80a64ec1800 | manual     | -                        |
-| p03           | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T224958Z.md                                                 | 01d3c99075aa09ea5fb49b801d4deca1d5f3c51e | manual     | -                        |
-| p04           | code     | fixes_added     | 2026-08-07 | reviews/archived/p04-review-2026-08-07T021700Z.md                                                 | ba65b8258b8e0adce74cd20ba534255dbfc8fccb | manual     | -                        |
-| p05           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
-| final         | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
-| plan-revision | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T180042Z.md                              | c33edabc017369a629ca7a3a63757cbad3d9dab9 | manual     | -                        |
-| plan-revision | artifact | passed          | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T181021Z.md                              | a8e41bbc13c9aee38312d1680ac6aec13642cae7 | manual     | -                        |
-| plan          | artifact | passed          | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed)                                     | -                                        | auto       | -                        |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T002327Z.md (4 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T004027Z.md (2 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T005429Z.md (4 Important + 2 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012159Z.md (superseded rerun; findings resolved) | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012720Z.md (3 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T013953Z.md (2 Important + 2 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T015212Z.md (2 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T021300Z.md (2 Important + 3 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T023457Z.md (4 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T024804Z.md (4 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T031926Z.md (2 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T033345Z.md (3 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T034831Z.md (2 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T040012Z.md (2 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T042235Z.md (3 Important + 2 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T043754Z.md (2 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan          | artifact | passed          | 2026-08-06 | operator acceptance after attempt-15 fixes                                                        | -                                        | operator   | -                        |
+| Scope              | Type     | Status          | Date       | Artifact                                                                                          | Reviewed Head                            | Invocation | Gate Target              |
+| ------------------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01                | code     | passed          | 2026-08-06 | reviews/archived/p01-review-2026-08-06T172134Z.md                                                 | a42a38521b33fa1127ebdd1b462a16ed632728cb | manual     | -                        |
+| p01-t06            | code     | fixes_completed | 2026-08-06 | reviews/archived/p01-t06-review-2026-08-06T173603Z.md                                             | fcc100f3f78984bc1ba285bd1fea099cda451a24 | manual     | -                        |
+| p01-t06            | code     | passed          | 2026-08-06 | reviews/archived/p01-t06-review-2026-08-06T174423Z.md                                             | c1d5a1b0994e19abb2b349b776ba3235f8955b52 | manual     | -                        |
+| p02                | code     | fixes_completed | 2026-08-06 | reviews/archived/p02-review-2026-08-06T201258Z.md                                                 | fde1437beb821c68f8fe972d4ac1c4425d20e7ef | manual     | -                        |
+| p02                | code     | passed          | 2026-08-06 | reviews/archived/p02-review-2026-08-06T202708Z.md                                                 | 3f0dfe5e3131ee2ef12bd06cf4eb842566b50ca9 | manual     | -                        |
+| p03                | code     | passed          | 2026-08-06 | reviews/archived/p03-review-2026-08-06T235124Z.md                                                 | ba66d54b697d86de0bade8863587870af75e06da | manual     | -                        |
+| p03                | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T213553Z.md                                                 | c9a0aeead5bce79a5e31bd6ce247e80a64ec1800 | manual     | -                        |
+| p03                | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T224958Z.md                                                 | 01d3c99075aa09ea5fb49b801d4deca1d5f3c51e | manual     | -                        |
+| p04                | code     | fixes_added     | 2026-08-07 | reviews/archived/p04-review-2026-08-07T021700Z.md                                                 | ba65b8258b8e0adce74cd20ba534255dbfc8fccb | manual     | -                        |
+| p04-scope-revision | artifact | fixes_added     | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T023400Z.md                         | 8f9d2c9c946404bc06bf6de2683dc3f821173ca5 | manual     | -                        |
+| p05                | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
+| final              | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
+| plan-revision      | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T180042Z.md                              | c33edabc017369a629ca7a3a63757cbad3d9dab9 | manual     | -                        |
+| plan-revision      | artifact | passed          | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T181021Z.md                              | a8e41bbc13c9aee38312d1680ac6aec13642cae7 | manual     | -                        |
+| plan               | artifact | passed          | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed)                                     | -                                        | auto       | -                        |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T002327Z.md (4 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T004027Z.md (2 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T005429Z.md (4 Important + 2 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012159Z.md (superseded rerun; findings resolved) | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T012720Z.md (3 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T013953Z.md (2 Important + 2 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T015212Z.md (2 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T021300Z.md (2 Important + 3 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T023457Z.md (4 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T024804Z.md (4 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T031926Z.md (2 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T033345Z.md (3 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T034831Z.md (2 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T040012Z.md (2 Important resolved)                | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T042235Z.md (3 Important + 2 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T043754Z.md (2 Important + 1 Medium resolved)     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan               | artifact | passed          | 2026-08-06 | operator acceptance after attempt-15 fixes                                                        | -                                        | operator   | -                        |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`

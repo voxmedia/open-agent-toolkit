@@ -90,10 +90,12 @@ hidden.
 
 ### Retained evidence boundary
 
-Provider-controlled free text is ephemeral. It may guide an in-memory correction
-within the current run, but it never crosses into terminal evidence, build
-records, manifests, warnings, returned loggable results, archive exports, or
-other durable state.
+Provider-controlled diagnostic, review, and error text is ephemeral. It may
+guide an in-memory correction within the current run, but it never crosses into
+terminal evidence, build records, manifests, warnings, returned loggable
+results, archive exports, or other durable state. This boundary does not remove
+intended authored artifact content, which remains governed by source,
+validation, and review gates.
 
 Retained failure and review evidence contains only:
 
@@ -101,7 +103,7 @@ Retained failure and review evidence contains only:
 - terminal outcome and evidence disposition;
 - stable locally generated reason/finding codes from closed enums;
 - validated local artifact identifiers where needed;
-- bounded counts and fixed redaction markers.
+- bounded positive counts.
 
 The code model is a closed pair rather than provider-supplied text:
 
@@ -110,9 +112,52 @@ The code model is a closed pair rather than provider-supplied text:
 - `kind`: `finding`, `provider-failure`, `pipeline-failure`, or `superseded`.
 
 Optional artifact IDs are validated against the run manifest. Counts are
-bounded non-negative integers. No generic message, description, evidence,
+bounded positive integers. No generic message, description, evidence,
 correction, details, metadata, or arbitrary code field exists in the retained
 shape.
+
+The final `terminal-evidence/v1` post-image is exact:
+
+- required root fields: `schemaVersion`, `runId`, `outcome`, `reasons`, and
+  `evidenceDisposition`;
+- optional root fields: `manifestHash` and `supersededBy`;
+- `runId` is 1–2000 characters; hashes remain `sha256:<64 lowercase hex>`;
+- `outcome` is `built-needs-review` or `failed`;
+- `evidenceDisposition` is `retained`, `partial`, `unavailable`, or
+  `superseded`;
+- `reasons` contains 1–50 closed reason objects;
+- each reason requires `stage`, `kind`, and `count`, may include `artifactId`,
+  and permits no other field;
+- `count` is an integer from 1 through 50, the sum across reasons is at most 50,
+  and `(stage, kind, artifactId)` tuples are unique;
+- any `artifactId` must be a member of the bound run manifest.
+
+A `built-needs-review` record has at least one `finding`, `provider-failure`, or
+`pipeline-failure` reason. A `failed` record has at least one
+`provider-failure` or `pipeline-failure` reason. `evidenceDisposition:
+superseded` requires `manifestHash`, `supersededBy`, and a
+`finalization`/`superseded` reason; other dispositions forbid `supersededBy`.
+When a manifest exists, producers and consumers require its hash even if the
+schema cannot infer filesystem availability. Legacy `findings`, `error`,
+`message`, `code`, `evidence`, and `correction` fields are rejected.
+
+The provider-facing `visual-review-result/v1` remains an ephemeral callback
+contract. Retained review attempts use a separate closed
+`visual-review-evidence/v1` projection with exactly `schemaVersion`,
+`requestHash`, `attempt`, `disposition`, and `reasons`:
+
+- `attempt` is 1 or 2;
+- `disposition` is `pass`, `correct`, or `failed`;
+- `pass` requires zero reasons;
+- `correct` requires 1–50 unique `visual-review`/`finding` reasons;
+- `failed` requires 1–50 unique `visual-review` reasons whose kind is
+  `provider-failure` or `pipeline-failure`;
+- reason count, sum, artifact membership, and unknown-field rules match terminal
+  evidence.
+
+Package coverage validates the retained projection's request hash and
+review-chain identity, requires terminal `pass` for successful packages, and
+never reads or archives the ephemeral provider result.
 
 Provider messages, descriptions, evidence prose, correction prose, serialized
 objects, token-like strings, and arbitrary thrown values are mapped to local
@@ -193,7 +238,9 @@ Only contract changes required by the safety kernel receive new versions:
 - `publish-receipt/v2` for exact object/public verification and auxiliary
   object coverage;
 - `project-recap@2` for the hub floor and prose-led adaptive expansion;
-- `terminal-evidence/v1` for code-only terminal failure/review evidence.
+- `terminal-evidence/v1` for code-only terminal failure/review evidence;
+- `visual-review-evidence/v1` for retained review-attempt projections while the
+  existing provider callback result remains ephemeral.
 
 `terminal-evidence/v1` is introduced and finalized within this unreleased
 branch. Its final shipped shape is closed and code-only; no released consumer
@@ -220,8 +267,9 @@ New producers and all shipped consumers move atomically:
 - No publication-time HTML or asset mutation is allowed.
 - Credentials never appear in config-derived requests, manifests, receipts,
   logs, fixtures, or public URLs.
-- Provider-controlled free text never appears in retained artifacts or returned
-  loggable result shapes; durable evidence is code-only and closed.
+- Provider-controlled diagnostic, review, and error text never appears in
+  retained artifacts or returned loggable result shapes; durable evidence is
+  code-only and closed.
 - Protected public access is explicit; 401/403 is never treated as success.
 - Flagged, failed, or superseded runs are unpublishable.
 - Corrections rebuild, rerender, revalidate, and re-review.

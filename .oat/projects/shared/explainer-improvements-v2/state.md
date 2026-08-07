@@ -87,8 +87,9 @@ oat_generated: false
 Phases p01 through p03 are complete. Phase p04 tasks p04-t01 through p04-t03
 landed, followed by two automatic review fixes and one operator-authorized
 exception. The final review left one Critical open-ended provider-text
-retention finding, so the operator approved a code-only evidence scope revision
-as p04-t04.
+retention finding
+(`reviews/archived/p04-review-2026-08-07T021700Z.md`), so the operator approved
+a code-only evidence scope revision as p04-t04.
 
 ## Artifacts
 

@@ -367,6 +367,13 @@ prose with a closed code-only evidence contract. Provider text may guide the
 single in-memory correction but is discarded before persistence or loggable
 return. This is a planned contract revision, not another regex-based fix loop.
 
+The first scope artifact review
+(`reviews/archived/artifact-p04-scope-revision-review-2026-08-07T023400Z.md`)
+confirmed the architecture and pre-release v1 decision, then required exact
+terminal/review evidence post-images plus the omitted durable visual-review,
+package-coverage, adapter-output, captured-log, schema-conformance, and lifecycle
+guidance seams. Those findings were incorporated before implementation.
+
 ## Phase 5: Prose-led authoring and release closure
 
 **Status:** pending
