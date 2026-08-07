@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-07
-oat_current_task_id: p04-t05
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -230,15 +230,15 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 6     | 6/6       |
-| p02   | completed   | 2     | 2/2       |
-| p03   | completed   | 11    | 11/11     |
-| p04   | in_progress | 6     | 4/6       |
-| p05   | pending     | 3     | 0/3       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 6     | 6/6       |
+| p02   | completed | 2     | 2/2       |
+| p03   | completed | 11    | 11/11     |
+| p04   | completed | 6     | 6/6       |
+| p05   | pending   | 3     | 0/3       |
 
-**Total:** 23/28 tasks completed
+**Total:** 25/28 tasks completed
 
 ---
 
@@ -339,8 +339,9 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Phase 4: Lifecycle and bounded recovery
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-08-07
+**Completed:** 2026-08-07
 
 | Task    | Status    | Commit    |
 | ------- | --------- | --------- |
@@ -348,8 +349,8 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | p04-t02 | completed | 888afba47 |
 | p04-t03 | completed | 8adec3778 |
 | p04-t04 | completed | c3ef47b71 |
-| p04-t05 | pending   | -         |
-| p04-t06 | pending   | -         |
+| p04-t05 | completed | b0e543461 |
+| p04-t06 | completed | 098e1780b |
 
 ### Review escalation and scope revision
 
@@ -422,6 +423,11 @@ already exhausted. The operator explicitly authorized one further bounded
 exception to implement both findings and re-review only their fix range.
 
 **Next:** Execute p04-t05 and p04-t06, then run a narrow fresh code re-review.
+
+The authorized narrow re-review
+(`reviews/archived/p04-t04-review-2026-08-07T200546Z.md`) passed with no
+findings. C1 and I1 are resolved, p04 is complete, and execution pauses at the
+configured p05 human checkpoint.
 
 ## Phase 5: Prose-led authoring and release closure
 

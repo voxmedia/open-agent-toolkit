@@ -1,7 +1,7 @@
 ---
-oat_current_task: p04-t05
-oat_last_commit: c3ef47b71d640d4289576fad904e20e027e6935f
-oat_blockers: []
+oat_current_task: p05-t01
+oat_last_commit: 098e1780b86116492073513614f64835aa470030
+oat_blockers: ['p05 HiLL approval']
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -72,7 +72,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-07T18:53:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-07T20:07:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -84,11 +84,10 @@ oat_generated: false
 
 ## Current Phase
 
-Phases p01 through p03 are complete. p04-t04 landed the approved code-only
-evidence scope revision. Its fresh code review confirmed the closed evidence
-contracts but found an unmanifested-file archive bypass and false-positive CLI
-canary rows. The operator authorized one bounded exception for p04-t05 and
-p04-t06 to close both findings before a narrow re-review.
+Phases p01 through p04 are complete. The operator-authorized p04-t05 and
+p04-t06 fixes closed the unmanifested-file archive bypass and made every CLI
+stream canary row a genuine injection test. Their narrow re-review passed with
+no findings. Phase p05 is the configured human checkpoint and awaits approval.
 
 ## Artifacts
 
@@ -127,13 +126,15 @@ p04-t06 to close both findings before a narrow re-review.
 - ✓ p04-t04 implemented the closed terminal and visual evidence contracts
 - ✓ Operator authorized one bounded exception for the two fresh code-review
   findings
-- ⧗ Implement p04-t05 and p04-t06, then re-review their fix range
+- ✓ p04-t05 and p04-t06 implemented and passed narrow re-review
+- ✓ p04 complete
+- ⧗ Await p05 HiLL approval
 
 ## Blockers
 
-None. Both active findings are converted into explicit bounded tasks.
+Configured p05 human checkpoint requires operator approval before execution.
 
 ## Next Milestone
 
-Implement p04-t05 exact run-package confinement, then p04-t06 genuine CLI
-stream canary injection.
+Approve p05, then implement the three prose-led authoring and release-closure
+tasks.
