@@ -454,6 +454,59 @@ test('redacts and bounds every retained terminal finding field', async () => {
   );
 });
 
+test('whole-field redacts escaped and ambiguous serialized credential forms', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(
+    request(outputRoot, { slug: 'Serialized Credential Forms' }),
+  );
+  const terminalManifest = {
+    runId: run.runId,
+    slug: run.slug,
+    outcome: 'built-needs-review',
+  };
+  const cases = [
+    {
+      secret: 'unicode-key-secret',
+      value: '{"pass\\u0077ord":"unicode-key-secret"}',
+    },
+    {
+      secret: 'yaml-tag-secret',
+      value: 'password: !!str "yaml-tag-secret"',
+    },
+    {
+      secret: 'yaml-literal-secret',
+      value: 'password: |\n  yaml-literal-secret\n  unmatched-literal-suffix',
+    },
+    {
+      secret: 'yaml-folded-secret',
+      value: 'password: >\n  yaml-folded-secret\n  unmatched-folded-suffix',
+    },
+  ];
+
+  await writeTerminalEvidence(run, {
+    outcome: 'built-needs-review',
+    manifest: terminalManifest,
+    findings: cases.map(({ value }, index) => ({
+      artifactId: `artifact-${index + 1}`,
+      evidence: value,
+    })),
+    evidenceDisposition: 'retained',
+  });
+
+  const retainedText = await readFile(
+    join(run.runRoot, 'terminal-evidence.json'),
+    'utf8',
+  );
+  const retained = JSON.parse(retainedText);
+  for (const { secret } of cases) {
+    assert.equal(retainedText.includes(secret), false);
+  }
+  assert.deepEqual(
+    retained.findings.map(({ evidence }) => evidence),
+    cases.map(() => '[redacted]'),
+  );
+});
+
 test('scrubs visual review failure fields before retention', async () => {
   const outputRoot = await temporaryDirectory();
   const run = await initializeRun(

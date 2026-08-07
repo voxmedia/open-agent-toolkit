@@ -17,28 +17,19 @@ const FINDING_FIELDS = [
 ];
 const SECRET_FIELD =
   '(?:(?:aws[_-]?)?(?:access[_-]?key(?:[_-]?id)?|secret[_-]?access[_-]?key|session[_-]?token)|api[_-]?key|client[_-]?secret|credentials?|password|private[_-]?key|secret[_-]?key|token)';
-const DOUBLE_QUOTED_SECRET_ASSIGNMENT_PATTERN = new RegExp(
-  `((?:["']?${SECRET_FIELD}["']?)\\s*[:=]\\s*)"(?:\\\\.|[^"\\\\])*"`,
-  'gi',
+const SECRET_ASSIGNMENT_PATTERN = new RegExp(
+  `(?:^|[^a-z0-9_-])["']?${SECRET_FIELD}["']?\\s*[:=]`,
+  'i',
 );
-const SINGLE_QUOTED_SECRET_ASSIGNMENT_PATTERN = new RegExp(
-  `((?:["']?${SECRET_FIELD}["']?)\\s*[:=]\\s*)'(?:\\\\.|[^'\\\\])*'`,
-  'gi',
-);
-const UNQUOTED_SECRET_ASSIGNMENT_PATTERN = new RegExp(
-  `((?:["']?${SECRET_FIELD}["']?)\\s*[:=]\\s*)[^\\s,"';&}]+`,
-  'gi',
-);
-const CREDENTIALED_URL_PATTERN = /\b(https?:\/\/)([^\s/@:]+):([^\s/@]+)@/gi;
-const AUTHORIZATION_HEADER_PATTERN =
-  /(\bauthorization\s*[:=]\s*)(?:"|')?(?:basic|bearer)\s+[a-z0-9._~+/=-]+(?:"|')?/gi;
-const BEARER_TOKEN_PATTERN = /\bbearer\s+[a-z0-9._~+/=-]+/gi;
-const BASIC_TOKEN_PATTERN = /\bbasic\s+[a-z0-9+/=]{8,}/gi;
-const AWS_ACCESS_KEY_PATTERN = /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/g;
+const AUTHORIZATION_MATERIAL_PATTERN =
+  /(?:^|[^a-z0-9_-])["']?authorization["']?\s*[:=]/i;
+const CREDENTIALED_URL_PATTERN = /\bhttps?:\/\/[^\s/@:]+:[^\s/@]+@/i;
+const BEARER_TOKEN_PATTERN = /\bbearer\s+[a-z0-9._~+/=-]+/i;
+const BASIC_TOKEN_PATTERN = /\bbasic\s+[a-z0-9+/=]{8,}/i;
+const AWS_ACCESS_KEY_PATTERN = /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/;
 const COMMON_TOKEN_PATTERN =
-  /\b(?:gh[pousr]_[a-z0-9_]{20,}|github_pat_[a-z0-9_]{20,}|xox[baprs]-[a-z0-9-]{10,}|sk_(?:live|test)_[a-z0-9]{16,}|eyJ[a-z0-9_-]{10,}\.[a-z0-9_-]{10,}\.[a-z0-9_-]{10,})\b/gi;
-const PRIVATE_KEY_PATTERN =
-  /-----BEGIN (?:[A-Z0-9 ]+ )?PRIVATE KEY-----[\s\S]*?-----END (?:[A-Z0-9 ]+ )?PRIVATE KEY-----/g;
+  /\b(?:gh[pousr]_[a-z0-9_]{20,}|github_pat_[a-z0-9_]{20,}|xox[baprs]-[a-z0-9-]{10,}|sk_(?:live|test)_[a-z0-9]{16,}|eyJ[a-z0-9_-]{10,}\.[a-z0-9_-]{10,}\.[a-z0-9_-]{10,})\b/i;
+const PRIVATE_KEY_PATTERN = /-----BEGIN (?:[A-Z0-9 ]+ )?PRIVATE KEY-----/;
 
 export function createTerminalEvidence({
   runId,
@@ -168,24 +159,43 @@ export function scrubRetainedText(value, label = 'terminal evidence value') {
   if (typeof value !== 'string') {
     throw new TypeError(`${label} must be a primitive string.`);
   }
-  const redacted = value
-    .replace(PRIVATE_KEY_PATTERN, '[redacted-private-key]')
-    .replace(
-      CREDENTIALED_URL_PATTERN,
-      (_match, protocol) => `${protocol}[redacted]@`,
-    )
-    .replace(DOUBLE_QUOTED_SECRET_ASSIGNMENT_PATTERN, '$1"[redacted]"')
-    .replace(SINGLE_QUOTED_SECRET_ASSIGNMENT_PATTERN, "$1'[redacted]'")
-    .replace(UNQUOTED_SECRET_ASSIGNMENT_PATTERN, '$1[redacted]')
-    .replace(AUTHORIZATION_HEADER_PATTERN, '$1[redacted]')
-    .replace(BEARER_TOKEN_PATTERN, 'Bearer [redacted]')
-    .replace(BASIC_TOKEN_PATTERN, 'Basic [redacted]')
-    .replace(AWS_ACCESS_KEY_PATTERN, '[redacted]')
-    .replace(COMMON_TOKEN_PATTERN, '[redacted]');
-  return redacted.slice(0, TERMINAL_EVIDENCE_MAX_TEXT_LENGTH);
+  const canonical = canonicalizeEscapedText(value);
+  if (
+    SECRET_ASSIGNMENT_PATTERN.test(canonical) ||
+    AUTHORIZATION_MATERIAL_PATTERN.test(canonical) ||
+    CREDENTIALED_URL_PATTERN.test(canonical) ||
+    BEARER_TOKEN_PATTERN.test(canonical) ||
+    BASIC_TOKEN_PATTERN.test(canonical) ||
+    AWS_ACCESS_KEY_PATTERN.test(canonical) ||
+    COMMON_TOKEN_PATTERN.test(canonical) ||
+    PRIVATE_KEY_PATTERN.test(canonical)
+  ) {
+    return '[redacted]';
+  }
+  return value.slice(0, TERMINAL_EVIDENCE_MAX_TEXT_LENGTH);
 }
 
 export const serializeTerminalText = scrubRetainedText;
+
+export function scrubRetainedValue(value, label = 'retained value') {
+  if (typeof value === 'string') {
+    return scrubRetainedText(value, label);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item, index) =>
+      scrubRetainedValue(item, `${label}[${index}]`),
+    );
+  }
+  if (isObject(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        key,
+        scrubRetainedValue(item, `${label}.${key}`),
+      ]),
+    );
+  }
+  return value;
+}
 
 export function normalizeRetainedError(
   value,
@@ -323,4 +333,22 @@ function primitiveText(value) {
 function nonEmptyPrimitiveText(value, fallback) {
   const text = primitiveText(value);
   return text && text.trim().length > 0 ? text : fallback;
+}
+
+function canonicalizeEscapedText(value) {
+  return value
+    .replace(/\\u\{([0-9a-f]{1,6})\}/gi, (_match, codePoint) =>
+      safeCodePoint(codePoint),
+    )
+    .replace(/\\u([0-9a-f]{4})/gi, (_match, codePoint) =>
+      safeCodePoint(codePoint),
+    )
+    .replace(/\\x([0-9a-f]{2})/gi, (_match, codePoint) =>
+      safeCodePoint(codePoint),
+    );
+}
+
+function safeCodePoint(hex) {
+  const codePoint = Number.parseInt(hex, 16);
+  return codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : '\ufffd';
 }

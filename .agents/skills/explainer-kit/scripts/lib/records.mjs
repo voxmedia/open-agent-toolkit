@@ -20,6 +20,7 @@ import {
   createTerminalEvidence,
   normalizeRetainedError,
   scrubRetainedText,
+  scrubRetainedValue,
 } from './terminal-evidence.mjs';
 
 export {
@@ -874,26 +875,6 @@ function assertValidContract(kind, value, context) {
 
 function scrubVisualReviewResult(result) {
   return scrubRetainedValue(result, 'visual review result');
-}
-
-function scrubRetainedValue(value, label) {
-  if (typeof value === 'string') {
-    return scrubRetainedText(value, label);
-  }
-  if (Array.isArray(value)) {
-    return value.map((item, index) =>
-      scrubRetainedValue(item, `${label}[${index}]`),
-    );
-  }
-  if (isObject(value)) {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [
-        key,
-        scrubRetainedValue(item, `${label}.${key}`),
-      ]),
-    );
-  }
-  return value;
 }
 
 function assertRun(run) {

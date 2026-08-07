@@ -69,6 +69,7 @@ import { plannedArtifacts, planExplainerSet } from './lib/set-plan.mjs';
 import {
   normalizeRetainedError,
   scrubRetainedText,
+  scrubRetainedValue,
   serializeTerminalText,
 } from './lib/terminal-evidence.mjs';
 import { resolveTheme } from './lib/theme.mjs';
@@ -292,7 +293,7 @@ export async function runExplainer(request, options = {}) {
       error: retainedError,
       evidenceDisposition: manifest ? 'retained' : 'unavailable',
     });
-    return resultFor(state, error);
+    return resultFor(state, { failed: true, error: retainedError });
   }
 }
 
@@ -859,13 +860,17 @@ function requiresRecapVisualReview(state) {
 async function reviewAndRetain(state, visualCritic, attempt) {
   state.visualReviewAttempt = attempt;
   try {
-    state.visualReview = await runVisualReview({
+    const review = await runVisualReview({
       plan: state.setPlan,
       rendered: state.rendered,
       evidence: state.browserEvidence,
       visualCritic,
       runRoot: state.run.runRoot,
     });
+    state.visualReview = {
+      ...review,
+      result: scrubRetainedValue(review.result, 'visual review result'),
+    };
     state.visualReviewPaths.push(
       ...(await writeVisualReviewAttempt(state.run, {
         attempt,
@@ -2394,13 +2399,13 @@ function assertValidRequest(request) {
   }
 }
 
-function resultFor(state, error) {
+function resultFor(state, failure = { failed: false }) {
   return {
     runId: state.run.runId,
     runRoot: state.run.runRoot,
     manifestPath: state.run.manifestPath,
     buildRecordPath: state.run.buildRecordPath,
-    outcome: error
+    outcome: failure.failed
       ? 'failed'
       : state.approval?.canResume === false
         ? 'incomplete'
@@ -2426,8 +2431,8 @@ function resultFor(state, error) {
     ...(state.visualReview && {
       visualReview: structuredClone(state.visualReview.result),
     }),
-    ...(error !== undefined && {
-      errors: [normalizeRetainedError(error)],
+    ...(failure.failed && {
+      errors: [failure.error],
     }),
   };
 }
