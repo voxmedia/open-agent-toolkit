@@ -84,6 +84,37 @@ Per-item statuses and frontmatter rollups make interrupted and repeated runs
 resumable. The promotions rollup covers RP apply-items; the filing rollup covers
 UP items plus RP file-items.
 
+### Project-log receipt
+
+When a project log exists, generate mode appends this one-line structural
+receipt:
+
+```text
+retro artifact=<path> evidence_used=<csv> evidence_unavailable=<csv> promotions=<number> upstream=<number> apply=<performed|declined|skipped|deferred> filing=<performed|declined|skipped|deferred>
+```
+
+Source identifiers are validated, deduplicated, sorted bytewise ascending, and
+joined with commas and no spaces; an empty source list is `none`. Counts
+describe the generated registers. Each action outcome is resolved
+independently:
+
+- `performed`: the action was entered and completed normally, including exact
+  recovered no-ops;
+- `declined`: an interactive user rejected the action-level offer before entry;
+- `skipped`: no eligible items existed at decision time; and
+- `deferred`: eligible items remain because consent or configured routing was
+  absent, the action was configured for later, or the apply/filing procedure
+  failed or was interrupted.
+
+The append uses stable structural identity and the exact rendered body:
+
+```bash
+oat project log append --project "$PROJECT_PATH" --structural \
+  --producer oat-project-retro \
+  --ref project-retro \
+  --body "$RECEIPT_BODY"
+```
+
 ## Apply repo improvements
 
 Invoke apply mode directly with wording such as "apply the retro findings."
@@ -108,13 +139,28 @@ After a successful application, the skill records `Status: applied` and an
 `Applied-ref`. Re-runs skip settled items and recover an exact prior side effect
 instead of applying it twice.
 
-For a docs item whose target canonical path is `project-log.md`, apply mode uses
-`oat project log append` and never directly edits the log. The proposal must
-identify the prior heading or event being corrected and preserve the original
-entry. The skill performs semantic post-side-effect recovery before appending
-again, then records `Applied-ref` only after the correction and retro writeback
-are durably committed. This remains a bounded docs special case; it adds no RP
-type and does not weaken the normal docs apply contract.
+For a docs item whose safely normalized target canonical path has the exact,
+case-sensitive final component `project-log.md`, apply mode uses
+`oat project log append` and never directly edits the log. Absolute paths,
+traversal, and ambiguous normalization fail closed; suffixes and prefixed
+lookalikes remain ordinary docs targets.
+
+The proposal must identify the prior heading or event being corrected and
+preserve the original entry. The appended judgment uses `--type feedback`,
+`--scope project`, `--area "retro correction $RP_ID"`, and a body whose stable
+identity includes both the RP ID and original-entry anchor. Before appending,
+perform semantic post-side-effect recovery. The skill recovers an exact
+uncommitted or committed correction and stops on partial, divergent, or
+multiple matches before it appends.
+
+The correction is committed first without retro writeback. A later retro-only
+writeback records `Status: applied` and an `Applied-ref` naming the full
+correction commit plus exact generated heading. `Applied-ref` is considered
+recorded only after the correction and retro writeback are durably committed.
+Append failure creates neither commit; correction-commit failure leaves the RP
+unsettled for exact recovery; writeback failure preserves the correction commit
+and retries only the writeback. This remains a bounded docs special case; it
+adds no RP type and does not weaken the normal docs apply contract.
 
 ## File tracker feedback
 

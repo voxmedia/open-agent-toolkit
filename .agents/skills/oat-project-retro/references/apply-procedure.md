@@ -35,21 +35,79 @@ continues immediately, this can be written back together with the final
 ## Application by Type
 
 1. **Docs:** update the canonical existing page. Avoid duplicate documents.
-   A docs item whose target canonical path is `project-log.md` is an
-   append-only correction special case:
-   - Use `oat project log append`; never directly edit `project-log.md`.
-   - Require the immutable proposal body to identify the prior heading or event
-     being corrected, and preserve the original entry.
-   - Perform semantic post-side-effect recovery before appending again: inspect
-     later entries for the exact correction, verify that any match represents
-     the proposal, and recover it instead of repeating the append. A partial,
-     divergent, or ambiguous match requires direction.
-   - Record `Applied-ref` only after the correction and retro writeback are
-     durably committed.
+   Route a docs item to the append-only correction special case only when its
+   target canonical path passes this matcher:
+   1. Parse the `Target` field value, removing at most one matching pair of
+      Markdown backticks.
+   2. Reject an empty value, NUL, an absolute POSIX path, a Windows drive or UNC
+      path, a trailing separator, or any unresolved `..` segment.
+   3. Convert `\` separators to `/`, remove leading `./`, remove interior `.`
+      segments, and collapse repeated separators.
+   4. Route only when the normalized target's exact, case-sensitive final path
+      component is `project-log.md`. A lookalike is an ordinary docs target,
+      not a correction. Any ambiguous normalization stops with no write.
 
-   This special case is limited to `project-log.md` targets and does not add or
-   change the public RP type vocabulary. All other docs items continue to
-   update the canonical existing page under the normal docs apply contract.
+   | Scenario            | Target                                     | Disposition   |
+   | ------------------- | ------------------------------------------ | ------------- |
+   | Repo-relative POSIX | `.oat/projects/shared/demo/project-log.md` | route         |
+   | Windows separators  | `.oat\projects\shared\demo\project-log.md` | route         |
+   | Exact basename      | `project-log.md`                           | route         |
+   | Lookalike suffix    | `project-log.md.bak`                       | ordinary-docs |
+   | Prefixed basename   | `my-project-log.md`                        | ordinary-docs |
+   | Nested child        | `project-log.md/child`                     | ordinary-docs |
+   | Ambiguous traversal | `.oat/projects/../demo/project-log.md`     | stop          |
+   | Absolute path       | `/tmp/project-log.md`                      | stop          |
+
+   For a routed item:
+   - Use `oat project log append`; never directly edit `project-log.md`.
+   - Require the immutable proposal body to identify the prior heading or
+     event being corrected, preserve the original entry, and supply a stable
+     `ORIGINAL_ENTRY_ANCHOR`. Set `RP_ID` to the item's stable `RP-NN` ID.
+   - Construct `CORRECTION_BODY` with the exact stable identity first line
+     `Retro correction id=$RP_ID original=$ORIGINAL_ENTRY_ANCHOR`, followed by
+     the immutable correction text. The ID, anchor, and correction text must
+     match exactly during recovery.
+   - Run the complete judgment append invocation:
+
+     ```bash
+     oat project log append --project "$PROJECT_PATH" \
+       --type feedback \
+       --scope project \
+       --area "retro correction $RP_ID" \
+       --body "$CORRECTION_BODY"
+     ```
+
+   - Perform semantic post-side-effect recovery before appending: search the
+     project log and Git state for the exact identity first line. Zero matches
+     permits one append. Exactly one match permits recovery only when the
+     original-entry anchor and full correction body are semantically exact.
+     Multiple, partial, or divergent matches stop for direction.
+   - Commit the project-log append without retro writeback. Verify the commit
+     contains the normalized project-log path and exact correction body.
+     Capture its full 40-character SHA and exact generated heading.
+   - In a later retro-only writeback commit, set the RP status and
+     `Applied-ref`. The reference names the full 40-character correction commit
+     plus the exact generated heading, serialized as
+     `<40-character-sha> :: <exact-generated-heading>`. Consider `Applied-ref`
+     recorded only after that writeback commit succeeds; at that point the
+     correction and retro writeback are durably committed.
+
+   The transition table is authoritative:
+
+   | Scenario                  | Starting state                                    | Required transition                                                                              |
+   | ------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+   | Fresh                     | No exact correction                               | Append once; commit project log; write back retro in a later commit                              |
+   | Uncommitted append        | One exact uncommitted correction                  | Do not append; commit the recovered project-log mutation; then write back                        |
+   | Committed append          | One exact committed correction and RP not applied | Do not append; verify full commit, path, and body; then write back                               |
+   | Append failure            | Command fails                                     | No correction commit or writeback; retain prior RP status                                        |
+   | Correction commit failure | Append exists but commit fails                    | No writeback; retain prior RP status; recover exact append on retry                              |
+   | Writeback commit failure  | Correction commit succeeds but retro commit fails | Preserve correction commit; restore non-applied artifact; retry writeback from recovered receipt |
+   | Ambiguous recovery        | Multiple or divergent matches                     | Stop with no append, commit, or writeback                                                        |
+
+   This special case is limited to normalized `project-log.md` targets and does
+   not add or change the public RP type vocabulary. All other docs items
+   continue to update the canonical existing page under the normal docs apply
+   contract.
 
 2. **Agent instruction:** choose the narrowest existing applicable
    `AGENTS.md`, skill, or provider-neutral instruction. Do not create nested
@@ -134,7 +192,9 @@ Compute `oat_retro_promotions` exactly:
 - Use one reviewed batch when the items are inseparable edits to the same
   canonical surface.
 - Include the target edit and its artifact status writeback in the same commit
-  whenever possible.
+  whenever possible. The project-log correction route is the explicit
+  exception: its correction commit must precede the later retro-only writeback
+  commit so `Applied-ref` can name an already durable correction.
 - Before each commit, format touched files, run surface-relevant checks, and
   verify the item still has the expected pre-apply status.
 - On re-run, rescan the artifact and process only remaining

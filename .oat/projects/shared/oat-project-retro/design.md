@@ -99,22 +99,35 @@ oat-project-implement (closeout)
 **Generate mode:**
 
 1. Resolve active project (or explicit `--project` path); confirm target.
-2. Inventory evidence sources; classify each as available/unavailable:
-   project log, `oat-execution-learnings.md`, lifecycle artifacts
-   (`implementation.md`, `state.md`, `plan.md`, reviews, evidence dirs),
-   session/run transcript (environment-aware: cloud tooling, local
-   transcripts, or none).
+2. Inventory evidence sources with `status: used | unavailable`. When a partial
+   evidence family contains mixed availability, split it into truthful source
+   entries (for example, `gate-receipts: used` and
+   `archived-review-markdown: unavailable`) rather than assigning a coarse
+   family status. Derivative current-run reconnaissance transcripts are not
+   original project-run evidence.
 3. Optional parallel recon lanes for large runs (subagent dispatch per the
    handoff methodology; lane count scales down for small projects).
 4. Synthesize `references/project-retro.md` from the template: core sections
    always, conditional sections only when evidence warrants, concise by
-   default with each section adding distinct information.
+   default with each section adding distinct information. Material incidents
+   stand alone and use stable evidence anchors that supplement rather than
+   replace explanation. `Challenges and Struggles` owns the complete incident
+   narrative; course changes, learnings, and gotchas retain their narrower
+   trigger/outcome, abstraction, and future-instruction roles.
 5. Populate both registers with status `proposed`; write frontmatter rollups
    and derive `Current State` from register fields and those rollups.
 6. Interactive: offer apply-now, then offer filing skill when unfiled items
    exist. Non-interactive: apply if `workflow.retro.apply: auto`; chain to
    filing only when `workflow.retro.filing` config exists.
-7. Append a project-log entry; format touched files; commit.
+7. Append the canonical one-line structural receipt with
+   `oat project log append --project "$PROJECT_PATH" --structural`,
+   `--producer oat-project-retro`, `--ref project-retro`, and
+   `--body "$RECEIPT_BODY"`; format touched files; commit. Source lists are
+   deduplicated and bytewise sorted before comma serialization. Apply and filing
+   outcomes use deterministic `performed | declined | skipped | deferred`
+   semantics: normal completion, interactive action rejection, no eligible
+   items, and eligible work left by consent/config deferral or failure,
+   respectively.
 
 **Apply mode (flag, natural language, or post-generate confirmation):**
 
@@ -124,11 +137,20 @@ oat-project-implement (closeout)
    `proposed`/`approved` (`Disposition: file` items belong to the filing
    skill and are never mutated by apply mode).
 3. Apply each per the skill's bundled apply-procedure reference (docs, AGENTS,
-   rules edits, decision records via `oat decision new`).
+   rules edits, decision records via `oat decision new`). A docs item routes to
+   append-only correction behavior only when its safely normalized target has
+   exact final path component `project-log.md`; absolute, traversing, and
+   ambiguous paths fail closed, while lookalikes follow ordinary docs routing.
+   The correction uses full judgment flags including `--type feedback`,
+   `--scope project`, stable RP/original-entry identity, and exact semantic
+   recovery.
 4. Update each item's status (`applied` / `rejected` with
    `Disposition-note`), update the frontmatter rollup, and refresh
-   `Current State`; commit artifact + edits together per item or as one reviewed
-   batch. Proposal bodies and all other freeform narrative remain immutable.
+   `Current State`. Ordinary items commit artifact + edits together per item or
+   as one reviewed batch. A project-log correction instead creates the
+   correction commit first and records its full SHA plus exact heading in a
+   later retro-only writeback commit. Proposal bodies and all other freeform
+   narrative remain immutable.
 
 **Filing flow (`oat-project-retro-file`):**
 
@@ -178,13 +200,19 @@ oat-project-implement (closeout)
 - Mode resolution: generate vs apply (explicit flag/wording beats inference;
   an existing artifact plus "apply" language selects apply mode).
 - Evidence inventory with explicit availability honesty (unavailable sources
-  are named in the artifact, never silently skipped).
+  are named in the artifact, never silently skipped); mixed evidence families
+  split into source-level entries and derivative recon transcripts stay
+  distinct from original run evidence.
 - Dual-lane synthesis with confirmed-cause vs hypothesis vs inconclusive
-  discipline; rejected alternatives recorded when they shaped outcomes.
+  discipline; rejected alternatives recorded when they shaped outcomes;
+  standalone incidents use stable anchors and section-specific narrative
+  ownership.
 - Register construction (formats below) and frontmatter rollups.
 - `Current State` derivation as the only mutable freeform narrative surface;
   status prose elsewhere is generation-time evidence.
 - Apply mode with idempotent, resumable register processing.
+- Deterministic structural run receipt and append-only project-log correction
+  routing with explicit append, recovery, commit, and writeback transitions.
 - Consent enforcement: interactive offers; config-gated non-interactive
   behavior; sanitization pass whenever upstream items will leave a private
   repo.
@@ -393,13 +421,20 @@ oat_retro_generated: '2026-08-05T22:00:00Z'
 oat_retro_evidence_sources: # every source, with availability
   - source: project-log
     status: used
-  - source: session-transcript
+  - source: gate-receipts
+    status: used
+  - source: archived-review-markdown
     status: unavailable
 oat_retro_promotions: none # none | proposed | partial | complete
 oat_retro_filing: none # none | proposed | partial | complete
 oat_generated: false
 ---
 ```
+
+Evidence status has no `partial` value. Mixed source families are represented
+by separate source identifiers with truthful `used` or `unavailable` status.
+Current-run recon transcripts derived while generating the retro are labeled
+as derivative and never presented as original project-run evidence.
 
 Rollup fields are what the completion offer and lifecycle skills read;
 consumers never parse register bodies just to answer "does a retro exist and
@@ -510,6 +545,13 @@ oat_post_implement_sequence:
 - **Apply failure on an item:** mark the item `rejected` with reason (or
   leave `proposed` on transient failure), continue with remaining items,
   report at the end. Register statuses make re-runs resume correctly.
+- **Project-log correction interruption:** match only a normalized target whose
+  final path component is exactly `project-log.md`. Search stable RP and
+  original-entry identity before appending. Recover one exact uncommitted or
+  committed append; stop on partial, divergent, or multiple matches. Append
+  failure produces no commits, correction-commit failure leaves the RP
+  unsettled, and writeback failure preserves the correction commit for a later
+  retro-only writeback commit.
 - **Filing preflight failure (issues disabled, missing credentials,
   uninitialized backlog):** destination reported unavailable in the matrix;
   affected items keep `proposed`; lane reported loudly with the concrete
@@ -544,7 +586,12 @@ Quick mode: no requirement-to-test mapping table; key levels and scenarios.
 - `retro-skill-contracts.test.ts`: mutable `Current State`, immutable proposal
   bodies, exact-versus-related duplicate classification, and table-driven local
   filing transitions for new, strengthened, linked, failed-commit, no-upstream,
-  GitHub, and rerun states.
+  GitHub, and rerun states. It also covers receipt outcome scenarios,
+  deterministic evidence-source serialization, positive/negative normalized
+  project-log target paths, and every correction interruption transition.
+- `commands/project/log/append.test.ts`: execute the documented structural
+  receipt and full judgment correction invocations against the actual command
+  parser, including all four action-outcome values.
 
 ### Integration / Repo Checks
 

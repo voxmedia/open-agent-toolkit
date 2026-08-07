@@ -31,12 +31,16 @@ For apply mode, follow
 [references/apply-procedure.md](references/apply-procedure.md) and skip the
 generation process below.
 
-Apply mode treats a docs item whose target canonical path is `project-log.md`
-as append-only: use `oat project log append` and never directly edit the log.
-The proposal must identify the prior heading or event being corrected and
-preserve the original entry. Perform semantic post-side-effect recovery before
-appending again, and record `Applied-ref` only after the correction and retro
-writeback are durably committed.
+Apply mode treats a docs item as an append-only project-log correction only
+when its safe normalized target canonical path has the exact final path
+component `project-log.md`; use `oat project log append` and never directly edit
+the log.
+Fail closed on absolute, traversing, or otherwise ambiguous targets. The
+proposal must identify the prior heading or event being corrected and preserve
+the original entry. Follow the reference's judgment flags, stable correction
+identity, correction-commit, and later retro-writeback transitions. Perform
+semantic post-side-effect recovery before appending again. Record `Applied-ref`
+only after the correction and retro writeback are durably committed.
 
 ## Progress Indicators
 
@@ -191,11 +195,50 @@ retro artifact=<path> evidence_used=<csv> evidence_unavailable=<csv> promotions=
 ```
 
 `artifact` is the repo-relative retro path. `evidence_used` and
-`evidence_unavailable` are comma-separated source identifiers; use `none` for
-an empty set. `promotions` is the RP register count and `upstream` is the UP
+`evidence_unavailable` are deterministic source lists. Source identifiers are
+deduplicated, sorted in bytewise ascending order, and serialized as
+comma-separated values with no spaces; an empty list is `none`. Reject an
+identifier unless it matches `[a-z0-9][a-z0-9._:-]*`; this excludes commas and
+whitespace. `promotions` is the RP register count and `upstream` is the UP
 register count. `apply` is the apply action outcome and `filing` is the filing
 action outcome. Counts describe artifact contents; outcomes describe actions.
 Never reuse a count key for an outcome or encode a count in `filing`.
+
+Resolve each action outcome independently at receipt time. The apply eligible
+set is RP items with `Disposition: apply` and an unsettled status. The filing
+eligible set is UP items plus RP `Disposition: file` items with an unsettled
+status. Use these mutually exclusive rules; an empty eligible set takes
+precedence over every non-entry reason, an action-level interactive rejection
+takes precedence over deferral, and normal completion applies only after the
+action was entered and returned successfully:
+
+| Scenario                       | Outcome   | Deterministic rule                                                                                        |
+| ------------------------------ | --------- | --------------------------------------------------------------------------------------------------------- |
+| Normal completion              | performed | Action entered and reached normal completion; durable side effects or exact recovered no-ops are included |
+| Interactive action rejection   | declined  | Interactive user rejects the action-level offer before entry                                              |
+| No eligible items              | skipped   | Eligible set is empty at decision time                                                                    |
+| Non-interactive consent absent | deferred  | Eligible items remain but required apply or filing config is absent                                       |
+| Configured deferral            | deferred  | `apply: ask` without interaction or filing destination `none` leaves eligible items for later             |
+| Child or apply failure         | deferred  | Eligible items remain because the invoked procedure failed or was interrupted before normal completion    |
+
+Item-level rejection inside an action that otherwise reaches normal completion
+does not change the action outcome from `performed`. A child-skill or apply
+failure after some durable side effects is still `deferred` because eligible
+work remains and the action did not complete normally.
+
+Build the one-line body in `RECEIPT_BODY`, then use this complete invocation.
+The producer and ref are stable literals:
+
+```bash
+oat project log append --project "$PROJECT_PATH" --structural \
+  --producer oat-project-retro \
+  --ref project-retro \
+  --body "$RECEIPT_BODY"
+```
+
+Do not append if body validation fails. After the command succeeds, verify the
+generated structural heading uses producer `oat-project-retro` and ref
+`project-retro`, and verify the appended body exactly equals `RECEIPT_BODY`.
 
 ### Step 6: Format, Verify, and Commit
 

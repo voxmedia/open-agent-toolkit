@@ -34,7 +34,7 @@ const retroDesign = readRepoFile(
 function readScenarioRow(content: string, scenario: string): string[] {
   const row = content
     .split('\n')
-    .find((line) => line.startsWith(`| ${scenario} `));
+    .find((line) => line.trimStart().startsWith(`| ${scenario} `));
 
   return (
     row
@@ -351,7 +351,54 @@ describe('retro skill content contracts', () => {
       /final verification[\s\S]*?required keys[\s\S]*?exactly once[\s\S]*?counts are numeric/i,
     );
     expect(retroSkill).not.toMatch(/filing=<number>/);
+    expect(retroSkill).toContain(
+      'oat project log append --project "$PROJECT_PATH" --structural',
+    );
+    expect(retroSkill).toContain('--producer oat-project-retro');
+    expect(retroSkill).toContain('--ref project-retro');
+    expect(retroSkill).toContain('--body "$RECEIPT_BODY"');
+    expect(retroSkill).toMatch(
+      /source identifiers[\s\S]*?deduplicat[\s\S]*?bytewise ascending[\s\S]*?comma[\s\S]*?no spaces[\s\S]*?none/i,
+    );
   });
+
+  it.each([
+    [
+      'Normal completion',
+      'performed',
+      'Action entered and reached normal completion; durable side effects or exact recovered no-ops are included',
+    ],
+    [
+      'Interactive action rejection',
+      'declined',
+      'Interactive user rejects the action-level offer before entry',
+    ],
+    ['No eligible items', 'skipped', 'Eligible set is empty at decision time'],
+    [
+      'Non-interactive consent absent',
+      'deferred',
+      'Eligible items remain but required apply or filing config is absent',
+    ],
+    [
+      'Configured deferral',
+      'deferred',
+      '`apply: ask` without interaction or filing destination `none` leaves eligible items for later',
+    ],
+    [
+      'Child or apply failure',
+      'deferred',
+      'Eligible items remain because the invoked procedure failed or was interrupted before normal completion',
+    ],
+  ])(
+    'maps receipt scenario %s deterministically',
+    (scenario, outcome, rule) => {
+      expect(readScenarioRow(retroSkill, scenario)).toEqual([
+        scenario,
+        outcome,
+        rule,
+      ]);
+    },
+  );
 
   it('keeps material incidents standalone, anchored, and non-repetitive', () => {
     for (const content of [
@@ -429,18 +476,122 @@ describe('retro skill content contracts', () => {
       expect(content).toMatch(
         /semantic post-side-effect recovery[\s\S]*?before[\s\S]*?append/i,
       );
-      expect(content).toMatch(/records? `Applied-ref` only after/i);
+      expect(content).toMatch(/`Applied-ref`[\s\S]*?only\s+after/i);
       expect(content).toMatch(
-        /correction and retro\s+writeback\s+are\s+durably committed/i,
+        /correction\s+and\s+retro\s+writeback\s+are\s+durably committed/i,
       );
     }
 
     expect(applyProcedure).toMatch(
-      /limited to[\s\S]*?project-log[\s\S]*?does not[\s\S]*?(?:new|change)[\s\S]*?RP type/i,
+      /limited to[\s\S]*?project-log[\s\S]*?does\s+not[\s\S]*?(?:new|change)[\s\S]*?RP type/i,
     );
     expect(applyProcedure).toMatch(
       /all other docs[\s\S]*?canonical existing page/i,
     );
     expect(applyProcedure).not.toContain('project-log-correction');
+    expect(applyProcedure).toContain('--type feedback');
+    expect(applyProcedure).toContain('--scope project');
+    expect(applyProcedure).toContain('--area "retro correction $RP_ID"');
+    expect(applyProcedure).toContain('--body "$CORRECTION_BODY"');
+    expect(applyProcedure).toMatch(
+      /stable identity[\s\S]*?RP_ID[\s\S]*?ORIGINAL_ENTRY_ANCHOR/i,
+    );
+    expect(applyProcedure).toMatch(
+      /Applied-ref[\s\S]*?full 40-character correction commit[\s\S]*?exact generated heading/i,
+    );
+  });
+
+  it.each([
+    [
+      'Repo-relative POSIX',
+      '.oat/projects/shared/demo/project-log.md',
+      'route',
+    ],
+    [
+      'Windows separators',
+      String.raw`.oat\projects\shared\demo\project-log.md`,
+      'route',
+    ],
+    ['Exact basename', 'project-log.md', 'route'],
+    ['Lookalike suffix', 'project-log.md.bak', 'ordinary-docs'],
+    ['Prefixed basename', 'my-project-log.md', 'ordinary-docs'],
+    ['Nested child', 'project-log.md/child', 'ordinary-docs'],
+    ['Ambiguous traversal', '.oat/projects/../demo/project-log.md', 'stop'],
+    ['Absolute path', '/tmp/project-log.md', 'stop'],
+  ])('defines correction target match: %s', (scenario, target, disposition) => {
+    expect(readScenarioRow(applyProcedure, scenario)).toEqual([
+      scenario,
+      `\`${target}\``,
+      disposition,
+    ]);
+  });
+
+  it.each([
+    [
+      'Fresh',
+      'No exact correction',
+      'Append once; commit project log; write back retro in a later commit',
+    ],
+    [
+      'Uncommitted append',
+      'One exact uncommitted correction',
+      'Do not append; commit the recovered project-log mutation; then write back',
+    ],
+    [
+      'Committed append',
+      'One exact committed correction and RP not applied',
+      'Do not append; verify full commit, path, and body; then write back',
+    ],
+    [
+      'Append failure',
+      'Command fails',
+      'No correction commit or writeback; retain prior RP status',
+    ],
+    [
+      'Correction commit failure',
+      'Append exists but commit fails',
+      'No writeback; retain prior RP status; recover exact append on retry',
+    ],
+    [
+      'Writeback commit failure',
+      'Correction commit succeeds but retro commit fails',
+      'Preserve correction commit; restore non-applied artifact; retry writeback from recovered receipt',
+    ],
+    [
+      'Ambiguous recovery',
+      'Multiple or divergent matches',
+      'Stop with no append, commit, or writeback',
+    ],
+  ])('defines correction transition: %s', (scenario, state, transition) => {
+    expect(readScenarioRow(applyProcedure, scenario)).toEqual([
+      scenario,
+      state,
+      transition,
+    ]);
+  });
+
+  it('aligns the lightweight design with final revision contracts', () => {
+    expect(retroDesign).toContain('--producer oat-project-retro');
+    expect(retroDesign).toContain('--ref project-retro');
+    expect(retroDesign).toMatch(
+      /performed[\s\S]*?declined[\s\S]*?skipped[\s\S]*?deferred/i,
+    );
+    expect(retroDesign).toMatch(
+      /partial[\s\S]*?evidence famil(?:y|ies)[\s\S]*?truthful\s+source\s+entries/i,
+    );
+    expect(retroDesign).toMatch(
+      /derivative current-run reconnaissance transcripts[\s\S]*?not[\s\S]*?original project-run evidence/i,
+    );
+    expect(retroDesign).toMatch(/stable evidence anchors/i);
+    expect(retroDesign).toMatch(
+      /Challenges and Struggles[\s\S]*?complete\s+incident\s+narrative/i,
+    );
+    expect(retroDesign).toMatch(
+      /normalized target[\s\S]*?final path component[\s\S]*?project-log\.md/i,
+    );
+    expect(retroDesign).toContain('--type feedback');
+    expect(retroDesign).toMatch(
+      /correction commit[\s\S]*?later retro-only writeback commit/i,
+    );
   });
 });
