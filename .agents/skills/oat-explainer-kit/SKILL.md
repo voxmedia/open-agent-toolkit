@@ -1,6 +1,6 @@
 ---
 name: oat-explainer-kit
-version: 1.0.5
+version: 1.0.6
 description: Use when building project explainers or recaps from OAT configuration, state, and lifecycle artifacts.
 disable-model-invocation: false
 user-invocable: true
