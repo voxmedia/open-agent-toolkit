@@ -163,7 +163,13 @@ succeed.
 
 Visual critics use the independent whole-set rubric in
 `references/visual-review.md`, which separates review judgment from
-medium-specific authoring rules.
+medium-specific authoring rules. They assess typography, hierarchy,
+composition, density, medium leverage, template repetition, diagram semantics,
+and cross-artifact cohesion from rendered browser evidence. The rubric keeps
+the existing provider-neutral result contract: `pass` means no required
+correction remains, while `correct` carries concrete artifact-scoped actions
+into the one bounded correction round. It does not assign design scores or
+encode geometry thresholds.
 
 Render QA is opt-in. It runs only against an injected `browserProbe`, and the
 core never launches a browser of its own — reviewing the rendered output in a

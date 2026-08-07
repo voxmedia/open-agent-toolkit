@@ -106,6 +106,12 @@ matching exports. Bare browser callbacks and caller-authored runtime metadata
 are rejected. These are first-class adapter inputs; do not place either
 provider in `coreOptions`.
 
+The critic judges typography, hierarchy, composition, density, medium leverage,
+template repetition, diagram semantics, and cross-artifact cohesion from the
+bound rendered evidence. Keep those criteria in prose. Preserve the core's
+existing `visual-review-result/v1` contract and actionable `pass`/`correct`
+behavior; do not add adapter-owned scores, layout thresholds, or result fields.
+
 The adapter resolves all executable providers before core invocation, enforces
 direct-versus-module mutual exclusion, and requires distinct identities for
 authoring, fact criticism, browser evidence, and visual criticism. A missing,

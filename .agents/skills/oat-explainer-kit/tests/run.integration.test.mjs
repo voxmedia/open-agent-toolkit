@@ -1299,6 +1299,28 @@ test('documents adapter publication v2 emission with immutable v1 replay', async
   assert.match(guidance, /publish-receipt\/v1.*reduced.*publish-summary\/v1/is);
 });
 
+test('documents the adapter visual critic as a full-set prose judgment seam', async () => {
+  const guidance = await readFile(
+    new URL('../references/visual-review-callback.md', import.meta.url),
+    'utf8',
+  );
+  for (const topic of [
+    'typography',
+    'hierarchy',
+    'composition',
+    'density',
+    'medium leverage',
+    'template repetition',
+    'diagram semantics',
+    'cross-artifact cohesion',
+  ]) {
+    assert.match(guidance.toLowerCase(), new RegExp(topic), topic);
+  }
+  assert.match(guidance, /`pass`.*no required correction/is);
+  assert.match(guidance, /`correct`.*actionable correction/is);
+  assert.match(guidance, /visual-review-result\/v1/i);
+});
+
 test('passes only derived credential-free destination roots into core publish requests', async () => {
   const projectFixture = await createFixture();
   const projectResult = await runOatExplainer({

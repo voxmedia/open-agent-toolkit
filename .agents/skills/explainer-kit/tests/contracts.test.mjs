@@ -1090,6 +1090,44 @@ test('requires complete bundled visual guidance in author requests', () => {
   );
 });
 
+test('documents actionable pass and correct visual-review behavior without changing the result contract', async () => {
+  const guidance = await readFile(
+    new URL('../references/visual-review.md', import.meta.url),
+    'utf8',
+  );
+  for (const topic of [
+    'typography',
+    'hierarchy',
+    'composition',
+    'density',
+    'medium leverage',
+    'template repetition',
+    'diagram semantics',
+    'cross-artifact cohesion',
+  ]) {
+    assert.match(guidance.toLowerCase(), new RegExp(topic), topic);
+  }
+  assert.match(guidance, /`pass`.*no required correction/is);
+  assert.match(guidance, /`correct`.*concrete.*correction/is);
+
+  const correction = visualReviewResult();
+  const context = { visualReviewRequest: visualReviewRequest() };
+  assert.deepEqual(
+    validateContract('visual-review-result', correction, context),
+    {
+      valid: true,
+      errors: [],
+    },
+  );
+  const pass = structuredClone(correction);
+  pass.disposition = 'pass';
+  pass.findings = [];
+  assert.deepEqual(validateContract('visual-review-result', pass, context), {
+    valid: true,
+    errors: [],
+  });
+});
+
 test('requires closed, internally consistent planner-owned graph semantics', () => {
   const request = authorRequestV2();
   request.artifactId = 'system-visual';
