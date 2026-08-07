@@ -123,11 +123,15 @@ oat-project-implement (closeout)
    `oat project log append --project "$PROJECT_PATH" --structural`,
    `--producer oat-project-retro`, `--ref project-retro`, and
    `--body "$RECEIPT_BODY"`; format touched files; commit. Source lists are
-   deduplicated and bytewise sorted before comma serialization. Apply and filing
-   outcomes use deterministic `performed | declined | skipped | deferred`
-   semantics: normal completion, interactive action rejection, no eligible
-   items, and eligible work left by consent/config deferral or failure,
-   respectively.
+   deduplicated and bytewise sorted before comma serialization. Before apply or
+   filing begins, capture one immutable pre-action eligibility snapshot for
+   each action; never derive initial eligibility from post-action state.
+   Outcome precedence is total: initially empty → `skipped`; action-level
+   interactive rejection → `declined`; non-entry, failure, or remaining
+   snapshot work → `deferred`; entered normal completion with no remaining
+   snapshot work → `performed`. A mixed filing action uses one lane-tagged union
+   snapshot, so a completed lane plus a deferred lane is `deferred`, while all
+   initial lanes settled successfully is `performed`.
 
 **Apply mode (flag, natural language, or post-generate confirmation):**
 
@@ -586,9 +590,12 @@ Quick mode: no requirement-to-test mapping table; key levels and scenarios.
 - `retro-skill-contracts.test.ts`: mutable `Current State`, immutable proposal
   bodies, exact-versus-related duplicate classification, and table-driven local
   filing transitions for new, strengthened, linked, failed-commit, no-upstream,
-  GitHub, and rerun states. It also covers receipt outcome scenarios,
-  deterministic evidence-source serialization, positive/negative normalized
-  project-log target paths, and every correction interruption transition.
+  GitHub, and rerun states. It also derives receipt outcomes from table-driven
+  initial snapshot, entry decision, completion, and remaining-work fixtures;
+  covers mixed filing lanes and initially-empty versus all-settled transitions;
+  and verifies deterministic evidence-source serialization, positive/negative
+  normalized project-log target paths, and every correction interruption
+  transition.
 - `commands/project/log/append.test.ts`: execute the documented structural
   receipt and full judgment correction invocations against the actual command
   parser, including all four action-outcome values.

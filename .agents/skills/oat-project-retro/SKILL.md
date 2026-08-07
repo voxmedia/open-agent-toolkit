@@ -204,27 +204,56 @@ register count. `apply` is the apply action outcome and `filing` is the filing
 action outcome. Counts describe artifact contents; outcomes describe actions.
 Never reuse a count key for an outcome or encode a count in `filing`.
 
-Resolve each action outcome independently at receipt time. The apply eligible
-set is RP items with `Disposition: apply` and an unsettled status. The filing
-eligible set is UP items plus RP `Disposition: file` items with an unsettled
-status. Use these mutually exclusive rules; an empty eligible set takes
-precedence over every non-entry reason, an action-level interactive rejection
-takes precedence over deferral, and normal completion applies only after the
-action was entered and returned successfully:
+Capture one immutable pre-action eligibility snapshot for each action after the
+registers are rendered and before any apply consent decision or filing
+dispatch. The apply snapshot contains the stable IDs of unsettled RP
+`Disposition: apply` items. The filing snapshot contains the stable IDs and
+lanes of unsettled UP items plus RP `Disposition: file` items. Never recompute
+initial eligibility from post-action register state.
 
-| Scenario                       | Outcome   | Deterministic rule                                                                                        |
-| ------------------------------ | --------- | --------------------------------------------------------------------------------------------------------- |
-| Normal completion              | performed | Action entered and reached normal completion; durable side effects or exact recovered no-ops are included |
-| Interactive action rejection   | declined  | Interactive user rejects the action-level offer before entry                                              |
-| No eligible items              | skipped   | Eligible set is empty at decision time                                                                    |
-| Non-interactive consent absent | deferred  | Eligible items remain but required apply or filing config is absent                                       |
-| Configured deferral            | deferred  | `apply: ask` without interaction or filing destination `none` leaves eligible items for later             |
-| Child or apply failure         | deferred  | Eligible items remain because the invoked procedure failed or was interrupted before normal completion    |
+For each snapshot, record:
 
-Item-level rejection inside an action that otherwise reaches normal completion
-does not change the action outcome from `performed`. A child-skill or apply
-failure after some durable side effects is still `deferred` because eligible
-work remains and the action did not complete normally.
+- `INITIAL_ELIGIBLE`: the number of members in that pre-action snapshot;
+- `DECISION`: `not-applicable | declined | deferred | entered`;
+- `COMPLETION`: `not-started | normal | failed`; and
+- `REMAINING_INITIAL`: how many members of that same snapshot remain unsettled
+  after the action. Ignore newly created eligible work until the next run.
+
+Validate `0 <= REMAINING_INITIAL <= INITIAL_ELIGIBLE`, then derive the outcome
+with this total precedence function:
+
+```text
+if INITIAL_ELIGIBLE == 0                         => skipped
+else if DECISION == declined                     => declined
+else if DECISION != entered                      => deferred
+else if COMPLETION != normal                     => deferred
+else if REMAINING_INITIAL > 0                    => deferred
+else                                             => performed
+```
+
+This samples initial eligibility exactly once. A successful action that settles
+every snapshot member is `performed`, never `skipped` because the post-action
+set became empty. Exact recovered no-ops count as normal completion when they
+settle the snapshot member. Item-level rejection is settled work; action-level
+rejection before entry is `declined`.
+
+For filing, use one lane-tagged union snapshot and one outcome. If any initially
+eligible repo or upstream lane remains unsettled because its destination is
+absent or configured `none`, the mixed action is `deferred` even when another
+lane completed normally. It is `performed` only when normal completion settles
+all initially eligible lanes.
+
+| Scenario                              | Initial eligible | Decision       | Completion  | Remaining initial | Outcome   |
+| ------------------------------------- | ---------------- | -------------- | ----------- | ----------------- | --------- |
+| Initially empty                       | 0                | not-applicable | not-started | 0                 | skipped   |
+| Interactive action rejection          | 2                | declined       | not-started | 2                 | declined  |
+| Absent non-interactive consent        | 2                | deferred       | not-started | 2                 | deferred  |
+| Configured apply deferral             | 2                | deferred       | not-started | 2                 | deferred  |
+| Action failure                        | 2                | entered        | failed      | 1                 | deferred  |
+| Normal completion with remaining work | 2                | entered        | normal      | 1                 | deferred  |
+| All settled successfully              | 2                | entered        | normal      | 0                 | performed |
+| Mixed filing lanes partly deferred    | 3                | entered        | normal      | 1                 | deferred  |
+| Mixed filing lanes all settled        | 3                | entered        | normal      | 0                 | performed |
 
 Build the one-line body in `RECEIPT_BODY`, then use this complete invocation.
 The producer and ref are stable literals:

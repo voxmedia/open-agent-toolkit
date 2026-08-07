@@ -44,6 +44,24 @@ function readScenarioRow(content: string, scenario: string): string[] {
   );
 }
 
+type ReceiptDecision = 'not-applicable' | 'declined' | 'deferred' | 'entered';
+type ReceiptCompletion = 'not-started' | 'normal' | 'failed';
+type ReceiptOutcome = 'performed' | 'declined' | 'skipped' | 'deferred';
+
+function deriveReceiptOutcome(input: {
+  initialEligible: number;
+  decision: ReceiptDecision;
+  completion: ReceiptCompletion;
+  remainingInitial: number;
+}): ReceiptOutcome {
+  if (input.initialEligible === 0) return 'skipped';
+  if (input.decision === 'declined') return 'declined';
+  if (input.decision !== 'entered') return 'deferred';
+  if (input.completion !== 'normal') return 'deferred';
+  if (input.remainingInitial > 0) return 'deferred';
+  return 'performed';
+}
+
 describe('retro skill content contracts', () => {
   it('authorizes each skill mandatory formatter and check path', () => {
     for (const content of [retroSkill, filingSkill]) {
@@ -363,42 +381,114 @@ describe('retro skill content contracts', () => {
   });
 
   it.each([
-    [
-      'Normal completion',
-      'performed',
-      'Action entered and reached normal completion; durable side effects or exact recovered no-ops are included',
-    ],
+    ['Initially empty', 0, 'not-applicable', 'not-started', 0, 'skipped'],
     [
       'Interactive action rejection',
+      2,
       'declined',
-      'Interactive user rejects the action-level offer before entry',
-    ],
-    ['No eligible items', 'skipped', 'Eligible set is empty at decision time'],
-    [
-      'Non-interactive consent absent',
-      'deferred',
-      'Eligible items remain but required apply or filing config is absent',
+      'not-started',
+      2,
+      'declined',
     ],
     [
-      'Configured deferral',
+      'Absent non-interactive consent',
+      2,
       'deferred',
-      '`apply: ask` without interaction or filing destination `none` leaves eligible items for later',
+      'not-started',
+      2,
+      'deferred',
     ],
+    ['Configured apply deferral', 2, 'deferred', 'not-started', 2, 'deferred'],
+    ['Action failure', 2, 'entered', 'failed', 1, 'deferred'],
     [
-      'Child or apply failure',
+      'Normal completion with remaining work',
+      2,
+      'entered',
+      'normal',
+      1,
       'deferred',
-      'Eligible items remain because the invoked procedure failed or was interrupted before normal completion',
     ],
-  ])(
-    'maps receipt scenario %s deterministically',
-    (scenario, outcome, rule) => {
+    ['All settled successfully', 2, 'entered', 'normal', 0, 'performed'],
+    [
+      'Mixed filing lanes partly deferred',
+      3,
+      'entered',
+      'normal',
+      1,
+      'deferred',
+    ],
+    ['Mixed filing lanes all settled', 3, 'entered', 'normal', 0, 'performed'],
+  ] as const)(
+    'derives receipt transition %s from one pre-action snapshot',
+    (
+      scenario,
+      initialEligible,
+      decision,
+      completion,
+      remainingInitial,
+      expected,
+    ) => {
+      const derived = deriveReceiptOutcome({
+        initialEligible,
+        decision,
+        completion,
+        remainingInitial,
+      });
+
+      expect(derived).toBe(expected);
       expect(readScenarioRow(retroSkill, scenario)).toEqual([
         scenario,
-        outcome,
-        rule,
+        String(initialEligible),
+        decision,
+        completion,
+        String(remainingInitial),
+        expected,
       ]);
     },
   );
+
+  it('samples receipt eligibility once before actions and never from post-action emptiness', () => {
+    const normalized = retroSkill.replace(/\s+/g, ' ');
+
+    expect(normalized).toMatch(
+      /pre-action eligibility snapshot[\s\S]*?before[\s\S]*?apply[\s\S]*?filing/i,
+    );
+    expect(normalized).toMatch(
+      /never[\s\S]*?recompute[\s\S]*?initial[\s\S]*?post-action/i,
+    );
+    expect(
+      deriveReceiptOutcome({
+        initialEligible: 0,
+        decision: 'not-applicable',
+        completion: 'not-started',
+        remainingInitial: 0,
+      }),
+    ).toBe('skipped');
+    expect(
+      deriveReceiptOutcome({
+        initialEligible: 2,
+        decision: 'entered',
+        completion: 'normal',
+        remainingInitial: 0,
+      }),
+    ).toBe('performed');
+
+    for (const content of [retroDesign, retroDocs]) {
+      const aligned = content.replace(/\s+/g, ' ');
+      expect(aligned).toMatch(
+        /(?:pre-action eligibility snapshot|before any[\s\S]*?eligibility snapshot)/i,
+      );
+      expect(aligned).toMatch(
+        /(?:never|do not)[\s\S]*?(?:derive|recompute)[\s\S]*?post-action/i,
+      );
+      expect(aligned).toMatch(
+        /all[\s\S]*?settled[\s\S]*?success[\s\S]*?performed/i,
+      );
+      expect(aligned).toMatch(
+        /mixed filing[\s\S]*?(?:remaining|unsettled|deferred)[\s\S]*?deferred/i,
+      );
+    }
+  });
 
   it('keeps material incidents standalone, anchored, and non-repetitive', () => {
     for (const content of [
@@ -573,9 +663,9 @@ describe('retro skill content contracts', () => {
   it('aligns the lightweight design with final revision contracts', () => {
     expect(retroDesign).toContain('--producer oat-project-retro');
     expect(retroDesign).toContain('--ref project-retro');
-    expect(retroDesign).toMatch(
-      /performed[\s\S]*?declined[\s\S]*?skipped[\s\S]*?deferred/i,
-    );
+    for (const outcome of ['performed', 'declined', 'skipped', 'deferred']) {
+      expect(retroDesign).toContain(outcome);
+    }
     expect(retroDesign).toMatch(
       /partial[\s\S]*?evidence famil(?:y|ies)[\s\S]*?truthful\s+source\s+entries/i,
     );

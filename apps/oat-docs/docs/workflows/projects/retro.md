@@ -95,16 +95,27 @@ retro artifact=<path> evidence_used=<csv> evidence_unavailable=<csv> promotions=
 
 Source identifiers are validated, deduplicated, sorted bytewise ascending, and
 joined with commas and no spaces; an empty source list is `none`. Counts
-describe the generated registers. Each action outcome is resolved
-independently:
+describe the generated registers.
 
-- `performed`: the action was entered and completed normally, including exact
-  recovered no-ops;
-- `declined`: an interactive user rejected the action-level offer before entry;
-- `skipped`: no eligible items existed at decision time; and
-- `deferred`: eligible items remain because consent or configured routing was
-  absent, the action was configured for later, or the apply/filing procedure
-  failed or was interrupted.
+Before any apply decision or filing dispatch, capture one immutable eligibility
+snapshot for that action. Apply snapshots contain unsettled RP apply-items;
+filing snapshots contain the lane-tagged union of unsettled UP items and RP
+file-items. Do not recompute initial eligibility after an action changes the
+registers.
+
+Derive each outcome from that snapshot with this precedence:
+
+1. An initially empty snapshot is `skipped`.
+2. An action-level interactive rejection before entry is `declined`.
+3. Non-entry, failure, or any snapshot member still unsettled is `deferred`.
+4. An entered action that completes normally with no snapshot member remaining
+   is `performed`.
+
+This makes an all-settled successful action `performed`, even though its
+post-action eligible set is empty. For mixed filing lanes, any initially
+eligible lane left unsettled by absent or `none` routing makes the single filing
+outcome `deferred`; normal completion that settles every initial lane is
+`performed`.
 
 The append uses stable structural identity and the exact rendered body:
 
