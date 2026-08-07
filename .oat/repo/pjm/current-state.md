@@ -44,7 +44,10 @@ copying their content here. -->
   strict canonical/legacy revision-phase parsing, one bounded mutable
   `Current State` surface, exact-versus-related duplicate classification,
   destination-first local receipts with fail-closed rerun recovery, and
-  evidence-scaled concise output.
+  evidence-scaled concise output. A second dogfood refinement adds deterministic
+  pre-action receipt outcomes, standalone narratives with stable evidence
+  anchors, source-level evidence inventories, and safe append-only project-log
+  correction routing.
 - CLI `0.2.28` adds tiered task-level defect prevention and bounded
   same-target post-commit recovery without weakening accepted-launch
   terminality. A dedicated per-phase numeric budget, committed terminal ledger
