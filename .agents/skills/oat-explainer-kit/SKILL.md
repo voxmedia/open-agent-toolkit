@@ -72,6 +72,13 @@ Missing optional artifacts are omitted, but at least one approved lifecycle
 artifact is required. An explicit supplied fact-base path bypasses artifact
 federation and is passed through as `factBase.mode: supplied`.
 
+New project-recap requests select immutable `project-recap@2`: one
+navigational hub is the floor, while a diagram, walkthrough deck, or deep dive
+is selected only when the planner can state its distinct reader question,
+source evidence, and medium rationale. The installed core continues reading
+`project-recap@1` for replay; the adapter never rewrites a retained request's
+recipe selector.
+
 Before invocation, read `references/author-callback.md`. Unattended
 `project-recap` runs require exactly one provider-neutral set planner:
 in-process callers supply `planSet`, while JSON/CLI callers supply

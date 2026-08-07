@@ -516,3 +516,39 @@ test('translates source-aware config into ExplainerRunRequestV1', async () => {
     errors: [],
   });
 });
+
+test('selects project recap v2 for new runs while other recipe selectors remain stable', async () => {
+  const repoRoot = await fixture();
+  const resolvedConfig = await resolveExplainerConfig({
+    repoRoot,
+    getConfig: configGetter().get,
+  });
+  const common = {
+    resolvedConfig,
+    slug: 'demo-project',
+    outputRoot: join(repoRoot, 'output'),
+    factBase: {
+      mode: 'federated',
+      freshnessPolicy: 'live-wins',
+      sources: [
+        {
+          id: 'plan',
+          kind: 'file',
+          locator: join(repoRoot, '.oat/projects/shared/demo/plan.md'),
+          role: 'plan',
+          sourceSetId: 'demo',
+        },
+      ],
+    },
+    mode: 'unattended',
+  };
+
+  assert.deepEqual(
+    toExplainerRunRequest({ ...common, recipe: 'project-recap' }).recipe,
+    { id: 'project-recap', version: '2' },
+  );
+  assert.deepEqual(
+    toExplainerRunRequest({ ...common, recipe: 'project-explainer' }).recipe,
+    { id: 'project-explainer', version: '1' },
+  );
+});

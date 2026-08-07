@@ -1096,7 +1096,7 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
   const authorCalls = authorModule.getCalls();
   assert.deepEqual(
     authorCalls.map(({ artifactId }) => artifactId),
-    ['project-recap', 'architecture', 'deck'],
+    ['project-recap'],
   );
   assert.equal(
     authorCalls.every(
@@ -1118,8 +1118,6 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
   );
   assert.deepEqual(adapterResult.manifest.source.authorResultPaths, [
     'source/author/project-recap.json',
-    'source/author/architecture.json',
-    'source/author/deck.json',
   ]);
 });
 

@@ -62,7 +62,8 @@ const AUTHORING_TYPES = new Set(['markdown', 'html']);
 const SAFE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const RECIPE_FILES = [
   'project-explainer.json',
-  'project-recap.json',
+  'project-recap.v1.json',
+  'project-recap.v2.json',
   'engineer-tour.json',
   'program-recap.json',
 ];

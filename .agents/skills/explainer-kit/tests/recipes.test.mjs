@@ -111,6 +111,74 @@ test('loads each supported recipe by exact id and version', () => {
   }
 });
 
+test('loads immutable project recap v1 replay and the prose-led v2 recipe', async () => {
+  const replay = loadRecipe('project-recap', '1');
+  const current = loadRecipe('project-recap', '2');
+
+  assert.equal(replay.version, '1');
+  assert.deepEqual(
+    recipeFloor(replay).map(({ id, type }) => ({ id, type })),
+    [
+      { id: 'project-recap', type: 'hub' },
+      { id: 'architecture', type: 'diagram' },
+      { id: 'deck', type: 'deck' },
+    ],
+  );
+
+  assert.equal(current.version, '2');
+  assert.deepEqual(
+    recipeFloor(current).map(({ id, type, required }) => ({
+      id,
+      type,
+      required,
+    })),
+    [{ id: 'project-recap', type: 'hub', required: true }],
+  );
+  assert.deepEqual(
+    recipeExpansion(current).profiles.map(
+      ({ profileId, type, authoring, briefRef }) => ({
+        profileId,
+        type,
+        authoring,
+        briefRef,
+      }),
+    ),
+    [
+      {
+        profileId: 'supporting-diagram',
+        type: 'diagram',
+        authoring: 'html',
+        briefRef: 'briefs/supporting-diagram.md',
+      },
+      {
+        profileId: 'walkthrough-deck',
+        type: 'deck',
+        authoring: 'html',
+        briefRef: 'briefs/walkthrough-deck.md',
+      },
+      {
+        profileId: 'deep-dive',
+        type: 'explainer',
+        authoring: 'markdown',
+        briefRef: 'briefs/deep-dive.md',
+      },
+    ],
+  );
+
+  const brief = await readFile(
+    new URL('../briefs/project-recap.md', import.meta.url),
+    'utf8',
+  );
+  for (const phrase of [
+    'navigational hub',
+    'reader question',
+    'source evidence',
+    'rationale',
+  ]) {
+    assert.match(brief.toLowerCase(), new RegExp(phrase), phrase);
+  }
+});
+
 test('bundled v2 recipes preserve floors and declare bounded expansion policy', async () => {
   const expectations = {
     'project-recap': {
@@ -611,10 +679,10 @@ test('rejects unsupported recipe ids and versions with the contract error', () =
       /future-recap@1/.test(error.message),
   );
   assert.throws(
-    () => loadRecipe('project-recap', '2'),
+    () => loadRecipe('project-recap', '3'),
     (error) =>
       error.code === 'E_RECIPE_UNSUPPORTED' &&
-      /project-recap@2/.test(error.message),
+      /project-recap@3/.test(error.message),
   );
 });
 

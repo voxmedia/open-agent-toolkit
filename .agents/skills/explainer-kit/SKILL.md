@@ -109,6 +109,16 @@ continues. Accepted expansion artifacts render to
 `site/{directory}/{slug}/{artifactId}/index.html` and are linked from the floor
 hub; floor artifacts keep their existing paths.
 
+`project-recap@2` requires one complete navigational hub and makes diagrams,
+decks, and deep dives adaptive expansions. The planner proposes one only when
+it can name a distinct reader question, the supporting source evidence, and why
+that medium improves on adding more hub prose. The prose brief governs
+typographic roles, hierarchy, slide archetypes, diagram semantics,
+fit-to-content composition, density, repetition, and medium choice. These are
+editorial judgments, not new request fields or renderer rules.
+`project-recap@1` remains readable for replay with its historical three-artifact
+floor.
+
 ## Review, Approval, and Warnings
 
 Approval runs after theme, render, hard internal-reference validation, safety

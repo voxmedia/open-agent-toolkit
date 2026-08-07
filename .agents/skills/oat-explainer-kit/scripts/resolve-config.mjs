@@ -189,7 +189,10 @@ export function toExplainerRunRequest({
 
   return {
     schemaVersion: 'explainer-kit.run-request/v1',
-    recipe: { id: recipe, version: '1' },
+    recipe: {
+      id: recipe,
+      version: recipe === 'project-recap' ? '2' : '1',
+    },
     slug,
     outputRoot,
     factBase,

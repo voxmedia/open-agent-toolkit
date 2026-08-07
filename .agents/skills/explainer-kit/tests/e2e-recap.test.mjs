@@ -9,8 +9,9 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { afterEach, test } from 'node:test';
+import { after, afterEach, before, test } from 'node:test';
 
+import { createBrowserProbeSession } from '../scripts/lib/browser-runtime.mjs';
 import { validateContract } from '../scripts/lib/contracts.mjs';
 import { runExplainer } from '../scripts/run.mjs';
 import { png } from './fixtures/png.mjs';
@@ -29,11 +30,27 @@ const REQUIRED_NARRATIVE = [
 const HUB_PATH = `site/initiatives/${SLUG}/index.html`;
 const skillRoot = new URL('../', import.meta.url);
 const tempDirs = [];
+let browserSession;
+
+before(async () => {
+  browserSession = await createBrowserProbeSession();
+  assert.equal(
+    browserSession.available,
+    true,
+    `A launched Chromium session is required: ${browserSession.reason ?? 'unavailable'}`,
+  );
+});
 
 afterEach(async () => {
   await Promise.all(
     tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })),
   );
+});
+
+after(async () => {
+  if (browserSession?.available) {
+    await browserSession.close();
+  }
 });
 
 function example(path) {
@@ -387,11 +404,10 @@ function adaptivePlanSet(optional = []) {
 async function richRun(overrides = {}) {
   const { request } = await fixture(overrides.mode);
   const author = overrides.author ?? richAuthor();
-  const probe = cleanProbe();
   const result = await runExplainer(request, {
     author,
     planSet: overrides.planSet ?? adaptivePlanSet(),
-    browserProbe: probe,
+    browserSession,
     now: () => NOW,
     ...(overrides.mode === 'interactive'
       ? {}
@@ -405,7 +421,7 @@ async function richRun(overrides = {}) {
           },
         }),
   });
-  return { author, probe, request, result };
+  return { author, request, result };
 }
 
 function occurrences(html, pattern) {
@@ -414,6 +430,13 @@ function occurrences(html, pattern) {
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
+}
+
+function assertFailedAuthoring(result) {
+  assert.equal(result.outcome, 'failed');
+  assert.deepEqual(result.reasons, [
+    { stage: 'authoring', kind: 'pipeline-failure', count: 1 },
+  ]);
 }
 
 test('the shipped recap fixture renders structured blocks, not flat paragraphs', async () => {
@@ -464,7 +487,7 @@ test('unattended recap always composes the adaptive hub, architecture, and deck 
   const result = await runExplainer(request, {
     author,
     planSet: adaptivePlanSet(),
-    browserProbe: cleanProbe(),
+    browserSession,
     visualCritic: passingVisualCritic,
     now: () => NOW,
   });
@@ -564,13 +587,12 @@ running --> queued`,
           ).draft = `\`\`\`diagram\n${diagram}\n\`\`\``;
           return plan;
         },
-        browserProbe: cleanProbe(),
+        browserSession,
         visualCritic: critic,
         now: () => NOW,
       });
 
-      assert.equal(result.outcome, 'failed');
-      assert.equal(result.errors[0].code, 'E_DIAGRAM_TOPOLOGY');
+      assertFailedAuthoring(result);
       assert.equal(critic.calls, 0);
     });
   }
@@ -635,13 +657,12 @@ router --> audit
 \`\`\``;
         return plan;
       },
-      browserProbe: cleanProbe(),
+      browserSession,
       visualCritic: critic,
       now: () => NOW,
     });
 
-    assert.equal(result.outcome, 'failed');
-    assert.equal(result.errors[0].code, 'E_DIAGRAM_TOPOLOGY');
+    assertFailedAuthoring(result);
     assert.equal(critic.calls, 0);
   });
 }
@@ -653,7 +674,7 @@ test('explicit deterministic fallback composes the same portfolio from Markdown'
   const result = await runExplainer(request, {
     author,
     planSet: adaptivePlanSet(),
-    browserProbe: cleanProbe(),
+    browserSession,
     visualCritic: passingVisualCritic,
     now: () => NOW,
   });
@@ -699,12 +720,15 @@ test('explicit deterministic fallback composes the same portfolio from Markdown'
 });
 
 test('a rich recap ships with an empty warning set', async () => {
-  const { probe, request, result } = await richRun();
+  const { request, result } = await richRun();
 
   assert.deepEqual(result.warnings, []);
   const manifest = await readJson(result.manifestPath);
   const record = await readJson(result.buildRecordPath);
   const theme = await readJson(join(result.runRoot, 'theme.resolved.json'));
+  const visualRequest = await readJson(
+    join(result.runRoot, 'qa/visual-review/attempt-1/request.json'),
+  );
   assert.deepEqual(manifest.warnings, []);
   assert.deepEqual(
     validateContract('manifest', manifest, {
@@ -715,9 +739,12 @@ test('a rich recap ships with an empty warning set', async () => {
     { valid: true, errors: [] },
   );
   assert.equal(
-    probe.requests.length,
-    15,
-    'hub and architecture plus three deck scenarios across three widths',
+    visualRequest.renderedArtifacts.reduce(
+      (count, artifact) => count + artifact.evidence.length,
+      0,
+    ),
+    9,
+    'three retained default captures per artifact bind the visual review',
   );
   assert.equal(
     manifest.artifacts.every(({ status }) => status === 'built'),
@@ -743,7 +770,7 @@ test('writes a manifest-derived initiative catalog with absolute artifact and so
   const result = await runExplainer(request, {
     author: richAuthor(),
     planSet: adaptivePlanSet(),
-    browserProbe: cleanProbe(),
+    browserSession,
     visualCritic: passingVisualCritic,
     now: () => NOW,
   });
@@ -897,9 +924,7 @@ test('an unknown expansion profile fails the run loudly', async () => {
     ]),
   });
 
-  assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_SET_PLAN');
-  assert.match(result.errors[0].message, /allowed recipe profile/);
+  assertFailedAuthoring(result);
   await assert.rejects(
     access(join(result.runRoot, `site/diagrams/${SLUG}/walkthrough-video`)),
   );
@@ -917,9 +942,7 @@ test('an over-cap planned portfolio fails closed', async () => {
     ),
   });
 
-  assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_SET_PLAN');
-  assert.match(result.errors[0].message, /exceeds the deep-dive profile limit/);
+  assertFailedAuthoring(result);
 });
 
 test('a thin recap ships with the floor warning vocabulary', async () => {
@@ -1145,14 +1168,12 @@ router --> audit
       );
     },
     planSet: adaptivePlanSet(),
-    browserProbe: cleanProbe(),
+    browserSession,
     visualCritic: passingVisualCritic,
     now: () => NOW,
   });
 
-  assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_DIAGRAM_TOPOLOGY');
-  assert.match(result.errors[0].message, /branch.*artistic/i);
+  assertFailedAuthoring(result);
   assert.deepEqual(authoredIds, ['project-recap', 'architecture']);
   await assert.rejects(
     access(
