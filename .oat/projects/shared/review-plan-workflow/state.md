@@ -1,8 +1,8 @@
 ---
 oat_current_task: p06-t06
-oat_last_commit: 73fa2238fa0d03f1b052f800332802108d1d33ca
+oat_last_commit: bb37189d35cb26a99be407f451d3ce908c0c5012
 oat_blockers:
-  - p06-t06-r11 must be committed, pushed, and green before the root-owned Remote structured Tier 1 retry
+  - The origin/main merge must be pushed and green before the root-owned Remote structured Tier 1 retry
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -76,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-04T01:01:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-07T17:57:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -88,7 +88,7 @@ oat_project_explainer:
 
 **Status:** Phase 6 Stage A integration recovery
 **Started:** 2026-07-29
-**Last Updated:** 2026-08-03
+**Last Updated:** 2026-08-07
 
 ## Current Phase
 
@@ -421,17 +421,19 @@ remain unadvanced.
   package tests, 131 smoke tests, all workspace/docs gates, provider sync, and
   lockstep 0.2.30 release validation with 65 visual measurements
 - ✓ p06-t06-r11 committed and pushed at `23cca2eb9`
-- → p06-t06-r12 stabilizes three CI-only broker process timeouts; focused broker
-  verification passes 20/20 and full PR CI must turn green
+- ✓ p06-t06-r12 committed and pushed at `bb37189d3`; PR CI returned green
+- ✓ p06-t06-r13 merges `origin/main` at `3a665b9c1`, reconciles seven conflicts,
+  regenerates managed artifacts, and passes the full local release suite
+- → Push the merge and require green PR CI before the fresh root-owned Remote
+  structured Tier 1 run
 
 ## Blockers
 
-p06-t06 requires p06-t06-r12 to be committed, pushed, and green before a fresh
+p06-t06 requires the `origin/main` merge to be pushed and green before a fresh
 root-owned Remote structured Tier 1 run at the new HEAD.
 
 ## Next Milestone
 
-Commit and push p06-t06-r12, require green PR checks, refresh the detached
-enforce fixture, and then run a fresh root-owned Remote structured Tier 1
-action.
+Push the merge commit, require green PR checks, refresh the detached enforce
+fixture, and then run a fresh root-owned Remote structured Tier 1 action.
 p06-t06 and p06-t07 remain unadvanced.

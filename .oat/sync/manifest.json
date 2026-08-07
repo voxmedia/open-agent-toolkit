@@ -851,7 +851,27 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-07-23T05:13:38.706Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-retro",
+      "providerPath": ".claude/skills/oat-project-retro",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-08-06T02:04:21.258Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-retro-file",
+      "providerPath": ".claude/skills/oat-project-retro-file",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-08-06T02:04:21.260Z"
     }
   ],
-  "lastUpdated": "2026-07-23T05:13:38.706Z"
+  "lastUpdated": "2026-08-06T02:04:21.260Z"
 }

@@ -83,7 +83,7 @@ export interface OatExplainersConfig {
 
 export type WorkflowHillCheckpointDefault = 'every' | 'final';
 export type WorkflowProjectLog = true | false | 'auto';
-export type WorkflowPostImplementStep = 'summary' | 'document' | 'pr';
+export type WorkflowPostImplementStep = 'summary' | 'document' | 'pr' | 'retro';
 export type WorkflowPostImplementLegacySequence =
   | 'wait'
   | 'summary'
@@ -102,6 +102,16 @@ export type WorkflowReviewExecutionModel =
   | 'fresh-session';
 export type WorkflowDesignMode = 'collaborative' | 'selective' | 'draft';
 export type WorkflowReviewPlanMode = 'legacy' | 'enforce';
+export type WorkflowRetroFilingDestination = 'issues' | 'backlog' | 'none';
+export type WorkflowRetroApply = 'auto' | 'ask';
+export interface WorkflowRetroConfig {
+  filing?: {
+    repo?: WorkflowRetroFilingDestination;
+    upstream?: 'issues' | 'none';
+  };
+  apply?: WorkflowRetroApply;
+  upstreamRepo?: string;
+}
 export type WorkflowCodexDispatchCeiling =
   | 'low'
   | 'medium'
@@ -214,6 +224,7 @@ export interface OatWorkflowConfig {
   gateTimeouts?: WorkflowGateTimeouts;
   gates?: WorkflowGatesConfig;
   explainers?: WorkflowExplainersConfig;
+  retro?: WorkflowRetroConfig;
 }
 
 const VALID_HILL_CHECKPOINT_DEFAULTS: readonly WorkflowHillCheckpointDefault[] =
@@ -224,6 +235,7 @@ const VALID_POST_IMPLEMENT_STEPS: readonly WorkflowPostImplementStep[] = [
   'summary',
   'document',
   'pr',
+  'retro',
 ];
 const VALID_EXPLAINER_STYLES: readonly OatExplainerStyle[] = [
   'clean-neutral',
@@ -355,6 +367,7 @@ export function normalizeWorkflowPostImplementSequence(
 
   const steps = [...value.preApproval, ...value.postApproval];
   if (
+    value.preApproval.includes('retro') ||
     !steps.every(
       (step): step is WorkflowPostImplementStep =>
         typeof step === 'string' &&
@@ -613,6 +626,49 @@ function normalizeExplainersConfig(
   return Object.keys(next).length > 0 ? next : undefined;
 }
 
+function normalizeWorkflowRetroConfig(
+  parsed: unknown,
+): WorkflowRetroConfig | undefined {
+  if (!isRecord(parsed)) {
+    return undefined;
+  }
+
+  const retro: WorkflowRetroConfig = {};
+  if (isRecord(parsed.filing)) {
+    const filing: NonNullable<WorkflowRetroConfig['filing']> = {};
+    if (
+      typeof parsed.filing.repo === 'string' &&
+      ['issues', 'backlog', 'none'].includes(parsed.filing.repo)
+    ) {
+      filing.repo = parsed.filing.repo as WorkflowRetroFilingDestination;
+    }
+    if (
+      typeof parsed.filing.upstream === 'string' &&
+      ['issues', 'none'].includes(parsed.filing.upstream)
+    ) {
+      filing.upstream = parsed.filing.upstream as 'issues' | 'none';
+    }
+    if (Object.keys(filing).length > 0) {
+      retro.filing = filing;
+    }
+  }
+  if (
+    typeof parsed.apply === 'string' &&
+    ['auto', 'ask'].includes(parsed.apply)
+  ) {
+    retro.apply = parsed.apply as WorkflowRetroApply;
+  }
+  const upstreamRepo = trimNonEmptyString(parsed.upstreamRepo);
+  if (
+    upstreamRepo !== undefined &&
+    /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(upstreamRepo)
+  ) {
+    retro.upstreamRepo = upstreamRepo;
+  }
+
+  return Object.keys(retro).length > 0 ? retro : undefined;
+}
+
 function normalizeWorkflowConfig(
   parsed: unknown,
 ): OatWorkflowConfig | undefined {
@@ -820,6 +876,11 @@ function normalizeWorkflowConfig(
     if (Object.keys(explainers).length > 0) {
       next.explainers = explainers;
     }
+  }
+
+  const retro = normalizeWorkflowRetroConfig(parsed.retro);
+  if (retro !== undefined) {
+    next.retro = retro;
   }
 
   return Object.keys(next).length > 0 ? next : undefined;

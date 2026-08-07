@@ -218,6 +218,7 @@ describe('getPublicPackageContracts', () => {
     const cliContract = getPublicPackageContracts()[0];
     const packedPaths = [
       'dist/index.js',
+      'assets/bundle-metadata.json',
       'assets/docs/index.md',
       'assets/migration/pjm-restructure.md',
       'assets/templates/decision.md',

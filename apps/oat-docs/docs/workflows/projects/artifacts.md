@@ -30,6 +30,11 @@ Mode-sensitive notes:
 - `pr/*.md`: generated PR descriptions
 - `references/imported-plan.md`: preserved source plan for import mode
 - `references/split-plan.json`: persisted split plan for a coordination parent, used as the durable resume source when `oat-project-split` is interrupted
+- `references/project-retro.md`: optional post-approval retrospective with
+  machine-scannable repo-improvement (`RP-NN`) and upstream-feedback (`UP-NN`)
+  registers. Promotion and filing rollups let the retro skills resume approved
+  applications and tracker filing without repeating settled work. See
+  [Project Retrospectives](retro.md).
 
 ### Explainer artifacts
 

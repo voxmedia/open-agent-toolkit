@@ -88,6 +88,8 @@ describe('installWorkflows', () => {
 
     expect(result.copiedSkills).toHaveLength(WORKFLOW_SKILLS.length);
     expect(result.copiedSkills).toContain('oat-explainer-kit');
+    expect(WORKFLOW_SKILLS).toContain('oat-project-retro');
+    expect(WORKFLOW_SKILLS).toContain('oat-project-retro-file');
     expect(result.outdatedSkills).toEqual([]);
     expect(result.copiedAgents).toHaveLength(WORKFLOW_AGENTS.length);
     expect(result.copiedTemplates).toHaveLength(WORKFLOW_TEMPLATES.length);
@@ -100,6 +102,7 @@ describe('installWorkflows', () => {
       ),
     ).resolves.toContain('name: oat-explainer-kit');
     expect(WORKFLOW_TEMPLATES).toContain('project-log.md');
+    expect(WORKFLOW_TEMPLATES).toContain('project-retro.md');
     await expect(
       readFile(join(targetRoot, '.oat', 'templates', 'project-log.md'), 'utf8'),
     ).resolves.toBe('# project-log.md\n');

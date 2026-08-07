@@ -2109,11 +2109,22 @@ green. Its first PR CI run passed release dry-run but three process-level broker
 tests exceeded their local-only 15-second and default five-second ceilings
 under shared runner load. Recovery `p06-t06-r12` raises only those bounded test
 ceilings to 30 and 15 seconds. The complete broker file passes 20/20 with
-`CI=1` and one worker.
+`CI=1` and one worker. Commit `bb37189d3` was pushed and PR CI returned green.
 
-**Next:** Commit and push p06-t06-r12, then require green PR checks before a
-fresh root-owned Remote structured Tier 1 run. p06-t06 and p06-t07 remain
-unadvanced.
+**Mainline integration recovery:** Recovery `p06-t06-r13` merges `origin/main`
+at `3a665b9c1`, including v0.2.29 retrospective workflows and autonomous
+dispatch-scope adoption. Seven conflicts were reconciled by keeping ReviewPlan's
+newer 0.2.30/skill versions while incorporating main's retrospective types,
+docs, generated backlog entry, provider manifest, and autonomy mappings.
+Provider views, bundled assets, and the backlog index were regenerated.
+Focused merged-contract verification passes 143/143 autonomy and skill tests.
+Full validation passes 4,177 CLI tests, 78 control-plane tests, 41 docs package
+tests, workspace lint/format/type-check/build, all six docs builds, five-package
+0.2.30 release validation, and 65 visual measurements.
+
+**Next:** Complete and push the merge commit, require green PR checks, refresh
+the detached enforce fixture, and run a fresh root-owned Remote structured Tier
+1 action. p06-t06 and p06-t07 remain unadvanced.
 
 ## Orchestration Runs
 

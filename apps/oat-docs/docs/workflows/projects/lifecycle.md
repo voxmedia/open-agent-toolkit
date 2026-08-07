@@ -144,11 +144,47 @@ approval, and only then runs post-approval steps. The snapshot is restart-safe:
 an incomplete sequence routes back to implementation and resumes from its first
 incomplete step.
 
+Structured sequences accept `summary`, `document`, `pr`, and `retro`.
+`retro` is post-approval only: placing it in `preApproval` invalidates the
+structured value. This placement lets the retrospective include the final
+approval and feedback tail while still running before project completion
+freezes lifecycle artifacts. The legacy string mappings are unchanged and do
+not add a retro step.
+
+When a pending post-approval `retro` step runs, OAT dispatches
+`oat-project-retro` in generate mode. Applying repo improvements and filing
+tracker items remain separately consented through interactive confirmation or
+`workflow.retro.*` configuration.
+
 `oat-project-next` checks `oat_implement_exit_gate` before every normal
 post-implementation route. Missing, pending, blocked, malformed, or stale state
 routes back to `oat-project-implement` even when `oat_phase_status` is
 `complete` or `pr_open`. Only an allowed, fresh disposition can continue to
 summary, documentation, PR, or project completion.
+
+### Retrospective completion safety net
+
+Before an interactive completion archives the project,
+`oat-project-complete` checks for
+`{PROJECT_PATH}/references/project-retro.md`. If the artifact is missing, it
+offers to generate one before completion. If the artifact exists, completion
+does not offer another retro; it may note unsettled promotion or filing
+registers. Non-interactive completion skips this offer, so autonomous
+generation occurs only through an explicitly configured post-approval `retro`
+step.
+
+When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (minors auto-converted to fix tasks, no user prompts). Disabled by default. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
+
+### Phase-review setup during planning
+
+Spec-driven, quick, and import planning run one shared setup after stable phase
+IDs exist and before the plan artifact review. The target probe qualifies only
+an explicitly configured, enabled, and available review target, then offers all
+phases, selected phases, or disabled. Existing explicit
+`oat_phase_review_gate` values are preserved unchanged without re-prompting.
+Probe failure, no qualifying target, non-interactive execution, or user decline
+leaves phase review disabled. Provider native plan mode inherits this behavior
+through the import-plan lane.
 
 ## Implementation modes
 

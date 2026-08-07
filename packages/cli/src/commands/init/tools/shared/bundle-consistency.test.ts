@@ -610,6 +610,14 @@ describe('bundle asset inventory consistency', () => {
         );
 
         expect(actual).toEqual(expected);
+        expect(
+          JSON.parse(
+            readFileSync(join(assetsRoot, 'bundle-metadata.json'), 'utf8'),
+          ),
+        ).toEqual({
+          schemaVersion: 1,
+          oatVersion: expected.cli,
+        });
       } finally {
         rmSync(assetsRoot, { recursive: true, force: true });
       }

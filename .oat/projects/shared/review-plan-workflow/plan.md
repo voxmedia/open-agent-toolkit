@@ -4127,6 +4127,26 @@ on the pushed PR check for the full shared-runner matrix.
 
 **Step 3: Commit** `test(p06-t06): stabilize broker process timeouts`
 
+#### Recovery p06-t06-r13: Integrate the latest Stage A base
+
+**Finding:** PR #190 fell two commits behind `origin/main` after Stage A
+retrospective and dispatch-ladder updates landed in v0.2.29.
+
+**Step 1: Merge** Merge `origin/main` at `3a665b9c1`, preserving both the
+ReviewPlan lifecycle changes and the new retrospective/configuration contracts.
+Resolve canonical skill, autonomy inventory, generated index/manifest, docs, and
+configuration conflicts against the combined effective behavior.
+
+**Step 2: Regenerate** Run project/user provider sync, regenerate the managed
+backlog index, and rebuild bundled CLI assets at the branch's lockstep 0.2.30
+version.
+
+**Step 3: Verify** Run the focused autonomy, skill, retrospective,
+configuration, and bundle-contract tests. Then run workspace lint, format,
+type-check, tests, build, docs build, and `pnpm release:validate`.
+
+**Step 4: Commit** Complete the merge commit and push the refreshed branch.
+
 ### Task p06-t07: Publish Stage A and start the soak
 
 **Files:**

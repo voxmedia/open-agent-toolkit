@@ -148,6 +148,10 @@ type ConfigKey =
   | 'workflow.gateTimeouts.artifact'
   | 'workflow.hillCheckpointDefault'
   | 'workflow.postImplementSequence'
+  | 'workflow.retro.apply'
+  | 'workflow.retro.filing.repo'
+  | 'workflow.retro.filing.upstream'
+  | 'workflow.retro.upstreamRepo'
   | 'workflow.reviewExecutionModel'
   | 'workflow.reviewPlanMode'
   | 'worktrees.root';
@@ -247,6 +251,10 @@ const KEY_ORDER: ConfigKey[] = [
   'workflow.archiveOnComplete',
   'workflow.createPrOnComplete',
   'workflow.postImplementSequence',
+  'workflow.retro.filing.repo',
+  'workflow.retro.filing.upstream',
+  'workflow.retro.apply',
+  'workflow.retro.upstreamRepo',
   'workflow.reviewExecutionModel',
   'workflow.reviewPlanMode',
   'workflow.autoReviewAtHillCheckpoints',
@@ -770,6 +778,56 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'Default post-implementation chaining. Legacy strings remain supported unchanged. Structured JSON uses {"preApproval":[...],"postApproval":[...]} with the canonical sequence steps. Plain get/list/dump output serializes structured values as compact JSON; get --json preserves the object value. When unset, the skill prompts. Resolution: local > shared > user > default.',
   },
   {
+    key: 'workflow.retro.filing.repo',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'issues | backlog | none',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set workflow.retro.filing.repo <issues|backlog|none>',
+    description:
+      'Default filing destination for host-repository retro items. Resolution: local > shared > user > default.',
+  },
+  {
+    key: 'workflow.retro.filing.upstream',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'issues | none',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set workflow.retro.filing.upstream <issues|none>',
+    description:
+      'Default filing destination for upstream retro items. Resolution: local > shared > user > default.',
+  },
+  {
+    key: 'workflow.retro.apply',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'auto | ask',
+    defaultValue: 'ask',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.retro.apply <auto|ask>',
+    description:
+      'Controls whether non-interactive retro runs apply approved repo promotions automatically or remain propose-only. Resolution: local > shared > user > default.',
+  },
+  {
+    key: 'workflow.retro.upstreamRepo',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'owner/name repository slug',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.retro.upstreamRepo <owner/name>',
+    description:
+      'Repository that receives upstream retro feedback; the workflow skill supplies its ecosystem default. Resolution: local > shared > user > default.',
+  },
+  {
     key: 'workflow.reviewExecutionModel',
     group: 'Workflow Preferences (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
@@ -1216,6 +1274,9 @@ const WORKFLOW_ENUM_VALUES = {
   ],
   'workflow.explainers.projectExplainer': ['always', 'ask', 'never'],
   'workflow.explainers.projectRecap': ['always', 'ask', 'never'],
+  'workflow.retro.filing.repo': ['issues', 'backlog', 'none'],
+  'workflow.retro.filing.upstream': ['issues', 'none'],
+  'workflow.retro.apply': ['auto', 'ask'],
 } as const satisfies Partial<Record<ConfigKey, readonly string[]>>;
 
 function closedDispatchProviderValues(
@@ -1417,6 +1478,16 @@ function parseWorkflowValue(
       }
       return sequence;
     }
+  }
+
+  if (key === 'workflow.retro.upstreamRepo') {
+    const normalized = rawValue.trim();
+    if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(normalized)) {
+      throw new Error(
+        `Invalid value for ${key}: expected an owner/name repository slug, got '${rawValue}'`,
+      );
+    }
+    return normalized;
   }
 
   if (
@@ -1746,6 +1817,33 @@ function applyWorkflowValue(
       explainers: {
         ...workflow.explainers,
         [explainerKey]: value,
+      },
+    } as OatWorkflowConfig;
+  }
+
+  if (subKey.startsWith('retro.filing.')) {
+    const filingKey = subKey.slice('retro.filing.'.length) as
+      | 'repo'
+      | 'upstream';
+    return {
+      ...workflow,
+      retro: {
+        ...workflow.retro,
+        filing: {
+          ...workflow.retro?.filing,
+          [filingKey]: value,
+        },
+      },
+    } as OatWorkflowConfig;
+  }
+
+  if (subKey.startsWith('retro.')) {
+    const retroKey = subKey.slice('retro.'.length) as 'apply' | 'upstreamRepo';
+    return {
+      ...workflow,
+      retro: {
+        ...workflow.retro,
+        [retroKey]: value,
       },
     } as OatWorkflowConfig;
   }
