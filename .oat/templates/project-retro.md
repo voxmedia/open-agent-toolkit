@@ -22,8 +22,12 @@ oat_template_name: project-retro
 <!-- Rendered artifacts must replace oat_retro_project with a non-null project
      slug and oat_retro_generated with a UTC YYYY-MM-DDTHH:MM:SSZ timestamp,
      set oat_template: false, and remove oat_template_name. Record every
-     inspected evidence source above with status: used | unavailable. Remove
-     all brace-delimited placeholders and scaffold RP/UP item examples. -->
+     inspected evidence source above with status: used | unavailable. When an
+     evidence family is partial, split it into truthful source entries, such as
+     archived-review-markdown: unavailable and gate-receipts: used. Do not add
+     a `partial` evidence status. Derivative current-run reconnaissance
+     transcripts are not original project-run evidence. Remove all
+     brace-delimited placeholders and scaffold RP/UP item examples. -->
 
 <!-- Keep output concise by default. Every section must add distinct
      information. Prefer references to evidence over repeated chronology. For

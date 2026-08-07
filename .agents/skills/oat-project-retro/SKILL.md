@@ -80,6 +80,11 @@ Follow the reading order and environment detection in
 Create an inventory before synthesis. Record every source in
 `oat_retro_evidence_sources` with `status: used | unavailable`; name unavailable
 sources in `## Evidence and Review Method`. Do not invent session-only claims.
+When an evidence family is partial, split it into truthful source entries, for
+example `archived-review-markdown: unavailable` and `gate-receipts: used`
+instead of `review-artifacts: unavailable`. Do not add a `partial` evidence
+status. Derivative current-run reconnaissance transcripts are not original
+project-run evidence.
 
 Use optional bounded, read-only reconnaissance lanes only when project size
 justifies them. Root synthesis remains with the invoking agent.

@@ -391,4 +391,29 @@ describe('retro skill content contracts', () => {
       );
     }
   });
+
+  it('inventories evidence at truthful source-level precision', () => {
+    for (const content of [
+      retroSkill,
+      evidenceAndLanes,
+      retroQualityBar,
+      retroTemplate,
+      retroDocs,
+    ]) {
+      const normalized = content.replace(/\s+/g, ' ');
+
+      expect(normalized).toMatch(/used`?\s*(?:\||or)\s*`?unavailable/i);
+      expect(normalized).toMatch(
+        /evidence famil(?:y|ies) (?:is|are) partial[\s\S]*?split[\s\S]*?truthful[\s\S]*?source entries/i,
+      );
+      expect(normalized).toMatch(/do not add a `?partial`? evidence status/i);
+      expect(normalized).toMatch(
+        /derivative current-run reconnaissance transcripts[\s\S]*?(?:not|never)[\s\S]*?original project-run evidence/i,
+      );
+    }
+
+    expect(evidenceAndLanes).toMatch(
+      /root synthesis[\s\S]*?verifies[\s\S]*?load-bearing[\s\S]*?anchor[\s\S]*?preserv/i,
+    );
+  });
 });

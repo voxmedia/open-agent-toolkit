@@ -15,6 +15,11 @@ Inventory and read available evidence in this order:
 
 Implementation outcomes and committed evidence outrank planned behavior.
 Record each source as `used` or `unavailable` in retro frontmatter.
+When an evidence family is partial, split it into truthful source entries, for
+example `archived-review-markdown: unavailable` and `gate-receipts: used`
+instead of `review-artifacts: unavailable`. Do not add a `partial` evidence
+status. Derivative current-run reconnaissance transcripts are not original
+project-run evidence.
 
 Return and preserve stable evidence anchors for load-bearing claims: prefer
 project-log event IDs, artifact headings, review paths, decision IDs, and

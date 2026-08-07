@@ -6,6 +6,11 @@
   events.
 - Distinguish confirmed causes, hypotheses, and inconclusive mechanisms.
 - Prefer classification over blame and avoid generic praise.
+- Keep evidence status to `used | unavailable`. When an evidence family is
+  partial, split it into truthful source entries, such as
+  `archived-review-markdown: unavailable` and `gate-receipts: used`. Do not add
+  a `partial` evidence status. Derivative current-run reconnaissance
+  transcripts are not original project-run evidence.
 - Treat committed evidence as authoritative when transcript tool-result bodies
   are missing.
 - Record rejected or superseded alternatives when they shaped the outcome.

@@ -40,6 +40,13 @@ access is recorded rather than hidden, and runtime claims fall back to durable
 ledgers when transcript output is incomplete. Findings distinguish confirmed
 causes, hypotheses, and inconclusive mechanisms.
 
+Evidence status remains `used | unavailable`. When an evidence family is
+partial, split it into truthful source entries, such as
+`archived-review-markdown: unavailable` and `gate-receipts: used`, rather than
+recording `review-artifacts: unavailable`. Do not add a `partial` evidence
+status. Derivative current-run reconnaissance transcripts are not original
+project-run evidence.
+
 ### Scale depth to the evidence
 
 Keep output concise by default. Every section must add distinct information.
