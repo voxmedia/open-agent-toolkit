@@ -25,8 +25,7 @@ export interface ExplainerTerminalEvidence {
     input: {
       outcome: string;
       manifest: unknown;
-      findings?: unknown[];
-      error?: unknown;
+      reasons: unknown[];
       evidenceDisposition: string;
     },
   ) => Promise<string>;
@@ -55,9 +54,9 @@ async function loadGeneratedTerminalEvidence(): Promise<ExplainerTerminalEvidenc
         pathToFileURL(join(skillRoot, 'scripts', 'lib', 'records.mjs')).href
       ) as Promise<Record<string, unknown>>,
     ]);
-  } catch (error) {
+  } catch {
     throw new CliError(
-      `Bundled explainer terminal evidence could not be loaded: ${error instanceof Error ? error.message : String(error)}`,
+      'Bundled explainer terminal evidence could not be loaded.',
       2,
     );
   }

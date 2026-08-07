@@ -226,14 +226,11 @@ describe('archive utils', () => {
       files['qa/visual-review/attempt-1/request.json'] =
         `${JSON.stringify(reviewRequest)}\n`;
       files['qa/visual-review/attempt-1/result.json'] = `${JSON.stringify({
-        schemaVersion: 'explainer-kit.visual-review-result/v1',
-        reviewId: 'archive-review',
-        requestId: reviewRequest.requestId,
+        schemaVersion: 'explainer-kit.visual-review-evidence/v1',
         requestHash,
-        reviewedAt: '2026-04-01T12:34:56.000Z',
+        attempt: 1,
         disposition: 'pass',
-        artifactIds: ['recap'],
-        findings: [],
+        reasons: [],
       })}\n`;
     }
 
@@ -310,21 +307,14 @@ describe('archive utils', () => {
         {
           outcome,
           manifest,
-          findings:
-            outcome === 'built-needs-review'
-              ? [
-                  {
-                    artifactId: 'recap',
-                    rubric: 'hierarchy',
-                    severity: 'important',
-                    evidence: 'The outcome is not prominent.',
-                    correction: 'Move the outcome into the lead.',
-                  },
-                ]
-              : [],
-          ...(outcome === 'failed' && {
-            error: { code: 'E_RUN', message: 'The recap failed.' },
-          }),
+          reasons: [
+            {
+              stage: outcome === 'failed' ? 'durability' : 'visual-review',
+              kind: outcome === 'failed' ? 'provider-failure' : 'finding',
+              artifactId: 'recap',
+              count: 1,
+            },
+          ],
           evidenceDisposition: 'retained',
         },
       );
@@ -706,15 +696,20 @@ describe('archive utils', () => {
     ).rejects.toThrow(/hash verification failed.*run-request\.json/i);
   });
 
-  it.each(['failed', 'incomplete'] as const)(
-    'rejects partial review evidence retained by a %s package',
+  it.each(['built-needs-review', 'failed', 'incomplete'] as const)(
+    'rejects legacy diagnostic review evidence retained by a %s package',
     async (outcome) => {
       const repoRoot = await createRepoRoot();
       const projectPath = join(repoRoot, '.oat', 'projects', 'shared', outcome);
       await mkdir(projectPath, { recursive: true });
       const recap = await createRecapPackage(projectPath, { outcome });
       const partialPath = 'qa/review-gate/attempt-1-error.json';
-      const partialContents = '{"code":"E_VISUAL_REVIEW"}\n';
+      const canary =
+        'ARCHIVE-CANARY {"pass\\\\u0077ord":"exact"} ? [yaml-complex] standalone';
+      const partialContents = `${JSON.stringify({
+        code: 'E_VISUAL_REVIEW',
+        message: canary,
+      })}\n`;
       await mkdir(dirname(join(recap.runRoot, partialPath)), {
         recursive: true,
       });
@@ -735,7 +730,12 @@ describe('archive utils', () => {
           projectRecapRun: recap.relativeRunPath,
           s3SyncOnComplete: false,
         }),
-      ).rejects.toThrow(/incomplete visual-review evidence chain/i);
+      ).rejects.toThrow(
+        /review-gate|terminal evidence|incomplete visual-review evidence/i,
+      );
+      await expect(
+        access(join(repoRoot, '.oat/repo/reference/project-recaps')),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
     },
   );
 

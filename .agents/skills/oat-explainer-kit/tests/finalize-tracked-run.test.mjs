@@ -156,15 +156,15 @@ test('verifies commit order and exact unrelated-change isolation', async () => {
     ok: true,
     outcome: 'built-durable',
     pushAllowed: true,
-    errors: [],
+    reasons: [],
   });
 
   observation.evidenceCommit.paths.push('notes/private.md');
   const contaminated = verifyTrackedRunFinalization(plan, observation);
   assert.equal(contaminated.ok, false);
-  assert.ok(
-    contaminated.errors.some(({ code }) => code === 'unrelated-change'),
-  );
+  assert.deepEqual(contaminated.reasons, [
+    { stage: 'finalization', kind: 'pipeline-failure', count: 1 },
+  ]);
 });
 
 test('keeps failed verification built-not-durable and allows later attestation', async () => {
@@ -224,9 +224,9 @@ test('rejects missing, empty, malformed, and unknown attestation observations', 
     const checked = verifyTrackedRunFinalization(plan, observation);
     assert.equal(checked.ok, false);
     assert.equal(checked.pushAllowed, false);
-    assert.ok(
-      checked.errors.some(({ code }) => code === 'attestation-outcome'),
-    );
+    assert.deepEqual(checked.reasons, [
+      { stage: 'finalization', kind: 'pipeline-failure', count: 1 },
+    ]);
   }
 });
 
@@ -273,13 +273,14 @@ test('finalizes flagged and failed evidence without promoting either outcome', a
       {
         outcome,
         manifest,
-        findings:
-          outcome === 'built-needs-review'
-            ? [{ artifactId: 'hub', severity: 'important' }]
-            : [],
-        ...(outcome === 'failed' && {
-          error: { code: 'E_RUN', message: 'The run failed.' },
-        }),
+        reasons: [
+          {
+            stage: outcome === 'failed' ? 'durability' : 'visual-review',
+            kind: outcome === 'failed' ? 'provider-failure' : 'finding',
+            artifactId: 'recap',
+            count: 1,
+          },
+        ],
         evidenceDisposition: 'retained',
       },
     );
@@ -300,7 +301,7 @@ test('finalizes flagged and failed evidence without promoting either outcome', a
       ok: true,
       outcome,
       pushAllowed: false,
-      errors: [],
+      reasons: [],
     });
   }
 });
@@ -317,7 +318,7 @@ test('rejects terminal evidence symlinked outside the tracked run', async () => 
     {
       outcome: 'failed',
       manifest,
-      error: { code: 'E_RUN', message: 'The run failed.' },
+      reasons: [{ stage: 'durability', kind: 'provider-failure', count: 1 }],
       evidenceDisposition: 'retained',
     },
   );
@@ -351,7 +352,7 @@ test('consumes production supersession evidence bound to both runs', async () =>
     {
       outcome: 'failed',
       manifest,
-      error: { code: 'E_RUN', message: 'The original run failed.' },
+      reasons: [{ stage: 'durability', kind: 'provider-failure', count: 1 }],
       evidenceDisposition: 'retained',
     },
   );
@@ -694,14 +695,11 @@ async function createRun({
       requestHash,
     };
     const reviewResult = {
-      schemaVersion: 'explainer-kit.visual-review-result/v1',
-      reviewId: 'finalizer-review',
-      requestId: reviewRequest.requestId,
+      schemaVersion: 'explainer-kit.visual-review-evidence/v1',
       requestHash,
-      reviewedAt: '2026-07-18T00:00:00.000Z',
+      attempt: 1,
       disposition: 'pass',
-      artifactIds: ['recap'],
-      findings: [],
+      reasons: [],
     };
     files.push(
       ['qa/visual-review/attempt-1/request.json', jsonBytes(reviewRequest)],

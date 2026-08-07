@@ -1060,9 +1060,9 @@ async function verifyProjectRecapTerminalEvidence(
       }),
     });
     return { bytes: verified.bytes, hash: verified.hash };
-  } catch (error) {
+  } catch {
     throw new CliError(
-      `Selected project recap requires valid confined terminal evidence before archival: ${error instanceof Error ? error.message : String(error)}`,
+      'Selected project recap requires valid confined terminal evidence before archival.',
     );
   }
 }

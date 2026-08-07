@@ -170,7 +170,7 @@ export function verifyTrackedRunFinalization(plan, observation) {
       ok: true,
       outcome: plan.outcome,
       pushAllowed: false,
-      errors: [],
+      reasons: [],
     };
   }
   const errors = [];
@@ -268,7 +268,7 @@ export function verifyTrackedRunFinalization(plan, observation) {
   }
 
   return errors.length === 0
-    ? { ok: true, outcome, pushAllowed: true, errors: [] }
+    ? { ok: true, outcome, pushAllowed: true, reasons: [] }
     : failed(errors);
 }
 
@@ -357,10 +357,9 @@ async function loadPackageCoverage(coreRoot) {
   let loaded;
   try {
     loaded = await import(pathToFileURL(modulePath).href);
-  } catch (loadError) {
+  } catch {
     throw new Error(
-      `Compatible explainer package coverage could not be loaded from coreRoot: ${loadError.message}`,
-      { cause: loadError },
+      'Compatible explainer package coverage could not be loaded from coreRoot.',
     );
   }
   if (
@@ -381,10 +380,9 @@ async function loadTerminalEvidenceContract(coreRoot) {
   let loaded;
   try {
     loaded = await import(pathToFileURL(modulePath).href);
-  } catch (loadError) {
+  } catch {
     throw new Error(
-      `Compatible terminal evidence could not be loaded from coreRoot: ${loadError.message}`,
-      { cause: loadError },
+      'Compatible terminal evidence could not be loaded from coreRoot.',
     );
   }
   if (
@@ -522,6 +520,12 @@ function failed(errors) {
     ok: false,
     outcome: 'built-not-durable',
     pushAllowed: false,
-    errors,
+    reasons: [
+      {
+        stage: 'finalization',
+        kind: 'pipeline-failure',
+        count: Math.min(Math.max(errors.length, 1), 50),
+      },
+    ],
   };
 }

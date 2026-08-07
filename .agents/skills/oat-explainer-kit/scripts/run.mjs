@@ -216,13 +216,6 @@ export async function runOatExplainer({
     }),
     reviewedSource: bound.reviewedSource,
   });
-  const criticContractError = result?.errors?.find(
-    ({ message }) =>
-      typeof message === 'string' && message.includes('critic result contract'),
-  );
-  if (criticContractError) {
-    throw new Error(criticContractError.message);
-  }
   const manifest = await readManifest(result, request);
   return {
     compatibility,
@@ -505,11 +498,8 @@ async function resolveLifecycleBrowserSession({
     return core.assertBrowserProbeSession(resolvedSession, {
       allowFixture: !required,
     });
-  } catch (cause) {
-    const error = new Error(
-      `Browser session validation failed: ${cause?.message ?? String(cause)}`,
-      { cause },
-    );
+  } catch {
+    const error = new Error('Browser session validation failed.');
     error.code = 'E_BROWSER_PROBE_REQUIRED';
     throw error;
   }
@@ -671,24 +661,29 @@ async function readManifest(result, request) {
   return manifest;
 }
 
-async function runCli(argv = process.argv.slice(2), io = console) {
+export async function runOatExplainerCli(
+  argv = process.argv.slice(2),
+  io = console,
+  run = runOatExplainer,
+) {
   try {
     if (argv.length !== 2 || argv[0] !== '--context') {
       throw new Error('Usage: run.mjs --context <adapter-context.json>');
     }
     const context = JSON.parse(await readFile(argv[1], 'utf8'));
-    const result = await runOatExplainer(context);
+    const result = await run(context);
     io.log(JSON.stringify(result, null, 2));
     return result.result.outcome === 'failed' ? 1 : 0;
-  } catch (error) {
+  } catch {
     io.error(
       JSON.stringify(
         {
           outcome: 'failed',
-          errors: [
+          reasons: [
             {
-              code: error.code ?? 'E_ADAPTER',
-              message: error instanceof Error ? error.message : String(error),
+              stage: 'finalization',
+              kind: 'pipeline-failure',
+              count: 1,
             },
           ],
         },
@@ -704,5 +699,5 @@ if (
   process.argv[1] &&
   pathToFileURL(process.argv[1]).href === import.meta.url
 ) {
-  process.exitCode = await runCli();
+  process.exitCode = await runOatExplainerCli();
 }

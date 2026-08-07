@@ -67,10 +67,9 @@ import { artifactPath, renderArtifact } from './lib/render.mjs';
 import { resolveRootConfinedPath } from './lib/safe-paths.mjs';
 import { plannedArtifacts, planExplainerSet } from './lib/set-plan.mjs';
 import {
-  normalizeRetainedError,
-  scrubRetainedText,
-  scrubRetainedValue,
-  serializeTerminalText,
+  createVisualReviewEvidence,
+  evidenceReason,
+  projectThrownReason,
 } from './lib/terminal-evidence.mjs';
 import { resolveTheme } from './lib/theme.mjs';
 import { runVisualReview } from './lib/visual-review.mjs';
@@ -83,6 +82,7 @@ export {
 
 // Stages a rejected draft reruns once its content is corrected.
 const REOPENED_ON_REJECTION = Object.freeze(['render', 'qa']);
+const LOCALLY_PROJECTED_ERRORS = new WeakSet();
 
 export async function runExplainer(request, options = {}) {
   const normalizedRequest = normalizeRunRequest(request);
@@ -138,7 +138,7 @@ export async function runExplainer(request, options = {}) {
     visualReviewPaths: [],
     visualReviewAttempt: 0,
     reviewGateBlocked: false,
-    reviewGateError: null,
+    reviewGateReason: null,
     correctionAttempted: false,
     resumeToken: null,
     resumedApprovalStatus: null,
@@ -159,7 +159,11 @@ export async function runExplainer(request, options = {}) {
           now,
         );
         state.factBase = processed.factBase;
-        state.warnings.push(...processed.checks.warnings);
+        const factBaseWarnings =
+          processed.checks.warnings.length > 0
+            ? ['fact-base-freshness-warning']
+            : [];
+        state.warnings.push(...factBaseWarnings);
         state.inputHashes = inputHashes(processed.factBase);
         state.factBaseHash = canonicalHash(processed.factBase);
         await writeJsonAtomic(
@@ -174,8 +178,8 @@ export async function runExplainer(request, options = {}) {
         );
         return {
           outputPaths: ['source/fact-base.json', 'source/fact-base.md'],
-          warnings: processed.checks.warnings,
-          status: processed.checks.warnings.length > 0 ? 'warned' : 'passed',
+          warnings: factBaseWarnings,
+          status: factBaseWarnings.length > 0 ? 'warned' : 'passed',
         };
       });
       await prepareTheme(state);
@@ -255,15 +259,7 @@ export async function runExplainer(request, options = {}) {
       await writeTerminalEvidence(run, {
         outcome: 'built-needs-review',
         manifest,
-        findings: state.visualReview?.result?.findings ?? [],
-        error:
-          state.reviewGateError ??
-          ((state.visualReview?.result?.findings?.length ?? 0) === 0
-            ? {
-                code: 'E_VISUAL_REVIEW',
-                message: 'Visual review did not pass.',
-              }
-            : undefined),
+        reasons: terminalReasonsForReview(state),
         evidenceDisposition: state.visualReview ? 'retained' : 'partial',
       });
       return resultFor(state);
@@ -286,14 +282,16 @@ export async function runExplainer(request, options = {}) {
         .then(JSON.parse)
         .catch(() => undefined);
     }
-    const retainedError = normalizeRetainedError(error);
+    const reason =
+      localEvidenceReason(error) ??
+      projectThrownReason('finalization', 'pipeline-failure');
     await writeTerminalEvidence(run, {
       outcome: 'failed',
       manifest,
-      error: retainedError,
+      reasons: [reason],
       evidenceDisposition: manifest ? 'retained' : 'unavailable',
     });
-    return resultFor(state, { failed: true, error: retainedError });
+    return resultFor(state, { failed: true, reasons: [reason] });
   }
 }
 
@@ -361,8 +359,9 @@ async function prepareTheme(state) {
   const resolved = await resolveTheme(state.run.request.theme);
   state.theme = resolved.theme;
   state.renderStrategy = resolved.renderStrategy;
-  state.themeWarnings = resolved.warnings;
-  state.warnings.push(...resolved.warnings);
+  state.themeWarnings =
+    resolved.warnings.length > 0 ? ['theme-selection-normalized'] : [];
+  state.warnings.push(...state.themeWarnings);
 }
 
 async function executeRenderStage(state, options) {
@@ -427,18 +426,10 @@ async function executeQaStage(state, options, now) {
       }
       const warning = reviewGateWarning(reviewError);
       state.reviewGateBlocked = true;
-      state.reviewGateError = normalizeRetainedError(reviewError, {
-        defaultCode: 'E_VISUAL_REVIEW',
-        defaultMessage: 'Visual review failed.',
-      });
+      state.reviewGateReason =
+        localEvidenceReason(reviewError) ??
+        evidenceReason('browser-review', 'pipeline-failure');
       state.warnings.push(warning);
-      state.visualReviewPaths.push(
-        ...(await writeVisualReviewFailure(state.run, {
-          attempt: state.visualReviewAttempt || 1,
-          error: reviewError,
-          evidence: state.browserEvidence,
-        })),
-      );
       return {
         outputPaths: [
           ...state.rendered.map(({ renderedPath }) => renderedPath),
@@ -502,10 +493,11 @@ function resolveBrowserProvider(request, recipe, options) {
     probe: async (...args) => {
       try {
         return await options.browserProbe(...args);
-      } catch (error) {
-        throw codedError(
-          'E_VISUAL_REVIEW',
-          `Browser evidence callback failed: ${error?.message ?? String(error)}`,
+      } catch {
+        throw withEvidenceReason(
+          codedError('E_VISUAL_REVIEW', 'Browser evidence callback failed.'),
+          'browser-review',
+          'provider-failure',
         );
       }
     },
@@ -542,22 +534,34 @@ async function auditRenderedArtifacts(
     type: artifact.type,
     html: artifact.html,
   }));
-  const report = await auditArtifactSet({
-    artifacts: probeArtifacts,
-    setPlan: state.setPlan,
-    ...(options.denylist && { denylist: options.denylist }),
-    ...(browserProvider?.session && {
-      browserSession: browserProvider.session,
-    }),
-    ...(browserProvider?.probe && { browserProbe: browserProvider.probe }),
-    ...(options.widths &&
-      !requiresRecapVisualReview(state) && { widths: options.widths }),
-    ...(browserProvider &&
-      requiresRecapVisualReview(state) && {
-        evidenceRoot: state.run.runRoot,
-        requireBrowserEvidence: true,
+  let report;
+  try {
+    report = await auditArtifactSet({
+      artifacts: probeArtifacts,
+      setPlan: state.setPlan,
+      ...(options.denylist && { denylist: options.denylist }),
+      ...(browserProvider?.session && {
+        browserSession: browserProvider.session,
       }),
-  });
+      ...(browserProvider?.probe && { browserProbe: browserProvider.probe }),
+      ...(options.widths &&
+        !requiresRecapVisualReview(state) && { widths: options.widths }),
+      ...(browserProvider &&
+        requiresRecapVisualReview(state) && {
+          evidenceRoot: state.run.runRoot,
+          requireBrowserEvidence: true,
+        }),
+    });
+  } catch (error) {
+    if (requiresRecapVisualReview(state)) {
+      throw withEvidenceReason(
+        codedError('E_VISUAL_REVIEW', 'Browser review failed.'),
+        'browser-review',
+        'provider-failure',
+      );
+    }
+    throw error;
+  }
   const hardIssues = report.issues.filter((issue) => isHardQaIssue(issue.code));
   const warningIssues = report.issues.filter(
     (issue) => !isHardQaIssue(issue.code),
@@ -616,22 +620,33 @@ async function auditRenderedArtifacts(
         type: artifact.type,
         html: artifact.html,
       }));
-      const finalReport = await auditArtifactSet({
-        artifacts: correctedArtifacts,
-        setPlan: state.setPlan,
-        ...(options.denylist && { denylist: options.denylist }),
-        ...(browserProvider?.session && {
-          browserSession: browserProvider.session,
-        }),
-        ...(browserProvider?.probe && { browserProbe: browserProvider.probe }),
-        ...(options.widths &&
-          !requiresRecapVisualReview(state) && { widths: options.widths }),
-        ...(browserProvider &&
-          requiresRecapVisualReview(state) && {
-            evidenceRoot: state.run.runRoot,
-            requireBrowserEvidence: true,
+      let finalReport;
+      try {
+        finalReport = await auditArtifactSet({
+          artifacts: correctedArtifacts,
+          setPlan: state.setPlan,
+          ...(options.denylist && { denylist: options.denylist }),
+          ...(browserProvider?.session && {
+            browserSession: browserProvider.session,
           }),
-      });
+          ...(browserProvider?.probe && {
+            browserProbe: browserProvider.probe,
+          }),
+          ...(options.widths &&
+            !requiresRecapVisualReview(state) && { widths: options.widths }),
+          ...(browserProvider &&
+            requiresRecapVisualReview(state) && {
+              evidenceRoot: state.run.runRoot,
+              requireBrowserEvidence: true,
+            }),
+        });
+      } catch {
+        throw withEvidenceReason(
+          codedError('E_VISUAL_REVIEW', 'Corrected browser review failed.'),
+          'browser-review',
+          'provider-failure',
+        );
+      }
       const finalHardIssues = finalReport.issues.filter((issue) =>
         isHardQaIssue(issue.code),
       );
@@ -869,7 +884,11 @@ async function reviewAndRetain(state, visualCritic, attempt) {
     });
     state.visualReview = {
       ...review,
-      result: scrubRetainedValue(review.result, 'visual review result'),
+      evidence: createVisualReviewEvidence({
+        request: review.request,
+        attempt,
+        result: review.result,
+      }),
     };
     state.visualReviewPaths.push(
       ...(await writeVisualReviewAttempt(state.run, {
@@ -878,7 +897,39 @@ async function reviewAndRetain(state, visualCritic, attempt) {
       })),
     );
   } catch (error) {
-    throw codedError('E_VISUAL_REVIEW', error?.message ?? String(error));
+    if (error?.visualReviewRequest) {
+      const kind = ['provider-failure', 'pipeline-failure'].includes(
+        error.evidenceKind,
+      )
+        ? error.evidenceKind
+        : 'pipeline-failure';
+      const evidence = createVisualReviewEvidence({
+        request: error.visualReviewRequest,
+        attempt,
+        failureKind: kind,
+      });
+      state.visualReview = {
+        request: structuredClone(error.visualReviewRequest),
+        evidence,
+      };
+      state.visualReviewPaths.push(
+        ...(await writeVisualReviewFailure(state.run, {
+          attempt,
+          request: error.visualReviewRequest,
+          kind,
+        })),
+      );
+      throw withEvidenceReason(
+        codedError('E_VISUAL_REVIEW', 'Visual review failed.'),
+        'visual-review',
+        kind,
+      );
+    }
+    throw withEvidenceReason(
+      codedError('E_VISUAL_REVIEW', 'Visual review pipeline failed.'),
+      'visual-review',
+      'pipeline-failure',
+    );
   }
 }
 
@@ -928,10 +979,11 @@ async function applyVisualCorrection(state, options, now) {
           previousContentPath: state.contentPaths.get(artifactId),
         },
       );
-    } catch (error) {
-      throw codedError(
-        'E_VISUAL_CORRECTION',
-        `Visual correction callback failed for ${artifactId}: ${error?.message ?? String(error)}`,
+    } catch {
+      throw withEvidenceReason(
+        codedError('E_VISUAL_CORRECTION', 'Visual correction provider failed.'),
+        'visual-review',
+        'provider-failure',
       );
     }
     if ((item.result.proposedArtifacts ?? []).length > 0) {
@@ -1031,9 +1083,9 @@ function isReviewGateError(error) {
 
 function normalizeReviewGateError(state, error) {
   if (!requiresRecapVisualReview(state)) return null;
-  if (isReviewGateError(error)) return error;
-  if (/^Browser (?:layout |theme |deck )?probe\b/.test(error?.message ?? '')) {
-    return codedError('E_VISUAL_REVIEW', error.message);
+  if (isReviewGateError(error)) {
+    if (localEvidenceReason(error)) return error;
+    return withEvidenceReason(error, 'visual-review', 'pipeline-failure');
   }
   return null;
 }
@@ -1042,15 +1094,10 @@ function reviewGateWarning(error) {
   const reason =
     error?.code === 'E_VISUAL_CORRECTION'
       ? 'correction-failed'
-      : 'review-chain-failed';
-  const normalized = normalizeRetainedError(error, {
-    defaultCode: 'E_VISUAL_REVIEW',
-    defaultMessage: 'Unknown visual review failure.',
-  });
-  return scrubRetainedText(
-    `visual-review-required:${reason}:${normalized.message}`,
-    'review gate warning',
-  );
+      : localEvidenceReason(error)?.stage === 'browser-review'
+        ? 'browser-review-failed'
+        : 'review-chain-failed';
+  return `visual-review-required:${reason}`;
 }
 
 function artisticRender(state, artifact) {
@@ -1390,23 +1437,22 @@ async function readJson(path) {
 export async function runExplainerCli(
   argv = process.argv.slice(2),
   io = console,
+  run = runExplainer,
 ) {
   try {
     const parsed = await parseCli(argv);
     const request = JSON.parse(await readFile(parsed.requestPath, 'utf8'));
-    const result = await runExplainer(request, parsed.options);
+    const result = await run(request, parsed.options);
     io.log(JSON.stringify(result, null, 2));
     return result.outcome === 'failed' ? 1 : 0;
   } catch (error) {
-    io.log(
+    io.error(
       JSON.stringify(
         {
           outcome: 'failed',
-          errors: [
-            {
-              code: error?.code ?? 'E_INPUT_SCHEMA',
-              message: safeMessage(error),
-            },
+          reasons: [
+            localEvidenceReason(error) ??
+              evidenceReason('planning', 'pipeline-failure'),
           ],
         },
         null,
@@ -1430,18 +1476,19 @@ async function executeStage(run, id, options, operation) {
       ...(result.warnings !== undefined && { warnings: result.warnings }),
     });
   } catch (error) {
+    const projected =
+      localEvidenceReason(error) ??
+      evidenceReason(evidenceStageForBuildStage(id), 'pipeline-failure');
     await updateBuildRecord(run, {
       id,
       status: 'failed',
-      error: {
-        code: error?.code ?? stageErrorCode(id),
-        message: safeMessage(error),
-        recovery: [
-          `Correct the ${id} inputs or implementation and start a new run.`,
-        ],
-      },
+      error: true,
     });
-    throw error;
+    throw withEvidenceReason(
+      codedError(stageErrorCode(id), `The ${id} stage failed.`),
+      projected.stage,
+      projected.kind,
+    );
   }
 }
 
@@ -1553,24 +1600,22 @@ async function executeDurabilityAndPublish(state, options, now) {
         manifestPath: state.run.manifestPath,
         buildRecordPath: state.run.buildRecordPath,
       });
-    } catch (error) {
+    } catch {
       await updateBuildRecord(state.run, {
         id: 'durability',
         status: 'failed',
-        error: {
-          code: error?.code ?? 'E_DURABILITY',
-          message: safeMessage(error),
-          recovery: ['Correct the durability failure and start a new run.'],
-        },
+        error: true,
       });
-      throw error;
+      throw withEvidenceReason(
+        codedError('E_DURABILITY', 'Durability provider failed.'),
+        'durability',
+        'provider-failure',
+      );
     }
     await updateBuildRecord(state.run, {
       id: 'durability',
       status: 'warned',
-      warnings: [
-        'Commit durability requires caller-created evidence through record-durability.mjs.',
-      ],
+      warnings: ['durability-evidence-required'],
     });
     await updateBuildRecord(state.run, { id: 'publish', status: 'skipped' });
     return false;
@@ -1617,23 +1662,21 @@ async function executeDurabilityAndPublish(state, options, now) {
     await updateBuildRecord(state.run, {
       id: 'publish',
       status: 'warned',
-      warnings: [
-        'Publishing requires separately retained verified receipt evidence.',
-      ],
+      warnings: ['publish-receipt-evidence-required'],
     });
     await persistManifest(state, finalizedAt);
     state.publication = publicationSummary(receipt);
-  } catch (error) {
+  } catch {
     await updateBuildRecord(state.run, {
       id: 'publish',
       status: 'failed',
-      error: {
-        code: error?.code ?? 'E_PUBLISH',
-        message: safeMessage(error),
-        recovery: ['Correct the publish failure and start a new run.'],
-      },
+      error: true,
     });
-    throw error;
+    throw withEvidenceReason(
+      codedError('E_PUBLISH', 'Publication provider failed.'),
+      'durability',
+      'provider-failure',
+    );
   }
   return true;
 }
@@ -1660,12 +1703,8 @@ async function persistManifest(state, createdAt) {
   return manifest;
 }
 
-async function persistFailureManifest(state, error, createdAt) {
+async function persistFailureManifest(state, _error, createdAt) {
   const record = JSON.parse(await readFile(state.run.buildRecordPath, 'utf8'));
-  const retainedError = normalizeRetainedError(error, {
-    defaultCode: 'E_RENDER',
-    defaultMessage: 'Rendering failed.',
-  });
   const recordedIds = new Set(state.artifacts.map(({ id }) => id));
   state.artifacts.push(
     ...recipeFloor(state.recipe)
@@ -1677,7 +1716,8 @@ async function persistFailureManifest(state, error, createdAt) {
         status: 'failed',
         rebuildable: false,
         failure: {
-          ...retainedError,
+          code: 'E_ARTIFACT_BUILD',
+          message: 'Artifact construction failed.',
           recovery: ['Correct the failed stage and start a new run.'],
         },
       })),
@@ -1964,13 +2004,22 @@ async function authorArtifact(
     );
   }
 
-  const result =
-    correctionContext === undefined
-      ? await author(structuredClone(authorRequest))
-      : await author(
-          structuredClone(authorRequest),
-          structuredClone(correctionContext),
-        );
+  let result;
+  try {
+    result =
+      correctionContext === undefined
+        ? await author(structuredClone(authorRequest))
+        : await author(
+            structuredClone(authorRequest),
+            structuredClone(correctionContext),
+          );
+  } catch {
+    throw withEvidenceReason(
+      codedError('E_AUTHOR', 'Artifact author provider failed.'),
+      'authoring',
+      'provider-failure',
+    );
+  }
   const resultValidation = validateContract('author-result/v2', result);
   if (!resultValidation.valid) {
     throw codedError(
@@ -2399,6 +2448,15 @@ function assertValidRequest(request) {
   }
 }
 
+function terminalReasonsForReview(state) {
+  const visualReasons = state.visualReview?.evidence?.reasons ?? [];
+  if (visualReasons.length > 0) return structuredClone(visualReasons);
+  return [
+    state.reviewGateReason ??
+      evidenceReason('visual-review', 'pipeline-failure'),
+  ];
+}
+
 function resultFor(state, failure = { failed: false }) {
   return {
     runId: state.run.runId,
@@ -2416,7 +2474,11 @@ function resultFor(state, failure = { failed: false }) {
       marking: state.approval.record.marking,
     }),
     warnings: retainedWarnings(state.warnings),
-    discovery: state.discovery,
+    discovery: {
+      rounds: state.discovery.rounds,
+      findingCount: state.discovery.findings.length,
+      reason: state.discovery.reason,
+    },
     ...(state.publication && { publication: state.publication }),
     ...(state.approval && {
       approval: {
@@ -2429,10 +2491,10 @@ function resultFor(state, failure = { failed: false }) {
       },
     }),
     ...(state.visualReview && {
-      visualReview: structuredClone(state.visualReview.result),
+      visualReview: structuredClone(state.visualReview.evidence),
     }),
     ...(failure.failed && {
-      errors: [failure.error],
+      reasons: structuredClone(failure.reasons),
     }),
   };
 }
@@ -2547,29 +2609,54 @@ function codedError(code, message) {
   return error;
 }
 
+function withEvidenceReason(error, stage, kind) {
+  error.evidenceReason = evidenceReason(stage, kind);
+  LOCALLY_PROJECTED_ERRORS.add(error);
+  return error;
+}
+
+function localEvidenceReason(error) {
+  return error !== null &&
+    (typeof error === 'object' || typeof error === 'function') &&
+    LOCALLY_PROJECTED_ERRORS.has(error)
+    ? error.evidenceReason
+    : null;
+}
+
+function evidenceStageForBuildStage(stage) {
+  return (
+    {
+      validate: 'planning',
+      'fact-base': 'planning',
+      content: 'authoring',
+      theme: 'authoring',
+      render: 'rendering',
+      qa: 'browser-review',
+      durability: 'durability',
+      publish: 'durability',
+    }[stage] ?? 'finalization'
+  );
+}
+
 function stageErrorCode(stage) {
   return `E_${stage.toUpperCase().replaceAll('-', '_')}`;
 }
 
-function safeMessage(error) {
-  return serializeTerminalText(
-    error instanceof Error
-      ? error.message
-      : typeof error === 'string'
-        ? error
-        : 'Run failed.',
-    'error message',
-  );
+function safeMessage(_error) {
+  return 'Operation failed.';
 }
 
 function retainedWarnings(warnings) {
-  return [
-    ...new Set(
-      warnings.map((warning, index) =>
-        scrubRetainedText(warning, `retained warning ${index + 1}`),
-      ),
-    ),
-  ];
+  return [...new Set(warnings.filter(isLocalWarningCode))];
+}
+
+function isLocalWarningCode(value) {
+  return (
+    typeof value === 'string' &&
+    /^(?:fact-base-freshness-warning|theme-selection-normalized|durability-evidence-required|publish-receipt-evidence-required|(?:expansion|guideline|render|qa)-[a-z0-9-]+|visual-review-required:[a-z0-9-]+|stage-reopened:[a-z0-9-]+:[0-9TZ:.-]+|missing-(?:theme-token|required-anchor):[a-z0-9-]+)$/.test(
+      value,
+    )
+  );
 }
 
 if (

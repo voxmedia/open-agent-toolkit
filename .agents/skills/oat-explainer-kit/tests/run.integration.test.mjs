@@ -22,7 +22,7 @@ import {
   resolveReviewedRepository,
 } from '../scripts/bind-project-sources.mjs';
 import { explainerModeForIntent } from '../scripts/resolve-intent.mjs';
-import { runOatExplainer } from '../scripts/run.mjs';
+import { runOatExplainer, runOatExplainerCli } from '../scripts/run.mjs';
 
 const tempDirs = [];
 
@@ -137,7 +137,9 @@ async function createFixture({ coreVersion = '2.1.0' } = {}) {
               buildRecordPath,
               outcome: 'failed',
               warnings: [],
-              errors: [{ code: 'E_FACT_BASE', message: 'forced failure' }],
+              reasons: [
+                { stage: 'planning', kind: 'pipeline-failure', count: 1 },
+              ],
             };
           }
           const manifest = {
@@ -1154,14 +1156,16 @@ test('rejects invalid critic module and callback contracts at the adapter bounda
     runOatExplainer({ ...context, criticModulePath: invalidModulePath }),
     /critic.*export.*function/i,
   );
-  await assert.rejects(
-    runOatExplainer({
-      ...context,
-      slug: 'critic-result-contract',
-      criticModulePath: invalidResultModulePath,
-    }),
-    /critic.*result.*contract/i,
-  );
+  const invalidResult = await runOatExplainer({
+    ...context,
+    slug: 'critic-result-contract',
+    criticModulePath: invalidResultModulePath,
+  });
+  assert.equal(invalidResult.result.outcome, 'failed');
+  assert.deepEqual(invalidResult.result.reasons, [
+    { stage: 'planning', kind: 'pipeline-failure', count: 1 },
+  ]);
+  assert.equal('errors' in invalidResult.result, false);
   await assert.rejects(
     runOatExplainer({
       ...context,
@@ -1482,9 +1486,65 @@ test('propagates failed core results when no manifest was produced', async () =>
 
   assert.equal(adapterResult.manifest, null);
   assert.equal(adapterResult.result.outcome, 'failed');
-  assert.deepEqual(adapterResult.result.errors, [
-    { code: 'E_FACT_BASE', message: 'forced failure' },
+  assert.deepEqual(adapterResult.result.reasons, [
+    { stage: 'planning', kind: 'pipeline-failure', count: 1 },
   ]);
+  assert.equal('errors' in adapterResult.result, false);
+});
+
+test('adapter CLI streams exclude arbitrary provider bytes for every terminal path', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'oat-explainer-cli-'));
+  tempDirs.push(directory);
+  const contextPath = join(directory, 'context.json');
+  await writeFile(contextPath, '{}\n');
+  const scenarios = [
+    {
+      name: 'success',
+      result: { result: { outcome: 'built-not-durable', warnings: [] } },
+    },
+    {
+      name: 'correctable',
+      result: {
+        result: {
+          outcome: 'built-needs-review',
+          reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+        },
+      },
+    },
+    {
+      name: 'provider failed',
+      result: {
+        result: {
+          outcome: 'failed',
+          reasons: [{ stage: 'authoring', kind: 'provider-failure', count: 1 }],
+        },
+      },
+    },
+    { name: 'caught error', throws: true },
+  ];
+
+  for (const scenario of scenarios) {
+    const canary = `ADAPTER-CLI-${scenario.name}-\\u0070assword: ? [exact]`;
+    const stdout = [];
+    const stderr = [];
+    const exitCode = await runOatExplainerCli(
+      ['--context', contextPath],
+      {
+        log: (value) => stdout.push(value),
+        error: (value) => stderr.push(value),
+      },
+      async () => {
+        if (scenario.throws) throw { nested: { arbitrary: canary } };
+        return scenario.result;
+      },
+    );
+    const captured = `${stdout.join('\n')}\n${stderr.join('\n')}`;
+    assert.equal(captured.includes(canary), false, scenario.name);
+    assert.equal(
+      exitCode,
+      scenario.throws || scenario.result?.result.outcome === 'failed' ? 1 : 0,
+    );
+  }
 });
 
 test('fails closed for missing cores and cores below the publication floor', async () => {

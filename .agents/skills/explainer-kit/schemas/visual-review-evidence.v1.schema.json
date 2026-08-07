@@ -1,34 +1,28 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "explainer-kit.terminal-evidence/v1",
+  "$id": "explainer-kit.visual-review-evidence/v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schemaVersion",
-    "runId",
-    "outcome",
-    "reasons",
-    "evidenceDisposition"
+    "requestHash",
+    "attempt",
+    "disposition",
+    "reasons"
   ],
   "properties": {
     "schemaVersion": {
-      "const": "explainer-kit.terminal-evidence/v1"
+      "const": "explainer-kit.visual-review-evidence/v1"
     },
-    "runId": { "type": "string", "minLength": 1, "maxLength": 2000 },
-    "outcome": {
-      "enum": ["built-needs-review", "failed"]
-    },
-    "manifestHash": { "$ref": "#/$defs/hash" },
+    "requestHash": { "$ref": "#/$defs/hash" },
+    "attempt": { "enum": [1, 2] },
+    "disposition": { "enum": ["pass", "correct", "failed"] },
     "reasons": {
       "type": "array",
-      "minItems": 1,
+      "minItems": 0,
       "maxItems": 50,
       "items": { "$ref": "#/$defs/reason" }
-    },
-    "evidenceDisposition": {
-      "enum": ["retained", "partial", "unavailable", "superseded"]
-    },
-    "supersededBy": { "$ref": "#/$defs/supersededBy" }
+    }
   },
   "$defs": {
     "hash": {
@@ -66,15 +60,6 @@
           "maxLength": 2000
         },
         "count": { "type": "integer", "minimum": 1, "maximum": 50 }
-      }
-    },
-    "supersededBy": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["runId", "manifestHash"],
-      "properties": {
-        "runId": { "type": "string", "minLength": 1, "maxLength": 2000 },
-        "manifestHash": { "$ref": "#/$defs/hash" }
       }
     }
   }

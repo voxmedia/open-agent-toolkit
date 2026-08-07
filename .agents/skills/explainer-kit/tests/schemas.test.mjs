@@ -26,6 +26,7 @@ const schemas = {
   'set-plan.v1': 'explainer-kit.set-plan/v1',
   'visual-review-request.v1': 'explainer-kit.visual-review-request/v1',
   'visual-review-result.v1': 'explainer-kit.visual-review-result/v1',
+  'visual-review-evidence.v1': 'explainer-kit.visual-review-evidence/v1',
   'terminal-evidence.v1': 'explainer-kit.terminal-evidence/v1',
 };
 
@@ -65,6 +66,59 @@ test('every supported contract has the required identity and closed objects', as
         `${name}${location} must be closed`,
       );
     }
+  }
+});
+
+test('retained terminal and visual evidence schemas are code-only closed projections', async () => {
+  const terminal = await loadSchema('terminal-evidence.v1');
+  const visual = await loadSchema('visual-review-evidence.v1');
+
+  assert.deepEqual(terminal.required, [
+    'schemaVersion',
+    'runId',
+    'outcome',
+    'reasons',
+    'evidenceDisposition',
+  ]);
+  assert.deepEqual(Object.keys(terminal.properties), [
+    'schemaVersion',
+    'runId',
+    'outcome',
+    'manifestHash',
+    'reasons',
+    'evidenceDisposition',
+    'supersededBy',
+  ]);
+  assert.equal(terminal.properties.reasons.minItems, 1);
+  assert.equal(terminal.properties.reasons.maxItems, 50);
+
+  assert.deepEqual(visual.required, [
+    'schemaVersion',
+    'requestHash',
+    'attempt',
+    'disposition',
+    'reasons',
+  ]);
+  assert.deepEqual(Object.keys(visual.properties), visual.required);
+  assert.deepEqual(visual.properties.attempt.enum, [1, 2]);
+  assert.deepEqual(visual.properties.disposition.enum, [
+    'pass',
+    'correct',
+    'failed',
+  ]);
+  assert.equal(visual.properties.reasons.minItems, 0);
+  assert.equal(visual.properties.reasons.maxItems, 50);
+
+  for (const schema of [terminal, visual]) {
+    assert.deepEqual(schema.$defs.reason.required, ['stage', 'kind', 'count']);
+    assert.deepEqual(Object.keys(schema.$defs.reason.properties), [
+      'stage',
+      'kind',
+      'artifactId',
+      'count',
+    ]);
+    assert.equal(schema.$defs.reason.properties.count.minimum, 1);
+    assert.equal(schema.$defs.reason.properties.count.maximum, 50);
   }
 });
 

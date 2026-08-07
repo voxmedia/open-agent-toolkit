@@ -683,6 +683,47 @@ function visualReviewResult() {
   };
 }
 
+function terminalEvidence(outcome = 'failed') {
+  const terminalManifest = manifest();
+  terminalManifest.outcome = outcome;
+  return {
+    schemaVersion: 'explainer-kit.terminal-evidence/v1',
+    runId: terminalManifest.runId,
+    outcome,
+    manifestHash: canonicalHash(terminalManifest),
+    reasons: [
+      {
+        stage: outcome === 'failed' ? 'durability' : 'visual-review',
+        kind: outcome === 'failed' ? 'provider-failure' : 'finding',
+        artifactId: 'hub',
+        count: 1,
+      },
+    ],
+    evidenceDisposition: 'retained',
+  };
+}
+
+function visualReviewEvidence(disposition = 'correct') {
+  const request = visualReviewRequest();
+  return {
+    schemaVersion: 'explainer-kit.visual-review-evidence/v1',
+    requestHash: request.requestHash,
+    attempt: 1,
+    disposition,
+    reasons:
+      disposition === 'pass'
+        ? []
+        : [
+            {
+              stage: 'visual-review',
+              kind: disposition === 'correct' ? 'finding' : 'provider-failure',
+              artifactId: request.renderedArtifacts[0].artifactId,
+              count: 1,
+            },
+          ],
+  };
+}
+
 function authorResultV2() {
   return {
     schemaVersion: 'explainer-kit.author-result/v2',
@@ -817,6 +858,183 @@ test('validates provider-neutral set planning and visual review envelopes', () =
       errors: [],
     });
     assert.equal(JSON.stringify(fixture).includes('provider'), false);
+  }
+});
+
+test('validates closed terminal evidence semantics and rejects every legacy text field', () => {
+  for (const outcome of ['built-needs-review', 'failed']) {
+    const terminalManifest = manifest();
+    terminalManifest.outcome = outcome;
+    assert.deepEqual(
+      validateContract('terminal-evidence', terminalEvidence(outcome), {
+        manifest: terminalManifest,
+      }),
+      { valid: true, errors: [] },
+    );
+  }
+
+  for (const legacyField of [
+    'findings',
+    'error',
+    'message',
+    'code',
+    'evidence',
+    'correction',
+    'details',
+    'metadata',
+  ]) {
+    const terminalManifest = manifest();
+    terminalManifest.outcome = 'failed';
+    const evidence = terminalEvidence();
+    evidence[legacyField] = 'arbitrary-exact-byte-canary';
+    assert.equal(
+      validateContract('terminal-evidence', evidence, {
+        manifest: terminalManifest,
+      }).valid,
+      false,
+      legacyField,
+    );
+  }
+});
+
+test('enforces terminal reason bounds, uniqueness, membership, and outcome rules', () => {
+  const terminalManifest = manifest();
+  terminalManifest.outcome = 'failed';
+  const invalid = [
+    (evidence) => {
+      evidence.reasons = [];
+    },
+    (evidence) => {
+      evidence.reasons[0].count = 0;
+    },
+    (evidence) => {
+      evidence.reasons[0].count = 51;
+    },
+    (evidence) => {
+      evidence.reasons = [
+        { stage: 'durability', kind: 'provider-failure', count: 25 },
+        { stage: 'rendering', kind: 'pipeline-failure', count: 26 },
+      ];
+    },
+    (evidence) => {
+      evidence.reasons.push(structuredClone(evidence.reasons[0]));
+    },
+    (evidence) => {
+      evidence.reasons[0].artifactId = 'foreign-artifact';
+    },
+    (evidence) => {
+      evidence.reasons[0].kind = 'finding';
+    },
+    (evidence) => {
+      evidence.reasons[0].kind = 'superseded';
+    },
+  ];
+  for (const mutate of invalid) {
+    const evidence = terminalEvidence();
+    mutate(evidence);
+    assert.equal(
+      validateContract('terminal-evidence', evidence, {
+        manifest: terminalManifest,
+      }).valid,
+      false,
+    );
+  }
+});
+
+test('gives closed supersession precedence for both original terminal outcomes', () => {
+  for (const outcome of ['built-needs-review', 'failed']) {
+    const terminalManifest = manifest();
+    terminalManifest.outcome = outcome;
+    const evidence = terminalEvidence(outcome);
+    evidence.evidenceDisposition = 'superseded';
+    evidence.reasons = [
+      { stage: 'finalization', kind: 'superseded', count: 1 },
+    ];
+    evidence.supersededBy = {
+      runId: 'replacement-run',
+      manifestHash: HASH_B,
+    };
+    assert.equal(
+      validateContract('terminal-evidence', evidence, {
+        manifest: terminalManifest,
+      }).valid,
+      true,
+      outcome,
+    );
+
+    evidence.supersededBy.runId = evidence.runId;
+    assert.equal(
+      validateContract('terminal-evidence', evidence, {
+        manifest: terminalManifest,
+      }).valid,
+      false,
+      `${outcome} replacement identity`,
+    );
+  }
+
+  const priorTotalFifty = terminalEvidence('built-needs-review');
+  priorTotalFifty.reasons = [
+    { stage: 'visual-review', kind: 'finding', count: 50 },
+  ];
+  const replacement = {
+    ...priorTotalFifty,
+    evidenceDisposition: 'superseded',
+    reasons: [{ stage: 'finalization', kind: 'superseded', count: 1 }],
+    supersededBy: { runId: 'replacement-run', manifestHash: HASH_B },
+  };
+  const terminalManifest = manifest();
+  terminalManifest.outcome = 'built-needs-review';
+  assert.equal(
+    validateContract('terminal-evidence', replacement, {
+      manifest: terminalManifest,
+    }).valid,
+    true,
+  );
+});
+
+test('validates retained visual evidence cardinality and adjacent request binding', () => {
+  const request = visualReviewRequest();
+  for (const disposition of ['pass', 'correct', 'failed']) {
+    assert.deepEqual(
+      validateContract(
+        'visual-review-evidence',
+        visualReviewEvidence(disposition),
+        { visualReviewRequest: request, attempt: 1 },
+      ),
+      { valid: true, errors: [] },
+      disposition,
+    );
+  }
+
+  for (const mutate of [
+    (evidence) => {
+      evidence.requestHash = HASH_B;
+    },
+    (evidence) => {
+      evidence.attempt = 2;
+    },
+    (evidence) => {
+      evidence.reasons = [];
+    },
+    (evidence) => {
+      evidence.reasons[0].kind = 'pipeline-failure';
+    },
+    (evidence) => {
+      evidence.reasons[0].artifactId = 'foreign-artifact';
+    },
+    (evidence) => {
+      evidence.reasons.push(structuredClone(evidence.reasons[0]));
+    },
+  ]) {
+    const evidence = visualReviewEvidence('correct');
+    mutate(evidence);
+    assert.equal(
+      validateContract('visual-review-evidence', evidence, {
+        visualReviewRequest: request,
+        attempt: 1,
+      }).valid,
+      false,
+    );
   }
 });
 

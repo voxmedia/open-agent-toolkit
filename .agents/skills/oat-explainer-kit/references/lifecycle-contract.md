@@ -141,7 +141,8 @@ request/result, and byte-bound whole-set review contracts.
 
 The core retains canonical 320, 768, and 1440 viewport screenshots, paired
 `explainer-kit.browser-evidence/v2` metrics with launched Chromium name,
-version, and capture identity, each review request/result, cohesion
+version, and capture identity, each review request and closed local evidence
+projection, cohesion
 observations, and any one-pass revision record. Missing, malformed, forged,
 cross-record mismatched, stale, or failed review-chain evidence terminates as
 `built-needs-review`; durability and publication remain blocked.
@@ -159,8 +160,11 @@ dynamically loads the versioned package-coverage contract from that core root;
 it does not maintain an adapter-local path list.
 
 A core `built-needs-review` or `failed` outcome is terminal evidence, not a
-non-durable success. The core retains `terminal-evidence.json` with run
-identity, the manifest hash when available, compact findings or error, and the
+non-durable success. Provider review and diagnostic prose exists only during
+the in-memory correction attempt. Retained review attempts use the closed
+`visual-review-evidence/v1` projection bound to the adjacent request hash and
+attempt directory. The core retains `terminal-evidence.json` with run identity,
+the manifest hash when available, bounded `stage`/`kind` reason tuples, and the
 evidence disposition. The planner verifies that binding and returns complete
 without artifact, attestation, evidence-commit, or push commands. This preserves
 the handoff without promoting it to durable or publishable success.

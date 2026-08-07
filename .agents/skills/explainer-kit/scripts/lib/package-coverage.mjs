@@ -93,6 +93,11 @@ export async function validateImmutablePackageEvidence(
   if (manifest?.recipe?.id !== 'project-recap') return;
 
   const recorded = Object.keys(manifest.immutableHashes ?? {});
+  if (recorded.some(isLegacyReviewMaterial)) {
+    throw new Error(
+      'Legacy review-gate evidence is not part of the canonical package.',
+    );
+  }
   const successful = SUCCESSFUL_OUTCOMES.has(manifest.outcome);
   const retainsReviewMaterial = recorded.some(isReviewMaterial);
   if (manifest.outcome === PARTIAL_REVIEW_OUTCOME) return;
@@ -274,12 +279,17 @@ export async function validateImmutablePackageEvidence(
 
     const resultPath = `${root}/result.json`;
     const result = parseJson(await readVerified(resultPath), resultPath);
-    const resultValidation = validateContract('visual-review-result', result, {
-      visualReviewRequest: request,
-    });
+    const resultValidation = validateContract(
+      'visual-review-evidence',
+      result,
+      {
+        visualReviewRequest: request,
+        attempt,
+      },
+    );
     if (!resultValidation.valid) {
       throw new Error(
-        `Immutable visual-review result ${resultPath} is invalid: ${resultValidation.errors
+        `Immutable visual-review evidence ${resultPath} is invalid: ${resultValidation.errors
           .map(({ code }) => code)
           .join(', ')}.`,
       );
@@ -309,18 +319,17 @@ function addVisualReviewAttemptPaths(required, manifest, attempt) {
 }
 
 function isReviewMaterial(path) {
-  return (
-    path.startsWith('qa/browser/') ||
-    path.startsWith('qa/visual-review/') ||
-    path.startsWith('qa/review-gate/')
-  );
+  return path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/');
+}
+
+function isLegacyReviewMaterial(path) {
+  return path.startsWith('qa/review-gate/');
 }
 
 function isAttemptTwoMaterial(path) {
   return (
     path === VISUAL_REVISION_PATH ||
-    path.startsWith('qa/visual-review/attempt-2/') ||
-    path.startsWith('qa/review-gate/attempt-2')
+    path.startsWith('qa/visual-review/attempt-2/')
   );
 }
 

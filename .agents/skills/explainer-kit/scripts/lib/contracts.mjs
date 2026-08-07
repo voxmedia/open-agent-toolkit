@@ -24,6 +24,7 @@ const SCHEMA_FILES = {
   'set-plan': 'set-plan.v1.schema.json',
   'visual-review-request': 'visual-review-request.v1.schema.json',
   'visual-review-result': 'visual-review-result.v1.schema.json',
+  'visual-review-evidence': 'visual-review-evidence.v1.schema.json',
   'terminal-evidence': 'terminal-evidence.v1.schema.json',
 };
 const DEFAULT_SCHEMA_KEYS = {
@@ -801,6 +802,19 @@ function validateCrossRecord(kind, value, context, errors) {
     }
   }
 
+  if (kind === 'terminal-evidence') {
+    validateTerminalEvidence(value, context.manifest, errors);
+  }
+
+  if (kind === 'visual-review-evidence') {
+    validateVisualReviewEvidence(
+      value,
+      context.visualReviewRequest,
+      context.attempt,
+      errors,
+    );
+  }
+
   if (kind === 'manifest') {
     const paths = [];
     for (const artifact of Array.isArray(value.artifacts)
@@ -1087,6 +1101,223 @@ function validateCrossRecord(kind, value, context, errors) {
         'Publish receipt must exactly cover every manifest artifact and the generated catalog.',
       );
     }
+  }
+}
+
+function validateTerminalEvidence(value, manifest, errors) {
+  const reasons = Array.isArray(value.reasons) ? value.reasons : [];
+  const artifactIds = isObject(manifest)
+    ? new Set(
+        (Array.isArray(manifest.artifacts) ? manifest.artifacts : []).map(
+          ({ id }) => id,
+        ),
+      )
+    : null;
+  validateReasonSet(reasons, artifactIds, '$.reasons', errors);
+
+  if (isObject(manifest)) {
+    if (value.runId !== manifest.runId) {
+      add(
+        errors,
+        '$.runId',
+        'terminal-run-mismatch',
+        'Terminal evidence run identity must match its manifest.',
+      );
+    }
+    if (value.outcome !== manifest.outcome) {
+      add(
+        errors,
+        '$.outcome',
+        'terminal-outcome-mismatch',
+        'Terminal evidence outcome must match its manifest.',
+      );
+    }
+    if (value.manifestHash !== canonicalHash(manifest)) {
+      add(
+        errors,
+        '$.manifestHash',
+        'terminal-manifest-mismatch',
+        'Terminal evidence manifest hash must match its manifest.',
+      );
+    }
+  }
+
+  if (value.evidenceDisposition === 'superseded') {
+    const reason = reasons[0];
+    if (
+      reasons.length !== 1 ||
+      reason?.stage !== 'finalization' ||
+      reason?.kind !== 'superseded' ||
+      reason?.count !== 1 ||
+      reason?.artifactId !== undefined
+    ) {
+      add(
+        errors,
+        '$.reasons',
+        'supersession-reason',
+        'Superseded evidence requires exactly one count-1 finalization/superseded reason without an artifact ID.',
+      );
+    }
+    if (
+      !isObject(value.supersededBy) ||
+      value.supersededBy.runId === value.runId
+    ) {
+      add(
+        errors,
+        '$.supersededBy',
+        'supersession-binding',
+        'Superseded evidence requires a distinct replacement run identity.',
+      );
+    }
+    if (typeof value.manifestHash !== 'string') {
+      add(
+        errors,
+        '$.manifestHash',
+        'supersession-manifest',
+        'Superseded evidence requires the original manifest hash.',
+      );
+    }
+    return;
+  }
+
+  if (value.supersededBy !== undefined) {
+    add(
+      errors,
+      '$.supersededBy',
+      'unexpected-supersession',
+      'Only superseded evidence may identify a replacement run.',
+    );
+  }
+  if (reasons.some((reason) => reason?.kind === 'superseded')) {
+    add(
+      errors,
+      '$.reasons',
+      'unexpected-supersession',
+      'Only superseded evidence may contain a superseded reason.',
+    );
+  }
+  const allowedKinds =
+    value.outcome === 'failed'
+      ? new Set(['provider-failure', 'pipeline-failure'])
+      : new Set(['finding', 'provider-failure', 'pipeline-failure']);
+  if (!reasons.some((reason) => allowedKinds.has(reason?.kind))) {
+    add(
+      errors,
+      '$.reasons',
+      'terminal-outcome-reasons',
+      'Terminal evidence reasons do not satisfy the terminal outcome.',
+    );
+  }
+}
+
+function validateVisualReviewEvidence(value, request, attempt, errors) {
+  if (!isObject(request)) {
+    add(
+      errors,
+      '$',
+      'review-request-required',
+      'Retained visual evidence requires its adjacent reviewed request.',
+    );
+    return;
+  }
+  const requestValidation = validateContract('visual-review-request', request);
+  if (!requestValidation.valid) {
+    add(
+      errors,
+      '$',
+      'invalid-review-request',
+      'Retained visual evidence cannot bind to an invalid reviewed request.',
+    );
+  }
+  if (value.requestHash !== request.requestHash) {
+    add(
+      errors,
+      '$.requestHash',
+      'review-binding-mismatch',
+      'Retained visual evidence must bind the adjacent request hash.',
+    );
+  }
+  if (![1, 2].includes(attempt) || value.attempt !== attempt) {
+    add(
+      errors,
+      '$.attempt',
+      'review-attempt-mismatch',
+      'Retained visual evidence attempt must match its attempt directory.',
+    );
+  }
+
+  const reasons = Array.isArray(value.reasons) ? value.reasons : [];
+  const artifactIds = new Set(
+    (Array.isArray(request.renderedArtifacts)
+      ? request.renderedArtifacts
+      : []
+    ).map(({ artifactId }) => artifactId),
+  );
+  validateReasonSet(reasons, artifactIds, '$.reasons', errors);
+  if (reasons.some((reason) => reason?.stage !== 'visual-review')) {
+    add(
+      errors,
+      '$.reasons',
+      'visual-reason-stage',
+      'Retained visual evidence reasons must use the visual-review stage.',
+    );
+  }
+  const validDisposition =
+    (value.disposition === 'pass' && reasons.length === 0) ||
+    (value.disposition === 'correct' &&
+      reasons.length > 0 &&
+      reasons.every((reason) => reason?.kind === 'finding')) ||
+    (value.disposition === 'failed' &&
+      reasons.length > 0 &&
+      reasons.every((reason) =>
+        ['provider-failure', 'pipeline-failure'].includes(reason?.kind),
+      ));
+  if (!validDisposition) {
+    add(
+      errors,
+      '$.reasons',
+      'visual-disposition-reasons',
+      'Retained visual evidence reasons do not satisfy its disposition.',
+    );
+  }
+}
+
+function validateReasonSet(reasons, artifactIds, path, errors) {
+  let total = 0;
+  const tuples = new Set();
+  for (const [index, reason] of reasons.entries()) {
+    if (!isObject(reason)) continue;
+    if (Number.isInteger(reason.count)) total += reason.count;
+    const tuple = `${reason.stage}\0${reason.kind}\0${reason.artifactId ?? ''}`;
+    if (tuples.has(tuple)) {
+      add(
+        errors,
+        `${path}[${index}]`,
+        'duplicate-reason',
+        'Retained reason tuples must be unique.',
+      );
+    }
+    tuples.add(tuple);
+    if (
+      reason.artifactId !== undefined &&
+      artifactIds &&
+      !artifactIds.has(reason.artifactId)
+    ) {
+      add(
+        errors,
+        `${path}[${index}].artifactId`,
+        'foreign-artifact',
+        'Retained reason artifact IDs must belong to the bound run.',
+      );
+    }
+  }
+  if (total > 50) {
+    add(
+      errors,
+      path,
+      'reason-total',
+      'Retained reason counts must total at most 50.',
+    );
   }
 }
 

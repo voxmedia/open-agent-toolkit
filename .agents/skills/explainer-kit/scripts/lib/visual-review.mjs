@@ -40,15 +40,31 @@ export async function runVisualReview({
       return Buffer.from(snapshot.bytes);
     },
   });
-  const result = await visualCritic(structuredClone(request), evidenceInput);
-  await assertSnapshotsUnchanged(runRoot, snapshots);
+  let result;
+  try {
+    result = await visualCritic(structuredClone(request), evidenceInput);
+  } catch {
+    throw visualReviewError('Visual critic provider failed.', {
+      request,
+      kind: 'provider-failure',
+    });
+  }
+  try {
+    await assertSnapshotsUnchanged(runRoot, snapshots);
+  } catch {
+    throw visualReviewError('Visual review evidence changed during review.', {
+      request,
+      kind: 'pipeline-failure',
+    });
+  }
   const validation = validateContract('visual-review-result', result, {
     visualReviewRequest: request,
   });
   if (!validation.valid) {
-    throw visualReviewError(
-      `Visual critic returned an invalid result: ${formatErrors(validation.errors)}`,
-    );
+    throw visualReviewError('Visual critic returned an invalid result.', {
+      request,
+      kind: 'provider-failure',
+    });
   }
   return {
     request,
@@ -335,9 +351,13 @@ function formatErrors(errors) {
     .join('; ');
 }
 
-function visualReviewError(message) {
+function visualReviewError(message, { request, kind } = {}) {
   const error = new Error(message);
   error.code = 'E_VISUAL_REVIEW';
+  if (request) {
+    error.visualReviewRequest = structuredClone(request);
+    error.evidenceKind = kind;
+  }
   return error;
 }
 

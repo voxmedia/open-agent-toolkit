@@ -29,7 +29,6 @@ import {
   writeManifestAtomic,
   writeSetPlanRecords,
   writeTerminalEvidence,
-  writeVisualReviewFailure,
   writeVisualRevision,
 } from '../scripts/lib/records.mjs';
 import { planExplainerSet } from '../scripts/lib/set-plan.mjs';
@@ -240,40 +239,6 @@ test('retains one bounded visual revision record for corrected artifacts', async
   );
 });
 
-test('retains structured partial evidence for a failed visual review attempt', async () => {
-  const outputRoot = await temporaryDirectory();
-  const run = await initializeRun(request(outputRoot));
-  const error = Object.assign(new Error('critic provider unavailable'), {
-    code: 'E_VISUAL_REVIEW',
-  });
-
-  const paths = await writeVisualReviewFailure(run, {
-    attempt: 1,
-    error,
-    evidence: [
-      {
-        screenshotPath: 'qa/browser/project-recap/320.png',
-        metricsPath: 'qa/browser/project-recap/320.json',
-      },
-    ],
-  });
-
-  assert.deepEqual(paths, ['qa/review-gate/attempt-1-error.json']);
-  assert.deepEqual(
-    JSON.parse(await readFile(join(run.runRoot, paths[0]), 'utf8')),
-    {
-      schemaVersion: 'explainer-kit.visual-review-error/v1',
-      attempt: 1,
-      code: 'E_VISUAL_REVIEW',
-      message: 'critic provider unavailable',
-      evidencePaths: [
-        'qa/browser/project-recap/320.png',
-        'qa/browser/project-recap/320.json',
-      ],
-    },
-  );
-});
-
 test('retains compact flagged and failed terminal evidence', async () => {
   for (const outcome of ['built-needs-review', 'failed']) {
     const outputRoot = await temporaryDirectory();
@@ -286,14 +251,13 @@ test('retains compact flagged and failed terminal evidence', async () => {
     const relativePath = await writeTerminalEvidence(run, {
       outcome,
       manifest: terminalManifest,
-      findings:
-        outcome === 'built-needs-review'
-          ? [{ artifactId: 'project-recap', severity: 'important' }]
-          : [],
-      error:
-        outcome === 'failed'
-          ? { code: 'E_QA', message: 'Review evidence was incomplete.' }
-          : undefined,
+      reasons: [
+        {
+          stage: outcome === 'failed' ? 'durability' : 'visual-review',
+          kind: outcome === 'failed' ? 'provider-failure' : 'finding',
+          count: 1,
+        },
+      ],
       evidenceDisposition: 'retained',
     });
 
@@ -305,16 +269,13 @@ test('retains compact flagged and failed terminal evidence', async () => {
         runId: run.runId,
         outcome,
         manifestHash: canonicalHash(terminalManifest),
-        findings:
-          outcome === 'built-needs-review'
-            ? [{ artifactId: 'project-recap', severity: 'important' }]
-            : [],
-        ...(outcome === 'failed' && {
-          error: {
-            code: 'E_QA',
-            message: 'Review evidence was incomplete.',
+        reasons: [
+          {
+            stage: outcome === 'failed' ? 'durability' : 'visual-review',
+            kind: outcome === 'failed' ? 'provider-failure' : 'finding',
+            count: 1,
           },
-        }),
+        ],
         evidenceDisposition: 'retained',
       },
     );
@@ -333,206 +294,85 @@ test('requires meaningful evidence for every flagged or failed terminal outcome'
       runId: run.runId,
       outcome,
       manifestHash: canonicalHash(terminalManifest),
-      findings: [],
+      reasons: [],
       evidenceDisposition: 'partial',
     };
 
     assert.throws(
       () =>
         assertTerminalEvidence(emptyEvidence, { manifest: terminalManifest }),
-      /finding|error/i,
+      /reason|min-items/i,
     );
     await assert.rejects(
       writeTerminalEvidence(run, {
         outcome,
         manifest: terminalManifest,
-        findings: [],
+        reasons: [],
         evidenceDisposition: 'partial',
       }),
-      /finding|error/i,
+      /reason|min-items/i,
     );
   }
 });
 
-test('normalizes primitive terminal failures into a safe bounded envelope', async () => {
+test('retains only closed local terminal reasons and rejects diagnostic input', async () => {
   const outputRoot = await temporaryDirectory();
   const run = await initializeRun(
-    request(outputRoot, { slug: 'Primitive Failure' }),
+    request(outputRoot, { slug: 'Code Only Evidence' }),
   );
   const terminalManifest = {
     runId: run.runId,
     slug: run.slug,
+    artifacts: [{ id: 'project-recap' }],
     outcome: 'failed',
   };
+  const canary = 'arbitrary-terminal-diagnostic-canary';
 
   await writeTerminalEvidence(run, {
     outcome: 'failed',
     manifest: terminalManifest,
-    error: 'Authorization: Basic cHJpbWl0aXZlOnNlY3JldA==',
-    evidenceDisposition: 'retained',
-  });
-
-  const retained = await readFile(
-    join(run.runRoot, 'terminal-evidence.json'),
-    'utf8',
-  );
-  assert.doesNotMatch(retained, /cHJpbWl0aXZlOnNlY3JldA==/);
-  assert.match(retained, /\[redacted\]/);
-});
-
-test('redacts and bounds every retained terminal finding field', async () => {
-  const outputRoot = await temporaryDirectory();
-  const run = await initializeRun(request(outputRoot));
-  const terminalManifest = {
-    runId: run.runId,
-    slug: run.slug,
-    outcome: 'built-needs-review',
-  };
-  const secrets = [
-    'finding-password',
-    'finding-token',
-    'AKIAIOSFODNN7EXAMPLE',
-    'credentialed-url-password',
-    'quoted-json-secret',
-    'quoted-yaml-secret',
-    'YmFzaWMtdXNlcjpiYXNpYy1zZWNyZXQ=',
-    'ghp_abcdefghijklmnopqrstuvwxyz123456',
-  ];
-  const oversized = 'finding-payload-'.repeat(500);
-  await writeTerminalEvidence(run, {
-    outcome: 'built-needs-review',
-    manifest: terminalManifest,
-    findings: [
+    reasons: [
       {
-        artifactId: `password=${secrets[0]}`,
-        rubric: `token=${secrets[1]}`,
-        severity: `aws_access_key_id=${secrets[2]}`,
-        evidence: [
-          `https://user:${secrets[3]}@example.com/private`,
-          `{"password":"${secrets[4]}"}`,
-          `token: '${secrets[5]}'`,
-          `Authorization: Basic ${secrets[6]}`,
-          secrets[7],
-          oversized,
-        ].join(' '),
-        correction: `password=${secrets[0]} Authorization: Bearer bearer-secret ${oversized}`,
+        stage: 'durability',
+        kind: 'provider-failure',
+        artifactId: 'project-recap',
+        count: 1,
       },
     ],
     evidenceDisposition: 'retained',
   });
 
-  const retainedText = await readFile(
+  const retained = await readFile(
     join(run.runRoot, 'terminal-evidence.json'),
     'utf8',
   );
-  const retained = JSON.parse(retainedText);
-  for (const secret of secrets) {
-    assert.equal(retainedText.includes(secret), false);
-  }
-  assert.equal(retainedText.includes(oversized), false);
-  assert.ok(
-    Object.values(retained.findings[0]).every(
-      (value) => typeof value === 'string' && value.length <= 2_000,
-    ),
-  );
+  assert.equal(retained.includes(canary), false);
+  assert.deepEqual(JSON.parse(retained).reasons, [
+    {
+      stage: 'durability',
+      kind: 'provider-failure',
+      artifactId: 'project-recap',
+      count: 1,
+    },
+  ]);
 
-  const nestedRun = await initializeRun(
-    request(await temporaryDirectory(), { slug: 'Nested Finding' }),
+  const legacyRun = await initializeRun(
+    request(await temporaryDirectory(), { slug: 'Legacy Evidence' }),
   );
   await assert.rejects(
-    writeTerminalEvidence(nestedRun, {
-      outcome: 'built-needs-review',
+    writeTerminalEvidence(legacyRun, {
+      outcome: 'failed',
       manifest: {
-        runId: nestedRun.runId,
-        slug: nestedRun.slug,
-        outcome: 'built-needs-review',
+        runId: legacyRun.runId,
+        slug: legacyRun.slug,
+        outcome: 'failed',
       },
-      findings: [{ evidence: { password: 'nested-secret' } }],
+      reasons: [{ stage: 'durability', kind: 'provider-failure', count: 1 }],
+      error: { message: canary },
       evidenceDisposition: 'retained',
     }),
-    /compact shape|primitive|string/i,
+    /legacy|unknown|diagnostic|shape/i,
   );
-});
-
-test('whole-field redacts escaped and ambiguous serialized credential forms', async () => {
-  const outputRoot = await temporaryDirectory();
-  const run = await initializeRun(
-    request(outputRoot, { slug: 'Serialized Credential Forms' }),
-  );
-  const terminalManifest = {
-    runId: run.runId,
-    slug: run.slug,
-    outcome: 'built-needs-review',
-  };
-  const cases = [
-    {
-      secret: 'unicode-key-secret',
-      value: '{"pass\\u0077ord":"unicode-key-secret"}',
-    },
-    {
-      secret: 'yaml-tag-secret',
-      value: 'password: !!str "yaml-tag-secret"',
-    },
-    {
-      secret: 'yaml-literal-secret',
-      value: 'password: |\n  yaml-literal-secret\n  unmatched-literal-suffix',
-    },
-    {
-      secret: 'yaml-folded-secret',
-      value: 'password: >\n  yaml-folded-secret\n  unmatched-folded-suffix',
-    },
-  ];
-
-  await writeTerminalEvidence(run, {
-    outcome: 'built-needs-review',
-    manifest: terminalManifest,
-    findings: cases.map(({ value }, index) => ({
-      artifactId: `artifact-${index + 1}`,
-      evidence: value,
-    })),
-    evidenceDisposition: 'retained',
-  });
-
-  const retainedText = await readFile(
-    join(run.runRoot, 'terminal-evidence.json'),
-    'utf8',
-  );
-  const retained = JSON.parse(retainedText);
-  for (const { secret } of cases) {
-    assert.equal(retainedText.includes(secret), false);
-  }
-  assert.deepEqual(
-    retained.findings.map(({ evidence }) => evidence),
-    cases.map(() => '[redacted]'),
-  );
-});
-
-test('scrubs visual review failure fields before retention', async () => {
-  const outputRoot = await temporaryDirectory();
-  const run = await initializeRun(
-    request(outputRoot, { slug: 'Secret Review Failure' }),
-  );
-  const error = Object.assign(
-    new Error(
-      '{"password":"review-secret"} Authorization: Basic cmV2aWV3OnNlY3JldA==',
-    ),
-    { code: 'E_VISUAL_REVIEW token=review-code-secret' },
-  );
-
-  await writeVisualReviewFailure(run, { attempt: 1, error });
-
-  const retained = await readFile(
-    join(run.runRoot, 'qa/review-gate/attempt-1-error.json'),
-    'utf8',
-  );
-  for (const secret of [
-    'review-secret',
-    'cmV2aWV3OnNlY3JldA==',
-    'review-code-secret',
-  ]) {
-    assert.equal(retained.includes(secret), false);
-  }
-  assert.match(retained, /\[redacted\]/);
 });
 
 test('supersedes retained evidence with replacement run identity and manifest hash', async () => {
@@ -546,7 +386,7 @@ test('supersedes retained evidence with replacement run identity and manifest ha
   await writeTerminalEvidence(run, {
     outcome: 'failed',
     manifest: terminalManifest,
-    error: { code: 'E_RUN', message: 'Original failure.' },
+    reasons: [{ stage: 'durability', kind: 'provider-failure', count: 50 }],
     evidenceDisposition: 'retained',
   });
 
@@ -567,8 +407,7 @@ test('supersedes retained evidence with replacement run identity and manifest ha
       runId: run.runId,
       outcome: 'failed',
       manifestHash: canonicalHash(terminalManifest),
-      findings: [],
-      error: { code: 'E_RUN', message: 'Original failure.' },
+      reasons: [{ stage: 'finalization', kind: 'superseded', count: 1 }],
       evidenceDisposition: 'superseded',
       supersededBy: {
         runId: 'run-replacement',
@@ -903,7 +742,7 @@ test('records an initial stage failure as a failed run', async () => {
   );
 });
 
-test('retains an exhausted internal-reference finding as a failed QA gate', async () => {
+test('projects an exhausted internal-reference finding to a local QA failure', async () => {
   const outputRoot = await temporaryDirectory();
   const run = await initializeRun(request(outputRoot));
   for (const id of ['validate', 'fact-base', 'content', 'theme', 'render']) {
@@ -925,10 +764,8 @@ test('retains an exhausted internal-reference finding as a failed QA gate', asyn
   });
 
   assert.equal(failed.outcome, 'failed');
-  assert.equal(
-    failed.stages.find(({ id }) => id === 'qa').error.code,
-    'E_INTERNAL_REFERENCE',
-  );
+  assert.equal(failed.stages.find(({ id }) => id === 'qa').error.code, 'E_QA');
+  assert.equal(JSON.stringify(failed).includes('missing/index.html'), false);
   assert.equal(
     failed.stages.find(({ id }) => id === 'durability').status,
     'pending',

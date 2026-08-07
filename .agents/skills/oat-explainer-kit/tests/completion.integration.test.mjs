@@ -267,7 +267,7 @@ test('documents bounded correction, compact terminal evidence, and publication d
   );
   assert.match(
     lifecycleContract,
-    /`terminal-evidence\.json`.*run\s+identity.*manifest hash.*compact findings or error.*evidence\s+disposition/s,
+    /`terminal-evidence\.json`.*run identity.*manifest hash.*bounded `stage`\/`kind` reason tuples.*evidence disposition/s,
   );
   assert.match(
     lifecycleContract,

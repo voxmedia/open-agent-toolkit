@@ -87,6 +87,12 @@ function assertSerializedOutputExcludes(value, secrets, label) {
   }
 }
 
+function assertLocalReason(result, stage, kind = 'pipeline-failure') {
+  assert.deepEqual(result.reasons, [{ stage, kind, count: 1 }]);
+  assert.equal('errors' in result, false);
+  assert.equal(JSON.stringify(result).includes('"message"'), false);
+}
+
 async function legacyResumeToken(runRoot, runId) {
   const tokenHash = createHash('sha256');
   tokenHash.update('explainer-kit.set-plan-resume/v1\0');
@@ -1120,7 +1126,7 @@ test('a rejected correction that fails QA remains local and updates the build re
   });
 
   assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_QA');
+  assertLocalReason(result, 'browser-review');
   assert.equal(durability.mock.callCount(), 0);
   assert.equal(publish.mock.callCount(), 0);
   const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
@@ -1152,15 +1158,15 @@ test('internal-reference validation fails before browser review and durability',
   );
 
   assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_INTERNAL_REFERENCE');
+  assertLocalReason(result, 'browser-review');
   assert.equal(correctArtifact.mock.callCount(), 1);
   assert.equal(browserProbe.mock.callCount(), 0);
   assert.equal(durability.mock.callCount(), 0);
   const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
   assert.equal(record.stages.find(({ id }) => id === 'qa').status, 'failed');
-  assert.match(
+  assert.equal(
     record.stages.find(({ id }) => id === 'qa').error.message,
-    /missing-target/,
+    'The qa stage failed.',
   );
 });
 
@@ -1295,7 +1301,7 @@ test('visual correction with a missing target fails before another review or ext
   );
 
   assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_INTERNAL_REFERENCE');
+  assertLocalReason(result, 'browser-review');
   assert.equal(visualCritic.mock.callCount(), 1);
   assert.equal(correctArtifact.mock.callCount(), 1);
   assert.equal(durability.mock.callCount(), 0);
@@ -1303,9 +1309,9 @@ test('visual correction with a missing target fails before another review or ext
   assert.deepEqual(events.slice(events.indexOf('correct') + 1), []);
   const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
   assert.equal(record.stages.find(({ id }) => id === 'qa').status, 'failed');
-  assert.match(
+  assert.equal(
     record.stages.find(({ id }) => id === 'qa').error.message,
-    /missing-target/,
+    'The qa stage failed.',
   );
 });
 
@@ -1473,7 +1479,7 @@ test('artistic author failure never silently downgrades to Markdown', async () =
 
   assert.equal(result.outcome, 'failed');
   assert.equal(author.mock.callCount(), 1);
-  assert.match(result.errors[0].message, /artistic author failed/);
+  assertLocalReason(result, 'authoring', 'provider-failure');
   await assert.rejects(
     access(join(result.runRoot, 'source/content/project-recap.md')),
   );
@@ -1520,7 +1526,7 @@ test('both modes fail before narrative output when no author is supplied', async
     );
 
     assert.equal(result.outcome, 'failed', mode);
-    assert.equal(result.errors[0].code, 'E_AUTHOR_REQUIRED', mode);
+    assertLocalReason(result, 'authoring');
     await assert.rejects(
       access(join(result.runRoot, 'source/content/project-recap.md')),
     );
@@ -1837,15 +1843,7 @@ test('rejects malformed returned-plan source IDs before authoring', async () => 
     });
 
     assert.equal(result.outcome, 'failed');
-    assert.equal(result.errors[0]?.code, 'E_SET_PLAN');
-    assert.match(
-      result.errors[0]?.message ?? '',
-      sourceIds === undefined
-        ? /\$\.sourceIds.*required/i
-        : sourceIds === 'project' || sourceIds === null
-          ? /\$\.sourceIds.*type/i
-          : /unknown reconciled source unknown/i,
-    );
+    assertLocalReason(result, 'authoring');
     assert.equal(author.mock.callCount(), 0);
   }
 });
@@ -1979,8 +1977,8 @@ test('invokes an independent critic once with the complete rendered recap set', 
   assert.equal(rejected.outcome, 'built-needs-review');
   assert.equal(rejected.errors?.length ?? 0, 0);
   assert.ok(
-    rejected.warnings.some((warning) =>
-      warning.startsWith('visual-review-required:review-chain-failed:'),
+    rejected.warnings.some(
+      (warning) => warning === 'visual-review-required:review-chain-failed',
     ),
   );
   assert.equal(sharedCallback.mock.callCount(), 3);
@@ -2089,8 +2087,8 @@ test('rejects a decoded geometry reshape after browser QA before critic invocati
   assert.equal(reshaped, true);
   assert.equal(visualCritic.mock.callCount(), 0);
   assert.ok(
-    result.warnings.some((warning) =>
-      warning.startsWith('visual-review-required:review-chain-failed:'),
+    result.warnings.some(
+      (warning) => warning === 'visual-review-required:review-chain-failed',
     ),
   );
   const reshapedBytes = await readFile(mobileScreenshotPath);
@@ -2104,13 +2102,12 @@ test('rejects a decoded geometry reshape after browser QA before critic invocati
     manifest.immutableHashes['qa/browser/project-recap/mobile.png'],
     `sha256:${createHash('sha256').update(reshapedBytes).digest('hex')}`,
   );
-  const retainedError = JSON.parse(
-    await readFile(
-      join(result.runRoot, 'qa/review-gate/attempt-1-error.json'),
-      'utf8',
-    ),
+  const terminalEvidence = JSON.parse(
+    await readFile(join(result.runRoot, 'terminal-evidence.json'), 'utf8'),
   );
-  assert.equal(retainedError.code, 'E_VISUAL_REVIEW');
+  assert.deepEqual(terminalEvidence.reasons, [
+    { stage: 'visual-review', kind: 'pipeline-failure', count: 1 },
+  ]);
 });
 
 test('runs a complete recap review with installed Chromium PNG evidence', async (t) => {
@@ -2206,21 +2203,21 @@ test('caps visual review at one correction and one final review', async (t) => {
       dispositions: ['correct', 'fail'],
       expectedAuthors: 4,
       expectedReviews: 2,
-      expectedFinal: 'fail',
+      expectedFinal: 'correct',
     },
     {
       name: 'retains a throwing final review as a handoff',
       dispositions: ['correct', 'throw'],
       expectedAuthors: 4,
       expectedReviews: 2,
-      expectedFinal: 'error',
+      expectedFinal: 'failed',
     },
     {
       name: 'retains a malformed final review as a handoff',
       dispositions: ['correct', 'malformed'],
       expectedAuthors: 4,
       expectedReviews: 2,
-      expectedFinal: 'error',
+      expectedFinal: 'failed',
     },
   ];
 
@@ -2306,10 +2303,7 @@ test('caps visual review at one correction and one final review', async (t) => {
       );
       assert.equal(author.mock.callCount(), scenario.expectedAuthors);
       assert.equal(visualCritic.mock.callCount(), scenario.expectedReviews);
-      assert.equal(
-        result.visualReview.disposition,
-        scenario.expectedFinal === 'error' ? 'correct' : scenario.expectedFinal,
-      );
+      assert.equal(result.visualReview.disposition, scenario.expectedFinal);
       if (scenario.expectedReviews === 2 && scenario.expectedFinal === 'pass') {
         const manifest = JSON.parse(
           await readFile(result.manifestPath, 'utf8'),
@@ -2334,15 +2328,12 @@ test('caps visual review at one correction and one final review', async (t) => {
           { code: 'ENOENT' },
         );
       } else {
-        if (scenario.expectedFinal === 'error') {
+        if (scenario.expectedFinal === 'failed') {
           await access(
-            join(result.runRoot, 'qa/review-gate/attempt-2-error.json'),
+            join(result.runRoot, 'qa/visual-review/attempt-2/result.json'),
           );
-          await assert.rejects(
-            access(
-              join(result.runRoot, 'qa/visual-review/attempt-2/request.json'),
-            ),
-            { code: 'ENOENT' },
+          await access(
+            join(result.runRoot, 'qa/visual-review/attempt-2/request.json'),
           );
         } else {
           await access(
@@ -2399,26 +2390,24 @@ test('fails closed before durability and publication when recap review is missin
       browserProbe: malformedBrowserProbe,
       visualDisposition: 'pass',
       strategy: 'publish',
-      warning: 'visual-review-required:review-chain-failed:',
+      warning: 'visual-review-required:browser-review-failed',
     },
     {
       name: 'omitted browser screenshot',
       browserProbe: browserProbeOmittingScreenshot(320),
       visualDisposition: 'pass',
       strategy: 'publish',
-      warning: 'visual-review-required:review-chain-failed:',
+      warning: 'visual-review-required:review-chain-failed',
       expectedBrowserEvidence: 6,
-      expectedStructuredError: true,
     },
     {
       name: 'visual-review evidence copy failure',
       browserProbe: retainingBrowserProbe,
       visualDisposition: 'pass',
       strategy: 'publish',
-      warning: 'visual-review-required:review-chain-failed:',
+      warning: 'visual-review-required:review-chain-failed',
       blockEvidenceCopy: true,
       expectedBrowserEvidence: 9,
-      expectedStructuredError: true,
     },
     {
       name: 'recap viewport override is disallowed',
@@ -2435,28 +2424,28 @@ test('fails closed before durability and publication when recap review is missin
       },
       visualDisposition: 'pass',
       strategy: 'publish',
-      warning: 'visual-review-required:review-chain-failed:',
+      warning: 'visual-review-required:browser-review-failed',
     },
     {
       name: 'throwing initial critic',
       browserProbe: retainingBrowserProbe,
       visualDisposition: 'throw',
       strategy: 'publish',
-      warning: 'visual-review-required:review-chain-failed:',
+      warning: 'visual-review-required:review-chain-failed',
     },
     {
       name: 'malformed initial critic result',
       browserProbe: retainingBrowserProbe,
       visualDisposition: 'malformed',
       strategy: 'publish',
-      warning: 'visual-review-required:review-chain-failed:',
+      warning: 'visual-review-required:review-chain-failed',
     },
     {
       name: 'throwing correction callback',
       browserProbe: retainingBrowserProbe,
       visualDisposition: 'correct',
       strategy: 'publish',
-      warning: 'visual-review-required:correction-failed:',
+      warning: 'visual-review-required:correction-failed',
       correctArtifact: async () => {
         throw new Error('correction provider unavailable');
       },
@@ -2586,23 +2575,6 @@ test('fails closed before durability and publication when recap review is missin
           warning.startsWith(scenario.warning ?? 'visual-review-required:'),
         ),
       );
-      if (scenario.expectedStructuredError) {
-        const errorPath = 'qa/review-gate/attempt-1-error.json';
-        const retainedError = JSON.parse(
-          await readFile(join(result.runRoot, errorPath), 'utf8'),
-        );
-        assert.equal(retainedError.code, 'E_VISUAL_REVIEW');
-        assert.equal(
-          retainedError.evidencePaths.length,
-          scenario.expectedBrowserEvidence * 2,
-        );
-        assert.ok(
-          retainedError.evidencePaths.every(
-            (path) => manifest.immutableHashes[path],
-          ),
-        );
-        assert.ok(manifest.immutableHashes[errorPath]);
-      }
     });
   }
 
@@ -2692,7 +2664,7 @@ test('fails before composition on invalid set sources, ledger conflicts, or miss
     });
 
     assert.equal(result.outcome, 'failed', label);
-    assert.equal(result.errors[0].code, 'E_SET_PLAN', label);
+    assertLocalReason(result, 'authoring');
     assert.equal(author.mock.callCount(), 0, label);
   }
 });
@@ -2731,7 +2703,7 @@ test('fails before composition when approved sources are omitted or left uncover
     });
 
     assert.equal(result.outcome, 'failed', coverageFailure);
-    assert.equal(result.errors[0].code, 'E_SET_PLAN', coverageFailure);
+    assertLocalReason(result, 'authoring');
     assert.equal(author.mock.callCount(), 0, coverageFailure);
   }
 });
@@ -3021,7 +2993,7 @@ test('resume rejects retained set-plan, identity, and path tampering before call
     mutate(record);
     await writeFile(path, `${JSON.stringify(record, null, 2)}\n`);
 
-    let errorCode;
+    let failure;
     try {
       const resumed = await runExplainerCore(interactiveRequest, {
         planSet,
@@ -3034,11 +3006,19 @@ test('resume rejects retained set-plan, identity, and path tampering before call
           resumeToken: rejected.approval.resumeToken,
         },
       });
-      errorCode = resumed.errors?.[0]?.code;
+      failure = resumed.reasons;
     } catch (error) {
-      errorCode = error.code;
+      failure = error.code;
     }
-    assert.equal(errorCode, 'E_APPROVAL_RESUME', label);
+    if (Array.isArray(failure)) {
+      assert.deepEqual(
+        failure,
+        [{ stage: 'finalization', kind: 'pipeline-failure', count: 1 }],
+        label,
+      );
+    } else {
+      assert.equal(failure, 'E_APPROVAL_RESUME', label);
+    }
     assert.equal(planSet.mock.callCount(), 1, label);
     assert.equal(author.mock.callCount(), 3, label);
   }
@@ -3144,11 +3124,7 @@ test('authors cannot mutate the validated portfolio with expansion proposals', a
   });
 
   assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_AUTHOR_RESULT');
-  assert.match(
-    result.errors[0].message,
-    /cannot change the validated set plan/,
-  );
+  assertLocalReason(result, 'authoring');
 });
 
 test('editorial and render QA findings warn in both modes while DOM safety throws E_QA', async () => {
@@ -3206,7 +3182,7 @@ test('editorial and render QA findings warn in both modes while DOM safety throw
     now: () => NOW,
   });
   assert.equal(unsafe.outcome, 'failed');
-  assert.equal(unsafe.errors[0].code, 'E_QA');
+  assertLocalReason(unsafe, 'browser-review');
 });
 
 test('authors must return the declared content path and source dumping fails QA', async () => {
@@ -3221,7 +3197,7 @@ test('authors must return the declared content path and source dumping fails QA'
     now: () => NOW,
   });
   assert.equal(invalid.outcome, 'failed');
-  assert.equal(invalid.errors[0].code, 'E_AUTHOR_RESULT');
+  assertLocalReason(invalid, 'authoring');
   await assert.rejects(
     access(join(invalid.runRoot, 'source/content/project-recap.html')),
   );
@@ -3249,7 +3225,7 @@ test('authors must return the declared content path and source dumping fails QA'
     now: () => NOW,
   });
   assert.equal(dumped.outcome, 'failed');
-  assert.equal(dumped.errors[0].code, 'E_QA');
+  assertLocalReason(dumped, 'browser-review');
   await access(join(dumped.runRoot, 'source/content/project-recap.html'));
 });
 
@@ -3302,11 +3278,7 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
       now: () => NOW,
     });
     assert.equal(result.outcome, 'failed', JSON.stringify(spoofed));
-    assert.equal(result.errors[0].code, 'E_AUTHOR_PROVENANCE');
-    assert.match(
-      result.errors[0].message,
-      /does not match the trusted caller context/,
-    );
+    assertLocalReason(result, 'authoring');
   }
 
   // A backdated claim never reaches the hash-pinned record.
@@ -3341,11 +3313,7 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
     now: () => NOW,
   });
   assert.equal(rejected.outcome, 'failed');
-  assert.equal(rejected.errors[0].code, 'E_AUTHOR_PROVENANCE');
-  assert.match(
-    rejected.errors[0].message,
-    /must not assert a provenance trust/,
-  );
+  assertLocalReason(rejected, 'authoring');
 
   // Without trusted context the retained record says so rather than implying
   // an authenticated identity.
@@ -3381,7 +3349,65 @@ test('a malformed trusted provenance context fails the run loudly', async () => 
   });
 
   assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_AUTHOR_PROVENANCE');
+  assertLocalReason(result, 'authoring');
+});
+
+test('core CLI streams exclude arbitrary provider bytes for every terminal path', async () => {
+  const directory = await temporaryDirectory();
+  const requestPath = join(directory, 'request.json');
+  await writeFile(requestPath, '{}\n');
+  const scenarios = [
+    {
+      name: 'success',
+      result: { outcome: 'built-not-durable', warnings: [] },
+    },
+    {
+      name: 'terminally flagged',
+      result: {
+        outcome: 'built-needs-review',
+        reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+      },
+    },
+    {
+      name: 'provider failed',
+      result: {
+        outcome: 'failed',
+        reasons: [{ stage: 'durability', kind: 'provider-failure', count: 1 }],
+      },
+    },
+    { name: 'caught error', throws: true },
+  ];
+
+  for (const scenario of scenarios) {
+    const canary = `CORE-CLI-${scenario.name}-\\u0070assword: ? [exact]`;
+    const stdout = [];
+    const stderr = [];
+    const exitCode = await runExplainerCli(
+      ['--request', requestPath],
+      {
+        log: (value) => stdout.push(value),
+        error: (value) => stderr.push(value),
+      },
+      async () => {
+        if (scenario.throws) {
+          throw {
+            evidenceReason: {
+              stage: canary,
+              kind: 'provider-failure',
+              count: 1,
+            },
+          };
+        }
+        return scenario.result;
+      },
+    );
+    const captured = `${stdout.join('\n')}\n${stderr.join('\n')}`;
+    assert.equal(captured.includes(canary), false, scenario.name);
+    assert.equal(
+      exitCode,
+      scenario.throws || scenario.result?.outcome === 'failed' ? 1 : 0,
+    );
+  }
 });
 
 test('CLI resolves an explicit author module without persisting executable callbacks', async () => {
@@ -3730,7 +3756,7 @@ test('enforces project-recap source-set cardinality while allowing multiple docu
     },
   );
   assert.equal(rejected.outcome, 'failed');
-  assert.match(rejected.errors[0].message, /at most 1 binding/i);
+  assertLocalReason(rejected, 'finalization');
 
   const allowed = await runExplainer(
     {
@@ -3801,11 +3827,8 @@ test('confines atomic package writes from symlinked site, content, nested ancest
     });
 
     assert.equal(result.outcome, 'failed', scenario);
-    assert.match(
-      result.errors[0].message,
-      /symlink|confined|ancestor/i,
-      scenario,
-    );
+    assert.equal(Array.isArray(result.reasons), true, scenario);
+    assert.equal(JSON.stringify(result).includes('"message"'), false, scenario);
     assert.deepEqual(await readdir(outside), [], scenario);
   }
 });
@@ -3831,7 +3854,7 @@ test('retains successful intermediates and a privacy-safe build record after a p
     record.stages.find(({ id }) => id === 'render').status,
     'failed',
   );
-  assert.match(recordText, /seeded renderer failure/);
+  assert.doesNotMatch(recordText, /seeded renderer failure/);
   assert.doesNotMatch(recordText, /Private transient direction/);
   await assert.rejects(
     access(result.manifestPath),
@@ -4092,7 +4115,7 @@ test('invokes durability and publishing seams only when explicitly requested', a
   assert.equal(durabilityResult.durable, true);
 });
 
-test('redacts and bounds terminal evidence after a late provider failure', async () => {
+test('projects late provider failures to closed terminal reasons', async () => {
   const fixture = await suppliedFixture();
   const secrets = {
     password: 'correct-horse-battery-staple',
@@ -4139,9 +4162,10 @@ test('redacts and bounds terminal evidence after a late provider failure', async
     assert.equal(terminalEvidenceText.includes(secret), false);
   }
   assert.equal(terminalEvidenceText.includes(oversized), false);
-  assert.ok(terminalEvidence.error.code.length <= 2_000);
-  assert.ok(terminalEvidence.error.message.length <= 2_000);
-  assert.match(terminalEvidence.error.message, /\[redacted\]/);
+  assert.deepEqual(terminalEvidence.reasons, [
+    { stage: 'durability', kind: 'provider-failure', count: 1 },
+  ]);
+  assert.equal('error' in terminalEvidence, false);
 });
 
 test('scrubs provider credentials from every retained visual, browser, and durability failure file', async (t) => {
@@ -4337,7 +4361,9 @@ test('normalizes primitive thrown values into retained failed evidence', async (
     'utf8',
   );
   assert.equal(terminalEvidence.includes(secret), false);
-  assert.match(terminalEvidence, /\[redacted\]/);
+  assert.deepEqual(JSON.parse(terminalEvidence).reasons, [
+    { stage: 'durability', kind: 'provider-failure', count: 1 },
+  ]);
 });
 
 test('reports every falsy thrown value as an explicit failed lifecycle outcome', async (t) => {
@@ -4374,11 +4400,11 @@ test('reports every falsy thrown value as an explicit failed lifecycle outcome',
         ),
       ]);
       assert.equal(result.outcome, 'failed');
-      assert.equal(result.errors.length, 1);
+      assertLocalReason(result, 'durability', 'provider-failure');
       assert.equal(buildRecord.outcome, 'failed');
       assert.equal(manifest.outcome, 'failed');
       assert.equal(terminalEvidence.outcome, 'failed');
-      assert.deepEqual(result.errors[0], terminalEvidence.error);
+      assert.deepEqual(result.reasons, terminalEvidence.reasons);
       assert.ok(buildRecord.stages.find(({ id }) => id === 'durability').error);
     });
   }
@@ -4459,11 +4485,7 @@ test('classifies a non-normalizable v2 receipt root as a publish failure', async
   );
 
   assert.equal(result.outcome, 'failed');
-  assert.equal(
-    result.errors[0].code,
-    'E_PUBLISH',
-    JSON.stringify(result.errors),
-  );
+  assertLocalReason(result, 'durability', 'provider-failure');
   assert.equal('publication' in result, false);
   assert.equal(publish.mock.callCount(), 1);
 });
