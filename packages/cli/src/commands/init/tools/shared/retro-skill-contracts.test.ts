@@ -17,6 +17,9 @@ const applyProcedure = readRepoFile(
 const retroQualityBar = readRepoFile(
   '.agents/skills/oat-project-retro/references/retro-quality-bar.md',
 );
+const evidenceAndLanes = readRepoFile(
+  '.agents/skills/oat-project-retro/references/evidence-and-lanes.md',
+);
 const filingSkill = readRepoFile(
   '.agents/skills/oat-project-retro-file/SKILL.md',
 );
@@ -348,5 +351,44 @@ describe('retro skill content contracts', () => {
       /final verification[\s\S]*?required keys[\s\S]*?exactly once[\s\S]*?counts are numeric/i,
     );
     expect(retroSkill).not.toMatch(/filing=<number>/);
+  });
+
+  it('keeps material incidents standalone, anchored, and non-repetitive', () => {
+    for (const content of [
+      retroSkill,
+      evidenceAndLanes,
+      retroQualityBar,
+      retroTemplate,
+      retroDocs,
+    ]) {
+      const normalized = content.replace(/\s+/g, ' ');
+
+      expect(normalized).toMatch(/stable evidence anchors?/i);
+      expect(normalized).toMatch(
+        /anchors?[\s\S]*?supplement[\s\S]*?(?:never|not)[\s\S]*?replace[\s\S]*?explanation/i,
+      );
+    }
+
+    for (const content of [
+      retroSkill,
+      retroQualityBar,
+      retroTemplate,
+      retroDocs,
+    ]) {
+      const normalized = content.replace(/\s+/g, ' ');
+
+      expect(normalized).toMatch(
+        /Challenges and Struggles[\s\S]*?what happened[\s\S]*?impact[\s\S]*?response[\s\S]*?result/i,
+      );
+      expect(normalized).toMatch(
+        /Where We Changed Course[\s\S]*?trigger[\s\S]*?changed direction[\s\S]*?outcome/i,
+      );
+      expect(normalized).toMatch(
+        /Domain Learnings[\s\S]*?reusable lessons[\s\S]*?(?:without|not)[\s\S]*?(?:replay|repeat)[\s\S]*?chronology/i,
+      );
+      expect(normalized).toMatch(
+        /Gotchas[\s\S]*?future-facing instructions[\s\S]*?(?:rather than|not)[\s\S]*?incident summaries/i,
+      );
+    }
   });
 });

@@ -28,7 +28,11 @@ oat_template_name: project-retro
 <!-- Keep output concise by default. Every section must add distinct
      information. Prefer references to evidence over repeated chronology. For
      a small project, keep core sections brief. Use subsections and tables only
-     for evidence-rich projects where they improve decisions. -->
+     for evidence-rich projects where they improve decisions. Make each
+     material incident understandable without opening another artifact. Use
+     stable evidence anchors such as project-log event IDs, artifact headings,
+     review paths, decision IDs, and commit IDs. Anchors supplement but never
+     replace explanation. -->
 
 ## Executive Summary
 
@@ -63,8 +67,9 @@ boundaries in a concise table or list.}
 
 ## Challenges and Struggles
 
-{Describe blockers, failed approaches, orchestration friction, and their
-effects. Classify rather than blame.}
+{Own the complete incident narrative here: what happened, impact, response, and
+result. Describe blockers, failed approaches, and orchestration friction.
+Classify rather than blame.}
 
 <!-- CONDITIONAL: Include both sections below when load-bearing decisions or
      rejected/superseded alternatives shaped the outcome. Otherwise delete
@@ -82,8 +87,8 @@ rejected or superseded.}
 
 ## Where We Changed Course
 
-{Explain meaningful changes in direction and the evidence or feedback that
-caused them.}
+{Record only the trigger, changed direction, and outcome. Do not repeat the
+complete incident chronology from Challenges and Struggles.}
 
 <!-- CONDITIONAL: Include when the project introduced reusable architecture
      patterns or materially new approaches. Otherwise delete this section. -->
@@ -98,21 +103,24 @@ caused them.}
 
 ## Domain Learnings
 
-{Capture specific domain lessons, failure classes, and correct responses.}
+{Abstract reusable lessons without replaying chronology. Capture domain failure
+classes and correct responses.}
 
 <!-- CONDITIONAL: Include when the evidence supports actionable guidance for
      humans. Otherwise delete this section. -->
 
 ## Gotchas for Humans
 
-{List concrete operator or contributor gotchas.}
+{Write future-facing instructions rather than incident summaries. List concrete
+operator or contributor gotchas.}
 
 <!-- CONDITIONAL: Include when the evidence supports actionable guidance for
      autonomous agents. Otherwise delete this section. -->
 
 ## Gotchas for Autonomous Agents
 
-{List concrete execution, evidence, monitoring, and escalation gotchas.}
+{Write future-facing instructions rather than incident summaries. List concrete
+execution, evidence, monitoring, and escalation gotchas.}
 
 ## Repo Improvements (Promotion Register)
 

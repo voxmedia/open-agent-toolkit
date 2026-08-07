@@ -11,6 +11,10 @@
 - Record rejected or superseded alternatives when they shaped the outcome.
 - Make reflections specific to this run: what changed, why the result is
   trustworthy, and what future work should do differently.
+- Make each material incident understandable without opening another artifact.
+  Use stable evidence anchors such as project-log event IDs, artifact headings,
+  review paths, decision IDs, and commit IDs. Anchors supplement but never
+  replace explanation.
 
 ## Required Core Sections
 
@@ -53,6 +57,16 @@ Prefer references to evidence over repeated chronology. For a small project,
 omit unsupported conditional sections and keep core sections brief. Use
 subsections and tables only for evidence-rich projects where they improve
 decisions. Do not add empty headings or `N/A` placeholders.
+
+Section ownership prevents repeated chronology:
+
+- `Challenges and Struggles` owns the complete incident narrative: what
+  happened, impact, response, and result.
+- `Where We Changed Course` records only the trigger, changed direction, and
+  outcome.
+- `Domain Learnings` abstracts reusable lessons without replaying chronology.
+- `Gotchas for Humans` and `Gotchas for Autonomous Agents` contain
+  future-facing instructions rather than incident summaries.
 
 ## Register Quality
 

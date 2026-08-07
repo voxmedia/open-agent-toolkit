@@ -95,6 +95,21 @@ keep core sections brief. Use subsections and tables only for evidence-rich
 projects where they improve decisions. This evidence-scaled depth adds no new
 consent-bearing config surface.
 
+Each material incident must stand alone: a reader can understand it without
+opening another artifact. Use stable evidence anchors such as project-log event
+IDs, artifact headings, review paths, decision IDs, and commit IDs. Anchors
+supplement but never replace explanation.
+
+Give each narrative section one job:
+
+- `Challenges and Struggles` owns the complete incident narrative: what
+  happened, impact, response, and result.
+- `Where We Changed Course` records only the trigger, changed direction, and
+  outcome.
+- `Domain Learnings` abstracts reusable lessons without replaying chronology.
+- `Gotchas for Humans` and `Gotchas for Autonomous Agents` contain
+  future-facing instructions rather than incident summaries.
+
 Required contracts:
 
 1. Keep all core sections and only evidence-supported conditional sections.

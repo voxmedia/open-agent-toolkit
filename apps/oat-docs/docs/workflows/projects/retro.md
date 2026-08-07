@@ -49,6 +49,21 @@ projects where they improve decisions. The required core and register
 contracts stay intact; evidence volume controls depth, not a new configuration
 or consent setting.
 
+Each material incident remains understandable without opening another
+artifact. Use stable evidence anchors such as project-log event IDs, artifact
+headings, review paths, decision IDs, and commit IDs. Anchors supplement but
+never replace explanation.
+
+Narrative sections have distinct ownership:
+
+- `Challenges and Struggles` owns the complete incident narrative: what
+  happened, impact, response, and result.
+- `Where We Changed Course` records only the trigger, changed direction, and
+  outcome.
+- `Domain Learnings` abstracts reusable lessons without replaying chronology.
+- `Gotchas for Humans` and `Gotchas for Autonomous Agents` contain
+  future-facing instructions rather than incident summaries.
+
 Every retro contains two machine-scannable registers:
 
 - **Repo Improvements (`RP-NN`)** route each item through

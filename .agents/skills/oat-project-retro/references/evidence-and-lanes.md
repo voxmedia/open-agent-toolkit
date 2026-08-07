@@ -16,6 +16,12 @@ Inventory and read available evidence in this order:
 Implementation outcomes and committed evidence outrank planned behavior.
 Record each source as `used` or `unavailable` in retro frontmatter.
 
+Return and preserve stable evidence anchors for load-bearing claims: prefer
+project-log event IDs, artifact headings, review paths, decision IDs, and
+commit IDs over line numbers. Anchors supplement but never replace explanation;
+the rendered incident narrative must remain understandable without opening the
+referenced source.
+
 ## Environment Detection
 
 ### Cloud tooling available
@@ -54,10 +60,10 @@ Recon lanes are optional and read-only. Scale them to evidence volume:
   decisions, orchestration/liveness, failure taxonomy, and durable-guidance
   gaps.
 
-Every lane returns compact conclusions with source paths or event identifiers,
-uncertainty labels, repo-improvement candidates, and OAT-upstream candidates.
-Lanes do not write the retro or apply changes. Root synthesis reconciles their
-claims against committed artifacts.
+Every lane returns compact conclusions with stable evidence anchors, uncertainty
+labels, repo-improvement candidates, and OAT-upstream candidates. Lanes do not
+write the retro or apply changes. Root synthesis verifies each load-bearing
+anchor against committed artifacts before preserving it in the retro.
 
 Minimum conceptual coverage, whether dispatched or performed directly:
 
