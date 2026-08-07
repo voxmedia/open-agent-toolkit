@@ -124,7 +124,8 @@ a code-only evidence scope revision as p04-t04.
 - ✓ Automatic review-fix budget 2/2 and authorized exception 1/1 recorded as
   exhausted
 - ✓ Operator approved replacing retained provider prose with closed local codes
-- ⧗ Review the p04-t04 design/plan revision, then implement it
+- ✓ p04-t04 design/plan revision passed final artifact review with no findings
+- ⧗ Implement p04-t04
 
 ## Blockers
 
@@ -132,5 +133,5 @@ None. The prior Critical finding is converted into explicit p04-t04 scope.
 
 ## Next Milestone
 
-Independently review the p04-t04 code-only evidence design/plan revision, then
-implement p04-t04 with arbitrary-canary retained-tree coverage.
+Implement p04-t04 with arbitrary-canary retained-tree and captured-output
+coverage.

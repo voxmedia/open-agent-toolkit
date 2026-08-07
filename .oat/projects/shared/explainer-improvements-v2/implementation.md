@@ -389,6 +389,11 @@ operator explicitly authorized the minimal correction: supersession preserves
 the original outcome and supersession reason rules override ordinary
 outcome-specific reason requirements.
 
+The final fresh scope review
+(`reviews/archived/artifact-p04-scope-revision-review-2026-08-07T173000Z.md`)
+passed with no findings. p04-t04 is implementation-ready with no further scope
+expansion.
+
 ## Phase 5: Prose-led authoring and release closure
 
 **Status:** pending
