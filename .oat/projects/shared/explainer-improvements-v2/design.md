@@ -85,7 +85,30 @@ Missing records and `incomplete` are non-terminal and block approval.
 `built-not-durable`, `built-needs-review`, and `failed` do not block project
 completion once recorded, but they are categorically unpublishable. One bounded
 correction may rebuild and re-review a flagged run. A remaining failure or
-quality flag is recorded rather than hidden.
+quality flag is recorded as closed, locally generated evidence rather than
+hidden.
+
+### Retained evidence boundary
+
+Provider-controlled free text is ephemeral. It may guide an in-memory correction
+within the current run, but it never crosses into terminal evidence, build
+records, manifests, warnings, returned loggable results, archive exports, or
+other durable state.
+
+Retained failure and review evidence contains only:
+
+- run and manifest identity;
+- terminal outcome and evidence disposition;
+- stable locally generated reason/finding codes from closed enums;
+- validated local artifact identifiers where needed;
+- bounded counts and fixed redaction markers.
+
+Provider messages, descriptions, evidence prose, correction prose, serialized
+objects, token-like strings, and arbitrary thrown values are mapped to local
+codes at the provider boundary and then discarded. Consumers reject unknown
+fields rather than trying to sanitize arbitrary text. Credential scrubbing may
+remain defense in depth for ephemeral display, but it is not the durable safety
+boundary.
 
 ### Prose-driven creative layer
 
@@ -142,8 +165,9 @@ deterministically.
 2. Generation validates `sourceIds` at the contract boundary.
 3. Rendering, link validation, browser review, and visual review produce a
    terminal outcome.
-4. A flagged run may receive one correction. Remaining findings are retained in
-   a compact durable record.
+4. A flagged run may receive one correction. Remaining findings are projected
+   to stable local codes in a compact durable record; provider prose is
+   discarded.
 5. Review-clean `built-durable` runs may proceed to the separate human
    publication gate. `built-not-durable`, flagged, failed, and superseded runs
    cannot publish.
@@ -158,8 +182,12 @@ Only contract changes required by the safety kernel receive new versions:
 - `publish-receipt/v2` for exact object/public verification and auxiliary
   object coverage;
 - `project-recap@2` for the hub floor and prose-led adaptive expansion;
-- a compact failure record only if existing durable records cannot represent
-  terminal failure evidence without ambiguity.
+- `terminal-evidence/v1` for code-only terminal failure/review evidence.
+
+`terminal-evidence/v1` is introduced and finalized within this unreleased
+branch. Its final shipped shape is closed and code-only; no released consumer
+depends on the superseded pre-release free-text shape. Producers and consumers
+move atomically, and archive/finalizer paths reject unknown free-text fields.
 
 Existing contract and recipe versions remain readable for deterministic replay.
 New producers and all shipped consumers move atomically:
@@ -181,6 +209,8 @@ New producers and all shipped consumers move atomically:
 - No publication-time HTML or asset mutation is allowed.
 - Credentials never appear in config-derived requests, manifests, receipts,
   logs, fixtures, or public URLs.
+- Provider-controlled free text never appears in retained artifacts or returned
+  loggable result shapes; durable evidence is code-only and closed.
 - Protected public access is explicit; 401/403 is never treated as success.
 - Flagged, failed, or superseded runs are unpublishable.
 - Corrections rebuild, rerender, revalidate, and re-review.
@@ -195,6 +225,8 @@ Tests are proportional to the invariant:
   classification, schema validation, and receipt coverage;
 - focused integration tests for adapter-to-core request composition, hard link
   gating, lifecycle ordering, and publication behavior;
+- canary tests that inject arbitrary provider strings and assert their exact
+  bytes do not occur anywhere in retained trees or returned loggable results;
 - one cross-boundary fake-destination acceptance test covering project and
   repository paths, exact bytes, explicit `index.html`, protected/public modes,
   and complete receipts;

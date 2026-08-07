@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: ba66d54b697d86de0bade8863587870af75e06da
+oat_current_task: p04-t04
+oat_last_commit: ba65b8258b8e0adce74cd20ba534255dbfc8fccb
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -72,7 +72,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-06T23:54:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-07T02:23:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -80,12 +80,15 @@ oat_generated: false
 
 **Status:** Implementation In Progress
 **Started:** 2026-08-05
-**Last Updated:** 2026-08-06
+**Last Updated:** 2026-08-07
 
 ## Current Phase
 
-Phases p01 through p03 are complete. The final p03 review passed at `ba66d54b`
-after both Minor follow-up tasks landed. Phase p04 is ready.
+Phases p01 through p03 are complete. Phase p04 tasks p04-t01 through p04-t03
+landed, followed by two automatic review fixes and one operator-authorized
+exception. The final review left one Critical open-ended provider-text
+retention finding, so the operator approved a code-only evidence scope revision
+as p04-t04.
 
 ## Artifacts
 
@@ -93,7 +96,7 @@ after both Minor follow-up tasks landed. Phase p04 is ready.
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
-- **Plan:** `plan.md` (5 phases / 25 tasks; p04 ready)
+- **Plan:** `plan.md` (5 phases / 26 tasks; p04-t04 scope revision)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -114,13 +117,19 @@ after both Minor follow-up tasks landed. Phase p04 is ready.
 - ✓ p03-t10 and p03-t11 resolved the final error-classification and summary
   guidance follow-ups
 - ✓ Final p03 review passed with no Critical, Important, or Medium findings
-- ⧗ p04-t01 source-ID boundary reproduction next
+- ✓ p04-t01 through p04-t03 implemented
+- ✓ Terminal outcome, supersession, archive, confinement, byte-binding, and
+  failure-normalization review findings resolved
+- ✓ Automatic review-fix budget 2/2 and authorized exception 1/1 recorded as
+  exhausted
+- ✓ Operator approved replacing retained provider prose with closed local codes
+- ⧗ Review the p04-t04 design/plan revision, then implement it
 
 ## Blockers
 
-None
+None. The prior Critical finding is converted into explicit p04-t04 scope.
 
 ## Next Milestone
 
-Implement p04-t01: reproduce and correct the exact `sourceIds` producer/consumer
-boundary mismatch before content processing.
+Independently review the p04-t04 code-only evidence design/plan revision, then
+implement p04-t04 with arbitrary-canary retained-tree coverage.

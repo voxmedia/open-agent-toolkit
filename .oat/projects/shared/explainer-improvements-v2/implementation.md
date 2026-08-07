@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-06
-oat_current_task_id: p04-t01
+oat_last_updated: 2026-08-07
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
 # Implementation: explainer-improvements-v2
 
 **Started:** 2026-08-05
-**Last Updated:** 2026-08-06
+**Last Updated:** 2026-08-07
 
 ## Quick-Start Exit Gate Feedback (escalation record)
 
@@ -230,15 +230,15 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 6     | 6/6       |
-| p02   | completed | 2     | 2/2       |
-| p03   | completed | 11    | 11/11     |
-| p04   | pending   | 3     | 0/3       |
-| p05   | pending   | 3     | 0/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | completed   | 6     | 6/6       |
+| p02   | completed   | 2     | 2/2       |
+| p03   | completed   | 11    | 11/11     |
+| p04   | in_progress | 4     | 3/4       |
+| p05   | pending     | 3     | 0/3       |
 
-**Total:** 19/25 tasks completed
+**Total:** 22/26 tasks completed
 
 ---
 
@@ -339,13 +339,33 @@ Operator disposition recorded in the conversation and reflected in the plan's
 
 ## Phase 4: Lifecycle and bounded recovery
 
-**Status:** pending
+**Status:** in_progress
+**Started:** 2026-08-07
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p04-t01 | pending | -      |
-| p04-t02 | pending | -      |
-| p04-t03 | pending | -      |
+| Task    | Status      | Commit    |
+| ------- | ----------- | --------- |
+| p04-t01 | completed   | d4ceff20f |
+| p04-t02 | completed   | 888afba47 |
+| p04-t03 | completed   | 8adec3778 |
+| p04-t04 | in_progress | -         |
+
+### Review escalation and scope revision
+
+Phase review found terminal-evidence credential, outcome, supersession, archive,
+and confinement defects. Two automatic fix iterations (`7a8e15fc4`,
+`6fbded0f2`) and one operator-authorized exception (`ba65b8258`) resolved every
+finding except the open-ended retained-provider-text boundary.
+
+The final acceptance review
+(`reviews/archived/p04-review-2026-08-07T021700Z.md`) reproduced nested/double-
+escaped serialization, YAML complex-key, and unenumerated standalone-token
+bypasses. Both automatic review-fix attempts and the authorized exception are
+exhausted.
+
+The operator approved a scope reduction: p04-t04 replaces retained provider
+prose with a closed code-only evidence contract. Provider text may guide the
+single in-memory correction but is discarded before persistence or loggable
+return. This is a planned contract revision, not another regex-based fix loop.
 
 ## Phase 5: Prose-led authoring and release closure
 

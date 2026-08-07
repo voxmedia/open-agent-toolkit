@@ -701,6 +701,55 @@ Run:
 git commit -m "feat(p04-t03): bound recap correction and retain failure evidence"
 ```
 
+### Task p04-t04: Replace retained provider text with closed local evidence
+
+**Files:**
+
+- `.agents/skills/explainer-kit/schemas/terminal-evidence.v1.schema.json`
+- `.agents/skills/explainer-kit/scripts/lib/terminal-evidence.mjs`
+- `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- `.agents/skills/explainer-kit/scripts/run.mjs`
+- Adapter finalizer and CLI archive consumers only where the final closed
+  contract requires migration
+- Focused core, adapter, archive, and retained-tree regression tests
+
+**Step 1: Write tests (RED)**
+
+Inject arbitrary unique canary strings through visual-review, browser,
+durability, warning, finding, thrown-value, and terminal-evidence paths. Assert
+their exact bytes never occur in any retained file, manifest, warning, archive
+export, or returned loggable result. Reproduce the final review's nested JSON,
+double-escaped key, YAML complex-key, and standalone-token examples, but make
+the invariant independent of a finite credential-pattern inventory.
+
+Require terminal evidence and returned lifecycle summaries to contain only
+closed locally generated reason/finding codes, validated local identifiers,
+bounded counts, outcomes/dispositions, and fixed markers. Unknown or free-text
+fields fail schema/semantic validation.
+
+**Step 2: Implement (GREEN)**
+
+Project provider results and arbitrary thrown values to stable local codes at
+the provider boundary, preserve raw prose only ephemerally for the in-memory
+correction attempt, and discard it before any persistence or loggable return.
+Remove best-effort text scrubbing as the durable security boundary.
+
+Finalize the unreleased `terminal-evidence/v1` schema in its code-only shape and
+migrate all producers/consumers atomically. No released consumer depends on the
+superseded pre-release shape, so do not mint or ship an unsafe compatibility
+version. Archive/finalizer readers reject unknown free-text fields.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs .agents/skills/oat-project-implement/tests/check-terminal-outcome.test.mjs .agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs && pnpm --dir packages/cli exec vitest run src/commands/project/archive/archive-utils.test.ts && pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm lint && pnpm format`
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p04-t04): retain code-only terminal evidence"
+```
+
 ---
 
 ## Phase 5: Prose-led authoring and release closure
@@ -828,7 +877,7 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 | p03           | code     | passed          | 2026-08-06 | reviews/archived/p03-review-2026-08-06T235124Z.md                                                 | ba66d54b697d86de0bade8863587870af75e06da | manual     | -                        |
 | p03           | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T213553Z.md                                                 | c9a0aeead5bce79a5e31bd6ce247e80a64ec1800 | manual     | -                        |
 | p03           | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T224958Z.md                                                 | 01d3c99075aa09ea5fb49b801d4deca1d5f3c51e | manual     | -                        |
-| p04           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
+| p04           | code     | fixes_added     | 2026-08-07 | reviews/archived/p04-review-2026-08-07T021700Z.md                                                 | ba65b8258b8e0adce74cd20ba534255dbfc8fccb | manual     | -                        |
 | p05           | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | final         | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | plan-revision | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T180042Z.md                              | c33edabc017369a629ca7a3a63757cbad3d9dab9 | manual     | -                        |
@@ -862,10 +911,11 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 - Phase 1: 6 tasks — adapter paths, destinations, and credential hygiene
 - Phase 2: 2 tasks — canonical links and hard validation
 - Phase 3: 11 tasks — publication verification, receipts, and review fixes
-- Phase 4: 3 tasks — lifecycle ordering and bounded recovery
+- Phase 4: 4 tasks — lifecycle ordering, bounded recovery, and code-only
+  terminal evidence
 - Phase 5: 3 tasks — prose-led authoring, docs, and release closure
 
-**Total: 25 tasks**
+**Total: 26 tasks**
 
 ## References
 
