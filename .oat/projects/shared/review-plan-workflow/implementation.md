@@ -2114,17 +2114,20 @@ ceilings to 30 and 15 seconds. The complete broker file passes 20/20 with
 **Mainline integration recovery:** Recovery `p06-t06-r13` merges `origin/main`
 at `3a665b9c1`, including v0.2.29 retrospective workflows and autonomous
 dispatch-scope adoption. Seven conflicts were reconciled by keeping ReviewPlan's
-newer 0.2.30/skill versions while incorporating main's retrospective types,
-docs, generated backlog entry, provider manifest, and autonomy mappings.
-Provider views, bundled assets, and the backlog index were regenerated.
+newer skill versions while incorporating main's retrospective types, docs,
+generated backlog entry, provider manifest, and autonomy mappings. Because main
+had independently advanced the public package baseline to 0.2.30, the pre-push
+version guard required a second lockstep bump to 0.2.31. Provider views, bundled
+assets, and the backlog index were regenerated.
 Focused merged-contract verification passes 143/143 autonomy and skill tests.
 Full validation passes 4,177 CLI tests, 78 control-plane tests, 41 docs package
 tests, workspace lint/format/type-check/build, all six docs builds, five-package
-0.2.30 release validation, and 65 visual measurements.
+0.2.31 release validation, and 65 visual measurements.
 
-**Next:** Complete and push the merge commit, require green PR checks, refresh
-the detached enforce fixture, and run a fresh root-owned Remote structured Tier
-1 action. p06-t06 and p06-t07 remain unadvanced.
+**Next:** Commit and push the required 0.2.31 post-merge version bump, require
+green PR checks, refresh the detached enforce fixture, and run a fresh
+root-owned Remote structured Tier 1 action. p06-t06 and p06-t07 remain
+unadvanced.
 
 ## Orchestration Runs
 

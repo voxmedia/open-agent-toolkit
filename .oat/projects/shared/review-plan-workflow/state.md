@@ -1,8 +1,8 @@
 ---
 oat_current_task: p06-t06
-oat_last_commit: bb37189d35cb26a99be407f451d3ce908c0c5012
+oat_last_commit: 95303436ddd14826b30028a693ad67b1f9082799
 oat_blockers:
-  - The origin/main merge must be pushed and green before the root-owned Remote structured Tier 1 retry
+  - The 0.2.31 post-merge version bump must be pushed and green before the root-owned Remote structured Tier 1 retry
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -423,17 +423,19 @@ remain unadvanced.
 - ✓ p06-t06-r11 committed and pushed at `23cca2eb9`
 - ✓ p06-t06-r12 committed and pushed at `bb37189d3`; PR CI returned green
 - ✓ p06-t06-r13 merges `origin/main` at `3a665b9c1`, reconciles seven conflicts,
-  regenerates managed artifacts, and passes the full local release suite
-- → Push the merge and require green PR CI before the fresh root-owned Remote
-  structured Tier 1 run
+  advances the collided public package baseline to 0.2.31, regenerates managed
+  artifacts, and passes the full local release suite
+- ✓ Merge commit `95303436d` pushed to PR #190
+- → Push the 0.2.31 follow-up and require green PR CI before the fresh
+  root-owned Remote structured Tier 1 run
 
 ## Blockers
 
-p06-t06 requires the `origin/main` merge to be pushed and green before a fresh
-root-owned Remote structured Tier 1 run at the new HEAD.
+p06-t06 requires the 0.2.31 post-merge version bump to be pushed and green
+before a fresh root-owned Remote structured Tier 1 run at the new HEAD.
 
 ## Next Milestone
 
-Push the merge commit, require green PR checks, refresh the detached enforce
+Push the 0.2.31 follow-up, require green PR checks, refresh the detached enforce
 fixture, and then run a fresh root-owned Remote structured Tier 1 action.
 p06-t06 and p06-t07 remain unadvanced.

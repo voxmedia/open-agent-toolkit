@@ -4138,7 +4138,7 @@ Resolve canonical skill, autonomy inventory, generated index/manifest, docs, and
 configuration conflicts against the combined effective behavior.
 
 **Step 2: Regenerate** Run project/user provider sync, regenerate the managed
-backlog index, and rebuild bundled CLI assets at the branch's lockstep 0.2.30
+backlog index, and rebuild bundled CLI assets at the branch's lockstep 0.2.31
 version.
 
 **Step 3: Verify** Run the focused autonomy, skill, retrospective,
