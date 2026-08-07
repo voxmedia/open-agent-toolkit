@@ -765,6 +765,14 @@ single concise `Explainer Outcome` section using the manifest and build record;
 never append a second outcome section. If no recap was attempted or reused,
 leave the summary unchanged.
 
+Before recording final approval, invoke the shared
+`oat-explainer-kit/scripts/check-terminal-outcome.mjs` guard with the resolved
+intent and, for `generate`, the selected or attempted manifest. The only
+terminal generated outcomes are `built-durable`, `built-not-durable`,
+`built-needs-review`, and `failed`. Missing records and `incomplete` block
+approval; do not substitute a warning or infer an outcome from filesystem
+presence. A `skip` intent requires no manifest.
+
 1. Dispatch incomplete `pre_approval` steps in stored order.
 2. When they succeed and a final checkpoint exists, commit `status:
 awaiting_approval` with `approval: pending` before asking for final HiLL
