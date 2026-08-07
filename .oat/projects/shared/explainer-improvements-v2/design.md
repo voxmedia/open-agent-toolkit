@@ -136,7 +136,14 @@ A `built-needs-review` record has at least one `finding`, `provider-failure`, or
 `pipeline-failure` reason. A `failed` record has at least one
 `provider-failure` or `pipeline-failure` reason. `evidenceDisposition:
 superseded` requires `manifestHash`, `supersededBy`, and a
-`finalization`/`superseded` reason; other dispositions forbid `supersededBy`.
+`finalization`/`superseded` reason. A superseded record replaces prior reasons
+with exactly one `{ stage: "finalization", kind: "superseded", count: 1 }`
+reason, with no `artifactId`; it does not append to a possibly full prior reason
+set. `supersededBy` is a closed object requiring only `runId` and
+`manifestHash`; its run ID is 1–2000 characters, differs from the record's run
+ID, and its hash uses the standard hash shape. Other dispositions forbid both
+`supersededBy` and `kind: superseded`.
+
 When a manifest exists, producers and consumers require its hash even if the
 schema cannot infer filesystem availability. Legacy `findings`, `error`,
 `message`, `code`, `evidence`, and `correction` fields are rejected.
@@ -148,12 +155,17 @@ contract. Retained review attempts use a separate closed
 
 - `attempt` is 1 or 2;
 - `disposition` is `pass`, `correct`, or `failed`;
-- `pass` requires zero reasons;
+- `reasons` contains 0–50 items independently of terminal-evidence
+  cardinality;
+- `pass` requires exactly zero reasons;
 - `correct` requires 1–50 unique `visual-review`/`finding` reasons;
 - `failed` requires 1–50 unique `visual-review` reasons whose kind is
   `provider-failure` or `pipeline-failure`;
-- reason count, sum, artifact membership, and unknown-field rules match terminal
-  evidence.
+- only per-reason count 1–50, total count at most 50, tuple uniqueness,
+  artifact membership, and unknown-field rules are shared with terminal
+  evidence;
+- `requestHash` equals the adjacent retained request's canonical `requestHash`,
+  and `attempt` equals the enclosing `attempt-N` directory.
 
 Package coverage validates the retained projection's request hash and
 review-chain identity, requires terminal `pass` for successful packages, and

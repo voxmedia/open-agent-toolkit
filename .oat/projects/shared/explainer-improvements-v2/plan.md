@@ -711,6 +711,7 @@ git commit -m "feat(p04-t03): bound recap correction and retain failure evidence
 - `.agents/skills/explainer-kit/scripts/lib/terminal-evidence.mjs`
 - `.agents/skills/explainer-kit/scripts/lib/records.mjs`
 - `.agents/skills/explainer-kit/scripts/lib/package-coverage.mjs`
+- `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
 - `.agents/skills/explainer-kit/scripts/run.mjs`
 - `.agents/skills/explainer-kit/tests/schemas.test.mjs`
 - `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
@@ -764,6 +765,13 @@ tuples with integer counts from 1–50 and total count at most 50; manifest
 artifact membership; outcome/kind constraints; and supersession conditionals.
 Reject every legacy or unknown nested field.
 
+For supersession, replace all prior reasons with exactly one
+`finalization`/`superseded` reason with count 1 and no artifact ID.
+`supersededBy` is exactly `{ runId, manifestHash }`, rejects extra fields,
+requires a replacement run distinct from the original, and is present if and
+only if disposition is `superseded`. Forbid `kind: superseded` for every other
+disposition.
+
 Keep provider `visual-review-result/v1` ephemeral. Persist only the exact new
 `visual-review-evidence/v1` projection: `schemaVersion`, `requestHash`,
 `attempt`, `disposition`, and `reasons`, with `pass`/`correct`/`failed`
@@ -771,6 +779,17 @@ cardinality and reason-kind conditionals defined in `design.md`. Migrate
 `package-coverage.mjs`, retained review-attempt records, archive fixtures, and
 lifecycle guidance atomically while preserving request/hash identity and the
 successful-package terminal-pass requirement.
+
+Visual retained `reasons` is independently 0–50: pass requires exactly zero,
+while correct/failed require 1–50. Share only per-reason count bounds, total
+count cap, tuple uniqueness, artifact membership, and unknown-field rules with
+terminal evidence. Require the retained `requestHash` to equal its adjacent
+request's canonical hash and `attempt` to equal the `attempt-N` directory.
+
+Refactor `visual-review.mjs` so the caller retains validated request identity
+when the critic throws; do not duplicate request construction in `run.mjs` or
+`records.mjs`. Persist a local `visual-review`/`provider-failure` reason without
+the caught provider text.
 
 Finalize the unreleased `terminal-evidence/v1` schema in its code-only shape and
 migrate all producers/consumers atomically. No released consumer depends on the
@@ -785,7 +804,8 @@ Add schema/semantic coverage for registry resolution, forbidden legacy and
 unknown nested fields, reason cardinality, per-reason and total count bounds,
 duplicate tuples, foreign artifact IDs, run/manifest binding, every
 outcome/disposition/supersession conditional, and every retained visual-review
-disposition conditional.
+disposition, request-hash, and attempt-directory conditional. Include positive
+and negative cases for supersession at a prior reason total of 50.
 
 **Step 3: Verify**
 
@@ -926,7 +946,8 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 | p03                | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T213553Z.md                                                 | c9a0aeead5bce79a5e31bd6ce247e80a64ec1800 | manual     | -                        |
 | p03                | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T224958Z.md                                                 | 01d3c99075aa09ea5fb49b801d4deca1d5f3c51e | manual     | -                        |
 | p04                | code     | fixes_added     | 2026-08-07 | reviews/archived/p04-review-2026-08-07T021700Z.md                                                 | ba65b8258b8e0adce74cd20ba534255dbfc8fccb | manual     | -                        |
-| p04-scope-revision | artifact | fixes_added     | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T023400Z.md                         | 8f9d2c9c946404bc06bf6de2683dc3f821173ca5 | manual     | -                        |
+| p04-scope-revision | artifact | fixes_completed | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T023400Z.md                         | 8f9d2c9c946404bc06bf6de2683dc3f821173ca5 | manual     | -                        |
+| p04-scope-revision | artifact | fixes_added     | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T025000Z.md                         | 35e610baa851e2693d9403587d9219c0f8bb2a23 | manual     | -                        |
 | p05                | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | final              | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | plan-revision      | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T180042Z.md                              | c33edabc017369a629ca7a3a63757cbad3d9dab9 | manual     | -                        |

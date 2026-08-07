@@ -374,6 +374,13 @@ terminal/review evidence post-images plus the omitted durable visual-review,
 package-coverage, adapter-output, captured-log, schema-conformance, and lifecycle
 guidance seams. Those findings were incorporated before implementation.
 
+The second scope artifact review
+(`reviews/archived/artifact-p04-scope-revision-review-2026-08-07T025000Z.md`)
+confirmed those seams, then required independent visual reason cardinality,
+exact request/attempt binding, a closed distinct-run supersession transition,
+and the request-owning visual-review helper. The second bounded artifact fix
+incorporated those rules before implementation.
+
 ## Phase 5: Prose-led authoring and release closure
 
 **Status:** pending
