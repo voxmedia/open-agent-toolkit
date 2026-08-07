@@ -21,6 +21,9 @@ const filingSkill = readRepoFile(
   '.agents/skills/oat-project-retro-file/SKILL.md',
 );
 const retroTemplate = readRepoFile('.oat/templates/project-retro.md');
+const retroDocs = readRepoFile(
+  'apps/oat-docs/docs/workflows/projects/retro.md',
+);
 
 describe('retro skill content contracts', () => {
   it('authorizes each skill mandatory formatter and check path', () => {
@@ -173,5 +176,26 @@ describe('retro skill content contracts', () => {
     expect(retroTemplate).toMatch(
       /Consumers may replace only the contents of this section/i,
     );
+  });
+
+  it('scales retro depth to evidence with concise output by default', () => {
+    for (const content of [
+      retroSkill,
+      retroQualityBar,
+      retroTemplate,
+      retroDocs,
+    ]) {
+      expect(content).toMatch(/concise[\s\S]*?default/i);
+      expect(content).toMatch(/section[\s\S]*?distinct\s+information/i);
+      expect(content).toMatch(/references?[\s\S]*?repeated\s+chronology/i);
+      expect(content).toMatch(
+        /small project[\s\S]*?core sections?[\s\S]*?brief/i,
+      );
+      expect(content).toMatch(
+        /subsections?[\s\S]*?tables?[\s\S]*?evidence-rich[\s\S]*?improve\s+decisions/i,
+      );
+    }
+
+    expect(retroSkill).toMatch(/no new[\s\S]*?config surface/i);
   });
 });

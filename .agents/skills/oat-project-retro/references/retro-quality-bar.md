@@ -48,10 +48,11 @@ Include only when evidence supports meaningful content:
 - Gotchas for Autonomous Agents
 - Remaining Boundaries and Follow-Ups
 
-For small projects, omit unsupported conditional sections and keep each core
-section brief. For large projects, use subsections and evidence tables where
-they make distinct failure classes or decisions easier to review. Do not add
-empty headings or `N/A` placeholders.
+Keep output concise by default. Every section must add distinct information.
+Prefer references to evidence over repeated chronology. For a small project,
+omit unsupported conditional sections and keep core sections brief. Use
+subsections and tables only for evidence-rich projects where they improve
+decisions. Do not add empty headings or `N/A` placeholders.
 
 ## Register Quality
 

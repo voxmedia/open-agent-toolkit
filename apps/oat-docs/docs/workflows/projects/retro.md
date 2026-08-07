@@ -40,6 +40,15 @@ access is recorded rather than hidden, and runtime claims fall back to durable
 ledgers when transcript output is incomplete. Findings distinguish confirmed
 causes, hypotheses, and inconclusive mechanisms.
 
+### Scale depth to the evidence
+
+Keep output concise by default. Every section must add distinct information.
+Prefer references to evidence over repeated chronology. For a small project,
+keep core sections brief. Use subsections and tables only for evidence-rich
+projects where they improve decisions. The required core and register
+contracts stay intact; evidence volume controls depth, not a new configuration
+or consent setting.
+
 Every retro contains two machine-scannable registers:
 
 - **Repo Improvements (`RP-NN`)** route each item through

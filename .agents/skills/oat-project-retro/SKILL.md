@@ -89,6 +89,12 @@ justifies them. Root synthesis remains with the invoking agent.
 Copy `.oat/templates/project-retro.md` to the output path and render it against
 [references/retro-quality-bar.md](references/retro-quality-bar.md).
 
+Keep output concise by default. Every section must add distinct information.
+Prefer references to evidence over repeated chronology. For a small project,
+keep core sections brief. Use subsections and tables only for evidence-rich
+projects where they improve decisions. This evidence-scaled depth adds no new
+consent-bearing config surface.
+
 Required contracts:
 
 1. Keep all core sections and only evidence-supported conditional sections.

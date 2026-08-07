@@ -25,6 +25,11 @@ oat_template_name: project-retro
      inspected evidence source above with status: used | unavailable. Remove
      all brace-delimited placeholders and scaffold RP/UP item examples. -->
 
+<!-- Keep output concise by default. Every section must add distinct
+     information. Prefer references to evidence over repeated chronology. For
+     a small project, keep core sections brief. Use subsections and tables only
+     for evidence-rich projects where they improve decisions. -->
+
 ## Executive Summary
 
 {Summarize how the run went, the most important outcome, and what should change next.}
