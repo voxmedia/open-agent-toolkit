@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-project-summary
+oat_ready_for: oat-project-pr-final
 oat_blockers: []
 oat_last_updated: 2026-08-07
 oat_current_task_id: null
@@ -415,6 +415,28 @@ sequence.
 continuations of the accepted phase implementer.
 
 **Next:** Refresh summary, documentation, and PR artifacts.
+
+### Review Received: refreshed final review
+
+**Date:** 2026-08-07
+**Review artifact:** `reviews/final-review-2026-08-07T145010Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**Finding disposition:**
+
+- I1 — fixed by root bookkeeping: the valid mid-closeout snapshot now uses
+  `status: pre_approval`, and `oat_phase_status` remains `in_progress` until the
+  PR child completes.
+
+**New tasks added:** None. This is deterministic closeout-state reconciliation.
+
+**Next:** Run a narrowed final re-review, then refresh PR #192.
 
 ### Revision Received: Inline Feedback
 
