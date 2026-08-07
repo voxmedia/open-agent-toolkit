@@ -251,16 +251,30 @@ test('terminates idempotently when the same commit evidence is already durable',
   assert.deepEqual(plan.commands, []);
 });
 
-test('refuses to finalize a recap whose visual review gate is unresolved', async () => {
+test('finalizes unresolved review evidence without making it publishable', async () => {
   const fixture = await createRun({ outcome: 'built-needs-review' });
-
-  await assert.rejects(
-    planTrackedRunFinalization(request(fixture, 'dedicated'), {
-      repoRoot: fixture.repoRoot,
-      project: 'demo',
-    }),
-    /built-needs-review.*visual review.*before finalization/i,
+  const manifest = JSON.parse(await readFile(fixture.manifestPath, 'utf8'));
+  await writeFile(
+    join(fixture.runRoot, 'terminal-evidence.json'),
+    `${JSON.stringify({
+      schemaVersion: 'explainer-kit.terminal-evidence/v1',
+      runId: manifest.runId,
+      outcome: 'built-needs-review',
+      manifestHash: canonicalHash(manifest),
+      findings: [{ artifactId: 'hub', severity: 'important' }],
+      evidenceDisposition: 'retained',
+    })}\n`,
   );
+
+  const plan = await planTrackedRunFinalization(request(fixture, 'dedicated'), {
+    repoRoot: fixture.repoRoot,
+    project: 'demo',
+  });
+  assert.equal(plan.status, 'complete');
+  assert.equal(plan.outcome, 'built-needs-review');
+  assert.equal(plan.publicationAllowed, false);
+  assert.equal(plan.evidenceDisposition, 'retained');
+  assert.deepEqual(plan.commands, []);
 });
 
 test('loads versioned package coverage from the explicit compatible core root', async () => {

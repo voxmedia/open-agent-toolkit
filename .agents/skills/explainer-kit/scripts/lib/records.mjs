@@ -260,6 +260,56 @@ export async function writeVisualReviewFailure(
   return [path];
 }
 
+export async function writeTerminalEvidence(
+  run,
+  { outcome, manifest, findings = [], error, evidenceDisposition } = {},
+) {
+  assertRun(run);
+  if (
+    !['built-needs-review', 'failed', 'superseded'].includes(outcome) ||
+    !['retained', 'partial', 'superseded', 'unavailable'].includes(
+      evidenceDisposition,
+    ) ||
+    !Array.isArray(findings) ||
+    findings.some((finding) => !isObject(finding)) ||
+    (error !== undefined && !isObject(error))
+  ) {
+    throw new TypeError('Terminal evidence has an invalid compact shape.');
+  }
+  if (
+    manifest !== undefined &&
+    (!isObject(manifest) ||
+      manifest.runId !== run.runId ||
+      manifest.slug !== run.slug)
+  ) {
+    throw new Error(
+      'Terminal evidence manifest identity does not match the run.',
+    );
+  }
+  const path = 'terminal-evidence.json';
+  try {
+    await access(join(run.runRoot, path));
+    throw new Error('Terminal evidence is immutable once retained.');
+  } catch (caught) {
+    if (caught?.code !== 'ENOENT') throw caught;
+  }
+  await writeJsonAtomic(run.runRoot, path, {
+    schemaVersion: 'explainer-kit.terminal-evidence/v1',
+    runId: run.runId,
+    outcome,
+    ...(manifest && { manifestHash: canonicalHash(manifest) }),
+    findings: findings.map(compactFinding),
+    ...(error && {
+      error: {
+        code: String(error.code ?? 'E_RUN'),
+        message: String(error.message ?? 'Run failed.'),
+      },
+    }),
+    evidenceDisposition,
+  });
+  return path;
+}
+
 export async function writeVisualRevision(run, { artifactIds, changes } = {}) {
   assertRun(run);
   if (
@@ -295,6 +345,14 @@ export async function writeVisualRevision(run, { artifactIds, changes } = {}) {
     changes: structuredClone(changes),
   });
   return [VISUAL_REVISION_PATH];
+}
+
+function compactFinding(finding) {
+  return Object.fromEntries(
+    ['artifactId', 'rubric', 'severity', 'evidence', 'correction']
+      .filter((key) => finding[key] !== undefined)
+      .map((key) => [key, structuredClone(finding[key])]),
+  );
 }
 
 async function copyConfinedEvidence(

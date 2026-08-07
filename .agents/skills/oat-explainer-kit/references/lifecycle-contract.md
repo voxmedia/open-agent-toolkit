@@ -145,6 +145,8 @@ version, and capture identity, each review request/result, cohesion
 observations, and any one-pass revision record. Missing, malformed, forged,
 cross-record mismatched, stale, or failed review-chain evidence terminates as
 `built-needs-review`; durability and publication remain blocked.
+The review chain performs at most one correction and one final review. It never
+starts a second rebuild to chase visual perfection.
 
 ## Tracked-run finalization
 
@@ -156,10 +158,12 @@ repository root, project name, an explicit compatible `coreRoot`, and, for
 dynamically loads the versioned package-coverage contract from that core root;
 it does not maintain an adapter-local path list.
 
-A core `built-needs-review` outcome is a terminal review gate, not a
-non-durable success. The planner rejects it before producing artifact,
-attestation, evidence-commit, or push commands. The recap must instead be
-reviewed and rebuilt to a passing visual-review outcome.
+A core `built-needs-review` or `failed` outcome is terminal evidence, not a
+non-durable success. The core retains `terminal-evidence.json` with run
+identity, the manifest hash when available, compact findings or error, and the
+evidence disposition. The planner verifies that binding and returns complete
+without artifact, attestation, evidence-commit, or push commands. This preserves
+the handoff without promoting it to durable or publishable success.
 
 The returned stages must run in order:
 
@@ -220,7 +224,11 @@ complete. A later attestation may recover durability without repeating the
 archive.
 
 This recovery path applies only to `built-not-durable`.
-`built-needs-review` cannot be exported, attested, finalized, or pushed.
+`built-needs-review` and `failed` packages may be exported so their compact
+terminal evidence survives project deletion, but they cannot be attested into
+`built-durable`, pushed by the finalizer, or published. Flagged, failed,
+superseded, and `built-not-durable` runs are never publishable. Only a
+review-clean `built-durable` run may cross the explicit human publication gate.
 
 Post-archive summary and PR recap links target `projectRecapExport.exportRoot`
 under `.oat/repo/reference/project-recaps/` on the current head branch. The

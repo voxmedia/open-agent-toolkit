@@ -252,11 +252,30 @@ test('passes only the selected shared-project recap to archive and supports no-r
   );
   assert.match(
     completionSkill,
-    /When recap intent resolves to `skip`, or generation produces no valid final recap, leave `SELECTED_PROJECT_RECAP_RUN` empty and complete without a recap/,
+    /When recap intent resolves to `skip`, leave `SELECTED_PROJECT_RECAP_RUN` empty\s+and complete without a recap/,
   );
   assert.match(
     completionSkill,
     /Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty/,
+  );
+});
+
+test('documents bounded correction, compact terminal evidence, and publication denial', () => {
+  assert.match(
+    lifecycleContract,
+    /at most one correction and one final review/,
+  );
+  assert.match(
+    lifecycleContract,
+    /`terminal-evidence\.json`.*run\s+identity.*manifest hash.*compact findings or error.*evidence\s+disposition/s,
+  );
+  assert.match(
+    lifecycleContract,
+    /Flagged, failed,\s+superseded, and `built-not-durable` runs are never publishable/,
+  );
+  assert.match(
+    lifecycleContract,
+    /review-clean `built-durable`.*explicit human publication gate/s,
   );
 });
 

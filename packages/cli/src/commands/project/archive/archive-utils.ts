@@ -1062,11 +1062,6 @@ async function loadVerifiedProjectRecap(
       'Selected project recap manifest recipe must be exactly `project-recap`.',
     );
   }
-  if (manifest.outcome === 'built-needs-review') {
-    throw new CliError(
-      'Selected project recap is built-needs-review and requires a passing visual review before archival.',
-    );
-  }
   const verifiedArtifactCount = await verifyProjectRecapImmutableHashes(
     sourceRunRoot,
     manifest,

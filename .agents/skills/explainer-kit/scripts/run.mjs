@@ -26,6 +26,7 @@ import { writeJsonAtomic, writeTextAtomic } from './lib/fs-safe.mjs';
 import { validateHtmlSafety } from './lib/html-safety.mjs';
 import { validateInternalReferences } from './lib/internal-references.mjs';
 import { parseMarkdown } from './lib/markdown.mjs';
+import { assertManifestPublishable } from './lib/publication-policy.mjs';
 import {
   auditArtifactSet,
   checkGuidelines,
@@ -56,6 +57,7 @@ import {
   verifySetPlanResumeToken,
   writeManifestAtomic,
   writeSetPlanRecords,
+  writeTerminalEvidence,
   writeVisualReviewAttempt,
   writeVisualReviewFailure,
   writeVisualRevision,
@@ -241,7 +243,13 @@ export async function runExplainer(request, options = {}) {
     if (state.reviewGateBlocked) {
       await updateBuildRecord(run, { id: 'durability', status: 'skipped' });
       await updateBuildRecord(run, { id: 'publish', status: 'skipped' });
-      await persistManifest(state, now());
+      const manifest = await persistManifest(state, now());
+      await writeTerminalEvidence(run, {
+        outcome: 'built-needs-review',
+        manifest,
+        findings: state.visualReview?.result?.findings ?? [],
+        evidenceDisposition: state.visualReview ? 'retained' : 'partial',
+      });
       return resultFor(state);
     }
 
@@ -255,9 +263,19 @@ export async function runExplainer(request, options = {}) {
     }
     return resultFor(state);
   } catch (error) {
+    let manifest;
     if (state.theme && state.factBase) {
       await persistFailureManifest(state, error, now()).catch(() => {});
+      manifest = await readFile(state.run.manifestPath, 'utf8')
+        .then(JSON.parse)
+        .catch(() => undefined);
     }
+    await writeTerminalEvidence(run, {
+      outcome: 'failed',
+      manifest,
+      error,
+      evidenceDisposition: manifest ? 'retained' : 'unavailable',
+    }).catch(() => {});
     return resultFor(state, error);
   }
 }
@@ -1479,6 +1497,10 @@ async function executeDurabilityAndPublish(state, options, now) {
   const finalizedAt = now();
   const finalizedManifest = await persistManifest(state, finalizedAt);
   try {
+    const buildRecord = JSON.parse(
+      await readFile(state.run.buildRecordPath, 'utf8'),
+    );
+    assertManifestPublishable(finalizedManifest, { buildRecord });
     const receipt = await options.publish({
       request: structuredClone(state.run.request.durability.publish),
       runRoot: state.run.runRoot,

@@ -27,6 +27,7 @@ import {
   verifySetPlanResumeToken,
   writeManifestAtomic,
   writeSetPlanRecords,
+  writeTerminalEvidence,
   writeVisualReviewFailure,
   writeVisualRevision,
 } from '../scripts/lib/records.mjs';
@@ -269,6 +270,54 @@ test('retains structured partial evidence for a failed visual review attempt', a
       ],
     },
   );
+});
+
+test('retains compact flagged, failed, and superseded terminal evidence', async () => {
+  for (const outcome of ['built-needs-review', 'failed', 'superseded']) {
+    const outputRoot = await temporaryDirectory();
+    const run = await initializeRun(request(outputRoot));
+    const terminalManifest = {
+      runId: run.runId,
+      slug: run.slug,
+      outcome: outcome === 'superseded' ? 'failed' : outcome,
+    };
+    const relativePath = await writeTerminalEvidence(run, {
+      outcome,
+      manifest: terminalManifest,
+      findings:
+        outcome === 'built-needs-review'
+          ? [{ artifactId: 'project-recap', severity: 'important' }]
+          : [],
+      error:
+        outcome === 'failed'
+          ? { code: 'E_QA', message: 'Review evidence was incomplete.' }
+          : undefined,
+      evidenceDisposition: outcome === 'superseded' ? 'superseded' : 'retained',
+    });
+
+    assert.equal(relativePath, 'terminal-evidence.json');
+    assert.deepEqual(
+      JSON.parse(await readFile(join(run.runRoot, relativePath), 'utf8')),
+      {
+        schemaVersion: 'explainer-kit.terminal-evidence/v1',
+        runId: run.runId,
+        outcome,
+        manifestHash: canonicalHash(terminalManifest),
+        findings:
+          outcome === 'built-needs-review'
+            ? [{ artifactId: 'project-recap', severity: 'important' }]
+            : [],
+        ...(outcome === 'failed' && {
+          error: {
+            code: 'E_QA',
+            message: 'Review evidence was incomplete.',
+          },
+        }),
+        evidenceDisposition:
+          outcome === 'superseded' ? 'superseded' : 'retained',
+      },
+    );
+  }
 });
 
 test('defines mode-aware successful recap coverage while allowing immutable extras', () => {

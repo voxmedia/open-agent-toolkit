@@ -24,10 +24,22 @@ export async function planTrackedRunFinalization(request, context = {}) {
       'Finalization requires an explainer-kit.manifest/v1 record.',
     );
   }
-  if (manifest.outcome === 'built-needs-review') {
-    throw new Error(
-      'built-needs-review requires a passing visual review before finalization.',
+  if (['built-needs-review', 'failed'].includes(manifest.outcome)) {
+    const terminalEvidence = JSON.parse(
+      await readFile(join(runRoot, 'terminal-evidence.json'), 'utf8'),
     );
+    const canonicalHash = await loadCanonicalHash(context.coreRoot);
+    assertTerminalEvidence(terminalEvidence, manifest, canonicalHash);
+    return {
+      schemaVersion: 'oat-explainer-kit.finalization-plan/v1',
+      status: 'complete',
+      outcome: manifest.outcome,
+      commands: [],
+      push: null,
+      publicationAllowed: false,
+      evidenceDisposition: terminalEvidence.evidenceDisposition,
+      terminalEvidencePath: 'terminal-evidence.json',
+    };
   }
   const packageCoverage = await loadPackageCoverage(context.coreRoot);
 
@@ -345,6 +357,41 @@ async function loadPackageCoverage(coreRoot) {
     );
   }
   return loaded;
+}
+
+async function loadCanonicalHash(coreRoot) {
+  const root = await realpathRequired(coreRoot, 'coreRoot');
+  const modulePath = join(root, 'scripts', 'lib', 'contracts.mjs');
+  let loaded;
+  try {
+    loaded = await import(pathToFileURL(modulePath).href);
+  } catch (loadError) {
+    throw new Error(
+      `Compatible explainer contracts could not be loaded from coreRoot: ${loadError.message}`,
+      { cause: loadError },
+    );
+  }
+  if (typeof loaded.canonicalHash !== 'function') {
+    throw new Error('coreRoot must provide canonicalHash().');
+  }
+  return loaded.canonicalHash;
+}
+
+function assertTerminalEvidence(evidence, manifest, canonicalHash) {
+  if (
+    evidence?.schemaVersion !== 'explainer-kit.terminal-evidence/v1' ||
+    evidence.runId !== manifest.runId ||
+    evidence.outcome !== manifest.outcome ||
+    evidence.manifestHash !== canonicalHash(manifest) ||
+    !Array.isArray(evidence.findings) ||
+    !['retained', 'partial', 'unavailable'].includes(
+      evidence.evidenceDisposition,
+    )
+  ) {
+    throw new Error(
+      'Terminal evidence does not match the flagged or failed manifest.',
+    );
+  }
 }
 
 function resolveRunPath(runRoot, path) {

@@ -794,7 +794,7 @@ describe('archive utils', () => {
     await expect(access(projectPath)).resolves.toBeUndefined();
   });
 
-  it('refuses to export a recap whose visual review gate is unresolved', async () => {
+  it('exports unresolved review evidence without making it publishable', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
     await mkdir(projectPath, { recursive: true });
@@ -802,18 +802,22 @@ describe('archive utils', () => {
       outcome: 'built-needs-review',
     });
 
-    await expect(
-      archiveProjectOnCompletion({
+    const result = await archiveProjectOnCompletion(
+      {
         repoRoot,
         projectPath,
         projectName: 'demo',
         projectsRoot: '.oat/projects/shared',
         projectRecapRun: recap.relativeRunPath,
         s3SyncOnComplete: false,
-      }),
-    ).rejects.toThrow(/built-needs-review.*visual review.*before archival/i);
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
 
-    await expect(access(projectPath)).resolves.toBeUndefined();
+    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(
+      recap.immutableCount,
+    );
+    await expect(access(projectPath)).rejects.toThrow();
   });
 
   it('rejects an incomplete immutable visual-review evidence chain', async () => {

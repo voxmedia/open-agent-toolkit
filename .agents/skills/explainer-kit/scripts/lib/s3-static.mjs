@@ -19,6 +19,7 @@ import {
   validateInitiativeCatalog,
 } from './catalog.mjs';
 import { validateContract } from './contracts.mjs';
+import { assertManifestPublishable } from './publication-policy.mjs';
 
 const execFile = promisify(execFileCallback);
 const SENTINEL_BODY = 'explainer-kit sentinel\n';
@@ -115,6 +116,14 @@ export async function publishS3Static(request, dependencies = {}) {
   const siteRoot = resolve(cwd, request.siteRoot);
   const manifestPath = resolve(cwd, request.manifestPath);
   const manifest = await readJson(manifestPath, 'manifest');
+  const buildRecord =
+    manifest.outcome === 'incomplete'
+      ? await readJson(
+          resolve(dirname(manifestPath), manifest.buildRecord?.path ?? ''),
+          'build record',
+        )
+      : undefined;
+  assertManifestPublishable(manifest, { buildRecord });
   const manifestValidation = validateContract('manifest', manifest);
   if (!manifestValidation.valid) {
     throw publishError(

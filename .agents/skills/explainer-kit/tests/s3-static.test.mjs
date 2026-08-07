@@ -74,6 +74,39 @@ test('rejects credential-bearing and ambiguous public roots before network use',
   assert.equal(networkCalled, false);
 });
 
+test('denies non-durable, flagged, failed, and superseded publication before network use', async () => {
+  for (const outcome of [
+    'built-not-durable',
+    'built-needs-review',
+    'failed',
+    'superseded',
+  ]) {
+    const fixture = await createFixture();
+    fixture.manifest.outcome = outcome;
+    await writeFile(
+      fixture.request.manifestPath,
+      `${JSON.stringify(fixture.manifest, null, 2)}\n`,
+    );
+    let networkCalled = false;
+
+    await assert.rejects(
+      publishS3Static(fixture.request, {
+        approved: true,
+        command: async () => {
+          networkCalled = true;
+        },
+        httpGet: async () => {
+          networkCalled = true;
+        },
+      }),
+      (error) =>
+        error.code === 'E_PUBLISH_OUTCOME' &&
+        error.message.includes(String(outcome)),
+    );
+    assert.equal(networkCalled, false);
+  }
+});
+
 test('creates run-unique sentinel paths with unguessable suffixes', () => {
   const first = createSentinelRelativePath('run/with spaces', () =>
     Buffer.from('0123456789abcdeffedcba9876543210', 'hex'),
@@ -402,6 +435,14 @@ test('hash-verifies binary public payloads without text coercion', async () => {
     mediaType: 'image/png',
     hash: binaryHash,
     rebuildable: false,
+    durableEvidence: [
+      {
+        kind: 'commit',
+        ref: 'a'.repeat(40),
+        paths: ['site/initiatives/demo/pixel.png'],
+        attestedAt: NOW,
+      },
+    ],
   });
   fixture.manifest.immutableHashes['source/content/pixel.md'] =
     `sha256:${'f'.repeat(64)}`;
@@ -578,6 +619,14 @@ async function createFixture() {
         mediaType: 'text/html',
         hash: hashes.html,
         rebuildable: false,
+        durableEvidence: [
+          {
+            kind: 'commit',
+            ref: 'a'.repeat(40),
+            paths: ['site/initiatives/demo/index.html'],
+            attestedAt: NOW,
+          },
+        ],
       },
     ],
     immutableHashes: {
@@ -589,7 +638,7 @@ async function createFixture() {
       'theme.resolved.json': `sha256:${'b'.repeat(64)}`,
       'site/initiatives/demo/index.html': hashes.html,
     },
-    outcome: 'built-not-durable',
+    outcome: 'built-durable',
     buildRecord: {
       path: 'build-record.json',
       hash: `sha256:${'e'.repeat(64)}`,
