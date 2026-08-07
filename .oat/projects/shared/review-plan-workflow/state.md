@@ -1,8 +1,8 @@
 ---
 oat_current_task: p06-t06
-oat_last_commit: 95303436ddd14826b30028a693ad67b1f9082799
+oat_last_commit: b6894769911142213a9071d95e8806a91c5edc09
 oat_blockers:
-  - The 0.2.31 post-merge version bump must be pushed and green before the root-owned Remote structured Tier 1 retry
+  - The lifecycle docs deduplication must be pushed and green before the root-owned Remote structured Tier 1 retry
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -426,16 +426,19 @@ remain unadvanced.
   advances the collided public package baseline to 0.2.31, regenerates managed
   artifacts, and passes the full local release suite
 - ✓ Merge commit `95303436d` pushed to PR #190
-- → Push the 0.2.31 follow-up and require green PR CI before the fresh
-  root-owned Remote structured Tier 1 run
+- ✓ 0.2.31 follow-up committed and pushed at `b68947699`; release dry-run passes
+- ✓ p06-t06-r14 removes the duplicate lifecycle docs section and `pnpm check`
+  passes all 10 tasks locally
+- → Push p06-t06-r14 and require green PR CI before the fresh root-owned Remote
+  structured Tier 1 run
 
 ## Blockers
 
-p06-t06 requires the 0.2.31 post-merge version bump to be pushed and green
-before a fresh root-owned Remote structured Tier 1 run at the new HEAD.
+p06-t06 requires the lifecycle docs deduplication to be pushed and green before
+a fresh root-owned Remote structured Tier 1 run at the new HEAD.
 
 ## Next Milestone
 
-Push the 0.2.31 follow-up, require green PR checks, refresh the detached enforce
-fixture, and then run a fresh root-owned Remote structured Tier 1 action.
+Push p06-t06-r14, require green PR checks, refresh the detached enforce fixture,
+and then run a fresh root-owned Remote structured Tier 1 action.
 p06-t06 and p06-t07 remain unadvanced.

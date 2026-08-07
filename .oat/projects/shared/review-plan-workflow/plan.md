@@ -4147,6 +4147,20 @@ type-check, tests, build, docs build, and `pnpm release:validate`.
 
 **Step 4: Commit** Complete the merge commit and push the refreshed branch.
 
+#### Recovery p06-t06-r14: Remove merged lifecycle documentation duplication
+
+**Finding:** CI on `b68947699` found that the lifecycle merge retained the
+`Phase-review setup during planning` section twice, violating markdownlint
+MD024.
+
+**Step 1: Implement** Remove the later duplicate while preserving the original
+phase-review setup and the newly merged retrospective completion section.
+
+**Step 2: Verify** Run `pnpm check`, including the docs formatting and
+markdownlint gate.
+
+**Step 3: Commit** `docs(p06-t06): remove duplicate lifecycle section`
+
 ### Task p06-t07: Publish Stage A and start the soak
 
 **Files:**

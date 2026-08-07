@@ -175,17 +175,6 @@ step.
 
 When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (minors auto-converted to fix tasks, no user prompts). Disabled by default. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
 
-### Phase-review setup during planning
-
-Spec-driven, quick, and import planning run one shared setup after stable phase
-IDs exist and before the plan artifact review. The target probe qualifies only
-an explicitly configured, enabled, and available review target, then offers all
-phases, selected phases, or disabled. Existing explicit
-`oat_phase_review_gate` values are preserved unchanged without re-prompting.
-Probe failure, no qualifying target, non-interactive execution, or user decline
-leaves phase review disabled. Provider native plan mode inherits this behavior
-through the import-plan lane.
-
 ## Implementation modes
 
 `oat-project-implement` v2.0 dispatches one subagent per phase (not per task). Capability detection at skill start selects a tier, locked for the run:

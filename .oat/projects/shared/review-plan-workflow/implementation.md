@@ -2124,10 +2124,15 @@ Full validation passes 4,177 CLI tests, 78 control-plane tests, 41 docs package
 tests, workspace lint/format/type-check/build, all six docs builds, five-package
 0.2.31 release validation, and 65 visual measurements.
 
-**Next:** Commit and push the required 0.2.31 post-merge version bump, require
-green PR checks, refresh the detached enforce fixture, and run a fresh
-root-owned Remote structured Tier 1 action. p06-t06 and p06-t07 remain
-unadvanced.
+**Post-merge CI recovery:** CI on `b68947699` exposed one markdownlint MD024
+failure: lifecycle documentation retained the phase-review setup section twice
+after conflict resolution. Recovery `p06-t06-r14` removes only the later
+duplicate. The exact CI command, `pnpm check`, passes all 10 tasks including
+docs formatting and markdownlint.
+
+**Next:** Commit and push p06-t06-r14, require green PR checks, refresh the
+detached enforce fixture, and run a fresh root-owned Remote structured Tier 1
+action. p06-t06 and p06-t07 remain unadvanced.
 
 ## Orchestration Runs
 
