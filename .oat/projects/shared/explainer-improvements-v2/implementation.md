@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-07
-oat_current_task_id: p04-t04
+oat_current_task_id: p04-t05
 oat_generated: false
 ---
 
@@ -235,10 +235,10 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | p01   | completed   | 6     | 6/6       |
 | p02   | completed   | 2     | 2/2       |
 | p03   | completed   | 11    | 11/11     |
-| p04   | in_progress | 4     | 3/4       |
+| p04   | in_progress | 6     | 4/6       |
 | p05   | pending     | 3     | 0/3       |
 
-**Total:** 22/26 tasks completed
+**Total:** 23/28 tasks completed
 
 ---
 
@@ -342,12 +342,14 @@ Operator disposition recorded in the conversation and reflected in the plan's
 **Status:** in_progress
 **Started:** 2026-08-07
 
-| Task    | Status      | Commit    |
-| ------- | ----------- | --------- |
-| p04-t01 | completed   | d4ceff20f |
-| p04-t02 | completed   | 888afba47 |
-| p04-t03 | completed   | 8adec3778 |
-| p04-t04 | in_progress | -         |
+| Task    | Status    | Commit    |
+| ------- | --------- | --------- |
+| p04-t01 | completed | d4ceff20f |
+| p04-t02 | completed | 888afba47 |
+| p04-t03 | completed | 8adec3778 |
+| p04-t04 | completed | c3ef47b71 |
+| p04-t05 | pending   | -         |
+| p04-t06 | pending   | -         |
 
 ### Review escalation and scope revision
 
@@ -393,6 +395,33 @@ The final fresh scope review
 (`reviews/archived/artifact-p04-scope-revision-review-2026-08-07T173000Z.md`)
 passed with no findings. p04-t04 is implementation-ready with no further scope
 expansion.
+
+### Review Received: p04-t04
+
+**Date:** 2026-08-07
+**Review artifact:**
+`reviews/archived/p04-t04-review-2026-08-07T185131Z.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** p04-t05, p04-t06
+
+- C1 → p04-t05: define and enforce the exact retained run-package inventory
+  after filesystem-capable provider boundaries and across archive source,
+  staged, and exported trees.
+- I1 → p04-t06: inject each row's canary through the exercised core and adapter
+  path before asserting complete stdout/stderr non-retention.
+
+The automatic p04 review-fix budget and prior implementation exception were
+already exhausted. The operator explicitly authorized one further bounded
+exception to implement both findings and re-review only their fix range.
+
+**Next:** Execute p04-t05 and p04-t06, then run a narrow fresh code re-review.
 
 ## Phase 5: Prose-led authoring and release closure
 

@@ -823,6 +823,96 @@ Run:
 git commit -m "fix(p04-t04): retain code-only terminal evidence"
 ```
 
+### Task p04-t05: (review) Enforce the exact retained run-package inventory
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/package-coverage.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+
+**Step 1: Write focused retained-tree and archive tests (RED)**
+
+Have the durability callback write a unique exact-byte canary to an
+unmanifested file through its supplied `runRoot` on both return and throw paths.
+Prove the file cannot survive in the retained local run tree or enter an
+archive export. Add archive cases with extra source and staged entries, and
+assert the exported tree contains exactly the permitted package inventory.
+
+Cover every provider callback that receives a run-package filesystem path so
+the check cannot be bypassed through a sibling boundary.
+
+**Step 2: Implement the exact package inventory (GREEN)**
+
+Define one closed permissible run-package inventory from manifest-declared
+authored artifacts plus the validated request, immutable records, closed
+mutable review records, and terminal evidence required by the lifecycle.
+Reject directories, files, and links outside that inventory after every
+filesystem-capable provider boundary, including throw paths, and before a run
+becomes retained.
+
+At archive time, validate the source and staged trees against the same
+inventory and copy only verified allowed paths. Do not recursively promote
+undeclared files, and do not delete intended authored artifacts declared by the
+manifest.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs && pnpm --dir packages/cli exec vitest run src/commands/project/archive/archive-utils.test.ts && pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm lint && pnpm format`
+
+Expected: both durability paths fail closed without retaining the canary,
+source/staged archive extras are rejected, the archive has the exact allowed
+tree, and all repository gates pass.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p04-t05): enforce retained package inventory"
+```
+
+### Task p04-t06: (review) Inject every CLI stream canary scenario
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Modify runtime seams only if a genuine injected canary escapes
+
+**Step 1: Make every matrix row a genuine injection test (RED)**
+
+For every core and adapter success, correctable, terminally flagged,
+provider-failed, and caught-error scenario, inject that row's unique exact-byte
+canary through a realistic provider-originated field, callback value, or thrown
+value before invoking the CLI. Assert the complete captured stdout and stderr
+do not contain the canary.
+
+Require the test to prove the canary entered the mocked execution path so a
+canary-free fixture cannot satisfy the assertion accidentally.
+
+**Step 2: Close any exposed stream seam (GREEN)**
+
+If genuine injection reveals a leak, project the affected provider value to
+the existing closed local code and structural-fact result at its owning
+boundary. Do not add pattern scrubbing, weaken assertions, or serialize raw
+caught errors.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs && pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm lint && pnpm format`
+
+Expected: every named matrix row proves real canary injection and complete
+stdout/stderr non-retention, with all repository gates passing.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "test(p04-t06): inject every CLI stream canary"
+```
+
 ---
 
 ## Phase 5: Prose-led authoring and release closure
@@ -950,11 +1040,12 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 | p03                | code     | passed          | 2026-08-06 | reviews/archived/p03-review-2026-08-06T235124Z.md                                                 | ba66d54b697d86de0bade8863587870af75e06da | manual     | -                        |
 | p03                | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T213553Z.md                                                 | c9a0aeead5bce79a5e31bd6ce247e80a64ec1800 | manual     | -                        |
 | p03                | code     | fixes_completed | 2026-08-06 | reviews/archived/p03-review-2026-08-06T224958Z.md                                                 | 01d3c99075aa09ea5fb49b801d4deca1d5f3c51e | manual     | -                        |
-| p04                | code     | fixes_added     | 2026-08-07 | reviews/archived/p04-review-2026-08-07T021700Z.md                                                 | ba65b8258b8e0adce74cd20ba534255dbfc8fccb | manual     | -                        |
+| p04                | code     | fixes_completed | 2026-08-07 | reviews/archived/p04-review-2026-08-07T021700Z.md                                                 | ba65b8258b8e0adce74cd20ba534255dbfc8fccb | manual     | -                        |
 | p04-scope-revision | artifact | fixes_completed | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T023400Z.md                         | 8f9d2c9c946404bc06bf6de2683dc3f821173ca5 | manual     | -                        |
 | p04-scope-revision | artifact | fixes_completed | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T025000Z.md                         | 35e610baa851e2693d9403587d9219c0f8bb2a23 | manual     | -                        |
 | p04-scope-revision | artifact | fixes_completed | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T030500Z.md                         | 26f1e8b420938b487397223ef609d1ef17d16fd4 | manual     | -                        |
 | p04-scope-revision | artifact | passed          | 2026-08-07 | reviews/archived/artifact-p04-scope-revision-review-2026-08-07T173000Z.md                         | a0cd15674c2032ac62b5103077280d90d1ef70b3 | manual     | -                        |
+| p04-t04            | code     | fixes_added     | 2026-08-07 | reviews/archived/p04-t04-review-2026-08-07T185131Z.md                                             | c3ef47b71d640d4289576fad904e20e027e6935f | manual     | -                        |
 | p05                | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | final              | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
 | plan-revision      | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T180042Z.md                              | c33edabc017369a629ca7a3a63757cbad3d9dab9 | manual     | -                        |
@@ -988,11 +1079,11 @@ git commit -m "chore(p05-t03): synchronize explainer release versions"
 - Phase 1: 6 tasks — adapter paths, destinations, and credential hygiene
 - Phase 2: 2 tasks — canonical links and hard validation
 - Phase 3: 11 tasks — publication verification, receipts, and review fixes
-- Phase 4: 4 tasks — lifecycle ordering, bounded recovery, and code-only
-  terminal evidence
+- Phase 4: 6 tasks — lifecycle ordering, bounded recovery, code-only terminal
+  evidence, and exact retained-package confinement
 - Phase 5: 3 tasks — prose-led authoring, docs, and release closure
 
-**Total: 26 tasks**
+**Total: 28 tasks**
 
 ## References
 

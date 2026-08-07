@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t04
-oat_last_commit: ba65b8258b8e0adce74cd20ba534255dbfc8fccb
+oat_current_task: p04-t05
+oat_last_commit: c3ef47b71d640d4289576fad904e20e027e6935f
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -72,7 +72,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-07T02:23:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-07T18:53:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -84,12 +84,11 @@ oat_generated: false
 
 ## Current Phase
 
-Phases p01 through p03 are complete. Phase p04 tasks p04-t01 through p04-t03
-landed, followed by two automatic review fixes and one operator-authorized
-exception. The final review left one Critical open-ended provider-text
-retention finding
-(`reviews/archived/p04-review-2026-08-07T021700Z.md`), so the operator approved
-a code-only evidence scope revision as p04-t04.
+Phases p01 through p03 are complete. p04-t04 landed the approved code-only
+evidence scope revision. Its fresh code review confirmed the closed evidence
+contracts but found an unmanifested-file archive bypass and false-positive CLI
+canary rows. The operator authorized one bounded exception for p04-t05 and
+p04-t06 to close both findings before a narrow re-review.
 
 ## Artifacts
 
@@ -97,7 +96,7 @@ a code-only evidence scope revision as p04-t04.
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
-- **Plan:** `plan.md` (5 phases / 26 tasks; p04-t04 scope revision)
+- **Plan:** `plan.md` (5 phases / 28 tasks; p04-t05 and p04-t06 review fixes)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -125,13 +124,16 @@ a code-only evidence scope revision as p04-t04.
   exhausted
 - ✓ Operator approved replacing retained provider prose with closed local codes
 - ✓ p04-t04 design/plan revision passed final artifact review with no findings
-- ⧗ Implement p04-t04
+- ✓ p04-t04 implemented the closed terminal and visual evidence contracts
+- ✓ Operator authorized one bounded exception for the two fresh code-review
+  findings
+- ⧗ Implement p04-t05 and p04-t06, then re-review their fix range
 
 ## Blockers
 
-None. The prior Critical finding is converted into explicit p04-t04 scope.
+None. Both active findings are converted into explicit bounded tasks.
 
 ## Next Milestone
 
-Implement p04-t04 with arbitrary-canary retained-tree and captured-output
-coverage.
+Implement p04-t05 exact run-package confinement, then p04-t06 genuine CLI
+stream canary injection.
