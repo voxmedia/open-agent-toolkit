@@ -1,7 +1,7 @@
 ---
 oat_current_task: p05-t01
 oat_last_commit: 098e1780b86116492073513614f64835aa470030
-oat_blockers: ['p05 HiLL approval']
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -9,7 +9,7 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [p05] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: [p05] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
@@ -72,7 +72,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-07T20:07:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-07T20:08:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -87,7 +87,7 @@ oat_generated: false
 Phases p01 through p04 are complete. The operator-authorized p04-t05 and
 p04-t06 fixes closed the unmanifested-file archive bypass and made every CLI
 stream canary row a genuine injection test. Their narrow re-review passed with
-no findings. Phase p05 is the configured human checkpoint and awaits approval.
+no findings. The operator approved the configured p05 human checkpoint.
 
 ## Artifacts
 
@@ -128,13 +128,13 @@ no findings. Phase p05 is the configured human checkpoint and awaits approval.
   findings
 - ✓ p04-t05 and p04-t06 implemented and passed narrow re-review
 - ✓ p04 complete
-- ⧗ Await p05 HiLL approval
+- ✓ p05 HiLL checkpoint approved
+- ⧗ Implement p05-t01 through p05-t03
 
 ## Blockers
 
-Configured p05 human checkpoint requires operator approval before execution.
+None.
 
 ## Next Milestone
 
-Approve p05, then implement the three prose-led authoring and release-closure
-tasks.
+Implement the three prose-led authoring and release-closure tasks.
