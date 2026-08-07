@@ -1,16 +1,16 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-06
-oat_current_task_id: prev1-t01
+oat_last_updated: 2026-08-07
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: oat-project-retro
 
 **Started:** 2026-08-05
-**Last Updated:** 2026-08-06
+**Last Updated:** 2026-08-07
 
 ## Gate Escalation Record (planning gate, attempts exhausted)
 
@@ -72,17 +72,17 @@ resolution complete; plan handed to implementation.
 
 ## Progress Overview
 
-| Phase  | Status      | Tasks | Completed |
-| ------ | ----------- | ----- | --------- |
-| p01    | complete    | 2     | 2/2       |
-| p02    | complete    | 4     | 4/4       |
-| p03    | complete    | 2     | 2/2       |
-| p04    | complete    | 2     | 2/2       |
-| p05    | complete    | 2     | 2/2       |
-| p06    | complete    | 1     | 1/1       |
-| p-rev1 | in_progress | 4     | 0/4       |
+| Phase  | Status   | Tasks | Completed |
+| ------ | -------- | ----- | --------- |
+| p01    | complete | 2     | 2/2       |
+| p02    | complete | 4     | 4/4       |
+| p03    | complete | 2     | 2/2       |
+| p04    | complete | 2     | 2/2       |
+| p05    | complete | 2     | 2/2       |
+| p06    | complete | 1     | 1/1       |
+| p-rev1 | complete | 4     | 4/4       |
 
-**Total:** 13/17 tasks completed
+**Total:** 17/17 tasks completed
 
 ---
 
@@ -133,12 +133,12 @@ resolution complete; plan handed to implementation.
 
 ### p-rev1 — Revision 1
 
-| Task      | Status  | Commit | Outcome |
-| --------- | ------- | ------ | ------- |
-| prev1-t01 | pending | -      | -       |
-| prev1-t02 | pending | -      | -       |
-| prev1-t03 | pending | -      | -       |
-| prev1-t04 | pending | -      | -       |
+| Task      | Status   | Commit      | Outcome                                                              |
+| --------- | -------- | ----------- | -------------------------------------------------------------------- |
+| prev1-t01 | complete | `e9133926c` | Keeps bounded mutable state coherent with immutable proposal bodies. |
+| prev1-t02 | complete | `87990de0b` | Separates related filings into a dedicated backlog item.             |
+| prev1-t03 | complete | `4f6164778` | Requires durable destination receipts and honest remote visibility.  |
+| prev1-t04 | complete | `c95a6f616` | Makes output evidence-scaled and refreshes shipped revision assets.  |
 
 ---
 
@@ -198,19 +198,19 @@ resolution complete; plan handed to implementation.
 
 ### Task prev1-t01: Keep mutable retro state coherent
 
-**Status:** pending
+**Status:** completed
 
 ### Task prev1-t02: Distinguish related duplicate candidates
 
-**Status:** pending
+**Status:** completed
 
 ### Task prev1-t03: Make local filing receipts durable
 
-**Status:** pending
+**Status:** completed
 
 ### Task prev1-t04: Calibrate retro depth and ship revision assets
 
-**Status:** pending
+**Status:** completed
 
 ---
 
@@ -282,22 +282,32 @@ configured-invocation evidence.
 
 #### Phase Outcome
 
-| Phase | Status | Task commits             | Review rounds | Fix rounds | Verification                         |
-| ----- | ------ | ------------------------ | ------------- | ---------- | ------------------------------------ |
-| p06   | passed | `4b40ea7fa`, `e9c30d26b` | 2             | 1          | 25 focused and 78 package tests pass |
+| Phase  | Status | Task commits                                       | Review rounds | Fix rounds | Verification                                     |
+| ------ | ------ | -------------------------------------------------- | ------------- | ---------- | ------------------------------------------------ |
+| p06    | passed | `4b40ea7fa`, `e9c30d26b`                           | 2             | 1          | 25 focused and 78 package tests pass             |
+| p-rev1 | passed | `e9133926c`, `87990de0b`, `4f6164778`, `c95a6f616` | 2             | 1          | 20 focused tests and the full ordered gates pass |
+
+The accepted p-rev1 review-fix commits were `36a0776ba`, `b67c885d8`, and
+`c1229f738`. They close the receipt-transition and design-alignment findings
+without changing the ownership of the four original task commits.
 
 #### Dispatch Evidence
 
-| Action         | Request / continuation ID                            | Target                                     | Model axis                    | Result |
-| -------------- | ---------------------------------------------------- | ------------------------------------------ | ----------------------------- | ------ |
-| implementation | `oat-project-retro-rev-p06-20260806T2300Z`           | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | done   |
-| review r1      | `oat-project-retro-rev-p06-review-r1-20260806T2333Z` | `oat-reviewer-gpt-5-6-sol-high`            | `selected:gpt-5.6-sol-high`   | fail   |
-| fix r1         | `oat-project-retro-p06-review-r1-fix-01`             | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | done   |
-| review r2      | `oat-project-retro-rev-p06-review-r2-20260806T2341Z` | `oat-reviewer-gpt-5-6-sol-high`            | `selected:gpt-5.6-sol-high`   | pass   |
+| Scope  | Action         | Request / continuation ID                               | Agent ID                               | Target                                     | Model axis                    | Result |
+| ------ | -------------- | ------------------------------------------------------- | -------------------------------------- | ------------------------------------------ | ----------------------------- | ------ |
+| p06    | implementation | `oat-project-retro-rev-p06-20260806T2300Z`              | recorded in p06 review artifacts       | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | done   |
+| p06    | review r1      | `oat-project-retro-rev-p06-review-r1-20260806T2333Z`    | recorded in p06 review artifact        | `oat-reviewer-gpt-5-6-sol-high`            | `selected:gpt-5.6-sol-high`   | fail   |
+| p06    | fix r1         | `oat-project-retro-p06-review-r1-fix-01`                | recorded in p06 review artifacts       | `oat-phase-implementer-gpt-5-6-sol-medium` | `selected:gpt-5.6-sol-medium` | done   |
+| p06    | review r2      | `oat-project-retro-rev-p06-review-r2-20260806T2341Z`    | recorded in p06 review artifact        | `oat-reviewer-gpt-5-6-sol-high`            | `selected:gpt-5.6-sol-high`   | pass   |
+| p-rev1 | implementation | `oat-project-retro-rev1-implementation-20260806T2345Z`  | `1d334a62-cbb1-4c38-bd96-3ea527195697` | `oat-phase-implementer-gpt-5-6-sol-high`   | `selected:gpt-5.6-sol-high`   | done   |
+| p-rev1 | review r1      | `oat-project-retro-rev1-review-r1-20260807T0007Z`       | `363fa587-ff70-4bf9-a728-827c9652fd20` | `oat-reviewer-gpt-5-6-sol-high`            | `selected:gpt-5.6-sol-high`   | fail   |
+| p-rev1 | fix r1         | `oat-project-retro-rev1-review-fixes-r1-20260807T0015Z` | `1d334a62-cbb1-4c38-bd96-3ea527195697` | `oat-phase-implementer-gpt-5-6-sol-high`   | `selected:gpt-5.6-sol-high`   | done   |
+| p-rev1 | review r2      | `oat-project-retro-rev1-review-r2-20260807T0027Z`       | `a723fe1d-e552-422d-b5e9-306dad33c35b` | `oat-reviewer-gpt-5-6-sol-high`            | `selected:gpt-5.6-sol-high`   | pass   |
 
-Both reviewers reported `Reconnaissance: not-attempted`; no reviewer-local
-orchestration record was required. Runtime identity was not observable, so
-launcher-owned targets and native acceptance remain the invocation evidence.
+All p06 and p-rev1 reviewers reported `Reconnaissance: not-attempted`; no
+reviewer-local orchestration record was required. Runtime identity was not
+observable, so launcher-owned targets and native acceptance remain the
+invocation evidence. No implementation recovery attempts were used.
 
 <!-- orchestration-runs-end -->
 
@@ -404,6 +414,17 @@ launcher-owned targets and native acceptance remain the invocation evidence.
 - p06 review round 1 found one Important crossed-dialect case. The original
   implementer added exact heading/task dialect constraints in `e9c30d26b`;
   round 2 passed with no findings.
+- p-rev1 implemented all four dogfood revisions in four ordered task commits.
+  Focused RED/GREEN contracts covered coherence, duplicate classification,
+  receipt durability, and evidence-scaled concision.
+- p-rev1 review round 1 found three Important gaps in destination-first
+  chronology, local-link/rerun receipt recovery, and design alignment. The
+  accepted implementer closed them in `36a0776ba`, `b67c885d8`, and
+  `c1229f738`, preserving a destination-only receipt commit followed by a
+  separate retro writeback.
+- p-rev1 review round 2 passed with no findings. All 20 focused contracts,
+  bundle/package contracts, and the ordered check, type-check, test, build,
+  lint, format, docs-build, and release-validation gates passed.
 
 ---
 
@@ -411,23 +432,25 @@ launcher-owned targets and native acceptance remain the invocation evidence.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review      | Source Artifact | Planned / Documented             | Actual / Accepted                                                                    | Reason                                                                                                                            | Source of Truth                       | Follow-up                                               |
-| ------------------ | --------------- | -------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------- |
-| p03 review round 1 | `plan.md`       | Three lifecycle skill files only | Added bounded review-fix authority for two contract tests and the autonomy inventory | Required mechanical maintenance for p03 version bumps and scanner-matched non-gate sites was omitted from the original file lists | Updated `plan.md` review-fix boundary | Resume the exact p03 implementer target, then re-review |
-| p02 review round 1 | `plan.md`       | Four p02 task boundaries         | Added bounded authority for four existing retro contract files and one focused test  | Review exposed resumability, non-interactive filing, schema, rollup, and provenance gaps not explicit in the original task steps  | Updated `plan.md` review-fix boundary | Resume the exact p02 implementer target, then re-review |
+| Task / Review      | Source Artifact | Planned / Documented             | Actual / Accepted                                                                               | Reason                                                                                                                            | Source of Truth                       | Follow-up                                               |
+| ------------------ | --------------- | -------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------- |
+| p03 review round 1 | `plan.md`       | Three lifecycle skill files only | Added bounded review-fix authority for two contract tests and the autonomy inventory            | Required mechanical maintenance for p03 version bumps and scanner-matched non-gate sites was omitted from the original file lists | Updated `plan.md` review-fix boundary | Resume the exact p03 implementer target, then re-review |
+| p02 review round 1 | `plan.md`       | Four p02 task boundaries         | Added bounded authority for four existing retro contract files and one focused test             | Review exposed resumability, non-interactive filing, schema, rollup, and provenance gaps not explicit in the original task steps  | Updated `plan.md` review-fix boundary | Resume the exact p02 implementer target, then re-review |
+| p-rev1 review r1   | `design.md`     | Initial revision task file sets  | Added bounded receipt-transition tests, design alignment, and destination-only dogfood evidence | Review exposed incomplete local-link/rerun recovery and a receipt chronology that did not yet demonstrate the new invariant       | Passing p-rev1 re-review              | Preserve destination-before-writeback ordering          |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                  | Result |
-| ----- | ---------------------------------------------------------- | ------ |
-| p01   | Integrated repository CI, lint, and format gates           | Passed |
-| p02   | Focused retro skill content contracts (6 tests)            | Passed |
-| p03   | Focused lifecycle skill and autonomy contracts (164 tests) | Passed |
-| p04   | Documentation check and docs build                         | Passed |
-| p05   | Full CI/build sequence and five-package release validation | Passed |
-| p06   | Control-plane focused (25) and package-wide (78) tests     | Passed |
+| Phase  | Tests Run                                                        | Result |
+| ------ | ---------------------------------------------------------------- | ------ |
+| p01    | Integrated repository CI, lint, and format gates                 | Passed |
+| p02    | Focused retro skill content contracts (6 tests)                  | Passed |
+| p03    | Focused lifecycle skill and autonomy contracts (164 tests)       | Passed |
+| p04    | Documentation check and docs build                               | Passed |
+| p05    | Full CI/build sequence and five-package release validation       | Passed |
+| p06    | Control-plane focused (25) and package-wide (78) tests           | Passed |
+| p-rev1 | Retro contracts (20), full ordered gates, and release validation | Passed |
 
 ## Final Summary (for PR/docs)
 
@@ -442,6 +465,13 @@ Track test execution during implementation.
 - Dogfooded the workflow on `explainer-improvements`, applied one explicitly
   approved lifecycle-instruction promotion, and made no filing or external
   write.
+- Dogfooded the revised workflow on this project, kept mutable state coherent,
+  separated a related lifecycle defect into
+  `BL-260806-fail-closed-when-configured`, and recorded a verified local
+  destination receipt with honest unpushed visibility.
+- Added exact local filing recovery rules for create, strengthen, link,
+  failed-commit, no-upstream, GitHub, and rerun transitions while keeping
+  proposal bodies immutable and output concise by default.
 - Bumped the five public packages in lockstep to `0.2.30`; final check,
   type-check, test, build, docs, lint/format, package validation, and visual
   validation gates passed.

@@ -72,6 +72,10 @@ artifact=.oat/projects/shared/oat-project-retro/references/project-retro.md evid
 
 Phase passed after one bounded review-fix round; see reviews/p06-review-2026-08-06T234340Z.md.
 
+### 2026-08-07 · structural · oat-project-implement · p-rev1
+
+Phase passed after one bounded review-fix round; see reviews/p-rev1-review-2026-08-07T003046Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
