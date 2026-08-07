@@ -40,7 +40,11 @@ copying their content here. -->
   `oat-project-retro-file` files consented repo or upstream feedback after
   destination preflight and duplicate checks. The `workflow.retro` namespace
   controls non-interactive apply and filing behavior, while interactive
-  completion offers a missing retro as a safety net.
+  completion offers a missing retro as a safety net. Dogfood revisions add
+  strict canonical/legacy revision-phase parsing, one bounded mutable
+  `Current State` surface, exact-versus-related duplicate classification,
+  destination-first local receipts with fail-closed rerun recovery, and
+  evidence-scaled concise output.
 - CLI `0.2.28` adds tiered task-level defect prevention and bounded
   same-target post-commit recovery without weakening accepted-launch
   terminality. A dedicated per-phase numeric budget, committed terminal ledger
