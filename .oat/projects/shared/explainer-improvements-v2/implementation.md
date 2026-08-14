@@ -430,6 +430,35 @@ The authorized narrow re-review
 findings. C1 and I1 are resolved, p04 is complete, and execution pauses at the
 configured p05 human checkpoint.
 
+### Review ledger reconciliation
+
+The immutable p04 code-review sequence is:
+
+- `p04-review-2026-08-07T003711Z.md` manually reviewed p04 at
+  `8adec377800752964941a8fdae02073136fe479b`; its findings were accepted and
+  resolved by the first automatic fix range ending at
+  `7a8e15fc44cd22f9d9f94c57b10e6f659561d2a8`.
+- `p04-review-2026-08-07T010500Z.md` manually re-reviewed p04 at
+  `7a8e15fc44cd22f9d9f94c57b10e6f659561d2a8`; its remaining and newly exposed
+  findings were resolved by the second automatic fix range ending at
+  `6fbded0f2c942100191a6d201775af3698b4d873`.
+- `p04-review-2026-08-07T013800Z.md` manually re-reviewed p04 at
+  `6fbded0f2c942100191a6d201775af3698b4d873`; its remaining findings were
+  resolved by the operator-authorized exception ending at
+  `ba65b8258b8e0adce74cd20ba534255dbfc8fccb`.
+- `p04-review-2026-08-07T021700Z.md` manually reviewed p04 at
+  `ba65b8258b8e0adce74cd20ba534255dbfc8fccb`. The bounded findings were fixed,
+  but the retained-provider-text boundary required the approved p04-t04 scope
+  revision described above.
+- `p04-t04-review-2026-08-07T185131Z.md` manually reviewed p04-t04 at
+  `c3ef47b71d640d4289576fad904e20e027e6935f`; its C1 and I1 findings became
+  p04-t05 and p04-t06.
+- `p04-t04-review-2026-08-07T200546Z.md` manually reviewed the resulting
+  p04-t05/p04-t06 fix range at
+  `098e1780b86116492073513614f64835aa470030` and passed with no findings. Its
+  immutable artifact scope remains `p04-t04`; the plan ledger includes an
+  explicit p04-t05/p04-t06 scope alias rather than relabeling the archive.
+
 ## Phase 5: Prose-led authoring and release closure
 
 **Status:** completed
