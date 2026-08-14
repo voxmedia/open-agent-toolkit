@@ -3369,6 +3369,24 @@ test('core CLI streams exclude arbitrary provider bytes for every terminal path'
       },
     },
     {
+      name: 'correctable',
+      result: {
+        outcome: 'built-needs-review',
+        reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+      },
+      inject(result, canary) {
+        result.visualReview = {
+          schemaVersion: 'explainer-kit.visual-review-evidence/v1',
+          requestHash: `sha256:${'1'.repeat(64)}`,
+          attempt: 1,
+          disposition: 'correct',
+          reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+          providerFinding: canary,
+        };
+        return result;
+      },
+    },
+    {
       name: 'terminally flagged',
       result: {
         outcome: 'built-needs-review',
@@ -3376,7 +3394,11 @@ test('core CLI streams exclude arbitrary provider bytes for every terminal path'
       },
       inject(result, canary) {
         result.visualReview = {
-          disposition: 'correct',
+          schemaVersion: 'explainer-kit.visual-review-evidence/v1',
+          requestHash: `sha256:${'2'.repeat(64)}`,
+          attempt: 2,
+          disposition: 'failed',
+          reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
           providerFinding: canary,
         };
         return result;
@@ -3435,6 +3457,50 @@ test('core CLI streams exclude arbitrary provider bytes for every terminal path'
     assert.equal(
       exitCode,
       scenario.throws || scenario.result?.outcome === 'failed' ? 1 : 0,
+    );
+  }
+});
+
+test('core CLI excludes provider canaries from live return and failure paths', async () => {
+  for (const providerOutcome of ['return', 'failure']) {
+    const fixture = await suppliedFixture('project-explainer');
+    const canary = `CORE-LIVE-${providerOutcome}-provider-secret-EXACT-BYTES`;
+    const requestPath = join(fixture.cwd, `${providerOutcome}-request.json`);
+    const authorModulePath = join(fixture.cwd, `${providerOutcome}-author.mjs`);
+    const markerPath = join(fixture.cwd, `${providerOutcome}-entered.txt`);
+    await Promise.all([
+      writeFile(requestPath, `${JSON.stringify(fixture.request, null, 2)}\n`),
+      writeFile(
+        authorModulePath,
+        providerCanaryAuthorModule({
+          canary,
+          markerPath,
+          throws: providerOutcome === 'failure',
+        }),
+      ),
+    ]);
+    const stdout = [];
+    const stderr = [];
+
+    const exitCode = await runExplainerCli(
+      ['--request', requestPath, '--author-module', authorModulePath],
+      {
+        log: (value) => stdout.push(value),
+        error: (value) => stderr.push(value),
+      },
+    );
+
+    assert.equal(await readFile(markerPath, 'utf8'), canary);
+    assert.equal(
+      `${stdout.join('\n')}\n${stderr.join('\n')}`.includes(canary),
+      false,
+      providerOutcome,
+    );
+    assert.equal(exitCode, providerOutcome === 'failure' ? 1 : 0);
+    const projected = JSON.parse(stderr.at(-1) ?? stdout.at(-1));
+    assert.equal(
+      projected.outcome,
+      providerOutcome === 'failure' ? 'failed' : 'built-not-durable',
     );
   }
 });
@@ -3514,6 +3580,35 @@ test('CLI resolves an explicit author module without persisting executable callb
     await access(join(result.runRoot, `source/content/${artifactId}.html`));
   }
 });
+
+function providerCanaryAuthorModule({ canary, markerPath, throws }) {
+  return `import { writeFile } from 'node:fs/promises';
+
+export default async function author(request) {
+  await writeFile(${JSON.stringify(markerPath)}, ${JSON.stringify(canary)});
+  ${throws ? `throw new Error(${JSON.stringify(canary)});` : ''}
+  const required = request.floor?.requiredNarrative ?? ['overview'];
+  const markdown = required
+    .map(
+      (id, index) =>
+        \`## \${id}\\n\\nSection \${index + 1} explains the verified \${id}. \${index === 0 ? request.factBase.claims[0]?.text ?? '' : ''}\`,
+    )
+    .join('\\n\\n');
+  return {
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: request.artifactId,
+    content: {
+      markdown: \`# Provider result\\n\\n${canary}\\n\\n\${markdown}\\n\`,
+    },
+    provenance: {
+      authorId: 'live-provider-canary',
+      generatedAt: '${NOW}',
+      method: 'module',
+    },
+  };
+}
+`;
+}
 
 test('runs both canonical recipes config-free from directories without .oat files', async () => {
   for (const recipe of ['project-explainer', 'project-recap']) {

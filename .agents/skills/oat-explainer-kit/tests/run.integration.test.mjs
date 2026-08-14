@@ -1540,7 +1540,31 @@ test('adapter CLI streams exclude arbitrary provider bytes for every terminal pa
       },
       inject(result, canary) {
         result.result.visualReview = {
+          schemaVersion: 'explainer-kit.visual-review-evidence/v1',
+          requestHash: `sha256:${'3'.repeat(64)}`,
+          attempt: 1,
           disposition: 'correct',
+          reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+          providerFinding: canary,
+        };
+        return result;
+      },
+    },
+    {
+      name: 'terminally flagged',
+      result: {
+        result: {
+          outcome: 'built-needs-review',
+          reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+        },
+      },
+      inject(result, canary) {
+        result.result.visualReview = {
+          schemaVersion: 'explainer-kit.visual-review-evidence/v1',
+          requestHash: `sha256:${'4'.repeat(64)}`,
+          attempt: 2,
+          disposition: 'failed',
+          reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
           providerFinding: canary,
         };
         return result;
@@ -1596,6 +1620,132 @@ test('adapter CLI streams exclude arbitrary provider bytes for every terminal pa
       exitCode,
       scenario.throws || scenario.result?.result.outcome === 'failed' ? 1 : 0,
     );
+  }
+});
+
+test('adapter CLI excludes provider canaries from live return and failure paths', async () => {
+  const fixture = await createFixture();
+  const binRoot = join(fixture.root, 'live-cli-bin');
+  await mkdir(binRoot, { recursive: true });
+  await writeFile(
+    join(binRoot, 'oat'),
+    `#!/bin/sh
+lock="${join(binRoot, 'oat-config.lock')}"
+while ! mkdir "$lock" 2>/dev/null; do
+  sleep 0.05
+done
+trap 'rmdir "$lock"' EXIT INT TERM
+"${join(SOURCE_REPO_ROOT, 'node_modules', '.bin', 'tsx')}" --tsconfig "${join(
+      SOURCE_REPO_ROOT,
+      'packages',
+      'cli',
+      'tsconfig.json',
+    )}" "${join(SOURCE_REPO_ROOT, 'packages', 'cli', 'src', 'index.ts')}" "$@"
+`,
+    { mode: 0o755 },
+  );
+  const originalPath = process.env.PATH;
+  process.env.PATH = `${binRoot}:${originalPath ?? ''}`;
+  const factBasePath = join(fixture.root, 'live-provider-fact-base.json');
+  await writeFile(
+    factBasePath,
+    `${JSON.stringify(
+      {
+        schemaVersion: 'explainer-kit.fact-base/v1',
+        generatedAt: '2026-07-20T12:00:00.000Z',
+        mode: 'supplied',
+        freshnessPolicy: 'live-wins',
+        sources: [
+          {
+            id: 'integration',
+            kind: 'file',
+            locator: 'integration.md',
+            hash: `sha256:${'5'.repeat(64)}`,
+            observedAt: '2026-07-20T12:00:00.000Z',
+          },
+        ],
+        claims: [
+          {
+            id: 'adapter-provider-canary',
+            text: 'The live adapter invoked the source core author provider.',
+            status: 'confirmed',
+            citations: [
+              { sourceId: 'integration', locator: 'integration.md:1' },
+            ],
+          },
+        ],
+        unresolvedClaims: [],
+        overrides: [],
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  try {
+    for (const providerOutcome of ['return', 'failure']) {
+      const canary = `ADAPTER-LIVE-${providerOutcome}-provider-secret-EXACT-BYTES`;
+      const contextPath = join(
+        fixture.root,
+        `${providerOutcome}-adapter-context.json`,
+      );
+      const authorModulePath = join(
+        fixture.root,
+        `${providerOutcome}-adapter-author.mjs`,
+      );
+      const markerPath = join(
+        fixture.root,
+        `${providerOutcome}-adapter-entered.txt`,
+      );
+      await Promise.all([
+        writeFile(
+          contextPath,
+          `${JSON.stringify(
+            {
+              adapterRoot: SOURCE_ADAPTER_ROOT,
+              userSkillsRoot: SOURCE_SKILLS_ROOT,
+              repoRoot: fixture.repoRoot,
+              invocation: 'project',
+              activeProject: '.oat/projects/shared/demo',
+              recipe: 'project-explainer',
+              slug: `adapter-live-${providerOutcome}`,
+              suppliedFactBasePath: factBasePath,
+              authorModulePath,
+              mode: 'unattended',
+            },
+            null,
+            2,
+          )}\n`,
+        ),
+        writeFile(
+          authorModulePath,
+          providerCanaryAuthorModule({
+            canary,
+            markerPath,
+            throws: providerOutcome === 'failure',
+          }),
+        ),
+      ]);
+      const stdout = [];
+      const stderr = [];
+
+      const exitCode = await runOatExplainerCli(['--context', contextPath], {
+        log: (value) => stdout.push(value),
+        error: (value) => stderr.push(value),
+      });
+
+      const captured = `${stdout.join('\n')}\n${stderr.join('\n')}`;
+      assert.equal(exitCode, providerOutcome === 'failure' ? 1 : 0, captured);
+      assert.equal(await readFile(markerPath, 'utf8'), canary);
+      assert.equal(captured.includes(canary), false, providerOutcome);
+      const projected = JSON.parse(stderr.at(-1) ?? stdout.at(-1));
+      assert.equal(
+        projected.result.outcome,
+        providerOutcome === 'failure' ? 'failed' : 'built-not-durable',
+      );
+    }
+  } finally {
+    process.env.PATH = originalPath;
   }
 });
 
@@ -1718,6 +1868,35 @@ export function getCalls() {
 }
 `,
   );
+}
+
+function providerCanaryAuthorModule({ canary, markerPath, throws }) {
+  return `import { writeFile } from 'node:fs/promises';
+
+export async function author(request) {
+  await writeFile(${JSON.stringify(markerPath)}, ${JSON.stringify(canary)});
+  ${throws ? `throw new Error(${JSON.stringify(canary)});` : ''}
+  const required = request.floor?.requiredNarrative ?? ['overview'];
+  const markdown = required
+    .map(
+      (id, index) =>
+        \`## \${id}\\n\\nSection \${index + 1} explains the verified \${id}. \${index === 0 ? request.factBase.claims[0]?.text ?? '' : ''}\`,
+    )
+    .join('\\n\\n');
+  return {
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: request.artifactId,
+    content: {
+      markdown: \`# Provider result\\n\\n${canary}\\n\\n\${markdown}\\n\`,
+    },
+    provenance: {
+      authorId: 'live-provider-canary',
+      generatedAt: '2026-07-20T12:00:00.000Z',
+      method: 'module',
+    },
+  };
+}
+`;
 }
 
 async function writeValidPlanSetModule(path) {
