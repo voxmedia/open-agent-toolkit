@@ -218,7 +218,7 @@ async function loadRecipes(coreRoot) {
       sha256: await hashFile(path),
     });
   }
-  return entries.sort(byId);
+  return entries.sort(byRecipeIdentity);
 }
 
 async function listChangedCandidates(repoRoot) {
@@ -726,6 +726,10 @@ function byName(left, right) {
 
 function byId(left, right) {
   return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
+}
+
+function byRecipeIdentity(left, right) {
+  return byId(left, right) || left.version.localeCompare(right.version);
 }
 
 function parseArguments(argv) {

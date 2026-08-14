@@ -16,6 +16,12 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { afterEach, test } from 'node:test';
 import { promisify } from 'node:util';
 
+import {
+  assertReleaseCandidate,
+  hashCanonicalJson,
+  releaseCandidateIdentity,
+} from './explainer-rc-contract.mjs';
+
 const execFileAsync = promisify(execFile);
 const RUNNER = resolve(import.meta.dirname, 'run-explainer-rc.mjs');
 const PACKAGE_NAMES = [
@@ -123,6 +129,26 @@ test('directly executes packaged publish-request v2 with exact request and manif
   });
   assert.equal(record.coreRunId, 'run-publish-123');
   assert.deepEqual(await extractionDirectories(fixture.tempRoot), []);
+});
+
+test('accepts sorted recipe identities with multiple versions of one recipe', async () => {
+  const fixture = await createFixture();
+  const recipe = fixture.manifest.recipes[0];
+  fixture.manifest.recipes.push({
+    ...recipe,
+    version: '2',
+    path: 'recipes/project-explainer.v2.json',
+    sha256: `sha256:${'9'.repeat(64)}`,
+  });
+  fixture.manifest.rcId = hashCanonicalJson(
+    releaseCandidateIdentity(fixture.manifest),
+  );
+
+  assert.doesNotThrow(() =>
+    assertReleaseCandidate(fixture.manifest, (message) => {
+      throw new Error(message);
+    }),
+  );
 });
 
 test('rejects unknown direct publish request versions before packaged execution', async () => {

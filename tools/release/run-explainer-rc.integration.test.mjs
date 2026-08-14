@@ -1,9 +1,16 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { after, test } from 'node:test';
 
+import {
+  catalogFromManifest,
+  initiativeCatalogPath,
+  serializeInitiativeCatalog,
+} from '../../.agents/skills/explainer-kit/scripts/lib/catalog.mjs';
+import { validateContract } from '../../.agents/skills/explainer-kit/scripts/lib/contracts.mjs';
 import { buildExplainerRc } from './build-explainer-rc.mjs';
 import {
   hashCanonicalJson,
@@ -19,6 +26,49 @@ after(async () => {
   if (root) await rm(root, { recursive: true, force: true });
 });
 
+test('packaged RC v2 fixture includes exact production catalog evidence', () => {
+  const manifest = fixtureManifest();
+  const receipt = publishReceipt(manifest);
+  const catalogPath = initiativeCatalogPath(manifest.slug);
+  const catalogHash = hashBytes(
+    Buffer.from(
+      serializeInitiativeCatalog(
+        catalogFromManifest(manifest, receipt.roots.publicBaseUrl),
+      ),
+    ),
+  );
+  const catalog = receipt.artifacts.find(
+    ({ source }) => source.kind === 'auxiliary' && source.name === 'catalog',
+  );
+
+  assert.equal(receipt.artifacts.length, manifest.artifacts.length + 1);
+  assert.deepEqual(catalog, {
+    source: { kind: 'auxiliary', name: 'catalog' },
+    relativePath: catalogPath,
+    hash: catalogHash,
+    s3Uri: `${receipt.roots.s3Uri}/${catalogPath.slice('site/'.length)}`,
+    publicUrl: `${receipt.roots.publicBaseUrl}/${catalogPath.slice('site/'.length)}`,
+    contentType: 'application/json',
+    objectVerification: verifiedObject(catalogHash),
+    publicVerification: verifiedPublic(catalogHash),
+  });
+  const context = {
+    manifest,
+    catalogArtifact: { relativePath: catalogPath, hash: catalogHash },
+  };
+  assert.equal(
+    validateContract('publish-receipt', receipt, context).valid,
+    true,
+  );
+
+  const drifted = structuredClone(receipt);
+  drifted.artifacts.pop();
+  assert.equal(
+    validateContract('publish-receipt', drifted, context).valid,
+    false,
+  );
+});
+
 test(
   'builds a real RC, runs its packaged core, and validates attributable wrapper post-run evidence',
   { skip: !CLEAN_REPO, timeout: 180_000 },
@@ -29,8 +79,12 @@ test(
     const rcPath = join(acceptanceDir, 'rc.json');
     const requestPath = join(root, 'private-request.json');
     const factBasePath = join(root, 'fact-base.json');
+    const authorModulePath = join(root, 'fixture-author.mjs');
     const executionPath = join(root, 'private-wrapper-execution.json');
-    await writeJson(factBasePath, suppliedFactBase());
+    await Promise.all([
+      writeJson(factBasePath, suppliedFactBase()),
+      writeFile(authorModulePath, fixtureAuthorModule()),
+    ]);
     const request = runRequest(root, factBasePath);
     await writeJson(requestPath, request);
 
@@ -44,7 +98,12 @@ test(
       artifactsDir,
       entry: 'scripts/run.mjs',
       record: executionPath,
-      entryArgs: ['--request', requestPath],
+      entryArgs: [
+        '--request',
+        requestPath,
+        '--author-module',
+        authorModulePath,
+      ],
       cwd: root,
     });
     const manifest = JSON.parse(
@@ -162,6 +221,41 @@ function publishReceipt(manifest) {
     s3Uri: 's3://example-bucket/explainers',
     publicBaseUrl: 'https://cdn.example.com/explainers',
   };
+  const artifacts = manifest.artifacts
+    .filter(({ status }) => status === 'built')
+    .map(({ id, renderedPath, hash, mediaType }) => {
+      const publishedPath = renderedPath.slice('site/'.length);
+      return {
+        source: { kind: 'manifest', artifactId: id },
+        relativePath: renderedPath,
+        hash,
+        s3Uri: `${roots.s3Uri}/${publishedPath}`,
+        publicUrl: `${roots.publicBaseUrl}/${publishedPath}`,
+        contentType: mediaType,
+        objectVerification: verifiedObject(hash),
+        publicVerification: verifiedPublic(hash),
+      };
+    });
+  const catalogPath = initiativeCatalogPath(manifest.slug);
+  const catalogHash = hashBytes(
+    Buffer.from(
+      serializeInitiativeCatalog(
+        catalogFromManifest(manifest, roots.publicBaseUrl),
+      ),
+    ),
+  );
+  const catalogPublishedPath = catalogPath.slice('site/'.length);
+  artifacts.push({
+    source: { kind: 'auxiliary', name: 'catalog' },
+    relativePath: catalogPath,
+    hash: catalogHash,
+    s3Uri: `${roots.s3Uri}/${catalogPublishedPath}`,
+    publicUrl: `${roots.publicBaseUrl}/${catalogPublishedPath}`,
+    contentType: 'application/json',
+    objectVerification: verifiedObject(catalogHash),
+    publicVerification: verifiedPublic(catalogHash),
+  });
+
   return {
     schemaVersion: 'explainer-kit.publish-receipt/v2',
     provider: 's3-static',
@@ -174,21 +268,7 @@ function publishReceipt(manifest) {
       publicVerification: verifiedPublic(`sha256:${'a'.repeat(64)}`),
       deleted: true,
     },
-    artifacts: manifest.artifacts
-      .filter(({ status }) => status === 'built')
-      .map(({ id, renderedPath, hash, mediaType }) => {
-        const publishedPath = renderedPath.slice('site/'.length);
-        return {
-          source: { kind: 'manifest', artifactId: id },
-          relativePath: renderedPath,
-          hash,
-          s3Uri: `${roots.s3Uri}/${publishedPath}`,
-          publicUrl: `${roots.publicBaseUrl}/${publishedPath}`,
-          contentType: mediaType,
-          objectVerification: verifiedObject(hash),
-          publicVerification: verifiedPublic(hash),
-        };
-      }),
+    artifacts,
   };
 }
 
@@ -250,6 +330,36 @@ function suppliedFactBase() {
   };
 }
 
+function fixtureAuthorModule() {
+  return `export default async function author(request) {
+  const humanize = (value) =>
+    value
+      .split('-')
+      .map((part) => \`\${part[0].toUpperCase()}\${part.slice(1)}\`)
+      .join(' ');
+  const required = request.floor?.requiredNarrative ?? ['overview'];
+  const markdown = required
+    .map(
+      (id, index) =>
+        \`## \${humanize(id)}\\n\\nThis section explains the verified \${humanize(id).toLowerCase()}.\${index === 0 ? \` \${request.factBase.claims[0]?.text ?? ''}\` : ''}\`,
+    )
+    .join('\\n\\n');
+  return {
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: request.artifactId,
+    content: {
+      markdown: \`# Real packaged core\\n\\n\${markdown}\\n\`,
+    },
+    provenance: {
+      authorId: 'packaged-rc-fixture-author',
+      generatedAt: '2026-07-18T12:00:00.000Z',
+      method: 'module',
+    },
+  };
+}
+`;
+}
+
 function safeRunId(runId) {
   return (
     runId
@@ -257,6 +367,54 @@ function safeRunId(runId) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '') || 'run'
   );
+}
+
+function fixtureManifest() {
+  const hash = `sha256:${'b'.repeat(64)}`;
+  return {
+    schemaVersion: 'explainer-kit.manifest/v1',
+    runId: 'run-packaged-fixture',
+    slug: 'packaged-fixture',
+    recipe: { id: 'project-explainer', version: '1' },
+    createdAt: '2026-07-18T12:00:00.000Z',
+    source: {
+      factBasePath: 'source/fact-base.json',
+      factBaseHash: hash,
+      inputHashes: { 'integration.md': hash },
+      authorResultPaths: ['source/author/hub.json'],
+      backlinks: [],
+    },
+    theme: { path: 'theme.resolved.json', hash, derived: false },
+    artifacts: [
+      {
+        id: 'hub',
+        type: 'hub',
+        contentPath: 'source/content/hub.md',
+        renderedPath: 'site/initiatives/packaged-fixture/index.html',
+        mediaType: 'text/html; charset=utf-8',
+        status: 'built',
+        hash,
+        rebuildable: false,
+      },
+    ],
+    immutableHashes: {
+      'run-request.json': hash,
+      'source/content-approval.json': hash,
+      'source/author/hub.json': hash,
+      'source/fact-base.json': hash,
+      'source/fact-base.md': hash,
+      'theme.resolved.json': hash,
+      'source/content/hub.md': hash,
+      'site/initiatives/packaged-fixture/index.html': hash,
+    },
+    outcome: 'built-not-durable',
+    buildRecord: { path: 'build-record.json', hash },
+    warnings: [],
+  };
+}
+
+function hashBytes(bytes) {
+  return `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 }
 
 async function writeJson(path, value) {

@@ -67,6 +67,7 @@ export function assertReleaseCandidate(candidate, fail) {
     candidate.recipes,
     ['id', 'version', 'schemaVersion', 'path', 'sha256'],
     fail,
+    ({ id, version }) => `${id}@${version}`,
   );
   if (
     !Array.isArray(candidate.changedCandidates) ||
@@ -143,7 +144,7 @@ function assertSkills(skills, fail) {
   }
 }
 
-function assertIdentityEntries(entries, keys, fail) {
+function assertIdentityEntries(entries, keys, fail, identity = ({ id }) => id) {
   if (!Array.isArray(entries) || entries.length === 0) {
     fail('Release candidate contract identities are incomplete.');
   }
@@ -161,7 +162,7 @@ function assertIdentityEntries(entries, keys, fail) {
       fail('A release candidate contract identity is invalid.');
     }
   }
-  const identities = entries.map(({ id }) => id);
+  const identities = entries.map(identity);
   if (
     new Set(identities).size !== identities.length ||
     !isDeepStrictEqual(identities, [...identities].sort())

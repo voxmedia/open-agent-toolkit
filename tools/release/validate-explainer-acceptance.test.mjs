@@ -53,6 +53,37 @@ test('passes wrapper, publish, and all gates for one unchanged packaged RC', asy
   }
 });
 
+test('ordinary acceptance coverage pins the auxiliary catalog contract', async () => {
+  const fixture = await createFixture();
+  const catalogPath = `site/initiatives/${fixture.manifest.slug}/catalog.json`;
+  const catalogs = fixture.receipt.artifacts.filter(
+    ({ source }) => source.kind === 'auxiliary' && source.name === 'catalog',
+  );
+  assert.equal(
+    fixture.receipt.artifacts.length,
+    fixture.manifest.artifacts.length + 1,
+  );
+  assert.equal(catalogs.length, 1);
+  assert.deepEqual(catalogs[0], {
+    source: { kind: 'auxiliary', name: 'catalog' },
+    relativePath: catalogPath,
+    hash: HASH('f'),
+    s3Uri: `${fixture.publishRequest.s3Uri}/initiatives/${fixture.manifest.slug}/catalog.json`,
+    publicUrl: `${fixture.publishRequest.publicBaseUrl}/initiatives/${fixture.manifest.slug}/catalog.json`,
+    contentType: 'application/json',
+    objectVerification: verifiedObject(HASH('f')),
+    publicVerification: verifiedPublic(HASH('f')),
+  });
+
+  fixture.receipt.artifacts = fixture.receipt.artifacts.filter(
+    ({ source }) => source.kind !== 'auxiliary',
+  );
+  await writeJson(join(fixture.root, 'publish-receipt.json'), fixture.receipt);
+  const failure = await runFailure(fixture.root, 'publish');
+  assert.equal(failure.code, 'E_RECEIPT_MISMATCH');
+  assert.equal(failure.evidence, 'publish-receipt.json');
+});
+
 test('requires only the evidence selected by the gate', async () => {
   const wrapper = await createFixture();
   await Promise.all([
@@ -513,6 +544,7 @@ async function createFixture() {
     wrapper,
     publishExecution,
     publishRequest,
+    manifest,
     receipt,
   };
 }
