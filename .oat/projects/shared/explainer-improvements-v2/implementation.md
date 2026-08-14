@@ -237,8 +237,9 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | p03   | completed | 11    | 11/11     |
 | p04   | completed | 6     | 6/6       |
 | p05   | completed | 4     | 4/4       |
+| p06   | pending   | 5     | 0/5       |
 
-**Total:** 29/29 tasks completed
+**Total:** 29/34 tasks completed
 
 ---
 
@@ -469,6 +470,55 @@ The narrow re-review
 (`reviews/archived/p05-review-2026-08-07T211756Z.md`) passed with no findings.
 P05 and all 29 implementation tasks are complete. The project is ready for its
 final full review.
+
+## Phase 6: Final review fixes
+
+**Status:** pending
+**Started:** -
+**Completed:** -
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p06-t01 | pending | -      |
+| p06-t02 | pending | -      |
+| p06-t03 | pending | -      |
+| p06-t04 | pending | -      |
+| p06-t05 | pending | -      |
+
+### Review Received: final reconciliation
+
+**Date received:** 2026-08-14
+**Superseding review artifact:**
+`reviews/archived/final-review-2026-08-07T215000Z.md`
+**Superseded preliminary artifact:**
+`reviews/archived/final-review-2026-08-07T214023Z.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 1
+- Medium: 3
+- Minor: 3
+
+**New tasks added:** p06-t01 through p06-t05
+
+- C1, M3, m2 → p06-t01: reject credential-bearing and path-divergent S3
+  roots at every semantic boundary and remove the dead cause argument.
+- I1 → p06-t02: repair the v2 packaged-RC receipt fixture and make its contract
+  fail in ordinary CI when it drifts.
+- M1 → p06-t03: restore all immutable p04 review events and accurately alias
+  the terminal p04-t05/p04-t06 re-review scope.
+- M2, m3 → p06-t04: complete both five-scenario CLI matrices and add live
+  provider-canary return/failure cases in each family.
+- m1 → p06-t05: reconcile docs/completion metadata and the project log while
+  preserving final-review-before-closure ordering.
+
+The preliminary zero-finding artifact is retained for provenance but is
+superseded and cannot close the lifecycle. The operator approved converting all
+three Minor findings into fix work on 2026-08-14.
+
+**Next:** Execute p06-t01 through p06-t05, run all completion gates, then
+perform a fresh full final review.
 
 ---
 

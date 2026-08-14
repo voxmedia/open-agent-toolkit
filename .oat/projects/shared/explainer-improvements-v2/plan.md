@@ -1064,6 +1064,190 @@ git commit -m "docs(p05-t04): align recap contract with recipe v2"
 
 ---
 
+## Phase 6: Final review fixes
+
+Write boundary: final security, release-gate, scenario-coverage, review-ledger,
+and completion-bookkeeping findings confirmed by the reconciled final review.
+
+### Task p06-t01: (final review) Reject unsafe and divergent S3 roots
+
+**Findings:** C1, M3, m2
+
+**Files:**
+
+- `.agents/skills/explainer-kit/schemas/publish-request.v2.schema.json`
+- `.agents/skills/explainer-kit/schemas/publish-receipt.v2.schema.json`
+- `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
+- Core, wrapper, schema, connector, retained-tree, and CLI regression tests
+
+**Step 1: Write security and parity tests (RED)**
+
+Inject credential-bearing S3 authorities through direct core, connector,
+callback/wrapper, retained request/receipt, returned summary, CLI output, and
+AWS argv paths. Require rejection before run initialization or process launch.
+Cover raw and encoded userinfo/delimiters, authority colons, query/fragment
+forms, invalid bucket names, literal and encoded dot/separator segments,
+repeated slashes, and public/protected artifact/catalog composition.
+
+**Step 2: Implement one semantic S3-root boundary (GREEN)**
+
+Use one semantic validator from request validation through connector,
+callback/wrapper receipt validation, and publication composition. Tighten both
+v2 schemas, preserve normal roots and v1 replay, reject divergent roots before
+network use, and remove the dead third `{ cause }` argument without exposing
+provider text.
+
+**Step 3: Verify**
+
+Run focused schema/contract/S3/core/wrapper suites, then:
+`pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm lint && pnpm format && pnpm release:validate`
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p06-t01): reject unsafe S3 publication roots"
+```
+
+### Task p06-t02: (final review) Repair the packaged-RC v2 acceptance gate
+
+**Finding:** I1
+
+**Files:**
+
+- `tools/release/run-explainer-rc.integration.test.mjs`
+- `tools/release/validate-explainer-acceptance.test.mjs`
+- Production catalog helpers only if required to avoid fixture drift
+
+**Step 1: Add an ordinary fixture-contract test (RED)**
+
+Prove the current v2 fixture is invalid because it omits the required auxiliary
+catalog. The non-opt-in test must validate exact count, source identity,
+initiative path, hash, and object/public verification so ordinary CI catches
+future arithmetic or shape drift.
+
+**Step 2: Build the fixture from the production catalog contract (GREEN)**
+
+Generate exactly one `source.kind: auxiliary`, `source.name: catalog` artifact
+at `site/initiatives/<slug>/catalog.json` with complete v2 verification. Do not
+relax the acceptance validator.
+
+**Step 3: Verify**
+
+Run the ordinary release tests and the opt-in real packaged-RC integration
+against a clean frozen repository, retaining the passing command/result. Then
+run `pnpm release:validate`, `pnpm lint`, and `pnpm format`.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "test(p06-t02): repair packaged RC acceptance fixture"
+```
+
+### Task p06-t03: (final review) Reconcile the p04 review ledger
+
+**Finding:** M1
+
+**Files:**
+
+- `.oat/projects/shared/explainer-improvements-v2/plan.md`
+- `.oat/projects/shared/explainer-improvements-v2/implementation.md`
+
+**Step 1: Inventory immutable p04 review events**
+
+Read every archived p04 code-review artifact at `003711`, `010500`, `013800`,
+`021700`, `185131`, and `200546`; capture each exact scope, full reviewed head,
+invocation, finding disposition, and relationship to its fix range.
+
+**Step 2: Repair ledger and narrative**
+
+Append the three missing failed p04 events with accurate monotonic statuses and
+add an explicit scope-alias/reconciliation row stating that the immutable
+`p04-t04` artifact at `200546` is the terminal p04-t05/p04-t06 re-review. Do
+not rewrite or relabel archived artifacts.
+
+**Step 3: Verify**
+
+Run plan validation, Markdown formatting, and a deterministic audit that every
+archived p04 code review has a ledger event with exact head/provenance.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "chore(p06-t03): reconcile p04 review ledger"
+```
+
+### Task p06-t04: (final review) Complete CLI canary coverage
+
+**Findings:** M2, m3
+
+**Files:**
+
+- `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Runtime projection seams only if a genuine canary escapes
+
+**Step 1: Complete both five-row matrices (RED)**
+
+Add core `correctable` and adapter `terminally flagged` rows. Require success,
+correctable, terminally flagged, provider-failed, and caught-error rows in each
+family, with proof that every unique canary entered the exercised path before
+complete stdout/stderr exclusion is asserted.
+
+**Step 2: Add live-pipeline canaries (GREEN)**
+
+Keep fast projection matrices and add at least one real provider-originated
+normal-return and provider-failure CLI case per family without stubbing the run
+function. Fix only an owning closed projection boundary if a byte escapes.
+
+**Step 3: Verify**
+
+Run both integration suites and focused canary tests, then:
+`pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm lint && pnpm format`
+
+**Step 4: Commit**
+
+```bash
+git commit -m "test(p06-t04): complete CLI canary coverage"
+```
+
+### Task p06-t05: (final review) Reconcile completion metadata
+
+**Finding:** m1
+
+**Files:**
+
+- `.oat/projects/shared/explainer-improvements-v2/state.md`
+- `.oat/projects/shared/explainer-improvements-v2/project-log.md`
+- `.oat/projects/shared/explainer-improvements-v2/implementation.md`
+
+**Step 1: Reconcile durable lifecycle facts**
+
+Set truthful docs status and append missing structural completion/review events
+for p01, p02, p04, p05, final reconciliation, and p06 implementation. Resolve
+unfilled synthesis placeholders without inventing outcomes that still depend
+on the fresh final review.
+
+**Step 2: Preserve closure ordering**
+
+Record implementation and documentation completion now, but leave final review
+and project completion pending for the root workflow to close only after the
+fresh review passes.
+
+**Step 3: Verify**
+
+Run plan validation, Markdown formatting, and consistency checks across
+`state.md`, `implementation.md`, `project-log.md`, task totals, docs status, and
+review readiness.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "chore(p06-t05): reconcile completion metadata"
+```
+
+---
+
 ## Reviews
 
 | Scope              | Type     | Status          | Date       | Artifact                                                                                          | Reviewed Head                            | Invocation | Gate Target              |
@@ -1085,7 +1269,8 @@ git commit -m "docs(p05-t04): align recap contract with recipe v2"
 | p04-t04            | code     | passed          | 2026-08-07 | reviews/archived/p04-t04-review-2026-08-07T200546Z.md                                             | 098e1780b86116492073513614f64835aa470030 | manual     | -                        |
 | p05                | code     | fixes_completed | 2026-08-07 | reviews/archived/p05-review-2026-08-07T210515Z.md                                                 | 3ed90f009cfc8a6f1c95fcbd9185a5a18cfe00ed | manual     | -                        |
 | p05                | code     | passed          | 2026-08-07 | reviews/archived/p05-review-2026-08-07T211756Z.md                                                 | 836d850147f067a59d6d4fd06edfd4d8f568e780 | manual     | -                        |
-| final              | code     | pending         | -          | -                                                                                                 | -                                        | -          | -                        |
+| final              | code     | received        | 2026-08-07 | reviews/archived/final-review-2026-08-07T214023Z.md (superseded by reconciliation)                | 3da933d4e2d5ebd9764616fb0110b4794598fdd7 | manual     | -                        |
+| final              | code     | fixes_added     | 2026-08-07 | reviews/archived/final-review-2026-08-07T215000Z.md                                               | 3da933d4e2d5ebd9764616fb0110b4794598fdd7 | manual     | -                        |
 | plan-revision      | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T180042Z.md                              | c33edabc017369a629ca7a3a63757cbad3d9dab9 | manual     | -                        |
 | plan-revision      | artifact | passed          | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T181021Z.md                              | a8e41bbc13c9aee38312d1680ac6aec13642cae7 | manual     | -                        |
 | plan               | artifact | passed          | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed)                                     | -                                        | auto       | -                        |
@@ -1121,8 +1306,10 @@ git commit -m "docs(p05-t04): align recap contract with recipe v2"
   evidence, and exact retained-package confinement
 - Phase 5: 4 tasks — prose-led authoring, docs, release closure, and shipped
   recap-contract alignment
+- Phase 6: 5 tasks — final security, release, coverage, ledger, and completion
+  fixes
 
-**Total: 29 tasks**
+**Total: 34 tasks**
 
 ## References
 

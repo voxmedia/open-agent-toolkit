@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t01
 oat_last_commit: 836d850147f067a59d6d4fd06edfd4d8f568e780
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -72,7 +72,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-07T21:18:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-14T22:02:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -80,15 +80,14 @@ oat_generated: false
 
 **Status:** Implementation In Progress
 **Started:** 2026-08-05
-**Last Updated:** 2026-08-07
+**Last Updated:** 2026-08-14
 
 ## Current Phase
 
-Phases p01 through p04 are complete. The operator-authorized p04-t05 and
-p04-t06 fixes closed the unmanifested-file archive bypass and made every CLI
-stream canary row a genuine injection test. Their narrow re-review passed with
-no findings. The operator approved p05, all four p05 tasks landed, and the
-narrow p05 re-review passed. All implementation phases are complete.
+Phases p01 through p05 are complete. The reconciled final review superseded the
+preliminary pass and confirmed eight findings: one Critical, one Important,
+three Medium, and three Minor. The operator approved converting every finding
+into five bounded p06 fix tasks. Phase 6 is ready to start at p06-t01.
 
 ## Artifacts
 
@@ -96,7 +95,7 @@ narrow p05 re-review passed. All implementation phases are complete.
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
-- **Plan:** `plan.md` (5 phases / 29 tasks; p05-t04 review fix)
+- **Plan:** `plan.md` (6 phases / 34 tasks; p06 final-review fixes)
 - **Implementation:** `implementation.md` (in progress)
 
 ## Progress
@@ -133,7 +132,10 @@ narrow p05 re-review passed. All implementation phases are complete.
 - ✓ p05-t01 through p05-t03 implemented; all release gates passed
 - ✓ p05-t04 aligned shipped core recap guidance and passed re-review
 - ✓ All 29 implementation tasks complete
-- ⧗ Run final full project review
+- ✓ Final reconciliation review received; preliminary pass marked superseded
+- ✓ All three Minor findings explicitly accepted as fix work
+- ⧗ Implement p06-t01 through p06-t05
+- ⧗ Run a fresh full final review
 
 ## Blockers
 
@@ -141,4 +143,5 @@ None.
 
 ## Next Milestone
 
-Run the final full project review and process any findings before closure.
+Implement the five bounded p06 final-review fix tasks, run completion gates, and
+perform a fresh full final review before closure.
