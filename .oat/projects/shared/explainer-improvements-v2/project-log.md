@@ -1,7 +1,7 @@
 ---
 oat_generated: false
 purpose: project-observations
-oat_last_updated: 2026-08-06
+oat_last_updated: 2026-08-14
 ---
 
 # Project Log: explainer-improvements-v2
@@ -112,6 +112,36 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 
 Phase p03 passed after 11 tasks, two bounded recoveries, and three review cycles; final review: reviews/archived/p03-review-2026-08-06T235124Z.md.
 
-## End-of-run synthesis (pending — do not skip at project completion)
+### 2026-08-14 · structural · oat-project-implement · p01
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Phase p01 completed 6/6 tasks on 2026-08-06; its focused correction passed at `c1d5a1b0994e19abb2b349b776ba3235f8955b52` in `reviews/archived/p01-t06-review-2026-08-06T174423Z.md`.
+
+### 2026-08-14 · structural · oat-project-implement · p02
+
+Phase p02 completed 2/2 tasks on 2026-08-06; the corrected canonical-link and internal-reference range passed at `3f0dfe5e3131ee2ef12bd06cf4eb842566b50ca9` in `reviews/archived/p02-review-2026-08-06T202708Z.md`.
+
+### 2026-08-14 · structural · oat-project-implement · p04
+
+Phase p04 completed 6/6 tasks on 2026-08-07 after two automatic fixes, two operator-authorized scope decisions, and the terminal p04-t05/p04-t06 re-review at `098e1780b86116492073513614f64835aa470030`; immutable artifact: `reviews/archived/p04-t04-review-2026-08-07T200546Z.md`.
+
+### 2026-08-14 · structural · oat-project-implement · p05
+
+Phase p05 completed 4/4 tasks on 2026-08-07 and passed its narrowed guidance re-review at `836d850147f067a59d6d4fd06edfd4d8f568e780` in `reviews/archived/p05-review-2026-08-07T211756Z.md`.
+
+### 2026-08-14 · structural · oat-project-review-receive · final-reconciliation
+
+The reconciled final review at `3da933d4e2d5ebd9764616fb0110b4794598fdd7` superseded the preliminary pass and recorded 1 Critical, 1 Important, 3 Medium, and 3 Minor findings in `reviews/archived/final-review-2026-08-07T215000Z.md`; all eight were authorized as p06 fix work.
+
+### 2026-08-14 · structural · oat-project-implement · p06
+
+Phase p06 completed 5/5 bounded final-review tasks in commits `634463e0c207b45fbb9fe9985840e0b6fdab1b40` through this bookkeeping commit. Task-level security, release, ledger, integration, and repository gates passed; serial completion gates and the fresh full final review remain pending.
+
+## End-of-run synthesis (implementation complete; final review pending)
+
+Implementation completed all 34 tasks and adopted two load-bearing adjustments:
+closed local terminal evidence replaced open-ended provider-text scrubbing, and
+publication acceptance now binds canonical roots to exact manifest plus
+auxiliary-catalog evidence. No observation has been graduated to a separate
+repository ledger or backlog item. The lifecycle verdict, project completion,
+and archival remain pending until the serial completion gates and fresh final
+review pass.

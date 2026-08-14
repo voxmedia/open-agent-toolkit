@@ -237,9 +237,9 @@ Operator disposition recorded in the conversation and reflected in the plan's
 | p03   | completed | 11    | 11/11     |
 | p04   | completed | 6     | 6/6       |
 | p05   | completed | 4     | 4/4       |
-| p06   | pending   | 5     | 0/5       |
+| p06   | completed | 5     | 5/5       |
 
-**Total:** 29/34 tasks completed
+**Total:** 34/34 tasks completed
 
 ---
 
@@ -502,17 +502,17 @@ final full review.
 
 ## Phase 6: Final review fixes
 
-**Status:** pending
-**Started:** -
-**Completed:** -
+**Status:** completed
+**Started:** 2026-08-14
+**Completed:** 2026-08-14
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p06-t01 | pending | -      |
-| p06-t02 | pending | -      |
-| p06-t03 | pending | -      |
-| p06-t04 | pending | -      |
-| p06-t05 | pending | -      |
+| Task    | Status    | Commit        |
+| ------- | --------- | ------------- |
+| p06-t01 | completed | 634463e0c     |
+| p06-t02 | completed | 5ac0ce599     |
+| p06-t03 | completed | cc5bb6c3a     |
+| p06-t04 | completed | f6ba8c91d     |
+| p06-t05 | completed | (this commit) |
 
 ### Review Received: final reconciliation
 
@@ -546,8 +546,14 @@ The preliminary zero-finding artifact is retained for provenance but is
 superseded and cannot close the lifecycle. The operator approved converting all
 three Minor findings into fix work on 2026-08-14.
 
-**Next:** Execute p06-t01 through p06-t05, run all completion gates, then
-perform a fresh full final review.
+All five bounded fix tasks are implemented. Publication roots now fail closed
+at every semantic boundary, ordinary and real packaged-RC evidence includes the
+production auxiliary catalog contract, the p04 review ledger is monotonic and
+scope-accurate, and both CLI families exercise complete projected and live
+provider-canary paths. Documentation and implementation metadata are complete.
+
+**Next:** Run all completion gates, then perform a fresh full final review.
+Project completion remains pending until that review passes.
 
 ---
 
@@ -873,6 +879,9 @@ Track test execution during implementation.
 | 1     | adapter/core focused suites; CLI tests; lint; format | passed | 0      | p01-t01–p01-t06 complete; focused re-review passed |
 | 2     | declared p02 union; lint; format                     | passed | 0      | 176/176; focused re-review passed                  |
 | 3     | focused/direct p03; release/smoke; repository gates  | passed | 0      | 228/228 + 31/31; final re-review passed 172/172    |
+| 4     | lifecycle, evidence, archive, and canary gates       | passed | 0      | 6/6 tasks; terminal narrow re-review passed        |
+| 5     | recipe, docs, release, and contract-reference gates  | passed | 0      | 4/4 tasks; focused re-review passed                |
+| 6     | security, RC, ledger, and CLI canary task gates      | passed | 0      | 5/5 tasks; serial completion gates pending         |
 
 The broad explainer skill glob is separately nonzero for 27 inherited
 `E_BROWSER_PROBE` failures in legacy recap fixtures. Focused p03 suites and all
@@ -883,24 +892,43 @@ p03 task failures.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- A provider-neutral explainer kernel with adaptive set planning, prose-led
+  project recaps, validated authoring links, and bounded correction/review.
+- Exact-byte public or protected S3 publication receipts, packaged-RC
+  acceptance, destination hygiene, and closed code-only terminal evidence.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Project and repository explainers derive credential-free destinations,
+  preserve immutable v1 replay, and emit complete v2 publication evidence.
+- Unsafe publication roots fail before run initialization or process launch;
+  flagged and failed outcomes remain inspectable without retaining provider
+  prose in terminal or CLI evidence.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/skills/explainer-kit/scripts/run.mjs` — core lifecycle, evidence, and
+  CLI projection.
+- `.agents/skills/explainer-kit/scripts/lib/s3-roots.mjs` — canonical
+  publication-root and artifact-destination boundary.
+- `.agents/skills/oat-explainer-kit/scripts/run.mjs` — OAT adapter lifecycle and
+  compatibility handoff.
+- `tools/release/validate-explainer-acceptance.mjs` — packaged release evidence
+  gate.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Focused core, adapter, schema, connector, wrapper, smoke, acceptance, and
+  real packaged-RC integration suites.
+- Repository check, type-check, test, build, lint, format, docs-build, and
+  release validation gates; the final serial completion run is recorded after
+  this bookkeeping commit.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- The approved p04 scope revision replaced open-ended retained-text scrubbing
+  with closed local evidence codes. No unresolved p06 design delta remains;
+  final acceptance still depends on the fresh full review.
 
 ## References
 

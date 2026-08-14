@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t01
-oat_last_commit: 836d850147f067a59d6d4fd06edfd4d8f568e780
+oat_current_task: null
+oat_last_commit: f6ba8c91d1eede48ecde13129647b5169b68b695
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -67,27 +67,27 @@ oat_workflow_origin: native # native | imported
 #   receive_completed: false
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-14T22:02:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-14T22:45:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-improvements-v2
 
-**Status:** Implementation In Progress
+**Status:** Implementation Complete — Final Review Pending
 **Started:** 2026-08-05
 **Last Updated:** 2026-08-14
 
 ## Current Phase
 
-Phases p01 through p05 are complete. The reconciled final review superseded the
-preliminary pass and confirmed eight findings: one Critical, one Important,
-three Medium, and three Minor. The operator approved converting every finding
-into five bounded p06 fix tasks. Phase 6 is ready to start at p06-t01.
+All 34 implementation tasks across p01 through p06 are complete. Phase 6
+resolved all eight reconciled final-review findings in five bounded task
+commits. Completion gates and a fresh full final review remain pending; the
+superseded preliminary review cannot close the project.
 
 ## Artifacts
 
@@ -96,7 +96,7 @@ into five bounded p06 fix tasks. Phase 6 is ready to start at p06-t01.
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
 - **Plan:** `plan.md` (6 phases / 34 tasks; p06 final-review fixes)
-- **Implementation:** `implementation.md` (in progress)
+- **Implementation:** `implementation.md` (complete; final review pending)
 
 ## Progress
 
@@ -131,10 +131,16 @@ into five bounded p06 fix tasks. Phase 6 is ready to start at p06-t01.
 - ✓ p05 HiLL checkpoint approved
 - ✓ p05-t01 through p05-t03 implemented; all release gates passed
 - ✓ p05-t04 aligned shipped core recap guidance and passed re-review
-- ✓ All 29 implementation tasks complete
+- ✓ All 34 implementation tasks complete
 - ✓ Final reconciliation review received; preliminary pass marked superseded
 - ✓ All three Minor findings explicitly accepted as fix work
-- ⧗ Implement p06-t01 through p06-t05
+- ✓ p06-t01 rejects unsafe publication roots before initialization or process
+  launch
+- ✓ p06-t02 repairs ordinary and real packaged-RC acceptance evidence
+- ✓ p06-t03 restores the immutable p04 review ledger and terminal scope alias
+- ✓ p06-t04 completes both CLI canary matrices and live provider paths
+- ✓ p06-t05 reconciles documentation and implementation metadata
+- ⧗ Run serial completion gates
 - ⧗ Run a fresh full final review
 
 ## Blockers
@@ -143,5 +149,5 @@ None.
 
 ## Next Milestone
 
-Implement the five bounded p06 final-review fix tasks, run completion gates, and
-perform a fresh full final review before closure.
+Run the serial completion gates, then perform a fresh full final review before
+the root workflow records project completion.
