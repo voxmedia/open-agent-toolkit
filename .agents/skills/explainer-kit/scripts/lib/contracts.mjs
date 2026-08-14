@@ -1,6 +1,10 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
+import {
+  composePublicationTarget,
+  normalizePublishRoots,
+} from './s3-roots.mjs';
 import { validatePortablePath } from './safe-paths.mjs';
 import {
   parseCanonicalGithubBlobUrl,
@@ -88,6 +92,7 @@ export function validateContract(kind, value, context = {}) {
   findRawSecrets(value, '$', errors);
   validateSchema(schema, value, '$', schema, errors);
   validateContractPaths(kind, value, errors);
+  validatePublicationRoots(kind, value, errors);
   validateCrossRecord(kind, value, context, errors);
   validateSourceBacklinks(kind, value, errors);
   return { valid: errors.length === 0, errors };
@@ -442,6 +447,95 @@ function validateContractPaths(kind, value, errors) {
         );
       }
     });
+  }
+}
+
+function validatePublicationRoots(kind, value, errors, path = '$') {
+  if (!isObject(value)) return;
+
+  if (kind === 'run-request') {
+    const publish = value.durability?.publish;
+    if (isObject(publish)) {
+      validatePublicationRoots(
+        'publish-request',
+        publish,
+        errors,
+        `${path}.durability.publish`,
+      );
+    }
+    return;
+  }
+
+  if (
+    kind.startsWith('publish-request') &&
+    value.schemaVersion === 'explainer-kit.publish-request/v2'
+  ) {
+    try {
+      normalizePublishRoots(value.s3Uri, value.publicBaseUrl);
+    } catch {
+      add(
+        errors,
+        path,
+        'publish-roots',
+        'Publish request roots must be credential-free and canonical.',
+      );
+    }
+    return;
+  }
+
+  if (
+    kind.startsWith('publish-receipt') &&
+    value.schemaVersion === 'explainer-kit.publish-receipt/v2'
+  ) {
+    let roots;
+    try {
+      roots = normalizePublishRoots(
+        value.roots?.s3Uri,
+        value.roots?.publicBaseUrl,
+      );
+      if (
+        roots.s3Uri !== value.roots.s3Uri ||
+        roots.publicBaseUrl !== value.roots.publicBaseUrl
+      ) {
+        throw new Error('noncanonical');
+      }
+    } catch {
+      add(
+        errors,
+        `${path}.roots`,
+        'publish-roots',
+        'Publish receipt roots must be credential-free and canonical.',
+      );
+      return;
+    }
+
+    for (const [index, artifact] of (Array.isArray(value.artifacts)
+      ? value.artifacts
+      : []
+    ).entries()) {
+      if (!isObject(artifact) || typeof artifact.relativePath !== 'string') {
+        continue;
+      }
+      const publishPath = artifact.relativePath.startsWith('site/')
+        ? artifact.relativePath.slice('site/'.length)
+        : artifact.relativePath;
+      try {
+        const expected = composePublicationTarget(publishPath, roots);
+        if (
+          artifact.s3Uri !== expected.s3Uri ||
+          artifact.publicUrl !== expected.publicUrl
+        ) {
+          throw new Error('destination mismatch');
+        }
+      } catch {
+        add(
+          errors,
+          `${path}.artifacts[${index}]`,
+          'receipt-artifact-destination',
+          'Publish receipt artifact destinations must be canonical children of the validated roots.',
+        );
+      }
+    }
   }
 }
 
@@ -1328,26 +1422,6 @@ function validatePublishReceiptV2Artifact(receipt, artifact, expected, errors) {
       '$.artifacts',
       'receipt-artifact-source',
       'Publish receipt source identity does not match the manifest or generated auxiliary object.',
-    );
-  }
-  const publishPath = artifact.relativePath?.startsWith('site/')
-    ? artifact.relativePath.slice('site/'.length)
-    : artifact.relativePath;
-  const encodedPath =
-    typeof publishPath === 'string'
-      ? publishPath
-          .split('/')
-          .map((part) => encodeURIComponent(part))
-          .join('/')
-      : '';
-  const expectedS3 = `${receipt.roots?.s3Uri?.replace(/\/+$/, '')}/${publishPath}`;
-  const expectedPublic = `${receipt.roots?.publicBaseUrl?.replace(/\/+$/, '')}/${encodedPath}`;
-  if (artifact.s3Uri !== expectedS3 || artifact.publicUrl !== expectedPublic) {
-    add(
-      errors,
-      '$.artifacts',
-      'receipt-artifact-destination',
-      'Publish receipt artifact destinations must be canonical children of the receipt roots.',
     );
   }
   if (

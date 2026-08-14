@@ -284,6 +284,12 @@ test('accepts immutable publish request v1 replay and explicit v2 access modes',
     publishRequest(),
     publishRequestV2('public'),
     publishRequestV2('protected'),
+    {
+      ...publishRequestV2('public'),
+      s3Uri: 's3://example/explainers/projects/Roadmap%20%26%20caf%C3%A9',
+      publicBaseUrl:
+        'https://example.com/explainers/projects/Roadmap%20%26%20caf%C3%A9',
+    },
   ]) {
     assert.deepEqual(validateContract('publish-request', request), {
       valid: true,
@@ -305,6 +311,90 @@ test('accepts immutable publish request v1 replay and explicit v2 access modes',
       valid: true,
       errors: [],
     });
+  }
+});
+
+test('rejects unsafe or divergent v2 publication roots at every contract surface', () => {
+  const unsafePairs = [
+    [
+      'credential-bearing authority',
+      's3://access-key:secret@example-bucket/explainers',
+      'https://docs.example.com/explainers',
+    ],
+    [
+      'encoded authority delimiter',
+      's3://access-key%40example-bucket/explainers',
+      'https://docs.example.com/explainers',
+    ],
+    [
+      'authority colon',
+      's3://example-bucket:443/explainers',
+      'https://docs.example.com/explainers',
+    ],
+    [
+      'query',
+      's3://example-bucket/explainers?version=1',
+      'https://docs.example.com/explainers',
+    ],
+    [
+      'fragment',
+      's3://example-bucket/explainers#latest',
+      'https://docs.example.com/explainers',
+    ],
+    [
+      'invalid bucket',
+      's3://Example_Bucket/explainers',
+      'https://docs.example.com/explainers',
+    ],
+    [
+      'literal dot segment',
+      's3://example-bucket/a/../b',
+      'https://docs.example.com/a/../b',
+    ],
+    [
+      'encoded dot segment',
+      's3://example-bucket/a/%2e%2e/b',
+      'https://docs.example.com/a/%2e%2e/b',
+    ],
+    [
+      'encoded separator',
+      's3://example-bucket/a%2fb',
+      'https://docs.example.com/a%2fb',
+    ],
+    [
+      'repeated slash',
+      's3://example-bucket/a//b',
+      'https://docs.example.com/a//b',
+    ],
+  ];
+
+  for (const [label, s3Uri, publicBaseUrl] of unsafePairs) {
+    const request = {
+      ...publishRequestV2('protected'),
+      s3Uri,
+      publicBaseUrl,
+    };
+    assert.equal(
+      validateContract('publish-request', request).valid,
+      false,
+      `direct request: ${label}`,
+    );
+
+    const run = runRequest();
+    run.durability = { strategy: 'publish', publish: request };
+    assert.equal(
+      validateContract('run-request', run).valid,
+      false,
+      `embedded request: ${label}`,
+    );
+
+    const receipt = publishReceiptV2('protected');
+    receipt.roots = { s3Uri, publicBaseUrl };
+    assert.equal(
+      validateContract('publish-receipt', receipt).valid,
+      false,
+      `receipt roots: ${label}`,
+    );
   }
 });
 

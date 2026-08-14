@@ -3946,6 +3946,46 @@ test('rejects invalid requests and recipes before creating the output root', asy
     }),
     /unsupported recipe/i,
   );
+  const credentialCanary = 'access-key:secret@example-bucket';
+  const unsafe = {
+    ...invalid,
+    durability: {
+      strategy: 'publish',
+      publish: {
+        schemaVersion: 'explainer-kit.publish-request/v2',
+        provider: 's3-static',
+        s3Uri: `s3://${credentialCanary}/explainers`,
+        publicBaseUrl: 'https://docs.example.com/explainers',
+        awsRegion: 'us-east-1',
+        publicAccess: 'protected',
+        siteRoot: join(outputRoot, 'site'),
+        manifestPath: join(outputRoot, 'manifest.json'),
+      },
+    },
+  };
+  await assert.rejects(
+    runExplainer(unsafe),
+    (error) =>
+      error.code === 'E_INPUT_SCHEMA' &&
+      !error.message.includes('access-key') &&
+      !error.message.includes('secret'),
+  );
+
+  const requestPath = join(cwd, 'unsafe-request.json');
+  await writeFile(requestPath, `${JSON.stringify(unsafe, null, 2)}\n`);
+  const stdout = [];
+  const stderr = [];
+  assert.equal(
+    await runExplainerCli([requestPath], {
+      log: (value) => stdout.push(String(value)),
+      error: (value) => stderr.push(String(value)),
+    }),
+    1,
+  );
+  assert.equal(
+    `${stdout.join('\n')}\n${stderr.join('\n')}`.includes(credentialCanary),
+    false,
+  );
   await assert.rejects(access(outputRoot));
 });
 
@@ -4601,8 +4641,8 @@ test('classifies a non-normalizable v2 receipt root as a publish failure', async
       'https://docs.example.com/explainers?version=2';
     assert.equal(
       validateContract('publish-receipt', receipt).valid,
-      true,
-      'query-bearing root remains schema-valid',
+      false,
+      'query-bearing root fails the closed receipt contract',
     );
     return receipt;
   });
@@ -4616,6 +4656,30 @@ test('classifies a non-normalizable v2 receipt root as a publish failure', async
   assertLocalReason(result, 'durability', 'provider-failure');
   assert.equal('publication' in result, false);
   assert.equal(publish.mock.callCount(), 1);
+});
+
+test('rejects credential-bearing callback receipts before retention or summary projection', async () => {
+  const fixture = await suppliedFixture();
+  const credentialCanary = 'access-key:secret@example-bucket';
+  const publish = mock.fn(async ({ manifestPath }) => {
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    const receipt = callbackReceiptV2(manifest, 'protected');
+    receipt.roots.s3Uri = `s3://${credentialCanary}/explainers`;
+    receipt.artifacts[0].s3Uri = `${receipt.roots.s3Uri}/${receipt.artifacts[0].relativePath.slice('site/'.length)}`;
+    assert.equal(validateContract('publish-receipt', receipt).valid, false);
+    return receipt;
+  });
+
+  const result = await runExplainer(
+    callbackPublishRunRequest(fixture, 'protected'),
+    { now: () => NOW, publish },
+  );
+
+  assert.equal(result.outcome, 'failed');
+  assert.equal('publication' in result, false);
+  assert.equal(JSON.stringify(result).includes(credentialCanary), false);
+  await assert.rejects(access(join(result.runRoot, 'publish-receipt.json')));
+  await assertRetainedTreeExcludes(result.runRoot, [credentialCanary]);
 });
 
 test('rejects incomplete or contradictory v2 callback receipts before publication state', async () => {

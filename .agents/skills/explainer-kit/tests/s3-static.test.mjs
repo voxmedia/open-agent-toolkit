@@ -24,8 +24,8 @@ afterEach(async () => {
 test('normalizes corresponding roots and maps site-relative paths', () => {
   assert.deepEqual(
     normalizePublishRoots(
-      's3://example-bucket/published///',
-      'https://cdn.example.com/published///',
+      's3://example-bucket/published/',
+      'https://cdn.example.com/published/',
     ),
     {
       bucket: 'example-bucket',
@@ -38,6 +38,58 @@ test('normalizes corresponding roots and maps site-relative paths', () => {
     () => normalizePublishRoots('s3://example-bucket', 'http://example.com'),
     /https/i,
   );
+});
+
+test('rejects unsafe or divergent S3 roots before process launch', async () => {
+  const unsafePairs = [
+    [
+      's3://access-key:secret@example-bucket/published',
+      'https://cdn.example.com/published',
+    ],
+    [
+      's3://access-key%40example-bucket/published',
+      'https://cdn.example.com/published',
+    ],
+    ['s3://example-bucket:443/published', 'https://cdn.example.com/published'],
+    [
+      's3://example-bucket/published?version=1',
+      'https://cdn.example.com/published',
+    ],
+    [
+      's3://example-bucket/published#latest',
+      'https://cdn.example.com/published',
+    ],
+    ['s3://Example_Bucket/published', 'https://cdn.example.com/published'],
+    ['s3://example-bucket/a/../b', 'https://cdn.example.com/a/../b'],
+    ['s3://example-bucket/a/%2e%2e/b', 'https://cdn.example.com/a/%2e%2e/b'],
+    ['s3://example-bucket/a%2fb', 'https://cdn.example.com/a%2fb'],
+    ['s3://example-bucket/a//b', 'https://cdn.example.com/a//b'],
+  ];
+
+  for (const [s3Uri, publicBaseUrl] of unsafePairs) {
+    assert.throws(
+      () => normalizePublishRoots(s3Uri, publicBaseUrl),
+      (error) => error.code === 'E_PUBLISH_ROOTS',
+    );
+
+    const fixture = await createFixture();
+    fixture.request.s3Uri = s3Uri;
+    fixture.request.publicBaseUrl = publicBaseUrl;
+    let processLaunched = false;
+    await assert.rejects(
+      publishS3Static(fixture.request, {
+        approved: true,
+        command: async () => {
+          processLaunched = true;
+        },
+      }),
+      (error) =>
+        ['E_PUBLISH_INPUT', 'E_PUBLISH_ROOTS'].includes(error.code) &&
+        !error.message.includes('access-key') &&
+        !error.message.includes('secret'),
+    );
+    assert.equal(processLaunched, false, s3Uri);
+  }
 });
 
 test('rejects credential-bearing and ambiguous public roots before network use', async () => {
@@ -67,7 +119,7 @@ test('rejects credential-bearing and ambiguous public roots before network use',
       },
     }),
     (error) =>
-      error.code === 'E_PUBLISH_ROOTS' &&
+      ['E_PUBLISH_INPUT', 'E_PUBLISH_ROOTS'].includes(error.code) &&
       !error.message.includes('user') &&
       !error.message.includes('secret'),
   );

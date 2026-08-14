@@ -240,6 +240,40 @@ test('private wrapper rejects ambiguous v2 manifest and catalog coverage', async
   }
 });
 
+test('private wrapper rejects unsafe or divergent v2 receipt destinations', async () => {
+  const mutations = [
+    [
+      'credential-bearing roots',
+      (receipt) => {
+        receipt.roots.s3Uri =
+          's3://access-key:secret@example-bucket/explainers';
+      },
+    ],
+    [
+      'divergent roots',
+      (receipt) => {
+        receipt.roots.s3Uri = 's3://example-bucket/internal';
+        receipt.roots.publicBaseUrl = 'https://docs.example.com/public';
+      },
+    ],
+    [
+      'credential-bearing artifact target',
+      (receipt) => {
+        receipt.artifacts[0].s3Uri =
+          's3://access-key:secret@example-bucket/explainers/index.html';
+      },
+    ],
+  ];
+
+  for (const [label, mutate] of mutations) {
+    await assert.rejects(
+      runWrapperWithReceipt({ receiptKind: 'v2-protected', mutate }),
+      /publish receipt does not match/i,
+      label,
+    );
+  }
+});
+
 async function runWrapperWithReceipt({ receiptKind, mutate }) {
   const root = await mkdtemp(join(tmpdir(), 'explainer-wrapper-receipt-'));
   tempDirs.push(root);

@@ -20,6 +20,15 @@ import {
 } from './catalog.mjs';
 import { validateContract } from './contracts.mjs';
 import { assertManifestPublishable } from './publication-policy.mjs';
+import {
+  composePublicationTarget,
+  normalizePublishRoots,
+} from './s3-roots.mjs';
+
+export {
+  composePublicationTarget,
+  normalizePublishRoots,
+} from './s3-roots.mjs';
 
 const execFile = promisify(execFileCallback);
 const SENTINEL_BODY = 'explainer-kit sentinel\n';
@@ -28,54 +37,6 @@ const TRANSIENT_PATTERN =
 const AUTH_PATTERN =
   /(?:credential|expired|sso session|access key|invalidclienttokenid|unrecognizedclient|token)/i;
 const NOT_FOUND_PATTERN = /(?:\b404\b|not found|nosuchkey)/i;
-
-export function normalizePublishRoots(s3Uri, publicBaseUrl) {
-  if (typeof s3Uri !== 'string' || !s3Uri.startsWith('s3://')) {
-    throw publishError('E_PUBLISH_ROOTS', 'S3 root must use s3://.');
-  }
-  const withoutScheme = s3Uri.slice('s3://'.length).replace(/\/+$/, '');
-  const slash = withoutScheme.indexOf('/');
-  const bucket = slash === -1 ? withoutScheme : withoutScheme.slice(0, slash);
-  const keyPrefix =
-    slash === -1
-      ? ''
-      : withoutScheme
-          .slice(slash + 1)
-          .split('/')
-          .filter(Boolean)
-          .join('/');
-  if (!bucket || /\s/.test(bucket)) {
-    throw publishError('E_PUBLISH_ROOTS', 'S3 root has an invalid bucket.');
-  }
-
-  let publicUrl;
-  try {
-    publicUrl = new URL(publicBaseUrl);
-  } catch {
-    throw publishError('E_PUBLISH_ROOTS', 'Public root must be a valid URL.');
-  }
-  if (
-    publicUrl.protocol !== 'https:' ||
-    publicUrl.username ||
-    publicUrl.password ||
-    publicUrl.search ||
-    publicUrl.hash
-  ) {
-    throw publishError(
-      'E_PUBLISH_ROOTS',
-      'Public root must be credential-free HTTPS without query or fragment.',
-    );
-  }
-  publicUrl.pathname = publicUrl.pathname.replace(/\/+$/, '');
-  const normalizedPublic = publicUrl.toString().replace(/\/$/, '');
-  const normalizedS3 = `s3://${bucket}${keyPrefix ? `/${keyPrefix}` : ''}`;
-  return {
-    bucket,
-    keyPrefix,
-    s3Uri: normalizedS3,
-    publicBaseUrl: normalizedPublic,
-  };
-}
 
 export function createSentinelRelativePath(
   runId,
@@ -640,11 +601,10 @@ async function verifyObjectBytes({
       getObjectArgs(roots, relativePath, downloadPath, awsOptions),
       { sleep },
     );
-  } catch (cause) {
+  } catch {
     throw publishError(
       'E_PUBLISH_VERIFY',
       `Authenticated object-byte verification is unavailable for ${relativePath}.`,
-      { cause },
     );
   }
   if (fileHash(await readFile(downloadPath)) !== expectedHash) {
@@ -696,17 +656,6 @@ function contentTypesMatch(served, expected) {
 
 function objectKey(roots, relativePath) {
   return roots.keyPrefix ? `${roots.keyPrefix}/${relativePath}` : relativePath;
-}
-
-export function composePublicationTarget(relativePath, roots) {
-  const suffix = relativePath
-    .split('/')
-    .map((part) => encodeURIComponent(part))
-    .join('/');
-  return {
-    s3Uri: `${roots.s3Uri}/${relativePath}`,
-    publicUrl: `${roots.publicBaseUrl}/${suffix}`,
-  };
 }
 
 function fileHash(bytes) {

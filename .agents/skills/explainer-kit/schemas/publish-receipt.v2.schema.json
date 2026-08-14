@@ -25,11 +25,11 @@
       "properties": {
         "s3Uri": {
           "type": "string",
-          "pattern": "^s3://[^/\\s]+(?:/[^\\s]*)?$"
+          "pattern": "^s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9](?:/[^\\s/?#\\\\]+(?:/[^\\s/?#\\\\]+)*)?$"
         },
         "publicBaseUrl": {
           "type": "string",
-          "pattern": "^https://[^\\s]+$"
+          "pattern": "^https://[^\\s/?#@]+(?::[0-9]+)?(?:/[^\\s/?#\\\\]+(?:/[^\\s/?#\\\\]+)*)?$"
         }
       }
     },
@@ -144,11 +144,11 @@
         "hash": { "$ref": "#/$defs/hash" },
         "s3Uri": {
           "type": "string",
-          "pattern": "^s3://[^/\\s]+/.+$"
+          "pattern": "^s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]/[^\\s?#\\\\]+$"
         },
         "publicUrl": {
           "type": "string",
-          "pattern": "^https://[^\\s]+$"
+          "pattern": "^https://[^\\s/?#@]+(?::[0-9]+)?/[^\\s?#\\\\]+$"
         },
         "contentType": { "type": "string", "minLength": 1 },
         "objectVerification": { "$ref": "#/$defs/objectVerification" },

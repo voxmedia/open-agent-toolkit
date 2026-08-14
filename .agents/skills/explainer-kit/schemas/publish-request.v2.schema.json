@@ -19,11 +19,11 @@
     "provider": { "const": "s3-static" },
     "s3Uri": {
       "type": "string",
-      "pattern": "^s3://[^/\\s]+(?:/[^\\s]*)?$"
+      "pattern": "^s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9](?:/[^\\s/?#\\\\]+(?:/[^\\s/?#\\\\]+)*)?/?$"
     },
     "publicBaseUrl": {
       "type": "string",
-      "pattern": "^https://[^\\s]+$"
+      "pattern": "^https://[^\\s/?#@]+(?::[0-9]+)?(?:/[^\\s/?#\\\\]+(?:/[^\\s/?#\\\\]+)*)?/?$"
     },
     "awsRegion": { "type": "string", "minLength": 1 },
     "awsProfile": { "type": "string", "minLength": 1 },
