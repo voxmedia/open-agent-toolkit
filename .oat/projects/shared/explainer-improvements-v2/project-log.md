@@ -136,6 +136,10 @@ The reconciled final review at `3da933d4e2d5ebd9764616fb0110b4794598fdd7` supers
 
 Phase p06 completed 5/5 bounded final-review tasks in commits `634463e0c207b45fbb9fe9985840e0b6fdab1b40` through this bookkeeping commit. Task-level security, release, ledger, integration, and repository gates passed; serial completion gates and the fresh full final review remain pending.
 
+### 2026-08-16 · structural · oat-project-review-provide · final
+
+Fresh full final review over 5f76ade9..07e2c96d7 recorded 1 Critical, 2 Important, 8 Medium, and 7 Minor findings in reviews/final-review-2026-08-16T232006Z.md; the Critical publish-request/v1 root-validation bypass blocks project close.
+
 ## End-of-run synthesis (implementation complete; final review pending)
 
 Implementation completed all 34 tasks and adopted two load-bearing adjustments:
