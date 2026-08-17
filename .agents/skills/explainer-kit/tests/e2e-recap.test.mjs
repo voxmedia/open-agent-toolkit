@@ -581,7 +581,7 @@ test('project-recap@2 admits a justified expansion end to end', async () => {
 });
 
 test('project-recap@2 rejects an unjustified expansion', async () => {
-  const { result } = await recapV2Run({
+  const { author, result } = await recapV2Run({
     planSet: unjustifiedPlanSet([
       {
         artifactId: 'index-flow',
@@ -593,11 +593,85 @@ test('project-recap@2 rejects an unjustified expansion', async () => {
   });
 
   assertFailedAuthoring(result);
-  const manifest = await readJson(result.manifestPath).catch(() => undefined);
-  assert.equal(
-    manifest?.artifacts?.some(({ id }) => id === 'index-flow') ?? false,
-    false,
-    'an unjustified expansion must never reach the manifest',
+
+  // The previous form of this assertion was vacuous. No manifest is written on
+  // this path at all: `run.mjs` persists a failure manifest only when both
+  // `state.factBase` and `state.theme` are set, and the theme stage runs after
+  // content, so an unjustified plan rejected during set-plan validation leaves
+  // `state.theme` unset. `manifest?.artifacts?.some(...) ?? false` therefore
+  // reduced to `assert.equal(false, false)` and could never fail.
+  //
+  // Assert the absence directly, and assert the observable the run does
+  // produce: the author is never asked to compose anything.
+  await assert.rejects(
+    access(join(result.runRoot, 'manifest.json')),
+    'a rejected set plan must not write a manifest',
+  );
+  assert.deepEqual(
+    author.requests.map(({ plannedArtifact }) => plannedArtifact.artifactId),
+    [],
+    'a rejected set plan must not reach the author at all',
+  );
+  await assert.rejects(
+    access(join(result.runRoot, `site/diagrams/${SLUG}/index-flow`)),
+    'the rejected expansion must not be rendered',
+  );
+
+  // Positive control, so the three assertions above cannot be satisfied
+  // trivially: the identical plan differing only by a present justification
+  // reaches the author and writes a manifest. Without this pairing the
+  // assertions would be indistinguishable from "the run failed for any reason".
+  const justified = await recapV2Run({
+    planSet: adaptivePlanSet([
+      {
+        artifactId: 'index-flow',
+        profileId: 'supporting-diagram',
+        kind: 'source-backed-detail',
+        rationale: 'The indexing pipeline has three stages the hub only names.',
+      },
+    ]),
+  });
+  assert.equal(justified.result.outcome, 'built-not-durable');
+  assert.deepEqual(
+    justified.author.requests.map(
+      ({ plannedArtifact }) => plannedArtifact.artifactId,
+    ),
+    ['project-recap', 'index-flow'],
+    'the justified variant does reach the author',
+  );
+  await access(join(justified.result.runRoot, 'manifest.json'));
+});
+
+test('an expansion whose justification kind is disallowed fails the recipe gate', async () => {
+  // The unjustified case above is rejected by set-plan *contract* validation
+  // before the recipe policy gate is reached. This drives the second half of
+  // that gate — a justification that is present and well-formed but carries a
+  // kind the profile does not allow. `project-recap@1` is used because it is
+  // the recipe that declares `allowedJustificationKinds`; v2's profiles do not,
+  // so the branch is unreachable there.
+  const { request } = await fixture();
+  const author = richAuthor();
+  const result = await runExplainer(request, {
+    author,
+    planSet: adaptivePlanSet([
+      {
+        artifactId: 'status-view',
+        profileId: 'status-view',
+        // `status-view` allows only `status-change`.
+        kind: 'source-backed-detail',
+        rationale: 'A well-formed justification of a disallowed kind.',
+      },
+    ]),
+    browserSession,
+    visualCritic: passingVisualCritic,
+    now: () => NOW,
+  });
+
+  assertFailedAuthoring(result);
+  assert.deepEqual(
+    author.requests.map(({ plannedArtifact }) => plannedArtifact.artifactId),
+    [],
+    'a disallowed justification kind must be rejected before authoring',
   );
 });
 
