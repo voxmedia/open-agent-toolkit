@@ -22,6 +22,7 @@ import {
   validateContract,
   visualReviewRequestId,
 } from '../scripts/lib/contracts.mjs';
+import { normalizePublishRoots } from '../scripts/lib/s3-roots.mjs';
 import { resolveRootConfinedPath } from '../scripts/lib/safe-paths.mjs';
 import { runValidationCli } from '../scripts/validate.mjs';
 
@@ -507,6 +508,72 @@ test('retains benign v1 publication roots under version-agnostic validation', ()
       { valid: true, errors: [] },
       `benign v1: ${label}`,
     );
+  }
+});
+
+test('rejects control characters and backslashes in both publication roots', () => {
+  // `\s` matches only space, tab, newline, CR, FF and VT, so the rest of the C0
+  // range and DEL previously reached S3 keys, public URLs, receipts and terminal
+  // output. NUL additionally crashed `execFile` with an uncoded error rather
+  // than a clean `E_PUBLISH_ROOTS`.
+  const controls = [
+    ['NUL', 0x00],
+    ['SOH', 0x01],
+    ['ESC', 0x1b],
+    ['DEL', 0x7f],
+    ['LF', 0x0a],
+    ['TAB', 0x09],
+    ['CR', 0x0d],
+  ];
+
+  const unsafe = [];
+  for (const [name, code] of controls) {
+    const char = String.fromCharCode(code);
+    unsafe.push([
+      `${name} in s3Uri`,
+      `s3://example-bucket/p${char}x`,
+      'https://cdn.example.com/p',
+    ]);
+    unsafe.push([
+      `${name} in publicBaseUrl`,
+      's3://example-bucket/p',
+      `https://cdn.example.com/p${char}x`,
+    ]);
+  }
+  // `parseS3Root` already screened `\`; `parsePublicRoot` did not, so
+  // `https://ex.com\evil/p` was silently normalized to `https://ex.com/p`.
+  unsafe.push([
+    'backslash in publicBaseUrl',
+    's3://example-bucket/p',
+    'https://ex.com\\evil/p',
+  ]);
+  unsafe.push([
+    'backslash in s3Uri',
+    's3://example-bucket\\evil/p',
+    'https://cdn.example.com/p',
+  ]);
+
+  for (const [label, s3Uri, publicBaseUrl] of unsafe) {
+    assert.throws(
+      () => normalizePublishRoots(s3Uri, publicBaseUrl),
+      (error) => error.code === 'E_PUBLISH_ROOTS',
+      `normalize: ${label}`,
+    );
+
+    // The same shapes must be rejected at the contract surface, at both
+    // publish-request versions.
+    for (const request of [publishRequest(), publishRequestV2('protected')]) {
+      const result = validateContract('publish-request', {
+        ...request,
+        s3Uri,
+        publicBaseUrl,
+      });
+      assert.equal(
+        result.valid,
+        false,
+        `${request.schemaVersion} contract: ${label}`,
+      );
+    }
   }
 });
 

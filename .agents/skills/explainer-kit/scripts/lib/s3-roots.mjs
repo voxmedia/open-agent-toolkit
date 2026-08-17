@@ -40,6 +40,7 @@ function parseS3Root(value) {
   if (
     typeof value !== 'string' ||
     /\s|[\\?#]/.test(value) ||
+    hasUnsafeRootChar(value) ||
     !value.startsWith('s3://')
   ) {
     throw rootError('S3 root must be a credential-free s3 URI.');
@@ -59,6 +60,7 @@ function parsePublicRoot(value) {
   if (
     typeof value !== 'string' ||
     /\s|[?#]/.test(value) ||
+    hasUnsafeRootChar(value) ||
     !value.startsWith('https://')
   ) {
     throw rootError('Public root must be credential-free HTTPS.');
@@ -151,6 +153,22 @@ function validBucket(bucket) {
     !RESERVED_BUCKET_PREFIXES.some((prefix) => bucket.startsWith(prefix)) &&
     !RESERVED_BUCKET_SUFFIXES.some((suffix) => bucket.endsWith(suffix))
   );
+}
+
+// `\s` matches only space, tab, newline, CR, FF and VT, leaving the rest of the
+// C0 range and DEL free to reach S3 object keys, composed public URLs, the
+// catalog, receipts and terminal output. NUL additionally crashed `execFile`
+// with an uncoded `ERR_INVALID_ARG_VALUE` rather than a clean `E_PUBLISH_ROOTS`.
+// Backslash is screened here so both parsers stay symmetric: `parseS3Root`
+// already rejected it, but `parsePublicRoot` silently dropped the segment.
+// Expressed as a codepoint scan rather than a regex so the source carries no
+// literal control bytes.
+function hasUnsafeRootChar(value) {
+  for (const char of value) {
+    const code = char.codePointAt(0);
+    if (code <= 0x1f || code === 0x7f || char === '\\') return true;
+  }
+  return false;
 }
 
 function rootError(message) {
