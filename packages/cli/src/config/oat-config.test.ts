@@ -779,6 +779,7 @@ describe('oat-config', () => {
       { preApproval: ['summary'], postApproval: [] },
       { preApproval: [], postApproval: ['document'] },
       { preApproval: ['summary'], postApproval: ['document', 'pr'] },
+      { preApproval: ['summary', 'pr'], postApproval: ['retro'] },
     ])(
       'accepts structured post-implementation sequence %#',
       async (sequence) => {
@@ -809,6 +810,8 @@ describe('oat-config', () => {
       { preApproval: [], postApproval: ['summary'], extra: true },
       { preApproval: ['summary', 'summary'], postApproval: [] },
       { preApproval: ['summary'], postApproval: ['summary'] },
+      { preApproval: ['retro'], postApproval: [] },
+      { preApproval: ['retro'], postApproval: ['retro'] },
     ])(
       'rejects malformed post-implementation sequence %# atomically',
       async (sequence) => {
@@ -868,6 +871,59 @@ describe('oat-config', () => {
       });
       await expect(readUserConfig(userConfigDir)).resolves.toMatchObject({
         workflow: { postImplementSequence: userSequence },
+      });
+    });
+
+    it('normalizes valid workflow.retro values and drops unknown keys', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            retro: {
+              filing: { repo: 'backlog', upstream: 'issues', unknown: true },
+              apply: 'auto',
+              upstreamRepo: 'voxmedia/open-agent-toolkit',
+              unknown: true,
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+        workflow: {
+          retro: {
+            filing: { repo: 'backlog', upstream: 'issues' },
+            apply: 'auto',
+            upstreamRepo: 'voxmedia/open-agent-toolkit',
+          },
+        },
+      });
+    });
+
+    it('drops invalid workflow.retro values independently', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            archiveOnComplete: true,
+            retro: {
+              filing: { repo: 'project', upstream: 'backlog' },
+              apply: 'always',
+              upstreamRepo: 'not-a-repo',
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      await expect(readOatConfig(repoRoot)).resolves.toEqual({
+        version: 1,
+        workflow: { archiveOnComplete: true },
       });
     });
 

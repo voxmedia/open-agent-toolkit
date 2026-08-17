@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.17
+version: 1.2.18
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -102,7 +102,8 @@ asking to write anything:
 | Claude          | haiku, sonnet                                                  | sonnet                                                                                                         | opus                                                        | fable                                  |
 | Cursor (opaque) | `gpt-5.6-luna-low`, `gpt-5.6-luna-medium`, `gpt-5.6-luna-high` | `gpt-5.6-luna-xhigh`, `gpt-5.6-terra-low`, `gpt-5.6-terra-medium`, `gpt-5.6-terra-high`, `gpt-5.6-terra-xhigh` | `gpt-5.6-sol-low`, `gpt-5.6-sol-medium`, `gpt-5.6-sol-high` | `gpt-5.6-sol-xhigh`, `gpt-5.6-sol-max` |
 
-Ask the user to select the owning scope explicitly before any adoption write:
+In an interactive run, ask the user to select the owning scope explicitly
+before any adoption write:
 
 1. **Shared repository** - team-owned `.oat/config.json`; run
    `oat config adopt dispatch-matrix --shared`.
@@ -118,13 +119,39 @@ project's named ceiling is a separate project-state constraint. A
 project-specific active policy or ceiling must not be written to user
 `~/.oat/config.json`.
 
+In an autonomous run (`OAT_AUTONOMOUS=1`), resolve ownership without prompting:
+
+1. Check config-file existence in this fixed order: user config
+   `~/.oat/config.json`, repo-local config `.oat/config.local.json`, then shared
+   config `.oat/config.json`. Consider shared only when repository-policy
+   authority already permits that write. Do not ask which scope to use and do
+   not reorder candidates from effective value or matrix-cell provenance.
+2. Before selecting a scope, inspect only the raw dispatch-ceiling shapes in
+   that scope and higher-precedence scopes. The scope is adoption-compatible
+   only when the recommendation can fill the preflight's missing provider/tier
+   cells without preserving a provider-level scalar in the selected scope or
+   being shadowed by one at higher precedence. A lower-precedence scalar is not
+   an obstacle when the selected scope writes the provider matrix above it.
+3. Select the first existing adoption-compatible authorized scope. If none
+   exists, name
+   the conflicting scalar paths and report the repository-policy boundary
+   before any write.
+4. Run exactly one matching adoption command, record the file-existence and
+   compatibility evidence plus the selected scope, then re-run the reviewer
+   preflight resolver.
+
+This ownership lookup may inspect file existence and raw config only for the
+scalar compatibility check above. It must not hand-merge config values or
+replace the effective resolver boundary. Existing explicit matrix cells remain
+preserved by adoption; their provenance does not choose the persistence scope.
+In ordinary non-interactive mode without `OAT_AUTONOMOUS=1`, an incomplete
+ladder or missing effective cells block readiness rather than choosing a scope.
+
 Adoption preserves explicit cells. After adoption, re-run the reviewer
 preflight resolver and re-check `ladderCompleteness.complete` and
 `ladderCompleteness.missingCells`. If preserved legacy or partial cells still
 leave effective cells incomplete or missing, identify those cells and block;
-do not overwrite, infer, or mark the plan implementation-ready. In
-non-interactive mode, incomplete or missing effective cells block readiness
-without choosing an ownership scope.
+do not overwrite, infer, or mark the plan implementation-ready.
 
 ### Reviewer Ceiling Contract
 

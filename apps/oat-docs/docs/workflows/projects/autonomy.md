@@ -66,6 +66,31 @@ The canonical autonomy contract and exhaustive gate inventory
 `references/docs/autonomy-contract.md`) map each prompt to its autonomous
 resolution and provenance.
 
+### Dispatch-ladder scope selection
+
+An incomplete reusable dispatch ladder is auto-resolvable when an authorized
+adoption-compatible config scope is available. Autonomous planning checks
+config-file existence in this fixed order without prompting or reordering from
+effective value or matrix-cell provenance:
+
+1. user config (`~/.oat/config.json`);
+2. repo-local config (`.oat/config.local.json`);
+3. shared config (`.oat/config.json`), only when repository policy already
+   authorizes that write.
+
+Before writing, planning rejects a candidate that would preserve a
+provider-level scalar in that scope or remain shadowed by one at higher
+precedence. It always tries the next authorized compatible candidate and stops
+without mutation only when none remains.
+
+The planner runs exactly one matching `oat config adopt dispatch-matrix`
+command, records file-existence and compatibility evidence plus the selected
+scope, and re-runs dispatch preflight. Existing explicit cells remain unchanged;
+their provenance does not select the persistence scope. No authorized
+compatible scope, or a ladder that remains incomplete after adoption, is still
+a repository-policy boundary. `OAT_NON_INTERACTIVE=1` without
+`OAT_AUTONOMOUS=1` does not select a scope and continues to fail closed.
+
 ## Review contract
 
 Autonomous execution preserves independent review:

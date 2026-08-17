@@ -10,6 +10,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { normalizeWorkflowPostImplementSequence } from '@config/oat-config';
 import { describe, expect, it } from 'vitest';
 
 function readImplementSkill(): string {
@@ -135,6 +136,24 @@ function requiredSlice(content: string, start: string, end: string): string {
 }
 
 describe('post-implementation sequence contracts', () => {
+  it('accepts retro only after approval in structured sequences', () => {
+    expect(
+      normalizeWorkflowPostImplementSequence({
+        preApproval: ['summary', 'pr'],
+        postApproval: ['retro'],
+      }),
+    ).toEqual({
+      preApproval: ['summary', 'pr'],
+      postApproval: ['retro'],
+    });
+    expect(
+      normalizeWorkflowPostImplementSequence({
+        preApproval: ['retro'],
+        postApproval: [],
+      }),
+    ).toBeUndefined();
+  });
+
   it('keeps non-final checkpoints and root-owned phase execution intact', () => {
     const skill = readImplementSkill();
     const normalized = normalizeWhitespace(skill);
@@ -644,13 +663,25 @@ describe('post-implementation sequence contracts', () => {
       'Resume from the first incomplete stored step, including a partially completed noncanonical order.',
     );
     expect(normalized).toContain(
-      'Every `summary`, `document`, and `pr` child receives the authoritative snapshot',
+      'Every `summary`, `document`, `pr`, and `retro` child receives the authoritative snapshot',
     );
     expect(normalized).toContain(
       'merge state updates without replacing `oat_post_implement_sequence`',
     );
     expect(normalized).toContain(
       'Re-read and verify the snapshot after every child returns before recording step success',
+    );
+    const persistedSnapshot = requiredSlice(
+      skill,
+      '```yaml\noat_post_implement_sequence:',
+      '\n```',
+    );
+    expect(persistedSnapshot).toContain(
+      'post_approval: [] # exact resolved array; add retro only when explicitly configured',
+    );
+    expect(persistedSnapshot).not.toContain('post_approval: [retro]');
+    expect(normalized).toContain(
+      'Never add `retro` unless the configured `postApproval` array explicitly contains it',
     );
   });
 

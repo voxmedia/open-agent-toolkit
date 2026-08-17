@@ -581,7 +581,11 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.hillCheckpointDefault` — `every` or `final`. Default HiLL checkpoint behavior in `oat-project-implement`: pause after every phase or only after the last phase. When unset, the skill prompts.
 - `workflow.archiveOnComplete` — boolean. Skip the "Archive after completion?" prompt in `oat-project-complete`. When unset, the skill prompts.
 - `workflow.createPrOnComplete` — boolean. Skip the "Open a PR?" prompt in `oat-project-complete`; when true, completion auto-triggers PR creation. When unset, the skill prompts.
-- `workflow.postImplementSequence` — legacy `wait`, `summary`, `pr`, or `docs-pr`, or `{ "preApproval": [...], "postApproval": [...] }`. Legacy values remain strings; structured arrays contain ordered, globally unique `summary`, `document`, and `pr` steps. Pre-approval steps run after final review and before final HiLL approval; post-approval steps run only after that approval. Plain retrieval keeps legacy strings and prints structured values as compact JSON; `--json` returns the raw value.
+- `workflow.postImplementSequence` — legacy `wait`, `summary`, `pr`, or `docs-pr`, or `{ "preApproval": [...], "postApproval": [...] }`. Legacy values remain strings and keep their existing mappings. Structured arrays contain ordered, globally unique `summary`, `document`, `pr`, and `retro` steps. `retro` is post-approval only: a structured value containing it in `preApproval` is rejected. Pre-approval steps run after final review and before final HiLL approval; post-approval steps run only after that approval. Plain retrieval keeps legacy strings and prints structured values as compact JSON; `--json` returns the raw value.
+- `workflow.retro.filing.repo` — `issues`, `backlog`, or `none`; unset by default. Selects the repo-lane filing destination.
+- `workflow.retro.filing.upstream` — `issues` or `none`; unset by default. Selects the upstream-lane filing destination.
+- `workflow.retro.apply` — `auto` or `ask`; defaults to `ask` behavior when unset. `auto` authorizes bounded promotion application in non-interactive runs; `ask` is propose-only when no interaction is possible.
+- `workflow.retro.upstreamRepo` — `owner/repo`; unset in CLI configuration. Retro guidance defaults it to `voxmedia/open-agent-toolkit`.
 - `workflow.reviewExecutionModel` — `subagent`, `inline`, or `fresh-session`. Default final-review execution model in `oat-project-implement`. `subagent` and `inline` run automatically. `fresh-session` is a soft preference: the skill prints guidance to run the review in another session but still offers escape hatches to `subagent` or `inline` if you change your mind. When unset, the skill prompts.
 - `workflow.autoReviewAtHillCheckpoints` — boolean. Automatically run the extra lifecycle review when a HiLL checkpoint is reached. This does not control Tier 1 per-phase `oat-reviewer` gates, which run after each phase in Tier 1 regardless of this setting. When unset, the skill prompts.
 - `workflow.autoNarrowReReviewScope` — boolean, default `true`. Re-reviews automatically use the guarded range after the prior matching review's recorded head. Unset and `true` enable narrowing without a prompt; set `false` to opt out and use the nominal full scope.
@@ -597,6 +601,12 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.dispatchCeiling.recommendationVersion` — version of the adopted recommended matrix.
 - `workflow.gates.skills` / `workflow.gates.execTargets` — structured per-skill final gate commands and exec-target registry. Use `oat gate set`, `oat gate target set`, `oat gate review`, and `oat gate cross-provider-exec`; do not use `oat config set` for these objects.
 - `workflow.gateTimeouts.code` / `workflow.gateTimeouts.artifact` — validated default gate-review budgets in milliseconds. Both resolve through `local > shared > user`.
+
+Explicit `workflow.retro.apply: auto` or `workflow.retro.filing.*`
+configuration counts as consent for the corresponding non-interactive action.
+Without those settings, non-interactive retro generation records proposals but
+does not apply or file them. Interactive runs still present the applicable
+promotion and filing choices before side effects.
 
 The two project-log keys use the standard workflow precedence:
 `local > shared > user > default`.

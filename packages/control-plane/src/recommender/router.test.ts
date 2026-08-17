@@ -203,11 +203,11 @@ describe('recommendSkill', () => {
       progress: {
         total: 3,
         completed: 2,
-        currentTaskId: 'p-rev1-t02',
+        currentTaskId: 'prev1-t02',
         phases: [
           {
             phaseId: 'p-rev1',
-            name: 'Review fixes',
+            name: 'Revision 1',
             total: 2,
             completed: 1,
             isRevision: true,
