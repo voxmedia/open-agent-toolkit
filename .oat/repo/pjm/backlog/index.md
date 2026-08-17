@@ -69,7 +69,7 @@
   `BL-260713-root-agent-judgment-logging` remains the planned fast-follow:
   root-agent role guidance takes over judgment-entry logging while subagents
   report observations to the root.
-- Build reliability: concurrent CLI invocations race on in-place `packages/cli/assets` regeneration (five incidents on 2026-07-12, including one silent bundle corruption). `BL-260712-serialize-cli-asset-bundling` — Serialize CLI asset bundling with atomic staging — tracks atomic staging plus a portable lock; increasingly urgent as multi-agent workflows make concurrent invocations in one worktree routine.
+- Build reliability: the 2026-07-12 concurrent-bundling race class (five incidents, one silent bundle corruption) is closed — `BL-260712-serialize-cli-asset-bundling` shipped atomic staged-rename publishing in explainer-improvements-v2. The residual reader-side rename window is `BL-260817-let-resolveassetsroot-honor`.
 - Gate review provenance, declared project corroboration, final/range producer aggregation, and opt-in phase review setup are complete. Their current user-facing contracts live in the workflow-gate, project-review, and project-artifact documentation.
 - Review lifecycle bookkeeping now preserves distinct append-ordered events,
   advances them monotonically by artifact identity, and routes from the latest
