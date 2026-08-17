@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p05] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p05] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy:
   default_attempt_limit: 0
@@ -68,17 +68,17 @@ oat_workflow_origin: native # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/196' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-17T15:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-17T16:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-improvements-v2
 
-**Status:** Complete — Final Review Passed
+**Status:** Implementation — PR open; completion may run before or after merge.
 **Started:** 2026-08-05
 **Last Updated:** 2026-08-17
 
@@ -165,8 +165,12 @@ as backlog `BL-260817-drop-explainer-kit-publish`.
 - ✓ p07 review round 2 mutation-tested the fixes and passed (0 Critical, 0
   Important)
 - ✓ All eight gates independently re-run green at `bcf479807`
-- ⧗ Fresh full final review to move the `final` event from `fixes_added` to
-  `passed`
+- ✓ Final review passed at 97e5853d2 (round 6: 0 C, 0 I, 0 M; one Minor
+  fixed as final-fix-005)
+- ✓ Documentation sync complete; five key decisions promoted to
+  reference/decisions/
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -179,10 +183,9 @@ rationale and the cross-model advisory that informed it are recorded in
 
 ## Next Milestone
 
-The `final` review event reached `passed` at `97e5853d2`
-(`reviews/final-review-2026-08-17T142743Z.md`, round 6 of 6: 0 Critical, 0
-Important, 0 Medium; its one Minor converted and fixed as `final-fix-005`).
-All ten gates — the eight local gates plus both version-lockstep CI gates —
-are green with explicit per-gate exit codes. All deferred findings live in six
-named backlog items. Remaining lifecycle: `oat-project-pr-final` to open the
-PR, then `oat-project-complete`.
+PR is open for review:
+[voxmedia/open-agent-toolkit#196](https://github.com/voxmedia/open-agent-toolkit/pull/196).
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
