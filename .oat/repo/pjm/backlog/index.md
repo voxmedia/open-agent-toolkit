@@ -4,6 +4,14 @@
 
 ## Curated Overview
 
+- Explainer publication hardening (explainer-improvements-v2, CLI `0.2.31`
+  pending merge) closed a credential-bearing publication-root bypass with
+  version-agnostic gates and made protected-mode publication durably
+  verifiable; the six `BL-260817-*` items carry its deliberate residue (v1
+  removal, authenticated protected-mode verification, CI browser and
+  version-drift decisions, reader-side assets override).
+  `BL-260712-serialize-cli-asset-bundling` closed: bundling now publishes by
+  atomic staged rename.
 - Project retrospectives now ship in CLI `0.2.30` as a post-approval-only
   lifecycle capability. The retro artifact separates repo-local promotions
   from upstream feedback in machine-scannable registers; generation, apply,
@@ -114,7 +122,6 @@
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                               | open   | high     | feature | L        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                               | open   | high     | task    | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                           | open   | high     | task    | S        |
-| BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                                           | open   | high     | task    | S        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                        | open   | high     | feature | M        |
 | BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version                                  | open   | high     | feature | S        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                            | open   | medium   | feature | M        |

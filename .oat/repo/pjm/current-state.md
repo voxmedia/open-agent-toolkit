@@ -34,6 +34,22 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.31` (explainer-improvements-v2, branch pending merge) hardens the
+  Explainer Kit publication boundary end to end: publication-root and receipt
+  screening is version-agnostic (a future contract version cannot silently
+  bypass it), C0/C1 control characters and backslashes are rejected in both
+  roots, public roots refuse loopback/link-local/private addresses with
+  redirects disabled (opt-out via `EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT`,
+  which leaves a durable `publicRootPolicy` receipt trace), and the initiative
+  catalog is versioned `v2` carrying a public-verification policy marker that
+  is threaded as a required argument through every builder/validator call
+  site. `project-recap@2` gains end-to-end coverage; the skill and hermetic
+  release suites run inside `pnpm test`; two version-lockstep gates
+  (`check:skill-bumps`, `release:check-versions`) run locally and in CI, and
+  `AGENTS.md`'s Definition of Done now mirrors CI's gate list exactly. Asset
+  bundling publishes by atomic staged rename. Delivered through six final
+  review rounds and five bounded fix batches; deferred residue lives in six
+  `BL-260817-*` backlog items.
 - CLI `0.2.30` adds evidence-grounded project retrospectives to the lifecycle
   tail. `retro` is a post-approval-only closeout step; `oat-project-retro`
   generates and idempotently applies machine-scannable promotion findings, and

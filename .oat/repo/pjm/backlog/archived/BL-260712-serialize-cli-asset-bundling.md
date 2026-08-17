@@ -1,14 +1,14 @@
 ---
 id: BL-260712-serialize-cli-asset-bundling
 title: 'Serialize CLI asset bundling with atomic staging'
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
 labels: [build, reliability, multi-agent]
 assignee: null
 created: '2026-07-12T20:32:24Z'
-updated: '2026-07-12T20:32:24Z'
+updated: '2026-08-17T22:50:00Z'
 associated_issues: []
 external_plans: []
 ---
