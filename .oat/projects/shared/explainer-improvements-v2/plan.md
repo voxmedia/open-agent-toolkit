@@ -1946,6 +1946,7 @@ git commit -m "docs(p07-t16): document mid-publish incomplete manifest"
 | plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T042235Z.md (3 Important + 2 Medium resolved)           | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan               | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-review-2026-08-06T043754Z.md (2 Important + 1 Medium resolved)           | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan               | artifact | passed          | 2026-08-06 | operator acceptance after attempt-15 fixes                                                              | -                                        | operator   | -                        |
+| p07                | code     | received        | 2026-08-17 | reviews/p07-review-2026-08-17T053431Z.md                                                                | 39ced2c9565d94e691c4e56778a2c1fe4aa62e48 | manual     | -                        |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
