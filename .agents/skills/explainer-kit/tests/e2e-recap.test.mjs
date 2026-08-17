@@ -92,6 +92,47 @@ async function markdownFixture(mode = 'unattended') {
   return result;
 }
 
+// `project-recap@2` is what the adapter pins for every new recap
+// (`oat-explainer-kit/scripts/resolve-config.mjs`), so it — not v1 — governs
+// production runs. v1 stays pinned above for golden replay.
+async function recapV2Fixture(mode = 'unattended') {
+  const result = await fixture(mode);
+  result.request.recipe = { id: 'project-recap', version: '2' };
+  return result;
+}
+
+/** Like `adaptivePlanSet`, but the optional entries carry no justification. */
+function unjustifiedPlanSet(optional = []) {
+  return async (context) => {
+    const plan = await adaptivePlanSet(optional)(context);
+    plan.portfolio = plan.portfolio.map((entry) => {
+      if (entry.required) return entry;
+      const { justification: _dropped, ...rest } = entry;
+      return rest;
+    });
+    return plan;
+  };
+}
+
+async function recapV2Run(overrides = {}) {
+  const { request } = await recapV2Fixture(overrides.mode);
+  const author = overrides.author ?? richAuthor();
+  const result = await runExplainer(request, {
+    author,
+    planSet: overrides.planSet ?? adaptivePlanSet(),
+    browserSession,
+    visualCritic: passingVisualCritic,
+    now: () => NOW,
+    reviewedSource: {
+      kind: 'lifecycle-artifacts',
+      locator: '.oat/projects/shared/atlas-index/implementation.md',
+      revision: 'a1b2c3d',
+      reviewedAt: NOW,
+    },
+  });
+  return { author, request, result };
+}
+
 // A stub for the headless runtime: a clean probe result keeps render QA silent
 // so the rich fixture's warning set is meaningful rather than runtime-shaped.
 function cleanProbeResult(request = {}) {
@@ -301,7 +342,11 @@ function hubHtml(request) {
               : id === 'as-built-architecture'
                 ? '<svg class="narrative-diagram" data-direction="TD"><text class="diagram-node-label">Change reader</text></svg>'
                 : id === 'implementation-record'
-                  ? '<ol class="timeline"><li>Build the retained checkpoint flow.</li></ol>'
+                  ? // The "3" carries the shared ledger's numeric claim. Recap
+                    // cohesion requires every declared claim to be observable in
+                    // rendered text, and under `project-recap@2` the hub can be
+                    // the only artifact, so the hub itself has to state it.
+                    '<ol class="timeline"><li>Build the retained checkpoint flow across 3 partitions.</li></ol>'
                   : id === 'validation-evidence'
                     ? '<aside class="callout callout--important">All retained hashes passed.</aside>'
                     : id === 'outcome'
@@ -478,6 +523,81 @@ test('the shipped recap fixture renders structured blocks, not flat paragraphs',
   assert.ok(
     occurrences(hub, /<table\b|<ul\b|<ol\b|<aside\b|<svg\b/g) >= 6,
     'structured block density holds',
+  );
+});
+
+test('project-recap@2 composes the hub-only floor end to end', async () => {
+  const { author, result } = await recapV2Run();
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  const manifest = await readJson(result.manifestPath);
+  // v2's defining behavior: the floor is the hub alone, where v1 mandated
+  // hub + architecture + deck.
+  assert.deepEqual(
+    manifest.artifacts.map(({ id, type }) => ({ id, type })),
+    [{ id: 'project-recap', type: 'hub' }],
+  );
+  assert.deepEqual(manifest.recipe, { id: 'project-recap', version: '2' });
+  assert.deepEqual(
+    author.requests.map(({ plannedArtifact }) => plannedArtifact.artifactId),
+    ['project-recap'],
+  );
+});
+
+test('project-recap@2 admits a justified expansion end to end', async () => {
+  const { author, result } = await recapV2Run({
+    planSet: adaptivePlanSet([
+      {
+        artifactId: 'index-flow',
+        profileId: 'supporting-diagram',
+        kind: 'source-backed-detail',
+        rationale:
+          'The indexing pipeline has three stages that the hub only names.',
+      },
+    ]),
+  });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  const manifest = await readJson(result.manifestPath);
+  assert.deepEqual(
+    manifest.artifacts.map(({ id, type }) => ({ id, type })),
+    [
+      { id: 'project-recap', type: 'hub' },
+      { id: 'index-flow', type: 'diagram' },
+    ],
+  );
+  assert.deepEqual(
+    author.requests.map(({ plannedArtifact }) => plannedArtifact.artifactId),
+    ['project-recap', 'index-flow'],
+  );
+});
+
+test('project-recap@2 rejects an unjustified expansion', async () => {
+  const { result } = await recapV2Run({
+    planSet: unjustifiedPlanSet([
+      {
+        artifactId: 'index-flow',
+        profileId: 'supporting-diagram',
+        kind: 'source-backed-detail',
+        rationale: 'Dropped before the plan reaches the recipe gate.',
+      },
+    ]),
+  });
+
+  assertFailedAuthoring(result);
+  const manifest = await readJson(result.manifestPath).catch(() => undefined);
+  assert.equal(
+    manifest?.artifacts?.some(({ id }) => id === 'index-flow') ?? false,
+    false,
+    'an unjustified expansion must never reach the manifest',
   );
 });
 
