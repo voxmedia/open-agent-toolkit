@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: bcf4798077276234745d8c38fe3cb6e07188dbf6
+oat_last_commit: 0c8382fa1
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p05] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p05] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy:
   default_attempt_limit: 0
@@ -72,13 +72,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-17T06:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-17T14:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-improvements-v2
 
-**Status:** All Implementation Phases Complete — Final Review Pending
+**Status:** Complete — Final Review Passed
 **Started:** 2026-08-05
 **Last Updated:** 2026-08-17
 
@@ -108,7 +108,7 @@ as backlog `BL-260817-drop-explainer-kit-publish`.
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
 - **Plan:** `plan.md` (7 phases / 50 tasks; p07 second final-review fixes)
-- **Implementation:** `implementation.md` (complete; final review pending)
+- **Implementation:** `implementation.md` (complete; final review passed)
 
 ## Progress
 
@@ -179,8 +179,10 @@ rationale and the cross-model advisory that informed it are recorded in
 
 ## Next Milestone
 
-Run `oat-project-review-provide code final`, then
-`oat-project-review-receive`, to move the `final` review event from
-`fixes_added` to `passed`. All implementation phases are complete and all eight
-gates are green at `bcf479807`; the project cannot close until that final event
-reaches `passed`.
+The `final` review event reached `passed` at `97e5853d2`
+(`reviews/final-review-2026-08-17T142743Z.md`, round 6 of 6: 0 Critical, 0
+Important, 0 Medium; its one Minor converted and fixed as `final-fix-005`).
+All ten gates — the eight local gates plus both version-lockstep CI gates —
+are green with explicit per-gate exit codes. All deferred findings live in six
+named backlog items. Remaining lifecycle: `oat-project-pr-final` to open the
+PR, then `oat-project-complete`.

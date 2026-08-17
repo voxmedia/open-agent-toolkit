@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-pr-final
 oat_blockers: []
 oat_last_updated: 2026-08-16
 oat_current_task_id: p07-t03
@@ -1457,6 +1457,41 @@ release:check-versions, check:skill-bumps.
 
 **Next:** closing narrowed review (round 6) over `510b74eca..HEAD` to move
 `final` to `passed`.
+
+### Final Review PASSED (round 6)
+
+**Date:** 2026-08-17
+**Round 6 artifact:** `reviews/final-review-2026-08-17T142743Z.md` — 0
+Critical, 0 Important, 0 Medium, 1 Minor over `510b74eca..97e5853d2`. All five
+round-5 findings verified closed by execution: the durability rejection branch
+goes red under mutation, the case-study scan covers every one of the skill's
+128 files and reports planted identifiers, `AGENTS.md`'s gate list matches
+`ci.yml` step-for-step, the exact-version pin is gone (and the surviving `!==`
+at the sentinel check fails closed — correct polarity), and the backlog
+acceptance criteria are concrete.
+
+**Round-6 Minor disposition: converted and fixed** (`final-fix-005`, commit
+`0c8382fa1`, root-inline): the scan's self-exclusion used `URL.pathname`,
+which percent-encodes, so a checkout path containing a space made the test
+report its own pattern literals — false red only. Replaced with
+`fileURLToPath`; verified 14/14 from a spaced path that previously failed.
+This fix is a one-line change in a test file whose oracle (run from a spaced
+path) was executed directly; recorded here as the explicit minor disposition
+required by the final-scope gate rather than deferred.
+
+**Final review status: `passed` at `97e5853d2`** (`final-fix-005` is a
+post-artifact minor disposition recorded in this ledger). Every
+Critical/Important/Medium across all six rounds is resolved; all deferred
+items live in named backlog entries
+(`BL-260817-drop-explainer-kit-publish`,
+`BL-260817-verify-protected-mode-public`,
+`BL-260817-let-resolveassetsroot-honor`,
+`BL-260817-run-the-rc-explainer-end`,
+`BL-260817-decide-and-pin-the-system`,
+`BL-260817-detect-branch-behind-published`); no finding is silently dropped.
+
+**Implementation is complete.** 50 planned tasks across 7 phases, 5 final-fix
+batches, 6 final review rounds, all ten gates green with explicit exit codes.
 
 ## References
 

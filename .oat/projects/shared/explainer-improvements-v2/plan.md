@@ -1952,6 +1952,7 @@ git commit -m "docs(p07-t16): document mid-publish incomplete manifest"
 | final              | code     | fixes_completed | 2026-08-17 | reviews/final-review-2026-08-17T092205Z.md                                                              | 8eb45413e89fff46d2fb421bbc4edc0970983267 | manual     | -                        |
 | final              | code     | fixes_completed | 2026-08-17 | reviews/final-review-2026-08-17T094116Z.md                                                              | 7440118a384cc008ffd3c5dd192ec62b65099c03 | manual     | -                        |
 | final              | code     | fixes_completed | 2026-08-17 | reviews/final-review-2026-08-17T132906Z.md                                                              | 510b74eca663b80e248687f47f1638a6f966aafb | manual     | -                        |
+| final              | code     | passed          | 2026-08-17 | reviews/final-review-2026-08-17T142743Z.md                                                              | 97e5853d28e99c3234414485e5dcda0f2cd84a7a | manual     | -                        |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
