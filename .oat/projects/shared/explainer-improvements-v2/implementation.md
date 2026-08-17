@@ -1130,8 +1130,58 @@ mechanical correction. Both conditions require stopping for direction.
 - `defaultHttpGet` is now exported from `s3-static.mjs` with an injectable
   `fetchImpl`, solely to make the `redirect: 'error'` policy assertable.
 
-**Next:** operator direction on `p07-t03` correspondence semantics, then resume
-p07 from the corrected `p07-t03` through `p07-t16`.
+### Operator Direction: `p07-t03` correspondence semantics (resolved)
+
+**Date:** 2026-08-16
+**Disposition:** authorize changed scope (exhaustion outcome 2). `p07-t03` is
+respecified; `32087f0cc` remains immutable and is superseded by a new commit.
+
+**Decision:** remove the relational rule entirely; do not replace it with
+suffix-containment. Surface the surviving uncertainty at the catalog boundary
+instead, and keep divergence detection only as a non-blocking suppressible
+warning.
+
+**Rationale (written so a later reader does not read this as convenience):**
+
+Review finding M2 identified a genuine gap but prescribed an invalid proxy
+control. The mapping from an S3 key to a public URL is **underdetermined by the
+two strings** — it lives in CDN configuration the tool cannot read. A
+committed, production-backed counterexample disproves the claimed invariant:
+the CloudFront Origin Path fixture maps bucket prefix `explainers` to the
+distribution root, so the paths legitimately do not correspond. Equality caused
+a false rejection of that real deployment. Suffix-containment is both
+incomplete and sometimes vacuous — an empty public path is a suffix of
+everything, so it passes the very case it was meant to accommodate, while
+path-rewriting behaviors still produce false rejections.
+
+`publish-receipt/v2` already separates `objectVerification` (authenticated S3
+hash — proves the uploaded object) from `publicVerification` (closed `oneOf`
+of `verified` or `skipped-protected` — proves, or explicitly declines to prove,
+reachability). The receipt therefore never overstated. The generated catalog
+did: its entries carry `url` with no verification signal at all, and the
+catalog is what advertises URLs to consumers. The corrective commit removes the
+unsound invariant and makes the remaining uncertainty visible at that
+consumer-facing boundary.
+
+Accepted cost: the revert gives up a typo-catching heuristic. It is retained as
+a clearly labeled suppressible warning rather than a security gate.
+
+**Cross-model advisory (Codex, high confidence, `phone-a-friend`):** concurred
+independently and contributed two corrections now folded into the respec.
+First, the catalog is serialized and uploaded as a hashed artifact
+(`s3-static.mjs:113,125,139`) **before** any verification runs (`:256`), so it
+must carry verification _policy/state_, never an outcome — root-verified
+against the source. Second, the framing is "underdetermined from the two
+strings," not "arbitrary": the mapping is knowable from CDN configuration, just
+not from these two inputs. It also flagged receipt/catalog state drift (derive
+both from one internal result and assert correspondence) and identified the
+genuinely sound long-term control — an authenticated end-to-end GET through the
+advertised URL using deployment-appropriate signing, plus the existing body-hash
+comparison — with the caveat that such credentials must be scoped and host-bound
+so a misconfigured URL cannot exfiltrate signing material. That control needs
+new configuration surface and is filed as repo backlog rather than p07 scope.
+
+**Next:** resume p07 from the respecified `p07-t03` through `p07-t16`.
 
 ## References
 

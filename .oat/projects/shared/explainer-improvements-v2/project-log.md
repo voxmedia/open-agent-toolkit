@@ -144,6 +144,10 @@ Fresh full final review over 5f76ade9..07e2c96d7 recorded 1 Critical, 2 Importan
 
 Phase p07 stopped direction-required after 4/16 tasks at 143e15a86: p07-t03's strict root-correspondence rule regressed tools/smoke/explainer-kit/wrapper-compatibility.test.mjs (2/5 fail), refuted by the repo's own CloudFront origin-path fixture; phase_recovery_limit=0 forbids automatic recovery. p07-t01/t02/t04 verified clean.
 
+### 2026-08-17 · structural · oat-project-implement · p07-t03
+
+Operator authorized changed scope for p07-t03 after cross-model advisory: remove the unsound root-correspondence rule rather than narrow it, surface protected-mode uncertainty as catalog verification state, and file authenticated public-URL verification as backlog BL-260817-verify-protected-mode-public.
+
 ## End-of-run synthesis (implementation complete; final review pending)
 
 Implementation completed all 34 tasks and adopted two load-bearing adjustments:

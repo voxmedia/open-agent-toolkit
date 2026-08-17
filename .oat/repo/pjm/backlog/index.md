@@ -126,6 +126,7 @@
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                          | open   | medium   | task    | S        |
 | BL-260726-validate-structured-output     | Validate structured-output contract in gate skill commands             | open   | medium   | task    |          |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                             | open   | medium   | task    | S        |
+| BL-260817-verify-protected-mode-public   | Verify protected-mode public URLs with an authenticated end-to-end GET | open   | medium   | task    | M        |
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                            | open   | low      | feature | L        |
 | BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight            | open   | low      | task    | M        |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization | open   | low      | feature | M        |

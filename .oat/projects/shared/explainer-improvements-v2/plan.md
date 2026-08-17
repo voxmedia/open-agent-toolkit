@@ -1337,41 +1337,79 @@ git commit -m "fix(p07-t02): reject control characters in publication roots"
 
 ---
 
-### Task p07-t03: (review) Enforce root correspondence and record it in protected mode
+### Task p07-t03: (review) Remove the unsound root-correspondence rule and surface protected-mode uncertainty
+
+**REVISED after operator direction.** The original spec prescribed strict equality
+between the S3 key prefix and the public root path. That rule shipped in `32087f0cc`,
+regressed `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs` from 5/5 to 3/5, and
+was stopped direction-required (Recovery Event `p07-rec-001`). The operator authorized
+this changed scope after a cross-model advisory review. `32087f0cc` is immutable; this
+task lands a new commit that replaces its rule.
 
 **Files:**
 
 - Modify: `.agents/skills/explainer-kit/scripts/lib/s3-roots.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/catalog.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
+- Modify: `.agents/skills/explainer-kit/schemas/initiative-catalog` schema (whichever file
+  `validateInitiativeCatalog` resolves — locate it rather than assuming a filename)
 
 **Step 1: Understand the issue**
 
-Review finding (M2): `normalizePublishRoots` parses the two roots in isolation and never
-relates them. In `public` mode divergence self-detects via a 404 raising
-`E_PUBLISH_VERIFY`. In `protected` mode the fetch is skipped entirely, yet
-`catalogFromManifest` and `composePublicationTarget` still stamp the unverified host
-into the catalog and every receipt entry's `publicUrl`.
+Review finding M2 identified a genuine gap but prescribed an invalid proxy control.
+
+The prescribed rule is unsound. The mapping from an S3 key to a public URL is
+**underdetermined by the two strings** — it lives in CDN configuration the tool cannot
+read. Two legitimate configurations in this repository disagree structurally:
+
+```text
+A  s3://bucket/repositories/duet  +  https://host/repositories/duet   (paths correspond)
+B  s3://bucket/explainers         +  https://host                     (prefix -> root)
+```
+
+B is a CloudFront **Origin Path** deployment and is the confirmed production config in
+`.agents/skills/oat-explainer-kit/references/migration.md`. Suffix-containment does not
+rescue the rule: an empty public path is a suffix of everything, so B passes vacuously,
+while path-rewriting behaviors (CloudFront Functions, Lambda@Edge, custom origins,
+redirects) still produce false rejections.
+
+What genuinely survives: authenticated S3 verification proves the **uploaded object**, not
+that an advertised URL reaches it. `publish-receipt/v2` already reports this honestly —
+`publicVerification` is a closed `oneOf` of `{status:"verified",httpStatus,hash}` or
+`{status:"skipped-protected"}`, distinct from `objectVerification`. The **catalog** does
+not: entries are `{id,type,status,renderedPath,hash,url}` with no verification signal, and
+the catalog is the artifact that advertises URLs to consumers.
 
 **Step 2: Implement fix**
 
-A **host** check would be wrong — the handoff's production example deliberately pairs
-different hosts. Require the public root's path suffix to equal the S3 key prefix,
-allowing the documented host difference. At minimum, record an explicit
-`rootCorrespondence` fact in the receipt so a reviewer can see whether the two roots
-were cross-checked.
+1. **Remove** the `keyPrefix !== pathname` check added in `32087f0cc`. Preserve every
+   independent per-root syntax and normalization check — this task removes only the
+   relational rule.
+2. **Surface uncertainty in the catalog.** Critical ordering constraint: the catalog is
+   built at `s3-static.mjs:113`, serialized at `:125`, and uploaded as a hashed artifact at
+   `:139` — all **before** the first upload (`:155`) and long before per-artifact
+   `publicVerification` (`:256`). It therefore **cannot** carry a verification _outcome_
+   without breaking its own hash. Carry **policy/state** instead: the resolved
+   `publicAccess`, or a `publicVerification: "required" | "skipped-by-policy"` marker, plus
+   a receipt reference. Never write `verified` into the catalog.
+3. **Avoid drift.** Derive the catalog marker and the receipt status from one internal
+   result, and assert their correspondence in a test.
+4. **Keep divergence detection as a non-blocking, suppressible warning** — never a gate. It
+   catches genuine typos without false-rejecting configuration B.
 
 **Step 3: Verify**
 
-Run: `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs`
-Expected: a protected-mode divergent-root case is rejected or explicitly marked
-unverified in the receipt; the handoff's legitimate cross-host example still passes.
+Run: `node --test tools/smoke/explainer-kit/wrapper-compatibility.test.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs`
+Expected: wrapper-compatibility returns to **5/5**; the CloudFront origin-path pair
+(prefix -> empty public path) is accepted; a protected-mode run marks catalog entries as
+policy-skipped rather than verified; the catalog's own hash remains valid.
 
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit/scripts/lib/s3-roots.mjs .agents/skills/explainer-kit/scripts/lib/s3-static.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs
-git commit -m "fix(p07-t03): enforce publication root correspondence"
+git add .agents/skills/explainer-kit/scripts/lib/s3-roots.mjs .agents/skills/explainer-kit/scripts/lib/catalog.mjs .agents/skills/explainer-kit/scripts/lib/s3-static.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs
+git commit -m "fix(p07-t03): replace unsound root correspondence with catalog verification state"
 ```
 
 ---

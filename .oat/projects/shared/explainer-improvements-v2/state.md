@@ -156,16 +156,12 @@ operator decision; `p07-t01` fixes the gate version-agnostically instead.
 
 ## Blockers
 
-**`p07-t03` root correspondence — direction-required.** The plan prescribed
-strict equality between the S3 key prefix and the public root path. That rule
-regressed the wrapper-compatibility smoke suite from 5/5 to 3/5, because this
-repository's own CloudFront Origin Path fixture maps the bucket prefix
-`explainers` to the distribution root (empty public path). The review finding
-M2's premise — that the path suffix corresponds in every legitimate example —
-is refuted by that fixture. Automatic recovery is disabled for p07
-(`default_attempt_limit: 0`), and the correct rule is a public-behavior and
-security-semantics decision, so the phase stopped rather than self-repairing.
-See Recovery Event `p07-rec-001` in `implementation.md`.
+None. The `p07-t03` direction-required stop (Recovery Event `p07-rec-001`) was
+resolved by operator direction on 2026-08-16: the unsound root-correspondence
+rule is removed rather than narrowed, and the surviving uncertainty is surfaced
+as catalog verification state. `p07-t03` is respecified in `plan.md`; the
+rationale and the cross-model advisory that informed it are recorded in
+`implementation.md`.
 
 ## Next Milestone
 
