@@ -40,6 +40,94 @@ test('normalizes corresponding roots and maps site-relative paths', () => {
   );
 });
 
+test('requires the public root path to correspond to the S3 key prefix', () => {
+  // Hosts are deliberately allowed to differ: a bucket is normally fronted by a
+  // separate CDN domain. The handoff's own production pairing must keep working.
+  const corresponding = [
+    [
+      'handoff cross-host production pairing',
+      's3://vox-media-open-agent-toolkit/repositories/duet',
+      'https://open-agent-toolkit.voxops.net/repositories/duet',
+    ],
+    [
+      'bucket root and host root',
+      's3://example-bucket',
+      'https://cdn.example.com',
+    ],
+    [
+      'adapter-derived project suffix',
+      's3://example-bucket/explainers/projects/demo',
+      'https://cdn.example.com/explainers/projects/demo',
+    ],
+  ];
+
+  for (const [label, s3Uri, publicBaseUrl] of corresponding) {
+    const roots = normalizePublishRoots(s3Uri, publicBaseUrl);
+    assert.equal(
+      roots.keyPrefix,
+      new URL(publicBaseUrl).pathname.replace(/^\/|\/$/g, ''),
+      `corresponding: ${label}`,
+    );
+  }
+
+  const divergent = [
+    [
+      'unrelated paths',
+      's3://example-bucket/private/a',
+      'https://cdn.example.com/unrelated/b',
+    ],
+    [
+      'public root is shallower',
+      's3://example-bucket/site',
+      'https://cdn.example.com',
+    ],
+    [
+      'public root is deeper',
+      's3://example-bucket',
+      'https://cdn.example.com/site',
+    ],
+    [
+      'public root extends the prefix',
+      's3://example-bucket/a',
+      'https://cdn.example.com/a/b',
+    ],
+  ];
+
+  for (const [label, s3Uri, publicBaseUrl] of divergent) {
+    assert.throws(
+      () => normalizePublishRoots(s3Uri, publicBaseUrl),
+      (error) => error.code === 'E_PUBLISH_ROOTS',
+      `divergent: ${label}`,
+    );
+  }
+});
+
+test('rejects divergent roots in protected mode before any process launch', async () => {
+  // `protected` mode skips the public fetch entirely, so a divergent
+  // `publicBaseUrl` used to be stamped unverified into the catalog and into
+  // every receipt entry's `publicUrl` with the object still reading `verified`.
+  // There is no self-detecting 404 in this mode, so the roots must fail closed.
+  for (const publicAccess of ['protected', 'public']) {
+    const fixture = await createFixture();
+    fixture.request.publicAccess = publicAccess;
+    fixture.request.s3Uri = 's3://example-bucket/published';
+    fixture.request.publicBaseUrl = 'https://cdn.example.com/somewhere-else';
+
+    let processLaunched = false;
+    await assert.rejects(
+      publishS3Static(fixture.request, {
+        approved: true,
+        command: async () => {
+          processLaunched = true;
+        },
+      }),
+      (error) => ['E_PUBLISH_INPUT', 'E_PUBLISH_ROOTS'].includes(error.code),
+      `publicAccess=${publicAccess}`,
+    );
+    assert.equal(processLaunched, false, `publicAccess=${publicAccess}`);
+  }
+});
+
 test('rejects unsafe or divergent S3 roots before process launch', async () => {
   const unsafePairs = [
     [

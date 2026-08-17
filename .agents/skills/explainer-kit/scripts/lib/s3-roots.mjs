@@ -15,6 +15,21 @@ export function normalizePublishRoots(s3Uri, publicBaseUrl) {
   const publicRoot = parsePublicRoot(publicBaseUrl);
   const keyPrefix = s3.segments.join('/');
   const pathname = publicRoot.segments.join('/');
+  // The two roots were previously parsed in isolation and never related, so a
+  // `publicBaseUrl` pointing somewhere that was never uploaded to was accepted.
+  // In `public` mode that self-detects as an `E_PUBLISH_VERIFY` 404, but in
+  // `protected` mode the fetch is skipped entirely while the unverified host is
+  // still stamped into the catalog and every receipt entry's `publicUrl`.
+  //
+  // Hosts are deliberately allowed to differ — a bucket is normally fronted by a
+  // separate CDN domain — but the path must correspond, which it does in every
+  // legitimate configuration: the adapter derives both roots by appending the
+  // same `/projects/<slug>` suffix to a shared base.
+  if (keyPrefix !== pathname) {
+    throw rootError(
+      'Publication roots must address the same path: the public root path must equal the S3 key prefix.',
+    );
+  }
   return {
     bucket: s3.bucket,
     keyPrefix,
