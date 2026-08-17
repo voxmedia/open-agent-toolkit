@@ -14,10 +14,19 @@
     "artifacts"
   ],
   "properties": {
-    "schemaVersion": { "const": "explainer-kit.publish-receipt/v2" },
-    "provider": { "const": "s3-static" },
-    "publishedAt": { "type": "string", "format": "date-time" },
-    "publicAccess": { "enum": ["public", "protected"] },
+    "schemaVersion": {
+      "const": "explainer-kit.publish-receipt/v2"
+    },
+    "provider": {
+      "const": "s3-static"
+    },
+    "publishedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "publicAccess": {
+      "enum": ["public", "protected"]
+    },
     "roots": {
       "type": "object",
       "additionalProperties": false,
@@ -43,16 +52,30 @@
         "deleted"
       ],
       "properties": {
-        "relativePath": { "$ref": "#/$defs/safeRelativePath" },
-        "objectVerification": { "$ref": "#/$defs/objectVerification" },
-        "publicVerification": { "$ref": "#/$defs/publicVerification" },
-        "deleted": { "type": "boolean" }
+        "relativePath": {
+          "$ref": "#/$defs/safeRelativePath"
+        },
+        "objectVerification": {
+          "$ref": "#/$defs/objectVerification"
+        },
+        "publicVerification": {
+          "$ref": "#/$defs/publicVerification"
+        },
+        "deleted": {
+          "type": "boolean"
+        }
       }
     },
     "artifacts": {
       "type": "array",
-      "items": { "$ref": "#/$defs/artifact" },
+      "items": {
+        "$ref": "#/$defs/artifact"
+      },
       "uniqueItems": true
+    },
+    "publicRootPolicy": {
+      "description": "Present only when EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT was set and the public root was in fact a non-public address, so a publication made with the anti-SSRF control disabled is distinguishable in durable evidence.",
+      "enum": ["private-allowed"]
     }
   },
   "$defs": {
@@ -72,8 +95,13 @@
           "additionalProperties": false,
           "required": ["kind", "artifactId"],
           "properties": {
-            "kind": { "const": "manifest" },
-            "artifactId": { "type": "string", "minLength": 1 }
+            "kind": {
+              "const": "manifest"
+            },
+            "artifactId": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         },
         {
@@ -81,8 +109,13 @@
           "additionalProperties": false,
           "required": ["kind", "name"],
           "properties": {
-            "kind": { "const": "auxiliary" },
-            "name": { "type": "string", "minLength": 1 }
+            "kind": {
+              "const": "auxiliary"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         }
       ]
@@ -92,11 +125,15 @@
       "additionalProperties": false,
       "required": ["status", "method", "hash"],
       "properties": {
-        "status": { "const": "verified" },
+        "status": {
+          "const": "verified"
+        },
         "method": {
           "enum": ["service-checksum", "authenticated-download"]
         },
-        "hash": { "$ref": "#/$defs/hash" }
+        "hash": {
+          "$ref": "#/$defs/hash"
+        }
       }
     },
     "publicVerification": {
@@ -106,13 +143,17 @@
           "additionalProperties": false,
           "required": ["status", "httpStatus", "hash"],
           "properties": {
-            "status": { "const": "verified" },
+            "status": {
+              "const": "verified"
+            },
             "httpStatus": {
               "type": "integer",
               "minimum": 200,
               "maximum": 299
             },
-            "hash": { "$ref": "#/$defs/hash" }
+            "hash": {
+              "$ref": "#/$defs/hash"
+            }
           }
         },
         {
@@ -120,7 +161,9 @@
           "additionalProperties": false,
           "required": ["status"],
           "properties": {
-            "status": { "const": "skipped-protected" }
+            "status": {
+              "const": "skipped-protected"
+            }
           }
         }
       ]
@@ -139,9 +182,15 @@
         "publicVerification"
       ],
       "properties": {
-        "source": { "$ref": "#/$defs/source" },
-        "relativePath": { "$ref": "#/$defs/safeRelativePath" },
-        "hash": { "$ref": "#/$defs/hash" },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "relativePath": {
+          "$ref": "#/$defs/safeRelativePath"
+        },
+        "hash": {
+          "$ref": "#/$defs/hash"
+        },
         "s3Uri": {
           "type": "string",
           "pattern": "^s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]/[^\\s?#\\\\]+$"
@@ -150,9 +199,16 @@
           "type": "string",
           "pattern": "^https://[^\\s/?#@]+(?::[0-9]+)?/[^\\s?#\\\\]+$"
         },
-        "contentType": { "type": "string", "minLength": 1 },
-        "objectVerification": { "$ref": "#/$defs/objectVerification" },
-        "publicVerification": { "$ref": "#/$defs/publicVerification" }
+        "contentType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "objectVerification": {
+          "$ref": "#/$defs/objectVerification"
+        },
+        "publicVerification": {
+          "$ref": "#/$defs/publicVerification"
+        }
       }
     }
   }

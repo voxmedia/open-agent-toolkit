@@ -185,6 +185,34 @@ the advertised URLs are still written into the initiative catalog and receipt,
 and the catalog records `publicVerification: "skipped-by-policy"` so consumers
 can see the URLs were never exercised.
 
+### Explainer publication environment variables
+
+Two escape hatches are read from the process environment rather than from
+config, because both are machine-local operational overrides rather than
+project settings. Neither has a config key.
+
+| Variable                                         | Effect                                                                      | Default |
+| ------------------------------------------------ | --------------------------------------------------------------------------- | ------- |
+| `EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT`        | Permits a loopback, link-local, unique-local or RFC 1918 `publicBaseUrl`    | off     |
+| `EXPLAINER_KIT_SUPPRESS_ROOT_DIVERGENCE_WARNING` | Silences the advisory warning when the S3 key prefix and public path differ | off     |
+
+Both accept `1`, `true` or `on`.
+
+`EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT` disables an anti-SSRF control. Public
+verification issues an outbound GET against whatever `publicBaseUrl` names, so
+by default the connector refuses internal addresses — including the
+`169.254.169.254` instance-metadata endpoint. Enable it only for a genuinely
+internal mirror. When it is set and the root is in fact non-public, the run
+records `publicRootPolicy: "private-allowed"` in the publish receipt, so a
+publication made with the control disabled is distinguishable in durable
+evidence from one made without it. The policy is address-literal only: a
+hostname that resolves inward is not detected either way.
+
+`EXPLAINER_KIT_SUPPRESS_ROOT_DIVERGENCE_WARNING` only affects an advisory
+message. Divergent roots are never a publication failure — a CloudFront Origin
+Path deployment legitimately maps a bucket prefix to the distribution root — so
+this changes no validation outcome.
+
 See [Explainer Kit](../workflows/skills/explainer-kit.md) for recipes, artifact
 locations, lifecycle behavior, and durability.
 

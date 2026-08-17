@@ -279,6 +279,46 @@ test('rejects loopback, link-local, and private-network public roots', async () 
   assert.equal(touched, false);
 });
 
+test('records the anti-SSRF opt-in in the receipt only when it was actually used', async () => {
+  // The variable is read straight from process.env and enters no request,
+  // manifest or catalog, so without this fact a publication made to an internal
+  // address with the control disabled left no durable trace.
+  const previous = process.env[PRIVATE_PUBLIC_ROOT_ENV];
+  const publish = async (publicBaseUrl) => {
+    const fixture = await createFixture();
+    fixture.request.publicAccess = 'protected';
+    fixture.request.s3Uri = 's3://example-bucket/published';
+    fixture.request.publicBaseUrl = publicBaseUrl;
+    const harness = fakeDestination();
+    return publishS3Static(fixture.request, {
+      approved: true,
+      now: () => NOW,
+      randomBytes: () => Buffer.from('0123456789abcdeffedcba9876543210', 'hex'),
+      ...harness.dependencies,
+      httpGet: unexpectedHttp,
+    });
+  };
+
+  try {
+    // Opt-in set and the root really is internal: recorded.
+    process.env[PRIVATE_PUBLIC_ROOT_ENV] = '1';
+    const internal = await publish('https://10.0.0.5/published');
+    assert.equal(internal.publicRootPolicy, 'private-allowed');
+
+    // Opt-in set but the root is public: nothing to disclose, so absent.
+    const routable = await publish('https://cdn.example.com/published');
+    assert.equal('publicRootPolicy' in routable, false);
+  } finally {
+    if (previous === undefined) delete process.env[PRIVATE_PUBLIC_ROOT_ENV];
+    else process.env[PRIVATE_PUBLIC_ROOT_ENV] = previous;
+  }
+
+  // Opt-in unset: an internal root cannot be published at all, and an ordinary
+  // receipt carries no such field.
+  const ordinary = await publish('https://cdn.example.com/published');
+  assert.equal('publicRootPolicy' in ordinary, false);
+});
+
 test('allows an internal public root only behind an explicit opt-in', () => {
   assert.equal(privatePublicRootAllowed({}), false);
   assert.equal(

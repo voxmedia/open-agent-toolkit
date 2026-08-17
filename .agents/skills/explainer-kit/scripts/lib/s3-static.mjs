@@ -24,7 +24,9 @@ import { assertManifestPublishable } from './publication-policy.mjs';
 import {
   composePublicationTarget,
   describeRootDivergence,
+  isPrivatePublicHost,
   normalizePublishRoots,
+  privatePublicRootAllowed,
   rootDivergenceWarningSuppressed,
 } from './s3-roots.mjs';
 
@@ -320,6 +322,16 @@ export async function publishS3Static(request, dependencies = {}) {
       provider: 's3-static',
       publishedAt: now(),
       publicAccess,
+      // Durable trace for the anti-SSRF opt-in. Without it, a run that
+      // published to an internal address with the control disabled is
+      // indistinguishable in retained evidence from one that did not, because
+      // the variable is read straight from the environment and enters no other
+      // record. Emitted only in that exceptional case, so ordinary receipts are
+      // byte-identical to before.
+      ...(privatePublicRootAllowed() &&
+        isPrivatePublicHost(new URL(roots.publicBaseUrl).hostname) && {
+          publicRootPolicy: 'private-allowed',
+        }),
       roots: { s3Uri: roots.s3Uri, publicBaseUrl: roots.publicBaseUrl },
       sentinel: {
         relativePath: sentinelRelativePath,
