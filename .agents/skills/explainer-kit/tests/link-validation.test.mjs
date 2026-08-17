@@ -90,6 +90,38 @@ test('rejects directory links, traversal, missing files and fragments', () => {
   }
 });
 
+test('rejects the exact broken hub links from the Cyclone case study', () => {
+  // The handoff asks for "the broken links from this case" by name. These are
+  // the literal hrefs the production hub shipped: bare directory references to
+  // sibling artifacts, which resolve to no manifest-declared file.
+  for (const reference of ['../architecture/', '../deck/']) {
+    const fixture = site();
+    fixture.artifacts[0].html = `<a href="${reference}">${reference}</a>`;
+    const result = validateInternalReferences(fixture);
+    assert.equal(result.valid, false, reference);
+    assert.ok(
+      result.errors.some(({ code }) => code === 'directory-reference'),
+      `${reference}: ${JSON.stringify(result.errors)}`,
+    );
+  }
+
+  // Both together, as the hub actually carried them.
+  const fixture = site();
+  fixture.artifacts[0].html = `
+    <nav>
+      <a href="../architecture/">Architecture</a>
+      <a href="../deck/">Deck</a>
+    </nav>
+  `;
+  const result = validateInternalReferences(fixture);
+  assert.equal(result.valid, false);
+  assert.equal(
+    result.errors.filter(({ code }) => code === 'directory-reference').length,
+    2,
+    JSON.stringify(result.errors),
+  );
+});
+
 test('fails closed on malformed, encoded-ambiguous, unsafe, and undeclared references', () => {
   for (const [html, code] of [
     ['<a href="../bad', 'malformed-html'],

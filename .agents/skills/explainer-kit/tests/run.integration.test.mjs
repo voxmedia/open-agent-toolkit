@@ -3372,6 +3372,14 @@ test('core CLI streams exclude arbitrary provider bytes for every terminal path'
         };
         return result;
       },
+      assertProjection(projected, name) {
+        assert.equal(projected.outcome, 'built-not-durable', name);
+        assert.equal(
+          projected.publication.schemaVersion,
+          'explainer-kit.publish-summary/v2',
+          name,
+        );
+      },
     },
     {
       name: 'correctable',
@@ -3389,6 +3397,10 @@ test('core CLI streams exclude arbitrary provider bytes for every terminal path'
           providerFinding: canary,
         };
         return result;
+      },
+      assertProjection(projected, name) {
+        assert.equal(projected.visualReview.disposition, 'correct', name);
+        assert.equal(projected.visualReview.attempt, 1, name);
       },
     },
     {
@@ -3408,6 +3420,10 @@ test('core CLI streams exclude arbitrary provider bytes for every terminal path'
         };
         return result;
       },
+      assertProjection(projected, name) {
+        assert.equal(projected.visualReview.disposition, 'failed', name);
+        assert.equal(projected.visualReview.attempt, 2, name);
+      },
     },
     {
       name: 'provider failed',
@@ -3418,6 +3434,14 @@ test('core CLI streams exclude arbitrary provider bytes for every terminal path'
       inject(result, canary) {
         result.providerFailure = { message: canary };
         return result;
+      },
+      assertProjection(projected, name) {
+        assert.equal(projected.outcome, 'failed', name);
+        assert.deepEqual(
+          projected.reasons,
+          [{ stage: 'durability', kind: 'provider-failure', count: 1 }],
+          name,
+        );
       },
     },
     { name: 'caught error', throws: true },
@@ -3459,6 +3483,13 @@ test('core CLI streams exclude arbitrary provider bytes for every terminal path'
     const captured = `${stdout.join('\n')}\n${stderr.join('\n')}`;
     assert.equal(entered, true, `${scenario.name} injected its canary`);
     assert.equal(captured.includes(canary), false, scenario.name);
+    // Canary exclusion alone is vacuously satisfiable by dropping the whole
+    // block: the prior review's M2 was exactly such a row. Assert that the
+    // block the canary was hidden inside actually survived projection.
+    if (scenario.assertProjection) {
+      assert.ok(stdout.length > 0, `${scenario.name} projected output`);
+      scenario.assertProjection(JSON.parse(stdout.at(-1)), scenario.name);
+    }
     assert.equal(
       exitCode,
       scenario.throws || scenario.result?.outcome === 'failed' ? 1 : 0,
