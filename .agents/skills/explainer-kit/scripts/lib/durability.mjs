@@ -8,6 +8,7 @@ import {
   catalogFromManifest,
   initiativeCatalogPath,
   serializeInitiativeCatalog,
+  validateInitiativeCatalog,
 } from './catalog.mjs';
 import { canonicalHash, validateContract } from './contracts.mjs';
 import { writeFileAtomic, writeJsonAtomic } from './fs-safe.mjs';
@@ -388,6 +389,30 @@ async function verifyPublishEvidence(evidence, { runRoot, manifest }) {
         receipt.roots?.publicBaseUrl,
         { publicAccess: receipt.publicAccess },
       );
+      // `catalogFromManifest` and `validateInitiativeCatalog` are independent
+      // implementations of the same contract. Binding a rebuilt catalog's hash
+      // without checking it against the validator means any divergence between
+      // them surfaces as an opaque `cross-record-mismatch` against the receipt
+      // rather than as the specific contract violation. This is the one place
+      // the guard sees a catalog it did not itself just build three lines
+      // earlier from the same inputs.
+      const catalogValidation = validateInitiativeCatalog(
+        catalog,
+        manifest,
+        receipt.roots?.publicBaseUrl,
+        { publicAccess: receipt.publicAccess },
+      );
+      if (!catalogValidation.valid) {
+        return {
+          verified: false,
+          errors: [
+            error(
+              'publish-receipt',
+              `Rebuilt initiative catalog is invalid: ${catalogValidation.errors[0].message}`,
+            ),
+          ],
+        };
+      }
       catalogArtifact = {
         relativePath: initiativeCatalogPath(manifest.slug),
         hash: bufferHash(Buffer.from(serializeInitiativeCatalog(catalog))),

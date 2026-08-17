@@ -905,6 +905,59 @@ test('derives an exact, absolute initiative catalog from the finalized manifest'
   );
 });
 
+test('rejects a catalog whose verification marker disagrees with the run policy', () => {
+  // The `catalog-verification-policy` guard had zero tests and its only
+  // production caller validated a catalog built three lines earlier from the
+  // identical policy, so the error branch was unreachable there. These drive it
+  // directly, with the mutation the guard exists to catch.
+  const finalized = manifest();
+  const base = 'https://cdn.example.com/published';
+
+  for (const [policy, wrongMarker] of [
+    ['public', 'skipped-by-policy'],
+    ['protected', 'required'],
+  ]) {
+    const catalog = catalogFromManifest(finalized, base, {
+      publicAccess: policy,
+    });
+    const mutated = structuredClone(catalog);
+    mutated.publicVerification = wrongMarker;
+
+    const result = validateInitiativeCatalog(mutated, finalized, base, {
+      publicAccess: policy,
+    });
+    assert.equal(result.valid, false, `${policy} rejects ${wrongMarker}`);
+    assert.ok(
+      result.errors.some(({ code }) => code === 'catalog-verification-policy'),
+      `${policy} raises catalog-verification-policy: ${JSON.stringify(result.errors)}`,
+    );
+
+    // The untouched catalog must still validate under its own policy.
+    assert.equal(
+      validateInitiativeCatalog(catalog, finalized, base, {
+        publicAccess: policy,
+      }).valid,
+      true,
+      `${policy} accepts its own marker`,
+    );
+  }
+
+  // A marker that is not part of the closed vocabulary is rejected too, and a
+  // verification *outcome* must never be accepted where policy belongs.
+  for (const bogus of ['verified', 'skipped-protected', '', null]) {
+    const mutated = catalogFromManifest(finalized, base, {
+      publicAccess: 'public',
+    });
+    mutated.publicVerification = bogus;
+    assert.ok(
+      validateInitiativeCatalog(mutated, finalized, base, {
+        publicAccess: 'public',
+      }).errors.some(({ code }) => code === 'catalog-verification-policy'),
+      `rejects marker ${JSON.stringify(bogus)}`,
+    );
+  }
+});
+
 test('refuses to build or validate a catalog without an explicit access policy', () => {
   // The marker is part of the serialized bytes and therefore of the hash the
   // receipt records. A silent default to the permissive `public` branch is what
