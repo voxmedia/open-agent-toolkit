@@ -1126,6 +1126,19 @@ catalog. The non-opt-in test must validate exact count, source identity,
 initiative path, hash, and object/public verification so ordinary CI catches
 future arithmetic or shape drift.
 
+> **Correction (p07-t05).** When this rationale was written, no repository gate
+> executed `tools/release/*.test.mjs`, so "ordinary CI catches future arithmetic
+> or shape drift" was false: `pnpm test` resolved to
+> `turbo run test && pnpm test:smoke`, which reached four vitest packages and
+> the smoke globs only. The claim holds from p07-t05 onward, which adds
+> `test:skills` and `test:release` to the root `test` script that CI already
+> runs. `test:release` names its four suites explicitly rather than globbing
+> `tools/release/*.test.mjs`, because `validate-explainer-visuals.test.mjs`
+> launches Playwright's `chrome-headless-shell` and CI installs no browsers;
+> 7 of its 12 tests fail on any machine without that binary. That suite stays
+> outside the gates and remains covered by `pnpm release:validate`, which
+> exercises the production script rather than these unit tests.
+
 **Step 2: Build the fixture from the production catalog contract (GREEN)**
 
 Generate exactly one `source.kind: auxiliary`, `source.name: catalog` artifact
