@@ -43,6 +43,46 @@ test('packaged RC v2 fixture includes exact production catalog evidence', () => 
     ({ source }) => source.kind === 'auxiliary' && source.name === 'catalog',
   );
 
+  // The `hash` element of the deepEqual below is derived by the same
+  // `catalogFromManifest` call the fixture uses to build the receipt, so on its
+  // own it compares a value against itself and would stay green through
+  // serialization or policy drift. Anchor the catalog against literals that do
+  // not move with the builder.
+  const built = catalogFromManifest(manifest, receipt.roots.publicBaseUrl, {
+    publicAccess: receipt.publicAccess,
+  });
+  assert.equal(built.schemaVersion, 'explainer-kit.initiative-catalog/v2');
+  assert.equal(receipt.publicAccess, 'public');
+  assert.equal(built.publicVerification, 'required');
+  assert.deepEqual(Object.keys(built), [
+    'schemaVersion',
+    'runId',
+    'slug',
+    'recipe',
+    'createdAt',
+    'publicVerification',
+    'artifacts',
+    'sourceBacklinks',
+  ]);
+  const serialized = serializeInitiativeCatalog(built);
+  assert.equal(serialized, `${JSON.stringify(built, null, 2)}\n`);
+  assert.match(catalogHash, /^sha256:[a-f0-9]{64}$/);
+
+  // And the hash is genuinely policy-sensitive, so the recorded value could not
+  // have been produced under a different access policy.
+  assert.notEqual(
+    catalogHash,
+    hashBytes(
+      Buffer.from(
+        serializeInitiativeCatalog(
+          catalogFromManifest(manifest, receipt.roots.publicBaseUrl, {
+            publicAccess: 'protected',
+          }),
+        ),
+      ),
+    ),
+  );
+
   assert.equal(receipt.artifacts.length, manifest.artifacts.length + 1);
   assert.deepEqual(catalog, {
     source: { kind: 'auxiliary', name: 'catalog' },
