@@ -6,7 +6,13 @@ import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import {
+  PRIVATE_PUBLIC_ROOT_ENV,
+  isPrivatePublicHost,
+  privatePublicRootAllowed,
+} from '../scripts/lib/s3-roots.mjs';
+import {
   createSentinelRelativePath,
+  defaultHttpGet,
   normalizePublishRoots,
   publishS3Static,
 } from '../scripts/lib/s3-static.mjs';
@@ -126,6 +132,143 @@ test('rejects divergent roots in protected mode before any process launch', asyn
     );
     assert.equal(processLaunched, false, `publicAccess=${publicAccess}`);
   }
+});
+
+test('rejects loopback, link-local, and private-network public roots', async () => {
+  // Every address below was probed as accepted before the address policy, while
+  // `defaultHttpGet` followed redirects against it.
+  const internal = [
+    ['loopback v4 with port', 'https://127.0.0.1:8443/p'],
+    ['loopback v4 elsewhere in /8', 'https://127.1.2.3/p'],
+    ['AWS IMDS link-local', 'https://169.254.169.254/p'],
+    ['localhost name', 'https://localhost/p'],
+    ['localhost subdomain', 'https://app.localhost/p'],
+    ['RFC 1918 ten-dot', 'https://10.0.0.5/p'],
+    ['RFC 1918 192.168', 'https://192.168.1.1/p'],
+    ['RFC 1918 172.16/12', 'https://172.16.0.1/p'],
+    ['unspecified v4', 'https://0.0.0.0/p'],
+    ['loopback v6', 'https://[::1]/p'],
+    ['link-local v6', 'https://[fe80::1]/p'],
+    ['unique-local v6', 'https://[fd12:3456::1]/p'],
+    // The URL parser rewrites these to hex (`[::ffff:7f00:1]`,
+    // `[::ffff:a9fe:a9fe]`), so they must be caught in the normalized shape.
+    ['IPv4-mapped loopback', 'https://[::ffff:127.0.0.1]/p'],
+    ['IPv4-mapped IMDS', 'https://[::ffff:169.254.169.254]/p'],
+    ['fully expanded loopback v6', 'https://[0:0:0:0:0:0:0:1]/p'],
+  ];
+
+  for (const [label, publicBaseUrl] of internal) {
+    assert.throws(
+      () => normalizePublishRoots('s3://example-bucket/p', publicBaseUrl),
+      (error) => error.code === 'E_PUBLISH_ROOTS',
+      `internal: ${label}`,
+    );
+  }
+
+  // Public addresses adjacent to the blocked ranges must still be accepted.
+  for (const [label, publicBaseUrl] of [
+    ['routable v4', 'https://8.8.8.8/p'],
+    ['just above 172.16/12', 'https://172.32.0.1/p'],
+    ['just below 172.16/12', 'https://172.15.0.1/p'],
+    ['not 192.168', 'https://192.169.0.1/p'],
+    ['routable v6', 'https://[2606:4700::1111]/p'],
+    ['ordinary CDN host', 'https://cdn.example.com/p'],
+  ]) {
+    assert.ok(
+      normalizePublishRoots('s3://example-bucket/p', publicBaseUrl),
+      `routable: ${label}`,
+    );
+  }
+
+  // The policy is address-literal only, and it fails closed at the connector
+  // before any process launch or network use.
+  const fixture = await createFixture();
+  fixture.request.s3Uri = 's3://example-bucket/p';
+  fixture.request.publicBaseUrl = 'https://169.254.169.254/p';
+  let touched = false;
+  await assert.rejects(
+    publishS3Static(fixture.request, {
+      approved: true,
+      command: async () => {
+        touched = true;
+      },
+      httpGet: async () => {
+        touched = true;
+      },
+    }),
+    (error) => ['E_PUBLISH_INPUT', 'E_PUBLISH_ROOTS'].includes(error.code),
+  );
+  assert.equal(touched, false);
+});
+
+test('allows an internal public root only behind an explicit opt-in', () => {
+  assert.equal(privatePublicRootAllowed({}), false);
+  assert.equal(
+    privatePublicRootAllowed({ [PRIVATE_PUBLIC_ROOT_ENV]: '1' }),
+    true,
+  );
+  assert.equal(
+    privatePublicRootAllowed({ [PRIVATE_PUBLIC_ROOT_ENV]: 'on' }),
+    true,
+  );
+  assert.equal(
+    privatePublicRootAllowed({ [PRIVATE_PUBLIC_ROOT_ENV]: 'no' }),
+    false,
+  );
+
+  assert.ok(isPrivatePublicHost('169.254.169.254'));
+  assert.ok(!isPrivatePublicHost('cdn.example.com'));
+
+  const previous = process.env[PRIVATE_PUBLIC_ROOT_ENV];
+  process.env[PRIVATE_PUBLIC_ROOT_ENV] = '1';
+  try {
+    assert.ok(
+      normalizePublishRoots('s3://example-bucket/p', 'https://10.0.0.5/p'),
+      'opt-in permits an internal root',
+    );
+  } finally {
+    if (previous === undefined) delete process.env[PRIVATE_PUBLIC_ROOT_ENV];
+    else process.env[PRIVATE_PUBLIC_ROOT_ENV] = previous;
+  }
+
+  assert.throws(
+    () => normalizePublishRoots('s3://example-bucket/p', 'https://10.0.0.5/p'),
+    (error) => error.code === 'E_PUBLISH_ROOTS',
+    'opt-in does not leak across runs',
+  );
+});
+
+test('public verification refuses to follow redirects', async () => {
+  const calls = [];
+  const fetchImpl = async (url, options) => {
+    calls.push({ url, options });
+    return {
+      status: 200,
+      headers: new Headers(),
+      arrayBuffer: async () => new ArrayBuffer(0),
+    };
+  };
+
+  await defaultHttpGet('https://cdn.example.com/p/index.html', { fetchImpl });
+  assert.equal(calls.length, 1);
+  assert.equal(
+    calls[0].options.redirect,
+    'error',
+    'a canonical artifact URL must never be chased through a redirect',
+  );
+
+  // A real `fetch` with `redirect: 'error'` rejects rather than following, so a
+  // redirecting public root must surface as a failure.
+  const redirecting = async () => {
+    throw Object.assign(new TypeError('fetch failed'), {
+      cause: new Error('unexpected redirect'),
+    });
+  };
+  await assert.rejects(
+    defaultHttpGet('https://cdn.example.com/p/index.html', {
+      fetchImpl: redirecting,
+    }),
+  );
 });
 
 test('rejects unsafe or divergent S3 roots before process launch', async () => {

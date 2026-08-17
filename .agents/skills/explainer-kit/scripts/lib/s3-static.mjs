@@ -689,9 +689,13 @@ async function defaultCommand(file, args) {
   return execFile(file, args, { maxBuffer: 1024 * 1024 });
 }
 
-async function defaultHttpGet(url) {
-  const response = await fetch(url, {
-    redirect: 'follow',
+export async function defaultHttpGet(url, { fetchImpl = fetch } = {}) {
+  // A canonical public artifact URL is uploaded to a known key and should never
+  // legitimately redirect. Following redirects turned public verification into
+  // an outbound GET primitive that a third party could bounce inward, so a
+  // redirect is a verification failure rather than something to chase.
+  const response = await fetchImpl(url, {
+    redirect: 'error',
     signal: AbortSignal.timeout(15_000),
   });
   return {

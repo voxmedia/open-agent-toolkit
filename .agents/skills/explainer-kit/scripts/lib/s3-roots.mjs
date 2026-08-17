@@ -101,6 +101,11 @@ function parsePublicRoot(value) {
   ) {
     throw rootError('Public root must be credential-free HTTPS.');
   }
+  if (isPrivatePublicHost(parsed.hostname) && !privatePublicRootAllowed()) {
+    throw rootError(
+      'Public root must not address a loopback, link-local, or private network.',
+    );
+  }
   return {
     authority: parsed.host,
     segments: parseRootPath(match[2] ?? ''),
@@ -184,6 +189,124 @@ function hasUnsafeRootChar(value) {
     if (code <= 0x1f || code === 0x7f || char === '\\') return true;
   }
   return false;
+}
+
+/**
+ * Operators publishing to a genuinely internal mirror may opt back in. The
+ * default is deny: public verification issues an outbound GET against whatever
+ * this root names, so an unconstrained root is an attacker-influenced request
+ * primitive aimed at internal addresses (including the `169.254.169.254` IMDS
+ * endpoint), and pass/fail timing discloses internal reachability.
+ */
+export const PRIVATE_PUBLIC_ROOT_ENV =
+  'EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT';
+
+export function privatePublicRootAllowed(env = process.env) {
+  return ['on', 'true', '1'].includes(
+    String(env[PRIVATE_PUBLIC_ROOT_ENV] ?? '').toLowerCase(),
+  );
+}
+
+/**
+ * Literal-address policy only. Resolving names would be both TOCTOU-prone and
+ * dependent on the resolver of whoever runs the publish, so a name that happens
+ * to resolve inward is deliberately out of scope here.
+ */
+export function isPrivatePublicHost(hostname) {
+  const host = String(hostname).toLowerCase();
+  if (host === 'localhost' || host.endsWith('.localhost')) return true;
+
+  if (host.startsWith('[') && host.endsWith(']')) {
+    return isPrivateIpv6(host.slice(1, -1));
+  }
+  if (host.includes(':')) return isPrivateIpv6(host);
+  if (IPV4_PATTERN.test(host)) return isPrivateIpv4(host);
+  return false;
+}
+
+function isPrivateIpv4(host) {
+  const octets = host.split('.').map(Number);
+  if (octets.some((octet) => !Number.isInteger(octet) || octet > 255)) {
+    // Not a valid dotted quad; leave it to the surrounding host checks.
+    return false;
+  }
+  const [a, b] = octets;
+  return (
+    a === 0 || // 0.0.0.0/8 "this network"
+    a === 127 || // loopback
+    a === 10 || // RFC 1918
+    (a === 172 && b >= 16 && b <= 31) || // RFC 1918
+    (a === 192 && b === 168) || // RFC 1918
+    (a === 169 && b === 254) // link-local, incl. the IMDS address
+  );
+}
+
+function isPrivateIpv6(address) {
+  const groups = expandIpv6(address.split('%')[0].toLowerCase());
+  if (!groups) return false;
+
+  // IPv4-mapped (`::ffff:a.b.c.d`) must not launder a private v4 address. The
+  // WHATWG URL parser rewrites the dotted form to hex, so `[::ffff:127.0.0.1]`
+  // arrives here as `::ffff:7f00:1` and has to be recognised in that shape.
+  if (groups.slice(0, 5).every((group) => group === 0)) {
+    if (groups[5] === 0xffff || groups[5] === 0) {
+      const [, , , , , , seven, eight] = groups;
+      const asV4 = [seven >> 8, seven & 0xff, eight >> 8, eight & 0xff].join(
+        '.',
+      );
+      if (groups[5] === 0xffff) return isPrivateIpv4(asV4);
+      // `::` unspecified and `::1` loopback.
+      if (seven === 0 && (eight === 0 || eight === 1)) return true;
+    }
+  }
+
+  return (
+    (groups[0] >= 0xfe80 && groups[0] <= 0xfebf) || // fe80::/10 link-local
+    (groups[0] >= 0xfc00 && groups[0] <= 0xfdff) // fc00::/7 unique-local
+  );
+}
+
+/** Expand an IPv6 literal to exactly eight numeric groups, or null. */
+function expandIpv6(address) {
+  if (!address.includes(':')) return null;
+  const halves = address.split('::');
+  if (halves.length > 2) return null;
+
+  const parse = (part) =>
+    part === ''
+      ? []
+      : part.split(':').map((group) => Number.parseInt(group, 16));
+
+  // A trailing dotted quad (`::ffff:1.2.3.4`) contributes two groups.
+  const dotted = /(\d{1,3}(?:\.\d{1,3}){3})$/.exec(address);
+  let tail = [];
+  let working = address;
+  if (dotted) {
+    const octets = dotted[1].split('.').map(Number);
+    if (octets.some((octet) => !Number.isInteger(octet) || octet > 255)) {
+      return null;
+    }
+    tail = [(octets[0] << 8) | octets[1], (octets[2] << 8) | octets[3]];
+    working = address.slice(0, address.length - dotted[1].length);
+  }
+
+  const [left, right] = working.split('::');
+  const head = parse(left.replace(/:$/, ''));
+  const rest =
+    right === undefined ? [] : parse(right.replace(/:$/, '').replace(/^:/, ''));
+  const explicit = [...head, ...rest, ...tail];
+  if (explicit.some((group) => Number.isNaN(group) || group > 0xffff)) {
+    return null;
+  }
+
+  if (right === undefined) return explicit.length === 8 ? explicit : null;
+  if (explicit.length > 8) return null;
+  return [
+    ...head,
+    ...Array.from({ length: 8 - explicit.length }, () => 0),
+    ...rest,
+    ...tail,
+  ];
 }
 
 function rootError(message) {
