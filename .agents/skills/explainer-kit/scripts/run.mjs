@@ -311,12 +311,44 @@ export async function runExplainer(request, options = {}) {
       reasons: [reason],
       evidenceDisposition: manifest ? 'retained' : 'unavailable',
     });
+    let reasons = [reason];
     if (manifest) {
-      await enforceRetainedRunPackage(state, manifest, {
-        includeTerminalEvidence: true,
-      }).catch(() => {});
+      try {
+        await enforceRetainedRunPackage(state, manifest, {
+          includeTerminalEvidence: true,
+        });
+      } catch (inventoryError) {
+        // This used to be swallowed outright. It must not simply be reported
+        // either: a failed run routinely leaves partial outputs, and the first
+        // pass removes them and *then* throws, so the common case is a
+        // successful repair rather than a violated invariant. Re-running
+        // separates the two — if the tree is clean now, the repair worked and
+        // there is nothing to report; if it still fails, the violation is
+        // genuinely unremovable or a required file is missing, which is the
+        // case that previously went unreported at run time.
+        const repaired = await enforceRetainedRunPackage(state, manifest, {
+          includeTerminalEvidence: true,
+        }).then(
+          () => true,
+          () => false,
+        );
+        if (!repaired) {
+          reasons = mergeTerminalReasons(
+            reasons,
+            localEvidenceReason(inventoryError) ??
+              projectThrownReason('finalization', 'pipeline-failure'),
+          );
+          // Re-record so the durable evidence names the inventory failure too.
+          await writeTerminalEvidence(run, {
+            outcome: 'failed',
+            manifest,
+            reasons,
+            evidenceDisposition: 'retained',
+          }).catch(() => {});
+        }
+      }
     }
-    return resultFor(state, { failed: true, reasons: [reason] });
+    return resultFor(state, { failed: true, reasons });
   }
 }
 
@@ -1869,6 +1901,7 @@ async function executeDurabilityAndPublish(state, options, now) {
   const finalizedAt = now();
   const finalizedManifest = await persistManifest(state, finalizedAt);
   let providerFailed = false;
+  let publishedReceipt;
   try {
     const buildRecord = JSON.parse(
       await readFile(state.run.buildRecordPath, 'utf8'),
@@ -1897,17 +1930,33 @@ async function executeDurabilityAndPublish(state, options, now) {
         `Publisher returned an invalid receipt: ${crossRecordValidation.errors[0].message}`,
       );
     }
-    state.publishReceiptPath = 'publish-receipt.json';
-    await writeJsonAtomic(state.run.runRoot, state.publishReceiptPath, receipt);
-    state.publication = publicationSummary(receipt);
-    await updateBuildRecord(state.run, {
-      id: 'publish',
-      status: 'warned',
-      warnings: ['publish-receipt-evidence-required'],
-    });
-    await persistManifest(state, finalizedAt);
+    publishedReceipt = receipt;
   } catch {
     providerFailed = true;
+  }
+  // Everything below the provider boundary is local work. Folding it into the
+  // try above classified a failed local write, build-record update or manifest
+  // rewrite as `provider-failure`, blaming the destination for a defect on this
+  // machine.
+  let pipelineFailed = false;
+  if (!providerFailed) {
+    try {
+      state.publishReceiptPath = 'publish-receipt.json';
+      await writeJsonAtomic(
+        state.run.runRoot,
+        state.publishReceiptPath,
+        publishedReceipt,
+      );
+      state.publication = publicationSummary(publishedReceipt);
+      await updateBuildRecord(state.run, {
+        id: 'publish',
+        status: 'warned',
+        warnings: ['publish-receipt-evidence-required'],
+      });
+      await persistManifest(state, finalizedAt);
+    } catch {
+      pipelineFailed = true;
+    }
   }
   let inventoryFailed = false;
   try {
@@ -1916,14 +1965,19 @@ async function executeDurabilityAndPublish(state, options, now) {
   } catch {
     inventoryFailed = true;
   }
-  if (providerFailed || inventoryFailed) {
+  if (providerFailed || pipelineFailed || inventoryFailed) {
     await updateBuildRecord(state.run, {
       id: 'publish',
       status: 'failed',
       error: true,
     });
     throw withEvidenceReason(
-      codedError('E_PUBLISH', 'Publication provider failed.'),
+      codedError(
+        'E_PUBLISH',
+        providerFailed
+          ? 'Publication provider failed.'
+          : 'Publication failed after upload while finalizing local records.',
+      ),
       'durability',
       providerFailed ? 'provider-failure' : 'pipeline-failure',
     );
@@ -2910,6 +2964,23 @@ function codedError(code, message) {
   const error = new Error(message);
   error.code = code;
   return error;
+}
+
+/**
+ * Terminal evidence reasons are unique by (stage, kind), so a second reason for
+ * a pair that is already present folds into its count rather than appending a
+ * duplicate the closed contract would reject.
+ */
+function mergeTerminalReasons(reasons, addition) {
+  const existing = reasons.find(
+    ({ stage, kind }) => stage === addition.stage && kind === addition.kind,
+  );
+  if (!existing) return [...reasons, addition];
+  return reasons.map((entry) =>
+    entry === existing
+      ? { ...entry, count: (entry.count ?? 1) + (addition.count ?? 1) }
+      : entry,
+  );
 }
 
 function withEvidenceReason(error, stage, kind) {
