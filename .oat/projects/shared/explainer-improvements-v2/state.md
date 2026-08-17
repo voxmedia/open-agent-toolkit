@@ -1,6 +1,6 @@
 ---
-oat_current_task: p07-t01
-oat_last_commit: 32c2b271be643e15e82799c373fa4e6c952ee3e0
+oat_current_task: p07-t03
+oat_last_commit: 143e15a86
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -156,10 +156,21 @@ operator decision; `p07-t01` fixes the gate version-agnostically instead.
 
 ## Blockers
 
-None. The Critical finding is queued as `p07-t01`, not blocking task execution.
+**`p07-t03` root correspondence — direction-required.** The plan prescribed
+strict equality between the S3 key prefix and the public root path. That rule
+regressed the wrapper-compatibility smoke suite from 5/5 to 3/5, because this
+repository's own CloudFront Origin Path fixture maps the bucket prefix
+`explainers` to the distribution root (empty public path). The review finding
+M2's premise — that the path suffix corresponds in every legitimate example —
+is refuted by that fixture. Automatic recovery is disabled for p07
+(`default_attempt_limit: 0`), and the correct rule is a public-behavior and
+security-semantics decision, so the phase stopped rather than self-repairing.
+See Recovery Event `p07-rec-001` in `implementation.md`.
 
 ## Next Milestone
 
-Execute Phase 7 starting at `p07-t01`, then re-run
-`oat-project-review-provide code final` and `oat-project-review-receive` to
-reach `passed`. The project cannot close while the Critical is unresolved.
+Resolve `p07-t03` correspondence semantics, then resume p07 from the corrected
+`p07-t03` through `p07-t16`. After the phase passes its root-owned review,
+re-run `oat-project-review-provide code final` and `oat-project-review-receive`
+to reach `passed`. The Critical itself is already closed by `p07-t01`
+(root-verified).
