@@ -467,6 +467,67 @@ test('rejects credential-bearing publication roots identically at v1 and v2', ()
   }
 });
 
+test('screens publication roots for every publish-receipt version', () => {
+  // The request gate was made version-agnostic by p07-t01, but the receipt
+  // branch one level below kept an exact `.../v2` pin, so a `publish-receipt/v1`
+  // carried credential-bearing and internal-address roots through to
+  // `publish-receipt.json` and the `publish-summary/v1` projection.
+  const unsafe = [
+    [
+      'credential-bearing S3 authority',
+      's3://AKIAV1LEAK:supersecret@example-bucket/p',
+      'https://cdn.example.com/p',
+    ],
+    [
+      'AWS IMDS public root',
+      's3://example-bucket/p',
+      'https://169.254.169.254/p',
+    ],
+    ['loopback public root', 's3://example-bucket/p', 'https://127.0.0.1/p'],
+    [
+      'userinfo in public root',
+      's3://example-bucket/p',
+      'https://user:pass@cdn.example.com/p',
+    ],
+  ];
+
+  for (const [label, s3Uri, publicBaseUrl] of unsafe) {
+    for (const receipt of [publishReceipt(), publishReceiptV2('public')]) {
+      receipt.roots = { s3Uri, publicBaseUrl };
+      const result = validateContract('publish-receipt', receipt);
+      assert.equal(result.valid, false, `${receipt.schemaVersion}: ${label}`);
+      assert.ok(
+        result.errors.some((error) => error.code === 'publish-roots'),
+        `${receipt.schemaVersion} raises publish-roots: ${label}`,
+      );
+    }
+  }
+
+  // v1 is retained for replay, so it must still tolerate non-canonical
+  // historical forms that v2 rejects. Only the canonical-form assertion is
+  // version-gated; credential and address screening is not.
+  const nonCanonical = {
+    s3Uri: 's3://example/explainers/',
+    publicBaseUrl: 'https://example.com/explainers/',
+  };
+  const replay = publishReceipt();
+  replay.roots = { ...nonCanonical };
+  assert.equal(
+    validateContract('publish-receipt', replay).valid,
+    true,
+    'v1 replay tolerates non-canonical roots',
+  );
+
+  const strict = publishReceiptV2('public');
+  strict.roots = { ...nonCanonical };
+  assert.ok(
+    validateContract('publish-receipt', strict).errors.some(
+      ({ code }) => code === 'publish-roots',
+    ),
+    'v2 still requires canonical roots',
+  );
+});
+
 test('retains benign v1 publication roots under version-agnostic validation', () => {
   // Closing the v1 bypass must not break legitimate v1 replay.
   const benign = [

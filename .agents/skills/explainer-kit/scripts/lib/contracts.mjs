@@ -484,19 +484,29 @@ function validatePublicationRoots(kind, value, errors, path = '$') {
     return;
   }
 
-  if (
-    kind.startsWith('publish-receipt') &&
-    value.schemaVersion === 'explainer-kit.publish-receipt/v2'
-  ) {
+  if (kind.startsWith('publish-receipt')) {
+    // Same default-deny rule as the request branch above: every receipt shape
+    // has its roots screened, whatever version it declares. Pinning this to the
+    // exact v2 string let a `publish-receipt/v1` carry credential-bearing and
+    // internal-address roots straight through to `publish-receipt.json`, a
+    // retained hash-covered member of the run package, and on into the
+    // `publish-summary/v1` projection.
+    const receiptV2 =
+      value.schemaVersion === 'explainer-kit.publish-receipt/v2';
     let roots;
     try {
       roots = normalizePublishRoots(
         value.roots?.s3Uri,
         value.roots?.publicBaseUrl,
       );
+      // The stricter *canonical-form* assertion stays v2-only: v1 is retained
+      // purely for replay and may legitimately carry non-canonical historical
+      // forms such as trailing slashes. Credential and address screening above
+      // applies to both, because no replay need justifies either.
       if (
-        roots.s3Uri !== value.roots.s3Uri ||
-        roots.publicBaseUrl !== value.roots.publicBaseUrl
+        receiptV2 &&
+        (roots.s3Uri !== value.roots.s3Uri ||
+          roots.publicBaseUrl !== value.roots.publicBaseUrl)
       ) {
         throw new Error('noncanonical');
       }
@@ -509,6 +519,8 @@ function validatePublicationRoots(kind, value, errors, path = '$') {
       );
       return;
     }
+
+    if (!receiptV2) return;
 
     for (const [index, artifact] of (Array.isArray(value.artifacts)
       ? value.artifacts
