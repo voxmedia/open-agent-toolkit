@@ -17,6 +17,7 @@ import {
   recordDurability,
   verifyRebuildability,
 } from '../scripts/lib/durability.mjs';
+import { publishS3Static } from '../scripts/lib/s3-static.mjs';
 import { runRecordDurabilityCli } from '../scripts/record-durability.mjs';
 
 const execFile = promisify(execFileCallback);
@@ -246,6 +247,81 @@ test('verifies publish receipts before recording publish evidence', async () => 
   assert.equal(manifest.artifacts[0].durableEvidence[0].kind, 'publish');
 });
 
+test('records durability from a receipt the real connector produced, in both access modes', async () => {
+  // Fixture-independent guard for the p07-fix-001 Critical. The previous suite
+  // built its expected catalog hash with the same defaulted call the verifier
+  // used, so verifier and fixture agreed with each other and both disagreed
+  // with the real producer. Here the receipt comes from `publishS3Static`
+  // itself, so only genuine producer/verifier agreement can make this pass.
+  for (const publicAccess of ['public', 'protected']) {
+    const fixture = await createRun();
+    const destination = fakeS3Destination();
+
+    // Publish observes the real in-flight transition: an `incomplete` manifest
+    // whose build record has `publish` running. The catalog projection omits
+    // `outcome`, which is why it stays stable across this transition.
+    const inFlightManifest = structuredClone(fixture.manifest);
+    const inFlightRecord = structuredClone(fixture.buildRecord);
+    inFlightManifest.outcome = 'incomplete';
+    inFlightRecord.outcome = 'incomplete';
+    inFlightRecord.stages = inFlightRecord.stages.map((stage) =>
+      stage.id === 'publish'
+        ? { ...stage, status: 'running' }
+        : stage.id === 'durability'
+          ? { ...stage, status: 'skipped' }
+          : stage,
+    );
+    await writeRecords(fixture.runRoot, inFlightManifest, inFlightRecord);
+
+    const receipt = await publishS3Static(
+      {
+        schemaVersion: 'explainer-kit.publish-request/v2',
+        provider: 's3-static',
+        s3Uri: 's3://example-bucket/published',
+        publicBaseUrl: 'https://cdn.example.com/published',
+        awsRegion: 'us-east-1',
+        publicAccess,
+        siteRoot: join(fixture.runRoot, 'site'),
+        manifestPath: join(fixture.runRoot, 'manifest.json'),
+      },
+      {
+        approved: true,
+        now: () => NOW,
+        command: destination.command,
+        httpGet: destination.httpGet,
+        receiptPath: join(fixture.runRoot, 'publish-receipt.json'),
+      },
+    );
+
+    assert.equal(receipt.publicAccess, publicAccess);
+    const uploadedCatalog = JSON.parse(
+      destination.objects
+        .get(`published/initiatives/${fixture.manifest.slug}/catalog.json`)
+        .Body.toString('utf8'),
+    );
+    assert.equal(
+      uploadedCatalog.publicVerification,
+      publicAccess === 'protected' ? 'skipped-by-policy' : 'required',
+      `${publicAccess}: connector embedded the policy marker`,
+    );
+
+    // Back to the state `run.mjs` leaves behind before recordDurability runs.
+    await writeRecords(fixture.runRoot, fixture.manifest, fixture.buildRecord);
+
+    const result = await recordDurability(publishRequest(fixture), {
+      now: () => NOW,
+    });
+
+    assert.equal(
+      result.durable,
+      true,
+      `${publicAccess}: ${JSON.stringify(result.errors)}`,
+    );
+    const { manifest } = await readRecords(fixture.runRoot);
+    assert.equal(manifest.outcome, 'built-durable', publicAccess);
+  }
+});
+
 test('accepts complete public and protected connector-shaped v2 receipts', async () => {
   for (const publicAccess of ['public', 'protected']) {
     const fixture = await createRun();
@@ -294,6 +370,7 @@ test('rejects contradictory generated-catalog evidence in v2 receipts', async ()
         const catalog = catalogFromManifest(
           manifest,
           receipt.roots.publicBaseUrl,
+          { publicAccess: receipt.publicAccess },
         );
         receipt.artifacts.at(-1).hash = bufferHash(
           Buffer.from(JSON.stringify(catalog)),
@@ -627,7 +704,9 @@ function publishReceiptV2(manifest, publicAccess) {
     contentType: artifact.mediaType,
     ...verificationFor(artifact.hash),
   }));
-  const catalog = catalogFromManifest(manifest, roots.publicBaseUrl);
+  const catalog = catalogFromManifest(manifest, roots.publicBaseUrl, {
+    publicAccess,
+  });
   const catalogPath = initiativeCatalogPath(manifest.slug);
   const catalogHash = bufferHash(
     Buffer.from(serializeInitiativeCatalog(catalog)),
@@ -667,6 +746,59 @@ async function readRecords(runRoot) {
       await readFile(join(runRoot, 'build-record.json'), 'utf8'),
     ),
   };
+}
+
+/**
+ * Minimal in-memory S3 destination. Only the `aws` process boundary and the
+ * anonymous HTTP fetch are faked; every explainer-kit code path is the shipped
+ * one, so the receipt this produces is a real connector receipt.
+ */
+function fakeS3Destination() {
+  const objects = new Map();
+  const argument = (call, flag) => {
+    const index = call.indexOf(flag);
+    return index === -1 ? undefined : call[index + 1];
+  };
+  const command = async (file, args) => {
+    const call = [file, ...args];
+    const operation = args[1];
+    const key = argument(call, '--key');
+    if (operation === 'head-object') {
+      if (objects.has(key)) {
+        return { stdout: JSON.stringify(objects.get(key)), stderr: '' };
+      }
+      throw Object.assign(new Error('Not Found'), {
+        stderr: 'An error occurred (404) when calling the HeadObject operation',
+      });
+    }
+    if (operation === 'put-object') {
+      const body = await readFile(argument(call, '--body'));
+      objects.set(key, {
+        ContentType: argument(call, '--content-type'),
+        CacheControl: argument(call, '--cache-control'),
+        Metadata: {
+          'explainer-sha256': argument(call, '--metadata').split('=')[1],
+        },
+        ChecksumSHA256: createHash('sha256').update(body).digest('base64'),
+        Body: body,
+      });
+    }
+    if (operation === 'delete-object') {
+      objects.delete(key);
+    }
+    return { stdout: '{}', stderr: '' };
+  };
+  // Roots correspond, so the URL path is exactly the object key.
+  const httpGet = async (url) => {
+    const key = new URL(url).pathname.replace(/^\/+/, '');
+    const object = objects.get(key);
+    return {
+      status: object ? 200 : 404,
+      headers: { 'content-type': object?.ContentType ?? 'text/plain' },
+      body: object?.Body ?? Buffer.alloc(0),
+    };
+  };
+  return { objects, command, httpGet };
 }
 
 async function writeRecords(runRoot, manifest, buildRecord) {

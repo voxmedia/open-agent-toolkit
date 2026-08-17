@@ -34,6 +34,34 @@ export function resolvePublicVerificationPolicy(publicAccess) {
       };
 }
 
+/**
+ * The public-access policy must be stated explicitly, never defaulted.
+ *
+ * It selects the catalog's `publicVerification` marker, which is part of the
+ * serialized bytes and therefore of the catalog hash the receipt records. An
+ * options bag that silently defaulted to the permissive `public` branch is what
+ * let four call sites omit it and still produce a plausible-looking catalog:
+ * the connector published `skipped-by-policy` for a `protected` run while the
+ * durability verifier rebuilt `required`, so the hashes diverged and no
+ * `protected` publication could ever be recorded durable.
+ *
+ * Passing `{ publicAccess: undefined }` is allowed and means `public` — that is
+ * the correct reading for `publish-request/v1` and `publish-receipt/v1`, which
+ * have no such field. Omitting the key entirely is a programming error.
+ */
+function requiredPublicAccess(options, caller) {
+  if (
+    options === null ||
+    typeof options !== 'object' ||
+    !('publicAccess' in options)
+  ) {
+    throw new TypeError(
+      `${caller} requires an explicit { publicAccess } policy: it selects the catalog's publicVerification marker and therefore its hash. Pass { publicAccess: undefined } for v1 records, which are public by definition.`,
+    );
+  }
+  return options.publicAccess;
+}
+
 export function initiativeCatalogPath(slug) {
   if (typeof slug !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
     throw new TypeError('Initiative catalog requires a safe initiative slug.');
@@ -41,7 +69,8 @@ export function initiativeCatalogPath(slug) {
   return `site/initiatives/${slug}/catalog.json`;
 }
 
-export function catalogFromManifest(manifest, publicBaseUrl, options = {}) {
+export function catalogFromManifest(manifest, publicBaseUrl, options) {
+  const publicAccess = requiredPublicAccess(options, 'catalogFromManifest');
   const validation = validateContract('manifest', manifest);
   if (!validation.valid) {
     throw new TypeError(
@@ -78,8 +107,8 @@ export function catalogFromManifest(manifest, publicBaseUrl, options = {}) {
     recipe: structuredClone(manifest.recipe),
     createdAt: manifest.createdAt,
     // Policy, never outcome. See resolvePublicVerificationPolicy.
-    publicVerification: resolvePublicVerificationPolicy(options.publicAccess)
-      .catalogMarker,
+    publicVerification:
+      resolvePublicVerificationPolicy(publicAccess).catalogMarker,
     artifacts,
     sourceBacklinks: structuredClone(manifest.source.backlinks ?? []),
   };
@@ -89,8 +118,12 @@ export function validateInitiativeCatalog(
   catalog,
   manifest,
   publicBaseUrl,
-  options = {},
+  options,
 ) {
+  const publicAccess = requiredPublicAccess(
+    options,
+    'validateInitiativeCatalog',
+  );
   const errors = [];
   let normalizedPublicBaseUrl;
   try {
@@ -153,9 +186,8 @@ export function validateInitiativeCatalog(
   }
   // Derived from the same resolver the receipt status comes from, so a catalog
   // that disagrees with the run's resolved verification policy is rejected.
-  const expectedPublicVerification = resolvePublicVerificationPolicy(
-    options.publicAccess,
-  ).catalogMarker;
+  const expectedPublicVerification =
+    resolvePublicVerificationPolicy(publicAccess).catalogMarker;
   if (catalog.publicVerification !== expectedPublicVerification) {
     add(
       errors,

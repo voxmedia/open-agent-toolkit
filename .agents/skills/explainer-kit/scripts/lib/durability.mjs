@@ -378,9 +378,15 @@ async function verifyPublishEvidence(evidence, { runRoot, manifest }) {
   let catalogArtifact;
   if (receipt.schemaVersion === 'explainer-kit.publish-receipt/v2') {
     try {
+      // Must rebuild the catalog under the policy the receipt declares. The
+      // connector embedded that policy in the catalog it hashed, so verifying a
+      // `protected` receipt against a `public`-shaped rebuild yields a
+      // different hash and rejects every protected publication as
+      // `cross-record-mismatch`.
       const catalog = catalogFromManifest(
         manifest,
         receipt.roots?.publicBaseUrl,
+        { publicAccess: receipt.publicAccess },
       );
       catalogArtifact = {
         relativePath: initiativeCatalogPath(manifest.slug),

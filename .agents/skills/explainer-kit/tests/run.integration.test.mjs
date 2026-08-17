@@ -4180,7 +4180,9 @@ test('invokes durability and publishing seams only when explicitly requested', a
       .update(
         Buffer.from(
           serializeInitiativeCatalog(
-            catalogFromManifest(manifest, roots.publicBaseUrl),
+            catalogFromManifest(manifest, roots.publicBaseUrl, {
+              publicAccess: 'public',
+            }),
           ),
         ),
       )
@@ -4865,7 +4867,9 @@ test('rejects incomplete or contradictory v2 callback receipts before publicatio
         .update(
           Buffer.from(
             serializeInitiativeCatalog(
-              catalogFromManifest(manifest, receipt.roots.publicBaseUrl),
+              catalogFromManifest(manifest, receipt.roots.publicBaseUrl, {
+                publicAccess: receipt.publicAccess,
+              }),
             ),
           ),
         )

@@ -190,9 +190,13 @@ function assertConsumableReceipt(receipt, manifest) {
   try {
     const context = { manifest };
     if (receiptV2) {
+      // Rebuild under the policy the receipt declares. This file is the
+      // normative example of the destination contract, so a connector author
+      // copying it must see the policy threaded through.
       const catalog = catalogFromManifest(
         manifest,
         receipt.roots?.publicBaseUrl,
+        { publicAccess: receipt.publicAccess },
       );
       context.catalogArtifact = {
         relativePath: initiativeCatalogPath(manifest.slug),

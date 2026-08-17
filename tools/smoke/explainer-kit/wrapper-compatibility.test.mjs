@@ -351,7 +351,9 @@ function completeReceiptV2({ publish, publicBaseUrl, manifest }, publicAccess) {
       objectVerification: verifiedObject(hash),
       publicVerification: publicVerification(hash),
     }));
-  const catalog = catalogFromManifest(manifest, publicBaseUrl);
+  const catalog = catalogFromManifest(manifest, publicBaseUrl, {
+    publicAccess,
+  });
   const catalogPath = initiativeCatalogPath(manifest.slug);
   const catalogHash = hashBytes(
     Buffer.from(serializeInitiativeCatalog(catalog)),

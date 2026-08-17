@@ -33,7 +33,9 @@ test('packaged RC v2 fixture includes exact production catalog evidence', () => 
   const catalogHash = hashBytes(
     Buffer.from(
       serializeInitiativeCatalog(
-        catalogFromManifest(manifest, receipt.roots.publicBaseUrl),
+        catalogFromManifest(manifest, receipt.roots.publicBaseUrl, {
+          publicAccess: receipt.publicAccess,
+        }),
       ),
     ),
   );
@@ -240,7 +242,9 @@ function publishReceipt(manifest) {
   const catalogHash = hashBytes(
     Buffer.from(
       serializeInitiativeCatalog(
-        catalogFromManifest(manifest, roots.publicBaseUrl),
+        catalogFromManifest(manifest, roots.publicBaseUrl, {
+          publicAccess: 'public',
+        }),
       ),
     ),
   );

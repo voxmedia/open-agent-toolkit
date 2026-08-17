@@ -649,6 +649,7 @@ test('derives an exact, absolute initiative catalog from the finalized manifest'
   const catalog = catalogFromManifest(
     finalized,
     'https://cdn.example.com/published/',
+    { publicAccess: 'public' },
   );
 
   assert.deepEqual(
@@ -667,6 +668,7 @@ test('derives an exact, absolute initiative catalog from the finalized manifest'
       catalog,
       finalized,
       'https://cdn.example.com/published/',
+      { publicAccess: 'public' },
     ),
     {
       valid: true,
@@ -681,14 +683,69 @@ test('derives an exact, absolute initiative catalog from the finalized manifest'
       stale,
       finalized,
       'https://cdn.example.com/published/',
+      { publicAccess: 'public' },
     ).errors.some(({ code }) => code === 'catalog-artifact-mismatch'),
+  );
+});
+
+test('refuses to build or validate a catalog without an explicit access policy', () => {
+  // The marker is part of the serialized bytes and therefore of the hash the
+  // receipt records. A silent default to the permissive `public` branch is what
+  // let four call sites omit it and still produce a plausible-looking catalog,
+  // so omission must be loud rather than merely wrong.
+  const finalized = manifest();
+  const base = 'https://cdn.example.com/published';
+
+  for (const badOptions of [undefined, null, {}, { publicAccess: undefined }]) {
+    const omitted =
+      badOptions === undefined ||
+      badOptions === null ||
+      !('publicAccess' in badOptions);
+    if (!omitted) continue;
+    assert.throws(
+      () => catalogFromManifest(finalized, base, badOptions),
+      /explicit \{ publicAccess \} policy/,
+      `catalogFromManifest: ${JSON.stringify(badOptions)}`,
+    );
+    assert.throws(
+      () =>
+        validateInitiativeCatalog(
+          catalogFromManifest(finalized, base, { publicAccess: 'public' }),
+          finalized,
+          base,
+          badOptions,
+        ),
+      /explicit \{ publicAccess \} policy/,
+      `validateInitiativeCatalog: ${JSON.stringify(badOptions)}`,
+    );
+  }
+
+  // Explicitly stating `undefined` is the correct reading for v1 records, which
+  // have no such field, and must be accepted as `public`.
+  assert.equal(
+    catalogFromManifest(finalized, base, { publicAccess: undefined })
+      .publicVerification,
+    'required',
+  );
+
+  // And the two markers really do produce different bytes, which is the whole
+  // reason the policy has to be threaded rather than defaulted.
+  assert.notEqual(
+    serializeInitiativeCatalog(
+      catalogFromManifest(finalized, base, { publicAccess: 'public' }),
+    ),
+    serializeInitiativeCatalog(
+      catalogFromManifest(finalized, base, { publicAccess: 'protected' }),
+    ),
   );
 });
 
 test('binds initiative catalog URLs to the exact normalized publish root', () => {
   const finalized = manifest();
   const base = 'https://cdn.example.com/published';
-  const catalog = catalogFromManifest(finalized, base);
+  const catalog = catalogFromManifest(finalized, base, {
+    publicAccess: 'public',
+  });
   const mutations = [
     ['wrong origin', 'https://other.example.com/published/index.html'],
     ['wrong base', 'https://cdn.example.com/elsewhere/index.html'],
@@ -701,7 +758,9 @@ test('binds initiative catalog URLs to the exact normalized publish root', () =>
     const changed = structuredClone(catalog);
     changed.artifacts[0].url = url;
     assert.equal(
-      validateInitiativeCatalog(changed, finalized, base).valid,
+      validateInitiativeCatalog(changed, finalized, base, {
+        publicAccess: 'public',
+      }).valid,
       false,
       label,
     );
@@ -710,14 +769,18 @@ test('binds initiative catalog URLs to the exact normalized publish root', () =>
   const unknown = structuredClone(catalog);
   unknown.artifacts[0].extra = true;
   assert.equal(
-    validateInitiativeCatalog(unknown, finalized, base).valid,
+    validateInitiativeCatalog(unknown, finalized, base, {
+      publicAccess: 'public',
+    }).valid,
     false,
   );
 
   const duplicate = structuredClone(catalog);
   duplicate.artifacts.push(structuredClone(duplicate.artifacts[0]));
   assert.equal(
-    validateInitiativeCatalog(duplicate, finalized, base).valid,
+    validateInitiativeCatalog(duplicate, finalized, base, {
+      publicAccess: 'public',
+    }).valid,
     false,
   );
 });
@@ -727,6 +790,7 @@ test('requires publish receipts to cover the exact manifest and generated catalo
   const catalog = catalogFromManifest(
     finalized,
     'https://example.com/explainers',
+    { publicAccess: 'public' },
   );
   const catalogHash = `sha256:${createHash('sha256')
     .update(Buffer.from(serializeInitiativeCatalog(catalog)))
