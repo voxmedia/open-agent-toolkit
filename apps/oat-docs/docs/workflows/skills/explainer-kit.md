@@ -196,7 +196,10 @@ evidence to an independent critic. Fixture sessions are test-only and are
 rejected in unattended production.
 
 A `correct` disposition permits one bounded correction and exactly one final
-review; there is no second correction or third review. Missing, forged,
+review; there is no second correction or third review. The correction budget is
+shared with the internal-link gate described below, so a `correct` disposition
+is refused outright with `E_VISUAL_CORRECTION` when link validation already
+spent the single bounded correction on this run. Missing, forged,
 cross-record-mismatched, or invalid evidence, a failed critic, or an unresolved
 correction ends as `built-needs-review`. Such output is retained for diagnosis
 but cannot become durable, finalized, archived, or published.
@@ -235,6 +238,26 @@ seams are separately transient and never part of request equality.
 Every legacy `ekrt1` token is rejected. A paused run created with the legacy
 format must restart to receive an authenticated token; editing retained package
 state cannot opt it into compatibility.
+
+### Internal-link validation
+
+Every internal reference in the rendered set must resolve to a
+manifest-declared target before the run can reach browser review. The gate runs
+after render and uses a bounded tokenizer rather than a general HTML parser.
+Relative references resolve from the current explicit file and must bind
+exactly to the manifest/site tree, and a referenced fragment must resolve to
+exactly one ID in its target document. Directory references, path traversal,
+missing targets, missing fragments, ambiguous fragments, and unsafe schemes all
+fail with `E_INTERNAL_REFERENCE`.
+
+A failure gets one bounded correction round, re-rendered and revalidated. That
+round is the same single budget the visual-review `correct` disposition uses —
+whichever gate reaches it first consumes it. Once it is exhausted the run fails
+hard: the QA stage is recorded `failed` with code-only evidence and the scrubbed
+message `The qa stage failed.`, and the run is neither durability- nor
+publication-eligible. No finding is retained, so nothing in the durable record
+names the broken reference; the failure is attributed to the `link-validation`
+evidence stage.
 
 ## Warnings and QA severity
 
