@@ -21,5 +21,13 @@ external_plans: []
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- A CI merge-path step fails when any of the five public package versions
+  (`cli`, `control-plane`, `docs-config`, `docs-theme`, `docs-transforms`) is
+  not strictly greater than the version on `origin/main` (or, if chosen as the
+  comparison source, the latest published npm version).
+- The check reproduces the explainer-improvements-v2 failure: it goes red on a
+  commit shaped like `68196ba71` (branch at 0.2.29 after main released
+  0.2.30), which `release:check-versions` correctly passes.
+- The check's own test proves it can fail (red/green against a synthetic
+  behind-main fixture), and `AGENTS.md`'s Definition of Done list is updated if
+  the command is expected to run locally.

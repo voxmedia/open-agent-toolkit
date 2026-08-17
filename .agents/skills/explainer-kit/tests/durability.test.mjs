@@ -346,6 +346,39 @@ test('accepts complete public and protected connector-shaped v2 receipts', async
   }
 });
 
+test('reports the specific violation when the rebuilt catalog fails validation', async () => {
+  // Drives the builder/validator cross-check rejection branch, which fires
+  // only when `catalogFromManifest` and `validateInitiativeCatalog` diverge.
+  // Correct production code cannot reach it, so the divergence is injected:
+  // the builder emits a catalog whose first artifact URL points off-root.
+  const fixture = await createRun();
+  const receipt = publishReceiptV2(fixture.manifest, 'public');
+  await writeFile(
+    join(fixture.runRoot, 'publish-receipt.json'),
+    `${JSON.stringify(receipt, null, 2)}\n`,
+  );
+
+  const result = await recordDurability(publishRequest(fixture), {
+    now: () => NOW,
+    buildCatalog: (manifest, publicBaseUrl, options) => {
+      const catalog = catalogFromManifest(manifest, publicBaseUrl, options);
+      catalog.artifacts[0].url = 'https://unrelated.example/escaped.html';
+      return catalog;
+    },
+  });
+
+  assert.equal(result.durable, false);
+  assert.equal(result.outcome, 'built-not-durable');
+  assert.ok(
+    result.errors.some(
+      (entry) =>
+        entry.code === 'publish-receipt' &&
+        entry.message.startsWith('Rebuilt initiative catalog is invalid:'),
+    ),
+    `expected the specific contract violation, got: ${JSON.stringify(result.errors)}`,
+  );
+});
+
 test('rejects contradictory generated-catalog evidence in v2 receipts', async () => {
   const mutations = [
     [

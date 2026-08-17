@@ -10,7 +10,11 @@ import {
   serializeInitiativeCatalog,
   validateInitiativeCatalog,
 } from './catalog.mjs';
-import { canonicalHash, validateContract } from './contracts.mjs';
+import {
+  canonicalHash,
+  isVerifiablePublishReceipt,
+  validateContract,
+} from './contracts.mjs';
 import { writeFileAtomic, writeJsonAtomic } from './fs-safe.mjs';
 import { validateSafeRelativePath } from './safe-paths.mjs';
 
@@ -353,7 +357,14 @@ async function verifyCommitEvidence(evidence, { runRoot, manifest }) {
       };
 }
 
-async function verifyPublishEvidence(evidence, { runRoot, manifest }) {
+async function verifyPublishEvidence(
+  evidence,
+  { runRoot, manifest, options = {} },
+) {
+  // Injectable for the rejection-branch test below, exactly as `fetchImpl` is
+  // on `defaultHttpGet`: the branch fires only when the builder and validator
+  // disagree, which correct production code never does on purpose.
+  const buildCatalog = options.buildCatalog ?? catalogFromManifest;
   const expectedPath = joinWithin(runRoot, 'publish-receipt.json');
   if (resolve(evidence.receiptPath) !== expectedPath) {
     return {
@@ -377,25 +388,24 @@ async function verifyPublishEvidence(evidence, { runRoot, manifest }) {
     };
   }
   let catalogArtifact;
-  if (receipt.schemaVersion === 'explainer-kit.publish-receipt/v2') {
+  if (isVerifiablePublishReceipt(receipt)) {
     try {
       // Must rebuild the catalog under the policy the receipt declares. The
       // connector embedded that policy in the catalog it hashed, so verifying a
       // `protected` receipt against a `public`-shaped rebuild yields a
       // different hash and rejects every protected publication as
       // `cross-record-mismatch`.
-      const catalog = catalogFromManifest(
-        manifest,
-        receipt.roots?.publicBaseUrl,
-        { publicAccess: receipt.publicAccess },
-      );
+      const catalog = buildCatalog(manifest, receipt.roots?.publicBaseUrl, {
+        publicAccess: receipt.publicAccess,
+      });
+      // This is a builder/validator cross-check on a catalog rebuilt three
+      // lines above from the same inputs — durability never consumes catalog
+      // bytes from outside, only a recorded hash, so no externally-sourced
+      // catalog object exists here to validate. The value of the check is that
       // `catalogFromManifest` and `validateInitiativeCatalog` are independent
-      // implementations of the same contract. Binding a rebuilt catalog's hash
-      // without checking it against the validator means any divergence between
-      // them surfaces as an opaque `cross-record-mismatch` against the receipt
-      // rather than as the specific contract violation. This is the one place
-      // the guard sees a catalog it did not itself just build three lines
-      // earlier from the same inputs.
+      // implementations of the same contract: if they ever diverge, this
+      // reports the specific contract violation instead of letting the
+      // divergence surface as an opaque `cross-record-mismatch`.
       const catalogValidation = validateInitiativeCatalog(
         catalog,
         manifest,

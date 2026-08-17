@@ -41,17 +41,17 @@ Every change runs the checks CI gates on, in this order:
 4. `pnpm build`
 5. `pnpm run check:skill-bumps`
 6. `pnpm release:check-versions`
+7. `pnpm release:validate`
+8. `pnpm build:docs`
 
-Steps 5 and 6 are the two version-lockstep gates CI runs. They are listed here
-because this local gate list must be a superset of CI: while the skill gate ran
-only in CI, changes reached review twice with a version bump that no local gate
-would have surfaced.
+This list mirrors CI's gate steps exactly, in CI's order, so that running it
+locally implies CI green. Steps 5 and 6 are the two version-lockstep gates;
+they earned their place here because while the skill gate ran only in CI,
+changes reached review twice with a version bump no local gate would have
+surfaced.
 
-CI runs none of `pnpm lint`, `pnpm format`, or `pnpm build:docs`. Run `pnpm lint`
-and `pnpm format` whenever a change touches `tools/smoke` or `.agents/skills`,
-since nothing else covers them, and `pnpm build:docs` when it touches the docs
-app. Changes to publishable packages add `pnpm release:validate`, described
-under Package Management.
+CI runs neither `pnpm lint` nor `pnpm format`. Run both whenever a change
+touches `tools/smoke` or `.agents/skills`, since nothing else covers them.
 
 ### Development Workflow
 

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
 import { renderArtifact } from '../scripts/lib/render.mjs';
@@ -124,8 +125,24 @@ async function template(name) {
 }
 
 async function coreSourceFiles() {
-  const roots = ['scripts', 'tests'];
-  const files = [];
+  // Whole-core coverage: every directory of the skill plus SKILL.md itself,
+  // not only scripts/ and tests/ — the constraint bans the identifiers from
+  // the core, and a scan that reaches two of twelve directories asserts less
+  // than it claims.
+  const roots = [
+    'briefs',
+    'examples',
+    'palettes',
+    'profiles',
+    'recipes',
+    'references',
+    'schemas',
+    'scripts',
+    'styles',
+    'templates',
+    'tests',
+  ];
+  const files = [fileURLToPath(new URL('SKILL.md', skillRoot))];
   for (const root of roots) {
     const directory = new URL(`${root}/`, skillRoot);
     const entries = await readdir(directory, {
@@ -134,7 +151,9 @@ async function coreSourceFiles() {
     });
     for (const entry of entries) {
       if (!entry.isFile()) continue;
-      if (!/\.(mjs|js|json|md)$/.test(entry.name)) continue;
+      if (!/\.(mjs|js|json|md|css|html|svg|txt|ya?ml)$/.test(entry.name)) {
+        continue;
+      }
       files.push(join(entry.parentPath ?? entry.path, entry.name));
     }
   }
@@ -437,7 +456,7 @@ test('worked examples are quarantined under examples and use RFC 2606 domains', 
   assert.equal(bundleHash, canonicalHash(identity));
 });
 
-test('core scripts and tests carry no case-study identifiers', async () => {
+test('the core carries no case-study identifiers', async () => {
   // The constraint was stated but not enforced: the forbidden-production scan
   // covered only `templates/`, so the production bucket, the CDN host and the
   // project code name entered the core in this range unnoticed.
