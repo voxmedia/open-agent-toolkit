@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: f6ba8c91d1eede48ecde13129647b5169b68b695
+oat_current_task: p07-t01
+oat_last_commit: 32c2b271be643e15e82799c373fa4e6c952ee3e0
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -72,22 +72,29 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-14T22:45:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-16T23:52:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-improvements-v2
 
-**Status:** Implementation Complete — Final Review Pending
+**Status:** Phase 7 Fix Tasks Queued — Second Final Review Received
 **Started:** 2026-08-05
-**Last Updated:** 2026-08-14
+**Last Updated:** 2026-08-16
 
 ## Current Phase
 
-All 34 implementation tasks across p01 through p06 are complete. Phase 6
-resolved all eight reconciled final-review findings in five bounded task
-commits. Completion gates and a fresh full final review remain pending; the
-superseded preliminary review cannot close the project.
+All 34 tasks across p01 through p06 are complete, and the serial completion
+gates passed at `07e2c96d7` (check, type-check, test, build, lint, format,
+build:docs, release:validate). The fresh full final review then found 1
+Critical, 2 Important, 8 Medium, and 7 Minor findings, all converted into
+Phase 7 (`p07-t01` through `p07-t16`).
+
+The Critical is a fail-open publication-root validation gate: root validation
+is keyed to the exact string `publish-request/v2`, so a `v1` publish block
+bypasses it entirely and a credential-bearing root is written verbatim into
+the hash-covered `run-request.json`. `publish-request/v1` is retained by
+operator decision; `p07-t01` fixes the gate version-agnostically instead.
 
 ## Artifacts
 
@@ -140,14 +147,19 @@ superseded preliminary review cannot close the project.
 - ✓ p06-t03 restores the immutable p04 review ledger and terminal scope alias
 - ✓ p06-t04 completes both CLI canary matrices and live provider paths
 - ✓ p06-t05 reconciles documentation and implementation metadata
-- ⧗ Run serial completion gates
-- ⧗ Run a fresh full final review
+- ✓ Serial completion gates passed at `07e2c96d7` (all eight)
+- ✓ Fresh full final review completed over `5f76ade9..07e2c96d7`
+- ✓ Both previously deferred p03 Minor findings closed (m1 accepted, m2
+  resolved); residues tracked as `p07-t16` and `p07-t15`
+- ⧗ Execute `p07-t01` through `p07-t16`
+- ⧗ Re-review and reach `passed` before project completion
 
 ## Blockers
 
-None.
+None. The Critical finding is queued as `p07-t01`, not blocking task execution.
 
 ## Next Milestone
 
-Run the serial completion gates, then perform a fresh full final review before
-the root workflow records project completion.
+Execute Phase 7 starting at `p07-t01`, then re-run
+`oat-project-review-provide code final` and `oat-project-review-receive` to
+reach `passed`. The project cannot close while the Critical is unresolved.

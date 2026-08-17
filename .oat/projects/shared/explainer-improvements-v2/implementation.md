@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-07
-oat_current_task_id: null
+oat_last_updated: 2026-08-16
+oat_current_task_id: p07-t01
 oat_generated: false
 ---
 
@@ -929,6 +929,88 @@ p03 task failures.
 - The approved p04 scope revision replaced open-ended retained-text scrubbing
   with closed local evidence codes. No unresolved p06 design delta remains;
   final acceptance still depends on the fresh full review.
+
+### Review Received: final (second full review)
+
+**Date:** 2026-08-16
+**Review artifact:** `reviews/archived/final-review-2026-08-16T232006Z.md`
+**Reviewed head:** `07e2c96d70b8130718f8a4203e60583f1cc817a1`
+
+**Findings:**
+
+- Critical: 1
+- Important: 2
+- Medium: 8
+- Minor: 7
+
+**New tasks added:** `p07-t01` through `p07-t16` (16 tasks; all 18 findings
+converted, with `m1`/`m2` and `m5`/`m6` paired into single tasks).
+
+**Review cycle:** 3 of 3. The bounded-loop cap was reached and explicitly
+overridden by the operator, who directed conversion of these findings into a
+fix phase. Recorded here so the override is durable rather than implicit.
+
+**Scope decision — `publish-request/v1` is retained:**
+
+The Critical is a fail-open validation gate, not a compatibility problem. Both
+contract documents already scope v1 to replay only
+(`extension-contract.md:29`, `lifecycle-contract.md:109`), and no in-repo
+producer emits v1 — the adapter emits v2 exclusively
+(`resolve-config.mjs:182`). Evidence gathered during this receive: six of nine
+benign v1 root shapes pass strict v2 validation unchanged, and the three that
+fail (uppercase bucket, underscore bucket, `http://` public root) are invalid
+S3 bucket names or plaintext HTTP that should be rejected regardless. A
+version-agnostic gate (`p07-t01`) therefore closes the Critical without a
+breaking contract removal inside a patch release, and without leaving the
+fail-open shape for a future v3 to fall into. Dropping `publish-request/v1` is
+captured as a separate repo backlog item for a future minor;
+`publish-receipt/v1` reading is retained regardless because
+`publish-summary/v1` replay depends on it.
+
+**Deferred-medium resurfacing (final-scope gate):**
+
+Both previously deferred p03 Minor findings were dispositioned by the reviewer
+and are now closed:
+
+- `m1` (mid-publish `incomplete` manifest): **accepted** — the transition is
+  contractually intended and gated at both publish entry points
+  (`publication-policy.mjs:11-14,22-46`), and the catalog projection omits
+  `outcome`/`warnings` so bytes cannot diverge. Its only residue is the
+  undocumented third-party connector contract, now tracked as `p07-t16`.
+- `m2` (`E_RUN` vs `E_PUBLISH`): **resolved, not deferred** — `E_RUN` exists
+  nowhere in shipped code (removed by `6fbded0f2`); the sole repo-wide hit is
+  inert fixture data. Its only residue is post-upload failure attribution, now
+  tracked as `p07-t15`.
+
+No deferred Medium findings remain undecided.
+
+**Minor findings disposition:** all 7 converted. Each is a small, localized
+test, code, or documentation change, and the two prior deferrals above resolve
+cleanly only if their residues are closed in the same pass.
+
+**Design drift / artifact alignment notes:**
+
+- `M5`: `contracts.md:216-218` promises a retained internal-reference finding
+  that the implementation does not produce — the gate throws and
+  `executeStage` rethrows a scrubbed `E_QA`. Shipped implementation is
+  defensible and is source of truth; `p07-t08` aligns the prose rather than
+  building the retained finding.
+- `M8`: `implementation.md:886-889` asserts a standing 27-failure carve-out
+  that no longer holds — the full glob measured 546 pass, 0 fail at
+  `07e2c96d7`. `p07-t11` corrects the stale claim; the historical p03-era
+  statements at `:812-815` remain as immutable review narrative.
+- `m4`: p06-t02 modified `build-explainer-rc.mjs` and
+  `explainer-rc-contract.mjs` outside its declared file boundary. The change is
+  necessary and correct, but unrecorded; `p07-t14` adds the Deviations row.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill, starting at
+`p07-t01`.
+
+After the fix tasks are complete:
+
+- Update this same artifact-identified review event to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then
+  `oat-project-review-receive` to reach `passed`
 
 ## References
 

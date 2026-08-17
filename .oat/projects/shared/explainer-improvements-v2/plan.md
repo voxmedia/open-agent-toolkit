@@ -1248,6 +1248,605 @@ git commit -m "chore(p06-t05): reconcile completion metadata"
 
 ---
 
+## Phase 7: Second final review fixes
+
+Resolves the 18 findings in `reviews/archived/final-review-2026-08-16T232006Z.md`.
+
+Operator decision recorded before this phase: `publish-request/v1` is **retained**.
+The Critical is a fail-open validation gate, not a compatibility problem, and the
+version-agnostic fix in p07-t01 closes it without a breaking contract removal in a
+patch release. Dropping `publish-request/v1` is captured as a separate repo backlog
+item for a future minor; `publish-receipt/v1` reading is retained regardless because
+`publish-summary/v1` replay depends on it.
+
+### Task p07-t01: (review) Validate publication roots for every publish-request version
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding (C1): `validatePublicationRoots` gates its entire semantic check on
+`value.schemaVersion === 'explainer-kit.publish-request/v2'` (`contracts.mjs:469-471`).
+A `v1` block matches neither that branch nor the receipt branch, so the function
+returns having validated nothing. `run-request.schema.json:48-52` still accepts v1 via
+`oneOf`, and v1's pattern `^s3://[^/\s]+(?:/[^\s]*)?$` matches an authority containing
+`:` and `@`. `initializeRun` then writes the credential verbatim to `run-request.json`,
+which is a hash-covered member of the retained run package.
+
+**Step 2: Implement fix**
+
+Invert the gate to default-deny: run `normalizePublishRoots` for **any**
+`publish-request` shape rather than only the exact v2 string. Do not special-case v1
+leniently — a probe of nine benign v1 root shapes showed six pass strict validation
+unchanged, and the three that fail (uppercase bucket, underscore bucket, `http://`
+public root) are invalid S3 bucket names or plaintext HTTP that should be rejected.
+The gate must not be keyed to an exact version string, so a future v3 cannot
+reintroduce the bypass.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs`
+Expected: a credential-bearing publish block is rejected with `publish-roots` at
+**both** v1 and v2; add explicit parity cases asserting v1 and v2 reject identically.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/lib/contracts.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs
+git commit -m "fix(p07-t01): validate publication roots for every request version"
+```
+
+---
+
+### Task p07-t02: (review) Reject control characters and backslashes in both root parsers
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-roots.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding (M1): both parsers screen with `/\s/`, which matches only space, tab,
+newline, CR, FF, VT — not the rest of the C0 range or DEL. Probed against the hardened
+v2 path: NUL, SOH, ESC, and DEL are accepted in `s3Uri` and `publicBaseUrl`. NUL fails
+closed but badly (`ERR_INVALID_ARG_VALUE` at spawn, an uncoded crash); ESC/DEL/SOH pass
+through spawn into S3 keys, public URLs, catalog, receipt, and terminal output. Same
+class: `parseS3Root` rejects `\` but `parsePublicRoot` does not.
+
+**Step 2: Implement fix**
+
+Screen with `/[\x00-\x1f\x7f\\]/` alongside the existing `\s` test in **both**
+`parseS3Root` and `parsePublicRoot`, raising the existing `E_PUBLISH_ROOTS` code.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs`
+Expected: NUL/SOH/ESC/DEL and `\` are rejected with `E_PUBLISH_ROOTS` in both roots;
+existing accepted shapes still pass.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/lib/s3-roots.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs
+git commit -m "fix(p07-t02): reject control characters in publication roots"
+```
+
+---
+
+### Task p07-t03: (review) Enforce root correspondence and record it in protected mode
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-roots.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding (M2): `normalizePublishRoots` parses the two roots in isolation and never
+relates them. In `public` mode divergence self-detects via a 404 raising
+`E_PUBLISH_VERIFY`. In `protected` mode the fetch is skipped entirely, yet
+`catalogFromManifest` and `composePublicationTarget` still stamp the unverified host
+into the catalog and every receipt entry's `publicUrl`.
+
+**Step 2: Implement fix**
+
+A **host** check would be wrong — the handoff's production example deliberately pairs
+different hosts. Require the public root's path suffix to equal the S3 key prefix,
+allowing the documented host difference. At minimum, record an explicit
+`rootCorrespondence` fact in the receipt so a reviewer can see whether the two roots
+were cross-checked.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs`
+Expected: a protected-mode divergent-root case is rejected or explicitly marked
+unverified in the receipt; the handoff's legitimate cross-host example still passes.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/lib/s3-roots.mjs .agents/skills/explainer-kit/scripts/lib/s3-static.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs
+git commit -m "fix(p07-t03): enforce publication root correspondence"
+```
+
+---
+
+### Task p07-t04: (review) Apply an address policy and stop following redirects
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-roots.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding (M3): `parsePublicRoot` enforces HTTPS and absence of
+userinfo/query/fragment but applies no address policy. Accepted:
+`https://127.0.0.1:8443/p`, `https://169.254.169.254/p` (AWS IMDS), `https://localhost/p`,
+`https://10.0.0.5/p`, `https://[::1]/p`. `defaultHttpGet` then issues
+`fetch(url, { redirect: 'follow' })`. Exploitability is bounded — it needs committed
+shared-config control, runs only after the human gate, and the body is hashed and
+compared — but it remains an outbound GET primitive with redirect following aimed at
+internal addresses, and an external root can be bounced inward by a third party.
+
+**Step 2: Implement fix**
+
+Reject loopback, link-local (`169.254.0.0/16`, `fe80::/10`), and unique-local/private
+ranges in `parsePublicRoot` unless an explicit opt-in is configured. Set
+`redirect: 'error'` in `defaultHttpGet` — a canonical public artifact URL should never
+legitimately redirect.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs`
+Expected: each probed internal address is rejected; a redirecting public root fails
+rather than following.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/lib/s3-roots.mjs .agents/skills/explainer-kit/scripts/lib/s3-static.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs
+git commit -m "fix(p07-t04): restrict public roots and disallow redirects"
+```
+
+---
+
+### Task p07-t05: (review) Execute skill and release test suites in CI
+
+**Files:**
+
+- Modify: `package.json`
+- Modify: `.github/workflows/ci.yml`
+- Modify: `.oat/projects/shared/explainer-improvements-v2/plan.md` (p06-t02 rationale)
+
+**Step 1: Understand the issue**
+
+Review finding (I1): `pnpm test` resolves to `turbo run test && pnpm test:smoke`, which
+reaches exactly four vitest packages plus `tools/smoke` globs. Neither
+`.agents/skills/**/tests/*.test.mjs` nor `tools/release/*.test.mjs` is reachable from
+`pnpm check`, `type-check`, `test`, or `build`. That leaves 546 skill tests — including
+the p06-t01 credential-rejection suite and both p06-t04 canary matrices — plus 30
+release tests runnable only by hand. This is not hypothetical: the recipe-identity
+defect `5ac0ce599` had to fix was introduced in p05-t01 and survived every repository
+gate. The C1 bypass is the second instance.
+
+**Step 2: Implement fix**
+
+Add `test:skills` and `test:release` steps globbing `.agents/skills/*/tests/*.test.mjs`
+and `tools/release/*.test.mjs`, wired into the root `test` script so the CI gates cover
+them. The full skill glob takes ~95s locally, so this is practical. If exclusion is
+deliberate for runtime reasons, add an explicit CI step instead and correct the
+p06-t02 rationale at `plan.md:1126-1128`, which currently claims "ordinary CI catches
+future arithmetic or shape drift".
+
+**Step 3: Verify**
+
+Run: `pnpm test`
+Expected: the skill and release suites execute and pass as part of the standard gate.
+
+**Step 4: Commit**
+
+```bash
+git add package.json .github/workflows/ci.yml .oat/projects/shared/explainer-improvements-v2/plan.md
+git commit -m "test(p07-t05): execute skill and release suites in CI"
+```
+
+---
+
+### Task p07-t06: (review) Cover `project-recap@2` end to end
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding (I2): the adapter pins `project-recap` at version `2`
+(`resolve-config.mjs:192-195`), so v2 governs every new recap. Only three unit-level
+touchpoints exercise v2; both end-to-end surfaces still pin v1
+(`e2e-recap.test.mjs:70`, `golden-conformance.test.mjs:956`). v2's defining behavior —
+the hub-only floor plus justified expansion — has never been driven through
+planning → authoring → render → link gate → browser review → visual review → durability.
+
+**Step 2: Implement fix**
+
+Repoint or duplicate `e2e-recap.test.mjs` to exercise `project-recap@2`: hub-only, one
+justified expansion, and one rejected unjustified expansion. This does not violate the
+design's "no new Chromium golden matrix" non-goal — `e2e-recap.test.mjs` is not part of
+the three-case golden suite, which stays pinned to v1 for replay.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+Expected: v2 hub floor and justified/unjustified expansion all behave as specified.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/tests/e2e-recap.test.mjs
+git commit -m "test(p07-t06): cover project-recap@2 end to end"
+```
+
+---
+
+### Task p07-t07: (review) Emit the declared `link-validation` evidence stage
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding (M4): `design.md` enumerates `link-validation` as one of the eight closed
+stages and it is accepted by both evidence schemas and the projection allow-lists, but no
+`withEvidenceReason(..., 'link-validation', ...)` call exists anywhere. Because
+`enforceInternalReferenceGate` runs inside `qa` and `evidenceStageForBuildStage` maps
+`qa → 'browser-review'`, an `E_INTERNAL_REFERENCE` failure is durably recorded as a
+browser-review failure. Fail-closed behavior is intact, so this is evidence fidelity.
+
+**Step 2: Implement fix**
+
+Wrap the internal-reference gate failure with
+`withEvidenceReason(error, 'link-validation', 'finding')` at its owning boundary in
+`enforceInternalReferenceGate` (`run.mjs:731-797`), or remove `link-validation` from the
+enum and `design.md` if attribution to `browser-review` is intended. Prefer emitting it.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/explainer-kit/tests/link-validation.test.mjs`
+Expected: an internal-reference failure records `link-validation`, not `browser-review`.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/run.mjs
+git commit -m "fix(p07-t07): attribute link failures to link-validation"
+```
+
+---
+
+### Task p07-t08: (review) Align internal-reference exhaustion prose with shipped behavior
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+
+**Step 1: Understand the issue**
+
+Review finding (M5, artifact alignment): `contracts.md:216-218` states that after the one
+correction is exhausted "the QA stage retains that finding and durability and publication
+remain ineligible". The implementation retains no finding: the gate throws
+`E_INTERNAL_REFERENCE`, `executeStage`'s catch records only `{status:'failed', error:true}`
+and rethrows a scrubbed `codedError('E_QA', ...)`. Nothing names the broken reference.
+
+**Step 2: Implement fix**
+
+Shipped implementation is source of truth. Align the prose to describe a hard QA-stage
+failure with code-only evidence, rather than implementing the retained finding the prose
+promises.
+
+**Step 3: Verify**
+
+Run: `pnpm format && pnpm lint`
+Expected: prose matches shipped behavior; no retained-finding claim remains.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/references/contracts.md
+git commit -m "docs(p07-t08): align exhaustion prose with shipped behavior"
+```
+
+---
+
+### Task p07-t09: (review) Document the internal-link gate and shared correction budget
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/skills/explainer-kit.md`
+
+**Step 1: Understand the issue**
+
+Review finding (M6): a grep across `apps/oat-docs/docs/` returns zero mentions of
+`E_INTERNAL_REFERENCE` or internal-link validation, though the page documents
+`E_AUTHOR_REQUIRED`, `E_APPROVAL_RESUME`, and `E_QA`. The p02 hard gate — the project's
+central link-integrity deliverable — is documented only in the bundled skill reference.
+Separately, `:198` states unconditionally that a `correct` disposition "permits one
+bounded correction and exactly one final review", but `run.mjs:628-636` throws
+`E_VISUAL_CORRECTION` when the link gate already spent the shared budget.
+
+**Step 2: Implement fix**
+
+Add the internal-link gate and `E_INTERNAL_REFERENCE` to the pipeline and error sections,
+and make the correction-budget sentence conditional on the shared budget.
+
+**Step 3: Verify**
+
+Run: `pnpm check && pnpm build:docs`
+Expected: markdownlint passes and the docs build succeeds.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/workflows/skills/explainer-kit.md
+git commit -m "docs(p07-t09): document internal-link gate and correction budget"
+```
+
+---
+
+### Task p07-t10: (review) Document `explainers.publish.publicAccess`
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+
+**Step 1: Understand the issue**
+
+Review finding (M7): the config table enumerates every other `explainers.publish.*` key
+with type, scope, and default, but `publicAccess` — added in this range at
+`packages/cli/src/commands/config/index.ts:626-637` and defaulting to `'public'` at
+`packages/cli/src/config/resolve.ts:70` — appears nowhere under `apps/oat-docs/docs/`.
+It is security-relevant: declaring `protected` switches verification to authenticated
+object hashing with public fetch recorded as `skipped-protected`, which is the mode in
+which p07-t03's divergence becomes unverifiable. `state.md` claims
+`oat_docs_updated: complete`.
+
+**Step 2: Implement fix**
+
+Add the row (`public | protected`, shared, default `public`) and extend the prose at
+`:168-172` to explain that `publicAccess` declares anonymous reachability and does not
+authorize publication.
+
+**Step 3: Verify**
+
+Run: `pnpm check && pnpm build:docs`
+Expected: the key is documented and the docs build succeeds.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/cli-utilities/configuration.md
+git commit -m "docs(p07-t10): document explainers.publish.publicAccess"
+```
+
+---
+
+### Task p07-t11: (review) Correct the stale 27-expected-failures carve-out
+
+**Files:**
+
+- Modify: `.oat/projects/shared/explainer-improvements-v2/implementation.md`
+
+**Step 1: Understand the issue**
+
+Review finding (M8): the Test Results section (`:886-889`) asserts in the present tense
+that the broad explainer skill glob "is separately nonzero for 27 inherited
+`E_BROWSER_PROBE` failures in legacy recap fixtures". The reviewer ran the full glob at
+this HEAD and measured **546 tests, 546 pass, 0 fail, 0 skipped**, with the three Chromium
+golden benchmarks not env-gated and passing. A standing "these failures are expected"
+note in a closing summary masks future genuine regressions.
+
+**Step 2: Implement fix**
+
+Correct the present-tense claim to record that the glob is green at `07e2c96d7`. Leave the
+historical p03-era statements at `:812-815` as written — they are immutable review
+narrative.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs .agents/skills/oat-explainer-kit/tests/*.test.mjs`
+Expected: the recorded count matches the measured result.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/explainer-improvements-v2/implementation.md
+git commit -m "docs(p07-t11): correct stale expected-failure carve-out"
+```
+
+---
+
+### Task p07-t12: (review) Assert projection survival and add the case-study link fixture
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/link-validation.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review findings (m1, m2). m1: each canary row asserts `entered === true`, canary exclusion,
+and exit code, but nothing asserts the projected output still contains the
+`visualReview`/`publication` block. The prior review's M2 was precisely a vacuous row, so
+a regression in `projectVisualReviewEvidence` would silently restore vacuity. m2: the
+handoff asks for "the broken links from this case", but the literal `../architecture/` and
+`../deck/` strings appear nowhere in the repository.
+
+**Step 2: Implement fix**
+
+Add one projection assertion per non-throwing canary row, e.g.
+`assert.equal(JSON.parse(stdout.at(-1)).visualReview.disposition, 'correct')`. Add the two
+literal case-study hrefs as a named regression case.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/link-validation.test.mjs`
+Expected: rows are non-vacuous by assertion; the case-study hrefs are covered by name.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/link-validation.test.mjs
+git commit -m "test(p07-t12): assert projection survival and case-study links"
+```
+
+---
+
+### Task p07-t13: (review) Align RC recipe-identity sort order
+
+**Files:**
+
+- Modify: `tools/release/explainer-rc-contract.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding (m3): the builder sorts entries by the `(id, version)` tuple
+(`build-explainer-rc.mjs:731-734`); the contract requires `${id}@${version}` strings to
+equal their default lexical sort (`explainer-rc-contract.mjs:70,165-169`). These disagree
+whenever one recipe id is a strict prefix of another, because `-` (0x2D) sorts before `@`
+(0x40). Not reachable with the current five ids and it fails closed (spurious RC
+rejection), but it is latent.
+
+**Step 2: Implement fix**
+
+Make the contract sort by the same `(id, version)` tuple as the builder, or have the
+builder sort the composed identity strings. Pick one and use it in both places.
+
+**Step 3: Verify**
+
+Run: `node --test tools/release/run-explainer-rc.test.mjs`
+Expected: ids where one is a strict prefix of another sort identically in both.
+
+**Step 4: Commit**
+
+```bash
+git add tools/release/explainer-rc-contract.mjs
+git commit -m "fix(p07-t13): align RC recipe-identity sort order"
+```
+
+---
+
+### Task p07-t14: (review) Record the p06-t02 scope extension as a deviation
+
+**Files:**
+
+- Modify: `.oat/projects/shared/explainer-improvements-v2/implementation.md`
+
+**Step 1: Understand the issue**
+
+Review finding (m4): p06-t02 declared the two RC test files plus "production catalog
+helpers only if required to avoid fixture drift". Commit `5ac0ce599` also modified
+`build-explainer-rc.mjs` and `explainer-rc-contract.mjs` — recipe-identity semantics, not
+catalog helpers. The change is necessary and correct, since two versions of
+`project-recap` now coexist, but the Deviations table (`:865-871`) does not record it.
+
+**Step 2: Implement fix**
+
+Add a Deviations row noting the accepted scope extension and its cause.
+
+**Step 3: Verify**
+
+Run: `pnpm format`
+Expected: the Deviations table records the extension.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/explainer-improvements-v2/implementation.md
+git commit -m "docs(p07-t14): record p06-t02 scope extension"
+```
+
+---
+
+### Task p07-t15: (review) Surface inventory and post-upload failure attribution
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+
+**Step 1: Understand the issue**
+
+Review findings (m5, m6). m5: `enforceRetainedRunPackage(...).catch(() => {})`
+(`run.mjs:315-318`) swallows the inventory assertion. Removal still happens, so the
+confinement invariant holds, but an unremovable violation or a missing required file would
+go unreported. m6: any throw inside the publish `try` sets `providerFailed = true`,
+including the local `writeJsonAtomic`, `updateBuildRecord`, and second `persistManifest`
+(`:1887-1894`), so post-upload local failures are recorded as `provider-failure` rather
+than `pipeline-failure`. This is the only residue of previously deferred finding m2.
+
+**Step 2: Implement fix**
+
+Record a local `finalization`/`pipeline-failure` reason instead of swallowing, so the
+failure is visible in terminal evidence. Wrap the post-upload local work so it rethrows as
+a distinct pipeline failure.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs`
+Expected: inventory failures are reported; post-upload local failures classify as
+`pipeline-failure`.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/run.mjs
+git commit -m "fix(p07-t15): surface inventory and post-upload failure attribution"
+```
+
+---
+
+### Task p07-t16: (review) Document the mid-publish `incomplete` manifest
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/references/destination-contract.md`
+
+**Step 1: Understand the issue**
+
+Review finding (m7): `run.mjs:1855-1866` persists the manifest before invoking the
+publisher callback, so the `manifestPath` a connector receives carries
+`outcome: 'incomplete'` while the `publish` stage is `running`. The built-in connector
+handles this correctly and `publication-policy.mjs:11-14,22-46` gates the transition
+explicitly, but the destination contract never mentions `incomplete` or the build-record
+requirement, so a third-party connector author has no way to know. This is the residue of
+previously deferred finding m1, which was accepted on the condition that the contract gap
+be closed.
+
+**Step 2: Implement fix**
+
+Document the intermediate state and the build-record-aware publishability check that a
+connector must perform.
+
+**Step 3: Verify**
+
+Run: `pnpm format && pnpm lint`
+Expected: the contract documents the intermediate state.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/references/destination-contract.md
+git commit -m "docs(p07-t16): document mid-publish incomplete manifest"
+```
+
+---
+
 ## Reviews
 
 | Scope              | Type     | Status          | Date       | Artifact                                                                                                | Reviewed Head                            | Invocation | Gate Target              |
@@ -1275,7 +1874,7 @@ git commit -m "chore(p06-t05): reconcile completion metadata"
 | p05                | code     | passed          | 2026-08-07 | reviews/archived/p05-review-2026-08-07T211756Z.md                                                       | 836d850147f067a59d6d4fd06edfd4d8f568e780 | manual     | -                        |
 | final              | code     | received        | 2026-08-07 | reviews/archived/final-review-2026-08-07T214023Z.md (superseded by reconciliation)                      | 3da933d4e2d5ebd9764616fb0110b4794598fdd7 | manual     | -                        |
 | final              | code     | fixes_added     | 2026-08-07 | reviews/archived/final-review-2026-08-07T215000Z.md                                                     | 3da933d4e2d5ebd9764616fb0110b4794598fdd7 | manual     | -                        |
-| final              | code     | received        | 2026-08-16 | reviews/final-review-2026-08-16T232006Z.md                                                              | 07e2c96d70b8130718f8a4203e60583f1cc817a1 | manual     | -                        |
+| final              | code     | fixes_added     | 2026-08-16 | reviews/archived/final-review-2026-08-16T232006Z.md                                                     | 07e2c96d70b8130718f8a4203e60583f1cc817a1 | manual     | -                        |
 | plan-revision      | artifact | fixes_completed | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T180042Z.md                                    | c33edabc017369a629ca7a3a63757cbad3d9dab9 | manual     | -                        |
 | plan-revision      | artifact | passed          | 2026-08-06 | reviews/archived/artifact-plan-revision-review-2026-08-06T181021Z.md                                    | a8e41bbc13c9aee38312d1680ac6aec13642cae7 | manual     | -                        |
 | plan               | artifact | passed          | 2026-08-05 | inline (deliberate inheritance; 1 Important + 2 Medium fixed)                                           | -                                        | auto       | -                        |
@@ -1313,8 +1912,11 @@ git commit -m "chore(p06-t05): reconcile completion metadata"
   recap-contract alignment
 - Phase 6: 5 tasks — final security, release, coverage, ledger, and completion
   fixes
+- Phase 7: 16 tasks — second final-review fixes: publication-root validation
+  hardening, CI test coverage, `project-recap@2` end-to-end coverage, evidence
+  attribution, and documentation alignment
 
-**Total: 34 tasks**
+**Total: 50 tasks**
 
 ## References
 
