@@ -213,9 +213,14 @@ with an isolated HTTPS base, then must bind exactly to the manifest/site tree.
 Referenced fragments must resolve to exactly one ID in the target document;
 unused duplicate renderer-generated IDs do not fail indexing. Safe base64 image
 data references and same-document fragments are classified separately. A
-malformed, unresolved, or ambiguous reference fails `E_INTERNAL_REFERENCE`;
-after the one correction is exhausted, including after visual correction, the
-QA stage retains that finding and durability and publication remain ineligible.
+malformed, unresolved, or ambiguous reference fails `E_INTERNAL_REFERENCE`.
+Once the one correction is exhausted, including after visual correction, the run
+fails hard: the QA stage is recorded `failed` with code-only evidence and the
+scrubbed message `The qa stage failed.`, and the run is not durability- or
+publication-eligible. No finding is retained and nothing names the broken
+reference — terminal evidence is code-only by design, and the failure is
+attributed to the `link-validation` evidence stage rather than to
+`browser-review`.
 
 An incomplete interactive result includes
 `approval.resumeToken: "ekrt2:<64 lowercase hex characters>"`. The token is an
