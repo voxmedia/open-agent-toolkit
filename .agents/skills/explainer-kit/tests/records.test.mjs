@@ -239,6 +239,51 @@ test('retains one bounded visual revision record for corrected artifacts', async
   );
 });
 
+test('refuses a second terminal-evidence write, so no amend path exists', async () => {
+  // This is the property that made `run.mjs`'s inventory re-record dead code:
+  // the first write is unconditional, so the second could only ever throw, and
+  // it was swallowed by `.catch(() => {})` under a comment claiming the durable
+  // evidence had been updated. The run path now reaches its inventory verdict
+  // before writing, so a single write carries the complete reason set. If this
+  // ever becomes amendable, that ordering constraint can be revisited.
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  const terminalManifest = {
+    runId: run.runId,
+    slug: run.slug,
+    outcome: 'failed',
+  };
+  const evidence = (reasons) => ({
+    outcome: 'failed',
+    manifest: terminalManifest,
+    reasons,
+    evidenceDisposition: 'retained',
+  });
+  const first = [{ stage: 'finalization', kind: 'pipeline-failure', count: 1 }];
+
+  await writeTerminalEvidence(run, evidence(first));
+  await assert.rejects(
+    writeTerminalEvidence(
+      run,
+      evidence([
+        ...first,
+        { stage: 'durability', kind: 'provider-failure', count: 1 },
+      ]),
+    ),
+    /immutable once retained/,
+    'a second write must be refused, not silently applied',
+  );
+
+  // And the retained bytes still carry only the first reason set, proving the
+  // refused write changed nothing on disk.
+  assert.deepEqual(
+    JSON.parse(
+      await readFile(join(run.runRoot, 'terminal-evidence.json'), 'utf8'),
+    ).reasons,
+    first,
+  );
+});
+
 test('retains compact flagged and failed terminal evidence', async () => {
   for (const outcome of ['built-needs-review', 'failed']) {
     const outputRoot = await temporaryDirectory();

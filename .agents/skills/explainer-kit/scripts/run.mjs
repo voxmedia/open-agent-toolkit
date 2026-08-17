@@ -305,18 +305,18 @@ export async function runExplainer(request, options = {}) {
     const reason =
       localEvidenceReason(error) ??
       projectThrownReason('finalization', 'pipeline-failure');
-    await writeTerminalEvidence(run, {
-      outcome: 'failed',
-      manifest,
-      reasons: [reason],
-      evidenceDisposition: manifest ? 'retained' : 'unavailable',
-    });
+    // The inventory verdict is reached *before* terminal evidence is written,
+    // so the single write below carries the complete reason set. Terminal
+    // evidence is immutable once retained (`records.mjs` refuses a second
+    // write unless the path is absent), so a re-record after the fact could
+    // never succeed; the previous shape swallowed that guaranteed failure in a
+    // `.catch(() => {})` under a comment claiming the durable evidence was
+    // updated. `includeTerminalEvidence` is correspondingly dropped here,
+    // because the file legitimately does not exist yet at this point.
     let reasons = [reason];
     if (manifest) {
       try {
-        await enforceRetainedRunPackage(state, manifest, {
-          includeTerminalEvidence: true,
-        });
+        await enforceRetainedRunPackage(state, manifest);
       } catch (inventoryError) {
         // This used to be swallowed outright. It must not simply be reported
         // either: a failed run routinely leaves partial outputs, and the first
@@ -326,9 +326,7 @@ export async function runExplainer(request, options = {}) {
         // there is nothing to report; if it still fails, the violation is
         // genuinely unremovable or a required file is missing, which is the
         // case that previously went unreported at run time.
-        const repaired = await enforceRetainedRunPackage(state, manifest, {
-          includeTerminalEvidence: true,
-        }).then(
+        const repaired = await enforceRetainedRunPackage(state, manifest).then(
           () => true,
           () => false,
         );
@@ -338,16 +336,15 @@ export async function runExplainer(request, options = {}) {
             localEvidenceReason(inventoryError) ??
               projectThrownReason('finalization', 'pipeline-failure'),
           );
-          // Re-record so the durable evidence names the inventory failure too.
-          await writeTerminalEvidence(run, {
-            outcome: 'failed',
-            manifest,
-            reasons,
-            evidenceDisposition: 'retained',
-          }).catch(() => {});
         }
       }
     }
+    await writeTerminalEvidence(run, {
+      outcome: 'failed',
+      manifest,
+      reasons,
+      evidenceDisposition: manifest ? 'retained' : 'unavailable',
+    });
     return resultFor(state, { failed: true, reasons });
   }
 }
