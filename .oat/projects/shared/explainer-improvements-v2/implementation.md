@@ -883,10 +883,15 @@ Track test execution during implementation.
 | 5     | recipe, docs, release, and contract-reference gates  | passed | 0      | 4/4 tasks; focused re-review passed                |
 | 6     | security, RC, ledger, and CLI canary task gates      | passed | 0      | 5/5 tasks; serial completion gates pending         |
 
-The broad explainer skill glob is separately nonzero for 27 inherited
-`E_BROWSER_PROBE` failures in legacy recap fixtures. Focused p03 suites and all
-repository gates pass; the inherited broad-glob failures are not counted as
-p03 task failures.
+The broad explainer skill glob is green. The final reviewer measured
+`node --test .agents/skills/explainer-kit/tests/*.test.mjs .agents/skills/oat-explainer-kit/tests/*.test.mjs`
+at `07e2c96d7` as **546 tests, 546 pass, 0 fail, 0 skipped**, with the three
+Chromium golden benchmarks neither env-gated nor failing. The same glob measures
+**561 tests, 561 pass, 0 fail, 0 skipped** after the p07 additions. The earlier
+carve-out for 27 inherited `E_BROWSER_PROBE` failures in legacy recap fixtures
+is historical and no longer applies; it is retained only in the p03-era
+narrative above. From p07-t05 onward this glob runs as part of `pnpm test`, so
+a regression fails an ordinary repository gate rather than needing a manual run.
 
 ## Final Summary (for PR/docs)
 
