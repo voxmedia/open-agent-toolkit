@@ -1372,6 +1372,52 @@ staging siblings not gitignored plus a cleanup-trap edge in the rename window
 **Next:** narrowed final re-review over `8eb45413e..HEAD` (round 4) to confirm
 `final-fix-002` and reach `passed`.
 
+### Final Round 4 Clean; Operator Disposition of the 18 Open Findings
+
+**Date:** 2026-08-17
+**Round 4 artifact:** `reviews/final-review-2026-08-17T094116Z.md` — 0
+Critical, 0 Important, 0 Medium, 0 Minor over `8eb45413e..7440118a3`;
+`final-fix-002` verified closed by independent reproduction of the CI gate.
+
+**Operator decision (final-scope disposition gate):** recommended split.
+
+**Convert to fix batch `final-fix-003` (16 items):**
+
+- Code/tests: `$id`-form contract-kind bypass of the version-agnostic root
+  gate plus the receipt-verification exact-version pins (`contracts.mjs:473,
+488,1112,1180`); C1 control-range screening (`s3-roots.mjs`); catalog-policy
+  guard tested and invoked from `durability.mjs`; vacuous `p07-t06`
+  unjustified-expansion assertion; `p07-t15` dead re-record code and false
+  comment; `p07-t13` strict-prefix test and comparator duplication;
+  case-study identifiers scrubbed from core; staging siblings gitignored and
+  the cleanup-trap window closed; the RC lane's tautological catalog assertion
+  made real (its CI-browser half deferred, below).
+- Docs/bookkeeping: destination-contract updated (remove the required
+  correspondence rule the operator deleted; document the catalog shape, the
+  address policy, and redirect refusal); the two environment variables
+  documented; `implementation.md` auditability and contradictory-count
+  corrections.
+- CI/process quick items: wire `release:check-versions` into a workflow; add
+  the CI skill-version-bump gate to `AGENTS.md` Definition of Done and a root
+  script so local gates are a superset of CI.
+
+**Explicitly deferred with rationale (2 items):**
+
+- RC end-to-end test in CI (`BL-260817-run-the-rc-explainer-end`): requires a
+  CI browser-provisioning decision; the code-side tautology is fixed in the
+  batch, so the remaining risk is coverage breadth, not correctness.
+- System-Chromium merge-gate policy (`BL-260817-decide-and-pin-the-system`):
+  a CI environment policy call; the benchmarks degrade gracefully without
+  browsers, so the exposure is an unpinned implicit dependency, not a red
+  gate.
+
+**Review-cycle note:** the final scope is past the three-cycle governance cap;
+every round since the cap has run under explicit standing operator direction,
+recorded at each step.
+
+**Next:** execute `final-fix-003`, re-verify all gates with explicit exit
+codes, then one narrowed review round to move `final` to `passed`.
+
 ## References
 
 - Plan: `plan.md`
