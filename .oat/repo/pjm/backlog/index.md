@@ -120,6 +120,7 @@
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                            | open   | medium   | feature | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                         | open   | medium   | feature | M        |
 | BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path | open   | medium   | task    | S        |
+| BL-260817-detect-branch-behind-published | Detect branch-behind-published-main package versions in CI                                 | open   | medium   | task    | S        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                 | open   | medium   | feature | M        |
 | BL-260817-drop-explainer-kit-publish     | Drop explainer-kit publish-request/v1 in a future minor                                    | open   | medium   | task    | S        |
 | BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance                              | open   | medium   | task    | S        |
