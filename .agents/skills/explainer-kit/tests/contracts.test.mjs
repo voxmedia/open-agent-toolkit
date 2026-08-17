@@ -314,61 +314,61 @@ test('accepts immutable publish request v1 replay and explicit v2 access modes',
   }
 });
 
-test('rejects unsafe or divergent v2 publication roots at every contract surface', () => {
-  const unsafePairs = [
-    [
-      'credential-bearing authority',
-      's3://access-key:secret@example-bucket/explainers',
-      'https://docs.example.com/explainers',
-    ],
-    [
-      'encoded authority delimiter',
-      's3://access-key%40example-bucket/explainers',
-      'https://docs.example.com/explainers',
-    ],
-    [
-      'authority colon',
-      's3://example-bucket:443/explainers',
-      'https://docs.example.com/explainers',
-    ],
-    [
-      'query',
-      's3://example-bucket/explainers?version=1',
-      'https://docs.example.com/explainers',
-    ],
-    [
-      'fragment',
-      's3://example-bucket/explainers#latest',
-      'https://docs.example.com/explainers',
-    ],
-    [
-      'invalid bucket',
-      's3://Example_Bucket/explainers',
-      'https://docs.example.com/explainers',
-    ],
-    [
-      'literal dot segment',
-      's3://example-bucket/a/../b',
-      'https://docs.example.com/a/../b',
-    ],
-    [
-      'encoded dot segment',
-      's3://example-bucket/a/%2e%2e/b',
-      'https://docs.example.com/a/%2e%2e/b',
-    ],
-    [
-      'encoded separator',
-      's3://example-bucket/a%2fb',
-      'https://docs.example.com/a%2fb',
-    ],
-    [
-      'repeated slash',
-      's3://example-bucket/a//b',
-      'https://docs.example.com/a//b',
-    ],
-  ];
+const UNSAFE_ROOT_PAIRS = [
+  [
+    'credential-bearing authority',
+    's3://access-key:secret@example-bucket/explainers',
+    'https://docs.example.com/explainers',
+  ],
+  [
+    'encoded authority delimiter',
+    's3://access-key%40example-bucket/explainers',
+    'https://docs.example.com/explainers',
+  ],
+  [
+    'authority colon',
+    's3://example-bucket:443/explainers',
+    'https://docs.example.com/explainers',
+  ],
+  [
+    'query',
+    's3://example-bucket/explainers?version=1',
+    'https://docs.example.com/explainers',
+  ],
+  [
+    'fragment',
+    's3://example-bucket/explainers#latest',
+    'https://docs.example.com/explainers',
+  ],
+  [
+    'invalid bucket',
+    's3://Example_Bucket/explainers',
+    'https://docs.example.com/explainers',
+  ],
+  [
+    'literal dot segment',
+    's3://example-bucket/a/../b',
+    'https://docs.example.com/a/../b',
+  ],
+  [
+    'encoded dot segment',
+    's3://example-bucket/a/%2e%2e/b',
+    'https://docs.example.com/a/%2e%2e/b',
+  ],
+  [
+    'encoded separator',
+    's3://example-bucket/a%2fb',
+    'https://docs.example.com/a%2fb',
+  ],
+  [
+    'repeated slash',
+    's3://example-bucket/a//b',
+    'https://docs.example.com/a//b',
+  ],
+];
 
-  for (const [label, s3Uri, publicBaseUrl] of unsafePairs) {
+test('rejects unsafe or divergent v2 publication roots at every contract surface', () => {
+  for (const [label, s3Uri, publicBaseUrl] of UNSAFE_ROOT_PAIRS) {
     const request = {
       ...publishRequestV2('protected'),
       s3Uri,
@@ -394,6 +394,118 @@ test('rejects unsafe or divergent v2 publication roots at every contract surface
       validateContract('publish-receipt', receipt).valid,
       false,
       `receipt roots: ${label}`,
+    );
+  }
+});
+
+test('validates publication roots for every publish-request version, not just v2', () => {
+  // Regression: `validatePublicationRoots` used to gate the whole semantic check
+  // on `schemaVersion === 'explainer-kit.publish-request/v2'`, so a v1 block was
+  // returned unvalidated and a credential-bearing root reached `initializeRun`
+  // and was persisted verbatim to `run-request.json`.
+  const versions = [
+    'explainer-kit.publish-request/v1',
+    'explainer-kit.publish-request/v2',
+    // A version this build does not know must still be screened, so a future
+    // v3 cannot reintroduce the bypass by virtue of not matching a literal.
+    'explainer-kit.publish-request/v3',
+  ];
+
+  for (const [label, s3Uri, publicBaseUrl] of UNSAFE_ROOT_PAIRS) {
+    for (const schemaVersion of versions) {
+      const request = {
+        ...publishRequestV2('protected'),
+        schemaVersion,
+        s3Uri,
+        publicBaseUrl,
+      };
+
+      const direct = validateContract('publish-request', request);
+      assert.equal(direct.valid, false, `direct ${schemaVersion}: ${label}`);
+      assert.ok(
+        direct.errors.some((error) => error.code === 'publish-roots'),
+        `direct ${schemaVersion} raises publish-roots: ${label}`,
+      );
+
+      const run = runRequest();
+      run.durability = { strategy: 'publish', publish: request };
+      const embedded = validateContract('run-request', run);
+      assert.equal(
+        embedded.valid,
+        false,
+        `embedded ${schemaVersion}: ${label}`,
+      );
+      assert.ok(
+        embedded.errors.some((error) => error.code === 'publish-roots'),
+        `embedded ${schemaVersion} raises publish-roots: ${label}`,
+      );
+    }
+  }
+});
+
+test('rejects credential-bearing publication roots identically at v1 and v2', () => {
+  // Exact reproduction from the final review: two run-requests identical apart
+  // from `schemaVersion` and v2's required `publicAccess`.
+  const leaking = {
+    s3Uri: 's3://AKIAV1LEAK:supersecret@example-bucket/p',
+    publicBaseUrl: 'https://user:pass@cdn.example.com/p',
+  };
+
+  for (const publish of [
+    { ...publishRequest(), ...leaking },
+    { ...publishRequestV2('public'), ...leaking },
+  ]) {
+    const run = runRequest();
+    run.durability = { strategy: 'publish', publish };
+    const result = validateContract('run-request', run);
+    assert.equal(result.valid, false, publish.schemaVersion);
+    assert.ok(
+      result.errors.some((error) => error.code === 'publish-roots'),
+      `${publish.schemaVersion} raises publish-roots`,
+    );
+  }
+});
+
+test('retains benign v1 publication roots under version-agnostic validation', () => {
+  // Closing the v1 bypass must not break legitimate v1 replay.
+  const benign = [
+    ['bare bucket', 's3://example-bucket', 'https://cdn.example.com'],
+    [
+      'single segment',
+      's3://example-bucket/explainers',
+      'https://cdn.example.com/explainers',
+    ],
+    [
+      'nested segments',
+      's3://example-bucket/repositories/duet',
+      'https://cdn.example.com/repositories/duet',
+    ],
+    [
+      'dotted bucket',
+      's3://example.bucket.name/p',
+      'https://cdn.example.com/p',
+    ],
+    [
+      'divergent hosts',
+      's3://vox-media-open-agent-toolkit/repositories/duet',
+      'https://open-agent-toolkit.voxops.net/repositories/duet',
+    ],
+    [
+      'percent-encoded segment',
+      's3://example-bucket/projects/Roadmap%20%26%20caf%C3%A9',
+      'https://cdn.example.com/projects/Roadmap%20%26%20caf%C3%A9',
+    ],
+  ];
+
+  for (const [label, s3Uri, publicBaseUrl] of benign) {
+    assert.deepEqual(
+      validateContract('publish-request', {
+        ...publishRequest(),
+        s3Uri,
+        publicBaseUrl,
+      }),
+      { valid: true, errors: [] },
+      `benign v1: ${label}`,
     );
   }
 });

@@ -466,10 +466,11 @@ function validatePublicationRoots(kind, value, errors, path = '$') {
     return;
   }
 
-  if (
-    kind.startsWith('publish-request') &&
-    value.schemaVersion === 'explainer-kit.publish-request/v2'
-  ) {
+  // Default-deny: every publish-request shape is validated, regardless of its
+  // declared schemaVersion. Keying this gate to an exact version string is what
+  // let `publish-request/v1` reach `initializeRun` with credential-bearing roots,
+  // and would let any future version reintroduce the same bypass.
+  if (kind.startsWith('publish-request')) {
     try {
       normalizePublishRoots(value.s3Uri, value.publicBaseUrl);
     } catch {
