@@ -1,6 +1,6 @@
 ---
-oat_current_task: p07-t03
-oat_last_commit: 143e15a86
+oat_current_task: null
+oat_last_commit: bcf4798077276234745d8c38fe3cb6e07188dbf6
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -72,29 +72,34 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-05T16:30:32.257Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-16T23:52:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-17T06:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-improvements-v2
 
-**Status:** Phase 7 Fix Tasks Queued — Second Final Review Received
+**Status:** All Implementation Phases Complete — Final Review Pending
 **Started:** 2026-08-05
-**Last Updated:** 2026-08-16
+**Last Updated:** 2026-08-17
 
 ## Current Phase
 
-All 34 tasks across p01 through p06 are complete, and the serial completion
-gates passed at `07e2c96d7` (check, type-check, test, build, lint, format,
-build:docs, release:validate). The fresh full final review then found 1
-Critical, 2 Important, 8 Medium, and 7 Minor findings, all converted into
-Phase 7 (`p07-t01` through `p07-t16`).
+All 50 tasks across p01 through p07 are complete. Phase 7 passed its root-owned
+review at `bcf479807` (0 Critical, 0 Important) after one bounded fix round,
+and all eight gates were independently re-run green by the root.
 
-The Critical is a fail-open publication-root validation gate: root validation
-is keyed to the exact string `publish-request/v2`, so a `v1` publish block
-bypasses it entirely and a credential-bearing root is written verbatim into
-the hash-covered `run-request.json`. `publish-request/v1` is retained by
-operator decision; `p07-t01` fixes the gate version-agnostically instead.
+Phase 7 resolved the 18 findings of the second full final review. Its own
+review then found one further defect class — a `publicAccess` option threaded
+only within a task's declared file boundary, which made protected-mode
+publication unable to reach `built-durable`, concealed by two fixtures that
+built their expected value with the same omission as the code under test. The
+fix made the option a required argument so omission throws, and swept 30 call
+sites. See the Phase p07 Outcome section in `implementation.md`.
+
+`publish-request/v1` is retained by operator decision; both the request gate
+(`p07-t01`) and the receipt gate (`p07-fix-001`) are now version-agnostic, so a
+future version cannot reintroduce the bypass. Removing v1 entirely is tracked
+as backlog `BL-260817-drop-explainer-kit-publish`.
 
 ## Artifacts
 
@@ -102,7 +107,7 @@ operator decision; `p07-t01` fixes the gate version-agnostically instead.
   `references/handoff-cyclone-case-study.md`)
 - **Spec:** N/A (quick mode; handoff acceptance criteria are normative)
 - **Design:** `design.md` (revised: executable kernel + prose-led creative layer)
-- **Plan:** `plan.md` (6 phases / 34 tasks; p06 final-review fixes)
+- **Plan:** `plan.md` (7 phases / 50 tasks; p07 second final-review fixes)
 - **Implementation:** `implementation.md` (complete; final review pending)
 
 ## Progress
@@ -151,8 +156,17 @@ operator decision; `p07-t01` fixes the gate version-agnostically instead.
 - ✓ Fresh full final review completed over `5f76ade9..07e2c96d7`
 - ✓ Both previously deferred p03 Minor findings closed (m1 accepted, m2
   resolved); residues tracked as `p07-t16` and `p07-t15`
-- ⧗ Execute `p07-t01` through `p07-t16`
-- ⧗ Re-review and reach `passed` before project completion
+- ✓ `p07-t01` through `p07-t16` implemented (16 tasks)
+- ✓ p07 review round 1 found 1 Critical + 2 Important from one propagation-gap
+  pattern concealed by self-consistent fixtures
+- ✓ Fix round `p07-fix-001` made the catalog access policy a required argument
+  and swept 30 call sites; both concealing fixtures now fail against the old
+  behavior
+- ✓ p07 review round 2 mutation-tested the fixes and passed (0 Critical, 0
+  Important)
+- ✓ All eight gates independently re-run green at `bcf479807`
+- ⧗ Fresh full final review to move the `final` event from `fixes_added` to
+  `passed`
 
 ## Blockers
 
@@ -165,8 +179,8 @@ rationale and the cross-model advisory that informed it are recorded in
 
 ## Next Milestone
 
-Resolve `p07-t03` correspondence semantics, then resume p07 from the corrected
-`p07-t03` through `p07-t16`. After the phase passes its root-owned review,
-re-run `oat-project-review-provide code final` and `oat-project-review-receive`
-to reach `passed`. The Critical itself is already closed by `p07-t01`
-(root-verified).
+Run `oat-project-review-provide code final`, then
+`oat-project-review-receive`, to move the `final` review event from
+`fixes_added` to `passed`. All implementation phases are complete and all eight
+gates are green at `bcf479807`; the project cannot close until that final event
+reaches `passed`.

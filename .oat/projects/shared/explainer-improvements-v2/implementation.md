@@ -1190,6 +1190,101 @@ new configuration surface and is filed as repo backlog rather than p07 scope.
 
 **Next:** resume p07 from the respecified `p07-t03` through `p07-t16`.
 
+### Phase p07 Outcome: PASSED at `bcf479807`
+
+**Date:** 2026-08-17
+**Tasks:** 16 of 16 complete · **Fix rounds:** 1 of 2 · **Review rounds:** 2
+
+| Round | Artifact                                   | Result                       |
+| ----- | ------------------------------------------ | ---------------------------- |
+| 1     | `reviews/p07-review-2026-08-17T053431Z.md` | 1 C, 2 I, 6 M, 8 m — blocked |
+| fix   | `159c8901c`, `bcf479807` (`p07-fix-001`)   | 3 blocking findings resolved |
+| 2     | `reviews/p07-review-2026-08-17T061620Z.md` | 0 C, 0 I, 1 M, 4 m — passed  |
+
+All eight gates independently re-run by the root at `bcf479807`: `check`,
+`type-check`, `test`, `build`, `lint`, `format`, `build:docs`,
+`release:validate`. Skill tests 566 → 569.
+
+**What round 1 found, and why it matters beyond the individual bugs.** The
+three blocking findings were one pattern, not three defects. `p07-t03` added a
+`publicAccess` option to `catalogFromManifest`; it was threaded through the
+call sites inside the task's declared file boundary and missed the ones
+outside. The reviewer's structural observation: the four files carrying the gap
+— `durability.mjs`, `durability.test.mjs`, `private-wrapper.mjs`,
+`wrapper-compatibility.test.mjs` — are exactly the four absent from
+`6f20182cd`'s seven-file diff. Consequence: because the omitted option
+defaulted to the permissive branch, a `protected` run published a catalog
+marked `skipped-by-policy` and the verifier rebuilt it as `required`, so
+protected-mode publication could never reach `built-durable` — a total
+functional regression in the mode the handoff exists to serve. A third finding
+showed the same shape in a different dimension: `contracts.mjs:487-489` still
+pinned the receipt branch to an exact version string, fourteen lines below the
+`p07-t01` comment condemning exactly that construct, leaving a
+credential-bearing `publish-receipt/v1` unvalidated.
+
+Every one of these was invisible to all eight gates.
+
+**Why the tests did not catch it.** Both concealing fixtures built their
+expected value with the same omission as the code under test:
+`durability.test.mjs:630` and `wrapper-compatibility.test.mjs:354` each receive
+`publicAccess`, use it for neighbouring fields, and drop it for the catalog.
+Verifier and fixture agreed with each other and both disagreed with the real
+producer. This is the third distinct vacuous-fixture defect in this project
+(the prior final review's M2 was a vacuous canary row; `p07-t12` exists to
+de-vacuum those rows).
+
+**How the fix round addressed the class rather than the instances.**
+`catalogFromManifest` and `validateInitiativeCatalog` now _require_ an explicit
+`{ publicAccess }`; omission throws. An explicit `{ publicAccess: undefined }`
+is permitted and reads as `public`, which is correct for v1 records that carry
+no such field. Round 2 assessed this design specifically and judged it sound:
+the distinction is drawn against the call site's **syntax**
+(`'publicAccess' in options`), which cannot be satisfied by accident of data
+flow, so it targets exactly the defect class rather than renaming the default.
+No new failure mode on v1 paths — v1 records never reach either function
+(`durability.mjs:380` is v2-gated, `run.mjs:2876-2877` early-returns) and on v2
+branches `publicAccess` is schema-required with `enum: ["public","protected"]`.
+30 call sites verified threaded, with two deliberate unthreaded calls in the
+guard test.
+
+**Evidence standard applied to the fixture claims.** Given the vacuous-fixture
+history, neither the root nor round 2 accepted the author's red-then-green
+account. Round 2 mutation-tested all three fixes in a disposable worktree; each
+reintroduced defect turns its fixture red (durability 13/15, wrapper 4/5,
+contracts 44/45), corroborating the reported figures. The fix round also added
+`records durability from a receipt the real connector produced, in both access
+modes`, which drives the shipped `publishS3Static` through the real
+`incomplete`/`publish: running` transition into the real `recordDurability`,
+faking only the `aws` process boundary.
+
+**Two root premises corrected by round 2**, recorded because the corrections
+were against instructions the root supplied: the guard test does **not** skip
+the explicit-`undefined` case — it skips it inside the throw loop, correctly,
+then asserts it separately at `contracts.test.mjs:786-790` (root verified); and
+there are **two** deliberate unthreaded calls (`:767` and `:773`), not one.
+Round 2 also refuted a worker claim rather than passing it through: marker
+direction is not single-point-anchored, being independently pinned at
+`s3-static.test.mjs:143-145`, `:196-211`, and `publish-boundary.test.mjs:158`.
+
+**Non-blocking findings carried to final review.** Round 1's 6 Medium and 8
+Minor and round 2's 1 Medium and 4 Minor are recorded without blocking, per the
+phase-gate contract. Known items include: `validateInitiativeCatalog` is still
+not invoked from `durability.mjs`; the strict guard converts a forgotten
+argument into a hard error but leaves an expression that evaluates to
+`undefined` silently permissive (no site exposed today); a pre-existing
+tautology in the RC release-lane fixture; and the two new vacuous assertions
+round 1 identified at `e2e-recap.test.mjs:594-599` and `catalog.mjs:156-166`.
+
+**Still open from the source review, unchanged by p07:** the unscreened C1
+control range (`0x80`–`0x9f`, including CSI `0x9b`); the literal-only address
+policy (`https://vault.internal/p` still accepted); and the undocumented
+`EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT` and
+`EXPLAINER_KIT_SUPPRESS_ROOT_DIVERGENCE_WARNING` environment variables.
+
+**Next:** all implementation phases are complete. Run
+`oat-project-review-provide code final` to move the `final` review event from
+`fixes_added` to `passed`.
+
 ## References
 
 - Plan: `plan.md`

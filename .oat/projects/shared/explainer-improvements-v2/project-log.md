@@ -148,6 +148,10 @@ Phase p07 stopped direction-required after 4/16 tasks at 143e15a86: p07-t03's st
 
 Operator authorized changed scope for p07-t03 after cross-model advisory: remove the unsound root-correspondence rule rather than narrow it, surface protected-mode uncertainty as catalog verification state, and file authenticated public-URL verification as backlog BL-260817-verify-protected-mode-public.
 
+### 2026-08-17 · structural · oat-project-implement · p07
+
+Phase p07 passed at bcf479807 after 16 tasks and one bounded fix round: review round 1 (reviews/p07-review-2026-08-17T053431Z.md) found 1 Critical + 2 Important from one propagation-gap pattern concealed by self-consistent fixtures; fix round p07-fix-001 made the catalog access policy a required argument and swept 30 call sites; review round 2 (reviews/p07-review-2026-08-17T061620Z.md) mutation-tested the fixtures and passed with 0 Critical / 0 Important.
+
 ## End-of-run synthesis (implementation complete; final review pending)
 
 Implementation completed all 34 tasks and adopted two load-bearing adjustments:
