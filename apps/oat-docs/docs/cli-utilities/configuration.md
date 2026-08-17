@@ -138,6 +138,7 @@ plumbing uses `explainers.*`; project lifecycle preferences use
 | `explainers.publish.publicBaseUrl`     | HTTPS URL                    | shared              | unset           |
 | `explainers.publish.awsRegion`         | non-empty string             | shared              | unset           |
 | `explainers.publish.awsProfile`        | non-empty string             | local, user         | unset           |
+| `explainers.publish.publicAccess`      | `public\|protected`          | shared              | `public`        |
 | `workflow.explainers.projectExplainer` | `always\|ask\|never`         | local, shared, user | `ask`           |
 | `workflow.explainers.projectRecap`     | `always\|ask\|never`         | local, shared, user | `ask`           |
 
@@ -171,6 +172,18 @@ required. `awsProfile` is optional; when absent, the standard AWS credential
 chain applies. Config never starts publishing by itself: lifecycle callers must
 still select publish durability explicitly, and publishing remains
 human-gated. Raw AWS credentials are not config keys.
+
+`publicAccess` declares whether published objects are expected to be reachable
+anonymously; it does not authorize publication and it does not change any
+bucket policy. It selects how publication is verified. The default `public`
+fetches every uploaded object over HTTPS and compares the returned bytes
+against the manifest hash. `protected` skips those anonymous fetches, verifies
+each object through authenticated S3 hashing instead, and records
+`skipped-protected` in the publish receipt. Because no anonymous fetch happens
+under `protected`, a mistyped `publicBaseUrl` is not detected at publish time:
+the advertised URLs are still written into the initiative catalog and receipt,
+and the catalog records `publicVerification: "skipped-by-policy"` so consumers
+can see the URLs were never exercised.
 
 See [Explainer Kit](../workflows/skills/explainer-kit.md) for recipes, artifact
 locations, lifecycle behavior, and durability.
