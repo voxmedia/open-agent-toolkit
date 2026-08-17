@@ -20,8 +20,20 @@ DISPATCH_MATRIX_RECOMMENDATION_SOURCE="${REPO_ROOT}/$(node "${INVENTORY}" --get 
 STAGING="${ASSETS}.staging.$$"
 PREVIOUS="${ASSETS}.previous.$$"
 
+# The trap must not destroy the only surviving copy. If the first rename below
+# succeeded and the second then failed, ASSETS does not exist while PREVIOUS
+# holds the entire previous bundle; deleting it unconditionally would leave no
+# assets directory at all — the opposite of what staging is for. Restore in that
+# case, and only discard PREVIOUS when ASSETS is actually present.
 cleanup() {
-  rm -rf "${STAGING}" "${PREVIOUS}"
+  rm -rf "${STAGING}"
+  if [ -e "${PREVIOUS}" ]; then
+    if [ -e "${ASSETS}" ]; then
+      rm -rf "${PREVIOUS}"
+    else
+      mv "${PREVIOUS}" "${ASSETS}"
+    fi
+  fi
 }
 trap cleanup EXIT
 
