@@ -782,9 +782,13 @@ async function enforceInternalReferenceGate(state, options, now) {
         },
       );
     } catch (error) {
-      throw codedError(
-        'E_INTERNAL_REFERENCE',
-        `Internal-reference correction failed for ${artifactId}: ${safeMessage(error)}`,
+      throw withEvidenceReason(
+        codedError(
+          'E_INTERNAL_REFERENCE',
+          `Internal-reference correction failed for ${artifactId}: ${safeMessage(error)}`,
+        ),
+        'link-validation',
+        'pipeline-failure',
       );
     }
     await installCorrectedArtifact(state, artifactIndex, item);
@@ -859,14 +863,24 @@ async function installCorrectedArtifact(state, artifactIndex, item) {
 }
 
 function internalReferenceError(errors) {
-  return codedError(
-    'E_INTERNAL_REFERENCE',
-    errors
-      .map(
-        ({ code, renderedPath, reference, message }) =>
-          `${code}: ${renderedPath ?? 'site'}${reference ? ` references ${reference}` : ''}: ${message}`,
-      )
-      .join('; '),
+  // `link-validation` is one of the eight closed evidence stages and is
+  // accepted by both evidence schemas, but the gate runs inside the `qa` build
+  // stage, and `evidenceStageForBuildStage` maps `qa -> browser-review`. Without
+  // an explicit local reason a broken internal link is durably recorded as a
+  // browser-review failure, which is the one thing the closed stage enum exists
+  // to prevent. Fail-closed behavior is unchanged; only attribution improves.
+  return withEvidenceReason(
+    codedError(
+      'E_INTERNAL_REFERENCE',
+      errors
+        .map(
+          ({ code, renderedPath, reference, message }) =>
+            `${code}: ${renderedPath ?? 'site'}${reference ? ` references ${reference}` : ''}: ${message}`,
+        )
+        .join('; '),
+    ),
+    'link-validation',
+    'pipeline-failure',
   );
 }
 

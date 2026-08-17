@@ -1158,7 +1158,10 @@ test('internal-reference validation fails before browser review and durability',
   );
 
   assert.equal(result.outcome, 'failed');
-  assertLocalReason(result, 'browser-review');
+  // The gate runs inside the `qa` build stage, which maps to `browser-review`,
+  // so this used to be recorded as a browser-review failure even though the
+  // browser was never invoked. `link-validation` is the declared stage for it.
+  assertLocalReason(result, 'link-validation');
   assert.equal(correctArtifact.mock.callCount(), 1);
   assert.equal(browserProbe.mock.callCount(), 0);
   assert.equal(durability.mock.callCount(), 0);
@@ -1301,7 +1304,9 @@ test('visual correction with a missing target fails before another review or ext
   );
 
   assert.equal(result.outcome, 'failed');
-  assertLocalReason(result, 'browser-review');
+  // The corrected artifact still points at a missing target, so the failure is
+  // raised by the internal-reference gate rather than by browser review.
+  assertLocalReason(result, 'link-validation');
   assert.equal(visualCritic.mock.callCount(), 1);
   assert.equal(correctArtifact.mock.callCount(), 1);
   assert.equal(durability.mock.callCount(), 0);
