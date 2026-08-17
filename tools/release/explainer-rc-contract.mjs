@@ -68,6 +68,7 @@ export function assertReleaseCandidate(candidate, fail) {
     ['id', 'version', 'schemaVersion', 'path', 'sha256'],
     fail,
     ({ id, version }) => `${id}@${version}`,
+    byRecipeIdentity,
   );
   if (
     !Array.isArray(candidate.changedCandidates) ||
@@ -144,7 +145,13 @@ function assertSkills(skills, fail) {
   }
 }
 
-function assertIdentityEntries(entries, keys, fail, identity = ({ id }) => id) {
+function assertIdentityEntries(
+  entries,
+  keys,
+  fail,
+  identity = ({ id }) => id,
+  compare = undefined,
+) {
   if (!Array.isArray(entries) || entries.length === 0) {
     fail('Release candidate contract identities are incomplete.');
   }
@@ -163,12 +170,27 @@ function assertIdentityEntries(entries, keys, fail, identity = ({ id }) => id) {
     }
   }
   const identities = entries.map(identity);
+  // The expected order must be computed with the same comparator the builder
+  // uses. Sorting the composed `id@version` strings instead disagrees with the
+  // builder's (id, version) tuple whenever one recipe id is a strict prefix of
+  // another, because `-` (0x2D) sorts before `@` (0x40): the builder emits
+  // ['project@1', 'project-explainer@1'] while a string sort expects the
+  // reverse, so a valid RC would be rejected.
+  const expected = compare
+    ? [...entries].sort(compare).map(identity)
+    : [...identities].sort();
   if (
     new Set(identities).size !== identities.length ||
-    !isDeepStrictEqual(identities, [...identities].sort())
+    !isDeepStrictEqual(identities, expected)
   ) {
     fail('Release candidate contract identities must be unique and sorted.');
   }
+}
+
+/** Mirrors `byRecipeIdentity` in `build-explainer-rc.mjs`. */
+function byRecipeIdentity(left, right) {
+  const byId = left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
+  return byId || left.version.localeCompare(right.version);
 }
 
 function assertObject(value, fail) {
