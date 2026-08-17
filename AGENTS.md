@@ -50,6 +50,11 @@ they earned their place here because while the skill gate ran only in CI,
 changes reached review twice with a version bump no local gate would have
 surfaced.
 
+Capture each gate's exit code explicitly (for example
+`pnpm <gate> > gate.log 2>&1; echo "exit=$?"`); never derive success from a
+pipeline whose final stage is a pager or filter — `pnpm <gate> | tail && echo OK`
+reports `tail`'s exit status and prints OK even when the gate fails.
+
 CI runs neither `pnpm lint` nor `pnpm format`. Run both whenever a change
 touches `tools/smoke` or `.agents/skills`, since nothing else covers them.
 
