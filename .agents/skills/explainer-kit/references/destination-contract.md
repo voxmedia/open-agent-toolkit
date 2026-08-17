@@ -16,11 +16,33 @@ replay. Credentials come only from the standard AWS credential chain or the
 request's optional profile. Never put access keys, secret keys, session tokens,
 or SSO tokens in a request.
 
-## Corresponding roots
+## How the two roots compose
 
-`s3Uri` and `publicBaseUrl` must identify corresponding roots. Both are
-normalized without trailing slashes. For a path `P` relative to `siteRoot`, the
-connector writes `<s3Uri>/P` and verifies `<publicBaseUrl>/P`.
+`s3Uri` and `publicBaseUrl` are each normalized without trailing slashes. For a
+path `P` relative to `siteRoot`, the connector writes `<s3Uri>/P` and verifies
+`<publicBaseUrl>/P`. That composition is the whole of the relationship.
+
+**No relational validation is performed between the two roots, by design.** The
+mapping from an S3 key to a public URL is underdetermined by these two strings:
+it lives in CDN configuration the connector cannot read. Both of these are
+legitimate, and they disagree structurally:
+
+| Shape | `s3Uri`                      | `publicBaseUrl`               |
+| ----- | ---------------------------- | ----------------------------- |
+| A     | `s3://bucket/repositories/x` | `https://host/repositories/x` |
+| B     | `s3://bucket/explainers`     | `https://host`                |
+
+B is an ordinary CloudFront **Origin Path** deployment, where a bucket prefix is
+mapped to the distribution root. Requiring the public path to equal the S3 key
+prefix rejects it. Suffix-containment does not rescue the rule either — an empty
+public path is a suffix of everything, so B would pass vacuously while
+path-rewriting deployments (CloudFront Functions, Lambda@Edge, custom origins)
+still produce false rejections.
+
+Divergence between the two paths is therefore reported as a **non-blocking
+warning**, never a failure. Correctness of an advertised URL is established by
+verification, not by string shape — which is also why `publicAccess: protected`,
+where no anonymous fetch happens, cannot establish it at all.
 
 For example:
 
@@ -34,7 +56,9 @@ For example:
 | public URL              | `https://cdn.example.com/published/initiatives/demo/index.html` |
 
 Use explicit `index.html` URLs. Directory redirects are not portable evidence.
-The destination must serve uploaded bytes at the corresponding public path.
+The destination must serve the uploaded bytes at the composed public path. That
+is a requirement on the deployment, not something the connector validates from
+the two root strings; see below.
 
 ## The manifest a connector receives is intentionally incomplete
 
@@ -127,9 +151,60 @@ not run `aws sso login`, retry with another profile, expose AWS diagnostics, or
 persist credentials. Refresh credentials separately and rerun after approval.
 
 Only transient individual object-operation failures receive bounded retries.
-Input, authorization, root-correspondence, metadata, and public-verification
-failures are not retried. A failed publish preserves the local package.
+Input, authorization, metadata, and public-verification failures are not
+retried. A failed publish preserves the local package.
 
 Public roots must be credential-free HTTPS URLs with no username, password,
-query, or fragment. Invalid roots fail before AWS or HTTP operations and are
-never persisted in receipts.
+query, or fragment. Three further rejections apply, all before any AWS or HTTP
+operation, and none of them are ever persisted in receipts:
+
+- **Control characters.** Any codepoint in `0x00`–`0x1f` or `0x7f`–`0x9f`, and
+  any backslash, in either root. These otherwise reach S3 object keys, composed
+  public URLs, the catalog, the receipt and `aws` argv; `0x9b` is the 8-bit CSI.
+- **Non-public addresses.** Loopback, link-local (`169.254.0.0/16`, `fe80::/10`,
+  including the `169.254.169.254` instance-metadata address), unique-local
+  (`fc00::/7`) and RFC 1918 private hosts, in both literal IPv4 and IPv6 forms
+  including IPv4-mapped spellings. Public verification issues an outbound GET
+  against whatever the root names, so an unconstrained root is a request
+  primitive aimed at internal addresses. Set
+  `EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT=1` to opt back in for a genuinely
+  internal mirror. The policy is address-literal only: a hostname that happens
+  to resolve inward is not detected.
+- **Redirects.** Public verification uses `redirect: 'error'`. A canonical
+  artifact URL is uploaded to a known key and should never legitimately
+  redirect, so any redirecting destination is a hard verification failure rather
+  than something to follow. A destination that requires redirects is
+  incompatible with this connector and will report as such rather than failing
+  opaquely later.
+
+## The generated initiative catalog
+
+The connector generates one auxiliary artifact the manifest does not declare: an
+initiative catalog at `site/initiatives/<slug>/catalog.json`, uploaded alongside
+the declared artifacts and recorded in the receipt as
+`source: { kind: 'auxiliary', name: 'catalog' }`.
+
+A third-party connector must reproduce it **byte for byte**, because
+`recordDurability` rebuilds it from the manifest and compares hashes; a mismatch
+rejects the publication with `cross-record-mismatch`. Build it with
+`catalogFromManifest(manifest, publicBaseUrl, { publicAccess })` and serialize
+with `serializeInitiativeCatalog`, rather than constructing it by hand.
+
+Two properties matter most:
+
+- The `{ publicAccess }` option is **required**. Omitting it raises a
+  `TypeError` rather than defaulting, because the policy selects a field inside
+  the serialized bytes and therefore changes the hash. Pass
+  `{ publicAccess: undefined }` for `publish-request/v1`, which has no such
+  field and is public by definition.
+- `publicVerification` carries **policy, never outcome**: `"required"` for
+  public destinations and `"skipped-by-policy"` for protected ones. The catalog
+  is serialized and hashed before the first upload and long before any
+  per-artifact verification runs, so it cannot carry a verification result
+  without invalidating its own hash. The authoritative outcome lives in the
+  publish receipt, which the catalog's `runId` identifies. Never write
+  `"verified"` into a catalog.
+
+Publishability is gated by `assertManifestPublishable`, which raises
+`E_PUBLISH_OUTCOME` for a manifest that is not eligible; see the intermediate
+`incomplete` state described above.

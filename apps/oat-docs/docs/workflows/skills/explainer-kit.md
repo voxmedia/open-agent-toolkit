@@ -360,8 +360,9 @@ Build success and durability are separate:
 
 The core verifies caller-supplied commit or publish evidence; it never creates
 Git commits. Publishing is always explicitly requested and human-gated. The
-public `s3-static` connector validates corresponding S3 and HTTPS roots with a
-run-unique sentinel, uploads only manifest-declared `site/` files, verifies the
+public `s3-static` connector validates each S3 and HTTPS root independently and
+proves the destination with a run-unique sentinel, uploads only
+manifest-declared `site/` files, verifies the
 content type and SHA-256 response bytes at public URLs, and writes
 `publish-receipt.json`. Public roots cannot contain credentials, queries, or
 fragments. Publishing is additive and does not run a root-wide destructive
