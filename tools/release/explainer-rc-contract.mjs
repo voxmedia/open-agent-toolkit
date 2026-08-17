@@ -187,8 +187,16 @@ function assertIdentityEntries(
   }
 }
 
-/** Mirrors `byRecipeIdentity` in `build-explainer-rc.mjs`. */
-function byRecipeIdentity(left, right) {
+/**
+ * The single recipe-identity comparator, shared with `build-explainer-rc.mjs`.
+ *
+ * The builder and the contract previously carried transcribed copies bound only
+ * by a comment, so they could silently diverge again. They disagree whenever one
+ * recipe id is a strict prefix of another, because `-` (0x2D) sorts before `@`
+ * (0x40): sorting the composed `id@version` strings puts `project-explainer@1`
+ * before `project@1`, while this tuple order puts `project@1` first.
+ */
+export function byRecipeIdentity(left, right) {
   const byId = left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
   return byId || left.version.localeCompare(right.version);
 }
