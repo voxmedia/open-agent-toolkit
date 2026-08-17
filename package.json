@@ -26,6 +26,7 @@
     "lint": "turbo run lint && pnpm exec oxlint tools/smoke .agents/skills",
     "lint:fix": "turbo run lint:fix && pnpm exec oxlint --fix tools/smoke .agents/skills",
     "prepare": "test \"$GIT_HOOKS\" = \"0\" && exit 0; node tools/git-hooks/manage-hooks.js setup 2>/dev/null || true",
+    "check:skill-bumps": "pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main",
     "release:check-versions": "tsx tools/release/check-version-bumps.ts",
     "release:validate": "tsx tools/release/validate-public-packages.ts && pnpm release:validate:visual",
     "release:validate:visual": "node tools/release/validate-explainer-visuals.mjs --output dist/explainer-visual-validation.json",

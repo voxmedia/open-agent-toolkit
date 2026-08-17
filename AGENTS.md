@@ -39,6 +39,13 @@ Every change runs the checks CI gates on, in this order:
 2. `pnpm type-check`
 3. `pnpm test`
 4. `pnpm build`
+5. `pnpm run check:skill-bumps`
+6. `pnpm release:check-versions`
+
+Steps 5 and 6 are the two version-lockstep gates CI runs. They are listed here
+because this local gate list must be a superset of CI: while the skill gate ran
+only in CI, changes reached review twice with a version bump that no local gate
+would have surfaced.
 
 CI runs none of `pnpm lint`, `pnpm format`, or `pnpm build:docs`. Run `pnpm lint`
 and `pnpm format` whenever a change touches `tools/smoke` or `.agents/skills`,
