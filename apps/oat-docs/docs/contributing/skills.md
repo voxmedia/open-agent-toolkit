@@ -43,6 +43,15 @@ Skill behavior is defined by frontmatter plus the process contract in each `SKIL
 - `allowed-tools`
 - `oat_gateable`
 
+### The `version` field is gated
+
+Changing any canonical skill's `SKILL.md` requires bumping its frontmatter
+`version` in the same PR — one bump per changed skill in the final PR diff,
+even if the skill was edited multiple times on the branch. The rule is
+enforced by `pnpm run check:skill-bumps`, which runs locally (root `AGENTS.md`
+Definition of Done) and in CI; a changed skill whose version matches
+`origin/main` fails the gate.
+
 ## Practical Authoring Flow
 
 1. Decide whether you are adding a general reusable skill or an OAT-specific lifecycle skill.

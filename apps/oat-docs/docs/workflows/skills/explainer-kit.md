@@ -334,9 +334,17 @@ Reviewed source and citation backlinks are absolute canonical GitHub blob URLs
 pinned to the exact 40-character commit revision and line range, so they
 survive project archival without resolving through a mutable branch or local
 checkout. Each recap also emits
-`site/initiatives/<slug>/catalog.json` from the finalized manifest. Its
-artifact IDs, types, paths, URLs, and source backlinks must remain in exact
-manifest parity; authors do not hand-maintain the catalog.
+`site/initiatives/<slug>/catalog.json` from the finalized manifest, versioned
+as `explainer-kit.initiative-catalog/v2`. Its artifact IDs, types, paths,
+URLs, and source backlinks must remain in exact manifest parity; authors do
+not hand-maintain the catalog. The catalog's `publicVerification` field is a
+**policy marker, never an outcome**: `required` when the run's public access
+policy calls for anonymous URL verification, `skipped-by-policy` for
+protected destinations. It records what the publication policy was — the
+per-artifact verification outcomes live in `publish-receipt.json`.
+Compatibility is regenerate-only: consumers parse the declared version, and
+no v1 read path exists because no released consumer could verify v1 catalog
+evidence.
 
 `manifest.immutableHashes` covers the exact retained bytes for
 `run-request.json`, content approval, fact-base JSON and Markdown, declared
@@ -362,11 +370,23 @@ The core verifies caller-supplied commit or publish evidence; it never creates
 Git commits. Publishing is always explicitly requested and human-gated. The
 public `s3-static` connector validates each S3 and HTTPS root independently and
 proves the destination with a run-unique sentinel, uploads only
-manifest-declared `site/` files, verifies the
-content type and SHA-256 response bytes at public URLs, and writes
-`publish-receipt.json`. Public roots cannot contain credentials, queries, or
-fragments. Publishing is additive and does not run a root-wide destructive
-sync.
+manifest-declared `site/` files, and writes `publish-receipt.json`.
+Verification depends on the declared `publicAccess` policy: in `public` mode
+the connector anonymously fetches each published URL and compares content
+type and SHA-256 response bytes; in `protected` mode it verifies object
+integrity through authenticated S3 hashing instead, and every receipt entry
+records `publicVerification: skipped-protected` so the skipped anonymous
+check is visible rather than implied.
+
+Root screening is strict on both roots: no credentials, queries, or
+fragments; no whitespace, C0/C1 control characters, or backslashes; and the
+gate applies to every publish-request and publish-receipt contract version
+rather than being pinned to one version string. Public roots must be HTTPS
+and must not address loopback, link-local, or private networks, and
+verification fetches refuse redirects (`redirect: 'error'`) — see the
+[publication environment variables](/docs/cli-utilities/configuration#explainer-publication-environment-variables)
+for the explicit private-root opt-in and its durable receipt trace.
+Publishing is additive and does not run a root-wide destructive sync.
 
 Release validation drives the bounded curated-style/template matrix in a real
 installed Chromium browser and retains machine-readable viewport, clipping,
@@ -414,8 +434,9 @@ typed adapter settings.
 Private integrations use the core boundary directly: resolve private inputs
 before the run, construct one versioned request, invoke the core once, then
 publish or link the versioned manifest after the run. Wrapper acceptance reads
-the complete post-run `PublishReceiptV1`, verifies every manifest artifact and
-the core run ID, and rejects foreign or stale receipts. Presets, private source
+the complete post-run `publish-receipt/v2`, verifies every manifest artifact
+and the core run ID, and rejects foreign or stale receipts; `publish-receipt/v1`
+remains readable for replay of older runs only. Presets, private source
 systems, external-document synchronization, and personal destinations remain
 wrapper-owned.
 

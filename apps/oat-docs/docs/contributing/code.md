@@ -41,18 +41,30 @@ OAT is organized as a pnpm workspace with Turborepo orchestration.
 
 ## Quality Gates
 
-Run the workspace checks that match your change surface:
+Every change runs the ordered Definition of Done from the root `AGENTS.md`,
+which mirrors CI's gate steps exactly so a locally green run implies CI green:
 
 ```bash
-pnpm test
-pnpm lint
-pnpm format
+pnpm check
 pnpm type-check
-pnpm build          # excludes docs for speed
-pnpm build:docs     # builds docs site and its dependencies
+pnpm test
+pnpm build                    # excludes docs for speed
+pnpm run check:skill-bumps    # changed .agents/skills/*/SKILL.md must bump version
+pnpm release:check-versions   # lockstep public package version bumps
+pnpm release:validate
+pnpm build:docs               # builds docs site and its dependencies
 ```
 
-For narrower changes, use package-specific checks when possible, but do not merge without passing the relevant workspace gates.
+`pnpm test` is composite: it runs the workspace vitest suites, then
+`test:smoke` (`tools/smoke`), `test:skills` (`.agents/skills/*/tests`), and
+the named-file `test:release` set. Steps 5 and 6 are the version-lockstep
+gates; they are in the local list because they previously ran only in CI and
+version-bump drift twice reached review with no local gate to surface it.
+
+CI runs neither `pnpm lint` nor `pnpm format` — run both whenever a change
+touches `tools/smoke` or `.agents/skills`, since nothing else covers them.
+For narrower changes, use package-specific checks when possible, but do not
+merge without passing the relevant workspace gates.
 
 ### TypeScript and type-aware linting
 

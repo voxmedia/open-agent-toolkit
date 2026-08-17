@@ -119,9 +119,12 @@ pnpm check
 pnpm type-check
 pnpm test
 pnpm build
+pnpm run check:skill-bumps
+pnpm release:check-versions
+pnpm release:validate
+pnpm build:docs
 pnpm lint
 pnpm format
-pnpm build:docs
 git diff --check
 ```
 
