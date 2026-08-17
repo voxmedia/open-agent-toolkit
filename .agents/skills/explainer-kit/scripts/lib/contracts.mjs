@@ -49,6 +49,34 @@ const SCHEMAS = Object.fromEntries(
 const SCHEMAS_BY_ID = new Map(
   Object.values(SCHEMAS).map((schema) => [schema.$id, schema]),
 );
+// `validateContract` accepts a schema `$id` as its `kind`, but every downstream
+// gate matches on the short registry form. `'explainer-kit.publish-request/v1'`
+// does not start with `'publish-request'`, so an `$id`-form call skipped the
+// default-deny publication-root gate entirely and answered `valid: true` for a
+// credential-bearing root. Normalize once, here, so no individual gate has to
+// remember to handle both spellings.
+const KIND_BY_SCHEMA_ID = new Map(
+  Object.entries(SCHEMAS).map(([kind, schema]) => [schema.$id, kind]),
+);
+
+function canonicalContractKind(kind) {
+  return KIND_BY_SCHEMA_ID.get(kind) ?? kind;
+}
+
+const LEGACY_PUBLISH_RECEIPT = 'explainer-kit.publish-receipt/v1';
+
+/**
+ * True for every publish-receipt shape except the retained v1 replay form.
+ *
+ * Stated as "not v1" rather than "=== v2" on purpose: keying verification to an
+ * exact version string means a future `publish-receipt/v3` silently skips
+ * sentinel verification and per-artifact validation, which is the same
+ * fail-open shape the publication-root gate was rewritten to eliminate. v1 is
+ * the only version that legitimately lacks these facts.
+ */
+export function isVerifiablePublishReceipt(value) {
+  return value?.schemaVersion !== LEGACY_PUBLISH_RECEIPT;
+}
 const RAW_SECRET_KEYS = new Set([
   'accesskey',
   'accesskeyid',
@@ -89,12 +117,15 @@ export function validateContract(kind, value, context = {}) {
   }
 
   const errors = [];
+  // Every gate below matches on the short registry form, so an `$id`-form kind
+  // is normalized before dispatch rather than in each gate.
+  const canonicalKind = canonicalContractKind(kind);
   findRawSecrets(value, '$', errors);
   validateSchema(schema, value, '$', schema, errors);
-  validateContractPaths(kind, value, errors);
-  validatePublicationRoots(kind, value, errors);
-  validateCrossRecord(kind, value, context, errors);
-  validateSourceBacklinks(kind, value, errors);
+  validateContractPaths(canonicalKind, value, errors);
+  validatePublicationRoots(canonicalKind, value, errors);
+  validateCrossRecord(canonicalKind, value, context, errors);
+  validateSourceBacklinks(canonicalKind, value, errors);
   return { valid: errors.length === 0, errors };
 }
 
@@ -491,8 +522,7 @@ function validatePublicationRoots(kind, value, errors, path = '$') {
     // internal-address roots straight through to `publish-receipt.json`, a
     // retained hash-covered member of the run package, and on into the
     // `publish-summary/v1` projection.
-    const receiptV2 =
-      value.schemaVersion === 'explainer-kit.publish-receipt/v2';
+    const receiptV2 = isVerifiablePublishReceipt(value);
     let roots;
     try {
       roots = normalizePublishRoots(
@@ -1107,10 +1137,7 @@ function validateCrossRecord(kind, value, context, errors) {
     }
   }
 
-  if (
-    kind === 'publish-receipt' &&
-    value.schemaVersion === 'explainer-kit.publish-receipt/v2'
-  ) {
+  if (kind.startsWith('publish-receipt') && isVerifiablePublishReceipt(value)) {
     const sentinel = value.sentinel;
     if (
       sentinel?.objectVerification?.status !== 'verified' ||
@@ -1176,10 +1203,7 @@ function validateCrossRecord(kind, value, context, errors) {
           'Publish receipt artifact does not match the manifest.',
         );
       }
-      if (
-        value.schemaVersion === 'explainer-kit.publish-receipt/v2' &&
-        isObject(artifact)
-      ) {
+      if (isVerifiablePublishReceipt(value) && isObject(artifact)) {
         validatePublishReceiptV2Artifact(
           value,
           artifact,

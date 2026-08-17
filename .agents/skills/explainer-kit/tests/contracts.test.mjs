@@ -19,6 +19,7 @@ import {
 } from '../scripts/lib/catalog.mjs';
 import {
   canonicalHash,
+  isVerifiablePublishReceipt,
   validateContract,
   visualReviewRequestId,
 } from '../scripts/lib/contracts.mjs';
@@ -442,6 +443,104 @@ test('validates publication roots for every publish-request version, not just v2
       );
     }
   }
+});
+
+test('screens publication roots when the kind is given in schema-$id form', () => {
+  // `validateContract` accepts a schema `$id` as its kind, but every gate below
+  // matched the short registry form, and
+  // `'explainer-kit.publish-request/v1'.startsWith('publish-request')` is false.
+  // The `$id` form therefore skipped the default-deny root gate entirely and
+  // answered `valid: true` for a credential-bearing root — the last surviving
+  // instance of the fail-open shape the request gate was rewritten to remove.
+  // `scripts/validate.mjs` passes `argv[0]` straight through, so this is the
+  // exact spelling an operator checking a publish config would use.
+  const leaking = {
+    s3Uri: 's3://AKIAV1LEAK:supersecret@example-bucket/p',
+    publicBaseUrl: 'https://169.254.169.254/p',
+  };
+
+  const requestKinds = [
+    'publish-request',
+    'publish-request/v1',
+    'publish-request/v2',
+    'explainer-kit.publish-request/v1',
+    'explainer-kit.publish-request/v2',
+  ];
+  for (const kind of requestKinds) {
+    const request = { ...publishRequestV2('public'), ...leaking };
+    const result = validateContract(kind, request);
+    assert.equal(result.valid, false, `request kind ${kind}`);
+    assert.ok(
+      result.errors.some((error) => error.code === 'publish-roots'),
+      `request kind ${kind} raises publish-roots`,
+    );
+  }
+
+  const receiptKinds = [
+    'publish-receipt',
+    'publish-receipt/v1',
+    'publish-receipt/v2',
+    'explainer-kit.publish-receipt/v1',
+    'explainer-kit.publish-receipt/v2',
+  ];
+  for (const kind of receiptKinds) {
+    const receipt = kind.includes('/v1')
+      ? publishReceipt()
+      : publishReceiptV2();
+    receipt.roots = { ...leaking };
+    const result = validateContract(kind, receipt);
+    assert.equal(result.valid, false, `receipt kind ${kind}`);
+    assert.ok(
+      result.errors.some((error) => error.code === 'publish-roots'),
+      `receipt kind ${kind} raises publish-roots`,
+    );
+  }
+});
+
+test('gates receipt verification on "not v1" rather than an exact version', () => {
+  // Sentinel verification and per-artifact validation were keyed to the exact
+  // string `explainer-kit.publish-receipt/v2`, so a future v3 would silently
+  // skip both — the same fail-open shape the root gate was rewritten to remove.
+  //
+  // This asserts the predicate directly. Going through `validateContract`
+  // cannot distinguish the two implementations today, because the schema
+  // registry rejects an unregistered version before the predicate is reached;
+  // a test routed that way would pass against either version and prove nothing.
+  assert.equal(
+    isVerifiablePublishReceipt({
+      schemaVersion: 'explainer-kit.publish-receipt/v1',
+    }),
+    false,
+    'v1 legitimately lacks the verification facts',
+  );
+  for (const schemaVersion of [
+    'explainer-kit.publish-receipt/v2',
+    'explainer-kit.publish-receipt/v3',
+    'explainer-kit.publish-receipt/v10',
+  ]) {
+    assert.equal(
+      isVerifiablePublishReceipt({ schemaVersion }),
+      true,
+      `${schemaVersion} must be verified, not skipped`,
+    );
+  }
+  assert.equal(isVerifiablePublishReceipt({}), true);
+  assert.equal(isVerifiablePublishReceipt(undefined), true);
+
+  // The registry rejection is the outer guarantee and is asserted separately so
+  // the predicate is not mistaken for the thing keeping an unknown version out.
+  const future = publishReceiptV2();
+  future.schemaVersion = 'explainer-kit.publish-receipt/v3';
+  assert.equal(validateContract('publish-receipt', future).valid, false);
+
+  // v2 still enforces the sentinel facts, and v1 still validates without them.
+  const unverified = publishReceiptV2();
+  unverified.sentinel.objectVerification = { status: 'skipped-protected' };
+  assert.equal(validateContract('publish-receipt', unverified).valid, false);
+  assert.equal(
+    validateContract('publish-receipt', publishReceipt()).valid,
+    true,
+  );
 });
 
 test('rejects credential-bearing publication roots identically at v1 and v2', () => {
