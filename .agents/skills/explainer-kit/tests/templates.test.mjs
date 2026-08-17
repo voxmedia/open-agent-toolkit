@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import { test } from 'node:test';
 
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
@@ -103,8 +104,41 @@ const forbiddenProduction = [
   /#[0-9a-f]{6}/i,
 ];
 
+// The `forbiddenProduction` list above cannot be applied outside `templates/`:
+// it bans generic shapes like any GitHub URL and any hex colour, which source
+// backlinks and theme fixtures legitimately contain. This narrower list is the
+// case-study identifier set the handoff's "Do not hard-code Duet, VoxOps, or
+// this bucket into the core" constraint actually names, and it is safe to scan
+// across the whole core.
+const forbiddenCaseStudyIdentifiers = [
+  /voxops/i,
+  /vox-media-open-agent-toolkit/i,
+  /cyclone-docs/i,
+  /dy4vzrzaexuy5/i,
+  /tkstang/i,
+  /\bduet\b/i,
+];
+
 async function template(name) {
   return readFile(new URL(`templates/${name}`, skillRoot), 'utf8');
+}
+
+async function coreSourceFiles() {
+  const roots = ['scripts', 'tests'];
+  const files = [];
+  for (const root of roots) {
+    const directory = new URL(`${root}/`, skillRoot);
+    const entries = await readdir(directory, {
+      recursive: true,
+      withFileTypes: true,
+    });
+    for (const entry of entries) {
+      if (!entry.isFile()) continue;
+      if (!/\.(mjs|js|json|md)$/.test(entry.name)) continue;
+      files.push(join(entry.parentPath ?? entry.path, entry.name));
+    }
+  }
+  return files;
 }
 
 test('production templates are complete neutral shells with documented tokens', async () => {
@@ -401,4 +435,30 @@ test('worked examples are quarantined under examples and use RFC 2606 domains', 
     errors: [],
   });
   assert.equal(bundleHash, canonicalHash(identity));
+});
+
+test('core scripts and tests carry no case-study identifiers', async () => {
+  // The constraint was stated but not enforced: the forbidden-production scan
+  // covered only `templates/`, so the production bucket, the CDN host and the
+  // project code name entered the core in this range unnoticed.
+  const selfPath = new URL(import.meta.url).pathname;
+  const offenders = [];
+  for (const path of await coreSourceFiles()) {
+    if (path === selfPath) continue;
+    const source = await readFile(path, 'utf8');
+    for (const pattern of forbiddenCaseStudyIdentifiers) {
+      if (pattern.test(source)) {
+        offenders.push(`${path}: ${pattern}`);
+      }
+    }
+  }
+  assert.deepEqual(offenders, []);
+
+  // The scan must actually reach files, or it would pass vacuously.
+  const scanned = await coreSourceFiles();
+  assert.ok(scanned.length > 20, `scanned only ${scanned.length} core files`);
+  assert.ok(
+    scanned.some((path) => path.endsWith('s3-roots.mjs')),
+    'scan must reach scripts/lib',
+  );
 });

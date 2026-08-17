@@ -638,8 +638,8 @@ test('retains benign v1 publication roots under version-agnostic validation', ()
     ],
     [
       'nested segments',
-      's3://example-bucket/repositories/duet',
-      'https://cdn.example.com/repositories/duet',
+      's3://example-bucket/repositories/alpha',
+      'https://cdn.example.com/repositories/alpha',
     ],
     [
       'dotted bucket',
@@ -648,8 +648,8 @@ test('retains benign v1 publication roots under version-agnostic validation', ()
     ],
     [
       'divergent hosts',
-      's3://vox-media-open-agent-toolkit/repositories/duet',
-      'https://open-agent-toolkit.voxops.net/repositories/duet',
+      's3://example-media-bucket/repositories/alpha',
+      'https://docs.example.net/repositories/alpha',
     ],
     [
       'percent-encoded segment',

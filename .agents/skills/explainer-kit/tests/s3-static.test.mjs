@@ -57,13 +57,13 @@ test('accepts both corresponding and origin-path publication roots', () => {
   const legitimate = [
     [
       'A: paths correspond',
-      's3://vox-media-open-agent-toolkit/repositories/duet',
-      'https://open-agent-toolkit.voxops.net/repositories/duet',
+      's3://example-media-bucket/repositories/alpha',
+      'https://docs.example.net/repositories/alpha',
     ],
     [
       'B: CloudFront Origin Path maps a prefix to the distribution root',
-      's3://tkstang-open-agent-toolkit/explainers',
-      'https://dy4vzrzaexuy5.cloudfront.net',
+      's3://example-owner-bucket/explainers',
+      'https://d111111abcdef8.example-cdn.net',
     ],
     [
       'bucket root and host root',
@@ -98,8 +98,8 @@ test('reports root divergence as a suppressible non-blocking warning', () => {
 
   const divergent = describeRootDivergence(
     normalizePublishRoots(
-      's3://tkstang-open-agent-toolkit/explainers',
-      'https://dy4vzrzaexuy5.cloudfront.net',
+      's3://example-owner-bucket/explainers',
+      'https://d111111abcdef8.example-cdn.net',
     ),
   );
   assert.match(divergent, /different paths/);

@@ -19,10 +19,10 @@ export function normalizePublishRoots(s3Uri, publicBaseUrl) {
   // S3 key to a public URL is underdetermined by these two strings: it lives in
   // CDN configuration this tool cannot read. Both of these are legitimate:
   //
-  //   A  s3://bucket/repositories/duet + https://host/repositories/duet
+  //   A  s3://bucket/repositories/alpha + https://host/repositories/alpha
   //   B  s3://bucket/explainers        + https://host   (CloudFront Origin Path)
   //
-  // B is the confirmed production configuration in oat-explainer-kit's
+  // B is a confirmed real deployment shape, recorded in oat-explainer-kit's
   // migration reference. Suffix-containment does not rescue the rule either --
   // an empty public path is a suffix of everything, so B would pass vacuously
   // while path-rewriting deployments still false-reject. Divergence is surfaced
