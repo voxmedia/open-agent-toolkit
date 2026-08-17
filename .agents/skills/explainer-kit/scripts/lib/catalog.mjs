@@ -1,6 +1,25 @@
 import { canonicalStringify, validateContract } from './contracts.mjs';
 
-const CATALOG_SCHEMA_VERSION = 'explainer-kit.initiative-catalog/v1';
+/**
+ * Bumped to v2 when the root `publicVerification` marker was added below.
+ *
+ * The catalog is serialized, hashed, and recorded as an auxiliary artifact in
+ * the publish receipt, so adding a root key changes the bytes. Released
+ * `0.2.30` emits the v1 shape, which has no such key: leaving both shapes under
+ * one version string would put two different wire formats behind one identifier
+ * for anyone parsing `catalog.json` by declared version.
+ *
+ * There is deliberately no v1 read path. Unlike `publish-request/v1` and
+ * `publish-receipt/v1`, which are retained because a v1 record can still be
+ * replayed, the catalog is regenerate-only and never reconstructed from a v1
+ * receipt: every rebuild site short-circuits on a non-v2 receipt
+ * (`durability.mjs` verifyPublishEvidence, `run.mjs` publicationValidationContext,
+ * and the normative `private-wrapper.mjs` example), and `0.2.30` emits
+ * `publish-receipt/v1` only. Accepting v1 here would be unreachable code. If a
+ * future reader ever does replay a v1-era catalog, it must reconstruct that
+ * shape explicitly rather than relaxing this constant.
+ */
+const CATALOG_SCHEMA_VERSION = 'explainer-kit.initiative-catalog/v2';
 
 export const PUBLIC_VERIFICATION_REQUIRED = 'required';
 export const PUBLIC_VERIFICATION_SKIPPED_BY_POLICY = 'skipped-by-policy';

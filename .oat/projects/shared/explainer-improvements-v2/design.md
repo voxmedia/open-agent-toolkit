@@ -256,7 +256,17 @@ Only contract changes required by the safety kernel receive new versions:
 - `project-recap@2` for the hub floor and prose-led adaptive expansion;
 - `terminal-evidence/v1` for code-only terminal failure/review evidence;
 - `visual-review-evidence/v1` for retained review-attempt projections while the
-  existing provider callback result remains ephemeral.
+  existing provider callback result remains ephemeral;
+- `initiative-catalog/v2` for the root `publicVerification` policy marker, whose
+  bytes are hashed into the publish receipt.
+
+`initiative-catalog/v2` carries no v1 read path, unlike the `publish-request`
+and `publish-receipt` v1 contracts that are retained for replay. The catalog is
+regenerate-only: every rebuild site short-circuits on a non-`publish-receipt/v2`
+receipt, and the released `0.2.30` emits `publish-receipt/v1` only, so no
+existing receipt can ask current code to reproduce a v1-era catalog hash. The
+bump exists for consumers that read the published `catalog.json` by its declared
+version, not for internal replay.
 
 `terminal-evidence/v1` is introduced and finalized within this unreleased
 branch. Its final shipped shape is closed and code-only; no released consumer

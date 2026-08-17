@@ -705,6 +705,36 @@ test('accepts publish receipt v1 replay and explicit v2 verification facts', () 
   }
 });
 
+test('binds the initiative catalog wire shape to its declared version', () => {
+  // The catalog is serialized and hashed into the publish receipt, so any root
+  // key change is a wire-format change. p07 added `publicVerification` while
+  // leaving the version at v1, putting two shapes behind one identifier for
+  // consumers that parse catalog.json by declared version. Nothing pinned
+  // either value, so nothing failed.
+  //
+  // Both expectations below are literals on purpose: deriving them from
+  // catalogFromManifest would make this test agree with any change it makes.
+  // Adding or removing a root key now forces a deliberate edit here, next to
+  // the version string that must move with it.
+  const catalog = catalogFromManifest(
+    manifest(),
+    'https://cdn.example.com/published/',
+    { publicAccess: 'public' },
+  );
+
+  assert.equal(catalog.schemaVersion, 'explainer-kit.initiative-catalog/v2');
+  assert.deepEqual(Object.keys(catalog).sort(), [
+    'artifacts',
+    'createdAt',
+    'publicVerification',
+    'recipe',
+    'runId',
+    'schemaVersion',
+    'slug',
+    'sourceBacklinks',
+  ]);
+});
+
 test('derives an exact, absolute initiative catalog from the finalized manifest', () => {
   const finalized = manifest();
   const catalog = catalogFromManifest(
