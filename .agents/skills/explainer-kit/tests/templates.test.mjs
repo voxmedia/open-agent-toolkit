@@ -460,7 +460,10 @@ test('the core carries no case-study identifiers', async () => {
   // The constraint was stated but not enforced: the forbidden-production scan
   // covered only `templates/`, so the production bucket, the CDN host and the
   // project code name entered the core in this range unnoticed.
-  const selfPath = new URL(import.meta.url).pathname;
+  // `fileURLToPath`, not `URL.pathname`: the latter percent-encodes, so from a
+  // checkout path containing a space the self-exclusion never matches and the
+  // scan reports its own pattern literals as offenders.
+  const selfPath = fileURLToPath(import.meta.url);
   const offenders = [];
   for (const path of await coreSourceFiles()) {
     if (path === selfPath) continue;
