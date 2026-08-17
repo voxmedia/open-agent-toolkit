@@ -1331,6 +1331,47 @@ next receive.
 **Next:** dispatch a narrowed final re-review over `68196ba71..HEAD` to verify
 both Important fixes and reach `passed`.
 
+### Final Review Round 3 Received; `final-fix-002` Applied
+
+**Date:** 2026-08-17
+**Review artifact:** `reviews/final-review-2026-08-17T092205Z.md` (0 Critical,
+1 Important, 10 Medium, 8 Minor over `68196ba71..8eb45413e`)
+
+Round 3 verdicts: catalog-versioning Important **closed** (the reviewer
+independently re-ran both mutations against scratch copies — 45/1 and 44/2 —
+proving the version-binding test non-vacuous); the v1-replay determination
+**sound** (both evidence legs re-verified directly, plus two checks the fix
+never claimed: no code path parses a catalog it did not build, and nothing
+pins the old version anywhere); the merge **clean** (20-file two-sided surface
+re-derived independently; 18 files exact numstat symmetry, 2 read at line
+level; `main` touched zero files under the p07 surface).
+
+The remaining Important: the version-drift fix was only half done. Both this
+branch and `origin/main` independently bumped `oat-project-complete`
+`1.6.0 → 1.6.1`, so the merged content differed from main's under the same
+declared version. CI's `validate-skill-version-bumps --base-ref origin/main`
+(`ci.yml:43`) fails on exactly this. The systemic cause the reviewer proved:
+**no root `package.json` script invokes that command, so the local eight-gate
+list is not a superset of CI's steps** — "all eight gates green" has never
+implied CI green. That gap explains how the collision survived two rounds.
+
+**Root-inline fix deviation (`final-fix-002`, commit `5e6fcc83b`):** the root
+applied this fix inline rather than dispatching a subagent. Reason: a
+three-line mechanical change (one frontmatter version string, two pinned test
+literals) whose correctness oracle is the CI gate command itself; dispatch
+overhead exceeded the work. Root model: opus-class session. Verified by
+running the exact CI gate (now "OK: validated 3 changed canonical skill
+version bump checks") and both pinned test files (165/165) before commit.
+
+**Carried forward, open at this head: 18** — the prior 9 Medium + 7 Minor
+(all re-checked by round 3, all still open) plus two new from round 3:
+`release:check-versions` wired to no workflow (Medium), and `bundle-assets.sh`
+staging siblings not gitignored plus a cleanup-trap edge in the rename window
+(Minor). All await disposition at receive.
+
+**Next:** narrowed final re-review over `8eb45413e..HEAD` (round 4) to confirm
+`final-fix-002` and reach `passed`.
+
 ## References
 
 - Plan: `plan.md`

@@ -156,6 +156,10 @@ Phase p07 passed at bcf479807 after 16 tasks and one bounded fix round: review r
 
 Narrowed final review over 07e2c96d7..68196ba71 recorded 0 Critical, 2 Important, 9 Medium, 7 Minor in reviews/final-review-2026-08-17T064111Z.md; 16 of 18 source findings fully resolved, 2 partial. Both Important findings are project-scope release-hygiene issues outside p07's task scope: initiative-catalog/v1 wire shape changed without a version bump against published 0.2.30, and all five public packages sit below main at 0.2.29 with no gate detecting it.
 
+### 2026-08-17 · structural · oat-project-review-provide · final
+
+Final review round 3 over 68196ba71..8eb45413e (reviews/final-review-2026-08-17T092205Z.md) recorded 0 Critical, 1 Important, 10 Medium, 8 Minor: catalog-versioning Important closed and v1-replay determination verified sound; version-drift Important half-open via an oat-project-complete 1.6.1 merge version collision failing CI's validate-skill-version-bumps gate, which no root package.json script runs. Fixed root-inline as final-fix-002 (5e6fcc83b, recorded deviation); all nine gates including the CI skill-bump gate verified with explicit exit codes after a vacuous-marker harness defect was found and corrected in the root's own gate runner.
+
 ## End-of-run synthesis (implementation complete; final review pending)
 
 Implementation completed all 34 tasks and adopted two load-bearing adjustments:
