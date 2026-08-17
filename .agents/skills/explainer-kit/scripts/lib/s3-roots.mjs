@@ -210,12 +210,22 @@ function validBucket(bucket) {
 // with an uncoded `ERR_INVALID_ARG_VALUE` rather than a clean `E_PUBLISH_ROOTS`.
 // Backslash is screened here so both parsers stay symmetric: `parseS3Root`
 // already rejected it, but `parsePublicRoot` silently dropped the segment.
+// The C1 range `0x80`-`0x9f` is screened for the same reason as C0: it was
+// retained verbatim in both normalized roots and flowed into the S3 key, the
+// composed public URL, the catalog, the receipt and `aws` argv. `0x9b` is the
+// 8-bit CSI, a functional terminal control introducer, so leaving it accepted
+// contradicted this project's no-uncontrolled-bytes-in-output posture. No
+// legitimate root contains a raw C1 byte; percent-encoded forms are unaffected
+// because the screen runs on the raw string before any decoding.
+//
 // Expressed as a codepoint scan rather than a regex so the source carries no
 // literal control bytes.
 function hasUnsafeRootChar(value) {
   for (const char of value) {
     const code = char.codePointAt(0);
-    if (code <= 0x1f || code === 0x7f || char === '\\') return true;
+    if (code <= 0x1f || (code >= 0x7f && code <= 0x9f) || char === '\\') {
+      return true;
+    }
   }
   return false;
 }

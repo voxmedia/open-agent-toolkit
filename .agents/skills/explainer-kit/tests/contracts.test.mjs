@@ -684,6 +684,12 @@ test('rejects control characters and backslashes in both publication roots', () 
     ['LF', 0x0a],
     ['TAB', 0x09],
     ['CR', 0x0d],
+    // C1: retained verbatim in both normalized roots before this screen, so it
+    // reached the S3 key, the public URL, the catalog, the receipt and argv.
+    // 0x9b is the 8-bit CSI.
+    ['C1 PAD', 0x80],
+    ['C1 CSI', 0x9b],
+    ['C1 APC', 0x9f],
   ];
 
   const unsafe = [];
@@ -734,6 +740,27 @@ test('rejects control characters and backslashes in both publication roots', () 
         `${request.schemaVersion} contract: ${label}`,
       );
     }
+  }
+
+  // Boundary: the screen must stop at 0x9f. Percent-encoded roots are the
+  // canonical way to carry non-ASCII and must keep working, and a raw
+  // printable codepoint above C1 must not be swept up by the widened range.
+  for (const [label, s3Uri, publicBaseUrl] of [
+    [
+      'percent-encoded non-ASCII',
+      's3://example-bucket/projects/Roadmap%20%26%20caf%C3%A9',
+      'https://cdn.example.com/projects/Roadmap%20%26%20caf%C3%A9',
+    ],
+    [
+      'raw codepoint above the C1 range',
+      `s3://example-bucket/p${String.fromCharCode(0xa1)}x`,
+      `https://cdn.example.com/p${String.fromCharCode(0xa1)}x`,
+    ],
+  ]) {
+    assert.ok(
+      normalizePublishRoots(s3Uri, publicBaseUrl),
+      `must remain accepted: ${label}`,
+    );
   }
 });
 
