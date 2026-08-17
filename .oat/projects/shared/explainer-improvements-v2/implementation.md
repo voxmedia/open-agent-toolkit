@@ -1285,6 +1285,52 @@ policy (`https://vault.internal/p` still accepted); and the undocumented
 `oat-project-review-provide code final` to move the `final` review event from
 `fixes_added` to `passed`.
 
+### Final Review Round 2 Received and Resolved (`final-fix-001`)
+
+**Date:** 2026-08-17
+**Review artifact:** `reviews/final-review-2026-08-17T064111Z.md` (0 Critical,
+2 Important, 9 Medium, 7 Minor; 16 of the 18 prior findings fully resolved,
+2 partial)
+
+Both Important findings were project-scope release-hygiene issues neither
+task-scoped phase review had vantage on, and both are now resolved:
+
+- **Catalog wire-shape versioning** (`8963b19a1`): `initiative-catalog` bumped
+  to `v2` after operator direction, because p07 added `publicVerification` to a
+  shape already published at `0.2.30` under `v1`. The fix's v1-replay
+  determination — no read-acceptance added, because the path is unreachable —
+  is evidenced four ways in the fix report: all three catalog-rebuild sites are
+  v2-gated, `origin/main` emits `publish-receipt/v1` only (`publish-receipt/v2`
+  does not exist there), a cross-check against main's actual lib reproduced the
+  v1 hash byte-exactly, and 0.2.30 could never verify the catalog entry in its
+  own receipt (a pre-existing hole, out of scope). The new version-binding test
+  was proven non-vacuous by breaking the source both ways (45/1 and 44/2).
+- **Version drift vs published `main`** (`8bda0b22b`): `origin/main` (0.2.30)
+  merged; all five public packages lockstep-bumped to `0.2.31`. Seven conflicts
+  resolved. The first resolution of the `autonomy-contract.md` prompt-site
+  table was **wrong** — the table lists files twice, the union script matched
+  first occurrences, and the union heuristic itself was invalid because the
+  gate-inventory test rejects stale mappings. Corrected in `f70c7e641` using
+  `packages/cli/src/validation/autonomy-gate-inventory.test.ts` as the oracle
+  (now 4/4). Recorded as a caution against hand-merging that table without
+  running its validator.
+
+Also in this range, outside the review's findings:
+
+- `c6a01adbd` publishes the CLI asset bundle by staged rename instead of an
+  in-place `rm -rf` + repopulate, narrowing a pre-existing smoke-suite race in
+  `package-coverage-consumers.test.mjs` (measured 3/3 failing runs → 1/3). The
+  completing fix (reader-side `OAT_ASSETS_DIR` override) is parked as backlog
+  `BL-260817-let-resolveassetsroot-honor` because it adds a runtime knob to
+  production CLI surface.
+
+**Not addressed, by scope:** the review's 9 Medium and 7 Minor findings,
+including those marked "should now be fixed". They await disposition at the
+next receive.
+
+**Next:** dispatch a narrowed final re-review over `68196ba71..HEAD` to verify
+both Important fixes and reach `passed`.
+
 ## References
 
 - Plan: `plan.md`
