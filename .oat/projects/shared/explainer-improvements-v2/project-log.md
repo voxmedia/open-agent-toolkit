@@ -152,6 +152,10 @@ Operator authorized changed scope for p07-t03 after cross-model advisory: remove
 
 Phase p07 passed at bcf479807 after 16 tasks and one bounded fix round: review round 1 (reviews/p07-review-2026-08-17T053431Z.md) found 1 Critical + 2 Important from one propagation-gap pattern concealed by self-consistent fixtures; fix round p07-fix-001 made the catalog access policy a required argument and swept 30 call sites; review round 2 (reviews/p07-review-2026-08-17T061620Z.md) mutation-tested the fixtures and passed with 0 Critical / 0 Important.
 
+### 2026-08-17 · structural · oat-project-review-provide · final
+
+Narrowed final review over 07e2c96d7..68196ba71 recorded 0 Critical, 2 Important, 9 Medium, 7 Minor in reviews/final-review-2026-08-17T064111Z.md; 16 of 18 source findings fully resolved, 2 partial. Both Important findings are project-scope release-hygiene issues outside p07's task scope: initiative-catalog/v1 wire shape changed without a version bump against published 0.2.30, and all five public packages sit below main at 0.2.29 with no gate detecting it.
+
 ## End-of-run synthesis (implementation complete; final review pending)
 
 Implementation completed all 34 tasks and adopted two load-bearing adjustments:
