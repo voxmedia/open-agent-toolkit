@@ -36,6 +36,36 @@ For example:
 Use explicit `index.html` URLs. Directory redirects are not portable evidence.
 The destination must serve uploaded bytes at the corresponding public path.
 
+## The manifest a connector receives is intentionally incomplete
+
+The core persists the manifest **before** it invokes the publisher callback, so
+the file at `manifestPath` carries `outcome: "incomplete"` while the `publish`
+stage is still `running`. This is a contractually intended intermediate state,
+not a corrupt or half-written record, and a connector must not reject it on the
+strength of `outcome` alone.
+
+Do not decide publishability from the manifest by itself. Read the build record
+named by `manifest.buildRecord.path` (resolved relative to the manifest) and
+require all of:
+
+- the manifest carries no `visual-review-required:` warning;
+- the build record's own `outcome` is `incomplete`;
+- its `publish` stage exists and is `running`; and
+- every stage before `publish` is `passed`, `warned`, or `skipped` and carries
+  no `visual-review-required:` warning.
+
+Only that combination makes an `incomplete` manifest publishable. The one other
+eligible shape is a finalized `built-durable` manifest that is not
+review-flagged. Any other `incomplete` manifest, and every manifest whose run is
+flagged, failed, or superseded, must be refused. The built-in connector performs
+exactly this check before its first network call; third-party connectors are
+required to perform an equivalent one.
+
+The published bytes cannot diverge from the finalized manifest: the catalog
+projection omits `outcome` and `warnings`, and both manifest writes share one
+`finalizedAt`. After the callback returns a valid receipt, the core rewrites the
+manifest with its terminal outcome.
+
 ## Safety and ordering
 
 The connector validates the request, manifest, paths, hashes, and duplicate
