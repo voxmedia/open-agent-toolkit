@@ -147,8 +147,16 @@ test('adapter-to-destination publishing preserves bytes, prefixes, access mode, 
         catalog,
         manifest,
         publishCase.expectedPublicBaseUrl,
+        { publicAccess: publishCase.publicAccess },
       ).valid,
       true,
+    );
+    // Policy, never outcome: the catalog is uploaded before any public fetch.
+    assert.equal(
+      catalog.publicVerification,
+      publishCase.publicAccess === 'protected'
+        ? 'skipped-by-policy'
+        : 'required',
     );
     assert.deepEqual(
       catalog.artifacts.map(({ id, hash }) => ({ id, hash })),
@@ -215,7 +223,11 @@ function fakeDestination(expectedPublicAccess) {
         );
       }
 
-      const catalog = catalogFromManifest(manifest, request.publicBaseUrl);
+      // A publisher must build the catalog under the same access policy it
+      // declares in its receipt; run.mjs rebuilds and hash-checks it that way.
+      const catalog = catalogFromManifest(manifest, request.publicBaseUrl, {
+        publicAccess: request.publicAccess,
+      });
       const catalogBytes = Buffer.from(serializeInitiativeCatalog(catalog));
       const catalogPath = initiativeCatalogPath(manifest.slug);
       artifacts.push(

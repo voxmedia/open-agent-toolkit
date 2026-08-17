@@ -1925,11 +1925,16 @@ async function persistManifest(state, createdAt) {
     state.run.request.publicBaseUrl ??
     state.run.request.durability?.publish?.publicBaseUrl;
   if (publicBaseUrl) {
+    // Must match the catalog the connector builds and uploads byte for byte,
+    // so the verification policy is resolved from the same request fields.
+    const publicAccess =
+      state.run.request.publicAccess ??
+      state.run.request.durability?.publish?.publicAccess;
     const catalogPath = initiativeCatalogPath(manifest.slug);
     await writeJsonAtomic(
       state.run.runRoot,
       catalogPath,
-      catalogFromManifest(manifest, publicBaseUrl),
+      catalogFromManifest(manifest, publicBaseUrl, { publicAccess }),
     );
     manifest = manifestFor(state, record, createdAt, {
       ...immutableHashes,
@@ -2805,7 +2810,11 @@ function publicationValidationContext(receipt, manifest) {
   }
   let catalog;
   try {
-    catalog = catalogFromManifest(manifest, receipt.roots.publicBaseUrl);
+    // `publicAccess` is a receipt/v2 field; a v1 receipt returns above, and the
+    // connector resolves v1 publish requests to 'public' for the same reason.
+    catalog = catalogFromManifest(manifest, receipt.roots.publicBaseUrl, {
+      publicAccess: receipt.publicAccess,
+    });
   } catch (error) {
     throw codedError(
       'E_PUBLISH',

@@ -4945,7 +4945,9 @@ function callbackReceiptV2(manifest, publicAccess) {
     .update(
       Buffer.from(
         serializeInitiativeCatalog(
-          catalogFromManifest(manifest, roots.publicBaseUrl),
+          // A publisher declaring `publicAccess` in its receipt must build the
+          // catalog under that same policy; run.mjs rebuilds it the same way.
+          catalogFromManifest(manifest, roots.publicBaseUrl, { publicAccess }),
         ),
       ),
     )

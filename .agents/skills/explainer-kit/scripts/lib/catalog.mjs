@@ -2,6 +2,38 @@ import { canonicalStringify, validateContract } from './contracts.mjs';
 
 const CATALOG_SCHEMA_VERSION = 'explainer-kit.initiative-catalog/v1';
 
+export const PUBLIC_VERIFICATION_REQUIRED = 'required';
+export const PUBLIC_VERIFICATION_SKIPPED_BY_POLICY = 'skipped-by-policy';
+
+/**
+ * Single source of truth for public-verification state.
+ *
+ * The catalog is built, serialized and hashed *before* the first upload and long
+ * before any per-artifact public verification runs, so it can never carry a
+ * verification *outcome*: writing one would either require re-uploading the
+ * catalog or invalidate the hash the receipt records for it. It therefore
+ * carries verification *policy* only, and the authoritative outcome stays in the
+ * run's publish receipt, which the catalog's `runId` identifies.
+ *
+ * Both the catalog marker and the receipt's skipped status are derived from this
+ * one result so the two cannot drift apart.
+ */
+export function resolvePublicVerificationPolicy(publicAccess) {
+  return publicAccess === 'protected'
+    ? {
+        publicAccess: 'protected',
+        catalogMarker: PUBLIC_VERIFICATION_SKIPPED_BY_POLICY,
+        verifyPublicly: false,
+        receiptSkipStatus: 'skipped-protected',
+      }
+    : {
+        publicAccess: 'public',
+        catalogMarker: PUBLIC_VERIFICATION_REQUIRED,
+        verifyPublicly: true,
+        receiptSkipStatus: 'skipped-protected',
+      };
+}
+
 export function initiativeCatalogPath(slug) {
   if (typeof slug !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
     throw new TypeError('Initiative catalog requires a safe initiative slug.');
@@ -9,7 +41,7 @@ export function initiativeCatalogPath(slug) {
   return `site/initiatives/${slug}/catalog.json`;
 }
 
-export function catalogFromManifest(manifest, publicBaseUrl) {
+export function catalogFromManifest(manifest, publicBaseUrl, options = {}) {
   const validation = validateContract('manifest', manifest);
   if (!validation.valid) {
     throw new TypeError(
@@ -45,12 +77,20 @@ export function catalogFromManifest(manifest, publicBaseUrl) {
     slug: manifest.slug,
     recipe: structuredClone(manifest.recipe),
     createdAt: manifest.createdAt,
+    // Policy, never outcome. See resolvePublicVerificationPolicy.
+    publicVerification: resolvePublicVerificationPolicy(options.publicAccess)
+      .catalogMarker,
     artifacts,
     sourceBacklinks: structuredClone(manifest.source.backlinks ?? []),
   };
 }
 
-export function validateInitiativeCatalog(catalog, manifest, publicBaseUrl) {
+export function validateInitiativeCatalog(
+  catalog,
+  manifest,
+  publicBaseUrl,
+  options = {},
+) {
   const errors = [];
   let normalizedPublicBaseUrl;
   try {
@@ -83,6 +123,7 @@ export function validateInitiativeCatalog(catalog, manifest, publicBaseUrl) {
     'slug',
     'recipe',
     'createdAt',
+    'publicVerification',
     'artifacts',
     'sourceBacklinks',
   ]);
@@ -110,6 +151,20 @@ export function validateInitiativeCatalog(catalog, manifest, publicBaseUrl) {
       );
     }
   }
+  // Derived from the same resolver the receipt status comes from, so a catalog
+  // that disagrees with the run's resolved verification policy is rejected.
+  const expectedPublicVerification = resolvePublicVerificationPolicy(
+    options.publicAccess,
+  ).catalogMarker;
+  if (catalog.publicVerification !== expectedPublicVerification) {
+    add(
+      errors,
+      '$.publicVerification',
+      'catalog-verification-policy',
+      `Catalog publicVerification must be ${expectedPublicVerification} for this run's public access policy.`,
+    );
+  }
+
   if (
     canonicalStringify(catalog.recipe) !== canonicalStringify(manifest?.recipe)
   ) {

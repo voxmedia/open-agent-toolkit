@@ -15,6 +15,7 @@ import { promisify } from 'node:util';
 import {
   catalogFromManifest,
   initiativeCatalogPath,
+  resolvePublicVerificationPolicy,
   serializeInitiativeCatalog,
   validateInitiativeCatalog,
 } from './catalog.mjs';
@@ -22,7 +23,9 @@ import { validateContract } from './contracts.mjs';
 import { assertManifestPublishable } from './publication-policy.mjs';
 import {
   composePublicationTarget,
+  describeRootDivergence,
   normalizePublishRoots,
+  rootDivergenceWarningSuppressed,
 } from './s3-roots.mjs';
 
 export {
@@ -110,11 +113,29 @@ export async function publishS3Static(request, dependencies = {}) {
     sentinelRelativePath,
     roots,
   );
-  const catalog = catalogFromManifest(manifest, roots.publicBaseUrl);
+  // Resolved before the catalog is built: the catalog is hashed and uploaded
+  // before any public verification runs, so it must carry the policy up front.
+  const publicAccess =
+    request.schemaVersion === 'explainer-kit.publish-request/v1'
+      ? 'public'
+      : request.publicAccess;
+  const verificationPolicy = resolvePublicVerificationPolicy(publicAccess);
+
+  const divergence = describeRootDivergence(roots);
+  if (divergence && !rootDivergenceWarningSuppressed()) {
+    (dependencies.warn ?? ((message) => console.warn(message)))(
+      `explainer-kit: ${divergence}`,
+    );
+  }
+
+  const catalog = catalogFromManifest(manifest, roots.publicBaseUrl, {
+    publicAccess,
+  });
   const catalogValidation = validateInitiativeCatalog(
     catalog,
     manifest,
     roots.publicBaseUrl,
+    { publicAccess },
   );
   if (!catalogValidation.valid) {
     throw publishError(
@@ -181,12 +202,10 @@ export async function publishS3Static(request, dependencies = {}) {
       awsOptions,
       sleep,
     });
-    const publicAccess =
-      request.schemaVersion === 'explainer-kit.publish-request/v1'
-        ? 'public'
-        : request.publicAccess;
-    let sentinelPublicVerification = { status: 'skipped-protected' };
-    if (publicAccess === 'public') {
+    let sentinelPublicVerification = {
+      status: verificationPolicy.receiptSkipStatus,
+    };
+    if (verificationPolicy.verifyPublicly) {
       const sentinelResponse = await httpGet(sentinelTargetPath.publicUrl);
       if (
         sentinelResponse.status < 200 ||
@@ -253,8 +272,10 @@ export async function publishS3Static(request, dependencies = {}) {
         awsOptions,
         sleep,
       });
-      let publicVerification = { status: 'skipped-protected' };
-      if (publicAccess === 'public') {
+      let publicVerification = {
+        status: verificationPolicy.receiptSkipStatus,
+      };
+      if (verificationPolicy.verifyPublicly) {
         const response = await httpGet(target.publicUrl);
         if (response.status < 200 || response.status > 299) {
           throw publishError(

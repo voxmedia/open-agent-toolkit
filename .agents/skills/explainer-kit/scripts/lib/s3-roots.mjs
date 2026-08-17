@@ -15,27 +15,56 @@ export function normalizePublishRoots(s3Uri, publicBaseUrl) {
   const publicRoot = parsePublicRoot(publicBaseUrl);
   const keyPrefix = s3.segments.join('/');
   const pathname = publicRoot.segments.join('/');
-  // The two roots were previously parsed in isolation and never related, so a
-  // `publicBaseUrl` pointing somewhere that was never uploaded to was accepted.
-  // In `public` mode that self-detects as an `E_PUBLISH_VERIFY` 404, but in
-  // `protected` mode the fetch is skipped entirely while the unverified host is
-  // still stamped into the catalog and every receipt entry's `publicUrl`.
+  // Deliberately NO relational rule between the two roots. The mapping from an
+  // S3 key to a public URL is underdetermined by these two strings: it lives in
+  // CDN configuration this tool cannot read. Both of these are legitimate:
   //
-  // Hosts are deliberately allowed to differ — a bucket is normally fronted by a
-  // separate CDN domain — but the path must correspond, which it does in every
-  // legitimate configuration: the adapter derives both roots by appending the
-  // same `/projects/<slug>` suffix to a shared base.
-  if (keyPrefix !== pathname) {
-    throw rootError(
-      'Publication roots must address the same path: the public root path must equal the S3 key prefix.',
-    );
-  }
+  //   A  s3://bucket/repositories/duet + https://host/repositories/duet
+  //   B  s3://bucket/explainers        + https://host   (CloudFront Origin Path)
+  //
+  // B is the confirmed production configuration in oat-explainer-kit's
+  // migration reference. Suffix-containment does not rescue the rule either --
+  // an empty public path is a suffix of everything, so B would pass vacuously
+  // while path-rewriting deployments still false-reject. Divergence is surfaced
+  // as a non-blocking warning by the connector instead; correctness of the
+  // advertised URL is established by verification, not by string shape.
   return {
     bucket: s3.bucket,
     keyPrefix,
     s3Uri: `s3://${s3.bucket}${keyPrefix ? `/${keyPrefix}` : ''}`,
     publicBaseUrl: `https://${publicRoot.authority}${pathname ? `/${pathname}` : ''}`,
   };
+}
+
+export const ROOT_DIVERGENCE_WARNING_ENV =
+  'EXPLAINER_KIT_SUPPRESS_ROOT_DIVERGENCE_WARNING';
+
+export function rootDivergenceWarningSuppressed(env = process.env) {
+  return ['on', 'true', '1'].includes(
+    String(env[ROOT_DIVERGENCE_WARNING_ENV] ?? '').toLowerCase(),
+  );
+}
+
+/**
+ * Advisory only, never a gate. A mismatched key prefix and public path is
+ * usually a typo, but it is also exactly what a CloudFront Origin Path
+ * deployment looks like, so this can only ever be a warning. Returns null when
+ * the two roots address the same path.
+ */
+export function describeRootDivergence(roots) {
+  const keyPrefix = roots?.keyPrefix ?? '';
+  let pathname;
+  try {
+    pathname = new URL(roots?.publicBaseUrl).pathname.replace(/^\/|\/$/g, '');
+  } catch {
+    return null;
+  }
+  if (keyPrefix === pathname) return null;
+  return (
+    `Publication roots address different paths: S3 key prefix "${keyPrefix}" ` +
+    `vs public path "${pathname}". This is expected for a CloudFront Origin ` +
+    `Path deployment; verify it is not a typo.`
+  );
 }
 
 export function composePublicationTarget(relativePath, roots) {

@@ -5,10 +5,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
+import { resolvePublicVerificationPolicy } from '../scripts/lib/catalog.mjs';
 import {
   PRIVATE_PUBLIC_ROOT_ENV,
+  ROOT_DIVERGENCE_WARNING_ENV,
+  describeRootDivergence,
   isPrivatePublicHost,
   privatePublicRootAllowed,
+  rootDivergenceWarningSuppressed,
 } from '../scripts/lib/s3-roots.mjs';
 import {
   createSentinelRelativePath,
@@ -46,14 +50,20 @@ test('normalizes corresponding roots and maps site-relative paths', () => {
   );
 });
 
-test('requires the public root path to correspond to the S3 key prefix', () => {
-  // Hosts are deliberately allowed to differ: a bucket is normally fronted by a
-  // separate CDN domain. The handoff's own production pairing must keep working.
-  const corresponding = [
+test('accepts both corresponding and origin-path publication roots', () => {
+  // The S3-key-to-URL mapping lives in CDN configuration this tool cannot read,
+  // so no structural rule between the two strings is sound. Both shapes below
+  // are legitimate and must be accepted.
+  const legitimate = [
     [
-      'handoff cross-host production pairing',
+      'A: paths correspond',
       's3://vox-media-open-agent-toolkit/repositories/duet',
       'https://open-agent-toolkit.voxops.net/repositories/duet',
+    ],
+    [
+      'B: CloudFront Origin Path maps a prefix to the distribution root',
+      's3://tkstang-open-agent-toolkit/explainers',
+      'https://dy4vzrzaexuy5.cloudfront.net',
     ],
     [
       'bucket root and host root',
@@ -61,77 +71,145 @@ test('requires the public root path to correspond to the S3 key prefix', () => {
       'https://cdn.example.com',
     ],
     [
-      'adapter-derived project suffix',
-      's3://example-bucket/explainers/projects/demo',
-      'https://cdn.example.com/explainers/projects/demo',
-    ],
-  ];
-
-  for (const [label, s3Uri, publicBaseUrl] of corresponding) {
-    const roots = normalizePublishRoots(s3Uri, publicBaseUrl);
-    assert.equal(
-      roots.keyPrefix,
-      new URL(publicBaseUrl).pathname.replace(/^\/|\/$/g, ''),
-      `corresponding: ${label}`,
-    );
-  }
-
-  const divergent = [
-    [
-      'unrelated paths',
-      's3://example-bucket/private/a',
-      'https://cdn.example.com/unrelated/b',
-    ],
-    [
-      'public root is shallower',
-      's3://example-bucket/site',
-      'https://cdn.example.com',
-    ],
-    [
-      'public root is deeper',
-      's3://example-bucket',
-      'https://cdn.example.com/site',
-    ],
-    [
-      'public root extends the prefix',
+      'public root deeper than the key prefix',
       's3://example-bucket/a',
       'https://cdn.example.com/a/b',
     ],
   ];
 
-  for (const [label, s3Uri, publicBaseUrl] of divergent) {
-    assert.throws(
-      () => normalizePublishRoots(s3Uri, publicBaseUrl),
-      (error) => error.code === 'E_PUBLISH_ROOTS',
-      `divergent: ${label}`,
+  for (const [label, s3Uri, publicBaseUrl] of legitimate) {
+    const roots = normalizePublishRoots(s3Uri, publicBaseUrl);
+    assert.equal(roots.s3Uri, s3Uri.replace(/\/$/, ''), `accepted: ${label}`);
+  }
+});
+
+test('reports root divergence as a suppressible non-blocking warning', () => {
+  // Advisory only: it catches genuine typos without false-rejecting Origin Path.
+  assert.equal(
+    describeRootDivergence(
+      normalizePublishRoots(
+        's3://example-bucket/explainers',
+        'https://cdn.example.com/explainers',
+      ),
+    ),
+    null,
+    'corresponding roots produce no warning',
+  );
+
+  const divergent = describeRootDivergence(
+    normalizePublishRoots(
+      's3://tkstang-open-agent-toolkit/explainers',
+      'https://dy4vzrzaexuy5.cloudfront.net',
+    ),
+  );
+  assert.match(divergent, /different paths/);
+  assert.match(divergent, /Origin\s+Path/);
+
+  assert.equal(rootDivergenceWarningSuppressed({}), false);
+  assert.equal(
+    rootDivergenceWarningSuppressed({ [ROOT_DIVERGENCE_WARNING_ENV]: '1' }),
+    true,
+  );
+});
+
+test('publishes a divergent-root deployment and warns without blocking', async () => {
+  // Configuration B must publish successfully; divergence is advisory only.
+  const fixture = await createFixture();
+  fixture.request.s3Uri = 's3://example-bucket/published';
+  fixture.request.publicBaseUrl = 'https://cdn.example.com';
+  // Protected mode keeps this test focused on the roots: no public fetch is
+  // issued, so the divergence itself is the only thing under test.
+  fixture.request.publicAccess = 'protected';
+  const harness = fakeDestination();
+  const warnings = [];
+
+  const receipt = await publishS3Static(fixture.request, {
+    approved: true,
+    now: () => NOW,
+    randomBytes: () => Buffer.from('0123456789abcdeffedcba9876543210', 'hex'),
+    ...harness.dependencies,
+    httpGet: unexpectedHttp,
+    warn: (message) => warnings.push(message),
+  });
+
+  assert.ok(receipt, 'divergent roots must not block publication');
+  assert.equal(warnings.length, 1, 'exactly one advisory warning');
+  assert.match(warnings[0], /different paths/);
+});
+
+test('catalog carries verification policy, never a verification outcome', async () => {
+  // The catalog is hashed and uploaded before the first public fetch, so it can
+  // only ever carry policy. `verified` must never appear in it.
+  for (const [publicAccess, marker, receiptStatus] of [
+    ['public', 'required', 'verified'],
+    ['protected', 'skipped-by-policy', 'skipped-protected'],
+  ]) {
+    const fixture = await createFixture();
+    fixture.request.publicAccess = publicAccess;
+    const harness = fakeDestination();
+
+    const receipt = await publishS3Static(fixture.request, {
+      approved: true,
+      now: () => NOW,
+      randomBytes: () => Buffer.from('0123456789abcdeffedcba9876543210', 'hex'),
+      ...harness.dependencies,
+      ...(publicAccess === 'protected' ? { httpGet: unexpectedHttp } : {}),
+    });
+
+    const catalogEntry = receipt.artifacts.find(
+      (entry) => entry.source?.name === 'catalog',
+    );
+    assert.ok(catalogEntry, `${publicAccess}: catalog is a receipt artifact`);
+
+    const uploaded = harness.objects.get(
+      `published/initiatives/${fixture.manifest.slug}/catalog.json`,
+    );
+    assert.ok(uploaded, `${publicAccess}: catalog was uploaded`);
+    const catalog = JSON.parse(uploaded.Body.toString('utf8'));
+
+    assert.equal(catalog.publicVerification, marker, publicAccess);
+    assert.notEqual(catalog.publicVerification, 'verified');
+
+    // The catalog's own hash must still be the one the receipt recorded.
+    assert.equal(
+      catalogEntry.hash,
+      `sha256:${createHash('sha256').update(uploaded.Body).digest('hex')}`,
+      `${publicAccess}: catalog hash stays valid`,
+    );
+
+    // Catalog marker and receipt status derive from one result and correspond.
+    const manifestEntry = receipt.artifacts.find(
+      (entry) => entry.source?.kind === 'manifest',
+    );
+    assert.equal(
+      manifestEntry.publicVerification.status,
+      receiptStatus,
+      `${publicAccess}: receipt status corresponds to the catalog marker`,
     );
   }
 });
 
-test('rejects divergent roots in protected mode before any process launch', async () => {
-  // `protected` mode skips the public fetch entirely, so a divergent
-  // `publicBaseUrl` used to be stamped unverified into the catalog and into
-  // every receipt entry's `publicUrl` with the object still reading `verified`.
-  // There is no self-detecting 404 in this mode, so the roots must fail closed.
-  for (const publicAccess of ['protected', 'public']) {
-    const fixture = await createFixture();
-    fixture.request.publicAccess = publicAccess;
-    fixture.request.s3Uri = 's3://example-bucket/published';
-    fixture.request.publicBaseUrl = 'https://cdn.example.com/somewhere-else';
-
-    let processLaunched = false;
-    await assert.rejects(
-      publishS3Static(fixture.request, {
-        approved: true,
-        command: async () => {
-          processLaunched = true;
-        },
-      }),
-      (error) => ['E_PUBLISH_INPUT', 'E_PUBLISH_ROOTS'].includes(error.code),
-      `publicAccess=${publicAccess}`,
+test('catalog marker and receipt status cannot drift apart', () => {
+  for (const publicAccess of ['public', 'protected', undefined]) {
+    const policy = resolvePublicVerificationPolicy(publicAccess);
+    assert.equal(
+      policy.verifyPublicly,
+      policy.catalogMarker === 'required',
+      `${publicAccess}: verifyPublicly matches the catalog marker`,
     );
-    assert.equal(processLaunched, false, `publicAccess=${publicAccess}`);
+    assert.equal(
+      policy.catalogMarker === 'skipped-by-policy',
+      policy.publicAccess === 'protected',
+      `${publicAccess}: skipped-by-policy iff protected`,
+    );
+    assert.notEqual(policy.catalogMarker, 'verified');
   }
+
+  // A catalog whose marker disagrees with the run's policy is rejected.
+  assert.equal(
+    resolvePublicVerificationPolicy('protected').catalogMarker,
+    'skipped-by-policy',
+  );
 });
 
 test('rejects loopback, link-local, and private-network public roots', async () => {
