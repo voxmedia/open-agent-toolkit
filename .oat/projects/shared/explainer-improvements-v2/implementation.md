@@ -1427,6 +1427,37 @@ recorded at each step.
 **Next:** execute `final-fix-003`, re-verify all gates with explicit exit
 codes, then one narrowed review round to move `final` to `passed`.
 
+### Final Rounds 5 and Fix `final-fix-004`
+
+**Date:** 2026-08-17
+**Round 5 artifact:** `reviews/final-review-2026-08-17T132906Z.md` — 0
+Critical, 0 Important, 1 Medium, 4 Minor over `3a360a722..510b74eca` (the
+`final-fix-003` batch). Ten of the batch's items were mutation-tested by the
+reviewer in scratch copies; nine discriminate. The `publicRootPolicy` receipt
+addition was judged correct and shippable. The item-13 refutation
+(`release:check-versions` cannot catch branch-behind-published-main) was
+reproduced and the gap filed as `BL-260817-detect-branch-behind-published`.
+
+**`final-fix-004` (root-inline, commit `2fcdd5f2c`):** all five round-5
+findings fixed — the durability guard's false comment corrected and its
+rejection branch made testable via an injectable catalog builder (red under
+`if (false && ...)` mutation); the last exact-version pin replaced with
+`isVerifiablePublishReceipt`; `AGENTS.md`'s Definition of Done made a true
+superset of CI (all eight CI steps, CI order); the case-study scan extended
+from two to all eleven core directories plus `SKILL.md` (red with a planted
+identifier); the new backlog item's acceptance criteria made concrete.
+Root-inline deviation rationale: five small single-oracle fixes; dispatch
+overhead exceeded the work. One process error recorded: the first mutation
+restore used `git checkout`, wiping the uncommitted fix, which was re-applied;
+subsequent mutations used scratch-copy backups.
+
+All ten gates green with explicit per-gate exit codes at `2fcdd5f2c`:
+check, type-check, test, build, lint, format, build:docs, release:validate,
+release:check-versions, check:skill-bumps.
+
+**Next:** closing narrowed review (round 6) over `510b74eca..HEAD` to move
+`final` to `passed`.
+
 ## References
 
 - Plan: `plan.md`
