@@ -1204,11 +1204,11 @@ new configuration surface and is filed as repo backlog rather than p07 scope.
 **Date:** 2026-08-17
 **Tasks:** 16 of 16 complete · **Fix rounds:** 1 of 2 · **Review rounds:** 2
 
-| Round | Artifact                                   | Result                       |
-| ----- | ------------------------------------------ | ---------------------------- |
-| 1     | `reviews/p07-review-2026-08-17T053431Z.md` | 1 C, 2 I, 6 M, 8 m — blocked |
-| fix   | `159c8901c`, `bcf479807` (`p07-fix-001`)   | 3 blocking findings resolved |
-| 2     | `reviews/p07-review-2026-08-17T061620Z.md` | 0 C, 0 I, 1 M, 4 m — passed  |
+| Round | Artifact                                            | Result                       |
+| ----- | --------------------------------------------------- | ---------------------------- |
+| 1     | `reviews/archived/p07-review-2026-08-17T053431Z.md` | 1 C, 2 I, 6 M, 8 m — blocked |
+| fix   | `159c8901c`, `bcf479807` (`p07-fix-001`)            | 3 blocking findings resolved |
+| 2     | `reviews/archived/p07-review-2026-08-17T061620Z.md` | 0 C, 0 I, 1 M, 4 m — passed  |
 
 All eight gates independently re-run by the root at `bcf479807`: `check`,
 `type-check`, `test`, `build`, `lint`, `format`, `build:docs`,
@@ -1297,7 +1297,7 @@ policy (`https://vault.internal/p` still accepted); and the undocumented
 ### Final Review Round 2 Received and Resolved (`final-fix-001`)
 
 **Date:** 2026-08-17
-**Review artifact:** `reviews/final-review-2026-08-17T064111Z.md` (0 Critical,
+**Review artifact:** `reviews/archived/final-review-2026-08-17T064111Z.md` (0 Critical,
 2 Important, 9 Medium, 7 Minor; 16 of the 18 prior findings fully resolved,
 2 partial)
 
@@ -1343,7 +1343,7 @@ both Important fixes and reach `passed`.
 ### Final Review Round 3 Received; `final-fix-002` Applied
 
 **Date:** 2026-08-17
-**Review artifact:** `reviews/final-review-2026-08-17T092205Z.md` (0 Critical,
+**Review artifact:** `reviews/archived/final-review-2026-08-17T092205Z.md` (0 Critical,
 1 Important, 10 Medium, 8 Minor over `68196ba71..8eb45413e`)
 
 Round 3 verdicts: catalog-versioning Important **closed** (the reviewer
@@ -1384,7 +1384,7 @@ staging siblings not gitignored plus a cleanup-trap edge in the rename window
 ### Final Round 4 Clean; Operator Disposition of the 18 Open Findings
 
 **Date:** 2026-08-17
-**Round 4 artifact:** `reviews/final-review-2026-08-17T094116Z.md` — 0
+**Round 4 artifact:** `reviews/archived/final-review-2026-08-17T094116Z.md` — 0
 Critical, 0 Important, 0 Medium, 0 Minor over `8eb45413e..7440118a3`;
 `final-fix-002` verified closed by independent reproduction of the CI gate.
 
@@ -1430,7 +1430,7 @@ codes, then one narrowed review round to move `final` to `passed`.
 ### Final Rounds 5 and Fix `final-fix-004`
 
 **Date:** 2026-08-17
-**Round 5 artifact:** `reviews/final-review-2026-08-17T132906Z.md` — 0
+**Round 5 artifact:** `reviews/archived/final-review-2026-08-17T132906Z.md` — 0
 Critical, 0 Important, 1 Medium, 4 Minor over `3a360a722..510b74eca` (the
 `final-fix-003` batch). Ten of the batch's items were mutation-tested by the
 reviewer in scratch copies; nine discriminate. The `publicRootPolicy` receipt
@@ -1461,7 +1461,7 @@ release:check-versions, check:skill-bumps.
 ### Final Review PASSED (round 6)
 
 **Date:** 2026-08-17
-**Round 6 artifact:** `reviews/final-review-2026-08-17T142743Z.md` — 0
+**Round 6 artifact:** `reviews/archived/final-review-2026-08-17T142743Z.md` — 0
 Critical, 0 Important, 0 Medium, 1 Minor over `510b74eca..97e5853d2`. All five
 round-5 findings verified closed by execution: the durability rejection branch
 goes red under mutation, the case-study scan covers every one of the skill's
