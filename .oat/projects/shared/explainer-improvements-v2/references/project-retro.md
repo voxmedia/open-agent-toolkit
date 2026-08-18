@@ -21,7 +21,7 @@ oat_retro_evidence_sources:
   - source: prior-session-transcripts
     status: unavailable
 oat_retro_promotions: complete
-oat_retro_filing: proposed
+oat_retro_filing: complete
 oat_generated: true
 oat_template: false
 ---
@@ -69,9 +69,8 @@ Claims below are Confirmed unless labeled otherwise.
 ## Current State
 
 - **Promotions:** complete — RP-01 applied (AGENTS.md, Definition of Done).
-- **Filing:** proposed — RP-02, RP-03, RP-04, RP-05 unsettled (proposed).
-- **Unsettled items:** RP-02–RP-05 (file). Next action: route through
-  `oat-project-retro-file`.
+- **Filing:** complete — RP-02–RP-05 filed to the local backlog (receipt e2c85888b, unpushed).
+- **Unsettled items:** None.
 
 ## What Went Well
 
@@ -240,12 +239,12 @@ pipeline whose final stage is a pager or filter.
 
 - **Type:** code-follow-up
 - **Disposition:** file
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-260818-extend-guarded-prose-contract.md`
+- **Destination-receipt:** e2c85888bfd674f51eb692cc97fec7101b4a14ef
+- **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** filed as new; related-not-duplicate candidates recorded in item body
 
 `contracts.test.mjs` forbids the phrase ``complete `PublishReceiptV1` `` in
 `references/extension-contract.md`, but the docs-app page duplicating that
@@ -259,12 +258,12 @@ only one guarded copy exists.
 
 - **Type:** code-follow-up
 - **Disposition:** file
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-260818-bound-the-smoke-cleanup.md`
+- **Destination-receipt:** e2c85888bfd674f51eb692cc97fec7101b4a14ef
+- **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** filed as new; related-not-duplicate candidates recorded in item body
 
 During final review round 5, `pnpm test` wedged for ~35 minutes inside
 `tools/smoke/runner/cleanup.test.mjs`'s SIGTERM harness; killing and rerunning
@@ -277,12 +276,12 @@ to the harness or reproduce and fix the race.
 
 - **Type:** code-follow-up
 - **Disposition:** file
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-260818-distinguish-operator-directed.md`
+- **Destination-receipt:** e2c85888bfd674f51eb692cc97fec7101b4a14ef
+- **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** filed as new; related-not-duplicate candidates recorded in item body
 
 The three-cycle review governance cap in the review skills counts artifacts
 per scope, so this project's final scope exceeded it by round 3 of 6 even
@@ -296,12 +295,12 @@ recorded override rather than per-round re-justification.
 
 - **Type:** agents-instruction
 - **Disposition:** file
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-260818-require-repo-wide-call-site.md`
+- **Destination-receipt:** e2c85888bfd674f51eb692cc97fec7101b4a14ef
+- **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** filed as new; related-not-duplicate candidates recorded in item body
 
 The `publicAccess` propagation gap occurred because a cross-cutting option was
 threaded only within the task's declared file boundary; the four affected
