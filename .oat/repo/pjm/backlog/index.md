@@ -126,15 +126,19 @@
 | BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version                                  | open   | high     | feature | S        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                            | open   | medium   | feature | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                         | open   | medium   | feature | M        |
+| BL-260818-bound-the-smoke-cleanup        | Bound the smoke cleanup SIGTERM harness with a timeout                                     | open   | medium   | task    | S        |
 | BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path | open   | medium   | task    | S        |
 | BL-260817-detect-branch-behind-published | Detect branch-behind-published-main package versions in CI                                 | open   | medium   | task    | S        |
+| BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap | open   | medium   | task    | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                 | open   | medium   | feature | M        |
 | BL-260817-drop-explainer-kit-publish     | Drop explainer-kit publish-request/v1 in a future minor                                    | open   | medium   | task    | S        |
 | BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance                              | open   | medium   | task    | S        |
+| BL-260818-extend-guarded-prose-contract  | Extend guarded-prose contract tests to docs-app mirrors                                    | open   | medium   | task    | S        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                             | open   | medium   | task    |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                          | open   | medium   | feature | L        |
 | BL-260817-let-resolveassetsroot-honor    | Let resolveAssetsRoot honor OAT_ASSETS_DIR and make smoke asset reads hermetic             | open   | medium   | task    | S        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                  | open   | medium   | feature | M        |
+| BL-260818-require-repo-wide-call-site    | Require repo-wide call-site sweeps for cross-cutting options in phase-implementer guidance | open   | medium   | task    | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                              | open   | medium   | feature | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                 | open   | medium   | feature | S        |
 | BL-260817-run-the-rc-explainer-end       | Run the RC explainer end-to-end test in CI with a provisioned browser                      | open   | medium   | task    | M        |
