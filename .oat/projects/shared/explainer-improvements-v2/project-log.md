@@ -164,6 +164,10 @@ Final review round 3 over 68196ba71..8eb45413e (reviews/final-review-2026-08-17T
 
 Final review passed at 97e5853d2 after six rounds and five bounded fix batches (reviews/final-review-2026-08-17T142743Z.md: 0 Critical, 0 Important, 0 Medium, 1 Minor converted and fixed as final-fix-005 at 0c8382fa1). All ten gates green with explicit exit codes; every deferred finding lives in one of six named backlog items. Implementation complete: 50 tasks, 7 phases; ready for oat-project-pr-final.
 
+### 2026-08-18 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/explainer-improvements-v2/references/project-retro.md evidence_used=archived-review-markdown,backlog-items,current-session-transcript,decision-records,git-history,lifecycle-artifacts,project-log evidence_unavailable=oat-execution-learnings,prior-session-transcripts promotions=5 upstream=0 apply=performed filing=performed
+
 ## End-of-run synthesis (implementation complete; final review pending)
 
 Implementation completed all 34 tasks and adopted two load-bearing adjustments:
