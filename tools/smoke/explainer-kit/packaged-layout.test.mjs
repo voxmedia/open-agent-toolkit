@@ -101,11 +101,10 @@ test('packaged adapter fails closed when its packaged core is missing or incompa
   await rename(fixture.coreRoot, missingRoot);
   const missing = await runJsonFailure(fixture.adapterRunArgs);
   assert.equal(missing.outcome, 'failed');
-  assert.equal(missing.errors[0].code, 'E_CORE_MISSING');
-  assert.match(
-    missing.errors[0].message,
-    /oat tools install utility --scope user/,
-  );
+  assert.deepEqual(missing.reasons, [
+    { stage: 'finalization', kind: 'pipeline-failure', count: 1 },
+  ]);
+  assert.equal('errors' in missing, false);
   await rename(missingRoot, fixture.coreRoot);
 
   const skillPath = `${fixture.coreRoot}/SKILL.md`;
@@ -116,11 +115,10 @@ test('packaged adapter fails closed when its packaged core is missing or incompa
   );
   const incompatible = await runJsonFailure(fixture.adapterRunArgs);
   assert.equal(incompatible.outcome, 'failed');
-  assert.equal(incompatible.errors[0].code, 'E_CORE_INCOMPATIBLE');
-  assert.match(
-    incompatible.errors[0].message,
-    /oat tools update --pack utility --scope user/,
-  );
+  assert.deepEqual(incompatible.reasons, [
+    { stage: 'finalization', kind: 'pipeline-failure', count: 1 },
+  ]);
+  assert.equal('errors' in incompatible, false);
 });
 
 async function runJson({ script, args, cwd, env }) {

@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.6.1
+version: 1.6.2
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -317,7 +317,7 @@ mutation. Initialize `SELECTED_PROJECT_RECAP_RUN=""`.
 When `SHOULD_GENERATE_RECAP="true"`, inspect manifests under
 `{PROJECT_PATH}/explainers/` before generating. A fresh `project-recap` manifest for the current completed implementation is reused without invoking the adapter again. Fresh means the manifest identifies recipe `project-recap`, belongs to this project, has a terminal outcome, and its recorded source hashes match the current approved implementation inputs, including the refreshed summary when present.
 
-If no fresh recap exists, invoke `scripts/run.mjs#runOatExplainer` exactly once with recipe `project-recap`, project invocation, the active project, and unattended lifecycle mode so approved OAT artifacts do not trigger a second content prompt. A failed adapter run warns but does not block completion. Use a returned valid terminal `project-recap` manifest as the selected run; do not rerun to improve its outcome.
+If no fresh recap exists, invoke `scripts/run.mjs#runOatExplainer` exactly once with recipe `project-recap`, project invocation, the active project, and unattended lifecycle mode so approved OAT artifacts do not trigger a second content prompt. A returned `failed` outcome warns but does not block completion. An invocation that returns no terminal outcome blocks lifecycle mutation. Use a returned valid terminal `project-recap` manifest as the selected run; do not rerun to improve its outcome.
 Before that invocation, construct exactly one brief-aware, provider-neutral
 author seam as documented by
 `oat-explainer-kit/references/author-callback.md`. In-process callers pass
@@ -338,7 +338,17 @@ it was given.
 
 Set `SELECTED_PROJECT_RECAP_RUN` only to the final selected `project-recap` run. The value must be project-relative in the form `explainers/<run-slug>` so it can be passed safely to the archive CLI. An incomplete, stale, wrong-project, or `project-explainer` manifest is never selected as the final recap.
 
-When recap intent resolves to `skip`, or generation produces no valid final recap, leave `SELECTED_PROJECT_RECAP_RUN` empty and complete without a recap. Record any failed recap attempt as a warning rather than changing project completion status.
+Before any lifecycle mutation, invoke the shared
+`oat-explainer-kit/scripts/check-terminal-outcome.mjs` guard with the resolved
+intent and, for `generate`, the selected or attempted manifest. The only
+terminal generated outcomes are `built-durable`, `built-not-durable`,
+`built-needs-review`, and `failed`. Missing records and `incomplete` block
+completion; do not substitute a warning or infer an outcome from filesystem
+presence. A `skip` intent requires no manifest.
+
+When recap intent resolves to `skip`, leave `SELECTED_PROJECT_RECAP_RUN` empty
+and complete without a recap. A terminal `failed` recap attempt is recorded as
+a warning rather than changing project completion status.
 
 `project-explainer` runs are active-project working artifacts, not durable post-completion reference products. Do not export, re-attest, or add archive-aware PR or summary reference links for a `project-explainer` run.
 
@@ -633,6 +643,12 @@ with:
 
 For a shared project that was not archived, use the selected active run and
 omit `relocatedFrom`, but keep the same `completion-bookkeeping` mode.
+
+When the finalization plan is `complete` with `built-needs-review` or `failed`,
+preserve that exact outcome and skip both attestation and the evidence commit.
+These evidence-only plans are already complete for lifecycle retention and
+remain unpublishable. Call `verifyTrackedRunFinalization(...)` on the complete
+plan; it must not promote either outcome to `built-durable`.
 
 The lifecycle bookkeeping commit is the artifact commit. Call the compatible
 core's `recordDurability(...)` with the finalizer's planned request. Submit only immutable paths under `projectRecapExport.exportRoot` as commit evidence for an archived recap; `manifest.json` and `build-record.json` are mutable records and

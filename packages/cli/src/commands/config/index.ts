@@ -112,6 +112,7 @@ type ConfigKey =
   | 'explainers.publish.awsProfile'
   | 'explainers.publish.awsRegion'
   | 'explainers.publish.provider'
+  | 'explainers.publish.publicAccess'
   | 'explainers.publish.publicBaseUrl'
   | 'explainers.publish.s3Uri'
   | 'git.defaultBranch'
@@ -234,6 +235,7 @@ const KEY_ORDER: ConfigKey[] = [
   'explainers.publish.s3Uri',
   'explainers.publish.publicBaseUrl',
   'explainers.publish.awsRegion',
+  'explainers.publish.publicAccess',
   'explainers.publish.awsProfile',
   'git.defaultBranch',
   'projects.root',
@@ -628,6 +630,19 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand:
       'oat config set explainers.publish.awsRegion <region> --shared',
     description: 'AWS region used for explainer publishing.',
+  },
+  {
+    key: 'explainers.publish.publicAccess',
+    group: 'Explainer Publish (shared)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'public | protected',
+    defaultValue: 'public',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set explainers.publish.publicAccess <public|protected> --shared',
+    description:
+      'Declares whether published explainer URLs support anonymous access; it does not authorize publication.',
   },
   {
     key: 'explainers.publish.awsProfile',
@@ -1232,6 +1247,14 @@ function parseExplainerValue(
       );
     }
     return value.replace(/\/+$/, '');
+  }
+  if (key === 'explainers.publish.publicAccess') {
+    if (value !== 'public' && value !== 'protected') {
+      throw new Error(
+        `Invalid value for ${key}: expected 'public' or 'protected', got '${rawValue}'.`,
+      );
+    }
+    return value;
   }
   return value;
 }

@@ -67,6 +67,8 @@ export function assertReleaseCandidate(candidate, fail) {
     candidate.recipes,
     ['id', 'version', 'schemaVersion', 'path', 'sha256'],
     fail,
+    ({ id, version }) => `${id}@${version}`,
+    byRecipeIdentity,
   );
   if (
     !Array.isArray(candidate.changedCandidates) ||
@@ -143,7 +145,13 @@ function assertSkills(skills, fail) {
   }
 }
 
-function assertIdentityEntries(entries, keys, fail) {
+function assertIdentityEntries(
+  entries,
+  keys,
+  fail,
+  identity = ({ id }) => id,
+  compare = undefined,
+) {
   if (!Array.isArray(entries) || entries.length === 0) {
     fail('Release candidate contract identities are incomplete.');
   }
@@ -161,13 +169,36 @@ function assertIdentityEntries(entries, keys, fail) {
       fail('A release candidate contract identity is invalid.');
     }
   }
-  const identities = entries.map(({ id }) => id);
+  const identities = entries.map(identity);
+  // The expected order must be computed with the same comparator the builder
+  // uses. Sorting the composed `id@version` strings instead disagrees with the
+  // builder's (id, version) tuple whenever one recipe id is a strict prefix of
+  // another, because `-` (0x2D) sorts before `@` (0x40): the builder emits
+  // ['project@1', 'project-explainer@1'] while a string sort expects the
+  // reverse, so a valid RC would be rejected.
+  const expected = compare
+    ? [...entries].sort(compare).map(identity)
+    : [...identities].sort();
   if (
     new Set(identities).size !== identities.length ||
-    !isDeepStrictEqual(identities, [...identities].sort())
+    !isDeepStrictEqual(identities, expected)
   ) {
     fail('Release candidate contract identities must be unique and sorted.');
   }
+}
+
+/**
+ * The single recipe-identity comparator, shared with `build-explainer-rc.mjs`.
+ *
+ * The builder and the contract previously carried transcribed copies bound only
+ * by a comment, so they could silently diverge again. They disagree whenever one
+ * recipe id is a strict prefix of another, because `-` (0x2D) sorts before `@`
+ * (0x40): sorting the composed `id@version` strings puts `project-explainer@1`
+ * before `project@1`, while this tuple order puts `project@1` first.
+ */
+export function byRecipeIdentity(left, right) {
+  const byId = left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
+  return byId || left.version.localeCompare(right.version);
 }
 
 function assertObject(value, fail) {

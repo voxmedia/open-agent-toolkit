@@ -7,6 +7,7 @@ const MODES = new Set(['dedicated', 'completion-bookkeeping']);
 const ARTIFACT_COMMIT_TOKEN = '$ARTIFACT_COMMIT';
 const SHA_PATTERN = /^[a-f0-9]{40}$/;
 const PACKAGE_COVERAGE_VERSION = 'explainer-kit.package-coverage/v2';
+const TERMINAL_EVIDENCE_VERSION = 'explainer-kit.terminal-evidence/v1';
 
 export async function planTrackedRunFinalization(request, context = {}) {
   assertRequest(request);
@@ -24,10 +25,27 @@ export async function planTrackedRunFinalization(request, context = {}) {
       'Finalization requires an explainer-kit.manifest/v1 record.',
     );
   }
-  if (manifest.outcome === 'built-needs-review') {
-    throw new Error(
-      'built-needs-review requires a passing visual review before finalization.',
+  if (['built-needs-review', 'failed'].includes(manifest.outcome)) {
+    const terminalEvidenceContract = await loadTerminalEvidenceContract(
+      context.coreRoot,
     );
+    const { evidence: terminalEvidence } =
+      await terminalEvidenceContract.readTerminalEvidenceFile(runRoot, {
+        manifest,
+      });
+    return {
+      schemaVersion: 'oat-explainer-kit.finalization-plan/v1',
+      status: 'complete',
+      outcome: manifest.outcome,
+      commands: [],
+      push: null,
+      publicationAllowed: false,
+      evidenceDisposition: terminalEvidence.evidenceDisposition,
+      terminalEvidencePath: 'terminal-evidence.json',
+      ...(terminalEvidence.supersededBy && {
+        supersededBy: terminalEvidence.supersededBy,
+      }),
+    };
   }
   const packageCoverage = await loadPackageCoverage(context.coreRoot);
 
@@ -138,11 +156,21 @@ export async function planTrackedRunFinalization(request, context = {}) {
 
 export function verifyTrackedRunFinalization(plan, observation) {
   if (plan?.status === 'complete') {
+    if (
+      !['built-durable', 'built-needs-review', 'failed'].includes(plan.outcome)
+    ) {
+      return failed([
+        error(
+          'invalid-plan',
+          'Complete finalization plan has an unsupported outcome.',
+        ),
+      ]);
+    }
     return {
       ok: true,
-      outcome: 'built-durable',
+      outcome: plan.outcome,
       pushAllowed: false,
-      errors: [],
+      reasons: [],
     };
   }
   const errors = [];
@@ -240,7 +268,7 @@ export function verifyTrackedRunFinalization(plan, observation) {
   }
 
   return errors.length === 0
-    ? { ok: true, outcome, pushAllowed: true, errors: [] }
+    ? { ok: true, outcome, pushAllowed: true, reasons: [] }
     : failed(errors);
 }
 
@@ -329,10 +357,9 @@ async function loadPackageCoverage(coreRoot) {
   let loaded;
   try {
     loaded = await import(pathToFileURL(modulePath).href);
-  } catch (loadError) {
+  } catch {
     throw new Error(
-      `Compatible explainer package coverage could not be loaded from coreRoot: ${loadError.message}`,
-      { cause: loadError },
+      'Compatible explainer package coverage could not be loaded from coreRoot.',
     );
   }
   if (
@@ -342,6 +369,29 @@ async function loadPackageCoverage(coreRoot) {
   ) {
     throw new Error(
       `coreRoot must provide ${PACKAGE_COVERAGE_VERSION} package coverage.`,
+    );
+  }
+  return loaded;
+}
+
+async function loadTerminalEvidenceContract(coreRoot) {
+  const root = await realpathRequired(coreRoot, 'coreRoot');
+  const modulePath = join(root, 'scripts', 'lib', 'terminal-evidence.mjs');
+  let loaded;
+  try {
+    loaded = await import(pathToFileURL(modulePath).href);
+  } catch {
+    throw new Error(
+      'Compatible terminal evidence could not be loaded from coreRoot.',
+    );
+  }
+  if (
+    loaded.TERMINAL_EVIDENCE_VERSION !== TERMINAL_EVIDENCE_VERSION ||
+    typeof loaded.assertTerminalEvidence !== 'function' ||
+    typeof loaded.readTerminalEvidenceFile !== 'function'
+  ) {
+    throw new Error(
+      `coreRoot must provide ${TERMINAL_EVIDENCE_VERSION} confined validation.`,
     );
   }
   return loaded;
@@ -470,6 +520,12 @@ function failed(errors) {
     ok: false,
     outcome: 'built-not-durable',
     pushAllowed: false,
-    errors,
+    reasons: [
+      {
+        stage: 'finalization',
+        kind: 'pipeline-failure',
+        count: Math.min(Math.max(errors.length, 1), 50),
+      },
+    ],
   };
 }

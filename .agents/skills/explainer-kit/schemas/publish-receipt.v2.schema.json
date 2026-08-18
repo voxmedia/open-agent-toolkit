@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.publish-receipt/v2",
+  "title": "PublishReceiptV2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "provider",
+    "publishedAt",
+    "publicAccess",
+    "roots",
+    "sentinel",
+    "artifacts"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "explainer-kit.publish-receipt/v2"
+    },
+    "provider": {
+      "const": "s3-static"
+    },
+    "publishedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "publicAccess": {
+      "enum": ["public", "protected"]
+    },
+    "roots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["s3Uri", "publicBaseUrl"],
+      "properties": {
+        "s3Uri": {
+          "type": "string",
+          "pattern": "^s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9](?:/[^\\s/?#\\\\]+(?:/[^\\s/?#\\\\]+)*)?$"
+        },
+        "publicBaseUrl": {
+          "type": "string",
+          "pattern": "^https://[^\\s/?#@]+(?::[0-9]+)?(?:/[^\\s/?#\\\\]+(?:/[^\\s/?#\\\\]+)*)?$"
+        }
+      }
+    },
+    "sentinel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relativePath",
+        "objectVerification",
+        "publicVerification",
+        "deleted"
+      ],
+      "properties": {
+        "relativePath": {
+          "$ref": "#/$defs/safeRelativePath"
+        },
+        "objectVerification": {
+          "$ref": "#/$defs/objectVerification"
+        },
+        "publicVerification": {
+          "$ref": "#/$defs/publicVerification"
+        },
+        "deleted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifact"
+      },
+      "uniqueItems": true
+    },
+    "publicRootPolicy": {
+      "description": "Present only when EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT was set and the public root was in fact a non-public address, so a publication made with the anti-SSRF control disabled is distinguishable in durable evidence.",
+      "enum": ["private-allowed"]
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "safeRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "source": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "artifactId"],
+          "properties": {
+            "kind": {
+              "const": "manifest"
+            },
+            "artifactId": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "name"],
+          "properties": {
+            "kind": {
+              "const": "auxiliary"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "objectVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "method", "hash"],
+      "properties": {
+        "status": {
+          "const": "verified"
+        },
+        "method": {
+          "enum": ["service-checksum", "authenticated-download"]
+        },
+        "hash": {
+          "$ref": "#/$defs/hash"
+        }
+      }
+    },
+    "publicVerification": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "httpStatus", "hash"],
+          "properties": {
+            "status": {
+              "const": "verified"
+            },
+            "httpStatus": {
+              "type": "integer",
+              "minimum": 200,
+              "maximum": 299
+            },
+            "hash": {
+              "$ref": "#/$defs/hash"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "const": "skipped-protected"
+            }
+          }
+        }
+      ]
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "relativePath",
+        "hash",
+        "s3Uri",
+        "publicUrl",
+        "contentType",
+        "objectVerification",
+        "publicVerification"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "relativePath": {
+          "$ref": "#/$defs/safeRelativePath"
+        },
+        "hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "s3Uri": {
+          "type": "string",
+          "pattern": "^s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]/[^\\s?#\\\\]+$"
+        },
+        "publicUrl": {
+          "type": "string",
+          "pattern": "^https://[^\\s/?#@]+(?::[0-9]+)?/[^\\s?#\\\\]+$"
+        },
+        "contentType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "objectVerification": {
+          "$ref": "#/$defs/objectVerification"
+        },
+        "publicVerification": {
+          "$ref": "#/$defs/publicVerification"
+        }
+      }
+    }
+  }
+}

@@ -19,6 +19,11 @@
     "dist/",
     ".oat/config.json",
     "packages/cli/assets/**",
+    // Transient staging siblings created by bundle-assets.sh. They are
+    // renamed away mid-build, so a concurrent check would otherwise race and
+    // fail with "Failed to read file".
+    "packages/cli/assets.staging.*/**",
+    "packages/cli/assets.previous.*/**",
     "packages/cli/assets/templates/**/*.yml",
     ".oat/templates/**/*.yml",
     "packages/cli/src/commands/docs/migrate/fixtures/**",

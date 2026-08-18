@@ -46,7 +46,10 @@
           "enum": ["none", "commit", "publish"]
         },
         "publish": {
-          "$ref": "explainer-kit.publish-request/v1"
+          "oneOf": [
+            { "$ref": "explainer-kit.publish-request/v1" },
+            { "$ref": "explainer-kit.publish-request/v2" }
+          ]
         }
       }
     },

@@ -15,6 +15,8 @@ import {
 
 const SENTINEL_SUFFIX_PATTERN = /^[a-f0-9]{32}$/;
 const GATES = new Set(['wrapper', 'publish', 'all']);
+const USAGE =
+  'Usage: validate-explainer-acceptance.mjs <acceptance-dir> --gate wrapper|publish|all';
 const FILES = {
   rc: 'rc.json',
   wrapper: 'private-wrapper-result.json',
@@ -238,8 +240,10 @@ async function validatePublishEvidence({
     'publish',
     {
       request: hashCanonicalJson(request),
+      requestSchema: request.schemaVersion,
       manifest: hashCanonicalJson(manifest),
       receipt: hashCanonicalJson(receipt),
+      receiptSchema: receipt.schemaVersion,
       coreRunId: manifest.runId,
     },
   );
@@ -331,9 +335,7 @@ function validateExecutionBindings(execution, expected, evidence) {
   requireObject(execution.request, evidence);
   requireExactKeys(execution.request, ['schemaVersion', 'sha256'], evidence);
   const expectedRequestSchema =
-    execution.entry === 'scripts/publish.mjs'
-      ? 'explainer-kit.publish-request/v1'
-      : 'explainer-kit.run-request/v1';
+    expected.requestSchema ?? 'explainer-kit.run-request/v1';
   if (
     execution.request.schemaVersion !== expectedRequestSchema ||
     execution.request.sha256 !== expected.request
@@ -356,7 +358,7 @@ function validateExecutionBindings(execution, expected, evidence) {
   } else {
     validateExecutionOutput(
       execution.outputs.receipt,
-      'explainer-kit.publish-receipt/v1',
+      expected.receiptSchema,
       expected.receipt,
       evidence,
     );
@@ -391,6 +393,8 @@ function wrapperEvidenceMismatch(evidence, message) {
 
 function validatePublishRequest(request) {
   requireObject(request, FILES.publishRequest);
+  const requestV2 =
+    request.schemaVersion === 'explainer-kit.publish-request/v2';
   const keys = [
     'schemaVersion',
     'provider',
@@ -400,15 +404,20 @@ function validatePublishRequest(request) {
     'siteRoot',
     'manifestPath',
   ];
+  if (requestV2) keys.push('publicAccess');
   if ('awsProfile' in request) keys.push('awsProfile');
   requireExactKeys(request, keys, FILES.publishRequest);
   if (
-    request.schemaVersion !== 'explainer-kit.publish-request/v1' ||
+    ![
+      'explainer-kit.publish-request/v1',
+      'explainer-kit.publish-request/v2',
+    ].includes(request.schemaVersion) ||
     request.provider !== 's3-static' ||
     !nonEmptyString(request.awsRegion) ||
     !nonEmptyString(request.siteRoot) ||
     !nonEmptyString(request.manifestPath) ||
-    ('awsProfile' in request && !nonEmptyString(request.awsProfile))
+    ('awsProfile' in request && !nonEmptyString(request.awsProfile)) ||
+    (requestV2 && !['public', 'protected'].includes(request.publicAccess))
   ) {
     incomplete(FILES.publishRequest, 'Publish request fields are incomplete.');
   }
@@ -467,22 +476,38 @@ function validatePublishReceipt({
   evidence,
 }) {
   requireObject(receipt, evidence);
+  const receiptV2 =
+    receipt.schemaVersion === 'explainer-kit.publish-receipt/v2';
   requireExactKeys(
     receipt,
-    [
-      'schemaVersion',
-      'provider',
-      'publishedAt',
-      'roots',
-      'sentinel',
-      'artifacts',
-    ],
+    receiptV2
+      ? [
+          'schemaVersion',
+          'provider',
+          'publishedAt',
+          'publicAccess',
+          'roots',
+          'sentinel',
+          'artifacts',
+        ]
+      : [
+          'schemaVersion',
+          'provider',
+          'publishedAt',
+          'roots',
+          'sentinel',
+          'artifacts',
+        ],
     evidence,
   );
   if (
-    receipt.schemaVersion !== 'explainer-kit.publish-receipt/v1' ||
+    ![
+      'explainer-kit.publish-receipt/v1',
+      'explainer-kit.publish-receipt/v2',
+    ].includes(receipt.schemaVersion) ||
     receipt.provider !== 's3-static' ||
-    !validDateTime(receipt.publishedAt)
+    !validDateTime(receipt.publishedAt) ||
+    (receiptV2 && !['public', 'protected'].includes(receipt.publicAccess))
   ) {
     incomplete(evidence, 'Publish receipt fields are incomplete.');
   }
@@ -498,11 +523,12 @@ function validatePublishReceipt({
       { evidence },
     );
   }
-  validateSentinel(receipt.sentinel, manifest.runId, evidence);
+  validateSentinel(receipt, manifest.runId, evidence);
   if (!Array.isArray(receipt.artifacts) || receipt.artifacts.length === 0) {
     incomplete(evidence, 'Publish receipt must contain artifacts.');
   }
-  if (receipt.artifacts.length !== manifestArtifacts.size) {
+  const expectedCount = manifestArtifacts.size + (receiptV2 ? 1 : 0);
+  if (receipt.artifacts.length !== expectedCount) {
     throw new AcceptanceError(
       'E_RECEIPT_MISMATCH',
       'Publish receipt does not contain exactly the declared manifest artifacts.',
@@ -511,8 +537,9 @@ function validatePublishReceipt({
   }
 
   const seen = new Set();
+  let auxiliaryCatalogs = 0;
   for (const artifact of receipt.artifacts) {
-    validateReceiptArtifact(artifact, evidence);
+    validateReceiptArtifact(artifact, receipt, evidence);
     if (!safeRelativePath(artifact.relativePath)) {
       throw new AcceptanceError(
         'E_PUBLISH_SAFETY',
@@ -532,7 +559,27 @@ function validatePublishReceipt({
     }
     seen.add(artifact.relativePath);
     const declaredHash = manifestArtifacts.get(artifact.relativePath);
-    if (declaredHash === undefined || declaredHash !== artifact.hash) {
+    const manifestArtifact = manifest.artifacts.find(
+      ({ renderedPath }) => renderedPath === artifact.relativePath,
+    );
+    const auxiliaryCatalog =
+      receiptV2 &&
+      artifact.source?.kind === 'auxiliary' &&
+      artifact.source.name === 'catalog' &&
+      artifact.relativePath ===
+        `site/initiatives/${manifest.slug}/catalog.json`;
+    if (auxiliaryCatalog) auxiliaryCatalogs += 1;
+    const sourceMatches =
+      !receiptV2 ||
+      (declaredHash !== undefined &&
+        artifact.source?.kind === 'manifest' &&
+        artifact.source.artifactId === manifestArtifact?.id) ||
+      auxiliaryCatalog;
+    if (
+      !sourceMatches ||
+      (!auxiliaryCatalog &&
+        (declaredHash === undefined || declaredHash !== artifact.hash))
+    ) {
       throw new AcceptanceError(
         'E_RECEIPT_MISMATCH',
         'Receipt artifact hashes do not match the declared manifest.',
@@ -554,14 +601,26 @@ function validatePublishReceipt({
       );
     }
   }
+  if (receiptV2 && auxiliaryCatalogs !== 1) {
+    throw new AcceptanceError(
+      'E_RECEIPT_MISMATCH',
+      'Publish receipt must contain exactly one generated catalog object.',
+      { evidence },
+    );
+  }
   return receipt.artifacts.length;
 }
 
-function validateSentinel(sentinel, runId, evidence) {
+function validateSentinel(receipt, runId, evidence) {
+  const { sentinel } = receipt;
+  const receiptV2 =
+    receipt.schemaVersion === 'explainer-kit.publish-receipt/v2';
   requireObject(sentinel, evidence);
   requireExactKeys(
     sentinel,
-    ['relativePath', 'uploadVerified', 'publicVerified', 'deleted'],
+    receiptV2
+      ? ['relativePath', 'objectVerification', 'publicVerification', 'deleted']
+      : ['relativePath', 'uploadVerified', 'publicVerified', 'deleted'],
     evidence,
   );
   const prefix = `.explainer-kit-sentinel/${safeRunId(runId)}-`;
@@ -573,8 +632,9 @@ function validateSentinel(sentinel, runId, evidence) {
   if (
     !match ||
     !SENTINEL_SUFFIX_PATTERN.test(match[1]) ||
-    sentinel.uploadVerified !== true ||
-    sentinel.publicVerified !== true ||
+    (receiptV2
+      ? !validVerificationFacts(receipt, sentinel)
+      : sentinel.uploadVerified !== true || sentinel.publicVerified !== true) ||
     sentinel.deleted !== true
   ) {
     incomplete(
@@ -591,11 +651,31 @@ function validateSentinel(sentinel, runId, evidence) {
   }
 }
 
-function validateReceiptArtifact(artifact, evidence) {
+function validateReceiptArtifact(artifact, receipt, evidence) {
+  const receiptV2 =
+    receipt.schemaVersion === 'explainer-kit.publish-receipt/v2';
   requireObject(artifact, evidence);
   requireExactKeys(
     artifact,
-    ['relativePath', 'hash', 's3Uri', 'publicUrl', 'httpStatus', 'contentType'],
+    receiptV2
+      ? [
+          'source',
+          'relativePath',
+          'hash',
+          's3Uri',
+          'publicUrl',
+          'contentType',
+          'objectVerification',
+          'publicVerification',
+        ]
+      : [
+          'relativePath',
+          'hash',
+          's3Uri',
+          'publicUrl',
+          'httpStatus',
+          'contentType',
+        ],
     evidence,
   );
   if (
@@ -603,13 +683,35 @@ function validateReceiptArtifact(artifact, evidence) {
     !HASH_PATTERN.test(artifact.hash) ||
     !nonEmptyString(artifact.s3Uri) ||
     !nonEmptyString(artifact.publicUrl) ||
-    !Number.isInteger(artifact.httpStatus) ||
-    artifact.httpStatus < 200 ||
-    artifact.httpStatus > 299 ||
-    !nonEmptyString(artifact.contentType)
+    !nonEmptyString(artifact.contentType) ||
+    (receiptV2
+      ? !validVerificationFacts(receipt, artifact)
+      : !Number.isInteger(artifact.httpStatus) ||
+        artifact.httpStatus < 200 ||
+        artifact.httpStatus > 299)
   ) {
     incomplete(evidence, 'A publish receipt artifact is incomplete.');
   }
+}
+
+function validVerificationFacts(receipt, value) {
+  if (
+    value.objectVerification?.status !== 'verified' ||
+    !['service-checksum', 'authenticated-download'].includes(
+      value.objectVerification.method,
+    ) ||
+    !HASH_PATTERN.test(value.objectVerification.hash)
+  ) {
+    return false;
+  }
+  if (value.hash && value.objectVerification.hash !== value.hash) return false;
+  return receipt.publicAccess === 'public'
+    ? value.publicVerification?.status === 'verified' &&
+        Number.isInteger(value.publicVerification.httpStatus) &&
+        value.publicVerification.httpStatus >= 200 &&
+        value.publicVerification.httpStatus <= 299 &&
+        value.publicVerification.hash === value.objectVerification.hash
+    : value.publicVerification?.status === 'skipped-protected';
 }
 
 function validateWrapperCommand(command) {
@@ -824,10 +926,7 @@ function incomplete(evidence, message) {
 }
 
 function usageError() {
-  throw new AcceptanceError(
-    'E_USAGE',
-    'Usage: validate-explainer-acceptance.mjs <acceptance-dir> --gate wrapper|publish|all',
-  );
+  throw new AcceptanceError('E_USAGE', USAGE);
 }
 
 function parseArguments(argv) {
@@ -858,6 +957,13 @@ function publicFailure(error) {
 }
 
 async function main() {
+  if (
+    process.argv.length === 3 &&
+    (process.argv[2] === '--help' || process.argv[2] === '-h')
+  ) {
+    process.stdout.write(`${USAGE}\n`);
+    return;
+  }
   try {
     const options = parseArguments(process.argv.slice(2));
     const result = await validateExplainerAcceptance(options);

@@ -41,13 +41,10 @@ Useful next commands:
 - `pnpm run cli -- project list --json`
 - `pnpm run cli -- project validate-plan --project-path <path>`
 
-For local repo development:
-
-- `pnpm build`
-- `pnpm build:docs`
-- `pnpm lint`
-- `pnpm type-check`
-- `pnpm test`
+For local repo development, run the ordered Definition of Done in
+[`AGENTS.md`](AGENTS.md) — it mirrors CI's gate list exactly, so a locally
+green run implies CI green. `pnpm lint` and `pnpm format` are additionally
+required when a change touches `tools/smoke` or `.agents/skills`.
 
 ## Docs
 

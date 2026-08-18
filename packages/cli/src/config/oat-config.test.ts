@@ -2337,6 +2337,7 @@ describe('oat-config', () => {
               s3Uri: 's3://example-bucket/explainers/',
               publicBaseUrl: 'https://docs.example.com/explainers/',
               awsRegion: ' us-east-1 ',
+              publicAccess: 'protected',
               awsProfile: 'not-shared',
             },
           },
@@ -2363,6 +2364,7 @@ describe('oat-config', () => {
             s3Uri: 's3://example-bucket/explainers',
             publicBaseUrl: 'https://docs.example.com/explainers',
             awsRegion: 'us-east-1',
+            publicAccess: 'protected',
           },
         },
         workflow: {

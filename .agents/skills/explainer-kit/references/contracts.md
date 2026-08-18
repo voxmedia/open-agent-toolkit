@@ -34,25 +34,34 @@ Every run, interactive or unattended, also requires a provider-neutral author
 callback; a run without one fails `E_AUTHOR_REQUIRED`. An in-process caller
 supplies `options.author(request)`; a JSON-only CLI caller uses
 `--author-module author.mjs`. The core invokes it once per resolved artifact
-with an `explainer-kit.author-request/v2` payload containing the artifact
+with an `explainer-kit.author-request/v3` payload containing the artifact
 identity and type, the artifact's authoring path, the inlined brief, the bundled
 `visualAuthoringGuidance`, the reconciled fact base, the resolved theme, the
 shell source for artistic artifacts, the required narrative sections for
-narrative floor artifacts, and bounded-discovery context. The guidance is
+narrative floor artifacts, bounded-discovery context, and `artifactLinks`.
+Each canonical link entry names the planned artifact, its explicit site-relative
+path ending in `index.html`, and the relative `href` from the receiving
+artifact's own location. The guidance is
 loaded only from the installed skill's `references/visual-authoring.md`; no
 ambient or home-directory file is consulted. The callback must return an
 `explainer-kit.author-result/v2` carrying exactly one of `content.markdown` or
 `content.html`, matching the artifact's declared authoring path, plus non-secret
 provenance. The executable callback is never persisted in `run-request.json`.
 
-Project recap requests have an explicit `recapMode`. Omitting it selects and
-persists `artistic`, which keeps the recipe's rich HTML floor. Selecting
-`deterministic-markdown` before the run applies the recipe-owned fallback to
-the complete planned portfolio, including optional expansions, while retaining
-the same adaptive hub, architecture, and deck identities. The resulting
-Markdown author records and `source/content/*.md` paths remain distinct in the
-manifest and immutable rebuild package. An artistic author failure fails the
-run; the core never silently retries or downgrades it as Markdown.
+New project recap producers select immutable `project-recap@2`. Its
+navigational hub is the only mandatory artifact. A diagram, deck, or deep dive
+is an optional expansion only when its justification states a distinct reader
+question, supporting source evidence, and the rationale for using that medium.
+Project recap requests also have an explicit `recapMode`. Omitting it selects
+and persists `artistic`, which keeps the recipe's rich HTML floor. Selecting
+`deterministic-markdown` before the run applies the recipe-owned fallback to the
+complete planned portfolio — the hub plus any accepted expansions — without
+changing its artifact identities. The resulting Markdown author records and
+`source/content/*.md` paths remain distinct in the manifest and immutable
+rebuild package. An artistic author failure fails the run; the core never
+silently retries or downgrades it as Markdown. `project-recap@1` is immutable
+replay guidance only: retained v1 requests remain readable, but current
+producers do not select it.
 
 Before artifact authoring, a caller supplies one provider-neutral `planSet`
 callback. It receives the reconciled fact base and recipe policy and returns
@@ -62,7 +71,7 @@ callback. It receives the reconciled fact base and recipe policy and returns
 {
   "schemaVersion": "explainer-kit.set-plan/v1",
   "planId": "project-recap-set",
-  "recipe": { "id": "project-recap", "version": "1" },
+  "recipe": { "id": "project-recap", "version": "2" },
   "sourceIds": ["plan"],
   "ledger": {
     "terminology": [],
@@ -87,9 +96,11 @@ The set plan owns the shared terminology/status/number ledger, source coverage,
 adaptive portfolio, per-artifact draft, and visual intent. Optional entries add
 a source-backed `justification`; undeclared sources, conflicting ledger values,
 duplicate artifact IDs, and unjustified optional entries are invalid. Each
-`author-request/v2` carries the complete immutable `setContext` plus the exact
+`author-request/v3` carries the complete immutable `setContext` plus the exact
 matching `plannedArtifact`. The planner finalizes floor and expansion entries
 before authoring; author results cannot add, remove, or replace artifacts.
+Version 2 requests remain valid for deterministic replay; new runs emit only
+the complete v3 request.
 When a planner draft contains a supported non-linear graph, the request also
 carries its closed `graphSemantics` (direction, nodes, edges, and topology).
 Artistic HTML must expose one exact `data-direction`. Each planned node requires
@@ -183,12 +194,33 @@ The core executes:
 5. author every planned artifact against the same set context
 6. render typed artifacts through the narrative renderer or validate
    agent-composed HTML, per each artifact's declared authoring path
-7. run structural and guideline QA, plus required browser and independent
+7. validate every post-render `href`, `src`, `srcset`, and embedded reference
+   against the manifest paths and generated site tree; reject directory links,
+   escapes, missing files or fragments, malformed references, and unsafe
+   embedded resources
+8. optionally apply one bounded author correction, then rerender and revalidate
+   the complete site before any browser callback
+9. run structural and guideline QA, plus required browser and independent
    visual review for unattended project recaps
-8. close any unresolved recap review gate before external persistence
-9. resolve content approval — the interactive gate pauses here, after render and
-   QA and before anything is published or persisted externally
-10. write the manifest and build record
+10. close any unresolved recap review gate before external persistence
+11. resolve content approval — the interactive gate pauses here, after render and
+    QA and before anything is published or persisted externally
+12. write the manifest and build record
+
+The internal-reference gate uses a bounded tokenizer/classifier rather than a
+general HTML parser. Relative references resolve from the current explicit file
+with an isolated HTTPS base, then must bind exactly to the manifest/site tree.
+Referenced fragments must resolve to exactly one ID in the target document;
+unused duplicate renderer-generated IDs do not fail indexing. Safe base64 image
+data references and same-document fragments are classified separately. A
+malformed, unresolved, or ambiguous reference fails `E_INTERNAL_REFERENCE`.
+Once the one correction is exhausted, including after visual correction, the run
+fails hard: the QA stage is recorded `failed` with code-only evidence and the
+scrubbed message `The qa stage failed.`, and the run is not durability- or
+publication-eligible. No finding is retained and nothing names the broken
+reference — terminal evidence is code-only by design, and the failure is
+attributed to the `link-validation` evidence stage rather than to
+`browser-review`.
 
 An incomplete interactive result includes
 `approval.resumeToken: "ekrt2:<64 lowercase hex characters>"`. The token is an

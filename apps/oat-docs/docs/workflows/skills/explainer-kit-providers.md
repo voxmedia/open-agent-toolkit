@@ -38,9 +38,11 @@ The provider-neutral `planSet` callback runs once after fact reconciliation and
 before any author callback. It returns the complete portfolio and one shared
 claim ledger.
 
-For a project recap, the portfolio must contain the required hub, architecture
-view, and deck. Optional entries must use a recipe-licensed profile, remain
-inside recipe and per-profile limits, and carry source-backed justification.
+For a new project recap, the portfolio must contain the required navigational
+hub. A diagram, deck, or deep dive is optional and must use a recipe-licensed
+profile, remain inside recipe and per-profile limits, and answer a distinct
+reader question with source evidence and a medium rationale. Version 1 recap
+plans remain readable for replay with their historical three-artifact floor.
 Duplicate identities, undeclared sources, conflicting shared terms, and
 unjustified optionals fail validation.
 
@@ -50,14 +52,16 @@ artifact. Authors cannot add, remove, replace, or rename portfolio entries.
 ## Artifact author
 
 The core invokes `author` once per planned artifact with
-`explainer-kit.author-request/v2`. The request contains:
+`explainer-kit.author-request/v3`. Version 2 requests remain readable for
+replay. The current request contains:
 
 - artifact identity, type, and authoring path;
 - the versioned brief and bundled medium-specific guidance;
 - reconciled facts and the shared set context;
 - the matching planned artifact;
 - the resolved theme; and
-- the bundled shell for artistic HTML.
+- the bundled shell for artistic HTML; and
+- canonical artifact links ending in explicit `index.html` paths.
 
 Return `explainer-kit.author-result/v2` with exactly one of
 `content.markdown` or `content.html` and non-secret provenance. The core
@@ -127,6 +131,13 @@ all reviewed artifact IDs, structured findings, and one disposition:
 - `pass` completes the review gate;
 - `correct` requests one bounded correction and one final review; or
 - `fail` terminates the gate.
+
+Judge typography, hierarchy, composition, density, medium leverage, template
+repetition, diagram semantics, and cross-artifact cohesion from the bound
+browser evidence. `pass` means no required correction remains. `correct`
+findings name concrete artifact-scoped actions that can be completed in the
+single bounded correction round. Keep this judgment in prose; do not invent
+numeric scores or geometry thresholds.
 
 The critic must not mutate rendered files or evidence. The core revalidates all
 bound bytes after each callback.

@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import { lstat, readdir, realpath, rm } from 'node:fs/promises';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 
 import { browserCaptureIdentity } from './browser-runtime.mjs';
 import { canonicalHash, validateContract } from './contracts.mjs';
@@ -16,6 +18,94 @@ export const VISUAL_REVISION_PATH = 'qa/visual-review/revision.json';
 const REVIEW_VIEWPORTS = Object.freeze(['mobile', 'tablet', 'desktop']);
 const SUCCESSFUL_OUTCOMES = new Set(['built-not-durable', 'built-durable']);
 const PARTIAL_REVIEW_OUTCOME = 'built-needs-review';
+
+export function permissibleRunPackagePaths(
+  manifest,
+  { includeManifest = true, includeTerminalEvidence = false } = {},
+) {
+  if (!isObject(manifest) || !isObject(manifest.immutableHashes)) {
+    throw new TypeError(
+      'Run package inventory requires a manifest with immutable hashes.',
+    );
+  }
+  const paths = new Set([
+    ...Object.keys(manifest.immutableHashes),
+    'build-record.json',
+    ...(includeManifest ? ['manifest.json'] : []),
+    ...(includeTerminalEvidence ? ['terminal-evidence.json'] : []),
+  ]);
+  for (const path of paths) assertInventoryPath(path);
+  return [...paths].sort();
+}
+
+export async function enforceRunPackageInventory(
+  runRoot,
+  manifest,
+  {
+    includeManifest = true,
+    includeTerminalEvidence = false,
+    removeUnexpected = false,
+  } = {},
+) {
+  if (typeof runRoot !== 'string' || runRoot.length === 0) {
+    throw new TypeError('Run package inventory requires a run root.');
+  }
+  const rootStats = await lstat(runRoot);
+  const canonicalRoot = await realpath(runRoot);
+  if (rootStats.isSymbolicLink() || !rootStats.isDirectory()) {
+    throw new Error('Run package inventory root is not a real directory.');
+  }
+
+  const allowedFiles = new Set(
+    permissibleRunPackagePaths(manifest, {
+      includeManifest,
+      includeTerminalEvidence,
+    }),
+  );
+  const allowedDirectories = new Set();
+  for (const path of allowedFiles) {
+    let parent = dirname(path);
+    while (parent !== '.') {
+      allowedDirectories.add(parent);
+      parent = dirname(parent);
+    }
+  }
+
+  const presentFiles = new Set();
+  let unexpected = false;
+  async function inspect(relativeRoot = '') {
+    const entries = await readdir(join(canonicalRoot, relativeRoot));
+    for (const entry of entries) {
+      const relativePath = relativeRoot ? `${relativeRoot}/${entry}` : entry;
+      const absolutePath = join(canonicalRoot, relativePath);
+      const stats = await lstat(absolutePath);
+      const allowed =
+        (stats.isDirectory() && allowedDirectories.has(relativePath)) ||
+        (stats.isFile() && allowedFiles.has(relativePath));
+      if (stats.isSymbolicLink() || !allowed) {
+        unexpected = true;
+        if (removeUnexpected) {
+          await rm(absolutePath, { recursive: true, force: true });
+        }
+        continue;
+      }
+      if (stats.isDirectory()) {
+        await inspect(relativePath);
+      } else {
+        presentFiles.add(relativePath);
+      }
+    }
+  }
+  await inspect();
+
+  const missing = [...allowedFiles].some((path) => !presentFiles.has(path));
+  if (unexpected || missing) {
+    throw new Error(
+      'Run package inventory does not match the exact permissible tree.',
+    );
+  }
+  return [...presentFiles].sort();
+}
 
 export function requiredImmutablePackagePaths(manifest, { runMode } = {}) {
   if (!isObject(manifest)) {
@@ -93,6 +183,11 @@ export async function validateImmutablePackageEvidence(
   if (manifest?.recipe?.id !== 'project-recap') return;
 
   const recorded = Object.keys(manifest.immutableHashes ?? {});
+  if (recorded.some(isLegacyReviewMaterial)) {
+    throw new Error(
+      'Legacy review-gate evidence is not part of the canonical package.',
+    );
+  }
   const successful = SUCCESSFUL_OUTCOMES.has(manifest.outcome);
   const retainsReviewMaterial = recorded.some(isReviewMaterial);
   if (manifest.outcome === PARTIAL_REVIEW_OUTCOME) return;
@@ -274,12 +369,17 @@ export async function validateImmutablePackageEvidence(
 
     const resultPath = `${root}/result.json`;
     const result = parseJson(await readVerified(resultPath), resultPath);
-    const resultValidation = validateContract('visual-review-result', result, {
-      visualReviewRequest: request,
-    });
+    const resultValidation = validateContract(
+      'visual-review-evidence',
+      result,
+      {
+        visualReviewRequest: request,
+        attempt,
+      },
+    );
     if (!resultValidation.valid) {
       throw new Error(
-        `Immutable visual-review result ${resultPath} is invalid: ${resultValidation.errors
+        `Immutable visual-review evidence ${resultPath} is invalid: ${resultValidation.errors
           .map(({ code }) => code)
           .join(', ')}.`,
       );
@@ -309,23 +409,41 @@ function addVisualReviewAttemptPaths(required, manifest, attempt) {
 }
 
 function isReviewMaterial(path) {
-  return (
-    path.startsWith('qa/browser/') ||
-    path.startsWith('qa/visual-review/') ||
-    path.startsWith('qa/review-gate/')
-  );
+  return path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/');
+}
+
+function isLegacyReviewMaterial(path) {
+  return path.startsWith('qa/review-gate/');
 }
 
 function isAttemptTwoMaterial(path) {
   return (
     path === VISUAL_REVISION_PATH ||
-    path.startsWith('qa/visual-review/attempt-2/') ||
-    path.startsWith('qa/review-gate/attempt-2')
+    path.startsWith('qa/visual-review/attempt-2/')
   );
 }
 
 function isObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function assertInventoryPath(path) {
+  if (
+    typeof path !== 'string' ||
+    path.length === 0 ||
+    path.includes('\\') ||
+    isAbsolute(path) ||
+    path
+      .split('/')
+      .some(
+        (segment) => segment === '' || segment === '.' || segment === '..',
+      ) ||
+    relative('.', path).startsWith(`..${sep}`)
+  ) {
+    throw new TypeError(
+      'Run package inventory paths must be normalized relative paths.',
+    );
+  }
 }
 
 function isPng(bytes) {

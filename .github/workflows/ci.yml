@@ -40,7 +40,10 @@ jobs:
         run: pnpm build
 
       - name: Validate skill version bumps
-        run: pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
+        run: pnpm run check:skill-bumps
+
+      - name: Validate package version bumps
+        run: pnpm release:check-versions
 
       - name: Release validate
         run: pnpm release:validate

@@ -1,18 +1,22 @@
 #!/usr/bin/env node
 
 import { readFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { bindProjectSources } from './bind-project-sources.mjs';
+import {
+  bindProjectSources,
+  bindRepositorySources,
+} from './bind-project-sources.mjs';
 import { checkCoreCompatibility } from './check-core.mjs';
+import { deriveExplainerDestination } from './derive-destination.mjs';
 import {
   resolveExplainerConfig,
   toExplainerRunRequest,
 } from './resolve-config.mjs';
 import { resolveExplainerOutputRoot } from './resolve-paths.mjs';
 
-export const MINIMUM_CORE_VERSION = '2.0.3';
+export const MINIMUM_CORE_VERSION = '2.1.0';
 const ADAPTER_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export async function runOatExplainer({
@@ -80,21 +84,52 @@ export async function runOatExplainer({
     repoRoot,
     invocation,
     activeProject,
+    slug,
   });
-  if (invocation !== 'project' || !activeProject) {
+  const destination = resolvedConfig.publish
+    ? deriveExplainerDestination({
+        invocation,
+        ...(invocation === 'project' && {
+          projectSlug: basename(activeProject),
+        }),
+        s3Uri: resolvedConfig.publish.s3Uri,
+        publicBaseUrl: resolvedConfig.publish.publicBaseUrl,
+      })
+    : null;
+  let bound;
+  if (invocation === 'project') {
+    if (!activeProject) {
+      throw new Error(
+        'Project artifact binding requires an activeProject input.',
+      );
+    }
+    bound = await bindProjectSources({
+      projectRoot: resolve(repoRoot, activeProject),
+      repoRoot,
+      recipe,
+      suppliedFactBasePath,
+    });
+  } else if (invocation === 'repo') {
+    bound = await bindRepositorySources({
+      repoRoot,
+      suppliedFactBasePath,
+    });
+  } else {
     throw new Error(
-      'Project artifact binding requires a project invocation and activeProject.',
+      'The OAT adapter accepts project or repository invocations; direct callers invoke the core with an explicit output root.',
     );
   }
-  const projectRoot = resolve(repoRoot, activeProject);
-  const bound = await bindProjectSources({
-    projectRoot,
-    repoRoot,
-    recipe,
-    suppliedFactBasePath,
-  });
+  const requestConfig = destination
+    ? {
+        ...resolvedConfig,
+        publish: {
+          ...resolvedConfig.publish,
+          ...destination,
+        },
+      }
+    : resolvedConfig;
   const request = toExplainerRunRequest({
-    resolvedConfig,
+    resolvedConfig: requestConfig,
     recipe,
     slug,
     outputRoot,
@@ -181,13 +216,6 @@ export async function runOatExplainer({
     }),
     reviewedSource: bound.reviewedSource,
   });
-  const criticContractError = result?.errors?.find(
-    ({ message }) =>
-      typeof message === 'string' && message.includes('critic result contract'),
-  );
-  if (criticContractError) {
-    throw new Error(criticContractError.message);
-  }
   const manifest = await readManifest(result, request);
   return {
     compatibility,
@@ -195,7 +223,9 @@ export async function runOatExplainer({
     manifest,
     result,
     marking: result.marking ?? null,
+    publication: result.publication ?? null,
     outputRoot,
+    destination,
   };
 }
 
@@ -204,10 +234,11 @@ export function supportsAdaptiveSetPlanning(version) {
   const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-|$)/);
   if (!match) return false;
   const [major, minor, patch] = match.slice(1).map(Number);
+  const [minimumMajor, minimumMinor, minimumPatch] =
+    MINIMUM_CORE_VERSION.split('.').map(Number);
   return (
-    major === 2 &&
-    (minor > 0 ||
-      (minor === 0 && patch >= Number(MINIMUM_CORE_VERSION.split('.')[2])))
+    major === minimumMajor &&
+    (minor > minimumMinor || (minor === minimumMinor && patch >= minimumPatch))
   );
 }
 
@@ -467,11 +498,8 @@ async function resolveLifecycleBrowserSession({
     return core.assertBrowserProbeSession(resolvedSession, {
       allowFixture: !required,
     });
-  } catch (cause) {
-    const error = new Error(
-      `Browser session validation failed: ${cause?.message ?? String(cause)}`,
-      { cause },
-    );
+  } catch {
+    const error = new Error('Browser session validation failed.');
     error.code = 'E_BROWSER_PROBE_REQUIRED';
     throw error;
   }
@@ -633,24 +661,29 @@ async function readManifest(result, request) {
   return manifest;
 }
 
-async function runCli(argv = process.argv.slice(2), io = console) {
+export async function runOatExplainerCli(
+  argv = process.argv.slice(2),
+  io = console,
+  run = runOatExplainer,
+) {
   try {
     if (argv.length !== 2 || argv[0] !== '--context') {
       throw new Error('Usage: run.mjs --context <adapter-context.json>');
     }
     const context = JSON.parse(await readFile(argv[1], 'utf8'));
-    const result = await runOatExplainer(context);
-    io.log(JSON.stringify(result, null, 2));
+    const result = await run(context);
+    io.log(JSON.stringify(projectAdapterCliResult(result), null, 2));
     return result.result.outcome === 'failed' ? 1 : 0;
-  } catch (error) {
+  } catch {
     io.error(
       JSON.stringify(
         {
           outcome: 'failed',
-          errors: [
+          reasons: [
             {
-              code: error.code ?? 'E_ADAPTER',
-              message: error instanceof Error ? error.message : String(error),
+              stage: 'finalization',
+              kind: 'pipeline-failure',
+              count: 1,
             },
           ],
         },
@@ -662,9 +695,211 @@ async function runCli(argv = process.argv.slice(2), io = console) {
   }
 }
 
+function projectAdapterCliResult(value) {
+  if (!isObject(value) || !isObject(value.result)) {
+    return {
+      result: {
+        outcome: 'failed',
+        reasons: [
+          {
+            stage: 'finalization',
+            kind: 'pipeline-failure',
+            count: 1,
+          },
+        ],
+      },
+    };
+  }
+  const projected = {};
+  for (const key of ['compatibility', 'request', 'manifest', 'destination']) {
+    if (isObject(value[key])) projected[key] = structuredClone(value[key]);
+  }
+  for (const key of ['marking', 'outputRoot']) {
+    if (typeof value[key] === 'string' || value[key] === null) {
+      projected[key] = value[key];
+    }
+  }
+  projected.result = projectAdapterRunResult(value.result);
+  const publication = projectAdapterPublication(value.publication);
+  if (publication) projected.publication = publication;
+  return projected;
+}
+
+function projectAdapterRunResult(value) {
+  const projected = {};
+  for (const key of [
+    'runId',
+    'runRoot',
+    'manifestPath',
+    'buildRecordPath',
+    'outcome',
+    'marking',
+  ]) {
+    if (typeof value[key] === 'string') projected[key] = value[key];
+  }
+  if (Array.isArray(value.warnings)) {
+    projected.warnings = [
+      ...new Set(value.warnings.filter(isAdapterWarningCode)),
+    ];
+  }
+  for (const key of ['discovery', 'approval']) {
+    if (isObject(value[key])) projected[key] = structuredClone(value[key]);
+  }
+  const reasons = projectAdapterReasons(value.reasons);
+  if (reasons.length > 0) projected.reasons = reasons;
+  const visualReview = projectAdapterVisualReview(value.visualReview);
+  if (visualReview) projected.visualReview = visualReview;
+  const publication = projectAdapterPublication(value.publication);
+  if (publication) projected.publication = publication;
+  return projected;
+}
+
+function projectAdapterVisualReview(value) {
+  if (!isObject(value)) return null;
+  const reasons = projectAdapterReasons(value.reasons);
+  if (
+    value.schemaVersion !== 'explainer-kit.visual-review-evidence/v1' ||
+    typeof value.requestHash !== 'string' ||
+    ![1, 2].includes(value.attempt) ||
+    !['pass', 'correct', 'failed'].includes(value.disposition) ||
+    !Array.isArray(value.reasons) ||
+    reasons.length !== value.reasons.length
+  ) {
+    return null;
+  }
+  return {
+    schemaVersion: value.schemaVersion,
+    requestHash: value.requestHash,
+    attempt: value.attempt,
+    disposition: value.disposition,
+    reasons,
+  };
+}
+
+function projectAdapterPublication(value) {
+  if (!isObject(value)) return null;
+  if (
+    value.schemaVersion !== 'explainer-kit.publish-summary/v1' &&
+    value.schemaVersion !== 'explainer-kit.publish-summary/v2'
+  ) {
+    return null;
+  }
+  return {
+    schemaVersion: value.schemaVersion,
+    ...(typeof value.receiptSchemaVersion === 'string' && {
+      receiptSchemaVersion: value.receiptSchemaVersion,
+    }),
+    ...(typeof value.publicAccess === 'string' && {
+      publicAccess: value.publicAccess,
+    }),
+    ...(Array.isArray(value.artifacts) && {
+      artifacts: value.artifacts.map((artifact) =>
+        isObject(artifact)
+          ? {
+              ...pickAdapterStringFields(artifact, [
+                'relativePath',
+                'publicUrl',
+                's3Uri',
+                'hash',
+                'contentType',
+              ]),
+              ...(isObject(artifact.source) && {
+                source: pickAdapterStringFields(artifact.source, [
+                  'kind',
+                  'artifactId',
+                  'name',
+                ]),
+              }),
+              ...(isObject(artifact.objectVerification) && {
+                objectVerification: projectAdapterVerification(
+                  artifact.objectVerification,
+                ),
+              }),
+              ...(isObject(artifact.publicVerification) && {
+                publicVerification: projectAdapterVerification(
+                  artifact.publicVerification,
+                ),
+              }),
+            }
+          : {},
+      ),
+    }),
+  };
+}
+
+function projectAdapterVerification(value) {
+  return {
+    ...pickAdapterStringFields(value, ['status', 'method', 'hash']),
+    ...(Number.isInteger(value.httpStatus) && {
+      httpStatus: value.httpStatus,
+    }),
+  };
+}
+
+function projectAdapterReasons(value) {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((reason) => {
+    if (
+      !isObject(reason) ||
+      ![
+        'planning',
+        'authoring',
+        'rendering',
+        'link-validation',
+        'browser-review',
+        'visual-review',
+        'durability',
+        'finalization',
+      ].includes(reason.stage) ||
+      ![
+        'finding',
+        'provider-failure',
+        'pipeline-failure',
+        'superseded',
+      ].includes(reason.kind) ||
+      !Number.isInteger(reason.count) ||
+      reason.count < 1 ||
+      reason.count > 50
+    ) {
+      return [];
+    }
+    return [
+      {
+        stage: reason.stage,
+        kind: reason.kind,
+        ...(typeof reason.artifactId === 'string' && {
+          artifactId: reason.artifactId,
+        }),
+        count: reason.count,
+      },
+    ];
+  });
+}
+
+function pickAdapterStringFields(value, keys) {
+  return Object.fromEntries(
+    keys.flatMap((key) =>
+      typeof value[key] === 'string' ? [[key, value[key]]] : [],
+    ),
+  );
+}
+
+function isAdapterWarningCode(value) {
+  return (
+    typeof value === 'string' &&
+    /^(?:fact-base-freshness-warning|theme-selection-normalized|durability-evidence-required|publish-receipt-evidence-required|(?:expansion|guideline|render|qa)-[a-z0-9-]+|visual-review-required:[a-z0-9-]+|stage-reopened:[a-z0-9-]+:[0-9TZ:.-]+|missing-(?:theme-token|required-anchor):[a-z0-9-]+)$/.test(
+      value,
+    )
+  );
+}
+
+function isObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 if (
   process.argv[1] &&
   pathToFileURL(process.argv[1]).href === import.meta.url
 ) {
-  process.exitCode = await runCli();
+  process.exitCode = await runOatExplainerCli();
 }

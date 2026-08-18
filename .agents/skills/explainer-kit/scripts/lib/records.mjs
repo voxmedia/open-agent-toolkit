@@ -15,6 +15,11 @@ import {
   validateImmutablePackageEvidence,
 } from './package-coverage.mjs';
 import { resolveRootConfinedPath } from './safe-paths.mjs';
+import {
+  assertTerminalEvidence,
+  createTerminalEvidence,
+  createVisualReviewEvidence,
+} from './terminal-evidence.mjs';
 
 export {
   PACKAGE_COVERAGE_VERSION,
@@ -137,10 +142,10 @@ export async function updateBuildRecord(run, stage) {
     ...current,
     status: stage.status,
     outputPaths: stage.outputPaths ?? current.outputPaths,
-    warnings: stage.warnings ?? current.warnings,
+    warnings: structuredClone(stage.warnings ?? current.warnings),
   };
   if (stage.error !== undefined) {
-    next.error = stage.error;
+    next.error = localStageFailure(stage.id);
   }
   if (stage.status === 'running' && next.startedAt === undefined) {
     next.startedAt = timestamp;
@@ -202,9 +207,50 @@ export async function writeVisualReviewAttempt(run, { attempt, review } = {}) {
       'Visual review records must contain valid bound contracts.',
     );
   }
+  const retainedResult = createVisualReviewEvidence({
+    request: review.request,
+    attempt,
+    result: review.result,
+  });
+  return writeRetainedVisualReview(run, {
+    attempt,
+    request: review.request,
+    retainedResult,
+  });
+}
 
+export async function writeVisualReviewFailure(
+  run,
+  { attempt, request, kind = 'provider-failure' } = {},
+) {
+  assertRun(run);
+  if (
+    ![1, 2].includes(attempt) ||
+    !isObject(request) ||
+    !['provider-failure', 'pipeline-failure'].includes(kind)
+  ) {
+    throw new TypeError(
+      'Visual review failures require a bound request, attempt, and local failure kind.',
+    );
+  }
+  const retainedResult = createVisualReviewEvidence({
+    request,
+    attempt,
+    failureKind: kind,
+  });
+  return writeRetainedVisualReview(run, {
+    attempt,
+    request,
+    retainedResult,
+  });
+}
+
+async function writeRetainedVisualReview(
+  run,
+  { attempt, request, retainedResult },
+) {
   const directory = `qa/visual-review/attempt-${attempt}`;
-  const retainedRequest = structuredClone(review.request);
+  const retainedRequest = structuredClone(request);
   const paths = [];
   for (const artifact of retainedRequest.renderedArtifacts) {
     for (const evidence of artifact.evidence) {
@@ -228,36 +274,99 @@ export async function writeVisualReviewAttempt(run, { attempt, review } = {}) {
   const requestPath = `${directory}/request.json`;
   const resultPath = `${directory}/result.json`;
   await writeJsonAtomic(run.runRoot, requestPath, retainedRequest);
-  await writeJsonAtomic(run.runRoot, resultPath, review.result);
+  await writeJsonAtomic(run.runRoot, resultPath, retainedResult);
   return [...paths, requestPath, resultPath];
 }
 
-export async function writeVisualReviewFailure(
+export async function writeTerminalEvidence(run, input = {}) {
+  assertRun(run);
+  const allowed = new Set([
+    'outcome',
+    'manifest',
+    'reasons',
+    'evidenceDisposition',
+  ]);
+  const unsupported = Object.keys(input).filter((key) => !allowed.has(key));
+  if (unsupported.length > 0) {
+    throw new TypeError(
+      `Terminal evidence rejects legacy or diagnostic fields: ${unsupported.join(', ')}.`,
+    );
+  }
+  const { outcome, manifest, reasons, evidenceDisposition } = input;
+  if (
+    !['built-needs-review', 'failed'].includes(outcome) ||
+    !['retained', 'partial', 'superseded', 'unavailable'].includes(
+      evidenceDisposition,
+    ) ||
+    !Array.isArray(reasons) ||
+    reasons.some((reason) => !isObject(reason))
+  ) {
+    throw new TypeError('Terminal evidence has an invalid compact shape.');
+  }
+  if (
+    manifest !== undefined &&
+    (!isObject(manifest) ||
+      manifest.runId !== run.runId ||
+      manifest.slug !== run.slug)
+  ) {
+    throw new Error(
+      'Terminal evidence manifest identity does not match the run.',
+    );
+  }
+  const path = 'terminal-evidence.json';
+  try {
+    await access(join(run.runRoot, path));
+    throw new Error('Terminal evidence is immutable once retained.');
+  } catch (caught) {
+    if (caught?.code !== 'ENOENT') throw caught;
+  }
+  const evidence = createTerminalEvidence({
+    runId: run.runId,
+    outcome,
+    manifest,
+    reasons,
+    evidenceDisposition,
+  });
+  await writeJsonAtomic(run.runRoot, path, evidence);
+  return path;
+}
+
+export async function supersedeTerminalEvidence(
   run,
-  { attempt, error, evidence = [] } = {},
+  { manifest, supersededBy } = {},
 ) {
   assertRun(run);
   if (
-    ![1, 2].includes(attempt) ||
-    !(error instanceof Error) ||
-    !Array.isArray(evidence)
+    !isObject(manifest) ||
+    manifest.runId !== run.runId ||
+    manifest.slug !== run.slug
   ) {
-    throw new TypeError(
-      'Visual review failures require an attempt, Error, and evidence array.',
+    throw new Error(
+      'Terminal evidence manifest identity does not match the run.',
     );
   }
-  const path = `qa/review-gate/attempt-${attempt}-error.json`;
-  await writeJsonAtomic(run.runRoot, path, {
-    schemaVersion: 'explainer-kit.visual-review-error/v1',
-    attempt,
-    code: error.code ?? 'E_VISUAL_REVIEW',
-    message: error.message,
-    evidencePaths: evidence.flatMap(({ screenshotPath, metricsPath }) => [
-      screenshotPath,
-      metricsPath,
-    ]),
+  const path = 'terminal-evidence.json';
+  const retained = JSON.parse(await readFile(join(run.runRoot, path), 'utf8'));
+  assertTerminalEvidence(retained, { manifest });
+  if (retained.evidenceDisposition === 'superseded') {
+    throw new Error('Terminal evidence is already superseded.');
+  }
+  const superseded = createTerminalEvidence({
+    runId: run.runId,
+    outcome: manifest.outcome,
+    manifest,
+    reasons: [
+      {
+        stage: 'finalization',
+        kind: 'superseded',
+        count: 1,
+      },
+    ],
+    evidenceDisposition: 'superseded',
+    supersededBy,
   });
-  return [path];
+  await writeJsonAtomic(run.runRoot, path, superseded);
+  return path;
 }
 
 export async function writeVisualRevision(run, { artifactIds, changes } = {}) {
@@ -762,6 +871,14 @@ function assertValidContract(kind, value, context) {
       .join('; ');
     throw new Error(`Invalid ${kind}: ${details}`);
   }
+}
+
+function localStageFailure(stageId) {
+  return {
+    code: `E_${stageId.toUpperCase().replaceAll('-', '_')}`,
+    message: `The ${stageId} stage failed.`,
+    recovery: [`Correct the ${stageId} stage and start a new run.`],
+  };
 }
 
 function assertRun(run) {

@@ -1,6 +1,6 @@
 ---
 name: oat-explainer-kit
-version: 1.0.5
+version: 1.0.6
 description: Use when building project explainers or recaps from OAT configuration, state, and lifecycle artifacts.
 disable-model-invocation: false
 user-invocable: true
@@ -37,7 +37,7 @@ rollback, and operator-owned real-wrapper gate, use `references/migration.md`.
 
 Before reading OAT config or invoking the core, call
 `scripts/check-core.mjs#checkCoreCompatibility` with this installed skill
-directory and minimum core version `2.0.3`. Continue only when it returns
+directory and minimum core version `2.1.0`. Continue only when it returns
 `ok: true`.
 
 - Missing core: stop and show
@@ -58,7 +58,7 @@ Call `scripts/run.mjs#runOatExplainer` with the repository root, project
 invocation, active project path, recipe, slug, lifecycle mode, and any explicit
 runtime overrides. The adapter:
 
-1. checks the user-scoped installed core at minimum version `2.0.3`;
+1. checks the user-scoped installed core at minimum version `2.1.0`;
 2. resolves only the public `explainers.*` and `workflow.explainers.*` keys;
 3. derives the canonical project output root;
 4. binds approved OAT artifacts to the recipe's single `project` source set;
@@ -71,6 +71,13 @@ runtime overrides. The adapter:
 Missing optional artifacts are omitted, but at least one approved lifecycle
 artifact is required. An explicit supplied fact-base path bypasses artifact
 federation and is passed through as `factBase.mode: supplied`.
+
+New project-recap requests select immutable `project-recap@2`: one
+navigational hub is the floor, while a diagram, walkthrough deck, or deep dive
+is selected only when the planner can state its distinct reader question,
+source evidence, and medium rationale. The installed core continues reading
+`project-recap@1` for replay; the adapter never rewrites a retained request's
+recipe selector.
 
 Before invocation, read `references/author-callback.md`. Unattended
 `project-recap` runs require exactly one provider-neutral set planner:
@@ -98,6 +105,12 @@ created by the compatible core and `visualCritic`; JSON/CLI callers supply
 matching exports. Bare browser callbacks and caller-authored runtime metadata
 are rejected. These are first-class adapter inputs; do not place either
 provider in `coreOptions`.
+
+The critic judges typography, hierarchy, composition, density, medium leverage,
+template repetition, diagram semantics, and cross-artifact cohesion from the
+bound rendered evidence. Keep those criteria in prose. Preserve the core's
+existing `visual-review-result/v1` contract and actionable `pass`/`correct`
+behavior; do not add adapter-owned scores, layout thresholds, or result fields.
 
 The adapter resolves all executable providers before core invocation, enforces
 direct-versus-module mutual exclusion, and requires distinct identities for

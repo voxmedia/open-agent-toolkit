@@ -99,6 +99,37 @@ const guidelineRecipe = () => ({
   },
 });
 
+test('bundled visual prose covers the full authoring and review judgment', async () => {
+  const [authoring, review] = await Promise.all([
+    readFile(
+      new URL('../references/visual-authoring.md', import.meta.url),
+      'utf8',
+    ),
+    readFile(
+      new URL('../references/visual-review.md', import.meta.url),
+      'utf8',
+    ),
+  ]);
+  const combined = `${authoring}\n${review}`.toLowerCase();
+
+  for (const topic of [
+    'typography',
+    'hierarchy',
+    'composition',
+    'density',
+    'medium leverage',
+    'template repetition',
+    'diagram semantics',
+    'cross-artifact cohesion',
+  ]) {
+    assert.match(combined, new RegExp(topic), topic);
+  }
+  assert.doesNotMatch(
+    combined,
+    /\b(?:score|threshold)\b|(?:at least|no more than)\s+\d+/,
+  );
+});
+
 test('accepts a self-contained, balanced and accessible artifact', () => {
   const report = checkHtmlStructure({
     id: 'overview',

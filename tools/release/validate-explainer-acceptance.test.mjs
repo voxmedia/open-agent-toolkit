@@ -53,6 +53,37 @@ test('passes wrapper, publish, and all gates for one unchanged packaged RC', asy
   }
 });
 
+test('ordinary acceptance coverage pins the auxiliary catalog contract', async () => {
+  const fixture = await createFixture();
+  const catalogPath = `site/initiatives/${fixture.manifest.slug}/catalog.json`;
+  const catalogs = fixture.receipt.artifacts.filter(
+    ({ source }) => source.kind === 'auxiliary' && source.name === 'catalog',
+  );
+  assert.equal(
+    fixture.receipt.artifacts.length,
+    fixture.manifest.artifacts.length + 1,
+  );
+  assert.equal(catalogs.length, 1);
+  assert.deepEqual(catalogs[0], {
+    source: { kind: 'auxiliary', name: 'catalog' },
+    relativePath: catalogPath,
+    hash: HASH('f'),
+    s3Uri: `${fixture.publishRequest.s3Uri}/initiatives/${fixture.manifest.slug}/catalog.json`,
+    publicUrl: `${fixture.publishRequest.publicBaseUrl}/initiatives/${fixture.manifest.slug}/catalog.json`,
+    contentType: 'application/json',
+    objectVerification: verifiedObject(HASH('f')),
+    publicVerification: verifiedPublic(HASH('f')),
+  });
+
+  fixture.receipt.artifacts = fixture.receipt.artifacts.filter(
+    ({ source }) => source.kind !== 'auxiliary',
+  );
+  await writeJson(join(fixture.root, 'publish-receipt.json'), fixture.receipt);
+  const failure = await runFailure(fixture.root, 'publish');
+  assert.equal(failure.code, 'E_RECEIPT_MISMATCH');
+  assert.equal(failure.evidence, 'publish-receipt.json');
+});
+
 test('requires only the evidence selected by the gate', async () => {
   const wrapper = await createFixture();
   await Promise.all([
@@ -252,7 +283,7 @@ test('rejects public roots containing userinfo, query, or fragment evidence', as
 test('requires complete receipt hashes and run-unique verified sentinel cleanup', async () => {
   for (const mutate of [
     (receipt) => {
-      receipt.sentinel.publicVerified = false;
+      receipt.sentinel.publicVerification.hash = HASH('0');
     },
     (receipt) => {
       receipt.sentinel.deleted = false;
@@ -302,6 +333,12 @@ test('rejects receipt paths that imply undeclared overwrite or delete scope', as
 });
 
 test('emits one structured fail-closed result for invalid usage', async () => {
+  const help = await execFileAsync(process.execPath, [VALIDATOR, '--help']);
+  assert.equal(
+    help.stdout.trim(),
+    'Usage: validate-explainer-acceptance.mjs <acceptance-dir> --gate wrapper|publish|all',
+  );
+
   try {
     await execFileAsync(process.execPath, [
       VALIDATOR,
@@ -406,34 +443,33 @@ async function createFixture() {
   };
   const manifestPath = join(root, 'runs/run-123/manifest.json');
   const publishRequest = {
-    schemaVersion: 'explainer-kit.publish-request/v1',
+    schemaVersion: 'explainer-kit.publish-request/v2',
     provider: 's3-static',
     s3Uri: 's3://example-bucket/published',
     publicBaseUrl: 'https://cdn.example.com/published',
     awsRegion: 'us-east-1',
+    publicAccess: 'public',
     siteRoot: join(root, 'runs/run-123/site'),
     manifestPath,
   };
   const manifest = {
     schemaVersion: 'explainer-kit.manifest/v1',
     runId: 'run-123',
+    slug: 'demo',
     artifacts: [
       {
+        id: 'hub',
         status: 'built',
         renderedPath: 'site/initiatives/demo/index.html',
         hash: HASH('e'),
       },
-      {
-        status: 'built',
-        renderedPath: 'site/initiatives/demo/catalog.json',
-        hash: HASH('f'),
-      },
     ],
   };
   const receipt = {
-    schemaVersion: 'explainer-kit.publish-receipt/v1',
+    schemaVersion: 'explainer-kit.publish-receipt/v2',
     provider: 's3-static',
     publishedAt: '2026-07-18T12:00:00.000Z',
+    publicAccess: 'public',
     roots: {
       s3Uri: publishRequest.s3Uri,
       publicBaseUrl: publishRequest.publicBaseUrl,
@@ -441,16 +477,20 @@ async function createFixture() {
     sentinel: {
       relativePath:
         '.explainer-kit-sentinel/run-123-0123456789abcdeffedcba9876543210.txt',
-      uploadVerified: true,
-      publicVerified: true,
+      objectVerification: verifiedObject(HASH('d')),
+      publicVerification: verifiedPublic(HASH('d')),
       deleted: true,
     },
     artifacts: [
-      receiptArtifact(publishRequest, 'site/initiatives/demo/index.html', 'e'),
+      receiptArtifact(publishRequest, 'site/initiatives/demo/index.html', 'e', {
+        kind: 'manifest',
+        artifactId: 'hub',
+      }),
       receiptArtifact(
         publishRequest,
         'site/initiatives/demo/catalog.json',
         'f',
+        { kind: 'auxiliary', name: 'catalog' },
       ),
     ],
   };
@@ -504,6 +544,7 @@ async function createFixture() {
     wrapper,
     publishExecution,
     publishRequest,
+    manifest,
     receipt,
   };
 }
@@ -549,18 +590,29 @@ function hashJson(value) {
     .digest('hex')}`;
 }
 
-function receiptArtifact(request, relativePath, hashCharacter) {
+function receiptArtifact(request, relativePath, hashCharacter, source) {
   const publishedPath = relativePath.slice('site/'.length);
+  const hash = HASH(hashCharacter);
   return {
+    source,
     relativePath,
-    hash: HASH(hashCharacter),
+    hash,
     s3Uri: `${request.s3Uri}/${publishedPath}`,
     publicUrl: `${request.publicBaseUrl}/${publishedPath}`,
-    httpStatus: 200,
     contentType: relativePath.endsWith('.json')
       ? 'application/json'
       : 'text/html; charset=utf-8',
+    objectVerification: verifiedObject(hash),
+    publicVerification: verifiedPublic(hash),
   };
+}
+
+function verifiedObject(hash) {
+  return { status: 'verified', method: 'service-checksum', hash };
+}
+
+function verifiedPublic(hash) {
+  return { status: 'verified', httpStatus: 200, hash };
 }
 
 async function runSuccess(root, gate) {

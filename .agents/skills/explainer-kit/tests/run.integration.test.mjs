@@ -20,7 +20,13 @@ import {
   createBrowserProbeSession,
   createFixtureBrowserProbeSession,
 } from '../scripts/lib/browser-runtime.mjs';
+import {
+  catalogFromManifest,
+  initiativeCatalogPath,
+  serializeInitiativeCatalog,
+} from '../scripts/lib/catalog.mjs';
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
+import { recordDurability } from '../scripts/lib/durability.mjs';
 import { validateImmutablePackageEvidence } from '../scripts/lib/package-coverage.mjs';
 import { decodeBrowserPng } from '../scripts/lib/png.mjs';
 import { SET_PLAN_RECORD_PATHS } from '../scripts/lib/records.mjs';
@@ -45,6 +51,46 @@ async function temporaryDirectory() {
   const directory = await mkdtemp(join(tmpdir(), 'explainer-run-'));
   tempDirs.push(directory);
   return directory;
+}
+
+async function assertRetainedTreeExcludes(runRoot, secrets) {
+  const retained = [];
+  async function collect(directory) {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        await collect(path);
+      } else if (entry.isFile()) {
+        retained.push(await readFile(path));
+      }
+    }
+  }
+  await collect(runRoot);
+  const combined = Buffer.concat(retained);
+  for (const secret of secrets) {
+    assert.equal(
+      combined.includes(Buffer.from(secret)),
+      false,
+      `retained run tree contains secret ${secret}`,
+    );
+  }
+}
+
+function assertSerializedOutputExcludes(value, secrets, label) {
+  const serialized = JSON.stringify(value);
+  for (const secret of secrets) {
+    assert.equal(
+      serialized.includes(secret),
+      false,
+      `${label} contains secret ${secret}`,
+    );
+  }
+}
+
+function assertLocalReason(result, stage, kind = 'pipeline-failure') {
+  assert.deepEqual(result.reasons, [{ stage, kind, count: 1 }]);
+  assert.equal('errors' in result, false);
+  assert.equal(JSON.stringify(result).includes('"message"'), false);
 }
 
 async function legacyResumeToken(runRoot, runId) {
@@ -1080,11 +1126,198 @@ test('a rejected correction that fails QA remains local and updates the build re
   });
 
   assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_QA');
+  assertLocalReason(result, 'browser-review');
   assert.equal(durability.mock.callCount(), 0);
   assert.equal(publish.mock.callCount(), 0);
   const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
   assert.equal(record.stages.find(({ id }) => id === 'qa').status, 'failed');
+});
+
+test('internal-reference validation fails before browser review and durability', async () => {
+  const fixture = await suppliedFixture();
+  const browserProbe = mock.fn(layoutProbe({ pageOverflowX: false }));
+  const durability = mock.fn(async () => {});
+  const brokenAuthor = async (authorRequestValue) => {
+    const authored = authorResult(authorRequestValue);
+    authored.content.markdown += '\n[Missing](../../missing/demo/index.html)\n';
+    return authored;
+  };
+  const correctArtifact = mock.fn(brokenAuthor);
+  const result = await runExplainer(
+    {
+      ...fixture.request,
+      durability: { strategy: 'commit' },
+    },
+    {
+      author: brokenAuthor,
+      correctArtifact,
+      browserProbe,
+      durability,
+      now: () => NOW,
+    },
+  );
+
+  assert.equal(result.outcome, 'failed');
+  // The gate runs inside the `qa` build stage, which maps to `browser-review`,
+  // so this used to be recorded as a browser-review failure even though the
+  // browser was never invoked. `link-validation` is the declared stage for it.
+  assertLocalReason(result, 'link-validation');
+  assert.equal(correctArtifact.mock.callCount(), 1);
+  assert.equal(browserProbe.mock.callCount(), 0);
+  assert.equal(durability.mock.callCount(), 0);
+  const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
+  assert.equal(record.stages.find(({ id }) => id === 'qa').status, 'failed');
+  assert.equal(
+    record.stages.find(({ id }) => id === 'qa').error.message,
+    'The qa stage failed.',
+  );
+});
+
+test('one bounded reference correction rerenders and revalidates before review', async () => {
+  const fixture = await suppliedFixture();
+  const events = [];
+  const browserProbe = mock.fn(async (probeRequest) => {
+    events.push(`browser:${probeRequest.viewport.width}`);
+    return layoutProbe({ pageOverflowX: false })(probeRequest);
+  });
+  const durability = mock.fn(async () => {
+    events.push('durability');
+  });
+  const correctArtifact = mock.fn(async (authorRequestValue, correction) => {
+    events.push('correct');
+    assert.equal(correction.attempt, 1);
+    assert.equal(correction.reason, 'internal-reference-validation');
+    assert.ok(
+      correction.findings.some(({ code }) => code === 'missing-target'),
+    );
+    return authorResult(authorRequestValue);
+  });
+
+  const result = await runExplainer(
+    {
+      ...fixture.request,
+      durability: { strategy: 'commit' },
+    },
+    {
+      author: async (authorRequestValue) => {
+        events.push('author');
+        const authored = authorResult(authorRequestValue);
+        authored.content.markdown +=
+          '\n[Missing](../../missing/demo/index.html)\n';
+        return authored;
+      },
+      correctArtifact,
+      browserProbe,
+      durability,
+      now: () => NOW,
+    },
+  );
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  assert.equal(correctArtifact.mock.callCount(), 1);
+  assert.ok(events.indexOf('correct') > events.indexOf('author'));
+  assert.ok(
+    events
+      .filter((event) => event.startsWith('browser:'))
+      .every((event) => events.indexOf(event) > events.indexOf('correct')),
+  );
+  assert.ok(events.indexOf('durability') > events.indexOf('correct'));
+});
+
+test('visual correction with a missing target fails before another review or external work', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const events = [];
+  const browserProbe = mock.fn(async (probeRequest) => {
+    events.push('browser');
+    return retainingBrowserProbe(probeRequest);
+  });
+  const visualCritic = mock.fn(async (reviewRequest) => {
+    events.push('critic');
+    return {
+      schemaVersion: 'explainer-kit.visual-review-result/v1',
+      reviewId: 'recap-review-1',
+      requestId: reviewRequest.requestId,
+      requestHash: reviewRequest.requestHash,
+      reviewedAt: NOW,
+      disposition: 'correct',
+      artifactIds: reviewRequest.renderedArtifacts.map(
+        ({ artifactId }) => artifactId,
+      ),
+      findings: [
+        {
+          artifactId: 'project-recap',
+          rubric: 'first-viewport',
+          severity: 'important',
+          evidence: 'The project outcome is below the fold.',
+          correction: 'Move the outcome into the lead panel.',
+        },
+      ],
+    };
+  });
+  const correctArtifact = mock.fn(async (authorRequestValue) => {
+    events.push('correct');
+    const corrected = authorResult(authorRequestValue);
+    corrected.content[authorRequestValue.authoring] +=
+      '<a href="../../missing/index.html">Missing target</a>';
+    return corrected;
+  });
+  const durability = mock.fn(async () => {
+    events.push('durability');
+  });
+  const publish = mock.fn(async () => {
+    events.push('publish');
+  });
+
+  const result = await runExplainerCore(
+    {
+      ...fixture.request,
+      durability: {
+        strategy: 'publish',
+        publish: {
+          schemaVersion: 'explainer-kit.publish-request/v1',
+          provider: 's3-static',
+          s3Uri: 's3://example-bucket/explainers',
+          publicBaseUrl: 'https://docs.example.com/explainers',
+          awsRegion: 'us-east-1',
+          siteRoot: join(fixture.outputRoot, 'project-recap-demo/site'),
+          manifestPath: join(
+            fixture.outputRoot,
+            'project-recap-demo/manifest.json',
+          ),
+        },
+      },
+    },
+    {
+      author: async (authorRequestValue) => authorResult(authorRequestValue),
+      planSet: async (plannerRequest) => plannedSet(plannerRequest),
+      browserSession: fixtureBrowserSession(browserProbe),
+      visualCritic,
+      correctArtifact,
+      durability,
+      publish,
+      now: () => NOW,
+    },
+  );
+
+  assert.equal(result.outcome, 'failed');
+  // The corrected artifact still points at a missing target, so the failure is
+  // raised by the internal-reference gate rather than by browser review.
+  assertLocalReason(result, 'link-validation');
+  assert.equal(visualCritic.mock.callCount(), 1);
+  assert.equal(correctArtifact.mock.callCount(), 1);
+  assert.equal(durability.mock.callCount(), 0);
+  assert.equal(publish.mock.callCount(), 0);
+  assert.deepEqual(events.slice(events.indexOf('correct') + 1), []);
+  const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
+  assert.equal(record.stages.find(({ id }) => id === 'qa').status, 'failed');
+  assert.equal(
+    record.stages.find(({ id }) => id === 'qa').error.message,
+    'The qa stage failed.',
+  );
 });
 
 test('resume rejects a changed fact-base binding', async () => {
@@ -1251,7 +1484,7 @@ test('artistic author failure never silently downgrades to Markdown', async () =
 
   assert.equal(result.outcome, 'failed');
   assert.equal(author.mock.callCount(), 1);
-  assert.match(result.errors[0].message, /artistic author failed/);
+  assertLocalReason(result, 'authoring', 'provider-failure');
   await assert.rejects(
     access(join(result.runRoot, 'source/content/project-recap.md')),
   );
@@ -1298,7 +1531,7 @@ test('both modes fail before narrative output when no author is supplied', async
     );
 
     assert.equal(result.outcome, 'failed', mode);
-    assert.equal(result.errors[0].code, 'E_AUTHOR_REQUIRED', mode);
+    assertLocalReason(result, 'authoring');
     await assert.rejects(
       access(join(result.runRoot, 'source/content/project-recap.md')),
     );
@@ -1376,8 +1609,43 @@ test('unattended author receives structured per-artifact context and retains val
   for (const authorRequest of requests) {
     assert.equal(
       authorRequest.schemaVersion,
-      'explainer-kit.author-request/v2',
+      'explainer-kit.author-request/v3',
     );
+    assert.deepEqual(
+      authorRequest.artifactLinks.map(
+        ({ artifactId, artifactType, sitePath }) => ({
+          artifactId,
+          artifactType,
+          sitePath,
+        }),
+      ),
+      [
+        {
+          artifactId: 'project-recap',
+          artifactType: 'hub',
+          sitePath: 'site/initiatives/project-recap-demo/index.html',
+        },
+        {
+          artifactId: 'architecture',
+          artifactType: 'diagram',
+          sitePath: 'site/diagrams/project-recap-demo/architecture/index.html',
+        },
+        {
+          artifactId: 'deck',
+          artifactType: 'deck',
+          sitePath: 'site/decks/project-recap-demo/deck/index.html',
+        },
+      ],
+    );
+    const selfLink = authorRequest.artifactLinks.find(
+      ({ artifactId }) => artifactId === authorRequest.artifactId,
+    );
+    assert.equal(selfLink.href, 'index.html');
+    for (const link of authorRequest.artifactLinks) {
+      assert.match(link.sitePath, /^site\/.+\/index\.html$/);
+      assert.match(link.href, /(?:^|\/)index\.html$/);
+      assert.equal(link.href.startsWith('/'), false);
+    }
     assert.match(authorRequest.brief, /Audience/i);
     for (const topic of [
       /representation/i,
@@ -1485,7 +1753,7 @@ test('plans one immutable set after facts and before every artifact author', asy
   const planSet = mock.fn(async (plannerRequest) => {
     events.push('plan');
     plannerRequests.push(plannerRequest);
-    const sourceIds = plannerRequest.factBase.sources.map(({ id }) => id);
+    const sourceIds = plannerRequest.sourceIds;
     return plannedSet(plannerRequest, [
       ...plannedSet(plannerRequest).portfolio,
       {
@@ -1533,6 +1801,7 @@ test('plans one immutable set after facts and before every artifact author', asy
     plannerRequests[0].factBase.schemaVersion,
     'explainer-kit.fact-base/v1',
   );
+  assert.deepEqual(plannerRequests[0].sourceIds, ['project']);
   assert.deepEqual(
     authorRequests.map(({ setContext }) => setContext),
     Array.from({ length: 4 }, () => authorRequests[0].setContext),
@@ -1549,6 +1818,38 @@ test('plans one immutable set after facts and before every artifact author', asy
     'source/set-plan/drafts.json',
   ]) {
     await access(join(result.runRoot, path));
+  }
+});
+
+test('rejects malformed returned-plan source IDs before authoring', async () => {
+  for (const sourceIds of [undefined, 'project', null, ['unknown']]) {
+    const fixture = await suppliedFixture('project-recap');
+    const author = mock.fn(async (authorRequest) =>
+      authorResult(authorRequest),
+    );
+
+    const result = await runExplainerCore(fixture.request, {
+      planSet: async (plannerRequest) => {
+        const plan = plannedSet(plannerRequest);
+        if (sourceIds === undefined) {
+          delete plan.sourceIds;
+        } else {
+          plan.sourceIds = sourceIds;
+          if (Array.isArray(sourceIds)) {
+            for (const artifact of plan.portfolio) {
+              artifact.sourceIds = sourceIds;
+            }
+          }
+        }
+        return plan;
+      },
+      author,
+      now: () => NOW,
+    });
+
+    assert.equal(result.outcome, 'failed');
+    assertLocalReason(result, 'authoring');
+    assert.equal(author.mock.callCount(), 0);
   }
 });
 
@@ -1681,8 +1982,8 @@ test('invokes an independent critic once with the complete rendered recap set', 
   assert.equal(rejected.outcome, 'built-needs-review');
   assert.equal(rejected.errors?.length ?? 0, 0);
   assert.ok(
-    rejected.warnings.some((warning) =>
-      warning.startsWith('visual-review-required:review-chain-failed:'),
+    rejected.warnings.some(
+      (warning) => warning === 'visual-review-required:review-chain-failed',
     ),
   );
   assert.equal(sharedCallback.mock.callCount(), 3);
@@ -1791,8 +2092,8 @@ test('rejects a decoded geometry reshape after browser QA before critic invocati
   assert.equal(reshaped, true);
   assert.equal(visualCritic.mock.callCount(), 0);
   assert.ok(
-    result.warnings.some((warning) =>
-      warning.startsWith('visual-review-required:review-chain-failed:'),
+    result.warnings.some(
+      (warning) => warning === 'visual-review-required:review-chain-failed',
     ),
   );
   const reshapedBytes = await readFile(mobileScreenshotPath);
@@ -1806,13 +2107,12 @@ test('rejects a decoded geometry reshape after browser QA before critic invocati
     manifest.immutableHashes['qa/browser/project-recap/mobile.png'],
     `sha256:${createHash('sha256').update(reshapedBytes).digest('hex')}`,
   );
-  const retainedError = JSON.parse(
-    await readFile(
-      join(result.runRoot, 'qa/review-gate/attempt-1-error.json'),
-      'utf8',
-    ),
+  const terminalEvidence = JSON.parse(
+    await readFile(join(result.runRoot, 'terminal-evidence.json'), 'utf8'),
   );
-  assert.equal(retainedError.code, 'E_VISUAL_REVIEW');
+  assert.deepEqual(terminalEvidence.reasons, [
+    { stage: 'visual-review', kind: 'pipeline-failure', count: 1 },
+  ]);
 });
 
 test('runs a complete recap review with installed Chromium PNG evidence', async (t) => {
@@ -1908,21 +2208,21 @@ test('caps visual review at one correction and one final review', async (t) => {
       dispositions: ['correct', 'fail'],
       expectedAuthors: 4,
       expectedReviews: 2,
-      expectedFinal: 'fail',
+      expectedFinal: 'correct',
     },
     {
       name: 'retains a throwing final review as a handoff',
       dispositions: ['correct', 'throw'],
       expectedAuthors: 4,
       expectedReviews: 2,
-      expectedFinal: 'error',
+      expectedFinal: 'failed',
     },
     {
       name: 'retains a malformed final review as a handoff',
       dispositions: ['correct', 'malformed'],
       expectedAuthors: 4,
       expectedReviews: 2,
-      expectedFinal: 'error',
+      expectedFinal: 'failed',
     },
   ];
 
@@ -2008,10 +2308,7 @@ test('caps visual review at one correction and one final review', async (t) => {
       );
       assert.equal(author.mock.callCount(), scenario.expectedAuthors);
       assert.equal(visualCritic.mock.callCount(), scenario.expectedReviews);
-      assert.equal(
-        result.visualReview.disposition,
-        scenario.expectedFinal === 'error' ? 'correct' : scenario.expectedFinal,
-      );
+      assert.equal(result.visualReview.disposition, scenario.expectedFinal);
       if (scenario.expectedReviews === 2 && scenario.expectedFinal === 'pass') {
         const manifest = JSON.parse(
           await readFile(result.manifestPath, 'utf8'),
@@ -2036,15 +2333,12 @@ test('caps visual review at one correction and one final review', async (t) => {
           { code: 'ENOENT' },
         );
       } else {
-        if (scenario.expectedFinal === 'error') {
+        if (scenario.expectedFinal === 'failed') {
           await access(
-            join(result.runRoot, 'qa/review-gate/attempt-2-error.json'),
+            join(result.runRoot, 'qa/visual-review/attempt-2/result.json'),
           );
-          await assert.rejects(
-            access(
-              join(result.runRoot, 'qa/visual-review/attempt-2/request.json'),
-            ),
-            { code: 'ENOENT' },
+          await access(
+            join(result.runRoot, 'qa/visual-review/attempt-2/request.json'),
           );
         } else {
           await access(
@@ -2101,26 +2395,24 @@ test('fails closed before durability and publication when recap review is missin
       browserProbe: malformedBrowserProbe,
       visualDisposition: 'pass',
       strategy: 'publish',
-      warning: 'visual-review-required:review-chain-failed:',
+      warning: 'visual-review-required:browser-review-failed',
     },
     {
       name: 'omitted browser screenshot',
       browserProbe: browserProbeOmittingScreenshot(320),
       visualDisposition: 'pass',
       strategy: 'publish',
-      warning: 'visual-review-required:review-chain-failed:',
+      warning: 'visual-review-required:review-chain-failed',
       expectedBrowserEvidence: 6,
-      expectedStructuredError: true,
     },
     {
       name: 'visual-review evidence copy failure',
       browserProbe: retainingBrowserProbe,
       visualDisposition: 'pass',
       strategy: 'publish',
-      warning: 'visual-review-required:review-chain-failed:',
+      warning: 'visual-review-required:review-chain-failed',
       blockEvidenceCopy: true,
       expectedBrowserEvidence: 9,
-      expectedStructuredError: true,
     },
     {
       name: 'recap viewport override is disallowed',
@@ -2137,28 +2429,28 @@ test('fails closed before durability and publication when recap review is missin
       },
       visualDisposition: 'pass',
       strategy: 'publish',
-      warning: 'visual-review-required:review-chain-failed:',
+      warning: 'visual-review-required:browser-review-failed',
     },
     {
       name: 'throwing initial critic',
       browserProbe: retainingBrowserProbe,
       visualDisposition: 'throw',
       strategy: 'publish',
-      warning: 'visual-review-required:review-chain-failed:',
+      warning: 'visual-review-required:review-chain-failed',
     },
     {
       name: 'malformed initial critic result',
       browserProbe: retainingBrowserProbe,
       visualDisposition: 'malformed',
       strategy: 'publish',
-      warning: 'visual-review-required:review-chain-failed:',
+      warning: 'visual-review-required:review-chain-failed',
     },
     {
       name: 'throwing correction callback',
       browserProbe: retainingBrowserProbe,
       visualDisposition: 'correct',
       strategy: 'publish',
-      warning: 'visual-review-required:correction-failed:',
+      warning: 'visual-review-required:correction-failed',
       correctArtifact: async () => {
         throw new Error('correction provider unavailable');
       },
@@ -2288,23 +2580,6 @@ test('fails closed before durability and publication when recap review is missin
           warning.startsWith(scenario.warning ?? 'visual-review-required:'),
         ),
       );
-      if (scenario.expectedStructuredError) {
-        const errorPath = 'qa/review-gate/attempt-1-error.json';
-        const retainedError = JSON.parse(
-          await readFile(join(result.runRoot, errorPath), 'utf8'),
-        );
-        assert.equal(retainedError.code, 'E_VISUAL_REVIEW');
-        assert.equal(
-          retainedError.evidencePaths.length,
-          scenario.expectedBrowserEvidence * 2,
-        );
-        assert.ok(
-          retainedError.evidencePaths.every(
-            (path) => manifest.immutableHashes[path],
-          ),
-        );
-        assert.ok(manifest.immutableHashes[errorPath]);
-      }
     });
   }
 
@@ -2394,7 +2669,7 @@ test('fails before composition on invalid set sources, ledger conflicts, or miss
     });
 
     assert.equal(result.outcome, 'failed', label);
-    assert.equal(result.errors[0].code, 'E_SET_PLAN', label);
+    assertLocalReason(result, 'authoring');
     assert.equal(author.mock.callCount(), 0, label);
   }
 });
@@ -2433,7 +2708,7 @@ test('fails before composition when approved sources are omitted or left uncover
     });
 
     assert.equal(result.outcome, 'failed', coverageFailure);
-    assert.equal(result.errors[0].code, 'E_SET_PLAN', coverageFailure);
+    assertLocalReason(result, 'authoring');
     assert.equal(author.mock.callCount(), 0, coverageFailure);
   }
 });
@@ -2723,7 +2998,7 @@ test('resume rejects retained set-plan, identity, and path tampering before call
     mutate(record);
     await writeFile(path, `${JSON.stringify(record, null, 2)}\n`);
 
-    let errorCode;
+    let failure;
     try {
       const resumed = await runExplainerCore(interactiveRequest, {
         planSet,
@@ -2736,11 +3011,19 @@ test('resume rejects retained set-plan, identity, and path tampering before call
           resumeToken: rejected.approval.resumeToken,
         },
       });
-      errorCode = resumed.errors?.[0]?.code;
+      failure = resumed.reasons;
     } catch (error) {
-      errorCode = error.code;
+      failure = error.code;
     }
-    assert.equal(errorCode, 'E_APPROVAL_RESUME', label);
+    if (Array.isArray(failure)) {
+      assert.deepEqual(
+        failure,
+        [{ stage: 'finalization', kind: 'pipeline-failure', count: 1 }],
+        label,
+      );
+    } else {
+      assert.equal(failure, 'E_APPROVAL_RESUME', label);
+    }
     assert.equal(planSet.mock.callCount(), 1, label);
     assert.equal(author.mock.callCount(), 3, label);
   }
@@ -2846,11 +3129,7 @@ test('authors cannot mutate the validated portfolio with expansion proposals', a
   });
 
   assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_AUTHOR_RESULT');
-  assert.match(
-    result.errors[0].message,
-    /cannot change the validated set plan/,
-  );
+  assertLocalReason(result, 'authoring');
 });
 
 test('editorial and render QA findings warn in both modes while DOM safety throws E_QA', async () => {
@@ -2908,7 +3187,7 @@ test('editorial and render QA findings warn in both modes while DOM safety throw
     now: () => NOW,
   });
   assert.equal(unsafe.outcome, 'failed');
-  assert.equal(unsafe.errors[0].code, 'E_QA');
+  assertLocalReason(unsafe, 'browser-review');
 });
 
 test('authors must return the declared content path and source dumping fails QA', async () => {
@@ -2923,7 +3202,7 @@ test('authors must return the declared content path and source dumping fails QA'
     now: () => NOW,
   });
   assert.equal(invalid.outcome, 'failed');
-  assert.equal(invalid.errors[0].code, 'E_AUTHOR_RESULT');
+  assertLocalReason(invalid, 'authoring');
   await assert.rejects(
     access(join(invalid.runRoot, 'source/content/project-recap.html')),
   );
@@ -2951,7 +3230,7 @@ test('authors must return the declared content path and source dumping fails QA'
     now: () => NOW,
   });
   assert.equal(dumped.outcome, 'failed');
-  assert.equal(dumped.errors[0].code, 'E_QA');
+  assertLocalReason(dumped, 'browser-review');
   await access(join(dumped.runRoot, 'source/content/project-recap.html'));
 });
 
@@ -3004,11 +3283,7 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
       now: () => NOW,
     });
     assert.equal(result.outcome, 'failed', JSON.stringify(spoofed));
-    assert.equal(result.errors[0].code, 'E_AUTHOR_PROVENANCE');
-    assert.match(
-      result.errors[0].message,
-      /does not match the trusted caller context/,
-    );
+    assertLocalReason(result, 'authoring');
   }
 
   // A backdated claim never reaches the hash-pinned record.
@@ -3043,11 +3318,7 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
     now: () => NOW,
   });
   assert.equal(rejected.outcome, 'failed');
-  assert.equal(rejected.errors[0].code, 'E_AUTHOR_PROVENANCE');
-  assert.match(
-    rejected.errors[0].message,
-    /must not assert a provenance trust/,
-  );
+  assertLocalReason(rejected, 'authoring');
 
   // Without trusted context the retained record says so rather than implying
   // an authenticated identity.
@@ -3083,7 +3354,191 @@ test('a malformed trusted provenance context fails the run loudly', async () => 
   });
 
   assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_AUTHOR_PROVENANCE');
+  assertLocalReason(result, 'authoring');
+});
+
+test('core CLI streams exclude arbitrary provider bytes for every terminal path', async () => {
+  const directory = await temporaryDirectory();
+  const requestPath = join(directory, 'request.json');
+  await writeFile(requestPath, '{}\n');
+  const scenarios = [
+    {
+      name: 'success',
+      result: { outcome: 'built-not-durable', warnings: [] },
+      inject(result, canary) {
+        result.publication = {
+          schemaVersion: 'explainer-kit.publish-summary/v2',
+          providerDiagnostic: canary,
+        };
+        return result;
+      },
+      assertProjection(projected, name) {
+        assert.equal(projected.outcome, 'built-not-durable', name);
+        assert.equal(
+          projected.publication.schemaVersion,
+          'explainer-kit.publish-summary/v2',
+          name,
+        );
+      },
+    },
+    {
+      name: 'correctable',
+      result: {
+        outcome: 'built-needs-review',
+        reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+      },
+      inject(result, canary) {
+        result.visualReview = {
+          schemaVersion: 'explainer-kit.visual-review-evidence/v1',
+          requestHash: `sha256:${'1'.repeat(64)}`,
+          attempt: 1,
+          disposition: 'correct',
+          reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+          providerFinding: canary,
+        };
+        return result;
+      },
+      assertProjection(projected, name) {
+        assert.equal(projected.visualReview.disposition, 'correct', name);
+        assert.equal(projected.visualReview.attempt, 1, name);
+      },
+    },
+    {
+      name: 'terminally flagged',
+      result: {
+        outcome: 'built-needs-review',
+        reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+      },
+      inject(result, canary) {
+        result.visualReview = {
+          schemaVersion: 'explainer-kit.visual-review-evidence/v1',
+          requestHash: `sha256:${'2'.repeat(64)}`,
+          attempt: 2,
+          disposition: 'failed',
+          reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+          providerFinding: canary,
+        };
+        return result;
+      },
+      assertProjection(projected, name) {
+        assert.equal(projected.visualReview.disposition, 'failed', name);
+        assert.equal(projected.visualReview.attempt, 2, name);
+      },
+    },
+    {
+      name: 'provider failed',
+      result: {
+        outcome: 'failed',
+        reasons: [{ stage: 'durability', kind: 'provider-failure', count: 1 }],
+      },
+      inject(result, canary) {
+        result.providerFailure = { message: canary };
+        return result;
+      },
+      assertProjection(projected, name) {
+        assert.equal(projected.outcome, 'failed', name);
+        assert.deepEqual(
+          projected.reasons,
+          [{ stage: 'durability', kind: 'provider-failure', count: 1 }],
+          name,
+        );
+      },
+    },
+    { name: 'caught error', throws: true },
+  ];
+
+  for (const scenario of scenarios) {
+    const canary = `CORE-CLI-${scenario.name}-provider-secret-EXACT-BYTES`;
+    const stdout = [];
+    const stderr = [];
+    let entered = false;
+    const exitCode = await runExplainerCli(
+      ['--request', requestPath],
+      {
+        log: (value) => stdout.push(value),
+        error: (value) => stderr.push(value),
+      },
+      async () => {
+        if (scenario.throws) {
+          const thrown = {
+            evidenceReason: {
+              stage: canary,
+              kind: 'provider-failure',
+              count: 1,
+            },
+          };
+          assert.equal(JSON.stringify(thrown).includes(canary), true);
+          entered = true;
+          throw thrown;
+        }
+        const injected = scenario.inject(
+          structuredClone(scenario.result),
+          canary,
+        );
+        assert.equal(JSON.stringify(injected).includes(canary), true);
+        entered = true;
+        return injected;
+      },
+    );
+    const captured = `${stdout.join('\n')}\n${stderr.join('\n')}`;
+    assert.equal(entered, true, `${scenario.name} injected its canary`);
+    assert.equal(captured.includes(canary), false, scenario.name);
+    // Canary exclusion alone is vacuously satisfiable by dropping the whole
+    // block: the prior review's M2 was exactly such a row. Assert that the
+    // block the canary was hidden inside actually survived projection.
+    if (scenario.assertProjection) {
+      assert.ok(stdout.length > 0, `${scenario.name} projected output`);
+      scenario.assertProjection(JSON.parse(stdout.at(-1)), scenario.name);
+    }
+    assert.equal(
+      exitCode,
+      scenario.throws || scenario.result?.outcome === 'failed' ? 1 : 0,
+    );
+  }
+});
+
+test('core CLI excludes provider canaries from live return and failure paths', async () => {
+  for (const providerOutcome of ['return', 'failure']) {
+    const fixture = await suppliedFixture('project-explainer');
+    const canary = `CORE-LIVE-${providerOutcome}-provider-secret-EXACT-BYTES`;
+    const requestPath = join(fixture.cwd, `${providerOutcome}-request.json`);
+    const authorModulePath = join(fixture.cwd, `${providerOutcome}-author.mjs`);
+    const markerPath = join(fixture.cwd, `${providerOutcome}-entered.txt`);
+    await Promise.all([
+      writeFile(requestPath, `${JSON.stringify(fixture.request, null, 2)}\n`),
+      writeFile(
+        authorModulePath,
+        providerCanaryAuthorModule({
+          canary,
+          markerPath,
+          throws: providerOutcome === 'failure',
+        }),
+      ),
+    ]);
+    const stdout = [];
+    const stderr = [];
+
+    const exitCode = await runExplainerCli(
+      ['--request', requestPath, '--author-module', authorModulePath],
+      {
+        log: (value) => stdout.push(value),
+        error: (value) => stderr.push(value),
+      },
+    );
+
+    assert.equal(await readFile(markerPath, 'utf8'), canary);
+    assert.equal(
+      `${stdout.join('\n')}\n${stderr.join('\n')}`.includes(canary),
+      false,
+      providerOutcome,
+    );
+    assert.equal(exitCode, providerOutcome === 'failure' ? 1 : 0);
+    const projected = JSON.parse(stderr.at(-1) ?? stdout.at(-1));
+    assert.equal(
+      projected.outcome,
+      providerOutcome === 'failure' ? 'failed' : 'built-not-durable',
+    );
+  }
 });
 
 test('CLI resolves an explicit author module without persisting executable callbacks', async () => {
@@ -3161,6 +3616,35 @@ test('CLI resolves an explicit author module without persisting executable callb
     await access(join(result.runRoot, `source/content/${artifactId}.html`));
   }
 });
+
+function providerCanaryAuthorModule({ canary, markerPath, throws }) {
+  return `import { writeFile } from 'node:fs/promises';
+
+export default async function author(request) {
+  await writeFile(${JSON.stringify(markerPath)}, ${JSON.stringify(canary)});
+  ${throws ? `throw new Error(${JSON.stringify(canary)});` : ''}
+  const required = request.floor?.requiredNarrative ?? ['overview'];
+  const markdown = required
+    .map(
+      (id, index) =>
+        \`## \${id}\\n\\nSection \${index + 1} explains the verified \${id}. \${index === 0 ? request.factBase.claims[0]?.text ?? '' : ''}\`,
+    )
+    .join('\\n\\n');
+  return {
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: request.artifactId,
+    content: {
+      markdown: \`# Provider result\\n\\n${canary}\\n\\n\${markdown}\\n\`,
+    },
+    provenance: {
+      authorId: 'live-provider-canary',
+      generatedAt: '${NOW}',
+      method: 'module',
+    },
+  };
+}
+`;
+}
 
 test('runs both canonical recipes config-free from directories without .oat files', async () => {
   for (const recipe of ['project-explainer', 'project-recap']) {
@@ -3432,7 +3916,7 @@ test('enforces project-recap source-set cardinality while allowing multiple docu
     },
   );
   assert.equal(rejected.outcome, 'failed');
-  assert.match(rejected.errors[0].message, /at most 1 binding/i);
+  assertLocalReason(rejected, 'finalization');
 
   const allowed = await runExplainer(
     {
@@ -3503,11 +3987,8 @@ test('confines atomic package writes from symlinked site, content, nested ancest
     });
 
     assert.equal(result.outcome, 'failed', scenario);
-    assert.match(
-      result.errors[0].message,
-      /symlink|confined|ancestor/i,
-      scenario,
-    );
+    assert.equal(Array.isArray(result.reasons), true, scenario);
+    assert.equal(JSON.stringify(result).includes('"message"'), false, scenario);
     assert.deepEqual(await readdir(outside), [], scenario);
   }
 });
@@ -3533,7 +4014,7 @@ test('retains successful intermediates and a privacy-safe build record after a p
     record.stages.find(({ id }) => id === 'render').status,
     'failed',
   );
-  assert.match(recordText, /seeded renderer failure/);
+  assert.doesNotMatch(recordText, /seeded renderer failure/);
   assert.doesNotMatch(recordText, /Private transient direction/);
   await assert.rejects(
     access(result.manifestPath),
@@ -3596,6 +4077,46 @@ test('rejects invalid requests and recipes before creating the output root', asy
     }),
     /unsupported recipe/i,
   );
+  const credentialCanary = 'access-key:secret@example-bucket';
+  const unsafe = {
+    ...invalid,
+    durability: {
+      strategy: 'publish',
+      publish: {
+        schemaVersion: 'explainer-kit.publish-request/v2',
+        provider: 's3-static',
+        s3Uri: `s3://${credentialCanary}/explainers`,
+        publicBaseUrl: 'https://docs.example.com/explainers',
+        awsRegion: 'us-east-1',
+        publicAccess: 'protected',
+        siteRoot: join(outputRoot, 'site'),
+        manifestPath: join(outputRoot, 'manifest.json'),
+      },
+    },
+  };
+  await assert.rejects(
+    runExplainer(unsafe),
+    (error) =>
+      error.code === 'E_INPUT_SCHEMA' &&
+      !error.message.includes('access-key') &&
+      !error.message.includes('secret'),
+  );
+
+  const requestPath = join(cwd, 'unsafe-request.json');
+  await writeFile(requestPath, `${JSON.stringify(unsafe, null, 2)}\n`);
+  const stdout = [];
+  const stderr = [];
+  assert.equal(
+    await runExplainerCli([requestPath], {
+      log: (value) => stdout.push(String(value)),
+      error: (value) => stderr.push(String(value)),
+    }),
+    1,
+  );
+  assert.equal(
+    `${stdout.join('\n')}\n${stderr.join('\n')}`.includes(credentialCanary),
+    false,
+  );
   await assert.rejects(access(outputRoot));
 });
 
@@ -3644,17 +4165,108 @@ test('invokes durability and publishing seams only when explicitly requested', a
   assert.equal(durability.mock.callCount(), 1);
 
   const publishFixture = await suppliedFixture();
-  await runExplainer(
+  let returnedReceipt;
+  const publishV2 = mock.fn(async ({ manifestPath, runRoot }) => {
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    const artifact = manifest.artifacts.find(
+      ({ status }) => status === 'built',
+    );
+    const roots = {
+      s3Uri: 's3://example-bucket/explainers',
+      publicBaseUrl: 'https://docs.example.com/explainers',
+    };
+    const catalogPath = initiativeCatalogPath(manifest.slug);
+    const catalogHash = `sha256:${createHash('sha256')
+      .update(
+        Buffer.from(
+          serializeInitiativeCatalog(
+            catalogFromManifest(manifest, roots.publicBaseUrl, {
+              publicAccess: 'public',
+            }),
+          ),
+        ),
+      )
+      .digest('hex')}`;
+    const receipt = {
+      schemaVersion: 'explainer-kit.publish-receipt/v2',
+      provider: 's3-static',
+      publishedAt: NOW,
+      publicAccess: 'public',
+      roots,
+      sentinel: {
+        relativePath: '.sentinel',
+        objectVerification: {
+          status: 'verified',
+          method: 'service-checksum',
+          hash: HASH,
+        },
+        publicVerification: {
+          status: 'verified',
+          httpStatus: 200,
+          hash: HASH,
+        },
+        deleted: true,
+      },
+      artifacts: [
+        {
+          source: { kind: 'manifest', artifactId: artifact.id },
+          relativePath: artifact.renderedPath,
+          hash: artifact.hash,
+          s3Uri: `s3://example-bucket/explainers/${artifact.renderedPath.slice('site/'.length)}`,
+          publicUrl: `https://docs.example.com/explainers/${artifact.renderedPath.slice('site/'.length)}`,
+          contentType: artifact.mediaType,
+          objectVerification: {
+            status: 'verified',
+            method: 'service-checksum',
+            hash: artifact.hash,
+          },
+          publicVerification: {
+            status: 'verified',
+            httpStatus: 200,
+            hash: artifact.hash,
+          },
+        },
+        {
+          source: { kind: 'auxiliary', name: 'catalog' },
+          relativePath: catalogPath,
+          hash: catalogHash,
+          s3Uri: `${roots.s3Uri}/${catalogPath.slice('site/'.length)}`,
+          publicUrl: `${roots.publicBaseUrl}/${catalogPath.slice(
+            'site/'.length,
+          )}`,
+          contentType: 'application/json',
+          objectVerification: {
+            status: 'verified',
+            method: 'service-checksum',
+            hash: catalogHash,
+          },
+          publicVerification: {
+            status: 'verified',
+            httpStatus: 200,
+            hash: catalogHash,
+          },
+        },
+      ],
+    };
+    await writeFile(
+      join(runRoot, 'publish-receipt.json'),
+      `${JSON.stringify(receipt, null, 2)}\n`,
+    );
+    returnedReceipt = receipt;
+    return receipt;
+  });
+  const published = await runExplainer(
     {
       ...publishFixture.request,
       durability: {
         strategy: 'publish',
         publish: {
-          schemaVersion: 'explainer-kit.publish-request/v1',
+          schemaVersion: 'explainer-kit.publish-request/v2',
           provider: 's3-static',
           s3Uri: 's3://example-bucket/explainers',
           publicBaseUrl: 'https://docs.example.com/explainers',
           awsRegion: 'us-east-1',
+          publicAccess: 'public',
           siteRoot: join(
             publishFixture.outputRoot,
             'project-explainer-demo/site',
@@ -3666,7 +4278,741 @@ test('invokes durability and publishing seams only when explicitly requested', a
         },
       },
     },
+    { now: () => NOW, publish: publishV2 },
+  );
+  assert.equal(publishV2.mock.callCount(), 1);
+  assert.deepEqual(published.publication, {
+    schemaVersion: 'explainer-kit.publish-summary/v2',
+    receiptSchemaVersion: 'explainer-kit.publish-receipt/v2',
+    publicAccess: 'public',
+    artifacts: returnedReceipt.artifacts,
+  });
+  assert.equal(published.publication.artifacts.length, 2);
+  for (const artifact of published.publication.artifacts) {
+    assert.deepEqual(
+      Object.keys(artifact).sort(),
+      [
+        'contentType',
+        'hash',
+        'objectVerification',
+        'publicUrl',
+        'publicVerification',
+        'relativePath',
+        's3Uri',
+        'source',
+      ].sort(),
+    );
+  }
+  const durabilityResult = await recordDurability(
+    {
+      schemaVersion: 'explainer-kit.durability-evidence/v1',
+      manifestPath: published.manifestPath,
+      evidence: {
+        kind: 'publish',
+        receiptPath: join(published.runRoot, 'publish-receipt.json'),
+      },
+    },
+    { now: () => NOW },
+  );
+  assert.equal(durabilityResult.durable, true);
+});
+
+test('confines every filesystem-capable provider boundary to the retained package inventory', async (t) => {
+  const scenarios = [
+    ['durability return', 'durability', false],
+    ['durability throw', 'durability', true],
+    ['browser return', 'browser', false],
+    ['browser throw', 'browser', true],
+    ['publisher return', 'publisher', false],
+    ['publisher throw', 'publisher', true],
+  ];
+
+  for (const [name, boundary, throws] of scenarios) {
+    await t.test(name, async () => {
+      const fixture = await suppliedFixture(
+        boundary === 'browser' ? 'project-recap' : 'project-explainer',
+      );
+      const canary = `RUN-INVENTORY-${name}-{"diagnostic":"exact bytes"}`;
+      let canaryPath;
+      let entered = false;
+      const options = { now: () => NOW };
+      let runRequest = fixture.request;
+
+      if (boundary === 'durability') {
+        runRequest = {
+          ...runRequest,
+          durability: { strategy: 'commit' },
+        };
+        options.durability = async ({ runRoot }) => {
+          entered = true;
+          canaryPath = join(runRoot, 'undeclared-provider-diagnostic.txt');
+          await writeFile(canaryPath, canary);
+          if (throws) throw new Error(canary);
+        };
+      } else if (boundary === 'browser') {
+        options.browserSession = fixtureBrowserSession(async (probeRequest) => {
+          if (!entered) {
+            entered = true;
+            canaryPath = join(
+              dirname(probeRequest.screenshotPath),
+              'undeclared-provider-diagnostic.txt',
+            );
+            await writeFile(canaryPath, canary);
+          }
+          if (throws) throw new Error(canary);
+          return retainingBrowserProbe(probeRequest);
+        });
+        options.visualCritic = async (reviewRequest) => ({
+          schemaVersion: 'explainer-kit.visual-review-result/v1',
+          reviewId: 'run-inventory-review',
+          requestId: reviewRequest.requestId,
+          requestHash: reviewRequest.requestHash,
+          reviewedAt: NOW,
+          disposition: 'pass',
+          artifactIds: reviewRequest.renderedArtifacts.map(
+            ({ artifactId }) => artifactId,
+          ),
+          findings: [],
+        });
+      } else {
+        runRequest = {
+          ...runRequest,
+          durability: {
+            strategy: 'publish',
+            publish: {
+              schemaVersion: 'explainer-kit.publish-request/v1',
+              provider: 's3-static',
+              s3Uri: 's3://example-bucket/explainers',
+              publicBaseUrl: 'https://docs.example.com/explainers',
+              awsRegion: 'us-east-1',
+              siteRoot: join(fixture.outputRoot, 'project-explainer-demo/site'),
+              manifestPath: join(
+                fixture.outputRoot,
+                'project-explainer-demo/manifest.json',
+              ),
+            },
+          },
+        };
+        options.publish = async ({ runRoot }) => {
+          entered = true;
+          canaryPath = join(runRoot, 'undeclared-provider-diagnostic.txt');
+          await writeFile(canaryPath, canary);
+          if (throws) throw new Error(canary);
+          return {};
+        };
+      }
+
+      const result = await runExplainer(runRequest, options);
+
+      assert.equal(entered, true);
+      if (boundary === 'browser') {
+        assert.ok(['built-needs-review', 'failed'].includes(result.outcome));
+      } else {
+        assert.equal(result.outcome, 'failed');
+      }
+      await assert.rejects(access(canaryPath), { code: 'ENOENT' });
+      await assertRetainedTreeExcludes(result.runRoot, [canary]);
+    });
+  }
+});
+
+test('projects late provider failures to closed terminal reasons', async () => {
+  const fixture = await suppliedFixture();
+  const secrets = {
+    password: 'correct-horse-battery-staple',
+    token: 'tok_live_terminal_evidence',
+    accessKey: 'AKIAIOSFODNN7EXAMPLE',
+    secretAccessKey: 'terminal-secret-access-key',
+    urlPassword: 'url-password-secret',
+  };
+  const oversized = 'payload-'.repeat(1_000);
+  const providerError = Object.assign(
+    new Error(
+      [
+        `password=${secrets.password}`,
+        `token=${secrets.token}`,
+        `aws_access_key_id=${secrets.accessKey}`,
+        `aws_secret_access_key=${secrets.secretAccessKey}`,
+        `https://operator:${secrets.urlPassword}@example.com/private`,
+        oversized,
+      ].join(' '),
+    ),
+    { code: `E_PROVIDER token=${secrets.token}` },
+  );
+
+  const result = await runExplainer(
+    {
+      ...fixture.request,
+      durability: { strategy: 'commit' },
+    },
+    {
+      now: () => NOW,
+      durability: async () => {
+        throw providerError;
+      },
+    },
+  );
+
+  assert.equal(result.outcome, 'failed');
+  const terminalEvidenceText = await readFile(
+    join(result.runRoot, 'terminal-evidence.json'),
+    'utf8',
+  );
+  const terminalEvidence = JSON.parse(terminalEvidenceText);
+  for (const secret of Object.values(secrets)) {
+    assert.equal(terminalEvidenceText.includes(secret), false);
+  }
+  assert.equal(terminalEvidenceText.includes(oversized), false);
+  assert.deepEqual(terminalEvidence.reasons, [
+    { stage: 'durability', kind: 'provider-failure', count: 1 },
+  ]);
+  assert.equal('error' in terminalEvidence, false);
+});
+
+test('scrubs provider credentials from every retained visual, browser, and durability failure file', async (t) => {
+  const scenarios = [
+    {
+      name: 'visual critic',
+      recipe: 'project-recap',
+      configure(secret) {
+        return {
+          browserSession: fixtureBrowserSession(),
+          visualCritic: async (reviewRequest) => ({
+            schemaVersion: 'explainer-kit.visual-review-result/v1',
+            reviewId: 'credential-hygiene-review',
+            requestId: reviewRequest.requestId,
+            requestHash: reviewRequest.requestHash,
+            reviewedAt: NOW,
+            disposition: 'fail',
+            artifactIds: reviewRequest.renderedArtifacts.map(
+              ({ artifactId }) => artifactId,
+            ),
+            findings: [
+              {
+                artifactId: reviewRequest.renderedArtifacts[0].artifactId,
+                rubric: 'first-viewport',
+                severity: 'important',
+                evidence: `{"password":"${secret}"}`,
+                correction: `Authorization: Bearer ${secret}`,
+              },
+            ],
+          }),
+        };
+      },
+    },
+    {
+      name: 'browser',
+      recipe: 'project-recap',
+      configure(secret) {
+        return {
+          browserSession: fixtureBrowserSession(async () => {
+            throw new Error(
+              `Authorization: Basic ${secret} password: '${secret}'`,
+            );
+          }),
+          visualCritic: async () => {
+            throw new Error('visual critic must not run after browser failure');
+          },
+        };
+      },
+    },
+    {
+      name: 'durability',
+      recipe: 'project-explainer',
+      request: { durability: { strategy: 'commit' } },
+      configure(secret) {
+        return {
+          durability: async () => {
+            throw Object.assign(
+              new Error(`https://operator:${secret}@example.com/private`),
+              { code: `E_DURABILITY token=${secret}` },
+            );
+          },
+        };
+      },
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    await t.test(scenario.name, async () => {
+      const fixture = await suppliedFixture(scenario.recipe);
+      const secret = `${scenario.name.replaceAll(' ', '-')}-retained-secret`;
+      const result = await runExplainer(
+        { ...fixture.request, ...scenario.request },
+        {
+          planSet: async (plannerRequest) => plannedSet(plannerRequest),
+          now: () => NOW,
+          ...scenario.configure(secret),
+        },
+      );
+
+      assert.ok(['built-needs-review', 'failed'].includes(result.outcome));
+      await assertRetainedTreeExcludes(result.runRoot, [secret]);
+    });
+  }
+});
+
+test('closes escaped and YAML credential forms across retained files and serializable results', async (t) => {
+  const scenarios = [
+    {
+      name: 'escaped visual finding',
+      recipe: 'project-recap',
+      configure(secret) {
+        return {
+          browserSession: fixtureBrowserSession(),
+          visualCritic: async (reviewRequest) => ({
+            schemaVersion: 'explainer-kit.visual-review-result/v1',
+            reviewId: 'serialized-credential-review',
+            requestId: reviewRequest.requestId,
+            requestHash: reviewRequest.requestHash,
+            reviewedAt: NOW,
+            disposition: 'fail',
+            artifactIds: reviewRequest.renderedArtifacts.map(
+              ({ artifactId }) => artifactId,
+            ),
+            findings: [
+              {
+                artifactId: reviewRequest.renderedArtifacts[0].artifactId,
+                rubric: 'first-viewport',
+                severity: 'important',
+                evidence: `{"pass\\u0077ord":"${secret}"}`,
+                correction: `password: !!str "${secret}"`,
+              },
+            ],
+          }),
+        };
+      },
+    },
+    {
+      name: 'literal browser error',
+      recipe: 'project-recap',
+      configure(secret) {
+        return {
+          browserSession: fixtureBrowserSession(async () => {
+            throw new Error(
+              `password: |\n  ${secret}\n  unmatched-browser-suffix`,
+            );
+          }),
+          visualCritic: async () => {
+            throw new Error('visual critic must not run after browser failure');
+          },
+        };
+      },
+    },
+    {
+      name: 'folded durability error',
+      recipe: 'project-explainer',
+      request: { durability: { strategy: 'commit' } },
+      configure(secret) {
+        return {
+          durability: async () => {
+            throw new Error(
+              `password: >\n  ${secret}\n  unmatched-durability-suffix`,
+            );
+          },
+        };
+      },
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    await t.test(scenario.name, async () => {
+      const fixture = await suppliedFixture(scenario.recipe);
+      const secret = `${scenario.name.replaceAll(' ', '-')}-secret`;
+      const result = await runExplainer(
+        { ...fixture.request, ...scenario.request },
+        {
+          planSet: async (plannerRequest) => plannedSet(plannerRequest),
+          now: () => NOW,
+          ...scenario.configure(secret),
+        },
+      );
+
+      assert.ok(['built-needs-review', 'failed'].includes(result.outcome));
+      await assertRetainedTreeExcludes(result.runRoot, [secret]);
+      assertSerializedOutputExcludes(
+        result,
+        [secret],
+        'serializable run result',
+      );
+    });
+  }
+});
+
+test('normalizes primitive thrown values into retained failed evidence', async () => {
+  const fixture = await suppliedFixture();
+  const secret = 'primitive-throw-secret';
+  const result = await runExplainer(
+    {
+      ...fixture.request,
+      durability: { strategy: 'commit' },
+    },
+    {
+      planSet: async (plannerRequest) => plannedSet(plannerRequest),
+      durability: async () => {
+        throw `Authorization: Basic ${secret}`;
+      },
+      now: () => NOW,
+    },
+  );
+
+  assert.equal(result.outcome, 'failed');
+  const terminalEvidence = await readFile(
+    join(result.runRoot, 'terminal-evidence.json'),
+    'utf8',
+  );
+  assert.equal(terminalEvidence.includes(secret), false);
+  assert.deepEqual(JSON.parse(terminalEvidence).reasons, [
+    { stage: 'durability', kind: 'provider-failure', count: 1 },
+  ]);
+});
+
+test('reports every falsy thrown value as an explicit failed lifecycle outcome', async (t) => {
+  const cases = [
+    ['undefined', undefined],
+    ['null', null],
+    ['false', false],
+    ['zero', 0],
+    ['empty string', ''],
+  ];
+
+  for (const [name, thrown] of cases) {
+    await t.test(name, async () => {
+      const fixture = await suppliedFixture();
+      const result = await runExplainer(
+        {
+          ...fixture.request,
+          durability: { strategy: 'commit' },
+        },
+        {
+          planSet: async (plannerRequest) => plannedSet(plannerRequest),
+          durability: async () => {
+            throw thrown;
+          },
+          now: () => NOW,
+        },
+      );
+
+      const [buildRecord, manifest, terminalEvidence] = await Promise.all([
+        readFile(result.buildRecordPath, 'utf8').then(JSON.parse),
+        readFile(result.manifestPath, 'utf8').then(JSON.parse),
+        readFile(join(result.runRoot, 'terminal-evidence.json'), 'utf8').then(
+          JSON.parse,
+        ),
+      ]);
+      assert.equal(result.outcome, 'failed');
+      assertLocalReason(result, 'durability', 'provider-failure');
+      assert.equal(buildRecord.outcome, 'failed');
+      assert.equal(manifest.outcome, 'failed');
+      assert.equal(terminalEvidence.outcome, 'failed');
+      assert.deepEqual(result.reasons, terminalEvidence.reasons);
+      assert.ok(buildRecord.stages.find(({ id }) => id === 'durability').error);
+    });
+  }
+});
+
+test('surfaces terminal evidence writer failures instead of dropping lifecycle evidence', async () => {
+  const fixture = await suppliedFixture();
+
+  await assert.rejects(
+    runExplainer(fixture.request, {
+      hooks: {
+        beforeStage: async (id, run) => {
+          if (id !== 'validate') return;
+          await writeFile(
+            join(run.runRoot, 'terminal-evidence.json'),
+            '{"occupied":true}\n',
+          );
+          throw new Error('trigger terminal writer failure');
+        },
+      },
+      now: () => NOW,
+    }),
+    /terminal evidence is immutable/i,
+  );
+});
+
+test('accepts only callback receipts bound to the finalized manifest and catalog', async () => {
+  for (const receiptVersion of ['v1', 'v2-public', 'v2-protected']) {
+    const fixture = await suppliedFixture();
+    const publicAccess = receiptVersion.endsWith('protected')
+      ? 'protected'
+      : 'public';
+    const publish = mock.fn(async ({ manifestPath }) => {
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      return receiptVersion === 'v1'
+        ? callbackReceiptV1(manifest)
+        : callbackReceiptV2(manifest, publicAccess);
+    });
+
+    const result = await runExplainer(
+      callbackPublishRunRequest(fixture, publicAccess, receiptVersion === 'v1'),
+      { now: () => NOW, publish },
+    );
+
+    assert.equal(publish.mock.callCount(), 1, receiptVersion);
+    assert.equal(
+      result.publication.receiptSchemaVersion,
+      `explainer-kit.publish-receipt/${receiptVersion === 'v1' ? 'v1' : 'v2'}`,
+      receiptVersion,
+    );
+    assert.equal(
+      result.publication.schemaVersion,
+      `explainer-kit.publish-summary/${receiptVersion === 'v1' ? 'v1' : 'v2'}`,
+      receiptVersion,
+    );
+    assert.equal(result.publication.publicAccess, publicAccess, receiptVersion);
+  }
+});
+
+test('classifies a non-normalizable v2 receipt root as a publish failure', async () => {
+  const fixture = await suppliedFixture();
+  const publish = mock.fn(async ({ manifestPath }) => {
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    const receipt = callbackReceiptV2(manifest, 'public');
+    receipt.roots.publicBaseUrl =
+      'https://docs.example.com/explainers?version=2';
+    assert.equal(
+      validateContract('publish-receipt', receipt).valid,
+      false,
+      'query-bearing root fails the closed receipt contract',
+    );
+    return receipt;
+  });
+
+  const result = await runExplainer(
+    callbackPublishRunRequest(fixture, 'public'),
     { now: () => NOW, publish },
   );
+
+  assert.equal(result.outcome, 'failed');
+  assertLocalReason(result, 'durability', 'provider-failure');
+  assert.equal('publication' in result, false);
   assert.equal(publish.mock.callCount(), 1);
 });
+
+test('rejects credential-bearing callback receipts before retention or summary projection', async () => {
+  const fixture = await suppliedFixture();
+  const credentialCanary = 'access-key:secret@example-bucket';
+  const publish = mock.fn(async ({ manifestPath }) => {
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    const receipt = callbackReceiptV2(manifest, 'protected');
+    receipt.roots.s3Uri = `s3://${credentialCanary}/explainers`;
+    receipt.artifacts[0].s3Uri = `${receipt.roots.s3Uri}/${receipt.artifacts[0].relativePath.slice('site/'.length)}`;
+    assert.equal(validateContract('publish-receipt', receipt).valid, false);
+    return receipt;
+  });
+
+  const result = await runExplainer(
+    callbackPublishRunRequest(fixture, 'protected'),
+    { now: () => NOW, publish },
+  );
+
+  assert.equal(result.outcome, 'failed');
+  assert.equal('publication' in result, false);
+  assert.equal(JSON.stringify(result).includes(credentialCanary), false);
+  await assert.rejects(access(join(result.runRoot, 'publish-receipt.json')));
+  await assertRetainedTreeExcludes(result.runRoot, [credentialCanary]);
+});
+
+test('rejects incomplete or contradictory v2 callback receipts before publication state', async () => {
+  const mutations = [
+    [
+      'missing manifest entry',
+      (receipt) => {
+        receipt.artifacts.shift();
+      },
+    ],
+    [
+      'duplicate entry',
+      (receipt) => {
+        const duplicate = structuredClone(receipt.artifacts[0]);
+        duplicate.contentType = 'application/octet-stream';
+        receipt.artifacts.push(duplicate);
+      },
+    ],
+    [
+      'foreign source',
+      (receipt) => {
+        receipt.artifacts[0].source.artifactId = 'foreign';
+      },
+    ],
+    [
+      'wrong hash',
+      (receipt) => {
+        receipt.artifacts[0].hash = `sha256:${'f'.repeat(64)}`;
+      },
+    ],
+    [
+      'missing catalog',
+      (receipt) => {
+        receipt.artifacts.pop();
+      },
+    ],
+  ];
+
+  for (const [label, mutate] of mutations) {
+    const fixture = await suppliedFixture();
+    const publish = mock.fn(async ({ manifestPath }) => {
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      const receipt = callbackReceiptV2(manifest, 'public');
+      mutate(receipt);
+      assert.equal(
+        validateContract('publish-receipt', receipt).valid,
+        true,
+        `${label} remains schema-valid`,
+      );
+      const catalogPath = initiativeCatalogPath(manifest.slug);
+      const catalogHash = `sha256:${createHash('sha256')
+        .update(
+          Buffer.from(
+            serializeInitiativeCatalog(
+              catalogFromManifest(manifest, receipt.roots.publicBaseUrl, {
+                publicAccess: receipt.publicAccess,
+              }),
+            ),
+          ),
+        )
+        .digest('hex')}`;
+      assert.equal(
+        validateContract('publish-receipt', receipt, {
+          manifest,
+          catalogArtifact: {
+            relativePath: catalogPath,
+            hash: catalogHash,
+          },
+        }).valid,
+        false,
+        `${label} violates cross-record validation`,
+      );
+      return receipt;
+    });
+
+    const result = await runExplainer(
+      callbackPublishRunRequest(fixture, 'public'),
+      {
+        now: () => NOW,
+        publish,
+      },
+    );
+    assert.equal(result.outcome, 'failed', label);
+    assert.equal('publication' in result, false, label);
+    assert.equal(publish.mock.callCount(), 1, label);
+  }
+});
+
+function callbackPublishRunRequest(fixture, publicAccess, requestV1 = false) {
+  const schemaVersion = requestV1
+    ? 'explainer-kit.publish-request/v1'
+    : 'explainer-kit.publish-request/v2';
+  return {
+    ...fixture.request,
+    durability: {
+      strategy: 'publish',
+      publish: {
+        schemaVersion,
+        provider: 's3-static',
+        s3Uri: 's3://example-bucket/explainers',
+        publicBaseUrl: 'https://docs.example.com/explainers',
+        awsRegion: 'us-east-1',
+        ...(schemaVersion.endsWith('/v2') && { publicAccess }),
+        siteRoot: join(fixture.outputRoot, 'project-explainer-demo/site'),
+        manifestPath: join(
+          fixture.outputRoot,
+          'project-explainer-demo/manifest.json',
+        ),
+      },
+    },
+  };
+}
+
+function callbackReceiptV1(manifest) {
+  const roots = {
+    s3Uri: 's3://example-bucket/explainers',
+    publicBaseUrl: 'https://docs.example.com/explainers',
+  };
+  return {
+    schemaVersion: 'explainer-kit.publish-receipt/v1',
+    provider: 's3-static',
+    publishedAt: NOW,
+    roots,
+    sentinel: {
+      relativePath: '.sentinel',
+      uploadVerified: true,
+      publicVerified: true,
+      deleted: true,
+    },
+    artifacts: manifest.artifacts.map((artifact) => ({
+      relativePath: artifact.renderedPath,
+      hash: artifact.hash,
+      s3Uri: `${roots.s3Uri}/${artifact.renderedPath}`,
+      publicUrl: `${roots.publicBaseUrl}/${artifact.renderedPath}`,
+      httpStatus: 200,
+      contentType: artifact.mediaType,
+    })),
+  };
+}
+
+function callbackReceiptV2(manifest, publicAccess) {
+  const roots = {
+    s3Uri: 's3://example-bucket/explainers',
+    publicBaseUrl: 'https://docs.example.com/explainers',
+  };
+  const verificationFor = (hash) => ({
+    objectVerification: {
+      status: 'verified',
+      method: 'service-checksum',
+      hash,
+    },
+    publicVerification:
+      publicAccess === 'public'
+        ? { status: 'verified', httpStatus: 200, hash }
+        : { status: 'skipped-protected' },
+  });
+  const artifacts = manifest.artifacts.map((artifact) => ({
+    source: { kind: 'manifest', artifactId: artifact.id },
+    relativePath: artifact.renderedPath,
+    hash: artifact.hash,
+    s3Uri: `${roots.s3Uri}/${artifact.renderedPath.slice('site/'.length)}`,
+    publicUrl: `${roots.publicBaseUrl}/${artifact.renderedPath.slice(
+      'site/'.length,
+    )}`,
+    contentType: artifact.mediaType,
+    ...verificationFor(artifact.hash),
+  }));
+  const catalogPath = initiativeCatalogPath(manifest.slug);
+  const catalogHash = `sha256:${createHash('sha256')
+    .update(
+      Buffer.from(
+        serializeInitiativeCatalog(
+          // A publisher declaring `publicAccess` in its receipt must build the
+          // catalog under that same policy; run.mjs rebuilds it the same way.
+          catalogFromManifest(manifest, roots.publicBaseUrl, { publicAccess }),
+        ),
+      ),
+    )
+    .digest('hex')}`;
+  artifacts.push({
+    source: { kind: 'auxiliary', name: 'catalog' },
+    relativePath: catalogPath,
+    hash: catalogHash,
+    s3Uri: `${roots.s3Uri}/${catalogPath.slice('site/'.length)}`,
+    publicUrl: `${roots.publicBaseUrl}/${catalogPath.slice('site/'.length)}`,
+    contentType: 'application/json',
+    ...verificationFor(catalogHash),
+  });
+  const sentinelHash = `sha256:${'a'.repeat(64)}`;
+  return {
+    schemaVersion: 'explainer-kit.publish-receipt/v2',
+    provider: 's3-static',
+    publishedAt: NOW,
+    publicAccess,
+    roots,
+    sentinel: {
+      relativePath: '.sentinel',
+      ...verificationFor(sentinelHash),
+      deleted: true,
+    },
+    artifacts,
+  };
+}

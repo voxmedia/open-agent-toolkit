@@ -15,6 +15,7 @@ export const EXPLAINER_CONFIG_KEYS = Object.freeze([
   'explainers.publish.s3Uri',
   'explainers.publish.publicBaseUrl',
   'explainers.publish.awsRegion',
+  'explainers.publish.publicAccess',
   'explainers.publish.awsProfile',
   'workflow.explainers.projectExplainer',
   'workflow.explainers.projectRecap',
@@ -115,7 +116,7 @@ export async function resolveExplainerConfig({
     }
   }
 
-  const publish = resolvePublish(values);
+  const { publish, publishReport } = resolvePublish(values, sources);
   const preferences = {
     projectExplainer: resolvePreference(
       'workflow.explainers.projectExplainer',
@@ -127,7 +128,15 @@ export async function resolveExplainerConfig({
     ),
   };
 
-  return { values, sources, theme, publish, preferences, warnings };
+  return {
+    values,
+    sources,
+    theme,
+    publish,
+    publishReport,
+    preferences,
+    warnings,
+  };
 }
 
 export function toExplainerRunRequest({
@@ -170,8 +179,9 @@ export function toExplainerRunRequest({
       );
     }
     durability.publish = {
-      schemaVersion: 'explainer-kit.publish-request/v1',
+      schemaVersion: 'explainer-kit.publish-request/v2',
       ...resolvedConfig.publish,
+      publicAccess: resolvedConfig.publish.publicAccess ?? 'public',
       siteRoot: join(outputRoot, slug, 'site'),
       manifestPath: join(outputRoot, slug, 'manifest.json'),
     };
@@ -179,7 +189,10 @@ export function toExplainerRunRequest({
 
   return {
     schemaVersion: 'explainer-kit.run-request/v1',
-    recipe: { id: recipe, version: '1' },
+    recipe: {
+      id: recipe,
+      version: recipe === 'project-recap' ? '2' : '1',
+    },
     slug,
     outputRoot,
     factBase,
@@ -254,6 +267,12 @@ function normalizeRuntimeValue(key, value) {
   if (key === 'explainers.publish.provider' && normalized !== 's3-static') {
     throw new Error(`${key} runtime override must be s3-static.`);
   }
+  if (
+    key === 'explainers.publish.publicAccess' &&
+    !['public', 'protected'].includes(normalized)
+  ) {
+    throw new Error(`${key} runtime override must be public or protected.`);
+  }
   if (key === 'explainers.defaults.style' && !STYLES.has(normalized)) {
     throw new Error(
       `${key} runtime override must name a curated explainer style.`,
@@ -283,27 +302,30 @@ function normalizeRuntimeValue(key, value) {
   return normalized;
 }
 
-function resolvePublish(values) {
-  const provider = nullableString(values['explainers.publish.provider']);
-  if (!provider) {
-    return null;
-  }
-  if (provider !== 's3-static') {
-    throw new Error(`Unsupported explainer publish provider: ${provider}`);
-  }
-
+function resolvePublish(values, sources) {
   const fields = {
+    provider: nullableString(values['explainers.publish.provider']),
     s3Uri: nullableString(values['explainers.publish.s3Uri']),
     publicBaseUrl: nullableString(values['explainers.publish.publicBaseUrl']),
     awsRegion: nullableString(values['explainers.publish.awsRegion']),
   };
+  if (fields.provider && fields.provider !== 's3-static') {
+    throw new Error(
+      `Unsupported explainer publish provider: ${fields.provider}`,
+    );
+  }
   const missing = Object.entries(fields)
     .filter(([, value]) => !value)
     .map(([key]) => key);
   if (missing.length > 0) {
-    throw new Error(
-      `Incomplete explainer publish configuration; missing ${missing.join(', ')}.`,
-    );
+    return {
+      publish: null,
+      publishReport: {
+        mode: 'build-only',
+        publishCapable: false,
+        missing,
+      },
+    };
   }
   if (!/^s3:\/\/[^/\s]+(?:\/.*)?$/.test(fields.s3Uri)) {
     throw new Error('explainers.publish.s3Uri must be a valid s3:// URI.');
@@ -315,12 +337,29 @@ function resolvePublish(values) {
   }
 
   const awsProfile = nullableString(values['explainers.publish.awsProfile']);
+  const publicAccess =
+    nullableString(values['explainers.publish.publicAccess']) ?? 'public';
+  if (!['public', 'protected'].includes(publicAccess)) {
+    throw new Error(
+      'explainers.publish.publicAccess must be public or protected.',
+    );
+  }
   return {
-    provider,
-    s3Uri: fields.s3Uri.replace(/\/+$/, ''),
-    publicBaseUrl: fields.publicBaseUrl.replace(/\/+$/, ''),
-    awsRegion: fields.awsRegion,
-    ...(awsProfile ? { awsProfile } : {}),
+    publish: {
+      provider: fields.provider,
+      s3Uri: fields.s3Uri.replace(/\/+$/, ''),
+      publicBaseUrl: fields.publicBaseUrl.replace(/\/+$/, ''),
+      awsRegion: fields.awsRegion,
+      ...(sources['explainers.publish.publicAccess'] !== 'default'
+        ? { publicAccess }
+        : {}),
+      ...(awsProfile ? { awsProfile } : {}),
+    },
+    publishReport: {
+      mode: 'publish-capable',
+      publishCapable: true,
+      missing: [],
+    },
   };
 }
 

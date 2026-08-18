@@ -23,14 +23,16 @@ import {
   requiredImmutablePackagePaths,
   reopenBuildStages,
   SET_PLAN_RECORD_PATHS,
+  supersedeTerminalEvidence,
   updateBuildRecord,
   verifySetPlanResumeToken,
   writeManifestAtomic,
   writeSetPlanRecords,
-  writeVisualReviewFailure,
+  writeTerminalEvidence,
   writeVisualRevision,
 } from '../scripts/lib/records.mjs';
 import { planExplainerSet } from '../scripts/lib/set-plan.mjs';
+import { assertTerminalEvidence } from '../scripts/lib/terminal-evidence.mjs';
 
 const HASH = `sha256:${'a'.repeat(64)}`;
 const tempDirs = [];
@@ -139,6 +141,17 @@ test('rejects traversal-like slugs before mutating the output root', async () =>
   assert.deepEqual(await readdir(parent), []);
 });
 
+test('rejects an output root already ending in the run slug before creating it', async () => {
+  const parent = await temporaryDirectory();
+  const outputRoot = join(parent, 'demo-project');
+
+  await assert.rejects(
+    initializeRun(request(outputRoot)),
+    /output root.*already ends.*run slug.*double-nest/i,
+  );
+  assert.deepEqual(await readdir(parent), []);
+});
+
 test('rejects an existing run-root symlink that escapes the output root', async () => {
   const outputRoot = await temporaryDirectory();
   const outside = await temporaryDirectory('explainer-records-outside-');
@@ -226,36 +239,225 @@ test('retains one bounded visual revision record for corrected artifacts', async
   );
 });
 
-test('retains structured partial evidence for a failed visual review attempt', async () => {
+test('refuses a second terminal-evidence write, so no amend path exists', async () => {
+  // This is the property that made `run.mjs`'s inventory re-record dead code:
+  // the first write is unconditional, so the second could only ever throw, and
+  // it was swallowed by `.catch(() => {})` under a comment claiming the durable
+  // evidence had been updated. The run path now reaches its inventory verdict
+  // before writing, so a single write carries the complete reason set. If this
+  // ever becomes amendable, that ordering constraint can be revisited.
   const outputRoot = await temporaryDirectory();
   const run = await initializeRun(request(outputRoot));
-  const error = Object.assign(new Error('critic provider unavailable'), {
-    code: 'E_VISUAL_REVIEW',
+  const terminalManifest = {
+    runId: run.runId,
+    slug: run.slug,
+    outcome: 'failed',
+  };
+  const evidence = (reasons) => ({
+    outcome: 'failed',
+    manifest: terminalManifest,
+    reasons,
+    evidenceDisposition: 'retained',
   });
+  const first = [{ stage: 'finalization', kind: 'pipeline-failure', count: 1 }];
 
-  const paths = await writeVisualReviewFailure(run, {
-    attempt: 1,
-    error,
-    evidence: [
+  await writeTerminalEvidence(run, evidence(first));
+  await assert.rejects(
+    writeTerminalEvidence(
+      run,
+      evidence([
+        ...first,
+        { stage: 'durability', kind: 'provider-failure', count: 1 },
+      ]),
+    ),
+    /immutable once retained/,
+    'a second write must be refused, not silently applied',
+  );
+
+  // And the retained bytes still carry only the first reason set, proving the
+  // refused write changed nothing on disk.
+  assert.deepEqual(
+    JSON.parse(
+      await readFile(join(run.runRoot, 'terminal-evidence.json'), 'utf8'),
+    ).reasons,
+    first,
+  );
+});
+
+test('retains compact flagged and failed terminal evidence', async () => {
+  for (const outcome of ['built-needs-review', 'failed']) {
+    const outputRoot = await temporaryDirectory();
+    const run = await initializeRun(request(outputRoot));
+    const terminalManifest = {
+      runId: run.runId,
+      slug: run.slug,
+      outcome,
+    };
+    const relativePath = await writeTerminalEvidence(run, {
+      outcome,
+      manifest: terminalManifest,
+      reasons: [
+        {
+          stage: outcome === 'failed' ? 'durability' : 'visual-review',
+          kind: outcome === 'failed' ? 'provider-failure' : 'finding',
+          count: 1,
+        },
+      ],
+      evidenceDisposition: 'retained',
+    });
+
+    assert.equal(relativePath, 'terminal-evidence.json');
+    assert.deepEqual(
+      JSON.parse(await readFile(join(run.runRoot, relativePath), 'utf8')),
       {
-        screenshotPath: 'qa/browser/project-recap/320.png',
-        metricsPath: 'qa/browser/project-recap/320.json',
+        schemaVersion: 'explainer-kit.terminal-evidence/v1',
+        runId: run.runId,
+        outcome,
+        manifestHash: canonicalHash(terminalManifest),
+        reasons: [
+          {
+            stage: outcome === 'failed' ? 'durability' : 'visual-review',
+            kind: outcome === 'failed' ? 'provider-failure' : 'finding',
+            count: 1,
+          },
+        ],
+        evidenceDisposition: 'retained',
+      },
+    );
+  }
+});
+
+test('requires meaningful evidence for every flagged or failed terminal outcome', async () => {
+  for (const outcome of ['built-needs-review', 'failed']) {
+    const outputRoot = await temporaryDirectory();
+    const run = await initializeRun(
+      request(outputRoot, { slug: `Empty ${outcome}` }),
+    );
+    const terminalManifest = { runId: run.runId, slug: run.slug, outcome };
+    const emptyEvidence = {
+      schemaVersion: 'explainer-kit.terminal-evidence/v1',
+      runId: run.runId,
+      outcome,
+      manifestHash: canonicalHash(terminalManifest),
+      reasons: [],
+      evidenceDisposition: 'partial',
+    };
+
+    assert.throws(
+      () =>
+        assertTerminalEvidence(emptyEvidence, { manifest: terminalManifest }),
+      /reason|min-items/i,
+    );
+    await assert.rejects(
+      writeTerminalEvidence(run, {
+        outcome,
+        manifest: terminalManifest,
+        reasons: [],
+        evidenceDisposition: 'partial',
+      }),
+      /reason|min-items/i,
+    );
+  }
+});
+
+test('retains only closed local terminal reasons and rejects diagnostic input', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(
+    request(outputRoot, { slug: 'Code Only Evidence' }),
+  );
+  const terminalManifest = {
+    runId: run.runId,
+    slug: run.slug,
+    artifacts: [{ id: 'project-recap' }],
+    outcome: 'failed',
+  };
+  const canary = 'arbitrary-terminal-diagnostic-canary';
+
+  await writeTerminalEvidence(run, {
+    outcome: 'failed',
+    manifest: terminalManifest,
+    reasons: [
+      {
+        stage: 'durability',
+        kind: 'provider-failure',
+        artifactId: 'project-recap',
+        count: 1,
       },
     ],
+    evidenceDisposition: 'retained',
   });
 
-  assert.deepEqual(paths, ['qa/review-gate/attempt-1-error.json']);
-  assert.deepEqual(
-    JSON.parse(await readFile(join(run.runRoot, paths[0]), 'utf8')),
+  const retained = await readFile(
+    join(run.runRoot, 'terminal-evidence.json'),
+    'utf8',
+  );
+  assert.equal(retained.includes(canary), false);
+  assert.deepEqual(JSON.parse(retained).reasons, [
     {
-      schemaVersion: 'explainer-kit.visual-review-error/v1',
-      attempt: 1,
-      code: 'E_VISUAL_REVIEW',
-      message: 'critic provider unavailable',
-      evidencePaths: [
-        'qa/browser/project-recap/320.png',
-        'qa/browser/project-recap/320.json',
-      ],
+      stage: 'durability',
+      kind: 'provider-failure',
+      artifactId: 'project-recap',
+      count: 1,
+    },
+  ]);
+
+  const legacyRun = await initializeRun(
+    request(await temporaryDirectory(), { slug: 'Legacy Evidence' }),
+  );
+  await assert.rejects(
+    writeTerminalEvidence(legacyRun, {
+      outcome: 'failed',
+      manifest: {
+        runId: legacyRun.runId,
+        slug: legacyRun.slug,
+        outcome: 'failed',
+      },
+      reasons: [{ stage: 'durability', kind: 'provider-failure', count: 1 }],
+      error: { message: canary },
+      evidenceDisposition: 'retained',
+    }),
+    /legacy|unknown|diagnostic|shape/i,
+  );
+});
+
+test('supersedes retained evidence with replacement run identity and manifest hash', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  const terminalManifest = {
+    runId: run.runId,
+    slug: run.slug,
+    outcome: 'failed',
+  };
+  await writeTerminalEvidence(run, {
+    outcome: 'failed',
+    manifest: terminalManifest,
+    reasons: [{ stage: 'durability', kind: 'provider-failure', count: 50 }],
+    evidenceDisposition: 'retained',
+  });
+
+  await supersedeTerminalEvidence(run, {
+    manifest: terminalManifest,
+    supersededBy: {
+      runId: 'run-replacement',
+      manifestHash: `sha256:${'b'.repeat(64)}`,
+    },
+  });
+
+  assert.deepEqual(
+    JSON.parse(
+      await readFile(join(run.runRoot, 'terminal-evidence.json'), 'utf8'),
+    ),
+    {
+      schemaVersion: 'explainer-kit.terminal-evidence/v1',
+      runId: run.runId,
+      outcome: 'failed',
+      manifestHash: canonicalHash(terminalManifest),
+      reasons: [{ stage: 'finalization', kind: 'superseded', count: 1 }],
+      evidenceDisposition: 'superseded',
+      supersededBy: {
+        runId: 'run-replacement',
+        manifestHash: `sha256:${'b'.repeat(64)}`,
+      },
     },
   );
 });
@@ -582,6 +784,36 @@ test('records an initial stage failure as a failed run', async () => {
   assert.deepEqual(
     JSON.parse(await readFile(run.buildRecordPath, 'utf8')),
     failed,
+  );
+});
+
+test('projects an exhausted internal-reference finding to a local QA failure', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  for (const id of ['validate', 'fact-base', 'content', 'theme', 'render']) {
+    await updateBuildRecord(run, { id, status: 'running' });
+    await updateBuildRecord(run, { id, status: 'passed' });
+  }
+  await updateBuildRecord(run, { id: 'qa', status: 'running' });
+  const failed = await updateBuildRecord(run, {
+    id: 'qa',
+    status: 'failed',
+    error: {
+      code: 'E_INTERNAL_REFERENCE',
+      message:
+        'missing-target: site/initiatives/demo/index.html references missing/index.html',
+      recovery: [
+        'Correct the qa inputs or implementation and start a new run.',
+      ],
+    },
+  });
+
+  assert.equal(failed.outcome, 'failed');
+  assert.equal(failed.stages.find(({ id }) => id === 'qa').error.code, 'E_QA');
+  assert.equal(JSON.stringify(failed).includes('missing/index.html'), false);
+  assert.equal(
+    failed.stages.find(({ id }) => id === 'durability').status,
+    'pending',
   );
 });
 

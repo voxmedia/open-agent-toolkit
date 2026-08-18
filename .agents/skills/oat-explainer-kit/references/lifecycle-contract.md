@@ -86,6 +86,38 @@ The resolved callback is passed only as the `author` option to
 `run-request.json`, or another retained data contract. Interactive runs use the
 same author contract and differ only at the later approval gate.
 
+## Repository invocation sources
+
+A repository invocation must provide `suppliedFactBasePath`. The adapter binds
+that validated fact-base input with provenance from the exact reviewed
+repository revision returned by `resolveReviewedRepository`; it never resolves
+or reads an active project for this invocation. Missing supplied input fails
+closed before core invocation with an actionable requirement.
+
+Repository runs write beneath `.oat/repo/reference/explainers/<run-slug>/` and
+use repository-level publish roots unchanged. Project invocations retain their
+approved lifecycle-artifact binding and project-local output behavior.
+
+When publish durability is explicitly selected, the adapter constructs the
+core `explainer-kit.publish-request/v2` with the per-invocation derived `s3Uri`,
+`publicBaseUrl`, and source-aware `publicAccess`. New adapter runs emit this v2
+shape atomically; the request carries no project/repository topology fields and
+no credential material. The human-gated publisher returns a complete
+`explainer-kit.publish-receipt/v2`, which the core validates against the
+finalized manifest and generated catalog before the adapter forwards the
+publication summary without destination reinterpretation. The immutable
+`publish-request/v1` and `publish-receipt/v1` contracts remain supported only
+for replay; v2 does not mutate either v1 contract in place. Configuration never
+bypasses the human publication gate.
+
+The adapter forwards the immutable `explainer-kit.publish-summary/v2` lifecycle
+handoff without destination reinterpretation. Every v2 artifact entry retains
+its source identity, rendered path, S3 URI, canonical public URL, content hash,
+object verification, and public verification evidence. A
+`publish-receipt/v1` replay instead yields the reduced immutable
+`explainer-kit.publish-summary/v1` shape, whose artifact entries retain only
+the relative path and public URL. Neither summary contract is mutated in place.
+
 ## Browser and visual-review execution
 
 Every unattended `project-recap` must provide exactly one browser-evidence
@@ -109,10 +141,13 @@ request/result, and byte-bound whole-set review contracts.
 
 The core retains canonical 320, 768, and 1440 viewport screenshots, paired
 `explainer-kit.browser-evidence/v2` metrics with launched Chromium name,
-version, and capture identity, each review request/result, cohesion
+version, and capture identity, each review request and closed local evidence
+projection, cohesion
 observations, and any one-pass revision record. Missing, malformed, forged,
 cross-record mismatched, stale, or failed review-chain evidence terminates as
 `built-needs-review`; durability and publication remain blocked.
+The review chain performs at most one correction and one final review. It never
+starts a second rebuild to chase visual perfection.
 
 ## Tracked-run finalization
 
@@ -124,10 +159,15 @@ repository root, project name, an explicit compatible `coreRoot`, and, for
 dynamically loads the versioned package-coverage contract from that core root;
 it does not maintain an adapter-local path list.
 
-A core `built-needs-review` outcome is a terminal review gate, not a
-non-durable success. The planner rejects it before producing artifact,
-attestation, evidence-commit, or push commands. The recap must instead be
-reviewed and rebuilt to a passing visual-review outcome.
+A core `built-needs-review` or `failed` outcome is terminal evidence, not a
+non-durable success. Provider review and diagnostic prose exists only during
+the in-memory correction attempt. Retained review attempts use the closed
+`visual-review-evidence/v1` projection bound to the adjacent request hash and
+attempt directory. The core retains `terminal-evidence.json` with run identity,
+the manifest hash when available, bounded `stage`/`kind` reason tuples, and the
+evidence disposition. The planner verifies that binding and returns complete
+without artifact, attestation, evidence-commit, or push commands. This preserves
+the handoff without promoting it to durable or publishable success.
 
 The returned stages must run in order:
 
@@ -188,7 +228,11 @@ complete. A later attestation may recover durability without repeating the
 archive.
 
 This recovery path applies only to `built-not-durable`.
-`built-needs-review` cannot be exported, attested, finalized, or pushed.
+`built-needs-review` and `failed` packages may be exported so their compact
+terminal evidence survives project deletion, but they cannot be attested into
+`built-durable`, pushed by the finalizer, or published. Flagged, failed,
+superseded, and `built-not-durable` runs are never publishable. Only a
+review-clean `built-durable` run may cross the explicit human publication gate.
 
 Post-archive summary and PR recap links target `projectRecapExport.exportRoot`
 under `.oat/repo/reference/project-recaps/` on the current head branch. The

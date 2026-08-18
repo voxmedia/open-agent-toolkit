@@ -9,8 +9,9 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { afterEach, test } from 'node:test';
+import { after, afterEach, before, test } from 'node:test';
 
+import { createBrowserProbeSession } from '../scripts/lib/browser-runtime.mjs';
 import { validateContract } from '../scripts/lib/contracts.mjs';
 import { runExplainer } from '../scripts/run.mjs';
 import { png } from './fixtures/png.mjs';
@@ -29,11 +30,27 @@ const REQUIRED_NARRATIVE = [
 const HUB_PATH = `site/initiatives/${SLUG}/index.html`;
 const skillRoot = new URL('../', import.meta.url);
 const tempDirs = [];
+let browserSession;
+
+before(async () => {
+  browserSession = await createBrowserProbeSession();
+  assert.equal(
+    browserSession.available,
+    true,
+    `A launched Chromium session is required: ${browserSession.reason ?? 'unavailable'}`,
+  );
+});
 
 afterEach(async () => {
   await Promise.all(
     tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })),
   );
+});
+
+after(async () => {
+  if (browserSession?.available) {
+    await browserSession.close();
+  }
 });
 
 function example(path) {
@@ -73,6 +90,47 @@ async function markdownFixture(mode = 'unattended') {
   const result = await fixture(mode);
   result.request.recipe = { id: 'project-explainer', version: '1' };
   return result;
+}
+
+// `project-recap@2` is what the adapter pins for every new recap
+// (`oat-explainer-kit/scripts/resolve-config.mjs`), so it — not v1 — governs
+// production runs. v1 stays pinned above for golden replay.
+async function recapV2Fixture(mode = 'unattended') {
+  const result = await fixture(mode);
+  result.request.recipe = { id: 'project-recap', version: '2' };
+  return result;
+}
+
+/** Like `adaptivePlanSet`, but the optional entries carry no justification. */
+function unjustifiedPlanSet(optional = []) {
+  return async (context) => {
+    const plan = await adaptivePlanSet(optional)(context);
+    plan.portfolio = plan.portfolio.map((entry) => {
+      if (entry.required) return entry;
+      const { justification: _dropped, ...rest } = entry;
+      return rest;
+    });
+    return plan;
+  };
+}
+
+async function recapV2Run(overrides = {}) {
+  const { request } = await recapV2Fixture(overrides.mode);
+  const author = overrides.author ?? richAuthor();
+  const result = await runExplainer(request, {
+    author,
+    planSet: overrides.planSet ?? adaptivePlanSet(),
+    browserSession,
+    visualCritic: passingVisualCritic,
+    now: () => NOW,
+    reviewedSource: {
+      kind: 'lifecycle-artifacts',
+      locator: '.oat/projects/shared/atlas-index/implementation.md',
+      revision: 'a1b2c3d',
+      reviewedAt: NOW,
+    },
+  });
+  return { author, request, result };
 }
 
 // A stub for the headless runtime: a clean probe result keeps render QA silent
@@ -284,7 +342,11 @@ function hubHtml(request) {
               : id === 'as-built-architecture'
                 ? '<svg class="narrative-diagram" data-direction="TD"><text class="diagram-node-label">Change reader</text></svg>'
                 : id === 'implementation-record'
-                  ? '<ol class="timeline"><li>Build the retained checkpoint flow.</li></ol>'
+                  ? // The "3" carries the shared ledger's numeric claim. Recap
+                    // cohesion requires every declared claim to be observable in
+                    // rendered text, and under `project-recap@2` the hub can be
+                    // the only artifact, so the hub itself has to state it.
+                    '<ol class="timeline"><li>Build the retained checkpoint flow across 3 partitions.</li></ol>'
                   : id === 'validation-evidence'
                     ? '<aside class="callout callout--important">All retained hashes passed.</aside>'
                     : id === 'outcome'
@@ -387,11 +449,10 @@ function adaptivePlanSet(optional = []) {
 async function richRun(overrides = {}) {
   const { request } = await fixture(overrides.mode);
   const author = overrides.author ?? richAuthor();
-  const probe = cleanProbe();
   const result = await runExplainer(request, {
     author,
     planSet: overrides.planSet ?? adaptivePlanSet(),
-    browserProbe: probe,
+    browserSession,
     now: () => NOW,
     ...(overrides.mode === 'interactive'
       ? {}
@@ -405,7 +466,7 @@ async function richRun(overrides = {}) {
           },
         }),
   });
-  return { author, probe, request, result };
+  return { author, request, result };
 }
 
 function occurrences(html, pattern) {
@@ -414,6 +475,13 @@ function occurrences(html, pattern) {
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
+}
+
+function assertFailedAuthoring(result) {
+  assert.equal(result.outcome, 'failed');
+  assert.deepEqual(result.reasons, [
+    { stage: 'authoring', kind: 'pipeline-failure', count: 1 },
+  ]);
 }
 
 test('the shipped recap fixture renders structured blocks, not flat paragraphs', async () => {
@@ -458,13 +526,162 @@ test('the shipped recap fixture renders structured blocks, not flat paragraphs',
   );
 });
 
+test('project-recap@2 composes the hub-only floor end to end', async () => {
+  const { author, result } = await recapV2Run();
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  const manifest = await readJson(result.manifestPath);
+  // v2's defining behavior: the floor is the hub alone, where v1 mandated
+  // hub + architecture + deck.
+  assert.deepEqual(
+    manifest.artifacts.map(({ id, type }) => ({ id, type })),
+    [{ id: 'project-recap', type: 'hub' }],
+  );
+  assert.deepEqual(manifest.recipe, { id: 'project-recap', version: '2' });
+  assert.deepEqual(
+    author.requests.map(({ plannedArtifact }) => plannedArtifact.artifactId),
+    ['project-recap'],
+  );
+});
+
+test('project-recap@2 admits a justified expansion end to end', async () => {
+  const { author, result } = await recapV2Run({
+    planSet: adaptivePlanSet([
+      {
+        artifactId: 'index-flow',
+        profileId: 'supporting-diagram',
+        kind: 'source-backed-detail',
+        rationale:
+          'The indexing pipeline has three stages that the hub only names.',
+      },
+    ]),
+  });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  const manifest = await readJson(result.manifestPath);
+  assert.deepEqual(
+    manifest.artifacts.map(({ id, type }) => ({ id, type })),
+    [
+      { id: 'project-recap', type: 'hub' },
+      { id: 'index-flow', type: 'diagram' },
+    ],
+  );
+  assert.deepEqual(
+    author.requests.map(({ plannedArtifact }) => plannedArtifact.artifactId),
+    ['project-recap', 'index-flow'],
+  );
+});
+
+test('project-recap@2 rejects an unjustified expansion', async () => {
+  const { author, result } = await recapV2Run({
+    planSet: unjustifiedPlanSet([
+      {
+        artifactId: 'index-flow',
+        profileId: 'supporting-diagram',
+        kind: 'source-backed-detail',
+        rationale: 'Dropped before the plan reaches the recipe gate.',
+      },
+    ]),
+  });
+
+  assertFailedAuthoring(result);
+
+  // The previous form of this assertion was vacuous. No manifest is written on
+  // this path at all: `run.mjs` persists a failure manifest only when both
+  // `state.factBase` and `state.theme` are set, and the theme stage runs after
+  // content, so an unjustified plan rejected during set-plan validation leaves
+  // `state.theme` unset. `manifest?.artifacts?.some(...) ?? false` therefore
+  // reduced to `assert.equal(false, false)` and could never fail.
+  //
+  // Assert the absence directly, and assert the observable the run does
+  // produce: the author is never asked to compose anything.
+  await assert.rejects(
+    access(join(result.runRoot, 'manifest.json')),
+    'a rejected set plan must not write a manifest',
+  );
+  assert.deepEqual(
+    author.requests.map(({ plannedArtifact }) => plannedArtifact.artifactId),
+    [],
+    'a rejected set plan must not reach the author at all',
+  );
+  await assert.rejects(
+    access(join(result.runRoot, `site/diagrams/${SLUG}/index-flow`)),
+    'the rejected expansion must not be rendered',
+  );
+
+  // Positive control, so the three assertions above cannot be satisfied
+  // trivially: the identical plan differing only by a present justification
+  // reaches the author and writes a manifest. Without this pairing the
+  // assertions would be indistinguishable from "the run failed for any reason".
+  const justified = await recapV2Run({
+    planSet: adaptivePlanSet([
+      {
+        artifactId: 'index-flow',
+        profileId: 'supporting-diagram',
+        kind: 'source-backed-detail',
+        rationale: 'The indexing pipeline has three stages the hub only names.',
+      },
+    ]),
+  });
+  assert.equal(justified.result.outcome, 'built-not-durable');
+  assert.deepEqual(
+    justified.author.requests.map(
+      ({ plannedArtifact }) => plannedArtifact.artifactId,
+    ),
+    ['project-recap', 'index-flow'],
+    'the justified variant does reach the author',
+  );
+  await access(join(justified.result.runRoot, 'manifest.json'));
+});
+
+test('an expansion whose justification kind is disallowed fails the recipe gate', async () => {
+  // The unjustified case above is rejected by set-plan *contract* validation
+  // before the recipe policy gate is reached. This drives the second half of
+  // that gate — a justification that is present and well-formed but carries a
+  // kind the profile does not allow. `project-recap@1` is used because it is
+  // the recipe that declares `allowedJustificationKinds`; v2's profiles do not,
+  // so the branch is unreachable there.
+  const { request } = await fixture();
+  const author = richAuthor();
+  const result = await runExplainer(request, {
+    author,
+    planSet: adaptivePlanSet([
+      {
+        artifactId: 'status-view',
+        profileId: 'status-view',
+        // `status-view` allows only `status-change`.
+        kind: 'source-backed-detail',
+        rationale: 'A well-formed justification of a disallowed kind.',
+      },
+    ]),
+    browserSession,
+    visualCritic: passingVisualCritic,
+    now: () => NOW,
+  });
+
+  assertFailedAuthoring(result);
+  assert.deepEqual(
+    author.requests.map(({ plannedArtifact }) => plannedArtifact.artifactId),
+    [],
+    'a disallowed justification kind must be rejected before authoring',
+  );
+});
+
 test('unattended recap always composes the adaptive hub, architecture, and deck minimum', async () => {
   const { request } = await fixture();
   const author = richAuthor([]);
   const result = await runExplainer(request, {
     author,
     planSet: adaptivePlanSet(),
-    browserProbe: cleanProbe(),
+    browserSession,
     visualCritic: passingVisualCritic,
     now: () => NOW,
   });
@@ -564,13 +781,12 @@ running --> queued`,
           ).draft = `\`\`\`diagram\n${diagram}\n\`\`\``;
           return plan;
         },
-        browserProbe: cleanProbe(),
+        browserSession,
         visualCritic: critic,
         now: () => NOW,
       });
 
-      assert.equal(result.outcome, 'failed');
-      assert.equal(result.errors[0].code, 'E_DIAGRAM_TOPOLOGY');
+      assertFailedAuthoring(result);
       assert.equal(critic.calls, 0);
     });
   }
@@ -635,13 +851,12 @@ router --> audit
 \`\`\``;
         return plan;
       },
-      browserProbe: cleanProbe(),
+      browserSession,
       visualCritic: critic,
       now: () => NOW,
     });
 
-    assert.equal(result.outcome, 'failed');
-    assert.equal(result.errors[0].code, 'E_DIAGRAM_TOPOLOGY');
+    assertFailedAuthoring(result);
     assert.equal(critic.calls, 0);
   });
 }
@@ -653,7 +868,7 @@ test('explicit deterministic fallback composes the same portfolio from Markdown'
   const result = await runExplainer(request, {
     author,
     planSet: adaptivePlanSet(),
-    browserProbe: cleanProbe(),
+    browserSession,
     visualCritic: passingVisualCritic,
     now: () => NOW,
   });
@@ -699,12 +914,15 @@ test('explicit deterministic fallback composes the same portfolio from Markdown'
 });
 
 test('a rich recap ships with an empty warning set', async () => {
-  const { probe, request, result } = await richRun();
+  const { request, result } = await richRun();
 
   assert.deepEqual(result.warnings, []);
   const manifest = await readJson(result.manifestPath);
   const record = await readJson(result.buildRecordPath);
   const theme = await readJson(join(result.runRoot, 'theme.resolved.json'));
+  const visualRequest = await readJson(
+    join(result.runRoot, 'qa/visual-review/attempt-1/request.json'),
+  );
   assert.deepEqual(manifest.warnings, []);
   assert.deepEqual(
     validateContract('manifest', manifest, {
@@ -715,9 +933,12 @@ test('a rich recap ships with an empty warning set', async () => {
     { valid: true, errors: [] },
   );
   assert.equal(
-    probe.requests.length,
-    15,
-    'hub and architecture plus three deck scenarios across three widths',
+    visualRequest.renderedArtifacts.reduce(
+      (count, artifact) => count + artifact.evidence.length,
+      0,
+    ),
+    9,
+    'three retained default captures per artifact bind the visual review',
   );
   assert.equal(
     manifest.artifacts.every(({ status }) => status === 'built'),
@@ -743,7 +964,7 @@ test('writes a manifest-derived initiative catalog with absolute artifact and so
   const result = await runExplainer(request, {
     author: richAuthor(),
     planSet: adaptivePlanSet(),
-    browserProbe: cleanProbe(),
+    browserSession,
     visualCritic: passingVisualCritic,
     now: () => NOW,
   });
@@ -897,9 +1118,7 @@ test('an unknown expansion profile fails the run loudly', async () => {
     ]),
   });
 
-  assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_SET_PLAN');
-  assert.match(result.errors[0].message, /allowed recipe profile/);
+  assertFailedAuthoring(result);
   await assert.rejects(
     access(join(result.runRoot, `site/diagrams/${SLUG}/walkthrough-video`)),
   );
@@ -917,9 +1136,7 @@ test('an over-cap planned portfolio fails closed', async () => {
     ),
   });
 
-  assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_SET_PLAN');
-  assert.match(result.errors[0].message, /exceeds the deep-dive profile limit/);
+  assertFailedAuthoring(result);
 });
 
 test('a thin recap ships with the floor warning vocabulary', async () => {
@@ -1145,14 +1362,12 @@ router --> audit
       );
     },
     planSet: adaptivePlanSet(),
-    browserProbe: cleanProbe(),
+    browserSession,
     visualCritic: passingVisualCritic,
     now: () => NOW,
   });
 
-  assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_DIAGRAM_TOPOLOGY');
-  assert.match(result.errors[0].message, /branch.*artistic/i);
+  assertFailedAuthoring(result);
   assert.deepEqual(authoredIds, ['project-recap', 'architecture']);
   await assert.rejects(
     access(

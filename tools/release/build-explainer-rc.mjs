@@ -33,6 +33,7 @@ import {
   SKILL_NAMES,
   hashBytes,
   hashCanonicalJson,
+  byRecipeIdentity,
 } from './explainer-rc-contract.mjs';
 
 const execFileAsync = promisify(execFile);
@@ -218,7 +219,11 @@ async function loadRecipes(coreRoot) {
       sha256: await hashFile(path),
     });
   }
-  return entries.sort(byId);
+  return entries.sort(byRecipeIdentity);
+}
+
+function byId(left, right) {
+  return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
 }
 
 async function listChangedCandidates(repoRoot) {
@@ -722,10 +727,6 @@ function sorted(values, selector = (value) => value) {
 
 function byName(left, right) {
   return left.name < right.name ? -1 : left.name > right.name ? 1 : 0;
-}
-
-function byId(left, right) {
-  return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
 }
 
 function parseArguments(argv) {
