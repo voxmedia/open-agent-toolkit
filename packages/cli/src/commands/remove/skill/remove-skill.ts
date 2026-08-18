@@ -1,4 +1,4 @@
-import { rm } from 'node:fs/promises';
+import { lstat, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
@@ -12,11 +12,16 @@ import {
   loadSyncConfig,
   type SyncConfig,
 } from '@config/sync-config';
+import {
+  classifyObsoleteMappingRetirement,
+  type RemovalSyncPlanEntry,
+} from '@engine/index';
 import { dirExists, fileExists } from '@fs/io';
-import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import { resolveProjectRoot, resolveScopeRoot, toPosixPath } from '@fs/paths';
 import {
   loadManifest,
   type Manifest,
+  type ManifestEntry,
   removeEntry,
   saveManifest,
 } from '@manifest/index';
@@ -56,6 +61,7 @@ interface ScopePlan {
   canonicalAbsolutePath: string;
   managedProviderViews: ProviderView[];
   unmanagedProviderViews: ProviderView[];
+  manifestProvidersToRemove: string[];
 }
 
 interface JsonScopeResult {
@@ -87,7 +93,12 @@ export interface RemoveSkillDependencies {
     adapter: ProviderAdapter,
     scope: Scope,
   ) => AdoptionSource[];
+  classifyObsoleteMappingRetirement: (
+    manifestEntry: ManifestEntry,
+    scopeRoot: string,
+  ) => Promise<RemovalSyncPlanEntry>;
   pathExists: (path: string) => Promise<boolean>;
+  pathEntryExists: (path: string) => Promise<boolean>;
   removeDirectory: (path: string) => Promise<void>;
 }
 
@@ -117,8 +128,17 @@ export function createDefaultRemoveSkillDependencies(): RemoveSkillDependencies 
     getConfigAwareAdapters,
     getSyncMappings,
     getAdoptionSources,
+    classifyObsoleteMappingRetirement,
     async pathExists(path) {
       return (await fileExists(path)) || (await dirExists(path));
+    },
+    async pathEntryExists(path) {
+      try {
+        await lstat(path);
+        return true;
+      } catch {
+        return false;
+      }
     },
     async removeDirectory(path) {
       await rm(path, { recursive: true, force: true });
@@ -167,6 +187,7 @@ async function buildScopePlan(
 
   const managedProviderViews: ProviderView[] = [];
   const unmanagedProviderViews: ProviderView[] = [];
+  const manifestProvidersToRemove = new Set<string>();
 
   for (const adapter of activeAdapters) {
     const syncMappings = dependencies
@@ -184,6 +205,7 @@ async function buildScopePlan(
       const providerPathExists = await dependencies.pathExists(absolutePath);
 
       if (hasManifestEntry) {
+        manifestProvidersToRemove.add(adapter.name);
         managedProviderViews.push({
           provider: adapter.name,
           absolutePath,
@@ -215,7 +237,37 @@ async function buildScopePlan(
     for (const source of localAdoptionSources) {
       const relativePath = join(source.directory, skillName);
       const absolutePath = join(scopeRoot, relativePath);
-      if (await dependencies.pathExists(absolutePath)) {
+      const legacyManifestEntry = manifest.entries.find(
+        (entry) =>
+          adapter.name === 'copilot' &&
+          entry.canonicalPath === canonicalRelativePath &&
+          entry.provider === adapter.name &&
+          entry.providerPath === toPosixPath(relativePath),
+      );
+
+      if (legacyManifestEntry) {
+        manifestProvidersToRemove.add(adapter.name);
+        const [retirement, providerPathExists] = await Promise.all([
+          dependencies.classifyObsoleteMappingRetirement(
+            legacyManifestEntry,
+            scopeRoot,
+          ),
+          dependencies.pathEntryExists(absolutePath),
+        ]);
+        if (retirement.operation === 'remove') {
+          managedProviderViews.push({
+            provider: adapter.name,
+            absolutePath,
+            relativePath,
+          });
+        } else if (providerPathExists) {
+          unmanagedProviderViews.push({
+            provider: adapter.name,
+            absolutePath,
+            relativePath,
+          });
+        }
+      } else if (await dependencies.pathExists(absolutePath)) {
         unmanagedProviderViews.push({
           provider: adapter.name,
           absolutePath,
@@ -234,6 +286,7 @@ async function buildScopePlan(
     canonicalAbsolutePath,
     managedProviderViews: dedupeViews(managedProviderViews),
     unmanagedProviderViews: dedupeViews(unmanagedProviderViews),
+    manifestProvidersToRemove: [...manifestProvidersToRemove],
   };
 }
 
@@ -284,11 +337,11 @@ async function applyPlan(
   }
 
   let nextManifest = plan.manifest;
-  for (const view of plan.managedProviderViews) {
+  for (const provider of plan.manifestProvidersToRemove) {
     nextManifest = removeEntry(
       nextManifest,
       plan.canonicalRelativePath,
-      view.provider,
+      provider,
     );
   }
   await dependencies.saveManifest(plan.manifestPath, nextManifest);

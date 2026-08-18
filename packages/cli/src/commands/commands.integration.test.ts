@@ -325,6 +325,171 @@ describe('CLI command integration', () => {
     ).toBe(false);
   });
 
+  it('sync uses Copilot native skills while retaining Copilot agent and rule views', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    await mkdir(join(root, '.github', 'agents'), { recursive: true });
+    await runCli(root, ['init']);
+    await seedCanonical(root);
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'rules', 'rule-one.md'),
+      '---\ndescription: Rule one\nactivation: always\n---\n\n# Rule One\n',
+      'utf8',
+    );
+
+    const result = await runCli(root, ['sync']);
+    expect(result.exitCode).toBe(0);
+
+    await expect(
+      lstat(join(root, '.github', 'skills', 'skill-one')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(
+      lstat(join(root, '.github', 'agents', 'agent-one')),
+    ).resolves.toMatchObject({});
+    await expect(
+      lstat(join(root, '.github', 'instructions', 'rule-one.instructions.md')),
+    ).resolves.toMatchObject({});
+
+    const manifest = JSON.parse(
+      await readFile(join(root, '.oat', 'sync', 'manifest.json'), 'utf8'),
+    );
+    expect(
+      manifest.entries.some(
+        (entry: { contentType: string; provider: string }) =>
+          entry.provider === 'copilot' && entry.contentType === 'skill',
+      ),
+    ).toBe(false);
+    expect(
+      manifest.entries.some(
+        (entry: { contentType: string; provider: string }) =>
+          entry.provider === 'copilot' && entry.contentType === 'agent',
+      ),
+    ).toBe(true);
+    expect(
+      manifest.entries.some(
+        (entry: { contentType: string; provider: string }) =>
+          entry.provider === 'copilot' && entry.contentType === 'rule',
+      ),
+    ).toBe(true);
+
+    const status = await runCli(root, ['status', '--json'], ['--json']);
+    expect(status.exitCode).toBe(0);
+    const statusPayload = JSON.parse(status.stdout);
+    expect(statusPayload.summary.missing).toBe(0);
+    expect(
+      statusPayload.reports.some(
+        (report: { provider: string; providerPath: string }) =>
+          report.provider === 'copilot' &&
+          report.providerPath.startsWith('.github/skills/'),
+      ),
+    ).toBe(false);
+  });
+
+  it('sync safely retires legacy Copilot skill ownership', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    await mkdir(join(root, '.github', 'agents'), { recursive: true });
+    await runCli(root, ['init']);
+    await seedCanonical(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-two'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-two', 'SKILL.md'),
+      'skill two',
+      'utf8',
+    );
+
+    await mkdir(join(root, '.github', 'skills'), { recursive: true });
+    await symlink(
+      join(root, '.agents', 'skills', 'skill-one'),
+      join(root, '.github', 'skills', 'skill-one'),
+      'dir',
+    );
+    await mkdir(join(root, '.github', 'skills', 'skill-two'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.github', 'skills', 'skill-two', 'SKILL.md'),
+      'user replacement',
+      'utf8',
+    );
+    await mkdir(join(root, '.github', 'skills', 'copilot-only'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.github', 'skills', 'copilot-only', 'SKILL.md'),
+      'copilot only',
+      'utf8',
+    );
+
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    manifest.entries.push(
+      {
+        canonicalPath: '.agents/skills/skill-one',
+        providerPath: '.github/skills/skill-one',
+        provider: 'copilot',
+        contentType: 'skill',
+        strategy: 'symlink',
+        contentHash: null,
+        isFile: false,
+        lastSynced: new Date().toISOString(),
+      },
+      {
+        canonicalPath: '.agents/skills/skill-two',
+        providerPath: '.github/skills/skill-two',
+        provider: 'copilot',
+        contentType: 'skill',
+        strategy: 'symlink',
+        contentHash: null,
+        isFile: false,
+        lastSynced: new Date().toISOString(),
+      },
+    );
+    await writeFile(
+      manifestPath,
+      `${JSON.stringify(manifest, null, 2)}\n`,
+      'utf8',
+    );
+
+    const dryRun = await runCli(root, ['sync', '--dry-run']);
+    expect(dryRun.exitCode).toBe(0);
+    expect(dryRun.stdout).toContain(
+      'remove copilot/skill-one (obsolete mapping has verified clean managed symlink)',
+    );
+    expect(dryRun.stdout).toContain(
+      'detach copilot/skill-two (obsolete mapping provider path is changed or unverified; preserve and detach manifest ownership)',
+    );
+
+    const result = await runCli(root, ['sync']);
+    expect(result.exitCode).toBe(0);
+    await expect(
+      lstat(join(root, '.github', 'skills', 'skill-one')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(
+      readFile(
+        join(root, '.github', 'skills', 'skill-two', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('user replacement');
+    await expect(
+      readFile(
+        join(root, '.github', 'skills', 'copilot-only', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('copilot only');
+
+    const updatedManifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    expect(
+      updatedManifest.entries.some(
+        (entry: { contentType: string; provider: string }) =>
+          entry.provider === 'copilot' && entry.contentType === 'skill',
+      ),
+    ).toBe(false);
+  });
+
   it('sync safely retires legacy Cursor skill ownership', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);

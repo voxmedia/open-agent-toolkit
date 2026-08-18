@@ -23,15 +23,16 @@ describe('copilotAdapter', () => {
     expect(copilotAdapter.displayName).toBe('GitHub Copilot');
   });
 
-  it('project mappings include rules under .github/instructions', () => {
+  it('project mappings native-read skills and preserve agents and rules', () => {
     expect(copilotAdapter.projectMappings).toHaveLength(3);
     expect(copilotAdapter.projectMappings).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           contentType: 'skill',
           canonicalDir: '.agents/skills',
-          providerDir: '.github/skills',
-          nativeRead: false,
+          providerDir: '.agents/skills',
+          nativeRead: true,
+          adoptionSourceDirs: ['.github/skills'],
         }),
         expect.objectContaining({
           contentType: 'agent',
@@ -52,13 +53,14 @@ describe('copilotAdapter', () => {
     );
   });
 
-  it('user mappings: skills → .copilot/skills, agents → .copilot/agents', () => {
+  it('user mappings native-read skills and preserve agents', () => {
     expect(copilotAdapter.userMappings).toEqual([
       {
         contentType: 'skill',
         canonicalDir: '.agents/skills',
-        providerDir: '.copilot/skills',
-        nativeRead: false,
+        providerDir: '.agents/skills',
+        nativeRead: true,
+        adoptionSourceDirs: ['.copilot/skills'],
       },
       {
         contentType: 'agent',
@@ -69,14 +71,18 @@ describe('copilotAdapter', () => {
     ]);
   });
 
-  it('all mappings have nativeRead: false', () => {
-    const allMappings = [
-      ...copilotAdapter.projectMappings,
-      ...copilotAdapter.userMappings,
-    ];
-    expect(allMappings.every((mapping) => mapping.nativeRead === false)).toBe(
-      true,
-    );
+  it('only skill mappings have nativeRead: true', () => {
+    expect(
+      [...copilotAdapter.projectMappings, ...copilotAdapter.userMappings].map(
+        ({ contentType, nativeRead }) => ({ contentType, nativeRead }),
+      ),
+    ).toEqual([
+      { contentType: 'skill', nativeRead: true },
+      { contentType: 'agent', nativeRead: false },
+      { contentType: 'rule', nativeRead: false },
+      { contentType: 'skill', nativeRead: true },
+      { contentType: 'agent', nativeRead: false },
+    ]);
   });
 
   it('detect returns true when .copilot/ exists', async () => {

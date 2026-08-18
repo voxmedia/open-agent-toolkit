@@ -9,8 +9,9 @@ export const COPILOT_PROJECT_MAPPINGS: PathMapping[] = [
   {
     contentType: 'skill',
     canonicalDir: '.agents/skills',
-    providerDir: '.github/skills',
-    nativeRead: false,
+    providerDir: '.agents/skills',
+    nativeRead: true,
+    adoptionSourceDirs: ['.github/skills'],
   },
   {
     contentType: 'agent',
@@ -33,8 +34,9 @@ export const COPILOT_USER_MAPPINGS: PathMapping[] = [
   {
     contentType: 'skill',
     canonicalDir: '.agents/skills',
-    providerDir: '.copilot/skills',
-    nativeRead: false,
+    providerDir: '.agents/skills',
+    nativeRead: true,
+    adoptionSourceDirs: ['.copilot/skills'],
   },
   {
     contentType: 'agent',

@@ -7,6 +7,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { AdoptionSourceUnavailableError } from '@commands/shared/adopt-stray';
 import type { CodexRoleStray } from '@commands/shared/codex-strays';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
 import type { DriftReport } from '@drift/index';
@@ -152,6 +153,33 @@ function createCursorAdapter(): ProviderAdapter {
   };
 }
 
+function createCopilotAdapter(): ProviderAdapter {
+  return {
+    name: 'copilot',
+    displayName: 'GitHub Copilot',
+    defaultStrategy: 'symlink',
+    projectMappings: [
+      {
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.agents/skills',
+        nativeRead: true,
+        adoptionSourceDirs: ['.github/skills'],
+      },
+    ],
+    userMappings: [
+      {
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.agents/skills',
+        nativeRead: true,
+        adoptionSourceDirs: ['.copilot/skills'],
+      },
+    ],
+    detect: async () => true,
+  };
+}
+
 function createManifest(entries: ManifestEntry[]): Manifest {
   return {
     version: 1,
@@ -184,7 +212,7 @@ function createHarness(options: TestHarnessOptions = {}): {
   selectWithAbort: ReturnType<typeof vi.fn>;
   confirmAction: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
-  applyCursorSkillDisposition: ReturnType<typeof vi.fn>;
+  applyNativeSkillDisposition: ReturnType<typeof vi.fn>;
   saveManifest: ReturnType<typeof vi.fn>;
   scanCanonical: ReturnType<typeof vi.fn>;
   scanBundledManagedCodexAgents: ReturnType<typeof vi.fn>;
@@ -227,7 +255,7 @@ function createHarness(options: TestHarnessOptions = {}): {
   const adoptStray = vi.fn(async (_scopeRoot, _stray, manifest: Manifest) => {
     return manifest;
   });
-  const applyCursorSkillDisposition = vi.fn(
+  const applyNativeSkillDisposition = vi.fn(
     async (_scopeRoot, _stray, manifest: Manifest) => manifest,
   );
   const saveManifest = vi.fn(async () => undefined);
@@ -326,7 +354,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     selectWithAbort,
     confirmAction,
     adoptStray,
-    applyCursorSkillDisposition,
+    applyNativeSkillDisposition,
     formatStatusTable: formatReports,
   });
 
@@ -337,7 +365,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     selectWithAbort,
     confirmAction,
     adoptStray,
-    applyCursorSkillDisposition,
+    applyNativeSkillDisposition,
     saveManifest,
     scanCanonical,
     scanBundledManagedCodexAgents,
@@ -553,7 +581,7 @@ describe('createStatusCommand', () => {
       command,
       selectWithAbort,
       selectManyWithAbort,
-      applyCursorSkillDisposition,
+      applyNativeSkillDisposition,
     } = createHarness({
       adapters: [createCursorAdapter()],
       interactive: true,
@@ -593,20 +621,82 @@ describe('createStatusCommand', () => {
       expect(call[1]).toHaveLength(2);
     }
     expect(
-      applyCursorSkillDisposition.mock.calls.map((call) => call[3]),
+      applyNativeSkillDisposition.mock.calls.map((call) => call[3]),
     ).toEqual(['adopt', 'keep']);
-    expect(applyCursorSkillDisposition.mock.calls[1]?.[4]).toBe(
+    expect(applyNativeSkillDisposition.mock.calls[1]?.[4]).toBe(
       '/tmp/workspace/.oat/sync/config.json',
     );
     expect(selectManyWithAbort).not.toHaveBeenCalled();
   });
+
+  it.each([
+    {
+      scope: 'project',
+      providerPath: '.github/skills/copilot-local',
+      syncConfigPath: '/tmp/workspace/.oat/sync/config.json',
+    },
+    {
+      scope: 'user',
+      providerPath: '.copilot/skills/copilot-local',
+      syncConfigPath: '/tmp/home/.oat/sync/config.json',
+    },
+  ])(
+    'offers explicit Copilot adoption or keep-local in $scope status',
+    async ({ scope, providerPath, syncConfigPath }) => {
+      const {
+        command,
+        selectWithAbort,
+        selectManyWithAbort,
+        applyNativeSkillDisposition,
+      } = createHarness({
+        adapters: [createCopilotAdapter()],
+        interactive: true,
+        manifestEntries: [],
+        driftReports: [],
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'copilot',
+            providerPath,
+            state: { status: 'stray' },
+          },
+        ],
+        singleSelectResponses: ['keep'],
+      });
+
+      await runStatusCommand(command, ['--scope', scope]);
+
+      expect(selectWithAbort).toHaveBeenCalledWith(
+        expect.stringContaining(`Migrate Copilot skill [${scope}]`),
+        [
+          expect.objectContaining({
+            label: 'Adopt into canonical',
+            value: 'adopt',
+          }),
+          expect.objectContaining({
+            label: 'Keep Copilot-only',
+            value: 'keep',
+          }),
+        ],
+        expect.any(Object),
+      );
+      expect(applyNativeSkillDisposition).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ provider: 'copilot' }),
+        expect.any(Object),
+        'keep',
+        syncConfigPath,
+      );
+      expect(selectManyWithAbort).not.toHaveBeenCalled();
+    },
+  );
 
   it('stops current and remaining status migration processing on abort', async () => {
     const {
       command,
       selectWithAbort,
       selectManyWithAbort,
-      applyCursorSkillDisposition,
+      applyNativeSkillDisposition,
     } = createHarness({
       adapters: [createCursorAdapter()],
       interactive: true,
@@ -632,12 +722,12 @@ describe('createStatusCommand', () => {
     await runStatusCommand(command, ['--scope', 'project']);
 
     expect(selectWithAbort).toHaveBeenCalledTimes(2);
-    expect(applyCursorSkillDisposition).toHaveBeenCalledTimes(1);
+    expect(applyNativeSkillDisposition).toHaveBeenCalledTimes(1);
     expect(selectManyWithAbort).not.toHaveBeenCalled();
   });
 
   it('uses project and user sync config paths for scope-all dispositions', async () => {
-    const { command, applyCursorSkillDisposition } = createHarness({
+    const { command, applyNativeSkillDisposition } = createHarness({
       adapters: [createCursorAdapter()],
       interactive: true,
       manifestEntries: [],
@@ -656,7 +746,7 @@ describe('createStatusCommand', () => {
     await runStatusCommand(command, ['--scope', 'all']);
 
     expect(
-      applyCursorSkillDisposition.mock.calls.map((call) => call[4]),
+      applyNativeSkillDisposition.mock.calls.map((call) => call[4]),
     ).toEqual([
       '/tmp/workspace/.oat/sync/config.json',
       '/tmp/home/.oat/sync/config.json',
@@ -664,7 +754,7 @@ describe('createStatusCommand', () => {
   });
 
   it('reports keep-local name collisions without recording the choice', async () => {
-    const { command, capture, applyCursorSkillDisposition } = createHarness({
+    const { command, capture, applyNativeSkillDisposition } = createHarness({
       adapters: [createCursorAdapter()],
       interactive: true,
       manifestEntries: [],
@@ -679,7 +769,7 @@ describe('createStatusCommand', () => {
       ],
       singleSelectResponses: ['keep'],
     });
-    applyCursorSkillDisposition.mockRejectedValueOnce(
+    applyNativeSkillDisposition.mockRejectedValueOnce(
       new CliError(
         'Cannot keep .cursor/skills/local-only Cursor-only because canonical skill .agents/skills/local-only has the same name. Rename one skill, then run the command again.',
       ),
@@ -688,7 +778,43 @@ describe('createStatusCommand', () => {
     await runStatusCommand(command, ['--scope', 'project']);
 
     expect(capture.warn.join('\n')).toContain('Rename one skill');
-    expect(applyCursorSkillDisposition).toHaveBeenCalledTimes(1);
+    expect(applyNativeSkillDisposition).toHaveBeenCalledTimes(1);
+  });
+
+  it('warns and continues when a native skill adoption source is unavailable', async () => {
+    const { command, capture, confirmAction, applyNativeSkillDisposition } =
+      createHarness({
+        adapters: [createCopilotAdapter()],
+        interactive: true,
+        manifestEntries: [],
+        driftReports: [],
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'copilot',
+            providerPath: '.github/skills/broken',
+            state: { status: 'stray' },
+          },
+          {
+            canonical: null,
+            provider: 'copilot',
+            providerPath: '.github/skills/keep-me',
+            state: { status: 'stray' },
+          },
+        ],
+        singleSelectResponses: ['adopt', 'keep'],
+      });
+    applyNativeSkillDisposition.mockRejectedValueOnce(
+      new AdoptionSourceUnavailableError(
+        'Cannot adopt .github/skills/broken: the path is missing or a broken symlink.',
+      ),
+    );
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(capture.warn.join('\n')).toContain('broken symlink');
+    expect(confirmAction).not.toHaveBeenCalled();
+    expect(applyNativeSkillDisposition).toHaveBeenCalledTimes(2);
   });
 
   it('outputs JSON when --json flag set', async () => {

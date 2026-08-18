@@ -97,6 +97,29 @@ manifest-owned path before acting:
 Use `oat sync --scope <project|user|all> --dry-run` to distinguish planned
 removal from preserve-and-detach operations before running a mutating sync.
 
+### Copilot skill migration
+
+Copilot reads canonical project and user skills directly from `.agents/skills`
+and `~/.agents/skills`. OAT no longer generates `.github/skills` or
+`~/.copilot/skills` views, but it still scans those legacy directories as
+adoption sources.
+
+Interactive `oat init` and `oat status` ask about each unresolved Copilot-local
+skill separately. Adopt moves it into the matching canonical directory without
+recreating a provider view or manifest entry. Keep Copilot-only leaves it in
+place and records its exact path as a known stray. A same-name canonical skill
+blocks Keep Copilot-only until one package is renamed. Non-interactive and JSON
+modes report pending migration actions without choosing a disposition.
+
+During upgrade cleanup, OAT removes only verified clean manifest-owned views.
+Changed, replaced, broken, unreadable, or otherwise unverifiable paths are
+preserved and detached from obsolete manifest ownership so they remain
+available for adoption or manual resolution.
+
+Copilot agent mappings remain materialized under `.github/agents` and
+`~/.copilot/agents`, and project rules remain rendered under
+`.github/instructions`; this retirement behavior applies only to skill views.
+
 For rules, adoption maps provider-native files back into `.agents/rules/*.md`:
 
 - Claude: `.claude/rules/*.md`
