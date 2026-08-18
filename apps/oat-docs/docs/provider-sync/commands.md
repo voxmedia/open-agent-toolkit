@@ -33,15 +33,16 @@ Key behavior:
 
 - Scope support (`project`, `user`, `all`)
 - Optional interactive stray adoption
-- Cursor-local skills are handled individually: Adopt moves the skill into the
-  matching canonical `.agents/skills` directory, while Keep Cursor-only
-  preserves it and records its exact path in the applicable sync config
-- Aborting a Cursor migration preserves completed choices and leaves the
-  current and remaining skills unresolved
-- Keep Cursor-only is blocked when a canonical skill has the same name; rename
-  one skill before retrying
-- Non-interactive and JSON modes report unresolved Cursor skill actions without
-  choosing or mutating a disposition
+- Cursor-local and Copilot-local skills are handled individually: Adopt moves
+  the skill into the matching canonical `.agents/skills` directory, while Keep
+  provider-only preserves it and records its exact path in the applicable sync
+  config
+- Aborting a native-read skill migration preserves completed choices and leaves
+  the current and remaining skills unresolved
+- Keep provider-only is blocked when a canonical skill has the same name;
+  rename one skill before retrying
+- Non-interactive and JSON modes report unresolved native-read skill actions
+  without choosing or mutating a disposition
 - JSON output for automation
 
 ## `oat sync`
@@ -57,7 +58,11 @@ Key behavior:
 - Provider enable/disable honored via sync config
 - Cursor skills are native-read from canonical `.agents/skills`; sync does not
   create `.cursor/skills` mirrors
-- Upgrade cleanup removes only verified clean legacy Cursor skill views.
+- Copilot skills are native-read from canonical `.agents/skills`; sync does not
+  create `.github/skills` or `~/.copilot/skills` mirrors. Copilot agents and
+  project rules still sync to `.github/agents`, `~/.copilot/agents`, and
+  `.github/instructions`.
+- Upgrade cleanup removes only verified clean legacy Cursor or Copilot skill views.
   Changed or unverified views are preserved and detached from obsolete manifest
   ownership.
 

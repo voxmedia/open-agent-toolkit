@@ -17,18 +17,20 @@ import { addLocalPaths } from '@commands/local/manage';
 import {
   adoptStrayToCanonical,
   isAdoptionConflictError,
+  isAdoptionSourceUnavailableError,
 } from '@commands/shared/adopt-stray';
 import {
   detectCodexRoleStrays,
   filterMaterializationManagedStrays,
   regenerateCodexAfterAdoption,
 } from '@commands/shared/codex-strays';
-import {
-  applyCursorSkillDisposition,
-  isCursorSkillCandidate,
-  type CursorSkillDisposition,
-} from '@commands/shared/cursor-skill-disposition';
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
+import {
+  applyNativeSkillDisposition,
+  getNativeSkillProviderDetails,
+  isNativeSkillCandidate,
+  type NativeSkillDisposition,
+} from '@commands/shared/native-skill-disposition';
 import { withScopeOption } from '@commands/shared/scope-option';
 import {
   confirmAction,
@@ -243,11 +245,11 @@ interface InitDependencies {
     choices: SelectChoice<T>[],
     ctx: PromptContext,
   ) => Promise<T | null>;
-  applyCursorSkillDisposition: (
+  applyNativeSkillDisposition: (
     scopeRoot: string,
     stray: InitStrayCandidate,
     manifest: Manifest,
-    disposition: CursorSkillDisposition,
+    disposition: NativeSkillDisposition,
     syncConfigPath: string,
     options?: { replaceCanonical?: boolean },
   ) => Promise<Manifest>;
@@ -458,7 +460,7 @@ function createDependencies(): InitDependencies {
     fileExists,
     inputWithDefault,
     selectWithAbort,
-    applyCursorSkillDisposition,
+    applyNativeSkillDisposition,
     runGuidedSetup: runGuidedSetupImpl,
     runToolPacks: runInitToolsWithDefaults,
     async runProviderSync(projectRoot: string) {
@@ -983,9 +985,9 @@ async function runInitCommand(
     });
     let straysAdopted = 0;
     let codexStrayAdopted = false;
-    const cursorSkillStrays = strays.filter(isCursorSkillCandidate);
+    const nativeSkillStrays = strays.filter(isNativeSkillCandidate);
     const ordinaryStrays = strays.filter(
-      (stray) => !isCursorSkillCandidate(stray),
+      (stray) => !isNativeSkillCandidate(stray),
     );
 
     if (!context.interactive && strays.length > 0) {
@@ -993,9 +995,10 @@ async function runInitCommand(
     }
 
     if (context.interactive && strays.length > 0 && !migrationAborted) {
-      for (const stray of cursorSkillStrays) {
+      for (const stray of nativeSkillStrays) {
+        const provider = getNativeSkillProviderDetails(stray)!;
         const disposition = await dependencies.selectWithAbort(
-          `Migrate Cursor skill [${scope}]: ${formatPathForScope(
+          `Migrate ${provider.displayName} skill [${scope}]: ${formatPathForScope(
             scope,
             stray.report.providerPath,
           )}`,
@@ -1006,9 +1009,9 @@ async function runInitCommand(
               description: `Move to ${stray.mapping.canonicalDir}.`,
             },
             {
-              label: 'Keep Cursor-only',
+              label: `Keep ${provider.displayName}-only`,
               value: 'keep',
-              description: 'Leave in .cursor/skills and remember this choice.',
+              description: `Leave in ${provider.sourceDir} and remember this choice.`,
             },
           ],
           { interactive: context.interactive },
@@ -1019,7 +1022,7 @@ async function runInitCommand(
         }
 
         try {
-          manifest = await dependencies.applyCursorSkillDisposition(
+          manifest = await dependencies.applyNativeSkillDisposition(
             scopeRoot,
             stray,
             manifest,
@@ -1030,13 +1033,17 @@ async function runInitCommand(
             straysAdopted += 1;
           } else {
             context.logger.success(
-              `Kept Cursor-only [${scope}]: ${formatPathForScope(
+              `Kept ${provider.displayName}-only [${scope}]: ${formatPathForScope(
                 scope,
                 stray.report.providerPath,
               )}.`,
             );
           }
         } catch (error) {
+          if (isAdoptionSourceUnavailableError(error)) {
+            context.logger.warn(error.message);
+            continue;
+          }
           if (
             error instanceof Error &&
             error.message.startsWith('Cannot keep ')
@@ -1054,12 +1061,12 @@ async function runInitCommand(
           );
           if (!shouldReplace) {
             context.logger.warn(
-              `Skipped conflicting Cursor skill [${scope}]: ${formatPathForScope(scope, stray.report.providerPath)}`,
+              `Skipped conflicting ${provider.displayName} skill [${scope}]: ${formatPathForScope(scope, stray.report.providerPath)}`,
             );
             continue;
           }
 
-          manifest = await dependencies.applyCursorSkillDisposition(
+          manifest = await dependencies.applyNativeSkillDisposition(
             scopeRoot,
             stray,
             manifest,
@@ -1106,6 +1113,10 @@ async function runInitCommand(
               codexStrayAdopted =
                 codexStrayAdopted || stray.provider === 'codex';
             } catch (error) {
+              if (isAdoptionSourceUnavailableError(error)) {
+                context.logger.warn(error.message);
+                continue;
+              }
               if (!isAdoptionConflictError(error)) {
                 throw error;
               }

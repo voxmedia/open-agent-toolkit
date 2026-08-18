@@ -17,6 +17,11 @@ For detailed `.oat/` tree semantics, see:
 - Cursor reads project skills directly from `.agents/skills/` and user skills
   directly from `~/.agents/skills/`. `.cursor/skills/` remains a Cursor-only
   extension and adoption surface, not generated output.
+- Copilot reads project skills directly from `.agents/skills/` and user skills
+  directly from `~/.agents/skills/`. OAT treats legacy `.github/skills/` and
+  `~/.copilot/skills/` as adoption sources, not generated output. Copilot agents
+  still sync to `.github/agents/` and `~/.copilot/agents/`, and project rules
+  still sync to `.github/instructions/`.
 
 ## OAT runtime/state
 

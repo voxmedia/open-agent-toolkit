@@ -279,13 +279,24 @@ supported home for Cursor-only skills. Cursor also reads `.claude/skills/` and
 **Skill locations:**
 
 - Project:
-  - `.github/skills/<skill-name>/SKILL.md`
+  - `.agents/skills/<skill-name>/SKILL.md` (**native canonical path**)
+  - `.github/skills/<skill-name>/SKILL.md` (**legacy/adoption path**)
   - `.claude/skills/<skill-name>/SKILL.md` (**Claude compatibility**)
 - Personal:
-  - `~/.copilot/skills/<skill-name>/SKILL.md` (Copilot coding agent and GitHub Copilot CLI only)
+  - `~/.agents/skills/<skill-name>/SKILL.md` (**native canonical path**)
+  - `~/.copilot/skills/<skill-name>/SKILL.md` (**legacy/adoption path**)
   - `~/.claude/skills/<skill-name>/SKILL.md` (**Claude compatibility**; Copilot coding agent and GitHub Copilot CLI only)
 
-**Notable:** Like Cursor, Copilot reads from `.claude/skills/` for cross-tool compatibility at both project and personal scopes. Organization-level and enterprise-level skill support is coming soon.
+**Notable:** Like Cursor, Copilot reads canonical `.agents/skills/` at project
+and personal scope. OAT does not generate `.github/skills` or
+`~/.copilot/skills` views; existing packages there remain adoption inputs.
+Copilot agents and project rules still use `.github/agents`,
+`~/.copilot/agents`, and `.github/instructions`.
+
+OAT asks whether to adopt each unresolved legacy Copilot skill into canonical
+storage or keep it Copilot-only as an exact known stray. Same-name canonical
+collisions block keep-local. Legacy cleanup removes only verified clean managed
+views and preserves changed or unverifiable content.
 
 **Notes:** The `license` field may be required in practice even though the spec marks it optional (see https://github.com/github/copilot-cli/issues/894).
 
@@ -343,16 +354,14 @@ Installs skills from GitHub repos, local paths, or GitLab URLs to any supported 
 
 ### Symlink Approach (Recommended)
 
-Author skills in `.agents/skills/` (canonical) and distribute to provider-specific directories:
+Author skills in `.agents/skills/` (canonical) and distribute only to providers
+that require a provider-specific directory:
 
 ```bash
 # Claude Code
 ln -s ../../.agents/skills/my-skill .claude/skills/my-skill
 
-# GitHub Copilot
-ln -s ../../.agents/skills/my-skill .github/skills/my-skill
-
-# Cursor, Codex, and Gemini read .agents/skills/ natively — no symlink needed
+# Cursor, Copilot, Codex, and Gemini read .agents/skills/ natively — no symlink needed
 ```
 
 For automated distribution, use **OAT sync** (for local/internal skills) or **`npx skills add`** (for remote/community skills):
@@ -365,11 +374,12 @@ oat sync --scope all
 npx skills add github-user/skill-repo -a claude-code -a github-copilot
 ```
 
-**Result: one canonical source, two symlinks, five tools.**
+**Result: one canonical source, one symlink, five tools.**
 
-**Note:** Cursor, Codex, and Gemini read `.agents/skills/` directly at project
-and user scope. Keep `.cursor/skills/` for intentionally Cursor-only skills,
-not as a generated mirror of canonical content.
+**Note:** Cursor, Copilot, Codex, and Gemini read `.agents/skills/` directly at
+project and user scope. Keep `.cursor/skills/` for intentionally Cursor-only
+skills, not as a generated mirror of canonical content. Treat `.github/skills/`
+and `~/.copilot/skills/` as legacy Copilot adoption inputs, not mirrors.
 
 ---
 
@@ -523,31 +533,33 @@ The proposal has community interest but no official timeline or maintainer respo
 
 **Source:** https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices, https://github.com/agentskills/agentskills/tree/main/skills-ref
 
-### Q: Does Cursor's native `.agents/skills/` support eliminate all provider views?
+### Q: Do native `.agents/skills/` mappings eliminate all provider views?
 
-**Answer:** No. Cursor, Codex, and Gemini need no skill mirror, but Claude Code
-and GitHub Copilot still use provider-specific paths:
+**Answer:** No. Cursor, Copilot, Codex, and Gemini need no skill mirror, but
+Claude Code still uses a provider-specific path. Provider-specific agent and
+rule views also remain where those runtimes require them:
 
 | Tool           | Native Path       | Reads `.claude/skills/`? | Reads `.agents/skills/`? |
 | -------------- | ----------------- | ------------------------ | ------------------------ |
 | Claude Code    | `.claude/skills/` | ✅ (native)              | ❌                       |
 | Cursor         | `.agents/skills/` | ✅ (compatibility)       | ✅ (native)              |
 | Codex CLI      | `.agents/skills/` | ❌                       | ✅ (native)              |
-| GitHub Copilot | `.github/skills/` | ✅ (compatibility)       | ❌                       |
+| GitHub Copilot | `.agents/skills/` | ✅ (compatibility)       | ✅ (native)              |
 | Gemini CLI     | `.agents/skills/` | ❌                       | ✅ (native alias)        |
 
-**Recommended approach:** Author skills in `.agents/skills/` (tool-agnostic canonical source), then symlink only where needed:
+**Recommended approach:** Author skills in `.agents/skills/` (tool-agnostic
+canonical source), then symlink only where needed:
 
 ```bash
-# Two symlinks needed:
+# One symlink needed:
 ln -s ../../.agents/skills/my-skill .claude/skills/my-skill    # Claude Code + Copilot compatibility
-ln -s ../../.agents/skills/my-skill .github/skills/my-skill    # GitHub Copilot (native path)
-# Cursor, Codex, and Gemini read .agents/skills/ natively — no symlink needed
+# Cursor, Copilot, Codex, and Gemini read .agents/skills/ natively — no symlink needed
 ```
 
-**One canonical source, two symlinks, five tools.** (Copilot reads `.claude/skills/` cross-compat, so the `.github/skills` symlink is optional but recommended for explicitness.)
+**One canonical source, one symlink, five tools.** Legacy `.github/skills` and
+`~/.copilot/skills` entries are migration candidates, not recommended mirrors.
 
-**Note (updated July 2026):** Cursor, Codex, and Gemini read
+**Note (updated August 2026):** Cursor, Copilot, Codex, and Gemini read
 `.agents/skills/` natively at project and user scope. No skill symlinks are
 needed for those providers.
 

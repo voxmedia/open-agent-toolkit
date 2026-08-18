@@ -31,8 +31,12 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
 
 === "Copilot"
 
-    - Project: `.agents/skills` -> `.github/skills`, `.agents/agents` -> `.github/agents`, `.agents/rules` -> `.github/instructions`
-    - User: `~/.agents/skills` -> `~/.copilot/skills`, `~/.agents/agents` -> `~/.copilot/agents`
+    - Project skills are native-read from `.agents/skills`; agents and rules still sync to `.github/agents` and `.github/instructions`
+    - User skills are native-read from `~/.agents/skills`; agents still sync to `~/.copilot/agents`
+    - `.github/skills` and `~/.copilot/skills` are legacy adoption sources. OAT does not generate skill views there.
+    - Interactive `oat init` and `oat status` ask for an individual disposition for each unresolved Copilot-local skill: adopt it into `.agents/skills` or keep it Copilot-only and remember the exact path in sync config
+    - Keep-local is blocked when a canonical skill has the same name
+    - During upgrades, OAT removes only verified clean legacy managed skill views. Changed or unverifiable views are preserved, detached from manifest ownership, and offered for adoption.
     - Rule files render as `.github/instructions/*.instructions.md`
     - Canonical always-on rules render with `applyTo: "**"` so Copilot activates them repo-wide; provider rules with exactly `applyTo: "**"` adopt back to `activation: always`
     - Comma-containing globs are not supported for Copilot rule sync because Copilot uses a comma-separated `applyTo` field
@@ -113,6 +117,8 @@ than falling back to the root target or a base role.
 - Adoption reconciles canonical plus the adopted provider first.
 - Native-read Cursor skill adoption moves the provider-local skill into `.agents/skills` without recreating a `.cursor/skills` view or manifest entry.
 - Choosing Keep Cursor-only leaves the skill in place and records its exact normalized path in the project or user sync config.
+- Native-read Copilot skill adoption moves a legacy provider-local skill into the matching canonical `.agents/skills` directory without recreating a `.github/skills` or `~/.copilot/skills` view or manifest entry.
+- Choosing Keep Copilot-only leaves the skill in place and records its exact normalized path in the project or user sync config.
 - Rule adoption normalizes provider filenames back to canonical `.agents/rules/*.md` entries before cross-provider fanout.
 - Cross-provider fanout is explicit via `oat sync --scope all`.
 

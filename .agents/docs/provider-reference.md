@@ -308,10 +308,22 @@ supported as intentional local extensions and migration sources.
 
 **Skill locations:**
 
-- Project: `.github/skills/<skill-name>/SKILL.md`
+- Project: `.agents/skills/<skill-name>/SKILL.md` (native-read canonical path)
+- Project legacy/adoption path: `.github/skills/<skill-name>/SKILL.md`
 - Project (cross-compat): `.claude/skills/<skill-name>/SKILL.md`
-- Personal: `~/.copilot/skills/<skill-name>/SKILL.md` (Copilot coding agent and GitHub Copilot CLI only)
+- Personal: `~/.agents/skills/<skill-name>/SKILL.md` (native-read canonical path)
+- Personal legacy/adoption path: `~/.copilot/skills/<skill-name>/SKILL.md`
 - Personal (cross-compat): `~/.claude/skills/<skill-name>/SKILL.md` (Copilot coding agent and GitHub Copilot CLI only)
+
+OAT does not generate Copilot skill views under `.github/skills` or
+`~/.copilot/skills`. Those directories remain migration inputs. Copilot custom
+agents still materialize under `.github/agents` and `~/.copilot/agents`, and
+project rules still render under `.github/instructions`.
+
+Interactive migration adopts each legacy skill into canonical storage or keeps
+it Copilot-only by recording the exact path in sync config. Upgrade cleanup
+removes only verified clean managed views; changed or unverifiable paths are
+preserved and detached from obsolete manifest ownership.
 
 ### Subagents (Custom Agents)
 

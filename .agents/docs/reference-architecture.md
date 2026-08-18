@@ -65,9 +65,9 @@ Here's where **each tool** expects project-level skills:
 | Agent              | `--agent` flag   | Project Path        | Global Path                   |
 | ------------------ | ---------------- | ------------------- | ----------------------------- |
 | **Claude Code**    | `claude-code`    | `.claude/skills/`   | `~/.claude/skills/`           |
-| **Cursor**         | `cursor`         | `.cursor/skills/`   | `~/.cursor/skills/`           |
+| **Cursor**         | `cursor`         | `.agents/skills/`   | `~/.agents/skills/`           |
 | **Codex**          | `codex`          | `.agents/skills/`   | `~/.agents/skills/`           |
-| **GitHub Copilot** | `github-copilot` | `.github/skills/`   | `~/.copilot/skills/`          |
+| **GitHub Copilot** | `github-copilot` | `.agents/skills/`   | `~/.agents/skills/`           |
 | **Gemini CLI**     | `gemini-cli`     | `.gemini/skills/`   | `~/.gemini/skills/`           |
 | **OpenCode**       | `opencode`       | `.opencode/skills/` | `~/.config/opencode/skills/`  |
 | **Windsurf**       | `windsurf`       | `.windsurf/skills/` | `~/.codeium/windsurf/skills/` |
@@ -160,9 +160,10 @@ The distinction: if a document exists primarily so that **agents can consume it 
     └── ...                         # Native-read or distributed as providers require
 ```
 
-Cursor, Codex, and Gemini read canonical skills directly. Providers that require
-tool-specific views receive them through OAT sync, `npx skills`, or manual
-symlinks. Either form can reference `.agents/docs/` via relative paths.
+Cursor, Copilot, Codex, and Gemini read canonical skills directly. Providers
+that require tool-specific views receive them through OAT sync, `npx skills`,
+or manual symlinks. Either form can reference `.agents/docs/` via relative
+paths.
 
 ---
 
@@ -193,9 +194,8 @@ my-repo/
 │       └── ...
 │
 ├── .github/                            # GitHub Copilot
-│   └── skills/                         # Symlinks → ../../.agents/skills/*
-│       ├── my-skill → ../../.agents/skills/my-skill
-│       └── ...
+│   ├── agents/                         # Materialized subagent definitions
+│   └── instructions/                   # Rendered project rules
 │
 └── .cursor/                            # Cursor-specific extensions and views
     ├── skills/                         # Intentional Cursor-only skills, not mirrors
@@ -206,10 +206,13 @@ my-repo/
 **Key points:**
 
 - Skills are authored once in `.agents/skills/` (canonical source)
-- Cursor, Codex, and Gemini read `.agents/skills/` natively at project and user scope
-- Claude Code and GitHub Copilot use generated views under their provider directories
+- Cursor, Copilot, Codex, and Gemini read `.agents/skills/` natively at project and user scope
+- Claude Code uses generated skill views under its provider directory
 - `.cursor/skills/` is reserved for intentional Cursor-only packages and migration candidates
+- Legacy `.github/skills/` and `~/.copilot/skills/` packages remain Copilot adoption candidates, not generated views
+- Copilot migration adopts each legacy skill or records an explicit Copilot-only choice; cleanup removes only verified clean managed views and preserves uncertain content
 - Canonical subagent definitions live in `.agents/agents/`, while OAT materializes provider-specific runtime formats
+- Copilot subagents and project rules still materialize under `.github/agents/`, `~/.copilot/agents/`, and `.github/instructions/`
 - `.agents/docs/` is referenced via relative paths from skills
 
 ### What Lives Where
@@ -252,9 +255,9 @@ in full before proceeding.
 ```
 
 The relative path from `.agents/skills/my-skill/SKILL.md` traverses up to
-`.agents/` and into `docs/`. Native-read providers resolve it from the canonical
-package. Generated symlink views such as `.claude/skills/` and
-`.github/skills/` resolve it through the canonical target.
+`.agents/` and into `docs/`. Native-read providers, including Copilot, resolve
+it from the canonical package. Generated symlink views such as
+`.claude/skills/` resolve it through the canonical target.
 
 ### From a Subagent
 
@@ -366,13 +369,12 @@ sync for providers that require generated views:
 
 ```
 .agents/skills/my-skill/SKILL.md          ← canonical source (single copy)
-  ├── native read: Cursor, Codex, Gemini
-  └── generated views:
+  ├── native read: Cursor, Copilot, Codex, Gemini
+  └── generated view:
 .claude/skills/my-skill → ../../.agents/skills/my-skill   ← Claude Code
-.github/skills/my-skill → ../../.agents/skills/my-skill   ← GitHub Copilot
 ```
 
-**Result:** one canonical source, two generated views, and five providers.
+**Result:** one canonical source, one generated view, and five providers.
 
 All skills reference `.agents/docs/` via relative path for shared standards.
 
@@ -400,8 +402,8 @@ The system prompt body can be largely shared across tools, but frontmatter schem
 
 - Create `.agents/docs/` in repositories
 - Author skills in `.agents/skills/` (canonical, tool-agnostic source)
-- Symlink to required tool paths: `.claude/skills/`, `.github/skills/`
-  - Cursor, Codex, and Gemini read `.agents/skills/` natively — no symlink needed
+- Symlink to required tool paths: `.claude/skills/`
+  - Cursor, Copilot, Codex, and Gemini read `.agents/skills/` natively — no symlink needed
 - Skills reference `.agents/docs/` via relative path
 - Canonical subagents in `.agents/agents/`, materialized into `.<tool>/agents/`
 - Zero custom tooling — just directory conventions, symlinks, and relative paths
