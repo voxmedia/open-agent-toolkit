@@ -4,6 +4,11 @@
 
 ## Curated Overview
 
+- Agent Plugins distribution now has a deliberate post-v1 follow-up:
+  `BL-260818-make-the-project-management` tracks making the
+  `project-management` pack user-scope and plugin eligible while keeping PJM
+  operational data repo-owned. The motivation is both provider-managed update
+  delivery and eliminating repetitive checked-in tool-copy update churn.
 - Explainer publication hardening (explainer-improvements-v2, CLI `0.2.31`
   pending merge) closed a credential-bearing publication-root bypass with
   version-agnostic gates and made protected-mode publication durably
@@ -137,6 +142,7 @@
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                             | open   | medium   | task    |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                          | open   | medium   | feature | L        |
 | BL-260817-let-resolveassetsroot-honor    | Let resolveAssetsRoot honor OAT_ASSETS_DIR and make smoke asset reads hermetic             | open   | medium   | task    | S        |
+| BL-260818-make-the-project-management    | Make the project-management pack user-scope and plugin eligible                            | open   | medium   | feature | L        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                  | open   | medium   | feature | M        |
 | BL-260818-require-repo-wide-call-site    | Require repo-wide call-site sweeps for cross-cutting options in phase-implementer guidance | open   | medium   | task    | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                              | open   | medium   | feature | M        |
