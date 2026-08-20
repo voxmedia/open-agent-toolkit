@@ -10,9 +10,10 @@ labels:
   - release
 assignee: null
 created: 2026-08-17T13:29:04.420Z
-updated: 2026-08-17T13:29:04.420Z
+updated: 2026-08-20T02:37:32Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-19-detect-behind-main-package-versions.md
 ---
 
 ## Description

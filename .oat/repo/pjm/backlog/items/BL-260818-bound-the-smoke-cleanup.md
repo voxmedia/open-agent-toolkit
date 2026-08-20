@@ -11,9 +11,10 @@ labels:
   - smoke
 assignee: null
 created: 2026-08-18T00:00:47.143Z
-updated: 2026-08-18T00:00:47.143Z
+updated: 2026-08-20T02:37:32Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-19-bound-smoke-cleanup-signal-wait.md
 ---
 
 ## Description
@@ -24,8 +25,7 @@ During explainer-improvements-v2 final review round 5, `pnpm test` wedged for ~3
 
 - The SIGTERM harness has a bounded timeout that fails the test rather than hanging the suite.
 - The missed-signal race is reproduced and fixed, or the timeout is documented as the accepted mitigation.
-
-## Acceptance Criteria
-
-- {Outcome 1}
-- {Outcome 2}
+- A timed-out child is force-killed and reaped before the harness removes its
+  temporary directories.
+- Timeout failures identify the paused stage and include captured stdout and
+  stderr so the missed signal remains diagnosable.
