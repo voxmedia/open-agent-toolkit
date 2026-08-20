@@ -11,8 +11,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -76,24 +76,29 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-19T23:43:42.389Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-20T04:27:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: 2026-08-20T19:44:50.201Z # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_lifecycle: paused
+oat_pause_timestamp: 2026-08-20T19:44:50.201Z
+oat_pause_reason: Codex native plugin packaging does not currently support the required OAT agent experience; priority shifted to user-scope support for all tool packs.
 ---
 
 # Project State: oat-plugin
 
-**Status:** Discovery complete — ready for design
+**Status:** Design paused — requirements draft unapproved
 **Started:** 2026-08-19
-**Last Updated:** 2026-08-19
+**Last Updated:** 2026-08-20
 
 ## Current Phase
 
-Discovery complete — requirements and product boundaries approved
+Design paused after drafting requirements and before requirements confirmation.
+Current Codex plugin packaging does not provide the required OAT agent
+experience, so work shifted to user-scope support for all tool packs.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete and approved)
-- **Spec:** `spec.md` (scaffolded template — authored inline by `oat-project-design`)
+- **Spec:** `spec.md` (in-progress draft — not approved)
 - **Design:** `design.md` (scaffolded template — not started)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
@@ -105,12 +110,16 @@ Discovery complete — requirements and product boundaries approved
 - ✓ V1 product, support, lifecycle, and coexistence boundaries established
 - ✓ Single-project scope confirmed
 - ✓ Discovery HiLL checkpoint approved
+- ✓ Requirements draft started
+- ⏸ Design paused before requirements confirmation
 
 ## Blockers
 
-None
+Product motivation is blocked by the lack of plugin-shipped agents in the
+current Codex plugin capability surface.
 
 ## Next Milestone
 
-Run `oat-project-design` to confirm requirements and produce `spec.md` and
-`design.md`.
+Resume only if Codex can preserve the required OAT agent experience or the user
+chooses a different parity strategy. The active priority moves to a separate
+project for user-scope support across all OAT tool packs.
