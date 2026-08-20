@@ -4,11 +4,12 @@
 
 ## Curated Overview
 
-- Agent Plugins distribution now has a deliberate post-v1 follow-up:
-  `BL-260818-make-the-project-management` tracks making the
-  `project-management` pack user-scope and plugin eligible while keeping PJM
-  operational data repo-owned. The motivation is both provider-managed update
-  delivery and eliminating repetitive checked-in tool-copy update churn.
+- User-scope tool distribution is now a high-priority cross-pack initiative:
+  `BL-260818-make-the-project-management` covers every tool pack, including
+  `project-management`, while keeping PJM operational data repo-owned. The
+  immediate path uses the regular OAT CLI and direct-install lifecycle to reduce
+  repeated installation and checked-in tool-copy update churn; native plugin
+  packaging is deferred.
 - Explainer publication hardening (explainer-improvements-v2, CLI `0.2.31`
   pending merge) closed a credential-bearing publication-root bypass with
   version-agnostic gates and made protected-mode publication durably
@@ -125,6 +126,7 @@
 | BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                                    | open   | high     | task    | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                     | open   | high     | feature | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                               | open   | high     | feature | L        |
+| BL-260818-make-the-project-management    | Make every OAT tool pack user-scope eligible                                               | open   | high     | feature | XL       |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                               | open   | high     | task    | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                           | open   | high     | task    | S        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                        | open   | high     | feature | M        |
@@ -142,7 +144,6 @@
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                             | open   | medium   | task    |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                          | open   | medium   | feature | L        |
 | BL-260817-let-resolveassetsroot-honor    | Let resolveAssetsRoot honor OAT_ASSETS_DIR and make smoke asset reads hermetic             | open   | medium   | task    | S        |
-| BL-260818-make-the-project-management    | Make the project-management pack user-scope and plugin eligible                            | open   | medium   | feature | L        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                  | open   | medium   | feature | M        |
 | BL-260818-require-repo-wide-call-site    | Require repo-wide call-site sweeps for cross-cutting options in phase-implementer guidance | open   | medium   | task    | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                              | open   | medium   | feature | M        |

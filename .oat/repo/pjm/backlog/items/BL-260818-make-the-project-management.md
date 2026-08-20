@@ -1,33 +1,58 @@
 ---
 id: BL-260818-make-the-project-management
-title: Make the project-management pack user-scope and plugin eligible
+title: Make every OAT tool pack user-scope eligible
 status: open
-priority: medium
+priority: high
 scope: feature
-scope_estimate: L
+scope_estimate: XL
 labels:
   - project-management
-  - plugin-distribution
   - tool-packs
+  - user-scope
 assignee: null
 created: 2026-08-18T20:43:22.823Z
-updated: 2026-08-18T20:43:22.823Z
+updated: 2026-08-20T19:45:34Z
 associated_issues: []
 external_plans: []
 ---
 
 ## Description
 
-Extend OAT's plugin distribution model so project-management capabilities can eventually be installed once at user scope and receive provider-managed updates. Preserve repository-owned PJM data and policy while eliminating the need to check managed skill and template copies into every repository, reducing repetitive version-bump commits, tool-update PRs, installation friction, and cross-repository drift.
+Make every OAT tool pack installable and operable at user scope through the
+regular OAT CLI and direct-install lifecycle, including the project-management
+pack. Preserve repository-owned project-management data and policy while
+eliminating the need to check reusable managed skills, agents, and templates
+into every repository. This should reduce repetitive version-bump commits,
+tool-update pull requests, installation friction, and cross-repository drift.
+
+Native plugin distribution is deferred from the immediate scope. The user-scope
+model should remain a sound source for future plugin packaging, but it must
+deliver value independently through the existing installation path.
 
 ## Acceptance Criteria
 
-- Define the boundary between globally distributed capabilities and repository-owned PJM state, configuration, policy, backlog records, roadmaps, and decisions.
-- Package the `project-management` skills and required read-only resources so they work from a user-level plugin without relying on checked-in `.agents/skills` or `.oat/templates` copies.
-- Keep `oat pjm init`, `oat pjm doctor`, backlog operations, and decision workflows writing only their intended repository-local artifacts.
-- Support provider-managed plugin upgrades so users receive compatible workflow updates without per-repository tool-update commits.
-- Preserve project-scoped and direct-install compatibility during migration, including explicit duplicate-source, precedence, version, and provenance diagnostics.
-- Ensure user-level availability does not falsely imply that a repository's PJM surface has been initialized.
-- Provide a safe migration path for repositories to remove redundant managed skill and template copies without removing curated PJM data.
-- Verify fresh installation, upgrade, duplicate installation, removal, rollback, and representative provider behavior.
-- Document the resulting user-versus-project ownership model and its compatibility relationship with the OAT CLI.
+- Every OAT tool pack can be selected for user-scope installation, including
+  `project-management`, without regressing existing user-eligible packs.
+- Reusable project-management skills, agents, templates, scripts, and read-only
+  resources work from user scope without requiring checked-in managed copies in
+  each repository.
+- Repository-owned PJM state, configuration, policy, backlog records, roadmaps,
+  decisions, and other curated project data remain repository-local.
+- User-scope project-management availability does not falsely imply that a
+  repository's PJM surface has been initialized.
+- `oat pjm init`, `oat pjm doctor`, backlog operations, decision workflows, and
+  related writes continue to affect only their intended repository-local
+  artifacts.
+- Installer, update, removal, configuration, status, and doctor flows recognize
+  user, project, and combined placement for every pack.
+- Existing project-scope and direct-install behavior remains supported during
+  migration, with explicit duplicate-source, precedence, version, ownership,
+  and provenance diagnostics.
+- A safe migration path removes only redundant OAT-managed assets and preserves
+  curated PJM data and repository-specific customizations.
+- Verification covers fresh user installation, project-to-user migration,
+  updates, duplicate installations, removal, rollback, and representative
+  provider materialization.
+- Documentation clearly explains the user-versus-project ownership model,
+  initialization boundary, update behavior, and future compatibility with
+  native plugin packaging.
