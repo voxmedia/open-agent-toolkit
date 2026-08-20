@@ -18,12 +18,12 @@ contract remains its immutable plan file.
 
 ## Status Ledger
 
-| Wave | Theme                         | Lanes | Status   | Record                    |
-| ---- | ----------------------------- | ----- | -------- | ------------------------- |
-| W1   | Test and CI containment       | 2     | composed | pending operator approval |
-| W2   | Sync provenance warning       | 1     | composed | pending W1 merge          |
-| W3   | Hermetic CLI assets           | 1     | composed | pending W2 merge          |
-| W4   | Codex skill policy correction | 1     | composed | pending W3 merge          |
+| Wave | Theme                         | Lanes | Status   | Record                                       |
+| ---- | ----------------------------- | ----- | -------- | -------------------------------------------- |
+| W1   | Test and CI containment       | 2     | composed | execution deferred by operator on 2026-08-19 |
+| W2   | Sync provenance warning       | 1     | composed | pending W1 merge                             |
+| W3   | Hermetic CLI assets           | 1     | composed | pending W2 merge                             |
+| W4   | Codex skill policy correction | 1     | composed | pending W3 merge                             |
 
 ## Wave Table (coverage: 5 plans = 5 index rows; verified 2026-08-19)
 
