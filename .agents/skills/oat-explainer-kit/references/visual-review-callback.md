@@ -51,6 +51,12 @@ viewport-matched screenshot and metrics hashes, observed cohesion claims, and
 the exact browser runtime and capture identity shared by every evidence record.
 Use the evidence reader to inspect the byte snapshot named by the request.
 
+Judge the rendered set as prose-led visual work. Cover typography, hierarchy,
+composition, density, medium leverage, template repetition, diagram semantics,
+and cross-artifact cohesion. Use the set plan and shared ledger to distinguish
+intentional variation from drift. Do not turn those judgments into numeric
+scores, geometry thresholds, or deterministic style checks.
+
 Return `explainer-kit.visual-review-result/v1` with:
 
 - a safe `reviewId`;
@@ -59,6 +65,11 @@ Return `explainer-kit.visual-review-result/v1` with:
 - `disposition` equal to `pass`, `correct`, or `fail`;
 - the complete reviewed `artifactIds`; and
 - structured `findings`.
+
+Return `pass` only when the full set needs no required correction. Return
+`correct` when one bounded review round can address every finding, and give
+each finding an actionable correction tied to an artifact and visible evidence.
+The result shape and its `pass`/`correct`/`fail` dispositions remain unchanged.
 
 The callback must not mutate rendered files, screenshots, or metrics. The core
 revalidates all bound bytes after the callback returns.

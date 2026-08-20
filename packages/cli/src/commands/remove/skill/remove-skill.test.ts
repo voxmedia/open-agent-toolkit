@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -12,6 +12,7 @@ import {
   loadSyncConfig as defaultLoadSyncConfig,
 } from '@config/sync-config';
 import { dirExists, fileExists } from '@fs/io';
+import { computeContentHash } from '@manifest/hash';
 import {
   createEmptyManifest,
   loadManifest,
@@ -78,6 +79,33 @@ function createCursorAdapter(): ProviderAdapter {
     defaultStrategy: 'symlink',
     projectMappings: [skillMapping],
     userMappings: [skillMapping],
+    detect: async () => true,
+  };
+}
+
+function createCopilotAdapter(): ProviderAdapter {
+  return {
+    name: 'copilot',
+    displayName: 'GitHub Copilot',
+    defaultStrategy: 'symlink',
+    projectMappings: [
+      {
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.agents/skills',
+        nativeRead: true,
+        adoptionSourceDirs: ['.github/skills'],
+      },
+    ],
+    userMappings: [
+      {
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.agents/skills',
+        nativeRead: true,
+        adoptionSourceDirs: ['.copilot/skills'],
+      },
+    ],
     detect: async () => true,
   };
 }
@@ -157,6 +185,7 @@ function withSkillEntry(
   skillName: string,
   provider: string,
   providerPath: string,
+  contentHash = 'hash',
 ): Manifest {
   return {
     ...manifest,
@@ -168,7 +197,7 @@ function withSkillEntry(
         provider,
         contentType: 'skill',
         strategy: 'copy',
-        contentHash: 'hash',
+        contentHash,
         isFile: false,
         lastSynced: new Date().toISOString(),
       },
@@ -289,6 +318,207 @@ describe('createRemoveSkillCommand', () => {
       ),
     ).toBeUndefined();
     expect(process.exitCode).toBe(0);
+  });
+
+  it('preserves unmanaged Copilot-local skill content during canonical removal', async () => {
+    const root = await makeTempDir();
+    const skillName = 'oat-demo';
+    await mkdir(join(root, '.agents', 'skills', skillName), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.claude', 'skills', skillName), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.github', 'skills', skillName), {
+      recursive: true,
+    });
+
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await saveManifest(
+      manifestPath,
+      withSkillEntry(
+        createEmptyManifest(),
+        skillName,
+        'claude',
+        `.claude/skills/${skillName}`,
+      ),
+    );
+
+    const { command, capture } = createHarness({
+      projectRoot: root,
+      adapters: [
+        createAdapter('claude', '.claude/skills'),
+        createCopilotAdapter(),
+      ],
+    });
+    await runRemoveSkillCommand(command, ['--scope', 'project'], [skillName]);
+
+    await expect(
+      dirExists(join(root, '.agents', 'skills', skillName)),
+    ).resolves.toBe(false);
+    await expect(
+      dirExists(join(root, '.claude', 'skills', skillName)),
+    ).resolves.toBe(false);
+    await expect(
+      dirExists(join(root, '.github', 'skills', skillName)),
+    ).resolves.toBe(true);
+    expect(capture.warn.join('\n')).toContain(
+      'copilot: .github/skills/oat-demo',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('removes a manifest-owned legacy Copilot view during canonical removal', async () => {
+    const root = await makeTempDir();
+    const skillName = 'oat-demo';
+    await mkdir(join(root, '.agents', 'skills', skillName), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.github', 'skills', skillName), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.github', 'skills', skillName, 'SKILL.md'),
+      '# Legacy managed copy\n',
+      'utf8',
+    );
+    const legacyPath = join(root, '.github', 'skills', skillName);
+
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await saveManifest(
+      manifestPath,
+      withSkillEntry(
+        createEmptyManifest(),
+        skillName,
+        'copilot',
+        `.github/skills/${skillName}`,
+        await computeContentHash(legacyPath, false),
+      ),
+    );
+
+    const { command, capture } = createHarness({
+      projectRoot: root,
+      adapters: [createCopilotAdapter()],
+    });
+    await runRemoveSkillCommand(command, ['--scope', 'project'], [skillName]);
+
+    await expect(
+      dirExists(join(root, '.agents', 'skills', skillName)),
+    ).resolves.toBe(false);
+    await expect(
+      dirExists(join(root, '.github', 'skills', skillName)),
+    ).resolves.toBe(false);
+    expect((await loadManifest(manifestPath)).entries).toHaveLength(0);
+    expect(capture.warn.join('\n')).not.toContain('unmanaged provider views');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('preserves a replaced legacy Copilot view while detaching manifest ownership', async () => {
+    const root = await makeTempDir();
+    const skillName = 'oat-demo';
+    await mkdir(join(root, '.agents', 'skills', skillName), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.github', 'skills', skillName), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.github', 'skills', skillName, 'SKILL.md'),
+      '# User replacement\n',
+      'utf8',
+    );
+
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await saveManifest(
+      manifestPath,
+      withSkillEntry(
+        createEmptyManifest(),
+        skillName,
+        'copilot',
+        `.github/skills/${skillName}`,
+        'stale-managed-hash',
+      ),
+    );
+
+    const { command, capture } = createHarness({
+      projectRoot: root,
+      adapters: [createCopilotAdapter()],
+    });
+    await runRemoveSkillCommand(command, ['--scope', 'project'], [skillName]);
+
+    await expect(
+      dirExists(join(root, '.github', 'skills', skillName)),
+    ).resolves.toBe(true);
+    expect((await loadManifest(manifestPath)).entries).toHaveLength(0);
+    expect(capture.warn.join('\n')).toContain(
+      'copilot: .github/skills/oat-demo',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('detaches a missing legacy Copilot view without reporting a deletion', async () => {
+    const root = await makeTempDir();
+    const skillName = 'oat-demo';
+    await mkdir(join(root, '.agents', 'skills', skillName), {
+      recursive: true,
+    });
+
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await saveManifest(
+      manifestPath,
+      withSkillEntry(
+        createEmptyManifest(),
+        skillName,
+        'copilot',
+        `.github/skills/${skillName}`,
+      ),
+    );
+
+    const { command, capture } = createHarness({
+      projectRoot: root,
+      adapters: [createCopilotAdapter()],
+    });
+    await runRemoveSkillCommand(command, ['--scope', 'project'], [skillName]);
+
+    expect((await loadManifest(manifestPath)).entries).toHaveLength(0);
+    expect(capture.info.join('\n')).not.toContain('.github/skills/oat-demo');
+    expect(capture.warn.join('\n')).not.toContain('.github/skills/oat-demo');
+  });
+
+  it('keeps Cursor adoption-source removal behavior unchanged for legacy rows', async () => {
+    const root = await makeTempDir();
+    const skillName = 'oat-demo';
+    await mkdir(join(root, '.agents', 'skills', skillName), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.cursor', 'skills', skillName), {
+      recursive: true,
+    });
+
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await saveManifest(
+      manifestPath,
+      withSkillEntry(
+        createEmptyManifest(),
+        skillName,
+        'cursor',
+        `.cursor/skills/${skillName}`,
+      ),
+    );
+
+    const { command, capture } = createHarness({
+      projectRoot: root,
+      adapters: [createCursorAdapter()],
+    });
+    await runRemoveSkillCommand(command, ['--scope', 'project'], [skillName]);
+
+    await expect(
+      dirExists(join(root, '.cursor', 'skills', skillName)),
+    ).resolves.toBe(true);
+    expect((await loadManifest(manifestPath)).entries).toHaveLength(1);
+    expect(capture.warn.join('\n')).toContain(
+      'cursor: .cursor/skills/oat-demo',
+    );
   });
 
   it('returns exit code 1 when skill is not found in selected scopes', async () => {

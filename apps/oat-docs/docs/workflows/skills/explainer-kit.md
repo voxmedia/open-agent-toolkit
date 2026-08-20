@@ -20,19 +20,19 @@ OAT lifecycle callers use the adapter.
 
 ## Recipes
 
-The core ships four versioned recipes on the `explainer-kit.recipe/v2` file
-schema. Each recipe's own `version` selector remains `"1"`, so `{id, version}`
-callers and manifest cross-checks are unaffected by the schema move.
+The core ships four recipe families on the `explainer-kit.recipe/v2` file
+schema. Most recipe selectors remain at version `"1"`. New project recaps use
+immutable `project-recap@2`, while `project-recap@1` remains readable for replay.
 
 A v2 recipe declares a **floor** — the artifacts every run must produce — plus
 a licensed **expansion** set. Most recipes retain one floor artifact.
-Unattended `project-recap` is the exception: it plans and composes an adaptive
-minimum set before any artifact author runs.
+`project-recap@2` requires one complete navigational hub and plans any additional
+artifact before an author runs.
 
 | Recipe              | Use                                                    | Required floor                                                                                                    |
 | ------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
 | `project-explainer` | Working explanation after project planning             | one Markdown `hub` covering architecture, decisions, risks, phases, and validation                                |
-| `project-recap`     | Final record after implementation and final review     | HTML visual hub, architecture/system diagram, and deck governed by one set plan                                   |
+| `project-recap`     | Final record after implementation and final review     | one HTML navigational hub; diagrams, decks, and deep dives are adaptive expansions                                |
 | `program-recap`     | Bird's-eye record of a multi-wave delivery program     | one Markdown `hub` covering the wave map, outcomes, convention evolution, aggregate numbers, and follow-up ledger |
 | `engineer-tour`     | Engineer-facing orientation to a codebase and its flow | one HTML-composed `explainer` covering orientation, architecture, execution flow, key code, and validation        |
 
@@ -46,8 +46,8 @@ adding an OAT dependency.
 ### Project recap modes
 
 Project recaps default to `recapMode: artistic`. This mode uses the shared set
-plan and provider-neutral author seam to compose the required HTML hub,
-architecture view, and deck.
+plan and provider-neutral author seam to compose the required HTML hub plus any
+source-backed expansion that answers a distinct reader question.
 
 `recapMode: deterministic-markdown` is an explicit fallback for callers that
 need deterministic output. It preserves the same planned artifact portfolio and
@@ -63,16 +63,16 @@ artifact `type`, authoring path, brief, optional shell, and a mandatory
 `maxCount`. Every recipe also carries a mandatory `expansion.limits.maxArtifacts`
 that caps the whole expansion set; floor artifacts do not count against it.
 
-| Recipe              | Profiles (max per profile)                       | `maxArtifacts` |
-| ------------------- | ------------------------------------------------ | -------------- |
-| `project-recap`     | `status-view` 1, `rollout-view` 1, `deep-dive` 3 | 5              |
-| `program-recap`     | `supporting-diagram` 3, `project-page` 12        | 12             |
-| `project-explainer` | `supporting-diagram` 4                           | 4              |
-| `engineer-tour`     | `supporting-diagram` 4                           | 4              |
+| Recipe              | Profiles (max per profile)                                  | `maxArtifacts` |
+| ------------------- | ----------------------------------------------------------- | -------------- |
+| `project-recap@2`   | `supporting-diagram` 1, `walkthrough-deck` 1, `deep-dive` 3 | 5              |
+| `program-recap`     | `supporting-diagram` 3, `project-page` 12                   | 12             |
+| `project-explainer` | `supporting-diagram` 4                                      | 4              |
+| `engineer-tour`     | `supporting-diagram` 4                                      | 4              |
 
-For project recaps, optional status and rollout views require matching
-source-backed justifications, while `deep-dive` remains a Markdown
-`explainer`. Other recipes retain their recipe-owned diagram and project-page
+For project recaps, every optional diagram, deck, or deep dive needs a distinct
+reader question, supporting source evidence, and rationale for choosing that
+medium. Other recipes retain their recipe-owned diagram and project-page
 profiles. Every declared type stays inside the frozen `manifest/v1` enum.
 
 ## Content authoring and review
@@ -116,6 +116,11 @@ author request, so an unattended author receives everything it needs in one
 payload. Changing a brief changes output expectations with no contract
 migration.
 
+The bundled authoring prose covers typographic roles, hierarchy, composition,
+density, medium leverage, template repetition, diagram semantics, and
+cross-artifact cohesion. These remain editorial judgments rather than numeric
+scores or deterministic layout checks.
+
 ### The planning and author seams
 
 Before authoring, one provider-neutral `planSet` callback produces the complete
@@ -125,15 +130,17 @@ portfolio. Every run also requires one provider-neutral author callback, in
 without one fails with `E_AUTHOR_REQUIRED`.
 
 The core invokes the author once per planned artifact with an
-`explainer-kit.author-request/v2` payload carrying the artifact identity and
+`explainer-kit.author-request/v3` payload carrying the artifact identity and
 type, its authoring path, the inlined brief, the reconciled fact base, the
 resolved theme, the shell source for artistic artifacts, the immutable set
-context, the matching planned artifact, and bundled medium-specific authoring
-guidance. The installed skill is the complete unattended baseline; optional
+context, the matching planned artifact, canonical artifact links, and bundled
+medium-specific authoring guidance. Version 2 requests remain readable for
+replay. The installed skill is the complete unattended baseline; optional
 provider capabilities can enhance composition but are not required. The core
-accepts only a schema-valid `explainer-kit.author-result/v2` containing exactly one of
-`content.markdown` or `content.html` plus non-secret provenance. Authored
-content is still checked for excessive verbatim overlap with the fact base.
+accepts only a schema-valid `explainer-kit.author-result/v2` containing exactly
+one of `content.markdown` or `content.html` plus non-secret provenance.
+Authored content is still checked for excessive verbatim overlap with the fact
+base.
 
 Direct callbacks and module entry points are first-class but transient: they
 never enter retained request contracts. See
@@ -143,9 +150,10 @@ planner, author, browser-session, and visual-critic boundaries.
 ### Planner-owned adaptive sets
 
 The set planner finalizes required and optional artifacts before authoring.
-Project recaps always contain a hub, architecture/system diagram, and deck;
-the planner may add only recipe-licensed optional views with a source-backed
-justification. Recipe and per-profile limits still bound the portfolio.
+New project recaps always contain a navigational hub. The planner may add only
+recipe-licensed optional diagrams, decks, or deep dives with a distinct reader
+question, source evidence, and medium rationale. Recipe and per-profile limits
+still bound the portfolio.
 Undeclared sources, conflicting ledger values, duplicate IDs, and unjustified
 optionals fail validation. Author results cannot add, remove, or replace
 artifacts.
@@ -188,10 +196,20 @@ evidence to an independent critic. Fixture sessions are test-only and are
 rejected in unattended production.
 
 A `correct` disposition permits one bounded correction and exactly one final
-review; there is no second correction or third review. Missing, forged,
+review; there is no second correction or third review. The correction budget is
+shared with the internal-link gate described below, so a `correct` disposition
+is refused outright with `E_VISUAL_CORRECTION` when link validation already
+spent the single bounded correction on this run. Missing, forged,
 cross-record-mismatched, or invalid evidence, a failed critic, or an unresolved
 correction ends as `built-needs-review`. Such output is retained for diagnosis
 but cannot become durable, finalized, archived, or published.
+
+The critic reviews the whole set for typography, hierarchy, composition,
+density, medium leverage, template repetition, diagram semantics, and
+cross-artifact cohesion. It returns the existing provider-neutral result:
+`pass` when no required correction remains or `correct` with concrete,
+artifact-scoped actions for the bounded correction round. No numeric design
+threshold is part of the contract.
 
 The approval record is also the durable source of truth for the resolved
 artifact set. It records every floor and accepted expansion artifact for all
@@ -220,6 +238,26 @@ seams are separately transient and never part of request equality.
 Every legacy `ekrt1` token is rejected. A paused run created with the legacy
 format must restart to receive an authenticated token; editing retained package
 state cannot opt it into compatibility.
+
+### Internal-link validation
+
+Every internal reference in the rendered set must resolve to a
+manifest-declared target before the run can reach browser review. The gate runs
+after render and uses a bounded tokenizer rather than a general HTML parser.
+Relative references resolve from the current explicit file and must bind
+exactly to the manifest/site tree, and a referenced fragment must resolve to
+exactly one ID in its target document. Directory references, path traversal,
+missing targets, missing fragments, ambiguous fragments, and unsafe schemes all
+fail with `E_INTERNAL_REFERENCE`.
+
+A failure gets one bounded correction round, re-rendered and revalidated. That
+round is the same single budget the visual-review `correct` disposition uses —
+whichever gate reaches it first consumes it. Once it is exhausted the run fails
+hard: the QA stage is recorded `failed` with code-only evidence and the scrubbed
+message `The qa stage failed.`, and the run is neither durability- nor
+publication-eligible. No finding is retained, so nothing in the durable record
+names the broken reference; the failure is attributed to the `link-validation`
+evidence stage.
 
 ## Warnings and QA severity
 
@@ -296,9 +334,17 @@ Reviewed source and citation backlinks are absolute canonical GitHub blob URLs
 pinned to the exact 40-character commit revision and line range, so they
 survive project archival without resolving through a mutable branch or local
 checkout. Each recap also emits
-`site/initiatives/<slug>/catalog.json` from the finalized manifest. Its
-artifact IDs, types, paths, URLs, and source backlinks must remain in exact
-manifest parity; authors do not hand-maintain the catalog.
+`site/initiatives/<slug>/catalog.json` from the finalized manifest, versioned
+as `explainer-kit.initiative-catalog/v2`. Its artifact IDs, types, paths,
+URLs, and source backlinks must remain in exact manifest parity; authors do
+not hand-maintain the catalog. The catalog's `publicVerification` field is a
+**policy marker, never an outcome**: `required` when the run's public access
+policy calls for anonymous URL verification, `skipped-by-policy` for
+protected destinations. It records what the publication policy was — the
+per-artifact verification outcomes live in `publish-receipt.json`.
+Compatibility is regenerate-only: consumers parse the declared version, and
+no v1 read path exists because no released consumer could verify v1 catalog
+evidence.
 
 `manifest.immutableHashes` covers the exact retained bytes for
 `run-request.json`, content approval, fact-base JSON and Markdown, declared
@@ -322,12 +368,25 @@ Build success and durability are separate:
 
 The core verifies caller-supplied commit or publish evidence; it never creates
 Git commits. Publishing is always explicitly requested and human-gated. The
-public `s3-static` connector validates corresponding S3 and HTTPS roots with a
-run-unique sentinel, uploads only manifest-declared `site/` files, verifies the
-content type and SHA-256 response bytes at public URLs, and writes
-`publish-receipt.json`. Public roots cannot contain credentials, queries, or
-fragments. Publishing is additive and does not run a root-wide destructive
-sync.
+public `s3-static` connector validates each S3 and HTTPS root independently and
+proves the destination with a run-unique sentinel, uploads only
+manifest-declared `site/` files, and writes `publish-receipt.json`.
+Verification depends on the declared `publicAccess` policy: in `public` mode
+the connector anonymously fetches each published URL and compares content
+type and SHA-256 response bytes; in `protected` mode it verifies object
+integrity through authenticated S3 hashing instead, and every receipt entry
+records `publicVerification: skipped-protected` so the skipped anonymous
+check is visible rather than implied.
+
+Root screening is strict on both roots: no credentials, queries, or
+fragments; no whitespace, C0/C1 control characters, or backslashes; and the
+gate applies to every publish-request and publish-receipt contract version
+rather than being pinned to one version string. Public roots must be HTTPS
+and must not address loopback, link-local, or private networks, and
+verification fetches refuse redirects (`redirect: 'error'`) — see the
+[publication environment variables](/docs/cli-utilities/configuration#explainer-publication-environment-variables)
+for the explicit private-root opt-in and its durable receipt trace.
+Publishing is additive and does not run a root-wide destructive sync.
 
 Release validation drives the bounded curated-style/template matrix in a real
 installed Chromium browser and retains machine-readable viewport, clipping,
@@ -375,8 +434,9 @@ typed adapter settings.
 Private integrations use the core boundary directly: resolve private inputs
 before the run, construct one versioned request, invoke the core once, then
 publish or link the versioned manifest after the run. Wrapper acceptance reads
-the complete post-run `PublishReceiptV1`, verifies every manifest artifact and
-the core run ID, and rejects foreign or stale receipts. Presets, private source
+the complete post-run `publish-receipt/v2`, verifies every manifest artifact
+and the core run ID, and rejects foreign or stale receipts; `publish-receipt/v1`
+remains readable for replay of older runs only. Presets, private source
 systems, external-document synchronization, and personal destinations remain
 wrapper-owned.
 

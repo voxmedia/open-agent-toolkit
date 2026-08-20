@@ -1,4 +1,7 @@
-export { computeSyncPlan } from './compute-plan';
+export {
+  classifyObsoleteMappingRetirement,
+  computeSyncPlan,
+} from './compute-plan';
 export {
   type EngineScope,
   type RemovalSyncPlanEntry,

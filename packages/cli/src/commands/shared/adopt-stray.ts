@@ -37,7 +37,26 @@ interface AdoptStrayOptions {
 }
 
 export function isAdoptionConflictError(error: unknown): error is CliError {
-  return error instanceof CliError && error.message.startsWith('Cannot adopt ');
+  return (
+    error instanceof CliError &&
+    !isAdoptionSourceUnavailableError(error) &&
+    error.message.startsWith('Cannot adopt ')
+  );
+}
+
+export class AdoptionSourceUnavailableError extends CliError {
+  readonly kind = 'adoption-source-unavailable' as const;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'AdoptionSourceUnavailableError';
+  }
+}
+
+export function isAdoptionSourceUnavailableError(
+  error: unknown,
+): error is AdoptionSourceUnavailableError {
+  return error instanceof AdoptionSourceUnavailableError;
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -57,13 +76,25 @@ export async function adoptStrayToCanonical<
   manifest: Manifest,
   options: AdoptStrayOptions = {},
 ): Promise<Manifest> {
+  const providerAbsolutePath = resolve(scopeRoot, stray.report.providerPath);
+  let providerStat: Awaited<ReturnType<typeof stat>>;
+  try {
+    providerStat = await stat(providerAbsolutePath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      throw error;
+    }
+    throw new AdoptionSourceUnavailableError(
+      `Cannot adopt ${toPosixPath(
+        relative(scopeRoot, providerAbsolutePath),
+      )}: the path is missing or a broken symlink. Remove it or restore its target, then run the command again.`,
+    );
+  }
+  const isFile = providerStat.isFile();
+
   if (stray.adoption?.kind === 'codex_role') {
     return adoptCodexRoleStrayToCanonical(scopeRoot, stray, manifest, options);
   }
-
-  const providerAbsolutePath = resolve(scopeRoot, stray.report.providerPath);
-  const providerStat = await stat(providerAbsolutePath);
-  const isFile = providerStat.isFile();
 
   if (isFile && stray.mapping.contentType === 'rule') {
     return adoptRuleStrayToCanonical(scopeRoot, stray, manifest, options);

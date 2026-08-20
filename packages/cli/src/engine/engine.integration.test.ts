@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { DEFAULT_SYNC_CONFIG } from '@config/sync-config';
 import { createSymlink } from '@fs/io';
 import { createEmptyManifest, loadManifest } from '@manifest/manager';
+import { copilotAdapter } from '@providers/copilot/adapter';
 import { cursorAdapter } from '@providers/cursor/adapter';
 import type { ProviderAdapter } from '@providers/shared/adapter.types';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -65,6 +66,37 @@ function createLegacyCursorAdapter(
     userMappings: [
       legacySkillMapping,
       ...cursorAdapter.userMappings.filter(
+        (mapping) => mapping.contentType !== 'skill',
+      ),
+    ],
+  };
+}
+
+function createLegacyCopilotAdapter(): ProviderAdapter {
+  const projectSkillMapping = {
+    contentType: 'skill' as const,
+    canonicalDir: '.agents/skills',
+    providerDir: '.github/skills',
+    nativeRead: false,
+  };
+  const userSkillMapping = {
+    contentType: 'skill' as const,
+    canonicalDir: '.agents/skills',
+    providerDir: '.copilot/skills',
+    nativeRead: false,
+  };
+
+  return {
+    ...copilotAdapter,
+    projectMappings: [
+      projectSkillMapping,
+      ...copilotAdapter.projectMappings.filter(
+        (mapping) => mapping.contentType !== 'skill',
+      ),
+    ],
+    userMappings: [
+      userSkillMapping,
+      ...copilotAdapter.userMappings.filter(
         (mapping) => mapping.contentType !== 'skill',
       ),
     ],
@@ -698,6 +730,73 @@ describe('sync engine integration', () => {
     expect(
       updatedManifest.entries.filter(
         (entry) => entry.provider === 'cursor' && entry.contentType === 'skill',
+      ),
+    ).toEqual([]);
+  });
+
+  it('retires user Copilot skill symlinks while preserving replaced content', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.agents', 'skills', 'skill-two'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-one', 'SKILL.md'),
+      '# skill one\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-two', 'SKILL.md'),
+      '# skill two\n',
+      'utf8',
+    );
+
+    const canonical = await scanCanonical(root, 'user');
+    const legacyPlan = await computeSyncPlan({
+      canonical,
+      adapters: [createLegacyCopilotAdapter()],
+      manifest: createEmptyManifest(),
+      scope: 'user',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(legacyPlan, createEmptyManifest(), manifestPath);
+
+    const replacedPath = join(root, '.copilot', 'skills', 'skill-two');
+    await rm(replacedPath, { recursive: true, force: true });
+    await mkdir(replacedPath, { recursive: true });
+    await writeFile(
+      join(replacedPath, 'SKILL.md'),
+      '# user replacement\n',
+      'utf8',
+    );
+
+    const legacyManifest = await loadManifest(manifestPath);
+    const retirementPlan = await computeSyncPlan({
+      canonical,
+      adapters: [copilotAdapter],
+      manifest: legacyManifest,
+      scope: 'user',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(retirementPlan, legacyManifest, manifestPath);
+
+    await expect(
+      lstat(join(root, '.copilot', 'skills', 'skill-one')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(
+      readFile(join(replacedPath, 'SKILL.md'), 'utf8'),
+    ).resolves.toBe('# user replacement\n');
+    const updatedManifest = await loadManifest(manifestPath);
+    expect(
+      updatedManifest.entries.filter(
+        (entry) =>
+          entry.provider === 'copilot' && entry.contentType === 'skill',
       ),
     ).toEqual([]);
   });

@@ -15,6 +15,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { AdoptionSourceUnavailableError } from '@commands/shared/adopt-stray';
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
 import type {
   MultiSelectChoice,
@@ -115,6 +116,31 @@ function createCursorSkillStray(
   };
 }
 
+function createCopilotSkillStray(
+  providerPath = '.github/skills/copilot-local',
+): InitStrayCandidate {
+  return {
+    provider: 'copilot',
+    report: {
+      canonical: null,
+      provider: 'copilot',
+      providerPath,
+      state: { status: 'stray' },
+    },
+    mapping: {
+      contentType: 'skill',
+      canonicalDir: '.agents/skills',
+      providerDir: '.agents/skills',
+      nativeRead: true,
+      adoptionSourceDirs: [
+        providerPath.startsWith('.copilot/')
+          ? '.copilot/skills'
+          : '.github/skills',
+      ],
+    },
+  };
+}
+
 function createCanonicalEntries(): CanonicalEntry[] {
   return [];
 }
@@ -133,7 +159,7 @@ function createHarness(options: HarnessOptions = {}): {
   loadSyncConfig: ReturnType<typeof vi.fn>;
   saveSyncConfig: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
-  applyCursorSkillDisposition: ReturnType<typeof vi.fn>;
+  applyNativeSkillDisposition: ReturnType<typeof vi.fn>;
   getHookInstallInfo: ReturnType<typeof vi.fn>;
   configureLocalHooksPath: ReturnType<typeof vi.fn>;
   installHook: ReturnType<typeof vi.fn>;
@@ -183,7 +209,7 @@ function createHarness(options: HarnessOptions = {}): {
       return manifest;
     },
   );
-  const applyCursorSkillDisposition = vi.fn(
+  const applyNativeSkillDisposition = vi.fn(
     async (
       _scopeRoot: string,
       _stray: InitStrayCandidate,
@@ -279,7 +305,7 @@ function createHarness(options: HarnessOptions = {}): {
     loadSyncConfig,
     resolveUserSyncConfig,
     saveSyncConfig,
-    applyCursorSkillDisposition,
+    applyNativeSkillDisposition,
     getConfigAwareAdapters: vi.fn(async () => ({
       activeAdapters: adapters.filter((adapter) =>
         (options.configAwareActiveAdapterNames ?? ['claude']).includes(
@@ -340,7 +366,7 @@ function createHarness(options: HarnessOptions = {}): {
     loadSyncConfig,
     saveSyncConfig,
     adoptStray,
-    applyCursorSkillDisposition,
+    applyNativeSkillDisposition,
     getHookInstallInfo,
     configureLocalHooksPath,
     installHook,
@@ -702,7 +728,7 @@ describe('createInitCommand', () => {
       command,
       selectWithAbort,
       selectManyWithAbort,
-      applyCursorSkillDisposition,
+      applyNativeSkillDisposition,
     } = createHarness({
       interactive: true,
       hookInstalled: true,
@@ -734,20 +760,73 @@ describe('createInitCommand', () => {
       expect(call[1]).toHaveLength(2);
     }
     expect(
-      applyCursorSkillDisposition.mock.calls.map((call) => call[3]),
+      applyNativeSkillDisposition.mock.calls.map((call) => call[3]),
     ).toEqual(['adopt', 'keep']);
-    expect(applyCursorSkillDisposition.mock.calls[1]?.[4]).toBe(
+    expect(applyNativeSkillDisposition.mock.calls[1]?.[4]).toBe(
       '/tmp/workspace/.oat/sync/config.json',
     );
     expect(selectManyWithAbort).not.toHaveBeenCalled();
   });
+
+  it.each([
+    {
+      scope: 'project',
+      providerPath: '.github/skills/copilot-local',
+      syncConfigPath: '/tmp/workspace/.oat/sync/config.json',
+    },
+    {
+      scope: 'user',
+      providerPath: '.copilot/skills/copilot-local',
+      syncConfigPath: '/tmp/home/.oat/sync/config.json',
+    },
+  ])(
+    'offers explicit Copilot adoption or keep-local at $scope scope',
+    async ({ scope, providerPath, syncConfigPath }) => {
+      const {
+        command,
+        selectWithAbort,
+        selectManyWithAbort,
+        applyNativeSkillDisposition,
+      } = createHarness({
+        interactive: true,
+        hookInstalled: true,
+        strays: [createCopilotSkillStray(providerPath)],
+        singleSelectResponses: ['keep'],
+      });
+
+      await runInitCommand(command, { globalArgs: ['--scope', scope] });
+
+      expect(selectWithAbort).toHaveBeenCalledWith(
+        expect.stringContaining(`Migrate Copilot skill [${scope}]`),
+        [
+          expect.objectContaining({
+            label: 'Adopt into canonical',
+            value: 'adopt',
+          }),
+          expect.objectContaining({
+            label: 'Keep Copilot-only',
+            value: 'keep',
+          }),
+        ],
+        expect.any(Object),
+      );
+      expect(applyNativeSkillDisposition).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ provider: 'copilot' }),
+        expect.any(Object),
+        'keep',
+        syncConfigPath,
+      );
+      expect(selectManyWithAbort).not.toHaveBeenCalled();
+    },
+  );
 
   it('continues later scope setup but stops migration prompts on abort', async () => {
     const {
       command,
       selectWithAbort,
       selectManyWithAbort,
-      applyCursorSkillDisposition,
+      applyNativeSkillDisposition,
       ensureCanonicalDirs,
       saveManifest,
     } = createHarness({
@@ -769,9 +848,9 @@ describe('createInitCommand', () => {
         String(message).startsWith('Migrate Cursor skill'),
       ),
     ).toHaveLength(2);
-    expect(applyCursorSkillDisposition).toHaveBeenCalledTimes(1);
+    expect(applyNativeSkillDisposition).toHaveBeenCalledTimes(1);
     expect(
-      applyCursorSkillDisposition.mock.calls[0]?.[1].report.providerPath,
+      applyNativeSkillDisposition.mock.calls[0]?.[1].report.providerPath,
     ).toBe('.cursor/skills/answered');
     expect(selectManyWithAbort).not.toHaveBeenCalled();
     expect(ensureCanonicalDirs).toHaveBeenCalledWith('/tmp/home', 'user');
@@ -782,7 +861,7 @@ describe('createInitCommand', () => {
   });
 
   it('writes Cursor dispositions to each scope sync config', async () => {
-    const { command, applyCursorSkillDisposition } = createHarness({
+    const { command, applyNativeSkillDisposition } = createHarness({
       interactive: true,
       hookInstalled: true,
       strays: [createCursorSkillStray()],
@@ -792,7 +871,7 @@ describe('createInitCommand', () => {
     await runInitCommand(command, { globalArgs: ['--scope', 'all'] });
 
     expect(
-      applyCursorSkillDisposition.mock.calls.map((call) => call[4]),
+      applyNativeSkillDisposition.mock.calls.map((call) => call[4]),
     ).toEqual([
       '/tmp/workspace/.oat/sync/config.json',
       '/tmp/home/.oat/sync/config.json',
@@ -800,13 +879,13 @@ describe('createInitCommand', () => {
   });
 
   it('reports keep-local name collisions without recording the choice', async () => {
-    const { command, capture, applyCursorSkillDisposition } = createHarness({
+    const { command, capture, applyNativeSkillDisposition } = createHarness({
       interactive: true,
       hookInstalled: true,
       strays: [createCursorSkillStray()],
       singleSelectResponses: ['keep'],
     });
-    applyCursorSkillDisposition.mockRejectedValueOnce(
+    applyNativeSkillDisposition.mockRejectedValueOnce(
       new CliError(
         'Cannot keep .cursor/skills/cursor-local Cursor-only because canonical skill .agents/skills/cursor-local has the same name. Rename one skill, then run the command again.',
       ),
@@ -815,11 +894,35 @@ describe('createInitCommand', () => {
     await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
 
     expect(capture.warn.join('\n')).toContain('Rename one skill');
-    expect(applyCursorSkillDisposition).toHaveBeenCalledTimes(1);
+    expect(applyNativeSkillDisposition).toHaveBeenCalledTimes(1);
+  });
+
+  it('warns and continues when a native skill adoption source is unavailable', async () => {
+    const { command, capture, confirmAction, applyNativeSkillDisposition } =
+      createHarness({
+        interactive: true,
+        hookInstalled: true,
+        strays: [
+          createCopilotSkillStray('.github/skills/broken'),
+          createCopilotSkillStray('.github/skills/keep-me'),
+        ],
+        singleSelectResponses: ['adopt', 'keep'],
+      });
+    applyNativeSkillDisposition.mockRejectedValueOnce(
+      new AdoptionSourceUnavailableError(
+        'Cannot adopt .github/skills/broken: the path is missing or a broken symlink.',
+      ),
+    );
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(capture.warn.join('\n')).toContain('broken symlink');
+    expect(confirmAction).not.toHaveBeenCalled();
+    expect(applyNativeSkillDisposition).toHaveBeenCalledTimes(2);
   });
 
   it('reports unresolved Cursor skills without prompting in non-interactive mode', async () => {
-    const { command, capture, selectWithAbort, applyCursorSkillDisposition } =
+    const { command, capture, selectWithAbort, applyNativeSkillDisposition } =
       createHarness({
         interactive: false,
         hookInstalled: true,
@@ -830,7 +933,7 @@ describe('createInitCommand', () => {
 
     expect(capture.warn).toContain(ADOPT_REMEDIATION);
     expect(selectWithAbort).not.toHaveBeenCalled();
-    expect(applyCursorSkillDisposition).not.toHaveBeenCalled();
+    expect(applyNativeSkillDisposition).not.toHaveBeenCalled();
   });
 
   it('detects codex role strays via default collector and includes codex adoption metadata', async () => {

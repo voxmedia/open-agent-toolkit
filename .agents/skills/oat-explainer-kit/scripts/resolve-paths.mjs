@@ -1,11 +1,12 @@
 import { lstat, realpath } from 'node:fs/promises';
-import { isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 export async function resolveExplainerOutputRoot({
   repoRoot,
   invocation,
   activeProject,
   outputRoot,
+  slug,
 }) {
   if (!repoRoot) {
     throw new TypeError('repoRoot is required.');
@@ -17,19 +18,26 @@ export async function resolveExplainerOutputRoot({
         'Direct callers must provide an explicit outputRoot to the core.',
       );
     }
-    return resolveSafePath(outputRoot, {
+    const resolvedRoot = await resolveSafePath(outputRoot, {
       baseRoot: repoRoot,
       field: 'outputRoot',
     });
+    assertParentOutputRoot(resolvedRoot, slug);
+    return resolvedRoot;
   }
 
   const canonicalRepoRoot = await realpath(resolve(repoRoot));
   if (invocation === 'repo') {
-    return resolveSafePath('.oat/repo/reference/explainers', {
-      baseRoot: canonicalRepoRoot,
-      confinedRoot: canonicalRepoRoot,
-      field: 'repo explainer output root',
-    });
+    const resolvedRoot = await resolveSafePath(
+      '.oat/repo/reference/explainers',
+      {
+        baseRoot: canonicalRepoRoot,
+        confinedRoot: canonicalRepoRoot,
+        field: 'repo explainer output root',
+      },
+    );
+    assertParentOutputRoot(resolvedRoot, slug);
+    return resolvedRoot;
   }
 
   if (invocation !== 'project') {
@@ -49,11 +57,13 @@ export async function resolveExplainerOutputRoot({
     throw new Error('The active project cannot be the repository root.');
   }
 
-  return resolveSafePath(join(projectRoot, 'explainers'), {
+  const resolvedRoot = await resolveSafePath(join(projectRoot, 'explainers'), {
     baseRoot: canonicalRepoRoot,
     confinedRoot: projectRoot,
     field: 'project explainer output root',
   });
+  assertParentOutputRoot(resolvedRoot, slug);
+  return resolvedRoot;
 }
 
 export async function resolveSourceAwarePath({
@@ -163,4 +173,38 @@ function isWithin(root, target) {
 
 function isMissing(error) {
   return error && typeof error === 'object' && error.code === 'ENOENT';
+}
+
+function assertParentOutputRoot(outputRoot, slug) {
+  if (slug === undefined) return;
+  const normalizedSlug = normalizeRunSlug(slug);
+  if (basename(outputRoot) === normalizedSlug) {
+    throw new Error(
+      `Output root already ends in run slug "${normalizedSlug}"; supply the parent output root to avoid double-nesting.`,
+    );
+  }
+}
+
+function normalizeRunSlug(candidate) {
+  if (
+    typeof candidate !== 'string' ||
+    candidate.includes('/') ||
+    candidate.includes('\\') ||
+    candidate.includes('\0') ||
+    candidate === '.' ||
+    candidate === '..'
+  ) {
+    throw new Error('Run slug must be text, not a path or traversal value.');
+  }
+  const slug = candidate
+    .normalize('NFKD')
+    .replaceAll(/\p{Mark}/gu, '')
+    .toLowerCase()
+    .trim()
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-+|-+$/g, '');
+  if (!slug) {
+    throw new Error('Run slug must contain at least one letter or number.');
+  }
+  return slug;
 }

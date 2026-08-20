@@ -1,5 +1,12 @@
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
+import {
+  catalogFromManifest,
+  initiativeCatalogPath,
+  serializeInitiativeCatalog,
+} from '../../../../.agents/skills/explainer-kit/scripts/lib/catalog.mjs';
+import { validateContract } from '../../../../.agents/skills/explainer-kit/scripts/lib/contracts.mjs';
 import { runExplainer } from '../../../../.agents/skills/explainer-kit/scripts/run.mjs';
 
 export const PERSONAL_PRESETS_EXAMPLE = Object.freeze({
@@ -177,25 +184,60 @@ async function readAuthorProvenance(runRoot, authorResultPaths) {
 }
 
 function assertConsumableReceipt(receipt, manifest) {
-  const manifestArtifacts = new Map(
-    manifest.artifacts
-      .filter(({ status }) => status === 'built')
-      .map(({ renderedPath, hash }) => [renderedPath, hash]),
-  );
+  const receiptV2 =
+    receipt?.schemaVersion === 'explainer-kit.publish-receipt/v2';
+  let validation;
+  try {
+    const context = { manifest };
+    if (receiptV2) {
+      // Rebuild under the policy the receipt declares. This file is the
+      // normative example of the destination contract, so a connector author
+      // copying it must see the policy threaded through.
+      const catalog = catalogFromManifest(
+        manifest,
+        receipt.roots?.publicBaseUrl,
+        { publicAccess: receipt.publicAccess },
+      );
+      context.catalogArtifact = {
+        relativePath: initiativeCatalogPath(manifest.slug),
+        hash: hashBytes(Buffer.from(serializeInitiativeCatalog(catalog))),
+      };
+    }
+    validation = validateContract('publish-receipt', receipt, context);
+  } catch {
+    throw new Error('Publish receipt does not match the wrapper core run.');
+  }
   if (
-    receipt?.schemaVersion !== 'explainer-kit.publish-receipt/v1' ||
+    ![
+      'explainer-kit.publish-receipt/v1',
+      'explainer-kit.publish-receipt/v2',
+    ].includes(receipt?.schemaVersion) ||
+    !validation.valid ||
     !receipt.sentinel?.relativePath?.includes(manifest.runId) ||
-    receipt.sentinel.uploadVerified !== true ||
-    receipt.sentinel.publicVerified !== true ||
-    receipt.sentinel.deleted !== true ||
-    !Array.isArray(receipt.artifacts) ||
-    receipt.artifacts.length !== manifestArtifacts.size ||
-    !receipt.artifacts.every(
-      ({ relativePath, hash }) => manifestArtifacts.get(relativePath) === hash,
-    )
+    !consumableSentinel(receipt) ||
+    receipt.sentinel.deleted !== true
   ) {
     throw new Error('Publish receipt does not match the wrapper core run.');
   }
+}
+
+function hashBytes(bytes) {
+  return `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+}
+
+function consumableSentinel(receipt) {
+  if (receipt.schemaVersion === 'explainer-kit.publish-receipt/v1') {
+    return (
+      receipt.sentinel.uploadVerified === true &&
+      receipt.sentinel.publicVerified === true
+    );
+  }
+  return (
+    receipt.sentinel.objectVerification?.status === 'verified' &&
+    (receipt.publicAccess === 'public'
+      ? receipt.sentinel.publicVerification?.status === 'verified'
+      : receipt.sentinel.publicVerification?.status === 'skipped-protected')
+  );
 }
 
 function assertConsumableManifest(manifest, result, request) {

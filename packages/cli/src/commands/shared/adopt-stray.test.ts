@@ -9,7 +9,10 @@ import { CURSOR_PROJECT_MAPPINGS } from '@providers/cursor/paths';
 import { parseCursorRuleToCanonical } from '@providers/cursor/rule-transform';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { adoptStrayToCanonical } from './adopt-stray';
+import {
+  AdoptionSourceUnavailableError,
+  adoptStrayToCanonical,
+} from './adopt-stray';
 
 describe('adoptStrayToCanonical', () => {
   const tempDirs: string[] = [];
@@ -65,6 +68,34 @@ describe('adoptStrayToCanonical', () => {
     expect(canonical).toContain('description: Reviewer');
     expect(canonical).toContain('readonly: true');
     expect(nextManifest.entries).toHaveLength(0);
+  });
+
+  it('reports a missing Codex role adoption source as unavailable', async () => {
+    const scopeRoot = await mkdtemp(join(tmpdir(), 'oat-adopt-stray-'));
+    tempDirs.push(scopeRoot);
+
+    await expect(
+      adoptStrayToCanonical(
+        scopeRoot,
+        {
+          provider: 'codex',
+          report: {
+            providerPath: '.codex/agents/missing.toml',
+          },
+          mapping: {
+            contentType: 'agent',
+            canonicalDir: '.agents/agents',
+            providerDir: '.codex/agents',
+            nativeRead: false,
+          },
+          adoption: {
+            kind: 'codex_role',
+            roleName: 'missing',
+          },
+        },
+        createEmptyManifest(),
+      ),
+    ).rejects.toBeInstanceOf(AdoptionSourceUnavailableError);
   });
 
   it('replaces canonical codex markdown when replace option is enabled', async () => {

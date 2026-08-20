@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
 import { renderArtifact } from '../scripts/lib/render.mjs';
@@ -103,8 +105,59 @@ const forbiddenProduction = [
   /#[0-9a-f]{6}/i,
 ];
 
+// The `forbiddenProduction` list above cannot be applied outside `templates/`:
+// it bans generic shapes like any GitHub URL and any hex colour, which source
+// backlinks and theme fixtures legitimately contain. This narrower list is the
+// case-study identifier set the handoff's "Do not hard-code Duet, VoxOps, or
+// this bucket into the core" constraint actually names, and it is safe to scan
+// across the whole core.
+const forbiddenCaseStudyIdentifiers = [
+  /voxops/i,
+  /vox-media-open-agent-toolkit/i,
+  /cyclone-docs/i,
+  /dy4vzrzaexuy5/i,
+  /tkstang/i,
+  /\bduet\b/i,
+];
+
 async function template(name) {
   return readFile(new URL(`templates/${name}`, skillRoot), 'utf8');
+}
+
+async function coreSourceFiles() {
+  // Whole-core coverage: every directory of the skill plus SKILL.md itself,
+  // not only scripts/ and tests/ — the constraint bans the identifiers from
+  // the core, and a scan that reaches two of twelve directories asserts less
+  // than it claims.
+  const roots = [
+    'briefs',
+    'examples',
+    'palettes',
+    'profiles',
+    'recipes',
+    'references',
+    'schemas',
+    'scripts',
+    'styles',
+    'templates',
+    'tests',
+  ];
+  const files = [fileURLToPath(new URL('SKILL.md', skillRoot))];
+  for (const root of roots) {
+    const directory = new URL(`${root}/`, skillRoot);
+    const entries = await readdir(directory, {
+      recursive: true,
+      withFileTypes: true,
+    });
+    for (const entry of entries) {
+      if (!entry.isFile()) continue;
+      if (!/\.(mjs|js|json|md|css|html|svg|txt|ya?ml)$/.test(entry.name)) {
+        continue;
+      }
+      files.push(join(entry.parentPath ?? entry.path, entry.name));
+    }
+  }
+  return files;
 }
 
 test('production templates are complete neutral shells with documented tokens', async () => {
@@ -401,4 +454,33 @@ test('worked examples are quarantined under examples and use RFC 2606 domains', 
     errors: [],
   });
   assert.equal(bundleHash, canonicalHash(identity));
+});
+
+test('the core carries no case-study identifiers', async () => {
+  // The constraint was stated but not enforced: the forbidden-production scan
+  // covered only `templates/`, so the production bucket, the CDN host and the
+  // project code name entered the core in this range unnoticed.
+  // `fileURLToPath`, not `URL.pathname`: the latter percent-encodes, so from a
+  // checkout path containing a space the self-exclusion never matches and the
+  // scan reports its own pattern literals as offenders.
+  const selfPath = fileURLToPath(import.meta.url);
+  const offenders = [];
+  for (const path of await coreSourceFiles()) {
+    if (path === selfPath) continue;
+    const source = await readFile(path, 'utf8');
+    for (const pattern of forbiddenCaseStudyIdentifiers) {
+      if (pattern.test(source)) {
+        offenders.push(`${path}: ${pattern}`);
+      }
+    }
+  }
+  assert.deepEqual(offenders, []);
+
+  // The scan must actually reach files, or it would pass vacuously.
+  const scanned = await coreSourceFiles();
+  assert.ok(scanned.length > 20, `scanned only ${scanned.length} core files`);
+  assert.ok(
+    scanned.some((path) => path.endsWith('s3-roots.mjs')),
+    'scan must reach scripts/lib',
+  );
 });

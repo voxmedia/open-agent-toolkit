@@ -1,6 +1,6 @@
 ---
 name: explainer-kit
-version: 2.0.3
+version: 2.1.0
 description: Use when building destination-neutral visual explainer artifacts from explicit, versioned inputs.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, mcp__*
@@ -74,11 +74,13 @@ request.
 The recipe — never the author — selects each artifact's authoring path. Floor
 entries and expansion profiles declare `authoring: markdown` for the narrative
 path or `authoring: html` for the artistic path. The core invokes the author
-once per artifact with an `explainer-kit.author-request/v2` payload carrying the
+once per artifact with an `explainer-kit.author-request/v3` payload carrying the
 artifact identity and type, its authoring path, the inlined brief from
 `briefs/`, the reconciled fact base, the resolved theme, the shell source for
-artistic artifacts, and the required narrative sections for narrative floor
-artifacts. It accepts only a schema-valid
+artistic artifacts, the required narrative sections for narrative floor
+artifacts, and canonical `artifactLinks` with explicit `index.html` site paths
+and receiver-relative hrefs. Version 2 requests remain readable for replay. It
+accepts only a schema-valid
 `explainer-kit.author-result/v2` with exactly one of `content.markdown` or
 `content.html` plus non-secret provenance, rejects excessive verbatim source
 overlap, retains each validated result under `source/author/` and its content
@@ -107,11 +109,28 @@ continues. Accepted expansion artifacts render to
 `site/{directory}/{slug}/{artifactId}/index.html` and are linked from the floor
 hub; floor artifacts keep their existing paths.
 
+`project-recap@2` requires one complete navigational hub and makes diagrams,
+decks, and deep dives adaptive expansions. The planner proposes one only when
+it can name a distinct reader question, the supporting source evidence, and why
+that medium improves on adding more hub prose. The prose brief governs
+typographic roles, hierarchy, slide archetypes, diagram semantics,
+fit-to-content composition, density, repetition, and medium choice. These are
+editorial judgments, not new request fields or renderer rules.
+`project-recap@1` remains readable for replay with its historical three-artifact
+floor.
+
 ## Review, Approval, and Warnings
 
-Approval runs after theme, render, safety validation, the guideline checker, and
-render QA, immediately before publish and durability — so a reviewer approves
-rendered artifacts and the complete warning set, not raw prose.
+Approval runs after theme, render, hard internal-reference validation, safety
+validation, the guideline checker, and render QA, immediately before publish and
+durability — so a reviewer approves rendered artifacts and the complete warning
+set, not raw prose. The reference gate resolves `href`, `src`, `srcset`,
+fragments, and safe embedded references against explicit manifest/site-tree
+files. It may invoke the existing correction author once, then rerenders and
+revalidates before any browser or visual review. A later visual correction also
+rerenders and passes through the validation-only reference gate without
+receiving another correction attempt. An exhausted `E_INTERNAL_REFERENCE`
+finding fails closed and cannot reach durability.
 
 Interactive runs stop with an `incomplete` outcome once artifacts are built and
 checked. Review the rendered `site/` tree, the sources under `source/content/`,
@@ -144,7 +163,13 @@ succeed.
 
 Visual critics use the independent whole-set rubric in
 `references/visual-review.md`, which separates review judgment from
-medium-specific authoring rules.
+medium-specific authoring rules. They assess typography, hierarchy,
+composition, density, medium leverage, template repetition, diagram semantics,
+and cross-artifact cohesion from rendered browser evidence. The rubric keeps
+the existing provider-neutral result contract: `pass` means no required
+correction remains, while `correct` carries concrete artifact-scoped actions
+into the one bounded correction round. It does not assign design scores or
+encode geometry thresholds.
 
 Render QA is opt-in. It runs only against an injected `browserProbe`, and the
 core never launches a browser of its own — reviewing the rendered output in a

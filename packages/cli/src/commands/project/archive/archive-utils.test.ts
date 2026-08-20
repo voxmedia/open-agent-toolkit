@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   access,
-  cp,
+  copyFile,
   mkdir,
   mkdtemp,
   readFile,
@@ -28,6 +28,7 @@ import {
   resolvePrimaryRepoRoot,
   verifySelectedProjectRecapForArchive,
 } from './archive-utils';
+import { loadExplainerTerminalEvidence } from './explainer-terminal-evidence';
 
 describe('archive utils', () => {
   const tempDirs: string[] = [];
@@ -54,6 +55,7 @@ describe('archive utils', () => {
     {
       distinctCanonicalHashes = false,
       includeReviewEvidence,
+      includeTerminalEvidence,
       mode = 'unattended',
       outcome = 'built-not-durable',
       recipeId = 'project-recap',
@@ -62,6 +64,7 @@ describe('archive utils', () => {
     }: {
       distinctCanonicalHashes?: boolean;
       includeReviewEvidence?: boolean;
+      includeTerminalEvidence?: boolean;
       mode?: 'interactive' | 'unattended';
       outcome?:
         | 'built-not-durable'
@@ -223,14 +226,11 @@ describe('archive utils', () => {
       files['qa/visual-review/attempt-1/request.json'] =
         `${JSON.stringify(reviewRequest)}\n`;
       files['qa/visual-review/attempt-1/result.json'] = `${JSON.stringify({
-        schemaVersion: 'explainer-kit.visual-review-result/v1',
-        reviewId: 'archive-review',
-        requestId: reviewRequest.requestId,
+        schemaVersion: 'explainer-kit.visual-review-evidence/v1',
         requestHash,
-        reviewedAt: '2026-04-01T12:34:56.000Z',
+        attempt: 1,
         disposition: 'pass',
-        artifactIds: ['recap'],
-        findings: [],
+        reasons: [],
       })}\n`;
     }
 
@@ -247,55 +247,78 @@ describe('archive utils', () => {
       ]),
     );
     const manifestPath = join(runRoot, 'manifest.json');
-    await writeFile(
-      manifestPath,
-      `${JSON.stringify({
-        schemaVersion: 'explainer-kit.manifest/v1',
-        runId: `run-${runName}`,
-        slug: runName,
-        recipe: { id: recipeId, version: '1' },
-        createdAt: '2026-04-01T12:34:56.000Z',
-        source: {
-          factBasePath: 'source/fact-base.json',
-          factBaseHash: distinctCanonicalHashes
-            ? `sha256:${'b'.repeat(64)}`
-            : immutableHashes['source/fact-base.json'],
-          inputHashes: {},
-          authorResultPaths: ['source/author/recap.json'],
-          ...(sourceBacklinks !== undefined && {
-            backlinks: sourceBacklinks,
-          }),
+    const manifest = {
+      schemaVersion: 'explainer-kit.manifest/v1',
+      runId: `run-${runName}`,
+      slug: runName,
+      recipe: { id: recipeId, version: '1' },
+      createdAt: '2026-04-01T12:34:56.000Z',
+      source: {
+        factBasePath: 'source/fact-base.json',
+        factBaseHash: distinctCanonicalHashes
+          ? `sha256:${'b'.repeat(64)}`
+          : immutableHashes['source/fact-base.json'],
+        inputHashes: {},
+        authorResultPaths: ['source/author/recap.json'],
+        ...(sourceBacklinks !== undefined && {
+          backlinks: sourceBacklinks,
+        }),
+      },
+      theme: {
+        path: 'theme.resolved.json',
+        hash: distinctCanonicalHashes
+          ? `sha256:${'c'.repeat(64)}`
+          : immutableHashes['theme.resolved.json'],
+        derived: false,
+      },
+      artifacts: [
+        {
+          id: 'recap',
+          type: 'explainer',
+          contentPath: 'source/content/recap.md',
+          renderedPath: 'site/index.html',
+          mediaType: 'text/html',
+          status: 'built',
+          hash: immutableHashes['site/index.html'],
+          rebuildable: false,
         },
-        theme: {
-          path: 'theme.resolved.json',
-          hash: distinctCanonicalHashes
-            ? `sha256:${'c'.repeat(64)}`
-            : immutableHashes['theme.resolved.json'],
-          derived: false,
-        },
-        artifacts: [
-          {
-            id: 'recap',
-            type: 'explainer',
-            contentPath: 'source/content/recap.md',
-            renderedPath: 'site/index.html',
-            mediaType: 'text/html',
-            status: 'built',
-            hash: immutableHashes['site/index.html'],
-            rebuildable: false,
-          },
-        ],
-        outcome,
-        immutableHashes,
-        buildRecord: {
-          path: 'build-record.json',
-          hash: `sha256:${'a'.repeat(64)}`,
-        },
-        warnings: [],
-      })}\n`,
-      'utf8',
-    );
+      ],
+      outcome,
+      immutableHashes,
+      buildRecord: {
+        path: 'build-record.json',
+        hash: `sha256:${'a'.repeat(64)}`,
+      },
+      warnings: [],
+    };
+    await writeFile(manifestPath, `${JSON.stringify(manifest)}\n`, 'utf8');
     await writeFile(join(runRoot, 'build-record.json'), '{}\n', 'utf8');
+    if (
+      includeTerminalEvidence ??
+      ['built-needs-review', 'failed'].includes(outcome)
+    ) {
+      const terminalEvidence = await loadExplainerTerminalEvidence();
+      await terminalEvidence.writeTerminalEvidence(
+        {
+          runId: manifest.runId,
+          slug: manifest.slug,
+          runRoot,
+        },
+        {
+          outcome,
+          manifest,
+          reasons: [
+            {
+              stage: outcome === 'failed' ? 'durability' : 'visual-review',
+              kind: outcome === 'failed' ? 'provider-failure' : 'finding',
+              artifactId: 'recap',
+              count: 1,
+            },
+          ],
+          evidenceDisposition: 'retained',
+        },
+      );
+    }
 
     return {
       relativeRunPath,
@@ -550,8 +573,101 @@ describe('archive utils', () => {
         expect.stringMatching(/20260401-demo\.tmp-/),
         exportRoot,
       );
+      const manifest = JSON.parse(
+        await readFile(join(exportRoot, 'manifest.json'), 'utf8'),
+      ) as { immutableHashes: Record<string, string> };
+      expect(await relativeFilePaths(exportRoot)).toEqual(
+        [
+          'build-record.json',
+          'manifest.json',
+          ...(outcome === 'failed' ? ['terminal-evidence.json'] : []),
+          ...Object.keys(manifest.immutableHashes),
+        ].sort(),
+      );
     },
   );
+
+  it('rejects an undeclared exact-byte source entry instead of promoting it', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    const canary = 'ARCHIVE-SOURCE-INVENTORY-{"diagnostic":"exact bytes"}';
+    await writeFile(join(recap.runRoot, 'undeclared-provider.txt'), canary);
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      ),
+    ).rejects.toThrow(/inventory/i);
+
+    await expect(access(projectPath)).resolves.toBeUndefined();
+    await expect(
+      access(
+        join(
+          repoRoot,
+          '.oat',
+          'repo',
+          'reference',
+          'project-recaps',
+          '20260401-demo',
+        ),
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('rejects an undeclared exact-byte staged entry before export promotion', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    let stagedRoot: string | undefined;
+    const copySingleFile = vi.fn(
+      async (source: string, destination: string) => {
+        await mkdir(dirname(destination), { recursive: true });
+        await copyFile(source, destination);
+        if (!stagedRoot) {
+          let candidate = dirname(destination);
+          while (!candidate.includes('20260401-demo.tmp-')) {
+            candidate = dirname(candidate);
+          }
+          stagedRoot = candidate;
+          await writeFile(
+            join(stagedRoot, 'undeclared-staged-provider.txt'),
+            'ARCHIVE-STAGED-INVENTORY-{"diagnostic":"exact bytes"}',
+          );
+        }
+      },
+    );
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        {
+          copySingleFile,
+          timestamp: () => '2026-04-01T12:34:56Z',
+        },
+      ),
+    ).rejects.toThrow(/inventory/i);
+
+    expect(copySingleFile).toHaveBeenCalled();
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
 
   it('accepts distinct canonical object hashes while verifying complete file-byte coverage', async () => {
     const repoRoot = await createRepoRoot();
@@ -673,15 +789,20 @@ describe('archive utils', () => {
     ).rejects.toThrow(/hash verification failed.*run-request\.json/i);
   });
 
-  it.each(['failed', 'incomplete'] as const)(
-    'rejects partial review evidence retained by a %s package',
+  it.each(['built-needs-review', 'failed', 'incomplete'] as const)(
+    'rejects legacy diagnostic review evidence retained by a %s package',
     async (outcome) => {
       const repoRoot = await createRepoRoot();
       const projectPath = join(repoRoot, '.oat', 'projects', 'shared', outcome);
       await mkdir(projectPath, { recursive: true });
       const recap = await createRecapPackage(projectPath, { outcome });
       const partialPath = 'qa/review-gate/attempt-1-error.json';
-      const partialContents = '{"code":"E_VISUAL_REVIEW"}\n';
+      const canary =
+        'ARCHIVE-CANARY {"pass\\\\u0077ord":"exact"} ? [yaml-complex] standalone';
+      const partialContents = `${JSON.stringify({
+        code: 'E_VISUAL_REVIEW',
+        message: canary,
+      })}\n`;
       await mkdir(dirname(join(recap.runRoot, partialPath)), {
         recursive: true,
       });
@@ -702,7 +823,12 @@ describe('archive utils', () => {
           projectRecapRun: recap.relativeRunPath,
           s3SyncOnComplete: false,
         }),
-      ).rejects.toThrow(/incomplete visual-review evidence chain/i);
+      ).rejects.toThrow(
+        /review-gate|terminal evidence|incomplete visual-review evidence/i,
+      );
+      await expect(
+        access(join(repoRoot, '.oat/repo/reference/project-recaps')),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
     },
   );
 
@@ -794,7 +920,7 @@ describe('archive utils', () => {
     await expect(access(projectPath)).resolves.toBeUndefined();
   });
 
-  it('refuses to export a recap whose visual review gate is unresolved', async () => {
+  it('exports unresolved review evidence without making it publishable', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
     await mkdir(projectPath, { recursive: true });
@@ -802,17 +928,153 @@ describe('archive utils', () => {
       outcome: 'built-needs-review',
     });
 
-    await expect(
-      archiveProjectOnCompletion({
+    const result = await archiveProjectOnCompletion(
+      {
         repoRoot,
         projectPath,
         projectName: 'demo',
         projectsRoot: '.oat/projects/shared',
         projectRecapRun: recap.relativeRunPath,
         s3SyncOnComplete: false,
-      }),
-    ).rejects.toThrow(/built-needs-review.*visual review.*before archival/i);
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
 
+    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(
+      recap.immutableCount,
+    );
+    await expect(
+      readFile(
+        join(result.projectRecapExport!.exportRoot, 'terminal-evidence.json'),
+        'utf8',
+      ),
+    ).resolves.toContain('"evidenceDisposition": "retained"');
+    await expect(access(projectPath)).rejects.toThrow();
+  });
+
+  it.each(['built-needs-review', 'failed'] as const)(
+    'requires terminal evidence before destructively archiving a %s recap',
+    async (outcome) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', outcome);
+      await mkdir(projectPath, { recursive: true });
+      const recap = await createRecapPackage(projectPath, {
+        outcome,
+        includeTerminalEvidence: false,
+      });
+
+      await expect(
+        archiveProjectOnCompletion({
+          repoRoot,
+          projectPath,
+          projectName: outcome,
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        }),
+      ).rejects.toThrow(/terminal evidence/i);
+      await expect(access(projectPath)).resolves.toBeUndefined();
+    },
+  );
+
+  it.each([
+    ['schemaVersion', 'future'],
+    ['runId', 'run-other'],
+    ['outcome', 'failed'],
+    ['manifestHash', `sha256:${'f'.repeat(64)}`],
+    ['evidenceDisposition', 'unknown'],
+  ] as const)(
+    'rejects tampered terminal evidence field %s before project removal',
+    async (field, value) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', field);
+      await mkdir(projectPath, { recursive: true });
+      const recap = await createRecapPackage(projectPath, {
+        outcome: 'built-needs-review',
+      });
+      const evidencePath = join(recap.runRoot, 'terminal-evidence.json');
+      const evidence = JSON.parse(
+        await readFile(evidencePath, 'utf8'),
+      ) as Record<string, unknown>;
+      evidence[field] = value;
+      await writeFile(evidencePath, `${JSON.stringify(evidence)}\n`);
+
+      await expect(
+        archiveProjectOnCompletion({
+          repoRoot,
+          projectPath,
+          projectName: field,
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        }),
+      ).rejects.toThrow(/terminal evidence/i);
+      await expect(access(projectPath)).resolves.toBeUndefined();
+    },
+  );
+
+  it('rejects terminal evidence symlinked outside the selected recap run', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(
+      repoRoot,
+      '.oat',
+      'projects',
+      'shared',
+      'symlinked',
+    );
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      outcome: 'failed',
+    });
+    const evidencePath = join(recap.runRoot, 'terminal-evidence.json');
+    const externalEvidencePath = join(repoRoot, 'external-evidence.json');
+    await writeFile(externalEvidencePath, await readFile(evidencePath));
+    await rm(evidencePath);
+    await symlink(externalEvidencePath, evidencePath);
+
+    await expect(
+      verifySelectedProjectRecapForArchive(projectPath, recap.relativeRunPath),
+    ).rejects.toThrow(/terminal evidence|symbolic link|run root/i);
+  });
+
+  it('rejects schema-valid terminal evidence byte substitution while staging', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'staged');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      outcome: 'failed',
+    });
+    const copySingleFile = vi.fn(
+      async (source: string, destination: string) => {
+        await mkdir(dirname(destination), { recursive: true });
+        await copyFile(source, destination);
+        if (destination.endsWith('terminal-evidence.json')) {
+          const evidencePath = destination;
+          const evidence = JSON.parse(
+            await readFile(evidencePath, 'utf8'),
+          ) as Record<string, unknown>;
+          evidence.error = {
+            code: 'E_RUN',
+            message: 'Schema-valid substituted failure evidence.',
+          };
+          await writeFile(evidencePath, `${JSON.stringify(evidence)}\n`);
+        }
+      },
+    );
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'staged',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        { copySingleFile },
+      ),
+    ).rejects.toThrow(/terminal evidence|changed while staging|byte/i);
     await expect(access(projectPath)).resolves.toBeUndefined();
   });
 
@@ -883,14 +1145,15 @@ describe('archive utils', () => {
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
     await mkdir(projectPath, { recursive: true });
     const recap = await createRecapPackage(projectPath);
-    const copyDirectory = vi.fn(async (source: string, destination: string) => {
-      await cp(source, destination, { recursive: true });
-      await writeFile(
-        join(destination, 'source', 'content', 'recap.md'),
-        '# corrupted\n',
-        'utf8',
-      );
-    });
+    const copySingleFile = vi.fn(
+      async (source: string, destination: string) => {
+        await mkdir(dirname(destination), { recursive: true });
+        await copyFile(source, destination);
+        if (destination.endsWith(join('source', 'content', 'recap.md'))) {
+          await writeFile(destination, '# corrupted\n', 'utf8');
+        }
+      },
+    );
     const removePath = vi.fn(
       async (target: string, options: { recursive: true; force: true }) =>
         rm(target, options),
@@ -907,7 +1170,7 @@ describe('archive utils', () => {
           s3SyncOnComplete: false,
         },
         {
-          copyDirectory,
+          copySingleFile,
           removePath,
           timestamp: () => '2026-04-01T12:34:56Z',
         },
@@ -1136,14 +1399,11 @@ describe('archive utils', () => {
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
     await mkdir(projectPath, { recursive: true });
     const recap = await createRecapPackage(projectPath);
-    let copyCount = 0;
-    const copyDirectory = vi.fn(async (source: string, destination: string) => {
-      copyCount += 1;
-      if (copyCount === 2) {
-        throw new Error('injected second copy failure');
-      }
-      await cp(source, destination, { recursive: true });
-    });
+    const copyDirectory = vi.fn(
+      async (_source: string, _destination: string) => {
+        throw new Error('injected archive copy failure');
+      },
+    );
     const exportRoot = join(
       repoRoot,
       '.oat',
@@ -1168,9 +1428,9 @@ describe('archive utils', () => {
           timestamp: () => '2026-04-01T12:34:56Z',
         },
       ),
-    ).rejects.toThrow('injected second copy failure');
+    ).rejects.toThrow('injected archive copy failure');
 
-    expect(copyDirectory).toHaveBeenCalledTimes(2);
+    expect(copyDirectory).toHaveBeenCalledTimes(1);
     await expect(access(projectPath)).resolves.toBeUndefined();
     await expect(access(exportRoot)).rejects.toThrow();
   });
@@ -2081,6 +2341,26 @@ describe('archive utils', () => {
 
 function hashContent(value: string | Buffer): string {
   return `sha256:${createHash('sha256').update(value).digest('hex')}`;
+}
+
+async function relativeFilePaths(
+  root: string,
+  relativeRoot = '',
+): Promise<string[]> {
+  const entries = await readdir(join(root, relativeRoot), {
+    withFileTypes: true,
+  });
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const relativePath = relativeRoot
+        ? `${relativeRoot}/${entry.name}`
+        : entry.name;
+      return entry.isDirectory()
+        ? relativeFilePaths(root, relativePath)
+        : [relativePath];
+    }),
+  );
+  return files.flat().sort();
 }
 
 function canonicalHash(value: unknown): string {

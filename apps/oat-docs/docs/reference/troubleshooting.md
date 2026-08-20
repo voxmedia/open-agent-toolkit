@@ -31,6 +31,24 @@ Use `.cursor/skills` only for intentionally Cursor-specific packages. Interactiv
 `oat init` and `oat status` offer each unresolved Cursor-local skill for
 canonical adoption or a remembered Keep Cursor-only choice.
 
+## Copilot appears detected but no skill sync actions are listed
+
+Expected for native-read skill mappings. Verify project skills under
+`.agents/skills` and personal skills under `~/.agents/skills`; Copilot reads
+those canonical directories directly. Sync will not create `.github/skills` or
+`~/.copilot/skills` mirrors.
+
+Legacy skills in those provider directories remain adoption candidates. Run
+`oat sync --scope <project|user|all> --dry-run` before upgrading: verified clean
+managed views may be removed, while changed or unverifiable paths are preserved
+and detached from obsolete manifest ownership. Copilot agents and project rules
+continue to sync to `.github/agents`, `~/.copilot/agents`, and
+`.github/instructions`.
+
+Interactive `oat init` and `oat status` offer each unresolved legacy skill for
+canonical adoption or a remembered Keep Copilot-only choice. Keep is blocked
+when a same-name canonical skill exists; rename one package before retrying.
+
 ## `sync` reports provider config mismatch
 
 - For interactive runs, select detected providers to enable when prompted.

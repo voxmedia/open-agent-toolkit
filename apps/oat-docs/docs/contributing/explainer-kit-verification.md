@@ -62,6 +62,11 @@ The suite recomputes semantic-input hashes, grounds every claim in retained
 source evidence, and evaluates the shared rubric against live runtime output.
 A prose claim or status label without runtime proof does not pass.
 
+The existing three-case, 27-capture golden suite is intentionally unchanged by
+the prose-led visual-review work. Simplifying it is a separate follow-up: first
+audit each case's unique coverage, runtime cost, and flakiness, then remove or
+replace fixtures only with evidence that the same behavior remains protected.
+
 ## Inspect generated evidence
 
 The suite materializes each case's runtime package under its temporary working
@@ -114,9 +119,12 @@ pnpm check
 pnpm type-check
 pnpm test
 pnpm build
+pnpm run check:skill-bumps
+pnpm release:check-versions
+pnpm release:validate
+pnpm build:docs
 pnpm lint
 pnpm format
-pnpm build:docs
 git diff --check
 ```
 

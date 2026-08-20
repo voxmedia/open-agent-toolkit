@@ -286,7 +286,7 @@ async function computeManagedDirectoryCopyHash(
   }
 }
 
-async function classifyObsoleteMappingRetirement(
+export async function classifyObsoleteMappingRetirement(
   manifestEntry: ManifestEntry,
   scopeRoot: string,
 ): Promise<RemovalSyncPlanEntry> {

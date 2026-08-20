@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
@@ -11,6 +18,8 @@ import {
   canonicalHash,
   visualReviewRequestId,
 } from '../../explainer-kit/scripts/lib/contracts.mjs';
+import { writeTerminalEvidence } from '../../explainer-kit/scripts/lib/records.mjs';
+import { supersedeExplainerRun } from '../../explainer-kit/scripts/run.mjs';
 import { png } from '../../explainer-kit/tests/fixtures/png.mjs';
 import {
   planTrackedRunFinalization as planTrackedRunFinalizationCore,
@@ -147,15 +156,15 @@ test('verifies commit order and exact unrelated-change isolation', async () => {
     ok: true,
     outcome: 'built-durable',
     pushAllowed: true,
-    errors: [],
+    reasons: [],
   });
 
   observation.evidenceCommit.paths.push('notes/private.md');
   const contaminated = verifyTrackedRunFinalization(plan, observation);
   assert.equal(contaminated.ok, false);
-  assert.ok(
-    contaminated.errors.some(({ code }) => code === 'unrelated-change'),
-  );
+  assert.deepEqual(contaminated.reasons, [
+    { stage: 'finalization', kind: 'pipeline-failure', count: 1 },
+  ]);
 });
 
 test('keeps failed verification built-not-durable and allows later attestation', async () => {
@@ -215,9 +224,9 @@ test('rejects missing, empty, malformed, and unknown attestation observations', 
     const checked = verifyTrackedRunFinalization(plan, observation);
     assert.equal(checked.ok, false);
     assert.equal(checked.pushAllowed, false);
-    assert.ok(
-      checked.errors.some(({ code }) => code === 'attestation-outcome'),
-    );
+    assert.deepEqual(checked.reasons, [
+      { stage: 'finalization', kind: 'pipeline-failure', count: 1 },
+    ]);
   }
 });
 
@@ -251,16 +260,120 @@ test('terminates idempotently when the same commit evidence is already durable',
   assert.deepEqual(plan.commands, []);
 });
 
-test('refuses to finalize a recap whose visual review gate is unresolved', async () => {
-  const fixture = await createRun({ outcome: 'built-needs-review' });
+test('finalizes flagged and failed evidence without promoting either outcome', async () => {
+  for (const outcome of ['built-needs-review', 'failed']) {
+    const fixture = await createRun({ outcome });
+    const manifest = JSON.parse(await readFile(fixture.manifestPath, 'utf8'));
+    await writeTerminalEvidence(
+      {
+        runId: manifest.runId,
+        slug: manifest.slug,
+        runRoot: fixture.runRoot,
+      },
+      {
+        outcome,
+        manifest,
+        reasons: [
+          {
+            stage: outcome === 'failed' ? 'durability' : 'visual-review',
+            kind: outcome === 'failed' ? 'provider-failure' : 'finding',
+            artifactId: 'recap',
+            count: 1,
+          },
+        ],
+        evidenceDisposition: 'retained',
+      },
+    );
+
+    const plan = await planTrackedRunFinalization(
+      request(fixture, 'dedicated'),
+      {
+        repoRoot: fixture.repoRoot,
+        project: 'demo',
+      },
+    );
+    assert.equal(plan.status, 'complete');
+    assert.equal(plan.outcome, outcome);
+    assert.equal(plan.publicationAllowed, false);
+    assert.equal(plan.evidenceDisposition, 'retained');
+    assert.deepEqual(plan.commands, []);
+    assert.deepEqual(verifyTrackedRunFinalization(plan), {
+      ok: true,
+      outcome,
+      pushAllowed: false,
+      reasons: [],
+    });
+  }
+});
+
+test('rejects terminal evidence symlinked outside the tracked run', async () => {
+  const fixture = await createRun({ outcome: 'failed' });
+  const manifest = JSON.parse(await readFile(fixture.manifestPath, 'utf8'));
+  await writeTerminalEvidence(
+    {
+      runId: manifest.runId,
+      slug: manifest.slug,
+      runRoot: fixture.runRoot,
+    },
+    {
+      outcome: 'failed',
+      manifest,
+      reasons: [{ stage: 'durability', kind: 'provider-failure', count: 1 }],
+      evidenceDisposition: 'retained',
+    },
+  );
+  const evidencePath = join(fixture.runRoot, 'terminal-evidence.json');
+  const externalEvidencePath = join(
+    fixture.repoRoot,
+    'external-terminal-evidence.json',
+  );
+  await writeFile(externalEvidencePath, await readFile(evidencePath));
+  await rm(evidencePath);
+  await symlink(externalEvidencePath, evidencePath);
 
   await assert.rejects(
     planTrackedRunFinalization(request(fixture, 'dedicated'), {
       repoRoot: fixture.repoRoot,
       project: 'demo',
     }),
-    /built-needs-review.*visual review.*before finalization/i,
+    /terminal evidence|symbolic link|run root/i,
   );
+});
+
+test('consumes production supersession evidence bound to both runs', async () => {
+  const fixture = await createRun({ outcome: 'failed' });
+  const manifest = JSON.parse(await readFile(fixture.manifestPath, 'utf8'));
+  await writeTerminalEvidence(
+    {
+      runId: manifest.runId,
+      slug: manifest.slug,
+      runRoot: fixture.runRoot,
+    },
+    {
+      outcome: 'failed',
+      manifest,
+      reasons: [{ stage: 'durability', kind: 'provider-failure', count: 1 }],
+      evidenceDisposition: 'retained',
+    },
+  );
+
+  const replacement = {
+    runId: 'run-replacement',
+    manifestHash: `sha256:${'c'.repeat(64)}`,
+  };
+  await supersedeExplainerRun({
+    runRoot: fixture.runRoot,
+    supersededBy: replacement,
+  });
+
+  const plan = await planTrackedRunFinalization(request(fixture, 'dedicated'), {
+    repoRoot: fixture.repoRoot,
+    project: 'demo',
+  });
+  assert.equal(plan.status, 'complete');
+  assert.equal(plan.outcome, 'failed');
+  assert.equal(plan.evidenceDisposition, 'superseded');
+  assert.deepEqual(plan.supersededBy, replacement);
 });
 
 test('loads versioned package coverage from the explicit compatible core root', async () => {
@@ -582,14 +695,11 @@ async function createRun({
       requestHash,
     };
     const reviewResult = {
-      schemaVersion: 'explainer-kit.visual-review-result/v1',
-      reviewId: 'finalizer-review',
-      requestId: reviewRequest.requestId,
+      schemaVersion: 'explainer-kit.visual-review-evidence/v1',
       requestHash,
-      reviewedAt: '2026-07-18T00:00:00.000Z',
+      attempt: 1,
       disposition: 'pass',
-      artifactIds: ['recap'],
-      findings: [],
+      reasons: [],
     };
     files.push(
       ['qa/visual-review/attempt-1/request.json', jsonBytes(reviewRequest)],
@@ -609,6 +719,8 @@ async function createRun({
 
   const manifest = {
     schemaVersion: 'explainer-kit.manifest/v1',
+    runId: 'run-recap',
+    slug: 'recap',
     recipe: { id: 'project-recap', version: '1' },
     source: {
       factBasePath: 'source/fact-base.json',

@@ -28,9 +28,29 @@ stands. Use one dominant title, a short framing statement, and the most useful
 visual or status summary before secondary detail. Keep headings descriptive,
 group related items, and use size, spacing, and contrast consistently.
 
+Assign intentional typography roles to the title, framing statement, section
+headings, labels, body copy, evidence, and annotations. Use weight, scale,
+measure, and contrast to clarify those roles rather than making every text block
+equally loud. Keep the role system consistent across artifacts without forcing
+every medium into the same composition.
+
 Use the shared terminology, status labels, and numbers exactly. Never create a
 shorter synonym that changes meaning. Keep source-backed uncertainty visible as
 `needs confirmation`.
+
+## Compose to the evidence
+
+Treat composition and density as editorial choices. Group facts that belong
+together, give the main claim enough emphasis, and let supporting evidence
+recede without becoming hard to find. Restructure crowded content instead of
+shrinking it, and remove decorative filler instead of stretching sparse
+material.
+
+Seek medium leverage: a visual artifact should make a relationship, comparison,
+sequence, or decision easier to understand than prose alone. Vary the treatment
+to fit the evidence and avoid template repetition across sections, cards, or
+slides. Shared visual language should create cross-artifact cohesion, not a set
+of cloned layouts.
 
 ## Hubs and responsive navigation
 
@@ -45,6 +65,8 @@ shorter synonym that changes meaning. Keep source-backed uncertainty visible as
 
 ## Diagrams and system visuals
 
+- Preserve diagram semantics: topology, direction, ownership, state, and edge
+  meaning must survive the visual treatment.
 - Encode relationships with position and connectors, not color alone.
 - Label nodes with concrete nouns and edges with actions or data movement.
 - Make direction explicit and include a legend only when the encoding needs it.
@@ -58,6 +80,8 @@ shorter synonym that changes meaning. Keep source-backed uncertainty visible as
   attribute escaping, including `data-edge-label=""` for an unlabeled edge.
 - Give the canvas an accessible name and description. Keep labels readable at
   the required viewport widths and provide bounded pan or zoom for large maps.
+- Fit the frame to the content so the meaningful topology is prominent rather
+  than stranded in unused canvas.
 - Use the same component names and status vocabulary as the hub and deck.
 
 ## Decks

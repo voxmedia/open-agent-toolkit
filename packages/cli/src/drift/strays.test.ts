@@ -161,44 +161,50 @@ describe('detectStrays', () => {
     expect(reports).toEqual([]);
   });
 
-  it('reports same-name entries from native-read adoption sources for collision handling', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
-    tempDirs.push(root);
-    const providerDir = join(root, '.cursor', 'skills');
-    await seedProviderEntry(providerDir, 'canonical-skill');
+  it.each([
+    { provider: 'cursor', adoptionSourceDir: '.cursor/skills' },
+    { provider: 'copilot', adoptionSourceDir: '.github/skills' },
+  ])(
+    'reports same-name $provider entries from native-read adoption sources for collision handling',
+    async ({ provider, adoptionSourceDir }) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
+      tempDirs.push(root);
+      const providerDir = join(root, adoptionSourceDir);
+      await seedProviderEntry(providerDir, 'canonical-skill');
 
-    const canonicalEntries: CanonicalEntry[] = [
-      {
-        name: 'canonical-skill',
-        type: 'skill',
-        canonicalPath: join(root, '.agents', 'skills', 'canonical-skill'),
-        isFile: false,
-      },
-    ];
-    const mapping: PathMapping = {
-      contentType: 'skill',
-      canonicalDir: '.agents/skills',
-      providerDir: '.agents/skills',
-      nativeRead: true,
-      adoptionSourceDirs: ['.cursor/skills'],
-    };
+      const canonicalEntries: CanonicalEntry[] = [
+        {
+          name: 'canonical-skill',
+          type: 'skill',
+          canonicalPath: join(root, '.agents', 'skills', 'canonical-skill'),
+          isFile: false,
+        },
+      ];
+      const mapping: PathMapping = {
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.agents/skills',
+        nativeRead: true,
+        adoptionSourceDirs: [adoptionSourceDir],
+      };
 
-    const reports = await detectStrays(
-      'cursor',
-      providerDir,
-      createEmptyManifest(),
-      canonicalEntries,
-      mapping,
-    );
+      const reports = await detectStrays(
+        provider,
+        providerDir,
+        createEmptyManifest(),
+        canonicalEntries,
+        mapping,
+      );
 
-    expect(reports).toEqual([
-      expect.objectContaining({
-        provider: 'cursor',
-        providerPath: '.cursor/skills/canonical-skill',
-        state: { status: 'stray' },
-      }),
-    ]);
-  });
+      expect(reports).toEqual([
+        expect.objectContaining({
+          provider,
+          providerPath: `${adoptionSourceDir}/canonical-skill`,
+          state: { status: 'stray' },
+        }),
+      ]);
+    },
+  );
 
   it('returns empty array when provider dir is empty', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));

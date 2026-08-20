@@ -1468,6 +1468,7 @@ describe('resolveEffectiveConfig', () => {
                 s3Uri: 's3://bucket/explainers',
                 publicBaseUrl: 'https://docs.example.com/explainers',
                 awsRegion: 'us-east-1',
+                publicAccess: 'protected',
               },
             },
           }) satisfies OatConfig,
@@ -1536,6 +1537,10 @@ describe('resolveEffectiveConfig', () => {
         value: 'us-east-1',
         source: 'shared',
       },
+      'explainers.publish.publicAccess': {
+        value: 'protected',
+        source: 'shared',
+      },
       'explainers.publish.awsProfile': {
         value: 'local-sso',
         source: 'local',
@@ -1577,6 +1582,10 @@ describe('resolveEffectiveConfig', () => {
         source: 'default',
       },
       'explainers.publish.awsRegion': { value: null, source: 'default' },
+      'explainers.publish.publicAccess': {
+        value: 'public',
+        source: 'default',
+      },
       'explainers.publish.awsProfile': { value: null, source: 'default' },
       'workflow.explainers.projectExplainer': {
         value: 'ask',

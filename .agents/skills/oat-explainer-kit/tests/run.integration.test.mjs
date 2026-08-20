@@ -22,7 +22,7 @@ import {
   resolveReviewedRepository,
 } from '../scripts/bind-project-sources.mjs';
 import { explainerModeForIntent } from '../scripts/resolve-intent.mjs';
-import { runOatExplainer } from '../scripts/run.mjs';
+import { runOatExplainer, runOatExplainerCli } from '../scripts/run.mjs';
 
 const tempDirs = [];
 
@@ -41,7 +41,7 @@ afterEach(async () => {
   );
 });
 
-async function createFixture({ coreVersion = '2.0.3' } = {}) {
+async function createFixture({ coreVersion = '2.1.0' } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'oat-explainer-run-'));
   tempDirs.push(root);
   const repoRoot = join(root, 'repo');
@@ -50,6 +50,7 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
   const userSkillsRoot = join(root, 'home', '.agents', 'skills');
   const coreRoot = join(userSkillsRoot, 'explainer-kit');
   const coreInvocationMarker = join(root, 'core-invoked');
+  const publishRequestMarker = join(root, 'publish-request.json');
   await mkdir(projectRoot, { recursive: true });
   await mkdir(adapterRoot, { recursive: true });
   await mkdir(join(coreRoot, 'scripts'), { recursive: true });
@@ -88,6 +89,10 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
         }
 
         export async function runExplainer(request, options) {
+          await writeFile(
+            ${JSON.stringify(publishRequestMarker)},
+            JSON.stringify(request.durability?.publish ?? null),
+          );
           await writeFile(${JSON.stringify(coreInvocationMarker)}, 'invoked\\n', {
             flag: 'a',
           });
@@ -132,7 +137,9 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
               buildRecordPath,
               outcome: 'failed',
               warnings: [],
-              errors: [{ code: 'E_FACT_BASE', message: 'forced failure' }],
+              reasons: [
+                { stage: 'planning', kind: 'pipeline-failure', count: 1 },
+              ],
             };
           }
           const manifest = {
@@ -162,6 +169,29 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
                 typeof options.browserSession?.probe === 'function',
               visualCritic: typeof options.visualCritic === 'function',
             },
+            publication: request.durability?.strategy === 'publish'
+              ? {
+                  schemaVersion: 'explainer-kit.publish-summary/v2',
+                  receiptSchemaVersion: 'explainer-kit.publish-receipt/v2',
+                  publicAccess: request.durability.publish.publicAccess,
+                  artifacts: [
+                    {
+                      source: { kind: 'manifest', artifactId: 'hub' },
+                      relativePath: 'site/index.html',
+                      s3Uri: request.durability.publish.s3Uri + '/index.html',
+                      publicUrl: request.durability.publish.publicBaseUrl + '/index.html',
+                      hash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                      contentType: 'text/html',
+                      objectVerification: {
+                        status: 'verified',
+                        method: 'service-checksum',
+                        hash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                      },
+                      publicVerification: { status: 'skipped-protected' },
+                    },
+                  ],
+                }
+              : undefined,
           };
         }
       `,
@@ -202,6 +232,7 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
     userSkillsRoot,
     coreRoot,
     coreInvocationMarker,
+    publishRequestMarker,
     reviewedCommit: reviewedCommitOutput.trim(),
   };
 }
@@ -320,6 +351,29 @@ function getConfig(key) {
             : null,
     source: 'default',
   });
+}
+
+function getPublishConfig(key) {
+  return getPublishConfigWith({})(key);
+}
+
+function getPublishConfigWith(overrides) {
+  const values = {
+    'explainers.publish.provider': 's3-static',
+    'explainers.publish.s3Uri': 's3://bucket/repositories/demo',
+    'explainers.publish.publicBaseUrl':
+      'https://docs.example.com/repositories/demo',
+    'explainers.publish.awsRegion': 'us-east-1',
+    'explainers.publish.publicAccess': 'protected',
+    ...overrides,
+  };
+  return (key) =>
+    Promise.resolve({
+      status: 'ok',
+      key,
+      value: values[key] ?? (key.startsWith('workflow.') ? 'ask' : null),
+      source: key in values ? 'shared' : 'default',
+    });
 }
 
 test('resolves a full reviewed commit and canonical GitHub repository identity', async () => {
@@ -1042,7 +1096,7 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
   const authorCalls = authorModule.getCalls();
   assert.deepEqual(
     authorCalls.map(({ artifactId }) => artifactId),
-    ['project-recap', 'architecture', 'deck'],
+    ['project-recap'],
   );
   assert.equal(
     authorCalls.every(
@@ -1064,8 +1118,6 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
   );
   assert.deepEqual(adapterResult.manifest.source.authorResultPaths, [
     'source/author/project-recap.json',
-    'source/author/architecture.json',
-    'source/author/deck.json',
   ]);
 });
 
@@ -1102,14 +1154,16 @@ test('rejects invalid critic module and callback contracts at the adapter bounda
     runOatExplainer({ ...context, criticModulePath: invalidModulePath }),
     /critic.*export.*function/i,
   );
-  await assert.rejects(
-    runOatExplainer({
-      ...context,
-      slug: 'critic-result-contract',
-      criticModulePath: invalidResultModulePath,
-    }),
-    /critic.*result.*contract/i,
-  );
+  const invalidResult = await runOatExplainer({
+    ...context,
+    slug: 'critic-result-contract',
+    criticModulePath: invalidResultModulePath,
+  });
+  assert.equal(invalidResult.result.outcome, 'failed');
+  assert.deepEqual(invalidResult.result.reasons, [
+    { stage: 'planning', kind: 'pipeline-failure', count: 1 },
+  ]);
+  assert.equal('errors' in invalidResult.result, false);
   await assert.rejects(
     runOatExplainer({
       ...context,
@@ -1156,6 +1210,282 @@ test('passes a supplied fact base through the normalized adapter request', async
   });
 });
 
+test('runs repository explainers from a supplied fact base without consulting the active project', async () => {
+  const fixture = await createFixture();
+  const factBasePath = join(fixture.root, 'repository-facts.json');
+  await writeFile(
+    factBasePath,
+    '{"schemaVersion":"explainer-kit.fact-base/v1"}',
+  );
+
+  const adapterResult = await runOatExplainer({
+    adapterRoot: fixture.adapterRoot,
+    userSkillsRoot: fixture.userSkillsRoot,
+    repoRoot: fixture.repoRoot,
+    invocation: 'repo',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-explainer',
+    slug: 'repository-overview',
+    suppliedFactBasePath: factBasePath,
+    getConfig: getPublishConfig,
+    author: fixtureAuthor,
+    mode: 'unattended',
+  });
+
+  assert.equal(
+    adapterResult.outputRoot,
+    join(await realpath(fixture.repoRoot), '.oat/repo/reference/explainers'),
+  );
+  assert.deepEqual(adapterResult.destination, {
+    s3Uri: 's3://bucket/repositories/demo',
+    publicBaseUrl: 'https://docs.example.com/repositories/demo',
+  });
+  assert.equal(adapterResult.request.durability.strategy, 'none');
+  assert.deepEqual(adapterResult.result.reviewedSource, {
+    kind: 'approved-fact-base',
+    locator: 'https://github.com/acme/project-recaps',
+    repository: 'acme/project-recaps',
+    repositoryUrl: 'https://github.com/acme/project-recaps',
+    revision: fixture.reviewedCommit,
+  });
+});
+
+test('fails closed when a repository invocation omits its supplied fact base', async () => {
+  const fixture = await createFixture();
+
+  await assert.rejects(
+    runOatExplainer({
+      adapterRoot: fixture.adapterRoot,
+      userSkillsRoot: fixture.userSkillsRoot,
+      repoRoot: fixture.repoRoot,
+      invocation: 'repo',
+      activeProject: '.oat/projects/shared/demo',
+      recipe: 'project-explainer',
+      slug: 'repository-overview',
+      getConfig,
+      author: fixtureAuthor,
+      mode: 'unattended',
+    }),
+    /repository invocation requires.*supplied fact base/i,
+  );
+  await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
+    code: 'ENOENT',
+  });
+});
+
+test('documents adapter publication v2 emission with immutable v1 replay', async () => {
+  const guidance = await readFile(
+    new URL('../references/lifecycle-contract.md', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(guidance, /publish-request\/v2/i);
+  assert.match(guidance, /publicAccess/);
+  assert.match(guidance, /publish-request\/v1.*replay/is);
+  assert.match(guidance, /publish-receipt\/v1.*replay/is);
+  assert.doesNotMatch(guidance, /does not emit that field/i);
+  assert.match(guidance, /publish-summary\/v2/i);
+  for (const evidence of [
+    /source identity/i,
+    /rendered path/i,
+    /S3 URI/i,
+    /canonical public URL/i,
+    /content hash/i,
+    /object verification/i,
+    /public verification/i,
+  ]) {
+    assert.match(guidance, evidence);
+  }
+  assert.match(guidance, /publish-receipt\/v1.*reduced.*publish-summary\/v1/is);
+});
+
+test('documents the adapter visual critic as a full-set prose judgment seam', async () => {
+  const guidance = await readFile(
+    new URL('../references/visual-review-callback.md', import.meta.url),
+    'utf8',
+  );
+  for (const topic of [
+    'typography',
+    'hierarchy',
+    'composition',
+    'density',
+    'medium leverage',
+    'template repetition',
+    'diagram semantics',
+    'cross-artifact cohesion',
+  ]) {
+    assert.match(guidance.toLowerCase(), new RegExp(topic), topic);
+  }
+  assert.match(guidance, /`pass`.*no required correction/is);
+  assert.match(guidance, /`correct`.*actionable correction/is);
+  assert.match(guidance, /visual-review-result\/v1/i);
+});
+
+test('passes only derived credential-free destination roots into core publish requests', async () => {
+  const projectFixture = await createFixture();
+  const projectResult = await runOatExplainer({
+    adapterRoot: projectFixture.adapterRoot,
+    userSkillsRoot: projectFixture.userSkillsRoot,
+    repoRoot: projectFixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-explainer',
+    slug: 'published-project',
+    getConfig: getPublishConfig,
+    author: fixtureAuthor,
+    durabilityStrategy: 'publish',
+    mode: 'unattended',
+  });
+  const projectPublish = projectResult.request.durability.publish;
+  assert.equal(
+    projectPublish.s3Uri,
+    's3://bucket/repositories/demo/projects/demo',
+  );
+  assert.equal(
+    projectPublish.publicBaseUrl,
+    'https://docs.example.com/repositories/demo/projects/demo',
+  );
+  assert.deepEqual(projectResult.publication, {
+    schemaVersion: 'explainer-kit.publish-summary/v2',
+    receiptSchemaVersion: 'explainer-kit.publish-receipt/v2',
+    publicAccess: 'protected',
+    artifacts: [
+      {
+        source: { kind: 'manifest', artifactId: 'hub' },
+        relativePath: 'site/index.html',
+        s3Uri: 's3://bucket/repositories/demo/projects/demo/index.html',
+        publicUrl:
+          'https://docs.example.com/repositories/demo/projects/demo/index.html',
+        hash: `sha256:${'a'.repeat(64)}`,
+        contentType: 'text/html',
+        objectVerification: {
+          status: 'verified',
+          method: 'service-checksum',
+          hash: `sha256:${'a'.repeat(64)}`,
+        },
+        publicVerification: { status: 'skipped-protected' },
+      },
+    ],
+  });
+
+  const repositoryFixture = await createFixture();
+  const factBasePath = join(repositoryFixture.root, 'repository-facts.json');
+  await writeFile(
+    factBasePath,
+    '{"schemaVersion":"explainer-kit.fact-base/v1"}',
+  );
+  const repositoryResult = await runOatExplainer({
+    adapterRoot: repositoryFixture.adapterRoot,
+    userSkillsRoot: repositoryFixture.userSkillsRoot,
+    repoRoot: repositoryFixture.repoRoot,
+    invocation: 'repo',
+    recipe: 'project-explainer',
+    slug: 'published-repository',
+    suppliedFactBasePath: factBasePath,
+    getConfig: getPublishConfig,
+    author: fixtureAuthor,
+    durabilityStrategy: 'publish',
+    mode: 'unattended',
+  });
+  assert.equal(
+    repositoryResult.request.durability.publish.s3Uri,
+    's3://bucket/repositories/demo',
+  );
+  assert.equal(
+    repositoryResult.request.durability.publish.publicBaseUrl,
+    'https://docs.example.com/repositories/demo',
+  );
+
+  for (const request of [projectResult.request, repositoryResult.request]) {
+    const publish = request.durability.publish;
+    assert.equal(publish.schemaVersion, 'explainer-kit.publish-request/v2');
+    assert.equal(publish.publicAccess, 'protected');
+    assert.equal('invocation' in request, false);
+    assert.equal('projectSlug' in request, false);
+    assert.equal('activeProject' in request, false);
+    assert.doesNotMatch(
+      JSON.stringify(request),
+      /access[_-]?key|secret|session[_-]?token|password/i,
+    );
+  }
+});
+
+test('rejects unsafe destination roots before core invocation or publish-request persistence', async () => {
+  const invalidRoots = [
+    [
+      'explainers.publish.s3Uri',
+      's3://synthetic-access:synthetic-secret@bucket/repositories/demo',
+    ],
+    ['explainers.publish.s3Uri', 's3:///bucket/repositories/demo'],
+    [
+      'explainers.publish.s3Uri',
+      's3://bucket/repositories/demo?synthetic-token=value',
+    ],
+    ['explainers.publish.s3Uri', 's3://bucket/repositories/demo?'],
+    [
+      'explainers.publish.s3Uri',
+      's3://bucket/repositories/demo#synthetic-fragment',
+    ],
+    ['explainers.publish.s3Uri', 's3://bucket/repositories/demo#'],
+    ['explainers.publish.s3Uri', 's3://bucket:/repositories/demo'],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https://synthetic-user:synthetic-password@docs.example.com/repositories/demo',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https:///docs.example.com/repositories/demo',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https://docs.example.com/repositories/demo?synthetic-token=value',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https://docs.example.com/repositories/demo?',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https://docs.example.com/repositories/demo#synthetic-fragment',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https://docs.example.com/repositories/demo#',
+    ],
+    [
+      'explainers.publish.publicBaseUrl',
+      'https://docs.example.com:/repositories/demo',
+    ],
+  ];
+
+  for (const [key, value] of invalidRoots) {
+    const fixture = await createFixture();
+    await assert.rejects(
+      runOatExplainer({
+        adapterRoot: fixture.adapterRoot,
+        userSkillsRoot: fixture.userSkillsRoot,
+        repoRoot: fixture.repoRoot,
+        invocation: 'project',
+        activeProject: '.oat/projects/shared/demo',
+        recipe: 'project-explainer',
+        slug: 'unsafe-publish-root',
+        getConfig: getPublishConfigWith({ [key]: value }),
+        author: fixtureAuthor,
+        durabilityStrategy: 'publish',
+        mode: 'unattended',
+      }),
+      /destination root|valid (?:s3:\/\/ URI|HTTPS URL)/i,
+      `${key} accepted invalid root ${value}`,
+    );
+    await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
+      code: 'ENOENT',
+    });
+    await assert.rejects(readFile(fixture.publishRequestMarker, 'utf8'), {
+      code: 'ENOENT',
+    });
+  }
+});
+
 test('propagates failed core results when no manifest was produced', async () => {
   const fixture = await createFixture();
 
@@ -1176,16 +1506,254 @@ test('propagates failed core results when no manifest was produced', async () =>
 
   assert.equal(adapterResult.manifest, null);
   assert.equal(adapterResult.result.outcome, 'failed');
-  assert.deepEqual(adapterResult.result.errors, [
-    { code: 'E_FACT_BASE', message: 'forced failure' },
+  assert.deepEqual(adapterResult.result.reasons, [
+    { stage: 'planning', kind: 'pipeline-failure', count: 1 },
   ]);
+  assert.equal('errors' in adapterResult.result, false);
 });
 
-test('fails closed for missing cores and cores without adaptive set capability', async () => {
+test('adapter CLI streams exclude arbitrary provider bytes for every terminal path', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'oat-explainer-cli-'));
+  tempDirs.push(directory);
+  const contextPath = join(directory, 'context.json');
+  await writeFile(contextPath, '{}\n');
+  const scenarios = [
+    {
+      name: 'success',
+      result: { result: { outcome: 'built-not-durable', warnings: [] } },
+      inject(result, canary) {
+        result.result.publication = {
+          schemaVersion: 'explainer-kit.publish-summary/v2',
+          providerDiagnostic: canary,
+        };
+        result.publication = result.result.publication;
+        return result;
+      },
+    },
+    {
+      name: 'correctable',
+      result: {
+        result: {
+          outcome: 'built-needs-review',
+          reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+        },
+      },
+      inject(result, canary) {
+        result.result.visualReview = {
+          schemaVersion: 'explainer-kit.visual-review-evidence/v1',
+          requestHash: `sha256:${'3'.repeat(64)}`,
+          attempt: 1,
+          disposition: 'correct',
+          reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+          providerFinding: canary,
+        };
+        return result;
+      },
+    },
+    {
+      name: 'terminally flagged',
+      result: {
+        result: {
+          outcome: 'built-needs-review',
+          reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+        },
+      },
+      inject(result, canary) {
+        result.result.visualReview = {
+          schemaVersion: 'explainer-kit.visual-review-evidence/v1',
+          requestHash: `sha256:${'4'.repeat(64)}`,
+          attempt: 2,
+          disposition: 'failed',
+          reasons: [{ stage: 'visual-review', kind: 'finding', count: 1 }],
+          providerFinding: canary,
+        };
+        return result;
+      },
+    },
+    {
+      name: 'provider failed',
+      result: {
+        result: {
+          outcome: 'failed',
+          reasons: [{ stage: 'authoring', kind: 'provider-failure', count: 1 }],
+        },
+      },
+      inject(result, canary) {
+        result.result.providerFailure = { message: canary };
+        return result;
+      },
+    },
+    { name: 'caught error', throws: true },
+  ];
+
+  for (const scenario of scenarios) {
+    const canary = `ADAPTER-CLI-${scenario.name}-provider-secret-EXACT-BYTES`;
+    const stdout = [];
+    const stderr = [];
+    let entered = false;
+    const exitCode = await runOatExplainerCli(
+      ['--context', contextPath],
+      {
+        log: (value) => stdout.push(value),
+        error: (value) => stderr.push(value),
+      },
+      async () => {
+        if (scenario.throws) {
+          const thrown = { nested: { arbitrary: canary } };
+          assert.equal(JSON.stringify(thrown).includes(canary), true);
+          entered = true;
+          throw thrown;
+        }
+        const injected = scenario.inject(
+          structuredClone(scenario.result),
+          canary,
+        );
+        assert.equal(JSON.stringify(injected).includes(canary), true);
+        entered = true;
+        return injected;
+      },
+    );
+    const captured = `${stdout.join('\n')}\n${stderr.join('\n')}`;
+    assert.equal(entered, true, `${scenario.name} injected its canary`);
+    assert.equal(captured.includes(canary), false, scenario.name);
+    assert.equal(
+      exitCode,
+      scenario.throws || scenario.result?.result.outcome === 'failed' ? 1 : 0,
+    );
+  }
+});
+
+test('adapter CLI excludes provider canaries from live return and failure paths', async () => {
+  const fixture = await createFixture();
+  const binRoot = join(fixture.root, 'live-cli-bin');
+  await mkdir(binRoot, { recursive: true });
+  await writeFile(
+    join(binRoot, 'oat'),
+    `#!/bin/sh
+lock="${join(binRoot, 'oat-config.lock')}"
+while ! mkdir "$lock" 2>/dev/null; do
+  sleep 0.05
+done
+trap 'rmdir "$lock"' EXIT INT TERM
+"${join(SOURCE_REPO_ROOT, 'node_modules', '.bin', 'tsx')}" --tsconfig "${join(
+      SOURCE_REPO_ROOT,
+      'packages',
+      'cli',
+      'tsconfig.json',
+    )}" "${join(SOURCE_REPO_ROOT, 'packages', 'cli', 'src', 'index.ts')}" "$@"
+`,
+    { mode: 0o755 },
+  );
+  const originalPath = process.env.PATH;
+  process.env.PATH = `${binRoot}:${originalPath ?? ''}`;
+  const factBasePath = join(fixture.root, 'live-provider-fact-base.json');
+  await writeFile(
+    factBasePath,
+    `${JSON.stringify(
+      {
+        schemaVersion: 'explainer-kit.fact-base/v1',
+        generatedAt: '2026-07-20T12:00:00.000Z',
+        mode: 'supplied',
+        freshnessPolicy: 'live-wins',
+        sources: [
+          {
+            id: 'integration',
+            kind: 'file',
+            locator: 'integration.md',
+            hash: `sha256:${'5'.repeat(64)}`,
+            observedAt: '2026-07-20T12:00:00.000Z',
+          },
+        ],
+        claims: [
+          {
+            id: 'adapter-provider-canary',
+            text: 'The live adapter invoked the source core author provider.',
+            status: 'confirmed',
+            citations: [
+              { sourceId: 'integration', locator: 'integration.md:1' },
+            ],
+          },
+        ],
+        unresolvedClaims: [],
+        overrides: [],
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  try {
+    for (const providerOutcome of ['return', 'failure']) {
+      const canary = `ADAPTER-LIVE-${providerOutcome}-provider-secret-EXACT-BYTES`;
+      const contextPath = join(
+        fixture.root,
+        `${providerOutcome}-adapter-context.json`,
+      );
+      const authorModulePath = join(
+        fixture.root,
+        `${providerOutcome}-adapter-author.mjs`,
+      );
+      const markerPath = join(
+        fixture.root,
+        `${providerOutcome}-adapter-entered.txt`,
+      );
+      await Promise.all([
+        writeFile(
+          contextPath,
+          `${JSON.stringify(
+            {
+              adapterRoot: SOURCE_ADAPTER_ROOT,
+              userSkillsRoot: SOURCE_SKILLS_ROOT,
+              repoRoot: fixture.repoRoot,
+              invocation: 'project',
+              activeProject: '.oat/projects/shared/demo',
+              recipe: 'project-explainer',
+              slug: `adapter-live-${providerOutcome}`,
+              suppliedFactBasePath: factBasePath,
+              authorModulePath,
+              mode: 'unattended',
+            },
+            null,
+            2,
+          )}\n`,
+        ),
+        writeFile(
+          authorModulePath,
+          providerCanaryAuthorModule({
+            canary,
+            markerPath,
+            throws: providerOutcome === 'failure',
+          }),
+        ),
+      ]);
+      const stdout = [];
+      const stderr = [];
+
+      const exitCode = await runOatExplainerCli(['--context', contextPath], {
+        log: (value) => stdout.push(value),
+        error: (value) => stderr.push(value),
+      });
+
+      const captured = `${stdout.join('\n')}\n${stderr.join('\n')}`;
+      assert.equal(exitCode, providerOutcome === 'failure' ? 1 : 0, captured);
+      assert.equal(await readFile(markerPath, 'utf8'), canary);
+      assert.equal(captured.includes(canary), false, providerOutcome);
+      const projected = JSON.parse(stderr.at(-1) ?? stdout.at(-1));
+      assert.equal(
+        projected.result.outcome,
+        providerOutcome === 'failure' ? 'failed' : 'built-not-durable',
+      );
+    }
+  } finally {
+    process.env.PATH = originalPath;
+  }
+});
+
+test('fails closed for missing cores and cores below the publication floor', async () => {
   for (const [coreVersion, pattern] of [
     [null, /install utility --scope user/i],
     ['1.9.9', /update --pack utility --scope user/i],
-    ['2.0.1', /adaptive set planning/i],
+    ['2.0.1', /update --pack utility --scope user/i],
   ]) {
     const fixture = await createFixture({ coreVersion });
     await assert.rejects(
@@ -1302,13 +1870,39 @@ export function getCalls() {
   );
 }
 
+function providerCanaryAuthorModule({ canary, markerPath, throws }) {
+  return `import { writeFile } from 'node:fs/promises';
+
+export async function author(request) {
+  await writeFile(${JSON.stringify(markerPath)}, ${JSON.stringify(canary)});
+  ${throws ? `throw new Error(${JSON.stringify(canary)});` : ''}
+  const required = request.floor?.requiredNarrative ?? ['overview'];
+  const markdown = required
+    .map(
+      (id, index) =>
+        \`## \${id}\\n\\nSection \${index + 1} explains the verified \${id}. \${index === 0 ? request.factBase.claims[0]?.text ?? '' : ''}\`,
+    )
+    .join('\\n\\n');
+  return {
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: request.artifactId,
+    content: {
+      markdown: \`# Provider result\\n\\n${canary}\\n\\n\${markdown}\\n\`,
+    },
+    provenance: {
+      authorId: 'live-provider-canary',
+      generatedAt: '2026-07-20T12:00:00.000Z',
+      method: 'module',
+    },
+  };
+}
+`;
+}
+
 async function writeValidPlanSetModule(path) {
   await writeFile(
     path,
-    `export async function planSet({ recipe, factBase }) {
-  const sourceIds = factBase.sources
-    .map(({ id }) => id)
-    .filter((id) => !id.startsWith('critic:'));
+    `export async function planSet({ recipe, sourceIds }) {
   const floor = recipe.floor ?? [
     { id: 'project-recap', type: 'hub' },
     { id: 'architecture', type: 'diagram' },

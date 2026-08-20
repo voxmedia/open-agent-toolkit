@@ -140,6 +140,7 @@ plumbing uses `explainers.*`; project lifecycle preferences use
 | `explainers.publish.publicBaseUrl`     | HTTPS URL                    | shared              | unset           |
 | `explainers.publish.awsRegion`         | non-empty string             | shared              | unset           |
 | `explainers.publish.awsProfile`        | non-empty string             | local, user         | unset           |
+| `explainers.publish.publicAccess`      | `public\|protected`          | shared              | `public`        |
 | `workflow.explainers.projectExplainer` | `always\|ask\|never`         | local, shared, user | `ask`           |
 | `workflow.explainers.projectRecap`     | `always\|ask\|never`         | local, shared, user | `ask`           |
 
@@ -173,6 +174,46 @@ required. `awsProfile` is optional; when absent, the standard AWS credential
 chain applies. Config never starts publishing by itself: lifecycle callers must
 still select publish durability explicitly, and publishing remains
 human-gated. Raw AWS credentials are not config keys.
+
+`publicAccess` declares whether published objects are expected to be reachable
+anonymously; it does not authorize publication and it does not change any
+bucket policy. It selects how publication is verified. The default `public`
+fetches every uploaded object over HTTPS and compares the returned bytes
+against the manifest hash. `protected` skips those anonymous fetches, verifies
+each object through authenticated S3 hashing instead, and records
+`skipped-protected` in the publish receipt. Because no anonymous fetch happens
+under `protected`, a mistyped `publicBaseUrl` is not detected at publish time:
+the advertised URLs are still written into the initiative catalog and receipt,
+and the catalog records `publicVerification: "skipped-by-policy"` so consumers
+can see the URLs were never exercised.
+
+### Explainer publication environment variables
+
+Two escape hatches are read from the process environment rather than from
+config, because both are machine-local operational overrides rather than
+project settings. Neither has a config key.
+
+| Variable                                         | Effect                                                                      | Default |
+| ------------------------------------------------ | --------------------------------------------------------------------------- | ------- |
+| `EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT`        | Permits a loopback, link-local, unique-local or RFC 1918 `publicBaseUrl`    | off     |
+| `EXPLAINER_KIT_SUPPRESS_ROOT_DIVERGENCE_WARNING` | Silences the advisory warning when the S3 key prefix and public path differ | off     |
+
+Both accept `1`, `true` or `on`.
+
+`EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT` disables an anti-SSRF control. Public
+verification issues an outbound GET against whatever `publicBaseUrl` names, so
+by default the connector refuses internal addresses — including the
+`169.254.169.254` instance-metadata endpoint. Enable it only for a genuinely
+internal mirror. When it is set and the root is in fact non-public, the run
+records `publicRootPolicy: "private-allowed"` in the publish receipt, so a
+publication made with the control disabled is distinguishable in durable
+evidence from one made without it. The policy is address-literal only: a
+hostname that resolves inward is not detected either way.
+
+`EXPLAINER_KIT_SUPPRESS_ROOT_DIVERGENCE_WARNING` only affects an advisory
+message. Divergent roots are never a publication failure — a CloudFront Origin
+Path deployment legitimately maps a bucket prefix to the distribution root — so
+this changes no validation outcome.
 
 See [Explainer Kit](../workflows/skills/explainer-kit.md) for recipes, artifact
 locations, lifecycle behavior, and durability.

@@ -18,6 +18,12 @@ export async function bindProjectSources({
   suppliedFactBasePath,
   reviewedRepository,
 }) {
+  if (suppliedFactBasePath) {
+    const repository =
+      reviewedRepository ??
+      (repoRoot ? await resolveReviewedRepository(repoRoot) : null);
+    return bindSuppliedFactBase(suppliedFactBasePath, repository);
+  }
   if (!projectRoot) {
     throw new TypeError('projectRoot is required to bind OAT artifacts.');
   }
@@ -30,21 +36,6 @@ export async function bindProjectSources({
   const repository =
     reviewedRepository ??
     (repoRoot ? await resolveReviewedRepository(repoRoot) : null);
-  if (suppliedFactBasePath) {
-    const path = await realpath(suppliedFactBasePath);
-    return {
-      factBase: {
-        mode: 'supplied',
-        path,
-        freshnessPolicy: 'live-wins',
-      },
-      reviewedSource: {
-        kind: 'approved-fact-base',
-        locator: repository?.repositoryUrl ?? path,
-        ...(repository && repository),
-      },
-    };
-  }
 
   const sourceSetId = basename(canonicalProjectRoot);
   const sources = [];
@@ -95,6 +86,21 @@ export async function bindProjectSources({
   };
 }
 
+export async function bindRepositorySources({
+  repoRoot,
+  suppliedFactBasePath,
+  reviewedRepository,
+}) {
+  if (!suppliedFactBasePath) {
+    throw new Error(
+      'Repository invocation requires a caller-supplied fact base path.',
+    );
+  }
+  const repository =
+    reviewedRepository ?? (await resolveReviewedRepository(repoRoot));
+  return bindSuppliedFactBase(suppliedFactBasePath, repository);
+}
+
 export async function resolveReviewedRepository(
   repoRoot,
   { command = execFile } = {},
@@ -116,6 +122,22 @@ export async function resolveReviewedRepository(
     repository,
     repositoryUrl: `https://github.com/${repository}`,
     revision,
+  };
+}
+
+async function bindSuppliedFactBase(suppliedFactBasePath, repository) {
+  const path = await realpath(suppliedFactBasePath);
+  return {
+    factBase: {
+      mode: 'supplied',
+      path,
+      freshnessPolicy: 'live-wins',
+    },
+    reviewedSource: {
+      kind: 'approved-fact-base',
+      locator: repository?.repositoryUrl ?? path,
+      ...(repository && repository),
+    },
   };
 }
 

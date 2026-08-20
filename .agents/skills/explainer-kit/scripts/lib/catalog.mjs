@@ -1,6 +1,85 @@
 import { canonicalStringify, validateContract } from './contracts.mjs';
 
-const CATALOG_SCHEMA_VERSION = 'explainer-kit.initiative-catalog/v1';
+/**
+ * Bumped to v2 when the root `publicVerification` marker was added below.
+ *
+ * The catalog is serialized, hashed, and recorded as an auxiliary artifact in
+ * the publish receipt, so adding a root key changes the bytes. Released
+ * `0.2.30` emits the v1 shape, which has no such key: leaving both shapes under
+ * one version string would put two different wire formats behind one identifier
+ * for anyone parsing `catalog.json` by declared version.
+ *
+ * There is deliberately no v1 read path. Unlike `publish-request/v1` and
+ * `publish-receipt/v1`, which are retained because a v1 record can still be
+ * replayed, the catalog is regenerate-only and never reconstructed from a v1
+ * receipt: every rebuild site short-circuits on a non-v2 receipt
+ * (`durability.mjs` verifyPublishEvidence, `run.mjs` publicationValidationContext,
+ * and the normative `private-wrapper.mjs` example), and `0.2.30` emits
+ * `publish-receipt/v1` only. Accepting v1 here would be unreachable code. If a
+ * future reader ever does replay a v1-era catalog, it must reconstruct that
+ * shape explicitly rather than relaxing this constant.
+ */
+const CATALOG_SCHEMA_VERSION = 'explainer-kit.initiative-catalog/v2';
+
+export const PUBLIC_VERIFICATION_REQUIRED = 'required';
+export const PUBLIC_VERIFICATION_SKIPPED_BY_POLICY = 'skipped-by-policy';
+
+/**
+ * Single source of truth for public-verification state.
+ *
+ * The catalog is built, serialized and hashed *before* the first upload and long
+ * before any per-artifact public verification runs, so it can never carry a
+ * verification *outcome*: writing one would either require re-uploading the
+ * catalog or invalidate the hash the receipt records for it. It therefore
+ * carries verification *policy* only, and the authoritative outcome stays in the
+ * run's publish receipt, which the catalog's `runId` identifies.
+ *
+ * Both the catalog marker and the receipt's skipped status are derived from this
+ * one result so the two cannot drift apart.
+ */
+export function resolvePublicVerificationPolicy(publicAccess) {
+  return publicAccess === 'protected'
+    ? {
+        publicAccess: 'protected',
+        catalogMarker: PUBLIC_VERIFICATION_SKIPPED_BY_POLICY,
+        verifyPublicly: false,
+        receiptSkipStatus: 'skipped-protected',
+      }
+    : {
+        publicAccess: 'public',
+        catalogMarker: PUBLIC_VERIFICATION_REQUIRED,
+        verifyPublicly: true,
+        receiptSkipStatus: 'skipped-protected',
+      };
+}
+
+/**
+ * The public-access policy must be stated explicitly, never defaulted.
+ *
+ * It selects the catalog's `publicVerification` marker, which is part of the
+ * serialized bytes and therefore of the catalog hash the receipt records. An
+ * options bag that silently defaulted to the permissive `public` branch is what
+ * let four call sites omit it and still produce a plausible-looking catalog:
+ * the connector published `skipped-by-policy` for a `protected` run while the
+ * durability verifier rebuilt `required`, so the hashes diverged and no
+ * `protected` publication could ever be recorded durable.
+ *
+ * Passing `{ publicAccess: undefined }` is allowed and means `public` — that is
+ * the correct reading for `publish-request/v1` and `publish-receipt/v1`, which
+ * have no such field. Omitting the key entirely is a programming error.
+ */
+function requiredPublicAccess(options, caller) {
+  if (
+    options === null ||
+    typeof options !== 'object' ||
+    !('publicAccess' in options)
+  ) {
+    throw new TypeError(
+      `${caller} requires an explicit { publicAccess } policy: it selects the catalog's publicVerification marker and therefore its hash. Pass { publicAccess: undefined } for v1 records, which are public by definition.`,
+    );
+  }
+  return options.publicAccess;
+}
 
 export function initiativeCatalogPath(slug) {
   if (typeof slug !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
@@ -9,7 +88,8 @@ export function initiativeCatalogPath(slug) {
   return `site/initiatives/${slug}/catalog.json`;
 }
 
-export function catalogFromManifest(manifest, publicBaseUrl) {
+export function catalogFromManifest(manifest, publicBaseUrl, options) {
+  const publicAccess = requiredPublicAccess(options, 'catalogFromManifest');
   const validation = validateContract('manifest', manifest);
   if (!validation.valid) {
     throw new TypeError(
@@ -45,12 +125,24 @@ export function catalogFromManifest(manifest, publicBaseUrl) {
     slug: manifest.slug,
     recipe: structuredClone(manifest.recipe),
     createdAt: manifest.createdAt,
+    // Policy, never outcome. See resolvePublicVerificationPolicy.
+    publicVerification:
+      resolvePublicVerificationPolicy(publicAccess).catalogMarker,
     artifacts,
     sourceBacklinks: structuredClone(manifest.source.backlinks ?? []),
   };
 }
 
-export function validateInitiativeCatalog(catalog, manifest, publicBaseUrl) {
+export function validateInitiativeCatalog(
+  catalog,
+  manifest,
+  publicBaseUrl,
+  options,
+) {
+  const publicAccess = requiredPublicAccess(
+    options,
+    'validateInitiativeCatalog',
+  );
   const errors = [];
   let normalizedPublicBaseUrl;
   try {
@@ -83,6 +175,7 @@ export function validateInitiativeCatalog(catalog, manifest, publicBaseUrl) {
     'slug',
     'recipe',
     'createdAt',
+    'publicVerification',
     'artifacts',
     'sourceBacklinks',
   ]);
@@ -110,6 +203,19 @@ export function validateInitiativeCatalog(catalog, manifest, publicBaseUrl) {
       );
     }
   }
+  // Derived from the same resolver the receipt status comes from, so a catalog
+  // that disagrees with the run's resolved verification policy is rejected.
+  const expectedPublicVerification =
+    resolvePublicVerificationPolicy(publicAccess).catalogMarker;
+  if (catalog.publicVerification !== expectedPublicVerification) {
+    add(
+      errors,
+      '$.publicVerification',
+      'catalog-verification-policy',
+      `Catalog publicVerification must be ${expectedPublicVerification} for this run's public access policy.`,
+    );
+  }
+
   if (
     canonicalStringify(catalog.recipe) !== canonicalStringify(manifest?.recipe)
   ) {

@@ -41,6 +41,11 @@ export async function createConfinedRunRoot(outputRoot, slug) {
 
   const normalizedSlug = normalizeSlug(slug);
   const requestedRoot = resolve(checkedRoot.normalizedPath);
+  if (basename(requestedRoot) === normalizedSlug) {
+    throw new Error(
+      `Output root already ends in run slug "${normalizedSlug}"; supply the parent output root to avoid double-nesting.`,
+    );
+  }
   await mkdir(requestedRoot, { recursive: true });
   const canonicalRoot = await realpath(requestedRoot);
   const runRoot = join(canonicalRoot, normalizedSlug);

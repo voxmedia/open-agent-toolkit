@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "explainer-kit.recipe/v2",
+  "id": "project-recap",
+  "version": "2",
+  "sourceRoles": [
+    {
+      "role": "project",
+      "required": true,
+      "accepts": ["file", "directory", "git", "github"],
+      "minBindings": 1,
+      "maxBindings": 1
+    }
+  ],
+  "floor": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "authoring": "html",
+      "template": "house-style",
+      "required": true,
+      "briefRef": "briefs/project-recap.md",
+      "requiredNarrative": [
+        "original-request",
+        "key-agent-decisions",
+        "as-built-architecture",
+        "implementation-record",
+        "validation-evidence",
+        "outcome"
+      ]
+    }
+  ],
+  "expansion": {
+    "profiles": [
+      {
+        "profileId": "supporting-diagram",
+        "type": "diagram",
+        "authoring": "html",
+        "briefRef": "briefs/supporting-diagram.md",
+        "shell": "diagram-shell",
+        "maxCount": 1
+      },
+      {
+        "profileId": "walkthrough-deck",
+        "type": "deck",
+        "authoring": "html",
+        "briefRef": "briefs/walkthrough-deck.md",
+        "shell": "deck-shell",
+        "maxCount": 1
+      },
+      {
+        "profileId": "deep-dive",
+        "type": "explainer",
+        "authoring": "markdown",
+        "briefRef": "briefs/deep-dive.md",
+        "maxCount": 3
+      }
+    ],
+    "limits": {
+      "maxArtifacts": 5
+    }
+  },
+  "fallback": {
+    "mode": "deterministic-markdown",
+    "selection": "explicit",
+    "authoring": "markdown",
+    "scope": "portfolio"
+  },
+  "discoveryLimits": {
+    "consecutiveNoNewFindingsRounds": 2,
+    "maxRounds": 8
+  }
+}

@@ -10,6 +10,11 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260817-catalog-carries-policy-never   | 2026-08-17 | accepted | Catalog carries policy, never outcome                                   | -      |
+| DR-260817-local-gates-mirror-ci-exactly  | 2026-08-17 | accepted | Local gates mirror CI exactly                                           | -      |
+| DR-260817-no-structural-root             | 2026-08-17 | accepted | No structural root-correspondence rule                                  | -      |
+| DR-260817-security-relevant-options-must | 2026-08-17 | accepted | Security-relevant options must be required arguments                    | -      |
+| DR-260817-version-agnostic-publication   | 2026-08-17 | accepted | Version-agnostic publication gates                                      | -      |
 | DR-260807-local-filing-is-destination    | 2026-08-07 | accepted | Local filing is destination-first                                       | -      |
 | DR-260807-mutable-prose-has-one-bounded  | 2026-08-07 | accepted | Mutable prose has one bounded home                                      | -      |
 | DR-260807-receipt-outcomes-use-one-pre   | 2026-08-07 | accepted | Receipt outcomes use one pre-action snapshot                            | -      |

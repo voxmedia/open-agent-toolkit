@@ -16,7 +16,15 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { afterEach, test } from 'node:test';
 import { promisify } from 'node:util';
 
+import {
+  assertReleaseCandidate,
+  byRecipeIdentity,
+  hashCanonicalJson,
+  releaseCandidateIdentity,
+} from './explainer-rc-contract.mjs';
+
 const execFileAsync = promisify(execFile);
+
 const RUNNER = resolve(import.meta.dirname, 'run-explainer-rc.mjs');
 const PACKAGE_NAMES = [
   '@open-agent-toolkit/cli',
@@ -33,6 +41,75 @@ afterEach(async () => {
       .splice(0)
       .map((root) => rm(root, { recursive: true, force: true })),
   );
+});
+
+test('recipe identities sort identically in the builder and the contract when one id is a strict prefix of another', async () => {
+  // Not reachable with the current five recipe ids, and it fails closed, but it
+  // is latent: '-' (0x2D) sorts before '@' (0x40), so sorting composed
+  // `id@version` strings disagrees with the (id, version) tuple exactly when one
+  // id is a strict prefix of another.
+  const raw = [
+    { id: 'project-explainer', version: '1' },
+    { id: 'project', version: '1' },
+    { id: 'project', version: '2' },
+  ];
+  const tupleOrder = [...raw]
+    .sort(byRecipeIdentity)
+    .map(({ id, version }) => `${id}@${version}`);
+  const stringOrder = raw.map(({ id, version }) => `${id}@${version}`).sort();
+
+  assert.deepEqual(tupleOrder, [
+    'project@1',
+    'project@2',
+    'project-explainer@1',
+  ]);
+  // The two orders genuinely differ, so the case below is discriminating.
+  assert.notDeepEqual(tupleOrder, stringOrder);
+
+  const hash = 'a'.repeat(64);
+  const recipesIn = (order) =>
+    order.map((identity) => {
+      const [id, version] = identity.split('@');
+      return {
+        id,
+        version,
+        schemaVersion: 'explainer-kit.recipe/v2',
+        path: `recipes/${id}.v${version}.json`,
+        sha256: hash,
+      };
+    });
+  const sortednessFailures = (order) => {
+    const failures = [];
+    assertReleaseCandidate(
+      {
+        schemaVersion: 'explainer-kit.release-candidate/v1',
+        packages: [],
+        skills: [],
+        schemas: [],
+        recipes: recipesIn(order),
+        changedCandidates: [],
+      },
+      (message) => failures.push(message),
+    );
+    return failures.filter((message) => message.includes('unique and sorted'));
+  };
+
+  // The contract must accept exactly what the builder emits, and reject the
+  // lexical string order the builder never produces.
+  assert.deepEqual(sortednessFailures(tupleOrder), []);
+  assert.equal(sortednessFailures(stringOrder).length, 1);
+
+  // And the comparator must not be transcribed back into the builder: both
+  // modules import the one exported definition.
+  const builderSource = await readFile(
+    resolve(import.meta.dirname, 'build-explainer-rc.mjs'),
+    'utf8',
+  );
+  assert.match(
+    builderSource,
+    /byRecipeIdentity,\n} from '\.\/explainer-rc-contract\.mjs'/,
+  );
+  assert.doesNotMatch(builderSource, /function byRecipeIdentity/);
 });
 
 test('verifies every tarball, runs an allowlisted packaged entry, records exit evidence, and cleans up', async () => {
@@ -91,6 +168,76 @@ test('verifies every tarball, runs an allowlisted packaged entry, records exit e
     exit: { code: 0, signal: null },
   });
   assert.deepEqual(await extractionDirectories(fixture.tempRoot), []);
+});
+
+test('directly executes packaged publish-request v2 with exact request and manifest bindings', async () => {
+  const fixture = await createFixture();
+  const request = JSON.parse(
+    await readFile(fixture.publishRequestPath, 'utf8'),
+  );
+  request.schemaVersion = 'explainer-kit.publish-request/v2';
+  request.publicAccess = 'protected';
+  await writeJson(fixture.publishRequestPath, request);
+  const recordPath = join(fixture.root, 'execution-v2.json');
+
+  await run(fixture, {
+    entry: 'scripts/publish.mjs',
+    recordPath,
+  });
+
+  const record = JSON.parse(await readFile(recordPath, 'utf8'));
+  assert.deepEqual(record.request, {
+    schemaVersion: 'explainer-kit.publish-request/v2',
+    sha256: await hashJsonFile(fixture.publishRequestPath),
+  });
+  assert.deepEqual(record.outputs.manifest, {
+    schemaVersion: 'explainer-kit.manifest/v1',
+    sha256: await hashJsonFile(fixture.publishManifestPath),
+  });
+  assert.deepEqual(record.outputs.receipt, {
+    schemaVersion: 'explainer-kit.publish-receipt/v2',
+    sha256: await hashJsonFile(fixture.receiptPath),
+  });
+  assert.equal(record.coreRunId, 'run-publish-123');
+  assert.deepEqual(await extractionDirectories(fixture.tempRoot), []);
+});
+
+test('accepts sorted recipe identities with multiple versions of one recipe', async () => {
+  const fixture = await createFixture();
+  const recipe = fixture.manifest.recipes[0];
+  fixture.manifest.recipes.push({
+    ...recipe,
+    version: '2',
+    path: 'recipes/project-explainer.v2.json',
+    sha256: `sha256:${'9'.repeat(64)}`,
+  });
+  fixture.manifest.rcId = hashCanonicalJson(
+    releaseCandidateIdentity(fixture.manifest),
+  );
+
+  assert.doesNotThrow(() =>
+    assertReleaseCandidate(fixture.manifest, (message) => {
+      throw new Error(message);
+    }),
+  );
+});
+
+test('rejects unknown direct publish request versions before packaged execution', async () => {
+  const fixture = await createFixture();
+  const request = JSON.parse(
+    await readFile(fixture.publishRequestPath, 'utf8'),
+  );
+  request.schemaVersion = 'explainer-kit.publish-request/v3';
+  await writeJson(fixture.publishRequestPath, request);
+  const marker = join(fixture.root, 'must-not-execute.marker');
+
+  const failure = await runFailure(fixture, {
+    entry: 'scripts/publish.mjs',
+    args: ['--marker', marker],
+  });
+
+  assert.equal(failure.code, 'E_EXECUTION_BINDING');
+  await assert.rejects(readFile(marker), { code: 'ENOENT' });
 });
 
 test('fails before execution when any retained tarball hash does not match', async () => {
@@ -542,9 +689,35 @@ if (exitIndex >= 0) {
 } else {
   const requestPath = args[args.indexOf('--request') + 1];
   const request = JSON.parse(await readFile(requestPath, 'utf8'));
-  if (request.schemaVersion === 'explainer-kit.publish-request/v1') {
+  if ([
+    'explainer-kit.publish-request/v1',
+    'explainer-kit.publish-request/v2',
+  ].includes(request.schemaVersion)) {
     const receiptPath = args[args.indexOf('--receipt') + 1];
-    const receipt = {
+    const receipt = request.schemaVersion.endsWith('/v2') ? {
+      schemaVersion: 'explainer-kit.publish-receipt/v2',
+      provider: 's3-static',
+      publishedAt: '2026-07-18T12:00:00.000Z',
+      publicAccess: request.publicAccess,
+      roots: { s3Uri: request.s3Uri, publicBaseUrl: request.publicBaseUrl },
+      sentinel: {
+        relativePath: '.explainer-kit-sentinel/run-publish-123-0123456789abcdeffedcba9876543210.txt',
+        objectVerification: {
+          status: 'verified',
+          method: 'service-checksum',
+          hash: 'sha256:${'a'.repeat(64)}',
+        },
+        publicVerification: request.publicAccess === 'public'
+          ? {
+              status: 'verified',
+              httpStatus: 200,
+              hash: 'sha256:${'a'.repeat(64)}',
+            }
+          : { status: 'skipped-protected' },
+        deleted: true,
+      },
+      artifacts: [],
+    } : {
       schemaVersion: 'explainer-kit.publish-receipt/v1',
       provider: 's3-static',
       publishedAt: '2026-07-18T12:00:00.000Z',

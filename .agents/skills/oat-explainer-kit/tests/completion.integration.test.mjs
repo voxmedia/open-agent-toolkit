@@ -252,11 +252,30 @@ test('passes only the selected shared-project recap to archive and supports no-r
   );
   assert.match(
     completionSkill,
-    /When recap intent resolves to `skip`, or generation produces no valid final recap, leave `SELECTED_PROJECT_RECAP_RUN` empty and complete without a recap/,
+    /When recap intent resolves to `skip`, leave `SELECTED_PROJECT_RECAP_RUN` empty\s+and complete without a recap/,
   );
   assert.match(
     completionSkill,
     /Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty/,
+  );
+});
+
+test('documents bounded correction, compact terminal evidence, and publication denial', () => {
+  assert.match(
+    lifecycleContract,
+    /at most one correction and one final review/,
+  );
+  assert.match(
+    lifecycleContract,
+    /`terminal-evidence\.json`.*run identity.*manifest hash.*bounded `stage`\/`kind` reason tuples.*evidence disposition/s,
+  );
+  assert.match(
+    lifecycleContract,
+    /Flagged, failed,\s+superseded, and `built-not-durable` runs are never publishable/,
+  );
+  assert.match(
+    lifecycleContract,
+    /review-clean `built-durable`.*explicit human publication gate/s,
   );
 });
 
@@ -351,6 +370,18 @@ test('uses lifecycle bookkeeping then exported recap attestation as two commits'
   assert.match(
     lifecycleContract,
     /Archive completion is exactly two commits: the lifecycle bookkeeping commit, then the exported recap evidence commit/,
+  );
+});
+
+test('skips attestation and evidence commits for complete terminal-evidence plans', () => {
+  assert.match(
+    completionSkill,
+    /When the finalization plan is `complete` with `built-needs-review` or `failed`,\s+preserve that exact outcome/i,
+  );
+  assert.match(completionSkill, /skip.*attestation.*evidence commit/i);
+  assert.match(
+    completionSkill,
+    /verifyTrackedRunFinalization.*must not promote.*`built-durable`/is,
   );
 });
 
@@ -525,10 +556,7 @@ const REQUIRED_NARRATIVE = [
   'outcome',
 ];
 
-async function completionPlanSet({ recipe, factBase }) {
-  const sourceIds = factBase.sources
-    .map(({ id }) => id)
-    .filter((id) => !id.startsWith('critic:'));
+async function completionPlanSet({ recipe, sourceIds }) {
   return {
     schemaVersion: 'explainer-kit.set-plan/v1',
     planId: 'completion-evidence-recap',
@@ -746,7 +774,17 @@ function lifecycleArtifacts({ decisions, components, checks }) {
  * fact base carried by the request it receives.
  */
 async function authorFromLifecycleEvidence(request) {
-  assert.equal(request.schemaVersion, 'explainer-kit.author-request/v2');
+  assert.equal(request.schemaVersion, 'explainer-kit.author-request/v3');
+  assert.ok(
+    request.artifactLinks.every(({ sitePath }) =>
+      sitePath.endsWith('/index.html'),
+    ),
+  );
+  assert.ok(
+    request.artifactLinks.every(
+      ({ href }) => href.endsWith('/index.html') || href === 'index.html',
+    ),
+  );
   assert.equal(request.authoring, 'html');
   assert.ok(request.brief.length > 0, 'the request must carry a brief');
 

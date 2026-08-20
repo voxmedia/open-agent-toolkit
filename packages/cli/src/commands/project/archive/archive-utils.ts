@@ -34,6 +34,7 @@ import {
   type ExplainerSourceBacklinks,
   loadExplainerSourceBacklinks,
 } from './explainer-source-backlinks';
+import { loadExplainerTerminalEvidence } from './explainer-terminal-evidence';
 
 const execFileAsync = promisify(execFileCallback);
 
@@ -597,6 +598,8 @@ async function exportProjectSummary(
 
 interface ProjectRecapManifest {
   schemaVersion: 'explainer-kit.manifest/v1';
+  runId: string;
+  slug: string;
   recipe: {
     id: string;
     version: string;
@@ -629,6 +632,21 @@ interface ProjectRecapManifest {
     | 'built-needs-review'
     | 'failed'
     | 'incomplete';
+}
+
+interface ExactRunPackageCoverage {
+  permissibleRunPackagePaths: (
+    manifest: ProjectRecapManifest,
+    options?: { includeTerminalEvidence?: boolean },
+  ) => string[];
+  enforceRunPackageInventory: (
+    runRoot: string,
+    manifest: ProjectRecapManifest,
+    options?: {
+      includeTerminalEvidence?: boolean;
+      removeUnexpected?: boolean;
+    },
+  ) => Promise<string[]>;
 }
 
 async function parseProjectRecapManifest(
@@ -1039,6 +1057,31 @@ async function readVerifiedRunMode(
   return request.mode;
 }
 
+async function verifyProjectRecapTerminalEvidence(
+  runRoot: string,
+  manifest: ProjectRecapManifest,
+  expected?: { bytes: Uint8Array; hash: string },
+): Promise<{ bytes: Buffer; hash: string } | null> {
+  if (!['built-needs-review', 'failed'].includes(manifest.outcome)) {
+    return null;
+  }
+  try {
+    const terminalEvidence = await loadExplainerTerminalEvidence();
+    const verified = await terminalEvidence.readTerminalEvidenceFile(runRoot, {
+      manifest,
+      ...(expected && {
+        expectedBytes: expected.bytes,
+        expectedHash: expected.hash,
+      }),
+    });
+    return { bytes: verified.bytes, hash: verified.hash };
+  } catch {
+    throw new CliError(
+      'Selected project recap requires valid confined terminal evidence before archival.',
+    );
+  }
+}
+
 async function loadVerifiedProjectRecap(
   projectPath: string,
   projectRecapRun: string,
@@ -1047,6 +1090,8 @@ async function loadVerifiedProjectRecap(
   manifestContents: string;
   manifest: ProjectRecapManifest;
   verifiedArtifactCount: number;
+  terminalEvidence: { bytes: Buffer; hash: string } | null;
+  packagePaths: string[];
 }> {
   const sourceRunRoot = await resolveSelectedProjectRecapRun(
     projectPath,
@@ -1060,11 +1105,6 @@ async function loadVerifiedProjectRecap(
   if (manifest.recipe.id !== 'project-recap') {
     throw new CliError(
       'Selected project recap manifest recipe must be exactly `project-recap`.',
-    );
-  }
-  if (manifest.outcome === 'built-needs-review') {
-    throw new CliError(
-      'Selected project recap is built-needs-review and requires a passing visual review before archival.',
     );
   }
   const verifiedArtifactCount = await verifyProjectRecapImmutableHashes(
@@ -1122,11 +1162,36 @@ async function loadVerifiedProjectRecap(
       'Selected project recap artifact hashes do not match the immutable package.',
     );
   }
+  const terminalEvidence = await verifyProjectRecapTerminalEvidence(
+    sourceRunRoot,
+    manifest,
+  );
+  const exactCoverage = packageCoverage as typeof packageCoverage &
+    ExactRunPackageCoverage;
+  if (
+    typeof exactCoverage.permissibleRunPackagePaths !== 'function' ||
+    typeof exactCoverage.enforceRunPackageInventory !== 'function'
+  ) {
+    throw new CliError(
+      'Bundled explainer package coverage does not provide the exact run inventory.',
+    );
+  }
+  try {
+    await exactCoverage.enforceRunPackageInventory(sourceRunRoot, manifest, {
+      includeTerminalEvidence: terminalEvidence !== null,
+    });
+  } catch {
+    throw new CliError('Selected project recap package inventory is invalid.');
+  }
   return {
     sourceRunRoot,
     manifestContents,
     manifest,
     verifiedArtifactCount,
+    terminalEvidence,
+    packagePaths: exactCoverage.permissibleRunPackagePaths(manifest, {
+      includeTerminalEvidence: terminalEvidence !== null,
+    }),
   };
 }
 
@@ -1154,7 +1219,8 @@ async function exportSelectedProjectRecap(
   const {
     sourceRunRoot,
     manifestContents: sourceManifestContents,
-    manifest: sourceManifest,
+    terminalEvidence: sourceTerminalEvidence,
+    packagePaths,
   } = verified;
 
   const exportRoot = join(
@@ -1173,7 +1239,7 @@ async function exportSelectedProjectRecap(
 
   const temporaryRoot = `${exportRoot}.tmp-${randomUUID()}`;
   const makeDir = dependencies.ensureDir ?? ensureDir;
-  const copyProjectDirectory = dependencies.copyDirectory ?? copyDirectory;
+  const copyFile = dependencies.copySingleFile ?? copySingleFile;
   const removePath =
     dependencies.removePath ??
     (async (target, removeOptions) => rm(target, removeOptions));
@@ -1181,7 +1247,11 @@ async function exportSelectedProjectRecap(
 
   await makeDir(dirname(exportRoot));
   try {
-    await copyProjectDirectory(sourceRunRoot, temporaryRoot);
+    for (const relativePath of packagePaths) {
+      const destination = join(temporaryRoot, relativePath);
+      await makeDir(dirname(destination));
+      await copyFile(join(sourceRunRoot, relativePath), destination);
+    }
     const stagedManifestContents = await readFile(
       join(temporaryRoot, 'manifest.json'),
       'utf8',
@@ -1191,10 +1261,33 @@ async function exportSelectedProjectRecap(
         'Selected project recap manifest changed while staging the export.',
       );
     }
+    const stagedManifest = await parseProjectRecapManifest(
+      stagedManifestContents,
+    );
     const verifiedArtifactCount = await verifyProjectRecapImmutableHashes(
       temporaryRoot,
-      sourceManifest,
+      stagedManifest,
     );
+    const stagedTerminalEvidence = await verifyProjectRecapTerminalEvidence(
+      temporaryRoot,
+      stagedManifest,
+      sourceTerminalEvidence ?? undefined,
+    );
+    const exactCoverage = (await loadExplainerPackageCoverage()) as Awaited<
+      ReturnType<typeof loadExplainerPackageCoverage>
+    > &
+      ExactRunPackageCoverage;
+    try {
+      await exactCoverage.enforceRunPackageInventory(
+        temporaryRoot,
+        stagedManifest,
+        {
+          includeTerminalEvidence: stagedTerminalEvidence !== null,
+        },
+      );
+    } catch {
+      throw new CliError('Staged project recap package inventory is invalid.');
+    }
     await renamePath(temporaryRoot, exportRoot);
 
     return {

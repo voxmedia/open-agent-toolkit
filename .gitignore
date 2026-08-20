@@ -20,6 +20,11 @@ dist/
 build/
 packages/cli/assets/*
 !packages/cli/assets/public-package-versions.json
+# Staging siblings of packages/cli/assets. The rule above ignores that
+# directory's contents, not siblings, so a build killed with SIGKILL or a
+# cancelled CI job would otherwise leave a ~400-file untracked tree behind.
+packages/cli/assets.staging.*
+packages/cli/assets.previous.*
 apps/oat-docs/site/
 
 # Next.js

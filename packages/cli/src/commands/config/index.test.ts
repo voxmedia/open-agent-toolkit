@@ -654,7 +654,7 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('lists and describes all eleven explainer configuration keys', async () => {
+  it('lists and describes all twelve explainer configuration keys', async () => {
     const root = await createRepoRoot();
     const expectedKeys = [
       'explainers.defaults.style',
@@ -665,6 +665,7 @@ describe('oat config', () => {
       'explainers.publish.s3Uri',
       'explainers.publish.publicBaseUrl',
       'explainers.publish.awsRegion',
+      'explainers.publish.publicAccess',
       'explainers.publish.awsProfile',
       'workflow.explainers.projectExplainer',
       'workflow.explainers.projectRecap',
@@ -704,6 +705,7 @@ describe('oat config', () => {
         '--shared',
       ],
       ['explainers.publish.awsRegion', 'us-east-1', '--shared'],
+      ['explainers.publish.publicAccess', 'protected', '--shared'],
       ['explainers.publish.awsProfile', 'work-sso', '--user'],
       ['workflow.explainers.projectExplainer', 'always', '--local'],
       ['workflow.explainers.projectRecap', 'never', '--shared'],
@@ -727,6 +729,7 @@ describe('oat config', () => {
           s3Uri: 's3://bucket/explainers',
           publicBaseUrl: 'https://docs.example.com/explainers',
           awsRegion: 'us-east-1',
+          publicAccess: 'protected',
         },
       },
       workflow: { explainers: { projectRecap: 'never' } },
@@ -843,6 +846,7 @@ describe('oat config', () => {
       'http://insecure.example.com',
       '--shared',
     ],
+    ['explainers.publish.publicAccess', 'private', '--shared'],
     ['explainers.publish.awsProfile', 'shared-profile', '--shared'],
     ['workflow.explainers.projectExplainer', 'sometimes', '--local'],
   ] as const)(

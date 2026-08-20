@@ -16,13 +16,18 @@ const schemas = {
   manifest: 'explainer-kit.manifest/v1',
   'build-record': 'explainer-kit.build-record/v1',
   'durability-evidence': 'explainer-kit.durability-evidence/v1',
-  'publish-request': 'explainer-kit.publish-request/v1',
-  'publish-receipt': 'explainer-kit.publish-receipt/v1',
+  'publish-request.v1': 'explainer-kit.publish-request/v1',
+  'publish-request.v2': 'explainer-kit.publish-request/v2',
+  'publish-receipt.v1': 'explainer-kit.publish-receipt/v1',
+  'publish-receipt.v2': 'explainer-kit.publish-receipt/v2',
   'author-request.v2': 'explainer-kit.author-request/v2',
+  'author-request.v3': 'explainer-kit.author-request/v3',
   'author-result.v2': 'explainer-kit.author-result/v2',
   'set-plan.v1': 'explainer-kit.set-plan/v1',
   'visual-review-request.v1': 'explainer-kit.visual-review-request/v1',
   'visual-review-result.v1': 'explainer-kit.visual-review-result/v1',
+  'visual-review-evidence.v1': 'explainer-kit.visual-review-evidence/v1',
+  'terminal-evidence.v1': 'explainer-kit.terminal-evidence/v1',
 };
 
 async function loadSchema(name) {
@@ -64,6 +69,59 @@ test('every supported contract has the required identity and closed objects', as
   }
 });
 
+test('retained terminal and visual evidence schemas are code-only closed projections', async () => {
+  const terminal = await loadSchema('terminal-evidence.v1');
+  const visual = await loadSchema('visual-review-evidence.v1');
+
+  assert.deepEqual(terminal.required, [
+    'schemaVersion',
+    'runId',
+    'outcome',
+    'reasons',
+    'evidenceDisposition',
+  ]);
+  assert.deepEqual(Object.keys(terminal.properties), [
+    'schemaVersion',
+    'runId',
+    'outcome',
+    'manifestHash',
+    'reasons',
+    'evidenceDisposition',
+    'supersededBy',
+  ]);
+  assert.equal(terminal.properties.reasons.minItems, 1);
+  assert.equal(terminal.properties.reasons.maxItems, 50);
+
+  assert.deepEqual(visual.required, [
+    'schemaVersion',
+    'requestHash',
+    'attempt',
+    'disposition',
+    'reasons',
+  ]);
+  assert.deepEqual(Object.keys(visual.properties), visual.required);
+  assert.deepEqual(visual.properties.attempt.enum, [1, 2]);
+  assert.deepEqual(visual.properties.disposition.enum, [
+    'pass',
+    'correct',
+    'failed',
+  ]);
+  assert.equal(visual.properties.reasons.minItems, 0);
+  assert.equal(visual.properties.reasons.maxItems, 50);
+
+  for (const schema of [terminal, visual]) {
+    assert.deepEqual(schema.$defs.reason.required, ['stage', 'kind', 'count']);
+    assert.deepEqual(Object.keys(schema.$defs.reason.properties), [
+      'stage',
+      'kind',
+      'artifactId',
+      'count',
+    ]);
+    assert.equal(schema.$defs.reason.properties.count.minimum, 1);
+    assert.equal(schema.$defs.reason.properties.count.maximum, 50);
+  }
+});
+
 test('run request persists render strategy and complete durability input', async () => {
   const schema = await loadSchema('run-request');
   const themeSelection = schema.$defs.themeSelection;
@@ -81,12 +139,25 @@ test('run request persists render strategy and complete durability input', async
     'commit',
     'publish',
   ]);
+  assert.deepEqual(schema.properties.durability.properties.publish.oneOf, [
+    { $ref: 'explainer-kit.publish-request/v1' },
+    { $ref: 'explainer-kit.publish-request/v2' },
+  ]);
   assert.deepEqual(schema.properties.recapMode.enum, [
     'artistic',
     'deterministic-markdown',
   ]);
   assert.equal(schema.$defs.sourceBinding.properties.role.minLength, 1);
   assert.equal(schema.$defs.sourceBinding.properties.sourceSetId.minLength, 1);
+});
+
+test('publish request v2 requires an explicit public access mode', async () => {
+  const schema = await loadSchema('publish-request.v2');
+  assert.ok(schema.required.includes('publicAccess'));
+  assert.deepEqual(schema.properties.publicAccess.enum, [
+    'public',
+    'protected',
+  ]);
 });
 
 test('theme identity excludes render strategy', async () => {
@@ -126,7 +197,7 @@ test('manifest and build record share outcomes and evidence contracts', async ()
 
 test('durability request and publish receipt declare unique path evidence', async () => {
   const durability = await loadSchema('durability-evidence');
-  const receipt = await loadSchema('publish-receipt');
+  const receipt = await loadSchema('publish-receipt.v2');
   assert.deepEqual(durability.properties.evidence.oneOf[0].required, [
     'kind',
     'repoRoot',
@@ -142,6 +213,9 @@ test('durability request and publish receipt declare unique path evidence', asyn
     receipt.$defs.artifact.properties.relativePath.$ref,
     '#/$defs/safeRelativePath',
   );
+  assert.ok(receipt.required.includes('publicAccess'));
+  assert.ok(receipt.$defs.artifact.required.includes('objectVerification'));
+  assert.ok(receipt.$defs.artifact.required.includes('publicVerification'));
 });
 
 test('author v2 contracts require authored content and provenance', async () => {
@@ -192,6 +266,25 @@ test('author v2 contracts require authored content and provenance', async () => 
     'self-asserted',
   ]);
   assert.equal(result.properties.provenance.additionalProperties, false);
+});
+
+test('author v3 requires a closed canonical artifact link table', async () => {
+  const request = await loadSchema('author-request.v3');
+
+  assert.ok(request.required.includes('artifactLinks'));
+  assert.equal(request.properties.authoring.enum.includes('markdown'), true);
+  assert.equal(request.properties.authoring.enum.includes('html'), true);
+  assert.equal(request.properties.artifactLinks.minItems, 1);
+  assert.equal(request.properties.artifactLinks.uniqueItems, true);
+  assert.deepEqual(request.$defs.artifactLink.required, [
+    'artifactId',
+    'artifactType',
+    'sitePath',
+    'href',
+  ]);
+  assert.equal(request.$defs.artifactLink.additionalProperties, false);
+  assert.match(request.$defs.artifactLink.properties.sitePath.pattern, /index/);
+  assert.match(request.$defs.artifactLink.properties.href.pattern, /index/);
 });
 
 test('set and visual review schemas carry closed shared context', async () => {

@@ -67,12 +67,14 @@ export interface OatExplainerDefaultsConfig {
 }
 
 export type OatExplainerPublishProvider = 's3-static';
+export type OatExplainerPublicAccess = 'public' | 'protected';
 
 export interface OatExplainerPublishConfig {
   provider?: OatExplainerPublishProvider;
   s3Uri?: string;
   publicBaseUrl?: string;
   awsRegion?: string;
+  publicAccess?: OatExplainerPublicAccess;
   awsProfile?: string;
 }
 
@@ -611,6 +613,12 @@ function normalizeExplainersConfig(
       const awsRegion = trimNonEmptyString(parsed.publish.awsRegion);
       if (awsRegion !== undefined) {
         publish.awsRegion = awsRegion;
+      }
+      if (
+        parsed.publish.publicAccess === 'public' ||
+        parsed.publish.publicAccess === 'protected'
+      ) {
+        publish.publicAccess = parsed.publish.publicAccess;
       }
     } else {
       const awsProfile = trimNonEmptyString(parsed.publish.awsProfile);

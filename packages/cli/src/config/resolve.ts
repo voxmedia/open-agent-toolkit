@@ -67,6 +67,7 @@ const DEFAULT_SHARED_CONFIG = {
       s3Uri: null,
       publicBaseUrl: null,
       awsRegion: null,
+      publicAccess: 'public',
       awsProfile: null,
     },
   },

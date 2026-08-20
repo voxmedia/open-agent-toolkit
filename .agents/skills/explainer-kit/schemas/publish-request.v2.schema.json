@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.publish-request/v2",
+  "title": "S3StaticPublishRequestV2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "provider",
+    "s3Uri",
+    "publicBaseUrl",
+    "awsRegion",
+    "publicAccess",
+    "siteRoot",
+    "manifestPath"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "explainer-kit.publish-request/v2" },
+    "provider": { "const": "s3-static" },
+    "s3Uri": {
+      "type": "string",
+      "pattern": "^s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9](?:/[^\\s/?#\\\\]+(?:/[^\\s/?#\\\\]+)*)?/?$"
+    },
+    "publicBaseUrl": {
+      "type": "string",
+      "pattern": "^https://[^\\s/?#@]+(?::[0-9]+)?(?:/[^\\s/?#\\\\]+(?:/[^\\s/?#\\\\]+)*)?/?$"
+    },
+    "awsRegion": { "type": "string", "minLength": 1 },
+    "awsProfile": { "type": "string", "minLength": 1 },
+    "publicAccess": { "enum": ["public", "protected"] },
+    "siteRoot": { "type": "string", "minLength": 1 },
+    "manifestPath": { "type": "string", "minLength": 1 }
+  }
+}

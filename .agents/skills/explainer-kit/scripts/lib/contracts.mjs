@@ -1,6 +1,10 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
+import {
+  composePublicationTarget,
+  normalizePublishRoots,
+} from './s3-roots.mjs';
 import { validatePortablePath } from './safe-paths.mjs';
 import {
   parseCanonicalGithubBlobUrl,
@@ -14,17 +18,24 @@ const SCHEMA_FILES = {
   manifest: 'manifest.schema.json',
   'build-record': 'build-record.schema.json',
   'durability-evidence': 'durability-evidence.schema.json',
-  'publish-request': 'publish-request.schema.json',
-  'publish-receipt': 'publish-receipt.schema.json',
+  'publish-request/v1': 'publish-request.v1.schema.json',
+  'publish-request/v2': 'publish-request.v2.schema.json',
+  'publish-receipt/v1': 'publish-receipt.v1.schema.json',
+  'publish-receipt/v2': 'publish-receipt.v2.schema.json',
   'author-request/v2': 'author-request.v2.schema.json',
+  'author-request/v3': 'author-request.v3.schema.json',
   'author-result/v2': 'author-result.v2.schema.json',
   'set-plan': 'set-plan.v1.schema.json',
   'visual-review-request': 'visual-review-request.v1.schema.json',
   'visual-review-result': 'visual-review-result.v1.schema.json',
+  'visual-review-evidence': 'visual-review-evidence.v1.schema.json',
+  'terminal-evidence': 'terminal-evidence.v1.schema.json',
 };
 const DEFAULT_SCHEMA_KEYS = {
-  'author-request': 'author-request/v2',
+  'author-request': 'author-request/v3',
   'author-result': 'author-result/v2',
+  'publish-request': 'publish-request/v2',
+  'publish-receipt': 'publish-receipt/v2',
 };
 
 const SCHEMAS = Object.fromEntries(
@@ -38,6 +49,34 @@ const SCHEMAS = Object.fromEntries(
 const SCHEMAS_BY_ID = new Map(
   Object.values(SCHEMAS).map((schema) => [schema.$id, schema]),
 );
+// `validateContract` accepts a schema `$id` as its `kind`, but every downstream
+// gate matches on the short registry form. `'explainer-kit.publish-request/v1'`
+// does not start with `'publish-request'`, so an `$id`-form call skipped the
+// default-deny publication-root gate entirely and answered `valid: true` for a
+// credential-bearing root. Normalize once, here, so no individual gate has to
+// remember to handle both spellings.
+const KIND_BY_SCHEMA_ID = new Map(
+  Object.entries(SCHEMAS).map(([kind, schema]) => [schema.$id, kind]),
+);
+
+function canonicalContractKind(kind) {
+  return KIND_BY_SCHEMA_ID.get(kind) ?? kind;
+}
+
+const LEGACY_PUBLISH_RECEIPT = 'explainer-kit.publish-receipt/v1';
+
+/**
+ * True for every publish-receipt shape except the retained v1 replay form.
+ *
+ * Stated as "not v1" rather than "=== v2" on purpose: keying verification to an
+ * exact version string means a future `publish-receipt/v3` silently skips
+ * sentinel verification and per-artifact validation, which is the same
+ * fail-open shape the publication-root gate was rewritten to eliminate. v1 is
+ * the only version that legitimately lacks these facts.
+ */
+export function isVerifiablePublishReceipt(value) {
+  return value?.schemaVersion !== LEGACY_PUBLISH_RECEIPT;
+}
 const RAW_SECRET_KEYS = new Set([
   'accesskey',
   'accesskeyid',
@@ -78,11 +117,15 @@ export function validateContract(kind, value, context = {}) {
   }
 
   const errors = [];
+  // Every gate below matches on the short registry form, so an `$id`-form kind
+  // is normalized before dispatch rather than in each gate.
+  const canonicalKind = canonicalContractKind(kind);
   findRawSecrets(value, '$', errors);
   validateSchema(schema, value, '$', schema, errors);
-  validateContractPaths(kind, value, errors);
-  validateCrossRecord(kind, value, context, errors);
-  validateSourceBacklinks(kind, value, errors);
+  validateContractPaths(canonicalKind, value, errors);
+  validatePublicationRoots(canonicalKind, value, errors);
+  validateCrossRecord(canonicalKind, value, context, errors);
+  validateSourceBacklinks(canonicalKind, value, errors);
   return { valid: errors.length === 0, errors };
 }
 
@@ -438,6 +481,107 @@ function validateContractPaths(kind, value, errors) {
   }
 }
 
+function validatePublicationRoots(kind, value, errors, path = '$') {
+  if (!isObject(value)) return;
+
+  if (kind === 'run-request') {
+    const publish = value.durability?.publish;
+    if (isObject(publish)) {
+      validatePublicationRoots(
+        'publish-request',
+        publish,
+        errors,
+        `${path}.durability.publish`,
+      );
+    }
+    return;
+  }
+
+  // Default-deny: every publish-request shape is validated, regardless of its
+  // declared schemaVersion. Keying this gate to an exact version string is what
+  // let `publish-request/v1` reach `initializeRun` with credential-bearing roots,
+  // and would let any future version reintroduce the same bypass.
+  if (kind.startsWith('publish-request')) {
+    try {
+      normalizePublishRoots(value.s3Uri, value.publicBaseUrl);
+    } catch {
+      add(
+        errors,
+        path,
+        'publish-roots',
+        'Publish request roots must be credential-free and canonical.',
+      );
+    }
+    return;
+  }
+
+  if (kind.startsWith('publish-receipt')) {
+    // Same default-deny rule as the request branch above: every receipt shape
+    // has its roots screened, whatever version it declares. Pinning this to the
+    // exact v2 string let a `publish-receipt/v1` carry credential-bearing and
+    // internal-address roots straight through to `publish-receipt.json`, a
+    // retained hash-covered member of the run package, and on into the
+    // `publish-summary/v1` projection.
+    const receiptV2 = isVerifiablePublishReceipt(value);
+    let roots;
+    try {
+      roots = normalizePublishRoots(
+        value.roots?.s3Uri,
+        value.roots?.publicBaseUrl,
+      );
+      // The stricter *canonical-form* assertion stays v2-only: v1 is retained
+      // purely for replay and may legitimately carry non-canonical historical
+      // forms such as trailing slashes. Credential and address screening above
+      // applies to both, because no replay need justifies either.
+      if (
+        receiptV2 &&
+        (roots.s3Uri !== value.roots.s3Uri ||
+          roots.publicBaseUrl !== value.roots.publicBaseUrl)
+      ) {
+        throw new Error('noncanonical');
+      }
+    } catch {
+      add(
+        errors,
+        `${path}.roots`,
+        'publish-roots',
+        'Publish receipt roots must be credential-free and canonical.',
+      );
+      return;
+    }
+
+    if (!receiptV2) return;
+
+    for (const [index, artifact] of (Array.isArray(value.artifacts)
+      ? value.artifacts
+      : []
+    ).entries()) {
+      if (!isObject(artifact) || typeof artifact.relativePath !== 'string') {
+        continue;
+      }
+      const publishPath = artifact.relativePath.startsWith('site/')
+        ? artifact.relativePath.slice('site/'.length)
+        : artifact.relativePath;
+      try {
+        const expected = composePublicationTarget(publishPath, roots);
+        if (
+          artifact.s3Uri !== expected.s3Uri ||
+          artifact.publicUrl !== expected.publicUrl
+        ) {
+          throw new Error('destination mismatch');
+        }
+      } catch {
+        add(
+          errors,
+          `${path}.artifacts[${index}]`,
+          'receipt-artifact-destination',
+          'Publish receipt artifact destinations must be canonical children of the validated roots.',
+        );
+      }
+    }
+  }
+}
+
 function addLexicalPathErrors(value, path, errors, allowAbsolute) {
   if (value === undefined) {
     return;
@@ -547,12 +691,20 @@ function validateCrossRecord(kind, value, context, errors) {
   }
 
   if (
-    ['author-request', 'author-request/v2'].includes(kind) ||
-    value.schemaVersion === 'explainer-kit.author-request/v2'
+    ['author-request', 'author-request/v2', 'author-request/v3'].includes(
+      kind,
+    ) ||
+    [
+      'explainer-kit.author-request/v2',
+      'explainer-kit.author-request/v3',
+    ].includes(value.schemaVersion)
   ) {
     validateAuthorSetContext(value, errors);
     validateVisualAuthoringGuidance(value, errors);
     validateAuthorGraphSemantics(value, errors);
+    if (value.schemaVersion === 'explainer-kit.author-request/v3') {
+      validateAuthorArtifactLinks(value, errors);
+    }
   }
 
   if (kind === 'visual-review-request') {
@@ -787,6 +939,19 @@ function validateCrossRecord(kind, value, context, errors) {
     }
   }
 
+  if (kind === 'terminal-evidence') {
+    validateTerminalEvidence(value, context.manifest, errors);
+  }
+
+  if (kind === 'visual-review-evidence') {
+    validateVisualReviewEvidence(
+      value,
+      context.visualReviewRequest,
+      context.attempt,
+      errors,
+    );
+  }
+
   if (kind === 'manifest') {
     const paths = [];
     for (const artifact of Array.isArray(value.artifacts)
@@ -972,6 +1137,34 @@ function validateCrossRecord(kind, value, context, errors) {
     }
   }
 
+  if (kind.startsWith('publish-receipt') && isVerifiablePublishReceipt(value)) {
+    const sentinel = value.sentinel;
+    if (
+      sentinel?.objectVerification?.status !== 'verified' ||
+      sentinel.objectVerification.hash === undefined
+    ) {
+      add(
+        errors,
+        '$.sentinel.objectVerification',
+        'receipt-object-verification',
+        'Publish receipt sentinel requires exact authenticated object verification.',
+      );
+    }
+    const validPublic =
+      value.publicAccess === 'public'
+        ? sentinel?.publicVerification?.status === 'verified' &&
+          sentinel.publicVerification.hash === sentinel.objectVerification?.hash
+        : sentinel?.publicVerification?.status === 'skipped-protected';
+    if (!validPublic) {
+      add(
+        errors,
+        '$.sentinel.publicVerification',
+        'receipt-public-verification',
+        'Publish receipt sentinel public verification must match the declared public-access mode.',
+      );
+    }
+  }
+
   if (
     kind === 'publish-receipt' &&
     isObject(context.manifest) &&
@@ -984,29 +1177,38 @@ function validateCrossRecord(kind, value, context, errors) {
         artifact.status === 'built' &&
         typeof artifact.renderedPath === 'string'
       ) {
-        expected.set(artifact.renderedPath, artifact.hash);
+        expected.set(artifact.renderedPath, {
+          hash: artifact.hash,
+          source: { kind: 'manifest', artifactId: artifact.id },
+        });
       }
     }
     if (
       isObject(context.catalogArtifact) &&
       typeof context.catalogArtifact.relativePath === 'string'
     ) {
-      expected.set(
-        context.catalogArtifact.relativePath,
-        context.catalogArtifact.hash,
-      );
+      expected.set(context.catalogArtifact.relativePath, {
+        hash: context.catalogArtifact.hash,
+        source: { kind: 'auxiliary', name: 'catalog' },
+      });
     }
     const received = new Set();
     for (const artifact of value.artifacts) {
-      if (
-        isObject(artifact) &&
-        expected.get(artifact.relativePath) !== artifact.hash
-      ) {
+      const expectedArtifact = expected.get(artifact?.relativePath);
+      if (isObject(artifact) && expectedArtifact?.hash !== artifact.hash) {
         add(
           errors,
           '$.artifacts',
           'cross-record-mismatch',
           'Publish receipt artifact does not match the manifest.',
+        );
+      }
+      if (isVerifiablePublishReceipt(value) && isObject(artifact)) {
+        validatePublishReceiptV2Artifact(
+          value,
+          artifact,
+          expectedArtifact,
+          errors,
         );
       }
       if (received.has(artifact?.relativePath)) {
@@ -1030,6 +1232,259 @@ function validateCrossRecord(kind, value, context, errors) {
         'Publish receipt must exactly cover every manifest artifact and the generated catalog.',
       );
     }
+  }
+}
+
+function validateTerminalEvidence(value, manifest, errors) {
+  const reasons = Array.isArray(value.reasons) ? value.reasons : [];
+  const artifactIds = isObject(manifest)
+    ? new Set(
+        (Array.isArray(manifest.artifacts) ? manifest.artifacts : []).map(
+          ({ id }) => id,
+        ),
+      )
+    : null;
+  validateReasonSet(reasons, artifactIds, '$.reasons', errors);
+
+  if (isObject(manifest)) {
+    if (value.runId !== manifest.runId) {
+      add(
+        errors,
+        '$.runId',
+        'terminal-run-mismatch',
+        'Terminal evidence run identity must match its manifest.',
+      );
+    }
+    if (value.outcome !== manifest.outcome) {
+      add(
+        errors,
+        '$.outcome',
+        'terminal-outcome-mismatch',
+        'Terminal evidence outcome must match its manifest.',
+      );
+    }
+    if (value.manifestHash !== canonicalHash(manifest)) {
+      add(
+        errors,
+        '$.manifestHash',
+        'terminal-manifest-mismatch',
+        'Terminal evidence manifest hash must match its manifest.',
+      );
+    }
+  }
+
+  if (value.evidenceDisposition === 'superseded') {
+    const reason = reasons[0];
+    if (
+      reasons.length !== 1 ||
+      reason?.stage !== 'finalization' ||
+      reason?.kind !== 'superseded' ||
+      reason?.count !== 1 ||
+      reason?.artifactId !== undefined
+    ) {
+      add(
+        errors,
+        '$.reasons',
+        'supersession-reason',
+        'Superseded evidence requires exactly one count-1 finalization/superseded reason without an artifact ID.',
+      );
+    }
+    if (
+      !isObject(value.supersededBy) ||
+      value.supersededBy.runId === value.runId
+    ) {
+      add(
+        errors,
+        '$.supersededBy',
+        'supersession-binding',
+        'Superseded evidence requires a distinct replacement run identity.',
+      );
+    }
+    if (typeof value.manifestHash !== 'string') {
+      add(
+        errors,
+        '$.manifestHash',
+        'supersession-manifest',
+        'Superseded evidence requires the original manifest hash.',
+      );
+    }
+    return;
+  }
+
+  if (value.supersededBy !== undefined) {
+    add(
+      errors,
+      '$.supersededBy',
+      'unexpected-supersession',
+      'Only superseded evidence may identify a replacement run.',
+    );
+  }
+  if (reasons.some((reason) => reason?.kind === 'superseded')) {
+    add(
+      errors,
+      '$.reasons',
+      'unexpected-supersession',
+      'Only superseded evidence may contain a superseded reason.',
+    );
+  }
+  const allowedKinds =
+    value.outcome === 'failed'
+      ? new Set(['provider-failure', 'pipeline-failure'])
+      : new Set(['finding', 'provider-failure', 'pipeline-failure']);
+  if (!reasons.some((reason) => allowedKinds.has(reason?.kind))) {
+    add(
+      errors,
+      '$.reasons',
+      'terminal-outcome-reasons',
+      'Terminal evidence reasons do not satisfy the terminal outcome.',
+    );
+  }
+}
+
+function validateVisualReviewEvidence(value, request, attempt, errors) {
+  if (!isObject(request)) {
+    add(
+      errors,
+      '$',
+      'review-request-required',
+      'Retained visual evidence requires its adjacent reviewed request.',
+    );
+    return;
+  }
+  const requestValidation = validateContract('visual-review-request', request);
+  if (!requestValidation.valid) {
+    add(
+      errors,
+      '$',
+      'invalid-review-request',
+      'Retained visual evidence cannot bind to an invalid reviewed request.',
+    );
+  }
+  if (value.requestHash !== request.requestHash) {
+    add(
+      errors,
+      '$.requestHash',
+      'review-binding-mismatch',
+      'Retained visual evidence must bind the adjacent request hash.',
+    );
+  }
+  if (![1, 2].includes(attempt) || value.attempt !== attempt) {
+    add(
+      errors,
+      '$.attempt',
+      'review-attempt-mismatch',
+      'Retained visual evidence attempt must match its attempt directory.',
+    );
+  }
+
+  const reasons = Array.isArray(value.reasons) ? value.reasons : [];
+  const artifactIds = new Set(
+    (Array.isArray(request.renderedArtifacts)
+      ? request.renderedArtifacts
+      : []
+    ).map(({ artifactId }) => artifactId),
+  );
+  validateReasonSet(reasons, artifactIds, '$.reasons', errors);
+  if (reasons.some((reason) => reason?.stage !== 'visual-review')) {
+    add(
+      errors,
+      '$.reasons',
+      'visual-reason-stage',
+      'Retained visual evidence reasons must use the visual-review stage.',
+    );
+  }
+  const validDisposition =
+    (value.disposition === 'pass' && reasons.length === 0) ||
+    (value.disposition === 'correct' &&
+      reasons.length > 0 &&
+      reasons.every((reason) => reason?.kind === 'finding')) ||
+    (value.disposition === 'failed' &&
+      reasons.length > 0 &&
+      reasons.every((reason) =>
+        ['provider-failure', 'pipeline-failure'].includes(reason?.kind),
+      ));
+  if (!validDisposition) {
+    add(
+      errors,
+      '$.reasons',
+      'visual-disposition-reasons',
+      'Retained visual evidence reasons do not satisfy its disposition.',
+    );
+  }
+}
+
+function validateReasonSet(reasons, artifactIds, path, errors) {
+  let total = 0;
+  const tuples = new Set();
+  for (const [index, reason] of reasons.entries()) {
+    if (!isObject(reason)) continue;
+    if (Number.isInteger(reason.count)) total += reason.count;
+    const tuple = `${reason.stage}\0${reason.kind}\0${reason.artifactId ?? ''}`;
+    if (tuples.has(tuple)) {
+      add(
+        errors,
+        `${path}[${index}]`,
+        'duplicate-reason',
+        'Retained reason tuples must be unique.',
+      );
+    }
+    tuples.add(tuple);
+    if (
+      reason.artifactId !== undefined &&
+      artifactIds &&
+      !artifactIds.has(reason.artifactId)
+    ) {
+      add(
+        errors,
+        `${path}[${index}].artifactId`,
+        'foreign-artifact',
+        'Retained reason artifact IDs must belong to the bound run.',
+      );
+    }
+  }
+  if (total > 50) {
+    add(
+      errors,
+      path,
+      'reason-total',
+      'Retained reason counts must total at most 50.',
+    );
+  }
+}
+
+function validatePublishReceiptV2Artifact(receipt, artifact, expected, errors) {
+  if (!expected || !deepEqual(artifact.source, expected.source)) {
+    add(
+      errors,
+      '$.artifacts',
+      'receipt-artifact-source',
+      'Publish receipt source identity does not match the manifest or generated auxiliary object.',
+    );
+  }
+  if (
+    artifact.objectVerification?.status !== 'verified' ||
+    artifact.objectVerification?.hash !== artifact.hash
+  ) {
+    add(
+      errors,
+      '$.artifacts',
+      'receipt-object-verification',
+      'Publish receipt object verification must prove the exact artifact hash.',
+    );
+  }
+  const publicVerification = artifact.publicVerification;
+  const validPublic =
+    receipt.publicAccess === 'public'
+      ? publicVerification?.status === 'verified' &&
+        publicVerification?.hash === artifact.hash
+      : publicVerification?.status === 'skipped-protected';
+  if (!validPublic) {
+    add(
+      errors,
+      '$.artifacts',
+      'receipt-public-verification',
+      'Publish receipt public verification must match the declared public-access mode.',
+    );
   }
 }
 
@@ -1172,6 +1627,84 @@ function validateAuthorSetContext(value, errors) {
       'set-plan-drift',
       'Author request planned artifact must be identical to the shared set plan entry.',
     );
+  }
+}
+
+function validateAuthorArtifactLinks(value, errors) {
+  if (!Array.isArray(value.artifactLinks) || !isObject(value.setContext)) {
+    return;
+  }
+  const planned = Array.isArray(value.setContext.portfolio)
+    ? value.setContext.portfolio
+    : [];
+  const linksById = new Map();
+  for (const [index, link] of value.artifactLinks.entries()) {
+    if (!isObject(link)) continue;
+    if (linksById.has(link.artifactId)) {
+      add(
+        errors,
+        `$.artifactLinks[${index}].artifactId`,
+        'artifact-link-parity',
+        'Canonical artifact link IDs must be unique.',
+      );
+    }
+    linksById.set(link.artifactId, link);
+  }
+  if (
+    linksById.size !== planned.length ||
+    planned.some(
+      ({ artifactId, artifactType }) =>
+        linksById.get(artifactId)?.artifactType !== artifactType,
+    )
+  ) {
+    add(
+      errors,
+      '$.artifactLinks',
+      'artifact-link-parity',
+      'Canonical artifact links must exactly cover the planned portfolio.',
+    );
+    return;
+  }
+
+  const current = linksById.get(value.artifactId);
+  if (!current || typeof current.sitePath !== 'string') return;
+  const base = new URL(current.sitePath, 'https://explainer.invalid/');
+  for (const [index, link] of value.artifactLinks.entries()) {
+    if (
+      !isObject(link) ||
+      typeof link.href !== 'string' ||
+      typeof link.sitePath !== 'string'
+    ) {
+      continue;
+    }
+    let resolved;
+    try {
+      resolved = new URL(link.href, base);
+    } catch {
+      add(
+        errors,
+        `$.artifactLinks[${index}].href`,
+        'artifact-link-resolution',
+        'Canonical artifact href must be a valid relative reference.',
+      );
+      continue;
+    }
+    if (
+      resolved.origin !== base.origin ||
+      resolved.protocol !== 'https:' ||
+      resolved.username ||
+      resolved.password ||
+      resolved.search ||
+      resolved.hash ||
+      resolved.pathname !== `/${link.sitePath}`
+    ) {
+      add(
+        errors,
+        `$.artifactLinks[${index}].href`,
+        'artifact-link-resolution',
+        'Canonical artifact href must resolve exactly to its declared site path.',
+      );
+    }
   }
 }
 
