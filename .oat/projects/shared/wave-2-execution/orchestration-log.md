@@ -31,6 +31,16 @@ scaffolding (W1 order), or re-set the pointer afterwards.
 **Skill signal (gap):** the wave skill's Step 1/3 order should state
 "bootstrap before scaffold" explicitly.
 
+### 2026-08-26 · structural · oat-gate-review · plan gate round 1
+
+Run `a0c09a83-2479-43ec-b693-dd1493dc5474` (`cursor-gpt-5-6-sol-xhigh`) →
+`blocked`: 0C/2I/0M/0m. I1 `oat_parallel_execution: false` (wave contract
+requires `true` even for a solo lane) → fixed in state.md; I2 task Step 2
+restated source-plan details (bump/asset regeneration) → reduced to "Execute
+the source plan in full." Both resolved in-artifact; artifact archived at
+`reviews/archived/artifact-plan-review-2026-08-26T192011Z.md`; gate re-run
+(remediation attempt 1 of 2).
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)

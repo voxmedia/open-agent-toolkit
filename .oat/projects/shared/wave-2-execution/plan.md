@@ -130,9 +130,7 @@ check in-worktree.
 **Step 1: Drift check** — per the source plan's `## Drift check`, plus the rule-1
 addendum above.
 
-**Step 2: Execute** the source plan in full (steps 1–4, including the lockstep
-bump 0.2.33 → 0.2.34 and the `pnpm build` regeneration of
-`packages/cli/assets/public-package-versions.json`).
+**Step 2: Execute** the source plan in full.
 
 **Step 3: Verify (wrapper gate)**
 
@@ -155,13 +153,13 @@ git commit -m "feat(p01-t01): warn when oat sync manifest and invoking CLI versi
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-08-26 | reviews/artifact-plan-review-2026-08-26T192011Z.md | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| final  | code     | pending         | -          | -                                                           | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T192011Z.md | -             | -          | -           |
+| spec   | artifact | pending         | -          | -                                                           | -             | -          | -           |
+| design | artifact | pending         | -          | -                                                           | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
