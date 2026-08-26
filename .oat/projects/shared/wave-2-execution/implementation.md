@@ -112,7 +112,9 @@ oat_generated: false
 - m3 — `oat sync` advisory undocumented (`apps/oat-docs/docs/provider-sync/commands.md:48`): **address at the `document` step** (docs are shipped and already covered by this wave's bump).
 - m4 — sibling commands (`init/index.ts:1187`) still restamp `oatVersion` silently: **defer — out of the source plan's scope** ("this plan only reports provenance already present in the sync manifest"); backlog candidate filed at wave close.
 
-**Next:** fix round `w2-p01-fix-001` → narrowed re-review → `passed`.
+**Fix round 1 (`w2-p01-fix-001`, continuation through the original handle):** DONE — append-only commit `023c222948225be87955500cf6b73147ef6a75bd` (parent `11d4a2f1` root bookkeeping; task commit `b257e908` immutable; 3 files). M1 resolved by construction: `apply.ts` restamp now derives from `scopePlan.versionSkew !== undefined` (duplicate predicate and unused `OAT_VERSION` import removed); the two unreachable empty-string guards in `detectVersionSkew` were removed so the derivation is bit-for-bit the old restamp predicate; restamp-only path pinned in-mock; new coupling test (equal/older/newer). m1: both values quoted in the advisory. m2: `--scope all` cases (mixed human, mixed JSON on `user`, both stale). Focused 55/55; check/type-check 0; full `pnpm test` 3686/3686; mutations MUT-A/B/C/D/E all red (MUT-E only via the new coupling test); codex 0.149.1 zero findings. Root verified range and parent. Row `p01` → `fixes_completed`.
+
+**Next:** narrowed re-review round 2 (`w2-p01-review-002`, range `11d4a2f1..023c2229`) → `passed`.
 
 #### Outstanding Items
 
