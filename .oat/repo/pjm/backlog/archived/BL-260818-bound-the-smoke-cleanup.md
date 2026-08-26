@@ -1,7 +1,7 @@
 ---
 id: BL-260818-bound-the-smoke-cleanup
 title: Bound the smoke cleanup SIGTERM harness with a timeout
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - smoke
 assignee: null
 created: 2026-08-18T00:00:47.143Z
-updated: 2026-08-20T02:37:32Z
+updated: '2026-08-26T15:12:53Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-19-bound-smoke-cleanup-signal-wait.md
