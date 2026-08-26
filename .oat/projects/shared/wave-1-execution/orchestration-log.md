@@ -60,6 +60,29 @@ BASE_SHA=bf7aff9cbdbbd28d5709b93dbf0af2312cb0eb22 (origin/main after PR #208);
 Scaffold: `oat project new wave-1-execution --mode quick --no-commit`
 (`--no-commit` present on oat 0.2.32).
 
+### 2026-08-26 · structural · oat-gate-review · plan gate
+
+Two launches of the configured `oat-project-plan` gate (runIds
+78c8d6e8-9dab-438c-8d13-a87f9b3215ac, b4dd4619-35f6-41ec-942b-127a2fef6ea8)
+selected `cursor-gpt-5-6-sol-xhigh` and returned
+`review_failed / unexpected_post_selection_failure` (Cursor team usage limit;
+resets 2026-09-01). Evidence:
+`references/plan-gate-launch-failures-2026-08-26.md`. Reviews row `plan`
+remains `pending`.
+
+### 2026-08-26 · general · bug · gate target selection
+
+The gate availability probe is `cursor-agent --version`, which succeeds while
+the provider account is quota-exhausted, so the gate deterministically selects
+a target that cannot run and offers no post-selection fallback to the next
+priority target. Impact: the whole program blocks on an operator config/quota
+action. Follow-up: backlog candidate — gate exec-target selection should
+either probe entitlement (a cheap real invocation) or fall through to the
+next available target on a pre-child provider rejection.
+**Skill signal (gap):** `oat-wave-execute` rule 8 covers gate timeouts but not
+pre-child provider rejections; add "rejection before any reviewer output ⇒
+launch defect; do not spend remediation attempts; report as boundary".
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)
