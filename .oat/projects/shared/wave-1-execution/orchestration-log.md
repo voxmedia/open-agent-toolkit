@@ -176,6 +176,22 @@ four round-1 dispositions verified fixed; minor p02-r2-m1 deferred with
 rationale (`implementation.md`). Row `p02` → `passed`. Artifact
 `reviews/archived/p02-review-2026-08-26T135641Z.md`.
 
+### 2026-08-26 · structural · oat-reviewer · p01 round 1
+
+`w1-p01-review-001` (opus, auto) → 0C/1I/1M/2m; artifact
+`reviews/archived/p01-review-2026-08-26T140159Z.md`; STOP #1 assessed not
+indicated. All four converted to one bounded fix round (`implementation.md`
+"Review Received: p01 (round 1)").
+
+### 2026-08-26 · general · worked-well · reviewer-designed adversarial probes
+
+The p01 Important (post-detach re-reap that can never settle, losing the
+diagnostic and leaking temp dirs) was found ONLY by the reviewer's own probes
+(C1/C2/D) and mutation probes (E1/E2) — every implementer gate, the pinned
+tests, and three codex passes were green. **Skill signal (strengthens):**
+DR-260715-adversarial-probe-reviewer — keep the mandatory reviewer-designed
+probe for logic-bearing lanes.
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)

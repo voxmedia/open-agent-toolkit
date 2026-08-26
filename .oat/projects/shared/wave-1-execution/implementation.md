@@ -139,10 +139,10 @@ _- Outstanding Items_
 
 #### Phase Outcomes
 
-| Phase | Worktree                | Implementer outcome                                                                                                                                | Review outcome                         | Fix rounds | Merged |
-| ----- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------- | ------ |
-| p01   | `.worktrees/wave-1/p01` | DONE_WITH_CONCERNS (aedced64; 1 task; DoD 10/10 + test:smoke green; codex 3×P2 fixed pre-commit; concern: deadline 10s→60s after one >10s outlier) | pending                                | 0          | -      |
-| p02   | `.worktrees/wave-1/p02` | DONE_WITH_CONCERNS (c8fdefc3 + fix b486beb6; focused pass; release gates red pending wave-level 0.2.33 bump)                                       | passed (round 2: 0C/0I/0M/1m deferred) | 1          | -      |
+| Phase | Worktree                | Implementer outcome                                                                                          | Review outcome                         | Fix rounds      | Merged |
+| ----- | ----------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- | --------------- | ------ |
+| p01   | `.worktrees/wave-1/p01` | DONE_WITH_CONCERNS (aedced64; DoD 10/10 + test:smoke green; codex 3×P2 fixed pre-commit)                     | round 1: 0C/1I/1M/2m → fix round       | 1 (in progress) | -      |
+| p02   | `.worktrees/wave-1/p02` | DONE_WITH_CONCERNS (c8fdefc3 + fix b486beb6; focused pass; release gates red pending wave-level 0.2.33 bump) | passed (round 2: 0C/0I/0M/1m deferred) | 1               | -      |
 
 ### Review Received: p02 (round 1)
 
@@ -176,6 +176,22 @@ _- Outstanding Items_
 - p02-r2-m1 — malformed-version diagnostic interpolates raw whitespace (`tools/release/check-version-bumps.ts:85`): a manifest `version` containing surrounding whitespace/newline (now correctly rejected by the m2 fix) renders with doubled spaces or a line break inside the one-line error. Rationale for deferral: input is pathological, the gate still fails closed and names the package, the reviewer marked it explicitly optional, and another fix + re-review cycle is disproportionate before fan-in. Follow-up trigger: address at final review if any other release-tooling change lands in this wave; otherwise carry into the W2 release-tooling touch (JSON-quote the interpolated values).
 
 **Review row `p02` → `passed`.**
+
+### Review Received: p01 (round 1)
+
+**Date:** 2026-08-26
+**Review artifact:** reviews/archived/p01-review-2026-08-26T140159Z.md (reviewed head `aedced645d2caa21b9fde5de5142822ddf025431`, invocation auto, dispatch `w1-p01-review-001`, model opus)
+
+**Findings:** Critical 0 · Important 1 · Medium 1 · Minor 2. Reviewer probes A–F ran (listener/timer cleanup verified clean on every path; real ignored-SIGTERM child fails in ~4s with stage + reap detail; two mutation probes E1/E2 show the timeout branch and reap-before-`rm` ordering have no regression coverage). STOP condition #1 (wedge in production cleanup) assessed **not indicated**: `run-smoke.mjs` `waitForQuiescence` bounds cancellation (`abortGracePeriodMs = 5_000`), which plausibly explains the >10s outlier.
+
+**Dispositions (auto mode — convert; bounded fix round via the original implementer handle, one append-only commit):**
+
+- I1 — post-detach bounded reap can never settle (`cleanup.test.mjs:892`; root cause `:700` unref'd timer + `:711–718` `child.unref()`): **convert** — after `reapOrDetach` detaches, the `finally` must not await a second unbounded-by-handles wait; ensure the "SIGKILL did not reap it within …ms" diagnostic surfaces via `assert.fail` and that both `rm` calls still run (reviewer probes C1/C2/D reproduced the lost diagnostic, cancelled sibling tests, and leaked temp dirs).
+- M1 — no regression coverage for `runSignalCase`'s timeout branch / reap-before-`rm` ordering; comment at `:941–943` over-claims: **convert, option (2)** — make the two deadlines (and a SIGTERM-ignoring wrapper switch) injectable into `runSignalCase` and add one real-path case with a ~300ms deadline asserting the rejection message and that both temp directories are gone.
+- m1 — detach path destroys stdio before the diagnostic reads it (`:713–714` vs comment `:726–729`): **convert** — sample captured buffers before `reapOrDetach` and append late output, or move `destroy()` after the diagnostic; narrow the comment.
+- m2 — sizing comment omits the >10s outlier that drove 60s (`:655–660`): **convert** — record the outlier and reword the multiplier.
+
+**Next:** fix round `w1-p01-fix-001` (continuation of `w1-p01-impl-001`), then a fresh narrowed re-review; row `p01` → `fixes_completed` → `passed`.
 
 #### Outstanding Items
 

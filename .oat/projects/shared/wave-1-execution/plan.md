@@ -223,14 +223,14 @@ git commit -m "fix(p02-t01): reject publishable package versions overtaken by cu
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -                                                           | -                                        | -          | -           |
-| p02    | code     | passed  | 2026-08-26 | reviews/archived/p02-review-2026-08-26T135641Z.md           | b486beb60d83a5b0d1f46cc3881627da93acb354 | auto       | -           |
-| final  | code     | pending | -          | -                                                           | -                                        | -          | -           |
-| plan   | artifact | passed  | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T125608Z.md | -                                        | -          | -           |
-| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -           |
-| design | artifact | pending | -          | -                                                           | -                                        | -          | -           |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | fixes_added | 2026-08-26 | reviews/archived/p01-review-2026-08-26T140159Z.md           | aedced645d2caa21b9fde5de5142822ddf025431 | auto       | -           |
+| p02    | code     | passed      | 2026-08-26 | reviews/archived/p02-review-2026-08-26T135641Z.md           | b486beb60d83a5b0d1f46cc3881627da93acb354 | auto       | -           |
+| final  | code     | pending     | -          | -                                                           | -                                        | -          | -           |
+| plan   | artifact | passed      | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T125608Z.md | -                                        | -          | -           |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
