@@ -410,6 +410,12 @@ Head `7f78dab719bcc64c471412c341dd20f09e25b997` (after `196dae19` and the final-
 - Finalizer (`dedicated`): artifact commit `efe10a05` (27 paths) → the repo pre-commit formatter (lint-staged `oxfmt --write` on `*.json`/`*.md`) rewrote 9 immutable package files, so `recordDurability` returned 9 `hash-mismatch` errors; evidence commit `612e2dbf` recorded the non-durable attestation; `verifyTrackedRunFinalization` → `built-not-durable`, `pushAllowed: false` for the durability claim. Original bytes were not recoverable (no lint-staged backup stash retained them). Per the closeout contract this outcome is a recorded warning, not a blocker for approval/PR.
 - Tooling deviation (root, closeout): `9f906e1d` adds `.oat/**/explainers/**`, `.oat/repo/reference/project-recaps/**`, `.oat/repo/explainers/**` to `.oxfmtrc.jsonc` ignorePatterns and `--no-error-on-unmatched-pattern` to the lint-staged `*.md` task (wave-execute rule 7). Outside both source plans' scope; recorded here and in the Deviations table.
 
+## Final HiLL approval (IMPLEMENT-16, autonomous)
+
+- Pre-approval sequence (configured `workflow.postImplementSequence`): summary (`85d57fdf`), document (`1c3aeeca`), pr (PR #215, head `dbda5cdf`) — all complete; recap gate IMPLEMENT-19 terminal (`built-not-durable`, warning).
+- Evidence: final review row `passed` (round 2 artifact `reviews/archived/final-review-2026-08-26T154241Z.md`, head `58a5aa09`, dispatch `w1-final-review-002`); configured exit gate `allowed / passed` (run `b20f4349`, artifact `reviews/archived/final-review-2026-08-26T160106Z.md`); `oat_implement_exit_gate` fresh (rolling freshness checkpoints over closeout-only descendants).
+- Decision: `approval: approved`, `approval_source: oat-autonomous`, `status: post_approval` → no post-approval steps configured → `complete`. This approval waives nothing: no failed review, child failure, repository-policy, destructive-change, or credential boundary is open. Merge remains a separate, operator-authorized root action after CI.
+
 ## Deviations from Plan / Design
 
 | Task / Review | Source Artifact                                | Planned / Documented                                       | Actual / Accepted                                                      | Reason                                                                                                                                                  | Source of Truth                     | Follow-up                                                                            |
