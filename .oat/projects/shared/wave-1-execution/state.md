@@ -67,26 +67,26 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:ed0bfc4f87082def7cb0d1fad711b3df7d6c0272fb57c6c8f0ba484e2dfef2b2'
   freshness_head: ab08d3763a8affe3690ee125da33d65ec35ecddd
   freshness_fingerprint: 'sha256:effective-delta-v1:ed0bfc4f87082def7cb0d1fad711b3df7d6c0272fb57c6c8f0ba484e2dfef2b2'
-  launch_state: intent_persisted
+  launch_state: result_persisted
   launch_attempt_id: 'w1-exit-gate-20260826T184804Z'
   launch_started_at: '2026-08-26T18:48:04Z'
   launch_result_receipt: '/private/tmp/claude-502/-Users-thomas-stang-orca-workspaces-open-agent-toolkit-bug-triage/99821df5-a46b-4bd0-a700-8b9284593b2c/scratchpad/w1-exit-gate-20260826T184804Z.receipt.json'
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  gate_run_marker: '/var/folders/ch/kmbmcdfd4gb807zjsjt2td4h0000gp/T/oat-gate-runs/8485a4f9-8f68-420d-ac77-e69e9c6eb773.json'
+  gate_run_id: '8485a4f9-8f68-420d-ac77-e69e9c6eb773'
+  envelope_status: ok
+  artifact: '.oat/projects/shared/wave-1-execution/reviews/final-review-2026-08-26T185206Z.md'
+  handoff: 'Gate passed at the important threshold with 2 non-blocking minor findings; run oat-project-review-receive for final-review-2026-08-26T185206Z.md'
+  receive_state: intent_persisted
+  receive_correlation: 'run=8485a4f9-8f68-420d-ac77-e69e9c6eb773; handoff=receive; source=reviews/final-review-2026-08-26T185206Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/wave-1-execution/reviews/final-review-2026-08-26T185206Z.md'
+  receive_archived_artifact: '.oat/projects/shared/wave-1-execution/reviews/archived/final-review-2026-08-26T185206Z.md'
+  receive_event_identity: 'final | code | final-review-2026-08-26T185206Z.md'
+  receive_pre_head: 6ee4247a8cb1c756eb01ad2f4f4ee1c36d5b465b
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-26T18:48:04Z'
+  updated_at: '2026-08-26T18:53:56.728Z'
 # oat_implement_exit_gate (template comment retained below for reference)
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -127,7 +127,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/215' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T04:15:34.593Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-08-26T16:37:51.573Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T18:48:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T18:53:56.728Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_post_implement_sequence:
   status: complete # pre_approval | awaiting_approval | post_approval | failed | complete
