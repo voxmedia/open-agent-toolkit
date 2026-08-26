@@ -751,7 +751,7 @@ async function reapOrDetach(child, timeoutMs) {
       code: child.exitCode,
       detached: true,
       signal: child.signalCode,
-      timedOut: true,
+      timedOut: child.exitCode === null && child.signalCode === null,
     };
   }
   const reaped = await waitForChildExit(child, timeoutMs);
@@ -777,10 +777,10 @@ function mergeCapture(before, after) {
  * caller fails with. The message is returned rather than thrown so this branch
  * stays directly testable.
  *
- * Output is sampled both before and after the reap. The reap's detach path
- * destroys the child's pipes, so a read taken only afterwards could miss what
- * was buffered at the deadline; reading only beforehand would miss bytes that
- * arrive while the child is being killed.
+ * Output is read after the reap so writes made while the child was being killed
+ * still reach the diagnostic. The pre-reap sample plus `mergeCapture` exist so a
+ * caller supplying a resetting reader still gets a complete capture; they do not
+ * recover bytes left buffered in a stream that `detachChild` destroys.
  */
 async function forceKillAfterTimeout(
   child,
@@ -793,15 +793,18 @@ async function forceKillAfterTimeout(
     reapTimeoutMs = SIGNAL_CHILD_REAP_TIMEOUT_MS,
   },
 ) {
-  if (child.exitCode === null && child.signalCode === null) {
+  const forced = child.exitCode === null && child.signalCode === null;
+  if (forced) {
     child.kill('SIGKILL');
   }
   const stdoutAtDeadline = readStdout();
   const stderrAtDeadline = readStderr();
   const reaped = await reap(child, reapTimeoutMs);
-  const reapSummary = reaped.timedOut
-    ? `SIGKILL did not reap it within ${reapTimeoutMs}ms`
-    : `SIGKILL reaped it with code ${reaped.code} signal ${reaped.signal}`;
+  const reapSummary = !forced
+    ? `it exited on its own with code ${reaped.code} signal ${reaped.signal} just after the deadline`
+    : reaped.timedOut
+      ? `SIGKILL did not reap it within ${reapTimeoutMs}ms`
+      : `SIGKILL reaped it with code ${reaped.code} signal ${reaped.signal}`;
   const stdout = mergeCapture(stdoutAtDeadline, readStdout());
   const stderr = mergeCapture(stderrAtDeadline, readStderr());
   return {
@@ -1175,6 +1178,10 @@ test('a detached child still reports its diagnostic and still removes both temp 
       // if it awaits instead, the loop drains and neither the rejection below
       // nor either rm ever happens.
       reapBeforeCleanup: async (cleanupChild, timeoutMs) => {
+        // Ordering guard: the reap runs before either rm, so both directories
+        // must still exist at this point.
+        assert.equal(await exists(directories.harnessDirectory), true);
+        assert.equal(await exists(directories.repository), true);
         const startedAt = Date.now();
         const result = await reapOrDetach(cleanupChild, timeoutMs);
         cleanupReapMs = Date.now() - startedAt;
