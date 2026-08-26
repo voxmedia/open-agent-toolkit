@@ -83,12 +83,47 @@ oat_workflow_origin: native # native | imported
 #   receive_completed: false
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: 'sha256:2f6228ff15a4e55394695ae9688000ffdc414b364a28ec77c2359b7e71161f4b'
+  resolved_command: 'OAT_GATE_EXEC_TIMEOUT_MS=2400000 oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --avoid none --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0 # generation 1
+  reviewed_head: 2e106b66b78f7d80ed7eca27aa5eb7d103ec4a56 # final review round 2 (passed) reviewed head
+  implementation_base_ref: origin/main # 1bd5424b48af0f1cd385ce42246952d16ab438f7
+  implementation_fingerprint: 'sha256:effective-delta-v1:046f942aeffd44dac9ebd0796b51780fb8374f4ddb0b952355842aaa2ffe75e3'
+  freshness_head: 87a3014fa1b31c0887b9250551b161dc79fc61ed # round-2 receive commit (text-only closeout fixes)
+  freshness_fingerprint: 'sha256:effective-delta-v1:8c3181366c5e6a82fa274ba4d2c514ea3809b4efaf6de0676bd6e1c0eea32a5e'
+  launch_state: intent_persisted
+  launch_attempt_id: 'w2-exit-gate-20260826T211845Z'
+  launch_started_at: '2026-08-26T21:18:45Z'
+  launch_result_receipt: '/private/tmp/claude-502/-Users-thomas-stang-orca-workspaces-open-agent-toolkit-bug-triage/99821df5-a46b-4bd0-a700-8b9284593b2c/scratchpad/w2-exit-gate-20260826T211845Z.receipt.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-08-26T21:18:45.158Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T19:08:06.587Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T21:17:47.556Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T21:18:45.159Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: generate
