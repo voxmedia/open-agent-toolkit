@@ -193,7 +193,25 @@ _- Outstanding Items_
 
 **Fix round 1 (`w1-p01-fix-001`, continuation of `w1-p01-impl-001` through the original handle):** DONE — append-only commit `6a9ed1af959c70dc0f02b2472b590549e704b1c6` (parent `aedced64` immutable; +246/−33, one file). I1 via `detachChild` + `WeakSet` short-circuit in `reapOrDetach` (unref'd timer kept per plan step 1); M1 via injectable seams on `runSignalCase` + two real-path tests (mutations E1/E2 now red, I1 revert → cancelled tests); m1 buffers sampled at deadline and after reap (`mergeCapture`); m2 comment records the outlier. Leak check 0 dirs / 0 children. `node --test` 19/19 in 15s (`cancelledByParent=0`); `pnpm test:smoke` 139/139; full DoD 10/10 exit 0 (`pnpm test` 134s). Codex fix-diff pass: 1×P2 (timing bound) fixed. Root verified range and re-ran the focused suite. Row `p01` → `fixes_completed`.
 
-**Next:** narrowed re-review round 2 (`w1-p01-review-002`, range `aedced64..6a9ed1af`) → `passed`.
+### Review Received: p01 (round 2, narrowed)
+
+**Date:** 2026-08-26
+**Review artifact:** reviews/archived/p01-review-2026-08-26T143550Z.md (reviewed head `6a9ed1af959c70dc0f02b2472b590549e704b1c6`, range `aedced64..6a9ed1af`, prior round 1 / head `aedced64`, invocation auto, dispatch `w1-p01-review-002`, model opus)
+
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 3. Disposition Verification: I1 **verified fixed** (short-circuit revert → 3 cancelled), m1/m2/Codex-P2 verified fixed, seam defaults verified to reproduce pre-fix behavior, stage-case assertions byte-identical, out-of-scope guards verified; M1 **partially fixed** (deletion of the pre-cleanup reap is caught, reordering after `rm` is not — probe E2b green).
+
+**Verification record (round-1 fix dispositions):** what — I1, M1, m1, m2 + Codex P2; how — independent round-2 reviewer re-ran mutations I1-revert/E1/E2 on scratch copies plus new probes P1/P4/P5 and a leak sweep; where — round-2 artifact `## Disposition Verification` and `## Adversarial Probes`.
+
+**Dispositions (auto mode — convert; second and final bounded fix round via the original handle, one append-only commit):**
+
+- M1-r2 — reap-before-`rm` ordering unguarded against reorder (`cleanup.test.mjs:990`, assertion `:1188–1192`): **convert** — inside the detach test's `reapBeforeCleanup` seam, assert both directories still exist before delegating to the real `reapOrDetach` (reviewer's fix); mutation E2b must go red.
+- m1-r2 — `reapSummary` attributes an unsent SIGKILL when the child exits between deadline and kill (`:796–804`): **convert** — capture `forced` before the kill and add a third summary branch.
+- m2-r2 — detached short-circuit hard-codes `timedOut: true` (`:749–756`): **convert** — derive from recorded status.
+- m3-r2 — pre-reap sample comment over-claims (`:780–783`): **convert** — narrow the comment to the actual contract.
+
+**Cycle accounting:** this is review cycle 2 of the 3-cycle governance cap for scope p01; round 3 is the last permitted cycle, so the round-3 disposition passes on 0C/0I and defers any residual Medium/Minor with rationale rather than opening a fourth cycle.
+
+**Next:** fix round `w1-p01-fix-002`, then narrowed re-review round 3 (`w1-p01-review-003`) → `passed`.
 
 #### Outstanding Items
 

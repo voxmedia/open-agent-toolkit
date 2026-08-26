@@ -192,6 +192,20 @@ tests, and three codex passes were green. **Skill signal (strengthens):**
 DR-260715-adversarial-probe-reviewer — keep the mandatory reviewer-designed
 probe for logic-bearing lanes.
 
+### 2026-08-26 · structural · oat-reviewer · p01 round 2 (narrowed)
+
+`w1-p01-review-002` (opus, auto, range `aedced64..6a9ed1af`) → 0C/0I/1M/3m; I1
+verified fixed; M1 partially fixed (reorder mutation E2b still green). All four
+converted to fix round 2 (`implementation.md`). Artifact
+`reviews/archived/p01-review-2026-08-26T143550Z.md`.
+
+### 2026-08-26 · general · feedback · mutation-class coverage
+
+Round-1's "cover the ordering" fix guarded deletion but not reordering; the
+round-2 reviewer's reorder mutation (E2b) caught it. **Skill signal (gap):**
+reviewer briefs for ordering/containment claims should ask for both delete-
+and reorder-class mutations, not "a mutation".
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)
