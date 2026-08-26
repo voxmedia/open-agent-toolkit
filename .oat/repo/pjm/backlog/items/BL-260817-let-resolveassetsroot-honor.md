@@ -11,9 +11,10 @@ labels:
   - flake
 assignee: null
 created: 2026-08-17T09:21:32.316Z
-updated: 2026-08-17T09:21:32.316Z
+updated: 2026-08-20T02:37:32Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-19-hermetic-cli-assets-root.md
 ---
 
 ## Description
@@ -28,5 +29,14 @@ Note: the concurrent writer that rebuilds `packages/cli/assets` mid-suite was ne
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- `resolveAssetsRoot` honors a non-empty `OAT_ASSETS_DIR` and applies the same
+  directory and bundle-integrity validation used for the packaged default.
+- An explicit missing, malformed, or version-mismatched override fails closed;
+  an unset or blank override preserves the packaged default.
+- `packages/cli/src/fs/assets.test.ts` covers override, fallback, and invalid
+  bundle behavior without mutating process-global environment.
+- `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs` bundles once
+  into a private temporary directory, reads built CLI assets from that root,
+  restores environment state, and removes the directory on every path.
+- Required lockstep public-package versions and release validation are updated
+  for the shipped CLI behavior change.

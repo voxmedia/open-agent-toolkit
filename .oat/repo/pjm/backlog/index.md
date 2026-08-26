@@ -4,6 +4,25 @@
 
 ## Curated Overview
 
+- GitHub issue triage (2026-08-19) added three high-priority lifecycle
+  reliability records: `BL-260820-bind-each-gate-review` (Bind each gate review
+  disposition to its exact received ledger event) from #194,
+  `BL-260820-track-pr-closeout-evidence` (Track PR-closeout evidence freshness
+  against the current head) from #201, and
+  `BL-260820-emit-source-qualified` (Emit source-qualified provenance envelopes
+  for review and gate receipts) from #202. The same pass linked #197 to the
+  existing activity-aware timeout record and #200 to the existing bounded
+  review-cycle override record; those two items predate this session.
+- Skills-corpus verification (2026-08-18) resolved eight reported leads into
+  three medium-priority workstreams: `BL-260819-repair-verified-bundled-skill`
+  (Repair verified bundled skill contract drift) groups four confirmed bundled
+  skill inconsistencies into one release-shaped fix;
+  `BL-260819-refresh-codex-skill-model` (Refresh codex-skill model routing and
+  repository-check policy) corrects repo-only Codex guidance; and
+  `BL-260819-classify-canonical-skills-by` (Classify canonical skills by
+  distribution, lifecycle, and tenant scope) prevents canonical-directory
+  counts from being mistaken for the public bundle. The audit refuted the
+  reported MIT/shadcn provenance concern, so no licensing item was added.
 - Explainer publication hardening (explainer-improvements-v2, CLI `0.2.31`
   pending merge) closed a credential-bearing publication-root bypass with
   version-agnostic gates and made protected-mode publication durably
@@ -117,16 +136,20 @@
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                                                  | open   | high     | feature | L        |
 | BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts                     | open   | high     | task    | M        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches                             | open   | high     | feature | M        |
+| BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                       | open   | high     | task    | M        |
+| BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                    | open   | high     | feature | M        |
 | BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                                    | open   | high     | task    | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                     | open   | high     | feature | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                               | open   | high     | feature | L        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                               | open   | high     | task    | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                           | open   | high     | task    | S        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                        | open   | high     | feature | M        |
+| BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                              | open   | high     | feature | L        |
 | BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version                                  | open   | high     | feature | S        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                            | open   | medium   | feature | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                         | open   | medium   | feature | M        |
 | BL-260818-bound-the-smoke-cleanup        | Bound the smoke cleanup SIGTERM harness with a timeout                                     | open   | medium   | task    | S        |
+| BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                     | open   | medium   | feature | M        |
 | BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path | open   | medium   | task    | S        |
 | BL-260817-detect-branch-behind-published | Detect branch-behind-published-main package versions in CI                                 | open   | medium   | task    | S        |
 | BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap | open   | medium   | task    | M        |
@@ -138,6 +161,8 @@
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                          | open   | medium   | feature | L        |
 | BL-260817-let-resolveassetsroot-honor    | Let resolveAssetsRoot honor OAT_ASSETS_DIR and make smoke asset reads hermetic             | open   | medium   | task    | S        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                  | open   | medium   | feature | M        |
+| BL-260819-refresh-codex-skill-model      | Refresh codex-skill model routing and repository-check policy                              | open   | medium   | task    | S        |
+| BL-260819-repair-verified-bundled-skill  | Repair verified bundled skill contract drift                                               | open   | medium   | task    | M        |
 | BL-260818-require-repo-wide-call-site    | Require repo-wide call-site sweeps for cross-cutting options in phase-implementer guidance | open   | medium   | task    | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                              | open   | medium   | feature | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                 | open   | medium   | feature | S        |
