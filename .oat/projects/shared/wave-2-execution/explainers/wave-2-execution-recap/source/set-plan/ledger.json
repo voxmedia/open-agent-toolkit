@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "explainer-kit.set-plan-ledger/v1",
+  "planId": "wave-2-execution-recap-floor",
+  "terminology": [
+    {
+      "term": "wave",
+      "meaning": "One ordered slice of the 2026-08-19 execution program, run as a single wrapper OAT project."
+    },
+    {
+      "term": "lane",
+      "meaning": "One phase of the wave, governed by exactly one immutable external plan."
+    },
+    {
+      "term": "external plan",
+      "meaning": "The immutable source document that is a lane's entire implementation contract."
+    },
+    {
+      "term": "version skew",
+      "meaning": "A sync manifest whose recorded producing CLI version differs from the version now invoking sync."
+    },
+    {
+      "term": "lockstep bump",
+      "meaning": "One version increment applied to all five public packages together."
+    }
+  ],
+  "statuses": [
+    {
+      "subject": "implementation",
+      "value": "complete"
+    },
+    {
+      "subject": "reviews",
+      "value": "passed"
+    },
+    {
+      "subject": "definition of done",
+      "value": "green"
+    }
+  ],
+  "numbers": [
+    {
+      "subject": "lanes",
+      "value": 1,
+      "unit": "lane"
+    },
+    {
+      "subject": "definition-of-done gates",
+      "value": 8,
+      "unit": "gates"
+    },
+    {
+      "subject": "focused test cases",
+      "value": 55,
+      "unit": "tests"
+    }
+  ]
+}
