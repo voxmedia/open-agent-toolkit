@@ -140,3 +140,17 @@ release:validate 0 · build:docs 0.
 
 Roll-up: summarized in `summary.md` `## Workflow Observations` before any
 archive step.
+
+## Exit-gate boundary (2026-08-26)
+
+Configured implement exit gate (`claude-fable-skip-permissions`, `--avoid none`, 40-minute ceiling) blocked in generation 1 after two completed attempts:
+
+- Attempt 1 — run `4199a1c1`, 21:19:12Z–21:22:34Z, `targeting_correlation_failed`. The gate child launched `pnpm check`/`type-check` in the background, armed a waiter, and ended its turn ("Waiting for the monitor events") — in headless mode that ends the process, so no artifact was written.
+- Attempt 2 — run `baa84df9`, runner launched as an orchestrator background task and killed by the host ~90 s in (third external runner kill this session); no envelope, no receipt, no artifact; not counted as a completed attempt.
+- Attempt 3 — run `a31a6325`, launched detached (`nohup … & disown`; macOS has no `setsid`), 21:27:14Z–21:31:45Z, `targeting_correlation_failed`. The child completed the substantive review (source read, focused suites, two end-to-end CLI probes, docs check, `apply.ts:187` confirmed) and then backgrounded the full DoD chain behind a waiter and ended its turn one step before writing the artifact. Its background `check`/`type-check` recorded exit 0 before the process tree died.
+
+Evidence: receipts `w2-exit-gate-20260826T211845Z`, `…T212345Z`, `…T212619Z` in the session scratchpad; gate-written project-log entries `56f19f0f`, `72e840cd`; child transcripts `283c13cb`, `1a35011f`, `96f809f2` under the project's Claude transcript directory.
+
+Disposition: `onFailure: block`, `maxAttempts: 2` reached with no review verdict. The failure is the gate target's headless behaviour (backgrounding long gates then yielding), not a finding against the wave, and an identical relaunch reproduces it (3 of 3 children). Replacing the route, prompt, or provider is outside the run's authority, so this is a boundary for the operator: either re-authorize the same gate with the target/prompt adjusted to run DoD gates inline, or authorize a documented gate disposition. W1's two generations of this same gate passed on 2026-08-26 (runs `b20f4349`, `8485a4f9`), so the regression is in the child behaviour introduced since, not the gate configuration.
+
+Rule for W3–W4 (pending operator input): before launching the exit gate, confirm the gate target's headless run cannot yield on background work — if the harness exposes background/monitor tools to the child, the gate prompt must forbid them or the target must run the DoD inline.

@@ -84,7 +84,7 @@ oat_workflow_origin: native # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_implement_exit_gate:
-  status: pending
+  status: blocked # generation 1: two completed attempts, both targeting_correlation_failed; maxAttempts reached; onFailure block — operator input required
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:2f6228ff15a4e55394695ae9688000ffdc414b364a28ec77c2359b7e71161f4b'
@@ -92,18 +92,18 @@ oat_implement_exit_gate:
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
-  attempts_completed: 1 # generation 1; attempt 1 = run 4199a1c1 targeting_correlation_failed (child ended its turn on a backgrounded build/gate chain without writing an artifact; exit 1; not remediable) — attempt 2 launched identically
+  attempts_completed: 2 # generation 1; attempt 1 = run 4199a1c1, attempt 3 = run a31a6325 (attempt 2 = run baa84df9, runner killed by host, not counted); both completed attempts targeting_correlation_failed
   reviewed_head: 2e106b66b78f7d80ed7eca27aa5eb7d103ec4a56 # final review round 2 (passed) reviewed head
   implementation_base_ref: origin/main # 1bd5424b48af0f1cd385ce42246952d16ab438f7
   implementation_fingerprint: 'sha256:effective-delta-v1:046f942aeffd44dac9ebd0796b51780fb8374f4ddb0b952355842aaa2ffe75e3'
   freshness_head: 87a3014fa1b31c0887b9250551b161dc79fc61ed # round-2 receive commit (text-only closeout fixes)
   freshness_fingerprint: 'sha256:effective-delta-v1:8c3181366c5e6a82fa274ba4d2c514ea3809b4efaf6de0676bd6e1c0eea32a5e'
-  launch_state: intent_persisted # attempt 3 (detached launch); attempt 2 = run baa84df9 not_accepted — host killed the gate runner ~90s after launch, no envelope/receipt/artifact, not counted as a completed attempt
+  launch_state: result_persisted # attempt 3 (detached nohup launch) completed 2026-08-26T21:31:45Z, exit 1
   launch_attempt_id: 'w2-exit-gate-20260826T212619Z' # attempt 1 w2-exit-gate-20260826T211845Z (run 4199a1c1); attempt 2 w2-exit-gate-20260826T212345Z (run baa84df9, runner killed)
   launch_started_at: '2026-08-26T21:26:19Z'
   launch_result_receipt: '/private/tmp/claude-502/-Users-thomas-stang-orca-workspaces-open-agent-toolkit-bug-triage/99821df5-a46b-4bd0-a700-8b9284593b2c/scratchpad/w2-exit-gate-20260826T212619Z.receipt.json'
-  gate_run_marker: '/var/folders/ch/kmbmcdfd4gb807zjsjt2td4h0000gp/T/oat-gate-runs/4199a1c1-6bec-4c70-adfb-c540d8e37000.json'
-  gate_run_id: '4199a1c1-6bec-4c70-adfb-c540d8e37000'
+  gate_run_marker: '/var/folders/ch/kmbmcdfd4gb807zjsjt2td4h0000gp/T/oat-gate-runs/a31a6325-8062-43cc-95e4-f6a8cfd72305.json' # attempt 1 marker 4199a1c1-6bec-4c70-adfb-c540d8e37000.json
+  gate_run_id: 'a31a6325-8062-43cc-95e4-f6a8cfd72305' # attempt 1 run 4199a1c1-6bec-4c70-adfb-c540d8e37000
   envelope_status: targeting_correlation_failed
   artifact: null
   handoff: null
@@ -116,14 +116,14 @@ oat_implement_exit_gate:
   receive_commit: null
   receive_eligible: false
   receive_completed: false
-  failure: 'attempt 1 (run 4199a1c1-6bec-4c70-adfb-c540d8e37000): review_completed_targeting_correlation_failed — no artifact carried the run ID; project-log entry recorded by the gate (56f19f0f)'
-  updated_at: '2026-08-26T21:26:19.929Z'
+  failure: 'attempts 1 and 3 (runs 4199a1c1, a31a6325): review_completed_targeting_correlation_failed — the claude-fable-skip-permissions child backgrounded the DoD gates behind a waiter and ended its headless turn before writing the artifact (child transcripts 283c13cb, 96f809f2); no artifact carried either run ID; project-log entries recorded by the gate (56f19f0f, 72e840cd). Attempt 2 (run baa84df9) runner killed by host at ~90s, no envelope. Gate blocked at maxAttempts=2; not self-authorized further.'
+  updated_at: '2026-08-26T21:33:49.667Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T19:08:06.587Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T21:26:19.929Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T21:33:49.668Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -165,4 +165,4 @@ None
 
 ## Next Milestone
 
-Closeout remaining: configured exit gate (final review passed at round 2, reviewed head 2e106b66) → pre-approval sequence (summary refresh → document → PR) → autonomous HiLL → complete-state. Final DoD, synthesis, summary.md, and backlog archival are done.
+BLOCKED at the configured exit gate (final review passed at round 2, reviewed head 2e106b66; exit gate generation 1 blocked after two completed attempts that produced no artifact — see `oat_implement_exit_gate.failure` and the orchestration log). Resume: operator decision on the gate, then → pre-approval sequence (summary refresh → document → PR) → autonomous HiLL → complete-state. Final DoD, synthesis, summary.md, and backlog archival are done.
