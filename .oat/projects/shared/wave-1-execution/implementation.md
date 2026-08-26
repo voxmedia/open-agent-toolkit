@@ -383,6 +383,10 @@ not as durable anchors.
 
 **Verification:** Run: `node --test tools/smoke/runner/cleanup.test.mjs`; `pnpm test:smoke`; `pnpm lint`; `pnpm format` — Result: all exit 0.
 
+## Final DoD (Step 12) at the final head
+
+Head `7f78dab719bcc64c471412c341dd20f09e25b997` (after `196dae19` and the final-review bookkeeping), exit codes captured per gate: check 0 (1s) · type-check 0 (1s) · test 0 (144s; 273 files / 3672 vitest + 39/39 node:test, 0 cancelled) · build 0 (1s) · check:skill-bumps 0 (3s) · release:check-versions 0 (0s) · release:validate 0 (24s) · build:docs 0 (2s) · lint 0 (1s) · format 0 (4s). Logs: session scratchpad `w1-final-*.log`.
+
 ## Deviations from Plan / Design
 
 | Task / Review | Source Artifact                                | Planned / Documented                                       | Actual / Accepted                                                  | Reason                                                                                                                                                  | Source of Truth                     | Follow-up                                                                            |
