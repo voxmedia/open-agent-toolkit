@@ -648,6 +648,103 @@ async function waitForFile(path, child) {
   throw new Error(`timed out waiting for signal sentinel: ${path}`);
 }
 
+// Test-only containment bounds for the signal harness child. These exist so a
+// child that misses or ignores SIGTERM fails one test with diagnostics instead
+// of wedging the whole suite; they never relax the exit contract asserted below.
+//
+// Sizing: the child finishes its SIGTERM cleanup and exits in ~1s (measured
+// repeatedly at 0.9-1.7s while the full workspace suite ran on a saturated
+// 14-core machine). This deadline is therefore ~35x the observed worst case --
+// deliberately generous, because a bound that is merely "comfortable" turns
+// scheduler stalls on a contended CI runner into a flaky red gate, while an
+// over-generous bound only makes a true wedge fail in a minute instead of never.
+const SIGNAL_CHILD_EXIT_TIMEOUT_MS = 60_000;
+// Second bound, after SIGKILL. A killed child runs no cleanup, so this only
+// covers reaping and parent event-loop scheduling under the same contention.
+const SIGNAL_CHILD_REAP_TIMEOUT_MS = 15_000;
+// Deliberately tiny bound used only by the forced-timeout regression below, so
+// proving the timeout path does not slow the suite.
+const SIGNAL_CHILD_TIMEOUT_PROBE_MS = 250;
+
+/**
+ * Wait for `child` to exit, bounded by `timeoutMs`.
+ *
+ * Resolves with `{ code, signal, timedOut }`, where `timedOut` is true only when
+ * the deadline elapsed first. The exit listener and the deadline timer are
+ * released on every path, and a child that already exited resolves from its
+ * recorded status rather than awaiting an `exit` event that cannot fire again.
+ */
+function waitForChildExit(child, timeoutMs) {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    return Promise.resolve({
+      code: child.exitCode,
+      signal: child.signalCode,
+      timedOut: false,
+    });
+  }
+  return new Promise((resolvePromise) => {
+    // Single owner for both subscriptions: whichever path settles first releases
+    // the other, so neither an exit listener nor a deadline timer is left behind.
+    const pending = {};
+    const settle = (result) => {
+      clearTimeout(pending.timer);
+      child.removeListener('exit', pending.onExit);
+      resolvePromise(result);
+    };
+    pending.onExit = (code, signal) =>
+      settle({ code, signal, timedOut: false });
+    pending.timer = setTimeout(
+      () => settle({ code: null, signal: null, timedOut: true }),
+      timeoutMs,
+    );
+    pending.timer.unref();
+    child.once('exit', pending.onExit);
+  });
+}
+
+/**
+ * Bounded reap that refuses to leak containment. A child which outlives even the
+ * kill deadline would otherwise keep this test process alive through its
+ * referenced handle and piped stdio, so the last resort is to destroy those
+ * pipes and unref the child: the suite still fails loudly, but it can exit.
+ */
+async function reapOrDetach(child, timeoutMs) {
+  const reaped = await waitForChildExit(child, timeoutMs);
+  if (reaped.timedOut) {
+    child.stdout?.destroy();
+    child.stderr?.destroy();
+    child.unref();
+  }
+  return reaped;
+}
+
+/**
+ * Handle a child that missed its SIGTERM deadline: force-kill it if it is still
+ * alive, reap it through a second bounded wait, and build the diagnostic the
+ * caller fails with. The message is returned rather than thrown so this branch
+ * stays directly testable.
+ *
+ * Output is read through accessors rather than passed by value: the child can
+ * still emit on stdout or stderr between the missed deadline and the reap, and
+ * that late output is often the reason the deadline was missed.
+ */
+async function forceKillAfterTimeout(
+  child,
+  { pauseStage, readStderr, readStdout },
+) {
+  if (child.exitCode === null && child.signalCode === null) {
+    child.kill('SIGKILL');
+  }
+  const reaped = await reapOrDetach(child, SIGNAL_CHILD_REAP_TIMEOUT_MS);
+  const reapSummary = reaped.timedOut
+    ? `SIGKILL did not reap it within ${SIGNAL_CHILD_REAP_TIMEOUT_MS}ms`
+    : `SIGKILL reaped it with code ${reaped.code} signal ${reaped.signal}`;
+  return {
+    message: `signal test child did not exit within ${SIGNAL_CHILD_EXIT_TIMEOUT_MS}ms of SIGTERM during ${pauseStage}; ${reapSummary}\nstdout:\n${readStdout()}\nstderr:\n${readStderr()}`,
+    reaped,
+  };
+}
+
 async function runSignalCase(pauseStage) {
   const repository = await createRepository(`oat-smoke-signal-${pauseStage}-`);
   const harnessDirectory = await mkdtemp(join(tmpdir(), 'oat-smoke-signal-'));
@@ -760,12 +857,19 @@ try {
   try {
     await waitForFile(sentinelPath, child);
     assert.equal(child.kill('SIGTERM'), true);
-    const exit = await new Promise((resolvePromise) => {
-      child.once('exit', (code, signal) => resolvePromise({ code, signal }));
-    });
+    const exit = await waitForChildExit(child, SIGNAL_CHILD_EXIT_TIMEOUT_MS);
+
+    if (exit.timedOut) {
+      const { message } = await forceKillAfterTimeout(child, {
+        pauseStage,
+        readStderr: () => stderr,
+        readStdout: () => stdout,
+      });
+      assert.fail(message);
+    }
 
     assert.deepEqual(
-      exit,
+      { code: exit.code, signal: exit.signal },
       { code: 143, signal: null },
       `stdout:\n${stdout}\nstderr:\n${stderr}`,
     );
@@ -781,6 +885,11 @@ try {
     if (child.exitCode === null && child.signalCode === null) {
       child.kill('SIGKILL');
     }
+    // Reap before removing the temporary directories: a child that is still
+    // running could otherwise write into paths this cleanup is deleting. The
+    // wait is bounded, so an unreapable child still cannot wedge the suite --
+    // the failing assertion above already reports that condition.
+    await reapOrDetach(child, SIGNAL_CHILD_REAP_TIMEOUT_MS);
     await rm(harnessDirectory, { force: true, recursive: true });
     await rm(repository, { force: true, recursive: true });
   }
@@ -792,4 +901,86 @@ test('SIGTERM during provision cleans the durable manifest without collateral wr
 
 test('SIGTERM during drive cleans the durable manifest without collateral writes', async () => {
   await runSignalCase('drive');
+});
+
+test('bounded exit wait times out, then the harness force-kills, reaps, and reports', async () => {
+  const harnessDirectory = await mkdtemp(
+    join(tmpdir(), 'oat-smoke-signal-timeout-'),
+  );
+  const sentinelPath = join(harnessDirectory, 'ready.json');
+  const wrapperPath = join(harnessDirectory, 'ignore-sigterm.mjs');
+  await writeFile(
+    wrapperPath,
+    `
+import { writeFileSync } from 'node:fs';
+
+setInterval(() => {}, 1_000);
+process.on('SIGTERM', () => {});
+writeFileSync(${JSON.stringify(sentinelPath)}, '{"ready":true}');
+`,
+  );
+
+  const child = spawn(process.execPath, [wrapperPath], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  try {
+    // The sentinel is written only after the SIGTERM handler is installed, so
+    // the signal below is deterministically ignored rather than racing setup.
+    await waitForFile(sentinelPath, child);
+    assert.equal(child.kill('SIGTERM'), true);
+
+    const startedAt = Date.now();
+    const ignored = await waitForChildExit(
+      child,
+      SIGNAL_CHILD_TIMEOUT_PROBE_MS,
+    );
+    assert.deepEqual(ignored, { code: null, signal: null, timedOut: true });
+    assert.equal(child.exitCode, null);
+    assert.equal(child.signalCode, null);
+
+    // Drive the harness's own fallback rather than killing the child here, so
+    // this regression fails if `runSignalCase` ever stops force-killing,
+    // reaping, or reporting after its deadline.
+    let readAfterReap = false;
+    const { message, reaped } = await forceKillAfterTimeout(child, {
+      pauseStage: 'provision',
+      readStderr: () => 'captured-stderr-marker',
+      readStdout: () => {
+        // Output must be sampled after the child is reaped, so late writes made
+        // while it was being killed still reach the diagnostic.
+        readAfterReap = child.exitCode !== null || child.signalCode !== null;
+        return 'captured-stdout-marker';
+      },
+    });
+    assert.ok(readAfterReap, 'captured output must be read after reaping');
+    assert.deepEqual(reaped, {
+      code: null,
+      signal: 'SIGKILL',
+      timedOut: false,
+    });
+    assert.match(message, /during provision/);
+    assert.match(message, /SIGKILL reaped it with code null signal SIGKILL/);
+    assert.match(message, /captured-stdout-marker/);
+    assert.match(message, /captured-stderr-marker/);
+
+    // An already-exited child resolves from recorded status instead of waiting
+    // for an `exit` event that can no longer fire.
+    assert.deepEqual(
+      await waitForChildExit(child, SIGNAL_CHILD_TIMEOUT_PROBE_MS),
+      { code: null, signal: 'SIGKILL', timedOut: false },
+    );
+
+    // The whole timeout path stays far inside the deadline the harness applies
+    // to a real signal case.
+    assert.ok(
+      Date.now() - startedAt < SIGNAL_CHILD_EXIT_TIMEOUT_MS,
+      'forced timeout path must complete within the signal-case deadline',
+    );
+  } finally {
+    if (child.exitCode === null && child.signalCode === null) {
+      child.kill('SIGKILL');
+    }
+    await reapOrDetach(child, SIGNAL_CHILD_REAP_TIMEOUT_MS);
+    await rm(harnessDirectory, { force: true, recursive: true });
+  }
 });
