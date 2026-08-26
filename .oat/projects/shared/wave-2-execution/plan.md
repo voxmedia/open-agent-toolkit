@@ -46,7 +46,7 @@ governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
 3. **Confirm the source plan's `## Done criteria`**, then run the full DoD gates
    in this order, invoking each gate literally and capturing each exit code to a
    log file: `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`,
-   `pnpm run check:skill-bumps`, `pnpm release:check-versions`,
+   `pnpm run check:skill-bumps`, `git fetch origin` then `pnpm release:check-versions`,
    `pnpm release:validate`, `pnpm build:docs`. (`pnpm lint`/`pnpm format` are not
    required — this wave touches neither `tools/smoke` nor `.agents/skills`.)
    Toolchain: Node 22.17.0 / pnpm 10.13.1; `pnpm run worktree:init` already ran.
@@ -96,12 +96,21 @@ check in-worktree.
   `apply.ts` at :169; `index.ts:238` is the manifest-path line, the `loadManifest`
   call is :243) — authoring imprecision, not drift. No `diagnostics`/`warnings`/
   `advisories` field exists in sync output (STOP #1 does not apply).
-- **Rule-1 addendum (coverage gap):** `OAT_VERSION` lives in
-  `packages/cli/src/shared/oat-version.ts` (imported by `apply.ts` and
-  `manifest/manager.ts`), outside the plan's drift command. The in-worktree drift
-  check MUST additionally run
-  `git diff --stat 6f443c08..HEAD -- packages/cli/src/shared/oat-version.ts` and
-  treat a change there as a material mismatch to compare before editing.
+- **Rule-1 addendum (coverage gaps):** the source plan's drift command omits two
+  surfaces its implementation depends on or writes. The in-worktree drift check
+  MUST additionally run, before editing:
+  1. `git diff --stat 6f443c08..HEAD -- packages/cli/src/shared/oat-version.ts`
+     (`OAT_VERSION`, imported by `apply.ts` and `manifest/manager.ts`) — a
+     change is a material mismatch to compare against the plan;
+  2. `git fetch origin && git diff --stat 1bd5424b..origin/main -- packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml packages/cli/assets/public-package-versions.json`
+     (the release surfaces the plan writes, revalidated against the recorded wave
+     baseline `1bd5424b` on a freshly fetched `origin/main`) — any advance of the
+     public-package baseline after planning is a material mismatch: STOP and
+     report the new baseline rather than bumping from a stale one.
+     Separately, run `git fetch origin` immediately before every
+     `pnpm release:check-versions` invocation so the strict-greater guard compares
+     against a current `origin/main` (the wrapper DoD sequence in the execution
+     contract requires this).
 - **Release-root intersection (W1 rule):** every touched file sits under
   `packages/cli/src/**` (publishable change; `versionPolicyIgnorePatterns` is
   `['assets/**']`); the plan's step 4 lockstep bump **0.2.33 → 0.2.34** is
@@ -160,19 +169,24 @@ git commit -m "feat(p01-t01): warn when oat sync manifest and invoking CLI versi
 | plan   | artifact | fixes_completed | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T192011Z.md | -             | -          | -           |
 | spec   | artifact | pending         | -          | -                                                           | -             | -          | -           |
 | design | artifact | pending         | -          | -                                                           | -             | -          | -           |
-| plan   | artifact | received        | 2026-08-26 | reviews/artifact-plan-review-2026-08-26T193112Z.md          | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T193112Z.md | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 ## Implementation Complete
 
-- [ ] 1/1 phases, 1/1 tasks complete
-- [ ] The source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
-- [ ] **Serialized backlog bookkeeping** (integration branch, after the phase passes):
-      `oat backlog archive BL-260718-warn-when-oat-sync-uses` with a real outcome summary, one commit
-- [ ] Orchestration-log end-of-run synthesis written; roll-up into `summary.md`
-      before any archive step
-- [ ] Full DoD gates green on the integration branch
+Strictly ordered — each item depends on the one before it (wave-execute Step 6
+closeout sequence):
+
+1. [ ] 1/1 phases, 1/1 tasks complete; the source plan's `## Done criteria`
+       confirmed (recorded in `implementation.md`)
+2. [ ] Full DoD gates green on the integration branch (final verification,
+       exit codes captured per gate)
+3. [ ] Orchestration-log end-of-run synthesis written, then rolled up into
+       `summary.md` — before any archive step
+4. [ ] **Serialized backlog bookkeeping**, only after 2 and 3:
+       `oat backlog archive BL-260718-warn-when-oat-sync-uses` with a real
+       outcome summary, one commit
 
 ## References
 
