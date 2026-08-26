@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "explainer-kit.set-plan-request/v1",
+  "recipe": {
+    "id": "project-recap",
+    "version": "2"
+  },
+  "factBaseHash": "sha256:75444c5cbe3a90694ee8c08dc2812f79d6cb5576de551a28cec5e295186f9597",
+  "sourceIds": ["plan", "implementation", "summary"],
+  "discovery": {
+    "rounds": 0,
+    "findings": [],
+    "reason": "not-requested"
+  },
+  "planHash": "sha256:2f17f4a534e0a354e3658d49d9aa980c34f5377afde719fed0e98aaf50067403"
+}

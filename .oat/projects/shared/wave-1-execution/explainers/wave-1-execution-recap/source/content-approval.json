@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "explainer-kit.content-approval/v2",
+  "runId": "run-051612fb-0075-43de-b2dd-0aea4209775f",
+  "mode": "unattended",
+  "status": "approved",
+  "marking": "auto-drafted",
+  "reviewedSource": {
+    "kind": "approved-oat-artifacts",
+    "locator": "https://github.com/voxmedia/open-agent-toolkit",
+    "repository": "voxmedia/open-agent-toolkit",
+    "repositoryUrl": "https://github.com/voxmedia/open-agent-toolkit",
+    "revision": "6cd0919ab4c675cf9d2c9c4023b31d58ebb1b52b"
+  },
+  "authorResultPaths": ["source/author/project-recap.json"],
+  "attempts": [],
+  "artifacts": [
+    {
+      "artifactId": "project-recap",
+      "origin": "floor",
+      "authoring": "html",
+      "contentPath": "source/content/project-recap.html",
+      "authorResultPath": "source/author/project-recap.json"
+    }
+  ]
+}
