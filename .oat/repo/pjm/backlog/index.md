@@ -144,6 +144,7 @@
 | BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                       | open   | high     | task    | M        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                    | open   | high     | feature | M        |
 | BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                                    | open   | high     | task    | M        |
+| BL-260826-gate-targets-must-not-yield    | Gate targets must not yield on background work in headless mode                            | open   | high     | task    | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                     | open   | high     | feature | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                               | open   | high     | feature | L        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                               | open   | high     | task    | M        |
@@ -155,6 +156,7 @@
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                         | open   | medium   | feature | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                     | open   | medium   | feature | M        |
 | BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path | open   | medium   | task    | S        |
+| BL-260826-deterministic-smoke-tier-leaks | Deterministic smoke tier leaks worktrees on interrupted runs                               | open   | medium   | task    | S        |
 | BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap | open   | medium   | task    | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                 | open   | medium   | feature | M        |
 | BL-260817-drop-explainer-kit-publish     | Drop explainer-kit publish-request/v1 in a future minor                                    | open   | medium   | task    | S        |
@@ -176,8 +178,11 @@
 | BL-260726-validate-structured-output     | Validate structured-output contract in gate skill commands                                 | open   | medium   | task    |          |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                 | open   | medium   | task    | S        |
 | BL-260817-verify-protected-mode-public   | Verify protected-mode public URLs with an authenticated end-to-end GET                     | open   | medium   | task    | M        |
+| BL-260826-warn-on-silent-oatversion      | Warn on silent oatVersion restamps outside sync                                            | open   | medium   | task    | S        |
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                                                | open   | low      | feature | L        |
 | BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight                                | open   | low      | task    | M        |
+| BL-260826-decide-whether-test-only-paths | Decide whether test-only paths under packages/cli/src count as publishable                 | open   | low      | task    | S        |
+| BL-260826-emit-the-dispatch-stamp-from   | Emit the dispatch stamp from the dispatch-ceiling resolver                                 | open   | low      | task    | XS       |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization                     | open   | low      | feature | M        |
 
 <!-- END OAT BACKLOG-INDEX -->

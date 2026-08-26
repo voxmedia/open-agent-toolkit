@@ -26,8 +26,8 @@ supersedes the "execution deferred by operator on 2026-08-19" record.
 | Wave | Theme                         | Lanes | Status   | Record                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ---- | ----------------------------- | ----- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | W1   | Test and CI containment       | 2     | merged   | PR #215 → `5bb2f914186de04f30c3f144f8bc452c4c0a4824` (squash, 2026-08-26T19:00:19Z); wrapper project `.oat/projects/shared/wave-1-execution` (lifecycle complete 2026-08-26; completion record `summary.md` + `implementation.md` § Final Summary); completion tail: deferred to program close; recap: deferred to program close (the per-wave project-recap manifest `explainers/wave-1-execution-recap` is `built-durable`, run `run-051612fb-0075-43de-b2dd-0aea4209775f`) |
-| W2   | Sync provenance warning       | 1     | composed | W1 merged 2026-08-26 → W2 unblocked; baseline `origin/main` = `5bb2f914` (public packages 0.2.33)                                                                                                                                                                                                                                                                                                                                                                             |
-| W3   | Hermetic CLI assets           | 1     | composed | pending W2 merge                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| W2   | Sync provenance warning       | 1     | merged   | PR #217 → `33149b26298f6d6bb631fdadb55de23bc9678edc` (squash, 2026-08-26T22:56:20Z); wrapper project `.oat/projects/shared/wave-2-execution` (lifecycle complete 2026-08-26; completion record `summary.md`); public packages 0.2.34; completion tail: deferred to program close; recap: deferred to program close (per-wave recap manifest `run-1b2d1eb3-9616-4ae7-95c7-861d5c148c97`, built-durable)                                                                        |
+| W3   | Hermetic CLI assets           | 1     | composed | W2 merged 2026-08-26 → W3 unblocked; baseline `origin/main` = `33149b26` (public packages 0.2.34)                                                                                                                                                                                                                                                                                                                                                                             |
 | W4   | Codex skill policy correction | 1     | composed | pending W3 merge                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ## Wave Table (coverage: 5 plans = 5 index rows; verified 2026-08-19, re-verified 2026-08-25)
@@ -36,7 +36,7 @@ supersedes the "execution deferred by operator on 2026-08-19" record.
 | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ---- | ----------------------------------------------------- | ------- |
 | [Bound smoke cleanup signal waits](./2026-08-19-bound-smoke-cleanup-signal-wait.md)              | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W1   | parallel group; merge first to bound later validation | done    |
 | [Reject package versions overtaken by main](./2026-08-19-detect-behind-main-package-versions.md) | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W1   | parallel group; merge after smoke containment         | done    |
-| [Surface sync version skew](./2026-08-19-warn-sync-version-skew.md)                              | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W2   | solo; merge before the next public-package baseline   | pending |
+| [Surface sync version skew](./2026-08-19-warn-sync-version-skew.md)                              | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W2   | solo; merge before the next public-package baseline   | done    |
 | [Honor an explicit CLI assets root](./2026-08-19-hermetic-cli-assets-root.md)                    | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W3   | solo; start from W2's merged package versions         | pending |
 | [Refresh codex-skill routing](./2026-08-19-refresh-codex-skill-routing.md)                       | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W4   | solo; reread live provider matrix before editing      | pending |
 
@@ -77,6 +77,21 @@ supersedes the "execution deferred by operator on 2026-08-19" record.
 - **Composition rationale:** The plan changes shipped CLI behavior and all five
   lockstep package manifests. Isolating it prevents a second plan from
   competing for the same release baseline and keeps rollback reviewable.
+- **Closeout (2026-08-26):** merged via PR #217 (`33149b26`), public packages
+  0.2.34. The lane shipped in full (advisory before the dry-run/apply branch,
+  `versionSkew` in both JSON envelopes, restamp derived from the same
+  diagnostic); the lockstep bump was pre-planned at the drift refresh per the
+  W1 rule. The configured implement exit gate blocked in generation 1 (its
+  `--avoid none` routed to a same-family Fable target whose headless children
+  yielded on background work); the operator removed `--avoid none` and
+  generation 2 passed on Cursor GPT-5.6 Sol. Follow-ups filed as backlog items
+  (silent `oatVersion` restamps outside sync, gate headless-yield contract and
+  `--avoid none` audit, resolver `--stamp`, test-only version policy,
+  deterministic-smoke worktree hygiene). Rules adopted for W3–W4: keep the gate
+  as now configured and verify the selected target in the `gate-start` line;
+  launch gates detached (`nohup … & disown`) and watch the receipt; summary
+  before any archive step; verify every commit with `git log` before the next
+  launch.
 
 ## Wave 3: Hermetic CLI assets
 
