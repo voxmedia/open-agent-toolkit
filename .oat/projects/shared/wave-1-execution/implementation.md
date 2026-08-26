@@ -136,6 +136,24 @@ _- Outstanding Items_
 | p01   | `.worktrees/wave-1/p01` | pending                                                                                                                 | pending        | 0          | -      |
 | p02   | `.worktrees/wave-1/p02` | DONE_WITH_CONCERNS (c8fdefc3; 1 task; focused pass; 6/8 DoD — release gates red on lockstep policy, root-dispositioned) | pending        | 0          | -      |
 
+### Review Received: p02 (round 1)
+
+**Date:** 2026-08-26
+**Review artifact:** reviews/archived/p02-review-2026-08-26T133911Z.md (reviewed head `c8fdefc3884095bc1be40daf9eecc52f502e7ee9`, invocation auto, dispatch `w1-p02-review-001`, model opus)
+
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 3. Reviewer-designed adversarial probes P1–P10 ran (2187-case weaker-anywhere differential: `weaker=0 lostErrorText=0`; STOP condition re-proven; mixed-set attribution correct).
+
+**Dispositions (auto mode — convert by default; bounded fix round via the original implementer handle, one append-only commit):**
+
+- M1 — missing-ref fail-closed branch unreachable through production resolvers (`check-version-bumps.ts:150`): **convert, option (a)** — document the shadowing at the `currentMainRef === null` branch and the `!mergeBase` skip (CI safety depends on `fetch-depth: 0`). Option (b) is rejected for this round because it trades against the source plan's third STOP condition; recorded as a follow-up candidate for the plan owner.
+- m1 — `CurrentMainVersionState` not exported / helper lacks a direct test (`check-version-bumps.ts:47,67`): **convert** — export the type and add a table-driven direct test for the three branches.
+- m2 — `parseStableVersion` trims whitespace, widening "exactly numeric" (`release-utils.ts:139`): **convert** — drop `.trim()` and update the pinned expectation to match the plan's wording.
+- m3 — no pinned mixed-set test (`check-version-bumps.test.ts:90`): **convert** — pin the four-bumped/one-behind case asserting exactly one strict-greater error naming the lagging package.
+
+**Pre-dispositioned condition (not a finding):** release gates red until the wave-level 0.2.33 lockstep bump; reviewer probe P1 verified the redness is version state, not code.
+
+**Next:** fix round `w1-p02-fix-001` (continuation of `w1-p02-impl-001`), then a fresh narrowed re-review; row `p02` → `fixes_completed` → `passed`.
+
 #### Outstanding Items
 
 - Wave-level lockstep bump of all five public packages to `0.2.33` on the

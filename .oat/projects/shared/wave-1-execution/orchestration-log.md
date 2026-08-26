@@ -130,6 +130,24 @@ taken here). **Skill signal (gap):** `oat-wave-execute` drift refresh should
 intersect each plan's write surface with the repo's release change-detection
 roots, not only with sibling plans.
 
+### 2026-08-26 · structural · oat-reviewer · p02 round 1
+
+`w1-p02-review-001` (opus, auto) → 0C/0I/1M/3m; artifact
+`reviews/archived/p02-review-2026-08-26T133911Z.md`; probes P1–P10 incl. a
+2187-case weaker-anywhere differential (`weaker=0`). All four findings converted
+to one bounded fix round (`implementation.md` "Review Received: p02 (round 1)").
+
+### 2026-08-26 · project · bug · orchestrator cwd drift
+
+A compound `cd .worktrees/wave-1/p02 && …` verification call persisted the shell
+cwd, so the next root bookkeeping commit (`6c2a8a30`) landed on `wave-1/p02` and
+relative lookups ran from the wrong checkout. Repaired by cherry-picking onto
+`wave-1-execution` (`588d3254`) and resetting `wave-1/p02` to the reviewed
+`c8fdefc3` (the misplaced commit touched only `.oat/projects/`). Rule adopted:
+every orchestrator command uses absolute paths / `git -C`; no bare `cd`.
+**Skill signal (strengthens):** rule 5's absolute-path merge guard should be
+generalized to all root commands, not only merges.
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)
