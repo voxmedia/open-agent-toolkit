@@ -121,7 +121,7 @@ configured implementation exit gate (`claude-fable-skip-permissions`, run
 
 ## Explainer Outcome
 
-- **project-recap:** built-durable — `explainers/wave-1-execution-recap` (run `run-051612fb-0075-43de-b2dd-0aea4209775f`, `project-recap@2`, one hub artifact, real Chromium evidence at 320/768/1440, visual review pass, fact critic 0 findings). Attestation history: the pre-commit formatter rewrote 9 of the 27 immutable package files at the artifact commit `efe10a05`, so the first `recordDurability` run recorded 9 `hash-mismatch` errors (`612e2dbf`, outcome `built-not-durable`); lint-staged had left the original bytes staged and they were committed with the formatter-guard commit `9f906e1d`, after which the package verified 27/27 and a fresh attestation against `9f906e1d` recorded `built-durable`.
+- **project-recap:** built-durable — `explainers/wave-1-execution-recap` (run `run-051612fb-0075-43de-b2dd-0aea4209775f`, `project-recap@2`, one hub artifact, real Chromium evidence at 320/768/1440, visual review pass, fact critic 0 findings). Attestation history: the pre-commit formatter rewrote 9 of the 27 immutable package files at the artifact commit `efe10a05`, so the first `recordDurability` run recorded 9 `hash-mismatch` errors (`612e2dbf`, outcome `built-not-durable`); the pre-format bytes were present in the index/working tree when the formatter-guard commit `9f906e1d` was made (most likely lint-staged's backup restore after `612e2dbf`; no stash or index reflog survives to confirm the mechanism) and hash-match the manifest 27/27, and a fresh attestation against `9f906e1d` recorded `built-durable` (`cb702de1`).
 
 ## Follow-up Items
 

@@ -440,6 +440,25 @@ Head `7f78dab719bcc64c471412c341dd20f09e25b997` (after `196dae19` and the final-
 
 **Review-cycle governance (REVIEWRECEIVE-02):** this is the third lifecycle review cycle for scope `final` (auto lineage: rounds 1–3; gate artifacts excluded). The configured 3-cycle cap is reached; reaching `passed` requires a fourth narrowed re-review, which autonomy must not self-authorize. Boundary reported to the operator; the exit-gate generation remains `stale` until a current-basis final review passes and a new generation runs.
 
+### Review Received: final (round 4, narrowed — operator-authorized)
+
+**Date:** 2026-08-26
+**Authorization:** the operator explicitly authorized an additional narrowed final-review cycle ("authorize", 2026-08-26) after the REVIEWRECEIVE-02 boundary report.
+**Review artifact:** reviews/archived/final-review-2026-08-26T183359Z.md (reviewed head `16066aedb53384848ec8fe4f876264a7630d574e`, range `a843353c..16066aed`, prior round 3 / head `a843353c`, invocation auto, dispatch `w1-final-review-004`, model opus)
+
+**Findings:** Critical 0 · Important 1 · Medium 1 · Minor 4. All seven round-3 dispositions **verified fixed**; the `cb702de1` re-attestation verified genuine (27/27 hashes on disk and in the evidence tree; build-record hash round-trips; evidence paths 1:1 with `immutableHashes`). Gates `pnpm check`/`format`/`lint` exit 0.
+
+**Dispositions (all artifact-text consistency; applied by the root in this fix round, no code or tooling changed):**
+
+- I1 — the withdrawn "originals unrecoverable" claim survived in `orchestration-log.md` and `oat-execution-learnings.md` (the latter asserting the opposite mechanism): **fixed** via appended dated correction entries in both append-only files.
+- M1 — restoration-provenance stated as fact but unverifiable (no lint-staged stash from this session survives): **fixed** — hedged consistently in implementation.md (two places) and summary.md; the verified half (27/27 hash match at `9f906e1d`) stays categorical.
+- m1 — program ledger W1 row stale on CI and head pin: **fixed** (CI green recorded; head pin dropped).
+- m2 — tooling-deviation record described the pre-m3/m4 config: **fixed** (superseded-at-`73bb99cd` pointers added in § IMPLEMENT-19 and the Deviations row).
+- m3 — approval-evidence line cited `built-not-durable` only: **fixed** (re-attestation noted; decision unchanged).
+- m4 — 109-column line from the m5 docs fix: **fixed** (annotation shortened).
+
+**Review row `final` (round 4) → `fixes_completed`.** A fifth narrowed cycle (verification of these six text fixes) is required to reach `passed` and remains operator-gated.
+
 ## Deviations from Plan / Design
 
 | Task / Review | Source Artifact                                | Planned / Documented                                       | Actual / Accepted                                                                                                                                                                                              | Reason                                                                                                                                                  | Source of Truth                     | Follow-up                                                                            |

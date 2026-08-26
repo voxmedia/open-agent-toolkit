@@ -50,7 +50,7 @@ pnpm type-check
 pnpm test
 pnpm build                    # excludes docs for speed
 pnpm run check:skill-bumps    # changed .agents/skills/*/SKILL.md must bump version
-pnpm release:check-versions   # lockstep bumps vs the merge base, and strictly above origin/main
+pnpm release:check-versions   # lockstep bumps; strictly above origin/main
 pnpm release:validate
 pnpm build:docs               # builds docs site and its dependencies
 ```

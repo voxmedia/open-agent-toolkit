@@ -58,3 +58,9 @@ environment-limited). No secrets, no autonomy signals.
 **Observation:** The recap's dedicated finalizer commits the immutable run package through the repo's lint-staged hook, which reformatted 9 of 27 hashed JSON/Markdown files; `recordDurability` then failed with hash mismatches and the terminal outcome was `built-not-durable`.
 **Impact:** The recap is committed and usable but not attested durable; the originals were unrecoverable after the hook rewrote both index and working tree.
 **Recommendation:** Keep `.oat/**/explainers/**` and recap export roots out of formatter scope (done in `9f906e1d`); the adapter finalizer should verify committed bytes before attestation and refuse hook-formatted commits.
+
+## 2026-08-26T18:40:00Z - decision - Correction to the 16:40 recap-durability entry
+
+**Observation:** The 2026-08-26T16:40:00Z gotcha entry's Impact line ("the originals were unrecoverable after the hook rewrote both index and working tree") is wrong. The pre-format bytes were present in the index/working tree when `9f906e1d` was committed (most likely lint-staged's backup restore after `612e2dbf`; the exact mechanism is no longer verifiable) and hash-match the manifest 27/27; a fresh attestation against `9f906e1d` recorded `built-durable` (`cb702de1`).
+**Impact:** The recap is attested durable; only the first attestation attempt failed. The 16:40 entry's Recommendation (keep explainer packages out of formatter scope; finalizer should verify committed bytes before attesting) stands.
+**Recommendation:** Treat this entry as superseding the 16:40 Impact line; append-only files carry corrections forward rather than rewriting history.

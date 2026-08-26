@@ -232,6 +232,16 @@ to explainer run packages; the adapter's finalizer should refuse to commit
 through formatting hooks or verify bytes post-commit before attesting.
 Follow-up: backlog candidate (adapter finalizer byte-verification).
 
+### 2026-08-26 · project · feedback · correction: recap durability
+
+Correction to the "recap durability vs pre-commit formatter" entry above:
+"Originals unrecoverable" was wrong. The pre-format bytes were present in the
+index/working tree when `9f906e1d` was committed (most likely lint-staged's
+backup restore after `612e2dbf`; mechanism no longer verifiable) and hash-match
+the manifest 27/27; a fresh attestation recorded `built-durable` (`cb702de1`).
+The skill signal (rule 7 applies to explainer packages; finalizer should verify
+bytes before attesting) stands.
+
 ---
 
 ## End-of-run synthesis (2026-08-26)
