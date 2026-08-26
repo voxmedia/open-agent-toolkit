@@ -131,14 +131,33 @@ _- Outstanding Items_
 
 #### Phase Outcomes
 
-| Phase | Worktree                | Implementer outcome | Review outcome | Fix rounds | Merged |
-| ----- | ----------------------- | ------------------- | -------------- | ---------- | ------ |
-| p01   | `.worktrees/wave-1/p01` | pending             | pending        | 0          | -      |
-| p02   | `.worktrees/wave-1/p02` | pending             | pending        | 0          | -      |
+| Phase | Worktree                | Implementer outcome                                                                                                     | Review outcome | Fix rounds | Merged |
+| ----- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------- | ---------- | ------ |
+| p01   | `.worktrees/wave-1/p01` | pending                                                                                                                 | pending        | 0          | -      |
+| p02   | `.worktrees/wave-1/p02` | DONE_WITH_CONCERNS (c8fdefc3; 1 task; focused pass; 6/8 DoD — release gates red on lockstep policy, root-dispositioned) | pending        | 0          | -      |
 
 #### Outstanding Items
 
-- (none yet)
+- Wave-level lockstep bump of all five public packages to `0.2.33` on the
+  integration branch after fan-in (root-owned; see Recovery Event p02-rec-001
+  disposition). Until then `pnpm release:check-versions` / `pnpm release:validate`
+  are expected red on `wave-1/p02`.
+
+#### Recovery Event p02-rec-001 (validated by root)
+
+- Phase/task: p02 / p02-t01
+- Original request: w1-p02-impl-001
+- Original commit: c8fdefc3884095bc1be40daf9eecc52f502e7ee9
+- Defect class: other
+- Discovered by: `pnpm release:check-versions` (post-commit phase verification); corroborated by `pnpm release:validate` and by the cross-model review (codex-cli 0.149.1, P1)
+- Disposition: direction-required
+- Authorization: operator-scope (root decision 2026-08-26)
+- Attempt: 0/10 (no reservation, no edit, `pending_attempt: null`, usage unchanged — validated)
+- Dispatch target: opus
+- Recovery commit: -
+- Verification: focused release suites pass; `release:check-versions` exit 1 / `release:validate` exit 1; other six DoD gates exit 0 — root re-ran `pnpm release:check-versions` in the p02 worktree and reproduced the six errors (1 merge-base lockstep + 5 strict-greater)
+- Reason: `packages/cli` `versionPolicyIgnorePatterns` is `['assets/**']` (`public-package-contract.ts:119`), so the plan-mandated test files under `packages/cli/src/release/` make `packages/cli` a changed publishable root; the repository guardrail (AGENTS.md "Publishable package guardrail") then requires all five lockstep versions to move. Bumping is barred inside the phase (plan scope; would collide with p01 at merge) and exempting test paths would be a policy change outside the plan.
+- **Root direction:** perform ONE wave-level lockstep bump `0.2.32 → 0.2.33` of `packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms` on `wave-1-execution` after both group merges and before the integration DoD gates (commit `chore(release): bump public packages to 0.2.33 (wave 1 lockstep)`). This is repository-mandated release bookkeeping, not a change to either source plan's requirements; p02's new guard then exercises its green path (`0.2.33 > 0.2.32` on `origin/main`). The p02 task commit stays immutable.
 
 <!-- orchestration-runs-end -->
 
@@ -155,9 +174,9 @@ _- Outstanding Items_
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact                                | Planned / Documented                                       | Actual / Accepted                                                  | Reason                                                                                                                                                  | Source of Truth                     | Follow-up                                                                            |
+| ------------- | ---------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------ |
+| p02-t01       | discovery.md Constraints / plan.md Parallelism | "no lockstep public-package bump is expected in this wave" | Wave-level lockstep bump 0.2.32 → 0.2.33 on the integration branch | Test files under `packages/cli/src/` trip the publishable-change guard (`versionPolicyIgnorePatterns: ['assets/**']`); repo guardrail mandates the bump | Implementation (integration branch) | Note for W2–W4: their version baseline is whatever `origin/main` holds at wave start |
 
 ## Test Results
 

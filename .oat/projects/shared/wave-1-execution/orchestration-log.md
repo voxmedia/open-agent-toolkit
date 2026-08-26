@@ -110,6 +110,26 @@ without hand assembly. **Skill signal (gap):** the resolver JSON carries no
 `dispatchStamp` field; a `--stamp` output or a CLI formatter entry point would
 remove the shim. Follow-up: backlog candidate.
 
+### 2026-08-26 · structural · oat-phase-implementer · p02
+
+`w1-p02-impl-001` → DONE_WITH_CONCERNS; commit `c8fdefc3` (4 files, +449/−1);
+focused suites pass; DoD 6/8 (release:check-versions=1, release:validate=1);
+codex review (0.149.1) 1×P1 confirming the same lockstep contradiction;
+Recovery Event p02-rec-001 direction-required → root direction: wave-level
+lockstep bump to 0.2.33 after fan-in (`implementation.md` Run 1).
+
+### 2026-08-26 · general · friction · release gate vs test-only changes
+
+Any change under `packages/cli/src/**` — including `*.test.ts` excluded from the
+published tarball — counts as a publishable change for `release:check-versions`
+(`versionPolicyIgnorePatterns: ['assets/**']`). Impact: a test-only lane forces
+a five-package lockstep bump; the wave discovery assumed none. Workaround:
+one root-owned bump at integration. Follow-up: backlog candidate — decide
+whether test-only paths should be version-policy-ignored (policy decision, not
+taken here). **Skill signal (gap):** `oat-wave-execute` drift refresh should
+intersect each plan's write surface with the repo's release change-detection
+roots, not only with sibling plans.
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)
