@@ -46,17 +46,22 @@ delete, JSON-field delete, desync all red); final review round 1: 0C/0I with
 bookkeeping findings resolved in-artifact; full definition of done green at
 `4c04963c`.
 
+Exit gate: generation 1 (Fable, `--avoid none`) blocked after two attempts whose
+headless child yielded on background work; the operator removed `--avoid none`
+and generation 2 passed on `cursor-gpt-5-6-sol-xhigh` (run `17dc551d`, full DoD
+in the foreground, 0C/0I/1M/2m — the medium was a bookkeeping heading defect).
+
 ## Key Decisions
 
 1. **Derive the apply restamp from the skew diagnostic rather than keep a
    duplicated predicate:** the review's preferred option; removing two
    unreachable empty-string guards made the coupling bit-exact with the previous
-   restamp condition while preserving the existing manifest validation error.
+   restamp condition while preserving the existing manifest validation error. (`DR-260826-derive-the-sync-apply-restamp`)
 2. **Pre-plan the lockstep bump as part of the lane:** W1's lesson (any
    `packages/cli/src/**` change is publishable) was applied at planning time;
    the drift refresh intersected the write surface with the release roots and
    the plan gate extended the in-worktree recheck to the release surfaces the
-   plan writes, with a fetch-first `release:check-versions`.
+   plan writes, with a fetch-first `release:check-versions`. (`DR-260826-pre-plan-the-lockstep-bump`)
 
 ## Design Deltas
 
