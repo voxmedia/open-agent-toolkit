@@ -162,15 +162,16 @@ git commit -m "feat(p01-t01): warn when oat sync manifest and invoking CLI versi
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | passed          | 2026-08-26 | reviews/archived/p01-review-2026-08-26T204852Z.md           | 023c222948225be87955500cf6b73147ef6a75bd | auto       | -           |
-| final  | code     | passed          | 2026-08-26 | reviews/archived/final-review-2026-08-26T211431Z.md         | 2e106b66b78f7d80ed7eca27aa5eb7d103ec4a56 | auto       | -           |
-| plan   | artifact | fixes_completed | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T192011Z.md | -                                        | -          | -           |
-| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
-| design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T193112Z.md | -                                        | -          | -           |
-| plan   | artifact | passed          | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T194327Z.md | -                                        | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | passed          | 2026-08-26 | reviews/archived/p01-review-2026-08-26T204852Z.md           | 023c222948225be87955500cf6b73147ef6a75bd | auto       | -                        |
+| final  | code     | passed          | 2026-08-26 | reviews/archived/final-review-2026-08-26T211431Z.md         | 2e106b66b78f7d80ed7eca27aa5eb7d103ec4a56 | auto       | -                        |
+| plan   | artifact | fixes_completed | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T192011Z.md | -                                        | -          | -                        |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T193112Z.md | -                                        | -          | -                        |
+| plan   | artifact | passed          | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T194327Z.md | -                                        | -          | -                        |
+| final  | code     | received        | 2026-08-26 | reviews/final-review-2026-08-26T222108Z.md                  | b15665e58ac42ad79230a65c1705afab0c14c500 | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
