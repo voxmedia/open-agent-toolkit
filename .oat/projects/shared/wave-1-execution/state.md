@@ -53,9 +53,9 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:2f6228ff15a4e55394695ae9688000ffdc414b364a28ec77c2359b7e71161f4b'
   resolved_command: 'OAT_GATE_EXEC_TIMEOUT_MS=2400000 oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --avoid none --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -65,8 +65,8 @@ oat_implement_exit_gate:
   reviewed_head: ab08d3763a8affe3690ee125da33d65ec35ecddd # round-4 final review (16066aed) + operator-accepted text fixes
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:ed0bfc4f87082def7cb0d1fad711b3df7d6c0272fb57c6c8f0ba484e2dfef2b2'
-  freshness_head: ab08d3763a8affe3690ee125da33d65ec35ecddd
-  freshness_fingerprint: 'sha256:effective-delta-v1:ed0bfc4f87082def7cb0d1fad711b3df7d6c0272fb57c6c8f0ba484e2dfef2b2'
+  freshness_head: adaefc60182f063b0e1854a16eed423aa66ad128 # closeout-only descendants after the gen-2 reviewed head (gate artifact/receive, project-log, closeout text alignment)
+  freshness_fingerprint: 'sha256:effective-delta-v1:fc936e7fdd1bf5c85f6f6714999d415f81e9ce8a0677daef8e7f7714a19115f7'
   launch_state: result_persisted
   launch_attempt_id: 'w1-exit-gate-20260826T184804Z'
   launch_started_at: '2026-08-26T18:48:04Z'
@@ -76,17 +76,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/wave-1-execution/reviews/final-review-2026-08-26T185206Z.md'
   handoff: 'Gate passed at the important threshold with 2 non-blocking minor findings; run oat-project-review-receive for final-review-2026-08-26T185206Z.md'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=8485a4f9-8f68-420d-ac77-e69e9c6eb773; handoff=receive; source=reviews/final-review-2026-08-26T185206Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/wave-1-execution/reviews/final-review-2026-08-26T185206Z.md'
   receive_archived_artifact: '.oat/projects/shared/wave-1-execution/reviews/archived/final-review-2026-08-26T185206Z.md'
   receive_event_identity: 'final | code | final-review-2026-08-26T185206Z.md'
   receive_pre_head: 6ee4247a8cb1c756eb01ad2f4f4ee1c36d5b465b
-  receive_commit: null
+  receive_commit: adaefc60182f063b0e1854a16eed423aa66ad128
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-26T18:53:56.728Z'
+  updated_at: '2026-08-26T18:54:06.834Z'
 # oat_implement_exit_gate (template comment retained below for reference)
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -127,7 +127,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/215' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T04:15:34.593Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-08-26T16:37:51.573Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T18:53:56.728Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T18:54:06.834Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_post_implement_sequence:
   status: complete # pre_approval | awaiting_approval | post_approval | failed | complete
