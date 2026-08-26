@@ -65,8 +65,8 @@ oat_implement_exit_gate:
   reviewed_head: 58a5aa0919428928152ffcbaf292b2973b18a65d
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:78875ee9763f73744cf256e12480e017615b94667fde7f2e7a1c7647d30f3fad'
-  freshness_head: c953ce2ad64580c91cb6a91408bef1fae5ad3d4a # closeout-only descendants: summary, document, recap (IMPLEMENT-19) + rule-7 formatter guard (closeout tooling)
-  freshness_fingerprint: 'sha256:effective-delta-v1:eeab12f57ea037e1b827cd58e9a694036512052086ab316056b437c038eda819'
+  freshness_head: f371b20b4c3dd76348960eb395d4a972549fd0e9 # closeout-only descendants through the recap-gate record
+  freshness_fingerprint: 'sha256:effective-delta-v1:77291f8dc4133bb9b0cfd4fdd7609216e5285294abcca610dc00b272006db93f'
   launch_state: result_persisted
   launch_attempt_id: 'w1-exit-gate-20260826T155104Z'
   launch_started_at: '2026-08-26T15:51:04Z'
@@ -86,7 +86,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-08-26T16:34:40.854Z'
+  updated_at: '2026-08-26T16:35:18.558Z'
 # oat_implement_exit_gate (template comment retained below for reference)
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -127,7 +127,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T04:15:34.593Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T16:34:40.854Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T16:35:18.558Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_post_implement_sequence:
   status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
