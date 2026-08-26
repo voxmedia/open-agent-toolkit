@@ -51,8 +51,8 @@ oat_generated: false
 
 ### Task p01-t01: Execute external plan — Surface sync producer and invoker version skew before mutation
 
-**Status:** completed (awaiting review)
-**Commit:** b257e90861484c7628e1eab240d08340d781898b
+**Status:** completed
+**Commit:** b257e90861484c7628e1eab240d08340d781898b (+ fix commit 023c222948225be87955500cf6b73147ef6a75bd)
 
 **Source plan:** `.oat/repo/reference/external-plans/2026-08-19-warn-sync-version-skew.md`
 
@@ -93,9 +93,9 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Worktree                                  | Implementer outcome                              | Review outcome | Fix rounds | Merged |
-| ----- | ----------------------------------------- | ------------------------------------------------ | -------------- | ---------- | ------ |
-| p01   | integration checkout (`wave-2-execution`) | DONE (b257e908; DoD 8/8 green; codex 0 findings) | pending        | 0          | n/a    |
+| Phase | Worktree                                  | Implementer outcome                                                | Review outcome                         | Fix rounds | Merged |
+| ----- | ----------------------------------------- | ------------------------------------------------------------------ | -------------------------------------- | ---------- | ------ |
+| p01   | integration checkout (`wave-2-execution`) | DONE (b257e908 + fix 023c2229; DoD 8/8 green; codex 0 findings ×2) | passed (round 2: 0C/0I/0M/2m deferred) | 1          | n/a    |
 
 ### Review Received: p01 (round 1)
 
@@ -114,7 +114,21 @@ oat_generated: false
 
 **Fix round 1 (`w2-p01-fix-001`, continuation through the original handle):** DONE — append-only commit `023c222948225be87955500cf6b73147ef6a75bd` (parent `11d4a2f1` root bookkeeping; task commit `b257e908` immutable; 3 files). M1 resolved by construction: `apply.ts` restamp now derives from `scopePlan.versionSkew !== undefined` (duplicate predicate and unused `OAT_VERSION` import removed); the two unreachable empty-string guards in `detectVersionSkew` were removed so the derivation is bit-for-bit the old restamp predicate; restamp-only path pinned in-mock; new coupling test (equal/older/newer). m1: both values quoted in the advisory. m2: `--scope all` cases (mixed human, mixed JSON on `user`, both stale). Focused 55/55; check/type-check 0; full `pnpm test` 3686/3686; mutations MUT-A/B/C/D/E all red (MUT-E only via the new coupling test); codex 0.149.1 zero findings. Root verified range and parent. Row `p01` → `fixes_completed`.
 
-**Next:** narrowed re-review round 2 (`w2-p01-review-002`, range `11d4a2f1..023c2229`) → `passed`.
+### Review Received: p01 (round 2, narrowed)
+
+**Date:** 2026-08-26
+**Review artifact:** reviews/archived/p01-review-2026-08-26T204852Z.md (reviewed head `023c222948225be87955500cf6b73147ef6a75bd`, range `11d4a2f1..023c2229`, prior round 1 / head `b257e908`, invocation auto, dispatch `w2-p01-review-002`, model opus)
+
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 2. Disposition Verification: M1, m1, m2 **verified fixed**; guard removal confirmed correct (empty `oatVersion` unreachable via `ManifestSchema` `min(1)` and `createEmptyManifest()`; the existing validation error is preserved); mutations MUT-A (2 red), MUT-B (7 red), MUT-E (1 red, the coupling test); focused 55/55; check/type-check/oxfmt/oxlint/release:check-versions exit 0.
+
+**Verification record (fix dispositions):** what — M1/m1/m2; how — independent round-2 reviewer re-ran the mutation battery and a new probe on scratch copies; where — the round-2 artifact's `## Disposition Verification` / `## Adversarial Probes`.
+
+**Deferred Findings (Minor):**
+
+- p01-r2-m1 — the restamp now keys off the optional `ScopeSyncPlan.versionSkew`, so a type-legal hand-built plan omitting the field would skip restamping a stale manifest (reviewer probe PROBE-N1; `tsc` accepts it). Rationale: unreachable through `computePlans`, which always sets the field; a type-shape hardening (make the field required/nullable) is a small follow-up better taken with the sibling-command advisory work (m4 round 1); deferring avoids a third review cycle for a test-space hazard. Follow-up trigger: next touch of `sync.types.ts`.
+- p01-r2-m2 — the source plan's step 1 says "only when the two non-empty strings differ" while the shipped predicate is exact inequality (the non-empty guard was unreachable and its removal is what makes restamp coupling bit-exact): **artifact wording drift in an immutable external plan**; recorded here (implementation is source of truth); no plan edit.
+
+**Review row `p01` → `passed`.**
 
 #### Outstanding Items
 

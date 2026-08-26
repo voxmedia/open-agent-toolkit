@@ -164,7 +164,7 @@ git commit -m "feat(p01-t01): warn when oat sync manifest and invoking CLI versi
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | fixes_completed | 2026-08-26 | reviews/archived/p01-review-2026-08-26T202437Z.md           | b257e90861484c7628e1eab240d08340d781898b | auto       | -           |
+| p01    | code     | passed          | 2026-08-26 | reviews/archived/p01-review-2026-08-26T204852Z.md           | 023c222948225be87955500cf6b73147ef6a75bd | auto       | -           |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T192011Z.md | -                                        | -          | -           |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -179,8 +179,8 @@ git commit -m "feat(p01-t01): warn when oat sync manifest and invoking CLI versi
 Strictly ordered — each item depends on the one before it (wave-execute Step 6
 closeout sequence):
 
-1. [ ] 1/1 phases, 1/1 tasks complete; the source plan's `## Done criteria`
-       confirmed (recorded in `implementation.md`)
+1. [x] 1/1 phases, 1/1 tasks complete; the source plan's `## Done criteria`
+       confirmed (recorded in `implementation.md` § Done-criteria confirmation)
 2. [ ] Full DoD gates green on the integration branch (final verification,
        exit codes captured per gate)
 3. [ ] Orchestration-log end-of-run synthesis written, then rolled up into

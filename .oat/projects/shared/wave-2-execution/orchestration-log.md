@@ -68,6 +68,16 @@ reports "no public package changes"; only the post-commit run exercises the
 strict-greater guard. **Skill signal (gap):** brief template should say "run
 release gates after the task commit as the load-bearing evidence".
 
+### 2026-08-26 · structural · oat-reviewer · p01 rounds 1–2
+
+Round 1 `w2-p01-review-001` → 0C/0I/1M/4m (reorder+delete mutations red);
+fix round `023c2229` resolved M1 by construction (restamp derived from the
+diagnostic); round 2 `w2-p01-review-002` → 0C/0I/0M/2m, all dispositions
+verified, MUT-E desync caught only by the new coupling test. Row `p01` →
+`passed`; two minors deferred with rationale.
+**Skill signal (strengthens):** delete+reorder mutation requirement — the
+round-1 reorder mutation exposed the unpinned restamp-only path.
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)
