@@ -170,7 +170,7 @@ git commit -m "feat(p01-t01): warn when oat sync manifest and invoking CLI versi
 | spec   | artifact | pending         | -          | -                                                           | -             | -          | -           |
 | design | artifact | pending         | -          | -                                                           | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T193112Z.md | -             | -          | -           |
-| plan   | artifact | received        | 2026-08-26 | reviews/artifact-plan-review-2026-08-26T194327Z.md          | -             | -          | -           |
+| plan   | artifact | passed          | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T194327Z.md | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

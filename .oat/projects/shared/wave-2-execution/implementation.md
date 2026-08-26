@@ -12,28 +12,33 @@ oat_generated: false
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
-> This document is used to resume interrupted implementation sessions.
->
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+> Resume conventions as in the Wave 1 log: `oat_current_task_id` points at the
+> next task; reviews are tracked in `plan.md` `## Reviews`.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase                             | Status      | Tasks | Completed |
+| --------------------------------- | ----------- | ----- | --------- |
+| Phase 01 (warn-sync-version-skew) | in_progress | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/1 tasks completed
+
+## Autonomy Gate Provenance
+
+- `IMPLEMENT-08`: subagent delegation authorized once for this run for
+  `oat-phase-implementer` and `oat-reviewer` within the plan's bounded scopes;
+  native Claude Code Task dispatch (Tier 1); no other authority widened.
+- `IMPLEMENT-03` / `IMPLEMENT-04`: `oat_plan_hill_phases: ['p01']` (final phase)
+  and `oat_auto_review_at_hill_checkpoints: true` explicit in `plan.md`.
+- Dispatch policy preflight: managed / `high`, source `project-state`, value
+  `opus`.
+- Plan gate: three rounds (`a0c09a83` blocked 0C/2I → fixed; `492c318d`
+  blocked 0C/2I → fixed; `cbe178ac` `ok` 0 findings) — `plan | artifact` →
+  `passed`.
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 01: warn-sync-version-skew (solo)
 
 **Status:** in_progress
 **Started:** 2026-08-26
@@ -42,83 +47,56 @@ oat_generated: false
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- (pending)
 
-**Key files touched:**
+### Task p01-t01: Execute external plan — Surface sync producer and invoker version skew before mutation
 
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
-
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
-
-**Status:** pending
-**Commit:** -
+**Source plan:** `.oat/repo/reference/external-plans/2026-08-19-warn-sync-version-skew.md`
 
 ---
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1 — 2026-08-26 (in progress)
+
+- Branch: `wave-2-execution`; Tier 1 (native `oat-phase-implementer` /
+  `oat-reviewer`); dispatch policy managed / `high` (Claude `opus`, enforced —
+  Task model arg); schedule `[p01]` (solo, integration checkout).
+- Phase recovery policy: default limit 10; usage ledger in `state.md`.
+
+#### Dispatch records
+
+- `w2-p01-impl-001` — caller `oat-project-implement`; scope `p01`; action
+  implementation; role `oat-phase-implementer` (class worker); provider claude;
+  dispatch_context root-native (Task tool); catalog: Task-tool model enum
+  {sonnet, opus, haiku, fable} observed 2026-08-26; role_selector
+  `oat-phase-implementer`; model_selector `opus` (tier-alias); effort
+  not-exposed (`effort_axis=not-applicable`); selection_source native-default;
+  selection_reason native-catalog; candidates_considered [opus]; task_class
+  default-implementation (classification_source caller: additive typed
+  diagnostic across four sync files + tests + lockstep bump; dispersed-context
+  reconciliation, no novel architecture); floor satisfied; authority: write in
+  the integration checkout within the source plan's scope; retry_limit 0
+  (phase recovery contract owns post-commit repair); guidance
+  `subagent-orchestration/references/provider-claude.md` 2026-07-25 (fresh).
+  Stamp:
+  `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=opus`
+- Enforcement log: `Dispatch policy: high; selected=opus; cap=opus (claude, enforced — Task model arg)`.
+
+#### Phase Outcomes
+
+| Phase | Worktree                                  | Implementer outcome | Review outcome | Fix rounds | Merged |
+| ----- | ----------------------------------------- | ------------------- | -------------- | ---------- | ------ |
+| p01   | integration checkout (`wave-2-execution`) | pending             | pending        | 0          | n/a    |
+
+#### Outstanding Items
+
+- (none yet)
 
 <!-- orchestration-runs-end -->
 
@@ -126,46 +104,11 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
-Chronological log of implementation progress.
-
 ### 2026-08-26
 
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-08-26
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+- Plan gate passed on round 3; p01 dispatched.
 
 ## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
@@ -173,38 +116,16 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Track test execution during implementation.
-
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| p01   | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+(pending — filled at closeout)
 
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
+- Orchestration log: `orchestration-log.md`
