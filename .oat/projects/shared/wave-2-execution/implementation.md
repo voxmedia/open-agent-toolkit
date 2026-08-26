@@ -51,10 +51,12 @@ oat_generated: false
 
 ### Task p01-t01: Execute external plan — Surface sync producer and invoker version skew before mutation
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed (awaiting review)
+**Commit:** b257e90861484c7628e1eab240d08340d781898b
 
 **Source plan:** `.oat/repo/reference/external-plans/2026-08-19-warn-sync-version-skew.md`
+
+**Outcome:** `oat sync` derives a `versionSkew` diagnostic per scope when the loaded manifest's `oatVersion` differs from `OAT_VERSION`, warns once (human mode) before any apply mutation, exposes the same structured array in both JSON envelopes (including dry-run no-op), leaves exit codes/eligibility untouched, and preserves absent/invalid manifest semantics. Lockstep bump 0.2.33 → 0.2.34.
 
 ---
 
@@ -87,12 +89,13 @@ oat_generated: false
   Stamp:
   `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=opus`
 - Enforcement log: `Dispatch policy: high; selected=opus; cap=opus (claude, enforced — Task model arg)`.
+- Launch acceptance (2026-08-26): `w2-p01-impl-001` accepted by the Claude Code Task tool (native, `subagent_type: oat-phase-implementer`, `model: opus`), background/awaited, on the integration checkout at `e6c77e43`. child_outcome: DONE — commit `b257e90861484c7628e1eab240d08340d781898b` (12 files); focused suites 51/51; DoD 8/8 exit 0 post-commit (`pnpm test` 144s, 3682/3682; one pre-commit vitest 5s-timeout flake in `post-implement-sequence-contracts.test.ts`, green on the contract's single no-edit rerun); codex review 0.149.1 zero findings; no recovery attempt; declared-up extra file `packages/cli/src/manifest/manager.test.ts` (one focused case, authorized by the source plan's Test plan). Root re-ran the focused suites and verified the range/versions.
 
 #### Phase Outcomes
 
-| Phase | Worktree                                  | Implementer outcome | Review outcome | Fix rounds | Merged |
-| ----- | ----------------------------------------- | ------------------- | -------------- | ---------- | ------ |
-| p01   | integration checkout (`wave-2-execution`) | pending             | pending        | 0          | n/a    |
+| Phase | Worktree                                  | Implementer outcome                              | Review outcome | Fix rounds | Merged |
+| ----- | ----------------------------------------- | ------------------------------------------------ | -------------- | ---------- | ------ |
+| p01   | integration checkout (`wave-2-execution`) | DONE (b257e908; DoD 8/8 green; codex 0 findings) | pending        | 0          | n/a    |
 
 #### Outstanding Items
 

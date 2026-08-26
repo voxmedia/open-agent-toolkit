@@ -54,6 +54,20 @@ Artifact archived; gate re-run (remediation attempt 2 of 2).
 **Skill signal (strengthens):** the drift-coverage audit must include the
 release surfaces a plan writes, not only the files it reads.
 
+### 2026-08-26 · structural · oat-phase-implementer · p01
+
+`w2-p01-impl-001` → DONE; commit `b257e908` (12 files incl. lockstep bump
+0.2.33→0.2.34); DoD 8/8 post-commit; codex (0.149.1) zero findings; one
+pre-commit vitest timeout flake (post-implement-sequence contracts) cleared by
+a no-edit rerun.
+
+### 2026-08-26 · general · feedback · release:check-versions is post-commit-only evidence
+
+The gate diffs committed HEAD against `origin/main`, so before the bump commit it
+reports "no public package changes"; only the post-commit run exercises the
+strict-greater guard. **Skill signal (gap):** brief template should say "run
+release gates after the task commit as the load-bearing evidence".
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)
