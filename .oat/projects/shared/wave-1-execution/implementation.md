@@ -191,7 +191,9 @@ _- Outstanding Items_
 - m1 — detach path destroys stdio before the diagnostic reads it (`:713–714` vs comment `:726–729`): **convert** — sample captured buffers before `reapOrDetach` and append late output, or move `destroy()` after the diagnostic; narrow the comment.
 - m2 — sizing comment omits the >10s outlier that drove 60s (`:655–660`): **convert** — record the outlier and reword the multiplier.
 
-**Next:** fix round `w1-p01-fix-001` (continuation of `w1-p01-impl-001`), then a fresh narrowed re-review; row `p01` → `fixes_completed` → `passed`.
+**Fix round 1 (`w1-p01-fix-001`, continuation of `w1-p01-impl-001` through the original handle):** DONE — append-only commit `6a9ed1af959c70dc0f02b2472b590549e704b1c6` (parent `aedced64` immutable; +246/−33, one file). I1 via `detachChild` + `WeakSet` short-circuit in `reapOrDetach` (unref'd timer kept per plan step 1); M1 via injectable seams on `runSignalCase` + two real-path tests (mutations E1/E2 now red, I1 revert → cancelled tests); m1 buffers sampled at deadline and after reap (`mergeCapture`); m2 comment records the outlier. Leak check 0 dirs / 0 children. `node --test` 19/19 in 15s (`cancelledByParent=0`); `pnpm test:smoke` 139/139; full DoD 10/10 exit 0 (`pnpm test` 134s). Codex fix-diff pass: 1×P2 (timing bound) fixed. Root verified range and re-ran the focused suite. Row `p01` → `fixes_completed`.
+
+**Next:** narrowed re-review round 2 (`w1-p01-review-002`, range `aedced64..6a9ed1af`) → `passed`.
 
 #### Outstanding Items
 
