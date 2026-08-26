@@ -50,7 +50,7 @@ pnpm type-check
 pnpm test
 pnpm build                    # excludes docs for speed
 pnpm run check:skill-bumps    # changed .agents/skills/*/SKILL.md must bump version
-pnpm release:check-versions   # lockstep public package version bumps
+pnpm release:check-versions   # lockstep bumps; strictly above origin/main
 pnpm release:validate
 pnpm build:docs               # builds docs site and its dependencies
 ```
@@ -60,6 +60,18 @@ pnpm build:docs               # builds docs site and its dependencies
 the named-file `test:release` set. Steps 5 and 6 are the version-lockstep
 gates; they are in the local list because they previously ran only in CI and
 version-bump drift twice reached review with no local gate to surface it.
+
+`pnpm release:check-versions` compares the five public package versions against
+their merge-base versions (lockstep bump required when any publishable root
+changed). Since 0.2.33, when a publishable root changed, the gate additionally
+requires every lockstep version to be strictly greater than the version on your
+local `origin/main` tracking ref (falling back to a local `main` branch when no
+`origin/main` exists) — so a branch whose bump was overtaken by a later `main`
+release fails locally the same way it fails in CI. Fetch first (`git fetch
+origin`) so that ref is current; a
+checkout with neither `origin/main` nor `main` skips the whole gate (CI uses
+`fetch-depth: 0`). Test files under `packages/cli/src/` count as publishable
+changes for this gate.
 
 CI runs neither `pnpm lint` nor `pnpm format` — run both whenever a change
 touches `tools/smoke` or `.agents/skills`, since nothing else covers them.
