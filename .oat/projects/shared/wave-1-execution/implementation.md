@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-26
-oat_current_task_id: p01-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                  | Status      | Tasks | Completed |
-| -------------------------------------- | ----------- | ----- | --------- |
-| Phase 01 (bound-smoke-cleanup)         | in_progress | 1     | 0/1       |
-| Phase 02 (detect-behind-main-versions) | in_progress | 1     | 0/1       |
+| Phase                                  | Status   | Tasks | Completed |
+| -------------------------------------- | -------- | ----- | --------- |
+| Phase 01 (bound-smoke-cleanup)         | complete | 1     | 1/1       |
+| Phase 02 (detect-behind-main-versions) | complete | 1     | 1/1       |
 
-**Total:** 0/2 tasks completed
+**Total:** 2/2 tasks completed
 
 ## Autonomy Gate Provenance
 
@@ -48,19 +48,32 @@ oat_generated: false
 
 ## Phase 01: bound-smoke-cleanup-signal-wait (group 1)
 
-**Status:** in_progress
+**Status:** complete (merged `c5c32345`)
 **Started:** 2026-08-26
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- (pending)
+- The smoke cleanup SIGTERM regression harness can no longer wedge the suite: `runSignalCase` waits are bounded (60s), a missed SIGTERM triggers SIGKILL and a bounded reap (15s) before temp-dir cleanup, an unreapable child is detached without stalling the event loop, and every timeout fails loudly with the paused stage and captured stdout/stderr. Success assertion `{ code: 143, signal: null }` unchanged.
+
+**Key files touched:**
+
+- `tools/smoke/runner/cleanup.test.mjs` — bounded wait / force-kill / reap-or-detach helpers, injectable test seams, three new regression tests (+409/−5 across three append-only commits).
+
+**Verification:**
+
+- Run: `node --test tools/smoke/runner/cleanup.test.mjs` (19/19, 0 cancelled, ~13s); `pnpm test:smoke` (139/139); mutation battery I1-revert/E1/E2/E2b all red; full DoD 10/10.
+- Result: pass; reviews rounds 1–3 → `passed` (see Review Received entries).
+
+**Notes / Decisions:**
+
+- Deadline constants raised 10s→60s / 5s→15s after one >10s outlier under CPU contention; reviewer attributed it to `run-smoke.mjs`'s bounded quiescence grace, not a production wedge (STOP #1 not indicated).
 
 ### Task p01-t01: Execute external plan — Bound smoke cleanup signal waits and preserve failure diagnostics
 
-**Status:** completed (awaiting review)
-**Commit:** aedced645d2caa21b9fde5de5142822ddf025431
+**Status:** completed
+**Commit:** aedced645d2caa21b9fde5de5142822ddf025431 (+ fix commits 6a9ed1af959c70dc0f02b2472b590549e704b1c6, fd8c7cb9b7fa60c5b95fb0174d1a76c58814a698)
 
 **Source plan:** `.oat/repo/reference/external-plans/2026-08-19-bound-smoke-cleanup-signal-wait.md`
 
@@ -74,19 +87,33 @@ oat_generated: false
 
 ## Phase 02: detect-behind-main-package-versions (group 1)
 
-**Status:** in_progress
+**Status:** complete (merged `872a06be`)
 **Started:** 2026-08-26
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- (pending)
+- `pnpm release:check-versions` now also rejects any lockstep public-package version that is not strictly greater than the version on `origin/main` (numeric `major.minor.patch` comparator; malformed or missing evidence fails closed; the comparison never runs when no publishable roots changed). The merge-base lockstep rule is untouched and its errors are reported first, so one run names every required rebase/re-bump.
+
+**Key files touched:**
+
+- `tools/release/check-version-bumps.ts`, `tools/release/release-utils.ts` — current-main ref resolver, comparator, strict-greater errors.
+- `packages/cli/src/release/check-version-bumps.test.ts`, `packages/cli/src/release/release-utils.test.ts` — overtaken-main regression (0.2.29 vs 0.2.30), higher/equal/lower/malformed/missing-ref/mixed-set/no-public-change cases.
+
+**Verification:**
+
+- Run: focused release suites (43 tests); full DoD; `pnpm release:check-versions` exit 0 on the integration branch after the 0.2.33 bump (exercises the new guard's green path).
+- Result: pass; reviews rounds 1–2 → `passed`.
+
+**Notes / Decisions:**
+
+- Test files under `packages/cli/src/` trip the publishable-change guard, forcing the wave-level lockstep bump (Recovery Event p02-rec-001, root direction).
 
 ### Task p02-t01: Execute external plan — Reject publishable package versions overtaken by current main
 
-**Status:** completed (review round 1 received; fix round in progress)
-**Commit:** c8fdefc3884095bc1be40daf9eecc52f502e7ee9
+**Status:** completed
+**Commit:** c8fdefc3884095bc1be40daf9eecc52f502e7ee9 (+ fix commit b486beb60d83a5b0d1f46cc3881627da93acb354)
 
 **Source plan:** `.oat/repo/reference/external-plans/2026-08-19-detect-behind-main-package-versions.md`
 
@@ -104,7 +131,7 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-### Run 1 — 2026-08-26 (in progress)
+### Run 1 — 2026-08-26 (complete: 2 phases passed, 0 failed, 0 stopped)
 
 - Branch: `wave-1-execution`; Tier 1 (native `oat-phase-implementer` /
   `oat-reviewer` via Claude Code Task); dispatch policy managed / `high`
@@ -139,10 +166,10 @@ _- Outstanding Items_
 
 #### Phase Outcomes
 
-| Phase | Worktree                | Implementer outcome                                                                                          | Review outcome                         | Fix rounds | Merged |
-| ----- | ----------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- | ---------- | ------ |
-| p01   | `.worktrees/wave-1/p01` | DONE_WITH_CONCERNS (aedced64 + fixes 6a9ed1af, fd8c7cb9; DoD 10/10 green)                                    | passed (round 3: 0C/0I/0M/2m deferred) | 2          | -      |
-| p02   | `.worktrees/wave-1/p02` | DONE_WITH_CONCERNS (c8fdefc3 + fix b486beb6; focused pass; release gates red pending wave-level 0.2.33 bump) | passed (round 2: 0C/0I/0M/1m deferred) | 1          | -      |
+| Phase | Worktree                | Implementer outcome                                                                                          | Review outcome                         | Fix rounds | Merged     |
+| ----- | ----------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- | ---------- | ---------- |
+| p01   | `.worktrees/wave-1/p01` | DONE_WITH_CONCERNS (aedced64 + fixes 6a9ed1af, fd8c7cb9; DoD 10/10 green)                                    | passed (round 3: 0C/0I/0M/2m deferred) | 2          | `c5c32345` |
+| p02   | `.worktrees/wave-1/p02` | DONE_WITH_CONCERNS (c8fdefc3 + fix b486beb6; focused pass; release gates red pending wave-level 0.2.33 bump) | passed (round 2: 0C/0I/0M/1m deferred) | 1          | `872a06be` |
 
 ### Review Received: p02 (round 1)
 
@@ -231,12 +258,16 @@ _- Outstanding Items_
 
 **Review row `p01` → `passed`.**
 
+#### Group 1 fan-in (2026-08-26)
+
+- Merges (serialized, `git merge --no-ff`, branch-guarded, no rebase — phase branches touched only code and the integration branch only `.oat/projects/`, so reviewed SHAs are preserved): p01 → `c5c32345`; p02 → `872a06be`. Config-integrity check: `.oat/config.json` keys present.
+- Root-owned lockstep bump per Recovery Event p02-rec-001 direction: `4fa530e6 chore(release): bump public packages to 0.2.33 (wave 1 lockstep)` (five manifests + regenerated `packages/cli/assets/public-package-versions.json`).
+- Integration DoD at `4fa530e6` (exit codes captured explicitly): check 0 (6s) · type-check 0 (1s) · test 0 (173s; 273 files / 3672 vitest + 39 node:test, no smoke hang) · build 0 (2s) · check:skill-bumps 0 (2s) · release:check-versions 0 (1s) · release:validate 0 (28s) · build:docs 0 (2s) · lint 0 (2s) · format 0 (4s). The gate runner was stopped externally after gate 6; gates 7–10 were re-run to completion before any bookkeeping edit.
+- Worktrees `.worktrees/wave-1/p01`, `.worktrees/wave-1/p02` removed and branches `wave-1/p01`, `wave-1/p02` deleted after merge (merged history retained on the integration branch).
+
 #### Outstanding Items
 
-- Wave-level lockstep bump of all five public packages to `0.2.33` on the
-  integration branch after fan-in (root-owned; see Recovery Event p02-rec-001
-  disposition). Until then `pnpm release:check-versions` / `pnpm release:validate`
-  are expected red on `wave-1/p02`.
+- None (the lockstep-bump item is closed by `4fa530e6`).
 
 #### Recovery Event p02-rec-001 (validated by root)
 
@@ -265,7 +296,7 @@ _- Outstanding Items_
 - Plan gate passed (gate run `78a49137-a275-4bd3-8135-e5f27d757e24`,
   `cursor-gpt-5-6-sol-xhigh`, 0 findings) after two launch failures caused by
   a Cursor usage limit (see `references/plan-gate-launch-failures-2026-08-26.md`).
-- Group 1 bootstrap + dispatch of p01/p02 implementers.
+- Group 1 bootstrap + dispatch of p01/p02 implementers; p01 reviews rounds 1–3 (fix rounds 2), p02 reviews rounds 1–2 (fix round 1); fan-in merges `c5c32345`, `872a06be`; lockstep bump `4fa530e6`; integration DoD 10/10 green.
 
 ## Deviations from Plan / Design
 
@@ -275,14 +306,38 @@ _- Outstanding Items_
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| p01   | -         | -      | -      | -        |
-| p02   | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                         | Passed | Failed | Coverage        |
+| ----- | ------------------------------------------------------------------------------------------------- | ------ | ------ | --------------- |
+| p01   | `node --test tools/smoke/runner/cleanup.test.mjs` (19); `pnpm test:smoke` (139); full `pnpm test` | all    | 0      | n/a (node:test) |
+| p02   | focused release suites (43); full `pnpm test` (273 files / 3672)                                  | all    | 0      | n/a             |
 
 ## Final Summary (for PR/docs)
 
-(pending — filled at closeout)
+**What shipped:**
+
+- Bounded smoke cleanup SIGTERM harness: a child that ignores SIGTERM is force-killed, reaped (or detached without stalling the event loop), and reported with its paused stage and captured stdout/stderr instead of hanging `pnpm test` indefinitely (`tools/smoke/runner/cleanup.test.mjs`).
+- Release integrity guard: `pnpm release:check-versions` rejects publishable changes whose lockstep versions are not strictly greater than current `origin/main` (the "branch overtaken by a main release" hole), composing with the existing merge-base lockstep rule (`tools/release/*`, `packages/cli/src/release/*.test.ts`).
+- Lockstep public-package bump 0.2.32 → 0.2.33 (repository guardrail; test files under `packages/cli/src/` count as publishable changes).
+
+**Behavioral changes (user-facing):**
+
+- CI fails a PR whose public package versions equal or trail `origin/main` (actionable per-package errors); test-suite behavior change is confined to the smoke regression harness.
+
+**Key files / modules:**
+
+- `tools/smoke/runner/cleanup.test.mjs` — bounded signal harness + regression tests.
+- `tools/release/check-version-bumps.ts`, `tools/release/release-utils.ts` — current-main resolver, numeric comparator, strict-greater errors.
+- `packages/cli/src/release/check-version-bumps.test.ts`, `packages/cli/src/release/release-utils.test.ts` — release guard regression suites.
+- `packages/*/package.json`, `packages/cli/assets/public-package-versions.json` — 0.2.33.
+
+**Verification performed:**
+
+- Per lane: source-plan Verify gates and Done criteria, full DoD in each worktree, codex cross-model reviews (p01: 3 passes + 2 fix-diff passes; p02: 2 passes), independent opus reviews with reviewer-designed adversarial/mutation probes (p01 3 rounds, p02 2 rounds), all rows `passed`.
+- Integration: full DoD (8 gates + lint + format) green at `4fa530e6`.
+
+**Design deltas (if any):**
+
+- Wave-level lockstep bump was not anticipated by discovery (see Deviations table); no source-plan requirement changed.
 
 ## References
 

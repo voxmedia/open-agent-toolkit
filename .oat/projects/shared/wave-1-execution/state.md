@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: null
+oat_last_commit: 4fa530e6
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260818-bound-the-smoke-cleanup' }
@@ -92,7 +92,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T04:15:34.593Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T13:03:06.075Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T15:11:52.578Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -102,13 +102,13 @@ oat_project_recap:
 
 # Project State: wave-1-execution
 
-**Status:** Implementation in progress (group 1: p01 + p02)
+**Status:** Implementation tasks complete; awaiting final review
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
 ## Current Phase
 
-Implementation — group 1 (p01 + p02) dispatched to parallel worktrees; root owns per-phase review, fix loops, merges, and integration gates.
+Implementation - Tasks complete; awaiting final review.
 
 ## Artifacts
 
@@ -125,7 +125,8 @@ Implementation — group 1 (p01 + p02) dispatched to parallel worktrees; root ow
 - ✓ Wave-boundary drift refresh: 2 PASS / 0 MINOR-DRIFT / 0 STOP
 - ✓ Plan complete (validate-plan passed)
 - ✓ Plan gate passed (gate run 78a49137, cursor-gpt-5-6-sol-xhigh, 0 findings)
-- ⧗ Implementation Run 1: group 1 (p01 + p02) in parallel worktrees
+- ✓ Implementation tasks complete (Run 1: p01 + p02 passed; merged; 0.2.33 lockstep bump; integration DoD green)
+- ⧗ Awaiting final review
 
 ## Blockers
 
@@ -133,4 +134,4 @@ None (plan-gate blocker cleared 2026-08-26 after the operator raised the Cursor 
 
 ## Next Milestone
 
-Group 1 implementers return → per-phase reviews → serialized merges (p01 then p02) → integration DoD gates.
+Closeout: orchestration-log synthesis → serialized backlog archival → final review → configured implementation exit gate → summary/document/PR → autonomous final HiLL → complete-state.
