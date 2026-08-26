@@ -181,6 +181,40 @@ disposition every finding in the phase report.
 git commit -m "fix(p01-t01): bound smoke cleanup signal waits and keep failure diagnostics"
 ```
 
+### Task p01-t02: (review) Hoist the SIGTERM-ignore handler in the regression fixture
+
+**Files:**
+
+- Modify: `tools/smoke/runner/cleanup.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding (final review m3): the generated `ignoreSigterm` wrapper writes
+its sentinel and only then calls `pauseForTermination()`, where
+`process.on('SIGTERM', () => {})` is installed; the parent sends SIGTERM as
+soon as the sentinel appears, so a signal delivered in that window hits Node's
+default action and the two real-path regressions could flake.
+Location: `tools/smoke/runner/cleanup.test.mjs` fixture source (~:873–887).
+
+**Step 2: Implement fix**
+
+In the generated wrapper, install the ignore handler at module scope
+immediately after `const ignoreSigterm = …` (before any sentinel write); keep
+the existing branch in `pauseForTermination` only for the keep-alive interval.
+Do not touch the normal `process.once('SIGTERM', …)` path.
+
+**Step 3: Verify**
+
+Run: `node --test tools/smoke/runner/cleanup.test.mjs` (19/19, 0 cancelled) and
+`pnpm test:smoke`, `pnpm lint`, `pnpm format`
+Expected: all exit 0.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p01-t02): install the fixture SIGTERM-ignore handler before the sentinel"
+```
+
 ---
 
 ## Phase 02: detect-behind-main-package-versions (group 1)
@@ -223,28 +257,28 @@ git commit -m "fix(p02-t01): reject publishable package versions overtaken by cu
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | passed  | 2026-08-26 | reviews/archived/p01-review-2026-08-26T150044Z.md           | fd8c7cb9b7fa60c5b95fb0174d1a76c58814a698 | auto       | -           |
-| p02    | code     | passed  | 2026-08-26 | reviews/archived/p02-review-2026-08-26T135641Z.md           | b486beb60d83a5b0d1f46cc3881627da93acb354 | auto       | -           |
-| final  | code     | pending | -          | -                                                           | -                                        | -          | -           |
-| plan   | artifact | passed  | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T125608Z.md | -                                        | -          | -           |
-| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -           |
-| design | artifact | pending | -          | -                                                           | -                                        | -          | -           |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | passed      | 2026-08-26 | reviews/archived/p01-review-2026-08-26T150044Z.md           | fd8c7cb9b7fa60c5b95fb0174d1a76c58814a698 | auto       | -           |
+| p02    | code     | passed      | 2026-08-26 | reviews/archived/p02-review-2026-08-26T135641Z.md           | b486beb60d83a5b0d1f46cc3881627da93acb354 | auto       | -           |
+| final  | code     | fixes_added | 2026-08-26 | reviews/archived/final-review-2026-08-26T152343Z.md         | 848beb889a59b25497e9740f1716673f70fa69cd | auto       | -           |
+| plan   | artifact | passed      | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T125608Z.md | -                                        | -          | -           |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 ## Implementation Complete
 
-- [ ] 2/2 phases, 2/2 tasks complete
-- [ ] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
-- [ ] **Serialized backlog bookkeeping** (integration branch, after all merges):
+- [x] 2/2 phases, 2/2 tasks complete (+ one review fix task p01-t02 added at final review)
+- [x] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md` § Done-criteria confirmation)
+- [x] **Serialized backlog bookkeeping** (integration branch, after all merges; commit `848beb88`):
       `oat backlog archive` with real outcome summaries for
       `BL-260818-bound-the-smoke-cleanup` and
       `BL-260817-detect-branch-behind-published`, one commit
-- [ ] Orchestration-log end-of-run synthesis written; roll-up into `summary.md`
+- [x] Orchestration-log end-of-run synthesis written (`032eeef7`); roll-up into `summary.md`
       before any archive step
-- [ ] Full DoD gates green on the integration branch
+- [x] Full DoD gates green on the integration branch (`4fa530e6`; re-run by final review at `848beb88`)
 
 ## References
 
