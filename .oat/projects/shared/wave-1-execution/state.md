@@ -65,12 +65,12 @@ oat_implement_exit_gate:
   reviewed_head: 58a5aa0919428928152ffcbaf292b2973b18a65d
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:78875ee9763f73744cf256e12480e017615b94667fde7f2e7a1c7647d30f3fad'
-  freshness_head: 7f78dab719bcc64c471412c341dd20f09e25b997
+  freshness_head: 7f78dab719bcc64c471412c341dd20f09e25b997 # + closeout-only descendants: da1565a2 (state carrier), final-DoD record commit
   freshness_fingerprint: 'sha256:effective-delta-v1:c4f1ce778c5ba15c23ee25d91f3280de55dc2337c727de226a144bdf642fa5ea'
-  launch_state: not_started
-  launch_attempt_id: null
-  launch_started_at: null
-  launch_result_receipt: null
+  launch_state: intent_persisted
+  launch_attempt_id: 'w1-exit-gate-20260826T155104Z'
+  launch_started_at: '2026-08-26T15:51:04Z'
+  launch_result_receipt: '/private/tmp/claude-502/-Users-thomas-stang-orca-workspaces-open-agent-toolkit-bug-triage/99821df5-a46b-4bd0-a700-8b9284593b2c/scratchpad/w1-exit-gate-20260826T155104Z.receipt.json'
   gate_run_marker: null
   gate_run_id: null
   envelope_status: null
@@ -86,7 +86,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-08-26T15:47:37.917Z'
+  updated_at: '2026-08-26T15:51:04Z'
 # oat_implement_exit_gate (template comment retained below for reference)
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
