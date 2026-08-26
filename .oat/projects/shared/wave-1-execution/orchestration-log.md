@@ -213,16 +213,85 @@ round-2 dispositions verified fixed; two minors deferred with rationale. Row
 `p01` → `passed`. Artifact `reviews/archived/p01-review-2026-08-26T150044Z.md`.
 Phase history: 3 append-only commits, one file.
 
+### 2026-08-26 · structural · oat-wave-execute · group 1 fan-in
+
+Merges `c5c32345` (p01), `872a06be` (p02) — no rebase (disjoint surfaces;
+reviewed SHAs preserved); lockstep bump `4fa530e6`; integration DoD 10/10 exit 0
+at `4fa530e6` (`pnpm test` 173s). Gate runner stopped externally after gate 6;
+gates 7–10 re-run to completion before bookkeeping. Worktrees/branches removed.
+
 ---
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis (2026-08-26)
 
-At project completion, BEFORE any archive step, the orchestrator writes:
-(1) verdicts on the conventions this wave exercised, with evidence entries cited;
-(2) a ruling on every "Skill signal"-tagged entry — what the `oat-wave-execute`
-skill should change; (3) adjustments adopted for later waves, stated as rules;
-(4) a graduated-entries ledger (backlog IDs / upstream refs / closed-with-evidence
-/ open-with-owner).
+### 1. Convention verdicts (evidence: entries above)
 
-Roll-up ordering (critical): `summary.md` `## Workflow Observations` and any
-repo-level ledger updates happen BEFORE `oat-project-complete` archives this file.
+- **Thin wrapper + pointer-only tasks:** held. Neither source plan was narrowed;
+  the one reconciliation (p02 rule-1 addendum) was non-narrowing and the plan
+  gate confirmed it.
+- **Wave-boundary drift refresh (rule 2):** held for code drift (2 PASS, empty
+  intersection) but missed a non-code hazard: release change-detection roots
+  (test files under `packages/cli/src/`) — see the friction entry. Verdict:
+  extend the intersection check.
+- **Rule 3 (clean orchestrator tree) / rule 5 (absolute paths):** violated once
+  by cwd drift (commit `6c2a8a30` on the wrong branch); repaired append-only.
+  Verdict: generalize rule 5 to every root command (`git -C`, absolute paths).
+- **Rule 6/8 (gate scope & diagnostics):** the plan gate hit a pre-child
+  provider rejection twice (Cursor usage limit) — a class rule 8 does not name.
+  Verdict: add "rejection before any reviewer output ⇒ launch defect; no
+  remediation attempts; boundary".
+- **Rule 10 (integration gates after fan-in):** held; all green; no cumulative
+  defect surfaced, but the runner-stop showed the value of per-gate exit logs.
+- **Rule 11 (append-only fix rounds):** held across 3 fix commits; every
+  reviewed SHA stayed immutable.
+- **Rule 12 (pipefail/exit capture):** held; a zsh `pnpm $cmd` word-split bug
+  produced one false gate failure in a lane (worked around by literal
+  invocation).
+- **Reviewer-designed adversarial probes:** decisive. p01's Important (post-
+  detach unsettleable reap) and p01-r2's Medium (reorder mutation) were found
+  only by reviewer probes; every implementer gate and codex pass was green.
+- **Cross-model review (codex):** cheap and corroborative (p02 P1 confirmed
+  the lockstep contradiction; p01 3×P2 pre-commit). One record discrepancy
+  (`--uncommitted` vs `--commit` invocations) recorded without harm.
+
+### 2. Skill-signal rulings
+
+- Gate target selection (gap) → **upstream:** availability probe should reach
+  entitlement or fall through on pre-child rejection; wave skill rule 8 addendum.
+- Stamp formatter (gap) → **upstream backlog candidate:** resolver `--stamp`.
+- Drift refresh vs release roots (gap) → **skill change:** intersect write
+  surfaces with `findChangedWorkspaceDirs` roots; warn when a test-only lane
+  forces a lockstep bump.
+- CPU contention for timing lanes (gap) → **skill change:** group composition
+  weighs contention for signal/timing lanes.
+- Delete-and-reorder mutations (gap) → **skill change:** reviewer brief asks
+  for both mutation classes on ordering claims.
+- Absolute-path rule (strengthens) → **skill change:** rule 5 generalized.
+- Adversarial probe rule (strengthens) → keep mandatory.
+
+### 3. Adjustments adopted for W2–W4 (rules)
+
+1. Every root command uses absolute paths or `git -C`; never a bare `cd`.
+2. Drift refresh reports each lane's release change-detection roots and flags
+   any lane that will force a lockstep bump; the wave plans the bump up front.
+3. Implementer briefs say "invoke each gate literally" and capture exit codes
+   per gate to a log file; the root reads the log, never the stream.
+4. Reviewer briefs for ordering/containment claims require delete- AND
+   reorder-class mutations.
+5. Gate launches: a pre-child provider rejection is a boundary after one
+   identical retry — do not spend remediation attempts.
+
+### 4. Graduated-entries ledger
+
+- Gate selection / entitlement probe → backlog candidate (file at wave close on
+  main): open-with-owner (root).
+- Resolver `--stamp` → backlog candidate: open-with-owner (root).
+- Test-only paths vs `versionPolicyIgnorePatterns` policy decision → backlog
+  candidate: open-with-owner (operator; policy).
+- p01 deferred minors (p01-r3-m1/m2), p02 deferred minor (p02-r2-m1) →
+  carried in `implementation.md` Deferred Findings for final-review resurfacing.
+- Plan-gate launch failures → closed-with-evidence (`references/plan-gate-launch-failures-2026-08-26.md`).
+- cwd drift incident → closed-with-evidence (repair commits `588d3254`).
+
+Roll-up: these observations are summarized in `summary.md` `## Workflow
+Observations` before any archive step.
