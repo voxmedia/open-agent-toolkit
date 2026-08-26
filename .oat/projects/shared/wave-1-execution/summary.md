@@ -121,7 +121,7 @@ configured implementation exit gate (`claude-fable-skip-permissions`, run
 
 ## Explainer Outcome
 
-- **project-recap:** built-not-durable — `explainers/wave-1-execution-recap` (run `run-051612fb-0075-43de-b2dd-0aea4209775f`, `project-recap@2`, one hub artifact, real Chromium evidence at 320/768/1440, visual review pass, fact critic 0 findings). Durability attestation failed because the repository's pre-commit formatter rewrote 9 of the 27 immutable package files on commit (`efe10a05`), so their bytes no longer match the manifest hashes; the original bytes were not recoverable. The hub is committed and usable; the formatter guard added in `9f906e1d` prevents this for later runs.
+- **project-recap:** built-durable — `explainers/wave-1-execution-recap` (run `run-051612fb-0075-43de-b2dd-0aea4209775f`, `project-recap@2`, one hub artifact, real Chromium evidence at 320/768/1440, visual review pass, fact critic 0 findings). Attestation history: the pre-commit formatter rewrote 9 of the 27 immutable package files at the artifact commit `efe10a05`, so the first `recordDurability` run recorded 9 `hash-mismatch` errors (`612e2dbf`, outcome `built-not-durable`); lint-staged had left the original bytes staged and they were committed with the formatter-guard commit `9f906e1d`, after which the package verified 27/27 and a fresh attestation against `9f906e1d` recorded `built-durable`.
 
 ## Follow-up Items
 

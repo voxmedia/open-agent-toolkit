@@ -31,6 +31,5 @@
     // formatter rewrite on commit breaks their durability attestation.
     ".oat/**/explainers/**",
     ".oat/repo/reference/project-recaps/**",
-    ".oat/repo/explainers/**",
   ],
 }

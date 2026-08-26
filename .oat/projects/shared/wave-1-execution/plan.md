@@ -257,15 +257,16 @@ git commit -m "fix(p02-t01): reject publishable package versions overtaken by cu
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | passed  | 2026-08-26 | reviews/archived/p01-review-2026-08-26T150044Z.md           | fd8c7cb9b7fa60c5b95fb0174d1a76c58814a698 | auto       | -                             |
-| p02    | code     | passed  | 2026-08-26 | reviews/archived/p02-review-2026-08-26T135641Z.md           | b486beb60d83a5b0d1f46cc3881627da93acb354 | auto       | -                             |
-| final  | code     | passed  | 2026-08-26 | reviews/archived/final-review-2026-08-26T154241Z.md         | 58a5aa0919428928152ffcbaf292b2973b18a65d | auto       | -                             |
-| plan   | artifact | passed  | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T125608Z.md | -                                        | -          | -                             |
-| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                             |
-| design | artifact | pending | -          | -                                                           | -                                        | -          | -                             |
-| final  | code     | passed  | 2026-08-26 | reviews/archived/final-review-2026-08-26T160106Z.md         | cab5ffd3c9eeba12ba535855ab41590ed43d3a38 | gate       | claude-fable-skip-permissions |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | passed          | 2026-08-26 | reviews/archived/p01-review-2026-08-26T150044Z.md           | fd8c7cb9b7fa60c5b95fb0174d1a76c58814a698 | auto       | -                             |
+| p02    | code     | passed          | 2026-08-26 | reviews/archived/p02-review-2026-08-26T135641Z.md           | b486beb60d83a5b0d1f46cc3881627da93acb354 | auto       | -                             |
+| final  | code     | passed          | 2026-08-26 | reviews/archived/final-review-2026-08-26T154241Z.md         | 58a5aa0919428928152ffcbaf292b2973b18a65d | auto       | -                             |
+| plan   | artifact | passed          | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T125608Z.md | -                                        | -          | -                             |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
+| final  | code     | passed          | 2026-08-26 | reviews/archived/final-review-2026-08-26T160106Z.md         | cab5ffd3c9eeba12ba535855ab41590ed43d3a38 | gate       | claude-fable-skip-permissions |
+| final  | code     | fixes_completed | 2026-08-26 | reviews/archived/final-review-2026-08-26T164716Z.md         | a843353cf2d9d36e6fc88e3ccbd2db936eaed0ba | auto       | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

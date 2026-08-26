@@ -63,10 +63,11 @@ version-bump drift twice reached review with no local gate to surface it.
 
 `pnpm release:check-versions` compares the five public package versions against
 their merge-base versions (lockstep bump required when any publishable root
-changed) and, since 0.2.33, also requires every lockstep version to be strictly
-greater than the version on your local `origin/main` tracking ref — so a branch
-whose bump was overtaken by a later `main` release fails locally the same way
-it fails in CI. Fetch first (`git fetch origin`) so that ref is current; a
+changed). Since 0.2.33, when a publishable root changed, the gate additionally
+requires every lockstep version to be strictly greater than the version on your
+local `origin/main` tracking ref (falling back to a local `main` branch when no
+`origin/main` exists) — so a branch whose bump was overtaken by a later `main`
+release fails locally the same way it fails in CI. Fetch first (`git fetch origin`) so that ref is current; a
 checkout with neither `origin/main` nor `main` skips the whole gate (CI uses
 `fetch-depth: 0`). Test files under `packages/cli/src/` count as publishable
 changes for this gate.
