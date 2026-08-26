@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues:
@@ -13,9 +13,19 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {}
+  phase_attempt_usage:
+    p01:
+      used_attempts: 0
+      pending_attempt: null
+    p02:
+      used_attempts: 0
+      pending_attempt: null
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -82,7 +92,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T04:15:34.593Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T13:01:05.547Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T13:03:06.075Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -92,13 +102,13 @@ oat_project_recap:
 
 # Project State: wave-1-execution
 
-**Status:** Plan complete — ready for implementation
+**Status:** Implementation in progress (group 1: p01 + p02)
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
 ## Current Phase
 
-Plan complete — Wave 1 wrapper plan (2 lanes, one parallel group) awaiting the configured plan gate, then `oat-project-implement`.
+Implementation — group 1 (p01 + p02) dispatched to parallel worktrees; root owns per-phase review, fix loops, merges, and integration gates.
 
 ## Artifacts
 
@@ -106,7 +116,7 @@ Plan complete — Wave 1 wrapper plan (2 lanes, one parallel group) awaiting the
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete — wrapper plan; drift refresh recorded)
-- **Implementation:** `implementation.md` (scaffolded — initialized by `oat-project-implement`)
+- **Implementation:** `implementation.md` (in progress — Run 1)
 - **Orchestration log:** `orchestration-log.md` (day one)
 
 ## Progress
@@ -115,7 +125,7 @@ Plan complete — Wave 1 wrapper plan (2 lanes, one parallel group) awaiting the
 - ✓ Wave-boundary drift refresh: 2 PASS / 0 MINOR-DRIFT / 0 STOP
 - ✓ Plan complete (validate-plan passed)
 - ✓ Plan gate passed (gate run 78a49137, cursor-gpt-5-6-sol-xhigh, 0 findings)
-- ⧗ Implementation (group 1: p01 + p02 in parallel worktrees)
+- ⧗ Implementation Run 1: group 1 (p01 + p02) in parallel worktrees
 
 ## Blockers
 
@@ -123,4 +133,4 @@ None (plan-gate blocker cleared 2026-08-26 after the operator raised the Cursor 
 
 ## Next Milestone
 
-Execute group 1 (p01 + p02 in parallel worktrees) via `oat-project-implement`.
+Group 1 implementers return → per-phase reviews → serialized merges (p01 then p02) → integration DoD gates.

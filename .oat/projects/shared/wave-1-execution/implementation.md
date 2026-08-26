@@ -24,16 +24,29 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase                                  | Status      | Tasks | Completed |
+| -------------------------------------- | ----------- | ----- | --------- |
+| Phase 01 (bound-smoke-cleanup)         | in_progress | 1     | 0/1       |
+| Phase 02 (detect-behind-main-versions) | in_progress | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/2 tasks completed
+
+## Autonomy Gate Provenance
+
+- `IMPLEMENT-08` (subagent delegation): authorized once for this run for
+  `oat-phase-implementer` and `oat-reviewer` within the plan's bounded phase
+  and review scopes; native Claude Code Task dispatch (Tier 1). No file,
+  command, credential, branch, or merge authority widened.
+- `IMPLEMENT-03` / `IMPLEMENT-04` (checkpoints): `oat_plan_hill_phases: ['p02']`
+  (final phase; `workflow.hillCheckpointDefault: final`) and
+  `oat_auto_review_at_hill_checkpoints: true` were already explicit in
+  `plan.md`; preserved unchanged.
+- Dispatch policy preflight: `oat project dispatch-ceiling resolve --provider claude --preflight …`
+  → `resolved`, managed / `high`, source `project-state`, value `opus`.
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 01: bound-smoke-cleanup-signal-wait (group 1)
 
 **Status:** in_progress
 **Started:** 2026-08-26
@@ -42,69 +55,34 @@ oat_generated: false
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- (pending)
 
-**Key files touched:**
+### Task p01-t01: Execute external plan — Bound smoke cleanup signal waits and preserve failure diagnostics
 
-- `{path}` - {why}
+**Status:** in_progress
+**Commit:** -
 
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Source plan:** `.oat/repo/reference/external-plans/2026-08-19-bound-smoke-cleanup-signal-wait.md`
 
 ---
 
-### Task p01-t02: {Task Name}
+## Phase 02: detect-behind-main-package-versions (group 1)
 
-**Status:** pending
+**Status:** in_progress
+**Started:** 2026-08-26
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- (pending)
+
+### Task p02-t01: Execute external plan — Reject publishable package versions overtaken by current main
+
+**Status:** in_progress
 **Commit:** -
 
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
-
-**Status:** pending
-**Commit:** -
+**Source plan:** `.oat/repo/reference/external-plans/2026-08-19-detect-behind-main-package-versions.md`
 
 ---
 
@@ -118,7 +96,48 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1 — 2026-08-26 (in progress)
+
+- Branch: `wave-1-execution`; Tier 1 (native `oat-phase-implementer` /
+  `oat-reviewer` via Claude Code Task); dispatch policy managed / `high`
+  (Claude `opus`, enforced — Task model arg); schedule `[p01, p02]` (one
+  parallel worktree group, ceiling 3).
+- Phase recovery policy: default limit 10 (no overrides); usage ledger in
+  `state.md`.
+
+#### Dispatch records (generic record + lifecycle extension)
+
+- `w1-p01-impl-001` — caller `oat-project-implement`; scope `p01`; action
+  implementation; role `oat-phase-implementer` (class worker); provider claude;
+  dispatch_context root-native (Claude Code Task tool); catalog: Task-tool
+  model enum {sonnet, opus, haiku, fable} observed 2026-08-26 before
+  selection; role_selector `oat-phase-implementer`; model_selector `opus`
+  (tier-alias); effort not-exposed on the native surface (`effort_axis=not-applicable`);
+  selection_source native-default; selection_reason native-catalog;
+  candidates_considered [opus]; task_class default-implementation
+  (classification_source caller: two-file signal-harness change with an
+  explicit external plan; dispersed-context reconciliation, not novel
+  architecture); floor satisfied; authority write within the p01 worktree
+  and the source plan's scope; retry_limit 0 (phase recovery contract owns
+  post-commit repair); guidance `subagent-orchestration/references/provider-claude.md`
+  2026-07-25 (fresh). Stamp:
+  `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=opus`
+- `w1-p02-impl-001` — identical axes for scope `p02` (task_class
+  default-implementation: release-gate extension with existing DI seams and
+  an explicit external plan). Stamp:
+  `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=opus`
+- Dispatch policy enforcement log (both): `Dispatch policy: high; selected=opus; cap=opus (claude, enforced — Task model arg)`.
+
+#### Phase Outcomes
+
+| Phase | Worktree                | Implementer outcome | Review outcome | Fix rounds | Merged |
+| ----- | ----------------------- | ------------------- | -------------- | ---------- | ------ |
+| p01   | `.worktrees/wave-1/p01` | pending             | pending        | 0          | -      |
+| p02   | `.worktrees/wave-1/p02` | pending             | pending        | 0          | -      |
+
+#### Outstanding Items
+
+- (none yet)
 
 <!-- orchestration-runs-end -->
 
@@ -126,46 +145,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
-Chronological log of implementation progress.
-
 ### 2026-08-26
 
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-08-26
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+- Plan gate passed (gate run `78a49137-a275-4bd3-8135-e5f27d757e24`,
+  `cursor-gpt-5-6-sol-xhigh`, 0 findings) after two launch failures caused by
+  a Cursor usage limit (see `references/plan-gate-launch-failures-2026-08-26.md`).
+- Group 1 bootstrap + dispatch of p01/p02 implementers.
 
 ## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
@@ -173,38 +160,17 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Track test execution during implementation.
-
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| p01   | -         | -      | -      | -        |
+| p02   | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+(pending — filled at closeout)
 
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
+- Orchestration log: `orchestration-log.md`
