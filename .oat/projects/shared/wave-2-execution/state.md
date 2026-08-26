@@ -96,8 +96,8 @@ oat_implement_exit_gate:
   reviewed_head: 2e106b66b78f7d80ed7eca27aa5eb7d103ec4a56 # final review round 2 (passed) reviewed head
   implementation_base_ref: origin/main # 1bd5424b48af0f1cd385ce42246952d16ab438f7
   implementation_fingerprint: 'sha256:effective-delta-v1:046f942aeffd44dac9ebd0796b51780fb8374f4ddb0b952355842aaa2ffe75e3'
-  freshness_head: 510526095bc21d407bcaabc2829755fa0edb8c52 # closeout-only descendants of the reviewed head (receive, gate bookkeeping, orchestration log)
-  freshness_fingerprint: 'sha256:effective-delta-v1:8d9259a65ea26662b9fdfeaf3bb642eaabe07b125103247911d20931da232f7f'
+  freshness_head: 1fc3a464e34c4fe485762ce190b8a93827a8f937 # post-gate descendants: gate receive, sequence snapshot, summary step (decisions), document step (docs page + PJM) — the docs change was anticipated by the gate artifact ("remains correctly routed to the project's later document step"); no code changed after the reviewed head; pnpm check exit=0, pnpm build:docs exit=0 at this head
+  freshness_fingerprint: 'sha256:effective-delta-v1:28e9ff5d8f64cd82a1e0503087ae7b2068e3c29c792cf4b1e79aa009331a06c1'
   launch_state: result_persisted # gen 2 attempt 1 completed 2026-08-26T22:26:29Z, exit 0
   launch_attempt_id: 'w2-exit-gate-gen2-a1' # gen 1 attempts: w2-exit-gate-20260826T211845Z, …T212345Z (killed), …T212619Z
   launch_started_at: '2026-08-26T22:08:01Z'
@@ -117,13 +117,13 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: 'attempts 1 and 3 (runs 4199a1c1, a31a6325): review_completed_targeting_correlation_failed — the claude-fable-skip-permissions child backgrounded the DoD gates behind a waiter and ended its headless turn before writing the artifact (child transcripts 283c13cb, 96f809f2); no artifact carried either run ID; project-log entries recorded by the gate (56f19f0f, 72e840cd). Attempt 2 (run baa84df9) runner killed by host at ~90s, no envelope. Gate blocked at maxAttempts=2; not self-authorized further.'
-  updated_at: '2026-08-26T22:28:17.268Z'
+  updated_at: '2026-08-26T22:31:14.690Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T19:08:06.587Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T22:30:30.029Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T22:31:14.691Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_post_implement_sequence:
   status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
