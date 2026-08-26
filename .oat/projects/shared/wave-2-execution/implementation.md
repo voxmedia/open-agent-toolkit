@@ -213,6 +213,13 @@ oat_generated: false
 
 **Gate review row `final` → `passed`; exit gate generation 2 allowed. Next: post-implement sequence (summary → document → pr).**
 
+## Implementation-tail project recap (IMPLEMENT-19)
+
+- Intent: `oat_project_recap: generate / autonomous_policy`; no manifest existed → exactly one `project-recap` attempt via `runOatExplainer` (`mode: unattended`, in-process planSet/author/critic/browserSession/visualCritic seams; delegated to an Opus worker, dispatch `w2-recap-001`, driver under `$TMPDIR/w2-recap/`).
+- Result: manifest `explainers/wave-2-execution-recap/manifest.json`, run `run-1b2d1eb3-9616-4ae7-95c7-861d5c148c97`, recipe `project-recap@2` (floor-only portfolio, one hub). Build: validate/fact-base/content/render/qa passed, theme warned `theme-selection-normalized` (only warning); fact critic 3 sources / 3 claims / 0 findings; real Chromium 147.0.7727.15 evidence at 320×640, 768×1024, 1440×900 (clean); visual review `pass` on attempt 1; backlinks pinned to `bfb52289`.
+- Finalizer (`dedicated`): artifact commit `36de6966` (exactly the 27 immutable paths; the formatter ignore from W1 held — lint-staged rewrote none), durability attestation `record-durability.mjs` → **built-durable** (`durable: true`, no errors), evidence commit `1638cc53` (`manifest.json` + `build-record.json`), `verifyTrackedRunFinalization` `ok: true`. Root re-verified 27/27 immutable hashes against the blobs at `1638cc53`.
+- Deviations from W1's procedure (worker-reported, root-accepted): fact base binds the three bindable artifacts (`plan`, `implementation`, `summary` — `bind-project-sources.mjs` cannot bind `discovery`/`state`; identical to W1's effective set); finalization plan verified against the real observed commits rather than an all-null observation; one commitlint `body-max-line-length` rejection before the artifact commit (HEAD unchanged, hashes re-checked 27/27, recommitted with a wrapped body).
+
 ## Deviations from Plan / Design
 
 | Task / Review  | Source Artifact                                      | Planned / Documented                                           | Actual / Accepted                                                                                                           | Reason                                                                                                                                                                                               | Source of Truth                                                               | Follow-up                                                      |

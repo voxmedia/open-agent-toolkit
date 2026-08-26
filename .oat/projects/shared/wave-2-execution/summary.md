@@ -89,6 +89,8 @@ in the foreground, 0C/0I/1M/2m — the medium was a bookkeeping heading defect).
 - Sibling commands (`init`, `remove skill`, `status`) still restamp
   `oatVersion` silently — tracked as a follow-up.
 
+**Explainer outcome:** project-recap **built-durable** — `explainers/wave-2-execution-recap` (run `run-1b2d1eb3-9616-4ae7-95c7-861d5c148c97`, `project-recap@2`, one hub artifact, real Chromium evidence at 320/768/1440, visual review pass on attempt 1; artifact commit `36de6966`, attestation `1638cc53`).
+
 ## Follow-up Items
 
 - Backlog candidate: extend the advisory to the three sibling `saveManifest`
