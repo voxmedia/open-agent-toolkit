@@ -97,6 +97,23 @@ oat_generated: false
 | ----- | ----------------------------------------- | ------------------------------------------------ | -------------- | ---------- | ------ |
 | p01   | integration checkout (`wave-2-execution`) | DONE (b257e908; DoD 8/8 green; codex 0 findings) | pending        | 0          | n/a    |
 
+### Review Received: p01 (round 1)
+
+**Date:** 2026-08-26
+**Review artifact:** reviews/archived/p01-review-2026-08-26T202437Z.md (reviewed head `b257e90861484c7628e1eab240d08340d781898b`, invocation auto, dispatch `w2-p01-review-001`, model opus)
+
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 4. Reviewer probes: reorder-class mutation (warning after the apply branch) → 1 test red; delete-class → 3 red; JSON-field delete → 5 red; focused 51/51; full DoD gates exit 0; commit touches exactly the 12 declared files.
+
+**Dispositions (auto mode; bounded fix round via the original implementer handle, one append-only commit):**
+
+- M1 — restamp-only apply path (`index.test.ts:513`) unpinned for the advisory; skew predicate duplicated between `index.ts:242` (`detectVersionSkew`) and `apply.ts:96` (`shouldRefreshManifestVersion`) with no test asserting agreement: **convert** — pin the restamp-only path with the same in-mock capture, and add a test (or share one predicate) proving both sites agree.
+- m1 — degenerate `oatVersion` strings render a self-contradictory advisory (`index.ts:255`): **convert** — quote both values in the message.
+- m2 — no multi-scope (`--scope all`) per-scope attribution coverage (`index.test.ts:533`): **convert** — parameterize the helper by scope and add one multi-scope case.
+- m3 — `oat sync` advisory undocumented (`apps/oat-docs/docs/provider-sync/commands.md:48`): **address at the `document` step** (docs are shipped and already covered by this wave's bump).
+- m4 — sibling commands (`init/index.ts:1187`) still restamp `oatVersion` silently: **defer — out of the source plan's scope** ("this plan only reports provenance already present in the sync manifest"); backlog candidate filed at wave close.
+
+**Next:** fix round `w2-p01-fix-001` → narrowed re-review → `passed`.
+
 #### Outstanding Items
 
 - (none yet)
