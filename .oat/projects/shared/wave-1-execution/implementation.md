@@ -160,7 +160,9 @@ _- Outstanding Items_
 
 **Pre-dispositioned condition (not a finding):** release gates red until the wave-level 0.2.33 lockstep bump; reviewer probe P1 verified the redness is version state, not code.
 
-**Next:** fix round `w1-p02-fix-001` (continuation of `w1-p02-impl-001`), then a fresh narrowed re-review; row `p02` → `fixes_completed` → `passed`.
+**Fix round 1 (`w1-p02-fix-001`, continuation of `w1-p02-impl-001` through the original handle):** DONE — append-only commit `b486beb60d83a5b0d1f46cc3881627da93acb354` (parent `c8fdefc3` immutable); M1 option (a) comments at both sites, m1 type exported + 8 direct tests, m2 `.trim()` dropped + pinned rejection, m3 mixed-set test (3 errors, one strict-greater naming `docs-theme`). Focused 43/43; check/type-check/build/skill-bumps/build:docs/lint/format exit 0; `pnpm test` one 5s timeout flake in an unrelated test, green on the contract's single no-edit rerun (no attempt consumed); release gates expected-red (pre-dispositioned). Root verified range `c8fdefc3..b486beb6` touches only the four in-scope files. Row `p02` → `fixes_completed`.
+
+**Next:** narrowed re-review round 2 (`w1-p02-review-002`, range `c8fdefc3..b486beb6`) → `passed`.
 
 #### Outstanding Items
 
