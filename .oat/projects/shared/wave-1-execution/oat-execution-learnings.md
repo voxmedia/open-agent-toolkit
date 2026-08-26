@@ -52,3 +52,9 @@ environment-limited). No secrets, no autonomy signals.
 **Observation:** Two remedies existed for the release-gate contradiction: bump all five packages or exempt `src/**/*.test.ts` from version policy.
 **Impact:** Chose the bump (repository guardrail; single commit after fan-in; exercises the new guard's green path); the exemption is a policy change outside the plan.
 **Recommendation:** Record the version-policy question as a backlog item for the operator.
+
+## 2026-08-26T16:40:00Z - gotcha - Pre-commit formatter breaks explainer-kit durability attestation
+
+**Observation:** The recap's dedicated finalizer commits the immutable run package through the repo's lint-staged hook, which reformatted 9 of 27 hashed JSON/Markdown files; `recordDurability` then failed with hash mismatches and the terminal outcome was `built-not-durable`.
+**Impact:** The recap is committed and usable but not attested durable; the originals were unrecoverable after the hook rewrote both index and working tree.
+**Recommendation:** Keep `.oat/**/explainers/**` and recap export roots out of formatter scope (done in `9f906e1d`); the adapter finalizer should verify committed bytes before attestation and refuse hook-formatted commits.

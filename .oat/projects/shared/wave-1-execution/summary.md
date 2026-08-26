@@ -119,6 +119,10 @@ configured implementation exit gate (`claude-fable-skip-permissions`, run
 
 - Drift refresh must intersect lane write surfaces with release change-detection roots and pre-plan lockstep bumps; the version-policy question for test-only paths is an operator decision ([2026-08-26T13:45:00Z — gotcha — Test-only changes under packages/cli trip the lockstep version guard](./oat-execution-learnings.md), [2026-08-26T16:05:00Z — decision — Wave-level lockstep bump instead of exempting test paths](./oat-execution-learnings.md)).
 
+## Explainer Outcome
+
+- **project-recap:** built-not-durable — `explainers/wave-1-execution-recap` (run `run-051612fb-0075-43de-b2dd-0aea4209775f`, `project-recap@2`, one hub artifact, real Chromium evidence at 320/768/1440, visual review pass, fact critic 0 findings). Durability attestation failed because the repository's pre-commit formatter rewrote 9 of the 27 immutable package files on commit (`efe10a05`), so their bytes no longer match the manifest hashes; the original bytes were not recoverable. The hub is committed and usable; the formatter guard added in `9f906e1d` prevents this for later runs.
+
 ## Follow-up Items
 
 - Deferred minors: p02-r2-m1 (quote whitespace in the malformed-version

@@ -220,6 +220,18 @@ reviewed SHAs preserved); lockstep bump `4fa530e6`; integration DoD 10/10 exit 0
 at `4fa530e6` (`pnpm test` 173s). Gate runner stopped externally after gate 6;
 gates 7–10 re-run to completion before bookkeeping. Worktrees/branches removed.
 
+### 2026-08-26 · general · bug · recap durability vs pre-commit formatter
+
+The project-recap built cleanly (real Chromium, visual review pass) but the
+dedicated finalizer's artifact commit ran lint-staged `oxfmt --write` over the
+immutable package, changing 9/27 hashed files → `recordDurability` 9×
+hash-mismatch → terminal `built-not-durable`. Originals unrecoverable. Fixed
+forward with formatter ignore patterns + lint-staged flag (`9f906e1d`).
+**Skill signal (strengthens):** rule 7 (formatter-ignored × staged-glob) applies
+to explainer run packages; the adapter's finalizer should refuse to commit
+through formatting hooks or verify bytes post-commit before attesting.
+Follow-up: backlog candidate (adapter finalizer byte-verification).
+
 ---
 
 ## End-of-run synthesis (2026-08-26)
