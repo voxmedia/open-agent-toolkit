@@ -139,10 +139,10 @@ _- Outstanding Items_
 
 #### Phase Outcomes
 
-| Phase | Worktree                | Implementer outcome                                                                                                                                | Review outcome | Fix rounds | Merged |
-| ----- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------- | ------ |
-| p01   | `.worktrees/wave-1/p01` | DONE_WITH_CONCERNS (aedced64; 1 task; DoD 10/10 + test:smoke green; codex 3×P2 fixed pre-commit; concern: deadline 10s→60s after one >10s outlier) | pending        | 0          | -      |
-| p02   | `.worktrees/wave-1/p02` | DONE_WITH_CONCERNS (c8fdefc3; 1 task; focused pass; 6/8 DoD — release gates red on lockstep policy, root-dispositioned)                            | pending        | 0          | -      |
+| Phase | Worktree                | Implementer outcome                                                                                                                                | Review outcome                         | Fix rounds | Merged |
+| ----- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------- | ------ |
+| p01   | `.worktrees/wave-1/p01` | DONE_WITH_CONCERNS (aedced64; 1 task; DoD 10/10 + test:smoke green; codex 3×P2 fixed pre-commit; concern: deadline 10s→60s after one >10s outlier) | pending                                | 0          | -      |
+| p02   | `.worktrees/wave-1/p02` | DONE_WITH_CONCERNS (c8fdefc3 + fix b486beb6; focused pass; release gates red pending wave-level 0.2.33 bump)                                       | passed (round 2: 0C/0I/0M/1m deferred) | 1          | -      |
 
 ### Review Received: p02 (round 1)
 
@@ -162,7 +162,20 @@ _- Outstanding Items_
 
 **Fix round 1 (`w1-p02-fix-001`, continuation of `w1-p02-impl-001` through the original handle):** DONE — append-only commit `b486beb60d83a5b0d1f46cc3881627da93acb354` (parent `c8fdefc3` immutable); M1 option (a) comments at both sites, m1 type exported + 8 direct tests, m2 `.trim()` dropped + pinned rejection, m3 mixed-set test (3 errors, one strict-greater naming `docs-theme`). Focused 43/43; check/type-check/build/skill-bumps/build:docs/lint/format exit 0; `pnpm test` one 5s timeout flake in an unrelated test, green on the contract's single no-edit rerun (no attempt consumed); release gates expected-red (pre-dispositioned). Root verified range `c8fdefc3..b486beb6` touches only the four in-scope files. Row `p02` → `fixes_completed`.
 
-**Next:** narrowed re-review round 2 (`w1-p02-review-002`, range `c8fdefc3..b486beb6`) → `passed`.
+### Review Received: p02 (round 2, narrowed)
+
+**Date:** 2026-08-26
+**Review artifact:** reviews/archived/p02-review-2026-08-26T135641Z.md (reviewed head `b486beb60d83a5b0d1f46cc3881627da93acb354`, range `c8fdefc3..b486beb6`, prior artifact round 1 / head `c8fdefc3`, invocation auto, dispatch `w1-p02-review-002`, model opus)
+
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 1. Disposition Verification: M1, m1, m2, m3 all **verified fixed** with file:line evidence; range touches only the four in-scope files; `b486beb6~1 == c8fdefc3`; focused suite 273 files / 3672 tests; oxfmt/oxlint clean; reviewer probes A–G (incl. two-lagging-package attribution) pass.
+
+**Verification record (fix dispositions):** what — the four round-1 fixes; how — independent round-2 reviewer re-read the diff, re-ran the focused suites, and probed the changed logic; where — the round-2 artifact's `## Disposition Verification` table.
+
+**Deferred Findings (Minor):**
+
+- p02-r2-m1 — malformed-version diagnostic interpolates raw whitespace (`tools/release/check-version-bumps.ts:85`): a manifest `version` containing surrounding whitespace/newline (now correctly rejected by the m2 fix) renders with doubled spaces or a line break inside the one-line error. Rationale for deferral: input is pathological, the gate still fails closed and names the package, the reviewer marked it explicitly optional, and another fix + re-review cycle is disproportionate before fan-in. Follow-up trigger: address at final review if any other release-tooling change lands in this wave; otherwise carry into the W2 release-tooling touch (JSON-quote the interpolated values).
+
+**Review row `p02` → `passed`.**
 
 #### Outstanding Items
 
