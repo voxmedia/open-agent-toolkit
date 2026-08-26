@@ -122,8 +122,8 @@ oat_docs_updated: complete # null | skipped | complete — documentation sync st
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/217 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T19:08:06.587Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T22:46:24.557Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_completed: '2026-08-26T22:46:40.708Z' # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-08-26T22:46:40.708Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_post_implement_sequence:
   status: complete # pre_approval | awaiting_approval | post_approval | failed | complete
@@ -140,17 +140,18 @@ oat_project_recap:
   decision: generate
   source: autonomous_policy
   decided_at: '2026-08-26T19:12:39.882Z'
+oat_lifecycle: complete
 ---
 
 # Project State: wave-2-execution
 
-**Status:** Implementation tasks complete; awaiting final review
+**Status:** Complete
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
 ## Current Phase
 
-Implementation - Tasks complete; awaiting final review.
+Lifecycle complete
 
 ## Artifacts
 
@@ -168,7 +169,7 @@ Implementation - Tasks complete; awaiting final review.
 - ✓ Plan complete (validate-plan passed)
 - ✓ Plan gate passed on round 3 (rounds 1–2 blocked on wrapper-contract items, fixed)
 - ✓ Implementation tasks complete (p01 passed after 2 review rounds; 0.2.34 lockstep bump)
-- ⧗ Awaiting final review
+- ✓ Project lifecycle complete
 
 ## Blockers
 
@@ -176,4 +177,4 @@ None
 
 ## Next Milestone
 
-PR #217 open (https://github.com/voxmedia/open-agent-toolkit/pull/217). Exit gate generation 2 passed on cursor-gpt-5-6-sol-xhigh (run 17dc551d) after generation 1 blocked and the operator removed `--avoid none`; recap built-durable; pre-approval sequence complete; HiLL approved autonomously (IMPLEMENT-16). Remaining: CI green → root merge (squash) → reconcile main → wave-close in the program ledger. Completion tail: deferred to program close.
+None. Project complete.

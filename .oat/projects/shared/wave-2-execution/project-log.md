@@ -68,6 +68,10 @@ target=claude-fable-skip-permissions threshold=important exit=1 status=targeting
 
 target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:2 exit=0 status=ok artifact=.oat/projects/shared/wave-2-execution/reviews/final-review-2026-08-26T222108Z.md
 
+### 2026-08-26 · structural · oat-project-complete · seal
+
+Lifecycle sealed for wave-2-execution: PR #217 open; exit gate generation 2 passed (cursor-gpt-5-6-sol-xhigh, run 17dc551d); project recap built-durable; completion tail deferred to program close.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
