@@ -169,6 +169,13 @@ beyond the log.
 exit 254 ("Command not found") — a false gate failure until invoked literally.
 Follow-up: brief template should say "invoke each gate literally".
 
+### 2026-08-26 · structural · oat-reviewer · p02 round 2 (narrowed)
+
+`w1-p02-review-002` (opus, auto, range `c8fdefc3..b486beb6`) → 0C/0I/0M/1m; all
+four round-1 dispositions verified fixed; minor p02-r2-m1 deferred with
+rationale (`implementation.md`). Row `p02` → `passed`. Artifact
+`reviews/archived/p02-review-2026-08-26T135641Z.md`.
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)
