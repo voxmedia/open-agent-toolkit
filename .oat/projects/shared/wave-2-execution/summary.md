@@ -36,7 +36,7 @@ lane's contract was its immutable external plan
   drift apart (a reviewer-named desync mutation is caught only by the new
   coupling test).
 - **Tests:** ordering-before-`executeSyncPlan`, JSON-only, equal/older/newer,
-  absent, invalid `oatVersion`, multi-scope attribution, coupling; +35 cases.
+  absent, invalid `oatVersion`, multi-scope attribution, coupling; +14 cases (41 → 55 in the two focused suites).
 - **Lockstep bump 0.2.33 → 0.2.34** across the five public packages plus the
   regenerated `packages/cli/assets/public-package-versions.json`.
 
@@ -89,7 +89,7 @@ bookkeeping findings resolved in-artifact; full definition of done green at
 - Backlog candidate: extend the advisory to the three sibling `saveManifest`
   call sites (`init/index.ts:1187`, `remove/skill/remove-skill.ts:347`,
   `status/index.ts:887`) and reconsider the "No changes required." message on a
-  restamp-only apply (`apply.ts:172`).
+  restamp-only apply (`apply.ts:187`, the `summary.plannedOperations === 0` guard).
 - Deferred minor p01-r2-m1: make `ScopeSyncPlan.versionSkew` non-optional on the
   next `sync.types.ts` touch.
 - Docs: `apps/oat-docs/docs/provider-sync/commands.md` — advisory + JSON field

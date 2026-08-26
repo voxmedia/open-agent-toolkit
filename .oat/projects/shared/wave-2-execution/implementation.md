@@ -149,7 +149,7 @@ oat_generated: false
 
 - p01-r2-m1 — restamp keyed off optional `ScopeSyncPlan.versionSkew` (deferred; trigger: next `sync.types.ts` touch; not published API — `packages/cli/package.json` declares only `bin`).
 - p01-r2-m2 — source-plan step-1 wording drift (recorded; plan immutable).
-- Backlog candidate (round-1 m4, scoped by final review): three sibling call sites restamp `oatVersion` silently — `init/index.ts:1187`, `remove/skill/remove-skill.ts:347`, `status/index.ts:887` — plus the pre-existing "No changes required." message on a restamp-only apply (`apply.ts:172`); file at wave close.
+- Backlog candidate (round-1 m4, scoped by final review): three sibling call sites restamp `oatVersion` silently — `init/index.ts:1187`, `remove/skill/remove-skill.ts:347`, `status/index.ts:887` — plus the pre-existing "No changes required." message on a restamp-only apply (`apply.ts:187`, the `summary.plannedOperations === 0` guard); file at wave close.
 - Docs (round-1 m3 / final m5): `apps/oat-docs/docs/provider-sync/commands.md` — handled at the `document` step.
 
 <!-- orchestration-runs-end -->
@@ -180,7 +180,23 @@ oat_generated: false
 
 **Review row `final` → `fixes_completed`; narrowed round 2 next.**
 
-## Deviations from Plan / Design
+### Review Received: final (round 2, narrowed)
+
+**Date:** 2026-08-26
+**Review artifact:** reviews/archived/final-review-2026-08-26T211431Z.md (reviewed head `2e106b66b78f7d80ed7eca27aa5eb7d103ec4a56`, range `a4a7804d..2e106b66`, invocation auto, dispatch `w2-final-review-002`, model opus, disposition-verification brief)
+
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 2 — all nine round-1 findings (M1–M3, m1–m6) re-verified fixed by direct inspection at HEAD; the range touches no code (5 project artifacts + `.oat/repo/reference/project-observations.md`), so round-1 requirements coverage is inherited; `pnpm check` exit 0, `oxfmt --check` clean on all six changed artifacts, focused suites 55/55, structural sweep found all 6 GFM tables well-formed.
+
+**Deferred Findings Re-evaluation:** p01-r2-m1 and p01-r2-m2 remain deferred (no code changed in range).
+
+**Dispositions (both artifact-accuracy nits; resolved by the root, this commit — root re-derived both before accepting):**
+
+- m1 `summary.md` "+35 cases" overstated → "+14 cases (41 → 55 in the two focused suites)"; root recount of `it(`/`test(` declarations at merge-base vs HEAD: `sync/index.test.ts` 27 → 40, `manifest/manager.test.ts` 13 → 14.
+- m2 backlog-candidate pointer `apply.ts:172` off by 15 lines in `implementation.md` and `summary.md` → `apply.ts:187` plus the `summary.plannedOperations === 0` guard (root confirmed `No changes required.` at :187).
+
+**Review row `final` → `passed` at reviewed head `2e106b66`; the two minors are text-only closeout fixes in this receive commit. Next: configured exit gate (generation 1).**
+
+$1
 
 | Task / Review  | Source Artifact                                      | Planned / Documented                                           | Actual / Accepted                                                                                                           | Reason                                                                                                                                                                                               | Source of Truth                                                               | Follow-up                                                      |
 | -------------- | ---------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------- |
