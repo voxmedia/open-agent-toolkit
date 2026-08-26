@@ -66,10 +66,27 @@ export async function validateAssetsBundle(
   }
 }
 
-export async function resolveAssetsRoot(): Promise<string> {
+function resolvePackagedAssetsRoot(): string {
   const modulePath = fileURLToPath(import.meta.url);
   const cliRoot = resolve(dirname(modulePath), '..', '..');
-  const assetsRoot = join(cliRoot, 'assets');
+  return join(cliRoot, 'assets');
+}
+
+/**
+ * Resolve the directory the CLI reads bundled assets from.
+ *
+ * A non-empty `OAT_ASSETS_DIR` selects an explicit root; an unset or blank
+ * value keeps the packaged `<cliRoot>/assets` default. Both paths run the same
+ * directory and bundle-integrity checks, and an explicit root never falls back
+ * to the packaged one: a missing, non-directory, malformed, or
+ * version-mismatched override fails closed with the same actionable errors.
+ */
+export async function resolveAssetsRoot(
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<string> {
+  const override = env.OAT_ASSETS_DIR?.trim() ?? '';
+  const assetsRoot =
+    override.length > 0 ? resolve(override) : resolvePackagedAssetsRoot();
 
   try {
     const assetsStat = await stat(assetsRoot);
