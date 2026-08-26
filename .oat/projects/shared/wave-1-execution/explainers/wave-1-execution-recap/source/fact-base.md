@@ -3,13 +3,12 @@
 ## Confirmed claims
 
 - **implementation:** ---
-  oat_status: in_progress
-  oat_ready_for: null
-  oat_blockers: []
-  oat_last_updated: 2026-08-26
-  oat_current_task_id: null
-  oat_generated: false
-
+oat_status: in_progress
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-08-26
+oat_current_task_id: null
+oat_generated: false
 ---
 
 # Implementation: wave-1-execution
@@ -455,22 +454,21 @@ Head `7f78dab719bcc64c471412c341dd20f09e25b997` (after `196dae19` and the final-
 - Discovery: `discovery.md`
 - Orchestration log: `orchestration-log.md`
 - **plan:** ---
-  oat_status: complete
-  oat_ready_for: oat-project-implement
-  oat_blockers: []
-  oat_last_updated: 2026-08-26
-  oat_phase: plan
-  oat_phase_status: complete
-  oat_plan_hill_phases: ['p02'] # final phase only (workflow.hillCheckpointDefault=final); p01/p02 complete together as one group
-  oat_auto_review_at_hill_checkpoints: true # from workflow.autoReviewAtHillCheckpoints
-  oat_plan_parallel_groups: [['p01', 'p02']] # write-disjoint per the 2026-08-26 drift refresh (tools/smoke vs tools/release + packages/cli/src/release)
-  oat_plan_source: quick
-  oat_import_reference: null
-  oat_import_source_path: null
-  oat_import_provider: null
-  oat_generated: false
-  oat_template: false
-
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_blockers: []
+oat_last_updated: 2026-08-26
+oat_phase: plan
+oat_phase_status: complete
+oat_plan_hill_phases: ['p02'] # final phase only (workflow.hillCheckpointDefault=final); p01/p02 complete together as one group
+oat_auto_review_at_hill_checkpoints: true # from workflow.autoReviewAtHillCheckpoints
+oat_plan_parallel_groups: [['p01', 'p02']] # write-disjoint per the 2026-08-26 drift refresh (tools/smoke vs tools/release + packages/cli/src/release)
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
+oat_generated: false
+oat_template: false
 ---
 
 # Implementation Plan: wave-1-execution (Wave 1 external-plan wrapper)
@@ -745,15 +743,14 @@ git commit -m "fix(p02-t01): reject publishable package versions overtaken by cu
 - Pattern: `DR-260713-wave-project-wrapper-over`, prior wave summary
   `.oat/repo/reference/project-summaries/20260722-wave-skills-promotion.md`
 - **summary:** ---
-  oat_status: complete
-  oat_ready_for: null
-  oat_blockers: []
-  oat_last_updated: 2026-08-26
-  oat_generated: true
-  oat_summary_last_task: p01-t02
-  oat_summary_revision_count: 0
-  oat_summary_includes_revisions: []
-
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-08-26
+oat_generated: true
+oat_summary_last_task: p01-t02
+oat_summary_revision_count: 0
+oat_summary_includes_revisions: []
 ---
 
 # Summary: wave-1-execution

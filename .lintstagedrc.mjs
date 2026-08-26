@@ -6,5 +6,7 @@ export default {
   '*.json': ['oxfmt --write --no-error-on-unmatched-pattern'],
 
   // Markdown files: format with oxfmt
-  '*.md': ['oxfmt --write'],
+  // --no-error-on-unmatched-pattern: files under .oxfmtrc ignorePatterns (for
+  // example immutable explainer-kit run packages) must not fail the hook.
+  '*.md': ['oxfmt --write --no-error-on-unmatched-pattern'],
 };

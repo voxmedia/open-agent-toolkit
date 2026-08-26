@@ -16,7 +16,10 @@
         "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/bug-triage/.oat/projects/shared/wave-1-execution/plan.md",
         "role": "project",
         "sourceSetId": "wave-1-execution",
-        "authoritativeFor": ["phases", "validation-approach"]
+        "authoritativeFor": [
+          "phases",
+          "validation-approach"
+        ]
       },
       {
         "id": "implementation",
@@ -37,7 +40,9 @@
         "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/bug-triage/.oat/projects/shared/wave-1-execution/summary.md",
         "role": "project",
         "sourceSetId": "wave-1-execution",
-        "authoritativeFor": ["outcome"]
+        "authoritativeFor": [
+          "outcome"
+        ]
       }
     ]
   },

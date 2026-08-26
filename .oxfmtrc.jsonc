@@ -27,5 +27,10 @@
     "packages/cli/assets/templates/**/*.yml",
     ".oat/templates/**/*.yml",
     "packages/cli/src/commands/docs/migrate/fixtures/**",
+    // Explainer-kit run packages are immutable, hash-attested artifacts; a
+    // formatter rewrite on commit breaks their durability attestation.
+    ".oat/**/explainers/**",
+    ".oat/repo/reference/project-recaps/**",
+    ".oat/repo/explainers/**",
   ],
 }

@@ -7,7 +7,9 @@
     {
       "id": "validate",
       "status": "passed",
-      "outputPaths": ["run-request.json"],
+      "outputPaths": [
+        "run-request.json"
+      ],
       "warnings": [],
       "startedAt": "2026-08-26T16:28:08.049Z",
       "completedAt": "2026-08-26T16:28:08.058Z"
@@ -15,7 +17,10 @@
     {
       "id": "fact-base",
       "status": "passed",
-      "outputPaths": ["source/fact-base.json", "source/fact-base.md"],
+      "outputPaths": [
+        "source/fact-base.json",
+        "source/fact-base.md"
+      ],
       "warnings": [],
       "startedAt": "2026-08-26T16:28:08.070Z",
       "completedAt": "2026-08-26T16:28:08.113Z"
@@ -39,15 +44,21 @@
     {
       "id": "theme",
       "status": "warned",
-      "outputPaths": ["theme.resolved.json"],
-      "warnings": ["theme-selection-normalized"],
+      "outputPaths": [
+        "theme.resolved.json"
+      ],
+      "warnings": [
+        "theme-selection-normalized"
+      ],
       "startedAt": "2026-08-26T16:28:08.227Z",
       "completedAt": "2026-08-26T16:28:08.246Z"
     },
     {
       "id": "render",
       "status": "passed",
-      "outputPaths": ["site/initiatives/wave-1-execution-recap/index.html"],
+      "outputPaths": [
+        "site/initiatives/wave-1-execution-recap/index.html"
+      ],
       "warnings": [],
       "startedAt": "2026-08-26T16:28:08.256Z",
       "completedAt": "2026-08-26T16:28:08.277Z"

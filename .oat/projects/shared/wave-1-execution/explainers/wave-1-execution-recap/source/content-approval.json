@@ -11,7 +11,9 @@
     "repositoryUrl": "https://github.com/voxmedia/open-agent-toolkit",
     "revision": "6cd0919ab4c675cf9d2c9c4023b31d58ebb1b52b"
   },
-  "authorResultPaths": ["source/author/project-recap.json"],
+  "authorResultPaths": [
+    "source/author/project-recap.json"
+  ],
   "attempts": [],
   "artifacts": [
     {

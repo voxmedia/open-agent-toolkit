@@ -10,7 +10,10 @@
       "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/6cd0919ab4c675cf9d2c9c4023b31d58ebb1b52b/.oat/projects/shared/wave-1-execution/plan.md#L1-L289",
       "role": "project",
       "sourceSetId": "wave-1-execution",
-      "authoritativeFor": ["phases", "validation-approach"],
+      "authoritativeFor": [
+        "phases",
+        "validation-approach"
+      ],
       "repository": "voxmedia/open-agent-toolkit",
       "revision": "6cd0919ab4c675cf9d2c9c4023b31d58ebb1b52b",
       "path": ".oat/projects/shared/wave-1-execution/plan.md",
@@ -51,7 +54,9 @@
       "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/6cd0919ab4c675cf9d2c9c4023b31d58ebb1b52b/.oat/projects/shared/wave-1-execution/summary.md#L1-L177",
       "role": "project",
       "sourceSetId": "wave-1-execution",
-      "authoritativeFor": ["outcome"],
+      "authoritativeFor": [
+        "outcome"
+      ],
       "repository": "voxmedia/open-agent-toolkit",
       "revision": "6cd0919ab4c675cf9d2c9c4023b31d58ebb1b52b",
       "path": ".oat/projects/shared/wave-1-execution/summary.md",
