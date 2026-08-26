@@ -126,8 +126,8 @@ oat_docs_updated: complete # documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/215' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T04:15:34.593Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T16:37:25.109Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_completed: '2026-08-26T16:37:51.573Z' # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-08-26T16:37:51.573Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_post_implement_sequence:
   status: complete # pre_approval | awaiting_approval | post_approval | failed | complete
@@ -144,17 +144,18 @@ oat_project_recap:
   decision: generate
   source: autonomous_policy
   decided_at: '2026-08-26T13:01:05.578Z'
+oat_lifecycle: complete
 ---
 
 # Project State: wave-1-execution
 
-**Status:** Implementation complete — PR #215 open
+**Status:** Complete
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
 ## Current Phase
 
-Implementation — complete (final review passed, configured exit gate passed, sequence summary → document → pr complete); PR #215 open; completion may run before or after merge.
+Lifecycle complete
 
 ## Artifacts
 
@@ -173,6 +174,7 @@ Implementation — complete (final review passed, configured exit gate passed, s
 - ✓ Plan gate passed (gate run 78a49137, cursor-gpt-5-6-sol-xhigh, 0 findings)
 - ✓ Implementation tasks complete (Run 1: p01 + p02 passed; merged; 0.2.33 lockstep bump; integration DoD green)
 - ✓ Final review passed (2 rounds); configured exit gate passed\n- ✓ Summary, documentation, PR #215 created\n- ✓ Autonomous final HiLL approval recorded\n- ⧗ Awaiting CI + merge
+- ✓ Project lifecycle complete
 
 ## Blockers
 
@@ -180,4 +182,6 @@ None (plan-gate blocker cleared 2026-08-26 after the operator raised the Cursor 
 
 ## Next Milestone
 
-Closeout: orchestration-log synthesis → serialized backlog archival → final review → configured implementation exit gate → summary/document/PR → autonomous final HiLL → complete-state.
+None. Project complete.
+
+completion tail: deferred to program close (`oat project archive` + S3 sync + active-project pointer clear run across all wave wrappers at the program-end HUMAN-GATED checkpoint). Merge of PR #215 is the root orchestrator's next action after CI.
