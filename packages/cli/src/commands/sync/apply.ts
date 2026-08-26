@@ -1,5 +1,4 @@
 import type { CommandContext } from '@app/command-context';
-import { OAT_VERSION } from '@shared/oat-version';
 
 import type {
   ScopeSyncPlan,
@@ -93,8 +92,11 @@ export async function runSyncApply(
       scopePlan.materializationExtensionPlans.some((plan) =>
         plan.operations.some((operation) => operation.action !== 'skip'),
       );
-    const shouldRefreshManifestVersion =
-      scopePlan.manifest.oatVersion !== OAT_VERSION;
+    // Derived from the same diagnostic that produced the pre-mutation advisory
+    // (`detectVersionSkew` in ./index), so the restamp and the warning cannot
+    // drift apart: this manifest is only ever restamped when sync has already
+    // reported the provenance the restamp is about to overwrite.
+    const shouldRefreshManifestVersion = scopePlan.versionSkew !== undefined;
 
     if (
       !hasSyncEntries &&
@@ -146,6 +148,9 @@ export async function runSyncApply(
   const providerMismatches = scopePlans
     .map((scopePlan) => scopePlan.providerMismatches)
     .filter((mismatch) => mismatch !== undefined);
+  const versionSkew = scopePlans
+    .map((scopePlan) => scopePlan.versionSkew)
+    .filter((skew) => skew !== undefined);
   const materializationExtensions = scopePlans.flatMap(
     (scopePlan) => scopePlan.materializationExtensions,
   );
@@ -172,6 +177,7 @@ export async function runSyncApply(
       plans: scopePlans.map((scopePlan) => scopePlan.plan),
       summary,
       providerMismatches,
+      versionSkew,
       materializationExtensions,
       codexExtensions,
     });
