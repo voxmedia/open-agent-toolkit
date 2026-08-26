@@ -8,7 +8,7 @@ scope_estimate: L # XS | S | M | L | XL | XXL
 labels: [gates, timeout, reliability, dispatch, liveness]
 assignee: null
 created: '2026-07-11T16:55:00Z'
-updated: '2026-07-30T23:38:00Z'
+updated: '2026-08-20T00:51:38.943Z'
 associated_issues: []
 ---
 
@@ -62,6 +62,10 @@ never be killed). Replace it with activity-aware semantics:
 6. **Artifact-aware completion:** on any timeout, check for a correlated,
    complete, run-ID-matching review artifact before declaring the work lost
    (carried from codex-subagent-max-depth learnings' potential resolutions).
+
+Source: [GitHub issue #197](https://github.com/voxmedia/open-agent-toolkit/issues/197),
+linked during the 2026-08-19 issue-triage pass after confirming this existing
+item already owns the remaining adaptive-timeout work.
 
 ## Partial Progress (2026-07-16)
 

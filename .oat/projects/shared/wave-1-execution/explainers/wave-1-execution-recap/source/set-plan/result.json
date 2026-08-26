@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "explainer-kit.set-plan/v1",
+  "planId": "wave-1-execution-recap-floor",
+  "recipe": {
+    "id": "project-recap",
+    "version": "2"
+  },
+  "sourceIds": [
+    "plan",
+    "implementation",
+    "summary"
+  ],
+  "ledger": {
+    "terminology": [
+      {
+        "term": "wave",
+        "meaning": "One ordered slice of the 2026-08-19 execution program, run as a single wrapper OAT project."
+      },
+      {
+        "term": "lane",
+        "meaning": "One phase of the wave, executed in its own worktree against exactly one external plan."
+      },
+      {
+        "term": "external plan",
+        "meaning": "The immutable source document that is a lane's entire implementation contract."
+      },
+      {
+        "term": "lockstep bump",
+        "meaning": "One version increment applied to all five public packages together."
+      }
+    ],
+    "statuses": [
+      {
+        "subject": "wave 1",
+        "value": "complete"
+      },
+      {
+        "subject": "reviews",
+        "value": "passed"
+      },
+      {
+        "subject": "definition of done",
+        "value": "green"
+      }
+    ],
+    "numbers": [
+      {
+        "subject": "lanes",
+        "value": 2,
+        "unit": "lanes"
+      },
+      {
+        "subject": "definition-of-done gates",
+        "value": 10,
+        "unit": "gates"
+      },
+      {
+        "subject": "smoke harness tests",
+        "value": 19,
+        "unit": "tests"
+      }
+    ]
+  },
+  "portfolio": [
+    {
+      "artifactId": "project-recap",
+      "artifactType": "hub",
+      "profileId": "recipe-floor",
+      "required": true,
+      "sourceIds": [
+        "plan",
+        "implementation",
+        "summary"
+      ],
+      "draft": "One navigational hub for the completed Wave 1 wrapper project. Open with the outcome and current state, then cover the original request and its constraints, the four decisions that materially changed the result, the as-built flow from the execution program to main with an inline architecture diagram, an implementation evidence table with commit references, a validation evidence table with commands, observed results and limits, and a closing outcome split into what works, what did not ship and what the next reader should do.",
+      "visualIntent": "Editorial hub. One dominant serif title, a short framing statement and a four-tile status strip in the first viewport, then deliberately varied section treatments: a numbered constraint list, a numbered decision ledger with reason and consequence pairs, a bounded-scroll inline SVG flow diagram with branch, fan-in and one dashed review-feedback edge, two evidence tables in scroll containers, and a three-rail outcome block. No repeated card treatment across sections."
+    }
+  ]
+}

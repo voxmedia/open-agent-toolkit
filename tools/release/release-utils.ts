@@ -84,6 +84,92 @@ export async function resolveMergeBase(
   return null;
 }
 
+export const CURRENT_MAIN_REF_CANDIDATES = ['origin/main', 'main'] as const;
+
+/**
+ * Resolves the ref pointing at the current tip of the default branch.
+ *
+ * Unlike {@link resolveMergeBase}, this deliberately returns the ref itself so
+ * callers compare against what main holds right now instead of the commit the
+ * branch forked from. `origin/main` wins when present; local `main` is the
+ * non-CI fallback.
+ */
+export async function resolveCurrentMainRef(
+  refExists: (ref: string) => Promise<boolean> = gitRefExists,
+): Promise<string | null> {
+  for (const ref of CURRENT_MAIN_REF_CANDIDATES) {
+    if (await refExists(ref)) {
+      return ref;
+    }
+  }
+
+  return null;
+}
+
+export interface StableVersion {
+  major: number;
+  minor: number;
+  patch: number;
+}
+
+const STABLE_VERSION_PATTERN = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+
+/**
+ * Parses a stable numeric `major.minor.patch` version.
+ *
+ * Prerelease identifiers, build metadata, leading zeroes, surrounding
+ * whitespace, and every other non-numeric shape are rejected with `null` so
+ * callers fail closed instead of silently treating unparseable evidence as
+ * `0.0.0`.
+ */
+export function parseStableVersion(
+  version: string | null | undefined,
+): StableVersion | null {
+  if (typeof version !== 'string') {
+    return null;
+  }
+
+  const match = STABLE_VERSION_PATTERN.exec(version);
+  if (!match) {
+    return null;
+  }
+
+  const major = Number(match[1]);
+  const minor = Number(match[2]);
+  const patch = Number(match[3]);
+
+  return Number.isSafeInteger(major) &&
+    Number.isSafeInteger(minor) &&
+    Number.isSafeInteger(patch)
+    ? { major, minor, patch }
+    : null;
+}
+
+/**
+ * Compares two stable versions.
+ *
+ * Returns a negative number when `left` is lower, zero when both are equal, a
+ * positive number when `left` is higher, and `null` when either side is
+ * missing or malformed.
+ */
+export function compareStableVersions(
+  left: string | null | undefined,
+  right: string | null | undefined,
+): number | null {
+  const leftVersion = parseStableVersion(left);
+  const rightVersion = parseStableVersion(right);
+
+  if (!leftVersion || !rightVersion) {
+    return null;
+  }
+
+  return (
+    leftVersion.major - rightVersion.major ||
+    leftVersion.minor - rightVersion.minor ||
+    leftVersion.patch - rightVersion.patch
+  );
+}
+
 export async function findChangedWorkspaceDirs(
   baseRef: string,
   headRef: string,

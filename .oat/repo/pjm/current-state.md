@@ -50,6 +50,17 @@ copying their content here. -->
   bundling publishes by atomic staged rename. Delivered through six final
   review rounds and five bounded fix batches; deferred residue lives in six
   `BL-260817-*` backlog items.
+- CLI `0.2.33` closes two containment defects from the 2026-08-19 defect wave
+  program (wave 1 wrapper project `wave-1-execution`): the smoke cleanup SIGTERM
+  regression harness is bounded (bounded child-exit wait, SIGKILL plus bounded
+  reap or detach before temp-dir cleanup, stage-aware diagnostics) so
+  `pnpm test` can no longer wedge on a missed signal, and
+  `pnpm release:check-versions` additionally rejects lockstep public-package
+  versions that are not strictly greater than current `origin/main` (numeric
+  comparator, fail-closed evidence, composes with the merge-base rule). Test
+  files under `packages/cli/src/` count as publishable changes, so the wave
+  carried the lockstep bump. Closed `BL-260818-bound-the-smoke-cleanup` and
+  `BL-260817-detect-branch-behind-published`.
 - CLI `0.2.30` adds evidence-grounded project retrospectives to the lifecycle
   tail. `retro` is a post-approval-only closeout step; `oat-project-retro`
   generates and idempotently applies machine-scannable promotion findings, and

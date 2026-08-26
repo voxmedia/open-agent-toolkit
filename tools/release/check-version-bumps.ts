@@ -7,10 +7,12 @@ import {
   type PublicPackageContract,
 } from '../../packages/cli/src/release/public-package-contract';
 import {
+  compareStableVersions,
   findChangedWorkspaceDirs,
   getPackageVersion,
   readPackageJsonAtGitRef,
   REPO_ROOT,
+  resolveCurrentMainRef,
   resolveMergeBase,
 } from './release-utils';
 import {
@@ -35,6 +37,17 @@ interface VersionBumpCheckDependencies {
     baseRef: string,
     workspaceDir: string,
   ) => Promise<Record<string, unknown> | null>;
+  resolveCurrentMainRefFn?: () => Promise<string | null>;
+  readMainPackageJsonFn?: (
+    mainRef: string,
+    workspaceDir: string,
+  ) => Promise<Record<string, unknown> | null>;
+}
+
+export interface CurrentMainVersionState {
+  contract: PublicPackageContract;
+  currentVersion: string;
+  mainVersion: string | null;
 }
 
 async function readCurrentPackageJson(
@@ -43,6 +56,45 @@ async function readCurrentPackageJson(
   return JSON.parse(
     await readFile(join(REPO_ROOT, workspaceDir, 'package.json'), 'utf8'),
   ) as Record<string, unknown>;
+}
+
+/**
+ * Rejects lockstep versions that the current tip of main has already reached.
+ *
+ * The merge-base rule proves a branch bumped relative to where it forked; this
+ * rule proves the branch is still ahead of what main released afterwards.
+ */
+export function findVersionsBehindCurrentMainErrors(
+  currentMainRef: string,
+  states: readonly CurrentMainVersionState[],
+): string[] {
+  const errors: string[] = [];
+
+  for (const { contract, currentVersion, mainVersion } of states) {
+    if (mainVersion === null) {
+      errors.push(
+        `${contract.publicName}: no package version found at current main (${currentMainRef}); cannot prove this branch is ahead of the released version`,
+      );
+      continue;
+    }
+
+    const comparison = compareStableVersions(currentVersion, mainVersion);
+
+    if (comparison === null) {
+      errors.push(
+        `${contract.publicName}: cannot compare versions numerically (branch ${currentVersion || 'missing'}, current main ${mainVersion}); the release gate requires stable major.minor.patch versions`,
+      );
+      continue;
+    }
+
+    if (comparison <= 0) {
+      errors.push(
+        `${contract.publicName}@${currentVersion} is not greater than the current main version ${mainVersion} (${currentMainRef}); rebase on current main and bump all public packages above ${mainVersion}`,
+      );
+    }
+  }
+
+  return errors;
 }
 
 export async function runVersionBumpCheck(
@@ -54,6 +106,13 @@ export async function runVersionBumpCheck(
   )();
 
   if (!mergeBase) {
+    // A refless or shallow checkout skips the whole gate, and that skip also
+    // shadows the current-main guard below: `resolveMergeBase` probes the same
+    // two refs (`origin/main`, then `main`) that `resolveCurrentMainRef` does,
+    // so whenever the latter would return null this early return has already
+    // fired. Changed-root detection is impossible without a merge base, so the
+    // skip must stay; CI safety instead rests on `.github/workflows/ci.yml`
+    // keeping `fetch-depth: 0` so `origin/main` always resolves there.
     return {
       status: 'skipped',
       summary: 'no merge base found — skipping version bump check',
@@ -90,7 +149,37 @@ export async function runVersionBumpCheck(
     }),
   );
 
-  const errors = findLockstepVersionBumpErrors(states);
+  const errors = [...findLockstepVersionBumpErrors(states)];
+  const currentMainRef = await (
+    dependencies.resolveCurrentMainRefFn ?? resolveCurrentMainRef
+  )();
+
+  if (currentMainRef === null) {
+    // Unreachable through the production resolvers because the `!mergeBase`
+    // skip above runs first and probes the same two refs; reachable in tests
+    // and for any caller injecting `resolveCurrentMainRefFn`. Kept as a
+    // fail-closed guard so a missing comparison source can never read as safe.
+    errors.push(
+      'cannot compare package versions with current main: neither origin/main nor main was found. Fetch the default branch (git fetch origin main) so the release gate can compare against the current main tip.',
+    );
+  } else {
+    const currentMainStates: CurrentMainVersionState[] = await Promise.all(
+      states.map(async (state) => ({
+        contract: state.contract,
+        currentVersion: state.currentVersion,
+        mainVersion: getPackageVersion(
+          await (dependencies.readMainPackageJsonFn ?? readPackageJsonAtGitRef)(
+            currentMainRef,
+            state.contract.workspaceDir,
+          ),
+        ),
+      })),
+    );
+
+    errors.push(
+      ...findVersionsBehindCurrentMainErrors(currentMainRef, currentMainStates),
+    );
+  }
 
   return errors.length === 0
     ? {
