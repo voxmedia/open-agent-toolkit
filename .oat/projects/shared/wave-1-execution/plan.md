@@ -223,14 +223,14 @@ git commit -m "fix(p02-t01): reject publishable package versions overtaken by cu
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-08-26 | reviews/artifact-plan-review-2026-08-26T125608Z.md | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -                                                           | -             | -          | -           |
+| p02    | code     | pending | -          | -                                                           | -             | -          | -           |
+| final  | code     | pending | -          | -                                                           | -             | -          | -           |
+| plan   | artifact | passed  | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T125608Z.md | -             | -          | -           |
+| spec   | artifact | pending | -          | -                                                           | -             | -          | -           |
+| design | artifact | pending | -          | -                                                           | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

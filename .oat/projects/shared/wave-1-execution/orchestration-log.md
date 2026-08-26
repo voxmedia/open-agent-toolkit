@@ -83,6 +83,16 @@ next available target on a pre-child provider rejection.
 pre-child provider rejections; add "rejection before any reviewer output ⇒
 launch defect; do not spend remediation attempts; report as boundary".
 
+### 2026-08-26 · structural · oat-gate-review · plan gate passed
+
+Third launch (runId 78a49137-a275-4bd3-8135-e5f27d757e24, target
+`cursor-gpt-5-6-sol-xhigh`, after the operator raised the Cursor limit)
+returned `ok / review_completed_gate_passed`: 0 critical, 0 important,
+0 medium, 0 minor. Artifact
+`reviews/archived/artifact-plan-review-2026-08-26T125608Z.md`; Reviews row
+`plan` → `passed` (receive: gate judgment sweep, nothing to disposition).
+Blocker `plan-gate` cleared.
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)

@@ -1,10 +1,7 @@
 ---
 oat_current_task: null
 oat_last_commit: null
-oat_blockers:
-  - task_id: plan-gate
-    reason: 'configured oat-project-plan gate cannot launch: selected exec target cursor-gpt-5-6-sol-xhigh rejected with Cursor team usage limit (resets 2026-09-01); see references/plan-gate-launch-failures-2026-08-26.md'
-    since: 2026-08-26
+oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260818-bound-the-smoke-cleanup' }
   - { type: backlog, ref: 'BL-260817-detect-branch-behind-published' }
@@ -85,8 +82,12 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T04:15:34.593Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T04:22:58.113Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T13:01:05.547Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_project_recap:
+  decision: generate
+  source: autonomous_policy
+  decided_at: '2026-08-26T13:01:05.578Z'
 ---
 
 # Project State: wave-1-execution
@@ -113,13 +114,13 @@ Plan complete — Wave 1 wrapper plan (2 lanes, one parallel group) awaiting the
 - ✓ Discovery complete
 - ✓ Wave-boundary drift refresh: 2 PASS / 0 MINOR-DRIFT / 0 STOP
 - ✓ Plan complete (validate-plan passed)
-- ✗ Plan gate blocked (2 launch failures, Cursor usage limit) — operator action required
+- ✓ Plan gate passed (gate run 78a49137, cursor-gpt-5-6-sol-xhigh, 0 findings)
 - ⧗ Implementation (group 1: p01 + p02 in parallel worktrees)
 
 ## Blockers
 
-- Plan gate launch failure (autonomy boundary, `missing-credentials` class): the configured cross-runtime plan gate selects `cursor-gpt-5-6-sol-xhigh`, whose provider is quota-exhausted until 2026-09-01. Operator action required before implementation can start. Evidence: `references/plan-gate-launch-failures-2026-08-26.md`.
+None (plan-gate blocker cleared 2026-08-26 after the operator raised the Cursor usage limit; see `orchestration-log.md`).
 
 ## Next Milestone
 
-Pass the configured plan gate, then execute group 1 via `oat-project-implement`.
+Execute group 1 (p01 + p02 in parallel worktrees) via `oat-project-implement`.
