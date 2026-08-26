@@ -80,6 +80,10 @@ Observation: the exit-gate reviewer's pnpm test failed once in tools/smoke/deter
 
 Completion sealed at 2026-08-26T16:37:51Z; project-log roll-up status: ok (rollup ledgerOutcome appended at summary step). Archive tail (oat project archive + S3 + active-pointer clear) deferred to program close per autonomous wave policy.
 
+### 2026-08-26 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/wave-1-execution/reviews/final-review-2026-08-26T185206Z.md
+
 ## End-of-run synthesis
 
 Wave 1 verdict: both lanes shipped with every source-plan Done criterion verified; the wrapper conventions held except two root-owned incidents (cwd drift; a release-root blind spot in drift refresh). Adopted for W2-W4: absolute paths for every root command; drift refresh intersects lane surfaces with release change-detection roots and pre-plans lockstep bumps; briefs invoke gates literally with per-gate exit logs; ordering/containment reviews require delete- and reorder-class mutations; pre-child gate provider rejections are boundaries after one identical retry. Graduated: five general judgments rolled into the repository ledger; four backlog candidates carried to wave close; three deferred minors carried in implementation.md.
