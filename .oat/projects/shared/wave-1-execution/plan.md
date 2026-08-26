@@ -257,14 +257,14 @@ git commit -m "fix(p02-t01): reject publishable package versions overtaken by cu
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | passed          | 2026-08-26 | reviews/archived/p01-review-2026-08-26T150044Z.md           | fd8c7cb9b7fa60c5b95fb0174d1a76c58814a698 | auto       | -           |
-| p02    | code     | passed          | 2026-08-26 | reviews/archived/p02-review-2026-08-26T135641Z.md           | b486beb60d83a5b0d1f46cc3881627da93acb354 | auto       | -           |
-| final  | code     | fixes_completed | 2026-08-26 | reviews/archived/final-review-2026-08-26T152343Z.md         | 848beb889a59b25497e9740f1716673f70fa69cd | auto       | -           |
-| plan   | artifact | passed          | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T125608Z.md | -                                        | -          | -           |
-| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
-| design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | passed  | 2026-08-26 | reviews/archived/p01-review-2026-08-26T150044Z.md           | fd8c7cb9b7fa60c5b95fb0174d1a76c58814a698 | auto       | -           |
+| p02    | code     | passed  | 2026-08-26 | reviews/archived/p02-review-2026-08-26T135641Z.md           | b486beb60d83a5b0d1f46cc3881627da93acb354 | auto       | -           |
+| final  | code     | passed  | 2026-08-26 | reviews/archived/final-review-2026-08-26T154241Z.md         | 58a5aa0919428928152ffcbaf292b2973b18a65d | auto       | -           |
+| plan   | artifact | passed  | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T125608Z.md | -                                        | -          | -           |
+| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -           |
+| design | artifact | pending | -          | -                                                           | -                                        | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -276,9 +276,8 @@ git commit -m "fix(p02-t01): reject publishable package versions overtaken by cu
       `oat backlog archive` with real outcome summaries for
       `BL-260818-bound-the-smoke-cleanup` and
       `BL-260817-detect-branch-behind-published`, one commit
-- [x] Orchestration-log end-of-run synthesis written (`032eeef7`); roll-up into `summary.md`
-      before any archive step
-- [x] Full DoD gates green on the integration branch (`4fa530e6`; re-run by final review at `848beb88`)
+- [x] Orchestration-log end-of-run synthesis written (`032eeef7`) — `summary.md` roll-up pending the summary step of the pre-approval sequence (before any archive step)
+- [x] Full DoD gates green on the integration branch (`4fa530e6`; re-run by final review at `848beb88`; full re-run at the final head after `196dae19` recorded in `implementation.md` § Final DoD)
 
 ## References
 
