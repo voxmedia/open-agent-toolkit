@@ -44,7 +44,7 @@ interface VersionBumpCheckDependencies {
   ) => Promise<Record<string, unknown> | null>;
 }
 
-interface CurrentMainVersionState {
+export interface CurrentMainVersionState {
   contract: PublicPackageContract;
   currentVersion: string;
   mainVersion: string | null;
@@ -106,6 +106,13 @@ export async function runVersionBumpCheck(
   )();
 
   if (!mergeBase) {
+    // A refless or shallow checkout skips the whole gate, and that skip also
+    // shadows the current-main guard below: `resolveMergeBase` probes the same
+    // two refs (`origin/main`, then `main`) that `resolveCurrentMainRef` does,
+    // so whenever the latter would return null this early return has already
+    // fired. Changed-root detection is impossible without a merge base, so the
+    // skip must stay; CI safety instead rests on `.github/workflows/ci.yml`
+    // keeping `fetch-depth: 0` so `origin/main` always resolves there.
     return {
       status: 'skipped',
       summary: 'no merge base found — skipping version bump check',
@@ -148,6 +155,10 @@ export async function runVersionBumpCheck(
   )();
 
   if (currentMainRef === null) {
+    // Unreachable through the production resolvers because the `!mergeBase`
+    // skip above runs first and probes the same two refs; reachable in tests
+    // and for any caller injecting `resolveCurrentMainRefFn`. Kept as a
+    // fail-closed guard so a missing comparison source can never read as safe.
     errors.push(
       'cannot compare package versions with current main: neither origin/main nor main was found. Fetch the default branch (git fetch origin main) so the release gate can compare against the current main tip.',
     );

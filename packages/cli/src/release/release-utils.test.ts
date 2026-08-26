@@ -114,11 +114,16 @@ describe('parseStableVersion', () => {
       minor: 2,
       patch: 32,
     });
-    expect(parseStableVersion(' 10.0.1 ')).toEqual({
+    expect(parseStableVersion('10.0.1')).toEqual({
       major: 10,
       minor: 0,
       patch: 1,
     });
+  });
+
+  it('rejects surrounding whitespace so only exact values are accepted', () => {
+    expect(parseStableVersion(' 0.2.32 ')).toBeNull();
+    expect(parseStableVersion('0.2.32\n')).toBeNull();
   });
 
   it.each([

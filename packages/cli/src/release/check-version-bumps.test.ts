@@ -1,15 +1,34 @@
 import { describe, expect, it } from 'vitest';
 
-import { runVersionBumpCheck } from '../../../../tools/release/check-version-bumps';
+import {
+  type CurrentMainVersionState,
+  findVersionsBehindCurrentMainErrors,
+  runVersionBumpCheck,
+} from '../../../../tools/release/check-version-bumps';
 import {
   findLockstepVersionBumpErrors,
   type PublicPackageVersionState,
 } from '../../../../tools/release/validate-public-packages';
-import { getPublicPackageContracts } from './public-package-contract';
+import {
+  getPublicPackageContracts,
+  type PublicPackageContract,
+} from './public-package-contract';
 
 const PUBLIC_NAMES = getPublicPackageContracts().map(
   (contract) => contract.publicName,
 );
+
+function contractFor(publicName: string): PublicPackageContract {
+  const contract = getPublicPackageContracts().find(
+    (candidate) => candidate.publicName === publicName,
+  );
+
+  if (!contract) {
+    throw new Error(`unknown public package: ${publicName}`);
+  }
+
+  return contract;
+}
 
 function buildMergeBaseStates(
   currentVersion: string,
@@ -250,5 +269,124 @@ describe('runVersionBumpCheck', () => {
       ],
     });
     expect(currentMainReads).toBe(0);
+  });
+
+  it('names only the lagging package when the lockstep set is mixed', async () => {
+    const contracts = getPublicPackageContracts();
+    const laggingWorkspaceDir = 'packages/docs-theme';
+
+    const result = await runVersionBumpCheck({
+      contracts,
+      resolveMergeBaseFn: async () => 'merge-base-sha',
+      findChangedWorkspaceDirsFn: async () => new Set(['packages/cli']),
+      readCurrentPackageJsonFn: async (workspaceDir) => ({
+        version: workspaceDir === laggingWorkspaceDir ? '0.2.32' : '0.2.33',
+      }),
+      readBasePackageJsonFn: async () => ({ version: '0.2.32' }),
+      resolveCurrentMainRefFn: async () => 'origin/main',
+      readMainPackageJsonFn: async () => ({ version: '0.2.32' }),
+    });
+
+    expect(result.status).toBe('failed');
+    expect(
+      result.errors.filter((error) =>
+        error.includes('is not greater than the current main version'),
+      ),
+    ).toEqual([
+      '@open-agent-toolkit/docs-theme@0.2.32 is not greater than the current main version 0.2.32 (origin/main); rebase on current main and bump all public packages above 0.2.32',
+    ]);
+    // Review probe P2: the mixed set also trips both pre-existing merge-base
+    // rules, so all three errors surface together in one run.
+    expect(
+      result.errors.filter((error) =>
+        error.includes(
+          'must stay on the same version for lockstep release publishes',
+        ),
+      ),
+    ).toHaveLength(1);
+    expect(
+      result.errors.filter((error) =>
+        error.includes(
+          'publishable package changes require a lockstep version bump',
+        ),
+      ),
+    ).toHaveLength(1);
+    expect(result.errors).toHaveLength(3);
+  });
+});
+
+describe('findVersionsBehindCurrentMainErrors', () => {
+  const contract = contractFor('@open-agent-toolkit/cli');
+
+  it.each([
+    {
+      label: 'a missing current-main version',
+      state: { contract, currentVersion: '0.2.33', mainVersion: null },
+      expected: `${contract.publicName}: no package version found at current main (origin/main); cannot prove this branch is ahead of the released version`,
+    },
+    {
+      label: 'a malformed branch version',
+      state: {
+        contract,
+        currentVersion: '0.2.33-rc.1',
+        mainVersion: '0.2.32',
+      },
+      expected: `${contract.publicName}: cannot compare versions numerically (branch 0.2.33-rc.1, current main 0.2.32); the release gate requires stable major.minor.patch versions`,
+    },
+    {
+      label: 'a malformed current-main version',
+      state: {
+        contract,
+        currentVersion: '0.2.33',
+        mainVersion: '0.2.32+build.7',
+      },
+      expected: `${contract.publicName}: cannot compare versions numerically (branch 0.2.33, current main 0.2.32+build.7); the release gate requires stable major.minor.patch versions`,
+    },
+    {
+      label: 'an empty branch version',
+      state: { contract, currentVersion: '', mainVersion: '0.2.32' },
+      expected: `${contract.publicName}: cannot compare versions numerically (branch missing, current main 0.2.32); the release gate requires stable major.minor.patch versions`,
+    },
+    {
+      label: 'a version equal to current main',
+      state: { contract, currentVersion: '0.2.32', mainVersion: '0.2.32' },
+      expected: `${contract.publicName}@0.2.32 is not greater than the current main version 0.2.32 (origin/main); rebase on current main and bump all public packages above 0.2.32`,
+    },
+    {
+      label: 'a version lower than current main',
+      state: { contract, currentVersion: '0.2.29', mainVersion: '0.2.30' },
+      expected: `${contract.publicName}@0.2.29 is not greater than the current main version 0.2.30 (origin/main); rebase on current main and bump all public packages above 0.2.30`,
+    },
+  ] satisfies {
+    label: string;
+    state: CurrentMainVersionState;
+    expected: string;
+  }[])('reports $label', ({ state, expected }) => {
+    expect(findVersionsBehindCurrentMainErrors('origin/main', [state])).toEqual(
+      [expected],
+    );
+  });
+
+  it('reports nothing when the branch version is strictly higher', () => {
+    expect(
+      findVersionsBehindCurrentMainErrors('origin/main', [
+        { contract, currentVersion: '0.2.33', mainVersion: '0.2.32' },
+      ]),
+    ).toEqual([]);
+  });
+
+  it('evaluates each package independently in one pass', () => {
+    expect(
+      findVersionsBehindCurrentMainErrors('origin/main', [
+        { contract, currentVersion: '0.2.33', mainVersion: '0.2.32' },
+        {
+          contract: contractFor('@open-agent-toolkit/docs-theme'),
+          currentVersion: '0.2.32',
+          mainVersion: '0.2.32',
+        },
+      ]),
+    ).toEqual([
+      '@open-agent-toolkit/docs-theme@0.2.32 is not greater than the current main version 0.2.32 (origin/main); rebase on current main and bump all public packages above 0.2.32',
+    ]);
   });
 });

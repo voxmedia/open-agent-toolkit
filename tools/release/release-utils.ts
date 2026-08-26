@@ -117,9 +117,10 @@ const STABLE_VERSION_PATTERN = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 /**
  * Parses a stable numeric `major.minor.patch` version.
  *
- * Prerelease identifiers, build metadata, leading zeroes, and every other
- * non-numeric shape are rejected with `null` so callers fail closed instead of
- * silently treating unparseable evidence as `0.0.0`.
+ * Prerelease identifiers, build metadata, leading zeroes, surrounding
+ * whitespace, and every other non-numeric shape are rejected with `null` so
+ * callers fail closed instead of silently treating unparseable evidence as
+ * `0.0.0`.
  */
 export function parseStableVersion(
   version: string | null | undefined,
@@ -128,7 +129,7 @@ export function parseStableVersion(
     return null;
   }
 
-  const match = STABLE_VERSION_PATTERN.exec(version.trim());
+  const match = STABLE_VERSION_PATTERN.exec(version);
   if (!match) {
     return null;
   }
