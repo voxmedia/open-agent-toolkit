@@ -13,7 +13,7 @@ oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy:
   default_attempt_limit: 10
@@ -119,20 +119,20 @@ oat_implement_exit_gate:
   failure: 'attempts 1 and 3 (runs 4199a1c1, a31a6325): review_completed_targeting_correlation_failed — the claude-fable-skip-permissions child backgrounded the DoD gates behind a waiter and ended its headless turn before writing the artifact (child transcripts 283c13cb, 96f809f2); no artifact carried either run ID; project-log entries recorded by the gate (56f19f0f, 72e840cd). Attempt 2 (run baa84df9) runner killed by host at ~90s, no envelope. Gate blocked at maxAttempts=2; not self-authorized further.'
   updated_at: '2026-08-26T22:31:14.690Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/217 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T19:08:06.587Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T22:45:35.173Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T22:46:24.557Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_post_implement_sequence:
-  status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  status: complete # pre_approval | awaiting_approval | post_approval | failed | complete
   source: configured # workflow.postImplementSequence
   final_phase: p01
   pre_approval: [summary, document, pr]
   pre_approval_completed: [summary, document, pr]
-  approval: pending # pending | approved | not_required
-  approval_source: null # null | user | oat-autonomous
+  approval: approved # pending | approved | not_required
+  approval_source: oat-autonomous # null | user | oat-autonomous
   post_approval: []
   post_approval_completed: []
   failure: null
@@ -176,4 +176,4 @@ None
 
 ## Next Milestone
 
-Closeout remaining (exit gate generation 2 passed on cursor-gpt-5-6-sol-xhigh, run 17dc551d, after generation 1 blocked and the operator removed `--avoid none`): → pre-approval sequence (summary refresh → document → PR) → autonomous HiLL → complete-state. Final DoD, synthesis, summary.md, and backlog archival are done.
+PR #217 open (https://github.com/voxmedia/open-agent-toolkit/pull/217). Exit gate generation 2 passed on cursor-gpt-5-6-sol-xhigh (run 17dc551d) after generation 1 blocked and the operator removed `--avoid none`; recap built-durable; pre-approval sequence complete; HiLL approved autonomously (IMPLEMENT-16). Remaining: CI green → root merge (squash) → reconcile main → wave-close in the program ledger. Completion tail: deferred to program close.
