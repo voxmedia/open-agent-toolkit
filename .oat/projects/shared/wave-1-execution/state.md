@@ -53,40 +53,40 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
-  disposition: passed
+  disposition: null
   config_fingerprint: 'sha256:2f6228ff15a4e55394695ae9688000ffdc414b364a28ec77c2359b7e71161f4b'
   resolved_command: 'OAT_GATE_EXEC_TIMEOUT_MS=2400000 oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --avoid none --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0
-  reviewed_head: 58a5aa0919428928152ffcbaf292b2973b18a65d
+  attempts_completed: 0 # generation 2 (generation 1 passed at run b20f4349, then went stale)
+  reviewed_head: ab08d3763a8affe3690ee125da33d65ec35ecddd # round-4 final review (16066aed) + operator-accepted text fixes
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v1:78875ee9763f73744cf256e12480e017615b94667fde7f2e7a1c7647d30f3fad'
-  freshness_head: f371b20b4c3dd76348960eb395d4a972549fd0e9 # closeout-only descendants through the recap-gate record
-  freshness_fingerprint: 'sha256:effective-delta-v1:77291f8dc4133bb9b0cfd4fdd7609216e5285294abcca610dc00b272006db93f'
-  launch_state: result_persisted
-  launch_attempt_id: 'w1-exit-gate-20260826T155104Z'
-  launch_started_at: '2026-08-26T15:51:04Z'
-  launch_result_receipt: '/private/tmp/claude-502/-Users-thomas-stang-orca-workspaces-open-agent-toolkit-bug-triage/99821df5-a46b-4bd0-a700-8b9284593b2c/scratchpad/w1-exit-gate-20260826T155104Z.receipt.json'
-  gate_run_marker: '/var/folders/ch/kmbmcdfd4gb807zjsjt2td4h0000gp/T/oat-gate-runs/b20f4349-bed3-42be-b800-4670a54c86ca.json'
-  gate_run_id: 'b20f4349-bed3-42be-b800-4670a54c86ca'
-  envelope_status: ok
-  artifact: '.oat/projects/shared/wave-1-execution/reviews/final-review-2026-08-26T160106Z.md'
-  handoff: 'Gate passed at the important threshold with 2 non-blocking minor findings; run oat-project-review-receive for final-review-2026-08-26T160106Z.md'
-  receive_state: completed
-  receive_correlation: 'run=b20f4349-bed3-42be-b800-4670a54c86ca; handoff=receive; source=reviews/final-review-2026-08-26T160106Z.md; scope=final; type=code'
-  receive_source_artifact: '.oat/projects/shared/wave-1-execution/reviews/final-review-2026-08-26T160106Z.md'
-  receive_archived_artifact: '.oat/projects/shared/wave-1-execution/reviews/archived/final-review-2026-08-26T160106Z.md'
-  receive_event_identity: 'final | code | final-review-2026-08-26T160106Z.md'
-  receive_pre_head: dc06ae99a26f2c35d2163af0fcbe439e832db4e6
-  receive_commit: 8f2e73c7ad3e598e3b1750a40138d124be8cf8e7
-  receive_eligible: true
-  receive_completed: true
-  failure: 'stale: substantive descendant after the reviewed basis — 9f906e1d (.oxfmtrc.jsonc / .lintstagedrc.mjs workflow-tooling change) and 1c3aeeca (AGENTS.md / docs) alter the effective delta; prior provenance preserved for audit; a current final lifecycle review and a new gate generation are required for the changed basis'
-  updated_at: '2026-08-26T16:38:45.055Z'
+  implementation_fingerprint: 'sha256:effective-delta-v1:ed0bfc4f87082def7cb0d1fad711b3df7d6c0272fb57c6c8f0ba484e2dfef2b2'
+  freshness_head: ab08d3763a8affe3690ee125da33d65ec35ecddd
+  freshness_fingerprint: 'sha256:effective-delta-v1:ed0bfc4f87082def7cb0d1fad711b3df7d6c0272fb57c6c8f0ba484e2dfef2b2'
+  launch_state: intent_persisted
+  launch_attempt_id: 'w1-exit-gate-20260826T184804Z'
+  launch_started_at: '2026-08-26T18:48:04Z'
+  launch_result_receipt: '/private/tmp/claude-502/-Users-thomas-stang-orca-workspaces-open-agent-toolkit-bug-triage/99821df5-a46b-4bd0-a700-8b9284593b2c/scratchpad/w1-exit-gate-20260826T184804Z.receipt.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-08-26T18:48:04Z'
 # oat_implement_exit_gate (template comment retained below for reference)
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -127,7 +127,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/215' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T04:15:34.593Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-08-26T16:37:51.573Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T16:52:57.719Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T18:48:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_post_implement_sequence:
   status: complete # pre_approval | awaiting_approval | post_approval | failed | complete
