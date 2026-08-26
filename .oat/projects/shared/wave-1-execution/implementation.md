@@ -457,7 +457,7 @@ Head `7f78dab719bcc64c471412c341dd20f09e25b997` (after `196dae19` and the final-
 - m3 — approval-evidence line cited `built-not-durable` only: **fixed** (re-attestation noted; decision unchanged).
 - m4 — 109-column line from the m5 docs fix: **fixed** (annotation shortened).
 
-**Review row `final` (round 4) → `fixes_completed`.** A fifth narrowed cycle (verification of these six text fixes) is required to reach `passed` and remains operator-gated.
+\*\*Review row `final` (round 4) → `passed` by explicit operator acceptance (2026-08-26): the operator reviewed the six text-only dispositions (`1d0c1c1b`, `95bc0700`) and accepted them as resolved in lieu of a fifth narrowed cycle. Recorded as an operator decision under REVIEWRECEIVE-02 — not an autonomous override. Effective reviewed basis for the new exit-gate generation: `95bc0700`.
 
 ## Deviations from Plan / Design
 
