@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "explainer-kit.build-record/v1",
+  "runId": "run-1b2d1eb3-9616-4ae7-95c7-861d5c148c97",
+  "renderStrategy": "default-only",
+  "startedAt": "2026-08-26T22:40:22.044Z",
+  "stages": [
+    {
+      "id": "validate",
+      "status": "passed",
+      "outputPaths": [
+        "run-request.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-26T22:40:22.075Z",
+      "completedAt": "2026-08-26T22:40:22.094Z"
+    },
+    {
+      "id": "fact-base",
+      "status": "passed",
+      "outputPaths": [
+        "source/fact-base.json",
+        "source/fact-base.md"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-26T22:40:22.117Z",
+      "completedAt": "2026-08-26T22:40:22.162Z"
+    },
+    {
+      "id": "content",
+      "status": "passed",
+      "outputPaths": [
+        "source/set-plan/request.json",
+        "source/set-plan/result.json",
+        "source/set-plan/ledger.json",
+        "source/set-plan/portfolio.json",
+        "source/set-plan/drafts.json",
+        "source/content/project-recap.html",
+        "source/author/project-recap.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-26T22:40:22.173Z",
+      "completedAt": "2026-08-26T22:40:22.275Z"
+    },
+    {
+      "id": "theme",
+      "status": "warned",
+      "outputPaths": [
+        "theme.resolved.json"
+      ],
+      "warnings": [
+        "theme-selection-normalized"
+      ],
+      "startedAt": "2026-08-26T22:40:22.285Z",
+      "completedAt": "2026-08-26T22:40:22.306Z"
+    },
+    {
+      "id": "render",
+      "status": "passed",
+      "outputPaths": [
+        "site/initiatives/wave-2-execution-recap/index.html"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-26T22:40:22.319Z",
+      "completedAt": "2026-08-26T22:40:22.338Z"
+    },
+    {
+      "id": "qa",
+      "status": "passed",
+      "outputPaths": [
+        "site/initiatives/wave-2-execution-recap/index.html",
+        "qa/visual-review/attempt-1/evidence/project-recap/mobile.png",
+        "qa/visual-review/attempt-1/evidence/project-recap/mobile.json",
+        "qa/visual-review/attempt-1/evidence/project-recap/tablet.png",
+        "qa/visual-review/attempt-1/evidence/project-recap/tablet.json",
+        "qa/visual-review/attempt-1/evidence/project-recap/desktop.png",
+        "qa/visual-review/attempt-1/evidence/project-recap/desktop.json",
+        "qa/visual-review/attempt-1/request.json",
+        "qa/visual-review/attempt-1/result.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-26T22:40:22.347Z",
+      "completedAt": "2026-08-26T22:40:23.915Z"
+    },
+    {
+      "id": "durability",
+      "status": "passed",
+      "outputPaths": [
+        "manifest.json",
+        "build-record.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-26T22:40:23.938Z",
+      "completedAt": "2026-08-26T22:42:23.853Z"
+    },
+    {
+      "id": "publish",
+      "status": "skipped",
+      "outputPaths": [],
+      "warnings": [],
+      "startedAt": "2026-08-26T22:40:23.947Z",
+      "completedAt": "2026-08-26T22:40:23.947Z"
+    }
+  ],
+  "outcome": "built-durable",
+  "completedAt": "2026-08-26T22:40:23.947Z"
+}

@@ -10,8 +10,10 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260826-derive-the-sync-apply-restamp  | 2026-08-26 | accepted | Derive the sync apply restamp from the version-skew diagnostic          | -      |
 | DR-260826-merge-phase-branches-without   | 2026-08-26 | accepted | Merge phase branches without rebase to preserve reviewed SHAs           | -      |
 | DR-260826-non-narrowing-reconciliation   | 2026-08-26 | accepted | Non-narrowing reconciliation of the release-guard plan                  | -      |
+| DR-260826-pre-plan-the-lockstep-bump     | 2026-08-26 | accepted | Pre-plan the lockstep bump as part of a wave lane                       | -      |
 | DR-260826-wave-level-lockstep-bump       | 2026-08-26 | accepted | Wave-level lockstep bump instead of exempting test paths                | -      |
 | DR-260817-catalog-carries-policy-never   | 2026-08-17 | accepted | Catalog carries policy, never outcome                                   | -      |
 | DR-260817-local-gates-mirror-ci-exactly  | 2026-08-17 | accepted | Local gates mirror CI exactly                                           | -      |

@@ -152,7 +152,6 @@
 | BL-260826-populate-native-subagent       | Populate native subagent runtime identity from provider transcript metadata                | open   | high     | feature | M        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                        | open   | high     | feature | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                              | open   | high     | feature | L        |
-| BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version                                  | open   | high     | feature | S        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                            | open   | medium   | feature | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                         | open   | medium   | feature | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                     | open   | medium   | feature | M        |
