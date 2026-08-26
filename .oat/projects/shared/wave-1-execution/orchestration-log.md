@@ -93,6 +93,23 @@ returned `ok / review_completed_gate_passed`: 0 critical, 0 important,
 `plan` → `passed` (receive: gate judgment sweep, nothing to disposition).
 Blocker `plan-gate` cleared.
 
+### 2026-08-26 · structural · oat-wave-execute · group 1 bootstrap + dispatch
+
+`bootstrap-group.sh wave-1 4b44635f p01 p02`: both `status=success`,
+`view-parity=ok`, `sync_commit: skip`, `git_clean=pass` (script 1.3.0 relocated
+its logs to `$TMPDIR/oat-bootstrap-logs/wave-1-p0N`). Implementers dispatched
+natively (`oat-phase-implementer`, `model: opus`) with resolver-pinned stamps
+recorded in `implementation.md` Run 1 (`w1-p01-impl-001`, `w1-p02-impl-001`).
+
+### 2026-08-26 · general · worked-well · resolver + stamp formatter
+
+`oat project dispatch-ceiling resolve … --json` plus the repo's
+`formatDispatchStamp` (run via a tsx shim against
+`packages/cli/src/providers/identity/stamp.ts`) produced grammar-stable stamps
+without hand assembly. **Skill signal (gap):** the resolver JSON carries no
+`dispatchStamp` field; a `--stamp` output or a CLI formatter entry point would
+remove the shim. Follow-up: backlog candidate.
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)

@@ -127,6 +127,7 @@ _- Outstanding Items_
   an explicit external plan). Stamp:
   `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=opus`
 - Dispatch policy enforcement log (both): `Dispatch policy: high; selected=opus; cap=opus (claude, enforced — Task model arg)`.
+- Launch acceptance (2026-08-26): `w1-p01-impl-001` and `w1-p02-impl-001` accepted by the Claude Code Task tool (native, `subagent_type: oat-phase-implementer`, `model: opus`), dispatch mode background/awaited; worktrees bootstrapped at `4b44635fec13b2083da8cf98d06ea284328b92a7` via `bootstrap-group.sh wave-1` (both `status=success`, `view-parity=ok`, `sync_commit: skip`, `git_clean=pass`). child_outcome: pending.
 
 #### Phase Outcomes
 
