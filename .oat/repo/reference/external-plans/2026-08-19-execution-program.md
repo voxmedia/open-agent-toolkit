@@ -36,7 +36,7 @@ supersedes the "execution deferred by operator on 2026-08-19" record.
 | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ---- | ----------------------------------------------------- | ------- |
 | [Bound smoke cleanup signal waits](./2026-08-19-bound-smoke-cleanup-signal-wait.md)              | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W1   | parallel group; merge first to bound later validation | done    |
 | [Reject package versions overtaken by main](./2026-08-19-detect-behind-main-package-versions.md) | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W1   | parallel group; merge after smoke containment         | done    |
-| $1 done                                                                                          |
+| [Surface sync version skew](./2026-08-19-warn-sync-version-skew.md)                              | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W2   | solo; merge before the next public-package baseline   | done    |
 | [Honor an explicit CLI assets root](./2026-08-19-hermetic-cli-assets-root.md)                    | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W3   | solo; start from W2's merged package versions         | pending |
 | [Refresh codex-skill routing](./2026-08-19-refresh-codex-skill-routing.md)                       | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W4   | solo; reread live provider matrix before editing      | pending |
 
