@@ -98,10 +98,10 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:046f942aeffd44dac9ebd0796b51780fb8374f4ddb0b952355842aaa2ffe75e3'
   freshness_head: 87a3014fa1b31c0887b9250551b161dc79fc61ed # round-2 receive commit (text-only closeout fixes)
   freshness_fingerprint: 'sha256:effective-delta-v1:8c3181366c5e6a82fa274ba4d2c514ea3809b4efaf6de0676bd6e1c0eea32a5e'
-  launch_state: result_persisted
-  launch_attempt_id: 'w2-exit-gate-20260826T211845Z'
-  launch_started_at: '2026-08-26T21:18:45Z'
-  launch_result_receipt: '/private/tmp/claude-502/-Users-thomas-stang-orca-workspaces-open-agent-toolkit-bug-triage/99821df5-a46b-4bd0-a700-8b9284593b2c/scratchpad/w2-exit-gate-20260826T211845Z.receipt.json'
+  launch_state: intent_persisted # attempt 2
+  launch_attempt_id: 'w2-exit-gate-20260826T212345Z' # attempt 1 was w2-exit-gate-20260826T211845Z
+  launch_started_at: '2026-08-26T21:23:45Z'
+  launch_result_receipt: '/private/tmp/claude-502/-Users-thomas-stang-orca-workspaces-open-agent-toolkit-bug-triage/99821df5-a46b-4bd0-a700-8b9284593b2c/scratchpad/w2-exit-gate-20260826T212345Z.receipt.json'
   gate_run_marker: '/var/folders/ch/kmbmcdfd4gb807zjsjt2td4h0000gp/T/oat-gate-runs/4199a1c1-6bec-4c70-adfb-c540d8e37000.json'
   gate_run_id: '4199a1c1-6bec-4c70-adfb-c540d8e37000'
   envelope_status: targeting_correlation_failed
@@ -117,13 +117,13 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: 'attempt 1 (run 4199a1c1-6bec-4c70-adfb-c540d8e37000): review_completed_targeting_correlation_failed — no artifact carried the run ID; project-log entry recorded by the gate (56f19f0f)'
-  updated_at: '2026-08-26T21:23:23.680Z'
+  updated_at: '2026-08-26T21:23:45.876Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T19:08:06.587Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T21:23:23.680Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T21:23:45.877Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: generate
