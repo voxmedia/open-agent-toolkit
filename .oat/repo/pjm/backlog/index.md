@@ -4,6 +4,11 @@
 
 ## Curated Overview
 
+- Provider transcript corroboration (2026-08-26) is tracked in
+  `BL-260826-populate-native-subagent`, linked to GitHub issue #211. Codex and
+  Claude can populate the existing optional runtime-observation layer from
+  sanitized metadata, while Cursor remains `not-reported`; this work does not
+  replace materialized roles or any pre-launch dispatch control.
 - GitHub issue triage (2026-08-19) added three high-priority lifecycle
   reliability records: `BL-260820-bind-each-gate-review` (Bind each gate review
   disposition to its exact received ledger event) from #194,
@@ -143,6 +148,7 @@
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                               | open   | high     | feature | L        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                               | open   | high     | task    | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                           | open   | high     | task    | S        |
+| BL-260826-populate-native-subagent       | Populate native subagent runtime identity from provider transcript metadata                | open   | high     | feature | M        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                        | open   | high     | feature | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                              | open   | high     | feature | L        |
 | BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version                                  | open   | high     | feature | S        |
