@@ -48,7 +48,43 @@
       "mediaType": "text/html",
       "status": "built",
       "hash": "sha256:614777320187b62c2c7d659248c39ce5f7bd25dd0f7051393d3dcc738b6ffcbe",
-      "rebuildable": false
+      "rebuildable": false,
+      "durableEvidence": [
+        {
+          "kind": "commit",
+          "ref": "9f906e1d606c7cc51e4b8fe32dedfb058c3c73b8",
+          "paths": [
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/run-request.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/source/fact-base.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/source/fact-base.md",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/source/content-approval.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/source/set-plan/request.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/source/set-plan/result.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/source/set-plan/ledger.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/source/set-plan/portfolio.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/source/set-plan/drafts.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/source/author/project-recap.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/source/content/project-recap.html",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/browser/project-recap/mobile.png",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/browser/project-recap/mobile.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/browser/project-recap/tablet.png",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/browser/project-recap/tablet.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/browser/project-recap/desktop.png",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/browser/project-recap/desktop.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/visual-review/attempt-1/evidence/project-recap/mobile.png",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/visual-review/attempt-1/evidence/project-recap/mobile.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/visual-review/attempt-1/evidence/project-recap/tablet.png",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/visual-review/attempt-1/evidence/project-recap/tablet.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/visual-review/attempt-1/evidence/project-recap/desktop.png",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/visual-review/attempt-1/evidence/project-recap/desktop.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/visual-review/attempt-1/request.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/qa/visual-review/attempt-1/result.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/theme.resolved.json",
+            ".oat/projects/shared/wave-1-execution/explainers/wave-1-execution-recap/site/initiatives/wave-1-execution-recap/index.html"
+          ],
+          "attestedAt": "2026-08-26T16:51:47.196Z"
+        }
+      ]
     }
   ],
   "immutableHashes": {
@@ -80,13 +116,12 @@
     "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27",
     "site/initiatives/wave-1-execution-recap/index.html": "sha256:614777320187b62c2c7d659248c39ce5f7bd25dd0f7051393d3dcc738b6ffcbe"
   },
-  "outcome": "built-not-durable",
+  "outcome": "built-durable",
   "buildRecord": {
     "path": "build-record.json",
-    "hash": "sha256:46b0ecb5f859a1495bb1adc4f59f624825803b2fc03617806694e18456c51198"
+    "hash": "sha256:ef7485a557ca55be13e884fe76eae7f705ce3980e52bc6071dc5aa21fc814c56"
   },
   "warnings": [
-    "theme-selection-normalized",
-    "E_DURABILITY: durability evidence verification failed. Immutable package hash changed for run-request.json. Immutable package hash changed for source/fact-base.json. Immutable package hash changed for source/fact-base.md. Immutable package hash changed for source/content-approval.json. Immutable package hash changed for source/set-plan/request.json. Immutable package hash changed for source/set-plan/result.json. Immutable package hash changed for source/set-plan/portfolio.json. Immutable package hash changed for qa/visual-review/attempt-1/request.json. Immutable package hash changed for theme.resolved.json."
+    "theme-selection-normalized"
   ]
 }

@@ -83,13 +83,14 @@
     },
     {
       "id": "durability",
-      "status": "warned",
-      "outputPaths": [],
-      "warnings": [
-        "E_DURABILITY: durability evidence verification failed. Immutable package hash changed for run-request.json. Immutable package hash changed for source/fact-base.json. Immutable package hash changed for source/fact-base.md. Immutable package hash changed for source/content-approval.json. Immutable package hash changed for source/set-plan/request.json. Immutable package hash changed for source/set-plan/result.json. Immutable package hash changed for source/set-plan/portfolio.json. Immutable package hash changed for qa/visual-review/attempt-1/request.json. Immutable package hash changed for theme.resolved.json."
+      "status": "passed",
+      "outputPaths": [
+        "manifest.json",
+        "build-record.json"
       ],
+      "warnings": [],
       "startedAt": "2026-08-26T16:28:09.557Z",
-      "completedAt": "2026-08-26T16:31:28.851Z"
+      "completedAt": "2026-08-26T16:51:47.196Z"
     },
     {
       "id": "publish",
@@ -100,6 +101,6 @@
       "completedAt": "2026-08-26T16:28:09.567Z"
     }
   ],
-  "outcome": "built-not-durable",
+  "outcome": "built-durable",
   "completedAt": "2026-08-26T16:28:09.567Z"
 }
