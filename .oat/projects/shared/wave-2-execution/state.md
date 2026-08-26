@@ -113,7 +113,7 @@ oat_implement_exit_gate:
   receive_archived_artifact: '.oat/projects/shared/wave-2-execution/reviews/archived/final-review-2026-08-26T222108Z.md'
   receive_event_identity: 'final | code | final-review-2026-08-26T222108Z.md'
   receive_pre_head: 770ad698 # gate bookkeeping commit (record gate review in project log)
-  receive_commit: pending # filled by the post-implement sequence snapshot commit
+  receive_commit: bc2e009d # receive commit for the gen-2 gate artifact
   receive_eligible: true
   receive_completed: true
   failure: 'attempts 1 and 3 (runs 4199a1c1, a31a6325): review_completed_targeting_correlation_failed — the claude-fable-skip-permissions child backgrounded the DoD gates behind a waiter and ended its headless turn before writing the artifact (child transcripts 283c13cb, 96f809f2); no artifact carried either run ID; project-log entries recorded by the gate (56f19f0f, 72e840cd). Attempt 2 (run baa84df9) runner killed by host at ~90s, no envelope. Gate blocked at maxAttempts=2; not self-authorized further.'
@@ -123,8 +123,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T19:08:06.587Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T22:28:17.268Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T22:28:44.411Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_post_implement_sequence:
+  status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  source: configured # workflow.postImplementSequence
+  final_phase: p01
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending # pending | approved | not_required
+  approval_source: null # null | user | oat-autonomous
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_project_recap:
   decision: generate
   source: autonomous_policy
