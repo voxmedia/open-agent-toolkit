@@ -59,10 +59,16 @@ oat_generated: false
 
 ### Task p01-t01: Execute external plan — Bound smoke cleanup signal waits and preserve failure diagnostics
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed (awaiting review)
+**Commit:** aedced645d2caa21b9fde5de5142822ddf025431
 
 **Source plan:** `.oat/repo/reference/external-plans/2026-08-19-bound-smoke-cleanup-signal-wait.md`
+
+**Outcome:** `runSignalCase` waits are bounded (`waitForChildExit`, 60s), a missed SIGTERM triggers SIGKILL + bounded reap (`reapOrDetach`, 15s) before temp-dir cleanup, and timeouts fail with stage + captured stdout/stderr; `{ code: 143, signal: null }` preserved. Root re-ran `node --test tools/smoke/runner/cleanup.test.mjs`: 16/16 pass, 13.4s.
+
+**Verification (implementer-reported, root spot-checked):** DoD 10/10 exit 0 (`pnpm test` 130s / 175s post-commit, no hang); `pnpm test:smoke` 136/136; codex review 0.149.1 three passes, 3 P2 fixed, 0 rejected.
+
+**Notes:** one unexplained >10s `SIGTERM during drive` outlier under load (empty stdout/stderr) drove the deadline recalibration; flagged to the reviewer as a possible production-cleanup stall (plan out-of-scope; follow-up candidate).
 
 ---
 
@@ -79,10 +85,12 @@ oat_generated: false
 
 ### Task p02-t01: Execute external plan — Reject publishable package versions overtaken by current main
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed (review round 1 received; fix round in progress)
+**Commit:** c8fdefc3884095bc1be40daf9eecc52f502e7ee9
 
 **Source plan:** `.oat/repo/reference/external-plans/2026-08-19-detect-behind-main-package-versions.md`
+
+**Outcome:** `release:check-versions` additionally rejects any lockstep version not strictly greater than `origin/main` (numeric `major.minor.patch` comparator; fail-closed missing ref/manifest; never runs without changed publishable roots); merge-base rule untouched and reported first. Root re-ran the focused suites: pass.
 
 ---
 
@@ -131,10 +139,10 @@ _- Outstanding Items_
 
 #### Phase Outcomes
 
-| Phase | Worktree                | Implementer outcome                                                                                                     | Review outcome | Fix rounds | Merged |
-| ----- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------- | ---------- | ------ |
-| p01   | `.worktrees/wave-1/p01` | pending                                                                                                                 | pending        | 0          | -      |
-| p02   | `.worktrees/wave-1/p02` | DONE_WITH_CONCERNS (c8fdefc3; 1 task; focused pass; 6/8 DoD — release gates red on lockstep policy, root-dispositioned) | pending        | 0          | -      |
+| Phase | Worktree                | Implementer outcome                                                                                                                                | Review outcome | Fix rounds | Merged |
+| ----- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------- | ------ |
+| p01   | `.worktrees/wave-1/p01` | DONE_WITH_CONCERNS (aedced64; 1 task; DoD 10/10 + test:smoke green; codex 3×P2 fixed pre-commit; concern: deadline 10s→60s after one >10s outlier) | pending        | 0          | -      |
+| p02   | `.worktrees/wave-1/p02` | DONE_WITH_CONCERNS (c8fdefc3; 1 task; focused pass; 6/8 DoD — release gates red on lockstep policy, root-dispositioned)                            | pending        | 0          | -      |
 
 ### Review Received: p02 (round 1)
 

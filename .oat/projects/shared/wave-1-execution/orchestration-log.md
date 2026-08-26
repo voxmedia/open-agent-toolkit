@@ -148,6 +148,27 @@ every orchestrator command uses absolute paths / `git -C`; no bare `cd`.
 **Skill signal (strengthens):** rule 5's absolute-path merge guard should be
 generalized to all root commands, not only merges.
 
+### 2026-08-26 · structural · oat-phase-implementer · p01
+
+`w1-p01-impl-001` → DONE_WITH_CONCERNS; commit `aedced64` (1 file, +195/−4);
+DoD 10/10 + test:smoke green; codex review (0.149.1) 3×P2 fixed pre-commit with
+mutation proofs; concern: signal deadline 60s / reap 15s after one >10s outlier.
+
+### 2026-08-26 · general · friction · parallel timing lane vs build-heavy lane
+
+Concurrent p02 builds/tests (load avg 14+ on 14 CPUs) made p01's
+timing-sensitive smoke gate intermittently red at a 10s bound; the lane spent
+its one bounded correction recalibrating (60s/15s, ~35× observed worst case).
+**Skill signal (gap):** group composition should weigh CPU contention for
+timing/signal lanes, not only write-surface disjointness. Follow-up: none
+beyond the log.
+
+### 2026-08-26 · general · bug · zsh gate loop
+
+`pnpm $cmd` in a zsh loop does not word-split, so `check:skill-bumps` reported
+exit 254 ("Command not found") — a false gate failure until invoked literally.
+Follow-up: brief template should say "invoke each gate literally".
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)
