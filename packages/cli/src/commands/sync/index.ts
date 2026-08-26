@@ -233,11 +233,18 @@ async function maybeResolveProviderMismatches(
 /**
  * Derive the advisory version-skew diagnostic for a loaded scope manifest.
  *
- * An absent manifest never reports skew: `loadManifest` deliberately creates an
- * empty manifest stamped with the invoking version, so the two strings match.
- * A malformed or empty `oatVersion` never reaches here because the manifest
- * schema already fails closed; the non-empty guard keeps corruption from being
- * downgraded into a warning.
+ * This is the single source of truth for "this manifest was produced by a
+ * different CLI version": `runSyncApply` keys its manifest restamp off the
+ * presence of this diagnostic, so a restamp can never destroy the provenance
+ * evidence without the advisory having been emitted first.
+ *
+ * Comparison is plain string inequality on identity, never semantic-version
+ * ordering. An absent manifest therefore never reports skew, because
+ * `loadManifest` deliberately creates an empty manifest stamped with the
+ * invoking version and the two strings match. `ManifestSchema` rejects an
+ * *empty* `oatVersion` before sync ever sees it, but it does admit other
+ * degenerate strings such as whitespace-only values; those surface here as
+ * ordinary skew rather than being reclassified as corruption.
  */
 function detectVersionSkew(
   scope: ScopeSyncPlan['scope'],
@@ -246,11 +253,7 @@ function detectVersionSkew(
   const producingVersion = manifest.oatVersion;
   const invokingVersion = OAT_VERSION;
 
-  if (
-    producingVersion.length === 0 ||
-    invokingVersion.length === 0 ||
-    producingVersion === invokingVersion
-  ) {
+  if (producingVersion === invokingVersion) {
     return undefined;
   }
 
@@ -401,7 +404,7 @@ function logVersionSkewWarnings(
     }
 
     context.logger.warn(
-      `Sync manifest version skew [${skew.scope}]: manifest produced by oat ${skew.producingVersion}, invoking oat ${skew.invokingVersion}.`,
+      `Sync manifest version skew [${skew.scope}]: manifest produced by oat "${skew.producingVersion}" but invoked by oat "${skew.invokingVersion}".`,
     );
   }
 }
