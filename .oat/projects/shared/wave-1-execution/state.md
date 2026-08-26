@@ -176,8 +176,9 @@ Lifecycle complete
 - ✓ Final review passed (2 rounds); configured exit gate passed
 - ✓ Summary, documentation, PR #215 created
 - ✓ Autonomous final HiLL approval recorded
-- ⧗ Final review round 3 received (post-gate tooling/docs changes); exit gate stale → new generation pending
-- ⧗ Awaiting CI + merge
+- ✓ Final review rounds 3–4 (post-gate tooling/docs + closeout text) — round 4 passed by operator acceptance
+- ✓ Exit gate generation 2 passed (run 8485a4f9)
+- ⧗ Awaiting CI on the final head + merge of PR #215
 - ✓ Project lifecycle complete
 
 ## Blockers

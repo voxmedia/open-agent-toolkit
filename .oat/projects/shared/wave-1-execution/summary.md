@@ -43,9 +43,12 @@ gates, review mapping, and bookkeeping.
   plus the generated `packages/cli/assets/public-package-versions.json`.
 
 Reviews: plan artifact gate (cursor-gpt-5-6-sol-xhigh) passed; p01 `passed`
-after three review rounds, p02 after two; final review (two rounds) and the
-configured implementation exit gate (`claude-fable-skip-permissions`, run
-`b20f4349`) `passed`; full definition of done green at `7f78dab7`.
+after three review rounds, p02 after two; final review (four rounds; rounds 3–4 narrowed to
+post-gate tooling/docs and closeout text, round 4 passed by operator acceptance)
+and the configured implementation exit gate `passed` — generation 1 (run
+`b20f4349`) went stale after post-gate tooling/docs commits; generation 2 (run
+`8485a4f9`, `claude-fable-skip-permissions`) is the pre-merge gate; full
+definition of done green at `7f78dab7` and re-run by reviewers at later heads.
 
 ## Key Decisions
 

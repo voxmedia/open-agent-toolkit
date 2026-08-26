@@ -268,7 +268,7 @@ git commit -m "fix(p02-t01): reject publishable package versions overtaken by cu
 | final  | code     | passed          | 2026-08-26 | reviews/archived/final-review-2026-08-26T160106Z.md         | cab5ffd3c9eeba12ba535855ab41590ed43d3a38 | gate       | claude-fable-skip-permissions |
 | final  | code     | fixes_completed | 2026-08-26 | reviews/archived/final-review-2026-08-26T164716Z.md         | a843353cf2d9d36e6fc88e3ccbd2db936eaed0ba | auto       | -                             |
 | final  | code     | passed          | 2026-08-26 | reviews/archived/final-review-2026-08-26T183359Z.md         | 16066aedb53384848ec8fe4f876264a7630d574e | auto       | -                             |
-| final  | code     | received        | 2026-08-26 | reviews/final-review-2026-08-26T185206Z.md                  | 7334ff02cc5151844f6d53e9c09addaee92e7bf9 | gate       | claude-fable-skip-permissions |
+| final  | code     | passed          | 2026-08-26 | reviews/archived/final-review-2026-08-26T185206Z.md         | 7334ff02cc5151844f6d53e9c09addaee92e7bf9 | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

@@ -459,6 +459,21 @@ Head `7f78dab719bcc64c471412c341dd20f09e25b997` (after `196dae19` and the final-
 
 \*\*Review row `final` (round 4) → `passed` by explicit operator acceptance (2026-08-26): the operator reviewed the six text-only dispositions (`1d0c1c1b`, `95bc0700`) and accepted them as resolved in lieu of a fifth narrowed cycle. Recorded as an operator decision under REVIEWRECEIVE-02 — not an autonomous override. Effective reviewed basis for the new exit-gate generation: `95bc0700`.
 
+### Review Received: final (configured exit gate, generation 2, judgment sweep)
+
+**Date:** 2026-08-26
+**Gate:** `workflow.gates.skills.oat-project-implement` run `8485a4f9-8f68-420d-ac77-e69e9c6eb773`, target `claude-fable-skip-permissions` (configured; `--avoid none`; same family as the `opus` implementers, distinct model — recorded), envelope `ok / review_completed_gate_passed`, threshold important, receiveEligible true, corroboration run/project/invocation matched. Receipt: session scratchpad `w1-exit-gate-20260826T184804Z.receipt.json`.
+**Review artifact:** reviews/archived/final-review-2026-08-26T185206Z.md (reviewed head `7334ff02cc5151844f6d53e9c09addaee92e7bf9`, invocation gate, narrowed on gate lineage from `cab5ffd3`)
+
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 2.
+
+**Judgment-sweep dispositions:**
+
+- gate2-m1 — `summary.md` Reviews line and `state.md` Progress stopped at round 2 / generation 1: **addressed now** (artifact alignment in this commit).
+- gate2-m2 — deferred ledger re-evaluation: p02-r2-m1, p01-r3-m1, p01-r3-m2 **remain deferred** (reviewer concurs; no `tools/` code changed in this range).
+
+**Gate row `final` (generation 2) → `passed`; `oat_implement_exit_gate` → `allowed / passed` (generation 2).**
+
 ## Deviations from Plan / Design
 
 | Task / Review | Source Artifact                                | Planned / Documented                                       | Actual / Accepted                                                                                                                                                                                                                                                                                                                     | Reason                                                                                                                                                  | Source of Truth                     | Follow-up                                                                                      |
