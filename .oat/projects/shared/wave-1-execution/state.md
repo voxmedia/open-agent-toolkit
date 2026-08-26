@@ -10,11 +10,11 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -82,33 +82,36 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T04:15:34.593Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T04:15:34.593Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T04:19:25.832Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-1-execution
 
-**Status:** Discovery
+**Status:** Plan complete — ready for implementation
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Plan complete — Wave 1 wrapper plan (2 lanes, one parallel group) awaiting the configured plan gate, then `oat-project-implement`.
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete — inherited wave contract + Wave 1 decisions)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
-- **Plan:** `plan.md` (scaffolded template — not started)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (complete — wrapper plan; drift refresh recorded)
+- **Implementation:** `implementation.md` (scaffolded — initialized by `oat-project-implement`)
+- **Orchestration log:** `orchestration-log.md` (day one)
 
 ## Progress
 
-- ✓ Discovery started
-- ✓ Execution artifacts scaffolded
-- ⧗ Awaiting user input
+- ✓ Discovery complete
+- ✓ Wave-boundary drift refresh: 2 PASS / 0 MINOR-DRIFT / 0 STOP
+- ✓ Plan complete (validate-plan passed)
+- ⧗ Plan gate (configured cross-runtime artifact review)
+- ⧗ Implementation (group 1: p01 + p02 in parallel worktrees)
 
 ## Blockers
 
@@ -116,4 +119,4 @@ None
 
 ## Next Milestone
 
-Complete discovery and generate a quick implementation plan
+Pass the configured plan gate, then execute group 1 via `oat-project-implement`.
