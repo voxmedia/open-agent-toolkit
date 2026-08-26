@@ -53,7 +53,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:2f6228ff15a4e55394695ae9688000ffdc414b364a28ec77c2359b7e71161f4b'
@@ -85,8 +85,8 @@ oat_implement_exit_gate:
   receive_commit: 8f2e73c7ad3e598e3b1750a40138d124be8cf8e7
   receive_eligible: true
   receive_completed: true
-  failure: null
-  updated_at: '2026-08-26T16:35:18.558Z'
+  failure: 'stale: substantive descendant after the reviewed basis — 9f906e1d (.oxfmtrc.jsonc / .lintstagedrc.mjs workflow-tooling change) and 1c3aeeca (AGENTS.md / docs) alter the effective delta; prior provenance preserved for audit; a current final lifecycle review and a new gate generation are required for the changed basis'
+  updated_at: '2026-08-26T16:38:45.055Z'
 # oat_implement_exit_gate (template comment retained below for reference)
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -127,7 +127,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/215' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T04:15:34.593Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-08-26T16:37:51.573Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T16:37:51.573Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T16:38:45.055Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_post_implement_sequence:
   status: complete # pre_approval | awaiting_approval | post_approval | failed | complete
