@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-26
-oat_current_task_id: p01-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -29,7 +29,7 @@ oat_generated: false
 | Phase 01 (bound-smoke-cleanup)         | complete | 1     | 1/1       |
 | Phase 02 (detect-behind-main-versions) | complete | 1     | 1/1       |
 
-**Total:** 2/2 tasks completed
+**Total:** 3/3 tasks completed (p01-t01, p02-t01, review fix p01-t02)
 
 ## Autonomy Gate Provenance
 
@@ -347,7 +347,18 @@ Lifted from the final review's Requirements Coverage tables
 - m2 — no per-criterion Done-criteria record: **resolved in artifact** (this section).
 - m3 — fixture installs the SIGTERM-ignore handler after the sentinel (real flake risk for the two real-path regressions): **convert → task p01-t02** (bounded fix on the integration branch, fresh same-target implementer; worktrees were already removed), then a narrowed final re-review.
 
-**Review row `final` → `fixes_added`.**
+**Fix task p01-t02 (`w1-p01-fix-003`, fresh same-target implementer on the integration branch):** DONE — commit `196dae19f83568e56b42dc40a413409b29ead12a` (parent `885408dd`; +9/−3 inside the generated `ignoreSigterm` wrapper: handler installed at module scope before any sentinel write). `node --test` 19/19 (0 cancelled, 12–13s); 5× determinism loop 30/30; `pnpm test:smoke` 139/139; lint/format 0; codex `--uncommitted` 0 findings; leak sweep clean. Note: the deferred minors p01-r3-m1/m2 name "next touch of `cleanup.test.mjs`" as their trigger — the root keeps them deferred (minimal-diff final cycle) and carries the trigger note into the wave summary follow-ups. Review row `final` → `fixes_completed`.
+
+### Task p01-t02: (review) Hoist the SIGTERM-ignore handler in the regression fixture
+
+**Status:** completed
+**Commit:** 196dae19f83568e56b42dc40a413409b29ead12a
+
+**Outcome:** the SIGTERM-ignoring regression fixture is deterministic — the ignore handler is installed before the sentinel the parent waits on.
+
+**Files changed:** `tools/smoke/runner/cleanup.test.mjs` — generated wrapper source only.
+
+**Verification:** Run: `node --test tools/smoke/runner/cleanup.test.mjs`; `pnpm test:smoke`; `pnpm lint`; `pnpm format` — Result: all exit 0.
 
 ## Deviations from Plan / Design
 
