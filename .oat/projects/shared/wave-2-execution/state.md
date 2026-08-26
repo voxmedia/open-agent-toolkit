@@ -118,19 +118,19 @@ oat_implement_exit_gate:
   receive_completed: true
   failure: 'attempts 1 and 3 (runs 4199a1c1, a31a6325): review_completed_targeting_correlation_failed — the claude-fable-skip-permissions child backgrounded the DoD gates behind a waiter and ended its headless turn before writing the artifact (child transcripts 283c13cb, 96f809f2); no artifact carried either run ID; project-log entries recorded by the gate (56f19f0f, 72e840cd). Attempt 2 (run baa84df9) runner killed by host at ~90s, no envelope. Gate blocked at maxAttempts=2; not self-authorized further.'
   updated_at: '2026-08-26T22:28:17.268Z'
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T19:08:06.587Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T22:30:24.052Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T22:30:30.029Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_post_implement_sequence:
   status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
   source: configured # workflow.postImplementSequence
   final_phase: p01
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending # pending | approved | not_required
   approval_source: null # null | user | oat-autonomous
   post_approval: []
