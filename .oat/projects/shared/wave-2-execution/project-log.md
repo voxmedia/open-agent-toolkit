@@ -60,6 +60,10 @@ Observation: wave-2 archived its backlog item before summary.md existed, contrad
 
 target=claude-fable-skip-permissions threshold=important exit=1 status=targeting_correlation_failed
 
+### 2026-08-26 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important exit=1 status=targeting_correlation_failed
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
