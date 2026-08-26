@@ -206,6 +206,13 @@ round-2 reviewer's reorder mutation (E2b) caught it. **Skill signal (gap):**
 reviewer briefs for ordering/containment claims should ask for both delete-
 and reorder-class mutations, not "a mutation".
 
+### 2026-08-26 · structural · oat-reviewer · p01 round 3 (narrowed, final)
+
+`w1-p01-review-003` (opus, auto, range `6a9ed1af..fd8c7cb9`) → 0C/0I/0M/2m; all
+round-2 dispositions verified fixed; two minors deferred with rationale. Row
+`p01` → `passed`. Artifact `reviews/archived/p01-review-2026-08-26T150044Z.md`.
+Phase history: 3 append-only commits, one file.
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)

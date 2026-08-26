@@ -139,10 +139,10 @@ _- Outstanding Items_
 
 #### Phase Outcomes
 
-| Phase | Worktree                | Implementer outcome                                                                                          | Review outcome                         | Fix rounds      | Merged |
-| ----- | ----------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- | --------------- | ------ |
-| p01   | `.worktrees/wave-1/p01` | DONE_WITH_CONCERNS (aedced64; DoD 10/10 + test:smoke green; codex 3×P2 fixed pre-commit)                     | round 1: 0C/1I/1M/2m → fix round       | 1 (in progress) | -      |
-| p02   | `.worktrees/wave-1/p02` | DONE_WITH_CONCERNS (c8fdefc3 + fix b486beb6; focused pass; release gates red pending wave-level 0.2.33 bump) | passed (round 2: 0C/0I/0M/1m deferred) | 1               | -      |
+| Phase | Worktree                | Implementer outcome                                                                                          | Review outcome                         | Fix rounds | Merged |
+| ----- | ----------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- | ---------- | ------ |
+| p01   | `.worktrees/wave-1/p01` | DONE_WITH_CONCERNS (aedced64 + fixes 6a9ed1af, fd8c7cb9; DoD 10/10 green)                                    | passed (round 3: 0C/0I/0M/2m deferred) | 2          | -      |
+| p02   | `.worktrees/wave-1/p02` | DONE_WITH_CONCERNS (c8fdefc3 + fix b486beb6; focused pass; release gates red pending wave-level 0.2.33 bump) | passed (round 2: 0C/0I/0M/1m deferred) | 1          | -      |
 
 ### Review Received: p02 (round 1)
 
@@ -213,7 +213,23 @@ _- Outstanding Items_
 
 **Fix round 2 (`w1-p01-fix-002`):** DONE — append-only commit `fd8c7cb9b7fa60c5b95fb0174d1a76c58814a698` (parent `6a9ed1af` immutable; +16/−9, one file). M1-r2 existence assertions inside the `reapBeforeCleanup` seam (E2b reorder mutation now red; E1/E2/I1-revert still red); m1-r2 `forced` flag + third `reapSummary` branch (P1-shaped probe: no `SIGKILL` in message); m2-r2 `timedOut` derived from status; m3-r2 comment narrowed. `node --test` 19/19 in 12s (0 cancelled); `pnpm test:smoke` 139/139; full DoD 10/10 exit 0 (`pnpm test` 130s); codex fix-diff pass: zero findings. Root verified range and parent. Row `p01` → `fixes_completed`.
 
-**Next:** narrowed re-review round 3 (`w1-p01-review-003`, range `6a9ed1af..fd8c7cb9`, final permitted cycle) → `passed`.
+### Review Received: p01 (round 3, narrowed — final cycle)
+
+**Date:** 2026-08-26
+**Review artifact:** reviews/archived/p01-review-2026-08-26T150044Z.md (reviewed head `fd8c7cb9b7fa60c5b95fb0174d1a76c58814a698`, range `6a9ed1af..fd8c7cb9`, prior round 2 / head `6a9ed1af`, invocation auto, dispatch `w1-p01-review-003`, model opus)
+
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 2. Disposition Verification: M1-r2, m1-r2, m2-r2, m3-r2 all **verified fixed**; mutation battery E2b/E2/E1/I1-revert all red, fidelity control 19/19; P1-shaped probe names self-exit with no `SIGKILL`; `node --test` 19/19 / 0 cancelled / 13.2s; `pnpm test:smoke` 139/139; oxlint/oxfmt clean; one file +16/−9; parent immutable; leak sweep clean.
+
+**Verification record (round-2 fix dispositions):** what — M1-r2, m1-r2, m2-r2, m3-r2; how — independent round-3 reviewer re-ran the full mutation battery and the P1 probe on scratch copies; where — round-3 artifact `## Disposition Verification` / `## Adversarial Probes`.
+
+**Deferred Findings (Minor):**
+
+- p01-r3-m1 — the round-2 minor fixes (`forced` / third `reapSummary` branch; `timedOut` derivation) have no regression coverage (reverting either leaves 19/19 green). Rationale: diagnostics-wording branches on the harness's last-resort path, already verified by reviewer probes across two rounds; this is the final permitted cycle for the scope and adding tests would open a fourth cycle. Follow-up trigger: next touch of `tools/smoke/runner/cleanup.test.mjs`.
+- p01-r3-m2 — `forced` cannot distinguish a dead-but-unreaped (zombie) child, so a zombie is still reported as "SIGKILL reaped it". Rationale: containment unaffected (the child is reaped either way); wording-only on a rare path; reviewer supplied a reap-result-based fix for the same follow-up.
+
+**Cross-model record discrepancy (recorded, not a finding):** the implementer's `codex review --uncommitted` pass on the round-2 fix diff reported zero findings; the round-3 reviewer's independent `codex review --commit fd8c7cb9` (same codex-cli 0.149.1) returned one P2, which the reviewer rejected with measured evidence (its premise — `kill()` false with `forced` true — is unreachable). Different invocations over the same diff; both records retained.
+
+**Review row `p01` → `passed`.**
 
 #### Outstanding Items
 
