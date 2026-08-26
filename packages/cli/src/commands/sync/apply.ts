@@ -146,6 +146,9 @@ export async function runSyncApply(
   const providerMismatches = scopePlans
     .map((scopePlan) => scopePlan.providerMismatches)
     .filter((mismatch) => mismatch !== undefined);
+  const versionSkew = scopePlans
+    .map((scopePlan) => scopePlan.versionSkew)
+    .filter((skew) => skew !== undefined);
   const materializationExtensions = scopePlans.flatMap(
     (scopePlan) => scopePlan.materializationExtensions,
   );
@@ -172,6 +175,7 @@ export async function runSyncApply(
       plans: scopePlans.map((scopePlan) => scopePlan.plan),
       summary,
       providerMismatches,
+      versionSkew,
       materializationExtensions,
       codexExtensions,
     });

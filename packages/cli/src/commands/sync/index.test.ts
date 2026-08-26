@@ -15,7 +15,8 @@ import {
   type SyncPlan,
   type SyncResult,
 } from '@engine/index';
-import type { Manifest } from '@manifest/index';
+import { CliError } from '@errors/index';
+import { createEmptyManifest, type Manifest } from '@manifest/index';
 import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
 import type {
   CodexExtensionApplyResult,
@@ -46,6 +47,7 @@ interface HarnessOptions {
   interactive?: boolean;
   loadedSyncConfig?: SyncConfig;
   loadedManifests?: Manifest[];
+  loadManifestError?: Error;
   configAwareResults?: ConfigAwareAdaptersResult[];
   providerSelectResponses?: Array<string[] | null>;
   canonicalEntries?: CanonicalEntry[];
@@ -113,6 +115,10 @@ function createManifest(overrides: Partial<Manifest> = {}): Manifest {
     lastUpdated: '2026-02-14T00:00:00.000Z',
     ...overrides,
   };
+}
+
+function versionSkewWarning(producingVersion: string): string {
+  return `Sync manifest version skew [project]: manifest produced by oat ${producingVersion}, invoking oat ${OAT_VERSION}.`;
 }
 
 function createCanonicalEntry(name = 'skill-one'): CanonicalEntry {
@@ -290,7 +296,12 @@ function createHarness(options: HarnessOptions = {}): {
         ? (options.home ?? '/tmp/home')
         : (options.cwd ?? '/tmp/workspace'),
     ),
-    loadManifest: vi.fn(async () => manifestQueue.shift() ?? createManifest()),
+    loadManifest: vi.fn(async () => {
+      if (options.loadManifestError) {
+        throw options.loadManifestError;
+      }
+      return manifestQueue.shift() ?? createManifest();
+    }),
     loadSyncConfig: vi.fn(
       async () =>
         options.loadedSyncConfig ?? (DEFAULT_SYNC_CONFIG as SyncConfig),
@@ -517,6 +528,201 @@ describe('createSyncCommand', () => {
       '/tmp/workspace/.oat/sync/manifest.json',
     );
     expect(capture.info).toContain('\nNo changes required.');
+  });
+
+  it('apply: warns once about version skew before the sync plan executes', async () => {
+    const staleManifest = createManifest({ oatVersion: '0.0.1' });
+    const { capture, command, executeSyncPlan } = createHarness({
+      loadedManifests: [staleManifest],
+      plans: [createPlan('create_symlink')],
+    });
+
+    let warningsWhenExecuted: string[] = [];
+    executeSyncPlan.mockImplementationOnce(async () => {
+      warningsWhenExecuted = [...capture.warn];
+      return { applied: 1, failed: 0, skipped: 0 };
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    const expected = versionSkewWarning('0.0.1');
+    expect(warningsWhenExecuted).toContain(expected);
+    expect(capture.warn.filter((message) => message === expected)).toHaveLength(
+      1,
+    );
+    expect(executeSyncPlan).toHaveBeenCalledTimes(1);
+    expect(capture.success).toContain('\nSync applied successfully.');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('dry-run: warns about version skew without executing the sync plan', async () => {
+    const { capture, command, executeSyncPlan } = createHarness({
+      loadedManifests: [createManifest({ oatVersion: '0.0.1' })],
+      plans: [createPlan('create_symlink')],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: ['--dry-run'],
+    });
+
+    expect(executeSyncPlan).not.toHaveBeenCalled();
+    expect(
+      capture.warn.filter((message) => message === versionSkewWarning('0.0.1')),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('apply --json: exposes version skew structurally with no human warning', async () => {
+    const { capture, command, executeSyncPlan } = createHarness({
+      loadedManifests: [createManifest({ oatVersion: '0.0.1' })],
+      plans: [createPlan('create_symlink')],
+      executeResults: [{ applied: 1, failed: 0, skipped: 0 }],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    expect(executeSyncPlan).toHaveBeenCalledTimes(1);
+    expect(capture.jsonPayloads).toHaveLength(1);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      dryRun: false,
+      versionSkew: [
+        {
+          scope: 'project',
+          producingVersion: '0.0.1',
+          invokingVersion: OAT_VERSION,
+        },
+      ],
+    });
+    expect(capture.info).toHaveLength(0);
+    expect(capture.warn).toHaveLength(0);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('dry-run --json no-op: exposes version skew structurally with no human warning', async () => {
+    const { capture, command, executeSyncPlan } = createHarness({
+      loadedManifests: [createManifest({ oatVersion: '0.0.1' })],
+      plans: [createEmptyPlan('project')],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+      commandArgs: ['--dry-run'],
+    });
+
+    expect(executeSyncPlan).not.toHaveBeenCalled();
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      dryRun: true,
+      summary: { plannedOperations: 0 },
+      versionSkew: [
+        {
+          scope: 'project',
+          producingVersion: '0.0.1',
+          invokingVersion: OAT_VERSION,
+        },
+      ],
+    });
+    expect(capture.info).toHaveLength(0);
+    expect(capture.warn).toHaveLength(0);
+  });
+
+  it('emits no version-skew diagnostic when the manifest matches the invoking version', async () => {
+    const { capture, command } = createHarness({
+      loadedManifests: [createManifest({ oatVersion: OAT_VERSION })],
+      plans: [createPlan('create_symlink')],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    expect(
+      capture.warn.filter((message) => message.includes('version skew')),
+    ).toHaveLength(0);
+    expect(capture.success).toContain('\nSync applied successfully.');
+  });
+
+  it('--json: omits version-skew entries when the manifest matches the invoking version', async () => {
+    const { capture, command } = createHarness({
+      loadedManifests: [createManifest({ oatVersion: OAT_VERSION })],
+      plans: [createPlan('create_symlink')],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ versionSkew: [] });
+    expect(capture.warn).toHaveLength(0);
+  });
+
+  it('reports both older and newer producing versions as symmetric inequality', async () => {
+    for (const producingVersion of ['0.0.1', '999.0.0']) {
+      const { capture, command } = createHarness({
+        loadedManifests: [createManifest({ oatVersion: producingVersion })],
+        plans: [createPlan('create_symlink')],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'project'],
+      });
+
+      expect(capture.warn).toContain(versionSkewWarning(producingVersion));
+
+      const jsonHarness = createHarness({
+        loadedManifests: [createManifest({ oatVersion: producingVersion })],
+        plans: [createPlan('create_symlink')],
+      });
+
+      await runSyncCommand(jsonHarness.command, {
+        globalArgs: ['--scope', 'project', '--json'],
+      });
+
+      expect(jsonHarness.capture.jsonPayloads[0]).toMatchObject({
+        versionSkew: [
+          {
+            scope: 'project',
+            producingVersion,
+            invokingVersion: OAT_VERSION,
+          },
+        ],
+      });
+    }
+  });
+
+  it('treats an absent manifest as no skew because it is created at the invoking version', async () => {
+    const { capture, command } = createHarness({
+      loadedManifests: [createEmptyManifest()],
+      plans: [createEmptyPlan('project')],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ versionSkew: [] });
+    expect(capture.warn).toHaveLength(0);
+  });
+
+  it('propagates manifest validation failures instead of reporting version skew', async () => {
+    const validationError = new CliError(
+      'Manifest at /tmp/workspace/.oat/sync/manifest.json failed validation: oatVersion: Too small. Delete or repair the file and re-run oat sync.',
+    );
+    const { capture, command, executeSyncPlan } = createHarness({
+      loadManifestError: validationError,
+    });
+
+    await expect(
+      runSyncCommand(command, { globalArgs: ['--scope', 'project'] }),
+    ).rejects.toBe(validationError);
+
+    expect(executeSyncPlan).not.toHaveBeenCalled();
+    expect(capture.warn).toHaveLength(0);
+    expect(capture.jsonPayloads).toHaveLength(0);
   });
 
   it('handles partial failure gracefully', async () => {

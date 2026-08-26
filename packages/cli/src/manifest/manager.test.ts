@@ -81,6 +81,36 @@ describe('manifest manager', () => {
         message: expect.stringContaining('version'),
       });
     });
+
+    it('throws CliError when oatVersion is empty or missing', async () => {
+      await mkdir(join(workDir, '.agents'), { recursive: true });
+      await writeFile(
+        manifestPath,
+        JSON.stringify({
+          version: 1,
+          oatVersion: '',
+          entries: [],
+          lastUpdated: '2026-02-14T00:00:00.000Z',
+        }),
+        'utf8',
+      );
+
+      await expect(loadManifest(manifestPath)).rejects.toMatchObject({
+        message: expect.stringContaining('oatVersion'),
+      });
+
+      await writeFile(
+        manifestPath,
+        JSON.stringify({
+          version: 1,
+          entries: [],
+          lastUpdated: '2026-02-14T00:00:00.000Z',
+        }),
+        'utf8',
+      );
+
+      await expect(loadManifest(manifestPath)).rejects.toBeInstanceOf(CliError);
+    });
   });
 
   describe('saveManifest', () => {

@@ -39,6 +39,7 @@ import {
   toMaterializationOperations,
   type ProviderAdapter,
 } from '@providers/shared';
+import { OAT_VERSION } from '@shared/oat-version';
 import { formatSyncPlan } from '@ui/output';
 import { Command, Option } from 'commander';
 
@@ -48,6 +49,7 @@ import type {
   ScopeSyncPlan,
   SyncCommandDependencies,
   SyncProviderMismatches,
+  SyncVersionSkew,
 } from './sync.types';
 
 function defaultDependencies(): SyncCommandDependencies {
@@ -228,6 +230,33 @@ async function maybeResolveProviderMismatches(
   };
 }
 
+/**
+ * Derive the advisory version-skew diagnostic for a loaded scope manifest.
+ *
+ * An absent manifest never reports skew: `loadManifest` deliberately creates an
+ * empty manifest stamped with the invoking version, so the two strings match.
+ * A malformed or empty `oatVersion` never reaches here because the manifest
+ * schema already fails closed; the non-empty guard keeps corruption from being
+ * downgraded into a warning.
+ */
+function detectVersionSkew(
+  scope: ScopeSyncPlan['scope'],
+  manifest: ScopeSyncPlan['manifest'],
+): SyncVersionSkew | undefined {
+  const producingVersion = manifest.oatVersion;
+  const invokingVersion = OAT_VERSION;
+
+  if (
+    producingVersion.length === 0 ||
+    invokingVersion.length === 0 ||
+    producingVersion === invokingVersion
+  ) {
+    return undefined;
+  }
+
+  return { scope, producingVersion, invokingVersion };
+}
+
 async function computePlans(
   context: CommandContext,
   dependencies: SyncCommandDependencies,
@@ -313,6 +342,7 @@ async function computePlans(
       activeAdapterNames,
       plan,
       providerMismatches: resolved.mismatches,
+      versionSkew: detectVersionSkew(scope, manifest),
       materializationExtensionPlans,
       materializationExtensions,
     });
@@ -356,6 +386,26 @@ function logNonInteractiveMismatchGuidance(
   }
 }
 
+function logVersionSkewWarnings(
+  context: CommandContext,
+  scopePlans: ScopeSyncPlan[],
+): void {
+  if (context.json) {
+    return;
+  }
+
+  for (const scopePlan of scopePlans) {
+    const skew = scopePlan.versionSkew;
+    if (!skew) {
+      continue;
+    }
+
+    context.logger.warn(
+      `Sync manifest version skew [${skew.scope}]: manifest produced by oat ${skew.producingVersion}, invoking oat ${skew.invokingVersion}.`,
+    );
+  }
+}
+
 async function runSyncCommand(
   context: CommandContext,
   dependencies: SyncCommandDependencies,
@@ -367,6 +417,7 @@ async function runSyncCommand(
     allowedCanonicalPaths,
   );
   logNonInteractiveMismatchGuidance(context, scopePlans);
+  logVersionSkewWarnings(context, scopePlans);
 
   if (context.dryRun) {
     runSyncDryRun(context, scopePlans, dependencies);
