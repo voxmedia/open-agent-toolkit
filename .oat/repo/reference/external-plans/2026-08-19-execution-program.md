@@ -77,6 +77,21 @@ supersedes the "execution deferred by operator on 2026-08-19" record.
 - **Composition rationale:** The plan changes shipped CLI behavior and all five
   lockstep package manifests. Isolating it prevents a second plan from
   competing for the same release baseline and keeps rollback reviewable.
+- **Closeout (2026-08-26):** merged via PR #217 (`33149b26`), public packages
+  0.2.34. The lane shipped in full (advisory before the dry-run/apply branch,
+  `versionSkew` in both JSON envelopes, restamp derived from the same
+  diagnostic); the lockstep bump was pre-planned at the drift refresh per the
+  W1 rule. The configured implement exit gate blocked in generation 1 (its
+  `--avoid none` routed to a same-family Fable target whose headless children
+  yielded on background work); the operator removed `--avoid none` and
+  generation 2 passed on Cursor GPT-5.6 Sol. Follow-ups filed as backlog items
+  (silent `oatVersion` restamps outside sync, gate headless-yield contract and
+  `--avoid none` audit, resolver `--stamp`, test-only version policy,
+  deterministic-smoke worktree hygiene). Rules adopted for W3–W4: keep the gate
+  as now configured and verify the selected target in the `gate-start` line;
+  launch gates detached (`nohup … & disown`) and watch the receipt; summary
+  before any archive step; verify every commit with `git log` before the next
+  launch.
 
 ## Wave 3: Hermetic CLI assets
 
