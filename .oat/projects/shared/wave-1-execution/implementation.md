@@ -211,7 +211,9 @@ _- Outstanding Items_
 
 **Cycle accounting:** this is review cycle 2 of the 3-cycle governance cap for scope p01; round 3 is the last permitted cycle, so the round-3 disposition passes on 0C/0I and defers any residual Medium/Minor with rationale rather than opening a fourth cycle.
 
-**Next:** fix round `w1-p01-fix-002`, then narrowed re-review round 3 (`w1-p01-review-003`) → `passed`.
+**Fix round 2 (`w1-p01-fix-002`):** DONE — append-only commit `fd8c7cb9b7fa60c5b95fb0174d1a76c58814a698` (parent `6a9ed1af` immutable; +16/−9, one file). M1-r2 existence assertions inside the `reapBeforeCleanup` seam (E2b reorder mutation now red; E1/E2/I1-revert still red); m1-r2 `forced` flag + third `reapSummary` branch (P1-shaped probe: no `SIGKILL` in message); m2-r2 `timedOut` derived from status; m3-r2 comment narrowed. `node --test` 19/19 in 12s (0 cancelled); `pnpm test:smoke` 139/139; full DoD 10/10 exit 0 (`pnpm test` 130s); codex fix-diff pass: zero findings. Root verified range and parent. Row `p01` → `fixes_completed`.
+
+**Next:** narrowed re-review round 3 (`w1-p01-review-003`, range `6a9ed1af..fd8c7cb9`, final permitted cycle) → `passed`.
 
 #### Outstanding Items
 
