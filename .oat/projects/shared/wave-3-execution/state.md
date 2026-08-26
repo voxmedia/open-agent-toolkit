@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues:
@@ -12,8 +12,15 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {}
+  phase_attempt_usage:
+    p01:
+      used_attempts: 0
+      pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -81,19 +88,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T23:08:35.576Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T23:09:01.251Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T23:22:23.493Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-3-execution
 
-**Status:** Plan complete — awaiting the configured plan gate, then `oat-project-implement`
+**Status:** Implement — p01 dispatched (plan gate passed round 1, run 59ebe179)
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
 ## Current Phase
 
-Plan (complete) — thin wave wrapper for the single Wave 3 external plan
+Implement (in progress; plan gate passed 2026-08-26, 0 findings) — thin wave wrapper for the single Wave 3 external plan
 (`2026-08-19-hermetic-cli-assets-root.md`); solo phase `p01` on the
 integration checkout `wave-3-execution` (BASE_SHA `39cea801`; code baseline
 `33149b26`, public packages 0.2.34).
@@ -112,8 +119,8 @@ integration checkout `wave-3-execution` (BASE_SHA `39cea801`; code baseline
 - ✓ Preflight: branch from main `39cea801`; `pnpm run worktree:init`, `pnpm build`, `pnpm type-check` exit 0
 - ✓ Wave-boundary drift refresh: 1 PASS / 0 MINOR-DRIFT / 0 STOP (rule-1 addendum recorded)
 - ✓ Wrapper scaffolded (discovery, plan, orchestration log)
-- ⧗ Configured plan gate
-- ⧗ Phase p01 via `oat-project-implement`
+- ✓ Configured plan gate passed round 1 (cursor-gpt-5-6-sol-xhigh, run 59ebe179, 0C/0I/0M/0m)
+- ⧗ Phase p01 via `oat-project-implement` (Opus implementer, request w3-p01-impl-001)
 
 ## Blockers
 
@@ -121,4 +128,4 @@ None
 
 ## Next Milestone
 
-Plan gate `passed` → dispatch p01 (Opus implementer) → phase review → final review → configured exit gate → post-implement sequence → PR → merge → wave-close. Completion tail: deferred to program close.
+p01 implementation → phase review (Opus implementer) → phase review → final review → configured exit gate → post-implement sequence → PR → merge → wave-close. Completion tail: deferred to program close.

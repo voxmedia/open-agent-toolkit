@@ -184,13 +184,13 @@ git commit -m "feat(p01-t01): honor OAT_ASSETS_DIR in resolveAssetsRoot and isol
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-08-26 | reviews/artifact-plan-review-2026-08-26T231805Z.md | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target              |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------------ |
+| p01    | code     | pending | -          | -                                                           | -             | -          | -                        |
+| final  | code     | pending | -          | -                                                           | -             | -          | -                        |
+| plan   | artifact | passed  | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T231805Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| spec   | artifact | pending | -          | -                                                           | -             | -          | -                        |
+| design | artifact | pending | -          | -                                                           | -             | -          | -                        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
