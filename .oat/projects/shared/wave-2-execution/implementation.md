@@ -47,7 +47,7 @@ oat_generated: false
 
 **Outcome (what changed):**
 
-- `oat sync` now surfaces producer/invoker version skew before any mutation: a per-scope `versionSkew` diagnostic (`scope`, `producingVersion`, `invokingVersion`) is derived while building each scope plan, one human warning per skewed scope is logged before the dry-run/apply branch (suppressed in JSON mode), and both JSON envelopes carry the structured array (`[]` when none). Exit codes, counts, and apply eligibility are unchanged; the apply restamp is now derived from the same diagnostic so the two cannot drift; absent/invalid manifests keep their existing semantics. Lockstep bump 0.2.33 → 0.2.34.
+- `oat sync` now surfaces producer/invoker version skew before any sync-manifest mutation (the restamp): a per-scope `versionSkew` diagnostic (`scope`, `producingVersion`, `invokingVersion`) is derived while building each scope plan, one human warning per skewed scope is logged before the dry-run/apply branch (suppressed in JSON mode), and both JSON envelopes carry the structured array (`[]` when none). Exit codes, counts, and apply eligibility are unchanged; the apply restamp is now derived from the same diagnostic so the two cannot drift; absent/invalid manifests keep their existing semantics. Lockstep bump 0.2.33 → 0.2.34.
 
 **Key files touched:**
 
@@ -79,7 +79,7 @@ oat_generated: false
 
 <!-- orchestration-runs-start -->
 
-### Run 1 — 2026-08-26 (in progress)
+### Run 1 — 2026-08-26 (complete: 1 phase passed, 0 failed, 0 stopped)
 
 - Branch: `wave-2-execution`; Tier 1 (native `oat-phase-implementer` /
   `oat-reviewer`); dispatch policy managed / `high` (Claude `opus`, enforced —
@@ -147,7 +147,10 @@ oat_generated: false
 
 #### Outstanding Items
 
-- (none yet)
+- p01-r2-m1 — restamp keyed off optional `ScopeSyncPlan.versionSkew` (deferred; trigger: next `sync.types.ts` touch; not published API — `packages/cli/package.json` declares only `bin`).
+- p01-r2-m2 — source-plan step-1 wording drift (recorded; plan immutable).
+- Backlog candidate (round-1 m4, scoped by final review): three sibling call sites restamp `oatVersion` silently — `init/index.ts:1187`, `remove/skill/remove-skill.ts:347`, `status/index.ts:887` — plus the pre-existing "No changes required." message on a restamp-only apply (`apply.ts:172`); file at wave close.
+- Docs (round-1 m3 / final m5): `apps/oat-docs/docs/provider-sync/commands.md` — handled at the `document` step.
 
 <!-- orchestration-runs-end -->
 
@@ -159,11 +162,29 @@ oat_generated: false
 
 - Plan gate passed on round 3; p01 dispatched → DONE (`b257e908`); review round 1 (1M/4m) → fix `023c2229` → round 2 passed (2 minors deferred).
 
+### Review Received: final (round 1)
+
+**Date:** 2026-08-26
+**Review artifact:** reviews/archived/final-review-2026-08-26T210420Z.md (reviewed head `a4a7804d592a795d78dfa6d76e73acb2197c5232`, range `1bd5424b..a4a7804d`, invocation auto, dispatch `w2-final-review-001`, model opus)
+
+**Findings:** Critical 0 · Important 0 · Medium 3 · Minor 6 — no code defect; all Done criteria and Review-focus items verified at HEAD from source plus nine end-to-end probes against the built CLI (incl. a `chmod 500 .oat/sync` probe proving the advisory reaches stderr before the restamp hard-fails); gates re-run green; `release:check-versions` compared 0.2.33 (origin/main `1bd5424b`) vs 0.2.34.
+
+**Deferred Findings Re-evaluation:** p01-r2-m1 and p01-r2-m2 remain deferred (new bounding evidence: `ScopeSyncPlan`/`runSyncApply` are not published API — `packages/cli/package.json` declares only `bin`).
+
+**Dispositions (all bookkeeping; resolved in artifact by the root, this commit):**
+
+- M1 malformed Done-criteria table → rebuilt from the final-review coverage table.
+- M2 table verified at a superseded head with a stale trailer → superseded by the final-head table (note added).
+- M3 checklist order violated (archival before `summary.md`) → `summary.md` generated now and rolled up (project-log rollup), items 2–3 checked, deviation recorded in the Deviations table, W3–W4 rule adopted.
+- m1 stale `oat_last_commit` → advanced with convention note. m2 Run 1 "(in progress)" / empty Outstanding Items → completed + mirrored. m3 "before any mutation" overstated → "before any sync-manifest mutation (the restamp)". m4 sibling restamp sites under-scoped → all three call sites + the "No changes required." message recorded in the backlog candidate. m5 docs → `document` step. m6 pre-existing no-op message → paired with the backlog candidate.
+
+**Review row `final` → `fixes_completed`; narrowed round 2 next.**
+
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review  | Source Artifact                                      | Planned / Documented                                           | Actual / Accepted                                                                                                           | Reason                                                                                                                                                                                               | Source of Truth                                                               | Follow-up                                                      |
+| -------------- | ---------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| closeout order | plan.md § Implementation Complete (strictly ordered) | item 3 (`summary.md` roll-up) before item 4 (backlog archival) | backlog archival `a4a7804d` landed before `summary.md` existed; the orchestration-log synthesis (`acc0c292`) did precede it | root sequencing error — the roll-up was scheduled for the pre-approval `summary` step; `summary.md` was produced at final-review receive and rolled up before any archive step of the project itself | plan.md ordering (source of truth); deviation accepted, archival not reverted | W3–W4 rule: generate `summary.md` before `oat backlog archive` |
 
 ## Test Results
 
@@ -175,7 +196,7 @@ oat_generated: false
 
 **What shipped:**
 
-- `oat sync` version-skew advisory: reports when a loaded manifest was produced by a different CLI version than the invoking one, in human (one warning per scope, before any restamp) and JSON (`versionSkew` array in apply and dry-run envelopes) modes; advisory only.
+- `oat sync` version-skew advisory: reports when a loaded manifest was produced by a different CLI version than the invoking one, in human (one warning per scope, before the manifest restamp) and JSON (`versionSkew` array in apply and dry-run envelopes) modes; advisory only.
 - Manifest restamp on apply now derives from the same diagnostic (no duplicated predicate).
 - Lockstep public-package bump 0.2.33 → 0.2.34.
 

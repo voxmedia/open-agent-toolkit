@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 023c2229
+oat_last_commit: a4a7804d # last commit on the branch (code last changed at 023c2229)
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260718-warn-when-oat-sync-uses' }
@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T19:08:06.587Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T20:52:59.616Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T21:09:03.344Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -130,4 +130,4 @@ None
 
 ## Next Milestone
 
-Closeout: final DoD → orchestration-log synthesis → serialized backlog archival → final review → configured exit gate → summary/document/PR → autonomous HiLL → complete-state.
+Closeout remaining: final review round 2 (narrowed) → configured exit gate → pre-approval sequence (summary refresh → document → PR) → autonomous HiLL → complete-state. Final DoD, synthesis, summary.md, and backlog archival are done.

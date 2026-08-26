@@ -49,3 +49,7 @@ Observation: a compound cd into a phase worktree persisted across orchestrator s
 ### 2026-08-26 · general · friction · deterministic smoke tier in linked worktrees
 
 Observation: the exit-gate reviewer's pnpm test failed once in tools/smoke/deterministic (git worktree add collided in the shared git dir), passed on isolated rerun, and leaked run-scoped smoke-automated worktrees and branches. Impact: root cleanup of the leaked refs; no wave code involved. Recommendation: the deterministic tier should namespace or clean its worktrees on failure and tolerate concurrent runs in linked worktrees.
+
+### 2026-08-26 · general · feedback · closeout ordering
+
+Observation: wave-2 archived its backlog item before summary.md existed, contradicting the wrapper plan's strictly ordered Implementation Complete checklist (synthesis + summary roll-up before archival). Impact: a final-review Medium and a recorded deviation; no data loss. Recommendation: generate summary.md immediately after the orchestration-log synthesis and before oat backlog archive; add this to the wave skill's closeout sequence wording.

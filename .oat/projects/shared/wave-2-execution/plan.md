@@ -165,7 +165,7 @@ git commit -m "feat(p01-t01): warn when oat sync manifest and invoking CLI versi
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01    | code     | passed          | 2026-08-26 | reviews/archived/p01-review-2026-08-26T204852Z.md           | 023c222948225be87955500cf6b73147ef6a75bd | auto       | -           |
-| final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| final  | code     | fixes_completed | 2026-08-26 | reviews/archived/final-review-2026-08-26T210420Z.md         | a4a7804d592a795d78dfa6d76e73acb2197c5232 | auto       | -           |
 | plan   | artifact | fixes_completed | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T192011Z.md | -                                        | -          | -           |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -181,13 +181,14 @@ closeout sequence):
 
 1. [x] 1/1 phases, 1/1 tasks complete; the source plan's `## Done criteria`
        confirmed (recorded in `implementation.md` § Done-criteria confirmation)
-2. [ ] Full DoD gates green on the integration branch (final verification,
-       exit codes captured per gate)
-3. [ ] Orchestration-log end-of-run synthesis written, then rolled up into
-       `summary.md` — before any archive step
-4. [ ] **Serialized backlog bookkeeping**, only after 2 and 3:
-       `oat backlog archive BL-260718-warn-when-oat-sync-uses` with a real
-       outcome summary, one commit
+2. [x] Full DoD gates green on the integration branch (final verification at
+       `4c04963c`, exit codes captured per gate; re-run by the final review at `a4a7804d`)
+3. [x] Orchestration-log end-of-run synthesis written (`acc0c292`), rolled up into
+       `summary.md` at final-review receive — before any archive step of the project;
+       note: item 4 landed one step earlier than this roll-up (deviation recorded in
+       `implementation.md`)
+4. [x] **Serialized backlog bookkeeping** (`a4a7804d`): `oat backlog archive
+BL-260718-warn-when-oat-sync-uses` with a real outcome summary, one commit
 
 ## References
 
