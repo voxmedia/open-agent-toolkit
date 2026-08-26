@@ -871,13 +871,19 @@ const fixture = process.env.SMOKE_FIXTURE;
 const sentinel = process.env.SMOKE_SENTINEL;
 const pauseStage = process.env.SMOKE_PAUSE_STAGE;
 const ignoreSigterm = process.env.SMOKE_IGNORE_SIGTERM === '1';
+if (ignoreSigterm) {
+  // Regression fixture only: swallow SIGTERM so the harness must fall back to
+  // its force-kill path. Installed at module scope, before any sentinel write,
+  // so a signal that arrives as soon as the parent sees the sentinel is
+  // deterministically ignored rather than racing this handler's installation.
+  process.on('SIGTERM', () => {});
+}
 const pauseForTermination = () =>
   new Promise((resolvePromise) => {
     const timer = setInterval(() => {}, 1_000);
     if (ignoreSigterm) {
-      // Regression fixture only: swallow SIGTERM so the harness must fall back
-      // to its force-kill path. Never resolves; only SIGKILL ends this child.
-      process.on('SIGTERM', () => {});
+      // The interval alone holds this child alive; the promise never resolves,
+      // so only SIGKILL ends it.
       return;
     }
     process.once('SIGTERM', () => {
