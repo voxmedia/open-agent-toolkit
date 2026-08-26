@@ -654,10 +654,19 @@ async function waitForFile(path, child) {
 //
 // Sizing: the child finishes its SIGTERM cleanup and exits in ~1s (measured
 // repeatedly at 0.9-1.7s while the full workspace suite ran on a saturated
-// 14-core machine). This deadline is therefore ~35x the observed worst case --
-// deliberately generous, because a bound that is merely "comfortable" turns
-// scheduler stalls on a contended CI runner into a flaky red gate, while an
-// over-generous bound only makes a true wedge fail in a minute instead of never.
+// 14-core machine). One `SIGTERM during drive` run on 2026-08-26 nevertheless
+// exceeded 10s -- load average above 14 with a sibling lane building, empty
+// stdout/stderr, never reproduced across 8+ later runs. That outlier is why this
+// bound is not 10s: the child's own post-SIGTERM budget legitimately includes
+// run-smoke's abort grace period plus git worktree/branch teardown plus a
+// recursive rm, all of which stretch under contention.
+//
+// This deadline is therefore ~35x the typical case and ~6x the single slowest
+// run observed -- deliberately generous, because a bound that is merely
+// "comfortable" turns scheduler stalls on a contended CI runner into a flaky red
+// gate, while an over-generous bound only makes a true wedge fail in a minute
+// instead of never. Worst case before the suite reports is 2 x (60 + 15)s across
+// the two stage cases.
 const SIGNAL_CHILD_EXIT_TIMEOUT_MS = 60_000;
 // Second bound, after SIGKILL. A killed child runs no cleanup, so this only
 // covers reaping and parent event-loop scheduling under the same contention.
@@ -665,6 +674,12 @@ const SIGNAL_CHILD_REAP_TIMEOUT_MS = 15_000;
 // Deliberately tiny bound used only by the forced-timeout regression below, so
 // proving the timeout path does not slow the suite.
 const SIGNAL_CHILD_TIMEOUT_PROBE_MS = 250;
+// Upper bound for an assertion that a short-circuit returned "immediately".
+// Sized for scheduling, not for the operation: a descheduled process can stall
+// well past a few hundred milliseconds on a contended runner, so this stays far
+// above that noise while remaining 6-12x below the deadlines it must be
+// distinguished from.
+const SIGNAL_SHORT_CIRCUIT_MAX_MS = 5_000;
 
 /**
  * Wait for `child` to exit, bounded by `timeoutMs`.
@@ -702,20 +717,58 @@ function waitForChildExit(child, timeoutMs) {
   });
 }
 
+// Children handed to `detachChild`. Tracked because detaching is irreversible
+// for waiting purposes: see `reapOrDetach`.
+const detachedChildren = new WeakSet();
+
 /**
- * Bounded reap that refuses to leak containment. A child which outlives even the
- * kill deadline would otherwise keep this test process alive through its
- * referenced handle and piped stdio, so the last resort is to destroy those
- * pipes and unref the child: the suite still fails loudly, but it can exit.
+ * Last resort when a child outlives even the kill deadline: destroy its pipes
+ * and unref it so it cannot keep this test process alive. The suite still fails
+ * loudly, but it can exit.
+ */
+function detachChild(child) {
+  detachedChildren.add(child);
+  child.stdout?.destroy();
+  child.stderr?.destroy();
+  child.unref();
+}
+
+/**
+ * Bounded reap that refuses to leak containment, resolving with the
+ * `waitForChildExit` shape plus `detached`.
+ *
+ * A detached child is never awaited again. `waitForChildExit`'s deadline timer
+ * is unref'd (the source plan requires that), and `detachChild` unrefs the child
+ * and destroys its stdio -- so a second wait on the same child would hold zero
+ * ref'd handles and could never settle on an otherwise idle loop. The event loop
+ * would simply drain, discarding whatever diagnostic the caller was about to
+ * raise and skipping the cleanup that follows it. Short-circuiting here keeps
+ * both the report and the cleanup reachable.
  */
 async function reapOrDetach(child, timeoutMs) {
-  const reaped = await waitForChildExit(child, timeoutMs);
-  if (reaped.timedOut) {
-    child.stdout?.destroy();
-    child.stderr?.destroy();
-    child.unref();
+  if (detachedChildren.has(child)) {
+    return {
+      code: child.exitCode,
+      detached: true,
+      signal: child.signalCode,
+      timedOut: true,
+    };
   }
-  return reaped;
+  const reaped = await waitForChildExit(child, timeoutMs);
+  if (!reaped.timedOut) {
+    return { ...reaped, detached: false };
+  }
+  detachChild(child);
+  return { ...reaped, detached: true };
+}
+
+/**
+ * Merge a capture sampled before the reap with the same accumulator read after
+ * it. The buffers only ever grow, so the later read normally supersedes the
+ * earlier one; the concatenating branch is defence for a reader that resets.
+ */
+function mergeCapture(before, after) {
+  return after.startsWith(before) ? after : `${before}${after}`;
 }
 
 /**
@@ -724,30 +777,62 @@ async function reapOrDetach(child, timeoutMs) {
  * caller fails with. The message is returned rather than thrown so this branch
  * stays directly testable.
  *
- * Output is read through accessors rather than passed by value: the child can
- * still emit on stdout or stderr between the missed deadline and the reap, and
- * that late output is often the reason the deadline was missed.
+ * Output is sampled both before and after the reap. The reap's detach path
+ * destroys the child's pipes, so a read taken only afterwards could miss what
+ * was buffered at the deadline; reading only beforehand would miss bytes that
+ * arrive while the child is being killed.
  */
 async function forceKillAfterTimeout(
   child,
-  { pauseStage, readStderr, readStdout },
+  {
+    exitTimeoutMs = SIGNAL_CHILD_EXIT_TIMEOUT_MS,
+    pauseStage,
+    readStderr,
+    readStdout,
+    reap = reapOrDetach,
+    reapTimeoutMs = SIGNAL_CHILD_REAP_TIMEOUT_MS,
+  },
 ) {
   if (child.exitCode === null && child.signalCode === null) {
     child.kill('SIGKILL');
   }
-  const reaped = await reapOrDetach(child, SIGNAL_CHILD_REAP_TIMEOUT_MS);
+  const stdoutAtDeadline = readStdout();
+  const stderrAtDeadline = readStderr();
+  const reaped = await reap(child, reapTimeoutMs);
   const reapSummary = reaped.timedOut
-    ? `SIGKILL did not reap it within ${SIGNAL_CHILD_REAP_TIMEOUT_MS}ms`
+    ? `SIGKILL did not reap it within ${reapTimeoutMs}ms`
     : `SIGKILL reaped it with code ${reaped.code} signal ${reaped.signal}`;
+  const stdout = mergeCapture(stdoutAtDeadline, readStdout());
+  const stderr = mergeCapture(stderrAtDeadline, readStderr());
   return {
-    message: `signal test child did not exit within ${SIGNAL_CHILD_EXIT_TIMEOUT_MS}ms of SIGTERM during ${pauseStage}; ${reapSummary}\nstdout:\n${readStdout()}\nstderr:\n${readStderr()}`,
+    message: `signal test child did not exit within ${exitTimeoutMs}ms of SIGTERM during ${pauseStage}; ${reapSummary}\nstdout:\n${stdout}\nstderr:\n${stderr}`,
     reaped,
   };
 }
 
-async function runSignalCase(pauseStage) {
+/**
+ * Run one SIGTERM stage case end to end.
+ *
+ * The options are test seams, not production knobs: the deadlines and the
+ * post-kill reap are injectable so the regressions below can drive this
+ * function's own timeout and detach branches in milliseconds, and
+ * `ignoreSigterm` builds a fixture child that deliberately swallows SIGTERM.
+ * Defaults reproduce the real case exactly.
+ */
+async function runSignalCase(
+  pauseStage,
+  {
+    exitTimeoutMs = SIGNAL_CHILD_EXIT_TIMEOUT_MS,
+    ignoreSigterm = false,
+    onDirectories,
+    reapAfterKill = reapOrDetach,
+    reapBeforeCleanup = reapOrDetach,
+    reapTimeoutMs = SIGNAL_CHILD_REAP_TIMEOUT_MS,
+  } = {},
+) {
   const repository = await createRepository(`oat-smoke-signal-${pauseStage}-`);
   const harnessDirectory = await mkdtemp(join(tmpdir(), 'oat-smoke-signal-'));
+  onDirectories?.({ harnessDirectory, repository });
   const runsDirectory = join(repository, '.smoke-runs');
   const sentinelPath = join(harnessDirectory, `${pauseStage}.json`);
   const guardPath = join(harnessDirectory, 'outside-manifest.guard');
@@ -782,9 +867,16 @@ const runsDirectory = process.env.SMOKE_RUNS;
 const fixture = process.env.SMOKE_FIXTURE;
 const sentinel = process.env.SMOKE_SENTINEL;
 const pauseStage = process.env.SMOKE_PAUSE_STAGE;
+const ignoreSigterm = process.env.SMOKE_IGNORE_SIGTERM === '1';
 const pauseForTermination = () =>
   new Promise((resolvePromise) => {
     const timer = setInterval(() => {}, 1_000);
+    if (ignoreSigterm) {
+      // Regression fixture only: swallow SIGTERM so the harness must fall back
+      // to its force-kill path. Never resolves; only SIGKILL ends this child.
+      process.on('SIGTERM', () => {});
+      return;
+    }
     process.once('SIGTERM', () => {
       clearInterval(timer);
       resolvePromise();
@@ -836,6 +928,7 @@ try {
       ...process.env,
       HOME: join(harnessDirectory, 'home'),
       SMOKE_FIXTURE: fixturePath,
+      SMOKE_IGNORE_SIGTERM: ignoreSigterm ? '1' : '0',
       SMOKE_PAUSE_STAGE: pauseStage,
       SMOKE_REPOSITORY: repository,
       SMOKE_RUNS: runsDirectory,
@@ -857,13 +950,16 @@ try {
   try {
     await waitForFile(sentinelPath, child);
     assert.equal(child.kill('SIGTERM'), true);
-    const exit = await waitForChildExit(child, SIGNAL_CHILD_EXIT_TIMEOUT_MS);
+    const exit = await waitForChildExit(child, exitTimeoutMs);
 
     if (exit.timedOut) {
       const { message } = await forceKillAfterTimeout(child, {
+        exitTimeoutMs,
         pauseStage,
         readStderr: () => stderr,
         readStdout: () => stdout,
+        reap: reapAfterKill,
+        reapTimeoutMs,
       });
       assert.fail(message);
     }
@@ -887,9 +983,11 @@ try {
     }
     // Reap before removing the temporary directories: a child that is still
     // running could otherwise write into paths this cleanup is deleting. The
-    // wait is bounded, so an unreapable child still cannot wedge the suite --
-    // the failing assertion above already reports that condition.
-    await reapOrDetach(child, SIGNAL_CHILD_REAP_TIMEOUT_MS);
+    // wait is bounded, and an already-detached child short-circuits instead of
+    // awaiting an exit that can no longer keep the loop alive, so both removals
+    // below are reachable on every path -- including the one where the failing
+    // assertion above is still propagating.
+    await reapBeforeCleanup(child, reapTimeoutMs);
     await rm(harnessDirectory, { force: true, recursive: true });
     await rm(repository, { force: true, recursive: true });
   }
@@ -903,7 +1001,13 @@ test('SIGTERM during drive cleans the durable manifest without collateral writes
   await runSignalCase('drive');
 });
 
-test('bounded exit wait times out, then the harness force-kills, reaps, and reports', async () => {
+/**
+ * Start a child that installs a SIGTERM handler which never resolves and only
+ * then announces readiness, so a signal sent after this resolves is
+ * deterministically ignored rather than racing the handler's installation. Only
+ * SIGKILL ends it. Callers own the returned directory.
+ */
+async function startSigtermIgnoringChild() {
   const harnessDirectory = await mkdtemp(
     join(tmpdir(), 'oat-smoke-signal-timeout-'),
   );
@@ -924,9 +1028,18 @@ writeFileSync(${JSON.stringify(sentinelPath)}, '{"ready":true}');
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   try {
-    // The sentinel is written only after the SIGTERM handler is installed, so
-    // the signal below is deterministically ignored rather than racing setup.
     await waitForFile(sentinelPath, child);
+  } catch (error) {
+    child.kill('SIGKILL');
+    await rm(harnessDirectory, { force: true, recursive: true });
+    throw error;
+  }
+  return { child, harnessDirectory };
+}
+
+test('bounded exit wait times out, then the harness force-kills, reaps, and reports', async () => {
+  const { child, harnessDirectory } = await startSigtermIgnoringChild();
+  try {
     assert.equal(child.kill('SIGTERM'), true);
 
     const startedAt = Date.now();
@@ -938,16 +1051,17 @@ writeFileSync(${JSON.stringify(sentinelPath)}, '{"ready":true}');
     assert.equal(child.exitCode, null);
     assert.equal(child.signalCode, null);
 
-    // Drive the harness's own fallback rather than killing the child here, so
-    // this regression fails if `runSignalCase` ever stops force-killing,
-    // reaping, or reporting after its deadline.
+    // Drive the harness's own fallback rather than killing the child here. This
+    // covers `forceKillAfterTimeout` only -- `runSignalCase`'s timeout branch,
+    // its detach path, and its reap-before-cleanup ordering are covered by the
+    // real-path regressions below, not by this test.
     let readAfterReap = false;
     const { message, reaped } = await forceKillAfterTimeout(child, {
       pauseStage: 'provision',
       readStderr: () => 'captured-stderr-marker',
       readStdout: () => {
-        // Output must be sampled after the child is reaped, so late writes made
-        // while it was being killed still reach the diagnostic.
+        // Sampled before and after the reap; the last read must land after it so
+        // writes made while the child was being killed still reach the message.
         readAfterReap = child.exitCode !== null || child.signalCode !== null;
         return 'captured-stdout-marker';
       },
@@ -955,6 +1069,7 @@ writeFileSync(${JSON.stringify(sentinelPath)}, '{"ready":true}');
     assert.ok(readAfterReap, 'captured output must be read after reaping');
     assert.deepEqual(reaped, {
       code: null,
+      detached: false,
       signal: 'SIGKILL',
       timedOut: false,
     });
@@ -983,4 +1098,102 @@ writeFileSync(${JSON.stringify(sentinelPath)}, '{"ready":true}');
     await reapOrDetach(child, SIGNAL_CHILD_REAP_TIMEOUT_MS);
     await rm(harnessDirectory, { force: true, recursive: true });
   }
+});
+
+test('reapOrDetach detaches at its deadline and short-circuits later waits on that child', async () => {
+  const { child, harnessDirectory } = await startSigtermIgnoringChild();
+  try {
+    // Never signalled, so this bounded reap cannot succeed: it must time out and
+    // detach. That is the state the harness reaches when even SIGKILL goes
+    // unreaped, and it is reproducible without an unkillable child.
+    const detached = await reapOrDetach(child, SIGNAL_CHILD_TIMEOUT_PROBE_MS);
+    assert.deepEqual(detached, {
+      code: null,
+      detached: true,
+      signal: null,
+      timedOut: true,
+    });
+
+    // A detached child holds no ref'd handles, so waiting on it again would
+    // drain the event loop instead of settling -- discarding any diagnostic in
+    // flight and skipping the cleanup behind it. Note the 60s deadline below:
+    // short-circuiting is the only reason this returns at all.
+    const startedAt = Date.now();
+    const again = await reapOrDetach(child, SIGNAL_CHILD_EXIT_TIMEOUT_MS);
+    assert.deepEqual(again, {
+      code: null,
+      detached: true,
+      signal: null,
+      timedOut: true,
+    });
+    assert.ok(
+      Date.now() - startedAt < SIGNAL_SHORT_CIRCUIT_MAX_MS,
+      'a detached child must short-circuit rather than await its 60s deadline',
+    );
+  } finally {
+    child.kill('SIGKILL');
+    await rm(harnessDirectory, { force: true, recursive: true });
+  }
+});
+
+test('runSignalCase force-kills, reports the stage, and still cleans up when the child ignores SIGTERM', async () => {
+  let directories;
+  await assert.rejects(
+    runSignalCase('provision', {
+      exitTimeoutMs: 300,
+      ignoreSigterm: true,
+      onDirectories: (paths) => {
+        directories = paths;
+      },
+    }),
+    /did not exit within 300ms of SIGTERM during provision; SIGKILL reaped it/,
+  );
+  assert.equal(await exists(directories.harnessDirectory), false);
+  assert.equal(await exists(directories.repository), false);
+});
+
+test('a detached child still reports its diagnostic and still removes both temp directories', async () => {
+  let directories;
+  let detachedDuringReap = false;
+  let cleanupReapMs = null;
+  await assert.rejects(
+    runSignalCase('provision', {
+      exitTimeoutMs: 300,
+      ignoreSigterm: true,
+      onDirectories: (paths) => {
+        directories = paths;
+      },
+      // A child that survives SIGKILL cannot be built portably, so stand in for
+      // one: detach exactly as the real reap does on its timeout path, and
+      // report the timeout. Everything after this point is the harness's code.
+      reapAfterKill: async (forcedChild) => {
+        detachChild(forcedChild);
+        detachedDuringReap = true;
+        return { code: null, detached: true, signal: null, timedOut: true };
+      },
+      // The real reap, timed. It must short-circuit for the now-detached child;
+      // if it awaits instead, the loop drains and neither the rejection below
+      // nor either rm ever happens.
+      reapBeforeCleanup: async (cleanupChild, timeoutMs) => {
+        const startedAt = Date.now();
+        const result = await reapOrDetach(cleanupChild, timeoutMs);
+        cleanupReapMs = Date.now() - startedAt;
+        return result;
+      },
+      reapTimeoutMs: 30_000,
+    }),
+    /did not exit within 300ms of SIGTERM during provision; SIGKILL did not reap it within 30000ms/,
+  );
+  assert.ok(detachedDuringReap, 'the force-kill path must have detached');
+  assert.notEqual(
+    cleanupReapMs,
+    null,
+    'cleanup must reap before removing directories',
+  );
+  assert.ok(
+    cleanupReapMs < SIGNAL_SHORT_CIRCUIT_MAX_MS,
+    `detached reap must short-circuit, took ${cleanupReapMs}ms`,
+  );
+  assert.equal(await exists(directories.harnessDirectory), false);
+  assert.equal(await exists(directories.repository), false);
 });
