@@ -78,10 +78,65 @@ verified, MUT-E desync caught only by the new coupling test. Row `p01` →
 **Skill signal (strengthens):** delete+reorder mutation requirement — the
 round-1 reorder mutation exposed the unpinned restamp-only path.
 
+### 2026-08-26 · structural · oat-wave-execute · final DoD
+
+Head `4c04963c`: check 0 · type-check 0 · test 0 (152s; 273 files / 3686) · build 0 ·
+check:skill-bumps 0 · release:check-versions 0 (after `git fetch origin`) ·
+release:validate 0 · build:docs 0.
+
 ---
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis (2026-08-26)
 
-Write at project completion, BEFORE any archive step: convention verdicts with
-evidence, rulings on every Skill-signal entry, adjustments for later waves as
-rules, and a graduated-entries ledger; roll up into `summary.md` first.
+### 1. Convention verdicts
+
+- **Thin wrapper / pointer-only tasks:** held after two plan-gate rounds
+  removed a restated source-plan step and set `oat_parallel_execution: true`
+  for a solo lane (the wave contract's literal requirement).
+- **Drift refresh + release-root intersection (W1 rule 2):** held and paid off —
+  the bump was pre-planned; the plan gate still found two coverage gaps
+  (release surfaces the plan writes; fetch-before-`release:check-versions`),
+  now codified in the wrapper's rule-1 addendum.
+- **Absolute paths / no bare cd (W1 rule 1):** held; zero incidents.
+- **Literal gate invocation + per-gate exit logs (W1 rule 3):** held; note the
+  implementer's observation that `pnpm exec oxfmt --check <files>` silently
+  drops file arguments — use the direct binary.
+- **Delete + reorder mutations (W1 rule 4):** decisive again — the reorder
+  mutation exposed the unpinned restamp-only path (round-1 Medium); the
+  reviewer's desync mutation (MUT-E) is now caught only by the coupling test.
+- **Bootstrap before scaffold:** violated once (activeProject reset); recorded.
+- **Gate resilience:** one gate runner was stopped externally after the gate
+  had completed; artifact recovered by runId (rule 8) without a relaunch.
+
+### 2. Skill-signal rulings
+
+- worktree:init clobbers activeProject → **skill change:** Step 1/3 order
+  "bootstrap, then scaffold" (or re-set the pointer).
+- release:check-versions is post-commit-only evidence → **brief template
+  change:** run release gates after the task commit as load-bearing evidence.
+- drift-coverage audit must include written release surfaces → **skill
+  change** (already applied to this wave's plan).
+- delete+reorder mutations → keep mandatory (strengthens).
+
+### 3. Adjustments adopted for W3–W4 (rules)
+
+1. Bootstrap the worktree before `oat project new`; verify `activeProject`
+   before any lifecycle command.
+2. The wrapper plan's rule-1 addendum always lists the release surfaces the
+   source plan writes and requires `git fetch origin` before
+   `release:check-versions`.
+3. Briefs state that the post-commit `release:check-versions` run is the
+   load-bearing evidence for a lockstep bump.
+4. Use direct `./node_modules/.bin/oxfmt` / `oxlint` for file-scoped checks.
+
+### 4. Graduated-entries ledger
+
+- Sibling commands restamp `oatVersion` silently (round-1 m4) → backlog
+  candidate: open-with-owner (root; file at wave close).
+- `ScopeSyncPlan.versionSkew` optional-field hazard (p01-r2-m1) → carried in
+  `implementation.md` Deferred Findings.
+- Source-plan wording drift (p01-r2-m2) → recorded; plan immutable.
+- Plan-gate rounds 1–2 findings → closed-with-evidence (`b53a8d06`).
+
+Roll-up: summarized in `summary.md` `## Workflow Observations` before any
+archive step.
