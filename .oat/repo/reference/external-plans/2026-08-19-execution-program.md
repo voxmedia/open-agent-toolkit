@@ -18,14 +18,19 @@ contract remains its immutable plan file.
 
 ## Status Ledger
 
-| Wave | Theme                         | Lanes | Status   | Record                                       |
-| ---- | ----------------------------- | ----- | -------- | -------------------------------------------- |
-| W1   | Test and CI containment       | 2     | composed | execution deferred by operator on 2026-08-19 |
-| W2   | Sync provenance warning       | 1     | composed | pending W1 merge                             |
-| W3   | Hermetic CLI assets           | 1     | composed | pending W2 merge                             |
-| W4   | Codex skill policy correction | 1     | composed | pending W3 merge                             |
+Execution approval: the operator approved the four-wave composition and authorized
+autonomous execution on 2026-08-25 (session-scoped OAT autonomy; wave PRs are
+created and merged by the root orchestrator once required gates pass). This
+supersedes the "execution deferred by operator on 2026-08-19" record.
 
-## Wave Table (coverage: 5 plans = 5 index rows; verified 2026-08-19)
+| Wave | Theme                         | Lanes | Status   | Record                                                                         |
+| ---- | ----------------------------- | ----- | -------- | ------------------------------------------------------------------------------ |
+| W1   | Test and CI containment       | 2     | composed | operator-approved 2026-08-25; wrapper project `wave-1-execution` (in progress) |
+| W2   | Sync provenance warning       | 1     | composed | pending W1 merge                                                               |
+| W3   | Hermetic CLI assets           | 1     | composed | pending W2 merge                                                               |
+| W4   | Codex skill policy correction | 1     | composed | pending W3 merge                                                               |
+
+## Wave Table (coverage: 5 plans = 5 index rows; verified 2026-08-19, re-verified 2026-08-25)
 
 | Plan                                                                                             | Index                                                                  | Wave | Ordering notes                                        | Status  |
 | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ---- | ----------------------------------------------------- | ------- |
