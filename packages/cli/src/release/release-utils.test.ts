@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  compareStableVersions,
   findChangedWorkspaceDirsFromPaths,
   findVersionPolicyDependencyRootsByWorkspaceDir,
+  parseStableVersion,
+  resolveCurrentMainRef,
 } from '../../../../tools/release/release-utils';
 import { getPublicPackageContracts } from './public-package-contract';
 
@@ -77,5 +80,92 @@ describe('findVersionPolicyDependencyRootsByWorkspaceDir', () => {
     ]);
     expect(dependencyRoots.get('packages/docs-theme')).toEqual([]);
     expect(dependencyRoots.get('packages/docs-transforms')).toEqual([]);
+  });
+});
+
+describe('resolveCurrentMainRef', () => {
+  it('prefers origin/main when the remote tracking ref exists', async () => {
+    const probedRefs: string[] = [];
+
+    await expect(
+      resolveCurrentMainRef(async (ref) => {
+        probedRefs.push(ref);
+        return ref === 'origin/main';
+      }),
+    ).resolves.toBe('origin/main');
+    expect(probedRefs).toEqual(['origin/main']);
+  });
+
+  it('falls back to local main outside CI checkouts', async () => {
+    await expect(
+      resolveCurrentMainRef(async (ref) => ref === 'main'),
+    ).resolves.toBe('main');
+  });
+
+  it('fails closed with null when no current main ref is available', async () => {
+    await expect(resolveCurrentMainRef(async () => false)).resolves.toBeNull();
+  });
+});
+
+describe('parseStableVersion', () => {
+  it('parses stable numeric versions', () => {
+    expect(parseStableVersion('0.2.32')).toEqual({
+      major: 0,
+      minor: 2,
+      patch: 32,
+    });
+    expect(parseStableVersion('10.0.1')).toEqual({
+      major: 10,
+      minor: 0,
+      patch: 1,
+    });
+  });
+
+  it('rejects surrounding whitespace so only exact values are accepted', () => {
+    expect(parseStableVersion(' 0.2.32 ')).toBeNull();
+    expect(parseStableVersion('0.2.32\n')).toBeNull();
+  });
+
+  it.each([
+    ['prerelease identifiers', '0.2.32-rc.1'],
+    ['build metadata', '0.2.32+build.5'],
+    ['v prefixes', 'v0.2.32'],
+    ['partial versions', '0.2'],
+    ['extra segments', '0.2.32.1'],
+    ['leading zeroes', '0.02.32'],
+    ['non-numeric segments', '0.2.x'],
+    ['empty strings', ''],
+  ])('rejects %s rather than mapping them to 0.0.0', (_label, version) => {
+    expect(parseStableVersion(version)).toBeNull();
+  });
+
+  it('rejects missing evidence', () => {
+    expect(parseStableVersion(null)).toBeNull();
+    expect(parseStableVersion(undefined)).toBeNull();
+  });
+
+  it('rejects segments beyond the safe integer range', () => {
+    expect(parseStableVersion('1.2.99999999999999999999')).toBeNull();
+  });
+});
+
+describe('compareStableVersions', () => {
+  it('orders versions by major, then minor, then patch', () => {
+    expect(compareStableVersions('0.2.33', '0.2.32')).toBeGreaterThan(0);
+    expect(compareStableVersions('0.3.0', '0.2.99')).toBeGreaterThan(0);
+    expect(compareStableVersions('1.0.0', '0.99.99')).toBeGreaterThan(0);
+    expect(compareStableVersions('0.2.29', '0.2.30')).toBeLessThan(0);
+    expect(compareStableVersions('0.2.32', '0.2.32')).toBe(0);
+  });
+
+  it('compares numerically rather than lexicographically', () => {
+    expect(compareStableVersions('0.2.9', '0.2.10')).toBeLessThan(0);
+  });
+
+  it('returns null when either side is missing or malformed', () => {
+    expect(compareStableVersions('0.2.32', null)).toBeNull();
+    expect(compareStableVersions(null, '0.2.32')).toBeNull();
+    expect(compareStableVersions('0.2.32-rc.1', '0.2.32')).toBeNull();
+    expect(compareStableVersions('0.2.32', '')).toBeNull();
   });
 });
