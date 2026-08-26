@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: null
+oat_last_commit: 023c2229
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260718-warn-when-oat-sync-uses' }
@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T19:08:06.587Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T19:48:01.327Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T20:52:59.616Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -98,13 +98,13 @@ oat_project_recap:
 
 # Project State: wave-2-execution
 
-**Status:** Implementation in progress (p01, solo)
+**Status:** Implementation tasks complete; awaiting final review
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
 ## Current Phase
 
-Implementation — p01 dispatched on the integration checkout; root owns review, fix loops, and closeout gates.
+Implementation - Tasks complete; awaiting final review.
 
 ## Artifacts
 
@@ -121,7 +121,8 @@ Implementation — p01 dispatched on the integration checkout; root owns review,
 - ✓ Wave-boundary drift refresh: 1 PASS / 0 MINOR-DRIFT / 0 STOP
 - ✓ Plan complete (validate-plan passed)
 - ✓ Plan gate passed on round 3 (rounds 1–2 blocked on wrapper-contract items, fixed)
-- ⧗ Implementation Run 1: p01 (solo)
+- ✓ Implementation tasks complete (p01 passed after 2 review rounds; 0.2.34 lockstep bump)
+- ⧗ Awaiting final review
 
 ## Blockers
 
@@ -129,4 +130,4 @@ None
 
 ## Next Milestone
 
-p01 implementer returns → phase review → closeout sequence (DoD → synthesis → backlog archival → final review → exit gate → summary/document/PR).
+Closeout: final DoD → orchestration-log synthesis → serialized backlog archival → final review → configured exit gate → summary/document/PR → autonomous HiLL → complete-state.

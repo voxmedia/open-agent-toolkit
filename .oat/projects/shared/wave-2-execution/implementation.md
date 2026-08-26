@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-26
-oat_current_task_id: p01-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -17,11 +17,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                             | Status      | Tasks | Completed |
-| --------------------------------- | ----------- | ----- | --------- |
-| Phase 01 (warn-sync-version-skew) | in_progress | 1     | 0/1       |
+| Phase                             | Status   | Tasks | Completed |
+| --------------------------------- | -------- | ----- | --------- |
+| Phase 01 (warn-sync-version-skew) | complete | 1     | 1/1       |
 
-**Total:** 0/1 tasks completed
+**Total:** 1/1 tasks completed
 
 ## Autonomy Gate Provenance
 
@@ -40,14 +40,29 @@ oat_generated: false
 
 ## Phase 01: warn-sync-version-skew (solo)
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-08-26
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- (pending)
+- `oat sync` now surfaces producer/invoker version skew before any mutation: a per-scope `versionSkew` diagnostic (`scope`, `producingVersion`, `invokingVersion`) is derived while building each scope plan, one human warning per skewed scope is logged before the dry-run/apply branch (suppressed in JSON mode), and both JSON envelopes carry the structured array (`[]` when none). Exit codes, counts, and apply eligibility are unchanged; the apply restamp is now derived from the same diagnostic so the two cannot drift; absent/invalid manifests keep their existing semantics. Lockstep bump 0.2.33 → 0.2.34.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/sync/{sync.types,index,apply,dry-run}.ts` — diagnostic type, derivation, warning, JSON fields, restamp coupling.
+- `packages/cli/src/commands/sync/index.test.ts`, `packages/cli/src/manifest/manager.test.ts` — ordering, JSON-only, equal/older/newer/absent/invalid, multi-scope, coupling cases.
+- five `packages/*/package.json` + `packages/cli/assets/public-package-versions.json` — 0.2.34.
+
+**Verification:**
+
+- Run: focused sync + manifest suites (55/55); full DoD 8/8 exit 0 post-commit; reviewer mutation battery (reorder, delete, JSON-field delete, desync) all red; codex reviews ×2 zero findings.
+- Result: pass; review rounds 1–2 → `passed`.
+
+**Notes / Decisions:**
+
+- The two unreachable empty-string guards in `detectVersionSkew` were removed so restamp coupling is bit-exact with the previous predicate (reviewer-verified; plan wording drift recorded as p01-r2-m2).
 
 ### Task p01-t01: Execute external plan — Surface sync producer and invoker version skew before mutation
 
@@ -142,7 +157,7 @@ oat_generated: false
 
 ### 2026-08-26
 
-- Plan gate passed on round 3; p01 dispatched.
+- Plan gate passed on round 3; p01 dispatched → DONE (`b257e908`); review round 1 (1M/4m) → fix `023c2229` → round 2 passed (2 minors deferred).
 
 ## Deviations from Plan / Design
 
@@ -152,13 +167,42 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| p01   | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                   | Passed | Failed | Coverage |
+| ----- | ------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| p01   | focused sync + manifest suites (55); full `pnpm test` (273 files / 3686 vitest + node:test) | all    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
-(pending — filled at closeout)
+**What shipped:**
+
+- `oat sync` version-skew advisory: reports when a loaded manifest was produced by a different CLI version than the invoking one, in human (one warning per scope, before any restamp) and JSON (`versionSkew` array in apply and dry-run envelopes) modes; advisory only.
+- Manifest restamp on apply now derives from the same diagnostic (no duplicated predicate).
+- Lockstep public-package bump 0.2.33 → 0.2.34.
+
+**Behavioral changes (user-facing):**
+
+- A stale manifest now yields a visible warning / structured diagnostic; nothing else changes (exit codes, counts, eligibility, manifest schema, absent/invalid handling).
+
+**Key files / modules:** `packages/cli/src/commands/sync/*`, tests, five package manifests, `packages/cli/assets/public-package-versions.json`.
+
+**Verification performed:** plan gate (3 rounds), per-phase review (2 rounds, mutation battery), codex cross-model reviews (×2, zero findings), full DoD post-commit and at the final head.
+
+**Design deltas (if any):** none against the source plan's requirements; the plan's "non-empty strings" step wording is superseded by exact inequality (p01-r2-m2, recorded).
+
+## Done-criteria confirmation (source plan)
+
+Lifted from the round-1 review's Requirements Coverage (reviewer-verified at `b257e908`; line refs are hints as of that head):
+
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Requirement | Status | Notes |
+| ------------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| DC1 — a stale manifest yields one pre-mutation diagnostic with scope, producing version, and invoking version | implemented | `detectVersionSkew` (`index.ts:242-259`) is called during `computePlans` (`index.ts:345`) right after `loadManifest` (`index.ts:272`); `logVersionSkewWarnings` (`index.ts:420`) runs before the `context.dryRun` branch and before `await runSyncApply` (`index.ts:423-427`), which is the only route to `executeSyncPlan` → `saveManifest`. `createSyncCommand` is the sole entry point (`packages/cli/src/commands/index.ts:32`) and `runSyncApply`/`runSyncDryRun` have no other callers. Message carries all three fields. MUT-A and MUT-B both go red. Restamp-only sub-path correct (PROBE-6) but unpinned → M1. |
+| DC2 — human apply and dry-run warn without changing exit status | implemented | Warning is a single `logger.warn` per skewed scope (`index.ts:403-405`); exactly-one asserted at `index.test.ts:552`. Exit-code expressions are untouched by the diff: `apply.ts:193` (`failed > 0 ? 1 : 0`) and `dry-run.ts:122` (`= 0`). `git diff` over `apply.ts`/`dry-run.ts` is 4 added lines each, 0 removed, all inside the diagnostic collection and the JSON object literal. |
+| DC3 — JSON apply and dry-run expose a structured diagnostic and no human text | implemented | `versionSkew` added to both envelopes (`apply.ts:178`, `dry-run.ts:108`), emitted as `[]` when none (`index.test.ts:649`). `logVersionSkewWarnings` early-returns in JSON mode (`index.ts:389-395`), and the real logger independently suppresses `info`/`warn`/`success` under `--json` (`packages/cli/src/ui/logger.ts:43-55`), so JSON mode is machine-only twice over. Tests assert `capture.info` and `capture.warn` are both empty for JSON apply (`index.test.ts:601-602`) and JSON dry-run no-op (`index.test.ts:629-630`). Skew never touches `process.exitCode` — non-fatal. Note: in JSON mode the diagnostic is inherently delivered with the terminal envelope (i.e. after apply), which is what the plan's step 2 prescribes. |
+| DC4 — equal, older, newer, absent, and invalid cases behave as stated | implemented | Equal: `index.test.ts:633`, `:649`. Older/newer symmetric: `:663` (`0.0.1` and `999.0.0`, both human and JSON). Absent: `:697` uses the real `createEmptyManifest()`, which stamps `OAT_VERSION` (`manifest/manager.ts:25-32`) → no false warning. Invalid: `:711` proves a `loadManifest` `CliError` propagates and no warning/JSON is emitted, backed by the new structural case at `manifest/manager.test.ts:85` (empty and missing `oatVersion` both reject). `ManifestSchema`/`manifest.types.ts`/`manager.ts` are unmodified — `git diff --stat … -- packages/cli/src/manifest/` shows `manager.test.ts` only. Caveat: whitespace-only `oatVersion` is admitted by the schema and surfaces as skew (m1). |
+| DC5 — all five public package versions move together and release gates pass | implemented | `cli`, `control-plane`, `docs-config`, `docs-theme`, `docs-transforms` all at `0.2.34` (from `0.2.33`). `packages/cli/assets/public-package-versions.json` regenerated consistently (all four keys → `0.2.34`; the missing `control-plane` key is pre-existing and out of scope per the wrapper). `pnpm-lock.yaml` unchanged, as the wrapper predicted for workspace links. `git fetch origin` (exit 0) then `pnpm release:check-versions` → exit 0, "version bump check passed". `pnpm release:validate` → exit 0, all five tgz validated + explainer visual validation `{"valid":true, "measurements":65}`. |
+| DC6 — the complete repository Definition of Done exits zero | implemented (re-verified in part) | Re-run by this review at the reviewed tree: `pnpm check` exit 0, `pnpm type-check` exit 0 (both reported `FULL TURBO` — cache hits against a previously green run of the same input hash), `pnpm test` exit 0 (cli **3682 passed / 273 files**; control-plane 9 files; docs-config 3; docs-transforms 2; `test:smoke` 39 pass / 1 skipped / 0 fail), `pnpm release:check-versions` exit 0, `pnpm release:validate` exit 0, plus `oxfmt --check` and `oxlint` on all six changed source/test files (exit 0, 0 warnings, 0 errors). Not independently re-run here: `pnpm build`, `pnpm run check:skill-bumps`, `pnpm build:docs` — inherited from the implementer's captured 8/8 exit-0 log recorded in `implementation.md` (`pnpm build:docs` did execute transitively inside the cached turbo `test` pipeline, which included `oat-docs:build`). |
+| DC7 — `git status --short` has no unexplained or out-of-scope files | implemented | Empty at review start, between every mutation, and at review end. The commit touches exactly the 12 declared files; the only file beyond the source plan's `## In scope` list is `packages/cli/src/manifest/manager.test.ts` (one focused case), which the plan's `## Test plan` explicitly authorizes ("add only a focused case there if the current tests do not exercise the required boundary") and which `implementation.md` declares up. |
 
 ## References
 
