@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -76,23 +76,23 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-26T20:46:17.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Discovery
+**Status:** Discovery complete
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
 ## Current Phase
 
-Discovery - Gathering requirements and understanding the problem space
+Discovery - Complete (seeded from brainstorm); ready for `oat-project-design`
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (scaffolded template — authored inline by `oat-project-design`)
 - **Design:** `design.md` (scaffolded template — not started)
 - **Plan:** `plan.md` (scaffolded template — not started)
@@ -102,7 +102,7 @@ Discovery - Gathering requirements and understanding the problem space
 
 - ✓ Discovery started
 - ✓ Downstream lifecycle files scaffolded
-- ⧗ Awaiting user input
+- ✓ Discovery complete (seeded from brainstorm session 2026-08-26)
 
 ## Blockers
 
@@ -110,4 +110,4 @@ None
 
 ## Next Milestone
 
-Complete discovery and move to design phase
+Run `oat-project-design` to confirm requirements and produce spec.md + design.md
