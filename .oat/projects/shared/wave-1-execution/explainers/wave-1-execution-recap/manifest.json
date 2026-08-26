@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v1",
+  "runId": "run-051612fb-0075-43de-b2dd-0aea4209775f",
+  "slug": "wave-1-execution-recap",
+  "recipe": {
+    "id": "project-recap",
+    "version": "2"
+  },
+  "createdAt": "2026-08-26T16:28:09.577Z",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:75444c5cbe3a90694ee8c08dc2812f79d6cb5576de551a28cec5e295186f9597",
+    "inputHashes": {
+      "inputs/plan": "sha256:543ba8f09eca35e4fa5352dc3add67c40ad13f5f88b8d03e1a0ff74596c0e0f5",
+      "inputs/implementation": "sha256:3d44e1b7b25fd4e95f1aaa598d86b3b890971e179e14449b3c8a3741fe02b263",
+      "inputs/summary": "sha256:1ccf7ee0d078049e3fae96bb94a1466f61ae0ad52cb315b8ae84dfff4c77ef46",
+      "inputs/critic-wave-1-recap-fact-critic": "sha256:ced13758ee7e04130de773b8f7bb77c7dbb6e5961f42ee02e3d87d3c4f45aa20"
+    },
+    "backlinks": [
+      {
+        "sourceId": "implementation",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/6cd0919ab4c675cf9d2c9c4023b31d58ebb1b52b/.oat/projects/shared/wave-1-execution/implementation.md#L1-L451"
+      },
+      {
+        "sourceId": "plan",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/6cd0919ab4c675cf9d2c9c4023b31d58ebb1b52b/.oat/projects/shared/wave-1-execution/plan.md#L1-L289"
+      },
+      {
+        "sourceId": "summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/6cd0919ab4c675cf9d2c9c4023b31d58ebb1b52b/.oat/projects/shared/wave-1-execution/summary.md#L1-L177"
+      }
+    ],
+    "authorResultPaths": ["source/author/project-recap.json"]
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:483ad6f5121e8645f454feefbf8547e11c995fa9ad23343cd1ccfd43f487801f",
+    "derived": false
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "contentPath": "source/content/project-recap.html",
+      "renderedPath": "site/initiatives/wave-1-execution-recap/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:614777320187b62c2c7d659248c39ce5f7bd25dd0f7051393d3dcc738b6ffcbe",
+      "rebuildable": false
+    }
+  ],
+  "immutableHashes": {
+    "run-request.json": "sha256:8a1483a19ba28ac6a7150491e6885bf394d90c927c376275f37dc269dfabcabc",
+    "source/fact-base.json": "sha256:8e465d63263710a605bd4e61b7049343990a1d1fcc8fdcf085eca5f29d09d60d",
+    "source/fact-base.md": "sha256:4f9072951c450c8e6e47d3367c95ed3d9f9dc127ea6fd3398790a0e8b3be10b0",
+    "source/content-approval.json": "sha256:57099f66c3dc45137c8f0ed8bd142e846495df2a5a4712bd8361f25c3560b13b",
+    "source/set-plan/request.json": "sha256:108831140de649cb5ef7c01e9d1aaa2d57ca45a1c5102886172d40f28d482872",
+    "source/set-plan/result.json": "sha256:28c59bbb161b672b12a4ee60263d92d7d771a5479670535b251e9df15e845e4d",
+    "source/set-plan/ledger.json": "sha256:d1cc36a3c37616aec56671d43eda838bec90facdd4989855f18b73a01132cb41",
+    "source/set-plan/portfolio.json": "sha256:b072e699e7967c90565f9aed28bdcd7ec1da888aa5f1dbdde1359baa4d5ecce1",
+    "source/set-plan/drafts.json": "sha256:814fca966948bcbf53558f17b782e29a6a2f5ddbb49c693516336b7f1bb011ad",
+    "source/author/project-recap.json": "sha256:5baf418679a23d3e14ffab2abce91305a45f969b2445580dc4a8b1a4da6bac03",
+    "source/content/project-recap.html": "sha256:614777320187b62c2c7d659248c39ce5f7bd25dd0f7051393d3dcc738b6ffcbe",
+    "qa/browser/project-recap/mobile.png": "sha256:4c98f66a5448170186fd9728c5406fe22266fa80f245434ca7665d5c37476543",
+    "qa/browser/project-recap/mobile.json": "sha256:0a7ba1bbfc52ae0209495fe04f62725662452a274204ea2be222858e13f546cf",
+    "qa/browser/project-recap/tablet.png": "sha256:4f07cfa0c1083c2e0cc9739bd8fa6aa215061921436dc4ccfcc2b216254d61be",
+    "qa/browser/project-recap/tablet.json": "sha256:40a77b957f818d3315e5e5c5a95c5f10a4177fc94853b9a6c97f60fbb50571dc",
+    "qa/browser/project-recap/desktop.png": "sha256:8cf2c41e916fe0720b55798a33b41416e7915a0e18f7cddc1e58cd86ff76ea37",
+    "qa/browser/project-recap/desktop.json": "sha256:1c8f73d5fc597f6239cfa688999bb3bb57a164c2519d731f6c19feb83f5547e2",
+    "qa/visual-review/attempt-1/evidence/project-recap/mobile.png": "sha256:4c98f66a5448170186fd9728c5406fe22266fa80f245434ca7665d5c37476543",
+    "qa/visual-review/attempt-1/evidence/project-recap/mobile.json": "sha256:0a7ba1bbfc52ae0209495fe04f62725662452a274204ea2be222858e13f546cf",
+    "qa/visual-review/attempt-1/evidence/project-recap/tablet.png": "sha256:4f07cfa0c1083c2e0cc9739bd8fa6aa215061921436dc4ccfcc2b216254d61be",
+    "qa/visual-review/attempt-1/evidence/project-recap/tablet.json": "sha256:40a77b957f818d3315e5e5c5a95c5f10a4177fc94853b9a6c97f60fbb50571dc",
+    "qa/visual-review/attempt-1/evidence/project-recap/desktop.png": "sha256:8cf2c41e916fe0720b55798a33b41416e7915a0e18f7cddc1e58cd86ff76ea37",
+    "qa/visual-review/attempt-1/evidence/project-recap/desktop.json": "sha256:1c8f73d5fc597f6239cfa688999bb3bb57a164c2519d731f6c19feb83f5547e2",
+    "qa/visual-review/attempt-1/request.json": "sha256:07dc3962b00cb357df351c9bf0750fb23c22eaeedb3cfbab66a998e71595d08f",
+    "qa/visual-review/attempt-1/result.json": "sha256:09039ad2b3a3e38f3310886094a8ddc5d546acb74db87b63fc4570a0e34b5907",
+    "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27",
+    "site/initiatives/wave-1-execution-recap/index.html": "sha256:614777320187b62c2c7d659248c39ce5f7bd25dd0f7051393d3dcc738b6ffcbe"
+  },
+  "outcome": "built-not-durable",
+  "buildRecord": {
+    "path": "build-record.json",
+    "hash": "sha256:46b0ecb5f859a1495bb1adc4f59f624825803b2fc03617806694e18456c51198"
+  },
+  "warnings": [
+    "theme-selection-normalized",
+    "E_DURABILITY: durability evidence verification failed. Immutable package hash changed for run-request.json. Immutable package hash changed for source/fact-base.json. Immutable package hash changed for source/fact-base.md. Immutable package hash changed for source/content-approval.json. Immutable package hash changed for source/set-plan/request.json. Immutable package hash changed for source/set-plan/result.json. Immutable package hash changed for source/set-plan/portfolio.json. Immutable package hash changed for qa/visual-review/attempt-1/request.json. Immutable package hash changed for theme.resolved.json."
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "explainer-kit.build-record/v1",
+  "runId": "run-051612fb-0075-43de-b2dd-0aea4209775f",
+  "renderStrategy": "default-only",
+  "startedAt": "2026-08-26T16:28:08.029Z",
+  "stages": [
+    {
+      "id": "validate",
+      "status": "passed",
+      "outputPaths": ["run-request.json"],
+      "warnings": [],
+      "startedAt": "2026-08-26T16:28:08.049Z",
+      "completedAt": "2026-08-26T16:28:08.058Z"
+    },
+    {
+      "id": "fact-base",
+      "status": "passed",
+      "outputPaths": ["source/fact-base.json", "source/fact-base.md"],
+      "warnings": [],
+      "startedAt": "2026-08-26T16:28:08.070Z",
+      "completedAt": "2026-08-26T16:28:08.113Z"
+    },
+    {
+      "id": "content",
+      "status": "passed",
+      "outputPaths": [
+        "source/set-plan/request.json",
+        "source/set-plan/result.json",
+        "source/set-plan/ledger.json",
+        "source/set-plan/portfolio.json",
+        "source/set-plan/drafts.json",
+        "source/content/project-recap.html",
+        "source/author/project-recap.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-26T16:28:08.124Z",
+      "completedAt": "2026-08-26T16:28:08.217Z"
+    },
+    {
+      "id": "theme",
+      "status": "warned",
+      "outputPaths": ["theme.resolved.json"],
+      "warnings": ["theme-selection-normalized"],
+      "startedAt": "2026-08-26T16:28:08.227Z",
+      "completedAt": "2026-08-26T16:28:08.246Z"
+    },
+    {
+      "id": "render",
+      "status": "passed",
+      "outputPaths": ["site/initiatives/wave-1-execution-recap/index.html"],
+      "warnings": [],
+      "startedAt": "2026-08-26T16:28:08.256Z",
+      "completedAt": "2026-08-26T16:28:08.277Z"
+    },
+    {
+      "id": "qa",
+      "status": "passed",
+      "outputPaths": [
+        "site/initiatives/wave-1-execution-recap/index.html",
+        "qa/visual-review/attempt-1/evidence/project-recap/mobile.png",
+        "qa/visual-review/attempt-1/evidence/project-recap/mobile.json",
+        "qa/visual-review/attempt-1/evidence/project-recap/tablet.png",
+        "qa/visual-review/attempt-1/evidence/project-recap/tablet.json",
+        "qa/visual-review/attempt-1/evidence/project-recap/desktop.png",
+        "qa/visual-review/attempt-1/evidence/project-recap/desktop.json",
+        "qa/visual-review/attempt-1/request.json",
+        "qa/visual-review/attempt-1/result.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-26T16:28:08.288Z",
+      "completedAt": "2026-08-26T16:28:09.536Z"
+    },
+    {
+      "id": "durability",
+      "status": "warned",
+      "outputPaths": [],
+      "warnings": [
+        "E_DURABILITY: durability evidence verification failed. Immutable package hash changed for run-request.json. Immutable package hash changed for source/fact-base.json. Immutable package hash changed for source/fact-base.md. Immutable package hash changed for source/content-approval.json. Immutable package hash changed for source/set-plan/request.json. Immutable package hash changed for source/set-plan/result.json. Immutable package hash changed for source/set-plan/portfolio.json. Immutable package hash changed for qa/visual-review/attempt-1/request.json. Immutable package hash changed for theme.resolved.json."
+      ],
+      "startedAt": "2026-08-26T16:28:09.557Z",
+      "completedAt": "2026-08-26T16:31:28.851Z"
+    },
+    {
+      "id": "publish",
+      "status": "skipped",
+      "outputPaths": [],
+      "warnings": [],
+      "startedAt": "2026-08-26T16:28:09.567Z",
+      "completedAt": "2026-08-26T16:28:09.567Z"
+    }
+  ],
+  "outcome": "built-not-durable",
+  "completedAt": "2026-08-26T16:28:09.567Z"
+}
