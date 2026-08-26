@@ -1,7 +1,7 @@
 ---
 id: BL-260718-warn-when-oat-sync-uses
 title: Warn when oat sync uses a different producing CLI version
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - versioning
 assignee: null
 created: 2026-07-18T17:36:38.289Z
-updated: 2026-08-20T02:37:32Z
+updated: '2026-08-26T20:56:20Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-19-warn-sync-version-skew.md
