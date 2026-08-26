@@ -196,7 +196,24 @@ oat_generated: false
 
 **Review row `final` → `passed` at reviewed head `2e106b66`; the two minors are text-only closeout fixes in this receive commit. Next: configured exit gate (generation 1).**
 
-$1
+### Review Received: final (gate, generation 2)
+
+**Date:** 2026-08-26
+**Review artifact:** reviews/archived/final-review-2026-08-26T222108Z.md (reviewed head `b15665e58ac42ad79230a65c1705afab0c14c500`, full range `1bd5424b..b15665e5`, invocation gate, run `17dc551d-d7cb-4c71-859e-3e830d833cba`, target `cursor-gpt-5-6-sol-xhigh`, model gpt-5.6-sol-xhigh)
+
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 2 — gate passed at the important threshold. The reviewer ran the full DoD in the foreground (check, type-check, test [3,686 vitest cases], build, check:skill-bumps, fetch-first release:check-versions, release:validate, build:docs, `git diff --check`), all exit 0. Generation 1 of this gate (Fable, `--avoid none`) blocked after two attempts that produced no artifact; the operator removed `--avoid none` so default same-family avoidance applies (orchestration log, "Exit-gate boundary").
+
+**Deferred Findings Re-evaluation:** p01-r2-m1 and p01-r2-m2 re-confirmed deferrable by the gate reviewer under their existing triggers.
+
+**Dispositions (resolved by the root, this commit):**
+
+- M1 `implementation.md:199` canonical Deviations heading replaced by a literal `$1` (introduced by the round-2 receive script — a function-callback replacement does not expand `$1`) → heading restored verbatim as `## Deviations from Plan / Design`; table untouched; no other `$1` literal exists in the project artifacts (grep).
+- m1 optional `ScopeSyncPlan.versionSkew` → remains deferred as p01-r2-m1 (same trigger: next `sync.types.ts` touch).
+- m2 external-plan "non-empty strings" wording → remains deferred as p01-r2-m2 (record-only; plan immutable).
+
+**Gate review row `final` → `passed`; exit gate generation 2 allowed. Next: post-implement sequence (summary → document → pr).**
+
+## Deviations from Plan / Design
 
 | Task / Review  | Source Artifact                                      | Planned / Documented                                           | Actual / Accepted                                                                                                           | Reason                                                                                                                                                                                               | Source of Truth                                                               | Follow-up                                                      |
 | -------------- | ---------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------- |
