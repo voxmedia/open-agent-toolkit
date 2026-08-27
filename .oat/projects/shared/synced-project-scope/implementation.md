@@ -289,6 +289,25 @@ lifecycle_outcome:
 
 ---
 
+## Recovery Events
+
+### Recovery Event recovery-p02-01-cli-phase-suite
+
+- Phase/task: p02 / p02-t11 phase verification
+- Original request: dispatch-synced-project-scope-p02-20260827T063331Z
+- Original commit: 34ecc0c30898dbccd20751d37b5adbc864fc587e
+- Defect class: test
+- Discovered by: `pnpm --filter @open-agent-toolkit/cli test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 43820a760b26d104f5a6bd2cbb61254bed35513d
+- Verification: focused 76/76 and relevant phase 3,739/3,739 passed before commit and against committed HEAD
+- Reason: mechanically related stale help snapshots and one integration fixture required explicit shared scope after the new synced default; no public behavior or architecture changed
+
+---
+
 ## Implementation Log
 
 Chronological log of implementation progress.

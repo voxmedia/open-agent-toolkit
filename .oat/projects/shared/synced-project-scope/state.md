@@ -27,16 +27,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p02:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: recovery-p02-01-cli-phase-suite
-        original_request_id: dispatch-synced-project-scope-p02-20260827T063331Z
-        original_task_id: p02-t11
-        original_commit: 34ecc0c30898dbccd20751d37b5adbc864fc587e
-        discovered_by: pnpm --filter @open-agent-toolkit/cli test
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 34ecc0c30898dbccd20751d37b5adbc864fc587e
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -96,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T06:31:48.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T07:19:36.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
