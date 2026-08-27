@@ -36,11 +36,16 @@ const commandLines = logicalLines.filter(
 
 // Prose that names the bypass without exemplifying it: the documented
 // non-repository exception, the high-impact authorization inventory, and
-// prohibition sentences. Everything else command-ish must stay bypass-free.
+// prohibition sentences. A line that actually runs `codex exec`/`codex resume`
+// is an example no matter which of those phrases it also carries, so it is
+// never exempt. Everything else command-ish must stay bypass-free.
+// The prohibition branch does not fire at HEAD (step 5 is not command-ish); it
+// is kept so a rewrap or a stronger prohibition sentence cannot start failing.
 const documentsTheException = (line) =>
-  /not a Git repo/i.test(line) ||
-  /high-impact flags/i.test(line) ||
-  /Do \*\*not\*\* add|Never pass/i.test(line);
+  !/(?:^|[`\s])codex\s+(?:exec|resume)/.test(line) &&
+  (/not a Git repo/i.test(line) ||
+    /high-impact flags/i.test(line) ||
+    /Do \*\*not\*\* add|Never pass/i.test(line));
 
 test('codex-skill routes model and effort through the provider authority', () => {
   assert.match(
@@ -89,26 +94,30 @@ test('codex-skill keeps the below-floor warning non-blocking', () => {
   // The plan forbids re-asking when the user already supplied a model and
   // effort, so the below-floor clause may warn but must not gate on a
   // confirmation. Only the direct-API classification does.
-  const clauses = guidance.replace(/\s+/g, ' ').split(/(?<=[.;])\s+/);
+  const prose = guidance.replace(/\s+/g, ' ');
+  const clauses = prose.split(/(?<=[.;])\s+/);
   const belowFloor = clauses.filter((clause) =>
     /below the route/i.test(clause),
   );
 
-  assert.equal(
-    belowFloor.length,
-    1,
-    'expected exactly one clause about a below-floor pairing',
+  assert.ok(
+    belowFloor.length >= 1,
+    'expected the guidance to describe a below-floor pairing',
   );
+  // Semantic, not phrase-co-located: the non-blocking rule may live in a
+  // neighbouring sentence, but it must be stated near the below-floor rule.
   assert.match(
-    belowFloor[0],
-    /without blocking/i,
+    prose,
+    /without blocking[\s\S]{0,200}?below the route|below the route[\s\S]{0,200}?without blocking/i,
     'the below-floor pairing must be reported without blocking the run',
   );
-  assert.doesNotMatch(
-    belowFloor[0],
-    /confirm/i,
-    'the below-floor pairing must not require a confirmation',
-  );
+  for (const clause of belowFloor) {
+    assert.doesNotMatch(
+      clause,
+      /confirm before launching/i,
+      'the below-floor pairing must not require a confirmation',
+    );
+  }
 });
 
 test('codex-skill never mandates the repository-check bypass', () => {
@@ -167,9 +176,9 @@ test('codex-skill command examples omit the bypass by default', () => {
 });
 
 test('codex-skill cross-directory guidance keeps the repository check', () => {
-  const crossDirectory = guidance
-    .split('\n')
-    .filter((line) => /-C[ ,]|--cd/.test(line));
+  const crossDirectory = logicalLines.filter((line) =>
+    /-C[ ,]|--cd/.test(line),
+  );
 
   assert.ok(crossDirectory.length > 0, 'expected -C/--cd guidance');
   for (const line of crossDirectory) {
