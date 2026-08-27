@@ -251,3 +251,11 @@ Status after attempt 3: still `blocked` by the gate; all findings applied. Await
 - M2 `ProjectSummary.scope` public API → `packages/control-plane/README.md` added to p02-t07.
 
 Status after attempt 4: still `blocked`; all findings applied. Awaiting maintainer: run again or approve.
+
+**Attempt 5 — `reviews/archived/artifact-plan-review-2026-08-27T025742Z.md`** (0 critical, 3 important) — all resolved:
+
+- I1 canonical snippet failed open to `shared` → fail-closed (`|| exit 1`); validator rule (c) rejects fallback patterns.
+- I2 archive "dry-check" named a destructive helper → new read-only `preflightSyncedCheckout`; `removeSyncedCheckout` called exactly once, last.
+- I3 spike never requested a blob URL → spike commit carries `design.md`; `blob/<sha>/design.md` fetched and content-checked.
+
+**Scope fold-in (maintainer direction 2026-08-27):** FR16 remote discovery & adoption (`list --remote`, adopting `pull`) and FR17 coordination pull added to spec; design gains the API additions and a "Discovery across machines and users" section (forks, clone refspec, GC roots); plan gains p02-t09/p02-t10 and a "picking up projects" docs page (40 tasks). Gate attempt 6 authorized on the combined change.
