@@ -36,6 +36,15 @@ export type PullResult = {
   conflicts?: string[];
 };
 
+export type CheckoutPreflight = {
+  status: 'clean' | 'dirty' | 'unpushed' | 'absent';
+  sha?: string;
+};
+
+export type RemoveResult = {
+  status: 'removed' | 'absent' | 'dirty' | 'unpushed';
+};
+
 export function buildSyncTarget(
   repoRoot: string,
   projectsRoot: string,
@@ -303,6 +312,99 @@ export async function abortSynced(
 ): Promise<void> {
   await assertNestedWorktree(target, git);
   await git.run(['rebase', '--abort'], { cwd: target.projectPath });
+}
+
+function normalizedPathspecs(repoRoot: string, pathspecs: string[]): string[] {
+  return pathspecs.map((pathspec) => repoRelativePath(repoRoot, pathspec));
+}
+
+export async function commitRecordChange(
+  repoRoot: string,
+  pathspecs: string[],
+  message: string,
+  git: GitRunner,
+): Promise<{ sha: string } | null> {
+  assertAllowlistedPathspecs(repoRoot, pathspecs);
+  const normalized = normalizedPathspecs(repoRoot, pathspecs);
+  await git.run(['add', '--', ...normalized], { cwd: repoRoot });
+  const changed = await git.run(
+    ['diff', '--cached', '--quiet', '--', ...normalized],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  assertExpectedGitResult('git diff --cached --quiet', changed, [0, 1]);
+  if (changed.code === 0) {
+    return null;
+  }
+
+  await git.run(['commit', '-m', message, '--', ...normalized], {
+    cwd: repoRoot,
+  });
+  const sha = (await git.run(['rev-parse', 'HEAD'], { cwd: repoRoot })).stdout;
+  return { sha };
+}
+
+export async function preflightSyncedCheckout(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<CheckoutPreflight> {
+  const fetched = await git.run(
+    ['fetch', target.remote, `+${target.ref}:${target.ref}`],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  const remoteExists = fetched.code === 0;
+  if (!remoteExists && !isMissingRemoteRef(fetched.stderr)) {
+    assertExpectedGitResult('git fetch synced ref', fetched, [0]);
+  }
+
+  if (!(await pathExists(target.projectPath))) {
+    return { status: 'absent' };
+  }
+
+  await assertNestedWorktree(target, git);
+  const sha = await headSha(target, git);
+  const status = await git.run(['status', '--porcelain'], {
+    cwd: target.projectPath,
+  });
+  if (status.stdout !== '') {
+    return { status: 'dirty', sha };
+  }
+  if (!remoteExists) {
+    return { status: 'unpushed', sha };
+  }
+
+  const remoteSha = (
+    await git.run(['rev-parse', target.ref], { cwd: target.repoRoot })
+  ).stdout;
+  return { status: sha === remoteSha ? 'clean' : 'unpushed', sha };
+}
+
+export async function removeSyncedCheckout(
+  target: SyncTarget,
+  git: GitRunner,
+  options: { force?: boolean } = {},
+): Promise<RemoveResult> {
+  const preflight = await preflightSyncedCheckout(target, git);
+  if (preflight.status === 'absent') {
+    return { status: 'absent' };
+  }
+  if (
+    !options.force &&
+    (preflight.status === 'dirty' || preflight.status === 'unpushed')
+  ) {
+    return { status: preflight.status };
+  }
+
+  await git.run(
+    [
+      'worktree',
+      'remove',
+      ...(options.force ? ['--force'] : []),
+      target.projectPath,
+    ],
+    { cwd: target.repoRoot },
+  );
+  await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
+  return { status: 'removed' };
 }
 
 export async function assertNestedWorktree(

@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
@@ -15,10 +16,13 @@ import {
   assertNestedWorktree,
   abortSynced,
   buildSyncTarget,
+  commitRecordChange,
   continueSynced,
   createSyncedProject,
+  preflightSyncedCheckout,
   pullSynced,
   pushSynced,
+  removeSyncedCheckout,
   type SyncTarget,
 } from './ref-sync';
 
@@ -583,6 +587,279 @@ describe('pullSynced', () => {
       expect(
         git(target.projectPath, ['rev-parse', '--show-toplevel']),
       ).toContain('.oat/projects/synced/example');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
+
+describe('commitRecordChange', () => {
+  it('stages and commits exactly the allowlisted record path', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const recordPath = join(
+        fixture.cloneA,
+        '.oat/projects/synced/example.json',
+      );
+      await mkdir(dirname(recordPath), { recursive: true });
+      await writeFile(recordPath, '{"slug":"example"}\n', 'utf8');
+      await writeFile(join(fixture.cloneA, 'unrelated.txt'), 'dirty\n', 'utf8');
+      const calls: string[][] = [];
+      const recordingRunner: GitRunner = {
+        async run(args, options) {
+          calls.push([...args]);
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      const result = await commitRecordChange(
+        fixture.cloneA,
+        [recordPath],
+        'chore: add record',
+        recordingRunner,
+      );
+
+      expect(result?.sha).toBe(git(fixture.cloneA, ['rev-parse', 'HEAD']));
+      expect(calls).toContainEqual([
+        'add',
+        '--',
+        '.oat/projects/synced/example.json',
+      ]);
+      expect(
+        git(fixture.cloneA, [
+          'diff-tree',
+          '--no-commit-id',
+          '--name-only',
+          '-r',
+          'HEAD',
+        ]),
+      ).toBe('.oat/projects/synced/example.json');
+      expect(git(fixture.cloneA, ['status', '--porcelain'])).toContain(
+        '?? unrelated.txt',
+      );
+      await expect(
+        commitRecordChange(
+          fixture.cloneA,
+          [recordPath],
+          'chore: no change',
+          defaultGitRunner,
+        ),
+      ).resolves.toBeNull();
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('leaves a pre-staged unrelated change outside the path-limited commit', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const unrelated = join(fixture.cloneA, 'src/unrelated.ts');
+      const recordPath = join(
+        fixture.cloneA,
+        '.oat/projects/synced/example.json',
+      );
+      await mkdir(dirname(unrelated), { recursive: true });
+      await mkdir(dirname(recordPath), { recursive: true });
+      await writeFile(unrelated, 'export const unrelated = true;\n', 'utf8');
+      await writeFile(recordPath, '{"slug":"example"}\n', 'utf8');
+      git(fixture.cloneA, ['add', 'src/unrelated.ts']);
+
+      await commitRecordChange(
+        fixture.cloneA,
+        [recordPath],
+        'chore: add record only',
+        defaultGitRunner,
+      );
+
+      expect(
+        git(fixture.cloneA, [
+          'diff-tree',
+          '--no-commit-id',
+          '--name-only',
+          '-r',
+          'HEAD',
+        ]),
+      ).toBe('.oat/projects/synced/example.json');
+      expect(git(fixture.cloneA, ['diff', '--cached', '--name-only'])).toBe(
+        'src/unrelated.ts',
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('rejects non-allowlisted pathspecs before invoking git add', async () => {
+    const calls: string[][] = [];
+    const runner: GitRunner = {
+      async run(args) {
+        calls.push([...args]);
+        return { code: 0, stdout: '', stderr: '' };
+      },
+    };
+
+    await expect(
+      commitRecordChange('/repo', ['src/index.ts'], 'bad', runner),
+    ).rejects.toBeInstanceOf(CliError);
+    expect(calls.some((args) => args[0] === 'add')).toBe(false);
+  });
+
+  it('keeps independently added records mergeable across branches', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      git(fixture.cloneA, ['checkout', '-q', '-b', 'feat-a']);
+      git(fixture.cloneB!, ['checkout', '-q', '-b', 'feat-b']);
+      const recordA = join(fixture.cloneA, '.oat/projects/synced/alpha.json');
+      const recordB = join(fixture.cloneB!, '.oat/projects/synced/beta.json');
+      await mkdir(dirname(recordA), { recursive: true });
+      await mkdir(dirname(recordB), { recursive: true });
+      await writeFile(recordA, '{"slug":"alpha"}\n', 'utf8');
+      await writeFile(recordB, '{"slug":"beta"}\n', 'utf8');
+      await commitRecordChange(
+        fixture.cloneA,
+        [recordA],
+        'add alpha',
+        defaultGitRunner,
+      );
+      await commitRecordChange(
+        fixture.cloneB!,
+        [recordB],
+        'add beta',
+        defaultGitRunner,
+      );
+      git(fixture.cloneB!, ['push', '-q', 'origin', 'feat-b']);
+      git(fixture.cloneA, ['checkout', '-q', 'main']);
+      git(fixture.cloneA, ['merge', '-q', '--no-edit', 'feat-a']);
+      git(fixture.cloneA, ['fetch', '-q', 'origin', 'feat-b']);
+      git(fixture.cloneA, ['merge', '-q', '--no-edit', 'origin/feat-b']);
+
+      expect(
+        git(fixture.cloneA, [
+          'ls-tree',
+          '--name-only',
+          'HEAD',
+          '.oat/projects/synced',
+        ]),
+      ).toContain('.oat/projects/synced');
+      expect(
+        existsSync(join(fixture.cloneA, '.oat/projects/synced/alpha.json')),
+      ).toBe(true);
+      expect(
+        existsSync(join(fixture.cloneA, '.oat/projects/synced/beta.json')),
+      ).toBe(true);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
+
+describe('synced checkout removal', () => {
+  it('preflights without removal and removes a clean pushed checkout safely', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'example',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await pushSynced(target, defaultGitRunner, {});
+      const calls: string[][] = [];
+      const recordingRunner: GitRunner = {
+        async run(args, options) {
+          calls.push([...args]);
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await expect(
+        preflightSyncedCheckout(target, recordingRunner),
+      ).resolves.toMatchObject({ status: 'clean' });
+      expect(calls.some((args) => args.includes('remove'))).toBe(false);
+      await expect(
+        removeSyncedCheckout(target, recordingRunner),
+      ).resolves.toMatchObject({ status: 'removed' });
+      expect(existsSync(target.projectPath)).toBe(false);
+      expect(
+        git(fixture.cloneA, ['worktree', 'list', '--porcelain']),
+      ).not.toContain(target.projectPath);
+      expect(calls.flat()).not.toContain('--force');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('leaves dirty and unpushed checkouts in place', async () => {
+    const dirtyFixture = await createSyncedFixture();
+    try {
+      const dirtyTarget = buildSyncTarget(
+        dirtyFixture.cloneA,
+        '.oat/projects/shared',
+        'dirty',
+      );
+      await createSyncedProject(dirtyTarget, defaultGitRunner);
+      await pushSynced(dirtyTarget, defaultGitRunner, {});
+      await writeFile(
+        join(dirtyTarget.projectPath, 'draft.md'),
+        'dirty\n',
+        'utf8',
+      );
+      await expect(
+        removeSyncedCheckout(dirtyTarget, defaultGitRunner),
+      ).resolves.toMatchObject({ status: 'dirty' });
+      expect(existsSync(dirtyTarget.projectPath)).toBe(true);
+    } finally {
+      await dirtyFixture.cleanup();
+    }
+
+    const unpushedFixture = await createSyncedFixture();
+    try {
+      const unpushedTarget = buildSyncTarget(
+        unpushedFixture.cloneA,
+        '.oat/projects/shared',
+        'unpushed',
+      );
+      await createSyncedProject(unpushedTarget, defaultGitRunner);
+      await pushSynced(unpushedTarget, defaultGitRunner, {});
+      await writeFile(
+        join(unpushedTarget.projectPath, 'local.md'),
+        'local\n',
+        'utf8',
+      );
+      git(unpushedTarget.projectPath, ['add', 'local.md']);
+      git(unpushedTarget.projectPath, ['commit', '-m', 'unpushed local']);
+
+      await expect(
+        preflightSyncedCheckout(unpushedTarget, defaultGitRunner),
+      ).resolves.toMatchObject({ status: 'unpushed' });
+      await expect(
+        removeSyncedCheckout(unpushedTarget, defaultGitRunner),
+      ).resolves.toMatchObject({ status: 'unpushed' });
+      expect(existsSync(unpushedTarget.projectPath)).toBe(true);
+    } finally {
+      await unpushedFixture.cleanup();
+    }
+  });
+
+  it('allows explicit force removal of a dirty checkout', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'example',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await pushSynced(target, defaultGitRunner, {});
+      await writeFile(
+        join(target.projectPath, 'draft.md'),
+        'discard\n',
+        'utf8',
+      );
+
+      await expect(
+        removeSyncedCheckout(target, defaultGitRunner, { force: true }),
+      ).resolves.toMatchObject({ status: 'removed' });
+      expect(existsSync(target.projectPath)).toBe(false);
     } finally {
       await fixture.cleanup();
     }
