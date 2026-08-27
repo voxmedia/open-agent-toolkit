@@ -258,7 +258,7 @@ oat_generated: false
 
 **Verification before dogfood:** Full CLI passed 289 files / 3,845 tests after recovery 1; CLI type-check/build, repository lint/format, and diff checks passed. The p03-t07 synced-project doctor check passed, while the overall live doctor command retained unrelated pre-existing warnings.
 
-**Recovery status:** Attempt 3 limited invocation-scoped `core.hooksPath=/dev/null` to the two empty-ref `worktree add` commands and passed authoritative verification. Dogfood then exposed the same inherited-hook defect during the initial synced scaffold commit. Attempt 4's broader lifecycle candidate passed 99/99 focused tests but was restored after the full CLI suite failed four unrelated fixed-timeout tests. The attempt is settled at 4/10 with no pending marker; p03-t11 now integrates upstream before recovery is reassessed.
+**Recovery status:** Attempt 3 limited invocation-scoped `core.hooksPath=/dev/null` to empty-ref materialization and passed authoritative verification. Dogfood then exposed the same inherited-hook defect during the initial synced scaffold commit. Attempt 4's broader lifecycle candidate passed 99/99 focused tests but was restored after the full CLI suite failed four unrelated fixed-timeout tests. After p03-t11 integrated upstream, attempt 5 applied the same coherent lifecycle repair and passed 99/99 focused plus 3,906/3,906 full CLI tests before and after commit. Root independently verified the exact four-file boundary, clean worktree, immutable ancestry, and 99/99 focused result. The ledger is settled at 5/10 with no pending attempt.
 
 **Operator direction (2026-08-27):** Authorize recovery attempt 3/10 with stable-load preflight and the same bounded two-file hook correction. After p03-t10 completes, fetch and merge `origin/main` as planned task p03-t11, resolve any real conflicts, verify and review the merged tree, and do not begin Phase 4 beforehand.
 
@@ -861,6 +861,21 @@ continuation_events: []
 - Recovery commit: -
 - Verification: focused hook/scaffold suites passed 99/99; full CLI failed 4 of 3,849 tests across three files with fixed five-second timeouts plus a companion cleanup `ENOTEMPTY`
 - Reason: required full phase verification failed despite a stable no-overlap preflight; all three candidate code/test files were restored exactly and ledger-only failure evidence remains in `c5f28c6403c0b1cdc379efe904f6237e21bc8f80`
+
+### Recovery Event p03-recovery-05-synced-ref-hooks-after-upstream
+
+- Phase/task: p03 / p03-t10
+- Original request: dispatch-synced-project-scope-p03-20260827T173721Z
+- Original commit: 460b519217d8e2d40e92e81d88d87fc5d49be33f
+- Defect class: composition
+- Discovered by: `pnpm run --silent cli -- project new synced-dogfood --mode quick --no-set-active` when the common pre-commit wrapper rejected the scaffold commit
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 5/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 0359d964837a6fb26c4ab9d6eca15001350a072b
+- Verification: focused hook/scaffold suites passed 99/99 and full CLI passed 3,906/3,906 before and after commit; CLI type-check, scoped lint, format, diff, commit-boundary, and cleanliness checks passed; root independently re-ran focused hook/scaffold 99/99 and verified the exact committed boundary
+- Reason: the upstream-integrated baseline preserved the bounded assumptions; invocation-scoped hook suppression now covers materialization, commit, push, rebase, continue, and abort inside intentionally minimal synced worktrees without changing parent-checkout or persistent Git configuration
 
 ### Recovery Event recovery-p02-01-cli-phase-suite
 

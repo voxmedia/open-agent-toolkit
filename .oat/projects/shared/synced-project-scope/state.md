@@ -1,6 +1,6 @@
 ---
 oat_current_task: p03-t10
-oat_last_commit: a72c8cf8b
+oat_last_commit: 0359d9648
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -30,16 +30,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p03:
       used_attempts: 5
-      pending_attempt:
-        attempt: 5
-        event_id: p03-recovery-05-synced-ref-hooks-after-upstream
-        original_request_id: dispatch-synced-project-scope-p03-20260827T173721Z
-        original_task_id: p03-t10
-        original_commit: 460b519217d8e2d40e92e81d88d87fc5d49be33f
-        discovered_by: pnpm run --silent cli -- project new synced-dogfood --mode quick --no-set-active (common pre-commit wrapper rejected scaffold commit)
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 6f61476106d2285b0c5a1afc87899cb419d7b1f1
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -99,19 +90,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T19:21:22.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T19:30:30.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation in progress - Phase 3 dogfood recovery reassessment
+**Status:** Implementation in progress - Phase 3 dogfood
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation - Phase 3 task p03-t10 recovery reassessment
+Implementation - Phase 3 task p03-t10 dogfood
 
 ## Artifacts
 
@@ -152,11 +143,12 @@ Implementation - Phase 3 task p03-t10 recovery reassessment
 - ✓ Phase 3 recovery attempt 3/10 validated and settled
 - ⨯ Phase 3 recovery attempt 4/10 failed full-suite verification; code restored
 - ✓ Phase 3 task p03-t11 integrated and reviewed `origin/main`
+- ✓ Phase 3 recovery attempt 5/10 validated and settled
 
 ## Blockers
 
-None. Upstream integration passed review at 0 Critical/0 Important; p03-t10 recovery remains before Phase 3 review and Phase 4.
+None. Upstream integration passed review at 0 Critical/0 Important and recovery attempt 5 passed; p03-t10 dogfood remains before Phase 3 review and Phase 4.
 
 ## Next Milestone
 
-Reassess p03-t10 recovery on the merged baseline, complete dogfood, then run the full Phase 3 review before Phase 4.
+Complete p03-t10 dogfood, then run the full Phase 3 review before Phase 4.
