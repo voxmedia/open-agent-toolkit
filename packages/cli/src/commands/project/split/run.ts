@@ -7,6 +7,11 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  resolveProjectScope,
+  resolveScopeRoot,
+  type ProjectScope,
+} from '@commands/shared/project-scope';
 import { confirmAction } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { generateStateDashboard } from '@commands/state/generate';
@@ -224,9 +229,27 @@ async function runFreshSplit(
         .join('; ')}`,
     );
   }
-  await writeCoordinationParent(document, { repoRoot, projectsRoot });
-  await seedChildren(document.plan, { repoRoot, projectsRoot });
-  await finalizeSplit(document.plan, { repoRoot, projectsRoot });
+  const localConfig = await readOatLocalConfig(repoRoot);
+  const scope = localConfig.activeProject
+    ? resolveProjectScope(localConfig.activeProject, projectsRoot)
+    : null;
+  const inheritedScope: ProjectScope = scope ?? 'shared';
+  const absoluteScopeRoot =
+    inheritedScope === 'shared'
+      ? isAbsolute(projectsRoot)
+        ? projectsRoot
+        : join(repoRoot, projectsRoot)
+      : resolveScopeRoot(repoRoot, projectsRoot, inheritedScope);
+  const scopeRoot = toRepoRelativeProjectPath(repoRoot, absoluteScopeRoot);
+  const splitContext = {
+    repoRoot,
+    projectsRoot,
+    scope: inheritedScope,
+    scopeRoot,
+  };
+  await writeCoordinationParent(document, splitContext);
+  await seedChildren(document.plan, splitContext);
+  await finalizeSplit(document.plan, splitContext);
 }
 
 export function createProjectSplitRunCommand(
@@ -285,7 +308,15 @@ export function createProjectSplitRunCommand(
           return;
         }
 
-        const parentPath = join(projectsRoot, document.plan.parentSlug)
+        const localConfig = await readOatLocalConfig(repoRoot);
+        const activeScope = localConfig.activeProject
+          ? resolveProjectScope(localConfig.activeProject, projectsRoot)
+          : null;
+        const parentRoot =
+          activeScope && activeScope !== 'shared'
+            ? resolveScopeRoot(repoRoot, projectsRoot, activeScope)
+            : projectsRoot;
+        const parentPath = join(parentRoot, document.plan.parentSlug)
           .split('\\')
           .join('/');
         const absoluteParentPath = isAbsolute(parentPath)

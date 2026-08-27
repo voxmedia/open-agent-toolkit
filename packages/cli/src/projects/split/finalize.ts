@@ -1,6 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { defaultGitRunner } from '@commands/project/sync/git';
+import {
+  buildSyncTarget,
+  pushSynced as defaultPushSynced,
+} from '@commands/project/sync/ref-sync';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import { replaceFrontmatter } from '@commands/shared/frontmatter-write';
 import { setActiveProject } from '@config/oat-config';
@@ -33,7 +38,8 @@ export async function finalizeSplit(
   context: SplitProjectContext,
 ): Promise<FinalizeSplitResult> {
   const projectsRoot = context.projectsRoot ?? '.oat/projects/shared';
-  const parentPath = join(projectsRoot, plan.parentSlug).split('\\').join('/');
+  const scopeRoot = context.scopeRoot ?? projectsRoot;
+  const parentPath = join(scopeRoot, plan.parentSlug).split('\\').join('/');
   const statePath = join(context.repoRoot, parentPath, 'state.md');
   const stateContent = await readFile(statePath, 'utf8');
   const frontmatter = readObjectFrontmatter(stateContent, statePath);
@@ -45,7 +51,30 @@ export async function finalizeSplit(
     'utf8',
   );
 
-  const activeProjectPath = join(projectsRoot, plan.initialActiveChild)
+  if (context.scope === 'synced') {
+    const gitRunner = context.gitRunner ?? defaultGitRunner;
+    const pushSynced = context.pushSynced ?? defaultPushSynced;
+    for (const slug of [
+      plan.parentSlug,
+      ...plan.children
+        .slice()
+        .sort((left, right) => left.order - right.order)
+        .map((child) => child.slug),
+    ]) {
+      const result = await pushSynced(
+        buildSyncTarget(context.repoRoot, projectsRoot, slug),
+        gitRunner,
+        { message: `chore(oat): finalize split ${plan.parentSlug}` },
+      );
+      if (result.status !== 'pushed' && result.status !== 'up-to-date') {
+        throw new Error(
+          `Failed to publish synced split project ${slug}: ${result.status}`,
+        );
+      }
+    }
+  }
+
+  const activeProjectPath = join(scopeRoot, plan.initialActiveChild)
     .split('\\')
     .join('/');
   await setActiveProject(context.repoRoot, activeProjectPath);

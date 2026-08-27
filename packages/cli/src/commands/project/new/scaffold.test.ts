@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { instantiateProjectLogTemplate } from '@commands/project/log/append';
+import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 
@@ -28,10 +29,13 @@ const SINGLE_BRACE_OAT_PLACEHOLDER = /(?<!\{)\{\s*OAT_[A-Z0-9_]+\s*\}(?!\})/g;
 function scaffoldProject(
   options: ScaffoldProjectOptions,
 ): Promise<ScaffoldProjectResult> {
-  return scaffoldProjectImpl({
-    home: join(options.repoRoot, '.test-home'),
-    ...options,
-  });
+  return scaffoldProjectImpl(
+    {
+      home: join(options.repoRoot, '.test-home'),
+      ...options,
+    },
+    { resolveDefaultScope: async () => 'shared' },
+  );
 }
 
 function initGitRepo(root: string): void {
@@ -198,6 +202,108 @@ describe('scaffoldProject', () => {
     });
 
     expect(result.projectPath).toBe('.oat/projects/shared/my_project');
+  });
+
+  it('scaffolds local projects without creating a branch commit', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    initGitRepo(repoRoot);
+    await writeFile(join(repoRoot, 'README.md'), '# fixture\n', 'utf8');
+    execFileSync('git', ['add', 'README.md'], { cwd: repoRoot });
+    execFileSync('git', ['commit', '-q', '-m', 'initial'], { cwd: repoRoot });
+    const before = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }).trim();
+
+    const result = await scaffoldProjectImpl({
+      repoRoot,
+      projectName: 'local-project',
+      scope: 'local',
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+
+    expect(result.scope).toBe('local');
+    expect(result.projectPath).toBe('.oat/projects/local/local-project');
+    expect(result.committed).toBe(false);
+    expect(
+      execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: repoRoot,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe(before);
+  });
+
+  it('publishes a synced scaffold and commits only its discovery record', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+
+    const result = await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'synced-project',
+      scope: 'synced',
+      commit: true,
+      refreshDashboard: false,
+      setActive: true,
+      nowUtc: '2026-08-27T00:00:00.000Z',
+    });
+
+    expect(result).toMatchObject({
+      scope: 'synced',
+      projectPath: '.oat/projects/synced/synced-project',
+      ref: 'refs/oat/projects/synced-project',
+      committed: true,
+      commitStatus: 'committed',
+    });
+    expect(result.sha).toMatch(/^[0-9a-f]{40}$/);
+    expect(
+      execFileSync(
+        'git',
+        [
+          'ls-tree',
+          '--name-only',
+          'HEAD',
+          '.oat/projects/synced/synced-project.json',
+        ],
+        { cwd: fixture.cloneA, encoding: 'utf8' },
+      ).trim(),
+    ).toBe('.oat/projects/synced/synced-project.json');
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe('');
+    expect(
+      execFileSync(
+        'git',
+        ['show', 'refs/oat/projects/synced-project:state.md'],
+        { cwd: fixture.originDir, encoding: 'utf8' },
+      ),
+    ).toContain('oat_workflow_mode: spec-driven');
+  });
+
+  it('rejects synced scaffolding without origin before creating state', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    initGitRepo(repoRoot);
+
+    await expect(
+      scaffoldProjectImpl({
+        repoRoot,
+        projectName: 'no-origin',
+        scope: 'synced',
+        refreshDashboard: false,
+      }),
+    ).rejects.toThrow('--scope local');
+    await expect(
+      readFile(
+        join(repoRoot, '.oat', 'projects', 'synced', 'no-origin', 'state.md'),
+        'utf8',
+      ),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
   it('uses a user template before a differing repo template', async () => {

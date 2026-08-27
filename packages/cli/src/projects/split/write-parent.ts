@@ -5,8 +5,14 @@ import {
   scaffoldProject as defaultScaffoldProject,
   type ScaffoldProjectResult,
 } from '@commands/project/new/scaffold';
+import type { GitRunner } from '@commands/project/sync/git';
+import type { pushSynced } from '@commands/project/sync/ref-sync';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import { replaceFrontmatter } from '@commands/shared/frontmatter-write';
+import {
+  resolveProjectScope,
+  type ProjectScope,
+} from '@commands/shared/project-scope';
 import { assertValidProjectStateFilesystemContent } from '@validation/project-state';
 import YAML from 'yaml';
 
@@ -18,7 +24,11 @@ export interface SplitProjectContext {
   today?: string;
   nowUtc?: string;
   env?: NodeJS.ProcessEnv;
+  scope?: ProjectScope;
+  scopeRoot?: string;
   scaffoldProject?: typeof defaultScaffoldProject;
+  gitRunner?: GitRunner;
+  pushSynced?: typeof pushSynced;
 }
 
 function readObjectFrontmatter(
@@ -48,10 +58,6 @@ async function writeObjectFrontmatter(
     replaceFrontmatter(content, YAML.stringify(frontmatter).trimEnd()),
     'utf8',
   );
-}
-
-function projectPathFor(projectsRoot: string, slug: string): string {
-  return join(projectsRoot, slug).split('\\').join('/');
 }
 
 function renderParentDiscovery(document: SplitPlanDocument): string {
@@ -186,9 +192,18 @@ export async function writeCoordinationParent(
   context: SplitProjectContext,
 ): Promise<WriteCoordinationParentResult> {
   const scaffoldProject = context.scaffoldProject ?? defaultScaffoldProject;
+  const projectsRoot = context.projectsRoot ?? '.oat/projects/shared';
+  const scope =
+    context.scope ??
+    resolveProjectScope(
+      join(projectsRoot, document.plan.parentSlug),
+      projectsRoot,
+    ) ??
+    'shared';
   const scaffold = await scaffoldProject({
     repoRoot: context.repoRoot,
     projectName: document.plan.parentSlug,
+    scope,
     mode: 'quick',
     setActive: false,
     refreshDashboard: false,
@@ -238,10 +253,7 @@ export async function writeCoordinationParent(
   );
 
   return {
-    parentProjectPath: projectPathFor(
-      context.projectsRoot ?? scaffold.projectsRoot,
-      document.plan.parentSlug,
-    ),
+    parentProjectPath: scaffold.projectPath,
     scaffold,
   };
 }

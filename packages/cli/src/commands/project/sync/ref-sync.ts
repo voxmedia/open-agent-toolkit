@@ -423,8 +423,9 @@ export async function commitRecordChange(
   pathspecs: string[],
   message: string,
   git: GitRunner,
+  options: AllowlistedPathspecOptions = {},
 ): Promise<{ sha: string } | null> {
-  assertAllowlistedPathspecs(repoRoot, pathspecs);
+  assertAllowlistedPathspecs(repoRoot, pathspecs, options);
   const normalized = normalizedPathspecs(repoRoot, pathspecs);
   await git.run(['add', '--', ...normalized], { cwd: repoRoot });
   const changed = await git.run(
