@@ -302,3 +302,17 @@ Verified by a subagent against `https://github.com/tkstang/disposable-test-repo-
 - Cleanup: remote + local ref deleted, `ls-remote` empty, clone removed. No branches/tags touched.
 
 Implications for p01-t10: push access and custom-ref acceptance are proven; the spike still needs the workflow-bearing commit + branch positive control + blob-URL check. Because the repo is empty, p01-t10's Step 1 creates `main` with the probe workflow as its first commit.
+
+### p01-t10 GitHub custom-ref spike — pre-verified (2026-08-27T04:15–04:22Z)
+
+Run by a subagent against `https://github.com/tkstang/disposable-test-repo-for-oat` (private; Actions enabled). `main` = `3661e5d4` (first commit: `.github/workflows/probe.yml` with unfiltered `on: [push]` + README); the main push produced a run within ~22 s, proving the workflow is active.
+
+- Spike commit `C = e36cc034464607ba353751fe92984dc5f3def096` (parent `main`, tree contains the workflow **and** `design.md`), blob `fadfd33f73706ee6f939a374644390e61117a99e`.
+- **A — custom ref does not trigger Actions: PROVEN.** Pushed `C` to `refs/oat/projects/spike` at 04:15:54Z; at 04:18:37Z `gh run list … select(.headSha=="C")` → empty.
+- **A′ — positive control: PROVEN.** Same `C` pushed to `refs/heads/oat-spike-branch` at 04:19:04Z; at 04:21:44Z exactly one run, `headBranch: oat-spike-branch`, `headSha: C`. Branch deleted 04:21:49Z. Final run list at 04:22:30Z: only the `main` and `oat-spike-branch` runs — none for the custom ref.
+- **B — blob for a commit reachable only from the custom ref: PROVEN via API.** With the branch deleted, `gh api repos/…/contents/design.md?ref=C` → `fadfd33f…` (matches BLOB); `gh api repos/…/commits/C` → 200. Unauthenticated `curl` of the HTML page returns 404 because the repo is private — expected, not a negative. Browser-rendered check: `https://github.com/tkstang/disposable-test-repo-for-oat/blob/e36cc034464607ba353751fe92984dc5f3def096/design.md` (ref re-created via the API after the run so the page stays addressable; delete with the repo).
+- **C — custom ref never in the branch list: PROVEN.** `gh api repos/…/branches` → `main` only throughout.
+- Cleanup: spike ref and contrast branch deleted after the run (ref later re-created for the browser check); `main` + workflow left in place; local clone removed.
+- Side finding: in zsh, `"$C:refs/heads/x"` expands `$C:r` as a modifier — use `"${C}:…"`. Plan commands updated.
+
+Disposition for implementation: p01-t10 copies this evidence into its section; no re-push needed unless the repo is recreated.

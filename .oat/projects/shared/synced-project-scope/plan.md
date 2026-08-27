@@ -537,6 +537,8 @@ git commit -m "feat(p01-t09): add allowlisted record commits and safe checkout r
 
 - Modify: `.oat/projects/shared/synced-project-scope/implementation.md` (evidence only)
 
+**Status: pre-verified on 2026-08-27 (see `implementation.md` → GitHub custom-ref spike).** A, A′, and C are proven and B is proven via the contents/commits API; the implementer only needs to (1) confirm the browser-rendered blob page in a logged-in session if the maintainer has not already, and (2) copy the recorded evidence into the p01-t10 section rather than re-running the pushes. Re-run the full sequence only if the disposable repository was recreated. Shell note: quote `${C}` with braces — in zsh, `$C:r` is a history modifier and silently mangles `refs/...`.
+
 **Why a disposable repo:** every `on: push` workflow in this repository is filtered to `branches: [main]`, so "no run after pushing a custom ref here" proves nothing. The negative CI result must come from a repository whose workflow has **no** branch filter.
 
 **Step 1: Use the maintainer-provided disposable repository and add an unfiltered push workflow**
@@ -566,13 +568,13 @@ until gh run list --json headSha,status --jq '.[]|select(.headSha=="'$(git rev-p
 # (a commit without the workflow file could never trigger Actions anywhere, which would make "no run" meaningless).
 printf '# spike\n\nrendered from a custom ref\n' > design.md && git add design.md
 TREE=$(git write-tree); git reset -q design.md; rm design.md
-C=$(git commit-tree "$TREE" -p HEAD -m "oat spike"); BLOB=$(git rev-parse "$C:design.md")
-SPIKE=refs/oat/projects/spike; git update-ref "$SPIKE" "$C" && git push origin "$C:$SPIKE"
+C=$(git commit-tree "$TREE" -p HEAD -m "oat spike"); BLOB=$(git rev-parse "${C}:design.md")
+SPIKE=refs/oat/projects/spike; git update-ref "$SPIKE" "$C" && git push origin "${C}:${SPIKE}"
 sleep 120   # give Actions time to create any run for the pushed ref
 # A. No workflow run for the custom-ref push — the negative half (NFR2):
 gh run list --limit 50 --json headSha,event,headBranch --jq '.[]|select(.headSha=="'$C'")'   # expected: empty
 # A'. Positive control: the SAME commit pushed to a branch DOES run the workflow:
-git push origin "$C:refs/heads/oat-spike-branch"; sleep 120
+git push origin "${C}:refs/heads/oat-spike-branch"; sleep 120
 gh run list --limit 50 --json headSha,event,headBranch --jq '.[]|select(.headSha=="'$C'")'   # expected: one run, headBranch == oat-spike-branch
 # B. The *blob* URL renders for the commit while it is reachable only from the custom ref
 #    (run B after deleting the branch in Step 3, then re-check it still renders):
