@@ -1,6 +1,17 @@
+import { execFileSync } from 'node:child_process';
+import { symlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
+import {
+  buildSyncTarget,
+  createSyncedProject,
+  pushSynced as pushSyncedReal,
+} from '@commands/project/sync/ref-sync';
 import { CliError } from '@errors/cli-error';
+import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -125,6 +136,80 @@ describe('createProjectPushCommand', () => {
 
     expect(pushSynced).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(1);
+  });
+
+  it('rejects an explicit real-worktree alias before staging its sibling', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const sibling = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'reviews',
+      );
+      await createSyncedProject(sibling, defaultGitRunner);
+      await writeFile(join(sibling.projectPath, 'state.md'), 'base\n', 'utf8');
+      await pushSyncedReal(sibling, defaultGitRunner, {
+        message: 'base sibling',
+      });
+      await symlink(
+        sibling.projectPath,
+        join(fixture.cloneA, '.oat/projects/synced/demo'),
+        'dir',
+      );
+      await writeFile(
+        join(sibling.projectPath, 'pending.md'),
+        'must remain uncommitted\n',
+        'utf8',
+      );
+      const siblingHead = execFileSync(
+        'git',
+        ['-C', sibling.projectPath, 'rev-parse', 'HEAD'],
+        { encoding: 'utf8' },
+      ).trim();
+      const capture = createLoggerCapture();
+      const gitCalls: string[][] = [];
+      const gitRunner: GitRunner = {
+        async run(args, options) {
+          gitCalls.push([...args]);
+          return defaultGitRunner.run(args, options);
+        },
+      };
+      const command = createProjectPushCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneA,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneA,
+        gitRunner,
+        processEnv: {},
+      });
+
+      await run(command, ['.oat/projects/synced/demo']);
+
+      expect(capture.error.join('\n')).toContain('canonical direct child');
+      expect(gitCalls).toEqual([]);
+      expect(
+        execFileSync('git', ['-C', sibling.projectPath, 'rev-parse', 'HEAD'], {
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe(siblingHead);
+      expect(
+        execFileSync(
+          'git',
+          ['-C', sibling.projectPath, 'status', '--porcelain'],
+          { encoding: 'utf8' },
+        ),
+      ).toContain('?? pending.md');
+      expect(process.exitCode).toBe(1);
+    } finally {
+      await fixture.cleanup();
+    }
   });
 
   it('emits the stable json envelope', async () => {

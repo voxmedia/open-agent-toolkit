@@ -1,4 +1,4 @@
-import { stat } from 'node:fs/promises';
+import { realpath, stat } from 'node:fs/promises';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
@@ -31,6 +31,7 @@ export interface ResolveSyncedTargetDependencies {
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
   readSyncedRecord: typeof readSyncedRecord;
   pathExists: (path: string) => Promise<boolean>;
+  realpath: typeof realpath;
   gitRunner: GitRunner;
 }
 
@@ -55,6 +56,7 @@ const DEFAULT_DEPENDENCIES: ResolveSyncedTargetDependencies = {
   readOatLocalConfig,
   readSyncedRecord,
   pathExists,
+  realpath,
   gitRunner: defaultGitRunner,
 };
 
@@ -129,6 +131,19 @@ export async function resolveSyncedTarget(
   }
 
   const checkoutExists = await dependencies.pathExists(projectPath);
+  if (checkoutExists) {
+    const [canonicalCheckout, canonicalSyncedRoot] = await Promise.all([
+      dependencies.realpath(projectPath),
+      dependencies.realpath(syncedRoot),
+    ]);
+    const canonicalDirectChild = resolve(canonicalSyncedRoot, slug);
+    if (canonicalCheckout !== canonicalDirectChild) {
+      throw new CliError(
+        `Project checkout must resolve to its canonical direct child of the synced project root: ${requested}`,
+        1,
+      );
+    }
+  }
   const record = await dependencies.readSyncedRecord(
     syncedRecordPath(syncedRoot, slug),
   );

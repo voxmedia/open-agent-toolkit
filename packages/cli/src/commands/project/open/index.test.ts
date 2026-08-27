@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -7,7 +14,13 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { defaultGitRunner } from '@commands/project/sync/git';
+import {
+  buildSyncTarget,
+  createSyncedProject,
+} from '@commands/project/sync/ref-sync';
 import { CliError } from '@errors/cli-error';
+import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -410,6 +423,42 @@ describe('oat project open', () => {
 
     expect(pullSynced).not.toHaveBeenCalled();
     expect(pushSynced).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('rejects a bare-slug real-worktree alias before opening its sibling', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const sibling = buildSyncTarget(
+      fixture.cloneA,
+      '.oat/projects/shared',
+      'reviews',
+    );
+    await createSyncedProject(sibling, defaultGitRunner);
+    const siblingState =
+      '---\noat_phase: plan\noat_phase_status: complete\noat_lifecycle: active\n---\n\n# Reviews\n';
+    await writeFile(
+      join(sibling.projectPath, 'state.md'),
+      siblingState,
+      'utf8',
+    );
+    await symlink(
+      sibling.projectPath,
+      join(fixture.cloneA, '.oat/projects/synced/demo'),
+      'dir',
+    );
+    const { command, capture, pullSynced, pushSynced } = createHarness({
+      cwd: fixture.cloneA,
+    });
+
+    await runCommand(command, ['demo']);
+
+    expect(capture.error.join('\n')).toContain('canonical direct child');
+    expect(pullSynced).not.toHaveBeenCalled();
+    expect(pushSynced).not.toHaveBeenCalled();
+    expect(await readFile(join(sibling.projectPath, 'state.md'), 'utf8')).toBe(
+      siblingState,
+    );
     expect(process.exitCode).toBe(1);
   });
 

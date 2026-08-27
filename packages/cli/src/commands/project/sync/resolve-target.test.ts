@@ -1,9 +1,12 @@
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { defaultGitRunner } from './git';
+import { buildSyncTarget, createSyncedProject } from './ref-sync';
 import { resolveSyncedTarget } from './resolve-target';
 
 function deps(
@@ -21,6 +24,7 @@ function deps(
     }),
     pathExists: async (path: string) =>
       (options.existing ?? []).some((suffix) => path.endsWith(suffix)),
+    realpath: async (path: string) => path,
     readSyncedRecord: async () =>
       options.record
         ? {
@@ -116,6 +120,38 @@ describe('resolveSyncedTarget', () => {
       });
       expect(pathExists).not.toHaveBeenCalled();
       expect(readSyncedRecord).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ['explicit path', '.oat/projects/synced/demo'],
+    ['bare slug', 'demo'],
+  ] as const)(
+    'rejects a real-worktree sibling symlink selected by %s',
+    async (_kind, requested) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const sibling = buildSyncTarget(
+          fixture.cloneA,
+          '.oat/projects/shared',
+          'reviews',
+        );
+        await createSyncedProject(sibling, defaultGitRunner);
+        await symlink(
+          sibling.projectPath,
+          join(fixture.cloneA, '.oat/projects/synced/demo'),
+          'dir',
+        );
+
+        await expect(
+          resolveSyncedTarget({ repoRoot: fixture.cloneA, env: {} }, requested),
+        ).rejects.toMatchObject({
+          message: expect.stringContaining('canonical direct child'),
+          exitCode: 1,
+        });
+      } finally {
+        await fixture.cleanup();
+      }
     },
   );
 
