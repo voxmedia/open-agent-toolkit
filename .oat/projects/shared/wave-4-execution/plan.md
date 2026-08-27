@@ -206,7 +206,7 @@ git commit -m "feat(p01-t01): route codex-skill through provider guidance and ma
 
 | Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
 | ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
-| p01    | code     | fixes_added | 2026-08-27 | reviews/archived/p01-review-2026-08-27T040820Z.md           | d9ce0c332a2b13a27a04239ea037d0f4320a3c42 | auto       | -                        |
+| p01    | code     | fixes_added | 2026-08-27 | reviews/archived/p01-review-2026-08-27T043458Z.md           | 39121c35e3ee07d8b7785d783565ae89e087d337 | auto       | -                        |
 | final  | code     | pending     | -          | -                                                           | -                                        | -          | -                        |
 | plan   | artifact | passed      | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020212Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
 | spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                        |

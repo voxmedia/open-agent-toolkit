@@ -96,9 +96,9 @@ _- Outstanding Items_
 
 #### Phase Outcomes
 
-| Phase | Worktree                                  | Implementer outcome                                                 | Review outcome                                | Fix rounds | Merged |
-| ----- | ----------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------- | ---------- | ------ |
-| p01   | integration checkout (`wave-4-execution`) | DONE (b97408f2 + fix d9ce0c33; DoD 10/10 green; codex 7 + 3 rounds) | round 1: 0C/0I/3M/4m → fixes; round 2 pending | 1          | n/a    |
+| Phase | Worktree                                  | Implementer outcome                                                                 | Review outcome                                                                                                   | Fix rounds | Merged |
+| ----- | ----------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
+| p01   | integration checkout (`wave-4-execution`) | DONE (b97408f2 + fixes d9ce0c33, 39121c35; DoD 10/10 green; codex 7 + 3 + 2 rounds) | round 1: 0C/0I/3M/4m; round 2: 0C/0I/3M/2m; round 3: 0C/0I/1M/1m (cap; bounded root-verified fix → final review) | 3          | n/a    |
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
@@ -153,7 +153,33 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - m1 line-position sensitivity (rewrapping the high-impact list or a stronger prohibition sentence produces false failures) → **fix**: exempt non-example prose explicitly (allowlist for the high-impact inventory and prohibition sentences) so wording improvements pass.
 - m2 stale-slug guard misses `gpt-5.5` (a compatibility route per `provider-codex.md:29`) → **fix**: add the 5.5 family to the assertion without the `gpt-5.4-mini` false positive; re-confirm the controls.
 
-**Review row `p01` → `fixes_added` at `d9ce0c33`; fix round 2 then narrowed round 3.**
+**Fix round `w4-p01-fix-002` (resumed implementer handle, append-only commit `39121c35e3ee07d8b7785d783565ae89e087d337` on `d9ce0c33`; 2 files, +66/−15; skill version still 1.3.0, packages still 0.2.36):**
+
+- M1 → reviewer-verified derivation (`codex ` with or without a backtick, `-s `/`--sandbox`, flag-bearing table rows); probes c2/g1/n1/n2 all fail (n1/n2 were green at `d9ce0c33`).
+- M3 → two clauses: below-floor pairing "say so once, without blocking"; direct-API specialist classification "confirm before launching" (`SKILL.md:27-30`); 8th contract case pins the non-blocking clause (reverting to "confirm" → `not ok 3`).
+- m1 → soft-wrapped lines unwrapped into logical lines before filtering, then an explicit prose allowlist (`not a Git repo`, `high-impact flags`, `Do **not** add`/`Never pass`); probes r1/r2 now pass (were false failures); the allowlist is live code.
+- m2 → `gpt-5.5` family added to the stale-slug assertion; the legacy-block probe fails; `gpt-5.4-mini` control and GPT-5.6 prose pass.
+- DoD all ten exit 0 (`$TMPDIR/w4-p01-fix2/`), `test:skills` 586/586, focused 8/8; post-commit `release:check-versions` 0 and `check:skill-bumps` 0. Codex: two consecutive clean rounds → stopped; nothing re-opened.
+
+**Verification record (root):** what — parent chain (`b97408f2`, `d9ce0c33` unchanged; `git rev-list --count d9ce0c33..HEAD` = 2), file list (2), versions (1.3.0 / 0.2.36), focused test 8/8 run by the root; how — `git log`/`git show --stat`/grep/`node --test` at HEAD; where — this entry; independent verification — round-3 narrowed review `w4-p01-review-003`.
+
+**Review row `p01` → `fixes_completed` at `39121c35`; narrowed round 3 (cycle 3 of 3) dispatched.**
+
+### Review Received: p01 (round 3, narrowed — cycle 3 of 3)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/p01-review-2026-08-27T043458Z.md (reviewed head `39121c35e3ee07d8b7785d783565ae89e087d337`, range `d9ce0c33..39121c35`, invocation auto, dispatch `w4-p01-review-003`, model opus; probe matrix reproduced plus reviewer-designed probes u1–u9/w1; `SKILL.md` sha256 identical before/after)
+
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 1 (+ Deferred ledger D1–D4) — all round-2 dispositions verified; HEAD's skill content is correct (three conditional, authorization-gated bypass mentions; no example carries it). Residuals are guard hardening in the contract test, not shipped-behavior defects; the gate threshold is `important`.
+
+**Cycle-cap disposition (REVIEWRECEIVE-02):** scope `p01` has consumed its three review cycles; the root does not self-authorize a fourth. The reviewer supplied and byte-copy-verified the fixes for M1 and D1 and a concrete suggestion for m1. Disposition: a **bounded, reviewer-specified, root-verified fix** (append-only `w4-p01-fix-003`) with the probe matrix re-run by the root as the stored verification record; independent verification is delegated to the **final review** (scope `final`, its own cycles), which is briefed to verify these three items explicitly, and to the configured exit gate.
+
+- M1 `documentsTheException` exempts on keyword alone (probes u6/u7/u9 single lines and u1/u3 wrapped continuations escape; u8 control fails) → **fix**: reviewer-verified predicate — an exempted line must not itself run `codex exec|resume`; drop or justify the dead `Do **not** add|Never pass` branch; align the comment.
+- m1 below-floor assertion pins phrase co-location to one clause (probe u5, a clearer rewrite, fails) → **fix**: assert the property semantically (`without blocking` within 200 chars of `below the route` in either order; no clause pairs `below the route` with `confirm before launching`; `>= 1` matches).
+- D1 cross-directory assertion iterates physical lines (probe w1 escapes at all three heads) → **fix**: use `logicalLines` (reviewer-validated one-liner).
+- D2 paragraph-level over-strictness → accepted (no current false failure). D3 drifted line citations in the dispatch brief → accepted (cosmetic). D4 in-flight `oat_last_commit` → resolved in this commit.
+
+**Review row `p01` → `fixes_added` at `39121c35`; bounded fix round 3 next, then closeout.**
 
 ## Implementation Log
 
@@ -164,7 +190,7 @@ Chronological log of implementation progress.
 - Preflight from main `3c135e21` (`worktree:init`, build, type-check exit 0; manifest restamp `f9db417c`); wrapper scaffolded `8e903a0c`; plan gate passed round 1 (`cursor-gpt-5-6-sol-xhigh`, run `0d369be4`, one medium mapped into rule 8); implement phase opened `51c7ec57`.
 - [x] p01-t01: Execute external plan — `b97408f2` (Opus implementer `w4-p01-impl-001`; DoD 10/10; Codex seven rounds, nine findings fixed pre-commit).
 - [x] p01-t01 fix round 1 — `d9ce0c33` (append-only; round-1 M1/M3/m1–m4; Codex three rounds under the stopping rule).
-- [ ] p01-t01 fix round 2 — round-2 M1/M3/m1/m2 (guard derivation, below-floor non-blocking clause, prose allowlist, `gpt-5.5` slug) — in progress.
+- [x] p01-t01 fix round 2 — `39121c35` (append-only; round-2 M1/M3/m1/m2: logical-line derivation + prose allowlist, non-blocking below-floor clause with an 8th contract case, `gpt-5.5` slug; Codex two clean rounds).
 - Decisions: the operator-reconciled `--full-auto` replacement is evaluated per example row (a mechanical swap weakened the `danger-full-access` row and was caught by Codex); prose guards key on documented phrases and command-ish content, not hedging words; cross-model review stops at two clean rounds or below-Medium findings.
 - Blockers: none.
 

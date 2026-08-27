@@ -112,3 +112,34 @@ narrowed round 3 will be the third and last cycle for scope p01.
 **Skill signal (gap):** a scaffold-replacement script must enumerate every
 template block (Progress Overview, Implementation Log, Test Results, Final
 Summary), not only the phase section — W3's final review found the same class.
+
+### 2026-08-27 · structural · oat-project-implement · p01 fix round 2 landed
+
+`w4-p01-fix-002` → append-only `39121c35`; all four code dispositions
+implemented, probe matrix fully in the required state (n1/n2 now fail, r1/r2
+now pass, `gpt-5.5` caught, 8/8); Codex stopped after two clean rounds;
+narrowed round 3 `w4-p01-review-003` dispatched (cycle 3 of 3).
+
+### 2026-08-27 · general · worked-well · normalize prose to logical lines before guarding
+
+Two successive guard fixes each traded one blind spot for another because
+they filtered physical lines of wrapped markdown. Unwrapping soft-wrapped
+lines first (then a named prose allowlist) removed the whole class — r1/r2
+flipped from false failures to passes while every mutation probe still fails.
+**Skill signal (strengthens):** prose contract tests in `.agents/skills/**/tests/`
+should normalize to logical lines and pin wording dispositions with their own
+assertion (M3 regressed by paraphrase with every gate green until an assertion
+existed).
+
+### 2026-08-27 · structural · oat-project-implement · p01 round 3 received (cycle cap)
+
+`w4-p01-review-003` → 0C/0I/1M/1m (+ ledger D1–D4): the round-2 prose
+allowlist exempts on keyword alone (a prohibition-sounding sentence can carry
+a bypass example), the new below-floor assertion is phrase-locked, and the
+cross-directory assertion never used logical lines. Cycle cap reached; root
+disposition: bounded reviewer-specified fix, root-run probe matrix as the
+verification record, independent verification delegated to the final review
+and the exit gate — no self-authorized fourth cycle.
+**Skill signal (gap):** three consecutive guard widenings each opened a
+narrower hole; a prose guard needs a structural rule ("an exempted line must
+not itself run the command") rather than keyword lists.
