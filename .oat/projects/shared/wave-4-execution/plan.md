@@ -204,17 +204,17 @@ git commit -m "feat(p01-t01): route codex-skill through provider guidance and ma
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
-| p01    | code     | passed      | 2026-08-27 | reviews/archived/p01-review-2026-08-27T043458Z.md           | 39121c35e3ee07d8b7785d783565ae89e087d337 | auto       | -                        |
-| final  | code     | fixes_added | 2026-08-27 | reviews/archived/final-review-2026-08-27T055358Z.md         | 067bfad9f0f221f076d1aeea1358b2b03b21f8c8 | auto       | -                        |
-| plan   | artifact | passed      | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020212Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                        |
-| design | artifact | pending     | -          | -                                                           | -                                        | -          | -                        |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | passed  | 2026-08-27 | reviews/archived/p01-review-2026-08-27T043458Z.md           | 39121c35e3ee07d8b7785d783565ae89e087d337 | auto       | -                        |
+| final  | code     | passed  | 2026-08-27 | reviews/archived/final-review-2026-08-27T055358Z.md         | 067bfad9f0f221f076d1aeea1358b2b03b21f8c8 | auto       | -                        |
+| plan   | artifact | passed  | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020212Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                        |
+| design | artifact | pending | -          | -                                                           | -                                        | -          | -                        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
-Note: the `p01` row cites the round-3 artifact at the head it reviewed (`39121c35`); the round-3 fixes landed in `44fb2327` as a reviewer-specified, root-verified bounded fix at the cycle cap (`implementation.md` § "Verification record (root, cycle-cap disposition)") and are independently verified by the `final` rows.
+Note: the `p01` row cites the round-3 artifact at the head it reviewed (`39121c35`); the `final` row cites the round-3 final artifact at `067bfad9`. The cycle-cap fixes `44fb2327` (p01) and `601c950b` (final) landed as reviewer-specified, root-verified bounded fixes (`implementation.md` § "Verification record (root, cycle-cap disposition)") and are independently covered by the configured exit-gate row.
 
 ## Implementation Complete
 
@@ -222,14 +222,14 @@ Strictly ordered — each item depends on the one before it (wave-execute Step 6
 closeout sequence):
 
 1. [x] 1/1 phases, 1/1 tasks complete; the source plan's `## Done criteria`
-       confirmed (recorded in `implementation.md` § Done-criteria confirmation — lifted from the final review at receive)
+       confirmed (recorded in `implementation.md` § Done-criteria confirmation, lifted from the final review at `41da6443`)
 2. [x] Full DoD gates green on the integration branch (root final verification at
        `6075a705`, exit codes captured per gate, including `pnpm lint` and `pnpm format`;
        post-commit `release:check-versions` and `check:skill-bumps` re-runs 0 at every code commit)
-3. [ ] Orchestration-log end-of-run synthesis written and rolled up into
-       `summary.md` — before any archive step of the project
-4. [ ] **Serialized backlog bookkeeping:** `oat backlog archive
-BL-260819-refresh-codex-skill-model` with a real outcome summary, one commit
+3. [x] Orchestration-log end-of-run synthesis written and rolled up into
+       `summary.md` (generated at final-review receive; `oat project log rollup`) — before any archive step of the project
+4. [x] **Serialized backlog bookkeeping:** `oat backlog archive
+BL-260819-refresh-codex-skill-model` with a real outcome summary (this receive commit, after item 3)
 
 ## References
 

@@ -184,3 +184,56 @@ backlog item; the configured exit gate is the independent verification.
 **Skill signal (gap):** a prose-contract guard can absorb unbounded reviewer
 creativity; the wrapper should budget guard-hardening rounds explicitly and
 route breadth beyond the plan-named classes to backlog from round 2 onward.
+
+### 2026-08-27 · structural · oat-project-implement · final review passed (cycle cap)
+
+`w4-final-fix-003` → append-only `601c950b` (test file only); root re-ran
+the 36-probe runner → ALL PROBES MATCHED; `final` row `passed`; M2/M3
+ledgered with a backlog item; exit gate generation 1 next.
+
+---
+
+## End-of-run synthesis (2026-08-27)
+
+**Outcome.** Wave 4 shipped its single lane in full: `codex-skill` now
+classifies work by OAT task class and takes model and effort from the provider
+reference (named as the source of truth; dated examples never override it),
+the repository-check bypass is conditional and authorization-gated, every
+command example validates against the live Codex CLI (`codex-cli 0.149.1`;
+the dead `--full-auto` replaced under the operator's non-narrowing STOP #2
+reconciliation), a seven-case prose contract test guards the stale pair and the
+blanket bypass, and the lane carried the `codex-skill` 1.2.0 → 1.3.0 bump with
+lockstep 0.2.35 → 0.2.36. One implementer commit and five append-only
+fix commits (every one after `39121c35` hardening the contract test only),
+three phase-review cycles and three final-scope cycles — both scopes at the
+cap — and sixteen Codex cross-model rounds.
+
+**What worked.** The cycle-cap disposition held twice without a
+self-authorized extra cycle: reviewer-specified patches applied as bounded
+fixes, root-run probe runners (22 → 34 → 36 probes with isolation controls) as
+the verification record, and the configured exit gate as the independent check;
+the last two guard residuals were ledgered with a backlog item rather than
+chased. The program-level "reread live provider guidance" requirement
+caught a dead flag the plan's authoring evidence missed, and the operator's
+option-1 reconciliation kept the lane within its plan. The plan gate's one
+medium — mapping mutation probes into the wrapper checklist — paid off:
+reviewer probes found two guard blind spots (`read-only` matching a bare
+`only` exclusion; Quick Reference rows outside the checked set) and an
+unsupported capability claim. Codex review caught a sandbox-weakening
+`--full-auto` mapping before commit (a STOP #3 risk).
+
+**Friction.** `pnpm run check:skill-bumps` is committed-state-only like
+`release:check-versions`; the live-CLI reread recorded flags per binary, not
+per subcommand (`exec resume` lacks `-s`, `-C`, `--approve-for-me`); Codex
+review ran seven rounds before a stopping rule was applied, and later
+re-litigated a root disposition; prose guards keyed on hedging words collide
+with flag vocabulary.
+
+**Rules adopted for the program close and any future wave.** (1) Post-commit
+re-runs cover both committed-state-only gates. (2) Live-syntax rereads record
+the flag set per subcommand. (3) Cross-model review stops at two consecutive
+clean rounds or below-Medium findings, and treats root dispositions as
+settled. (4) Prose contract tests scan backticked fragments and key exceptions
+on documented phrases; probe records carry insertion anchors. (5) Flag swaps
+are re-evaluated per example row when the replacement carries sandbox
+semantics.

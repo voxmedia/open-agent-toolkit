@@ -1,6 +1,6 @@
 ---
 oat_current_task: null # p01 passed at 44fb2327 (root-verified); closeout in progress
-oat_last_commit: 495d4b9a # final-scope fix 2 (last code commit; test file only)
+oat_last_commit: 601c950b # final-scope fix 3 (last code commit; test file only)
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260819-refresh-codex-skill-model' }
@@ -88,13 +88,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T01:55:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T06:00:03.555Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T06:11:33.326Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-4-execution
 
-**Status:** Implement — final review round 3 received (0C/0I/3M/0m; cycle cap): M1 bounded root-verified fix, M2/M3 ledgered; then configured exit gate
+**Status:** Implement — final review passed (root-verified at `601c950b`); summary + synthesis written, backlog archived; configured exit gate next
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
@@ -135,7 +135,8 @@ non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Rec
 - ✓ Narrowed final round 2: 0C/0I/2M/1m (x1 row-scoped carve-out, x6/x4 negation mask; artifact drift)
 - ✓ Fix round `w4-final-fix-002` (`495d4b9a`, test only; root-run 34-probe matrix ALL MATCHED)
 - ✓ Narrowed final round 3 (cycle 3 of 3): 0C/0I/3M/0m — guard breadth; `SKILL.md` unchanged since `39121c35`
-- ⧗ Bounded fix `w4-final-fix-003` (M1, one line; root-verified) → `final` row passed → configured exit gate → post-implement sequence
+- ✓ Bounded fix `w4-final-fix-003` (`601c950b`, test only; root-run 36-probe matrix ALL MATCHED) — `final` row passed; summary.md generated, synthesis written, backlog item archived
+- ⧗ Configured exit gate generation 1 → post-implement sequence (summary → document [skipped] → pr)
 
 ## Blockers
 
