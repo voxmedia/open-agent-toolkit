@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p03-t10
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -28,10 +28,10 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 10    | 10/10     |
 | Phase 2 | complete    | 13    | 13/13     |
-| Phase 3 | in_progress | 11    | 10/11     |
+| Phase 3 | in_progress | 11    | 11/11     |
 | Phase 4 | pending     | 11    | 0/11      |
 
-**Total:** 33/45 tasks completed
+**Total:** 34/45 tasks completed
 
 ---
 
@@ -237,7 +237,7 @@ oat_generated: false
 
 ## Phase 3: Reviewer and lifecycle surface
 
-**Status:** in progress - 10 of 11 tasks complete; p03-t10 recovery reassessment remains
+**Status:** implementation complete - 11 of 11 tasks complete; independent review pending
 **Started:** 2026-08-27
 
 ### Task Outcomes
@@ -253,7 +253,7 @@ oat_generated: false
 | p03-t07 | completed | `22c6ca79` | Synced-project doctor checks                         |
 | p03-t08 | completed | `99729346` | Managed `.gitattributes` block                       |
 | p03-t09 | completed | `41e8bbe7` | Nested-worktree local-sync guard                     |
-| p03-t10 | blocked   | -          | Dogfood blocked by inherited synced-worktree hooks   |
+| p03-t10 | completed | this task  | Synced scope dogfood and cleanup verified            |
 | p03-t11 | completed | `a72c8cf8` | Integrated and reviewed `origin/main` before Phase 4 |
 
 **Verification before dogfood:** Full CLI passed 289 files / 3,845 tests after recovery 1; CLI type-check/build, repository lint/format, and diff checks passed. The p03-t07 synced-project doctor check passed, while the overall live doctor command retained unrelated pre-existing warnings.
@@ -261,6 +261,28 @@ oat_generated: false
 **Recovery status:** Attempt 3 limited invocation-scoped `core.hooksPath=/dev/null` to empty-ref materialization and passed authoritative verification. Dogfood then exposed the same inherited-hook defect during the initial synced scaffold commit. Attempt 4's broader lifecycle candidate passed 99/99 focused tests but was restored after the full CLI suite failed four unrelated fixed-timeout tests. After p03-t11 integrated upstream, attempt 5 applied the same coherent lifecycle repair and passed 99/99 focused plus 3,906/3,906 full CLI tests before and after commit. Root independently verified the exact four-file boundary, clean worktree, immutable ancestry, and 99/99 focused result. The ledger is settled at 5/10 with no pending attempt.
 
 **Operator direction (2026-08-27):** Authorize recovery attempt 3/10 with stable-load preflight and the same bounded two-file hook correction. After p03-t10 completes, fetch and merge `origin/main` as planned task p03-t11, resolve any real conflicts, verify and review the merged tree, and do not begin Phase 4 beforehand.
+
+### p03-t10 dogfood
+
+**Source-built workflow:** Starting from clean parent HEAD `2d626c25120f9624b693f9c2a347d5c1f0964c85`, preflight confirmed that the project path, record, local and remote `refs/oat/projects/synced-dogfood`, local and remote `tmp/dogfood`, and `/Users/tstang/Code/oat-dogfood-wt` were absent. Every OAT command used `pnpm run --silent cli --` through the planned shell function.
+
+- `oat project new synced-dogfood --mode quick --no-set-active` created the synced project, local/remote project ref, detached checkout, active discovery record, and parent scaffold commit `6cfe231e392c0d23853d527a94febfece3665318`. The initial project commit was `e8243a39d06934f2f9924a103045d309737c94c2`; the parent remained clean because the record was included in the scaffold commit.
+- Appending `dogfood` to the project `state.md` changed only that file in the detached project checkout. `oat project push .oat/projects/synced/synced-dogfood --message "chore(oat): dogfood"` published `249c5c9482d4e7a4f3f8cc1f41866fef9a3722d7`; the local and remote project refs matched, and both the parent and project checkout were clean.
+- `git worktree add ../oat-dogfood-wt -b tmp/dogfood` created the linked scratch worktree at `/Users/tstang/Code/oat-dogfood-wt` on local branch `tmp/dogfood`. In that worktree, `pnpm run worktree:init` completed successfully and `oat project pull synced-dogfood` created a clean detached checkout at `249c5c9482d4e7a4f3f8cc1f41866fef9a3722d7`; reading `state.md` showed the pushed `dogfood` line. The init step made only its generated `.oat/sync/manifest.json` version update (`0.2.35` to `0.2.36`) in the scratch worktree.
+- `oat project links synced-dogfood` rendered the expected pinned GitHub blob URL:
+
+```markdown
+<!-- oat:project-links:start -->
+
+**OAT project** `synced-dogfood` (synced) — pinned to `refs/oat/projects/synced-dogfood` @ `249c5c9` (2026-08-27)
+[Discovery](https://github.com/voxmedia/open-agent-toolkit/blob/249c5c9482d4e7a4f3f8cc1f41866fef9a3722d7/discovery.md)
+
+<!-- oat:project-links:end -->
+```
+
+**Doctor:** `oat doctor --scope project` passed the new synced-project check (`project:synced_editor_hint`). The overall command exited 1 only for unchanged pre-existing unrelated warnings: stale invocation docs/assets, unvalidated Cursor dispatch-matrix cells, PJM top-level layout, the legacy decision-record monolith, loose reference files, and the second roadmap/current-state pair.
+
+**Cleanup and final state:** Root ran the source-built forced prune at the retained destructive boundary. It created lifecycle commit `e82b88cd893433c05263fe37ba7a9cfeee681faf`, removed both clean detached project checkouts, deleted the parent record plus local and remote project ref, restored only the generated scratch manifest edit, removed exactly `/Users/tstang/Code/oat-dogfood-wt`, deleted only local `tmp/dogfood`, and pruned registrations. Final read-only verification at `e82b88cd893433c05263fe37ba7a9cfeee681faf` found the parent clean; the project path, record, scratch path, local project ref, local scratch branch, remote project ref, and remote scratch branch were all absent. Unrelated worktrees and `refs/oat/projects/*` refs were untouched.
 
 ### p03-t11 upstream integration
 
