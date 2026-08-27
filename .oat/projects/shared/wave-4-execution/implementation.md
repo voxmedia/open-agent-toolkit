@@ -220,6 +220,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Review row `final` → `fixes_completed` at `94d6f74d`; narrowed round 2 dispatched.**
 
+### Review Received: final (round 2, narrowed)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/final-review-2026-08-27T053039Z.md (reviewed head `6b81bea96da62fe1533a870c9d522fb640967eed`, range `41da6443..6b81bea9`, invocation auto, dispatch `w4-final-review-002`, model opus)
+
+**Findings:** Critical 0 · Important 0 · Medium 2 · Minor 1 — all round-1 dispositions (I1, M1–M4, m1, docs) verified fixed; 29-probe matrix independently reproduced; 8/8 gates re-run; `SKILL.md` byte-identical since `39121c35`. Two genuine residual evasions of the contract guard remain (each with an isolation control), and one artifact-drift minor.
+
+**Dispositions (bounded fix round `w4-final-fix-002`, append-only, test file only; round 3 — the last final cycle — verifies):**
+
+- M1 the `not a Git repo` carve-out is row-scoped (probe x1: the shipped `Apply local edits` row with the bypass plus a trailing "(covers a target that is not a Git repo)" note is exempted; x1c control fails) → **fix**: for a flag-bearing table row, require the exception phrase in the use-case cell (`line.split('|')[1]`), evaluated before the whole-line test.
+- M2 `negatesConfirmation` skips the whole clause (probes x6 negation mask and x4 "and with no delay" insertion evade; x6c control fails) and is dead weight (b2 never matches `requiresConfirmation`) → **fix**: delete the skip so the requirement assertion applies to every below-floor clause.
+- m1 Final Summary / task-record summary lag the final-scope commits and the 29-probe matrix → **fixed at the round-3 receive** (so the text names the last code commit).
+
+**Review row `final` → `fixes_added` at `6b81bea9`; fix round then narrowed round 3 (cycle 3 of 3).**
+
 ## Implementation Log
 
 Chronological log of implementation progress.
