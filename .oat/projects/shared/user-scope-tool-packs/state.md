@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T15:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T16:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -98,7 +98,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 5 awaiting independent review
+**Status:** Implementation in progress — Phase 5 review blocking
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -232,8 +232,15 @@ individually captured exit codes, independently reproduced by root: `pnpm check`
 was set to `0.2.37` rather than the next patch because `origin/main` is at
 `0.2.36` while the merge-base is `0.2.32`, and main carries a stricter gate
 rejecting versions it has overtaken; root confirmed all three facts. The branch
-still needs a rebase onto current main before merge. Independent Phase 5 review
-is pending.
+still needs a rebase onto current main before merge. Independent Phase 5 review returned a blocking verdict: 0 Critical, 3 Important,
+4 Medium, 8 Minor, artifact `reviews/p05-review-2026-08-27T154500Z.md`, with
+reconnaissance `attempted` and complete orchestration evidence. Production code
+was found sound; the blocking set is the two test-only commits plus one
+shipped-contract gap. User-scope canonical agents install but reach no provider
+with no diagnostic; `oat tools update`'s content refresh is unbound by the whole
+suite (the reviewer disabled it and the 290-file CLI suite stayed green twice);
+and the migration/rollback leg never touches the production migrate path. The
+first of two configured review-fix iterations is pending.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -325,7 +332,9 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 5 tasks `p05-t01`-`p05-t06` completed
 - ✓ Phase 5 complete CI gate sequence passed and independently reproduced
 - ✓ Phase 4 deferred aggregate-doctor Minor closed inside `p05-t01`
-- ⧗ Phase 5 independent review pending
+- ✓ Phase 5 independent review received (Claude High, `opus`)
+- ✗ Phase 5 review: 0 Critical, 3 Important, 4 Medium, 8 Minor
+- ⧗ Phase 5 fix iteration 1/2 pending
 
 ## Blockers
 
@@ -333,4 +342,4 @@ None.
 
 ## Next Milestone
 
-Dispatch the independent Phase 5 review.
+Resolve the three blocking Phase 5 findings (I1, I2, I3).

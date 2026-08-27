@@ -514,6 +514,42 @@ individually and independently reproduced by root):**
   root-owned bookkeeping. The gate evidence above is the implementer's, verified
   by root re-running the full sequence.
 
+**Review outcome:**
+
+- Artifact: `reviews/p05-review-2026-08-27T154500Z.md` (0 Critical, 3 Important,
+  4 Medium, 8 Minor). Blocking. Reconnaissance signal `attempted`, with complete
+  `## Review Orchestration` evidence, so exactly one project-log entry
+  referencing the artifact is owed at the terminal phase outcome.
+- Production code was found sound; the blocking set is concentrated in the two
+  test-only commits plus one shipped-contract gap.
+- I1 - user-scope canonical agents install but reach no provider, with no
+  diagnostic and no repair. `SCOPE_CONTENT_TYPES.user` is `['skill']`, so the
+  Claude adapter's user agent mapping is unreachable dead configuration.
+  Reproduced on a clean root: `oat tools install workflows --scope user` writes
+  three agents that `oat sync --scope user` never materializes, while `status`,
+  `doctor`, and `update` all report the pack complete. Pre-existing, but p05-t03
+  was chartered to cover agents and instead pinned the gap as expected.
+- I2 - `oat tools update`'s content refresh is unbound by the entire test suite.
+  The reviewer disabled refresh of every outdated managed asset and the full
+  290-file CLI suite stayed green, twice. The p05-t04 update leg simulates new
+  membership by deleting an asset, exercising only the `missing` branch.
+- I3 - the migration/rollback acceptance leg hand-rolls install-then-remove
+  through `reconcilePackLifecycle` and never touches the production
+  `oat tools migrate` path, injecting no failure. Same defect class as the
+  Phase 4 blocking finding.
+- Mediums: doctor's `|| pathExists('.oat/repo')` disjunct warns about PJM
+  non-adoption for repos that only use `.oat/repo/knowledge/`, exiting 1 where
+  they previously passed, and disagrees with `oat status`; docs mark seed files
+  "not applicable" at user scope when `oat tools install ideas --scope user`
+  demonstrably creates them; the `retained-override` remedy points only at
+  `.oat/templates/` while the finding also fires on user-owned `.oat/ideas/*`;
+  and the removal legs bypass production `removeTools`.
+- The reviewer confirmed release readiness is real: lockstep set uniformly
+  `0.2.37`, `public-package-versions.json` regenerates byte-identical, and
+  `0.2.37` is the minimum valid choice against main's gate. It also verified the
+  `runCli` harness change weakened no assertion, by diffing against the
+  `be61aef51` blob.
+
 **Concerns carried to independent review:**
 
 - The branch is behind main on the release line (`origin/main` `0.2.36`,
@@ -936,7 +972,7 @@ individually and independently reproduced by root):**
 
 #### Outstanding Items
 
-- Dispatch the independent Phase 5 review.
+- Resolve the three blocking Phase 5 findings (I1, I2, I3).
 
 ## Final Summary (for PR/docs)
 
