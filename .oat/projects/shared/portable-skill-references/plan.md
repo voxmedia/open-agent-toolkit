@@ -286,7 +286,8 @@ merge path.
    git commit -m "chore(p02-t01): release portable skill references"
    ```
 
-   Omit the second `git add` when sync produced no provider-view diff. Never
+   The backlog staging command is unconditional after a successful archive.
+   Omit the third `git add` when sync produced no provider-view diff. Never
    stage a provider directory wholesale or add unrelated generated paths.
 
 8. Run every CI gate in the repository's documented order, capturing and
@@ -339,7 +340,7 @@ merge path.
 | design | artifact | pending         | -          | -                                                    | -             | -          | -           |
 | plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md` | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220007Z.md` | -             | -          | -           |
-| plan   | artifact | received        | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220505Z.md` | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220505Z.md` | -             | -          | -           |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
