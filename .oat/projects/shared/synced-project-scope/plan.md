@@ -1634,6 +1634,54 @@ git commit -m "chore(p03-t10): record synced scope dogfood evidence"
 
 ---
 
+### Task p03-t11: Integrate upstream `origin/main` before Phase 4
+
+**Files:**
+
+- Merge: upstream changes from `origin/main` into `feat/synced-project-scope`
+- Modify: conflict-dependent files only if the real merge reports conflicts
+- Modify: `.oat/projects/shared/synced-project-scope/implementation.md` (integration evidence and exact upstream SHA)
+
+**Step 1: Preflight and refresh upstream**
+
+- Require a clean worktree and record the pre-merge branch HEAD, fetched `origin/main` SHA, merge base, ahead/behind counts, predicted conflicts, and changed-file overlap.
+- Fetch `origin/main` again immediately before merging. If it advanced from the planned SHA, refresh the evidence and evaluate the new delta before proceeding.
+- Current planning evidence: branch `0de67d1f785c50ab4aa556faaa7a05a285c8ab1d`, `origin/main` `cb69a2869fe1d5715f13a3b6d966cd9b7ea845f8`, merge base `bf7aff9cbdbbd28d5709b93dbf0af2312cb0eb22`, ahead/behind `103/10`, no changed-file overlap, and no merge-tree content conflict. Five files are deleted upstream while unchanged on the branch and should follow the upstream deletion.
+
+**Step 2: Merge and resolve**
+
+Run: `git merge --no-edit origin/main`
+
+- If the merge is clean, inspect the merge commit and confirm all pre-merge feature commits remain ancestors.
+- If conflicts occur, stop and enumerate every conflicted path. Resolve each path from the branch requirement plus upstream intent; never apply wholesale `ours`/`theirs`. Preserve upstream changes that do not conflict with the synced-project scope.
+- Do not rebase, squash, reset, force-push, or rewrite existing task history.
+
+**Step 3: Verify merged tree**
+
+Run the repository CI gates in documented order, capturing each exit code:
+
+1. `pnpm check`
+2. `pnpm type-check`
+3. `pnpm test`
+4. `pnpm build`
+5. `pnpm run check:skill-bumps`
+6. `pnpm release:check-versions`
+7. `pnpm release:validate`
+8. `pnpm build:docs`
+
+Also run `pnpm lint` and `pnpm format` because the branch already changes skills and smoke-covered surfaces. Run `git diff --check` across the merge result and verify the worktree is clean.
+
+**Step 4: Review integration**
+
+- Run a fresh root-owned review limited to the merge/conflict-resolution result and the upstream integration evidence. Zero Critical and zero Important findings are required before Phase 4.
+- If the merge is conflict-free, the reviewer still checks that upstream deletions/additions landed, feature commits remain reachable, package/version state is coherent, and merged-tree verification is truthful.
+
+**Step 5: Record evidence**
+
+Append the exact pre/post merge SHAs, conflict disposition, verification exit codes, and review artifact to `implementation.md`. The merge commit itself owns upstream integration; commit lifecycle evidence separately as OAT bookkeeping.
+
+---
+
 ## Phase 4: Skills, docs, release
 
 Goal: the lifecycle uses the new scope end to end; docs describe it; release gates pass.
@@ -2091,10 +2139,10 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 
 - Phase 1: 10 tasks - Sync foundations (scope resolver, gitignore rule, git runner, fixture, record, ref-sync create/push/pull/continue/abort, record commits, GitHub spike)
 - Phase 2: 13 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e, `list --remote`, adopting pull + children, synced-aware `open`/`pause`, shared canonical mutation preflight, isolated child failures + stable split coverage)
-- Phase 3: 10 tasks - Reviewer and lifecycle surface (links render/compute/refresh, archive state machine, `prune`, `migrate`, doctor, gitattributes, local-sync guard, dogfood)
+- Phase 3: 11 tasks - Reviewer and lifecycle surface (links render/compute/refresh, archive state machine, `prune`, `migrate`, doctor, gitattributes, local-sync guard, dogfood, upstream integration)
 - Phase 4: 11 tasks - Skills sweep (A/B/C/D/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood
 
-**Total: 44 tasks**
+**Total: 45 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

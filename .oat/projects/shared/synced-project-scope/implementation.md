@@ -1,10 +1,7 @@
 ---
-oat_status: blocked
-oat_ready_for: null
-oat_blockers:
-  - task_id: p03-t10
-    reason: 'Dogfood exposed empty synced-ref checkout incompatibility with the repository post-checkout hook. A bounded invocation-scoped hook suppression passed 49 focused tests, but recovery attempt 2/10 failed ambiguous full-CLI verification after different fixed-timeout cases failed on the initial run and allowed no-edit rerun; code was restored and further work requires operator direction.'
-    since: 2026-08-27
+oat_status: in_progress
+oat_ready_for: oat-project-implement
+oat_blockers: []
 oat_last_updated: 2026-08-27
 oat_current_task_id: p03-t10
 oat_generated: false
@@ -27,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 10    | 10/10     |
-| Phase 2 | complete | 13    | 13/13     |
-| Phase 3 | blocked  | 10    | 9/10      |
-| Phase 4 | pending  | 11    | 0/11      |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 10    | 10/10     |
+| Phase 2 | complete    | 13    | 13/13     |
+| Phase 3 | in_progress | 11    | 9/11      |
+| Phase 4 | pending     | 11    | 0/11      |
 
-**Total:** 32/44 tasks completed
+**Total:** 32/45 tasks completed
 
 ---
 
@@ -240,7 +237,7 @@ oat_generated: false
 
 ## Phase 3: Reviewer and lifecycle surface
 
-**Status:** blocked - 9 of 10 tasks complete; p03-t10 dogfood cannot finish under current verification evidence
+**Status:** blocked - 9 of 11 tasks complete; p03-t10 recovery authorized and p03-t11 upstream integration queued
 **Started:** 2026-08-27
 
 ### Task Outcomes
@@ -257,10 +254,13 @@ oat_generated: false
 | p03-t08 | completed | `99729346` | Managed `.gitattributes` block                      |
 | p03-t09 | completed | `41e8bbe7` | Nested-worktree local-sync guard                    |
 | p03-t10 | blocked   | -          | Dogfood blocked by empty-ref post-checkout handling |
+| p03-t11 | pending   | -          | Integrate and review `origin/main` before Phase 4   |
 
 **Verification before dogfood:** Full CLI passed 289 files / 3,845 tests after recovery 1; CLI type-check/build, repository lint/format, and diff checks passed. The p03-t07 synced-project doctor check passed, while the overall live doctor command retained unrelated pre-existing warnings.
 
 **Blocker:** The repository's common post-checkout wrapper requires `tools/git-hooks/post-checkout` inside the new checkout, but synced project refs intentionally begin empty. Invocation-scoped `core.hooksPath=/dev/null` for only the two empty-ref `worktree add` commands passed 49/49 focused tests. Recovery attempt 2 produced no code commit because the full CLI run and its one allowed no-edit rerun failed different existing fixed-timeout integration cases. The code files were restored exactly; only failed ledger evidence was committed.
+
+**Operator direction (2026-08-27):** Authorize recovery attempt 3/10 with stable-load preflight and the same bounded two-file hook correction. After p03-t10 completes, fetch and merge `origin/main` as planned task p03-t11, resolve any real conflicts, verify and review the merged tree, and do not begin Phase 4 beforehand.
 
 ---
 

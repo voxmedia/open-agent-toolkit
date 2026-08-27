@@ -1,10 +1,7 @@
 ---
 oat_current_task: p03-t10
 oat_last_commit: 617449d37
-oat_blockers:
-  - task_id: p03-t10
-    reason: 'Dogfood exposed empty synced-ref checkout incompatibility with the repository post-checkout hook. A bounded invocation-scoped hook suppression passed 49 focused tests, but recovery attempt 2/10 failed ambiguous full-CLI verification after different fixed-timeout cases failed on the initial run and allowed no-edit rerun; code was restored and further work requires operator direction.'
-    since: 2026-08-27
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -93,19 +90,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T18:22:15.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T18:29:50.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation blocked - Phase 3 dogfood recovery verification
+**Status:** Implementation in progress - Phase 3 recovery authorized
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation - Phase 3 task p03-t10 blocked
+Implementation - Phase 3 task p03-t10 recovery
 
 ## Artifacts
 
@@ -143,11 +140,13 @@ Implementation - Phase 3 task p03-t10 blocked
 - ✓ Phase 3 recovery attempt 1/10 validated and settled
 - ⨯ Phase 3 recovery attempt 2/10 failed phase verification; code restored
 - ⨯ Phase 3 task p03-t10 blocked before dogfood completion
+- … Phase 3 recovery attempt 3/10 authorized with stable-load preflight
+- … Phase 3 task p03-t11 queued to integrate `origin/main` before Phase 4
 
 ## Blockers
 
-- p03-t10: empty synced refs cannot materialize under the repository's required post-checkout wrapper; the bounded invocation-scoped hook suppression is uncommitted because full-phase verification remained ambiguous after the one allowed no-edit rerun.
+None. Recovery attempt 3/10 is authorized; Phase 4 remains gated by p03-t10, p03-t11, and Phase 3 review.
 
 ## Next Milestone
 
-Obtain operator direction: authorize another bounded recovery attempt after host load stabilizes, revise verification/scope, or stop/defer p03-t10.
+Resume p03-t10 recovery attempt 3/10 after host load stabilizes, then complete p03-t11 upstream integration and review before Phase 4.
