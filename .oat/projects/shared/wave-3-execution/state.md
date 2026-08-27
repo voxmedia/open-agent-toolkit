@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T23:08:35.576Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T00:38:26.441Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T00:42:24.267Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -124,7 +124,8 @@ integration checkout `wave-3-execution` (BASE_SHA `39cea801`; code baseline
 - ✓ Phase review round 1 (Opus, six probes; 0C/0I/2M/4m — probe 1 weaker-anywhere clean)
 - ✓ Fix round `w3-p01-fix-001` (`6dc9cdd1`: M1, M2 incl. runner-seam closure, m1, m3, m4; m2 → document step; DoD 10/10; Codex clean)
 - ✓ p01 review round 2 (narrowed): 0C/0I/0M/0m — phase passed
-- ⧗ Closeout: final verification (root DoD) → final review → configured exit gate
+- ✓ Closeout baseline / final verification: root DoD 10/10 at `cf53e818`
+- ⧗ Final review (fresh Opus, end-to-end probes) → configured exit gate
 
 ## Blockers
 

@@ -199,10 +199,10 @@ git commit -m "feat(p01-t01): honor OAT_ASSETS_DIR in resolveAssetsRoot and isol
 Strictly ordered — each item depends on the one before it (wave-execute Step 6
 closeout sequence):
 
-1. [ ] 1/1 phases, 1/1 tasks complete; the source plan's `## Done criteria`
-       confirmed (recorded in `implementation.md` § Done-criteria confirmation)
-2. [ ] Full DoD gates green on the integration branch (exit codes captured per
-       gate, including `pnpm lint` and `pnpm format`)
+1. [x] 1/1 phases, 1/1 tasks complete; the source plan's `## Done criteria`
+       confirmed (recorded in `implementation.md` § Done-criteria confirmation — filled at final-review receive)
+2. [x] Full DoD gates green on the integration branch (root final verification at
+       `cf53e818`, exit codes captured per gate, including `pnpm lint` and `pnpm format`)
 3. [ ] Orchestration-log end-of-run synthesis written and rolled up into
        `summary.md` — before any archive step of the project
 4. [ ] **Serialized backlog bookkeeping:** `oat backlog archive

@@ -199,12 +199,9 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Track test execution during implementation.
+**Final verification (root, closeout baseline) at `cf53e818`** — full definition of done invoked literally, one log per gate under the session scratchpad `w3-dod/`, exit codes captured in `exits.txt`: `pnpm check` 0 · `pnpm type-check` 0 · `pnpm test` 0 · `pnpm build` 0 · `pnpm run check:skill-bumps` 0 · `git fetch origin` 0 then `pnpm release:check-versions` 0 (0.2.35 vs `origin/main` 0.2.34) · `pnpm release:validate` 0 · `pnpm build:docs` 0 · `pnpm lint` 0 · `pnpm format` 0. Tree clean after the run; no deterministic-smoke worktrees left behind.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+Earlier evidence: implementer DoD 10/10 at `4019f98c` and again at `6dc9cdd1` (post-commit `release:check-versions` re-run 0); reviewer re-runs at both heads; focused suites `src/fs/assets.test.ts` 14 cases, `gate/index.test.ts` 198, smoke consumer file 4 cases (incl. the restore/cleanup guard), all green with and without an ambient `OAT_ASSETS_DIR`.
 
 ## Final Summary (for PR/docs)
 
