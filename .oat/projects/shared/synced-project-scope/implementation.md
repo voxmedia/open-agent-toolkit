@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p02-t13
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,11 +27,11 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 10    | 10/10     |
-| Phase 2 | in_progress | 13    | 12/13     |
+| Phase 2 | in_progress | 13    | 13/13     |
 | Phase 3 | pending     | 10    | 0/10      |
 | Phase 4 | pending     | 11    | 0/11      |
 
-**Total:** 22/44 tasks completed
+**Total:** 23/44 tasks completed
 
 ---
 
@@ -145,16 +145,16 @@ oat_generated: false
 
 ## Phase 2: CLI surface
 
-**Status:** in progress - 12 of 13 tasks complete; p02-t13 queued from round-7 review
+**Status:** in progress - all 13 tasks complete; p02-t13 task-delta review pending
 **Started:** 2026-08-27
 
 ### Phase Summary
 
-**Outcome:** The first 12 CLI-surface tasks are implemented, including scope-aware scaffolding, push/pull/list/scope commands, remote adoption, coordination children, synced-aware open/pause behavior, and one shared canonical identity preflight for every mutating sync target. One phase recovery updated stale integration expectations after the default changed to synced. Task p02-t13 will close the remaining per-child isolation and test-timeout findings.
+**Outcome:** All 13 CLI-surface tasks are implemented. Coordination-child identity, record, remote, and pull failures now remain isolated per child so healthy later siblings continue without weakening canonical mutation safety. The load-sensitive fresh split publication test has the planned explicit timeout. One phase recovery updated stale integration expectations after the default changed to synced.
 
 **Verification:** Task p02-t12 passed a 109-test focused real-worktree/entry-point matrix and the full CLI suite at 282 files and 3,799 tests against committed HEAD; CLI type-check, file-scoped lint/format, commit check, and exact five-file boundary passed. Prior review round 6 passed 433 phase tests, 77 command/help/lifecycle tests, the full 3,789-test CLI suite, and 78 control-plane tests plus builds, type-checks, changed-file lint/format, and range diff checks.
 
-**Review disposition:** Seven independent rounds and five bounded fix iterations ran, followed by one planned revision task. Task p02-t12 closed the mutation-safety defect. The operator authorized one additional planned task, p02-t13, to resolve round 7's Important FR17 isolation gap and Medium load-sensitive split-test timeout, followed by a task-delta-only review. Phase 3 has not started.
+**Review disposition:** Seven independent rounds and five bounded fix iterations ran, followed by two planned revision tasks. Tasks p02-t12 and p02-t13 closed the mutation-safety, FR17 isolation, and split-timeout findings. The operator-authorized task-delta-only review of p02-t13 is pending. Phase 3 has not started.
 
 ### Task p02-t01: `projects.defaultScope` config key
 
@@ -222,11 +222,16 @@ oat_generated: false
 
 ### Task p02-t13: (review) Isolate coordination-child failures and stabilize fresh split coverage
 
-**Status:** pending
-
 **Source:** Round-7 review `reviews/archived/code-p02-review-2026-08-27T160020Z.md`
 
 **Scope:** Preserve canonical mutation safety while converting identity, record, remote, and pull failures into isolated per-child results so healthy later siblings continue; add a bounded timeout to the load-sensitive fresh split integration test.
+
+**Status:** completed
+**Commit:** `9da82464b5fa93477303027a598ff3e9c768905c`
+
+**Outcome:** `pullChildren()` now guards the complete child-specific operation and returns an error row while continuing later siblings. A real-worktree regression proves an aliased first child cannot mutate its sibling or block a healthy child adoption, and successful pending record paths remain committable. The fresh synced split publication test now uses a 15-second bound.
+
+**Verification:** RED failed 1/62 as expected. Against committed HEAD, the focused matrix passed 72/72, CLI type-check and file-scoped lint/format passed, and two clean no-overlap full CLI runs passed 282 files and 3,799 tests each. Root independently verified the exact three-file commit boundary, immutable parent/range, diff checks, clean worktree, unchanged recovery ledger, and focused 72/72 result.
 
 ---
 
@@ -597,7 +602,7 @@ lifecycle_outcome:
 **Branch:** `feat/synced-project-scope`
 **Tier:** 1 - subagents
 **Dispatch policy:** managed `high` (Codex pinned variant)
-**Status:** in progress - p02-t13 dispatch prepared
+**Status:** implementation complete - task-delta review pending
 
 #### Dispatch Record
 
@@ -636,8 +641,8 @@ classification_reason: Subtle partial-success and mutation-safety behavior remai
 floor_satisfaction: satisfied
 deadline_seconds: 3600
 retry_limit: 0
-launch_status: prepared
-child_outcome: pending
+launch_status: accepted
+child_outcome: completed
 runtime_confirmation: not-reported
 continuation_events:
   - resumes dispatch-synced-project-scope-p02-20260827T063331Z through /root/p02_implement
@@ -647,12 +652,22 @@ continuation_events:
 
 - Project: `.oat/projects/shared/synced-project-scope`
 - Workflow / phase / task: spec-driven / p02 / p02-t13
-- Phase base HEAD: `21ea007bff79c0a3d89b8cc6bf150abea0cf4696`
+- Phase base HEAD: `4b75e312357c16d2ce4415519d4f2db824fc7033`
 - File boundary: `ref-sync.ts`, `ref-sync.test.ts`, optional `pull/index.test.ts` only if needed for command-level proof, and `split-flow.test.ts`
 - Commit policy: exactly one task commit, `fix(p02-t13): preserve child pull isolation`
 - Recovery: unchanged at 1/10; `pending_attempt: null`
 - Review authorization: one fresh task-delta-only review after the task; no full-phase review restart
 - Dispatch stamp: `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+#### Implementation Outcome
+
+- Task commit: `9da82464b5fa93477303027a598ff3e9c768905c`
+- Commit range: `4b75e312357c16d2ce4415519d4f2db824fc7033..9da82464b5fa93477303027a598ff3e9c768905c`
+- Changed boundary: exactly `ref-sync.ts`, `ref-sync.test.ts`, and `split-flow.test.ts`; optional `pull/index.test.ts` was not needed
+- Verification: RED 1 failed / 61 passed; focused committed 72/72; type-check, lint, format, commit/range checks passed; two full CLI runs passed 3,799/3,799 after one unrelated load-sensitive no-edit rerun
+- Recovery: unchanged at 1/10 with `pending_attempt: null`; no recovery event
+- Root verification: exact parent/range/boundary and focused 72/72 independently passed
+- Next: fresh reviewer limited to the p02-t13 commit delta
 
 ---
 
@@ -729,7 +744,8 @@ Chronological log of implementation progress.
 - [x] p02 review cycle 7 - blocked at 1 Important / 1 Medium in `reviews/archived/code-p02-review-2026-08-27T160020Z.md`
 - [x] p02 operator disposition - one planned task and task-delta-only review authorized
 - [x] p02 review cycle 7 findings received into p02-t13
-- [ ] p02-t13 - isolate child failures and stabilize fresh split coverage
+- [x] p02-t13 - isolation and timeout fixes completed in `9da82464`
+- [ ] p02-t13 task-delta-only review - pending
 - [ ] p03-t01 - not started
 
 ---
