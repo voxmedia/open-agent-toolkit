@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { applyOatCoreGitignore } from './gitignore';
+import { applyOatCoreGitignore, isSyncedRuleApplied } from './gitignore';
 
 const tempDirs: string[] = [];
 
@@ -102,6 +102,54 @@ describe('applyOatCoreGitignore', () => {
     const content = await readFile(join(root, '.gitignore'), 'utf8');
     expect(content).toContain('.oat/state.md');
     expect(content).toContain('.oat/projects/local/**');
+  });
+
+  it('upgrades the prior core section with the synced directory-only rule', async () => {
+    const root = await makeTempDir();
+    await writeFile(
+      join(root, '.gitignore'),
+      [
+        '# OAT core',
+        '.oat/config.local.json',
+        '.oat/state.md',
+        '.oat/projects/local/**',
+        '.oat/projects/archived/**',
+        '!.oat/projects/local/.gitkeep',
+        '!.oat/projects/archived/.gitkeep',
+        '# END OAT core',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const updated = await applyOatCoreGitignore(root);
+    const repeated = await applyOatCoreGitignore(root);
+
+    expect(updated.action).toBe('updated');
+    expect(updated.entries).toContain('.oat/projects/synced/*/');
+    expect(repeated.action).toBe('no-change');
+  });
+
+  it('ignores synced project directories but not sibling record files', async () => {
+    const root = await makeTempDir();
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    await applyOatCoreGitignore(root);
+
+    expect(
+      execFileSync(
+        'git',
+        ['check-ignore', '--no-index', '.oat/projects/synced/x/'],
+        { cwd: root, stdio: 'ignore' },
+      ),
+    ).toBeNull();
+    expect(() =>
+      execFileSync(
+        'git',
+        ['check-ignore', '--no-index', '.oat/projects/synced/x.json'],
+        { cwd: root, stdio: 'ignore' },
+      ),
+    ).toThrow();
+    await expect(isSyncedRuleApplied(root)).resolves.toBe(true);
   });
 
   it('coexists with OAT local paths section', async () => {

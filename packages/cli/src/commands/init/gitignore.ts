@@ -15,6 +15,7 @@ const CORE_ENTRIES = [
   '.oat/state.md',
   '.oat/projects/local/**',
   '.oat/projects/archived/**',
+  '.oat/projects/synced/*/',
   '!.oat/projects/local/.gitkeep',
   '!.oat/projects/archived/.gitkeep',
 ];
@@ -23,6 +24,24 @@ export interface ApplyOatCoreResult {
   action: 'created' | 'updated' | 'no-change';
   entries: string[];
   stateDashboardIndexAction: 'untracked' | 'not-tracked' | 'not-git-repo';
+}
+
+export async function isSyncedRuleApplied(repoRoot: string): Promise<boolean> {
+  try {
+    await execFileAsync(
+      'git',
+      [
+        'check-ignore',
+        '--quiet',
+        '--no-index',
+        '.oat/projects/synced/__probe__/',
+      ],
+      { cwd: repoRoot },
+    );
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function buildSection(): string {
