@@ -3,11 +3,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import {
+  DOCS_SKILLS,
   UTILITY_SKILLS,
   WORKFLOW_AGENTS,
   WORKFLOW_SCRIPTS,
   WORKFLOW_TEMPLATES,
 } from '@commands/init/tools/shared/skill-manifest';
+import type { AutoSyncDependencies } from '@commands/tools/shared/auto-sync';
 import {
   hasScopedPackOwnershipEvidence,
   readScopedPackIntent,
@@ -138,6 +140,7 @@ function filesystemDeps(scopeRoot: string): RemoveToolsDependencies {
 async function runRemoveCommand(
   scopeRoot: string,
   args: string[],
+  runSync: AutoSyncDependencies['runSync'] = async () => {},
 ): Promise<void> {
   const program = new Command()
     .name('oat')
@@ -149,7 +152,7 @@ async function runRemoveCommand(
   const tools = new Command('tools');
   tools.addCommand(
     createToolsRemoveCommand(filesystemDeps(scopeRoot), {
-      runSync: async () => {},
+      runSync,
     }),
   );
   program.addCommand(tools);
@@ -645,5 +648,24 @@ describe('removeTools', () => {
         readScopedPackIntent({ pack, scope: 'user', scopeRoot }),
       ).resolves.toMatchObject({ enabled: false, source: 'none' });
     }
+  });
+
+  it('syncs exact removed canonical paths once per affected scope', async () => {
+    const scopeRoot = await makeScopeRoot();
+    const calls: Parameters<AutoSyncDependencies['runSync']>[0][] = [];
+
+    await runRemoveCommand(scopeRoot, ['--pack', 'docs'], async (options) => {
+      calls.push(options);
+    });
+
+    expect(calls).toEqual([
+      expect.objectContaining({
+        scope: 'user',
+        installedCanonicalPaths: undefined,
+        removedCanonicalPaths: DOCS_SKILLS.map(
+          (skill) => `.agents/skills/${skill}`,
+        ),
+      }),
+    ]);
   });
 });

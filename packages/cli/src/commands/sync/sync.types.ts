@@ -21,6 +21,11 @@ export interface SyncProviderMismatches {
   detectedDisabled: string[];
 }
 
+export interface CanonicalSyncFilter {
+  mode: 'install' | 'remove';
+  paths: string[];
+}
+
 export interface ScopeSyncPlan {
   scope: ConcreteScope;
   scopeRoot: string;

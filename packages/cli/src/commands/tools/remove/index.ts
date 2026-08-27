@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
 import { lstat, rm } from 'node:fs/promises';
+import { relative } from 'node:path';
 
 import { buildCommandContext } from '@app/command-context';
 import { withScopeOption } from '@commands/shared/scope-option';
@@ -61,17 +62,22 @@ const defaultDependencies: RemoveToolsDependencies = {
 };
 
 const defaultSyncDependencies: AutoSyncDependencies = {
-  runSync: async ({ scope, cwd }) => {
+  runSync: async ({ scope, cwd, removedCanonicalPaths }) => {
+    const args = [
+      ...process.execArgv,
+      process.argv[1]!,
+      'sync',
+      '--scope',
+      scope,
+    ];
+    for (const canonicalPath of removedCanonicalPaths ?? []) {
+      args.push('--remove-canonical', canonicalPath);
+    }
     await new Promise<void>((resolve, reject) => {
-      execFile(
-        process.execPath,
-        [...process.execArgv, process.argv[1]!, 'sync', '--scope', scope],
-        { cwd },
-        (error) => {
-          if (error) reject(error);
-          else resolve();
-        },
-      );
+      execFile(process.execPath, args, { cwd }, (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
     });
   },
 };
@@ -154,15 +160,28 @@ export function createToolsRemoveCommand(
       }
 
       // Auto-sync after mutations (before output so sync errors are captured)
-      if (result.removed.length > 0 && !dryRun && opts.sync !== false) {
-        const affectedScopes = [...new Set(result.removed.map((t) => t.scope))];
-        await autoSync(
-          affectedScopes,
-          context.cwd,
-          context.home,
-          logger,
-          syncDependencies,
-        );
+      if (!dryRun && opts.sync !== false) {
+        for (const scope of scopes) {
+          const scopeRoot = await dependencies.resolveScopeRoot(
+            scope,
+            context.cwd,
+            context.home,
+          );
+          const removedCanonicalPaths = canonicalRemovalPaths(
+            result,
+            scope,
+            scopeRoot,
+          );
+          if (removedCanonicalPaths.length === 0) continue;
+          await autoSync(
+            [scope],
+            context.cwd,
+            context.home,
+            logger,
+            syncDependencies,
+            { removedCanonicalPaths },
+          );
+        }
       }
 
       if (context.json) {
@@ -179,6 +198,29 @@ export function createToolsRemoveCommand(
         logger.info('No tools to remove.');
       }
     });
+}
+
+function canonicalRemovalPaths(
+  result: Awaited<ReturnType<typeof removeTools>>,
+  scope: (typeof result.removedAssets)[number]['scope'],
+  scopeRoot: string,
+): string[] {
+  const paths = result.removedAssets
+    .filter((asset) => asset.scope === scope)
+    .map((asset) => relative(scopeRoot, asset.path).replaceAll('\\', '/'))
+    .filter((path) =>
+      /^\.agents\/(?:skills\/[^/]+|agents\/[^/]+\.md)$/.test(path),
+    );
+  paths.push(
+    ...result.removed
+      .filter((tool) => tool.scope === scope)
+      .map((tool) =>
+        tool.type === 'skill'
+          ? `.agents/skills/${tool.name}`
+          : `.agents/agents/${tool.name}.md`,
+      ),
+  );
+  return [...new Set(paths)];
 }
 
 function resolveTarget(

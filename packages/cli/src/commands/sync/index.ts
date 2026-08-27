@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
@@ -46,6 +46,7 @@ import { runSyncApply } from './apply';
 import { runSyncDryRun } from './dry-run';
 import type {
   ScopeSyncPlan,
+  CanonicalSyncFilter,
   SyncCommandDependencies,
   SyncProviderMismatches,
 } from './sync.types';
@@ -111,6 +112,18 @@ function validateInstallCanonicalPaths(
     }
   }
 
+  return paths;
+}
+
+function validateRemoveCanonicalPaths(
+  paths: string[] | undefined,
+): string[] | undefined {
+  if (!paths?.length) return undefined;
+  for (const path of paths) {
+    if (!INSTALL_CANONICAL_PATH_PATTERN.test(path)) {
+      throw new CliError(`Invalid --remove-canonical path: ${path}`, 1);
+    }
+  }
   return paths;
 }
 
@@ -231,7 +244,7 @@ async function maybeResolveProviderMismatches(
 async function computePlans(
   context: CommandContext,
   dependencies: SyncCommandDependencies,
-  allowedCanonicalPaths?: string[],
+  canonicalFilter?: CanonicalSyncFilter,
 ): Promise<ScopeSyncPlan[]> {
   const scopePlans: ScopeSyncPlan[] = [];
 
@@ -244,6 +257,22 @@ async function computePlans(
       dependencies.loadSyncConfig(configPath),
       dependencies.scanCanonical(scopeRoot, scope),
     ]);
+    if (canonicalFilter?.mode === 'remove') {
+      const existing = new Set(
+        canonical.map(({ canonicalPath }) =>
+          relative(scopeRoot, canonicalPath).replaceAll('\\', '/'),
+        ),
+      );
+      const stillPresent = canonicalFilter.paths.filter((path) =>
+        existing.has(path),
+      );
+      if (stillPresent.length > 0) {
+        throw new CliError(
+          `Cannot remove canonical provider views while source exists: ${stillPresent.join(', ')}`,
+          1,
+        );
+      }
+    }
     const adapters = dependencies.getAdapters();
     const initialResolution = await dependencies.getConfigAwareAdapters(
       adapters,
@@ -272,7 +301,7 @@ async function computePlans(
       scope,
       config: resolved.config,
       scopeRoot,
-      allowedCanonicalPaths,
+      allowedCanonicalPaths: canonicalFilter?.paths,
     });
 
     const activeAdapterNames = resolved.activeAdapters.map(
@@ -290,7 +319,7 @@ async function computePlans(
         extension.computePlan({
           scopeRoot,
           canonicalEntries: extensionCanonical,
-          allowedCanonicalPaths,
+          allowedCanonicalPaths: canonicalFilter?.paths,
           options: { userConfigDir: join(context.home, '.oat') },
         }),
       ),
@@ -359,13 +388,9 @@ function logNonInteractiveMismatchGuidance(
 async function runSyncCommand(
   context: CommandContext,
   dependencies: SyncCommandDependencies,
-  allowedCanonicalPaths?: string[],
+  canonicalFilter?: CanonicalSyncFilter,
 ): Promise<void> {
-  const scopePlans = await computePlans(
-    context,
-    dependencies,
-    allowedCanonicalPaths,
-  );
+  const scopePlans = await computePlans(context, dependencies, canonicalFilter);
   logNonInteractiveMismatchGuidance(context, scopePlans);
 
   if (context.dryRun) {
@@ -396,15 +421,41 @@ export function createSyncCommand(
           value,
         ]),
     )
+    .addOption(
+      new Option('--remove-canonical <path>', 'Internal removal sync filter')
+        .hideHelp()
+        .default([])
+        .argParser((value, previous?: string[]) => [
+          ...(previous ?? []),
+          value,
+        ]),
+    )
     .action(async (_options, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      const options = command.opts<{ installCanonical?: string[] }>();
+      const options = command.opts<{
+        installCanonical?: string[];
+        removeCanonical?: string[];
+      }>();
+      const installPaths = validateInstallCanonicalPaths(
+        options.installCanonical,
+      );
+      const removePaths = validateRemoveCanonicalPaths(options.removeCanonical);
+      if (installPaths?.length && removePaths?.length) {
+        throw new CliError(
+          '--install-canonical and --remove-canonical cannot be combined',
+          1,
+        );
+      }
       await runSyncCommand(
         context,
         dependencies,
-        validateInstallCanonicalPaths(options.installCanonical),
+        installPaths?.length
+          ? { mode: 'install', paths: installPaths }
+          : removePaths?.length
+            ? { mode: 'remove', paths: removePaths }
+            : undefined,
       );
     });
 }

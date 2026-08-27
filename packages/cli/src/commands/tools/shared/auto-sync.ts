@@ -7,6 +7,7 @@ export interface AutoSyncDependencies {
     cwd: string;
     home: string;
     installedCanonicalPaths?: string[];
+    removedCanonicalPaths?: string[];
   }) => Promise<void>;
 }
 
@@ -40,6 +41,7 @@ export async function autoSync(
         cwd,
         home,
         installedCanonicalPaths: options?.installedCanonicalPaths,
+        removedCanonicalPaths: options?.removedCanonicalPaths,
       });
     }
     logger.info('Auto-sync completed.');

@@ -740,6 +740,77 @@ describe('createSyncCommand', () => {
     expect(computeSyncPlan).not.toHaveBeenCalled();
   });
 
+  it('forwards absent removal canonical filters into exact provider pruning', async () => {
+    const { command, computeSyncPlan } = createHarness({
+      canonicalEntries: [],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: [
+        '--dry-run',
+        '--remove-canonical',
+        '.agents/skills/oat-docs-analyze',
+      ],
+    });
+
+    expect(computeSyncPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowedCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
+      }),
+    );
+  });
+
+  it('rejects removal pruning while the canonical source still exists', async () => {
+    const { command, computeSyncPlan } = createHarness({
+      canonicalEntries: [createCanonicalEntry('oat-docs-analyze')],
+    });
+
+    await expect(
+      runSyncCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: [
+          '--dry-run',
+          '--remove-canonical',
+          '.agents/skills/oat-docs-analyze',
+        ],
+      }),
+    ).rejects.toMatchObject({
+      message:
+        'Cannot remove canonical provider views while source exists: .agents/skills/oat-docs-analyze',
+    });
+    expect(computeSyncPlan).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid or mixed removal canonical filters', async () => {
+    const invalidHarness = createHarness();
+    await expect(
+      runSyncCommand(invalidHarness.command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--dry-run', '--remove-canonical', '../../etc/passwd'],
+      }),
+    ).rejects.toMatchObject({
+      message: 'Invalid --remove-canonical path: ../../etc/passwd',
+    });
+    const mixedHarness = createHarness();
+    await expect(
+      runSyncCommand(mixedHarness.command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: [
+          '--dry-run',
+          '--install-canonical',
+          '.agents/skills/oat-docs-analyze',
+          '--remove-canonical',
+          '.agents/agents/oat-reviewer.md',
+        ],
+      }),
+    ).rejects.toMatchObject({
+      message: '--install-canonical and --remove-canonical cannot be combined',
+    });
+    expect(invalidHarness.computeSyncPlan).not.toHaveBeenCalled();
+    expect(mixedHarness.computeSyncPlan).not.toHaveBeenCalled();
+  });
+
   it('combines enabled Codex and Cursor materialization plans in dry-run JSON', async () => {
     const cursorCompute = vi.fn(async () => ({
       provider: 'cursor' as const,
