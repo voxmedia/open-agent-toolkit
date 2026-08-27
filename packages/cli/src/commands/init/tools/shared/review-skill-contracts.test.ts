@@ -1275,4 +1275,53 @@ describe('review skill contracts', () => {
     );
     expect(commitStep).not.toContain('git add .oat/repo/reference/decisions/');
   });
+
+  it('commits synced retro targets before writeback with recoverable receipts', () => {
+    const content = readFileSync(
+      repoFilePath(
+        '.agents/skills/oat-project-retro/references/apply-procedure.md',
+      ),
+      'utf8',
+    );
+    const transaction = content.slice(
+      content.indexOf('## Commit and Resume Strategy'),
+    );
+
+    expect(transaction).toMatch(
+      /docs, agent-instruction, or\s+rule item lists every exact edited canonical file/,
+    );
+    expect(transaction).toMatch(
+      /decision item lists the\s+exact generated or verified decision record[\s\S]*?managed decision\s+index only when this application changed it/,
+    );
+    expect(transaction).toContain(
+      'UNRELATED_STAGED_PATCH_BEFORE=$(git diff --cached --binary)',
+    );
+    expect(transaction).toContain(
+      'git commit --only -m "chore(oat): apply retro target $RP_ID" -- "${RETRO_TARGET_PATHS[@]}"',
+    );
+    expect(transaction).toContain(
+      'RETRO_TARGET_COMMIT_PATHS=$(git diff-tree --no-commit-id --name-only -r "$RETRO_TARGET_COMMIT")',
+    );
+    expect(transaction).toContain(
+      'APPLIED_REF="$RETRO_TARGET_COMMIT :: ${RETRO_TARGET_PATHS[*]}"',
+    );
+    expect(
+      transaction.indexOf('RETRO_TARGET_COMMIT=$(git rev-parse HEAD)'),
+    ).toBeLessThan(transaction.indexOf('RETRO_PUSH=$(oat project push'));
+    expect(transaction).toContain(
+      'RETRO_COMMIT_PATHS=("${RETRO_TARGET_PATHS[@]}" "$PROJECT_PATH/references/project-retro.md")',
+    );
+    expect(transaction).toContain(
+      '[ "$UNRELATED_STAGED_PATCH_AFTER" = "$UNRELATED_STAGED_PATCH_BEFORE" ]',
+    );
+    expect(transaction).toMatch(
+      /Before the parent target commit[\s\S]*?Do not write back or push/,
+    );
+    expect(transaction).toMatch(
+      /Between the parent target commit and project-ref push[\s\S]*?Recover `Applied-ref`/,
+    );
+    expect(transaction).toMatch(
+      /After both commits[\s\S]*?project-ref writeback receipt/,
+    );
+  });
 });

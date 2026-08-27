@@ -151,7 +151,7 @@
   },
   {
     "file": ".agents/skills/oat-project-retro/references/apply-procedure.md",
-    "anchor": "    oat project push \"$PROJECT_PATH\" --message \"chore(oat): record retro application $RP_ID\"",
+    "anchor": "    RETRO_PUSH=$(oat project push \"$PROJECT_PATH\" --message \"chore(oat): record retro application $RP_ID\" --json) || exit 1",
     "kind": "write"
   },
   {
