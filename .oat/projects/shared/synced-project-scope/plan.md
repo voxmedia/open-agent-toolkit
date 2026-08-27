@@ -2201,6 +2201,7 @@ git commit -m "docs(p04-t07): document the synced project scope and reviewer exp
 **Files:**
 
 - Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json` (`0.2.36` → `0.2.37`)
+- Modify: `packages/cli/assets/public-package-versions.json` (generated lockstep asset refreshed by `pnpm release:validate`, `0.2.36` → `0.2.37`)
 - Modify: `pnpm-lock.yaml` if the workspace references versions (run `pnpm install --lockfile-only`)
 
 **Step 1: Apply**
@@ -2209,7 +2210,7 @@ Bump all five together (minor vs patch per repo release policy — patch unless 
 
 **Step 1a: Format**
 
-Run: `pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json` (after `pnpm install --lockfile-only`).
+Run: `pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json` (after `pnpm install --lockfile-only` and `pnpm release:validate` refreshes the generated asset).
 
 **Step 2: Verify**
 
@@ -2219,7 +2220,7 @@ Expected: both `exit=0`.
 **Step 3: Commit**
 
 ```bash
-git add packages/*/package.json pnpm-lock.yaml
+git add packages/*/package.json packages/cli/assets/public-package-versions.json pnpm-lock.yaml
 git commit -m "chore(p04-t08): bump public packages to 0.2.37"
 ```
 
