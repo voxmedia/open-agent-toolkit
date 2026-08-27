@@ -79,15 +79,15 @@ configured exit gate generation 1 passed on `cursor-gpt-5-6-sol-xhigh` (run
    replacing the dead `--full-auto` with the live documented approval flags is
    part of the plan's step 2 and Done criterion 4 — same file, no behavior
    weakening, no undocumented flags — with each example row re-evaluated for
-   sandbox semantics rather than swapped mechanically.
+   sandbox semantics rather than swapped mechanically. (`DR-260827-reconcile-a-plan-stop-condition`)
 2. **Guard structurally, not by keyword:** after three guard widenings each
    opened a narrower hole, the contract test keys exemptions on "an exempted
    line must not itself run the command" and normalizes soft-wrapped prose to
-   logical lines; wording dispositions get their own assertion.
+   logical lines; wording dispositions get their own assertion. (`DR-260827-structural-exemptions-and-property`)
 3. **Cycle-cap disposition:** at the third p01 review cycle the reviewer's
    verified patches were applied as a bounded root-verified fix (22-probe
    runner, `NO-TESTS-RAN` guard) and independently verified by the final
-   review — no self-authorized fourth cycle.
+   review — no self-authorized fourth cycle. (`DR-260827-cycle-cap-disposition-bounded`)
 4. **Cross-model review stopping rule:** two consecutive clean rounds or
    below-Medium findings; root dispositions are settled (Codex re-litigated one
    twice).
