@@ -792,12 +792,12 @@ Expected: green.
 
 **Step 4: Format**
 
-Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/push/ packages/cli/src/commands/project/sync/resolve-target.ts packages/cli/src/commands/project/index.ts`
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/push/ packages/cli/src/commands/project/sync/resolve-target.ts packages/cli/src/commands/project/sync/resolve-target.test.ts packages/cli/src/commands/project/index.ts`
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/project/push/ packages/cli/src/commands/project/sync/resolve-target.ts packages/cli/src/commands/project/index.ts
+git add packages/cli/src/commands/project/push/ packages/cli/src/commands/project/sync/resolve-target.ts packages/cli/src/commands/project/sync/resolve-target.test.ts packages/cli/src/commands/project/index.ts
 git commit -m "feat(p02-t05): add oat project push command"
 ```
 
@@ -848,7 +848,8 @@ git commit -m "feat(p02-t06): add oat project pull command"
 **Files:**
 
 - Modify: `packages/cli/src/commands/project/list.ts`
-- Modify: `packages/cli/src/commands/project/list.integration.test.ts` (and `list.test.ts` if present)
+- Modify: `packages/cli/src/commands/project/list.integration.test.ts` and `packages/cli/src/commands/project/list.test.ts` (if present; include it in format + commit when touched)
+- Modify: `packages/control-plane/README.md` (document the additive `ProjectSummary.scope` field — the package's AGENTS.md requires public API changes to be reflected there)
 - Modify: `packages/control-plane/src/types.ts` (`ProjectSummary.scope?: 'shared' | 'local' | 'synced'`) — additive optional field
 
 **Step 1: Write test (RED)**
@@ -872,12 +873,12 @@ Expected: green; this repo's list shows `shared` scope rows.
 
 **Step 4: Format**
 
-Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.integration.test.ts packages/control-plane/src/types.ts`
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.integration.test.ts packages/cli/src/commands/project/list.test.ts packages/control-plane/src/types.ts packages/control-plane/README.md`
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.integration.test.ts packages/control-plane/src/types.ts
+git add packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.integration.test.ts packages/cli/src/commands/project/list.test.ts packages/control-plane/src/types.ts packages/control-plane/README.md
 git commit -m "feat(p02-t07): list projects across shared, synced, and local scopes"
 ```
 
@@ -1408,7 +1409,7 @@ git commit -m "feat(p04-t01): push synced artifacts from authoring skills"
 - Modify: `.agents/agents/oat-phase-implementer.md` — no literal `git add` exists in this file; add a short **Synced-scope bookkeeping** paragraph under the ledger/recovery commit guidance stating that artifact and ledger commits use the scope guard + `oat project push`, while code task commits (`feat(pNN-tNN)`) are unchanged; bump frontmatter `version`
 - Modify: `.agents/skills/oat-project-review-receive/SKILL.md` (`:529-534` only — `:399-400` is the generated _code_ fix-commit template and stays a branch commit; add a one-line note there: "fix tasks that edit synced artifacts use `oat project push`")
 - Modify: `.agents/skills/oat-project-review-receive-remote/SKILL.md` (`:270-271`)
-- Modify: `.agents/skills/oat-project-review-provide/SKILL.md` (Step 9.5 `:1064` — the required atomic commit of the review artifact + `plan.md`; for `synced` projects this becomes `oat project push` under the guard, since a branch commit cannot persist files inside the nested checkout)
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md` — two sites: Step 1.6 `:250` (committed-artifact baseline) becomes scope-aware: for `synced`, run `git -C "$PROJECT_PATH" status --porcelain -- discovery.md spec.md design.md plan.md implementation.md state.md` inside the nested checkout and stop on any pending change (the parent-worktree check cannot see inside the ignored checkout); if the checkout is absent, run `oat project pull` before artifact validation; Step 9.5 `:1064` (the required atomic commit of the review artifact + `plan.md`) becomes `oat project push` under the guard, since a branch commit cannot persist files inside the nested checkout. Add a skill-contract test case in `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` asserting the Step 1.6 synced baseline wording is present
 - Modify: `.agents/skills/oat-project-revise/SKILL.md` (`:271-272` only — `:185-186` is the code fix-commit template; same one-line note)
 - Modify: `.agents/skills/oat-project-reconcile/SKILL.md` (`:681-691`)
 
@@ -1423,12 +1424,12 @@ Expected: pass. Note: `check:skill-bumps` only inspects `SKILL.md`; `references/
 
 **Step 3: Format**
 
-Run: `pnpm exec oxfmt --write .agents/skills/oat-project-implement .agents/agents/oat-phase-implementer.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-review-receive-remote/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-revise/SKILL.md .agents/skills/oat-project-reconcile/SKILL.md`
+Run: `pnpm exec oxfmt --write .agents/skills/oat-project-implement .agents/agents/oat-phase-implementer.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-review-receive-remote/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-revise/SKILL.md .agents/skills/oat-project-reconcile/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
 
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/oat-project-implement .agents/agents/oat-phase-implementer.md .agents/skills/oat-project-review-receive .agents/skills/oat-project-review-receive-remote .agents/skills/oat-project-review-provide .agents/skills/oat-project-revise .agents/skills/oat-project-reconcile
+git add .agents/skills/oat-project-implement .agents/agents/oat-phase-implementer.md .agents/skills/oat-project-review-receive .agents/skills/oat-project-review-receive-remote .agents/skills/oat-project-review-provide .agents/skills/oat-project-revise .agents/skills/oat-project-reconcile packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "feat(p04-t02): push synced artifacts from execution skills and phase implementer"
 ```
 
@@ -1505,11 +1506,17 @@ git commit -m "feat(p04-t04): pull synced artifacts on arrival and document scop
 
 - Modify: `.agents/skills/oat-project-pr-final/SKILL.md` — for `synced` projects the PR step becomes an explicit ordered sequence: (1) generate/refresh `summary.md` and the `pr/` artifact as today; (2) **`oat project push`** so the ref contains the summary and any moved artifacts (`oat project links` reads the ref — a summary that exists only in the checkout would be omitted); (3) render the block with `oat project links "$PROJECT_PATH"` and insert it into the body (`:280-320`); (4) `gh pr create`; (5) set `oat_pr_status: open` and `oat_pr_url` in `state.md` (`:408`, unchanged); (6) **`oat project push`** again so the ref carries the authoritative PR metadata and the push path refreshes the block to the new ref SHA. `:299-301`: synced artifact paths are never linked as References — the block replaces them.
 - Modify: `.agents/skills/oat-project-pr-progress/SKILL.md` (`:227-265`, `:246-247`, `:312`) — same six-step sequence; **new behavior:** progress PRs must persist `oat_pr_status: open` / `oat_pr_url` in `state.md` (today they do not), otherwise p03-t03's push-time refresh never fires for mid-project PRs. Verification for both skills (manual, recorded in `implementation.md` during p04-t10): a freshly generated `summary.md` appears in the initial block; after a progress PR, one more `oat project push` re-renders the block with the new SHA.
-- Modify: `.agents/skills/oat-project-complete/SKILL.md` (steps 7–11.5: for synced projects run the design's 7-step state machine — finalize → `oat project push` → `oat project archive` (steps 3–6, commits record + summary export) → `oat project links --durable-summary <path>` → `gh pr edit`; step 10's bookkeeping commit becomes a no-op for synced projects; keep the anti-pattern note about never linking `archived/` paths)
+- Modify: `.agents/skills/oat-project-complete/SKILL.md` — **first** replace the Step 1 shared-only classification (`:48-51`, `IS_SHARED_PROJECT` derived from `projects.root` prefix) with a single `PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value)` and a derived `IS_DURABLE_PROJECT` that is true for `shared` **and** `synced`; then audit and update every `IS_SHARED_PROJECT` condition — archive offer `:145`, recap/export durability gate `:355`, archive execution `:442`, `:514`, link-breakage note `:716` — so `shared` and `synced` receive identical archive/recap/durable behavior (including when `workflow.archiveOnComplete` is unset) while `local` stays exactly as today; **then** steps 7–11.5 for synced projects run the design's 7-step state machine (finalize → `oat project push` → `oat project archive` (steps 3–6, commits record + summary export) → `oat project links --durable-summary <path>` → `gh pr edit`); step 10's bookkeeping commit becomes a no-op for synced projects; keep the anti-pattern note about never linking `archived/` paths
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` (`:802-912` pins the shared-only wording, e.g. the `IS_SHARED_PROJECT="false"` recap sentence at `:912`) — update the pinned strings to the scope-aware wording and add an assertion that the skill classifies `synced` as durable
 
 **Step 1: Apply**
 
 Bump versions. In `oat-project-complete`, state explicitly that archive refuses on a dirty/unpushed checkout and that the fix is `oat project push`.
+
+**Step 2a: Verify the skill contract test**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`
+Expected: green with the updated scope-aware pins.
 
 **Step 2: Verify**
 
@@ -1518,12 +1525,12 @@ Expected: pass.
 
 **Step 3: Format**
 
-Run: `pnpm exec oxfmt --write .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-pr-progress/SKILL.md .agents/skills/oat-project-complete/SKILL.md`
+Run: `pnpm exec oxfmt --write .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-pr-progress/SKILL.md .agents/skills/oat-project-complete/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
 
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/oat-project-pr-final .agents/skills/oat-project-pr-progress .agents/skills/oat-project-complete
+git add .agents/skills/oat-project-pr-final .agents/skills/oat-project-pr-progress .agents/skills/oat-project-complete packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "feat(p04-t05): embed pinned artifact links in PRs and complete synced projects"
 ```
 
@@ -1555,7 +1562,7 @@ Expected: green; real tree passes.
 
 **Step 4: Format**
 
-Run: `pnpm exec oxfmt --write packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts`
+Run: `pnpm exec oxfmt --write packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts packages/cli/src/validation/synced-bookkeeping-sites.json`
 
 **Step 5: Commit**
 
@@ -1612,6 +1619,10 @@ git commit -m "docs(p04-t07): document the synced project scope and reviewer exp
 
 Bump all five together (minor vs patch per repo release policy — patch unless policy says new CLI commands require minor; check `release:check-versions` output).
 
+**Step 1a: Format**
+
+Run: `pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json` (after `pnpm install --lockfile-only`).
+
 **Step 2: Verify**
 
 Run: `pnpm release:check-versions > gate.log 2>&1; echo "exit=$?"; pnpm release:validate > gate2.log 2>&1; echo "exit=$?"`
@@ -1642,13 +1653,15 @@ pnpm lint > gate-lint.log 2>&1; echo "lint exit=$?"      # required: .agents/ski
 pnpm format > gate-format.log 2>&1; echo "format exit=$?"  # required: .agents/skills touched
 ```
 
-**Step 2: Fix and re-run** until every exit is 0. Record the final exit list in `implementation.md`.
+**Step 2: Fix and re-run** until every exit is 0. Every correction is committed **before** the evidence commit as its own scoped commit (`fix(p04-t09): <what>`, staging only the corrected paths; skill edits also get their version bump and pass `pnpm run check:skill-bumps`, `pnpm lint`, `pnpm format`). Record the final exit list and the fix-commit SHAs in `implementation.md`.
 
 **Step 3: Commit**
 
 ```bash
+git status --porcelain            # must be empty apart from implementation.md before this commit
 git add .oat/projects/shared/synced-project-scope/implementation.md
 git commit -m "chore(p04-t09): record definition-of-done gate results"
+git status --porcelain            # must be empty — the task is not complete otherwise
 ```
 
 ---
@@ -1682,7 +1695,7 @@ Expected: the skill snippet chose the `synced` branch and pushed (no `git commit
 
 **Step 2: Record evidence**
 
-Append `### p04-t10 skill dogfood` to `implementation.md`: which sites ran, the observed `oat project push`/`pull` JSON, and any snippet defects found (fix them in the same task with a follow-up skill version bump).
+Append `### p04-t10 skill dogfood` to `implementation.md`: which sites ran, the observed `oat project push`/`pull` JSON, and any snippet defects found. Each defect fix is its own scoped commit **before** the evidence commit (`fix(p04-t10): <skill> <what>`, staging only the corrected skill/agent files, with a version bump), so nothing is left uncommitted behind the evidence.
 
 **Step 3: Verify**
 
@@ -1702,8 +1715,10 @@ All three must exit 0 before the commit below (these are the only gates covering
 **Step 4: Commit**
 
 ```bash
+git status --porcelain            # must be empty apart from implementation.md
 git add .oat/projects/shared/synced-project-scope/implementation.md
 git commit -m "chore(p04-t10): record skill-sweep dogfood evidence"
+git status --porcelain            # must be empty — the phase is not complete otherwise
 ```
 
 ---
@@ -1724,7 +1739,7 @@ git commit -m "chore(p04-t10): record skill-sweep dogfood evidence"
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T013313Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T014220Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T015823Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T022840Z.md                | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T022840Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

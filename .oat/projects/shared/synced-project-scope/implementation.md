@@ -241,3 +241,13 @@ The configured `oat-project-plan` gate (`oat gate review --review-type artifact 
 - M1 dogfood asserted the whole `refs/oat/projects/*` namespace empty → assertions scoped to the scratch slug.
 
 Status after attempt 3: still `blocked` by the gate; all findings applied. Awaiting maintainer: run again or approve.
+
+**Attempt 4 — `reviews/archived/artifact-plan-review-2026-08-27T022840Z.md`** (1 critical, 2 important, 2 medium) — all resolved in `plan.md`:
+
+- C1 `oat-project-complete` classifies scope shared-vs-local in Step 1 and gates archive/recap on it → p04-t05 now rewrites Step 1 to `oat project scope` + `IS_DURABLE_PROJECT` (shared|synced), audits all six `IS_SHARED_PROJECT` sites, and updates the pinned contract test.
+- I1 `oat-project-review-provide` Step 1.6 baseline check can't see the nested checkout → p04-t02 makes it scope-aware (`git -C "$PROJECT_PATH" status` on core artifacts; pull when absent) with a contract-test case.
+- I2 p04-t09/p04-t10 could fix files without committing them → scoped fix commits before evidence commits; clean-status assertions before/after.
+- M1 format/commit surfaces incomplete (p02-t05, p02-t07, p04-t06, p04-t08) → all declared files now formatted and staged; manifest format step added.
+- M2 `ProjectSummary.scope` public API → `packages/control-plane/README.md` added to p02-t07.
+
+Status after attempt 4: still `blocked`; all findings applied. Awaiting maintainer: run again or approve.
