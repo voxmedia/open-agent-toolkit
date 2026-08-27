@@ -226,6 +226,31 @@ oat_generated: false
 **Status:** in_progress
 **Started:** 2026-08-27
 
+### Phase Summary
+
+**Outcome:**
+
+- Added preview-first, verified user/project pack migration in five task commits,
+  with destination re-inventory before any source mutation and explicit source
+  removal confirmation.
+- Recovery attempt 1/10 corrected retained-preview classification for
+  user-managed source templates; the attempt is reconciled with no pending
+  marker.
+
+**Verification:**
+
+- Phase suite: 4 files and 43 tests passed; root independently repeated it.
+- Full CLI suite: 287 files and 3,749 tests passed.
+- `pnpm test`, `pnpm type-check`, `pnpm lint`, `pnpm format`, and
+  `git diff --check` passed; the worktree was clean.
+
+**Review concern:**
+
+- Independent review must verify whether migration source removal preserves a
+  shared asset when another pack remains intended at that source scope. The
+  migration path delegates directly to generic remove reconciliation, while the
+  established remove command has explicit shared-owner retention behavior.
+
 ### Task p03-t01: Define migration plans and result state
 
 **Status:** completed
@@ -407,7 +432,8 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Complete Phase 3 broader verification and return the phase report.
+- Complete fresh independent Phase 3 review, including the shared-owner source
+  retention concern.
 
 ## Final Summary (for PR/docs)
 

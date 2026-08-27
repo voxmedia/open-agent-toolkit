@@ -85,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T07:27:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T07:35:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -95,7 +95,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 3 verification
+**Status:** Implementation in progress — Phase 3 independent review
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -136,6 +136,11 @@ Phase 3 is ready to begin.
 All five Phase 3 task commits are present. A bounded preview-composition defect
 consumed recovery attempt 1/10 and was recovered in
 `3e2421bce1286dd61852e8e15d87cff1c8c82b5d`; the marker is reconciled.
+All Phase 3 gates pass: 43 focused tests, 3,749 CLI tests, workspace tests,
+type-check, lint, format, and diff check. Independent review must specifically
+verify shared-owner retention during source removal because the migration path
+uses generic remove reconciliation rather than the remove command's explicit
+shared-owner retention adapter.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -145,7 +150,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 3 verification)
+- **Implementation:** `implementation.md` (Phase 3 awaiting independent review)
 
 ## Progress
 
@@ -194,7 +199,8 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 2 completed
 - ✓ Phase 3 tasks `p03-t01`–`p03-t05` committed
 - ✓ Phase 3 recovery attempt 1/10 reconciled
-- ⧗ Phase 3 broader verification
+- ✓ Phase 3 broader verification passed
+- ⧗ Phase 3 independent review
 
 ## Blockers
 
@@ -202,4 +208,5 @@ None.
 
 ## Next Milestone
 
-Complete Phase 3 broader verification and return the phase report.
+Complete fresh independent Phase 3 review, including the shared-owner source
+retention concern.
