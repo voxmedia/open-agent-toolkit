@@ -93,14 +93,9 @@ import {
   type InstallResearchResult,
 } from './research/install-research';
 import {
-  BRAINSTORM_SKILLS,
   DOCS_SKILLS,
-  IDEA_SKILLS,
-  RESEARCH_AGENTS,
   RESEARCH_SKILLS,
   UTILITY_SKILLS,
-  WORKFLOW_AGENTS,
-  WORKFLOW_SKILLS,
   resolvePackDefaultScope,
 } from './shared/skill-manifest';
 import { createInitToolsUtilityCommand } from './utility';

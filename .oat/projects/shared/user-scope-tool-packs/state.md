@@ -20,13 +20,22 @@ oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 2 # default restored after the authorized p01 extension reached a passing verdict
-# oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
-#   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
-#   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
-#   phase_attempt_usage: # authoritative monotonic per-phase attempt ledger
-#     pNN:
-#       used_attempts: 0
-#       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {}
+  phase_attempt_usage:
+    p02:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: '4bd11825-d39d-4c04-888d-ef704ae4af24'
+        original_request_id: 'd9cf84cf-abf6-459b-831c-8768658de1e8'
+        original_task_id: 'p02-t03'
+        original_commit: '0b9415546476b26e450a52484aad147dfe8741d9'
+        discovered_by: 'oxlint --fix'
+        dispatch_target: 'oat-phase-implementer-gpt-5-6-sol-high'
+        reservation_head: '0b9415546476b26e450a52484aad147dfe8741d9'
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
