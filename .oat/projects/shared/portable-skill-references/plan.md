@@ -311,14 +311,15 @@ merge path.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                             | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | ---------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -                                                    | -             | -          | -           |
-| p02    | code     | pending | -          | -                                                    | -             | -          | -           |
-| final  | code     | pending | -          | -                                                    | -             | -          | -           |
-| spec   | artifact | pending | -          | -                                                    | -             | -          | -           |
-| design | artifact | pending | -          | -                                                    | -             | -          | -           |
-| plan   | artifact | passed  | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md` | -             | manual     | plan        |
+| Scope  | Type     | Status   | Date       | Artifact                                             | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | -------- | ---------- | ---------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending  | -          | -                                                    | -             | -          | -           |
+| p02    | code     | pending  | -          | -                                                    | -             | -          | -           |
+| final  | code     | pending  | -          | -                                                    | -             | -          | -           |
+| spec   | artifact | pending  | -          | -                                                    | -             | -          | -           |
+| design | artifact | pending  | -          | -                                                    | -             | -          | -           |
+| plan   | artifact | passed   | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md` | -             | manual     | plan        |
+| plan   | artifact | received | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220007Z.md` | -             | -          | -           |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
