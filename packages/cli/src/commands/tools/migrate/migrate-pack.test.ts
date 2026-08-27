@@ -1,10 +1,15 @@
 import { join } from 'node:path';
 
+import type { ApplyPackReconcileDependencies } from '@commands/tools/shared/apply-pack-reconcile';
 import type { ScopedPackInventory } from '@commands/tools/shared/pack-inventory';
 import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import { describe, expect, it } from 'vitest';
 
-import { planPackMigration } from './migrate-pack';
+import {
+  executeMigrationDestination,
+  planPackMigration,
+  type PackMigrationPreview,
+} from './migrate-pack';
 
 function inventory(
   scope: 'project' | 'user',
@@ -194,5 +199,129 @@ describe('planPackMigration', () => {
         }),
       }),
     ).toThrow(/legacy false/i);
+  });
+});
+
+function migrationPreview(): PackMigrationPreview {
+  return planPackMigration({
+    pack: 'ideas',
+    from: 'project',
+    to: 'user',
+    sourceRoot: '/project',
+    destinationRoot: '/user',
+    assetsRoot: '/assets',
+    sourceInventory: inventory('project'),
+    destinationInventory: inventory('user', { intent: 'none' }),
+  });
+}
+
+function destinationDependencies(options: {
+  copyFailure?: boolean;
+  verificationFailure?: boolean;
+  events: string[];
+}): ApplyPackReconcileDependencies {
+  let intentWritten = false;
+  return {
+    resolveManagedRoots: async (scopeRoot) => ({
+      '.agents': {
+        name: '.agents',
+        logicalRoot: join(scopeRoot, '.agents'),
+        realRoot: join(scopeRoot, '.agents'),
+        exists: false,
+      },
+      '.oat': {
+        name: '.oat',
+        logicalRoot: join(scopeRoot, '.oat'),
+        realRoot: join(scopeRoot, '.oat'),
+        exists: false,
+      },
+    }),
+    validatePath: async (path) => ({
+      realManagedRoot: '/user',
+      realPath: path,
+    }),
+    copyDirectory: async () => {
+      options.events.push('copy');
+      if (options.copyFailure) throw new Error('injected copy failure');
+    },
+    copyFile: async () => {
+      options.events.push('copy');
+      if (options.copyFailure) throw new Error('injected copy failure');
+    },
+    chmodPath: async () => {
+      options.events.push('chmod');
+    },
+    removePath: async () => {
+      throw new Error('destination execution must not remove');
+    },
+    writeGenerated: async () => {
+      options.events.push('generate');
+    },
+    writeIntent: async () => {
+      options.events.push('intent');
+      intentWritten = true;
+    },
+    inventory: async () => {
+      options.events.push('inventory');
+      if (options.verificationFailure) {
+        return inventory('user', { intent: 'none' });
+      }
+      return inventory('user', {
+        intent: intentWritten ? 'declared' : 'inferred-legacy',
+      });
+    },
+  };
+}
+
+describe('executeMigrationDestination', () => {
+  it('leaves source and destination intent untouched when a copy fails', async () => {
+    const events: string[] = [];
+    await expect(
+      executeMigrationDestination(migrationPreview(), '/user', {
+        applyDependencies: destinationDependencies({
+          copyFailure: true,
+          events,
+        }),
+      }),
+    ).rejects.toThrow(/injected copy failure/);
+
+    expect(events).toEqual(['copy']);
+    expect(events).not.toContain('intent');
+    expect(events).not.toContain('source');
+  });
+
+  it('does not persist destination intent when re-inventory is incomplete', async () => {
+    const events: string[] = [];
+    await expect(
+      executeMigrationDestination(migrationPreview(), '/user', {
+        applyDependencies: destinationDependencies({
+          verificationFailure: true,
+          events,
+        }),
+      }),
+    ).rejects.toThrow(/expected complete but found absent/i);
+
+    expect(events).toContain('inventory');
+    expect(events).not.toContain('intent');
+    expect(events).not.toContain('source');
+  });
+
+  it('persists destination intent only after complete filesystem verification', async () => {
+    const events: string[] = [];
+    const result = await executeMigrationDestination(
+      migrationPreview(),
+      '/user',
+      {
+        applyDependencies: destinationDependencies({ events }),
+      },
+    );
+
+    expect(result).toMatchObject({ status: 'destination-verified' });
+    expect(result.destinationInventory).toMatchObject({
+      completeness: 'complete',
+      intent: { enabled: true, source: 'declared' },
+    });
+    expect(events.slice(-3)).toEqual(['inventory', 'intent', 'inventory']);
+    expect(events).not.toContain('source');
   });
 });

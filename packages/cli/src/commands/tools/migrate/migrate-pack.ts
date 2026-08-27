@@ -1,4 +1,8 @@
 import {
+  applyPackReconcilePlan,
+  type ApplyPackReconcileDependencies,
+} from '@commands/tools/shared/apply-pack-reconcile';
+import {
   hasScopedPackPlacementEvidence,
   type ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
@@ -10,7 +14,6 @@ import {
 } from '@commands/tools/shared/pack-reconcile';
 import type { PackAssetStatus, PackName } from '@commands/tools/shared/types';
 import type { ConcreteScope } from '@shared/types';
-
 export interface MigrationAssetPreview {
   assetId: string;
   path: string;
@@ -53,6 +56,11 @@ export interface PlanPackMigrationInput {
   assetsRoot: string;
   sourceInventory: ScopedPackInventory;
   destinationInventory: ScopedPackInventory;
+}
+
+export interface ExecuteMigrationDestinationDependencies {
+  apply?: typeof applyPackReconcilePlan;
+  applyDependencies: ApplyPackReconcileDependencies;
 }
 
 function assertInventory(
@@ -182,5 +190,53 @@ export function planPackMigration(
     removals,
     retained,
     destinationPlan,
+  };
+}
+
+export async function executeMigrationDestination(
+  preview: PackMigrationPreview,
+  destinationRoot: string,
+  dependencies: ExecuteMigrationDestinationDependencies,
+): Promise<PackMigrationOutcome> {
+  if (
+    preview.destinationPlan.pack !== preview.pack ||
+    preview.destinationPlan.scope !== preview.to ||
+    preview.destinationPlan.action !== 'migrate-destination'
+  ) {
+    throw new Error('Migration destination plan does not match the preview');
+  }
+  if (preview.conflicts.length > 0) {
+    throw new Error(
+      `Migration destination conflicts must be resolved before mutation: ${preview.conflicts.map(({ assetId }) => assetId).join(', ')}`,
+    );
+  }
+
+  const applied = await (dependencies.apply ?? applyPackReconcilePlan)(
+    preview.destinationPlan,
+    destinationRoot,
+    dependencies.applyDependencies,
+  );
+  const destinationInventory = applied.inventory;
+  const drifted = destinationInventory.assets.filter(
+    ({ definition: asset, status }) =>
+      asset.ownership[preview.to] === 'managed' && status !== 'current',
+  );
+  if (
+    destinationInventory.pack !== preview.pack ||
+    destinationInventory.scope !== preview.to ||
+    destinationInventory.completeness !== 'complete' ||
+    !destinationInventory.intent.enabled ||
+    destinationInventory.intent.source !== 'declared' ||
+    drifted.length > 0
+  ) {
+    throw new Error(
+      `Migration destination verification did not produce a complete current declared installation for ${preview.pack} at ${preview.to} scope`,
+    );
+  }
+
+  return {
+    preview,
+    status: 'destination-verified',
+    destinationInventory,
   };
 }
