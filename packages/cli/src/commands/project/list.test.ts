@@ -28,7 +28,9 @@ function createHarness(options: HarnessOptions): {
   listProjects: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
-  const listProjects = vi.fn(async () => options.projects ?? []);
+  const listProjects = vi.fn(async (root: string) =>
+    root.endsWith('/shared') ? (options.projects ?? []) : [],
+  );
 
   const command = createProjectListCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -46,6 +48,8 @@ function createHarness(options: HarnessOptions): {
       async () => options.projectsRoot ?? '.oat/projects/shared',
     ),
     listProjects,
+    listSyncedRecords: vi.fn(async () => []),
+    directoryExists: vi.fn(async (path: string) => path.endsWith('/shared')),
     readProjectMetadata: vi.fn(async (projectPath: string) => {
       const projectName = projectPath.split('/').at(-1) ?? projectPath;
       return (
@@ -71,7 +75,6 @@ async function runCommand(
     .name('oat')
     .option('--json')
     .option('--verbose')
-    .option('--scope <scope>')
     .option('--cwd <path>')
     .exitOverride();
 
@@ -181,6 +184,8 @@ describe('oat project list', () => {
     await runCommand(command, []);
 
     expect(capture.info.join('\n')).toContain('NAME');
+    expect(capture.info.join('\n')).toContain('SCOPE');
+    expect(capture.info.join('\n')).toContain('shared');
     expect(capture.info.join('\n')).toContain('alpha');
     expect(capture.info.join('\n')).toContain('oat-project-implement');
     expect(process.exitCode).toBe(0);

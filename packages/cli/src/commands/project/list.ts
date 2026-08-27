@@ -1,19 +1,27 @@
-import { isAbsolute, join } from 'node:path';
+import { stat } from 'node:fs/promises';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { listSyncedRecords } from '@commands/project/sync/record';
 import { parseFrontmatterField } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  PROJECT_SCOPES,
+  resolveScopeRoot,
+  type ProjectScope,
+} from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { resolveProjectRoot } from '@fs/paths';
 import {
   listProjects,
+  type ProjectListRow,
   type ProjectSummary,
 } from '@open-agent-toolkit/control-plane';
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 
 interface ProjectListDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -23,6 +31,8 @@ interface ProjectListDependencies {
     env: NodeJS.ProcessEnv,
   ) => Promise<string>;
   listProjects: (projectsRoot: string) => Promise<ProjectSummary[]>;
+  listSyncedRecords: typeof listSyncedRecords;
+  directoryExists: (path: string) => Promise<boolean>;
   readProjectMetadata: (projectPath: string) => Promise<ProjectListMetadata>;
   processEnv: NodeJS.ProcessEnv;
 }
@@ -35,6 +45,7 @@ interface ProjectListMetadata {
 
 interface ProjectListOptions {
   includeCoordination?: boolean;
+  scope?: ProjectScope;
 }
 
 const DEFAULT_DEPENDENCIES: ProjectListDependencies = {
@@ -42,9 +53,22 @@ const DEFAULT_DEPENDENCIES: ProjectListDependencies = {
   resolveProjectRoot,
   resolveProjectsRoot,
   listProjects,
+  listSyncedRecords,
+  directoryExists,
   readProjectMetadata,
   processEnv: process.env,
 };
+
+async function directoryExists(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).isDirectory();
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return false;
+    }
+    throw error;
+  }
+}
 
 async function readProjectMetadata(
   projectPath: string,
@@ -91,20 +115,32 @@ async function filterProjectsForList(
   return filtered;
 }
 
-function formatProjectTable(projects: ProjectSummary[]): string[] {
+function formatProjectTable(projects: ProjectListRow[]): string[] {
   if (projects.length === 0) {
     return ['No tracked projects found.'];
   }
 
   const rows = projects.map((project) => ({
     name: project.name,
-    phase: `${project.phase} (${project.phaseStatus})`,
-    progress: `${project.progress.completed}/${project.progress.total}`,
+    scope: project.scope,
+    phase:
+      project.phase === null
+        ? '—'
+        : `${project.phase} (${project.phaseStatus})`,
+    progress:
+      project.progress === null
+        ? '—'
+        : `${project.progress.completed}/${project.progress.total}`,
     recommendation: project.recommendation.skill,
+    hint:
+      project.kind === 'materialized'
+        ? '—'
+        : `oat project pull ${project.name}`,
   }));
 
   const widths = {
     name: Math.max('NAME'.length, ...rows.map((row) => row.name.length)),
+    scope: Math.max('SCOPE'.length, ...rows.map((row) => row.scope.length)),
     phase: Math.max('PHASE'.length, ...rows.map((row) => row.phase.length)),
     progress: Math.max(
       'PROGRESS'.length,
@@ -114,32 +150,123 @@ function formatProjectTable(projects: ProjectSummary[]): string[] {
       'RECOMMENDATION'.length,
       ...rows.map((row) => row.recommendation.length),
     ),
+    hint: Math.max('HINT'.length, ...rows.map((row) => row.hint.length)),
   };
 
   const header = [
     'NAME'.padEnd(widths.name),
+    'SCOPE'.padEnd(widths.scope),
     'PHASE'.padEnd(widths.phase),
     'PROGRESS'.padEnd(widths.progress),
     'RECOMMENDATION'.padEnd(widths.recommendation),
+    'HINT'.padEnd(widths.hint),
   ].join('  ');
 
   const divider = [
     '-'.repeat(widths.name),
+    '-'.repeat(widths.scope),
     '-'.repeat(widths.phase),
     '-'.repeat(widths.progress),
     '-'.repeat(widths.recommendation),
+    '-'.repeat(widths.hint),
   ].join('  ');
 
   const lines = rows.map((row) =>
     [
       row.name.padEnd(widths.name),
+      row.scope.padEnd(widths.scope),
       row.phase.padEnd(widths.phase),
       row.progress.padEnd(widths.progress),
       row.recommendation.padEnd(widths.recommendation),
+      row.hint.padEnd(widths.hint),
     ].join('  '),
   );
 
   return [header, divider, ...lines];
+}
+
+function displayPath(repoRoot: string, absolutePath: string): string {
+  return relative(repoRoot, absolutePath).split(sep).join('/');
+}
+
+async function collectProjectRows(
+  repoRoot: string,
+  projectsRoot: string,
+  options: ProjectListOptions,
+  dependencies: ProjectListDependencies,
+): Promise<ProjectListRow[]> {
+  const configuredSharedRoot = isAbsolute(projectsRoot)
+    ? resolve(projectsRoot)
+    : resolve(repoRoot, projectsRoot);
+  const roots: Array<{ scope: ProjectScope; path: string }> = [
+    { scope: 'shared', path: configuredSharedRoot },
+    {
+      scope: 'synced',
+      path: resolveScopeRoot(repoRoot, projectsRoot, 'synced'),
+    },
+    {
+      scope: 'local',
+      path: resolveScopeRoot(repoRoot, projectsRoot, 'local'),
+    },
+  ];
+  const selected = options.scope
+    ? roots.filter((entry) => entry.scope === options.scope)
+    : roots;
+  const rows: ProjectListRow[] = [];
+  for (const root of selected) {
+    if (await dependencies.directoryExists(root.path)) {
+      const projects = await filterProjectsForList(
+        await dependencies.listProjects(root.path),
+        root.path,
+        options.includeCoordination ?? false,
+        dependencies,
+      );
+      rows.push(
+        ...projects.map(
+          (project): ProjectListRow => ({
+            ...project,
+            kind: 'materialized',
+            scope: root.scope,
+            checkout: 'present',
+          }),
+        ),
+      );
+    }
+    if (root.scope === 'synced') {
+      const materialized = new Set(
+        rows
+          .filter(
+            (row) => row.scope === 'synced' && row.kind === 'materialized',
+          )
+          .map((row) => row.name),
+      );
+      for (const record of await dependencies.listSyncedRecords(root.path)) {
+        if (!materialized.has(record.slug)) {
+          rows.push({
+            kind: 'recorded-absent',
+            name: record.slug,
+            path: displayPath(repoRoot, join(root.path, record.slug)),
+            scope: 'synced',
+            checkout: 'absent',
+            phase: null,
+            phaseStatus: null,
+            workflowMode: null,
+            lifecycle: null,
+            progress: null,
+            recommendation: {
+              skill: 'oat project pull',
+              reason: 'checkout absent',
+            },
+          });
+        }
+      }
+    }
+  }
+  return rows.sort(
+    (left, right) =>
+      left.name.localeCompare(right.name) ||
+      left.scope.localeCompare(right.scope),
+  );
 }
 
 async function runProjectList(
@@ -153,13 +280,10 @@ async function runProjectList(
       repoRoot,
       dependencies.processEnv,
     );
-    const absoluteProjectsRoot = isAbsolute(projectsRoot)
-      ? projectsRoot
-      : join(repoRoot, projectsRoot);
-    const projects = await filterProjectsForList(
-      await dependencies.listProjects(absoluteProjectsRoot),
-      absoluteProjectsRoot,
-      options.includeCoordination ?? false,
+    const projects = await collectProjectRows(
+      repoRoot,
+      projectsRoot,
+      options,
       dependencies,
     );
 
@@ -196,6 +320,11 @@ export function createProjectListCommand(
     .option(
       '--include-coordination',
       'Include completed coordination parent projects',
+    )
+    .addOption(
+      new Option('--scope <scope>', 'Filter by project scope').choices(
+        PROJECT_SCOPES,
+      ),
     )
     .action(async (options: ProjectListOptions, command: Command) => {
       const context = dependencies.buildCommandContext(
