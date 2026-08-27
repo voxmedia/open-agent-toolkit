@@ -359,7 +359,7 @@ Archive _target_ durability logic (`isGitignoredArchivePath` → primary checkou
 
 ### Scaffold & list
 
-`ScaffoldProjectOptions` gains `scope?: ProjectScope` (default from `resolveDefaultScope`). For `synced`, `scaffoldProject` calls `createSyncedProject` before writing templates into the checkout, then `pushSynced` (initial commit `chore(oat): scaffold <slug>`), writes the record, and commits the record (plus `.gitignore` if changed) on the branch through `commitRecordChange` (the existing `commitScaffold` becomes a thin caller of it). `oat project list` enumerates all three sibling roots — `shared` (`projects.root`), `synced`, and `local` — reports `scope` per row, and `--scope <shared|synced|local>` filters. Listing `local` is additive: today `list` reads only `projects.root`, so `local` projects were never listed; resume of a `local` project is path-based via `activeProject` and is unchanged.
+`ScaffoldProjectOptions` gains `scope?: ProjectScope` (default from `resolveDefaultScope`). For `synced`, `scaffoldProject` calls `createSyncedProject` before writing templates into the checkout, then `pushSynced` (initial commit `chore(oat): scaffold <slug>`), writes the record, and commits the record (plus `.gitignore` if changed) on the branch through `commitRecordChange` (the existing `commitScaffold` becomes a thin caller of it). `oat project split` seeds children and coordination parents by calling `scaffoldProject` with the parent's scope (`resolveProjectScope(parentPath, projectsRoot)`), never the config default, so a `shared` parent keeps `shared` children (NFR1). `oat project list` enumerates all three sibling roots — `shared` (`projects.root`), `synced`, and `local` — reports `scope` per row, and `--scope <shared|synced|local>` filters. Listing `local` is additive: today `list` reads only `projects.root`, so `local` projects were never listed; resume of a `local` project is path-based via `activeProject` and is unchanged.
 
 ### Skill integration
 
@@ -443,7 +443,7 @@ No new `state.md` frontmatter: scope is derived from the path; push reads only t
 
 ## API Design
 
-All commands live under `oat project`. They resolve the project from an explicit path argument, else `activeProject`, and refuse with a scope error when the resolved project is not `synced` (except `scope` and `new`). Every command supports `--json` with a `status` field; exit code 0 for success/no-op, 1 for actionable user states (`conflict`, `rejected`, `dirty`, wrong scope, missing remote) via `CliError`, 2 for system errors.
+All commands live under `oat project`. They resolve the project from an explicit path argument, a bare slug (resolved under the `synced` root, falling back to the record file when the checkout is absent), else `activeProject`, and refuse with a scope error when the resolved project is not `synced` (except `scope` and `new`). Every command supports `--json` with a `status` field; exit code 0 for success/no-op, 1 for actionable user states (`conflict`, `rejected`, `dirty`, wrong scope, missing remote) via `CliError`, 2 for system errors.
 
 ### `oat project new <name> [--scope <shared|local|synced>] …`
 
@@ -451,13 +451,13 @@ Existing flags unchanged. `--scope` defaults to `projects.defaultScope`. For `sy
 
 **JSON:** `{ status: 'ok', projectPath, scope, ref?, sha?, scaffoldCommit? }`
 
-### `oat project push [project-path] [--message <msg>] [--no-refresh-pr]`
+### `oat project push [project-path|slug] [--message <msg>] [--no-refresh-pr]`
 
 Commits pending artifact changes first, then reconciles with `origin` and publishes (commit-first order; see Ref sync engine). Refreshes the PR links block when `state.md` has `oat_pr_status: open` and `oat_pr_url` set, unless `--no-refresh-pr`. On `conflict`, the checkout is left mid-rebase with the pending edits already committed; resolve, then `oat project pull --continue`, then `oat project push`.
 
 **JSON:** `{ status: 'pushed' | 'up-to-date' | 'rejected' | 'conflict', sha, ref, conflicts?: string[], prRefresh?: 'refreshed' | 'skipped' | 'failed' }`
 
-### `oat project pull [project-path] [--continue | --abort]`
+### `oat project pull [project-path|slug] [--continue | --abort]`
 
 Materializes or rebases. `--continue` after resolving conflicts (from either a pull or a push); `--abort` returns to the pre-rebase state.
 
@@ -574,7 +574,7 @@ Push: exactly one fetch → rebase → push cycle; a second rejection returns `r
 | FR3  | integration        | push to bare origin; up-to-date no-op creates no commit; parent index untouched; **dirty local + remote advanced (non-overlapping files) → commit, rebase, push succeeds; overlapping files → `conflict`, pending edits present in nested `git log`, `pull --continue` then `push` succeeds**; second concurrent push → `rejected`. Authority: nested checkout HEAD vs `rev-parse <ref>` on origin                        |
 | FR4  | integration        | fresh clone pull creates checkout; second pull `up-to-date`; dirty → `dirty`; divergent edit → `conflict` → `--continue` → push succeeds; `--abort` leaves local commit intact                                                                                                                                                                                                                                            |
 | FR5  | unit + integration | zod schema accept/reject; two branches adding different records merge cleanly (git merge in fixture); **after completion and after prune, `git ls-tree HEAD -- <record>` on the parent branch shows the updated/absent record and `status --porcelain` is empty**. Authority: parent branch committed tree                                                                                                                |
-| FR6  | manual + unit      | skill dogfood on this project after migrate; skill validator asserts no `git add` of `synced` paths and no `jq` in `oat-*` skills                                                                                                                                                                                                                                                                                         |
+| FR6  | manual + unit      | skill-sweep dogfood on a scratch synced project after the sweep lands (plan p04-t10); skill validator asserts no `git add` of `synced` paths and no `oat project scope` output piped to `jq` in `oat-*` skills                                                                                                                                                                                                            |
 | FR7  | unit + integration | render with subsets of present artifacts; replace idempotent (twice = once); missing markers appended; **malformed markers → body unchanged, `skipped`**; **with `--durable-summary`, the durable line is appended below the ref links and every ref link is still present**; links computed from ref with checkout absent; non-GitHub origin plain text; `gh` mocked refresh. Authority: rendered block string / PR body |
 | FR8  | integration        | archive synced project → **refused when dirty or unpushed**; success → snapshot has no `.git`; `worktree list` has no stale entry; record `complete` committed on the parent branch; ref still on origin; `links` still renders from the ref. Authority: archive dir, parent tree, origin refs                                                                                                                            |
 | FR9  | unit + integration | `CORE_ENTRIES` contains rule; upgrade of existing block idempotent; record file not ignored, directory ignored                                                                                                                                                                                                                                                                                                            |
@@ -640,7 +640,7 @@ CLI tool; `oat doctor` is the monitoring surface (FR13).
 1. Upgrade the CLI; run `oat tools update` (gitignore + gitattributes blocks, refreshed skills). Commit the managed-file change.
 2. New projects default to `synced`. Nothing else changes for existing `shared`/`local` projects.
 3. Optionally convert an in-flight `shared` project: `oat project migrate .oat/projects/shared/<slug> --to synced`. This yields exactly one branch commit that deletes the tracked artifacts and adds the record; the artifacts' branch history remains in git history.
-4. This project dogfoods step 3 on itself before the skills sweep phase.
+4. This project dogfoods step 3 on itself as the first act after implementation completes (before its final PR), not mid-implementation — see the plan-level note in `plan.md`.
 
 ### Rollback Strategy
 
@@ -694,7 +694,7 @@ Reverse migration is manual and documented: copy the checkout's files into `.oat
 - `oat project prune`, `oat project migrate`.
 - Doctor check module; gitattributes block.
 
-**Verification:** FR7/FR8/FR11/FR12/FR13/FR15 rows green; migrate this project to `synced` and continue the remaining phases on it.
+**Verification:** FR7/FR8/FR11/FR12/FR13/FR15 rows green; CLI dogfood on a scratch synced project (create → push → pull in a linked worktree → links → doctor → prune). Self-migration of this project is deferred to after completion — the bookkeeping skills the running implementation session depends on are rewritten in Phase 4.
 
 ### Phase 4: Skills, docs, release
 
@@ -706,7 +706,7 @@ Reverse migration is manual and documented: copy the checkout's files into `.oat
 - Docs: file-locations, directory-structure, project workflow, worktrees, "reviewing an OAT PR"; editor hint.
 - Lockstep package bump; full DoD gates.
 
-**Verification:** FR6/FR14/NFR6 manual rows; dogfood a full bookkeeping cycle on this (by then synced) project.
+**Verification:** FR6/FR14/NFR6 manual rows; dogfood one rewritten bookkeeping site and one arrival site on a scratch synced project using the shipped snippets.
 
 ## Dependencies
 
@@ -714,7 +714,7 @@ Reverse migration is manual and documented: copy the checkout's files into `.oat
 
 - **git ≥ 2.5** (worktree add on arbitrary commit-ish); realistically any git from the last several years.
 - **gh CLI** (optional) for PR body refresh.
-- No other runtime tools: shell skills use `oat project scope --format value`, so `jq` is neither required nor permitted in bundled skills.
+- No other runtime tools for lifecycle scope detection: shell skills use `oat project scope --format value`; `jq` is not a dependency of any lifecycle snippet (unrelated skills that already use `jq`/`--jq` for GitHub API work are unaffected).
 
 ### Internal Dependencies
 

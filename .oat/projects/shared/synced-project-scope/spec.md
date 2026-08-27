@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-design
 oat_blockers: []
-oat_last_updated: 2026-08-26
+oat_last_updated: 2026-08-27
 oat_generated: false
 oat_template: false
 ---
@@ -315,29 +315,29 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 
 ## Requirement Index
 
-| ID   | Description                                                    | Priority | Verification                                         | Planned Tasks     |
-| ---- | -------------------------------------------------------------- | -------- | ---------------------------------------------------- | ----------------- |
-| FR1  | `synced` scope: ignored on branch, versioned on custom ref     | P0       | integration: scaffold + check-ignore + ref history   | TBD - see plan.md |
-| FR2  | Default scope `synced`, explicit `--scope` selection           | P0       | unit: scope option + default config                  | TBD - see plan.md |
-| FR3  | Push: fetch, rebase, commit, publish; parent index untouched   | P0       | integration: push against bare origin                | TBD - see plan.md |
-| FR4  | Pull: create or rebase checkout; conflict reporting; continue  | P0       | integration: fresh-clone pull, conflict flow         | TBD - see plan.md |
-| FR5  | Tracked per-project discovery record                           | P0       | unit: record schema; integration: concurrent add     | TBD - see plan.md |
-| FR6  | Lifecycle skills push/pull for `synced`                        | P0       | manual: skill walkthrough; unit: skill validation    | TBD - see plan.md |
-| FR7  | PR links block: pinned, delimited, refreshed, summary appended | P0       | unit: block rendering; integration: gh edit (mocked) | TBD - see plan.md |
-| FR8  | Completion parity, clean worktree removal, ref retained        | P0       | integration: archive of synced project               | TBD - see plan.md |
-| FR9  | Gitignore block ignores dirs, tracks records                   | P0       | unit: block generation; integration: check-ignore    | TBD - see plan.md |
-| FR10 | Independent checkout per worktree                              | P0       | integration: two-worktree push/pull round trip       | TBD - see plan.md |
-| FR11 | Prune with open-PR guard                                       | P1       | integration: prune flows                             | TBD - see plan.md |
-| FR12 | Migrate `shared` → `synced`                                    | P1       | integration: migrate fixture project                 | TBD - see plan.md |
-| FR13 | Doctor checks                                                  | P1       | unit: doctor check module                            | TBD - see plan.md |
-| FR14 | Documentation                                                  | P0       | manual: docs build + review                          | TBD - see plan.md |
-| FR15 | `shared` linguist-generated attribute                          | P2       | unit: gitattributes block                            | TBD - see plan.md |
-| NFR1 | `shared`/`local` unchanged                                     | P0       | unit + integration: existing suites pass             | TBD - see plan.md |
-| NFR2 | No CI / branch-list footprint                                  | P0       | manual: push to test repo with a workflow            | TBD - see plan.md |
-| NFR3 | Git credentials only                                           | P0       | integration: no cloud env consulted                  | TBD - see plan.md |
-| NFR4 | Sync never touches parent index; never force-pushes            | P0       | integration: parent status unchanged after push/pull | TBD - see plan.md |
-| NFR5 | Idempotent, resumable                                          | P1       | integration: double pull; interrupted rebase         | TBD - see plan.md |
-| NFR6 | Release hygiene                                                | P0       | manual: DoD gates                                    | TBD - see plan.md |
+| ID   | Description                                                    | Priority | Verification                                         | Planned Tasks                                        |
+| ---- | -------------------------------------------------------------- | -------- | ---------------------------------------------------- | ---------------------------------------------------- |
+| FR1  | `synced` scope: ignored on branch, versioned on custom ref     | P0       | integration: scaffold + check-ignore + ref history   | p01-t01, p01-t02, p01-t06, p02-t02                   |
+| FR2  | Default scope `synced`, explicit `--scope` selection           | P0       | unit: scope option + default config                  | p02-t01, p02-t02, p02-t03                            |
+| FR3  | Push: fetch, rebase, commit, publish; parent index untouched   | P0       | integration: push against bare origin                | p01-t07, p02-t05                                     |
+| FR4  | Pull: create or rebase checkout; conflict reporting; continue  | P0       | integration: fresh-clone pull, conflict flow         | p01-t08, p02-t06                                     |
+| FR5  | Tracked per-project discovery record                           | P0       | unit: record schema; integration: concurrent add     | p01-t05, p01-t09, p02-t02, p03-t04, p03-t05          |
+| FR6  | Lifecycle skills push/pull for `synced`                        | P0       | manual: skill walkthrough; unit: skill validation    | p04-t01, p04-t02, p04-t03, p04-t04, p04-t05, p04-t10 |
+| FR7  | PR links block: pinned, delimited, refreshed, summary appended | P0       | unit: block rendering; integration: gh edit (mocked) | p03-t01, p03-t02, p03-t03, p04-t05                   |
+| FR8  | Completion parity, clean worktree removal, ref retained        | P0       | integration: archive of synced project               | p03-t04, p04-t05                                     |
+| FR9  | Gitignore block ignores dirs, tracks records                   | P0       | unit: block generation; integration: check-ignore    | p01-t02, p02-t02, p03-t08                            |
+| FR10 | Independent checkout per worktree                              | P0       | integration: two-worktree push/pull round trip       | p01-t08, p02-t08                                     |
+| FR11 | Prune with open-PR guard                                       | P1       | integration: prune flows                             | p03-t05                                              |
+| FR12 | Migrate `shared` → `synced`                                    | P1       | integration: migrate fixture project                 | p03-t06                                              |
+| FR13 | Doctor checks                                                  | P1       | unit: doctor check module                            | p03-t07                                              |
+| FR14 | Documentation                                                  | P0       | manual: docs build + review                          | p04-t07                                              |
+| FR15 | `shared` linguist-generated attribute                          | P2       | unit: gitattributes block                            | p03-t08                                              |
+| NFR1 | `shared`/`local` unchanged                                     | P0       | unit + integration: existing suites pass             | p02-t02, p02-t07, p02-t08, p03-t09, p04-t09          |
+| NFR2 | No CI / branch-list footprint                                  | P0       | manual: push to test repo with a workflow            | p01-t10                                              |
+| NFR3 | Git credentials only                                           | P0       | integration: no cloud env consulted                  | p01-t07, p02-t08                                     |
+| NFR4 | Sync never touches parent index; never force-pushes            | P0       | integration: parent status unchanged after push/pull | p01-t06, p01-t09, p03-t10                            |
+| NFR5 | Idempotent, resumable                                          | P1       | integration: double pull; interrupted rebase         | p01-t08                                              |
+| NFR6 | Release hygiene                                                | P0       | manual: DoD gates                                    | p04-t06, p04-t08, p04-t09                            |
 
 **Notes:**
 

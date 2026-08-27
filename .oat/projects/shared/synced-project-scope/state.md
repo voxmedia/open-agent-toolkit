@@ -33,6 +33,10 @@ oat_phase_status: complete # Status: in_progress | complete | pr_open
 #         - composer-2.5
 #         - { harness: cursor, model: gpt-5.5-xhigh }
 #   source: project-state
+oat_dispatch_policy: # project dispatch policy (named maximum tier; set during planning)
+  mode: managed
+  policy: high
+  source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
