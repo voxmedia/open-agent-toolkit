@@ -33,16 +33,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p04:
       used_attempts: 4
-      pending_attempt:
-        attempt: 4
-        event_id: p04-recovery-04-retro-contract-fixture
-        original_request_id: dispatch-synced-project-scope-p04-20260827T204100Z
-        original_task_id: p04-t16
-        original_commit: 0ab17825c7b273529373c60e52318338ef3d5860
-        discovered_by: pnpm test
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 0ab17825c7b273529373c60e52318338ef3d5860
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -102,7 +93,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T22:46:14.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T23:13:19.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -173,6 +164,7 @@ Implementation - Phase 4 review fixes p04-t12 through p04-t16
 - ✓ Phase 4 final-head Definition of Done gates pass in CI order, plus lint, format, and diff checks
 - ⨯ Phase 4 independent review requested changes with 5 Important findings
 - ✓ Phase 4 review findings received into p04-t12 through p04-t16
+- ✓ Phase 4 recovery attempt 4/10 validated and settled
 
 ## Blockers
 

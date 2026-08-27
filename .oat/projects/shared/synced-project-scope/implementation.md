@@ -1126,6 +1126,21 @@ continuation_events: []
 - Verification: suspected timeout cases passed individually 5/5 with no edit; focused skill-contract suites passed 191/191 and full `pnpm test` passed before and after commit; validate-skills, skill-bumps, lint, format, exact three-file boundary, immediate parentage, diff, and worktree cleanliness passed; root independently reran `skills.test.ts` at 141/141 plus the real-tree validator and skill-bump gate
 - Reason: aligned two stale `oat-project-next` version expectations with 1.0.12 and clarified the existing retro writeback-order contract for independent synced refs without changing public behavior
 
+### Recovery Event p04-recovery-04-retro-contract-fixture
+
+- Phase/task: p04 / p04-t16
+- Original request: dispatch-synced-project-scope-p04-20260827T204100Z
+- Original commit: 0ab17825c7b273529373c60e52318338ef3d5860
+- Defect class: test
+- Discovered by: `pnpm test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 4/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: f41fc6b7719be78ee9fe51d12dadcbb30d9faaa4
+- Verification: committed-HEAD focused retro/review contracts passed 87/87, both prior split timeout cases passed individually, and full `pnpm test` passed with CLI 3,940/3,940, smoke 140/140, packaged skills 586/586, and all ten workspace tasks; root verified the exact two-file boundary, immediate recovery ancestry, clean worktree, and matching fixture-only correction
+- Reason: mechanically refreshed one obsolete shipped retro contract fixture to the p04-t16 transactional wording; unrelated split and smoke timeout failures passed no-edit focused reruns and the authoritative full rerun
+
 ### Recovery Event recovery-p02-01-cli-phase-suite
 
 - Phase/task: p02 / p02-t11 phase verification
