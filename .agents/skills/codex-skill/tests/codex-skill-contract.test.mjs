@@ -6,16 +6,41 @@ const route = new URL('../SKILL.md', import.meta.url);
 
 const guidance = await readFile(route, 'utf8');
 
-// Command-ish content: a backticked fragment naming `codex`, or any line that
-// spells a sandbox flag (Quick Reference rows never contain the literal
-// `codex exec`, yet they are the initial-run and cross-directory examples).
-const commandLines = guidance
-  .split('\n')
-  .filter((line) => /`[^`\n]*codex /.test(line) || /-s |--sandbox/.test(line));
+// Undo soft wraps first: a sentence that spans two physical lines is still one
+// statement, so a cosmetic rewrap must not change whether it reads as prose or
+// as an example. List items, table rows, fences, and fenced content stay whole.
+const logicalLines = [];
+for (const line of guidance.split('\n')) {
+  const continuesPrevious =
+    logicalLines.length > 0 &&
+    /^\s{2,}\S/.test(line) &&
+    !/^\s*(?:[-*+]\s|\d+\.\s|\||```)/.test(line);
 
-// The one documented exception: the non-repository example. Anything else that
-// is command-ish must not carry the bypass.
-const documentsTheException = (line) => /not a Git repo/i.test(line);
+  if (continuesPrevious) {
+    logicalLines[logicalLines.length - 1] += ` ${line.trim()}`;
+  } else {
+    logicalLines.push(line);
+  }
+}
+
+// Command-ish content: `codex …` with or without inline-code or fence markup,
+// any line spelling a sandbox flag, and flag-bearing table rows (Quick
+// Reference rows carry the initial-run and cross-directory examples but never
+// the literal `codex exec`).
+const commandLines = logicalLines.filter(
+  (line) =>
+    /(?:^|[`\s])codex\s/.test(line) ||
+    /-s |--sandbox/.test(line) ||
+    /^\s*\|.*`-{1,2}[a-z]/.test(line),
+);
+
+// Prose that names the bypass without exemplifying it: the documented
+// non-repository exception, the high-impact authorization inventory, and
+// prohibition sentences. Everything else command-ish must stay bypass-free.
+const documentsTheException = (line) =>
+  /not a Git repo/i.test(line) ||
+  /high-impact flags/i.test(line) ||
+  /Do \*\*not\*\* add|Never pass/i.test(line);
 
 test('codex-skill routes model and effort through the provider authority', () => {
   assert.match(
@@ -55,8 +80,34 @@ test('codex-skill does not pin the retired fixed model pair', () => {
   // `gpt-5.4-mini` stay allowed.
   assert.doesNotMatch(
     guidance,
-    /`gpt-5\.[0-3][^`\n]*`|`gpt-5\.4`(?!-)/i,
+    /`gpt-5\.[0-3][^`\n]*`|`gpt-5\.4`(?!-)|`gpt-5\.5[^`\n]*`/i,
     'the skill must not name a retired model slug as a route',
+  );
+});
+
+test('codex-skill keeps the below-floor warning non-blocking', () => {
+  // The plan forbids re-asking when the user already supplied a model and
+  // effort, so the below-floor clause may warn but must not gate on a
+  // confirmation. Only the direct-API classification does.
+  const clauses = guidance.replace(/\s+/g, ' ').split(/(?<=[.;])\s+/);
+  const belowFloor = clauses.filter((clause) =>
+    /below the route/i.test(clause),
+  );
+
+  assert.equal(
+    belowFloor.length,
+    1,
+    'expected exactly one clause about a below-floor pairing',
+  );
+  assert.match(
+    belowFloor[0],
+    /without blocking/i,
+    'the below-floor pairing must be reported without blocking the run',
+  );
+  assert.doesNotMatch(
+    belowFloor[0],
+    /confirm/i,
+    'the below-floor pairing must not require a confirmation',
   );
 });
 

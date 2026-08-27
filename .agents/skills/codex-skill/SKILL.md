@@ -24,10 +24,10 @@ user-invocable: true
 2. Resolve the model and reasoning effort:
    - If the user already supplied a model and reasoning effort, check the pairing
      against the reference's task-class matrix before running, then use it: an
-     explicit user instruction outranks the dated examples. Say so once, and
-     confirm before launching, when the pairing sits below the route the matrix
-     gives the classified work, or when the reference classifies that model as a
-     direct-API specialist route rather than a CLI route.
+     explicit user instruction outranks the dated examples. Say so once, without
+     blocking, when the pairing sits below the route the matrix gives the
+     classified work; confirm before launching when the reference classifies that
+     model as a direct-API specialist route rather than a CLI route.
    - If the reference leaves exactly one eligible route for the class, use it
      and state the choice in your summary.
    - Only when more than one currently eligible route materially changes cost or
