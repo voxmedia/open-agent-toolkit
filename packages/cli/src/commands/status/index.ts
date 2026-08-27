@@ -6,6 +6,11 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import {
+  resolvePjmAdoption,
+  type PjmAdoption,
+  type ResolvePjmAdoptionOptions,
+} from '@commands/pjm/adoption';
+import {
   adoptStrayToCanonical,
   isAdoptionConflictError,
   isAdoptionSourceUnavailableError,
@@ -36,6 +41,17 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  hasScopedPackPlacementEvidence,
+  inventoryPack,
+  type InventoryPackInput,
+  type PackDiagnostic,
+  type PackInventory,
+  type ScopedPackInventory,
+} from '@commands/tools/shared/pack-inventory';
+import { PACK_NAMES } from '@commands/tools/shared/pack-manifest';
+import type { PackIntentSource } from '@commands/tools/shared/scoped-pack-intent';
+import type { PackCompleteness, PackName } from '@commands/tools/shared/types';
+import {
   DEFAULT_SYNC_CONFIG,
   loadSyncConfig,
   type SyncConfig,
@@ -55,6 +71,7 @@ import {
   scanBundledManagedAgents,
   scanCanonical,
 } from '@engine/index';
+import { resolveAssetsRoot } from '@fs/assets';
 import {
   normalizeToPosixPath,
   resolveProjectRoot,
@@ -105,10 +122,49 @@ interface StatusSummary {
   stray: number;
 }
 
+interface StatusPackDiagnostic {
+  code: PackDiagnostic['code'];
+  message: string;
+  paths: string[];
+  recovery: string | null;
+}
+
+interface StatusPackScopeState {
+  scope: ConcreteScope;
+  intent: PackIntentSource;
+  completeness: PackCompleteness;
+  stale: number;
+  newer: number;
+  retainedOverrides: number;
+  missing: string[];
+  diagnostics: StatusPackDiagnostic[];
+  recovery: string | null;
+}
+
+interface StatusPackState {
+  pack: PackName;
+  placement: PackInventory['placement'];
+  scopes: StatusPackScopeState[];
+  diagnostics: StatusPackDiagnostic[];
+}
+
+interface StatusPjmState {
+  state: PjmAdoption['state'];
+  repoRoot: string;
+  recovery: string | null;
+}
+
+interface StatusPackReport {
+  states: StatusPackState[];
+  unavailableScopes: ConcreteScope[];
+  pjm: StatusPjmState | null;
+}
+
 interface StatusJsonPayload {
   scope: Scope;
   reports: DriftReport[];
   summary: StatusSummary;
+  packs: StatusPackReport;
   remediation?: string;
 }
 
@@ -203,6 +259,11 @@ interface StatusDependencies {
     options?: { replaceCanonical?: boolean },
   ) => Promise<Manifest>;
   formatStatusTable: (reports: DriftReport[]) => string;
+  resolveAssetsRoot: () => Promise<string>;
+  inventoryPack: (input: InventoryPackInput) => Promise<PackInventory>;
+  resolvePjmAdoption: (
+    options: ResolvePjmAdoptionOptions,
+  ) => Promise<PjmAdoption>;
 }
 
 interface StatusStrayCandidate {
@@ -269,6 +330,9 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   adoptStray: adoptStrayDefault,
   applyNativeSkillDisposition,
   formatStatusTable,
+  resolveAssetsRoot,
+  inventoryPack,
+  resolvePjmAdoption,
 };
 
 function entryInsideMapping(
@@ -364,6 +428,282 @@ function formatStrayChoiceLabel(
   provider: string,
 ): string {
   return `[${scope}] ${basename(providerPath)} (${provider})`;
+}
+
+interface PackPathRoots {
+  projectRoot?: string;
+  userRoot?: string;
+}
+
+const MAX_REPORTED_PACK_PATHS = 3;
+
+/**
+ * Renders a managed path relative to the scope root that owns it. User-scope
+ * paths collapse to `~/...` so status never echoes unrelated home content.
+ */
+function formatPackPath(path: string, roots: PackPathRoots): string {
+  const normalized = normalizeToPosixPath(path);
+  for (const [root, prefix] of [
+    [roots.projectRoot, ''],
+    [roots.userRoot, '~/'],
+  ] as const) {
+    if (!root) continue;
+    const normalizedRoot = normalizeToPosixPath(root);
+    if (
+      normalized === normalizedRoot ||
+      normalized.startsWith(`${normalizedRoot}/`)
+    ) {
+      return `${prefix}${normalizeToPosixPath(relative(root, path))}`;
+    }
+  }
+  return normalized;
+}
+
+function formatPackPaths(paths: string[], roots: PackPathRoots): string {
+  const shown = paths
+    .slice(0, MAX_REPORTED_PACK_PATHS)
+    .map((path) => formatPackPath(path, roots));
+  const remaining = paths.length - shown.length;
+  return remaining > 0
+    ? `${shown.join(', ')}, +${remaining} more`
+    : shown.join(', ');
+}
+
+function updatePackRecovery(pack: PackName, scope: ConcreteScope): string {
+  return `oat tools update --pack ${pack} --scope ${scope}`;
+}
+
+function packDiagnosticRecovery(
+  pack: PackName,
+  diagnostic: PackDiagnostic,
+  scope: ConcreteScope | null,
+): string | null {
+  if (diagnostic.code === 'duplicate-scope') {
+    return `oat tools migrate --pack ${pack} --from project --to user`;
+  }
+  if (diagnostic.code === 'legacy-false-conflict' && scope) {
+    return updatePackRecovery(pack, scope);
+  }
+  return null;
+}
+
+function toStatusPackDiagnostic(
+  pack: PackName,
+  diagnostic: PackDiagnostic,
+  scope: ConcreteScope | null,
+  roots: PackPathRoots,
+): StatusPackDiagnostic {
+  return {
+    code: diagnostic.code,
+    message: diagnostic.message,
+    paths: diagnostic.paths.map((path) => formatPackPath(path, roots)),
+    recovery: packDiagnosticRecovery(pack, diagnostic, scope),
+  };
+}
+
+function toStatusPackScopeState(
+  pack: PackName,
+  scoped: ScopedPackInventory,
+  roots: PackPathRoots,
+): StatusPackScopeState {
+  const { scope } = scoped;
+  const missing = scoped.assets.filter(
+    (asset) =>
+      asset.definition.ownership[scope] === 'managed' &&
+      asset.status === 'missing',
+  );
+  const stale = scoped.assets.filter(({ status }) => status === 'outdated');
+  const newer = scoped.assets.filter(({ status }) => status === 'newer');
+  const retainedOverrides = scoped.assets.filter(
+    (asset) =>
+      asset.definition.ownership[scope] === 'seed-if-missing' &&
+      asset.status === 'present',
+  );
+  const needsRepair = scoped.completeness !== 'complete' || stale.length > 0;
+  return {
+    scope,
+    intent: scoped.intent.source,
+    completeness: scoped.completeness,
+    stale: stale.length,
+    newer: newer.length,
+    retainedOverrides: retainedOverrides.length,
+    missing: missing.map(({ path }) => formatPackPath(path, roots)),
+    diagnostics: scoped.diagnostics.map((diagnostic) =>
+      toStatusPackDiagnostic(pack, diagnostic, scope, roots),
+    ),
+    recovery: needsRepair ? updatePackRecovery(pack, scope) : null,
+  };
+}
+
+/**
+ * Only scope-level diagnostics carry a known scope. Pack-level diagnostics
+ * (cross-scope duplication, shared-owner observations) are reported once on
+ * the pack itself so no diagnostic is silently dropped or double counted.
+ */
+function collectPackLevelDiagnostics(
+  inventory: PackInventory,
+  roots: PackPathRoots,
+): StatusPackDiagnostic[] {
+  const scopedMessages = new Set(
+    inventory.scopes.flatMap(({ diagnostics }) =>
+      diagnostics.map(({ message }) => message),
+    ),
+  );
+  return inventory.diagnostics
+    .filter(({ message }) => !scopedMessages.has(message))
+    .map((diagnostic) =>
+      toStatusPackDiagnostic(inventory.pack, diagnostic, null, roots),
+    );
+}
+
+function toStatusPackState(
+  inventory: PackInventory,
+  roots: PackPathRoots,
+): StatusPackState | null {
+  const scopes = inventory.scopes.filter(hasScopedPackPlacementEvidence);
+  const diagnostics = collectPackLevelDiagnostics(inventory, roots);
+  if (scopes.length === 0 && diagnostics.length === 0) {
+    return null;
+  }
+  return {
+    pack: inventory.pack,
+    placement: inventory.placement,
+    scopes: scopes.map((scoped) =>
+      toStatusPackScopeState(inventory.pack, scoped, roots),
+    ),
+    diagnostics,
+  };
+}
+
+/**
+ * Repository PJM adoption is only actionable when this repository shows PJM
+ * intent. User-scope PJM capability is now the default, so an unadopted
+ * repository with no project-scope PJM evidence is normal and stays silent.
+ */
+function shouldReportPjmAdoption(
+  adoption: StatusPjmState,
+  states: StatusPackState[],
+): boolean {
+  if (adoption.state === 'partial-initialization') {
+    return true;
+  }
+  if (adoption.state !== 'none') {
+    return false;
+  }
+  const pjm = states.find(({ pack }) => pack === 'project-management');
+  return (pjm?.scopes ?? []).some(({ scope }) => scope === 'project');
+}
+
+async function collectPackReport(
+  scopeRoots: Map<ConcreteScope, string>,
+  unavailableScopes: ConcreteScope[],
+  dependencies: StatusDependencies,
+): Promise<StatusPackReport> {
+  const roots: PackPathRoots = {
+    ...(scopeRoots.has('project')
+      ? { projectRoot: scopeRoots.get('project')! }
+      : {}),
+    ...(scopeRoots.has('user') ? { userRoot: scopeRoots.get('user')! } : {}),
+  };
+  if (scopeRoots.size === 0) {
+    return { states: [], unavailableScopes, pjm: null };
+  }
+
+  const assetsRoot = await dependencies.resolveAssetsRoot();
+  const inventories = await Promise.all(
+    PACK_NAMES.map((pack) =>
+      dependencies.inventoryPack({ pack, assetsRoot, ...roots }),
+    ),
+  );
+  const states = inventories
+    .map((inventory) => toStatusPackState(inventory, roots))
+    .filter((state): state is StatusPackState => state !== null);
+
+  const projectRoot = scopeRoots.get('project');
+  if (!projectRoot) {
+    return { states, unavailableScopes, pjm: null };
+  }
+
+  const adoption = await dependencies.resolvePjmAdoption({
+    projectRoot,
+    repoRoot: join(projectRoot, '.oat', 'repo'),
+  });
+  return {
+    states,
+    unavailableScopes,
+    pjm: {
+      state: adoption.state,
+      repoRoot: adoption.repoRoot,
+      recovery: adoption.recovery,
+    },
+  };
+}
+
+function describePackScope(state: StatusPackScopeState): string {
+  const details: string[] = [state.completeness];
+  if (state.missing.length > 0) {
+    details.push(`${state.missing.length} missing`);
+  }
+  if (state.stale > 0) details.push(`${state.stale} stale`);
+  if (state.newer > 0) details.push(`${state.newer} newer`);
+  if (state.retainedOverrides > 0) {
+    details.push(`${state.retainedOverrides} retained override(s)`);
+  }
+  return `${state.scope} (${details.join(', ')})`;
+}
+
+function formatPackReport(report: StatusPackReport): string | null {
+  const lines: string[] = [];
+
+  if (report.states.length > 0) {
+    lines.push('Pack state:');
+    for (const state of report.states) {
+      const scopeSummary =
+        state.scopes.length > 0
+          ? state.scopes.map(describePackScope).join(', ')
+          : 'no installed scope';
+      lines.push(`  ${state.pack}: ${scopeSummary}`);
+      for (const scope of state.scopes) {
+        if (scope.missing.length > 0) {
+          lines.push(`    Missing: ${formatPackPaths(scope.missing, {})}`);
+        }
+        for (const diagnostic of scope.diagnostics) {
+          lines.push(`    ${diagnostic.code}: ${diagnostic.message}`);
+          if (diagnostic.recovery) {
+            lines.push(`    Fix: ${diagnostic.recovery}`);
+          }
+        }
+        if (scope.recovery) {
+          lines.push(`    Fix: ${scope.recovery}`);
+        }
+      }
+      for (const diagnostic of state.diagnostics) {
+        lines.push(`    ${diagnostic.code}: ${diagnostic.message}`);
+        if (diagnostic.recovery) {
+          lines.push(`    Fix: ${diagnostic.recovery}`);
+        }
+      }
+    }
+  }
+
+  for (const scope of report.unavailableScopes) {
+    lines.push(
+      `${scope} scope is unavailable here; pack state is reported for the remaining scope(s).`,
+    );
+  }
+
+  if (report.pjm && shouldReportPjmAdoption(report.pjm, report.states)) {
+    lines.push(
+      report.pjm.state === 'partial-initialization'
+        ? 'PJM: this repository has a partial PJM scaffold and has not adopted PJM.'
+        : 'PJM: this repository has not adopted PJM.',
+    );
+    if (report.pjm.recovery) {
+      lines.push(`  Fix: ${report.pjm.recovery}`);
+    }
+  }
+
+  return lines.length > 0 ? lines.join('\n') : null;
 }
 
 async function collectScopeReports(
@@ -622,15 +962,30 @@ async function runStatusCommand(
 ): Promise<void> {
   const reports: DriftReport[] = [];
   const scopeCollections: ScopeReportCollection[] = [];
+  const scopes = resolveConcreteScopes(context.scope);
+  const scopeRoots = new Map<ConcreteScope, string>();
+  const unavailableScopes: ConcreteScope[] = [];
 
-  for (const scope of resolveConcreteScopes(context.scope)) {
-    const scopeReportCollection = await collectScopeReports(
-      scope,
-      context,
-      dependencies,
-    );
+  for (const scope of scopes) {
+    let scopeReportCollection: ScopeReportCollection;
+    try {
+      scopeReportCollection = await collectScopeReports(
+        scope,
+        context,
+        dependencies,
+      );
+    } catch (error) {
+      // `--scope all` outside a Git repository still reports user scope; an
+      // explicitly requested scope stays a hard failure.
+      if (scope === 'project' && scopes.includes('user')) {
+        unavailableScopes.push(scope);
+        continue;
+      }
+      throw error;
+    }
     reports.push(...scopeReportCollection.reports);
     scopeCollections.push(scopeReportCollection);
+    scopeRoots.set(scope, scopeReportCollection.scopeRoot);
   }
 
   const summary = summarizeReports(reports);
@@ -649,11 +1004,18 @@ async function runStatusCommand(
     return;
   }
 
+  const packReport = await collectPackReport(
+    scopeRoots,
+    unavailableScopes,
+    dependencies,
+  );
+
   if (context.json) {
     const payload: StatusJsonPayload = {
       scope: context.scope,
       reports,
       summary,
+      packs: packReport,
     };
     if (!context.interactive && summary.stray > 0) {
       payload.remediation = DEFAULT_REMEDIATION;
@@ -661,6 +1023,10 @@ async function runStatusCommand(
     context.logger.json(payload);
   } else {
     context.logger.info(dependencies.formatStatusTable(reports));
+    const packSummary = formatPackReport(packReport);
+    if (packSummary) {
+      context.logger.info(packSummary);
+    }
   }
 
   if (summary.stray > 0) {
