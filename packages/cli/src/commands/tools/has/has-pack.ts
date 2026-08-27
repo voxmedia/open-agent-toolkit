@@ -54,11 +54,24 @@ export async function resolvePackAvailability(
 
   for (const scope of scopes) {
     if (!allowedScopes.has(scope)) continue;
-    const scopeRoot = await dependencies.resolveScopeRoot(
-      scope,
-      context.cwd,
-      context.home,
-    );
+    let scopeRoot: string;
+    try {
+      scopeRoot = await dependencies.resolveScopeRoot(
+        scope,
+        context.cwd,
+        context.home,
+      );
+    } catch (error) {
+      // `has` is an availability probe, and user scope is now the default
+      // install target, so a query that spans both scopes still has a complete
+      // answer outside a Git repository. An explicitly requested project scope
+      // stays a hard failure.
+      if (scope === 'project' && scopes.includes('user')) {
+        unavailableScopes.push(scope);
+        continue;
+      }
+      throw error;
+    }
     const inventory = await (
       dependencies.inventoryScopedPack ?? inventoryScopedPack
     )({ pack, scope, scopeRoot, assetsRoot });

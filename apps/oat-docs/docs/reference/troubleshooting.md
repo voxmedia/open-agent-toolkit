@@ -241,11 +241,13 @@ oat tools update --pack project-management --scope user
 
 ## `--scope all` fails outside a Git repository
 
-It should not. `oat tools update --scope all`, `oat status --scope all`, and
-`oat doctor --scope all` complete the user-scope work and report project scope
-as unavailable. An explicitly requested `--scope project` outside a repository
-is still a hard failure, which is intentional — you asked for a scope that does
-not exist here.
+It should not. `oat status --scope all` and `oat doctor --scope all` complete
+the user-scope work and report project scope as unavailable.
+`oat tools update --scope all` also completes the user-scope work, but it skips
+project scope silently rather than naming it in the result, so an empty project
+section there means "no repository here", not "nothing to update". An
+explicitly requested `--scope project` outside a repository is still a hard
+failure, which is intentional — you asked for a scope that does not exist here.
 
 ## Manifest not found or invalid
 

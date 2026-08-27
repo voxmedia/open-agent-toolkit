@@ -44,6 +44,23 @@ interface RemovedTool {
   scope: ConcreteScope;
 }
 
+/**
+ * Per-pack, per-scope evidence that a removal actually acted on the pack.
+ *
+ * `removed` is true when a scanned pack tool matched, or when a
+ * manifest-declared managed destination for that pack existed on disk before
+ * removal ran (including one retained for a shared owner). It gates clearing
+ * durable scoped intent: a removal that found no trace of a pack removed
+ * nothing, reports that nothing was removed, and must leave the intent that
+ * `oat tools update` restores from (FR5) untouched. Under `--dry-run` it
+ * reports what a real run would have acted on.
+ */
+export interface PackRemovalOutcome {
+  pack: PackName;
+  scope: ConcreteScope;
+  removed: boolean;
+}
+
 export interface RemoveResult {
   removed: RemovedTool[];
   removedAssets: Array<{ path: string; scope: ConcreteScope }>;
@@ -52,6 +69,7 @@ export interface RemoveResult {
     scope: ConcreteScope;
     reason: string;
   }>;
+  packOutcomes: PackRemovalOutcome[];
   notInstalled: string[];
 }
 
@@ -98,11 +116,19 @@ interface ScopeRemovalPlan {
   matched: ToolInfo[];
   managedTargets: ManagedRemovalTarget[];
   retainedOwnerData: Array<{ path: string; reason: string }>;
+  presentPacks: PackName[];
 }
 
 interface ManagedPackRemovalPlan {
   targets: ManagedRemovalTarget[];
   retained: Array<{ path: string; reason: string }>;
+  /**
+   * Packs with at least one manifest-declared managed asset on disk at this
+   * scope before removal ran, including assets retained for a shared owner.
+   * This is the pack's physical footprint, and it is what separates a real
+   * removal from a no-op.
+   */
+  presentPacks: PackName[];
 }
 
 function selectedPacks(target: Exclude<RemoveTarget, { kind: 'name' }>) {
@@ -151,15 +177,50 @@ async function planManagedPackRemoval(
     hasOwnershipEvidence: deps.hasPackOwnershipEvidence,
   });
   const retainedPaths = new Set(retentions.map(({ path }) => path));
+  const managedAssets = selectedManagedAssets(packs, scope);
+
+  // Sampled before anything is deleted, because that is the only moment at
+  // which a pack's physical footprint is still observable. Retained
+  // shared-owner assets count: the pack declares them, so a removal that had to
+  // consider them is not a no-op for that pack.
+  const assetPaths = new Map<string, string>();
+  for (const { asset } of managedAssets) {
+    assetPaths.set(asset.destination, join(scopeRoot, asset.destination));
+  }
+  const existence = new Map(
+    await Promise.all(
+      [...assetPaths.values()].map(
+        async (path): Promise<[string, boolean]> => [
+          path,
+          await deps.pathExists(path),
+        ],
+      ),
+    ),
+  );
+  const presentPacks = [
+    ...new Set(
+      managedAssets
+        .filter(({ asset }) =>
+          existence.get(assetPaths.get(asset.destination)!),
+        )
+        .map(({ pack }) => pack),
+    ),
+  ];
+
   const targets = new Map<
     string,
     { asset: PackAssetDefinition; isDirectory: boolean }
   >();
-  for (const { asset } of selectedManagedAssets(packs, scope)) {
+  for (const { asset } of managedAssets) {
     const path = join(scopeRoot, asset.destination);
     if (targets.has(path) || retainedPaths.has(path)) continue;
     targets.set(path, { asset, isDirectory: isDirectoryAsset(asset) });
   }
+
+  const retained = [...retainedPaths].map((path) => ({
+    path,
+    reason: 'retained shared owner data',
+  }));
 
   if (dryRun) {
     return {
@@ -167,10 +228,8 @@ async function planManagedPackRemoval(
         path,
         isDirectory,
       })),
-      retained: [...retainedPaths].map((path) => ({
-        path,
-        reason: 'retained shared owner data',
-      })),
+      retained,
+      presentPacks,
     };
   }
 
@@ -187,10 +246,8 @@ async function planManagedPackRemoval(
         },
       ),
     ),
-    retained: [...retainedPaths].map((path) => ({
-      path,
-      reason: 'retained shared owner data',
-    })),
+    retained,
+    presentPacks,
   };
 }
 
@@ -248,10 +305,12 @@ export async function removeTools(
       removed,
       removedAssets,
       retainedOwnerData,
+      packOutcomes: [],
       notInstalled: removed.length === 0 ? [target.name] : [],
     };
   }
 
+  const packOutcomes: PackRemovalOutcome[] = [];
   const plans: ScopeRemovalPlan[] = [];
   for (const scope of scopes) {
     const scopeRoot = await deps.resolveScopeRoot(scope, cwd, home);
@@ -284,6 +343,7 @@ export async function removeTools(
       matched,
       managedTargets: managedPlan.targets,
       retainedOwnerData: [...managedPlan.retained, ...seedData],
+      presentPacks: managedPlan.presentPacks,
     });
   }
 
@@ -308,7 +368,22 @@ export async function removeTools(
         scope: plan.scope,
       })),
     );
+    packOutcomes.push(
+      ...selectedPacks(target).map((pack) => ({
+        pack,
+        scope: plan.scope,
+        removed:
+          plan.matched.some((tool) => tool.pack === pack) ||
+          plan.presentPacks.includes(pack),
+      })),
+    );
   }
 
-  return { removed, removedAssets, retainedOwnerData, notInstalled: [] };
+  return {
+    removed,
+    removedAssets,
+    retainedOwnerData,
+    packOutcomes,
+    notInstalled: [],
+  };
 }

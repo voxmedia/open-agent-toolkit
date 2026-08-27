@@ -12,6 +12,7 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 - What it does: explains how bundled OAT packs are installed, updated, inspected, and removed.
 - When to use it: when you need to add capabilities to a repo, update installed skills, or understand which packs own which tools.
 - Primary commands: `oat tools list`, `oat tools has`, `oat tools install`, `oat tools update`, `oat tools remove`, `oat tools migrate`
+- Coming from an earlier CLI: read [Upgrading from an earlier CLI](#upgrading-from-an-earlier-cli) for the changed install-scope default, PJM adoption gating, sparse `tools` config map, and per-pack `--json` shape
 
 ## Bundled packs at a glance
 
@@ -251,7 +252,7 @@ The canonical surface splits active operational state (under `pjm/`) from durabl
 
 Decisions are now file-per-record under `reference/decisions/` (created and indexed with the [`oat decision`](config-and-local-state.md#oat-decision-) command group), replacing the legacy single `decision-record.md`. Repos still on the old `reference/` layout can migrate with `oat pjm migrate`.
 
-For decision records without the broader PJM surface, run `oat decision init` directly. It creates only the decision directory, generated index, and decision-specific AGENTS guidance; it does not require the `project-management` pack or create current state, roadmap, and backlog artifacts. If the pack is installed later, its root guidance is maintained as a separate managed section so the decision instructions remain independently reusable.
+Decision records still require repository PJM adoption. Run `oat pjm init` first: like every repository-mutating PJM command, `oat decision init` fails closed in an unadopted repository, writes nothing, and returns `oat pjm init` as the recovery. Once the repository is adopted, `oat decision init` scaffolds only the decision surface — the decision directory, generated index, and decision-specific AGENTS guidance — without touching current state, roadmap, or backlog artifacts. It does not require the `project-management` pack. If the pack is installed later, its root guidance is maintained as a separate managed section so the decision instructions remain independently reusable.
 
 `oat pjm init` is idempotent and non-destructive. Existing reference docs are skipped and left unchanged, so curated repo state is not overwritten on repeated runs.
 
@@ -387,9 +388,13 @@ Key behavior:
 ```
 
 - `scopes` lists only the scopes where the pack is **complete**;
-  `unavailableScopes` lists requested scopes the pack does not allow at all (for
-  example `project` for `core`); `completeness` and `missing` explain a `false`
-  result so it is actionable
+  `unavailableScopes` lists requested scopes the pack could not be checked in —
+  either because the pack does not allow that scope at all (for example
+  `project` for `core`) or because the scope could not be resolved here;
+  `completeness` and `missing` explain a `false` result so it is actionable
+- Outside a Git repository, the default `--scope all` query still answers from
+  user scope and lists `project` in `unavailableScopes` instead of failing. An
+  explicit `--scope project` outside a repository is still a hard failure
 - Exits `0` for every valid query, including an unavailable pack, `1` for an invalid pack or other actionable input error, and `2` for an unexpected scan or runtime failure
 - `oat tools has <pack>` answers **capability availability**, not repository
   adoption. For `project-management` specifically, use
@@ -418,7 +423,7 @@ Key behavior:
 - For every pack that allows both scopes (`ideas`, `docs`, `workflows`, `utility`, `project-management`, `research`, `brainstorm`), the interactive flow offers a per-pack end-state selector (`project`, `user`, or `both`) defaulting to the pack's current placement; leaving the default makes no changes for that pack
 - Fresh installs default to **user scope** for every pack; existing installs keep their current placement
 - `oat init --setup` uses this same additive scope resolver. In guided setup, choosing to customize scope reaches the per-pack selector; choosing the recommended defaults, or running non-interactively, applies additive per-pack defaults without removals
-- Every pack's fresh-install default is user scope (`defaultScope` in the release manifest); existing installs keep their current placement on re-install, so a re-install never moves a pack between scopes
+- Every pack's fresh-install default is user scope (`defaultScope` in the release manifest); existing installs keep their current placement on re-install, so a re-install never moves a pack between scopes or creates a second copy at the other one. This applies to the per-pack subcommands too: a bare `oat tools install docs` in a repository where `docs` is already at project scope stays at project scope, and only an explicit `--scope` overrides that
 - Removing a pack from a scope happens only when you explicitly choose a narrower end-state in the interactive flow (e.g. a pack at `both` set to `project` only). All staged removals are shown in a single change summary and applied only after one batch confirmation — declining makes no changes
 - Non-interactive installs (including `--scope project`, `--scope user`, and the default pack set) are strictly additive and never remove a pack from a scope. Removal is interactive-only
 - Tracks installed vs bundled skill versions and reports outdated skills
@@ -447,7 +452,7 @@ Key behavior:
 - Managed template and script companions are refreshed at **user** scope. A project-scope repository template is an owner override and is left alone
 - Non-versioned assets are compared by content digest, so an identical refresh is a no-op instead of a rewrite
 - Update persists inferred legacy intent only after a successful explicit mutation, so a read never rewrites your config
-- `--scope all` outside a Git repository completes the user-scope work and reports project scope as unavailable instead of failing
+- `--scope all` outside a Git repository completes the user-scope work instead of failing. Unlike `oat status` and `oat doctor`, update skips project scope silently and does not name it in the result; an explicitly requested `--scope project` outside a repository is still a hard failure
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
 - Reports tools that are already current, newer than bundled, or not bundled (custom)
@@ -465,6 +470,7 @@ Key behavior:
 - Retained by design: project-scope repository template overrides, mutable seed files (`.oat/ideas/…`, `.oat/projects-root`, project `.gitkeep` files), and shared scripts still owned by another installed pack. Retained owner data is reported rather than silently skipped
 - Already-missing files are not an error
 - On success the pack's intent key is deleted from that scope's config file. It is never rewritten as `false`. A failed removal retains the key
+- A removal that finds no trace of a pack at a scope leaves that pack's intent alone. `No tools to remove.` means no durable state changed either, so `--all` in a repository whose packs are already gone will not quietly rewrite `.oat/config.json` or destroy the intent [`oat tools update`](#oat-tools-update) restores a fully-missing pack from
 - Removal-triggered sync prunes exactly the canonical provider views for the removed paths in that scope, leaving other scopes and packs untouched
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
@@ -690,6 +696,97 @@ Use `--no-sync` on any mutation command to skip this step.
 For `oat tools install`, the follow-up sync still refreshes provider views immediately, but its removal pass is scoped to the canonical entries that were just installed. This avoids deleting unrelated provider views when a worktree has stale manifest entries for packs whose canonical content is absent locally.
 
 Removal and migration use the symmetric contract: the follow-up sync prunes exactly the provider views for the canonical paths that were removed, in that scope only, and only after the canonical source is confirmed absent.
+
+## Upgrading from an earlier CLI
+
+User-scope tool packs and explicit PJM adoption changed several defaults and
+exit codes. Nothing here is data-destructive, and legacy config keeps working —
+`tools.<pack>: false` still parses, complete pre-adoption PJM scaffolds are
+grandfathered as `inferred-legacy`, and no CLI flag was removed or renamed. But
+several commands you already run behave differently.
+
+### Install scope defaults flipped to user
+
+Every pack's fresh-install default is now **user** scope; it used to be project
+scope. A fresh `oat tools install docs` in a repository therefore lands in
+`~/.agents/` rather than the repository.
+
+Existing installs are not moved: both the aggregate installer and the per-pack
+subcommands resolve an already-installed pack to its current placement, so a
+re-install neither migrates the pack nor creates a second copy at the other
+scope. An explicit `--scope` still wins over that. Use
+[`oat tools migrate`](#oat-tools-migrate) when you actually want to move a pack.
+
+If you already have a pack at both scopes, `oat doctor` reports it as
+[`duplicate-scope`](#duplicate-cross-scope-installs) and **exits 1**. That is a
+new non-zero exit for a state the previous release did not diagnose; resolve it
+with `oat tools migrate`, or treat the exit code accordingly in scripts.
+
+### PJM commands fail closed without adoption
+
+Repository PJM state now requires explicit adoption via `oat pjm init`:
+
+- `oat pjm doctor` **exits 1** in an unadopted repository. It previously
+  reported a passing `pjm:disabled` check.
+- `oat backlog init`, `oat backlog new`, `oat backlog regenerate-index`,
+  `oat backlog archive`, `oat decision init`, `oat decision new`, and
+  `oat decision regenerate-index` **exit 1 and write nothing** in an unadopted
+  repository, naming `oat pjm init` as the recovery. Previously `init` was an
+  alternate adoption path and the other subcommands were ungated.
+
+Installing the `project-management` pack does not adopt a repository. Run
+`oat pjm init` once per repository that should carry PJM state.
+
+### The `tools` config map is now sparse
+
+Pack intent is written as [true-or-absent](#pack-intent-toolspack). Earlier
+releases wrote all eight pack keys as explicit `true`/`false` on reconcile;
+current releases write `true` for installed packs and delete the key otherwise.
+
+Scripts that read `tools.<pack> === false` now read `undefined` for a pack that
+is not installed. Test for a truthy value instead. Legacy `false` values that
+already exist in a config file are still read (see
+[Legacy `false` intent](#legacy-false-intent)) — they are just never written.
+
+### Per-pack install `--json` changed shape
+
+The per-pack subcommands (`oat tools install docs`, `oat tools install
+workflows`, and the rest) now emit one multi-scope payload:
+
+```json
+{
+  "status": "ok",
+  "pack": "docs",
+  "scopes": ["user"],
+  "results": [
+    { "request": { "pack": "docs", "scope": "user", "scopeRoot": "/home/you" } }
+  ]
+}
+```
+
+Each `results` entry is a full lifecycle result; only its `request` is shown
+above. The previous single-scope payload's `scope`, `targetRoot`, `assetsRoot`,
+`selectedSkills`, and `result` fields are **gone**, not renamed. A script
+keying on them reads `undefined` rather than failing. Read `scopes` for the
+scopes acted on, and `results[].request.scopeRoot` for the target root of each.
+
+### Other behavior changes worth knowing
+
+- `oat tools remove --pack <pack>` deletes every managed asset the release
+  manifest declares for that pack and scope, including templates and scripts. It
+  previously removed only scanned skills and agents. Project-scope repository
+  template overrides and other owner data are still retained and reported.
+- A removal that finds no trace of a pack leaves that pack's intent alone, so
+  `No tools to remove.` now means no durable state changed either.
+- `oat tools info <packname>` exits `0` and prints a pack block. It previously
+  reported "not found" and exited 1 for a pack name.
+- `oat tools list`, `oat tools outdated`, and `oat tools remove <name>` now see
+  user-scope **agents**, not just skills.
+- `oat tools has <pack>` is complete-only: a partially installed pack answers
+  `false`. The exit code is unchanged at `0`.
+- `oat tools has` and `oat tools update --scope all` no longer fail outside a
+  Git repository; see [`oat tools has`](#oat-tools-has-pack) and
+  [`oat tools update`](#oat-tools-update) for exactly what each reports.
 
 ## Legacy commands
 

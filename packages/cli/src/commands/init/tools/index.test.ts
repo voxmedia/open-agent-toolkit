@@ -1432,6 +1432,66 @@ describe('createInitToolsCommand', () => {
     expect(installDocs).not.toHaveBeenCalled();
   });
 
+  it('keeps a direct pack install at its existing project placement', async () => {
+    // Upgrade path for every pre-user-scope install: the pack's defaultScope is
+    // now `user`, so a bare re-install must consult existing placement or it
+    // silently creates a second copy at the other scope.
+    const { command, reconcilePacks } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      declaredPlacement: { docs: 'project' },
+      toolsByScope: { project: [], user: [] },
+    });
+
+    await runCommand(command, ['docs']);
+
+    expect(reconcilePacks).toHaveBeenCalledWith([
+      expect.objectContaining({
+        pack: 'docs',
+        scope: 'project',
+        action: 'install',
+      }),
+    ]);
+    expect(reconcilePacks.mock.calls[0]![0]).toHaveLength(1);
+  });
+
+  it('honors an explicit scope over an existing direct pack placement', async () => {
+    const { command, reconcilePacks } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      declaredPlacement: { docs: 'project' },
+      toolsByScope: { project: [], user: [] },
+    });
+
+    await runCommand(command, ['docs'], ['--scope', 'user']);
+
+    expect(reconcilePacks).toHaveBeenCalledWith([
+      expect.objectContaining({
+        pack: 'docs',
+        scope: 'user',
+        action: 'install',
+      }),
+    ]);
+  });
+
+  it('falls back to the pack default scope for a direct install with no placement', async () => {
+    const { command, reconcilePacks } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: { project: [], user: [] },
+    });
+
+    await runCommand(command, ['docs']);
+
+    expect(reconcilePacks).toHaveBeenCalledWith([
+      expect.objectContaining({
+        pack: 'docs',
+        scope: 'user',
+        action: 'install',
+      }),
+    ]);
+  });
+
   it('does not write repository AGENTS guidance from the production project-scope PJM placement', async () => {
     // Production registers `createReconciledPackCommand` (reconcilePacks is the
     // default dependency); the legacy adapter is only wired when a caller

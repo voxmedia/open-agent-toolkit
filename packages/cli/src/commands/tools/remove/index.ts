@@ -139,6 +139,17 @@ export function createToolsRemoveCommand(
             context.home,
           );
           for (const pack of packs) {
+            // Durable scoped intent is what lets `oat tools update` restore a
+            // pack whose files are all missing, so it may only be cleared for a
+            // pack this run actually removed something for. A removal that
+            // removed nothing reports nothing and must leave intent alone.
+            const removedForPack = result.packOutcomes.some(
+              (outcome) =>
+                outcome.pack === pack &&
+                outcome.scope === scope &&
+                outcome.removed,
+            );
+            if (!removedForPack) continue;
             await writeScopedPackIntent({
               pack,
               scope,

@@ -104,7 +104,11 @@ describe('no-Git production pack commands', () => {
     expect(() =>
       JSON.parse(JSON.stringify(result.capture.jsonPayloads[0])),
     ).not.toThrow();
-    expect(result.resolveProjectRoot).not.toHaveBeenCalled();
+    // A direct install resolves the project root exactly once, before the
+    // lifecycle runs, to see whether the pack already lives at project scope.
+    // Outside a repository that lookup fails and is absorbed, so the install
+    // still completes at user scope and no project post-hook runs.
+    expect(result.resolveProjectRoot).toHaveBeenCalledTimes(1);
     expect(result.postLifecycleProjectRootCalls()).toBe(0);
     const payload = result.capture.jsonPayloads[0] as {
       results: Array<{ apply: { inventory: { intent: { source: string } } } }>;

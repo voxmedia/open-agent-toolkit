@@ -626,12 +626,17 @@ async function resolvePackScopes(
 }
 
 /**
- * Default end-state offered for a pack in the interactive selector: its
- * current placement when installed, or its configured default scope when not
- * yet present.
+ * Existing-placement precedence: a pack that is already installed keeps the
+ * placement it has, and only a pack that is not present anywhere falls back to
+ * its configured default scope.
+ *
+ * This is the single definition of that rule. It backs the interactive
+ * selector's offered default, non-interactive aggregate resolution, and the
+ * per-pack `oat tools install <pack>` subcommands, so a bare re-install can
+ * never silently migrate or duplicate an existing install across scopes.
  */
 function resolvePackDefaultEndState(
-  pack: UserEligiblePack,
+  pack: ToolPack,
   currentLocation: PackInstallState['location'],
 ): PackInstallTarget {
   switch (currentLocation) {
@@ -1315,6 +1320,55 @@ export async function runInitToolsWithDefaults(
   return runInitTools(context, { ...DEFAULT_DEPENDENCIES });
 }
 
+/**
+ * Scopes a bare `oat tools install <pack>` (no explicit `--scope`) should
+ * target.
+ *
+ * Delegates to `resolvePackDefaultEndState`, the same existing-placement rule
+ * the aggregate installer uses, so a pack already installed at project scope
+ * stays at project scope instead of gaining a second copy at the pack's
+ * `defaultScope`. Falls back to the configured default only when placement
+ * cannot be observed (no inventory dependency, or an inventory failure).
+ */
+async function resolvePackCommandScopes(
+  pack: ToolPack,
+  context: CommandContext,
+  assetsRoot: string,
+  dependencies: InitToolsDependencies,
+): Promise<ConcreteScope[]> {
+  const definition = getPackDefinition(pack);
+  const inventory = dependencies.inventoryPack;
+  if (!inventory) return [definition.defaultScope];
+
+  try {
+    const userRoot = dependencies.resolveScopeRoot(
+      'user',
+      context.cwd,
+      context.home,
+    );
+    const projectRoot = definition.allowedScopes.includes('project')
+      ? await dependencies
+          .resolveProjectRoot(context.cwd)
+          .catch(() => undefined)
+      : undefined;
+    const packInventory = await inventory({
+      pack,
+      assetsRoot,
+      ...(projectRoot ? { projectRoot } : {}),
+      userRoot,
+    });
+    const states = buildPackInstallStateMapFromInventory(
+      [pack],
+      [packInventory],
+    );
+    return scopesForEndState(
+      resolvePackDefaultEndState(pack, states[pack].location),
+    ).filter((scope) => definition.allowedScopes.includes(scope));
+  } catch {
+    return [definition.defaultScope];
+  }
+}
+
 function createReconciledPackCommand(
   pack: ToolPack,
   dependencies: InitToolsDependencies,
@@ -1340,22 +1394,29 @@ function createReconciledPackCommand(
         readGlobalOptions(command),
       );
       try {
+        const assetsRoot = await dependencies.resolveAssetsRoot();
         const explicitScope =
           command.getOptionValueSourceWithGlobals('scope') === 'cli';
+        const requestedScope =
+          context.scope === 'project' || context.scope === 'user'
+            ? context.scope
+            : null;
         const scopes: ConcreteScope[] =
           explicitScope && context.scope === 'all'
             ? [...definition.allowedScopes]
-            : [
-                context.scope === 'project' || context.scope === 'user'
-                  ? context.scope
-                  : definition.defaultScope,
-              ];
+            : requestedScope
+              ? [requestedScope]
+              : await resolvePackCommandScopes(
+                  pack,
+                  context,
+                  assetsRoot,
+                  dependencies,
+                );
         for (const scope of scopes) {
           if (!definition.allowedScopes.includes(scope)) {
             throw new Error(`Pack ${pack} does not allow ${scope} scope`);
           }
         }
-        const assetsRoot = await dependencies.resolveAssetsRoot();
         const requests = await Promise.all(
           scopes.map(
             async (scope): Promise<PackLifecycleRequest> => ({

@@ -167,4 +167,49 @@ describe('resolvePackAvailability', () => {
     expect(result.available).toBe(false);
     expect(result.completeness).toEqual({ project: 'partial' });
   });
+
+  it('answers from user scope when project scope is unresolvable', async () => {
+    const dependencies = createDependencies({
+      user: [createTool('docs', 'user')],
+    });
+    dependencies.resolveScopeRoot = vi.fn(async (scope) => {
+      if (scope === 'project')
+        throw new Error('Unable to resolve project root');
+      return '/home/user';
+    });
+
+    await expect(
+      resolvePackAvailability(
+        'docs',
+        ['project', 'user'],
+        createContext(),
+        dependencies,
+      ),
+    ).resolves.toEqual({
+      pack: 'docs',
+      available: true,
+      scopes: ['user'],
+      unavailableScopes: ['project'],
+      completeness: { user: 'complete' },
+      missing: [],
+    });
+  });
+
+  it('still fails when project scope is explicitly requested and unresolvable', async () => {
+    const dependencies = createDependencies({
+      user: [createTool('docs', 'user')],
+    });
+    dependencies.resolveScopeRoot = vi.fn(async () => {
+      throw new Error('Unable to resolve project root');
+    });
+
+    await expect(
+      resolvePackAvailability(
+        'docs',
+        ['project'],
+        createContext(),
+        dependencies,
+      ),
+    ).rejects.toThrow('Unable to resolve project root');
+  });
 });
