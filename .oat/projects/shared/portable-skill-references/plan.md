@@ -228,6 +228,12 @@ merge path.
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
 - Modify: `packages/cli/assets/public-package-versions.json`
+- Move:
+  `.oat/repo/pjm/backlog/items/BL-260827-make-packaged-skill-references.md`
+  to
+  `.oat/repo/pjm/backlog/archived/BL-260827-make-packaged-skill-references.md`
+- Modify: `.oat/repo/pjm/backlog/completed.md`
+- Modify: `.oat/repo/pjm/backlog/index.md`
 - Modify only if produced by `oat sync --scope all`: managed provider-linked
   views corresponding to the six changed canonical skills
 
@@ -243,13 +249,25 @@ merge path.
 3. Run `pnpm run cli -- sync --scope all`. Inspect the diff and include only
    provider-managed view changes caused by the six canonical skill edits; stop
    on unrelated generated drift.
-4. Format:
+4. Close the associated backlog item in the same shipping commit, then verify
+   that the generated PJM state is coherent:
+
+   ```bash
+   pnpm run cli -- backlog archive BL-260827-make-packaged-skill-references --summary "Made packaged sibling-skill references scope-portable and added a recursive syntax-robust regression ratchet."
+   pnpm run cli -- pjm doctor --json
+   ```
+
+   Inspect and stage the moved archived item plus `backlog/completed.md` and
+   regenerated `backlog/index.md`; do not hand-edit the generated lifecycle
+   changes.
+
+5. Format:
 
    ```bash
    pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
    ```
 
-5. Verify the metadata shape before committing:
+6. Verify the metadata shape before committing:
 
    ```bash
    pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/release/public-package-contract.test.ts
@@ -258,11 +276,12 @@ merge path.
    git diff --check
    ```
 
-6. Commit the release-shaped delta before running the base-relative version
+7. Commit the release-shaped delta before running the base-relative version
    gates, because those gates compare committed `HEAD` with the merge base:
 
    ```bash
    git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
+   git add .oat/repo/pjm/backlog/archived/BL-260827-make-packaged-skill-references.md .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md
    git add -- <each exact provider-view path confirmed in the inspected sync diff>
    git commit -m "chore(p02-t01): release portable skill references"
    ```
@@ -270,7 +289,7 @@ merge path.
    Omit the second `git add` when sync produced no provider-view diff. Never
    stage a provider directory wholesale or add unrelated generated paths.
 
-7. Run every CI gate in the repository's documented order, capturing and
+8. Run every CI gate in the repository's documented order, capturing and
    checking each command's own exit code rather than a pager's or filter's:
 
    ```bash
@@ -297,7 +316,7 @@ merge path.
    run_portable_gate 08-build-docs pnpm build:docs
    ```
 
-8. Re-run the skill-only checks omitted from CI and the final diff check:
+9. Re-run the skill-only checks omitted from CI and the final diff check:
 
    ```bash
    run_portable_gate 09-lint pnpm lint
@@ -311,15 +330,15 @@ merge path.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                             | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | ---------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                    | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                    | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                    | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                    | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                    | -             | -          | -           |
-| plan   | artifact | passed   | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md` | -             | manual     | plan        |
-| plan   | artifact | received | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220007Z.md` | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                             | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                                    | -             | -          | -           |
+| p02    | code     | pending         | -          | -                                                    | -             | -          | -           |
+| final  | code     | pending         | -          | -                                                    | -             | -          | -           |
+| spec   | artifact | pending         | -          | -                                                    | -             | -          | -           |
+| design | artifact | pending         | -          | -                                                    | -             | -          | -           |
+| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md` | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220007Z.md` | -             | -          | -           |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
