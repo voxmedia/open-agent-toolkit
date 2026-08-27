@@ -683,6 +683,67 @@ continuation_events:
 
 ---
 
+### Run 13 - 2026-08-27T17:37:21Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Codex pinned variant)
+**Status:** in progress - Phase 3 dispatch prepared
+
+#### Dispatch Record
+
+```yaml
+request_id: dispatch-synced-project-scope-p03-20260827T173721Z
+caller: oat-project-implement
+scope: p03
+objective: Implement all ten Phase 3 reviewer and lifecycle surface tasks in plan order.
+action: implementation
+role_name: oat-phase-implementer
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+authority: write only Phase 3 planned boundaries and create one verified commit per task
+role_selector: oat-phase-implementer-gpt-5-6-sol-high
+model_selector: gpt-5.6-sol
+model_selector_granularity: exact-materialized-role
+effort_selector: high
+reasoning_mode_selector: null
+service_tier_selector: priority
+guidance_reference: subagent-orchestration/references/provider-codex.md
+guidance_version: 2026-07-25
+guidance_verified_at: 2026-07-25
+guidance_status: fresh
+selection_source: policy-resolved
+selection_reason: native-catalog
+candidates_considered:
+  - gpt-5.6-sol/high
+selected_route: native
+task_class: hard-reasoning
+model_class_floor: hard-reasoning
+classification_source: caller
+classification_reason: Ten dependent tasks contain subtle archive retry identity, multi-worktree prune, migration rollback, PR refresh, and lifecycle state behavior.
+floor_satisfaction: satisfied
+deadline_seconds: 10800
+retry_limit: 0
+launch_status: prepared
+child_outcome: pending
+runtime_confirmation: not-reported
+continuation_events: []
+```
+
+#### Project Dispatch
+
+- Project / phase: `.oat/projects/shared/synced-project-scope` / p03
+- Workflow: spec-driven, sequential root worktree
+- Pre-dispatch HEAD: `bac33fc227963b491ec077c20199b38d9ccc0af3`
+- Tasks: p03-t01 through p03-t10, exactly one verified commit each
+- Phase recovery: 0/10, `pending_attempt: null`
+- Dispatch stamp: `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+---
+
 ## Recovery Events
 
 ### Recovery Event recovery-p02-01-cli-phase-suite
