@@ -81,7 +81,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T01:46:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T01:57:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -91,22 +91,23 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Plan self-reviewed — Fable gate pending
+**Status:** Fable plan findings fixed — verification gate pending
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-The executable 33-task plan is drafted with requirement traceability and passed
-its inline structured self-review. The configured Fable gate remains before
-implementation readiness.
+The executable 34-task plan is drafted with requirement traceability. All seven
+findings from the first Fable gate were resolved in the planning artifacts; the
+final configured Fable verification attempt remains before implementation
+readiness.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete and approved)
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
-- **Plan:** `plan.md` (self-reviewed — Fable gate pending)
+- **Plan:** `plan.md` (Fable fixes applied — verification pending)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -124,7 +125,8 @@ implementation readiness.
 - ✓ Implementation plan drafted
 - ✓ Requirements mapped to stable task IDs
 - ✓ Inline structured plan self-review passed
-- ⧗ Configured Fable plan gate
+- ✓ First Fable plan gate received and all findings resolved
+- ⧗ Fable verification gate
 
 ## Blockers
 
@@ -132,4 +134,5 @@ None
 
 ## Next Milestone
 
-Run and receive the configured Fable plan gate.
+Run the final configured Fable verification gate and complete planning if it
+passes.

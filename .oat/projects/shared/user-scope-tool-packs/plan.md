@@ -572,6 +572,7 @@ Run the RED command again; expected: pass.
 - Modify: `packages/cli/src/commands/sync/dry-run.ts`
 - Modify: `packages/cli/src/commands/sync/apply.ts`
 - Modify: `packages/cli/src/commands/tools/shared/auto-sync.ts`
+- Modify: `packages/cli/src/commands/tools/shared/auto-sync.test.ts`
 
 **Step 1: Write test (RED)**
 
@@ -893,7 +894,7 @@ Run the RED command again; expected: pass.
 Cover user skill/template destinations, no Git/AGENTS writes, project override
 seeding, adoption-owned guidance, update/removal parity, and JSON provenance.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/project-management/index.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/project-management/install-project-management.test.ts src/commands/init/tools/project-management/index.test.ts`
 
 **Step 2: Implement (GREEN)**
 
@@ -920,24 +921,27 @@ Run the RED command again; expected: pass.
 - Modify: `.agents/skills/oat-docs-apply/SKILL.md`
 - Modify: `.agents/skills/oat-agent-instructions-analyze/SKILL.md`
 - Modify: `.agents/skills/oat-agent-instructions-apply/SKILL.md`
+- Modify: `.agents/skills/oat-repo-knowledge-index/SKILL.md`
 - Modify: `packages/cli/src/commands/init/tools/shared/resolve-tracking-script.test.ts`
 - Modify: `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
 
 **Step 1: Write test (RED)**
 
-Reject bare repo-relative `.oat/scripts/resolve-tracking.sh`; require scope root
-derived from the loaded `SKILL.md`; cover user/project installed layouts.
+Sweep every bundled skill that references `.oat/scripts/`; reject bare
+repo-relative `.oat/scripts/resolve-tracking.sh`, require a scope root derived
+from the loaded `SKILL.md`, and cover user/project installed layouts.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/resolve-tracking-script.test.ts src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
 
 **Step 2: Implement (GREEN)**
 
-Update all four skill contracts to pair the loaded skill with the same-scope
-shared script. Bump each changed skill's frontmatter version once for the PR.
+Update all five consuming skill contracts across the docs and workflows packs
+to pair the loaded skill with the same-scope shared script. Bump each changed
+skill's frontmatter version once for the PR.
 
 **Step 3: Format**
 
-Run: `pnpm exec oxfmt --write .agents/skills/oat-docs-analyze/SKILL.md .agents/skills/oat-docs-apply/SKILL.md .agents/skills/oat-agent-instructions-analyze/SKILL.md .agents/skills/oat-agent-instructions-apply/SKILL.md packages/cli/src/commands/init/tools/shared/resolve-tracking-script.test.ts packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+Run: `pnpm exec oxfmt --write .agents/skills/oat-docs-analyze/SKILL.md .agents/skills/oat-docs-apply/SKILL.md .agents/skills/oat-agent-instructions-analyze/SKILL.md .agents/skills/oat-agent-instructions-apply/SKILL.md .agents/skills/oat-repo-knowledge-index/SKILL.md packages/cli/src/commands/init/tools/shared/resolve-tracking-script.test.ts packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
 
 **Step 4: Verify**
 
@@ -981,6 +985,46 @@ Run the RED command plus `pnpm run check:skill-bumps`; expected: pass.
 **Step 5: Commit**
 
 `git commit -m "fix(p04-t06): make PJM skills user-scope portable"`
+
+### Task p04-t07: Separate PJM capability presence from repository adoption
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-document/SKILL.md`
+- Modify: `.agents/skills/oat-project-summary/SKILL.md`
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Modify: `.agents/skills/oat-brainstorm/references/destinations.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/project-start-preflight-contracts.test.ts`
+
+**Step 1: Write test (RED)**
+
+Reject bundled skill contracts that use `oat tools has project-management` as
+evidence that the current repository adopted PJM. Require a read-only
+`oat pjm doctor --json` adoption preflight before repository PJM writes, an
+actionable `oat pjm init` stop for absent/partial adoption, and no implicit
+decision initialization from an uninitialized repository.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/project-start-preflight-contracts.test.ts`
+
+**Step 2: Implement (GREEN)**
+
+Keep `tools has project-management` only as a capability-availability check.
+Update the three consuming skills and brainstorm destination guidance to branch
+on the read-only doctor JSON adoption state before offering or performing PJM
+writes. Bump each changed skill's frontmatter version once for the PR.
+
+**Step 3: Format**
+
+Run: `pnpm exec oxfmt --write .agents/skills/oat-project-document/SKILL.md .agents/skills/oat-project-summary/SKILL.md .agents/skills/oat-brainstorm/SKILL.md .agents/skills/oat-brainstorm/references/destinations.md packages/cli/src/commands/init/tools/shared/project-start-preflight-contracts.test.ts`
+
+**Step 4: Verify**
+
+Run the RED command plus `pnpm run check:skill-bumps`; expected: pass with no
+bundled skill treating global pack presence as repository adoption.
+
+**Step 5: Commit**
+
+`git commit -m "fix(p04-t07): preflight repository PJM adoption in consumers"`
 
 **Phase 4 Verification:**
 
@@ -1031,12 +1075,14 @@ Run the RED command again; expected: pass.
 - Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md`
 - Modify: `apps/oat-docs/docs/cli-utilities/bootstrap.md`
 - Modify: `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
 - Modify: `apps/oat-docs/docs/cli-utilities/backlog-lifecycle.md`
 - Modify: `apps/oat-docs/docs/provider-sync/scope-and-surface.md`
 - Modify: `apps/oat-docs/docs/reference/cli-reference.md`
 - Modify: `apps/oat-docs/docs/reference/file-locations.md`
 - Modify: `apps/oat-docs/docs/reference/troubleshooting.md`
 - Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+- Update if generated: `apps/oat-docs/index.md`
 
 **Step 1: Define the acceptance checklist**
 
@@ -1046,12 +1092,13 @@ PJM adoption/state/template precedence, and removal ownership.
 
 **Step 2: Implement (GREEN)**
 
-Author the listed docs and update cross-links; do not hand-edit generated
-`apps/oat-docs/index.md`.
+Author the listed docs and update cross-links. Run
+`pnpm run cli -- docs generate-index`; do not hand-edit the generated
+`apps/oat-docs/index.md`, and commit it if regeneration changes it.
 
 **Step 3: Format**
 
-Run: `pnpm exec oxfmt --write apps/oat-docs/docs/cli-utilities/tool-packs.md apps/oat-docs/docs/cli-utilities/bootstrap.md apps/oat-docs/docs/cli-utilities/config-and-local-state.md apps/oat-docs/docs/cli-utilities/backlog-lifecycle.md apps/oat-docs/docs/provider-sync/scope-and-surface.md apps/oat-docs/docs/reference/cli-reference.md apps/oat-docs/docs/reference/file-locations.md apps/oat-docs/docs/reference/troubleshooting.md apps/oat-docs/docs/workflows/projects/lifecycle.md`
+Run: `pnpm exec oxfmt --write apps/oat-docs/docs/cli-utilities/tool-packs.md apps/oat-docs/docs/cli-utilities/bootstrap.md apps/oat-docs/docs/cli-utilities/config-and-local-state.md apps/oat-docs/docs/cli-utilities/configuration.md apps/oat-docs/docs/cli-utilities/backlog-lifecycle.md apps/oat-docs/docs/provider-sync/scope-and-surface.md apps/oat-docs/docs/reference/cli-reference.md apps/oat-docs/docs/reference/file-locations.md apps/oat-docs/docs/reference/troubleshooting.md apps/oat-docs/docs/workflows/projects/lifecycle.md`
 
 **Step 4: Verify**
 
@@ -1136,7 +1183,7 @@ Run the RED command again; expected: pass for every manifest pack.
 - Modify: `packages/docs-config/package.json`
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
-- Modify: `pnpm-lock.yaml`
+- Modify: `packages/cli/assets/public-package-versions.json`
 
 **Step 1: Verify expected RED**
 
@@ -1145,8 +1192,9 @@ Expected: fails because shipped CLI/assets/docs changed without lockstep bumps.
 
 **Step 2: Implement (GREEN)**
 
-Advance all five public packages to the same next patch version and refresh the
-lockfile with pnpm.
+Advance all five public packages to the same next patch version, then regenerate
+`packages/cli/assets/public-package-versions.json` through `pnpm build` or the
+CLI bundle-assets script.
 
 **Step 3: Format**
 
@@ -1216,8 +1264,8 @@ exit-code evidence.
 | p03    | code     | pending         | -          | -                                                             | -             | -          | -                             |
 | p04    | code     | pending         | -          | -                                                             | -             | -          | -                             |
 | p05    | code     | pending         | -          | -                                                             | -             | -          | -                             |
-| plan   | artifact | passed          | 2026-08-27 | -                                                             | -             | manual     | -                             |
-| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T015201Z.md            | -             | -          | -                             |
+| plan   | artifact | pending         | 2026-08-27 | -                                                             | -             | manual     | -                             |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T015201Z.md   | -             | gate       | claude-fable-skip-permissions |
 
 Statuses are monotonic: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`. Append new review events; never delete earlier
@@ -1230,10 +1278,10 @@ rows.
 - Phase 1: 7 tasks - canonical manifest, scoped intent, inventory, path safety
 - Phase 2: 9 tasks - unified install/read/update/remove/sync lifecycle
 - Phase 3: 5 tasks - verified guided scope migration
-- Phase 4: 6 tasks - PJM adoption/templates/user scope/resource portability
+- Phase 4: 7 tasks - PJM adoption/templates/user scope/resource portability
 - Phase 5: 6 tasks - diagnostics, docs, provider/acceptance tests, release gates
 
-**Total: 33 tasks**
+**Total: 34 tasks**
 
 Ready for implementation after plan artifact review and configured plan gate.
 
@@ -1243,4 +1291,5 @@ Ready for implementation after plan artifact review and configured plan gate.
 - Spec: `spec.md`
 - Discovery: `discovery.md`
 - Backlog: `.oat/repo/pjm/backlog/items/BL-260818-make-the-project-management.md`
-- Review: `reviews/archived/artifact-design-review-2026-08-27T012258Z.md`
+- Design review: `reviews/archived/artifact-design-review-2026-08-27T012258Z.md`
+- Plan review: `reviews/archived/artifact-plan-review-2026-08-27T015201Z.md`

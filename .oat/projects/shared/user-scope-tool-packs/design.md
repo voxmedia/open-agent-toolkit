@@ -514,8 +514,9 @@ PJM skills must not instruct an agent to read
 `<repo>/.agents/skills/<skill>/references/...`. Bundle consistency tests recurse
 skill directories and verify referenced packaged files exist.
 
-The existing `resolve-tracking.sh` is intentionally shared by four docs skills.
-Each consuming skill derives the scope root from the actual loaded
+The existing `resolve-tracking.sh` is intentionally shared by five consuming
+skills across the docs and workflows packs. Each consuming skill derives the
+scope root from the actual loaded
 `<scope>/.agents/skills/<skill>/SKILL.md`, then resolves
 `<scope>/.oat/scripts/resolve-tracking.sh`. This pairs a user-loaded skill with
 the user-managed script and a project-loaded skill with the project script; it
@@ -769,8 +770,8 @@ boundaries and recovery.
 
 ### Phase 4: PJM Ownership and Resource Portability
 
-**Goal:** User-scope PJM assets, explicit adoption guards, shared template
-precedence, and skill-local static references.
+**Goal:** User-scope PJM assets, explicit adoption guards and consumer
+preflights, shared template precedence, and skill-local static references.
 
 **Verification:** PJM zero-write guard, template-source matrix, skill bundle
 contracts, and representative initialized workflows.

@@ -301,23 +301,23 @@ the copied skill directory and resolve from the installed artifact.
 
 ## Requirement Index
 
-| ID   | Description                                    | Priority | Verification                                      | Planned Tasks                                                          |
-| ---- | ---------------------------------------------- | -------- | ------------------------------------------------- | ---------------------------------------------------------------------- |
-| FR1  | Every pack supports the intended scope model   | P0       | integration: install scope matrix                 | p01-t01, p01-t02, p02-t03, p02-t04                                     |
-| FR2  | Lifecycle covers the full managed surface      | P0       | unit + integration: manifest asset reconciliation | p01-t01, p01-t02, p01-t03, p01-t06, p02-t01, p02-t08                   |
-| FR3  | Scoped intent opts into evolving membership    | P0       | unit + integration: intent and release evolution  | p01-t04, p01-t05, p02-t07                                              |
-| FR4  | Inventory reports placement and completeness   | P0       | unit: inventory state matrix                      | p01-t06, p02-t05, p02-t06, p05-t01                                     |
-| FR5  | Lifecycle commands share reconciliation rules  | P0       | integration: install/update/remove/has/sync       | p02-t01, p02-t02, p02-t03, p02-t05, p02-t06, p02-t07, p02-t08, p02-t09 |
-| FR6  | PJM capability remains separate from adoption  | P0       | integration: initialized/uninitialized repos      | p04-t01, p04-t02, p04-t04, p04-t06                                     |
-| FR7  | PJM templates use repo-user-bundled precedence | P0       | unit + integration: template source matrix        | p04-t03, p04-t04                                                       |
-| FR8  | Scope migration is verified and reversible     | P0       | integration: migration and injected failures      | p03-t01, p03-t02, p03-t03, p03-t04, p03-t05                            |
-| FR9  | Legacy placements adopt without silent changes | P0       | integration: legacy and duplicate fixtures        | p01-t05, p02-t03, p02-t07, p02-t08, p03-t05                            |
-| FR10 | Docs explain the ownership and lifecycle model | P1       | manual + integration: docs/help/guidance          | p02-t06, p03-t04, p05-t01, p05-t02                                     |
-| NFR1 | Destructive operations fail safely             | P0       | unit + integration: confirmation/path/rollback    | p01-t07, p02-t02, p02-t08, p03-t01, p03-t02, p03-t03, p03-t05          |
-| NFR2 | Operations are deterministic and idempotent    | P0       | unit + integration: repeat/dry-run parity         | p01-t03, p02-t01, p02-t02, p02-t07, p02-t08, p05-t04                   |
-| NFR3 | Existing CLI/config behavior remains usable    | P0       | integration: compatibility regression suite       | p01-t04, p01-t05, p02-t03, p02-t04, p02-t06, p02-t08, p05-t04          |
-| NFR4 | Diagnostics are structured and actionable      | P1       | unit + integration: human/JSON contracts          | p02-t05, p02-t06, p03-t04, p05-t01                                     |
-| NFR5 | Inspection remains local and bounded           | P1       | unit: canonical-path enumeration                  | p01-t03, p01-t06, p01-t07                                              |
+| ID   | Description                                    | Priority | Verification                                      | Planned Tasks                                                                   |
+| ---- | ---------------------------------------------- | -------- | ------------------------------------------------- | ------------------------------------------------------------------------------- |
+| FR1  | Every pack supports the intended scope model   | P0       | integration: install scope matrix                 | p01-t01, p01-t02, p02-t03, p02-t04                                              |
+| FR2  | Lifecycle covers the full managed surface      | P0       | unit + integration: manifest asset reconciliation | p01-t01, p01-t02, p01-t03, p01-t06, p02-t01, p02-t08, p04-t05                   |
+| FR3  | Scoped intent opts into evolving membership    | P0       | unit + integration: intent and release evolution  | p01-t04, p01-t05, p02-t07                                                       |
+| FR4  | Inventory reports placement and completeness   | P0       | unit: inventory state matrix                      | p01-t06, p02-t05, p02-t06, p05-t01                                              |
+| FR5  | Lifecycle commands share reconciliation rules  | P0       | integration: install/update/remove/has/sync       | p02-t01, p02-t02, p02-t03, p02-t05, p02-t06, p02-t07, p02-t08, p02-t09, p05-t03 |
+| FR6  | PJM capability remains separate from adoption  | P0       | integration: initialized/uninitialized repos      | p04-t01, p04-t02, p04-t04, p04-t06, p04-t07                                     |
+| FR7  | PJM templates use repo-user-bundled precedence | P0       | unit + integration: template source matrix        | p04-t03, p04-t04                                                                |
+| FR8  | Scope migration is verified and reversible     | P0       | integration: migration and injected failures      | p03-t01, p03-t02, p03-t03, p03-t04, p03-t05                                     |
+| FR9  | Legacy placements adopt without silent changes | P0       | integration: legacy and duplicate fixtures        | p01-t05, p02-t03, p02-t07, p02-t08, p03-t05, p04-t07                            |
+| FR10 | Docs explain the ownership and lifecycle model | P1       | manual + integration: docs/help/guidance          | p02-t06, p03-t04, p05-t01, p05-t02                                              |
+| NFR1 | Destructive operations fail safely             | P0       | unit + integration: confirmation/path/rollback    | p01-t07, p02-t02, p02-t08, p03-t01, p03-t02, p03-t03, p03-t05                   |
+| NFR2 | Operations are deterministic and idempotent    | P0       | unit + integration: repeat/dry-run parity         | p01-t03, p02-t01, p02-t02, p02-t07, p02-t08, p05-t04                            |
+| NFR3 | Existing CLI/config behavior remains usable    | P0       | integration: compatibility regression suite       | p01-t04, p01-t05, p02-t03, p02-t04, p02-t06, p02-t08, p04-t07, p05-t04          |
+| NFR4 | Diagnostics are structured and actionable      | P1       | unit + integration: human/JSON contracts          | p02-t05, p02-t06, p03-t04, p05-t01                                              |
+| NFR5 | Inspection remains local and bounded           | P1       | unit: canonical-path enumeration                  | p01-t03, p01-t06, p01-t07                                                       |
 
 ## Open Questions
 
