@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wave 3: giving the CLI an explicit assets root</title>
+    <meta name="description" content="One defect, one lane: the CLI could only ever read its bundled skills, agents and templates from the packaged directory, so the smoke test meant to prove coverage had to borrow the repository it was testing." />
+    <style>
+      :root {
+        --canvas: #f4f6f9;
+          --panel: #ffffff;
+          --elevated: #eef1f5;
+          --border: color-mix(in srgb, #4a5568 26%, transparent);
+          --ink: #16202e;
+          --muted: #4a5568;
+          --accent: #2f56c9;
+          --accent-2: #0e7180;
+          --success: #157a54;
+          --warning: #965108;
+          --danger: #bd3a2c;
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        --radius: 8px;
+        --radius-lg: 12px;
+        --rule: 1px solid var(--border);
+        --measure: 66ch;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --canvas: #111827;
+          --panel: #1f2937;
+          --elevated: #374151;
+          --border: color-mix(in srgb, #d1d5db 26%, transparent);
+          --ink: #f9fafb;
+          --muted: #d1d5db;
+          --accent: #93c5fd;
+          --accent-2: #5eead4;
+          --success: #86efac;
+          --warning: #fde047;
+          --danger: #fca5a5;
+        }
+      }
+      * { box-sizing: border-box; }
+      html {
+        color-scheme: light dark;
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 1rem;
+        line-height: 1.65;
+        -webkit-text-size-adjust: 100%;
+      }
+      a { color: var(--accent); }
+      a:focus-visible,
+      .toc a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: minmax(11rem, 15rem) minmax(0, 1fr);
+        gap: 2.5rem;
+        max-width: 76rem;
+        margin: 0 auto;
+        padding: 2.5rem 2rem 4rem;
+      }
+      main { min-width: 0; }
+
+      /* Typographic roles */
+      .eyebrow,
+      .toc-label,
+      .label {
+        font: 700 0.68rem/1.4 var(--mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      h1 {
+        font-family: var(--serif);
+        font-size: clamp(2.1rem, 6vw, 3.4rem);
+        font-weight: 600;
+        line-height: 1.08;
+        letter-spacing: -0.015em;
+        margin: 0.6rem 0 0;
+        text-wrap: balance;
+      }
+      .lede {
+        font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+        line-height: 1.5;
+        max-width: 46ch;
+        margin: 1rem 0 0;
+        color: var(--ink);
+      }
+      h2 {
+        font-family: var(--serif);
+        font-size: clamp(1.45rem, 3.2vw, 1.9rem);
+        font-weight: 600;
+        line-height: 1.15;
+        margin: 0 0 1.1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: var(--rule);
+        scroll-margin-top: 1.5rem;
+        text-wrap: balance;
+      }
+      h3 {
+        font-family: var(--sans);
+        font-size: 1.05rem;
+        font-weight: 650;
+        line-height: 1.3;
+        margin: 0 0 0.4rem;
+      }
+      p { margin: 0 0 1rem; max-width: var(--measure); }
+      .note {
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+      code, pre { font-family: var(--mono); }
+      :not(pre) > code {
+        font-size: 0.86em;
+        background: var(--elevated);
+        border-radius: 4px;
+        padding: 0.08em 0.32em;
+        overflow-wrap: anywhere;
+      }
+
+      /* Navigation rail */
+      .toc {
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+        max-height: calc(100dvh - 4rem);
+        overflow-y: auto;
+      }
+      .toc-label { display: block; margin-bottom: 0.8rem; }
+      .toc ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        counter-reset: toc;
+      }
+      .toc a {
+        display: block;
+        border-left: 2px solid var(--border);
+        padding: 0.32rem 0 0.32rem 0.75rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.35;
+        text-decoration: none;
+      }
+      .toc a:hover { color: var(--ink); }
+      .toc a.active {
+        border-left-color: var(--accent);
+        color: var(--ink);
+        font-weight: 650;
+      }
+
+      /* Masthead and status */
+      .masthead { margin-bottom: 3rem; }
+      .status-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+        gap: 1px;
+        background: var(--border);
+        border: var(--rule);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin-top: 2rem;
+      }
+      .stat {
+        background: var(--panel);
+        padding: 0.95rem 1.1rem;
+      }
+      .stat .label { display: block; }
+      .stat b {
+        display: block;
+        font-family: var(--serif);
+        font-size: 1.45rem;
+        font-weight: 600;
+        line-height: 1.15;
+        margin-top: 0.25rem;
+      }
+      .stat.is-good b { color: var(--success); }
+      .stat.is-open b { color: var(--warning); }
+      .stat span.sub {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      section { margin-bottom: 3.5rem; }
+
+      /* Section 1: the before and after, then the accepted contract */
+      .before-after {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+        gap: 1px;
+        background: var(--border);
+        border: var(--rule);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin: 1.6rem 0 0;
+      }
+      .before-after > div {
+        background: var(--panel);
+        padding: 1.1rem 1.2rem;
+        min-width: 0;
+      }
+      .before-after .label { display: block; margin-bottom: 0.35rem; }
+      .before-after p { margin: 0; max-width: none; }
+      .before-after .is-before .label { color: var(--danger); }
+      .before-after .is-after .label { color: var(--success); }
+      .contract {
+        list-style: none;
+        margin: 1.5rem 0 0;
+        padding: 0;
+        display: grid;
+        gap: 0.65rem;
+        max-width: var(--measure);
+        counter-reset: rule;
+      }
+      .contract li {
+        display: grid;
+        grid-template-columns: 1.6rem 1fr;
+        gap: 0.6rem;
+        align-items: baseline;
+      }
+      .contract li::before {
+        content: counter(rule);
+        counter-increment: rule;
+        font: 700 0.7rem/1.6 var(--mono);
+        color: var(--accent);
+      }
+
+      /* Section 2: decisions */
+      .decisions {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        counter-reset: decision;
+        display: grid;
+        gap: 1.6rem;
+      }
+      .decisions > li {
+        display: grid;
+        grid-template-columns: 2.6rem minmax(0, 1fr);
+        gap: 0.4rem 1rem;
+        padding-top: 1.2rem;
+        border-top: var(--rule);
+      }
+      .decisions > li::before {
+        content: counter(decision, decimal-leading-zero);
+        counter-increment: decision;
+        font: 600 1.4rem/1 var(--serif);
+        color: var(--accent);
+      }
+      .decisions h3 { grid-column: 2; }
+      .decisions dl {
+        grid-column: 2;
+        margin: 0.5rem 0 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.5rem 1.2rem;
+        max-width: var(--measure);
+      }
+      .decisions dt {
+        font: 700 0.68rem/1.4 var(--mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .decisions dd { margin: 0.1rem 0 0; }
+      @media (min-width: 52rem) {
+        .decisions dl { grid-template-columns: 5.5rem minmax(0, 1fr); }
+        .decisions dt { text-align: right; padding-top: 0.28rem; }
+        .decisions dd { margin-top: 0; }
+      }
+
+      /* Section 3: architecture */
+      figure { margin: 1.5rem 0 0; }
+      .diagram-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+        border: var(--rule);
+        border-radius: var(--radius-lg);
+        background: var(--canvas);
+        padding: 1rem;
+      }
+      svg.diagram {
+        display: block;
+        width: 100%;
+        min-width: 40rem;
+        height: auto;
+      }
+      .diagram .node { fill: var(--panel); stroke: var(--border); stroke-width: 1; }
+      .diagram .node.is-lane { fill: var(--elevated); stroke: var(--accent); }
+      .diagram .node.is-blocked { fill: var(--panel); stroke: var(--warning); stroke-dasharray: 5 4; }
+      .diagram .node.is-goal { fill: var(--panel); stroke: var(--success); stroke-width: 2; }
+      .diagram .edge { fill: none; stroke: var(--accent); stroke-width: 2; }
+      .diagram .edge.is-feedback { stroke: var(--muted); stroke-dasharray: 6 5; }
+      .diagram .arrow { fill: var(--accent); }
+      .diagram .arrow.is-muted { fill: var(--muted); }
+      .diagram .node-label {
+        fill: var(--ink);
+        font: 650 14px var(--sans);
+      }
+      .diagram .node-sub {
+        fill: var(--muted);
+        font: 11px var(--mono);
+      }
+      .diagram .edge-label {
+        fill: var(--muted);
+        font: 11px var(--mono);
+      }
+      figcaption {
+        margin-top: 0.75rem;
+        font-size: 0.875rem;
+        color: var(--muted);
+        max-width: var(--measure);
+      }
+      .lanes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+        gap: 1.25rem;
+        margin-top: 2rem;
+      }
+      .lane {
+        min-width: 0;
+        border-top: 3px solid var(--accent);
+        padding-top: 0.9rem;
+      }
+      .lane.is-secondary { border-top-color: var(--muted); }
+      .lane ul { margin: 0.6rem 0 0; padding-left: 1.1rem; }
+      .lane li { margin-bottom: 0.35rem; }
+
+      /* Tables */
+      .table-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+        margin-top: 1.4rem;
+      }
+      table {
+        width: 100%;
+        min-width: 38rem;
+        border-collapse: collapse;
+        font-size: 0.94rem;
+      }
+      caption {
+        text-align: left;
+        font: 700 0.68rem/1.4 var(--mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding-bottom: 0.6rem;
+      }
+      th, td {
+        border-bottom: var(--rule);
+        padding: 0.62rem 0.9rem 0.62rem 0;
+        text-align: left;
+        vertical-align: top;
+      }
+      thead th {
+        font: 700 0.68rem/1.4 var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        border-bottom-width: 2px;
+      }
+      tbody th { font-weight: 650; white-space: nowrap; }
+      td.evidence { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); }
+      td.ok { color: var(--success); }
+
+      /* Section 6: outcome */
+      .outcome {
+        display: grid;
+        gap: 1.75rem;
+        margin-top: 0.5rem;
+      }
+      .outcome > div { max-width: var(--measure); }
+      .outcome h3 { display: flex; align-items: baseline; gap: 0.55rem; }
+      .outcome h3 .label { letter-spacing: 0.14em; }
+      .outcome ul { margin: 0.5rem 0 0; padding-left: 1.15rem; }
+      .outcome li { margin-bottom: 0.45rem; }
+      .outcome .works { border-left: 3px solid var(--success); padding-left: 1rem; }
+      .outcome .gaps { border-left: 3px solid var(--warning); padding-left: 1rem; }
+      .outcome .next { border-left: 3px solid var(--accent); padding-left: 1rem; }
+
+      footer {
+        margin-top: 3.5rem;
+        padding-top: 1.2rem;
+        border-top: var(--rule);
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      footer p { max-width: var(--measure); }
+
+      @media (max-width: 52rem) {
+        .wrap {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 1.25rem;
+          padding: 1rem 1rem 3rem;
+        }
+        .toc {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          max-height: none;
+          overflow-x: auto;
+          overflow-y: hidden;
+          background: var(--canvas);
+          border-bottom: var(--rule);
+          padding: 0.6rem 0;
+          margin: 0 -1rem;
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+        .toc-label { display: none; }
+        .toc ol { display: flex; gap: 0.3rem; }
+        .toc a {
+          flex: none;
+          white-space: nowrap;
+          border-left: 0;
+          border-bottom: 2px solid var(--border);
+          padding: 0.2rem 0.55rem;
+          font-size: 0.82rem;
+        }
+        .toc a.active { border-bottom-color: var(--accent); border-left-color: transparent; }
+        .decisions > li { grid-template-columns: minmax(0, 1fr); }
+        .decisions > li::before { grid-column: 1; }
+        .decisions h3, .decisions dl { grid-column: 1; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="toc" aria-label="Recap sections">
+        <span class="toc-label">OAT project recap / shared / wave-3-execution</span>
+        <ol>
+          <li><a href="#original-request">What was asked for</a></li>
+          <li><a href="#key-agent-decisions">Decisions that shaped the result</a></li>
+          <li><a href="#as-built-architecture">How the wave was built</a></li>
+          <li><a href="#implementation-record">What changed</a></li>
+          <li><a href="#validation-evidence">How it was checked</a></li>
+          <li><a href="#outcome">Where this leaves the repository</a></li>
+        </ol>
+      </nav>
+      <main>
+        <header class="masthead">
+          <span class="eyebrow">OAT project recap / shared / wave-3-execution</span>
+          <h1>Wave 3: giving the CLI an explicit assets root</h1>
+          <p class="lede">The CLI reads its bundled skills, agents and templates from one directory. Nothing could point it anywhere else, so the test that proved those bundles reach every consumer had to reach into the working repository to do it.</p>
+          <div class="status-strip">
+            <div class="stat is-good">
+              <span class="label">Implementation</span>
+              <b>Complete</b>
+              <span class="sub">1 of 1 lanes, both review rounds closed</span>
+            </div>
+            <div class="stat is-good">
+              <span class="label">Definition of done</span>
+              <b>Green</b>
+              <span class="sub">10 gates, every exit code 0</span>
+            </div>
+            <div class="stat is-good">
+              <span class="label">Reviews</span>
+              <b>Passed</b>
+              <span class="sub">plan gate, phase, final and exit gate</span>
+            </div>
+            <div class="stat is-open">
+              <span class="label">Remaining</span>
+              <b>Wave PR</b>
+              <span class="sub">not yet opened or merged</span>
+            </div>
+          </div>
+        </header>
+        <section id="original-request" aria-labelledby="original-request-heading">
+          <h2 id="original-request-heading">What was asked for</h2>
+          <p>Wave 3 of the 2026-08-19 execution program carried a single bounded change, so the wrapper OAT project has exactly one lane. The CLI resolves its assets root — the bundled skills, agents, templates and scripts it installs into a repository — from a fixed packaged location. Only the build script that produces that bundle ever consulted an environment variable; the runtime resolver ignored one entirely.</p>
+          <div class="before-after">
+            <div class="is-before">
+              <span class="label">Before</span>
+              <p>A test that wanted its own bundle could not have one. The package-coverage smoke test built into the repository's own assets directory and read back from it, so the thing under test and the thing being tested shared a directory.</p>
+            </div>
+            <div class="is-after">
+              <span class="label">After</span>
+              <p><code>OAT_ASSETS_DIR</code> selects the assets root at runtime, validated exactly as the packaged one is. The smoke test builds into a private temporary directory, points the built CLI at it, and proves the built code reads that directory and not the shared one.</p>
+            </div>
+          </div>
+          <p>The override is not a fallback switch. A value that is set but wrong — a missing directory, a file where a directory belongs, a bundle with no metadata, a bundle stamped for a different version — must fail closed with the error the CLI already raises, never quietly reverting to the packaged bundle. Unset and blank values keep the packaged root untouched.</p>
+          <h3>The constraints the wrapper accepted</h3>
+          <ol class="contract">
+            <li>The lane's entire implementation contract is its immutable external plan. The wrapper adds ordering, gates, review mapping and bookkeeping, and restates none of it.</li>
+            <li>Run the source plan's drift check in the worktree before editing, extended by the wrapper to cover the release surfaces the plan writes, every call site of the resolver, and the way the smoke runner isolates processes.</li>
+            <li>Honour every source-plan STOP condition verbatim; a tripped STOP parks the lane instead of weakening the plan.</li>
+            <li>Confirm the source plan's own done criteria, then run the full definition of done, invoking each gate literally and capturing every exit code to a log — including the two gates continuous integration never runs, because this wave writes into the smoke tree.</li>
+            <li>Obtain an independent cross-model review of the uncommitted work before committing, and keep reviewed history append-only: fix rounds land as new commits and no reviewed SHA is amended.</li>
+          </ol>
+          <p class="note">Success meant the source plan's done criteria confirmed and recorded, every review row <code>passed</code>, and the full definition of done green on the wave branch.</p>
+        </section>
+        <section id="key-agent-decisions" aria-labelledby="key-agent-decisions-heading">
+          <h2 id="key-agent-decisions-heading">Decisions that shaped the result</h2>
+          <p>Four choices changed what shipped or how it got there. Each is recorded with the reason it was made and the consequence it carried.</p>
+          <ol class="decisions">
+            <li>
+              <h3>Close the ambient-environment class at the runner seam</h3>
+              <dl>
+                <dt>Reason</dt>
+                <dd>Making the resolver read an environment variable made every test that resolves an assets root sensitive to the machine running it. The first review round named one call site; sweeping the class showed the real exposure was production code correctly following the new override through seven command paths.</dd>
+                <dt>Consequence</dt>
+                <dd>One line in the CLI's test-runner config pins the variable to empty for the whole suite, taking it from 52 failures under a partial ambient bundle to 3695 green. The two explicit call-site fixes stayed as defence in depth, and two reviewers separately confirmed the line masks nothing: removed under a complete ambient bundle, the suite still passes.</dd>
+              </dl>
+            </li>
+            <li>
+              <h3>Keep the error messages the plan mandated, and file the wording</h3>
+              <dl>
+                <dt>Reason</dt>
+                <dd>The fail-closed errors tell the reader to rebuild the packaged bundle. For someone who set an override by hand that remedy points at the wrong thing entirely, and the reviewer said so.</dd>
+                <dt>Consequence</dt>
+                <dd>The wording was left exactly as the source plan required rather than widened mid-lane, and an override-aware message was filed as a backlog candidate. The same call sent a second observation — that a bundle carrying only metadata passes validation and degrades later — to the backlog rather than into the change.</dd>
+              </dl>
+            </li>
+            <li>
+              <h3>Pre-plan the version bump, then re-check it after committing</h3>
+              <dl>
+                <dt>Reason</dt>
+                <dd>Earlier waves established that any change under the CLI source tree is a publishable change. Separately, the release version gate reads committed state only, so a green run before the commit says nothing about the commit itself.</dd>
+                <dt>Consequence</dt>
+                <dd>The lockstep bump was planned into the lane instead of patched on afterwards, and re-running the version gate after committing became a standing rule for the remaining waves rather than a one-off.</dd>
+              </dl>
+            </li>
+            <li>
+              <h3>Prove isolation against the built CLI, not the injection seam</h3>
+              <dl>
+                <dt>Reason</dt>
+                <dd>The change adds an injectable environment argument, which makes unit tests easy and proves nothing about the shipped binary. A smoke test that only injected would have restated the unit tests in a slower medium.</dd>
+                <dt>Consequence</dt>
+                <dd>The smoke file imports the built output and asserts the resolved root is its own temporary directory, with a negative control that moves the shared assets aside entirely. The final review then drove the same behaviour through real commands on the built CLI.</dd>
+              </dl>
+            </li>
+        </ol>
+        </section>
+        <section id="as-built-architecture" aria-labelledby="as-built-architecture-heading">
+          <h2 id="as-built-architecture-heading">How the wave was built</h2>
+          <p>With one lane there is no fan-out to manage, so the structure worth drawing is vertical: the loops a change had to survive before it counted as done. Three fired, and each one sent work back to a different owner.</p>
+          <figure>
+            <div class="diagram-scroll">
+              <svg class="diagram" viewBox="0 0 900 712" role="img" aria-labelledby="arch-title arch-desc" preserveAspectRatio="xMidYMin meet">
+                <title id="arch-title">Wave 3 execution architecture</title>
+                <desc id="arch-desc">The 2026-08-19 execution program scopes the wave-3-execution wrapper project. A configured artifact gate passes the wrapper plan on its first round. The wrapper dispatches one lane, p01, on the integration checkout, which honours an explicit assets root and isolates the package-coverage smoke test. A cross-model reviewer returns the lane once before it commits, shown as a dashed loop. The phase review then returns it once more for a bounded fix round, a second dashed loop. Ten definition-of-done gates and two final review rounds follow, and the final review returns thirteen bookkeeping items to the wrapper as a third dashed loop. A configured exit gate passes in its first generation on a cross-family target. The wave PR is the remaining step.</desc>
+                <defs>
+                  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path class="arrow" d="M0,0 L10,5 L0,10 z" />
+                  </marker>
+                  <marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path class="arrow is-muted" d="M0,0 L10,5 L0,10 z" />
+                  </marker>
+                </defs>
+                <g>
+                  <rect class="node" x="330" y="16" width="240" height="52" rx="8" />
+                  <text class="node-label" x="450" y="40" text-anchor="middle">2026-08-19 execution program</text><text class="node-sub" x="450" y="57" text-anchor="middle">four waves, immutable</text>
+                  <rect class="node" x="290" y="112" width="320" height="52" rx="8" />
+                  <text class="node-label" x="450" y="136" text-anchor="middle">wave-3-execution</text><text class="node-sub" x="450" y="153" text-anchor="middle">wrapper OAT project, quick mode</text>
+                  <rect class="node" x="60" y="108" width="190" height="60" rx="8" />
+                  <text class="node-label" x="155" y="132" text-anchor="middle">Plan gate</text><text class="node-sub" x="155" y="149" text-anchor="middle">configured artifact review</text>
+                  <text class="node-sub" x="155" y="160" text-anchor="middle">passed on round 1</text>
+                  <rect class="node is-lane" x="190" y="212" width="420" height="88" rx="8" />
+                  <text class="node-label" x="400" y="240" text-anchor="middle">Lane p01 — integration checkout</text><text class="node-sub" x="400" y="257" text-anchor="middle">external plan: hermetic-cli-assets-root</text>
+                  <text class="node-sub" x="400" y="274" text-anchor="middle">assets root override + smoke isolation + lockstep 0.2.35</text>
+                  <rect class="node" x="700" y="224" width="168" height="64" rx="8" />
+                  <text class="node-label" x="784" y="250" text-anchor="middle">Cross-model review</text><text class="node-sub" x="784" y="267" text-anchor="middle">codex, pre-commit</text>
+                  <text class="node-sub" x="784" y="278" text-anchor="middle">round 1 returned it</text>
+                  <rect class="node" x="290" y="348" width="320" height="52" rx="8" />
+                  <text class="node-label" x="450" y="372" text-anchor="middle">Phase review p01</text><text class="node-sub" x="450" y="389" text-anchor="middle">two rounds, six designed probes</text>
+                  <rect class="node" x="290" y="436" width="320" height="64" rx="8" />
+                  <text class="node-label" x="450" y="460" text-anchor="middle">10 DoD gates + final review</text><text class="node-sub" x="450" y="477" text-anchor="middle">every exit code 0, two rounds</text>
+                  <text class="node-sub" x="450" y="494" text-anchor="middle">13 bookkeeping items back to the wrapper</text>
+                  <rect class="node" x="305" y="540" width="290" height="64" rx="8" />
+                  <text class="node-label" x="450" y="564" text-anchor="middle">Exit gate generation 1</text><text class="node-sub" x="450" y="581" text-anchor="middle">passed on a cross-family target</text>
+                  <text class="node-sub" x="450" y="598" text-anchor="middle">no findings, run as configured</text>
+                  <rect class="node is-goal" x="330" y="648" width="240" height="48" rx="8" />
+                  <text class="node-label" x="450" y="669" text-anchor="middle">Wave PR</text>
+                  <text class="node-sub" x="450" y="686" text-anchor="middle">remaining step</text>
+                </g>
+                <g>
+                  <path class="edge" d="M450,68 V112" marker-end="url(#arrow)" />
+                  <path class="edge" d="M290,132 H256" marker-end="url(#arrow)" />
+                  <path class="edge" d="M450,164 V212" marker-end="url(#arrow)" />
+                  <path class="edge" d="M610,248 H694" marker-end="url(#arrow)" />
+                  <path class="edge is-feedback" d="M700,276 H616" marker-end="url(#arrow-muted)" />
+                  <path class="edge" d="M450,300 V348" marker-end="url(#arrow)" />
+                  <path class="edge is-feedback" d="M290,374 H40 V256 H184" marker-end="url(#arrow-muted)" />
+                  <path class="edge" d="M450,400 V436" marker-end="url(#arrow)" />
+                  <path class="edge is-feedback" d="M610,468 H886 V140 H616" marker-end="url(#arrow-muted)" />
+                  <path class="edge" d="M450,500 V540" marker-end="url(#arrow)" />
+                  <path class="edge" d="M450,604 V648" marker-end="url(#arrow)" />
+                </g>
+                <g>
+                  <text class="edge-label" x="462" y="94">scopes the wave</text>
+                  <text class="edge-label" x="252" y="104">wrapper plan</text>
+                  <text class="edge-label" x="462" y="196">one lane, no parallel group</text>
+                  <text class="edge-label" x="620" y="240">pre-commit</text>
+                  <text class="edge-label" x="700" y="308">one hermeticity defect</text>
+                  <text class="edge-label" x="462" y="332">reviewed at the task commit</text>
+                  <text class="edge-label" x="58" y="248">fix round 1</text>
+                  <text class="edge-label" x="620" y="460">closeout only</text>
+                  <text class="edge-label" x="462" y="530">after every row passed</text>
+                  <text class="edge-label" x="462" y="640">next</text>
+                </g>
+                <g>
+                  <path class="edge" d="M24,704 H56" />
+                  <text class="edge-label" x="64" y="708">forward progress</text>
+                  <path class="edge is-feedback" d="M200,704 H232" />
+                  <text class="edge-label" x="240" y="708">loop that fired</text>
+                </g>
+              </svg>
+            </div>
+            <figcaption>Flow of the wave. Solid edges are forward progress; dashed edges are the three loops that actually fired — a cross-model reviewer returning the lane before it could commit, the phase review returning it for one bounded fix round, and the final review returning thirteen bookkeeping items to the wrapper. The exit gate passed in its first generation, and the wave PR is still ahead.</figcaption>
+          </figure>
+          <div class="lanes">
+            <div class="lane">
+              <h3>What the wrapper owns</h3>
+              <ul>
+                <li>Ordering, the drift-check addendum and the concurrency ceiling</li>
+                <li>The wrapper-level definition-of-done sequence and its captured exit codes</li>
+                <li>Review mapping, gate targets and dispatch policy</li>
+                <li>Commit scope naming, backlog archival and all bookkeeping</li>
+              </ul>
+            </div>
+            <div class="lane is-secondary">
+              <h3>What the external plan owns</h3>
+              <ul>
+                <li>Its drift check and STOP conditions</li>
+                <li>Its implementation steps and embedded verify gates</li>
+                <li>Its done criteria, review focus and test plan</li>
+                <li>The files it is allowed to write</li>
+              </ul>
+            </div>
+          </div>
+          <h3>Delivered surfaces</h3>
+          <div class="table-scroll">
+            <table>
+              <caption>As-built boundaries</caption>
+              <thead>
+                <tr><th scope="col">Surface</th><th scope="col">Responsibility after the wave</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><code>fs/assets.ts</code></th>
+                  <td>Splits the packaged lookup into its own function and takes the environment as an argument. A non-empty trimmed override selects that directory; both routes then run the same unchanged existence, directory and bundle-metadata checks.</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>fs/assets.test.ts</code></th>
+                  <td>Fourteen cases through the injected argument: the override wins, blank and unset fall back, four invalid classes fail closed, a relative value resolves against the working directory, and the production default binding is asserted rather than skipped.</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>vitest.config.ts</code></th>
+                  <td>Pins the variable to empty for the whole CLI suite, so an operator's own override cannot reach any test that resolves an assets root.</td>
+                </tr>
+                <tr>
+                  <th scope="row">Package-coverage smoke file</th>
+                  <td>Bundles once per file into a temporary root, points the CLI at it before importing built consumers, asserts the resolved root is that temporary one, then restores the environment and removes the directory on every path.</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>bundle-assets.sh</code></th>
+                  <td>Behaviour untouched; its rationale comment no longer claims the runtime honours no override.</td>
+                </tr>
+                <tr>
+                  <th scope="row">Public package manifests</th>
+                  <td>Five packages plus the generated version asset, all at 0.2.35.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">The validation itself was deliberately not touched. The override reaches the same checks, in the same order, with the same errors — which is what makes an invalid override indistinguishable from an invalid packaged bundle.</p>
+        </section>
+        <section id="implementation-record" aria-labelledby="implementation-record-heading">
+          <h2 id="implementation-record-heading">What changed</h2>
+          <p>The lane landed as one task commit of nine files plus one append-only fix commit of six, so every SHA a review cites still resolves. Three of the fix commit's files sit outside the source plan's declared scope; each is a test-hermeticity consequence of the change itself, and each was declared and accepted rather than absorbed.</p>
+          <div class="table-scroll">
+            <table>
+              <caption>Implementation record</caption>
+              <thead>
+                <tr><th scope="col">Component</th><th scope="col">Notable change</th><th scope="col">Commits</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Assets root selection</th>
+                  <td>The resolver takes the environment as an argument and honours a non-empty trimmed override; a relative value resolves against the working directory. Unset, empty and whitespace-only values keep the packaged directory.</td>
+                  <td class="evidence">4019f98c</td>
+                </tr>
+                <tr>
+                  <th scope="row">Fail-closed contract</th>
+                  <td>A missing directory, a non-directory, a bundle without metadata and a version-mismatched bundle all raise the pre-existing error naming the offending path. No route degrades to the packaged bundle.</td>
+                  <td class="evidence">4019f98c</td>
+                </tr>
+                <tr>
+                  <th scope="row">Hermetic smoke consumer</th>
+                  <td>One temporary root and one bundle per file, the variable set before any built consumer is imported, and an assertion that the built output resolves that root rather than the shared one.</td>
+                  <td class="evidence">4019f98c</td>
+                </tr>
+                <tr>
+                  <th scope="row">Test hermeticity</th>
+                  <td>The default-binding case became a hard assertion instead of a conditional skip, the two literal call sites became explicit, and the class was closed at the runner config. A second cleanup hook asserts the restore actually happened.</td>
+                  <td class="evidence">6dc9cdd1</td>
+                </tr>
+                <tr>
+                  <th scope="row">Rationale comment</th>
+                  <td>The bundle script's comment claiming the runtime ignores the variable was corrected. Behaviour and staging were left alone.</td>
+                  <td class="evidence">6dc9cdd1</td>
+                </tr>
+                <tr>
+                  <th scope="row">Lockstep bump</th>
+                  <td>Five public package manifests and the generated version asset moved from 0.2.34 to 0.2.35. The lockfile records workspace links, so it was correctly left unchanged.</td>
+                  <td class="evidence">4019f98c</td>
+                </tr>
+                <tr>
+                  <th scope="row">Closeout bookkeeping</th>
+                  <td>The done-criteria confirmation table, resume state, the orchestration synthesis and roll-up, and backlog archival for the tracked item.</td>
+                  <td class="evidence">9a2e659b, e9a9575b, b1c60abc</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">Nothing in the production code was widened to accommodate the tests. The runner-config line changes only what the CLI's own suite inherits from the machine it runs on.</p>
+        </section>
+        <section id="validation-evidence" aria-labelledby="validation-evidence-heading">
+          <h2 id="validation-evidence-heading">How it was checked</h2>
+          <p>Ten green gates did not find the defects that mattered here. Reviewer-designed probes did: a conditional skip that quietly removed the only coverage of the production default, a whole class of environment sensitivity nobody had swept, and cleanup code that was correct but unasserted, so two mutations of it survived.</p>
+          <div class="table-scroll">
+            <table>
+              <caption>Validation evidence</caption>
+              <thead>
+                <tr><th scope="col">Check</th><th scope="col">Where it ran</th><th scope="col">Observed result</th><th scope="col">Limits</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Focused suites</th>
+                  <td>CLI unit suites, at the fix commit</td>
+                  <td class="ok">The assets suite passes 14 cases and the gate suite 198, with and without an ambient override present.</td>
+                  <td class="note">These drive the injected argument, so on their own they say nothing about the shipped binary.</td>
+                </tr>
+                <tr>
+                  <th scope="row">Reviewer probes</th>
+                  <td>Phase review, six reviewer-designed probes across two rounds</td>
+                  <td class="ok">Neither resolution path is weaker than the other, blank, whitespace and relative values behave as specified, and delete and reorder mutations against the smoke cleanup both die.</td>
+                  <td class="note">Mutations were applied to scratch copies; every mutated file was restored byte-exact and hash-checked.</td>
+                </tr>
+                <tr>
+                  <th scope="row">Built-CLI probes</th>
+                  <td>Final review, six probe groups against the built CLI</td>
+                  <td class="ok">A real command reads a marked temporary bundle, and six invalid override classes produce six exit-2 rejections with no listing emitted.</td>
+                  <td class="note">Probes drive the built output, which is the only evidence that covers what users get.</td>
+                </tr>
+                <tr>
+                  <th scope="row">Negative control</th>
+                  <td>Smoke file run with the shared assets directory moved aside</td>
+                  <td class="ok">Still passes — the file depends on its own bundle and nothing else.</td>
+                  <td class="note">Isolation proven by removal rather than by reading the code.</td>
+                </tr>
+                <tr>
+                  <th scope="row">Ambient-override sweep</th>
+                  <td>Fix round, whole CLI suite under a partial ambient bundle</td>
+                  <td class="ok">7 files and 52 failures before the runner seam; 273 files and 3695 tests green after it.</td>
+                  <td class="note">Under a complete ambient bundle nothing fails either way, which is how the seam was shown not to hide a real defect.</td>
+                </tr>
+                <tr>
+                  <th scope="row">Definition of done</th>
+                  <td>Wave branch, 10 gates captured individually</td>
+                  <td class="ok">Every exit code 0, re-run at the task commit, at the fix commit, at the closeout baseline and independently by the final reviewer.</td>
+                  <td class="note">Two of the ten are gates continuous integration never runs; the wrapper adds them because this wave writes into the smoke tree.</td>
+                </tr>
+                <tr>
+                  <th scope="row">Cross-model review</th>
+                  <td>Codex on the uncommitted diff, twice</td>
+                  <td class="ok">The first round reproduced a hermeticity regression and it was fixed before the commit; the second found no actionable defect.</td>
+                  <td class="note">Independent of the same-model phase reviewer, which separately found two mediums and four minors.</td>
+                </tr>
+                <tr>
+                  <th scope="row">Reviews</th>
+                  <td>Plan gate 1 round, phase 2 rounds, final 2 rounds, plus the configured exit gate</td>
+                  <td class="ok">Every row passed. The exit gate passed in its first generation on a cross-family target with no findings at the important threshold.</td>
+                  <td class="note">Two minor findings were routed to the backlog rather than closed inside the lane.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">The pattern worth carrying forward: a test that passes because it was skipped, and cleanup that works but is never checked, both read as green. Only a mutation or a removal tells them apart from the real thing.</p>
+        </section>
+        <section id="outcome" aria-labelledby="outcome-heading">
+          <h2 id="outcome-heading">Where this leaves the repository</h2>
+          <div class="outcome">
+            <div class="works">
+              <h3><span class="label">Works now</span></h3>
+              <ul>
+                <li>One environment variable points the published CLI at a different assets root, and that directory is validated exactly as the packaged one is.</li>
+                <li>An override that is set but invalid must fail closed, with the same actionable error and the offending path named; no route falls back silently.</li>
+                <li>The package-coverage smoke test builds its own bundle in a temporary directory, proves the built CLI reads it, and leaves neither the variable nor the directory behind.</li>
+                <li>The CLI suite no longer inherits an operator's own override, and the five public packages sit at 0.2.35 with the tracked backlog item closed.</li>
+              </ul>
+            </div>
+            <div class="gaps">
+              <h3><span class="label">Did not ship</span></h3>
+              <ul>
+                <li>The fail-closed message still tells the reader to rebuild the packaged bundle, which is the wrong remedy for someone who set the override by hand. The source plan mandated the existing wording; a better one is a backlog candidate.</li>
+                <li>A bundle carrying only metadata satisfies validation and then comes up short at read time. That matches the plan's validation bar exactly, and a structural check is the second backlog candidate.</li>
+                <li>No documentation landed inside the lane — the source plan's scope excludes docs — so the entry for the new variable was written afterwards, at the post-implement documentation step.</li>
+                <li>The wave PR has not been opened or merged; the recorded closeout stops at the completed pre-approval steps.</li>
+              </ul>
+            </div>
+            <div class="next">
+              <h3><span class="label">For the next reader</span></h3>
+              <ul>
+                <li>Treat the variable as a public runtime knob now. It decides which bundled skills, agents and templates the CLI writes into someone's repository, which is a wider blast radius than a test fixture.</li>
+                <li>Take the two backlog candidates together: an override-aware remedy message and a structural check for partial bundles are the same conversation.</li>
+                <li>Re-run the release version gate after committing, not only before. It reads committed state, so a pre-commit pass is not evidence about the commit.</li>
+                <li>The sync manifest still records 0.2.34 while the packages read 0.2.35. That is a pre-existing repository pattern with its own tracked item, not something this wave introduced.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+        <footer>
+          <p>Recap built from the approved lifecycle artifacts of the OAT project <code>.oat/projects/shared/wave-3-execution</code>: <code>plan.md</code>, <code>implementation.md</code> and <code>summary.md</code>. Commit references are short SHAs on the <code>wave-3-execution</code> branch. Line and file pointers quoted in those artifacts shift with later edits and should be verified against HEAD.</p>
+        </footer>
+      </main>
+    </div>
+<script>
+      (() => {
+        const links = [...document.querySelectorAll('.toc a[href^="#"]')];
+        const targets = links
+          .map((link) => document.querySelector(link.getAttribute('href')))
+          .filter(Boolean);
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              links.forEach((link) =>
+                link.classList.toggle(
+                  'active',
+                  link.getAttribute('href') === `#${entry.target.id}`,
+                ),
+              );
+            }
+          },
+          { rootMargin: '-15% 0px -70% 0px' },
+        );
+        targets.forEach((target) => observer.observe(target));
+      })();
+    </script>
+  </body>
+</html>
