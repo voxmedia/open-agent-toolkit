@@ -401,6 +401,7 @@ with captured logs.
 | design | artifact | pending         | -          | -                                                           | -             | -          | -                        |
 | plan   | artifact | passed          | 2026-08-27 | -                                                           | -             | auto       | -                        |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T225534Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T230217Z.md          | -             | -          | -                        |
 
 ## Implementation Complete
 
