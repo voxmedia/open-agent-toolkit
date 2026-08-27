@@ -29,10 +29,14 @@ for (const line of guidance.split('\n')) {
 // the literal `codex exec`).
 const isFlagBearingTableRow = (line) => /^\s*\|.*`-{1,2}[a-z]/.test(line);
 
+// The bypass flag itself is a marker too: a bare `--skip-git-repo-check` option
+// bullet carries no `codex` token, no `-s `, and is not a table row, yet it is
+// the literal pre-fix construct the plan removed from the option list.
 const commandLines = logicalLines.filter(
   (line) =>
     /(?:^|[`\s])codex\s/.test(line) ||
     /-s |--sandbox/.test(line) ||
+    /--skip-git-repo-check/.test(line) ||
     isFlagBearingTableRow(line),
 );
 
