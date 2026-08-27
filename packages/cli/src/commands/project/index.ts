@@ -4,6 +4,7 @@ import { createProjectArchiveCommand } from './archive';
 import { createProjectCompleteDiscoveryCommand } from './complete-discovery';
 import { createProjectCompleteStateCommand } from './complete-state';
 import { createProjectDispatchCeilingCommand } from './dispatch-ceiling';
+import { createProjectLinksCommand } from './links';
 import { createProjectListCommand } from './list';
 import { createProjectLogCommand } from './log/index';
 import { createProjectNewCommand } from './new';
@@ -25,6 +26,7 @@ export function createProjectCommand(): Command {
     .addCommand(createProjectCompleteStateCommand())
     .addCommand(createProjectDispatchCeilingCommand())
     .addCommand(createProjectListCommand())
+    .addCommand(createProjectLinksCommand())
     .addCommand(createProjectLogCommand())
     .addCommand(createProjectNewCommand())
     .addCommand(createProjectOpenCommand())
