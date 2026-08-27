@@ -67,6 +67,7 @@ import { type DoctorCheck, formatDoctorResults } from '@ui/output';
 import { Command } from 'commander';
 
 import { checkStaleInvocations } from './stale-invocations';
+import { checkSyncedProjects } from './synced-projects';
 
 interface DoctorDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -109,6 +110,7 @@ interface DoctorDependencies {
     pathExists: (path: string) => Promise<boolean>,
   ) => Promise<SkillVersionReport>;
   checkStaleInvocations: (repoRoot: string) => Promise<DoctorCheck>;
+  checkSyncedProjects: (repoRoot: string) => Promise<DoctorCheck[]>;
 }
 
 interface OutdatedSkillVersion {
@@ -289,6 +291,7 @@ function createDependencies(): DoctorDependencies {
       pathExists = pathExistsDefault,
     ) => checkSkillVersionsDefault(scopeRoot, assetsRoot, pathExists),
     checkStaleInvocations,
+    checkSyncedProjects,
   };
 }
 
@@ -852,6 +855,7 @@ async function runChecksForScope(
 
   if (scope === 'project') {
     checks.push(await dependencies.checkStaleInvocations(scopeRoot));
+    checks.push(...(await dependencies.checkSyncedProjects(scopeRoot)));
 
     try {
       const assetsRoot = await dependencies.resolveAssetsRoot();
