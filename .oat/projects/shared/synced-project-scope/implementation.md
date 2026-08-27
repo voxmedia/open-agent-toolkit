@@ -1,7 +1,10 @@
 ---
-oat_status: in_progress
+oat_status: blocked
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p02-review
+    reason: 'Post-revision p02 review round 7 found one Important FR17 child-failure isolation defect and one Medium split-test timeout after the authorized revision; further review-receive or implementation requires operator direction.'
+    since: 2026-08-27
 oat_last_updated: 2026-08-27
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -24,12 +27,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 10    | 10/10     |
-| Phase 2 | in_progress | 12    | 12/12     |
-| Phase 3 | pending     | 10    | 0/10      |
-| Phase 4 | pending     | 11    | 0/11      |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 10    | 10/10     |
+| Phase 2 | blocked  | 12    | 12/12     |
+| Phase 3 | pending  | 10    | 0/10      |
+| Phase 4 | pending  | 11    | 0/11      |
 
 **Total:** 22/43 tasks completed
 
@@ -145,7 +148,7 @@ oat_generated: false
 
 ## Phase 2: CLI surface
 
-**Status:** in progress - all 12 tasks complete; awaiting fresh p02 review
+**Status:** blocked - all 12 tasks complete; post-revision review round 7 blocked
 **Started:** 2026-08-27
 
 ### Phase Summary
@@ -154,7 +157,7 @@ oat_generated: false
 
 **Verification:** Task p02-t12 passed a 109-test focused real-worktree/entry-point matrix and the full CLI suite at 282 files and 3,799 tests against committed HEAD; CLI type-check, file-scoped lint/format, commit check, and exact five-file boundary passed. Prior review round 6 passed 433 phase tests, 77 command/help/lifecycle tests, the full 3,789-test CLI suite, and 78 control-plane tests plus builds, type-checks, changed-file lint/format, and range diff checks.
 
-**Review disposition:** Six independent rounds and five bounded fix iterations ran. Review round 6's systemic finding became planned task p02-t12. Commit `9eff5cee` centralizes canonical slug/path/ref identity before record access or Git mutation across low-level entry points, coordination children, resolver paths, and reachable split targets. A fresh p02 review is required before Phase 3 begins.
+**Review disposition:** Seven independent rounds and five bounded fix iterations ran, followed by one planned revision task. Task p02-t12 closed the mutation-safety defect, but review round 7 found 1 Important FR17 isolation gap: child preflight failures escape the per-child result boundary and prevent later siblings. It also found 1 Medium load-sensitive split-test timeout. Further review-receive or implementation requires operator direction; Phase 3 has not started.
 
 ### Task p02-t01: `projects.defaultScope` config key
 
@@ -553,6 +556,27 @@ lifecycle_outcome:
 
 ---
 
+### Run 11 - 2026-08-27T16:09:02Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Codex pinned variants)
+**Status:** blocked - post-revision p02 review requires operator direction
+
+#### Terminal Outcome
+
+- Planned revision task: p02-t12 completed in `9eff5ceef77a1716c2a56d1a594e707b263ea803`
+- Review round 7: blocked with 1 Important, 1 Medium, and no other findings; artifact `reviews/code-p02-review-2026-08-27T160020Z.md`; reviewed head `9eff5ceef77a1716c2a56d1a594e707b263ea803`
+- Review dispatch: fresh `oat-reviewer-gpt-5-6-sol-high`, request `dispatch-synced-project-scope-p02-review-r7-20260827T160020Z`, reconnaissance not attempted
+- Important blocker: `pullChildren()` performs identity, record, and remote preflight outside the per-child guarded result path, so one invalid child aborts the parent pull and prevents healthy later siblings, violating FR17
+- Medium: fresh synced split publication can exceed Vitest's default 5-second timeout under full-suite load; an immediate no-edit rerun passed 3,799/3,799
+- Prior round-6 mutation defect: closed; canonical identity now protects all audited mutation entry points
+- Authorization boundary: fix cycle 5/5 remains exhausted, and the authorized planned revision p02-t12 has been consumed; no further review-receive or implementation is authorized
+- Phase recovery: unchanged at 1/10 with `pending_attempt: null`
+- Phase 3: not started
+
+---
+
 ## Recovery Events
 
 ### Recovery Event recovery-p02-01-cli-phase-suite
@@ -623,6 +647,8 @@ Chronological log of implementation progress.
 - [x] p02 review cycle 6 - blocked at 1 Important / 0 Medium in `reviews/code-p02-review-2026-08-27T153712Z.md`
 - [x] p02 plan revision - shared low-level mutation preflight queued as p02-t12
 - [x] p02-t12 - systemic fix completed in `9eff5cee`
+- [x] p02 review cycle 7 - blocked at 1 Important / 1 Medium in `reviews/code-p02-review-2026-08-27T160020Z.md`
+- [ ] p02 operator disposition - receive round-7 findings into another planned task or stop
 - [ ] p03-t01 - not started
 
 ---
