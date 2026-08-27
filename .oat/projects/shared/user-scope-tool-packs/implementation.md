@@ -20,12 +20,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 7     | 7/7       |
-| Phase 2 | in_progress | 9     | 3/9       |
+| Phase 2 | in_progress | 9     | 9/9       |
 | Phase 3 | pending     | 5     | 0/5       |
 | Phase 4 | pending     | 7     | 0/7       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 10/34 tasks completed
+**Total:** 16/34 tasks completed
 
 ## Phase 1: Canonical Pack Contract and Inventory
 
@@ -125,6 +125,26 @@ oat_generated: false
 **Status:** in_progress
 **Started:** 2026-08-27
 
+### Phase Summary
+
+**Outcome:**
+
+- Added deterministic reconcile planning/apply modules, manifest-driven
+  installation and command inventory, complete has/outdated/update/remove
+  semantics, and canonical provider-view removal sync in nine task commits.
+- Implementation self-review and root search found a potentially Important
+  concern: `planPackReconcile()` and `applyPackReconcilePlan()` have no
+  production callers outside their defining modules. Independent review must
+  determine whether Phase 2 actually satisfies the single-reconcile-surface
+  requirement.
+
+**Verification:**
+
+- Phase 2 suite passed 56 files / 554 tests.
+- Full CLI passed 281 files / 3,700 tests; CLI type-check, lint, format, and
+  `git diff --check` passed.
+- `pnpm test` passed. Recovery usage is 2/10 with no pending attempt.
+
 ### Task p02-t01: Build pure reconcile plans
 
 **Status:** completed
@@ -143,7 +163,34 @@ oat_generated: false
 
 ### Task p02-t04: Unify direct pack installers
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** `b72b91676`
+
+### Task p02-t05: Report complete pack list and info state
+
+**Status:** completed
+**Commit:** `282e2c7e0`
+
+### Task p02-t06: Tighten has and outdated semantics
+
+**Status:** completed
+**Commit:** `9bc28f6f5`
+
+### Task p02-t07: Reconcile evolving pack updates
+
+**Status:** completed
+**Commit:** `9a938a288`
+
+### Task p02-t08: Remove complete managed packs and scoped intent
+
+**Status:** completed
+**Commit:** `382f13c70`
+**Recovery commit:** `95a692812238255c5aba2e25c23aa8ee4560d3e2`
+
+### Task p02-t09: Add canonical removal sync
+
+**Status:** completed
+**Commit:** `c6bd82c71`
 
 ### Phase 2 Plan Adjustment
 
@@ -170,7 +217,7 @@ oat_generated: false
 | Phase | Status      | Tasks | Review  | Fix loops |
 | ----- | ----------- | ----- | ------- | --------- |
 | p01   | completed   | 7/7   | passed  | 3         |
-| p02   | in_progress | 3/9   | pending | 0         |
+| p02   | in_progress | 9/9   | pending | 0         |
 
 #### Dispatch Notes
 
@@ -189,6 +236,9 @@ oat_generated: false
   `d9cf84cf-abf6-459b-831c-8768658de1e8`, base
   `28eab6e9f613541d07162c0b002834454f30cd42`.
 - `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Phase 2 task commits run from `a2100aae2` through `c6bd82c71`; recovery
+  commits `303dd6c75` and `95a692812` are reconciled. Phase gates pass, with the
+  production-caller concern carried into independent review.
 
 ### Recovery Event 4bd11825-d39d-4c04-888d-ef704ae4af24
 
@@ -256,7 +306,8 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Continue Phase 2 at `p02-t04`.
+- Run independent Phase 2 code review, explicitly checking whether the shared
+  reconcile planner/apply modules are wired into production command paths.
 
 ## Final Summary (for PR/docs)
 

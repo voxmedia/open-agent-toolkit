@@ -82,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T05:39:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T05:45:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -92,7 +92,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 2 verification
+**Status:** Implementation in progress — Phase 2 review pending
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -115,6 +115,9 @@ after task 3 consumed recovery attempt 1/10 and was recovered append-only in
 All nine Phase 2 task commits are now present. A stale help snapshot discovered
 by the full CLI suite consumed recovery attempt 2/10 and was recovered in
 `95a692812238255c5aba2e25c23aa8ee4560d3e2`; that marker is also reconciled.
+Phase 2 implementation and its verification gates are complete. Self-review
+found that the new shared reconcile planner/apply modules may have no production
+callers, so Phase 2 requires independent review before it can pass.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -124,7 +127,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 2 verification)
+- **Implementation:** `implementation.md` (Phase 2 review pending)
 
 ## Progress
 
@@ -162,7 +165,8 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 2 recovery attempt 1/10 reconciled
 - ✓ Phase 2 tasks `p02-t04`–`p02-t09` committed
 - ✓ Phase 2 recovery attempt 2/10 reconciled
-- ⧗ Phase 2 final verification
+- ✓ Phase 2 verification passed: 56 files / 554 tests
+- ⧗ Phase 2 independent review, including reconcile production wiring
 
 ## Blockers
 
@@ -170,4 +174,4 @@ None.
 
 ## Next Milestone
 
-Complete Phase 2 final verification and return the phase report.
+Run independent Phase 2 code review against the completed implementation range.
