@@ -1,16 +1,19 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
-oat_last_updated: 2026-08-26
-oat_current_task_id: p01-t01
+oat_blockers:
+  - task_id: p01-t10
+    reason: 'Maintainer confirmation is required that the private GitHub blob page rendered, or that authenticated API proof is accepted instead.'
+    since: 2026-08-27
+oat_last_updated: 2026-08-27
+oat_current_task_id: p01-t10
 oat_generated: false
 ---
 
 # Implementation: synced-project-scope
 
 **Started:** 2026-08-26
-**Last Updated:** 2026-08-26
+**Last Updated:** 2026-08-27
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -24,84 +27,130 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | blocked | 10    | 9/10      |
+| Phase 2 | pending | 11    | 0/11      |
+| Phase 3 | pending | 10    | 0/10      |
+| Phase 4 | pending | 11    | 0/11      |
 
-**Total:** 0/{N} tasks completed
+**Total:** 9/42 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Sync foundations
 
-**Status:** in_progress
-**Started:** 2026-08-26
+**Status:** blocked
+**Started:** 2026-08-27
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- The scope resolver, synced-ref naming, discovery records, and nested-worktree Git primitives are implemented.
+- Push, pull, continue, abort, path-limited parent commits, checkout preflight, and safe checkout removal are covered by focused tests.
+- The final manual evidence task is parked pending one maintainer-supplied browser-rendering fact.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/shared/project-scope.ts` - scope and synced-ref resolution.
+- `packages/cli/src/commands/project/sync/` - Git runner, records, and ref/worktree state machine.
+- `packages/cli/src/__tests__/synced-fixture.ts` - real bare-origin fixture.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: focused Vitest suites, oxlint over the 12 changed TypeScript files, and CLI type-check.
+- Result: code verification passed (6 test files, 50 tests); phase completion is pending p01-t10.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- No plan or design deviation has been accepted. The private blob ref remains present until the visual check is confirmed or explicitly waived.
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Scope resolver module
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** `61cadfdb81ace662407e544506c97fdb8ceede62`
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Project scope, synced-ref, record-path, nested-checkout, and default-scope resolution now have a shared typed API.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/shared/project-scope.ts` and test.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Result: focused tests, lint, and type-check passed.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- None.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- None.
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Gitignore rule for synced artifact directories
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `52b2b34d28fb4b2acc6ac7b62a06c3df8bba1918`
 
 **Notes:**
 
-- {Notes will be added during implementation}
+- Added and tested the directory-only synced checkout rule plus its probe helper.
+
+### Task p01-t03: Git runner
+
+**Status:** completed
+**Commit:** `9e46c5a17aef161bd5e514f51ea4983285b449d3`
+
+### Task p01-t04: Synced test fixture helper
+
+**Status:** completed
+**Commit:** `642047af45290a9800d017c34df5f6c13f078518`
+
+### Task p01-t05: Discovery record module
+
+**Status:** completed
+**Commit:** `a84118dd2d0bac60860a45f1ddae24dd4b05206d`
+
+### Task p01-t06: Ref sync engine - create and mutation invariants
+
+**Status:** completed
+**Commit:** `d22af48b8fb07d8f7b278475760d05636ef5e7dc`
+
+### Task p01-t07: Ref sync engine - push
+
+**Status:** completed
+**Commit:** `db698714932251ded14592e5bd2b035618791bc7`
+
+### Task p01-t08: Ref sync engine - pull, continue, and abort
+
+**Status:** completed
+**Commit:** `9c6949542ae1ed906ce8f49713e9f28274450ac7`
+
+### Task p01-t09: Parent-branch record commits and checkout removal
+
+**Status:** completed
+**Commit:** `30688df4eb268501647a3fa6476852422fcf9eba`
+
+### Task p01-t10: GitHub custom-ref spike
+
+**Status:** blocked
+**Commit:** -
+**Blocker:** Confirm that the private blob URL rendered in a logged-in browser, or explicitly authorize the authenticated contents/commits API evidence as sufficient. The scratch ref remains at the recorded spike SHA.
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: CLI surface
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: `projects.defaultScope` config key
 
 **Status:** pending
 **Commit:** -
@@ -120,6 +169,93 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 1 - 2026-08-27T04:40:31Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Codex pinned variant)
+**Status:** parked - `NEEDS_CONTEXT`
+
+#### Generic Dispatch Record
+
+```yaml
+request_id: dispatch-synced-project-scope-p01-20260827T044031Z
+caller: oat-project-implement
+scope: synced-project-scope/p01
+objective: Implement all ten p01 tasks in plan order with one verified commit per task.
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+catalog_snapshot:
+  id: codex-native-agent-schema-20260827T044031Z
+  source: tool-schema
+  observed_at: 2026-08-27T04:40:31Z
+authority: p01 declared files; p01-t10 implementation evidence; recovery ledger only if activated
+role_selector: oat-phase-implementer-gpt-5-6-sol-high
+model_selector: gpt-5.6-sol
+model_selector_granularity: materialized-role
+effort_selector: high
+reasoning_mode_selector: null
+service_tier_selector: priority
+guidance_reference: .agents/skills/subagent-orchestration/references/provider-codex.md
+guidance_version: 2026-07-25
+guidance_verified_at: 2026-07-25
+guidance_status: fresh
+selection_source: native-default
+candidates_considered:
+  - gpt-5.6-sol/high
+selection_reason: native-catalog
+selected_route: native
+deadline_seconds: 7200
+retry_limit: 1
+payload:
+  agent_type: oat-phase-implementer-gpt-5-6-sol-high
+  fork_turns: none
+  task_name: p01_implement
+launch_status: accepted
+child_outcome: needs-context
+configured_invocation_evidence:
+  - exact registered agent type accepted with materialized model and effort controls
+runtime_confirmation: not-reported
+diagnostics:
+  - initial payload was rejected before start because task_name was missing; corrected payload preserved the target and scope
+  - no supported signed-in browser connection was available for the private blob UI check
+continuation_events: []
+task_class: hard-reasoning
+model_class_floor: hard-reasoning
+classification_source: caller
+classification_reason: Subtle custom-ref, nested-worktree, rebase, and path-limited mutation invariants create silent failure modes.
+floor_satisfaction: satisfied
+project_dispatch:
+  project_path: .oat/projects/shared/synced-project-scope
+  workflow_mode: spec-driven
+  phase: implement
+  phase_id: p01
+  worktree: root
+  commit_policy: one-commit-per-task
+lifecycle_outcome:
+  task_status: needs-context
+  verification_status: code-passed; p01-t10-pending
+  commit_range: 61cadfdb81ace662407e544506c97fdb8ceede62..30688df4eb268501647a3fa6476852422fcf9eba
+```
+
+#### Phase Outcomes
+
+| Phase | Verdict       | Tasks | Root review | Fix loops |
+| ----- | ------------- | ----- | ----------- | --------- |
+| p01   | needs-context | 9/10  | not-started | 0         |
+
+**Parallel groups:** None - the validated plan is fully sequential.
+
+**Outstanding items:**
+
+- p01-t10: maintainer confirmation of the private blob page, or explicit acceptance of authenticated API proof.
+- After context: continue the same accepted handle, record evidence, delete only `refs/oat/projects/spike`, verify it is absent, and commit p01-t10.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -128,38 +264,31 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-### 2026-08-26
+### 2026-08-27
 
-**Session Start:** {time}
+**Session Start:** 04:40Z
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01 through p01-t09 - nine verified append-only commits
+- [ ] p01-t10 - parked for maintainer context
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Added the foundational typed and Git-plumbing modules for synced project refs and nested worktrees.
+- Added focused coverage for custom-ref creation, push/pull conflict paths, parent record commits, and checkout removal.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Preserved the scratch ref until its private blob page is visually confirmed or the API proof is explicitly accepted.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Continue request `dispatch-synced-project-scope-p01-20260827T044031Z` through its original handle after context is supplied.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- p01-t10 private blob browser confirmation - pending.
 
-**Session End:** {time}
-
----
-
-### 2026-08-26
-
-**Session Start:** {time}
-
-{Continue log...}
+**Session End:** 05:08Z (parked)
 
 ---
 
@@ -175,10 +304,10 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run | Passed | Failed | Coverage      |
+| ----- | --------- | ------ | ------ | ------------- |
+| 1     | 50        | 50     | 0      | not collected |
+| 2     | -         | -      | -      | -             |
 
 ## Final Summary (for PR/docs)
 
