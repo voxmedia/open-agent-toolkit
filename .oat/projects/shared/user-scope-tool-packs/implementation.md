@@ -151,6 +151,10 @@ oat_generated: false
   1 Medium). Final configured fix iteration 2/2 must correct default no-Git
   post-hook routing, executable-mode idempotence, shared-owner update
   eligibility, and stale returned intent evidence.
+- Final configured fix iteration 2 completed in
+  `eaf378802c8616992079c2026b92d77eb543317d`. All four findings have bounded
+  regression coverage; 578 Phase 2 tests and 3,724 CLI tests pass. Decisive
+  fresh re-review is pending.
 
 **Verification:**
 
@@ -231,7 +235,7 @@ oat_generated: false
 | Phase | Status      | Tasks | Review | Fix loops |
 | ----- | ----------- | ----- | ------ | --------- |
 | p01   | completed   | 7/7   | passed | 3         |
-| p02   | in_progress | 9/9   | fixes  | 2         |
+| p02   | in_progress | 9/9   | review | 2         |
 
 #### Dispatch Notes
 
@@ -267,6 +271,12 @@ oat_generated: false
   `reviews/p02-review-2026-08-27T063435Z.md`; 2 Critical, 1 Important,
   1 Medium. Final configured fix iteration 2/2 is required.
 - `Dispatch: scope=p02-review-fix1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- Phase 2 fix iteration 2:
+  `eaf378802c8616992079c2026b92d77eb543317d`; 114 focused tests,
+  578 Phase 2 tests, 3,724 CLI tests, workspace tests, type-check, lint, format,
+  and diff check passed. Root repeated 43 load-bearing tests, type-check, and
+  diff check successfully.
+- `Dispatch: scope=p02-fix2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 
 ### Recovery Event 4bd11825-d39d-4c04-888d-ef704ae4af24
 
@@ -334,8 +344,7 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Complete final configured Phase 2 fix iteration 2/2 and run a fresh
-  independent re-review.
+- Run the decisive fresh independent Phase 2 re-review after fix iteration 2/2.
 
 ## Final Summary (for PR/docs)
 
