@@ -1,4 +1,4 @@
-import { mkdir, realpath } from 'node:fs/promises';
+import { mkdir, realpath, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 
 import {
@@ -26,6 +26,12 @@ export interface AllowlistedPathspecOptions {
 
 export type PushResult = {
   status: 'pushed' | 'up-to-date' | 'rejected' | 'conflict';
+  sha: string;
+  conflicts?: string[];
+};
+
+export type PullResult = {
+  status: 'created' | 'updated' | 'up-to-date' | 'conflict' | 'dirty';
   sha: string;
   conflicts?: string[];
 };
@@ -184,6 +190,119 @@ export async function pushSynced(
     cwd: target.repoRoot,
   });
   return { status: 'pushed', sha: pushedHead };
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function reconcilePulledRef(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<PullResult> {
+  await assertNestedWorktree(target, git);
+  const status = await git.run(['status', '--porcelain'], {
+    cwd: target.projectPath,
+  });
+  if (status.stdout !== '') {
+    const conflicts = await listConflicts(target, git);
+    if (conflicts.length > 0) {
+      return {
+        status: 'conflict',
+        sha: await headSha(target, git),
+        conflicts,
+      };
+    }
+    return { status: 'dirty', sha: await headSha(target, git) };
+  }
+
+  const beforeRebase = await headSha(target, git);
+  const remoteHead = (
+    await git.run(['rev-parse', target.ref], { cwd: target.repoRoot })
+  ).stdout;
+  if (beforeRebase === remoteHead) {
+    return { status: 'up-to-date', sha: beforeRebase };
+  }
+
+  const rebased = await git.run(['rebase', target.ref], {
+    cwd: target.projectPath,
+    allowFailure: true,
+  });
+  if (rebased.code !== 0) {
+    const conflicts = await listConflicts(target, git);
+    if (conflicts.length === 0) {
+      assertExpectedGitResult('git rebase synced ref', rebased, [0]);
+    }
+    return { status: 'conflict', sha: beforeRebase, conflicts };
+  }
+
+  const afterRebase = await headSha(target, git);
+  return {
+    status: afterRebase === beforeRebase ? 'up-to-date' : 'updated',
+    sha: afterRebase,
+  };
+}
+
+export async function pullSynced(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<PullResult> {
+  await git.run(['fetch', target.remote, `+${target.ref}:${target.ref}`], {
+    cwd: target.repoRoot,
+  });
+  await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
+
+  if (!(await pathExists(target.projectPath))) {
+    await mkdir(dirname(target.projectPath), { recursive: true });
+    await git.run(
+      ['worktree', 'add', '--detach', target.projectPath, target.ref],
+      { cwd: target.repoRoot },
+    );
+    await assertNestedWorktree(target, git);
+    return { status: 'created', sha: await headSha(target, git) };
+  }
+
+  return reconcilePulledRef(target, git);
+}
+
+export async function continueSynced(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<PullResult> {
+  await assertNestedWorktree(target, git);
+  const continued = await git.run(['rebase', '--continue'], {
+    cwd: target.projectPath,
+    env: { GIT_EDITOR: 'true' },
+    allowFailure: true,
+  });
+  if (continued.code !== 0) {
+    const conflicts = await listConflicts(target, git);
+    if (conflicts.length === 0) {
+      assertExpectedGitResult('git rebase --continue', continued, [0]);
+    }
+    return {
+      status: 'conflict',
+      sha: await headSha(target, git),
+      conflicts,
+    };
+  }
+  return { status: 'updated', sha: await headSha(target, git) };
+}
+
+export async function abortSynced(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<void> {
+  await assertNestedWorktree(target, git);
+  await git.run(['rebase', '--abort'], { cwd: target.projectPath });
 }
 
 export async function assertNestedWorktree(
