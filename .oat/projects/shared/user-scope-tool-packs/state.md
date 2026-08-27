@@ -1,6 +1,6 @@
 ---
 oat_current_task: p03-t05
-oat_last_commit: 6b0a7fe542f41f2a20143b0f3194242cf63ef770
+oat_last_commit: b0a6bc16e5efa5cb22cac853d8a45c2f8358e8f1
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -85,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T08:19:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T08:34:52Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -95,7 +95,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 3 fix iteration 2/2
+**Status:** Implementation in progress — Phase 3 decisive re-review
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -153,6 +153,10 @@ Fresh re-review closed three original findings and reduced the remaining set to
 one Important recovery-context gap and one Medium blocked-preview
 classification overlap. Both are accepted for final configured fix iteration
 2/2.
+Final fix iteration 2 completed both dispositions in
+`b0a6bc16e5efa5cb22cac853d8a45c2f8358e8f1` and passed all focused, phase,
+CLI, workspace, type-check, lint, format, and diff gates. Decisive fresh
+independent re-review is pending.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -162,7 +166,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 3 fix iteration 2/2)
+- **Implementation:** `implementation.md` (Phase 3 awaiting decisive re-review)
 
 ## Progress
 
@@ -217,7 +221,8 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 3 fix iteration 1/2 completed
 - ✓ Phase 3 fresh independent re-review received
 - ✗ Phase 3 re-review: 0 Critical, 1 Important, 1 Medium
-- ⧗ Phase 3 final configured fix iteration 2/2
+- ✓ Phase 3 final configured fix iteration 2/2 completed
+- ⧗ Phase 3 decisive fresh independent re-review
 
 ## Blockers
 
@@ -225,5 +230,4 @@ None.
 
 ## Next Milestone
 
-Complete final configured Phase 3 fix iteration 2/2, then run a decisive fresh
-re-review.
+Run a decisive fresh independent Phase 3 re-review over fix iteration 2.
