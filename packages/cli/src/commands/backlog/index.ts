@@ -209,6 +209,7 @@ export function createBacklogCommand(
           backlogRoot,
           assetsRoot,
           templatesRoot: resolve(projectRoot, '.oat', 'templates'),
+          home: context.home,
           title,
           priority: options.priority,
           scope: options.scope,

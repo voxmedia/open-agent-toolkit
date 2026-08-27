@@ -2,8 +2,17 @@ import { access, mkdir, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 
 import { initializeBacklog } from '@commands/backlog/init';
-import { initializeScopedDecisionAgentsGuidance } from '@commands/decision/agents-guidance';
+import {
+  buildDecisionAgentsSectionBody,
+  DECISION_AGENTS_SECTION_KEY,
+  initializeScopedDecisionAgentsGuidance,
+} from '@commands/decision/agents-guidance';
 import { initializeDecisionRecords } from '@commands/decision/init';
+import {
+  buildProjectManagementAgentsSectionBody,
+  PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+} from '@commands/init/tools/project-management/agents-guidance';
+import { upsertAgentsMdSection } from '@commands/shared/agents-md';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 
@@ -188,6 +197,21 @@ export async function initializeRepoReference(
       schemaVersion: PJM_ADOPTION_SCHEMA_VERSION,
     },
   });
+
+  // Repository AGENTS guidance belongs to adoption, not to pack placement:
+  // it is written here — after scaffold verification and alongside the
+  // `pjm.initialized` marker — so installing the capability at any scope never
+  // implies that this repository adopted PJM.
+  await upsertAgentsMdSection(
+    projectRoot,
+    PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+    buildProjectManagementAgentsSectionBody(),
+  );
+  await upsertAgentsMdSection(
+    projectRoot,
+    DECISION_AGENTS_SECTION_KEY,
+    buildDecisionAgentsSectionBody(),
+  );
 
   return {
     repoRoot: options.repoRoot,

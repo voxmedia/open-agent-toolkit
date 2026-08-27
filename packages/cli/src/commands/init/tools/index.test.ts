@@ -1261,32 +1261,26 @@ describe('createInitToolsCommand', () => {
     );
   });
 
-  it('writes tool-pack, project-management, and decision AGENTS sections', async () => {
+  it('writes the tool-pack AGENTS section without claiming PJM adoption', async () => {
     const { command, upsertAgentsMdSection } = createHarness({
       interactive: false,
     });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(3);
+    // Pack placement owns the tool-pack inventory section only. The
+    // project-management and decisions sections are adoption-owned and are
+    // written by `oat pjm init` (`initializeRepoReference`).
+    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
     expect(upsertAgentsMdSection).toHaveBeenNthCalledWith(
       1,
       '/tmp/workspace',
       'tools',
       expect.stringContaining('Tool Packs'),
     );
-    expect(upsertAgentsMdSection).toHaveBeenNthCalledWith(
-      2,
-      '/tmp/workspace',
-      'project-management',
-      expect.stringContaining('### Project Management'),
-    );
-    expect(upsertAgentsMdSection).toHaveBeenNthCalledWith(
-      3,
-      '/tmp/workspace',
-      'decisions',
-      expect.stringContaining('### Decision Records'),
-    );
+    const writtenKeys = upsertAgentsMdSection.mock.calls.map((call) => call[1]);
+    expect(writtenKeys).not.toContain('project-management');
+    expect(writtenKeys).not.toContain('decisions');
   });
 
   it('reconciles shared config from project scope after aggregate install', async () => {
@@ -1438,6 +1432,24 @@ describe('createInitToolsCommand', () => {
     expect(installDocs).not.toHaveBeenCalled();
   });
 
+  it('does not write repository AGENTS guidance from the production project-scope PJM placement', async () => {
+    // Production registers `createReconciledPackCommand` (reconcilePacks is the
+    // default dependency); the legacy adapter is only wired when a caller
+    // injects legacy installer overrides. Assert against the command the CLI
+    // actually registers, so this guards a path users reach.
+    const { command, reconcilePacks, upsertAgentsMdSection } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+    });
+
+    await runCommand(command, ['project-management'], ['--scope', 'project']);
+
+    expect(reconcilePacks).toHaveBeenCalledWith([
+      expect.objectContaining({ pack: 'project-management', scope: 'project' }),
+    ]);
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+  });
+
   it('installs a direct user-eligible pack completely at both explicit scopes', async () => {
     const { command, reconcilePacks } = createHarness({
       interactive: false,
@@ -1481,7 +1493,7 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'user']);
 
-    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(3);
+    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
     const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
     expect(body).toContain('_(user scope)_');
     expect(body).toContain('`~/.agents/skills/`');

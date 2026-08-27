@@ -248,6 +248,7 @@ export function createDecisionCommand(
           decisionsRoot,
           assetsRoot,
           templatesRoot: resolve(projectRoot, '.oat', 'templates'),
+          home: context.home,
           title,
           status: options.status,
           context: options.context,

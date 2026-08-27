@@ -251,6 +251,7 @@ describe('createDecisionCommand', () => {
       decisionsRoot: '/tmp/workspace/repo/.oat/repo/reference/decisions',
       assetsRoot: '/tmp/assets',
       templatesRoot: '/tmp/workspace/repo/.oat/templates',
+      home: '/tmp/home',
       title: 'Adopt PJM Split',
       status: 'accepted',
       context: 'Shared monoliths collide.',

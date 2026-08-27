@@ -253,6 +253,7 @@ describe('createBacklogCommand', () => {
       backlogRoot: '/tmp/workspace/custom/backlog',
       assetsRoot: '/tmp/assets',
       templatesRoot: '/tmp/workspace/repo/.oat/templates',
+      home: '/tmp/home',
       title: 'Streaming Cache Layer',
       priority: 'high',
       scope: 'feature',

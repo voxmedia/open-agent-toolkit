@@ -1,6 +1,6 @@
 ---
 name: oat-project-summary
-version: 1.4.0
+version: 1.5.0
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
@@ -376,6 +376,12 @@ fi
 - If capability is absent → skip this entire step silently.
 - If adoption is `none` or `partial-initialization` → skip every PJM write and
   report that `oat pjm init` is required before decision promotion.
+- If capability is present but `PJM_ADOPTION_STATE` is empty or holds any value
+  other than the four documented states (`declared`, `inferred-legacy`, `none`,
+  `partial-initialization`) → treat adoption as unverified: skip every PJM
+  write, do not fall through to the promotion branch, and report that adoption
+  could not be determined (usually `jq` missing from `PATH` or a failing
+  `oat pjm doctor`).
 
 **7.2 — Skip if nothing to promote.** If `summary.md` has no `## Key Decisions` section, or that section has no decision content, skip the step. There is nothing to promote.
 

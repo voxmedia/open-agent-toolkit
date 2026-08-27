@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 
 export type PjmTemplateTier = 'repository' | 'user' | 'bundle';
@@ -39,7 +40,11 @@ export async function resolvePjmTemplate(
     throw new Error(`Invalid PJM template name: ${options.name}`);
   }
 
-  const home = options.home ?? process.env.HOME;
+  // Resolve the same home the installer writes to. `CommandContext.home` is
+  // `os.homedir()`, so falling back to `process.env.HOME` would skip the user
+  // tier entirely wherever HOME is unset but `homedir()` resolves (Windows
+  // derives it from USERPROFILE).
+  const home = options.home ?? homedir();
   const candidates: Array<{ path: string; tier: PjmTemplateTier }> = [
     ...(options.templatesRoot
       ? [

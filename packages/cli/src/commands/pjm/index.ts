@@ -168,6 +168,7 @@ export function createPjmCommand(
           repoRoot,
           assetsRoot,
           templatesRoot: resolve(projectRoot, '.oat', 'templates'),
+          home: context.home,
         });
 
         if (context.json) {
@@ -271,6 +272,7 @@ export function createPjmCommand(
           repoRoot,
           assetsRoot,
           templatesRoot: resolve(projectRoot, '.oat', 'templates'),
+          home: context.home,
           projectManagementEnabled:
             config.tools?.['project-management'] === true,
           apply: options.dryRun ? false : (options.apply ?? false),

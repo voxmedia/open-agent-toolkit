@@ -1,6 +1,6 @@
 ---
 name: oat-project-document
-version: 1.7.0
+version: 1.8.0
 description: Use when the user requests or confirms documenting an active OAT project — e.g. "document the project", "update the docs", "run oat-project-document", or confirms a previously offered documentation run. Do NOT auto-invoke when implementation completes. Analyzes project artifacts, presents a documentation delta plan, and applies approved changes.
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: false
@@ -184,6 +184,13 @@ any PJM writer. Warn that repository adoption is absent/incomplete, recommend
 `oat pjm init`, and proceed with documentation-only work.
 
 **If `PJM_INSTALLED` is not `true`:** Skip silently and proceed to Step 2.
+
+**If `PJM_INSTALLED` is `true` but `PJM_ADOPTION_STATE` is empty or holds any
+value other than the four documented states (`declared`, `inferred-legacy`,
+`none`, `partial-initialization`):** Treat adoption as unverified. Do not invoke
+any PJM writer, and do not fall through to the `declared` branch. Report that
+adoption could not be determined — the usual causes are `jq` missing from
+`PATH` or `oat pjm doctor` failing — and proceed with documentation-only work.
 
 ### Step 2: Read Project Artifacts
 

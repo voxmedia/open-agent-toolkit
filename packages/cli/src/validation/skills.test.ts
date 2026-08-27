@@ -2216,8 +2216,8 @@ describe('validateOatSkills', () => {
       ['.agents/agents/oat-reviewer.md', '1.2.0'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.4.0'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.0'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.4.0'],
-      ['.agents/skills/oat-project-document/SKILL.md', '1.7.0'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.0'],
+      ['.agents/skills/oat-project-document/SKILL.md', '1.8.0'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.3'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.5'],
     ] as const;

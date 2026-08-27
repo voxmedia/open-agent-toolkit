@@ -6,10 +6,6 @@ import {
   type GlobalOptions,
   type ScopeSelectionMode,
 } from '@app/command-context';
-import {
-  buildDecisionAgentsSectionBody,
-  DECISION_AGENTS_SECTION_KEY,
-} from '@commands/decision/agents-guidance';
 import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
 import { applyGitignore } from '@commands/local/apply';
 import { addLocalPaths } from '@commands/local/manage';
@@ -88,10 +84,6 @@ import {
   type PackInstallState,
 } from './install-state';
 import { createInitToolsProjectManagementCommand } from './project-management';
-import {
-  buildProjectManagementAgentsSectionBody,
-  PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
-} from './project-management/agents-guidance';
 import {
   installProjectManagement as defaultInstallProjectManagement,
   type InstallProjectManagementOptions,
@@ -1275,22 +1267,9 @@ export async function runInitTools(
           sectionBody,
         )
       : { action: 'no-change' as const };
-    const projectManagementSectionResult =
-      adoptsProject && selectedPacks.includes('project-management')
-        ? await dependencies.upsertAgentsMdSection(
-            scopeRoot('project'),
-            PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
-            buildProjectManagementAgentsSectionBody(),
-          )
-        : null;
-    const decisionSectionResult =
-      adoptsProject && selectedPacks.includes('project-management')
-        ? await dependencies.upsertAgentsMdSection(
-            scopeRoot('project'),
-            DECISION_AGENTS_SECTION_KEY,
-            buildDecisionAgentsSectionBody(),
-          )
-        : null;
+    // Pack placement never writes the project-management or decisions AGENTS
+    // sections. Those belong to explicit repository adoption (`oat pjm init`,
+    // via `initializeRepoReference`), which owns the `pjm.initialized` marker.
     if (adoptsProject) {
       await dependencies.removeAgentsMdSection(
         scopeRoot('project'),
@@ -1301,24 +1280,6 @@ export async function runInitTools(
     if (!context.json && sectionResult.action !== 'no-change') {
       context.logger.info(
         `AGENTS.md tool packs section ${sectionResult.action}.`,
-      );
-    }
-    if (
-      !context.json &&
-      projectManagementSectionResult !== null &&
-      projectManagementSectionResult.action !== 'no-change'
-    ) {
-      context.logger.info(
-        `AGENTS.md project-management section ${projectManagementSectionResult.action}.`,
-      );
-    }
-    if (
-      !context.json &&
-      decisionSectionResult !== null &&
-      decisionSectionResult.action !== 'no-change'
-    ) {
-      context.logger.info(
-        `AGENTS.md decisions section ${decisionSectionResult.action}.`,
       );
     }
 
@@ -1420,21 +1381,9 @@ function createReconciledPackCommand(
         );
         setInstalledCanonicalPaths(command, canonicalPathsForPacks([pack]));
 
-        const projectRequest = requests.find(
-          ({ scope }) => scope === 'project',
-        );
-        if (pack === 'project-management' && projectRequest) {
-          await dependencies.upsertAgentsMdSection(
-            projectRequest.scopeRoot,
-            PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
-            buildProjectManagementAgentsSectionBody(),
-          );
-          await dependencies.upsertAgentsMdSection(
-            projectRequest.scopeRoot,
-            DECISION_AGENTS_SECTION_KEY,
-            buildDecisionAgentsSectionBody(),
-          );
-        }
+        // Project-scope placement installs capability only. The
+        // project-management and decisions AGENTS sections are written by the
+        // explicit adoption action (`oat pjm init`), never by pack placement.
 
         if (context.json) {
           context.logger.json({

@@ -126,6 +126,24 @@ describe('initializeRepoReference', () => {
     ).rejects.toThrow();
   });
 
+  it('writes the adoption-owned repository AGENTS sections at the project root', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
+    tempDirs.push(root);
+    const assetsRoot = join(root, 'assets');
+    const repoRoot = join(root, 'repo');
+    await seedTemplates(join(assetsRoot, 'templates'));
+
+    await initializeRepoReference({ assetsRoot, repoRoot });
+
+    // Pack placement must not write these; adoption must.
+    const rootGuidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
+    expect(rootGuidance).toContain('<!-- OAT project-management -->');
+    expect(rootGuidance).toContain('### Project Management');
+    expect(rootGuidance).toContain('<!-- OAT decisions -->');
+    expect(rootGuidance).toContain('### Decision Records');
+    expect(rootGuidance).not.toContain('oat decision init');
+  });
+
   it('emits the human README and the pjm handoffs README', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
     tempDirs.push(root);
