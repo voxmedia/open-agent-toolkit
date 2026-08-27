@@ -28,10 +28,10 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 10    | 10/10     |
 | Phase 2 | complete    | 13    | 13/13     |
-| Phase 3 | in_progress | 11    | 9/11      |
+| Phase 3 | in_progress | 11    | 10/11     |
 | Phase 4 | pending     | 11    | 0/11      |
 
-**Total:** 32/45 tasks completed
+**Total:** 33/45 tasks completed
 
 ---
 
@@ -237,30 +237,38 @@ oat_generated: false
 
 ## Phase 3: Reviewer and lifecycle surface
 
-**Status:** in progress - 9 of 11 tasks complete; p03-t11 upstream integration precedes p03-t10 recovery reassessment
+**Status:** in progress - 10 of 11 tasks complete; p03-t10 recovery reassessment remains
 **Started:** 2026-08-27
 
 ### Task Outcomes
 
-| Task    | Status    | Commit     | Outcome                                             |
-| ------- | --------- | ---------- | --------------------------------------------------- |
-| p03-t01 | completed | `3742edd5` | Links block rendering                               |
-| p03-t02 | completed | `f04e3602` | Ref-derived links command                           |
-| p03-t03 | completed | `979fd7a1` | PR link refresh after push                          |
-| p03-t04 | completed | `fd044f09` | Worktree-aware archive completion                   |
-| p03-t05 | completed | `0e9a7fb7` | Project-wide prune                                  |
-| p03-t06 | completed | `369bff6b` | Shared-to-synced migration with rollback            |
-| p03-t07 | completed | `22c6ca79` | Synced-project doctor checks                        |
-| p03-t08 | completed | `99729346` | Managed `.gitattributes` block                      |
-| p03-t09 | completed | `41e8bbe7` | Nested-worktree local-sync guard                    |
-| p03-t10 | blocked   | -          | Dogfood blocked by empty-ref post-checkout handling |
-| p03-t11 | pending   | -          | Integrate and review `origin/main` before Phase 4   |
+| Task    | Status    | Commit     | Outcome                                              |
+| ------- | --------- | ---------- | ---------------------------------------------------- |
+| p03-t01 | completed | `3742edd5` | Links block rendering                                |
+| p03-t02 | completed | `f04e3602` | Ref-derived links command                            |
+| p03-t03 | completed | `979fd7a1` | PR link refresh after push                           |
+| p03-t04 | completed | `fd044f09` | Worktree-aware archive completion                    |
+| p03-t05 | completed | `0e9a7fb7` | Project-wide prune                                   |
+| p03-t06 | completed | `369bff6b` | Shared-to-synced migration with rollback             |
+| p03-t07 | completed | `22c6ca79` | Synced-project doctor checks                         |
+| p03-t08 | completed | `99729346` | Managed `.gitattributes` block                       |
+| p03-t09 | completed | `41e8bbe7` | Nested-worktree local-sync guard                     |
+| p03-t10 | blocked   | -          | Dogfood blocked by inherited synced-worktree hooks   |
+| p03-t11 | completed | `a72c8cf8` | Integrated and reviewed `origin/main` before Phase 4 |
 
 **Verification before dogfood:** Full CLI passed 289 files / 3,845 tests after recovery 1; CLI type-check/build, repository lint/format, and diff checks passed. The p03-t07 synced-project doctor check passed, while the overall live doctor command retained unrelated pre-existing warnings.
 
 **Recovery status:** Attempt 3 limited invocation-scoped `core.hooksPath=/dev/null` to the two empty-ref `worktree add` commands and passed authoritative verification. Dogfood then exposed the same inherited-hook defect during the initial synced scaffold commit. Attempt 4's broader lifecycle candidate passed 99/99 focused tests but was restored after the full CLI suite failed four unrelated fixed-timeout tests. The attempt is settled at 4/10 with no pending marker; p03-t11 now integrates upstream before recovery is reassessed.
 
 **Operator direction (2026-08-27):** Authorize recovery attempt 3/10 with stable-load preflight and the same bounded two-file hook correction. After p03-t10 completes, fetch and merge `origin/main` as planned task p03-t11, resolve any real conflicts, verify and review the merged tree, and do not begin Phase 4 beforehand.
+
+### p03-t11 upstream integration
+
+**Merge evidence:** Pre-merge feature HEAD `338cd286c3caca29de5d7e9589ca8d9ce917285b`; fetched `origin/main` `cb69a2869fe1d5715f13a3b6d966cd9b7ea845f8`; merge base `bf7aff9cbdbbd28d5709b93dbf0af2312cb0eb22`; pre-merge ahead/behind `108/10`. The 95 feature-changed paths and 229 upstream-changed paths had no overlap, the merge-tree preview reported no content conflicts, and `git merge --no-edit origin/main` created conflict-free merge `a72c8cf8b49afabfe33afd101f9c92a3b85f373a` with exactly the feature and upstream heads as parents. Both parents remain ancestors. The binary full-index upstream delta and merged-in delta have the same SHA-256 `0147c795eba955e74f1223bf05871529b3bbd997bcd806cb32213e4b1585825e`.
+
+**Merged-tree gates:** `pnpm check=0`; `pnpm type-check=0`; `pnpm test=0`; `pnpm build=0`; `pnpm run check:skill-bumps=0`; `pnpm release:check-versions=1`; `pnpm release:validate=1`; `pnpm build:docs=0`; `pnpm lint=0`; `pnpm format=0`; `git diff --check=0`. Both release-policy failures have the same planned cause: shipped CLI/control-plane changes require all five public packages to advance above upstream `0.2.36`. Phase 4 task p04-t08 owns the lockstep bump; the branch is not CI-green or release-ready until that task makes both gates pass.
+
+**Review:** `reviews/p03-t11-upstream-review-2026-08-27T191902Z.md` reviewed merge `a72c8cf8b49afabfe33afd101f9c92a3b85f373a` and passed the p03-t11 threshold with 0 Critical, 0 Important, 1 Medium, and 0 Minor findings. M1 identified stale p04-t08 version literals; this bookkeeping change aligns the plan from `0.2.32 → 0.2.33` to the merged `0.2.36 → 0.2.37` baseline/target before Phase 4. No implementation change was required.
 
 ---
 

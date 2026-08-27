@@ -1947,7 +1947,7 @@ git commit -m "docs(p04-t07): document the synced project scope and reviewer exp
 
 **Files:**
 
-- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json` (`0.2.32` → `0.2.33`)
+- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json` (`0.2.36` → `0.2.37`)
 - Modify: `pnpm-lock.yaml` if the workspace references versions (run `pnpm install --lockfile-only`)
 
 **Step 1: Apply**
@@ -1967,7 +1967,7 @@ Expected: both `exit=0`.
 
 ```bash
 git add packages/*/package.json pnpm-lock.yaml
-git commit -m "chore(p04-t08): bump public packages to 0.2.33"
+git commit -m "chore(p04-t08): bump public packages to 0.2.37"
 ```
 
 ---
@@ -2114,6 +2114,7 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 | p02     | code     | fixes_completed | 2026-08-27 | reviews/archived/code-p02-review-2026-08-27T153712Z.md            | fc14f074f1b7289bdf3c974999664c5c58899f60 | auto       | -                        |
 | p02     | code     | fixes_completed | 2026-08-27 | reviews/archived/code-p02-review-2026-08-27T160020Z.md            | 9eff5ceef77a1716c2a56d1a594e707b263ea803 | auto       | -                        |
 | p02-t13 | code     | passed          | 2026-08-27 | reviews/code-p02-t13-review-2026-08-27T173345Z.md                 | 9da82464b5fa93477303027a598ff3e9c768905c | auto       | -                        |
+| p03-t11 | code     | passed          | 2026-08-27 | reviews/p03-t11-upstream-review-2026-08-27T191902Z.md             | a72c8cf8b49afabfe33afd101f9c92a3b85f373a | manual     | -                        |
 | p03     | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | p04     | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | final   | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |

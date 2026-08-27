@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t11
-oat_last_commit: c5f28c640
+oat_current_task: p03-t10
+oat_last_commit: a72c8cf8b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -90,19 +90,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T19:10:54.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T19:21:22.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation in progress - Phase 3 upstream integration
+**Status:** Implementation in progress - Phase 3 dogfood recovery reassessment
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation - Phase 3 task p03-t11 upstream integration
+Implementation - Phase 3 task p03-t10 recovery reassessment
 
 ## Artifacts
 
@@ -110,7 +110,7 @@ Implementation - Phase 3 task p03-t11 upstream integration
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress - 32/45 tasks complete)
+- **Implementation:** `implementation.md` (in progress - 33/45 tasks complete)
 
 ## Progress
 
@@ -142,12 +142,12 @@ Implementation - Phase 3 task p03-t11 upstream integration
 - ⨯ Phase 3 task p03-t10 blocked before dogfood completion
 - ✓ Phase 3 recovery attempt 3/10 validated and settled
 - ⨯ Phase 3 recovery attempt 4/10 failed full-suite verification; code restored
-- … Phase 3 task p03-t11 queued to integrate `origin/main` before Phase 4
+- ✓ Phase 3 task p03-t11 integrated and reviewed `origin/main`
 
 ## Blockers
 
-None. Attempt 4 is settled; p03-t11 may integrate and verify upstream before p03-t10 recovery is reassessed. Phase 4 remains gated by both tasks and Phase 3 review.
+None. Upstream integration passed review at 0 Critical/0 Important; p03-t10 recovery remains before Phase 3 review and Phase 4.
 
 ## Next Milestone
 
-Complete p03-t11 upstream integration and review, then reassess p03-t10 recovery on the merged baseline before Phase 4.
+Reassess p03-t10 recovery on the merged baseline, complete dogfood, then run the full Phase 3 review before Phase 4.
