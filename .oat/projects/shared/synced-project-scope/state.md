@@ -93,19 +93,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T23:31:12.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T23:41:19.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation complete; final project review pending
+**Status:** Final project review received; review processing pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation complete - final project code review pending
+Final project review received - review processing pending
 
 ## Artifacts
 
@@ -113,7 +113,7 @@ Implementation complete - final project code review pending
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (58/58 tasks complete; all phase reviews passed; final project review pending)
+- **Implementation:** `implementation.md` (58/58 tasks complete; all phase reviews passed; final project review received)
 
 ## Progress
 
@@ -169,11 +169,12 @@ Implementation complete - final project code review pending
 - ✓ Phase 4 repaired-head Definition of Done gates pass in CI order, plus lint, format, and diff checks
 - ✓ Phase 4 independent re-review passed at 0 Critical / 0 Important / 0 Medium / 0 Minor
 - ✓ Phase 4 complete; all 58 implementation tasks are complete
+- ⨯ Final independent project review received with 3 Critical, 2 Important, 1 Medium, and 1 Minor findings
 
 ## Blockers
 
-None.
+- Final review findings await `oat-project-review-receive`; merge, migration, archive, completion, and PR publication remain blocked.
 
 ## Next Milestone
 
-Run the final independent project code review.
+Run `oat-project-review-receive` to process the final review findings.
