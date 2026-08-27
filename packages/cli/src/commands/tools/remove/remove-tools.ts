@@ -45,6 +45,12 @@ interface RemovedTool {
 
 export interface RemoveResult {
   removed: RemovedTool[];
+  removedAssets: Array<{ path: string; scope: ConcreteScope }>;
+  retainedOwnerData: Array<{
+    path: string;
+    scope: ConcreteScope;
+    reason: string;
+  }>;
   notInstalled: string[];
 }
 
@@ -86,9 +92,16 @@ interface ManagedRemovalTarget {
 }
 
 interface ScopeRemovalPlan {
+  scope: ConcreteScope;
   scopeRoot: string;
   matched: ToolInfo[];
   managedTargets: ManagedRemovalTarget[];
+  retainedOwnerData: Array<{ path: string; reason: string }>;
+}
+
+interface ManagedPackRemovalPlan {
+  targets: ManagedRemovalTarget[];
+  retained: Array<{ path: string; reason: string }>;
 }
 
 function selectedPacks(target: Exclude<RemoveTarget, { kind: 'name' }>) {
@@ -129,7 +142,7 @@ async function planManagedPackRemoval(
   scopeRoot: string,
   dryRun: boolean,
   deps: RemoveToolsDependencies,
-): Promise<ManagedRemovalTarget[]> {
+): Promise<ManagedPackRemovalPlan> {
   const retainedPaths = new Set<string>();
   const targets = new Map<
     string,
@@ -164,21 +177,36 @@ async function planManagedPackRemoval(
   }
 
   if (dryRun) {
-    return [...targets.entries()].map(([path, { isDirectory }]) => ({
-      path,
-      isDirectory,
-    }));
+    return {
+      targets: [...targets.entries()].map(([path, { isDirectory }]) => ({
+        path,
+        isDirectory,
+      })),
+      retained: [...retainedPaths].map((path) => ({
+        path,
+        reason: 'retained shared owner data',
+      })),
+    };
   }
 
   const roots = await resolveManagedScopeRoots(scopeRoot);
-  return Promise.all(
-    [...targets.entries()].map(
-      async ([path, { asset, isDirectory }]): Promise<ManagedRemovalTarget> => {
-        await validateManagedPath(path, roots[managedRootName(asset)]);
-        return { path, isDirectory };
-      },
+  return {
+    targets: await Promise.all(
+      [...targets.entries()].map(
+        async ([
+          path,
+          { asset, isDirectory },
+        ]): Promise<ManagedRemovalTarget> => {
+          await validateManagedPath(path, roots[managedRootName(asset)]);
+          return { path, isDirectory };
+        },
+      ),
     ),
-  );
+    retained: [...retainedPaths].map((path) => ({
+      path,
+      reason: 'retained shared owner data',
+    })),
+  };
 }
 
 async function executeManagedPackRemoval(
@@ -216,6 +244,8 @@ export async function removeTools(
   deps: RemoveToolsDependencies,
 ): Promise<RemoveResult> {
   const removed: RemovedTool[] = [];
+  const removedAssets: RemoveResult['removedAssets'] = [];
+  const retainedOwnerData: RemoveResult['retainedOwnerData'] = [];
   const assetsRoot = await deps.resolveAssetsRoot();
 
   if (target.kind === 'name') {
@@ -231,6 +261,8 @@ export async function removeTools(
 
     return {
       removed,
+      removedAssets,
+      retainedOwnerData,
       notInstalled: removed.length === 0 ? [target.name] : [],
     };
   }
@@ -240,16 +272,33 @@ export async function removeTools(
     const scopeRoot = await deps.resolveScopeRoot(scope, cwd, home);
     const tools = await deps.scanTools({ scope, scopeRoot, assetsRoot });
     const matched = tools.filter((tool) => matchesTarget(tool, target));
+    const managedPlan = await planManagedPackRemoval(
+      selectedPacks(target),
+      scope,
+      scopeRoot,
+      dryRun,
+      deps,
+    );
+    const seedData = PACK_MANIFEST.filter(({ name }) =>
+      selectedPacks(target).includes(name),
+    ).flatMap(({ assets }) =>
+      assets
+        .filter(
+          (asset) =>
+            asset.scopes.includes(scope) &&
+            asset.ownership[scope] === 'seed-if-missing',
+        )
+        .map(({ destination }) => ({
+          path: join(scopeRoot, destination),
+          reason: 'repository or scope owner data',
+        })),
+    );
     plans.push({
+      scope,
       scopeRoot,
       matched,
-      managedTargets: await planManagedPackRemoval(
-        selectedPacks(target),
-        scope,
-        scopeRoot,
-        dryRun,
-        deps,
-      ),
+      managedTargets: managedPlan.targets,
+      retainedOwnerData: [...managedPlan.retained, ...seedData],
     });
   }
 
@@ -265,7 +314,16 @@ export async function removeTools(
     removed.push(
       ...plan.matched.map(({ name, type, scope }) => ({ name, type, scope })),
     );
+    removedAssets.push(
+      ...plan.managedTargets.map(({ path }) => ({ path, scope: plan.scope })),
+    );
+    retainedOwnerData.push(
+      ...plan.retainedOwnerData.map((entry) => ({
+        ...entry,
+        scope: plan.scope,
+      })),
+    );
   }
 
-  return { removed, notInstalled: [] };
+  return { removed, removedAssets, retainedOwnerData, notInstalled: [] };
 }
