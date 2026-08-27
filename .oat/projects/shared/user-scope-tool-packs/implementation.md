@@ -387,6 +387,33 @@ oat_generated: false
 - Follow-up: amend that design sentence during Phase 5 documentation rather than
   reverting the tests.
 
+**Fix iteration 1/2:**
+
+- `oat-phase-implementer` at the Claude High ceiling, model `opus`. One
+  append-only commit `ab9250d68` on parent `b81a8bcc2`, 11 files. All three
+  Important, all four Medium, and four named Minor findings closed.
+- `Dispatch: scope=p05-fix1 action=fix role=implementer producer=claude provenance=resolver model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer(model=opus)`
+- I1 was taken as the bounded diagnostic half only: `inventoryScopedPack` emits a
+  scoped `user-agent-unmaterialized` diagnostic when a user-scope canonical agent
+  is managed, present, and outside `USER_SCOPE_MANAGED_AGENT_FILES`. Both
+  `status` and `doctor` consume it through the shared inventory model.
+  `SCOPE_CONTENT_TYPES` and adapter behavior are untouched.
+- **Root independently reproduced the I2 mutation test**, which is the evidence
+  the whole finding rests on: with `pack-reconcile.ts:156` mutated from
+  `observed?.status === 'current'` to `!== 'missing'`, the new stale-content case
+  fails 8/8; with the mutation reverted it passes 8/8. The `oat tools update`
+  refresh path is now genuinely bound by the suite.
+- I3 replaced the hand-rolled leg with three legs driving the registered
+  `oat tools migrate` through `runCli`, including two failure-injection cases.
+- Root re-ran the complete CI gate sequence at the fix commit: all eleven gates
+  exit 0, CLI 3,906 tests, clean worktree.
+- Version note: the implementer flagged that this commit changes shipped CLI
+  behavior and bundled docs assets and asked whether a further lockstep bump is
+  needed. It is not. The AGENTS.md lockstep rule is PR-scoped, this PR already
+  moves all five public packages `0.2.32` to `0.2.37`, and `0.2.37` is strictly
+  greater than main's `0.2.36`. `release:check-versions` and `release:validate`
+  both pass.
+
 **Review outcome:**
 
 - Artifact: `reviews/p04-review-2026-08-27T133629Z.md` (0 Critical, 2 Important,
@@ -972,7 +999,7 @@ individually and independently reproduced by root):**
 
 #### Outstanding Items
 
-- Resolve the three blocking Phase 5 findings (I1, I2, I3).
+- Fresh independent Phase 5 re-review of fix commit `ab9250d68`.
 
 ## Final Summary (for PR/docs)
 

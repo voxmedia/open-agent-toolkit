@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05-t06
-oat_last_commit: 17eb63ea5
+oat_last_commit: ab9250d685fa89a588ad896ca594b446b173bea4
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T16:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T16:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -239,8 +239,13 @@ was found sound; the blocking set is the two test-only commits plus one
 shipped-contract gap. User-scope canonical agents install but reach no provider
 with no diagnostic; `oat tools update`'s content refresh is unbound by the whole
 suite (the reviewer disabled it and the 290-file CLI suite stayed green twice);
-and the migration/rollback leg never touches the production migrate path. The
-first of two configured review-fix iterations is pending.
+and the migration/rollback leg never touches the production migrate path. Fix iteration 1/2 closed all three Important, all four Medium, and four named
+Minor findings in one append-only commit,
+`ab9250d685fa89a588ad896ca594b446b173bea4`. Root independently reproduced the
+decisive I2 mutation test (8/8 fail with the mutation, 8/8 pass without),
+verified the commit boundary, and re-ran the complete CI gate sequence: all
+eleven gates exit 0 with 3,906 CLI tests. Decisive fresh independent re-review
+is pending.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -334,7 +339,9 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 4 deferred aggregate-doctor Minor closed inside `p05-t01`
 - ✓ Phase 5 independent review received (Claude High, `opus`)
 - ✗ Phase 5 review: 0 Critical, 3 Important, 4 Medium, 8 Minor
-- ⧗ Phase 5 fix iteration 1/2 pending
+- ✓ Phase 5 fix iteration 1/2 completed in `ab9250d68`
+- ✓ Root independently reproduced the I2 mutation test
+- ⧗ Phase 5 fresh independent re-review pending
 
 ## Blockers
 
@@ -342,4 +349,4 @@ None.
 
 ## Next Milestone
 
-Resolve the three blocking Phase 5 findings (I1, I2, I3).
+Fresh independent Phase 5 re-review of fix commit `ab9250d68`.
