@@ -470,9 +470,13 @@ describe('review skill contracts', () => {
     expect(content).toContain('PROJECT_LOG_LEDGER_APPENDED="false"');
     expect(content).toContain('oat config get workflow.projectLogLedgerPath');
     expect(commitStep).toContain('PROJECT_LOG_PROMOTION_APPENDED');
-    expect(commitStep).toContain('git add "$PROJECT_PATH/project-log.md"');
+    expect(commitStep).toContain(
+      'PROJECT_OUTPUT_PATHS+=("$PROJECT_PATH/project-log.md")',
+    );
     expect(commitStep).toContain('PROJECT_LOG_LEDGER_APPENDED');
-    expect(commitStep).toContain('git add "$PROJECT_LOG_LEDGER_PATH"');
+    expect(commitStep).toContain(
+      'PARENT_OUTPUT_PATHS+=("$PROJECT_LOG_LEDGER_PATH")',
+    );
   });
 
   it('requires workflow skills to use canonical dispatch policy choices', () => {
@@ -1230,5 +1234,45 @@ describe('review skill contracts', () => {
     expect(dirtySection).toContain(
       'A synced dirty branch never runs parent\n  `git add` for the project artifact.',
     );
+  });
+
+  it('commits new synced summary decisions durably without consuming unrelated staged state', () => {
+    const content = readFileSync(
+      repoFilePath('.agents/skills/oat-project-summary/SKILL.md'),
+      'utf8',
+    );
+    const promotionStep = content.slice(
+      content.indexOf('### Step 7: Promote Key Decisions'),
+      content.indexOf('### Step 8: Commit'),
+    );
+    const commitStep = content.slice(
+      content.indexOf('### Step 8: Commit'),
+      content.indexOf('### Step 9: Output Summary'),
+    );
+
+    expect(content).toContain(
+      'UNRELATED_STAGED_PATCH_BEFORE=$(git diff --cached --binary)',
+    );
+    expect(promotionStep).toContain('DECISION_CREATE=$(oat decision new');
+    expect(promotionStep).toContain('--consequences "<consequences>" --json)');
+    expect(promotionStep).toContain(
+      'PROMOTED_DECISION_PATHS+=("$DECISION_RECORD_PATH")',
+    );
+    expect(commitStep).toContain(
+      'PARENT_COMMIT_MESSAGE="docs: promote summary decisions for {project-name}"',
+    );
+    expect(commitStep).toContain(
+      'git commit --only -m "$PARENT_COMMIT_MESSAGE" -- "${PARENT_OUTPUT_PATHS[@]}"',
+    );
+    expect(commitStep).toContain(
+      'PARENT_COMMIT_PATHS=$(git diff-tree --no-commit-id --name-only -r "$PARENT_DURABILITY_COMMIT")',
+    );
+    expect(
+      commitStep.indexOf('PARENT_DURABILITY_COMMIT=$(git rev-parse HEAD)'),
+    ).toBeLessThan(commitStep.indexOf('SUMMARY_PUSH=$(oat project push'));
+    expect(commitStep).toContain(
+      '[ "$UNRELATED_STAGED_PATCH_AFTER" = "$UNRELATED_STAGED_PATCH_BEFORE" ]',
+    );
+    expect(commitStep).not.toContain('git add .oat/repo/reference/decisions/');
   });
 });
