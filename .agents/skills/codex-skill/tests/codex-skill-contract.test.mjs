@@ -27,25 +27,34 @@ for (const line of guidance.split('\n')) {
 // any line spelling a sandbox flag, and flag-bearing table rows (Quick
 // Reference rows carry the initial-run and cross-directory examples but never
 // the literal `codex exec`).
+const isFlagBearingTableRow = (line) => /^\s*\|.*`-{1,2}[a-z]/.test(line);
+
 const commandLines = logicalLines.filter(
   (line) =>
     /(?:^|[`\s])codex\s/.test(line) ||
     /-s |--sandbox/.test(line) ||
-    /^\s*\|.*`-{1,2}[a-z]/.test(line),
+    isFlagBearingTableRow(line),
 );
 
-// Prose that names the bypass without exemplifying it: the documented
-// non-repository exception, the high-impact authorization inventory, and
-// prohibition sentences. A line that actually runs `codex exec`/`codex resume`
-// is an example no matter which of those phrases it also carries, so it is
-// never exempt. Everything else command-ish must stay bypass-free.
+// A line that invokes the binary at all — `codex exec`, `codex resume`, the
+// `codex e` alias, or bare `codex` — is an example, whatever else it says.
+const invokesCodex = (line) => /(?:^|[`\s])codex(?:\s|`)/.test(line);
+
+// Prose that names the bypass without exemplifying it. Only the documented
+// non-repository exception can exempt a flag-bearing table row: authorization
+// wording is normal in such a row, so it must not buy an exemption there.
 // The prohibition branch does not fire at HEAD (step 5 is not command-ish); it
 // is kept so a rewrap or a stronger prohibition sentence cannot start failing.
-const documentsTheException = (line) =>
-  !/(?:^|[`\s])codex\s+(?:exec|resume)/.test(line) &&
-  (/not a Git repo/i.test(line) ||
+const documentsTheException = (line) => {
+  if (invokesCodex(line)) return false;
+  if (/not a Git repo/i.test(line)) return true;
+  if (isFlagBearingTableRow(line)) return false;
+
+  return (
     /high-impact flags/i.test(line) ||
-    /Do \*\*not\*\* add|Never pass/i.test(line));
+    /Do \*\*not\*\* add|Never pass/i.test(line)
+  );
+};
 
 test('codex-skill routes model and effort through the provider authority', () => {
   assert.match(
@@ -111,10 +120,19 @@ test('codex-skill keeps the below-floor warning non-blocking', () => {
     /without blocking[\s\S]{0,200}?below the route|below the route[\s\S]{0,200}?without blocking/i,
     'the below-floor pairing must be reported without blocking the run',
   );
+  // Property, not phrase: any construction that *requires* a confirmation or
+  // authorization is rejected, while a negated mention ("you do not need to
+  // confirm") stays legal, so a clearer rewrite cannot fail for wording alone.
+  const requiresConfirmation =
+    /\b(?:ask (?:the user )?(?:for|to) (?:a )?confirm|confirm before|must confirm|require[sd]? (?:a )?confirmation|obtain (?:the user'?s )?(?:confirmation|authorization))/i;
+  const negatesConfirmation = /\b(?:do not|don't|no)\b[^.]*\bconfirm/i;
+
   for (const clause of belowFloor) {
+    if (negatesConfirmation.test(clause)) continue;
+
     assert.doesNotMatch(
       clause,
-      /confirm before launching/i,
+      requiresConfirmation,
       'the below-floor pairing must not require a confirmation',
     );
   }
