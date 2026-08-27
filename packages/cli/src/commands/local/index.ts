@@ -191,8 +191,12 @@ export function createLocalCommand(): Command {
                 context.logger.json({ status: 'ok', ...result });
               } else {
                 for (const entry of result.entries) {
+                  const reason =
+                    entry.status === 'skipped' && entry.reason
+                      ? ` (${entry.reason})`
+                      : '';
                   context.logger.info(
-                    `  ${entry.status.padEnd(8)} ${entry.path}`,
+                    `  ${entry.status.padEnd(8)} ${entry.path}${reason}`,
                   );
                 }
                 context.logger.info(
