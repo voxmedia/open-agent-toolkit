@@ -1594,7 +1594,12 @@ git commit -m "fix(p03-t09): skip nested worktrees during local path sync"
 
 **Files:**
 
+- Modify: `.codex/agents/oat-phase-implementer*.toml`, `.cursor/agents/oat-phase-implementer*.md`, `.oat/sync/manifest.json` (mechanically generated provider views and manifest produced by the required pre-dogfood `oat sync --scope all`; commit these exact managed outputs as a clean-parent prerequisite)
 - Modify: `.oat/projects/shared/synced-project-scope/implementation.md` (evidence only)
+
+**Step 0: Sync and commit generated provider views**
+
+Run `pnpm run cli -- sync --scope all`. When canonical Phase 4 agent changes produce tracked provider-view updates, verify with `pnpm run --silent cli -- status --scope all --json` that the affected entries are `in_sync` and the summary has zero drifted or missing entries (unrelated pre-existing stray entries may keep the command exit nonzero). Run `git diff --check`, then stage exactly `.codex/agents/oat-phase-implementer*.toml`, `.cursor/agents/oat-phase-implementer*.md`, and `.oat/sync/manifest.json` and commit them as `chore(p04-t10): sync phase implementer provider views`. The subsequent dogfood must start from a clean parent.
 
 **Step 1: Run**
 
@@ -2265,7 +2270,7 @@ git status --porcelain            # must be empty — the task is not complete o
 
 **Step 1: Run**
 
-Exercise at least one rewritten bookkeeping site and one arrival site end to end, using the bundled skills exactly as shipped after p04-t01..t05 (sync provider views first: `pnpm run cli -- sync --scope all`):
+Exercise at least one rewritten bookkeeping site and one arrival site end to end, using the bundled skills exactly as shipped after p04-t01..t05 and the committed provider sync from Step 0:
 
 ```bash
 oat() { pnpm run --silent cli -- "$@"; }
