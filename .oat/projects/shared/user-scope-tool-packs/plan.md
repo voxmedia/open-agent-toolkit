@@ -579,6 +579,7 @@ Run the RED command again; expected: pass.
 - Modify: `packages/cli/src/commands/sync/sync.types.ts`
 - Modify: `packages/cli/src/commands/sync/dry-run.ts`
 - Modify: `packages/cli/src/commands/sync/apply.ts`
+- Modify: `packages/cli/src/commands/tools/remove/index.ts`
 - Modify: `packages/cli/src/commands/tools/shared/auto-sync.ts`
 - Modify: `packages/cli/src/commands/tools/shared/auto-sync.test.ts`
 

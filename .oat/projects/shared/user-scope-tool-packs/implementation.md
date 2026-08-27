@@ -145,6 +145,13 @@ oat_generated: false
 
 **Status:** in_progress
 
+### Phase 2 Plan Adjustment
+
+- `p02-t09` now includes
+  `packages/cli/src/commands/tools/remove/index.ts`. The task already requires
+  wiring removal adapters to canonical-path sync, and this is the sole adapter
+  that owns both the removal result and the `autoSync()` invocation.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
