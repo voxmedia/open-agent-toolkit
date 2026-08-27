@@ -539,36 +539,36 @@ export async function pullChildren(
       projectPath: resolve(syncedRoot, slug),
       ref: syncedRefName(slug),
     };
-    await assertCanonicalSyncTargetIdentity(childTarget);
-    const recordPath = syncedRecordPath(syncedRoot, slug);
-    const adopt = (await readSyncedRecord(recordPath)) === null;
-    const remote = await git.run(
-      ['ls-remote', '--exit-code', childTarget.remote, childTarget.ref],
-      { cwd: parentTarget.repoRoot, allowFailure: true },
-    );
-    if (
-      remote.code === 2 &&
-      remote.stdout.trim() === '' &&
-      remote.stderr.trim() === ''
-    ) {
-      results.push({
-        slug,
-        status: 'missing',
-        message: `Remote ref ${childTarget.ref} is absent.`,
-        exitCode: 1,
-      });
-      continue;
-    }
-    if (remote.code !== 0) {
-      results.push({
-        slug,
-        status: 'error',
-        message: `git ls-remote ${childTarget.remote} ${childTarget.ref} failed (exit ${remote.code}): ${remote.stderr || remote.stdout || 'unknown Git error'}`,
-        exitCode: 2,
-      });
-      continue;
-    }
     try {
+      await assertCanonicalSyncTargetIdentity(childTarget);
+      const recordPath = syncedRecordPath(syncedRoot, slug);
+      const adopt = (await readSyncedRecord(recordPath)) === null;
+      const remote = await git.run(
+        ['ls-remote', '--exit-code', childTarget.remote, childTarget.ref],
+        { cwd: parentTarget.repoRoot, allowFailure: true },
+      );
+      if (
+        remote.code === 2 &&
+        remote.stdout.trim() === '' &&
+        remote.stderr.trim() === ''
+      ) {
+        results.push({
+          slug,
+          status: 'missing',
+          message: `Remote ref ${childTarget.ref} is absent.`,
+          exitCode: 1,
+        });
+        continue;
+      }
+      if (remote.code !== 0) {
+        results.push({
+          slug,
+          status: 'error',
+          message: `git ls-remote ${childTarget.remote} ${childTarget.ref} failed (exit ${remote.code}): ${remote.stderr || remote.stdout || 'unknown Git error'}`,
+          exitCode: 2,
+        });
+        continue;
+      }
       const result = await pullSynced(childTarget, git, { adopt });
       results.push({
         slug,

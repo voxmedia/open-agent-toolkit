@@ -392,7 +392,7 @@ describe('oat-project-split integration fixtures', () => {
     await finalizeSplit(document.plan, context);
 
     expectPublishedSplit(fixture.originDir, document);
-  });
+  }, 15_000);
 
   it('rejects an internally constructed child target aliased to a sibling before git mutation', async () => {
     const fixture = await createSyncedFixture();

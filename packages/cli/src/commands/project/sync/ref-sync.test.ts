@@ -968,28 +968,42 @@ describe('pullSynced', () => {
 });
 
 describe('pullChildren', () => {
-  it('rejects a child symlink to a sibling before record access or git mutation', async () => {
-    const fixture = await createSyncedFixture();
+  it('isolates an aliased first child while adopting and committing a healthy later child', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
     try {
-      const parent = buildSyncTarget(
+      const laterRemote = buildSyncTarget(
         fixture.cloneA,
+        '.oat/projects/shared',
+        'later',
+      );
+      const parent = buildSyncTarget(
+        fixture.cloneB!,
         '.oat/projects/shared',
         'parent',
       );
       const sibling = buildSyncTarget(
-        fixture.cloneA,
+        fixture.cloneB!,
         '.oat/projects/shared',
         'sibling',
       );
-      const child = buildSyncTarget(
-        fixture.cloneA,
+      const alias = buildSyncTarget(
+        fixture.cloneB!,
         '.oat/projects/shared',
-        'child',
+        'alias',
       );
+      await createSyncedProject(laterRemote, defaultGitRunner);
+      await writeFile(
+        join(laterRemote.projectPath, 'state.md'),
+        'healthy later child\n',
+        'utf8',
+      );
+      await pushSynced(laterRemote, defaultGitRunner, {
+        message: 'publish later child',
+      });
       await createSyncedProject(parent, defaultGitRunner);
       await writeFile(
         join(parent.projectPath, 'state.md'),
-        '---\noat_kind: coordination\noat_children:\n  - child\n---\n',
+        '---\noat_kind: coordination\noat_children:\n  - alias\n  - later\n---\n',
         'utf8',
       );
       await createSyncedProject(sibling, defaultGitRunner);
@@ -998,34 +1012,67 @@ describe('pullChildren', () => {
         'preserve sibling\n',
         'utf8',
       );
-      await symlink(sibling.projectPath, child.projectPath, 'dir');
-      const recordPath = join(
-        fixture.cloneA,
-        '.oat/projects/synced/child.json',
+      await symlink(sibling.projectPath, alias.projectPath, 'dir');
+      const aliasRecordPath = join(
+        fixture.cloneB!,
+        '.oat/projects/synced/alias.json',
       );
-      await mkdir(dirname(recordPath), { recursive: true });
-      await writeFile(recordPath, '{ invalid json\n', 'utf8');
+      await mkdir(dirname(aliasRecordPath), { recursive: true });
+      await writeFile(aliasRecordPath, '{ invalid json\n', 'utf8');
+      const siblingHead = git(sibling.projectPath, ['rev-parse', 'HEAD']);
       const siblingStatus = git(sibling.projectPath, ['status', '--porcelain']);
-      const calls: string[][] = [];
+      const calls: Array<{ args: string[]; cwd: string }> = [];
       const recordingRunner: GitRunner = {
-        async run(args) {
-          calls.push([...args]);
-          throw new Error('git should not run');
+        async run(args, options) {
+          calls.push({ args: [...args], cwd: options.cwd });
+          return defaultGitRunner.run(args, options);
         },
       };
 
-      await expect(pullChildren(parent, recordingRunner)).rejects.toMatchObject(
-        {
+      const results = await pullChildren(parent, recordingRunner);
+
+      expect(results).toEqual([
+        expect.objectContaining({
+          slug: 'alias',
+          status: 'error',
+          exitCode: 2,
           message: expect.stringContaining('canonical direct child'),
-        },
-      );
-      expect(calls).toEqual([]);
+        }),
+        expect.objectContaining({
+          slug: 'later',
+          status: 'created',
+          adopted: true,
+          pendingRecordPaths: [
+            join(fixture.cloneB!, '.oat/projects/synced/later.json'),
+          ],
+        }),
+      ]);
+      expect(
+        calls.some(
+          (call) =>
+            call.cwd === alias.projectPath || call.args.includes(alias.ref),
+        ),
+      ).toBe(false);
       expect(
         await readFile(join(sibling.projectPath, 'preserve.md'), 'utf8'),
       ).toBe('preserve sibling\n');
+      expect(git(sibling.projectPath, ['rev-parse', 'HEAD'])).toBe(siblingHead);
       expect(git(sibling.projectPath, ['status', '--porcelain'])).toBe(
         siblingStatus,
       );
+      const pendingRecordPaths = results.flatMap(
+        (result) => result.pendingRecordPaths ?? [],
+      );
+      const recordCommit = await commitRecordChange(
+        fixture.cloneB!,
+        pendingRecordPaths,
+        'chore(oat): adopt healthy coordination children',
+        defaultGitRunner,
+      );
+      expect(recordCommit?.sha).toMatch(/^[0-9a-f]{40}$/);
+      expect(
+        git(fixture.cloneB!, ['show', '--format=', '--name-only', 'HEAD']),
+      ).toBe('.oat/projects/synced/later.json');
     } finally {
       await fixture.cleanup();
     }
