@@ -71,14 +71,17 @@ new ──► ensure gitignore rule ──► empty-tree root commit ──► u
     ──► git worktree add --detach <path> <ref> ──► scaffold templates into <path>
     ──► push (commit + publish) ──► write <slug>.json ──► scaffold commit on branch (record [+ .gitignore])
 
-push ──► fetch +ref:ref ──► rebase HEAD onto ref ──► add -A (inside worktree) ──► commit
-     ──► push origin HEAD:ref ──► update-ref local ──► [PR open?] refresh links block
+push ──► add -A + commit (inside worktree, skipped if clean) ──► fetch +ref:ref ──► rebase onto ref
+     ──► [conflict?] report files + `oat project pull --continue` : push origin HEAD:ref ──► update-ref local
+     ──► [PR open?] refresh links block (from ref)
 
 pull ──► fetch ──► [no checkout?] worktree prune + worktree add --detach : [dirty?] refuse : rebase
      ──► [conflict?] report files + `oat project pull --continue`
 
-complete ──► summary export / archive copy (excluding .git pointer) / S3 ──► worktree remove
-         ──► record.status = complete ──► ref retained
+complete ──► finalize summary/state ──► push (final artifact commit) ──► [clean + pushed?] : refuse
+         ──► archive copy (excluding .git pointer) / summary export / S3 ──► record.status = complete
+         ──► commitRecordChange (record + summary export) on branch ──► worktree remove (no force) ──► ref retained
+         ──► refresh PR block from ref with durable summary path
 ```
 
 ## Component Design
@@ -206,25 +209,52 @@ export async function pruneSynced(t: SyncTarget, git: GitRunner): Promise<void>;
 export async function migrateSharedToSynced(
   t: SyncTarget,
   git: GitRunner,
-): Promise<{ sha: string }>;
+): Promise<{ sha: string; branchCommit: string }>;
+
+/**
+ * The only path that mutates the parent branch. Stages exactly the given
+ * pathspecs (each must match the parent-branch allowlist below) and commits.
+ * Returns null when nothing was staged. Used by new, migrate, archive, prune.
+ */
+export async function commitRecordChange(
+  repoRoot: string,
+  pathspecs: string[],
+  message: string,
+  git: GitRunner,
+): Promise<{ sha: string } | null>;
 ```
 
-**Git sequences (verified):**
+**Git sequences (verified in a scratch repo during design and review):**
 
 - `create`: `hash-object -t tree /dev/null` → `commit-tree <tree> -m "chore(oat): init synced project <slug>"` → `update-ref <ref> <commit>` → `worktree add --detach <projectPath> <ref>`.
-- `push`: `fetch <remote> +<ref>:<ref>` (missing remote ref tolerated on first push) → if HEAD is not a descendant of `<ref>`: `rebase <ref>` → `add -A` → `commit -m <message>` (skipped when the index is clean) → `push <remote> HEAD:<ref>` (never `--force`) → on success `update-ref <ref> HEAD`.
+- `push` (commit-first, so the rebase always runs on a clean checkout): nested-worktree guard → `add -A` → `commit -m <message>` (skipped when the index is clean) → `fetch <remote> +<ref>:<ref>` (missing remote ref tolerated on first push) → if HEAD is not a descendant of `<ref>`: `rebase <ref>` → on conflict return `conflict` (the checkout is now in exactly the same rebase-in-progress state as a pull conflict; `oat project pull --continue` finishes it, then `oat project push` completes the publish) → `push <remote> HEAD:<ref>` (never `--force`) → on success `update-ref <ref> HEAD`. A push with a clean index and HEAD already equal to the remote ref returns `up-to-date` without creating a commit.
 - `pull`: `fetch` → if `projectPath` absent: `worktree prune` then `worktree add --detach <projectPath> <ref>` → else if `status --porcelain` non-empty: return `dirty` → else `rebase <ref>`.
 - `continue`/`abort`: `rebase --continue` with `GIT_EDITOR=true` / `rebase --abort`, then re-evaluate as pull.
-- `removeSyncedCheckout`: `worktree remove --force <projectPath>` → `worktree prune`.
-- `prune`: `push <remote> :<ref>` → `update-ref -d <ref>` → `removeSyncedCheckout` → delete record.
-- `migrate`: `create` into a temp path → copy tracked artifact files in → first push → `git rm -r --cached -- <shared project dir>` → move directory to `synced/` (or remove and re-add worktree) → write record → single branch commit `chore(oat): migrate <slug> to synced scope`.
+- `removeSyncedCheckout` (archive path): precondition `status --porcelain` empty **and** HEAD equals the fetched `<ref>` (i.e. nothing unpushed) → `worktree remove <projectPath>` (no `--force`) → `worktree prune`. Precondition failure returns `dirty` / `unpushed` and names `oat project push` as the fix.
+- `prune`: same preconditions unless the user passed `--force`, in which case `worktree remove --force` is permitted because the user explicitly asked to discard → `push <remote> :<ref>` → `update-ref -d <ref>` → remove checkout → delete record file → `commitRecordChange([recordPath], "chore(oat): prune synced project <slug>")`.
+- `migrate` (`shared` → `synced`), one algorithm, in order:
+  1. Preconditions: `git status --porcelain -- <src>` empty (source tracked and clean); `origin` configured; no existing `<ref>`, record, or `<dest>` directory; gitignore rule present (self-heal as in `create`).
+  2. `create` the ref and register `<dest> = .oat/projects/synced/<slug>` as the detached worktree (empty tree).
+  3. Copy every file from `<src>` into `<dest>` (source has no `.git`; nothing to exclude).
+  4. In `<dest>`: `add -A` → `commit -m "chore(oat): migrate <slug> to synced scope"` → `push <remote> HEAD:<ref>` → `update-ref <ref> HEAD`.
+  5. Parent branch: `git rm -r -q -- <src>` (removes index entries **and** files) → write the record → `commitRecordChange([<src>, recordPath, ".gitignore" if changed], "chore(oat): migrate <slug> to synced scope")` — exactly one branch commit.
+  6. If `activeProject` pointed at `<src>`, retarget it to `<dest>`.
+  - Rollback boundaries: failure before step 5 → delete `<ref>` locally and remotely (if pushed) and `worktree remove --force <dest>`; nothing on the branch has changed. Failure inside step 5 → `git reset -q -- <src> <recordPath>` and `git checkout -- <src>`, delete the record file; the pushed ref is harmless and is reused on retry.
+  - End-state assertions (also the integration test): `<src>` absent from the index and filesystem; `<dest>` registered (`worktree list`) and clean; parent `status --porcelain` empty after exactly one new commit; record present in `git ls-tree HEAD`; `<ref>` present on `origin`; `activeProject` retargeted.
+
+**Mutation invariants (replace any single global guard):**
+
+1. **Nested-worktree mutations** (`add`, `commit`, `rebase`, `rebase --continue/--abort`) run with `cwd = projectPath` and first assert `git rev-parse --show-toplevel == projectPath`. Invariant failure is a bug, not a user error: `CliError` exit 2 before any mutation.
+2. **Common-dir / ref mutations** (`update-ref`, `worktree add|remove|prune`, `fetch`, `push`) run with `cwd = repoRoot` and may name only `<ref>` (or `HEAD:<ref>` / `:<ref>`) and `projectPath`. `push` never carries `--force`, `--force-with-lease`, or `+` on the push refspec.
+3. **Parent-branch index mutations** happen only through `commitRecordChange`, whose pathspec allowlist is: the project's record file, `.gitignore`, `.gitattributes`, the migration source directory (for `git rm`), and the configured `archive.summaryExportPath` file. Any other pathspec is rejected before staging. Never `add -A`, never a directory glob, never `--force`.
 
 **Design Decisions:**
 
 - The local ref `refs/oat/projects/<slug>` doubles as the remote mirror (fetched with a `+` refspec into the same name) — one ref, no `refs/remotes/` indirection. Each nested worktree's detached HEAD is its working state, reconciled against that ref.
 - `update-ref` happens after a successful push, never before, so the local ref never claims a commit `origin` has not accepted.
-- `add -A` is safe because `cwd` _is_ the nested worktree; the parent index is never addressed. A guard asserts `git rev-parse --show-toplevel` equals `projectPath` before any mutating command.
+- Commit-first push means a conflict is always a rebase of committed work — nothing is ever stashed, and the agent's edits are already durable in the nested history when it starts resolving.
 - Push performs exactly one fetch/rebase cycle; a second rejection (a genuine race) is reported as `rejected` with "pull, then push again" rather than looping.
+- Record mutations and ref pushes are distinct, explicitly ordered operations: the ref is published first, then the branch commit is made, so a failure between them leaves a retryable state (ref ahead, record stale) rather than a record that advertises something `origin` does not have.
 
 ### Discovery record — `commands/project/sync/record.ts`
 
@@ -245,7 +275,7 @@ export async function listSyncedRecords(
 ): Promise<SyncedProjectRecord[]>;
 ```
 
-**Design Decisions:** written by scaffold (create), completion (`status`, `completedAt`), and deleted by prune. Push does **not** touch the record — a per-push field would turn the record into a merge-conflict magnet across branches, and the ref on `origin` is the authority anyway.
+**Design Decisions:** written by scaffold (create) and migrate, updated by completion (`status`, `completedAt`), and deleted by prune. Every one of those mutations is made durable on the parent branch by the CLI itself through `commitRecordChange` (messages: `chore(oat): scaffold <slug>`, `… migrate <slug> to synced scope`, `… complete synced project <slug>`, `… prune synced project <slug>`), with `--no-commit` available for library callers that manage their own commits (mirrors the existing `commit` opt-in on `scaffoldProject`). Push does **not** touch the record — a per-push field would turn the record into a merge-conflict magnet across branches, and the ref on `origin` is the authority anyway.
 
 ### PR links — `commands/project/links/`
 
@@ -291,7 +321,7 @@ Durable summary: `docs/project-summaries/20260826-synced-project-scope.md`
 <!-- oat:project-links:end -->
 ```
 
-**Design Decisions:** GitHub origins get `blob/<sha>/<file>` links; any other host gets the ref name + short SHA as plain text — degrade, don't guess URL schemes. `refreshPrLinks` runs `gh pr view --json body`, replaces the block, and `gh pr edit --body-file`; `gh` missing or unauthenticated returns `skipped` with a warning. Links are computed from the artifact checkout's HEAD after push, so they are never ahead of `origin`.
+**Design Decisions:** GitHub origins get `blob/<sha>/<file>` links; any other host gets the ref name + short SHA as plain text — degrade, don't guess URL schemes. `refreshPrLinks` runs `gh pr view --json body`, replaces the block, and `gh pr edit --body-file`; `gh` missing or unauthenticated returns `skipped` with a warning. `LinksInput` is computed from the **ref**, not the checkout: `sha = rev-parse <ref>` (after fetch) and `present = ls-tree --name-only <ref>` filtered by the allowlist. That keeps links valid after push (never ahead of `origin`) and, critically, computable after completion has removed the checkout. `replaceLinksBlock` treats a start marker without an end marker (or vice versa) as malformed: it returns the body unchanged and `refreshPrLinks` reports `skipped` with a warning — it never guesses where the block ends. When `durableSummaryPath` is supplied, the durable line is appended below the ref links; the ref links themselves are always re-rendered from the ref and are never dropped.
 
 ### Gitignore / gitattributes — `commands/init/gitignore.ts`, new `commands/init/gitattributes.ts`
 
@@ -299,7 +329,19 @@ Durable summary: `docs/project-summaries/20260826-synced-project-scope.md`
 
 ### Archive integration — `commands/project/archive/archive-utils.ts`
 
-`archiveProjectOnCompletion` checks `isSyncedCheckout(sourcePath)`. If true: the copy uses a filter that skips the top-level `.git` pointer file, and cleanup calls `removeSyncedCheckout` instead of `rm`. Then it sets `record.status = 'complete'` / `completedAt`. Archive _target_ durability logic (`isGitignoredArchivePath` → primary checkout re-targeting) is untouched. The ref is retained.
+Completion of a `synced` project is an explicit ordered state machine. `oat-project-complete` owns steps 1–2 and 7 (it already finalizes state and edits the PR); `oat project archive` owns steps 3–6 and refuses to start unless its precondition holds. Each step is safe to retry after a failure at any later step.
+
+| #   | Owner   | Step                                                                                                                                                                                             | Retry safety                                                         |
+| --- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| 1   | skill   | Finalize `summary.md` and `state.md` in the checkout (existing `oat project complete-state`).                                                                                                    | Idempotent file writes.                                              |
+| 2   | skill   | `oat project push` — the final artifact commit reaches `<ref>` on `origin`.                                                                                                                      | `up-to-date` on repeat.                                              |
+| 3   | archive | **Precondition:** checkout clean and HEAD == fetched `<ref>` (nothing unpushed). Otherwise refuse with `oat project push` as the fix. Nothing below runs on a dirty or unpushed checkout.        | Pure check.                                                          |
+| 4   | archive | Copy the checkout to `.oat/projects/archived/<name>` with a filter that skips the top-level `.git` pointer; write archive metadata; export `summary.md` to `archive.summaryExportPath`; S3 sync. | Overwrites the snapshot; existing target-durability logic untouched. |
+| 5   | archive | Write `record.status = 'complete'`, `completedAt`; `commitRecordChange([recordPath, summaryExportFile?], "chore(oat): complete synced project <slug>")`.                                         | No-op commit when already recorded.                                  |
+| 6   | archive | `removeSyncedCheckout` — `worktree remove` **without** `--force` (guaranteed safe by step 3) → `worktree prune`. The ref is retained.                                                            | Skipped when the checkout is already absent.                         |
+| 7   | skill   | Refresh the PR block from the ref: `oat project links --durable-summary <path>` → `gh pr edit` (existing step 11.5 site). Links resolve because the ref still exists.                            | Idempotent block replacement.                                        |
+
+Archive _target_ durability logic (`isGitignoredArchivePath` → primary checkout re-targeting) is untouched. For `shared` projects the routine is byte-for-byte unchanged.
 
 ### Doctor — `commands/doctor/synced-projects.ts`
 
@@ -317,14 +359,14 @@ Durable summary: `docs/project-summaries/20260826-synced-project-scope.md`
 
 ### Scaffold & list
 
-`ScaffoldProjectOptions` gains `scope?: ProjectScope` (default from `resolveDefaultScope`). For `synced`, `scaffoldProject` calls `createSyncedProject` before writing templates into the checkout, then `pushSynced` (initial commit `chore(oat): scaffold <slug>`), writes the record, and commits the record (plus `.gitignore` if changed) on the branch with the existing `commitScaffold` path. `oat project list` enumerates `shared` and `synced` siblings and reports `scope` per row; `--scope` filters.
+`ScaffoldProjectOptions` gains `scope?: ProjectScope` (default from `resolveDefaultScope`). For `synced`, `scaffoldProject` calls `createSyncedProject` before writing templates into the checkout, then `pushSynced` (initial commit `chore(oat): scaffold <slug>`), writes the record, and commits the record (plus `.gitignore` if changed) on the branch through `commitRecordChange` (the existing `commitScaffold` becomes a thin caller of it). `oat project list` enumerates all three sibling roots — `shared` (`projects.root`), `synced`, and `local` — reports `scope` per row, and `--scope <shared|synced|local>` filters. Listing `local` is additive: today `list` reads only `projects.root`, so `local` projects were never listed; resume of a `local` project is path-based via `activeProject` and is unchanged.
 
 ### Skill integration
 
 A shared snippet replaces each inventoried bookkeeping commit:
 
 ```bash
-PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --json | jq -r .scope)
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value)   # prints: shared | local | synced
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): bookkeeping after p03"
 else
@@ -332,7 +374,7 @@ else
 fi
 ```
 
-Arrival sites add `oat project pull "$PROJECT_PATH"` under the same guard. `oat project scope` is a tiny read-only command so skills never reimplement path parsing. PR skills call `oat project links "$PROJECT_PATH"` and paste the block into the body template; `oat-project-complete` passes `--durable-summary <path>` when the export is configured.
+Arrival sites add `oat project pull "$PROJECT_PATH"` under the same guard. `oat project scope --format value` prints the bare scope word so shell skills need no JSON parser — `jq` is deliberately **not** a dependency, matching the existing skill boilerplate which only ever uses `oat config get`. `oat project scope` is a tiny read-only command so skills never reimplement path parsing. PR skills call `oat project links "$PROJECT_PATH"` and paste the block into the body template; `oat-project-complete` passes `--durable-summary <path>` when the export is configured.
 
 **Inventoried sites (from recon):**
 
@@ -382,7 +424,7 @@ refs/oat/projects/<slug>            local ref = mirror of origin's ref (fetched 
 .oat/projects/synced/<slug>/        tree root == project directory (state.md, plan.md, …)
 ```
 
-History is linear by construction (rebase-on-pull, no merges, no force). The root commit is the empty tree, so every project ref starts from an identical "init" commit.
+History is linear by construction (rebase-on-pull, no merges, no force). Every project ref starts from the same empty tree (`4b825dc…`) but a distinct root commit, because the init message carries the slug; fixtures must compare tree hashes, not commit hashes, when asserting "freshly created".
 
 ### Config additions
 
@@ -411,35 +453,39 @@ Existing flags unchanged. `--scope` defaults to `projects.defaultScope`. For `sy
 
 ### `oat project push [project-path] [--message <msg>] [--no-refresh-pr]`
 
-Commits and publishes. Refreshes the PR links block when `state.md` has `oat_pr_status: open` and `oat_pr_url` set, unless `--no-refresh-pr`.
+Commits pending artifact changes first, then reconciles with `origin` and publishes (commit-first order; see Ref sync engine). Refreshes the PR links block when `state.md` has `oat_pr_status: open` and `oat_pr_url` set, unless `--no-refresh-pr`. On `conflict`, the checkout is left mid-rebase with the pending edits already committed; resolve, then `oat project pull --continue`, then `oat project push`.
 
 **JSON:** `{ status: 'pushed' | 'up-to-date' | 'rejected' | 'conflict', sha, ref, conflicts?: string[], prRefresh?: 'refreshed' | 'skipped' | 'failed' }`
 
 ### `oat project pull [project-path] [--continue | --abort]`
 
-Materializes or rebases. `--continue` after resolving conflicts; `--abort` returns to the pre-rebase state.
+Materializes or rebases. `--continue` after resolving conflicts (from either a pull or a push); `--abort` returns to the pre-rebase state.
 
 **JSON:** `{ status: 'created' | 'updated' | 'up-to-date' | 'conflict' | 'dirty', sha, ref, conflicts?: string[] }`
 
-### `oat project scope [project-path]`
+### `oat project scope [project-path] [--format json|value]`
 
-Read-only. `{ status: 'ok', projectPath, scope, ref?, record?: SyncedProjectRecord, checkout: 'present' | 'absent' | 'n/a' }`.
+Read-only. `--format value` (the shell-skill form) prints exactly one of `shared`, `local`, `synced` and nothing else. `--json` / `--format json`: `{ status: 'ok', projectPath, scope, ref?, record?: SyncedProjectRecord, checkout: 'present' | 'absent' | 'n/a' }`.
 
-### `oat project links [project-path] [--format markdown|json] [--durable-summary <repo-relative-path>]`
+### `oat project links [project-path|slug] [--format markdown|json] [--durable-summary <repo-relative-path>]`
 
-Prints the block for the checkout's HEAD. `--format json` returns `LinksInput` plus rendered `markdown`.
+Prints the block for the **ref's** current commit (fetching first), so it works before, during, and after the checkout exists. `--format json` returns `LinksInput` plus rendered `markdown`.
 
-### `oat project prune <project-path|slug> [--force]`
+### `oat project prune <project-path|slug> [--force] [--no-commit]`
 
-Refuses when `state.md` (in the checkout or the last archived snapshot) has `oat_pr_status: open` unless `--force`. Warns that pinned links will stop resolving. Removes remote ref, local ref, checkout, record.
+Refuses when `state.md` (in the checkout or the last archived snapshot) has `oat_pr_status: open`, or when the checkout is dirty or unpushed, unless `--force`. Warns that pinned links will stop resolving. Removes remote ref, local ref, checkout, and record, then commits the record deletion on the branch (`--no-commit` to skip).
 
-### `oat project migrate <project-path> --to synced`
+### `oat project migrate <project-path> --to synced [--no-commit]`
 
-`shared` → `synced` only in v1. Refuses on a dirty artifact directory or missing `origin`. Updates `activeProject` if it pointed at the migrated path. Produces one branch commit.
+`shared` → `synced` only in v1, using the six-step algorithm in Ref sync engine. Refuses on a dirty or untracked source, missing `origin`, or an existing ref/record/destination. Updates `activeProject` if it pointed at the migrated path. Produces exactly one branch commit.
 
-### `oat project list [--scope <scope>]`
+### `oat project archive [project-path]` (existing)
 
-Adds a `scope` column and filter; enumerates `shared` and `synced` siblings of `projects.root`.
+For `synced` projects: refuses unless the checkout is clean and pushed; runs steps 3–6 of the completion state machine; commits the record update (and summary export) on the branch. `shared` behavior unchanged.
+
+### `oat project list [--scope <shared|synced|local>]`
+
+Adds a `scope` column and filter; enumerates the `shared`, `synced`, and `local` siblings of `projects.root`.
 
 ### Config
 
@@ -470,7 +516,7 @@ Whoever can push branches to `origin` can push `refs/oat/*`. Repositories that r
 ### Threat Mitigation
 
 - **Shell injection:** all git/gh invocations use `execFile` with argument arrays; no shell.
-- **Parent-checkout damage:** mutating git commands assert `--show-toplevel == projectPath`; no `-A` outside the nested worktree; no force-push anywhere (NFR4).
+- **Parent-checkout damage:** the three mutation invariants in Ref sync engine — nested-worktree commands assert `--show-toplevel == projectPath`; common-dir commands may name only `<ref>` and `projectPath`; parent-branch staging goes only through `commitRecordChange` with its pathspec allowlist. No `-A` outside the nested worktree; no force-push anywhere; `worktree remove --force` only in `prune --force` (NFR4).
 - **Ref hijack / traversal:** ref names are derived from validated slugs only; `..`, `/`, and control characters are rejected upstream.
 - **PR body tampering:** `replaceLinksBlock` only replaces text between the two markers; if markers are malformed (start without end), refresh is skipped with a warning rather than guessing.
 
@@ -503,9 +549,9 @@ Not applicable — no database.
 
 ### Conflict flow (push or pull)
 
-1. `git rebase` stops → command returns `status: 'conflict'`, `conflicts: [files]`.
+1. Push has already committed pending edits (commit-first), so a conflict from either command is a rebase of committed local work onto `<ref>`. `git rebase` stops → command returns `status: 'conflict'`, `conflicts: [files]`.
 2. Message: "Resolve conflicts in `.oat/projects/synced/<slug>/…`, then run `oat project pull --continue` (or `--abort`)."
-3. Skill guidance: the agent resolves in place (artifact files are markdown; `state.md` is last-writer-wins by intent) and continues. `push` after a successful `--continue` completes the original operation.
+3. Skill guidance: the agent resolves in place (artifact files are markdown; `state.md` is last-writer-wins by intent) and continues. `push` after a successful `--continue` completes the original operation. `--abort` restores the pre-rebase detached HEAD with the local commit intact — nothing the agent wrote is lost either way.
 
 ### Retry Logic
 
@@ -521,29 +567,29 @@ Push: exactly one fetch → rebase → push cycle; a second rejection returns `r
 
 ### Requirement-to-Test Mapping
 
-| ID   | Verification       | Key Scenarios                                                                                                                                            |
-| ---- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FR1  | integration        | scaffold synced → `git check-ignore` true; nested `git log` shows init + scaffold; parent `status --porcelain` shows only record                         |
-| FR2  | unit               | `--scope` each value → correct directory; no flag → `projects.defaultScope`; config `shared` → shared                                                    |
-| FR3  | integration        | push to bare origin; up-to-date no-op creates no commit; parent index untouched; rejected after concurrent push returns `rejected`                       |
-| FR4  | integration        | fresh clone pull creates checkout; second pull `up-to-date`; dirty → `dirty`; divergent edit → `conflict` → `--continue` → push succeeds; `--abort`      |
-| FR5  | unit + integration | zod schema accept/reject; two branches adding different records merge cleanly (git merge in fixture)                                                     |
-| FR6  | manual + unit      | skill dogfood on this project after migrate; skill validator asserts no `git add` of `synced` paths in `oat-*` skills                                    |
-| FR7  | unit + integration | render with subsets of present artifacts; replace idempotent (twice = once); missing markers appended; non-GitHub origin plain text; `gh` mocked refresh |
-| FR8  | integration        | archive synced project → snapshot has no `.git`; `worktree list` has no stale entry; record `complete`; ref still on origin                              |
-| FR9  | unit + integration | `CORE_ENTRIES` contains rule; upgrade of existing block idempotent; record file not ignored, directory ignored                                           |
-| FR10 | integration        | two linked worktrees each pull; push from A, pull in B → identical tree; remove worktree A → pull in B still works                                       |
-| FR11 | integration        | prune with open PR refuses; `--force` removes ref/record/checkout                                                                                        |
-| FR12 | integration        | migrate fixture shared project → files on ref, one branch commit removing tracked files + adding record; active pointer updated; dirty → refuse          |
-| FR13 | unit               | each doctor condition with injected git runner                                                                                                           |
-| FR14 | manual             | `pnpm build:docs` + review                                                                                                                               |
-| FR15 | unit               | gitattributes block created/updated/no-change                                                                                                            |
-| NFR1 | unit + integration | existing `scaffold.test.ts`, `archive` tests, `gitignore.test.ts` pass unchanged; shared project flow unchanged in e2e                                   |
-| NFR2 | manual             | push to a GitHub test repo with an `on: push` workflow → no run triggered; ref absent from branch list                                                   |
-| NFR3 | integration        | push/pull with AWS env vars unset and `gh` absent                                                                                                        |
-| NFR4 | integration        | parent `status --porcelain` identical before/after every sync command; no `--force` in any git args (runner spy)                                         |
-| NFR5 | integration        | pull twice; interrupted rebase → `--continue`/`--abort`                                                                                                  |
-| NFR6 | manual             | DoD gates incl. `check:skill-bumps`, `release:check-versions`                                                                                            |
+| ID   | Verification       | Key Scenarios                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ---- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR1  | integration        | scaffold synced → `git check-ignore` true; nested `git log` shows init + scaffold; parent `status --porcelain` shows only record                                                                                                                                                                                                                                                                                          |
+| FR2  | unit               | `--scope` each value → correct directory; no flag → `projects.defaultScope`; config `shared` → shared                                                                                                                                                                                                                                                                                                                     |
+| FR3  | integration        | push to bare origin; up-to-date no-op creates no commit; parent index untouched; **dirty local + remote advanced (non-overlapping files) → commit, rebase, push succeeds; overlapping files → `conflict`, pending edits present in nested `git log`, `pull --continue` then `push` succeeds**; second concurrent push → `rejected`. Authority: nested checkout HEAD vs `rev-parse <ref>` on origin                        |
+| FR4  | integration        | fresh clone pull creates checkout; second pull `up-to-date`; dirty → `dirty`; divergent edit → `conflict` → `--continue` → push succeeds; `--abort` leaves local commit intact                                                                                                                                                                                                                                            |
+| FR5  | unit + integration | zod schema accept/reject; two branches adding different records merge cleanly (git merge in fixture); **after completion and after prune, `git ls-tree HEAD -- <record>` on the parent branch shows the updated/absent record and `status --porcelain` is empty**. Authority: parent branch committed tree                                                                                                                |
+| FR6  | manual + unit      | skill dogfood on this project after migrate; skill validator asserts no `git add` of `synced` paths and no `jq` in `oat-*` skills                                                                                                                                                                                                                                                                                         |
+| FR7  | unit + integration | render with subsets of present artifacts; replace idempotent (twice = once); missing markers appended; **malformed markers → body unchanged, `skipped`**; **with `--durable-summary`, the durable line is appended below the ref links and every ref link is still present**; links computed from ref with checkout absent; non-GitHub origin plain text; `gh` mocked refresh. Authority: rendered block string / PR body |
+| FR8  | integration        | archive synced project → **refused when dirty or unpushed**; success → snapshot has no `.git`; `worktree list` has no stale entry; record `complete` committed on the parent branch; ref still on origin; `links` still renders from the ref. Authority: archive dir, parent tree, origin refs                                                                                                                            |
+| FR9  | unit + integration | `CORE_ENTRIES` contains rule; upgrade of existing block idempotent; record file not ignored, directory ignored                                                                                                                                                                                                                                                                                                            |
+| FR10 | integration        | two linked worktrees each pull; push from A, pull in B → identical tree; remove worktree A → pull in B still works                                                                                                                                                                                                                                                                                                        |
+| FR11 | integration        | prune with open PR refuses; dirty/unpushed refuses; `--force` removes ref/record/checkout and **commits the record deletion on the parent branch**. Authority: origin refs, `worktree list`, parent tree                                                                                                                                                                                                                  |
+| FR12 | integration        | migrate fixture shared project → the six end-state assertions from the algorithm (source absent from index and disk, dest registered and clean, parent clean after exactly one commit, record in `ls-tree HEAD`, ref on origin, active pointer retargeted); dirty source → refuse; failure injected before step 5 → branch untouched                                                                                      |
+| FR13 | unit               | each doctor condition with injected git runner                                                                                                                                                                                                                                                                                                                                                                            |
+| FR14 | manual             | `pnpm build:docs` + review                                                                                                                                                                                                                                                                                                                                                                                                |
+| FR15 | unit               | gitattributes block created/updated/no-change                                                                                                                                                                                                                                                                                                                                                                             |
+| NFR1 | unit + integration | existing `scaffold.test.ts`, `archive` tests, `gitignore.test.ts` pass unchanged; shared project flow unchanged in e2e; **`local` project: `oat project new --scope local` lands under `local/`, appears in `list` with `scope: local` and under `--scope local`, resumes via `activeProject`, and is never touched by push/pull/archive changes**. Authority: `list --json`, filesystem                                  |
+| NFR2 | manual             | push to a GitHub test repo with an `on: push` workflow → no run triggered; ref absent from branch list                                                                                                                                                                                                                                                                                                                    |
+| NFR3 | integration        | push/pull with AWS env vars unset and `gh` absent                                                                                                                                                                                                                                                                                                                                                                         |
+| NFR4 | integration        | parent `status --porcelain` identical before/after push/pull/links/scope; for new/migrate/archive/prune the only parent-tree delta is the allowlisted pathspecs; runner spy asserts no `--force` on `push`, no `add -A` with `cwd = repoRoot`, and `worktree remove --force` only under `prune --force`                                                                                                                   |
+| NFR5 | integration        | pull twice; interrupted rebase → `--continue`/`--abort`                                                                                                                                                                                                                                                                                                                                                                   |
+| NFR6 | manual             | DoD gates incl. `check:skill-bumps`, `release:check-versions`                                                                                                                                                                                                                                                                                                                                                             |
 
 ### Unit Tests
 
@@ -668,6 +714,7 @@ Reverse migration is manual and documented: copy the checkout's files into `.oat
 
 - **git ≥ 2.5** (worktree add on arbitrary commit-ish); realistically any git from the last several years.
 - **gh CLI** (optional) for PR body refresh.
+- No other runtime tools: shell skills use `oat project scope --format value`, so `jq` is neither required nor permitted in bundled skills.
 
 ### Internal Dependencies
 
