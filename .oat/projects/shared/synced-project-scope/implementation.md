@@ -1035,6 +1035,21 @@ continuation_events: []
 - Verification: committed-HEAD autonomy-inventory and project-log fixtures passed 10/10, completion integration passed 19/19, and full `pnpm test` passed; lint, format, diff, exact four-file boundary, immediate parentage, and worktree cleanliness passed; root independently re-ran the focused 10/10 and 19/19 suites
 - Reason: refreshed deterministic prompt-site hashes, isolated the project-log fixture from globally installed CLI drift with a test-local shared-scope result, and aligned the packaged completion fixture with durable-project/local-scope terminology
 
+### Recovery Event p04-recovery-03-final-skill-contracts
+
+- Phase/task: p04 / p04-t11 phase verification
+- Original request: dispatch-synced-project-scope-p04-20260827T204100Z
+- Original commit: 13a858f12b73124dd6be5c6d6f133982dc8d82c0
+- Defect class: composition
+- Discovered by: `pnpm test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 3/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 75b8f83510d76dc4cf04b2ddd1380e0e43e3294a
+- Verification: suspected timeout cases passed individually 5/5 with no edit; focused skill-contract suites passed 191/191 and full `pnpm test` passed before and after commit; validate-skills, skill-bumps, lint, format, exact three-file boundary, immediate parentage, diff, and worktree cleanliness passed; root independently reran `skills.test.ts` at 141/141 plus the real-tree validator and skill-bump gate
+- Reason: aligned two stale `oat-project-next` version expectations with 1.0.12 and clarified the existing retro writeback-order contract for independent synced refs without changing public behavior
+
 ### Recovery Event recovery-p02-01-cli-phase-suite
 
 - Phase/task: p02 / p02-t11 phase verification
