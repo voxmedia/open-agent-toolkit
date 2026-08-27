@@ -252,6 +252,13 @@ The canonical surface splits active operational state (under `pjm/`) from durabl
 
 Decisions are now file-per-record under `reference/decisions/` (created and indexed with the [`oat decision`](config-and-local-state.md#oat-decision-) command group), replacing the legacy single `decision-record.md`. Repos still on the old `reference/` layout can migrate with `oat pjm migrate`.
 
+> **Current migration prerequisite:** In CLI `0.2.37`, `oat pjm migrate` still
+> requires project-scope `tools.project-management: true` in `.oat/config.json`;
+> a user-only pack install does not satisfy that gate. In an adopted legacy
+> repository, run `oat config set tools.project-management true` before the
+> migration preview. Removing this temporary coupling is tracked by
+> `BL-260827-correct-scope-and-adoption`.
+
 Decision records still require repository PJM adoption. Run `oat pjm init` first: like every repository-mutating PJM command, `oat decision init` fails closed in an unadopted repository, writes nothing, and returns `oat pjm init` as the recovery. Once the repository is adopted, `oat decision init` scaffolds only the decision surface — the decision directory, generated index, and decision-specific AGENTS guidance — without touching current state, roadmap, or backlog artifacts. It does not require the `project-management` pack. If the pack is installed later, its root guidance is maintained as a separate managed section so the decision instructions remain independently reusable.
 
 `oat pjm init` is idempotent and non-destructive. Existing reference docs are skipped and left unchanged, so curated repo state is not overwritten on repeated runs.
@@ -471,6 +478,11 @@ Key behavior:
 - Already-missing files are not an error
 - On success the pack's intent key is deleted from that scope's config file. It is never rewritten as `false`. A failed removal retains the key
 - A removal that finds no trace of a pack at a scope leaves that pack's intent alone. `No tools to remove.` means no durable state changed either, so `--all` in a repository whose packs are already gone will not quietly rewrite `.oat/config.json` or destroy the intent [`oat tools update`](#oat-tools-update) restores a fully-missing pack from
+- In `--json` output, the additive `packOutcomes` array reports `pack`, `scope`,
+  and `removed` for each attempted pack/scope pair. Automation should use
+  `removed: true` as the evidence that removal acted on that pack and its scoped
+  intent was eligible to be cleared; `removed: false` is a no-op and preserves
+  intent.
 - Removal-triggered sync prunes exactly the canonical provider views for the removed paths in that scope, leaving other scopes and packs untouched
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
