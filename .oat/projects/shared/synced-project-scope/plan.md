@@ -1964,7 +1964,8 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 | p02    | code     | fixes_completed | 2026-08-27 | reviews/code-p02-review-2026-08-27T071958Z.md                     | 7082c2b4205c8e287d79442e4d09bc76ced8ed80 | auto       | -                        |
 | p02    | code     | fixes_completed | 2026-08-27 | reviews/code-p02-review-2026-08-27T075217Z.md                     | 1fef87205999940086aeb9e14d0c3d80d8309c5a | auto       | -                        |
 | p02    | code     | fixes_completed | 2026-08-27 | reviews/code-p02-review-2026-08-27T081844Z.md                     | 00c9f24efb6b4a5fd4aaaadd40765853377c9b27 | auto       | -                        |
-| p02    | code     | fixes_added     | 2026-08-27 | reviews/code-p02-review-2026-08-27T124656Z.md                     | 7c8ee775bb12a24346927819de70cd0ff648350a | auto       | -                        |
+| p02    | code     | fixes_completed | 2026-08-27 | reviews/code-p02-review-2026-08-27T124656Z.md                     | 7c8ee775bb12a24346927819de70cd0ff648350a | auto       | -                        |
+| p02    | code     | received        | 2026-08-27 | reviews/code-p02-review-2026-08-27T132942Z.md                     | 7a03f675a74fbf687b75ae17e8205167d9899345 | auto       | -                        |
 | p03    | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | p04    | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | final  | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
