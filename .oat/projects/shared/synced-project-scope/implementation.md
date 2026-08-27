@@ -293,7 +293,44 @@ oat_generated: false
 
 ### p03-t11 upstream integration
 
-**Merge evidence:** Pre-merge feature HEAD `338cd286c3caca29de5d7e9589ca8d9ce917285b`; fetched `origin/main` `cb69a2869fe1d5715f13a3b6d966cd9b7ea845f8`; merge base `bf7aff9cbdbbd28d5709b93dbf0af2312cb0eb22`; pre-merge ahead/behind `108/10`. The 95 feature-changed paths and 229 upstream-changed paths had no overlap, the merge-tree preview reported no content conflicts, and `git merge --no-edit origin/main` created conflict-free merge `a72c8cf8b49afabfe33afd101f9c92a3b85f373a` with exactly the feature and upstream heads as parents. Both parents remain ancestors. The binary full-index upstream delta and merged-in delta have the same SHA-256 `0147c795eba955e74f1223bf05871529b3bbd997bcd806cb32213e4b1585825e`.
+**Merge evidence:** Pre-merge feature HEAD `338cd286c3caca29de5d7e9589ca8d9ce917285b`; fetched `origin/main` `cb69a2869fe1d5715f13a3b6d966cd9b7ea845f8`; merge base `bf7aff9cbdbbd28d5709b93dbf0af2312cb0eb22`; pre-merge ahead/behind `108/10`. The 95 feature-changed paths and 229 upstream-changed paths had no overlap, the merge-tree preview reported no content conflicts, and `git merge --no-edit origin/main` created conflict-free merge `a72c8cf8b49afabfe33afd101f9c92a3b85f373a` with exactly the feature and upstream heads as parents. Both parents remain ancestors.
+
+The merge result preserves the exact Git tree entry (mode, object type, and object ID, or mutual absence for a deletion) from the corresponding parent for every changed path. This was verified with the following reproducible command:
+
+```bash
+set -euo pipefail
+base=bf7aff9cbdbbd28d5709b93dbf0af2312cb0eb22
+upstream=cb69a2869fe1d5715f13a3b6d966cd9b7ea845f8
+feature=338cd286c3caca29de5d7e9589ca8d9ce917285b
+merge=a72c8cf8b49afabfe33afd101f9c92a3b85f373a
+upstream_count=$(git diff --name-only "$base" "$upstream" | wc -l | tr -d ' ')
+feature_count=$(git diff --name-only "$base" "$feature" | wc -l | tr -d ' ')
+overlap_count=$(comm -12 <(git diff --name-only "$base" "$upstream" | LC_ALL=C sort) <(git diff --name-only "$base" "$feature" | LC_ALL=C sort) | wc -l | tr -d ' ')
+upstream_mismatches=0
+while IFS= read -r changed_path; do
+  [[ "$(git ls-tree "$upstream" -- "$changed_path")" == "$(git ls-tree "$merge" -- "$changed_path")" ]] || ((upstream_mismatches += 1))
+done < <(git diff --name-only "$base" "$upstream")
+feature_mismatches=0
+while IFS= read -r changed_path; do
+  [[ "$(git ls-tree "$feature" -- "$changed_path")" == "$(git ls-tree "$merge" -- "$changed_path")" ]] || ((feature_mismatches += 1))
+done < <(git diff --name-only "$base" "$feature")
+printf 'upstream_paths=%s\nfeature_paths=%s\noverlap_paths=%s\nupstream_tree_mismatches=%s\nfeature_tree_mismatches=%s\n' "$upstream_count" "$feature_count" "$overlap_count" "$upstream_mismatches" "$feature_mismatches"
+test "$upstream_count" -eq 229
+test "$feature_count" -eq 95
+test "$overlap_count" -eq 0
+test "$upstream_mismatches" -eq 0
+test "$feature_mismatches" -eq 0
+```
+
+The command exited `0` and printed:
+
+```text
+upstream_paths=229
+feature_paths=95
+overlap_paths=0
+upstream_tree_mismatches=0
+feature_tree_mismatches=0
+```
 
 **Merged-tree gates:** `pnpm check=0`; `pnpm type-check=0`; `pnpm test=0`; `pnpm build=0`; `pnpm run check:skill-bumps=0`; `pnpm release:check-versions=1`; `pnpm release:validate=1`; `pnpm build:docs=0`; `pnpm lint=0`; `pnpm format=0`; `git diff --check=0`. Both release-policy failures have the same planned cause: shipped CLI/control-plane changes require all five public packages to advance above upstream `0.2.36`. Phase 4 task p04-t08 owns the lockstep bump; the branch is not CI-green or release-ready until that task makes both gates pass.
 
