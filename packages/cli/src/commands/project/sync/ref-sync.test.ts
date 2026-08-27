@@ -44,8 +44,9 @@ async function materializeRemoteTarget(target: SyncTarget): Promise<void> {
   );
 }
 
-async function installRejectingPostCheckoutHook(
+async function installRejectingHook(
   repoRoot: string,
+  hookName: string,
 ): Promise<void> {
   const hooksDir = git(repoRoot, [
     'rev-parse',
@@ -54,9 +55,30 @@ async function installRejectingPostCheckoutHook(
     'hooks',
   ]);
   await mkdir(hooksDir, { recursive: true });
-  await writeFile(join(hooksDir, 'post-checkout'), '#!/bin/sh\nexit 97\n', {
+  await writeFile(join(hooksDir, hookName), '#!/bin/sh\nexit 97\n', {
     mode: 0o755,
   });
+}
+
+function rejectingInheritedHookRunner(): GitRunner {
+  return {
+    async run(args, options) {
+      const hookCapable =
+        args.includes('commit') ||
+        args.includes('push') ||
+        args.includes('rebase');
+      const hooksSuppressed =
+        args[0] === '-c' && args[1] === 'core.hooksPath=/dev/null';
+      if (hookCapable && !hooksSuppressed) {
+        return {
+          code: 97,
+          stdout: '',
+          stderr: 'inherited common hook rejected minimal synced worktree',
+        };
+      }
+      return defaultGitRunner.run(args, options);
+    },
+  };
 }
 
 describe('createSyncedProject', () => {
@@ -99,7 +121,7 @@ describe('createSyncedProject', () => {
         '.oat/projects/shared',
         'hook-safe-create',
       );
-      await installRejectingPostCheckoutHook(fixture.cloneA);
+      await installRejectingHook(fixture.cloneA, 'post-checkout');
 
       await createSyncedProject(target, defaultGitRunner);
 
@@ -504,6 +526,30 @@ describe('pushSynced', () => {
     }
   });
 
+  it('does not run inherited commit or push hooks for pending synced edits', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'hook-safe-push',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await installRejectingHook(fixture.cloneA, 'pre-commit');
+      await installRejectingHook(fixture.cloneA, 'pre-push');
+      await writeFile(join(target.projectPath, 'state.md'), 'pending\n');
+
+      await expect(
+        pushSynced(target, defaultGitRunner, { message: 'hook-safe push' }),
+      ).resolves.toMatchObject({ status: 'pushed' });
+      expect(git(target.projectPath, ['log', '-1', '--format=%s'])).toBe(
+        'hook-safe push',
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('rebases a pending local edit on a non-overlapping remote advance', async () => {
     const fixture = await createSyncedFixture({ secondClone: true });
     try {
@@ -530,6 +576,7 @@ describe('pushSynced', () => {
         message: 'remote edit',
       });
       await writeFile(join(targetA.projectPath, 'local.md'), 'local\n', 'utf8');
+      await installRejectingHook(fixture.cloneA, 'pre-rebase');
       const local = await pushSynced(targetA, defaultGitRunner, {
         message: 'local edit',
       });
@@ -692,6 +739,8 @@ describe('pushSynced', () => {
         `+${targetA.ref}:${targetA.ref}`,
       ]);
       expect(calls).toContainEqual([
+        '-c',
+        'core.hooksPath=/dev/null',
         '-C',
         targetA.projectPath,
         'push',
@@ -795,7 +844,7 @@ describe('pullSynced', () => {
       await createSyncedProject(targetA, defaultGitRunner);
       await writeFile(join(targetA.projectPath, 'state.md'), 'published\n');
       await pushSynced(targetA, defaultGitRunner, {});
-      await installRejectingPostCheckoutHook(fixture.cloneB!);
+      await installRejectingHook(fixture.cloneB!, 'post-checkout');
 
       const result = await pullSynced(targetB, defaultGitRunner);
 
@@ -830,6 +879,38 @@ describe('pullSynced', () => {
       expect(await readFile(join(target.projectPath, 'draft.md'), 'utf8')).toBe(
         'do not touch\n',
       );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('does not run an inherited pre-rebase hook while updating a synced checkout', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const targetA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'hook-safe-pull-rebase',
+      );
+      const targetB = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        'hook-safe-pull-rebase',
+      );
+      await createSyncedProject(targetA, defaultGitRunner);
+      await writeFile(join(targetA.projectPath, 'state.md'), 'base\n');
+      await pushSynced(targetA, defaultGitRunner, { message: 'base' });
+      await pullSynced(targetB, defaultGitRunner);
+      await writeFile(join(targetA.projectPath, 'state.md'), 'remote\n');
+      await pushSynced(targetA, defaultGitRunner, { message: 'remote' });
+      await installRejectingHook(fixture.cloneB!, 'pre-rebase');
+
+      await expect(
+        pullSynced(targetB, defaultGitRunner),
+      ).resolves.toMatchObject({ status: 'updated' });
+      expect(
+        await readFile(join(targetB.projectPath, 'state.md'), 'utf8'),
+      ).toBe('remote\n');
     } finally {
       await fixture.cleanup();
     }
@@ -875,7 +956,7 @@ describe('pullSynced', () => {
       );
       git(targetB.projectPath, ['add', 'state.md']);
       await expect(
-        continueSynced(targetB, defaultGitRunner),
+        continueSynced(targetB, rejectingInheritedHookRunner()),
       ).resolves.toMatchObject({ status: 'updated' });
       await expect(
         pushSynced(targetB, defaultGitRunner, {}),
@@ -914,7 +995,7 @@ describe('pullSynced', () => {
         status: 'conflict',
         conflicts: ['local-name.md', 'old.md', 'remote-name.md'],
       });
-      await abortSynced(targetB, defaultGitRunner);
+      await abortSynced(targetB, rejectingInheritedHookRunner());
       expect(git(targetB.projectPath, ['status', '--porcelain'])).toBe('');
     } finally {
       await fixture.cleanup();

@@ -106,6 +106,11 @@ export interface MigrateSharedToSyncedOptions {
 }
 
 const ZERO_OBJECT_ID = '0000000000000000000000000000000000000000';
+const DISABLE_HOOKS_CONFIG = ['-c', 'core.hooksPath=/dev/null'] as const;
+
+function withHooksDisabled(args: string[]): string[] {
+  return [...DISABLE_HOOKS_CONFIG, ...args];
+}
 
 export function buildSyncTarget(
   repoRoot: string,
@@ -258,15 +263,13 @@ export async function createSyncedProject(
   try {
     await mkdir(dirname(target.projectPath), { recursive: true });
     await git.run(
-      [
-        '-c',
-        'core.hooksPath=/dev/null',
+      withHooksDisabled([
         'worktree',
         'add',
         '--detach',
         target.projectPath,
         target.ref,
-      ],
+      ]),
       { cwd: target.repoRoot },
     );
     worktreeAdded = true;
@@ -365,11 +368,11 @@ export async function pushSynced(
   assertExpectedGitResult('git diff --cached --quiet', staged, [0, 1]);
   if (staged.code === 1) {
     await git.run(
-      [
+      withHooksDisabled([
         'commit',
         '-m',
         options.message ?? `chore(oat): sync ${target.slug} artifacts`,
-      ],
+      ]),
       { cwd: target.projectPath },
     );
   }
@@ -391,7 +394,7 @@ export async function pushSynced(
     );
     assertExpectedGitResult('git merge-base --is-ancestor', ancestor, [0, 1]);
     if (ancestor.code === 1) {
-      const rebased = await git.run(['rebase', target.ref], {
+      const rebased = await git.run(withHooksDisabled(['rebase', target.ref]), {
         cwd: target.projectPath,
         allowFailure: true,
       });
@@ -415,7 +418,13 @@ export async function pushSynced(
 
   const pushedHead = await headSha(target, git);
   const pushed = await git.run(
-    ['-C', target.projectPath, 'push', target.remote, `HEAD:${target.ref}`],
+    withHooksDisabled([
+      '-C',
+      target.projectPath,
+      'push',
+      target.remote,
+      `HEAD:${target.ref}`,
+    ]),
     { cwd: target.repoRoot, allowFailure: true },
   );
   if (pushed.code !== 0) {
@@ -470,7 +479,7 @@ async function reconcilePulledRef(
     return { status: 'up-to-date', sha: beforeRebase };
   }
 
-  const rebased = await git.run(['rebase', target.ref], {
+  const rebased = await git.run(withHooksDisabled(['rebase', target.ref]), {
     cwd: target.projectPath,
     allowFailure: true,
   });
@@ -503,15 +512,13 @@ export async function pullSynced(
   if (!checkoutExists) {
     await mkdir(dirname(target.projectPath), { recursive: true });
     await git.run(
-      [
-        '-c',
-        'core.hooksPath=/dev/null',
+      withHooksDisabled([
         'worktree',
         'add',
         '--detach',
         target.projectPath,
         target.ref,
-      ],
+      ]),
       { cwd: target.repoRoot },
     );
     await assertNestedWorktree(target, git);
@@ -642,7 +649,7 @@ export async function continueSynced(
   git: GitRunner,
 ): Promise<PullResult> {
   await assertNestedWorktree(target, git);
-  const continued = await git.run(['rebase', '--continue'], {
+  const continued = await git.run(withHooksDisabled(['rebase', '--continue']), {
     cwd: target.projectPath,
     env: { GIT_EDITOR: 'true' },
     allowFailure: true,
@@ -666,7 +673,9 @@ export async function abortSynced(
   git: GitRunner,
 ): Promise<void> {
   await assertNestedWorktree(target, git);
-  await git.run(['rebase', '--abort'], { cwd: target.projectPath });
+  await git.run(withHooksDisabled(['rebase', '--abort']), {
+    cwd: target.projectPath,
+  });
 }
 
 function normalizedPathspecs(repoRoot: string, pathspecs: string[]): string[] {

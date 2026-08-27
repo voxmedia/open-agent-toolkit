@@ -97,6 +97,31 @@ async function createRepoRoot(): Promise<string> {
   return repoRoot;
 }
 
+async function installSyncedWorktreeRejectingHooks(
+  repoRoot: string,
+  hookNames: string[],
+): Promise<void> {
+  const hooksDir = execFileSync(
+    'git',
+    ['rev-parse', '--path-format=absolute', '--git-path', 'hooks'],
+    { cwd: repoRoot, encoding: 'utf8' },
+  ).trim();
+  await mkdir(hooksDir, { recursive: true });
+  const hook = [
+    '#!/bin/sh',
+    'case "$(git rev-parse --show-toplevel)" in',
+    '  */.oat/projects/synced/*) exit 97 ;;',
+    'esac',
+    'exit 0',
+    '',
+  ].join('\n');
+  await Promise.all(
+    hookNames.map((hookName) =>
+      writeFile(join(hooksDir, hookName), hook, { mode: 0o755 }),
+    ),
+  );
+}
+
 async function setProjectLogConfig(
   repoRoot: string,
   projectLog: true | false | 'auto',
@@ -248,9 +273,14 @@ describe('scaffoldProject', () => {
     ).toBe(before);
   });
 
-  it('publishes a synced scaffold and commits only its discovery record', async () => {
+  it('publishes a synced scaffold without running inherited synced-worktree hooks', async () => {
     const fixture = await createSyncedFixture();
     tempDirs.push(fixture.rootDir);
+    await installSyncedWorktreeRejectingHooks(fixture.cloneA, [
+      'post-checkout',
+      'pre-commit',
+      'pre-push',
+    ]);
 
     const result = await scaffoldProjectImpl({
       repoRoot: fixture.cloneA,
