@@ -1,0 +1,212 @@
+---
+oat_status: in_progress
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-08-27
+oat_phase: plan
+oat_phase_status: in_progress
+oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
+oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
+oat_plan_source: spec-driven # spec-driven | quick | imported
+oat_import_reference: null # e.g., references/imported-plan.md
+oat_import_source_path: null # original source path provided by user
+oat_import_provider: null # codex | cursor | claude | null
+oat_generated: false
+---
+
+# Implementation Plan: scope-adoption-diagnostics
+
+> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+
+**Goal:** {Brief goal statement from spec}
+
+**Architecture:** {1-2 sentence architecture summary from design}
+
+**Tech Stack:** {Key technologies from design}
+
+**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+
+## Planning Checklist
+
+- [ ] Confirmed HiLL checkpoints with user
+- [ ] Set `oat_plan_hill_phases` in frontmatter
+- [ ] Evaluated phases for parallelism opportunities
+- [ ] Set `oat_plan_parallel_groups` in frontmatter
+
+---
+
+## Parallelism
+
+Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
+
+```yaml
+oat_plan_parallel_groups: [['p02', 'p03']]
+```
+
+Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
+
+Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+
+---
+
+## Dispatch Profile
+
+_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
+
+Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
+
+| Phase | Claude model                     | Codex effort                   | Rationale                     |
+| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
+| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
+
+Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
+
+---
+
+RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Other task-body shapes, including non-TDD shapes, are allowed when appropriate, provided the plan preserves stable `pNN-tNN` IDs, per-task verification, and atomic commits.
+
+## Phase 1: {Phase Name}
+
+### Task p01-t01: {Task Name}
+
+**Files:**
+
+- Create: `{path/to/file.ts}`
+- Modify: `{path/to/existing.ts}`
+
+**Step 1: Write test (RED)**
+
+```typescript
+// {path/to/file.test.ts}
+describe('{feature}', () => {
+  it('{test case}', () => {
+    // Test implementation
+  });
+});
+```
+
+Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
+Expected: Test fails (RED)
+
+**Step 2: Implement (GREEN)**
+
+```typescript
+// {path/to/file.ts}
+// Implementation code or interface signatures
+```
+
+Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
+Expected: Test passes (GREEN)
+
+Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
+
+**Step 3: Refactor**
+
+{Any cleanup or improvements while tests stay green}
+
+**Step 4: Verify**
+
+Run: `pnpm lint && pnpm type-check`
+Expected: No errors
+
+**Step 5: Commit**
+
+```bash
+git add {files}
+git commit -m "feat(p01-t01): {description}"
+```
+
+---
+
+### Task p01-t02: {Task Name}
+
+**Files:**
+
+- {File list}
+
+**Step 1: Write test (RED)**
+
+{Test code}
+
+**Step 2: Implement (GREEN)**
+
+{Implementation code or signatures}
+
+**Step 3: Refactor**
+
+{Optional cleanup}
+
+**Step 4: Verify**
+
+Run: `{verification command}`
+Expected: {output}
+
+Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
+
+**Step 5: Commit**
+
+```bash
+git add {files}
+git commit -m "feat(p01-t02): {description}"
+```
+
+---
+
+## Phase 2: {Phase Name}
+
+### Task p02-t01: {Task Name}
+
+{Continue TDD pattern...}
+
+---
+
+## Reviews
+
+{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
+
+{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
+
+| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending | -    | -        | -             | -          | -           |
+| p02    | code     | pending | -    | -        | -             | -          | -           |
+| final  | code     | pending | -    | -        | -             | -          | -           |
+| spec   | artifact | pending | -    | -        | -             | -          | -           |
+| design | artifact | pending | -    | -        | -             | -          | -           |
+
+For code-review events, `Reviewed Head` is the full 40-character SHA at the
+head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
+`Gate Target` is populated only for gate events. Legacy five-column rows remain
+valid. Writers must preserve every existing row and every unknown trailing
+cell; never truncate a widened row back to five columns.
+
+**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
+
+**Meaning:**
+
+- `received`: review artifact exists (not yet converted into fix tasks)
+- `fixes_added`: fix tasks were added to the plan (work queued)
+- `fixes_completed`: fix tasks implemented, awaiting re-review
+- `passed`: re-review run and recorded as passing (no Critical/Important)
+
+---
+
+## Implementation Complete
+
+**Summary:**
+
+- Phase 1: {N} tasks - {Description}
+- Phase 2: {N} tasks - {Description}
+
+**Total: {N} tasks**
+
+Ready for code review and merge.
+
+---
+
+## References
+
+- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
+- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
+- Discovery: `discovery.md`
+- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
