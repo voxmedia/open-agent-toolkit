@@ -59,11 +59,11 @@ own the explicitly deferred residue.
 
 - Phase execution is delegated as one bounded phase to the exact resolver-selected implementer.
 - Phase review artifact:
-  `reviews/p01-review-2026-08-27T031035Z.md` (2 Critical, 2 Important,
+  `reviews/archived/p01-review-2026-08-27T031035Z.md` (2 Critical, 2 Important,
   1 Medium). Fix iteration 1 completed in
   `eeda0085b00cf508eec3e4b288bd4069477b84ec`.
 - Re-review artifact:
-  `reviews/p01-review-2026-08-27T035112Z.md` (1 Critical, 1 Important,
+  `reviews/archived/p01-review-2026-08-27T035112Z.md` (1 Critical, 1 Important,
   2 Medium). Final configured fix iteration 2 completed in
   `309cb7f9ac3d44513dc9836a14f738786dc01772`; re-review is pending.
 - Deferred non-blocking Medium findings:
@@ -72,7 +72,7 @@ own the explicitly deferred residue.
   - source/generation materialization lacks a complete shared forward-contract
     check and partial seed repair.
 - Final re-review artifact:
-  `reviews/p01-review-2026-08-27T041427Z.md` (1 Critical, 0 Important,
+  `reviews/archived/p01-review-2026-08-27T041427Z.md` (1 Critical, 0 Important,
   2 Medium). The Critical managed-root containment finding remains after two
   fix iterations.
 - Operator authorization: up to two additional Phase 1 review/fix iterations,
@@ -84,7 +84,7 @@ own the explicitly deferred residue.
   validates all selected targets before any mutation; the focused containment
   regression and removal suites pass. Fresh independent re-review is pending.
 - Passing re-review artifact:
-  `reviews/p01-review-2026-08-27T050410Z.md` (0 Critical, 0 Important,
+  `reviews/archived/p01-review-2026-08-27T050410Z.md` (0 Critical, 0 Important,
   2 Medium). Phase 1 passes at the configured blocking threshold; the two
   existing Medium findings remain deferred and nonblocking.
 
@@ -143,7 +143,7 @@ own the explicitly deferred residue.
   determine whether Phase 2 actually satisfies the single-reconcile-surface
   requirement.
 - Independent review artifact:
-  `reviews/p02-review-2026-08-27T055129Z.md` (5 Critical, 2 Important,
+  `reviews/archived/p02-review-2026-08-27T055129Z.md` (5 Critical, 2 Important,
   1 Medium). Fix iteration 1/2 must integrate production reconciliation and
   close the install, update, scope, inventory, and diagnostic defects.
 - Fix iteration 1 completed in
@@ -152,7 +152,7 @@ own the explicitly deferred residue.
   blocking findings have focused regression coverage. Fresh re-review is
   pending.
 - Re-review artifact:
-  `reviews/p02-review-2026-08-27T063435Z.md` (2 Critical, 1 Important,
+  `reviews/archived/p02-review-2026-08-27T063435Z.md` (2 Critical, 1 Important,
   1 Medium). Final configured fix iteration 2/2 must correct default no-Git
   post-hook routing, executable-mode idempotence, shared-owner update
   eligibility, and stale returned intent evidence.
@@ -161,7 +161,7 @@ own the explicitly deferred residue.
   regression coverage; 578 Phase 2 tests and 3,724 CLI tests pass. Decisive
   fresh re-review is pending.
 - Passing decisive re-review artifact:
-  `reviews/p02-review-2026-08-27T070524Z.md` (0 Critical, 0 Important,
+  `reviews/archived/p02-review-2026-08-27T070524Z.md` (0 Critical, 0 Important,
   0 Medium, 0 Minor). Phase 2 passes without a retry extension.
 
 **Verification:**
@@ -258,7 +258,7 @@ own the explicitly deferred residue.
 
 **Independent review:**
 
-- `reviews/p03-review-2026-08-27T074154Z.md` found 2 Critical, 2 Important,
+- `reviews/archived/p03-review-2026-08-27T074154Z.md` found 2 Critical, 2 Important,
   1 Medium, and 0 Minor findings. The review confirmed the shared-owner defect
   and also requires convergent provider-sync recovery, inspectable conflict and
   removal previews, legacy-false destination adoption, and manifest-derived
@@ -275,7 +275,7 @@ own the explicitly deferred residue.
   workspace tests, type-check, lint, format, and diff check. Root independently
   repeated the load-bearing shared/removal/migration suites: 6 files and 67
   tests passed.
-- Fresh re-review `reviews/p03-review-2026-08-27T081809Z.md` closed three
+- Fresh re-review `reviews/archived/p03-review-2026-08-27T081809Z.md` closed three
   original findings and reduced the remaining set to 0 Critical, 1 Important,
   1 Medium, and 0 Minor. Final configured fix iteration 2/2 will preserve the
   resolved project `--cwd` in recovery commands and make blocked preview
@@ -288,7 +288,7 @@ own the explicitly deferred residue.
 - The implementer passed 133 review-focused tests, 55 Phase 3 tests, 3,762 CLI
   tests, workspace tests, type-check, lint, format, and diff check. Root
   independently repeated the 133-test review boundary.
-- Decisive re-review `reviews/p03-review-2026-08-27T083913Z.md` closed the
+- Decisive re-review `reviews/archived/p03-review-2026-08-27T083913Z.md` closed the
   recovery-context finding but found one remaining Medium planner/JSON contract
   inconsistency: a blocked conflict is absent from preview additions but remains
   inside the serialized executable destination plan. Runtime execution remains
@@ -306,7 +306,7 @@ own the explicitly deferred residue.
 - The implementer passed 36 fix-focused tests, 133 regression tests, 55 Phase 3
   tests, 3,762 CLI tests, workspace tests, type-check, lint, format, and diff
   check. Root independently repeated the 36-test decisive boundary.
-- Decisive re-review `reviews/p03-review-2026-08-27T125029Z.md` found no
+- Decisive re-review `reviews/archived/p03-review-2026-08-27T125029Z.md` found no
   findings at any severity. Phase 3 passes, and its temporary retry limit is
   restored from 3 to the project default 2.
 
@@ -393,7 +393,7 @@ own the explicitly deferred residue.
 
 **Passing re-review:**
 
-- Artifact: `reviews/p05-review-2026-08-27T170000Z.md`, range
+- Artifact: `reviews/archived/p05-review-2026-08-27T170000Z.md`, range
   `b81a8bcc2..ab9250d68`; reconnaissance `attempted` with complete
   `## Review Orchestration` evidence. Verdict pass: 0 Critical, 0 Important,
   1 Medium, 5 Minor.
@@ -445,7 +445,7 @@ own the explicitly deferred residue.
 
 **Review outcome:**
 
-- Artifact: `reviews/p04-review-2026-08-27T133629Z.md` (0 Critical, 2 Important,
+- Artifact: `reviews/archived/p04-review-2026-08-27T133629Z.md` (0 Critical, 2 Important,
   3 Medium, 1 Minor). Blocking at the configured threshold.
 - Five of the six required audit targets were upheld: adoption cannot be forged
   by capability presence, writes fail closed, template precedence is correct,
@@ -572,7 +572,7 @@ individually and independently reproduced by root):**
 
 **Review outcome:**
 
-- Artifact: `reviews/p05-review-2026-08-27T154500Z.md` (0 Critical, 3 Important,
+- Artifact: `reviews/archived/p05-review-2026-08-27T154500Z.md` (0 Critical, 3 Important,
   4 Medium, 8 Minor). Blocking. Reconnaissance signal `attempted`, with complete
   `## Review Orchestration` evidence, so exactly one project-log entry
   referencing the artifact is owed at the terminal phase outcome.
@@ -718,7 +718,7 @@ individually and independently reproduced by root):**
   direction-required stop.
 - `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - Passing Phase 4 re-review: `oat-reviewer` at the Claude High ceiling, model
-  `opus`; artifact `reviews/p04-review-2026-08-27T144000Z.md`, range
+  `opus`; artifact `reviews/archived/p04-review-2026-08-27T144000Z.md`, range
   `bed357bab..f337df8b5`; reconnaissance `not-attempted`. Verdict pass:
   0 Critical, 0 Important, 1 Medium, 4 Minor. All five prior findings closed.
   The re-reviewer independently re-derived the ratchet scanner regex, confirmed
@@ -762,7 +762,7 @@ individually and independently reproduced by root):**
 - Phase 4 review: `oat-reviewer` at the Claude High ceiling, model `opus`,
   selection branch `matrix-pinned`, resolved via
   `oat project dispatch-ceiling resolve --provider claude --role reviewer`.
-  Artifact `reviews/p04-review-2026-08-27T133629Z.md`; reconnaissance signal
+  Artifact `reviews/archived/p04-review-2026-08-27T133629Z.md`; reconnaissance signal
   `not-attempted`, so no `## Review Orchestration` section and no project-log
   orchestration entry. Verdict blocking: 0 Critical, 2 Important, 3 Medium,
   1 Minor.
@@ -779,7 +779,7 @@ individually and independently reproduced by root):**
 - `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - Phase 1 review:
   `oat-reviewer-gpt-5-6-sol-high`; artifact
-  `reviews/p01-review-2026-08-27T031035Z.md`.
+  `reviews/archived/p01-review-2026-08-27T031035Z.md`.
 - `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Phase 2 implementation:
   `oat-phase-implementer-gpt-5-6-sol-high`, request
@@ -790,7 +790,7 @@ individually and independently reproduced by root):**
   commits `303dd6c75` and `95a692812` are reconciled. Phase gates pass, with the
   production-caller concern carried into independent review.
 - Phase 2 review:
-  `reviews/p02-review-2026-08-27T055129Z.md`; 5 Critical, 2 Important,
+  `reviews/archived/p02-review-2026-08-27T055129Z.md`; 5 Critical, 2 Important,
   1 Medium. All seven blocking findings are assigned to fix iteration 1/2.
 - `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Phase 2 fix iteration 1:
@@ -800,7 +800,7 @@ individually and independently reproduced by root):**
   114 focused tests, type-check, and diff check successfully.
 - `Dispatch: scope=p02-fix1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - Phase 2 re-review after fix iteration 1:
-  `reviews/p02-review-2026-08-27T063435Z.md`; 2 Critical, 1 Important,
+  `reviews/archived/p02-review-2026-08-27T063435Z.md`; 2 Critical, 1 Important,
   1 Medium. Final configured fix iteration 2/2 is required.
 - `Dispatch: scope=p02-review-fix1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Phase 2 fix iteration 2:
@@ -810,7 +810,7 @@ individually and independently reproduced by root):**
   diff check successfully.
 - `Dispatch: scope=p02-fix2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - Passing decisive Phase 2 re-review:
-  `reviews/p02-review-2026-08-27T070524Z.md`; 0 Critical, 0 Important,
+  `reviews/archived/p02-review-2026-08-27T070524Z.md`; 0 Critical, 0 Important,
   0 Medium, 0 Minor.
 - `Dispatch: scope=p02-review-fix2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Phase 3 implementation:
@@ -819,7 +819,7 @@ individually and independently reproduced by root):**
   `32d440898` through `7a4c1ab45`.
 - `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - Phase 3 review:
-  `reviews/p03-review-2026-08-27T074154Z.md`; 2 Critical, 2 Important,
+  `reviews/archived/p03-review-2026-08-27T074154Z.md`; 2 Critical, 2 Important,
   1 Medium, 0 Minor. All five findings are assigned to fix iteration 1/2.
 - `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Phase 3 fix iteration 1:
@@ -828,7 +828,7 @@ individually and independently reproduced by root):**
   diff gates passed; root repeated 67 load-bearing tests.
 - `Dispatch: scope=p03-fix1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - Phase 3 re-review after fix iteration 1:
-  `reviews/p03-review-2026-08-27T081809Z.md`; 0 Critical, 1 Important,
+  `reviews/archived/p03-review-2026-08-27T081809Z.md`; 0 Critical, 1 Important,
   1 Medium, 0 Minor. Both findings are assigned to final configured fix
   iteration 2/2.
 - `Dispatch: scope=p03-review-fix1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
@@ -838,7 +838,7 @@ individually and independently reproduced by root):**
   lint, format, and diff gates passed; root repeated 133 load-bearing tests.
 - `Dispatch: scope=p03-fix2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - Decisive Phase 3 re-review after fix iteration 2:
-  `reviews/p03-review-2026-08-27T083913Z.md`; 0 Critical, 0 Important,
+  `reviews/archived/p03-review-2026-08-27T083913Z.md`; 0 Critical, 0 Important,
   1 Medium, 0 Minor. The configured two fix iterations are exhausted.
 - `Dispatch: scope=p03-review-fix2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Phase 3 fix iteration 3:
@@ -848,7 +848,7 @@ individually and independently reproduced by root):**
   decisive tests.
 - `Dispatch: scope=p03-fix3 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - Passing decisive Phase 3 re-review:
-  `reviews/p03-review-2026-08-27T125029Z.md`; 0 Critical, 0 Important,
+  `reviews/archived/p03-review-2026-08-27T125029Z.md`; 0 Critical, 0 Important,
   0 Medium, 0 Minor.
 - `Dispatch: scope=p03-review-fix3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 
@@ -913,7 +913,7 @@ individually and independently reproduced by root):**
   37/37; CLI passed 3,677/3,677; the workspace suite passed.
 - `Dispatch: scope=p01-fix3 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - Passing Phase 1 re-review:
-  `reviews/p01-review-2026-08-27T050410Z.md`; 0 Critical, 0 Important,
+  `reviews/archived/p01-review-2026-08-27T050410Z.md`; 0 Critical, 0 Important,
   2 Medium. The prior containment finding is closed.
 - `Dispatch: scope=p01-review-fix3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Phase 1 fix iteration 2:
@@ -921,7 +921,7 @@ individually and independently reproduced by root):**
   removal and unambiguous shared-owner intent implemented. Focused suites passed
   243/243 and 37/37; CLI passed 3,676/3,676; workspace gates passed.
 - Final Phase 1 re-review:
-  `reviews/p01-review-2026-08-27T041427Z.md`; 1 Critical containment finding
+  `reviews/archived/p01-review-2026-08-27T041427Z.md`; 1 Critical containment finding
   remains at retry exhaustion.
 - `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Phase 1 fix iteration 1:
@@ -930,7 +930,7 @@ individually and independently reproduced by root):**
   and the workspace test/check/build/release/docs gates passed.
 - Phase 1 re-review:
   `oat-reviewer-gpt-5-6-sol-high`; artifact
-  `reviews/p01-review-2026-08-27T035112Z.md`; 1 Critical and 1 Important
+  `reviews/archived/p01-review-2026-08-27T035112Z.md`; 1 Critical and 1 Important
   finding require fix iteration 2.
 - `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 
@@ -1032,7 +1032,7 @@ individually and independently reproduced by root):**
 
 ### Final Review
 
-- Artifact: `reviews/final-review-2026-08-27T174707Z.md`, range
+- Artifact: `reviews/archived/final-review-2026-08-27T174707Z.md`, range
   `6f443c084..dd359d2bb`, reviewed head `dd359d2bb`; reconnaissance `attempted`
   with complete `## Review Orchestration` evidence. Verdict blocking:
   0 Critical, 2 Important, 9 Medium, 6 Minor.

@@ -202,7 +202,7 @@ continued. The full CLI suite now passes 3,787/3,787, and `pnpm check`,
 `git diff --check` all pass.
 Independent Phase 4 review (Claude High ceiling, model `opus`) returned a
 blocking verdict: 0 Critical, 2 Important, 3 Medium, 1 Minor, artifact
-`reviews/p04-review-2026-08-27T133629Z.md`. Five of six required audit targets
+`reviews/archived/p04-review-2026-08-27T133629Z.md`. Five of six required audit targets
 were upheld. Both blocking findings sit on the pack-placement-is-not-adoption
 boundary: production project-scope placement still writes repository root
 `AGENTS.md` because the CLI registers the reconciled pack command rather than
@@ -233,7 +233,7 @@ was set to `0.2.37` rather than the next patch because `origin/main` is at
 `0.2.36` while the merge-base is `0.2.32`, and main carries a stricter gate
 rejecting versions it has overtaken; root confirmed all three facts. The branch
 still needs a rebase onto current main before merge. Independent Phase 5 review returned a blocking verdict: 0 Critical, 3 Important,
-4 Medium, 8 Minor, artifact `reviews/p05-review-2026-08-27T154500Z.md`, with
+4 Medium, 8 Minor, artifact `reviews/archived/p05-review-2026-08-27T154500Z.md`, with
 reconnaissance `attempted` and complete orchestration evidence. Production code
 was found sound; the blocking set is the two test-only commits plus one
 shipped-contract gap. User-scope canonical agents install but reach no provider
