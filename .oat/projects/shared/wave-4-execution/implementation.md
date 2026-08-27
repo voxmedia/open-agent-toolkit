@@ -28,7 +28,7 @@ oat_generated: false
 | -------- | -------- | ----- | --------- |
 | Phase 01 | complete | 1     | 1/1       |
 
-**Total:** 1/1 tasks completed (phase review round 2 in progress)
+**Total:** 1/1 tasks completed (phase passed after three review cycles)
 
 ## Phase 01: refresh-codex-skill-routing (solo)
 
@@ -177,7 +177,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - M1 `documentsTheException` exempts on keyword alone (probes u6/u7/u9 single lines and u1/u3 wrapped continuations escape; u8 control fails) → **fix**: reviewer-verified predicate — an exempted line must not itself run `codex exec|resume`; drop or justify the dead `Do **not** add|Never pass` branch; align the comment.
 - m1 below-floor assertion pins phrase co-location to one clause (probe u5, a clearer rewrite, fails) → **fix**: assert the property semantically (`without blocking` within 200 chars of `below the route` in either order; no clause pairs `below the route` with `confirm before launching`; `>= 1` matches).
 - D1 cross-directory assertion iterates physical lines (probe w1 escapes at all three heads) → **fix**: use `logicalLines` (reviewer-validated one-liner).
-- D2 paragraph-level over-strictness → accepted (no current false failure). D3 drifted line citations in the dispatch brief → accepted (cosmetic). D4 in-flight `oat_last_commit` → resolved in this commit.
+- D2 paragraph-level over-strictness → accepted (no current false failure). D3 drifted line citations in the dispatch brief → accepted (cosmetic). D4 in-flight `oat_last_commit` → the `state.md` half was resolved in this commit; the Implementation Log fix-round-2 line was destroyed by a botched edit in `6075a705` and restored at the final-review receive (final round-1 I1).
 
 **Fix round `w4-p01-fix-003` (resumed implementer handle, append-only commit `44fb232773ee0360e4c891123ef069fc0bc137d6` on `39121c35`; test file only, +28/−19; `SKILL.md` byte-identical to `39121c35`; skill 1.3.0, packages 0.2.36):**
 
@@ -190,6 +190,28 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Review row `p01` → `passed` at `44fb2327` (round 3 dispositions root-verified under the cycle cap; final review verifies independently). Next: closeout baseline → root DoD → final review → configured exit gate.**
 
+### Review Received: final (round 1)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/final-review-2026-08-27T050607Z.md (reviewed head `41da6443304b0296d5fda899b9c3f10d1bc6815b`, range `3c135e21..41da6443`, invocation auto, dispatch `w4-final-review-001`, model opus)
+
+**Findings:** Critical 0 · Important 1 · Medium 4 · Minor 1 — no shipped-behavior defect: DoD 10/10 re-run by the reviewer at `41da6443`; every command example valid against live help; every offered/excluded route consistent with `provider-codex.md`; weaker-anywhere clean; the 22-probe matrix reproduces (`ALL PROBES MATCHED`); docs: no page references the old routing or bypass (`oat_docs_updated` → `skipped` at the document step is consistent). Two findings are contract-test guard breadth (the round-3 structural rule keys on two literal subcommand tokens; the below-floor assertion is evadable by paraphrase — the Codex `\bconfirm` patch is rejected but the concern is upheld); four are wrapper bookkeeping.
+
+**Deferred Findings Re-evaluation:** the reviewer's ledger closes R1 m1–m4, R2 m1–m2, R3 m1/D1, accepts D2/D3 and the STOP #2 reconciliation, and escalates the half-resolved D4 (now I1) and the R3 M1 partial closure (now M1).
+
+**Dispositions (bounded fix round on the final scope — cycle 1 of 3 for scope `final` — append-only `w4-final-fix-001` for the two test items; root bookkeeping in this commit):**
+
+- I1 Implementation Log: a botched edit in `6075a705` wrote a replacement callback's source in place of the round-2 line and dropped the round-3 line → **fixed** (both lines restored verbatim); D4 note corrected. Root cause: the receive script's `once` helper accepted a function as the replacement; the helper now rejects non-string replacements.
+- M1 structural exemption keys on `codex exec|resume` only (evasions e1 flag-only row with an allowlist phrase, e2 bare `codex`, e3 `codex e` alias) → **fix** (implementer): negative test on any live invocation of the binary (`/(?:^|[`\s])codex(?:\s|`)/`) and deny the exemption to flag-bearing table rows; e1–e3 must fail, the 22-probe matrix must stay matched.
+- M2 below-floor assertion evadable by paraphrase (b1 "ask for confirmation before running" passes; `\bconfirm` would false-fail b2) → **fix** (implementer): property-based denial of a confirmation/authorization _requirement_ in the below-floor clause set while allowing negated mentions; b1 must fail, b2/u4/u5/control must pass.
+- M3 Reviews ledger `p01` row paired the round-3 artifact with `44fb2327`, a head it never reviewed → **fixed**: head restored to `39121c35` with a note pointing at the root verification record; the root-verified pass at `44fb2327` is carried by this final review.
+- M4 stale status prose (`state.md` Artifacts/comment/Next Milestone; `implementation.md` Total line) → **fixed**.
+- m1 References `design.md`/`spec.md` residue → **fixed** (`N/A (quick mode)`).
+
+**Verification record (root):** what — I1/M3/M4/m1 edits; how — `rg -n 'm=>m|not started|day one|round 2 in progress|phase review in progress' <project>` returns nothing, `rg -n '39121c35' implementation.md` shows the restored line, `validate-plan` valid, `oxfmt --check` clean; where — this entry; independent verification — narrowed final round 2 after the implementer's fix commit.
+
+**Review row `final` → `fixes_added`; implementer fix round then narrowed round 2.**
+
 ## Implementation Log
 
 Chronological log of implementation progress.
@@ -199,7 +221,8 @@ Chronological log of implementation progress.
 - Preflight from main `3c135e21` (`worktree:init`, build, type-check exit 0; manifest restamp `f9db417c`); wrapper scaffolded `8e903a0c`; plan gate passed round 1 (`cursor-gpt-5-6-sol-xhigh`, run `0d369be4`, one medium mapped into rule 8); implement phase opened `51c7ec57`.
 - [x] p01-t01: Execute external plan — `b97408f2` (Opus implementer `w4-p01-impl-001`; DoD 10/10; Codex seven rounds, nine findings fixed pre-commit).
 - [x] p01-t01 fix round 1 — `d9ce0c33` (append-only; round-1 M1/M3/m1–m4; Codex three rounds under the stopping rule).
-      m=>m+'\n- [x] p01-t01 fix round 3 — `44fb2327` (append-only; round-3 M1/m1/D1 — structural exemption rule, semantic below-floor assertion, logical-line cross-directory check; test file only; root-run 22-probe matrix ALL MATCHED).'
+- [x] p01-t01 fix round 2 — `39121c35` (append-only; round-2 M1/M3/m1/m2: logical-line derivation + prose allowlist, non-blocking below-floor clause with an 8th contract case, `gpt-5.5` slug; Codex two clean rounds).
+- [x] p01-t01 fix round 3 — `44fb2327` (append-only; round-3 M1/m1/D1 — structural exemption rule, semantic below-floor assertion, logical-line cross-directory check; test file only; root-run 22-probe matrix ALL MATCHED).
 - Decisions: the operator-reconciled `--full-auto` replacement is evaluated per example row (a mechanical swap weakened the `danger-full-access` row and was caught by Codex); prose guards key on documented phrases and command-ish content, not hedging words; cross-model review stops at two clean rounds or below-Medium findings.
 - Blockers: none.
 
@@ -232,5 +255,4 @@ Earlier evidence: implementer DoD 10/10 at `b97408f2`, `d9ce0c33`, `39121c35`, `
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Design/Spec: N/A (quick mode)

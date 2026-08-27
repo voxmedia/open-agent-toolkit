@@ -1,5 +1,5 @@
 ---
-oat_current_task: null # p01-t01 implemented; phase review in progress
+oat_current_task: null # p01 passed at 44fb2327 (root-verified); closeout in progress
 oat_last_commit: 44fb2327 # p01-t01 third fix commit (last code commit; test file only)
 oat_blockers: []
 associated_issues:
@@ -83,18 +83,18 @@ oat_workflow_origin: native # native | imported
 #   receive_completed: false
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: skipped # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T01:55:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T04:57:28.488Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T05:11:22.314Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-4-execution
 
-**Status:** Implement — p01 passed at `44fb2327` (round-3 fixes root-verified under the cycle cap); closeout: root DoD → final review → configured exit gate
+**Status:** Implement — final review round 1 received (0C/1I/4M/1m: bookkeeping + guard breadth); bounded fix round then narrowed round 2 → configured exit gate
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
@@ -113,8 +113,8 @@ non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Rec
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode)
 - **Plan:** `plan.md` (complete — wrapper plan with drift-refresh record, live Codex reread, reconciliation, rule-1 addendum)
-- **Implementation:** `implementation.md` (scaffolded — not started)
-- **Orchestration log:** `orchestration-log.md` (day one)
+- **Implementation:** `implementation.md` (complete — task record, three review rounds, final summary; final review round 1 received)
+- **Orchestration log:** `orchestration-log.md` (Run 1 complete; synthesis at final-review receive)
 
 ## Progress
 
@@ -130,7 +130,8 @@ non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Rec
 - ✓ p01 review round 3 (narrowed, cycle 3 of 3): 0C/0I/1M/1m — guard hardening only; HEAD content correct
 - ✓ Bounded fix round `w4-p01-fix-003` (`44fb2327`, test only; root-run 22-probe matrix ALL MATCHED) — p01 `passed`
 - ✓ Closeout baseline / final verification: root DoD 10/10 at `6075a705`
-- ⧗ Final review (fresh Opus; independently verifies the round-3 fixes) → configured exit gate
+- ✓ Final review round 1 (fresh Opus): DoD 10/10, live-help + provider-reference + weaker-anywhere clean, 22-probe matrix matched; 0C/1I/4M/1m — bookkeeping (fixed) + two guard-breadth items (implementer fix round)
+- ⧗ Fix round `w4-final-fix-001` → narrowed final round 2 → configured exit gate → post-implement sequence
 
 ## Blockers
 
@@ -138,4 +139,4 @@ None
 
 ## Next Milestone
 
-p01 phase review → final review → configured exit gate → post-implement sequence → PR → merge → wave-close → program recap (generate only) → HUMAN-GATED completion-tail checkpoint. Completion tail: deferred to program close.
+Final fix round → narrowed final review round 2 → configured exit gate → post-implement sequence (summary → document [skipped: no docs reference the old routing] → pr) → merge → wave-close → program recap (generate only) → HUMAN-GATED completion-tail checkpoint. Completion tail: deferred to program close.

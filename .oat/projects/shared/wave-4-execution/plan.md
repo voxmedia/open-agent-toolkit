@@ -204,15 +204,17 @@ git commit -m "feat(p01-t01): route codex-skill through provider guidance and ma
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
-| p01    | code     | passed  | 2026-08-27 | reviews/archived/p01-review-2026-08-27T043458Z.md           | 44fb232773ee0360e4c891123ef069fc0bc137d6 | auto       | -                        |
-| final  | code     | pending | -          | -                                                           | -                                        | -          | -                        |
-| plan   | artifact | passed  | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020212Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                        |
-| design | artifact | pending | -          | -                                                           | -                                        | -          | -                        |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | passed      | 2026-08-27 | reviews/archived/p01-review-2026-08-27T043458Z.md           | 39121c35e3ee07d8b7785d783565ae89e087d337 | auto       | -                        |
+| final  | code     | fixes_added | 2026-08-27 | reviews/archived/final-review-2026-08-27T050607Z.md         | 41da6443304b0296d5fda899b9c3f10d1bc6815b | auto       | -                        |
+| plan   | artifact | passed      | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020212Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                        |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -                        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
+
+Note: the `p01` row cites the round-3 artifact at the head it reviewed (`39121c35`); the round-3 fixes landed in `44fb2327` as a reviewer-specified, root-verified bounded fix at the cycle cap (`implementation.md` § "Verification record (root, cycle-cap disposition)") and are independently verified by the `final` rows.
 
 ## Implementation Complete
 

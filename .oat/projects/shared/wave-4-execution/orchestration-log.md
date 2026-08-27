@@ -154,3 +154,19 @@ complete. Codex flagged one below-Medium follow-up (phrase-literal
 **Skill signal (strengthens):** a probe runner that fails loudly when no tests
 ran (`NO-TESTS-RAN`) — the implementer's first "before" run was a silent
 false-green from an unglobbed filename.
+
+### 2026-08-27 · structural · oat-project-implement · final review round 1
+
+`w4-final-review-001` (Opus, fresh) at `41da6443` → 0C/1I/4M/1m: no
+shipped-behavior defect (DoD 10/10, live help, provider reference,
+weaker-anywhere, 22-probe matrix all clean); the Important was a root
+bookkeeping corruption (a replacement callback's source written into the
+Implementation Log by `6075a705`, deleting the round-2 line); two Mediums are
+contract-guard breadth (three live spellings — bare `codex`, `codex e`,
+flag-only rows with an allowlist phrase — evade the structural rule; a
+paraphrased blocking requirement evades the below-floor assertion — the
+`\bconfirm` patch stays rejected). Root fixed the bookkeeping; implementer
+fix round `w4-final-fix-001` dispatched; narrowed round 2 follows.
+**Skill signal (gap):** the root's `once` helper accepted a function as a
+replacement and wrote its source; helpers must reject non-string replacements
+and every bookkeeping commit needs a post-write grep for `=>`/`$1` residue.
