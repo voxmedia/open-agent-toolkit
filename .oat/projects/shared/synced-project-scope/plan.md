@@ -2129,6 +2129,7 @@ git commit -m "feat(p04-t05): embed pinned artifact links in PRs and complete sy
 - Modify: `packages/cli/src/validation/skills.ts`
 - Modify: `packages/cli/src/validation/skills.test.ts`
 - Create: `packages/cli/src/validation/synced-bookkeeping-sites.json`
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md` (mechanical correction discovered by the new validator: resolve `PROJECT_SCOPE` inside the same fenced shell block as the fold-back artifact commit; its PR-scoped version was already bumped in p04-t03, so do not bump it again)
 
 **Step 1: Write test (RED)**
 
@@ -2139,7 +2140,7 @@ Expected: fails.
 
 **Step 2: Implement (GREEN)**
 
-Add the two content rules alongside the existing frontmatter rules; error messages name the file and line. `design.md` Dependencies already states the narrowed rule (applied during plan review); the validator implements that wording.
+Add the two content rules alongside the existing frontmatter rules; error messages name the file and line. `design.md` Dependencies already states the narrowed rule (applied during plan review); the validator implements that wording. Correct the real `oat-brainstorm` fold-back site exposed by the rule by resolving `PROJECT_SCOPE` fail-closed inside the same fenced shell block as its guarded `git add`/commit; do not rely on a variable from a prior fence.
 
 **Step 3: Verify**
 
@@ -2148,12 +2149,12 @@ Expected: green; real tree passes.
 
 **Step 4: Format**
 
-Run: `pnpm exec oxfmt --write packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts packages/cli/src/validation/synced-bookkeeping-sites.json`
+Run: `pnpm exec oxfmt --write packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts packages/cli/src/validation/synced-bookkeeping-sites.json .agents/skills/oat-brainstorm/SKILL.md`
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts packages/cli/src/validation/synced-bookkeeping-sites.json
+git add packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts packages/cli/src/validation/synced-bookkeeping-sites.json .agents/skills/oat-brainstorm/SKILL.md
 git commit -m "feat(p04-t06): validate skills never stage synced artifacts or require jq"
 ```
 
