@@ -210,6 +210,51 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('gets projects.defaultScope with source attribution', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, projects: { root: '.oat/projects/shared', defaultScope: 'shared' } })}\n`,
+      'utf8',
+    );
+
+    const plain = createHarness({ cwd: root });
+    await runCommand(plain.command, ['get', 'projects.defaultScope']);
+    expect(plain.capture.info[0]).toBe('shared');
+
+    const json = createHarness({ cwd: root });
+    await runCommand(
+      json.command,
+      ['get', 'projects.defaultScope'],
+      ['--json'],
+    );
+    expect(json.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      key: 'projects.defaultScope',
+      value: 'shared',
+      source: 'shared',
+    });
+  });
+
+  it('sets projects.defaultScope only to a supported scope', async () => {
+    const root = await createRepoRoot();
+    const valid = createHarness({ cwd: root });
+    await runCommand(valid.command, ['set', 'projects.defaultScope', 'local']);
+    expect(
+      JSON.parse(await readFile(join(root, '.oat', 'config.json'), 'utf8')),
+    ).toEqual({
+      version: 1,
+      projects: { root: '.oat/projects/shared', defaultScope: 'local' },
+    });
+
+    const invalid = createHarness({ cwd: root });
+    await runCommand(invalid.command, ['set', 'projects.defaultScope', 'foo']);
+    expect(process.exitCode).toBe(1);
+    expect(invalid.capture.error[0]).toContain(
+      'expected one of shared | local | synced',
+    );
+  });
+
   it('sets local config keys in config.local.json', async () => {
     const root = await createRepoRoot();
     const { command } = createHarness({ cwd: root });
@@ -1038,6 +1083,26 @@ describe('oat config', () => {
       expect(capture.error[0]).toContain('projects.root');
       expect(capture.error[0]).toContain('user');
     });
+
+    it.each(['--local', '--user'])(
+      'set projects.defaultScope %s is rejected',
+      async (surface) => {
+        const root = await createRepoRoot();
+        const home = await createHome();
+        const { command, capture } = createHarness({ cwd: root, home });
+
+        await runCommand(command, [
+          'set',
+          'projects.defaultScope',
+          'shared',
+          surface,
+        ]);
+
+        expect(process.exitCode).toBe(1);
+        expect(capture.error[0]).toContain('projects.defaultScope');
+        expect(capture.error[0]).toContain(surface.slice(2));
+      },
+    );
 
     it('set activeProject --shared is rejected as invalid surface', async () => {
       const root = await createRepoRoot();

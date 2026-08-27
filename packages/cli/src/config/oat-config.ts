@@ -44,6 +44,11 @@ export interface OatGitConfig {
   defaultBranch?: string;
 }
 
+export interface OatProjectsConfig {
+  root: string;
+  defaultScope?: 'shared' | 'local' | 'synced';
+}
+
 export interface OatArchiveConfig {
   s3Uri?: string;
   s3SyncOnComplete?: boolean;
@@ -896,7 +901,7 @@ export type OatToolsConfig = Partial<
 export interface OatConfig {
   version: number;
   worktrees?: { root: string };
-  projects?: { root: string };
+  projects?: OatProjectsConfig;
   git?: OatGitConfig;
   archive?: OatArchiveConfig;
   explainers?: OatExplainersConfig;
@@ -1038,12 +1043,20 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     next.worktrees = { root: parsed.worktrees.root.trim() };
   }
 
-  if (
-    isRecord(parsed.projects) &&
-    typeof parsed.projects.root === 'string' &&
-    parsed.projects.root.trim()
-  ) {
-    next.projects = { root: parsed.projects.root.trim() };
+  if (isRecord(parsed.projects)) {
+    const root =
+      typeof parsed.projects.root === 'string' && parsed.projects.root.trim()
+        ? parsed.projects.root.trim()
+        : undefined;
+    const defaultScope =
+      parsed.projects.defaultScope === 'shared' ||
+      parsed.projects.defaultScope === 'local' ||
+      parsed.projects.defaultScope === 'synced'
+        ? parsed.projects.defaultScope
+        : undefined;
+    if (root) {
+      next.projects = { root, ...(defaultScope ? { defaultScope } : {}) };
+    }
   }
 
   if (isRecord(parsed.git)) {

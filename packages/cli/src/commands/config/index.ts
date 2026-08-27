@@ -3,6 +3,7 @@ import { isAbsolute, join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import { PROJECT_SCOPES } from '@commands/shared/project-scope';
 import {
   confirmAction,
   type PromptContext,
@@ -116,6 +117,7 @@ type ConfigKey =
   | 'explainers.publish.publicBaseUrl'
   | 'explainers.publish.s3Uri'
   | 'git.defaultBranch'
+  | 'projects.defaultScope'
   | 'projects.root'
   | 'tools.brainstorm'
   | 'tools.core'
@@ -239,6 +241,7 @@ const KEY_ORDER: ConfigKey[] = [
   'explainers.publish.awsProfile',
   'git.defaultBranch',
   'projects.root',
+  'projects.defaultScope',
   'tools.brainstorm',
   'tools.core',
   'tools.docs',
@@ -287,6 +290,17 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set projects.root <value>',
     description: 'Root directory for tracked OAT projects in this repository.',
+  },
+  {
+    key: 'projects.defaultScope',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'enum',
+    defaultValue: 'synced',
+    mutability: 'read/write',
+    owningCommand: 'oat config set projects.defaultScope <shared|local|synced>',
+    description: 'Scope used by `oat project new` when `--scope` is omitted.',
   },
   {
     key: 'worktrees.root',
@@ -1260,6 +1274,7 @@ function parseExplainerValue(
 }
 
 const WORKFLOW_ENUM_VALUES = {
+  'projects.defaultScope': PROJECT_SCOPES,
   'workflow.hillCheckpointDefault': ['every', 'final'],
   'workflow.postImplementSequence': ['wait', 'summary', 'pr', 'docs-pr'],
   'workflow.reviewExecutionModel': ['subagent', 'inline', 'fresh-session'],
@@ -1323,6 +1338,7 @@ function isStateKey(key: ConfigKey): boolean {
 function isStructuralKey(key: ConfigKey): boolean {
   return (
     key === 'projects.root' ||
+    key === 'projects.defaultScope' ||
     key === 'worktrees.root' ||
     key === 'git.defaultBranch' ||
     key.startsWith('documentation.') ||
@@ -2150,6 +2166,22 @@ async function setConfigValue(
 
   const config = await dependencies.readOatConfig(repoRoot);
 
+  if (key === 'projects.defaultScope') {
+    const defaultScope = parseWorkflowValue(key, rawValue) as
+      | 'shared'
+      | 'local'
+      | 'synced';
+    await dependencies.writeOatConfig(repoRoot, {
+      ...config,
+      projects: {
+        root: config.projects?.root ?? '.oat/projects/shared',
+        ...config.projects,
+        defaultScope,
+      },
+    });
+    return { key, value: defaultScope, source: 'shared' };
+  }
+
   if (key.startsWith('documentation.')) {
     const doc = { ...config.documentation };
 
@@ -2279,7 +2311,7 @@ async function setConfigValue(
   if (key === 'projects.root') {
     await dependencies.writeOatConfig(repoRoot, {
       ...config,
-      projects: { root: normalizedValue },
+      projects: { ...config.projects, root: normalizedValue },
     });
   } else {
     await dependencies.writeOatConfig(repoRoot, {
