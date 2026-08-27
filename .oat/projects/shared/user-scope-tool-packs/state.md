@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T16:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T17:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -98,7 +98,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 5 review blocking
+**Status:** All phases implemented and reviewed — final review pending
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -244,8 +244,18 @@ Minor findings in one append-only commit,
 `ab9250d685fa89a588ad896ca594b446b173bea4`. Root independently reproduced the
 decisive I2 mutation test (8/8 fail with the mutation, 8/8 pass without),
 verified the commit boundary, and re-ran the complete CI gate sequence: all
-eleven gates exit 0 with 3,906 CLI tests. Decisive fresh independent re-review
-is pending.
+eleven gates exit 0 with 3,906 CLI tests. Decisive fresh independent re-review passed with 0 Critical and 0 Important
+(1 Medium, 5 Minor), so Phase 5 passes and all five phases are complete. The
+re-reviewer reproduced root's I2 mutation result exactly and killed three of
+four further mutations with the new tests, so both P0 safety behaviours —
+update's content refresh and migration's verify-before-remove ordering — are now
+defended by tests proven to catch real regressions. All four implementer
+judgment calls were upheld. One residual Medium remains: the
+`USER_SCOPE_MANAGED_AGENT_FILES` exclusion is unconditional while that
+materialization is provider-conditional, so on a Claude-only HOME
+`oat-reviewer` and `oat-phase-implementer` are under-reported by the new
+diagnostic. The reviewer recommends shipping with that Medium fixed, plus two
+docs minors and a rebase onto current main.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -255,7 +265,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (all phases implemented; p05 review pending)
+- **Implementation:** `implementation.md` (all five phases complete and passing)
 
 ## Progress
 
@@ -341,7 +351,9 @@ HiLL checkpoint and automatic checkpoint review.
 - ✗ Phase 5 review: 0 Critical, 3 Important, 4 Medium, 8 Minor
 - ✓ Phase 5 fix iteration 1/2 completed in `ab9250d68`
 - ✓ Root independently reproduced the I2 mutation test
-- ⧗ Phase 5 fresh independent re-review pending
+- ✓ Phase 5 decisive fresh independent re-review passed (0 Critical, 0 Important)
+- ✓ Phase 5 completed; all 34 planned tasks done across five phases
+- ⧗ Final verification, final review, and p05 HiLL checkpoint
 
 ## Blockers
 
@@ -349,4 +361,4 @@ None.
 
 ## Next Milestone
 
-Fresh independent Phase 5 re-review of fix commit `ab9250d68`.
+Final verification, final review, and the p05 HiLL checkpoint.

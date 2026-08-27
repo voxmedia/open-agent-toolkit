@@ -23,7 +23,7 @@ oat_generated: false
 | Phase 2 | completed | 9     | 9/9       |
 | Phase 3 | completed | 5     | 5/5       |
 | Phase 4 | completed | 7     | 7/7       |
-| Phase 5 | review    | 6     | 6/6       |
+| Phase 5 | completed | 6     | 6/6       |
 
 **Total:** 34/34 tasks completed
 
@@ -387,6 +387,31 @@ oat_generated: false
 - Follow-up: amend that design sentence during Phase 5 documentation rather than
   reverting the tests.
 
+**Passing re-review:**
+
+- Artifact: `reviews/p05-review-2026-08-27T170000Z.md`, range
+  `b81a8bcc2..ab9250d68`; reconnaissance `attempted` with complete
+  `## Review Orchestration` evidence. Verdict pass: 0 Critical, 0 Important,
+  1 Medium, 5 Minor.
+- The re-reviewer independently re-ran the I2 mutation and confirmed root's
+  result exactly (8 failed / 57 passed mutated; 65 passed clean), then attacked
+  the I3 legs with three further mutations: two were killed by the new tests and
+  one survived them but was killed by a pre-existing unit test. It also killed a
+  fourth mutation against the I1 diagnostic.
+- All four implementer judgment calls were upheld: I1 reporting `pass` with a
+  named message rather than exit 1 is correct given `workflows` and `research`
+  both default to user scope; the I3 harness seam weakened no pre-existing
+  assertion, verified at byte level; the migrate coverage shift is structurally
+  forced and FR8 is satisfied by the union with
+  `migrate/migrate.integration.test.ts`; and no further lockstep bump is needed.
+- I1 is recorded as **partially closed**. The residual is a new Medium: the
+  `USER_SCOPE_MANAGED_AGENT_FILES` exclusion in `pack-inventory.ts:230,236,242`
+  is unconditional, but that materialization is provider-conditional — only
+  Codex and Cursor register a materialization extension. On a Claude-only HOME,
+  `oat-reviewer` and `oat-phase-implementer` are under-reported. The reviewer
+  rated it Medium rather than Important because the pack is no longer reported
+  clean and the project-scope remedy is correct and verified to work.
+
 **Fix iteration 1/2:**
 
 - `oat-phase-implementer` at the Claude High ceiling, model `opus`. One
@@ -479,9 +504,9 @@ oat_generated: false
 
 ## Phase 5: Diagnostics, Documentation, and Release Readiness
 
-**Status:** implementation complete; independent review pending
+**Status:** completed
 **Started:** 2026-08-27
-**Completed:** -
+**Completed:** 2026-08-27
 
 ### Phase Summary
 
@@ -999,7 +1024,7 @@ individually and independently reproduced by root):**
 
 #### Outstanding Items
 
-- Fresh independent Phase 5 re-review of fix commit `ab9250d68`.
+- Final verification, final review, and the p05 HiLL checkpoint.
 
 ## Final Summary (for PR/docs)
 
