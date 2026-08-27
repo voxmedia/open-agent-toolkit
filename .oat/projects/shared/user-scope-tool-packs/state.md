@@ -1,7 +1,9 @@
 ---
 oat_current_task: p01-t07
 oat_last_commit: 309cb7f9ac3d44513dc9836a14f738786dc01772
-oat_blockers: []
+oat_blockers:
+  - task_id: p01-t07
+    reason: 'Final Phase 1 review found manifest-driven recursive removal bypasses managed-root validation; both configured fix iterations are exhausted.'
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
   ] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -82,7 +84,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T04:07:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T04:16:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -92,7 +94,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 1 review fixes
+**Status:** Blocked — Phase 1 review retry limit exhausted
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -101,7 +103,9 @@ oat_project_explainer:
 Phase 1 produced seven verified task commits. Its independent root-owned review
 found two Critical and two Important issues; bounded fix iteration 1 completed
 those four. Re-review found one Critical and one Important removal/ownership
-edge; final configured fix iteration 2 completed both and re-review is next.
+edge; final configured fix iteration 2 completed both. The final re-review found
+a new Critical managed-root containment defect in recursive removal, and the
+2/2 review-fix limit is exhausted.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -111,7 +115,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 1 re-review pending)
+- **Implementation:** `implementation.md` (blocked at Phase 1 review)
 
 ## Progress
 
@@ -139,12 +143,16 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 1 bounded review fix iteration 1 completed
 - ✓ Phase 1 re-review received
 - ✓ Phase 1 bounded review fix iteration 2 completed
-- ⧗ Phase 1 re-review after retry exhaustion boundary
+- ✓ Phase 1 re-review after retry exhaustion boundary
+- ✗ Critical managed-root containment finding remains
 
 ## Blockers
 
-None
+- `p01-t07`: Manifest-driven recursive removal must validate every deletion
+  target with the existing managed-root containment guard before mutation. Both
+  configured review-fix iterations are consumed.
 
 ## Next Milestone
 
-Re-review Phase 1 after the final configured fix iteration.
+Await operator direction: authorize an additional bounded fix iteration, defer
+the finding, or stop the project.

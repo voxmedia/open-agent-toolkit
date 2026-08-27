@@ -52,6 +52,10 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:1,minor:3 exit=0 status=ok artifact=.oat/projects/shared/user-scope-tool-packs/reviews/artifact-plan-review-2026-08-27T020356Z.md
 
+### 2026-08-27 · structural · oat-project-implement · p01
+
+Phase p01 blocked after 2/2 review-fix iterations; final review reviews/p01-review-2026-08-27T041427Z.md reports one Critical managed-root containment finding.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
