@@ -50,6 +50,14 @@ copying their content here. -->
   bundling publishes by atomic staged rename. Delivered through six final
   review rounds and five bounded fix batches; deferred residue lives in six
   `BL-260817-*` backlog items.
+- CLI `0.2.35` closes the hermetic-assets defect from the 2026-08-19 defect wave
+  program (wave 3 wrapper project `wave-3-execution`): `resolveAssetsRoot`
+  honors a non-empty `OAT_ASSETS_DIR` with the unchanged fail-closed bundle
+  validation (missing, malformed, or version-mismatched overrides error out
+  instead of falling back), the package-coverage smoke consumer reads a private
+  per-file bundle and asserts its own environment restoration and cleanup, and
+  the CLI unit suite neutralizes an ambient override at the vitest env seam.
+  Closed `BL-260817-let-resolveassetsroot-honor`.
 - CLI `0.2.34` closes the sync version-skew defect from the 2026-08-19 defect
   wave program (wave 2 wrapper project `wave-2-execution`): `oat sync` now
   compares each scope manifest's `oatVersion` with the invoking CLI before the

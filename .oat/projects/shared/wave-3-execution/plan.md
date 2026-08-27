@@ -208,7 +208,7 @@ closeout sequence):
        `summary.md` (generated at final-review receive; `oat project log rollup`) — before any archive step of the project
 4. [x] **Serialized backlog bookkeeping:** `oat backlog archive
 BL-260817-let-resolveassetsroot-honor` with a real outcome summary (this receive commit, after item 3)
-5. [ ] `document` step (post-implement sequence): document `OAT_ASSETS_DIR` in
+5. [x] `document` step (post-implement sequence): document `OAT_ASSETS_DIR` in
        `apps/oat-docs/docs/cli-utilities/configuration.md` (p01 round-1 m2) and refresh PJM current state
 
 ## References

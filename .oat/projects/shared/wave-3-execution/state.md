@@ -123,7 +123,7 @@ oat_post_implement_sequence:
   source: configured # workflow.postImplementSequence
   final_phase: p01
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending # pending | approved | not_required
   approval_source: null # null | user | oat-autonomous
   post_approval: []
@@ -133,12 +133,12 @@ oat_project_recap:
   decision: generate
   source: autonomous_policy
   decided_at: '2026-08-27T01:24:31.201Z'
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T23:08:35.576Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T01:24:36.842Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T01:24:40.999Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
