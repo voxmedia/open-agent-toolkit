@@ -3,6 +3,10 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import {
+  PROJECT_SCOPES,
+  type ProjectScope,
+} from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { Command, Option } from 'commander';
 
@@ -26,6 +30,7 @@ interface ProjectNewCommandOptions {
   commit: boolean;
   withProjectLog?: boolean;
   projectLog?: boolean;
+  scope?: ProjectScope;
 }
 
 interface ProjectNewDependencies {
@@ -39,6 +44,7 @@ interface ProjectNewDependencies {
     refreshDashboard: boolean;
     commit: boolean;
     projectLog?: boolean;
+    scope?: ProjectScope;
   }) => Promise<ScaffoldProjectResult>;
 }
 
@@ -57,6 +63,9 @@ function reportSuccess(
       status: 'ok',
       projectName,
       mode: result.mode,
+      scope: result.scope,
+      ref: result.ref,
+      sha: result.sha,
       projectPath: result.projectPath,
       projectsRoot: result.projectsRoot,
       createdFiles: result.createdFiles,
@@ -73,6 +82,10 @@ function reportSuccess(
 
   context.logger.info(`Created/updated OAT project: ${projectName}`);
   context.logger.info(`Project path: ${result.projectPath}`);
+  context.logger.info(`Scope: ${result.scope}`);
+  if (result.ref) {
+    context.logger.info(`Ref: ${result.ref}`);
+  }
   if (result.activePointerUpdated) {
     context.logger.info(
       'Active project updated in local config: .oat/config.local.json',
@@ -115,6 +128,7 @@ async function runProjectNew(
           : options.projectLog === false
             ? false
             : undefined,
+      scope: options.scope,
     });
 
     reportSuccess(context, projectName, result);
@@ -145,6 +159,9 @@ export function createProjectNewCommand(
       new Option('--mode <mode>', 'Scaffold mode')
         .choices(['spec-driven', 'quick', 'import'])
         .default('spec-driven'),
+    )
+    .addOption(
+      new Option('--scope <scope>', 'Project scope').choices(PROJECT_SCOPES),
     )
     .option('--force', 'Non-destructive scaffold; create missing files only')
     .option('--no-set-active', 'Do not update active project in local config')
