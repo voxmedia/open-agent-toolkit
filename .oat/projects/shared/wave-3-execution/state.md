@@ -83,18 +83,53 @@ oat_workflow_origin: native # native | imported
 #   receive_completed: false
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: 'sha256:9fbcb0c285de3d6f04890eccd1630329d1584f88da6575ec5437f074902b36e7' # same declaration as W2 generation 2 (--avoid none removed by the operator 2026-08-26)
+  resolved_command: 'OAT_GATE_EXEC_TIMEOUT_MS=2400000 oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings. Run every verification command in the foreground of your own turn: do not use background tasks, monitors, or waiters, and do not end your turn until the review artifact has been written and committed."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0 # generation 1
+  reviewed_head: e9a9575b761bb014c3c5a858dca4dbf24ed7acc4 # final review round 2 (passed) reviewed head; last code commit 6dc9cdd1
+  implementation_base_ref: origin/main # 39cea8017b73b602f247cb50a372d1fb9cae34f1
+  implementation_fingerprint: 'sha256:effective-delta-v1:0cb477cebd555533670fc670a813bde259b93d90f033ebcdc30276d2fa726a17' # effective delta at the last code commit 6dc9cdd1
+  freshness_head: null # set at receive (rolling checkpoint over closeout-only descendants)
+  freshness_fingerprint: null
+  launch_state: intent_persisted
+  launch_attempt_id: 'w3-exit-gate-g1-a1'
+  launch_started_at: '2026-08-27T01:08:10Z'
+  launch_result_receipt: '/private/tmp/claude-502/-Users-thomas-stang-orca-workspaces-open-agent-toolkit-bug-triage/99821df5-a46b-4bd0-a700-8b9284593b2c/scratchpad/w3-exit-gate-g1-a1.receipt.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-08-27T01:08:10.324Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T23:08:35.576Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T00:59:43.947Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T01:08:10.325Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-3-execution
 
-**Status:** Implement — final review round 1 received (0C/2I/4M/7m, all bookkeeping, resolved); narrowed round 2 → configured exit gate
+**Status:** Implement — final review passed (round 2 at `e9a9575b`); configured exit gate generation 1 launched
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
@@ -126,7 +161,8 @@ integration checkout `wave-3-execution` (BASE_SHA `39cea801`; code baseline
 - ✓ p01 review round 2 (narrowed): 0C/0I/0M/0m — phase passed
 - ✓ Closeout baseline / final verification: root DoD 10/10 at `cf53e818`
 - ✓ Final review round 1 (fresh Opus, built-CLI probes): 0C/2I/4M/7m — bookkeeping only, resolved at receive; summary.md generated, synthesis written, backlog item archived
-- ⧗ Final review round 2 (narrowed) → configured exit gate → post-implement sequence (summary → document → pr)
+- ✓ Final review round 2 (narrowed): 0/0/0/0 — `passed` at `e9a9575b`
+- ⧗ Configured exit gate generation 1 → post-implement sequence (summary → document → pr)
 
 ## Blockers
 
