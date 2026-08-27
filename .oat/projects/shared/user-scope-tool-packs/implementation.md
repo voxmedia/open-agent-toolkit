@@ -378,11 +378,32 @@ oat_generated: false
   here as the cause of recovery attempts 2/10 and 3/10 rather than silently
   absorbed.
 
-**Review concern:**
+**Review outcome:**
 
-- Independent review should confirm that `adoption.state` branching in the four
-  consuming skill contracts cannot be satisfied by global pack presence, and
-  that the user-scope installation leaves no repository-scoped writes behind.
+- Artifact: `reviews/p04-review-2026-08-27T133629Z.md` (0 Critical, 2 Important,
+  3 Medium, 1 Minor). Blocking at the configured threshold.
+- Five of the six required audit targets were upheld: adoption cannot be forged
+  by capability presence, writes fail closed, template precedence is correct,
+  installed-scope resource resolution is correct, and all three recovery commits
+  are genuinely inert (the reviewer recomputed the prompt-site hashes
+  independently).
+- Blocking findings, both on the "pack placement must not imply repository
+  adoption" boundary:
+  - I1 - production `oat init tools project-management --scope project` still
+    writes repository root `AGENTS.md`. p04-t04 fixed
+    `createInitToolsProjectManagementCommand`, but production registers
+    `createReconciledPackCommand`, so the p04-t04 regression test guards an
+    unreached path. Confirmed by root against the real CLI help output.
+  - I2 - `packages/cli/src/commands/decision/agents-guidance.ts:43` still
+    recommends `oat decision init`, which p04-t02 made fail closed in exactly
+    the situation the guidance describes. Its sibling body was updated in
+    p04-t04; this one was never touched in the phase range.
+- Non-blocking, recorded: M1 user-tier templates read `process.env.HOME` while
+  the installer writes to `os.homedir()`; M2 empty/unknown `adoption.state` is
+  unhandled in `oat-project-document` and `oat-project-summary`; M3
+  `oat-brainstorm` chains into a user-scope-default PJM skill by repo-relative
+  path; Minor aggregate `oat doctor` still keys on project pack intent, already
+  deferred to `p05-t01` and annotated `@deprecated`.
 
 ### Task p04-t01: Add durable PJM adoption state
 
@@ -435,12 +456,12 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Status    | Tasks | Review  | Fix loops |
-| ----- | --------- | ----- | ------- | --------- |
-| p01   | completed | 7/7   | passed  | 3         |
-| p02   | completed | 9/9   | passed  | 2         |
-| p03   | completed | 5/5   | passed  | 3         |
-| p04   | review    | 7/7   | pending | 0         |
+| Phase | Status    | Tasks | Review   | Fix loops |
+| ----- | --------- | ----- | -------- | --------- |
+| p01   | completed | 7/7   | passed   | 3         |
+| p02   | completed | 9/9   | passed   | 2         |
+| p03   | completed | 5/5   | passed   | 3         |
+| p04   | review    | 7/7   | blocking | 0         |
 
 #### Root-inline phase
 
@@ -469,6 +490,14 @@ oat_generated: false
   this entry, and the omission is what caused the child's terminal
   direction-required stop.
 - `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Phase 4 review: `oat-reviewer` at the Claude High ceiling, model `opus`,
+  selection branch `matrix-pinned`, resolved via
+  `oat project dispatch-ceiling resolve --provider claude --role reviewer`.
+  Artifact `reviews/p04-review-2026-08-27T133629Z.md`; reconnaissance signal
+  `not-attempted`, so no `## Review Orchestration` section and no project-log
+  orchestration entry. Verdict blocking: 0 Critical, 2 Important, 3 Medium,
+  1 Minor.
+- `Dispatch: scope=p04 action=review role=reviewer producer=claude provenance=resolver model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer(model=opus)`
 - Phase 4 report: `BLOCKED`, 7/7 tasks done, phase verification fail, recovery
   attempts 0/10, worktree clean, no reservation or edit. Validated against the
   pre-attempt `direction-required` row: `pending_attempt` was null, usage was
@@ -730,7 +759,7 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Dispatch the independent Phase 4 review.
+- Resolve the two blocking Phase 4 review findings (I1, I2).
 
 ## Final Summary (for PR/docs)
 

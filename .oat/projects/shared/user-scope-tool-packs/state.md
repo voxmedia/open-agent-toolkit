@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T13:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T14:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -98,7 +98,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 4 awaiting independent review
+**Status:** Implementation in progress — Phase 4 review blocking
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -199,7 +199,18 @@ Recovery attempt 2/10 realigned the version pins in
 recovery-volume warning; every eligibility condition still held, so the run
 continued. The full CLI suite now passes 3,787/3,787, and `pnpm check`,
 `pnpm type-check`, `pnpm lint`, `pnpm format`, `check:skill-bumps`, and
-`git diff --check` all pass. Independent Phase 4 review is pending.
+`git diff --check` all pass.
+Independent Phase 4 review (Claude High ceiling, model `opus`) returned a
+blocking verdict: 0 Critical, 2 Important, 3 Medium, 1 Minor, artifact
+`reviews/p04-review-2026-08-27T133629Z.md`. Five of six required audit targets
+were upheld. Both blocking findings sit on the pack-placement-is-not-adoption
+boundary: production project-scope placement still writes repository root
+`AGENTS.md` because the CLI registers the reconciled pack command rather than
+the adapter p04-t04 fixed, and generated decision guidance still recommends
+`oat decision init`, which p04-t02 made fail closed. Root independently
+confirmed both. The first of two configured review-fix iterations is pending,
+and its route requires a decision because the original phase target is
+unbindable from the active provider.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -282,7 +293,9 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 4 recovery attempt 3/10 reconciled (prompt-site inventory)
 - ⚠ Elevated recovery-volume warning recorded at 3 p04 events
 - ✓ Full CLI suite passed 3,787/3,787 with all workspace gates green
-- ⧗ Phase 4 independent review pending
+- ✓ Phase 4 independent review received (Claude High, `opus`)
+- ✗ Phase 4 review: 0 Critical, 2 Important, 3 Medium, 1 Minor
+- ⧗ Phase 4 fix iteration 1/2 pending route decision
 
 ## Blockers
 
@@ -290,4 +303,4 @@ None.
 
 ## Next Milestone
 
-Dispatch the independent Phase 4 review.
+Resolve the two blocking Phase 4 review findings (I1, I2).
