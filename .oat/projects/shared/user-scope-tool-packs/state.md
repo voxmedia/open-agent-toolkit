@@ -25,8 +25,17 @@ oat_phase_recovery_policy:
   phase_attempt_limits: {}
   phase_attempt_usage:
     p02:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: '36a35349-8d93-430f-805a-a670b613ca68'
+        original_request_id: 'd9cf84cf-abf6-459b-831c-8768658de1e8'
+        original_task_id: 'p02-t08'
+        original_commit: '382f13c706295a2bfafdd7f6373bbc8633eb0678'
+        discovered_by: 'pnpm --filter @open-agent-toolkit/cli test'
+        dispatch_target: 'oat-phase-implementer-gpt-5-6-sol-high'
+        reservation_head: 'c6bd82c710bf3af9f6a63833e95700c8e57cc0ee'
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit

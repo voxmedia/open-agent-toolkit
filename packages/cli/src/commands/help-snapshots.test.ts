@@ -766,7 +766,8 @@ describe('help output snapshots', () => {
       Options:
         --scope <scope>  Limit execution scope (choices: "project", "user", "all",
                          default: "all")
-        --pack <pack>    Skill pack to remove (ideas|docs|workflows|utility|research)
+        --pack <pack>    Skill pack to remove
+                         (core|ideas|docs|workflows|utility|project-management|research|brainstorm)
         --dry-run        Preview removal without applying
         -h, --help       display help for command
 
