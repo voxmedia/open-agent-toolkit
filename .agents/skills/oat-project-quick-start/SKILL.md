@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.3.5
+version: 2.3.6
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -207,8 +207,14 @@ Keep this concise and outcome-oriented.
 If discovery/state artifacts were updated and the skill is about to pause for the Step 2.5 design-depth decision, commit those artifact changes first so the project can be resumed cleanly.
 
 ```bash
-git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md"
-git diff --cached --quiet || git commit -m "chore(oat): capture quick-start discovery for {project-name}"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): capture quick-start discovery for {project-name}"
+else
+  git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md"
+  git diff --cached --quiet || git commit -m "chore(oat): capture quick-start discovery for {project-name}"
+fi
 ```
 
 ### Step 2.5: Decision Point — Design Depth
@@ -259,8 +265,14 @@ oat project complete-discovery "$PROJECT_PATH" --ready-for oat-project-design
 - Commit the promoted discovery/state artifacts before stopping:
 
 ```bash
-git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md"
-git diff --cached --quiet || git commit -m "chore(oat): promote quick-start discovery for {project-name}"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): promote quick-start discovery for {project-name}"
+else
+  git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md"
+  git diff --cached --quiet || git commit -m "chore(oat): promote quick-start discovery for {project-name}"
+fi
 ```
 
 - Inform the user: "Discovery is complete. Run `oat-project-design` next — it will confirm requirements and produce both `spec.md` and `design.md` in one collaborative pass. If you'd rather formalize requirements without designing yet, `oat-project-spec` remains available as an optional standalone step."
@@ -457,16 +469,28 @@ Update `"$PROJECT_PATH/state.md"` to reflect the design phase:
 Before proceeding to plan generation or pausing for validation, persist the design bookkeeping:
 
 ```bash
-git add "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
-git diff --cached --quiet || git commit -m "chore(oat): capture quick-start design for {project-name}"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): capture quick-start design for {project-name}"
+else
+  git add "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
+  git diff --cached --quiet || git commit -m "chore(oat): capture quick-start design for {project-name}"
+fi
 ```
 
 Complete discovery through the CLI validation boundary before proceeding to plan generation:
 
 ```bash
 oat project complete-discovery "$PROJECT_PATH" --ready-for oat-project-quick-start
-git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md"
-git diff --cached --quiet || git commit -m "chore(oat): complete quick-start discovery for {project-name}"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): complete quick-start discovery for {project-name}"
+else
+  git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md"
+  git diff --cached --quiet || git commit -m "chore(oat): complete quick-start discovery for {project-name}"
+fi
 ```
 
 ### Step 2.9: Snapshot Explicit Phase-Review Setting Before Plan Rewrite
@@ -818,15 +842,21 @@ oat state refresh
 After dashboard refresh, stage and commit the changed quick-start artifacts before handing off to implementation or stopping.
 
 ```bash
-for path in \
-  "$PROJECT_PATH/discovery.md" \
-  "$PROJECT_PATH/design.md" \
-  "$PROJECT_PATH/plan.md" \
-  "$PROJECT_PATH/implementation.md" \
-  "$PROJECT_PATH/state.md"; do
-  [ -e "$path" ] && git add "$path"
-done
-git diff --cached --quiet || git commit -m "chore(oat): update quick-start artifacts for {project-name}"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): update quick-start artifacts for {project-name}"
+else
+  for path in \
+    "$PROJECT_PATH/discovery.md" \
+    "$PROJECT_PATH/design.md" \
+    "$PROJECT_PATH/plan.md" \
+    "$PROJECT_PATH/implementation.md" \
+    "$PROJECT_PATH/state.md"; do
+    [ -e "$path" ] && git add "$path"
+  done
+  git diff --cached --quiet || git commit -m "chore(oat): update quick-start artifacts for {project-name}"
+fi
 ```
 
 ### Step 7: Output Next Action

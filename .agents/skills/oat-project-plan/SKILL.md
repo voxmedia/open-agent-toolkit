@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.4.4
+version: 1.4.5
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -641,8 +641,10 @@ Planning - Ready for implementation
 ### Step 15: Commit Plan
 
 ```bash
-git add "$PROJECT_PATH/"
-git commit -m "docs: complete implementation plan for {project-name}
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "docs: complete implementation plan for {project-name}
 
 Phases:
 - Phase 1: {description} ({N} tasks)
@@ -651,6 +653,18 @@ Phases:
 Total: {N} tasks
 
 Ready for implementation"
+else
+  git add "$PROJECT_PATH/"
+  git commit -m "docs: complete implementation plan for {project-name}
+
+Phases:
+- Phase 1: {description} ({N} tasks)
+- Phase 2: {description} ({N} tasks)
+
+Total: {N} tasks
+
+Ready for implementation"
+fi
 ```
 
 ### Step 15.5: Generate the Project Explainer When Selected

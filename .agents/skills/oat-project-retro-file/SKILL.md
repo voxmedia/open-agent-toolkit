@@ -1,6 +1,6 @@
 ---
 name: oat-project-retro-file
-version: 1.0.1
+version: 1.0.2
 description: Use when the user requests or confirms filing proposed feedback from a project retro into repository or upstream GitHub issues and OAT backlog items. Runs destination capability, duplicate, approval, and sanitization checks before filing, then writes destinations and statuses back to the retro artifact.
 disable-model-invocation: false
 user-invocable: true
@@ -16,7 +16,7 @@ idempotent status writeback.
 This skill never applies `Disposition: apply` repo edits and never mutates
 `oat_retro_promotions`.
 
-## Progress Indicators
+## Progress Indicators (User-Facing)
 
 Print one banner and concise step indicators:
 
