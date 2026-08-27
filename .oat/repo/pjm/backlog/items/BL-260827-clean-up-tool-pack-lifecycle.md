@@ -22,8 +22,9 @@ Resolve the five remaining reviewed lifecycle and configuration consistency gaps
 
 ## Acceptance Criteria
 
-- `seed-if-missing` assets compare the installed content digest with the
-  bundled digest so unchanged assets are not mislabeled as retained overrides.
+- Source-backed `seed-if-missing` assets compare installed and bundled content
+  digests so unchanged defaults are not mislabeled as retained overrides;
+  generated seeds preserve their generation-aware presence/schema contracts.
 - Legacy repository scans report the exact pack intents they adopted instead
   of silently promoting every detected project pack.
 - Skill and agent inventory detects content drift even when the installed and

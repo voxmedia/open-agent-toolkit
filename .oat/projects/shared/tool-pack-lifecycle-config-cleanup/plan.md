@@ -5,208 +5,386 @@ oat_blockers: []
 oat_last_updated: 2026-08-27
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_parallel_groups:
+  - [p01, p02]
+oat_phase_review_gate: false
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
+oat_template: true
 ---
 
-# Implementation Plan: tool-pack-lifecycle-config-cleanup
+# Implementation Plan: Tool-Pack Lifecycle and Config Cleanup
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> Execute this plan using `oat-project-implement`. Phases p01 and p02 may run
+> in isolated worktrees; p03 follows their merge.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Close the five residual lifecycle/config findings from the
+user-scope tool-pack final review without reopening the architecture or
+changing additive install semantics.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** Reuse the canonical pack manifest, digest helpers, inventory
+model, project-config reconciler, and Commander adapters. Correct evidence and
+validation at those existing boundaries rather than adding a second lifecycle
+model.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** TypeScript ESM, Commander, Vitest, pnpm workspaces, Turborepo,
+oxfmt, and Fumadocs Markdown.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
-
-## Planning Checklist
-
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
-
----
+**Commit Convention:** `{type}({task-id}): {description}`
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
+Phases p01 and p02 are one parallel group. p01 owns pack inventory and its
+focused fixtures; p02 owns project-config reconciliation, config commands, and
+per-pack command registration. Their production write sets and focused suites
+are disjoint. Phase p03 follows both because it selects lockstep package
+versions, updates any combined upgrade documentation, and verifies the merged
+tree.
 
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
+## Phase 1: Content-Accurate Pack Inventory
 
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
+**Goal:** Classify managed and seed-if-missing content from canonical digest
+evidence instead of presence or version metadata alone.
 
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
-
----
-
-## Dispatch Profile
-
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
-
----
-
-RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Other task-body shapes, including non-TDD shapes, are allowed when appropriate, provided the plan preserves stable `pNN-tNN` IDs, per-task verification, and atomic commits.
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Distinguish seed defaults from retained overrides
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Modify: `packages/cli/src/commands/tools/shared/pack-inventory.ts`
+- Modify: `packages/cli/src/commands/tools/shared/pack-inventory.test.ts`
 
-**Step 1: Write test (RED)**
+**Step 1: Write tests (RED)**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+Cover a source-backed seed-if-missing asset that is absent, byte-identical to
+the bundle, and intentionally modified. Assert the identical asset is
+classified as the bundled default, while the modified asset remains a retained
+override and is never overwritten by inventory. Also cover generated seeds for
+projects-root default, projects-config default, and empty-file generation;
+assert they retain their generation-aware presence/schema contracts and are not
+treated as byte-for-byte bundled files.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-inventory.test.ts`
+
+Expected: fail because every present seed-if-missing asset currently collapses
+to the same status.
 
 **Step 2: Implement (GREEN)**
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
+For source-backed seed-if-missing assets, resolve and validate the bundled
+source, compare installed and bundled content using the existing bounded digest
+helpers, and emit distinct current/default versus retained-override evidence.
+Branch generated seeds through their manifest generation contract without
+requiring a source or raw-byte equivalence. Preserve missing behavior and
+read-only inventory semantics.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
+**Step 3: Format**
 
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
-
-**Step 3: Refactor**
-
-{Any cleanup or improvements while tests stay green}
+Run:
+`pnpm exec oxfmt --write packages/cli/src/commands/tools/shared/pack-inventory.ts packages/cli/src/commands/tools/shared/pack-inventory.test.ts`
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
+Run the focused test command again; expected: pass.
 
 **Step 5: Commit**
 
-```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
-```
+`git commit -m "fix(p01-t01): classify seeded pack assets by content"`
 
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t02: Detect same-version skill and agent drift
 
 **Files:**
 
-- {File list}
+- Modify: `packages/cli/src/commands/tools/shared/pack-inventory.ts`
+- Modify: `packages/cli/src/commands/tools/shared/pack-inventory.test.ts`
 
-**Step 1: Write test (RED)**
+**Step 1: Write tests (RED)**
 
-{Test code}
+For both a skill directory and agent file, keep installed and bundled version
+metadata equal while changing managed content. Assert inventory reports drift.
+Pin the complete precedence matrix: with a valid bundled version, absent or
+malformed installed metadata parses through the existing zero-version contract
+and is `outdated`; an older installed version is `outdated`; a newer installed
+version remains `newer`; malformed bundled metadata preserves the current
+parse/compare behavior; and equal versions are `current` only when canonical
+content also matches and `outdated` when it differs.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-inventory.test.ts`
+
+Expected: fail because equal versions currently short-circuit content
+comparison.
 
 **Step 2: Implement (GREEN)**
 
-{Implementation code or signatures}
+Preserve missing, malformed, older, and newer version outcomes. Only the
+equal-version branch adds a canonical content digest requirement before it can
+return current. Reuse the canonical materialized source and installed-path
+boundaries so ignored or unrelated files do not become drift evidence.
 
-**Step 3: Refactor**
+**Step 3: Format**
 
-{Optional cleanup}
+Run the same file-scoped `oxfmt --write` command from p01-t01.
 
 **Step 4: Verify**
 
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
+Run the focused test command again; expected: pass for skill, agent, and static
+asset matrices.
 
 **Step 5: Commit**
 
-```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
-```
+`git commit -m "fix(p01-t02): detect version-equal pack content drift"`
 
----
+**Phase 1 Verification:**
 
-## Phase 2: {Phase Name}
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-inventory.test.ts src/commands/doctor/index.test.ts src/commands/status/index.test.ts`
 
-### Task p02-t01: {Task Name}
+Expected: inventory and both consumers pass with the refined evidence.
 
-{Continue TDD pattern...}
+## Phase 2: Explicit Adoption and Supported CLI State
 
----
+**Goal:** Make config adoption observable and prevent public commands from
+creating or advertising unsupported lifecycle states.
+
+### Task p02-t01: Report exact legacy pack intents adopted
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/shared/project-tools-config.ts`
+- Modify: `packages/cli/src/commands/tools/shared/project-tools-config.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/index.ts`
+- Modify: `packages/cli/src/commands/init/tools/index.test.ts`
+- Modify: `packages/cli/src/commands/tools/update/index.ts`
+- Modify: `packages/cli/src/commands/tools/update/index.test.ts`
+
+**Step 1: Write tests (RED)**
+
+Cover one newly adopted pack, several newly adopted packs, already-declared
+packs, custom tools, and a second idempotent run. Assert the reconciler returns
+the exact newly adopted pack names in canonical order and writes only when the
+set is non-empty. At both install and update command boundaries, assert one
+human-visible report per adopted pack and an ordered adopted-pack field in JSON
+output; the second run emits neither human nor JSON adoption output.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/project-tools-config.test.ts src/commands/init/tools/index.test.ts src/commands/tools/update/index.test.ts`
+
+Expected: fail because the reconciler returns only `written` or `unchanged`.
+
+**Step 2: Implement (GREEN)**
+
+Return a structured result containing action and adopted pack names. Preserve
+the canonical scanner and one atomic config write. Update both concrete callers
+to surface the adoption set in human and JSON results without changing which
+detected packs are eligible.
+
+**Step 3: Format**
+
+Run:
+`pnpm exec oxfmt --write packages/cli/src/commands/tools/shared/project-tools-config.ts packages/cli/src/commands/tools/shared/project-tools-config.test.ts`
+
+Include any changed caller/test paths in the same file-scoped invocation.
+
+**Step 4: Verify**
+
+Run the same explicit three-file command from Step 1; expected: exact human/JSON
+adoption reporting and idempotent no-op pass.
+
+**Step 5: Commit**
+
+`git commit -m "fix(p02-t01): report adopted project pack intents"`
+
+### Task p02-t02: Reject newly-written false pack intent
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Write tests (RED)**
+
+Assert `oat config set tools.<known-pack> false` fails before writing and gives
+an actionable lifecycle-command remedy. Preserve setting `true`, reject
+unknown pack names, and prove a pre-existing `false` remains readable without
+being silently rewritten.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts`
+
+Expected: fail because the generic setter writes the conflict state.
+
+**Step 2: Implement (GREEN)**
+
+Validate known pack keys and accept only the supported truthy declaration in
+the shared config setter. Direct removal to `oat tools remove` and keep legacy
+false values as read-only migration input for normal config resolution.
+
+**Step 3: Format**
+
+Run:
+`pnpm exec oxfmt --write packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts`
+
+**Step 4: Verify**
+
+Run the focused test command again; expected: pass with zero-write assertions.
+
+**Step 5: Commit**
+
+`git commit -m "fix(p02-t02): prevent legacy pack conflict writes"`
+
+### Task p02-t03: Remove the inert per-pack force option
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/index.ts`
+- Modify: `packages/cli/src/commands/init/tools/index.test.ts`
+- Modify snapshots or CLI reference docs only when the public help output is
+  explicitly pinned there
+
+**Step 1: Write tests (RED)**
+
+Assert individual pack help does not advertise `--force`, while the supported
+top-level update/reconciliation commands retain their own documented options.
+Assert passing `--force` to a per-pack install is rejected rather than ignored.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts`
+
+Expected: fail because every per-pack command registers the unused flag.
+
+**Step 2: Implement (GREEN)**
+
+Remove the option from `createReconciledPackCommand` and update help snapshots
+or reference text as needed. Do not introduce overwrite semantics or change
+the reconcile request.
+
+**Step 3: Format**
+
+Run:
+`pnpm exec oxfmt --write packages/cli/src/commands/init/tools/index.ts packages/cli/src/commands/init/tools/index.test.ts`
+
+Include any changed Markdown path if public reference output is updated.
+
+**Step 4: Verify**
+
+Run the focused test command again; expected: pass for all pack subcommands.
+
+**Step 5: Commit**
+
+`git commit -m "fix(p02-t03): remove unused per-pack force flag"`
+
+**Phase 2 Verification:**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/project-tools-config.test.ts src/commands/config/index.test.ts src/commands/init/tools/index.test.ts src/commands/tools/update/index.test.ts`
+
+Expected: adoption, config, and CLI help contracts pass.
+
+## Phase 3: Release Integration
+
+**Goal:** Integrate both correction lanes, document any public compatibility
+change, advance lockstep packages, and reproduce every CI gate.
+
+### Task p03-t01: Update release notes, versions, and verify the merged tree
+
+**Files:**
+
+- Modify when needed: `apps/oat-docs/docs/cli-utilities/tool-packs.md`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `pnpm-lock.yaml`
+
+**Step 1: Confirm the documentation delta**
+
+Analyze the existing tool-pack and CLI-reference coverage against the actual
+merged behavior. Present any substantive wording delta for user approval before
+editing. When only the existing tool-pack page changes, record navigation and
+generated-index work as not applicable. If navigation changes, run the docs nav
+sync and `oat docs generate-index` before verification.
+
+**Step 2: Rebase release evidence**
+
+Fetch `origin/main`, confirm it is an ancestor or integrate it before selecting
+versions, and choose the next lockstep public package version strictly above
+current main. Summarize removal of the inert per-pack flag and any config-set
+compatibility guidance in the existing tool-pack upgrade section when the
+public behavior is not already clear.
+
+**Step 3: Format**
+
+Run:
+`pnpm exec oxfmt --write apps/oat-docs/docs/cli-utilities/tool-packs.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json`
+
+Regenerate the lockfile with the repository's pnpm workflow when manifest
+versions change.
+
+**Step 4: Verify focused integration**
+
+Run the Phase 1 and Phase 2 verification commands together; expected: all
+focused lifecycle/config suites pass.
+
+**Step 5: Run definition-of-done gates**
+
+Run in CI order and capture every exit code independently:
+
+1. `pnpm check`
+2. `pnpm type-check`
+3. `pnpm test`
+4. `pnpm build`
+5. `pnpm run check:skill-bumps`
+6. `pnpm release:check-versions`
+7. `pnpm release:validate`
+8. `pnpm build:docs`
+
+Also run `pnpm lint`, `pnpm format`, and `git diff --check` because the touched
+CLI/docs surfaces are broader than the CI overlap guarantees.
+
+**Step 6: Commit**
+
+`git commit -m "chore(p03-t01): verify lifecycle config cleanup release"`
+
+**Phase 3 Verification:** All focused tests and eleven repository gates exit 0
+with captured logs.
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
-
-For code-review events, `Reviewed Head` is the full 40-character SHA at the
-head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
-`Gate Target` is populated only for gate events. Legacy five-column rows remain
-valid. Writers must preserve every existing row and every unknown trailing
-cell; never truncate a widened row back to five columns.
-
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
-
----
+| Scope  | Type     | Status  | Date       | Artifact | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | -------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -        | -             | -          | -           |
+| p02    | code     | pending | -          | -        | -             | -          | -           |
+| p03    | code     | pending | -          | -        | -             | -          | -           |
+| final  | code     | pending | -          | -        | -             | -          | -           |
+| spec   | artifact | pending | -          | -        | -             | -          | -           |
+| design | artifact | pending | -          | -        | -             | -          | -           |
+| plan   | artifact | passed  | 2026-08-27 | -        | -             | auto       | -           |
 
 ## Implementation Complete
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 2 tasks — content-accurate seed and versioned-asset inventory.
+- Phase 2: 3 tasks — explicit adoption reporting and supported config/CLI
+  state.
+- Phase 3: 1 task — release integration, versions, docs, and complete gates.
 
-**Total: {N} tasks**
+**Total: 6 tasks**
 
-Ready for code review and merge.
-
----
+Ready for implementation after plan review and gate disposition.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Backlog:
+  `../../../repo/pjm/backlog/items/BL-260827-clean-up-tool-pack-lifecycle.md`
+- Parent project: `../user-scope-tool-packs/implementation.md`
+- Closeout review that established this follow-up:
+  `../user-scope-tool-packs/reviews/final-review-2026-08-27T222249Z.md`
+- Detailed prior final review:
+  `../user-scope-tool-packs/reviews/final-review-2026-08-27T174707Z.md`

@@ -26,8 +26,8 @@ workflow goes straight to a runnable plan without a design artifact.
 
 Correct each inconsistency at its existing authority boundary:
 
-- inventory seed-if-missing assets and versioned skills/agents using content
-  evidence, not presence or version metadata alone;
+- inventory source-backed seed-if-missing assets and versioned skills/agents
+  using content evidence, not presence or version metadata alone;
 - make legacy project-pack adoption report the exact intents it writes;
 - prevent the generic config setter from creating a legacy-conflict state; and
 - remove the inert per-pack `--force` surface unless implementation reveals a
@@ -61,7 +61,8 @@ Correct each inconsistency at its existing authority boundary:
 
 ## Success Criteria
 
-- Unchanged seed-if-missing assets are distinguishable from retained overrides.
+- Unchanged source-backed seed-if-missing assets are distinguishable from
+  retained overrides; generated seeds retain their generation-aware contracts.
 - Same-version but changed skill/agent content is reported as drift.
 - Legacy reconciliation returns or renders the exact adopted pack set and is
   unchanged on a second run.
