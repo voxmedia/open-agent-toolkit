@@ -1285,6 +1285,7 @@ exit-code evidence.
 | p02    | code     | passed          | 2026-08-27 | reviews/p02-review-2026-08-27T070524Z.md                      | dc600fe68bdcccd810cc0574f2b472113a588f11 | auto       | -                             |
 | final  | code     | fixes_completed | 2026-08-27 | reviews/final-review-2026-08-27T174707Z.md                    | dd359d2bbf603e5af9030c6abe931f4c37f05a07 | manual     | -                             |
 | final  | code     | fixes_completed | 2026-08-27 | reviews/final-review-2026-08-27T222249Z.md                    | 3802bd083bb74627916c28faefa0910c92b9a2eb | manual     | -                             |
+| final  | code     | received        | 2026-08-27 | reviews/final-review-2026-08-27T230626Z.md                    | 0bbeacc64e1b33f01bcbe506d00871bc4b3e813c | manual     | -                             |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
 | design | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T012258Z.md | -                                        | gate       | claude-fable-skip-permissions |
 | p03    | code     | fixes_completed | 2026-08-27 | reviews/p03-review-2026-08-27T074154Z.md                      | 3e2421bce1286dd61852e8e15d87cff1c8c82b5d | manual     | -                             |
