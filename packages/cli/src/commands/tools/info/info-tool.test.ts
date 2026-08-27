@@ -63,6 +63,12 @@ function createDeps(
       scope === 'project' ? '/project' : '/home/user',
     resolveAssetsRoot: async () => '/assets',
     getToolDetail: async () => detail,
+    inventoryPack: async ({ pack, projectRoot, userRoot }) => ({
+      pack,
+      placement: projectRoot ? 'project' : userRoot ? 'user' : 'unavailable',
+      scopes: [],
+      diagnostics: [],
+    }),
   };
 }
 
@@ -158,5 +164,41 @@ describe('runInfoTool', () => {
 
     expect(result.found).toBe(true);
     expect(result.tool!.scope).toBe('user');
+  });
+
+  it('reports pack completeness, missing members, and intent provenance', async () => {
+    const deps = createDeps({});
+    deps.inventoryPack = async ({ pack }) => ({
+      pack,
+      placement: 'user',
+      diagnostics: [],
+      scopes: [
+        {
+          pack,
+          scope: 'user',
+          intent: {
+            pack,
+            scope: 'user',
+            enabled: true,
+            source: 'declared',
+            configPath: '/home/.oat/config.json',
+            diagnostics: [],
+          },
+          completeness: 'partial',
+          diagnostics: [],
+          assets: [],
+        },
+      ],
+    });
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ logger: capture.logger }),
+      'ideas',
+      deps,
+    );
+    expect(result.pack?.scopes[0]).toMatchObject({
+      completeness: 'partial',
+      intent: { source: 'declared' },
+    });
   });
 });

@@ -32,6 +32,12 @@ function createDeps(
     resolveScopeRoot: async (scope) =>
       scope === 'project' ? '/project' : '/home/user',
     resolveAssetsRoot: async () => '/assets',
+    inventoryPack: async ({ pack, projectRoot, userRoot }) => ({
+      pack,
+      placement: projectRoot ? 'project' : userRoot ? 'user' : 'unavailable',
+      scopes: [],
+      diagnostics: [],
+    }),
   };
 }
 
@@ -101,9 +107,13 @@ describe('runListTools', () => {
     await runListTools(context, deps);
 
     expect(capture.jsonPayloads).toHaveLength(1);
-    const payload = capture.jsonPayloads[0] as { tools: ToolInfo[] };
+    const payload = capture.jsonPayloads[0] as {
+      tools: ToolInfo[];
+      packs: unknown[];
+    };
     expect(payload.tools).toHaveLength(1);
     expect(payload.tools[0]!.name).toBe('oat-idea-new');
+    expect(payload.packs).toHaveLength(8);
   });
 
   it('shows custom tools with pack=custom', async () => {
@@ -137,5 +147,32 @@ describe('runListTools', () => {
     expect(
       capture.info.some((line) => line.includes('No tools installed')),
     ).toBe(true);
+  });
+
+  it('reports complete pack placement and diagnostics from shared inventory', async () => {
+    const deps = createDeps({ project: [sampleTool] });
+    deps.inventoryPack = async ({ pack }) => ({
+      pack,
+      placement: pack === 'ideas' ? 'both' : 'unavailable',
+      scopes: [],
+      diagnostics:
+        pack === 'ideas'
+          ? [
+              {
+                code: 'duplicate-scope',
+                message: 'duplicate',
+                paths: ['/p', '/u'],
+              },
+            ]
+          : [],
+    });
+    const result = await runListTools(
+      createContext({ logger: deps.capture.logger }),
+      deps,
+    );
+    expect(result.packs.find(({ pack }) => pack === 'ideas')).toMatchObject({
+      placement: 'both',
+      diagnostics: [{ code: 'duplicate-scope' }],
+    });
   });
 });
