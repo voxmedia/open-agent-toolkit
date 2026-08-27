@@ -1,10 +1,10 @@
 ---
 name: oat-project-summary
-version: 1.3.5
+version: 1.3.6
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 ---
 
 # Project Summary
@@ -424,14 +424,23 @@ This is informational only. There is no interactive prompt anywhere in this step
 ### Step 8: Commit
 
 ```bash
-git add "$PROJECT_PATH/summary.md"
-if [ "$PROJECT_LOG_PROMOTION_APPENDED" = "true" ]; then
-  git add "$PROJECT_PATH/project-log.md"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  SUMMARY_PUSH=$(oat project push "$PROJECT_PATH" --message "docs: generate summary for {project-name}" --json)
+  SUMMARY_COMMIT_SHA=$(printf '%s\n' "$SUMMARY_PUSH" | jq -r '.sha')
+else
+  git add "$PROJECT_PATH/summary.md"
+  if [ "$PROJECT_LOG_PROMOTION_APPENDED" = "true" ]; then
+    git add "$PROJECT_PATH/project-log.md"
+  fi
+  git commit -m "docs: generate summary for {project-name}"
+  SUMMARY_COMMIT_SHA=$(git rev-parse HEAD)
 fi
 if [ "$PROJECT_LOG_LEDGER_APPENDED" = "true" ]; then
   git add "$PROJECT_LOG_LEDGER_PATH"
+  git diff --cached --quiet || git commit -m "docs: update project log ledger for {project-name}"
 fi
-git commit -m "docs: generate summary for {project-name}"
 ```
 
 These conditional paths are required: append-based promotion mutates
@@ -444,7 +453,13 @@ If decision records were promoted in Step 7, also stage `.oat/repo/reference/dec
 If this is a re-run (incremental update):
 
 ```bash
-git commit -m "docs: update summary for {project-name}"
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  SUMMARY_PUSH=$(oat project push "$PROJECT_PATH" --message "docs: update summary for {project-name}" --json)
+  SUMMARY_COMMIT_SHA=$(printf '%s\n' "$SUMMARY_PUSH" | jq -r '.sha')
+else
+  git diff --cached --quiet || git commit -m "docs: update summary for {project-name}"
+  SUMMARY_COMMIT_SHA=$(git rev-parse HEAD)
+fi
 ```
 
 ### Step 9: Output Summary

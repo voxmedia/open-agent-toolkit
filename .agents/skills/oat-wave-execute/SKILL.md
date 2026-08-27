@@ -1,6 +1,6 @@
 ---
 name: oat-wave-execute
-version: 1.8.0
+version: 1.8.1
 description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout.
 argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 disable-model-invocation: false
@@ -66,6 +66,10 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
    that commit can fail silently; the ORCHESTRATOR commits the gate artifact on
    the reviewer's behalf. Keep the tree clean around either path (both consumers:
    stoa waves 2–3; Orc W1–W4).
+   Before persisting a gate artifact, resolve the wrapper project's scope with
+   `oat project scope "$PROJECT_PATH" --format value` and fail closed. A synced
+   wrapper uses `oat project push`; other scopes retain the existing gate-artifact
+   branch commit.
 4. **Pre-declare CUMULATIVE churn in every brief:** declarations cover everything
    landed since each source plan's AUTHORED COMMIT (drift checks compare against
    that commit, not the group base), naming files + rough regions. Zero false
@@ -326,7 +330,10 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   `.oat/config.json` keys remain present; this check originated with
   `BL-260715-investigate-oat-config-json` in the source program's repo. Update
   canonical sections in place, the run-entry table, review rows, and state;
-  remove worktrees + branches after merge.
+  remove worktrees + branches after merge. Wrapper-project artifact bookkeeping
+  at this boundary uses the same fail-closed scope guard and `oat project push`
+  when the wrapper is synced; code merge commits remain on the integration
+  branch unchanged.
 
 ### Step 6: Closeout
 

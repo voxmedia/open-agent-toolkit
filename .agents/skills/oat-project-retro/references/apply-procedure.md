@@ -84,9 +84,24 @@ continues immediately, this can be written back together with the final
        --body "$CORRECTION_BODY"
      ```
 
-   - Commit the project-log append without retro writeback. Verify the commit
-     contains the normalized project-log path and exact correction body.
-     Capture its full 40-character SHA and exact generated heading.
+   - Commit the project-log append without retro writeback using the scope
+     guard below. Verify the commit contains the normalized project-log path
+     and exact correction body. Capture its full 40-character SHA and exact
+     generated heading.
+
+     ```bash
+     PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+     # fail closed: never fall back to branch bookkeeping when scope resolution fails
+     if [ "$PROJECT_SCOPE" = "synced" ]; then
+       CORRECTION_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): apply retro correction $RP_ID" --json)
+       CORRECTION_COMMIT=$(printf '%s\n' "$CORRECTION_PUSH" | jq -r '.sha')
+     else
+       git add "$PROJECT_PATH/project-log.md"
+       git commit -m "chore(oat): apply retro correction $RP_ID"
+       CORRECTION_COMMIT=$(git rev-parse HEAD)
+     fi
+     ```
+
    - In a later retro-only writeback commit, set the RP status and
      `Applied-ref`. The reference names the full 40-character correction commit
      plus the exact generated heading, serialized as
@@ -199,6 +214,19 @@ Compute `oat_retro_promotions` exactly:
   commit so `Applied-ref` can name an already durable correction.
 - Before each commit, format touched files, run surface-relevant checks, and
   verify the item still has the expected pre-apply status.
+- Persist each retro artifact writeback under the same fail-closed scope guard:
+
+  ```bash
+  PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+  # fail closed: never fall back to branch bookkeeping when scope resolution fails
+  if [ "$PROJECT_SCOPE" = "synced" ]; then
+    oat project push "$PROJECT_PATH" --message "chore(oat): record retro application $RP_ID"
+  else
+    git add "$PROJECT_PATH/references/project-retro.md"
+    git commit -m "chore(oat): record retro application $RP_ID"
+  fi
+  ```
+
 - On re-run, rescan the artifact and process only remaining
   `proposed | approved` apply-items. Never repeat an `applied` item.
 

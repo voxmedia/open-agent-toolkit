@@ -1,6 +1,6 @@
 ---
 name: oat-brainstorm
-version: 1.1.2
+version: 1.2.0
 description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
@@ -522,7 +522,13 @@ Confirm the chosen artifact with the user (minimal confirmation per `references/
 **Step 2 — Preflight `git status` check.** Run **before** any artifact mutation, scoped to the chosen artifact only:
 
 ```bash
-git status --porcelain -- "$ARTIFACT_PATH"
+PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  git -C "$ACTIVE_PROJECT" status --porcelain -- "$(basename "$ARTIFACT_PATH")"
+else
+  git status --porcelain -- "$ARTIFACT_PATH"
+fi
 ```
 
 The check happens before any append, so the skill can route around the dirty case without having half-written the synthesis.
@@ -537,23 +543,24 @@ The check happens before any append, so the skill can route around the dirty cas
 
    Section body contains: `chosenDirection` (with rationale), key decisions (extracted from the conversation), and a transcript appendix (`transcriptSessionNote`). Optionally include `openQuestions` and `nextSteps` if surfaced.
 
-2. Stage **only** the artifact:
+2. Persist **only** the artifact under the scope guard:
 
    ```bash
-   git add -- "$ARTIFACT_PATH"
+   if [ "$PROJECT_SCOPE" = "synced" ]; then
+     FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" --json)
+     FOLD_BACK_COMMIT_SHA=$(printf '%s\n' "$FOLD_BACK_PUSH" | jq -r '.sha')
+   else
+     git add -- "$ARTIFACT_PATH"
+     git commit -m "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>"
+     FOLD_BACK_COMMIT_SHA=$(git rev-parse HEAD)
+   fi
    ```
 
-   Use the explicit `--` filename form. **Never `git add -A`. Never directory globs.** Other working-tree paths are not touched by this commit.
+   For non-synced projects, use the explicit `--` filename form. **Never `git add -A`. Never directory globs.** Other working-tree paths are not touched by this commit. For synced projects, `FOLD_BACK_COMMIT_SHA` comes from the push JSON rather than the parent branch.
 
-3. Commit with the canonical message:
+3. `<artifact-basename>` is `design.md` or `discovery.md` depending on which was chosen. `<project-name>` is the active project's slug.
 
-   ```bash
-   git commit -m "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>"
-   ```
-
-   `<artifact-basename>` is `design.md` or `discovery.md` depending on which was chosen. `<project-name>` is the active project's slug.
-
-4. If `git commit` succeeded → proceed to step 5 (handoff prompt).
+4. If the guarded persistence succeeded → proceed to step 5 (handoff prompt).
 
 **Step 4 — If the artifact is dirty** (any entry in the porcelain output): pause the fold-back, present the user with three options before any artifact mutation occurs:
 
@@ -563,7 +570,7 @@ The check happens before any append, so the skill can route around the dirty cas
 
 After the user picks A or B and the resulting commit succeeds, proceed to step 5. After option C, jump to branch 9j.
 
-**Step 5 — Handoff prompt.** Print **only after the scoped commit succeeds.** If `git commit` failed (pre-commit hooks rejected, signing failed, anything else), surface the error verbatim and **do NOT print the handoff prompt** — the prompt references a commit hash, and a missing commit makes the prompt actively misleading. The user resolves the failure (or re-routes via option C above) before fold-back can complete.
+**Step 5 — Handoff prompt.** Print **only after the scoped commit or synced push succeeds.** If persistence failed (pre-commit hooks rejected, signing failed, push failed, anything else), surface the error verbatim and **do NOT print the handoff prompt** — the prompt references a commit hash, and a missing commit makes the prompt actively misleading. The user resolves the failure (or re-routes via option C above) before fold-back can complete.
 
 Resolve the handoff target by `ACTIVE_PROJECT_MODE` and `ACTIVE_PROJECT_PR_STATUS`:
 
@@ -601,14 +608,26 @@ If `<ACTIVE_PROJECT>/brainstorming/` does not exist, create it (`mkdir -p`). The
 
 Render `${SKILL_DIR}/templates/brainstorm-doc.md` (resolve `${SKILL_DIR}` per the rule in step 3) with the synthesized payload (same shape as the doc-to-path destination) and write to the resolved path.
 
-After writing, commit the file with scoped staging (mirror the discipline of the active-project fold-back commit safety contract):
+After writing, persist the file with the same fail-closed scope guard:
 
 ```bash
-git add -- "<active-project-relative-path>"
-git commit -m "chore(oat): capture brainstorming reference for <project-name>"
+PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  REFERENCE_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): capture brainstorming reference for <project-name>" --json)
+  REFERENCE_COMMIT_SHA=$(printf '%s\n' "$REFERENCE_PUSH" | jq -r '.sha')
+else
+  git add -- "<active-project-relative-path>"
+  git commit -m "chore(oat): capture brainstorming reference for <project-name>"
+  REFERENCE_COMMIT_SHA=$(git rev-parse HEAD)
+fi
 ```
 
 Use only `git add -- <path>` so unrelated working-tree changes are not swept into the commit. After the commit succeeds, capture the short hash via `git rev-parse --short HEAD` and report it alongside the absolute path written (for example: "Wrote `<absolute-path>` and committed as `<hash>`."). End mode assertion.
+
+For synced projects, the preceding short-hash sentence is superseded by the
+full `REFERENCE_COMMIT_SHA` returned from `oat project push --json`; no parent
+branch artifact commit occurs.
 
 #### 9k — Promote to N projects
 
