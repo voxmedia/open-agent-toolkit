@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T17:25:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T18:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -98,7 +98,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation tasks complete — awaiting final review
+**Status:** Implementation tasks complete — final review blocking
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -354,7 +354,10 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 5 decisive fresh independent re-review passed (0 Critical, 0 Important)
 - ✓ Phase 5 completed; all 34 planned tasks done across five phases
 - ✓ Final closeout baseline prepared and reviews ledger reconciled
-- ⧗ Awaiting final verification and final review
+- ✓ Final verification passed (test, lint, type-check, build)
+- ✓ Final project review received (Claude High, `opus`)
+- ✗ Final review: 0 Critical, 2 Important, 9 Medium, 6 Minor
+- ⧗ Final review fix pass pending
 
 ## Blockers
 

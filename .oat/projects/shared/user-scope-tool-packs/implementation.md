@@ -1026,6 +1026,50 @@ individually and independently reproduced by root):**
 
 - Final verification, final review, and the p05 HiLL checkpoint.
 
+### Final Review
+
+- Artifact: `reviews/final-review-2026-08-27T174707Z.md`, range
+  `6f443c084..dd359d2bb`, reviewed head `dd359d2bb`; reconnaissance `attempted`
+  with complete `## Review Orchestration` evidence. Verdict blocking:
+  0 Critical, 2 Important, 9 Medium, 6 Minor.
+- Both Important findings are cross-phase seams that no single-phase review
+  could see, and root reproduced both end-to-end:
+  - **fI1** - `oat tools remove` wipes durable per-scope intent while reporting
+    that nothing happened. `tools/remove/index.ts:133-150` guards the
+    intent-clearing loop only on `!dryRun && target.kind !== 'name'` and never
+    inspects `result.removed`. Reproduced: a repo with
+    `{"tools":{"docs":true,"utility":true}}` and no assets on disk runs
+    `oat tools remove --all --scope project`, exits 0, prints
+    `No tools to remove.`, and is left with `{"version":1}`. That destroys the
+    exact state FR5 (P0) needs to restore a fully-missing pack. The genuine
+    failure path is safe; only the "nothing removed" path is wrong.
+  - **fI2** - per-pack install ignores existing placement, silently duplicating
+    installs on upgrade. `init/tools/index.ts:1345-1352` resolves scope from
+    `definition.defaultScope`, now `'user'` for all eight packs, with no lookup
+    of current placement. Reproduced: `docs` installed at project scope, then
+    the standard `oat tools install docs`, produces a second full copy at user
+    scope and flips `oat doctor` to exit 1 with `packs:scope_duplication`. This
+    is the upgrade path for every existing 0.2.3x user. Existing-placement
+    precedence is implemented, but only in the aggregate resolver, and the docs
+    state the opposite contract in three places.
+- Requirements closure: nine of fifteen fully met, six partial (FR1, FR5, FR9,
+  FR10, NFR1, NFR3). Every partial traces to a recorded finding; nothing is
+  claimed-but-absent.
+- Cross-phase coherence: upheld, with three identified seams. The reviewer's
+  unifying observation is that every seam is a place where a phase
+  re-implemented, outside the shared abstraction, something the abstraction
+  already guaranteed - fI1 clears intent in the adapter rather than the plan,
+  fI2 resolves scope outside the aggregate resolver, and m1 bypasses
+  `formatPackPath`, whose own comment says it exists to prevent exactly that.
+- Upgrade risk: ten of thirteen user-visible behavior changes are undocumented.
+  Back-compat defenses are real and nothing is data-destructive, but the
+  upgrade narrative is missing.
+- Rebase warning: the branch is 11 commits behind main with 13 files changed on
+  both sides, notably `sync/index.ts`, `sync.types.ts`, and `bundle-assets.sh`,
+  all surfaces this branch heavily rewrote. The rebase needs real review, not
+  mechanical resolution, and the full gate sequence must be re-run afterwards
+  because the gates were verified at `dd359d2bb`, not at the post-rebase head.
+
 ## Final Summary (for PR/docs)
 
 ### What shipped
