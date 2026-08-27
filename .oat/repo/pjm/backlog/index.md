@@ -162,6 +162,7 @@
 | BL-260817-drop-explainer-kit-publish     | Drop explainer-kit publish-request/v1 in a future minor                                    | open   | medium   | task    | S        |
 | BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance                              | open   | medium   | task    | S        |
 | BL-260818-extend-guarded-prose-contract  | Extend guarded-prose contract tests to docs-app mirrors                                    | open   | medium   | task    | S        |
+| BL-260827-fail-closed-on-partial-or      | Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles                             | open   | medium   | task    | S        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                             | open   | medium   | task    |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                          | open   | medium   | feature | L        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                  | open   | medium   | feature | M        |
@@ -183,6 +184,7 @@
 | BL-260826-decide-whether-test-only-paths | Decide whether test-only paths under packages/cli/src count as publishable                 | open   | low      | task    | S        |
 | BL-260826-emit-the-dispatch-stamp-from   | Emit the dispatch stamp from the dispatch-ceiling resolver                                 | open   | low      | task    | XS       |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization                     | open   | low      | feature | M        |
+| BL-260827-override-aware-remedy-text     | Override-aware remedy text in assets-root fail-closed errors                               | open   | low      | task    | XS       |
 
 <!-- END OAT BACKLOG-INDEX -->
 

@@ -27,8 +27,8 @@ supersedes the "execution deferred by operator on 2026-08-19" record.
 | ---- | ----------------------------- | ----- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | W1   | Test and CI containment       | 2     | merged   | PR #215 → `5bb2f914186de04f30c3f144f8bc452c4c0a4824` (squash, 2026-08-26T19:00:19Z); wrapper project `.oat/projects/shared/wave-1-execution` (lifecycle complete 2026-08-26; completion record `summary.md` + `implementation.md` § Final Summary); completion tail: deferred to program close; recap: deferred to program close (the per-wave project-recap manifest `explainers/wave-1-execution-recap` is `built-durable`, run `run-051612fb-0075-43de-b2dd-0aea4209775f`) |
 | W2   | Sync provenance warning       | 1     | merged   | PR #217 → `33149b26298f6d6bb631fdadb55de23bc9678edc` (squash, 2026-08-26T22:56:20Z); wrapper project `.oat/projects/shared/wave-2-execution` (lifecycle complete 2026-08-26; completion record `summary.md`); public packages 0.2.34; completion tail: deferred to program close; recap: deferred to program close (per-wave recap manifest `run-1b2d1eb3-9616-4ae7-95c7-861d5c148c97`, built-durable)                                                                        |
-| W3   | Hermetic CLI assets           | 1     | composed | W2 merged 2026-08-26 → W3 unblocked; baseline `origin/main` = `33149b26` (public packages 0.2.34)                                                                                                                                                                                                                                                                                                                                                                             |
-| W4   | Codex skill policy correction | 1     | composed | pending W3 merge                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| W3   | Hermetic CLI assets           | 1     | merged   | PR #219 → `cd3ba1400209e8dcfd78abc1d124591f0f1d6136` (squash, 2026-08-27T01:47:39Z); wrapper project `.oat/projects/shared/wave-3-execution` (lifecycle complete 2026-08-27; completion record `summary.md`); public packages 0.2.35; completion tail: deferred to program close; recap: deferred to program close (per-wave recap manifest `run-6c05d663-d933-4480-8740-96709c53deeb`, built-durable)                                                                        |
+| W4   | Codex skill policy correction | 1     | composed | W3 merged 2026-08-27 → W4 unblocked; baseline `origin/main` = `cd3ba140` (public packages 0.2.35); plan STOP #2 (live `codex exec --help` has no `--full-auto`) reported and reconciled non-narrowingly by the operator (option 1, 2026-08-27)                                                                                                                                                                                                                                |
 
 ## Wave Table (coverage: 5 plans = 5 index rows; verified 2026-08-19, re-verified 2026-08-25)
 
@@ -37,7 +37,7 @@ supersedes the "execution deferred by operator on 2026-08-19" record.
 | [Bound smoke cleanup signal waits](./2026-08-19-bound-smoke-cleanup-signal-wait.md)              | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W1   | parallel group; merge first to bound later validation | done    |
 | [Reject package versions overtaken by main](./2026-08-19-detect-behind-main-package-versions.md) | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W1   | parallel group; merge after smoke containment         | done    |
 | [Surface sync version skew](./2026-08-19-warn-sync-version-skew.md)                              | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W2   | solo; merge before the next public-package baseline   | done    |
-| [Honor an explicit CLI assets root](./2026-08-19-hermetic-cli-assets-root.md)                    | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W3   | solo; start from W2's merged package versions         | pending |
+| [Honor an explicit CLI assets root](./2026-08-19-hermetic-cli-assets-root.md)                    | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W3   | solo; start from W2's merged package versions         | done    |
 | [Refresh codex-skill routing](./2026-08-19-refresh-codex-skill-routing.md)                       | [2026-08-19 backlog review](./2026-08-19-backlog-review-plan-index.md) | W4   | solo; reread live provider matrix before editing      | pending |
 
 ## Wave 1: Test and CI containment
@@ -105,6 +105,20 @@ supersedes the "execution deferred by operator on 2026-08-19" record.
   bump form one shippable unit. A dedicated wave avoids simultaneous edits to
   the public manifests and gives the environment-override boundary focused
   review.
+- **Closeout (2026-08-27):** merged via PR #219 (`cd3ba140`), public packages
+  0.2.35. The lane shipped in full (validated `OAT_ASSETS_DIR` override with
+  unchanged fail-closed validation; hermetic per-file package-coverage smoke
+  bundle with an asserted restore/cleanup guard; ambient-override class closed
+  at the vitest env seam). Plan gate and exit gate both passed on round 1 on
+  Cursor GPT-5.6 Sol; two phase-review rounds (reviewer probes found a silent
+  `it.skipIf` skip, an unswept ambient-env class, and unasserted cleanup — all
+  fixed append-only); the `OAT_ASSETS_DIR` docs entry landed at the document
+  step. Follow-ups filed as backlog items (partial-bundle structural check;
+  override-aware error remedy). Rules adopted for W4: post-commit
+  `release:check-versions` re-run; focused-test Verify lines checked against
+  the runner; class-naming findings get a repo-wide sweep with the fixture
+  shape stated; negative controls and restore/cleanup mutation checks for
+  containment lanes; bookkeeping scripts dry-run their anchors before writing.
 
 ## Wave 4: Codex skill policy correction
 
