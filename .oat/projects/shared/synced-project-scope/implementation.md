@@ -1346,3 +1346,93 @@ Cleanup completed on 2026-08-27: `refs/heads/oat-spike-branch` and `refs/oat/pro
 $ git ls-remote https://github.com/tkstang/disposable-test-repo-for-oat 'refs/oat/*'
 (empty)
 ```
+
+### p04-t10 skill dogfood
+
+The shipped provider views were synchronized first. The planned prerequisite
+commit `5955c87ae75ecf6f4ea1ad97ede87106e1827a48` contains exactly the generated
+`oat-phase-implementer` Codex and Cursor views plus `.oat/sync/manifest.json`;
+the parent worktree was clean before scratch-project creation.
+
+The source-built CLI created `skill-dogfood` with the default `synced` scope.
+The scratch record lived at `.oat/projects/synced/skill-dogfood.json`, the
+custom ref was `refs/oat/projects/skill-dogfood`, and scaffold commit
+`6528c4119262e3fe6bac978a883386f9b0803106` recorded only the scratch project.
+
+#### Bookkeeping site — real `oat-project-summary`
+
+The shipped summary workflow ran end to end on a prepared active project with
+one completed task. It resolved the project as `synced`, found no project log,
+generated a fresh 31-line `summary.md` with Overview, What Was Implemented, and
+Key Decisions, deduplicated the grounded decision against the existing exact
+slug `tracked-artifacts-remain`, and pushed through the skill's synced
+bookkeeping branch. No project artifact was committed directly on the feature
+branch.
+
+Preparation push:
+
+```json
+{
+  "status": "pushed",
+  "sha": "b6f4945b582e7b3de9acfeef3ce7672666be36a9",
+  "ref": "refs/oat/projects/skill-dogfood"
+}
+```
+
+Summary push:
+
+```json
+{
+  "status": "pushed",
+  "sha": "1169319b71130fd31abd2f2b72c5cc6c4dff0806",
+  "ref": "refs/oat/projects/skill-dogfood"
+}
+```
+
+The nested checkout log contained only record commits: summary, prepared
+fixture, scaffold, and synced-project initialization.
+
+#### Arrival site — real `oat-project-progress`
+
+The linked worktree `/Users/tstang/Code/oat-skill-wt` was initialized on
+`tmp/skill-dogfood`, its active-project pointer was set while the nested
+checkout was absent, and the shipped progress workflow ran from Step 0. Scope
+resolution returned `synced`; the skill then reported:
+
+```text
+Pull created: skill-dogfood at 1169319b71130fd31abd2f2b72c5cc6c4dff0806.
+```
+
+Only after that pull did the workflow read project and knowledge-base state.
+The checkout existed at the expected SHA, `summary.md` was present, and the
+progress router recommended `oat-project-implement`. A separate structured
+mechanical check returned:
+
+```json
+{
+  "status": "up-to-date",
+  "sha": "1169319b71130fd31abd2f2b72c5cc6c4dff0806",
+  "adopted": false,
+  "ref": "refs/oat/projects/skill-dogfood",
+  "children": []
+}
+```
+
+#### Cleanup and verification
+
+Root-owned cleanup ran only after both real skill workflows completed.
+`oat project prune skill-dogfood --force --json` created lifecycle commit
+`fa9c18c6b2a794f296c6e61c2ff88a7bee675834`, deleting only the scratch record.
+Root restored `activeProject` to
+`.oat/projects/shared/synced-project-scope`, removed the exact linked worktree,
+and deleted the exact temporary branch. Final state:
+
+- both scratch nested checkouts are absent;
+- `.oat/projects/synced/skill-dogfood.json` is absent;
+- local and remote `refs/oat/projects/skill-dogfood` are absent;
+- `/Users/tstang/Code/oat-skill-wt` and `tmp/skill-dogfood` are absent;
+- the parent worktree is clean; and
+- `pnpm oat:validate-skills` passed for 63 skills.
+
+No shipped snippet defect was found, so p04-t10 changed no canonical skill or
+agent file and required no additional skill-surface gate rerun.
