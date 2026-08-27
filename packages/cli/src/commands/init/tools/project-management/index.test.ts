@@ -39,15 +39,19 @@ function makeContext(overrides: Partial<CommandContext> = {}): CommandContext {
 }
 
 function makeInstallProjectManagement() {
-  return vi.fn(async () => ({
-    copiedSkills: ['oat-pjm-backlog'],
-    updatedSkills: [],
-    skippedSkills: [],
-    outdatedSkills: [],
-    copiedTemplates: [],
-    updatedTemplates: [],
-    skippedTemplates: [],
-  }));
+  return vi.fn(
+    async (options: { scope?: 'project' | 'user'; targetRoot: string }) => ({
+      scope: options.scope ?? 'user',
+      targetRoot: options.targetRoot,
+      copiedSkills: ['oat-pjm-backlog'],
+      updatedSkills: [],
+      skippedSkills: [],
+      outdatedSkills: [],
+      copiedTemplates: [],
+      updatedTemplates: [],
+      skippedTemplates: [],
+    }),
+  );
 }
 
 // Wrap the project-management command in a parent that has --scope so
@@ -127,6 +131,38 @@ describe('createInitToolsProjectManagementCommand — universal scope', () => {
     );
   });
 
+  it('emits scope, roots, and unchanged adoption provenance in JSON', async () => {
+    const logger = makeLogger();
+    const installProjectManagement = makeInstallProjectManagement();
+    const cmd = createInitToolsProjectManagementCommand({
+      buildCommandContext: () => makeContext({ logger, json: true }),
+      resolveProjectRoot: async () => '/test/project',
+      resolveAssetsRoot: async () => '/assets',
+      installProjectManagement,
+    });
+    const parent = wrapWithScopeParent(cmd);
+
+    await runViaParent(parent, ['--scope', 'user', 'project-management']);
+
+    expect(logger.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'ok',
+        scope: 'user',
+        targetRoot: '/test/home',
+        assetsRoot: '/assets',
+        adoption: {
+          owner: 'repository',
+          action: 'oat pjm init',
+          changed: false,
+        },
+        result: expect.objectContaining({
+          scope: 'user',
+          targetRoot: '/test/home',
+        }),
+      }),
+    );
+  });
+
   it('accepts explicit --scope project and proceeds with install', async () => {
     const installProjectManagement = makeInstallProjectManagement();
     const cmd = createInitToolsProjectManagementCommand({
@@ -167,7 +203,7 @@ describe('createInitToolsProjectManagementCommand — universal scope', () => {
     );
   });
 
-  it('writes root AGENTS guidance after a successful direct install', async () => {
+  it('does not treat project-scope capability placement as repository adoption', async () => {
     const installProjectManagement = makeInstallProjectManagement();
     const cmd = createInitToolsProjectManagementCommand({
       buildCommandContext: () => makeContext(),
@@ -184,22 +220,15 @@ describe('createInitToolsProjectManagementCommand — universal scope', () => {
     ]);
 
     expect(exitCode).not.toBe(1);
-    expect(upsertAgentsMdSection).toHaveBeenCalledWith(
-      '/test/project',
-      'project-management',
-      expect.stringContaining('### Project Management'),
-    );
-    expect(upsertAgentsMdSection).toHaveBeenCalledWith(
-      '/test/project',
-      'decisions',
-      expect.stringContaining('### Decision Records'),
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+    expect(installProjectManagement).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: 'project' }),
     );
   });
 
-  it('keeps a completed install successful when AGENTS guidance cannot be written', async () => {
+  it('reports adoption-owned next steps after project capability placement', async () => {
     const logger = makeLogger();
     const installProjectManagement = makeInstallProjectManagement();
-    upsertAgentsMdSection.mockRejectedValueOnce(new Error('permission denied'));
     const cmd = createInitToolsProjectManagementCommand({
       buildCommandContext: () => makeContext({ logger }),
       resolveProjectRoot: async () => '/test/project',
@@ -218,8 +247,8 @@ describe('createInitToolsProjectManagementCommand — universal scope', () => {
     expect(logger.info).toHaveBeenCalledWith(
       'Installed project-management tool pack.',
     );
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Could not update AGENTS.md'),
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining('pjm init'),
     );
     expect(logger.error).not.toHaveBeenCalled();
     expect(getInstalledCanonicalPaths(cmd)).not.toHaveLength(0);

@@ -219,6 +219,33 @@ describe('installProjectManagement', () => {
     ).resolves.toContain('roadmap');
   });
 
+  it('keeps project template overrides as seed-if-missing even with force', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'target');
+    await seedAssets(assetsRoot);
+    await mkdir(join(targetRoot, '.oat', 'templates'), { recursive: true });
+    await writeFile(
+      join(targetRoot, '.oat', 'templates', 'roadmap.md'),
+      '# curated project roadmap\n',
+      'utf8',
+    );
+
+    const result = await installProjectManagement({
+      assetsRoot,
+      targetRoot,
+      scope: 'project',
+      force: true,
+    });
+
+    expect(result.scope).toBe('project');
+    expect(result.targetRoot).toBe(targetRoot);
+    expect(result.skippedTemplates).toContain('roadmap.md');
+    await expect(
+      readFile(join(targetRoot, '.oat', 'templates', 'roadmap.md'), 'utf8'),
+    ).resolves.toBe('# curated project roadmap\n');
+  });
+
   it('tracks outdated skills when bundled versions are newer', async () => {
     const root = await makeTempDir();
     const assetsRoot = join(root, 'assets');

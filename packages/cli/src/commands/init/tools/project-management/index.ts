@@ -3,14 +3,6 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
-import {
-  buildDecisionAgentsSectionBody,
-  DECISION_AGENTS_SECTION_KEY,
-} from '@commands/decision/agents-guidance';
-import {
-  type UpsertSectionResult,
-  upsertAgentsMdSection,
-} from '@commands/shared/agents-md';
 import { withScopeOption } from '@commands/shared/scope-option';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
@@ -21,10 +13,6 @@ import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
 
-import {
-  buildProjectManagementAgentsSectionBody,
-  PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
-} from './agents-guidance';
 import {
   installProjectManagement as defaultInstallProjectManagement,
   type InstallProjectManagementOptions,
@@ -97,36 +85,9 @@ export function createInitToolsProjectManagementCommand(
             assetsRoot,
             targetRoot,
             force: options.force,
+            scope,
           });
           didInstall = true;
-
-          let projectManagementGuidanceAction:
-            | UpsertSectionResult['action']
-            | undefined;
-          let decisionGuidanceAction: UpsertSectionResult['action'] | undefined;
-          let agentsGuidanceWarning: string | undefined;
-          if (scope === 'project') {
-            try {
-              const projectManagementGuidanceResult =
-                await upsertAgentsMdSection(
-                  targetRoot,
-                  PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
-                  buildProjectManagementAgentsSectionBody(),
-                );
-              projectManagementGuidanceAction =
-                projectManagementGuidanceResult.action;
-              const decisionGuidanceResult = await upsertAgentsMdSection(
-                targetRoot,
-                DECISION_AGENTS_SECTION_KEY,
-                buildDecisionAgentsSectionBody(),
-              );
-              decisionGuidanceAction = decisionGuidanceResult.action;
-            } catch (error) {
-              const message =
-                error instanceof Error ? error.message : String(error);
-              agentsGuidanceWarning = `Could not update AGENTS.md project-management guidance: ${message}`;
-            }
-          }
 
           if (context.json) {
             context.logger.json({
@@ -135,9 +96,11 @@ export function createInitToolsProjectManagementCommand(
               targetRoot,
               assetsRoot,
               result,
-              ...(agentsGuidanceWarning === undefined
-                ? {}
-                : { warnings: [agentsGuidanceWarning] }),
+              adoption: {
+                owner: 'repository',
+                action: 'oat pjm init',
+                changed: false,
+              },
             });
           } else {
             context.logger.info('Installed project-management tool pack.');
@@ -148,25 +111,9 @@ export function createInitToolsProjectManagementCommand(
             context.logger.info(
               `Templates: copied=${result.copiedTemplates.length}, updated=${result.updatedTemplates.length}, skipped=${result.skippedTemplates.length}`,
             );
-            if (
-              projectManagementGuidanceAction !== undefined &&
-              projectManagementGuidanceAction !== 'no-change'
-            ) {
-              context.logger.info(
-                `AGENTS.md project-management section ${projectManagementGuidanceAction}.`,
-              );
-            }
-            if (
-              decisionGuidanceAction !== undefined &&
-              decisionGuidanceAction !== 'no-change'
-            ) {
-              context.logger.info(
-                `AGENTS.md decisions section ${decisionGuidanceAction}.`,
-              );
-            }
-            if (agentsGuidanceWarning !== undefined) {
-              context.logger.warn(agentsGuidanceWarning);
-            }
+            context.logger.info(
+              'Repository adoption is unchanged. Run `oat pjm init` in each repository that should use PJM.',
+            );
             context.logger.info(`Run: oat sync --scope ${scope}`);
           }
           process.exitCode = 0;
