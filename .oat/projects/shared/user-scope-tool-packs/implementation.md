@@ -270,6 +270,11 @@ oat_generated: false
   workspace tests, type-check, lint, format, and diff check. Root independently
   repeated the load-bearing shared/removal/migration suites: 6 files and 67
   tests passed.
+- Fresh re-review `reviews/p03-review-2026-08-27T081809Z.md` closed three
+  original findings and reduced the remaining set to 0 Critical, 1 Important,
+  1 Medium, and 0 Minor. Final configured fix iteration 2/2 will preserve the
+  resolved project `--cwd` in recovery commands and make blocked preview
+  categories mutually exclusive.
 
 ### Task p03-t01: Define migration plans and result state
 
@@ -312,11 +317,11 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Status      | Tasks | Review  | Fix loops |
-| ----- | ----------- | ----- | ------- | --------- |
-| p01   | completed   | 7/7   | passed  | 3         |
-| p02   | completed   | 9/9   | passed  | 2         |
-| p03   | in_progress | 5/5   | pending | 1         |
+| Phase | Status      | Tasks | Review   | Fix loops |
+| ----- | ----------- | ----- | -------- | --------- |
+| p01   | completed   | 7/7   | passed   | 3         |
+| p02   | completed   | 9/9   | passed   | 2         |
+| p03   | in_progress | 5/5   | blocking | 1         |
 
 #### Dispatch Notes
 
@@ -376,6 +381,11 @@ oat_generated: false
   addressed. Focused, phase, full CLI, workspace, type-check, lint, format, and
   diff gates passed; root repeated 67 load-bearing tests.
 - `Dispatch: scope=p03-fix1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Phase 3 re-review after fix iteration 1:
+  `reviews/p03-review-2026-08-27T081809Z.md`; 0 Critical, 1 Important,
+  1 Medium, 0 Minor. Both findings are assigned to final configured fix
+  iteration 2/2.
+- `Dispatch: scope=p03-review-fix1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 
 ### Recovery Event d8c701a8-4297-4028-bd4b-e60f404686fa
 
@@ -461,7 +471,8 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Run a fresh independent Phase 3 re-review over fix iteration 1.
+- Execute final configured Phase 3 fix iteration 2/2 for the recovery-context
+  and blocked-preview findings, then run a decisive fresh re-review.
 
 ## Final Summary (for PR/docs)
 
