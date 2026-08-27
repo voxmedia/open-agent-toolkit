@@ -36,11 +36,11 @@ oat_generated: false
 ## Phase 01: hermetic-cli-assets-root (solo)
 
 **Source plan (the contract):** `.oat/repo/reference/external-plans/2026-08-19-hermetic-cli-assets-root.md`
-**Status:** implemented — awaiting phase review (round 1)
+**Status:** passed — review round 2 (narrowed) clean at `6dc9cdd1`
 
 ### Phase Summary (fill when phase is complete)
 
-_Pending phase review._
+Source plan executed in full: `resolveAssetsRoot(env = process.env)` honors a non-empty trimmed `OAT_ASSETS_DIR` (relative values resolve against cwd) with the unchanged `stat` + `validateAssetsBundle` fail-closed path; unit coverage via the injected `env` (override wins, blank/unset fall back, four fail-closed cases, relative case, hard-asserted default binding via `vi.stubEnv`); the package-coverage smoke file bundles once per file into a temp root, sets `OAT_ASSETS_DIR` before importing built consumers, restores/cleans on every path with a second `after` asserting it, and proves the built `dist` reads the temp root (negative control: shared assets moved aside); ambient-override class closed at `packages/cli/vitest.config.ts`; `bundle-assets.sh` rationale comment corrected; lockstep 0.2.34 → 0.2.35 with `public-package-versions.json` regenerated. Two review rounds (0C/0I/2M/4m → fixed; 0/0/0/0), two Codex rounds clean. Docs for `OAT_ASSETS_DIR` → `document` step.
 
 ### Task p01-t01: Execute external plan — Honor an explicit CLI assets root and isolate package coverage smoke tests
 
@@ -63,7 +63,7 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-### Run 1 — 2026-08-26 (in progress: p01 implemented, phase review pending)
+### Run 1 — 2026-08-26 (complete: 1 phase passed, 0 failed, 0 stopped)
 
 - Branch: `wave-3-execution`; Tier 1 (native `oat-phase-implementer` /
   `oat-reviewer`); dispatch policy managed / `high` (Claude `opus`, enforced —
@@ -99,9 +99,9 @@ _- Outstanding Items_
 
 #### Phase Outcomes
 
-| Phase | Worktree                                  | Implementer outcome                                             | Review outcome | Fix rounds | Merged |
-| ----- | ----------------------------------------- | --------------------------------------------------------------- | -------------- | ---------- | ------ |
-| p01   | integration checkout (`wave-3-execution`) | DONE (4019f98c; DoD 10/10 green; codex P2 fixed, round 2 clean) | pending        | 0          | n/a    |
+| Phase | Worktree                                  | Implementer outcome                                             | Review outcome                                            | Fix rounds | Merged |
+| ----- | ----------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------- | ---------- | ------ |
+| p01   | integration checkout (`wave-3-execution`) | DONE (4019f98c + fix 6dc9cdd1; DoD 10/10 green; codex clean ×2) | passed (round 2: 0C/0I/0M/0m; round 1: 0C/0I/2M/4m fixed) | 1          | n/a    |
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
@@ -125,7 +125,30 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - m3 relative-override semantics unpinned → **fix**: JSDoc line + one `it` case asserting `resolve(cwd, value)`.
 - m4 smoke restore/cleanup unasserted (two surviving mutants) → **fix**: second file-level `after` asserting env-key presence equals the captured prior state and the temp root no longer exists.
 
-**Review row `p01` → `fixes_added`; narrowed round 2 after the fix commit.**
+**Fix round `w3-p01-fix-001` (resumed implementer handle, append-only commit `6dc9cdd19e90b16cafd5e980378f81a27134da70` on `4019f98c`; 6 files, +66/−19):**
+
+- M1 → hard assertion via `vi.stubEnv`/`vi.unstubAllEnvs()` (`assets.test.ts:25-39`); 13/13 with no skips under an ambient metadata-only bundle.
+- M2 → both literal zero-argument test call sites made explicit (`gate/index.test.ts:479` → `resolveAssetsRoot({})`; `assets.test.ts` via stubEnv) **and** the class closed at the runner seam: `packages/cli/vitest.config.ts` `test.env: { OAT_ASSETS_DIR: '' }` — with a metadata-only ambient bundle the CLI suite went from 7 files / 52 failures (production code correctly following the override through real command paths; a complete ambient bundle fails none) to 273 files / 3695 green; production call sites unchanged. Scope of the config-level change handed to round 2 for a verdict.
+- m1 → `bundle-assets.sh:12-20` rationale corrected (comment only; `bash -n` 0).
+- m3 → JSDoc line (`assets.ts:83`) + relative-override case (`assets.test.ts:54-70`) asserting `resolve(process.cwd(), value)`.
+- m4 → second file-level `after` (`package-coverage-consumers.test.mjs:66-78`) asserting env-key presence/value restored and the temp root gone; both round-1 mutants now fail (exit 1 each), file restored byte-exact (SHA-pinned).
+- m2 → docs untouched; `document` step.
+- DoD all ten exit 0 (`$TMPDIR/w3-p01-fix/`), `release:check-versions` re-run post-commit exit 0; `codex review --uncommitted` → no actionable defects.
+
+**Verification record (root):** what — the fix commit's parent chain (`4019f98c` unchanged, `git rev-list --count 4019f98c..HEAD` = 2), file list (6), and the `vitest.config.ts` diff; how — `git log`/`git show --stat`/`git diff` at HEAD; where — this entry; independent verification of each disposition — round-2 narrowed review `w3-p01-review-002`.
+
+**Review row `p01` → `fixes_completed` at `6dc9cdd1`; narrowed round 2 dispatched.**
+
+### Review Received: p01 (round 2, narrowed)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/p01-review-2026-08-27T003545Z.md (reviewed head `6dc9cdd19e90b16cafd5e980378f81a27134da70`, range `4019f98c..6dc9cdd1`, invocation auto, dispatch `w3-p01-review-002`, model opus, disposition-verification brief)
+
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 0 — all six round-1 dispositions verified with reviewer-run evidence (M1/M2/m1/m3/m4 fixed; m2 deferred to the `document` step, no docs touched). The `packages/cli/vitest.config.ts` `test.env` change judged in scope, necessary, and non-masking (reviewer reproduced 7 files / 52 failures with the line removed under a metadata-only ambient bundle, traced the residual failures to production call sites, and confirmed 3695/3695 green with the line removed under a complete ambient bundle). Both round-1 surviving smoke mutants now die; every mutated file restored byte-exact (SHA-256 verified).
+
+**Deferred Findings Re-evaluation:** none deferred for p01 (m2 is routed, not deferred).
+
+**Review row `p01` → `passed` at `6dc9cdd1`. Next: closeout baseline → final verification → final review → configured exit gate.**
 
 ## Implementation Log
 

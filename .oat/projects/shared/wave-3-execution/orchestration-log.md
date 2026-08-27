@@ -79,3 +79,28 @@ fixed that site and did not sweep the other default-binding call site the
 change exposed (`gate/index.test.ts:479`, six failures under an ambient
 override — round-1 M2). Rule: a cross-model finding that names a class gets a
 repo-wide sweep, not a point fix.
+
+### 2026-08-27 · structural · oat-project-implement · p01 fix round landed
+
+`w3-p01-fix-001` (resumed implementer handle) → append-only `6dc9cdd1`;
+all six round-1 dispositions implemented (m2 routed to the document step);
+DoD 10/10, post-commit `release:check-versions` 0, Codex clean; narrowed
+round 2 `w3-p01-review-002` dispatched.
+
+### 2026-08-27 · general · worked-well · close an env-sensitivity class at the runner seam
+
+Round-1 M2 named one ambient call site; the implementer's sweep found the real
+class was production code correctly following the new override through seven
+command paths (52 failures under a metadata-only ambient bundle, none under a
+complete one). One line in `packages/cli/vitest.config.ts` (`test.env`)
+closed the class; the two explicit call-site fixes stay as defense in depth.
+**Skill signal (strengthens):** when a change makes production read a new
+environment variable, the proportionate hermeticity fix is usually one entry
+in the test-runner env, not N call-site edits — and a finding about ambient
+sensitivity should state which fixture shape it used.
+
+### 2026-08-27 · structural · oat-project-implement · p01 passed (round 2)
+
+`w3-p01-review-002` (narrowed) → 0C/0I/0M/0m; all six dispositions verified
+with reviewer-run evidence; `vitest.config.ts` seam change judged in scope
+and non-masking. Phase p01 `passed` at `6dc9cdd1`; Run 1 complete.

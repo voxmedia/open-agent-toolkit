@@ -1,6 +1,6 @@
 ---
 oat_current_task: null # p01-t01 implemented; phase review in progress
-oat_last_commit: 4019f98c # p01-t01 implementation commit
+oat_last_commit: 6dc9cdd1 # p01-t01 fix commit (code)
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260817-let-resolveassetsroot-honor' }
@@ -88,13 +88,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T23:08:35.576Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T00:07:42.004Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T00:38:26.441Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-3-execution
 
-**Status:** Implement — p01 implemented (`4019f98c`); review round 1 received (0C/0I/2M/4m); bounded fix round in progress
+**Status:** Implement — p01 passed (round 2 clean at `6dc9cdd1`); closeout: final verification → final review → exit gate
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
@@ -122,7 +122,9 @@ integration checkout `wave-3-execution` (BASE_SHA `39cea801`; code baseline
 - ✓ Configured plan gate passed round 1 (cursor-gpt-5-6-sol-xhigh, run 59ebe179, 0C/0I/0M/0m)
 - ✓ Phase p01 implemented by the Opus implementer (`4019f98c`; DoD 10/10; Codex review P2 fixed)
 - ✓ Phase review round 1 (Opus, six probes; 0C/0I/2M/4m — probe 1 weaker-anywhere clean)
-- ⧗ Fix round `w3-p01-fix-001` (M1, M2, m1, m3, m4; m2 → document step) → narrowed review round 2
+- ✓ Fix round `w3-p01-fix-001` (`6dc9cdd1`: M1, M2 incl. runner-seam closure, m1, m3, m4; m2 → document step; DoD 10/10; Codex clean)
+- ✓ p01 review round 2 (narrowed): 0C/0I/0M/0m — phase passed
+- ⧗ Closeout: final verification (root DoD) → final review → configured exit gate
 
 ## Blockers
 
@@ -130,4 +132,4 @@ None
 
 ## Next Milestone
 
-Fix round → p01 review round 2 (narrowed) → final review → configured exit gate → post-implement sequence → PR → merge → wave-close. Completion tail: deferred to program close.
+final review → configured exit gate → post-implement sequence → PR → merge → wave-close. Completion tail: deferred to program close.

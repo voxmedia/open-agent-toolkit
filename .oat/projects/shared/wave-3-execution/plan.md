@@ -184,13 +184,13 @@ git commit -m "feat(p01-t01): honor OAT_ASSETS_DIR in resolveAssetsRoot and isol
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
-| p01    | code     | fixes_added | 2026-08-27 | reviews/archived/p01-review-2026-08-27T000253Z.md           | 4019f98c0e3b34846632597da025a7590e3a5da1 | auto       | -                        |
-| final  | code     | pending     | -          | -                                                           | -                                        | -          | -                        |
-| plan   | artifact | passed      | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T231805Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                        |
-| design | artifact | pending     | -          | -                                                           | -                                        | -          | -                        |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | passed  | 2026-08-27 | reviews/archived/p01-review-2026-08-27T003545Z.md           | 6dc9cdd19e90b16cafd5e980378f81a27134da70 | auto       | -                        |
+| final  | code     | pending | -          | -                                                           | -                                        | -          | -                        |
+| plan   | artifact | passed  | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T231805Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                        |
+| design | artifact | pending | -          | -                                                           | -                                        | -          | -                        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
