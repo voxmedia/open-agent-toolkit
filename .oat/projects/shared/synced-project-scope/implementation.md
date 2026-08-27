@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-review-provide
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: null
+oat_current_task_id: p04-t12
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status         | Tasks | Completed |
-| ------- | -------------- | ----- | --------- |
-| Phase 1 | complete       | 10    | 10/10     |
-| Phase 2 | complete       | 13    | 13/13     |
-| Phase 3 | complete       | 19    | 19/19     |
-| Phase 4 | review_pending | 11    | 11/11     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 10    | 10/10     |
+| Phase 2 | complete    | 13    | 13/13     |
+| Phase 3 | complete    | 19    | 19/19     |
+| Phase 4 | in_progress | 16    | 11/16     |
 
-**Total:** 53/53 tasks completed
+**Total:** 53/58 tasks completed
 
 ---
 
@@ -402,7 +402,7 @@ feature_tree_mismatches=0
 
 ## Phase 4: Skills, docs, release
 
-**Status:** review_pending - 11 of 11 tasks complete
+**Status:** in_progress - 11 of 16 tasks complete
 **Started:** 2026-08-27
 
 ### Task Outcomes
@@ -420,6 +420,11 @@ feature_tree_mismatches=0
 | p04-t09 | completed | `20c83263` | CI-order Definition of Done evidence recorded             |
 | p04-t10 | completed | `3b423779` | Real summary/progress dogfood and cleanup verified        |
 | p04-t11 | completed | `13a858f1` | Remaining lifecycle writers and router are scope-aware    |
+| p04-t12 | pending   | -          | Synced completion always publishes pinned links           |
+| p04-t13 | pending   | -          | Next routing enumerates shared, synced, and local scopes  |
+| p04-t14 | pending   | -          | Dirty synced brainstorm fold-back uses project pushes     |
+| p04-t15 | pending   | -          | Summary decision records get a durable parent commit      |
+| p04-t16 | pending   | -          | Synced retro targets commit before artifact writeback     |
 
 ### Phase Summary
 
@@ -448,8 +453,26 @@ attempt.
 `pnpm release:validate=0`; `pnpm build:docs=0`; `pnpm lint=0`;
 `pnpm format=0`; `git diff --check=0`.
 
-**Review disposition:** Implementation is complete. The root-owned independent
-Phase 4 review remains pending and must run against this bookkeeping handoff.
+**Review disposition:** The independent Phase 4 review requested changes. Five
+Important findings are planned as p04-t12 through p04-t16; Phase 4 returns to
+implementation and must be independently re-reviewed after those fixes pass.
+
+### Review Received: p04 - 2026-08-27T22:33:16Z
+
+**Artifact:** `reviews/archived/p04-review-2026-08-27T223316Z.md`
+
+**Reviewed head:** `1caa8e9989c11c3ebb1355785fc1f7f502837563`
+
+**Verdict:** Changes requested - 0 Critical, 5 Important, 0 Medium, 0 Minor.
+
+**Disposition:** All five Important findings are implementation defects and were
+converted to p04-t12 through p04-t16. They cover unconditional completion PR
+links, all-scope next routing, dirty brainstorm persistence, durable summary
+decision promotion, and transactional synced retro target application.
+
+**Next:** Resume at p04-t12, complete the five review-fix tasks with one commit
+per task, rerun the Phase 4 gates, and independently re-review the repaired
+Phase 4 delta before advancing.
 
 ---
 

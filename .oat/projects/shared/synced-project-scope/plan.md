@@ -2363,6 +2363,146 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 
 ---
 
+### Task p04-t12: Ensure synced completion always publishes pinned links (review)
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Understand**
+
+Trace both the new-PR and existing-PR completion paths when recap export is disabled and `archive.summaryExportPath` is null. Preserve the existing final-ref/archive ordering and the already-completed PR-scoped skill version bump.
+
+**Step 2: Implement**
+
+After the final synced ref/archive SHA is known, always render `oat project links "$PROJECT_NAME" --format markdown` and insert or replace the delimited pinned-links block in the final PR body. Add `--durable-summary` only when a verified export exists, independently of `projectRecapExport`.
+
+**Step 3: Verify**
+
+Add contract coverage for a newly opened PR and an already-open PR with no recap and no configured summary export. Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`, `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm lint`, and `pnpm format`.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p04-t12): always publish synced completion links"
+```
+
+---
+
+### Task p04-t13: Enumerate every project scope in next routing (review)
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-next/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Understand**
+
+Trace the empty and invalid active-pointer fallbacks. Preserve the existing arrival pull and the already-completed PR-scoped skill version bump.
+
+**Step 2: Implement**
+
+Replace the shared-root directory probe with `oat project list --json`. Distinguish a genuinely empty project list from projects that exist without a valid active pointer, and route the latter through project selection instead of project creation.
+
+**Step 3: Verify**
+
+Add contract cases for an absent-checkout synced record and for a local-only project. Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`, `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm lint`, and `pnpm format`.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-next/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p04-t13): list all scopes in next routing"
+```
+
+---
+
+### Task p04-t14: Make dirty brainstorm fold-back scope-aware (review)
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Understand**
+
+Follow the resolved project scope through the clean path and both dirty-worktree choices. Preserve current parent-branch Git behavior for shared/local projects and the existing PR-scoped skill version bump.
+
+**Step 2: Implement**
+
+For synced Option A, push the existing artifact state before applying the fold-back, then push the fold-back as a second ref commit. For synced Option B, append the fold-back and perform one `oat project push --json`, capturing its SHA. Never run parent-branch `git add` for synced artifacts.
+
+**Step 3: Verify**
+
+Add contract coverage for both synced dirty branches and the retained non-synced Git path. Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`, `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm lint`, and `pnpm format`.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p04-t14): persist dirty synced brainstorm fold-back"
+```
+
+---
+
+### Task p04-t15: Commit promoted summary decisions on the parent branch (review)
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-summary/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Understand**
+
+Separate synced project-ref outputs from repository-wide decision records and the managed decision index. Account for ledger append, ledger deduplication, and unrelated pre-existing staged state; retain the existing PR-scoped skill version bump.
+
+**Step 2: Implement**
+
+Stage and commit only the exact newly created decision records and managed index on the parent branch. Combine them with the ledger commit when a ledger append exists; otherwise create a dedicated guarded parent commit. Verify the committed paths, record the durable commit, preserve unrelated staged state, and push the synced summary separately.
+
+**Step 3: Verify**
+
+Add a synced summary contract or dogfood case that creates a genuinely new decision with no ledger append, and cover preservation of unrelated staged state. Run the focused contract suite, `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm lint`, and `pnpm format`.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-summary/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p04-t15): commit synced summary decisions durably"
+```
+
+---
+
+### Task p04-t16: Make synced retro target application transactional (review)
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-retro/references/apply-procedure.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Understand**
+
+Map the repository target commit, retro-artifact writeback, `Applied-ref`, and interruption states for synced projects. Preserve the shared/local single-commit route and the existing PR-scoped skill version bump.
+
+**Step 2: Implement**
+
+For synced projects, format and verify the exact repository targets, commit those paths on the parent branch first, and capture that commit plus target paths as `Applied-ref`. Then write back and push the retro artifact in a separate ref commit. Define recovery for interruption before the parent commit, between the two commits, and after both commits.
+
+**Step 3: Verify**
+
+Add contract cases for ordinary docs and decision-record targets under a synced project, including the two-commit ordering and recovery markers. Run the focused contract suite, `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm lint`, and `pnpm format`.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-retro/references/apply-procedure.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p04-t16): commit synced retro targets before writeback"
+```
+
+---
+
 ## Reviews
 
 | Scope   | Type     | Status          | Date       | Artifact                                                          | Reviewed Head                            | Invocation | Gate Target              |
@@ -2381,7 +2521,7 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 | p03     | code     | fixes_completed | 2026-08-27 | reviews/archived/code-p03-review-2026-08-27T194810Z.md            | 3ad8104319e54b9595bc5529d28624194b4c0d7a | manual     | -                        |
 | p03     | code     | fixes_completed | 2026-08-27 | reviews/archived/code-p03-review-2026-08-27T202636Z.md            | 947e9d92e0b510fefa287e94c27b582bf1dc429b | manual     | -                        |
 | p03-t19 | code     | passed          | 2026-08-27 | reviews/code-p03-t19-review-2026-08-27T203907Z.md                 | 4cf94b72b99cb1110f33720b80ce65fc9b715f98 | manual     | -                        |
-| p04     | code     | received        | 2026-08-27 | reviews/p04-review-2026-08-27T223316Z.md                          | 1caa8e9989c11c3ebb1355785fc1f7f502837563 | manual     | -                        |
+| p04     | code     | fixes_added     | 2026-08-27 | reviews/archived/p04-review-2026-08-27T223316Z.md                 | 1caa8e9989c11c3ebb1355785fc1f7f502837563 | manual     | -                        |
 | final   | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                        |
@@ -2406,9 +2546,9 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 - Phase 1: 10 tasks - Sync foundations (scope resolver, gitignore rule, git runner, fixture, record, ref-sync create/push/pull/continue/abort, record commits, GitHub spike)
 - Phase 2: 13 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e, `list --remote`, adopting pull + children, synced-aware `open`/`pause`, shared canonical mutation preflight, isolated child failures + stable split coverage)
 - Phase 3: 19 tasks - Reviewer and lifecycle surface plus eight received review fixes (archive safety/retry identity, migration index safety, doctor working-tree/index leak detection, PR refresh isolation, reproducible merge evidence, local-sync text reason)
-- Phase 4: 11 tasks - Skills sweep (A/B/C/D/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood
+- Phase 4: 16 tasks - Skills sweep (A/B/C/D/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood, and five received-review durability/routing fixes
 
-**Total: 53 tasks**
+**Total: 58 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
