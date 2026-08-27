@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-27
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null
@@ -559,38 +559,42 @@ git add -A && git commit -qm "probe workflow" && git push -u origin HEAD
 until gh run list --json headSha,status --jq '.[]|select(.headSha=="'$(git rev-parse HEAD)'")' | grep -q .; do sleep 10; done
 ```
 
-**Step 2: Push a custom ref and test the three assumptions**
+**Step 2: Push a workflow-bearing commit to a custom ref, then to a branch (the contrast is the proof)**
 
 ```bash
-printf '# spike\n\nrendered from a custom ref\n' > spike.md
-BLOB=$(git hash-object -w spike.md); TREE=$(printf '100644 blob %s\tdesign.md\n' "$BLOB" | git mktree)   # a real markdown file named like an artifact
-C=$(git commit-tree "$TREE" -m "oat spike"); rm spike.md
+# Build the spike commit ON TOP of the workflow-bearing tip so its tree contains .github/workflows/probe.yml
+# (a commit without the workflow file could never trigger Actions anywhere, which would make "no run" meaningless).
+printf '# spike\n\nrendered from a custom ref\n' > design.md && git add design.md
+TREE=$(git write-tree); git reset -q design.md; rm design.md
+C=$(git commit-tree "$TREE" -p HEAD -m "oat spike"); BLOB=$(git rev-parse "$C:design.md")
 SPIKE=refs/oat/projects/spike; git update-ref "$SPIKE" "$C" && git push origin "$C:$SPIKE"
 sleep 120   # give Actions time to create any run for the pushed ref
-# A. No workflow run for the spike commit — authoritative negative result (NFR2):
+# A. No workflow run for the custom-ref push — the negative half (NFR2):
 gh run list --limit 50 --json headSha,event,headBranch --jq '.[]|select(.headSha=="'$C'")'   # expected: empty
-# B. The *blob* URL renders although the commit is unreachable from any branch/tag (FR7 assumption — this is the link shape the PR block uses):
+# A'. Positive control: the SAME commit pushed to a branch DOES run the workflow:
+git push origin "$C:refs/heads/oat-spike-branch"; sleep 120
+gh run list --limit 50 --json headSha,event,headBranch --jq '.[]|select(.headSha=="'$C'")'   # expected: one run, headBranch == oat-spike-branch
+# B. The *blob* URL renders for the commit while it is reachable only from the custom ref
+#    (run B after deleting the branch in Step 3, then re-check it still renders):
 BLOB_URL="https://github.com/$(gh repo view --json nameWithOwner --jq .nameWithOwner)/blob/$C/design.md"
-curl -fsSL "$BLOB_URL" | grep -q "rendered from a custom ref" && echo "blob renders: $BLOB_URL"   # expected: prints the URL; open it in a browser too
-gh api "repos/{owner}/{repo}/contents/design.md?ref=$C" --jq .sha                                   # expected: $BLOB
-gh api "repos/{owner}/{repo}/commits/$C" --jq .sha                                              # expected: $C
-# C. Ref absent from branch list:
+curl -fsSL "$BLOB_URL" | grep -q "rendered from a custom ref" && echo "blob renders: $BLOB_URL"
+gh api "repos/{owner}/{repo}/contents/design.md?ref=$C" --jq .sha                              # expected: $BLOB
+# C. Ref absent from branch list once the contrast branch is deleted:
 gh api "repos/{owner}/{repo}/branches" --jq '.[].name'                                          # expected: main only
 ```
-
-Optionally also push a **branch** `oat/projects/spike` with the same commit and confirm a run **does** appear — that contrast makes the custom-ref result unambiguous.
 
 **Step 3: Clean up**
 
 ```bash
-git push origin ":$SPIKE"; cd .. && rm -rf oat-spike      # delete the spike ref and local clone only; the repository stays for the operator
+git push origin ":refs/heads/oat-spike-branch"          # delete the contrast branch first, then re-run check B and C
+git push origin ":$SPIKE"; git update-ref -d "$SPIKE"; cd .. && rm -rf oat-spike   # delete the spike ref and local clone only; the repository stays for the operator
 ```
 
-If pushing to the disposable repository is not permitted for the implementing agent, stop and hand the three checks to the user — this task is a hard prerequisite for Phase 3's links work, not something to skip.
+If pushing to the disposable repository is not permitted for the implementing agent, stop and hand the checks to the user — this task is a hard prerequisite for Phase 3's links work, not something to skip.
 
 **Step 4: Record evidence**
 
-Append `### p01-t10 GitHub spike` to `implementation.md` with the repository URL, spike SHA, blob SHA, the exact blob URL that rendered, the three raw outputs (A/B/C), timestamps, and confirmation the spike ref was deleted. If A is non-empty (a run was created for the custom ref) or B fails (commit not served), **stop the phase and surface it** — the design's contingency is a real branch under `refs/heads/oat/projects/*`, which is a design change and needs the user.
+Append `### p01-t10 GitHub spike` to `implementation.md` with the repository URL, spike SHA, blob SHA, the exact blob URL that rendered, the four raw outputs (A negative, A' positive control, B, C), timestamps, and confirmation both refs were deleted. If A is non-empty **or A' is empty** (the workflow never ran even for the branch — the control failed and the negative proves nothing) the spike is inconclusive: fix the probe and re-run before recording. If A is non-empty (a run was created for the custom ref) or B fails (commit not served), **stop the phase and surface it** — the design's contingency is a real branch under `refs/heads/oat/projects/*`, which is a design change and needs the user.
 
 **Step 5: Verify**
 
@@ -792,7 +796,7 @@ git commit -m "feat(p02-t04): add oat project scope command"
 
 `resolve-target.test.ts`: argument forms accepted by every sync command — an explicit path; a bare slug (no path separator, matches the project-name regex) → `<syncedRoot>/<slug>`; no argument → `activeProject`; with `{ allowMissingCheckout: true }` a slug/path whose directory is absent resolves from the record file `<syncedRoot>/<slug>.json`; non-synced path → scope `CliError`; unknown slug with no record → "no synced project named …".
 
-Command tests with an injected `pushSynced`: resolves target from path, slug, or active project; refuses non-synced project (`CliError`, message names the scope); `--message` forwarded; results map to exit codes (`pushed`/`up-to-date` → 0; `conflict`/`rejected` → 1 with the documented next-command text); `--json` envelope `{status, sha, ref, conflicts?, prRefresh?}`. `prRefresh` is `undefined` in this task (wired in p03-t03); `--no-refresh-pr` accepted and recorded.
+Command tests with an injected `pushSynced`: resolves target from path, slug, or active project; refuses non-synced project (`CliError`, message names the scope); `--message` forwarded; results map to exit codes (`pushed`/`up-to-date` → 0; `conflict`/`rejected` → 1 with the documented next-command text, which names the explicit target: `oat project pull <path-or-slug> --continue`); `--json` envelope `{status, sha, ref, conflicts?, prRefresh?}`. `prRefresh` is `undefined` in this task (wired in p03-t03); `--no-refresh-pr` accepted and recorded.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/push/index.test.ts`
 Expected: fails.
@@ -831,7 +835,7 @@ git commit -m "feat(p02-t05): add oat project push command"
 
 - Checkout absent but record present → target resolved from the record (path may not exist yet) and `pullSynced` invoked → `created`.
 - `--continue` → `continueSynced`; `--abort` → `abortSynced`; both together → usage error.
-- Exit codes: `created`/`updated`/`up-to-date` → 0; `conflict`/`dirty` → 1 with next-command text listing conflicted files.
+- Exit codes: `created`/`updated`/`up-to-date` → 0; `conflict`/`dirty` → 1 with next-command text listing conflicted files **and naming the same target the user passed** (`oat project pull <path-or-slug> --continue` / `--abort`, shell-quoted); with `activeProject` pointing at a different project, recovery succeeds only with the emitted targeted command (command-level test).
 - `--json` envelope.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/pull/index.test.ts`
@@ -1072,6 +1076,7 @@ git commit -m "feat(p02-t10): adopt remote synced projects on pull and pull coor
 **Step 1: Write test (RED)**
 
 - `open <slug>` resolves across `shared`, `synced`, and `local` roots (exact match; ambiguity across scopes → error listing candidates); a synced slug with a record but no checkout → pulls (adopting if needed) before opening; sets `activeProject` to the scope-correct path.
+- `open` on a **paused** synced project: `maybeResumePausedProject` rewrites `state.md` (`open/index.ts:80-119`) → `pushSynced` (`chore(oat): resume <slug>`) runs **before** `activeProject` is updated and success is reported; push failure → exit 1, `activeProject` unchanged, `state.md` left resumed locally with the error naming `oat project push`; an already-active synced project → no commit, no push (nested `rev-list --count` unchanged).
 - `pause` on a synced project: writes `state.md`, then `pushSynced` (message `chore(oat): pause <slug>`) **before** clearing the active pointer; push failure leaves the pointer set and exits 1 with the push error; `shared`/`local` behavior unchanged (existing tests pass).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/open src/commands/project/pause`
@@ -1079,7 +1084,7 @@ Expected: new cases fail.
 
 **Step 2: Implement (GREEN)**
 
-Both commands use `project-scope.ts` roots and `resolveSyncedTarget`; `pause` injects `pushSynced`.
+Both commands use `project-scope.ts` roots and `resolveSyncedTarget`; both inject `pushSynced` — `pause` after writing the paused state, `open` when `maybeResumePausedProject` returns true — and in both the push precedes any active-pointer change.
 
 **Step 3: Verify**
 
@@ -1255,7 +1260,8 @@ Using the fixture with a pushed synced project:
 - Dirty checkout → archive refuses (`CliError`, names `oat project push`); unpushed commit → refuses; nothing archived, nothing removed.
 - Clean + pushed → archive dir exists with no `.git` entry and **no `reviews/` directory** (FR18; `pr/`, `summary.md`, lifecycle files present); `worktree list` has no stale entry; record has `status:'complete'` + `completedAt`; parent `ls-tree HEAD` shows the updated record (and the summary export file when `archive.summaryExportPath` is configured) in one commit `chore(oat): complete synced project <slug>`; `origin` still has the ref; `computeLinksInput` still works.
 - Re-run after success → idempotent (no second commit, no error).
-- **Retry identity:** the first attempt writes `record.archiveSnapshot = <snapshot name>` before copying; failure injected after the copy, after summary export/S3, after the record commit, and before checkout removal each leave a state from which a re-run **reuses the same snapshot path and export file** (no `-<suffix>` target, no duplicate export, no second lifecycle commit) and completes; the checkout is removed only after every durable write succeeded.
+- **Re-run after the checkout was removed** (record `complete`, snapshot present, `.git` pointer gone) → enters the synced path via the record, returns success with no copy, no export, no commit.
+- **Retry identity:** the first attempt writes `record.archiveSnapshot = <snapshot name>` **before** any copy (runner/fs spy asserts the order); failure injected between identity persistence and the copy, after the copy, after summary export/S3, after the record commit, and before checkout removal each leave a state from which a re-run **reuses the same snapshot path and export file** (no `-<suffix>` target, no duplicate export, no second lifecycle commit) and completes; the checkout is removed only after every durable write succeeded.
 - **Recap transaction (FR8/NFR1 parity with today's Steps 10–10.6):** with a selected project recap (`--project-recap-run`), the archive report exposes the exact tracked recap-export paths; the lifecycle commit made by `commitRecordChange` contains the record, the summary export, and the **immutable** recap export paths (allowlist extended to `projectRecapExport.exportRoot`, excluding `manifest.json`/`build-record.json`); the report returns that `lifecycleCommit` SHA for re-attestation; a second `commitRecordChange` (invoked by the skill after Step 10.5) commits only `manifest.json` + `build-record.json`; tests cover recap and no-recap completion, exact path containment of both commits, commit order, and recovery when the second commit fails (re-run commits only the evidence).
 - `shared` project → identical to existing tests **except** that `reviews/` is no longer copied into `archived/<name>/` (FR18; update the one existing assertion that expected it, if any).
 - e2e: extend the `synced project lifecycle` describe in `packages/cli/src/e2e/workflow.test.ts` (p02-t08) with `project push` → `project archive` through the real program; assert the parent commit, absent checkout, and retained origin ref.
@@ -1265,7 +1271,7 @@ Expected: new cases fail.
 
 **Step 2: Implement (GREEN)**
 
-In `archiveProjectOnCompletion`: `if (await isSyncedCheckout(source))` → precondition via the **non-mutating** `preflightSyncedCheckout(t, git)` from p01-t09 (returns `clean` | `dirty` | `unpushed` | `absent`; refuse unless `clean`) → copy with a filter excluding top-level `.git` (extend `copyDirectory` with an optional `filter`) → persist `record.archiveSnapshot` (retry identity; `resolveArchiveProjectTarget` must honor it instead of suffixing) → existing export/S3 → record update → `commitRecordChange([record, summaryExport, ...immutableRecapExportPaths])` (unless `commit:false`; returns `lifecycleCommit`) → `removeSyncedCheckout` (called exactly once, last, only after every durable write; test asserts the source directory still exists immediately after the copy and the record commit). The copy filter also skips `reviews/` for **every** scope (FR18) — the local snapshot no longer carries review artifacts, matching what S3 already excludes. Dependencies injected for tests.
+In `archiveProjectOnCompletion`: synced mode is resolved from the **scope root and record** (`resolveProjectScope(source) === 'synced'` and a record exists), not from a present `.git` pointer — so a re-run after the checkout was removed still enters the synced path. Then: if `record.status === 'complete'` and `record.archiveSnapshot` names an existing snapshot and the checkout is absent → **no-op success** (idempotent rerun). Otherwise: precondition via the **non-mutating** `preflightSyncedCheckout(t, git)` from p01-t09 (returns `clean` | `dirty` | `unpushed` | `absent`; refuse unless `clean`) → **persist `record.archiveSnapshot` first** (the retry identity; `resolveArchiveProjectTarget` honors it instead of suffixing) → copy with a filter excluding top-level `.git` (extend `copyDirectory` with an optional `filter`) → existing export/S3 → record update → `commitRecordChange([record, summaryExport, ...immutableRecapExportPaths])` (unless `commit:false`; returns `lifecycleCommit`) → `removeSyncedCheckout` (called exactly once, last, only after every durable write; test asserts the source directory still exists immediately after the copy and the record commit). The copy filter also skips `reviews/` for **every** scope (FR18) — the local snapshot no longer carries review artifacts, matching what S3 already excludes. Dependencies injected for tests.
 
 **Step 3: Verify**
 
@@ -1869,7 +1875,10 @@ git -C .oat/projects/synced/skill-dogfood log --oneline # shows the bookkeeping 
 # 2. Arrival/routing site — a REAL skill in the linked worktree: run `oat-project-progress` and confirm its Step 0 pulled
 #    the checkout before reporting status (the arrival snippet alone is not the acceptance path).
 git worktree add ../oat-skill-wt -b tmp/skill-dogfood
-(cd ../oat-skill-wt && pnpm run worktree:init && oat() { pnpm run --silent cli -- "$@"; } && oat config set activeProject .oat/projects/synced/skill-dogfood && oat project pull skill-dogfood && ls .oat/projects/synced/skill-dogfood)
+(cd ../oat-skill-wt && pnpm run worktree:init && oat() { pnpm run --silent cli -- "$@"; } && oat config set activeProject .oat/projects/synced/skill-dogfood && [ ! -d .oat/projects/synced/skill-dogfood ] && echo "checkout absent — invoking oat-project-progress now")
+#    → in that worktree, invoke the REAL `oat-project-progress` skill (not `oat project pull`); its Step 0 must materialize
+#      .oat/projects/synced/skill-dogfood before it reads state. Evidence: the skill transcript + `ls` afterwards.
+#      (A manual `oat project pull` is a separate CLI check, not the acceptance path.)
 oat project prune skill-dogfood --force
 oat config set activeProject .oat/projects/shared/synced-project-scope   # restore this project as active
 git worktree remove ../oat-skill-wt && git branch -D tmp/skill-dogfood
@@ -1961,7 +1970,7 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T025742Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T031106Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T032056Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T033204Z.md                | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T033204Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

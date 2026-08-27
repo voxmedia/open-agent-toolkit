@@ -570,7 +570,7 @@ Not applicable — no database.
 ### Conflict flow (push or pull)
 
 1. Push has already committed pending edits (commit-first), so a conflict from either command is a rebase of committed local work onto `<ref>`. `git rebase` stops → command returns `status: 'conflict'`, `conflicts: [files]`.
-2. Message: "Resolve conflicts in `.oat/projects/synced/<slug>/…`, then run `oat project pull --continue` (or `--abort`)."
+2. Message: "Resolve conflicts in `.oat/projects/synced/<slug>/…`, then run `oat project pull <path-or-slug> --continue` (or `oat project pull <path-or-slug> --abort`)." The target is always echoed explicitly (shell-quoted) because the conflicted project need not be `activeProject` — e.g. an adopting pull from another checkout.
 3. Skill guidance: the agent resolves in place (artifact files are markdown; `state.md` is last-writer-wins by intent) and continues. `push` after a successful `--continue` completes the original operation. `--abort` restores the pre-rebase detached HEAD with the local commit intact — nothing the agent wrote is lost either way.
 
 ### Retry Logic

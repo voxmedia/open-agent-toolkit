@@ -281,3 +281,13 @@ Gate attempt 7 authorized by the fold-in decision.
 - M2 `push-runner.ts` added to p03-t04.
 
 Plan is now 42 tasks. Gate attempt 8 follows.
+
+**Attempt 8 — `reviews/archived/artifact-plan-review-2026-08-27T033204Z.md`** (1 critical, 2 important, 2 medium) — all resolved:
+
+- C1 `open` publishes `state.md` when it resumes a paused synced project (push before pointer change; tests).
+- I1 spike commit built on the workflow-bearing tip; positive control on a branch; blob check after branch deletion.
+- I2 archive persists `record.archiveSnapshot` before any copy; synced mode from scope root + record; absent-checkout completed rerun is a no-op.
+- M1 dogfood invokes the real `oat-project-progress` with the checkout absent.
+- M2 conflict messages name the explicit target.
+
+**Plan approved by the maintainer after attempt 8** ("sounds good" to: approve after receiving gate 8 unless structural). Eight gate runs, 36 findings, all applied. `plan.md` marked complete; implementation not started.
