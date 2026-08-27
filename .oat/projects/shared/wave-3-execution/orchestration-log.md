@@ -38,3 +38,44 @@ round (W2 needed three). Artifact archived at
 **Skill signal (strengthens):** carrying the previous wave's gate-passed
 wrapper text forward (with the rule-1 addendum re-derived from fresh recon)
 removes the wrapper-precision findings that cost W2 two rounds.
+
+### 2026-08-26 · structural · oat-project-implement · p01 implemented and reviewed (round 1)
+
+`w3-p01-impl-001` (Opus) returned DONE at `4019f98c` (one commit, DoD
+10/10, Codex cross-model review two rounds — P2 hermeticity regression fixed);
+`w3-p01-review-001` (Opus, fresh, six mandated probes) → 0C/0I/2M/4m; fix
+round `w3-p01-fix-001` dispatched on the resumed implementer handle.
+
+### 2026-08-26 · general · friction · plan Verify command does not filter
+
+The source plan's step-2 Verify `pnpm --filter … test -- src/fs/assets.test.ts`
+runs the whole CLI vitest suite (the path after `--` is ignored); the gate is
+still sound but gives no signal that the intended file ran.
+`vitest run <path>` is the working form. **Skill signal (gap):** plan authors
+should verify focused-test invocations against the repo's runner.
+
+### 2026-08-26 · general · friction · release:check-versions is committed-state-only
+
+Pre-commit the gate reports "no public package changes — version bump check
+passed" (a no-op indistinguishable from success); only the post-commit re-run
+gates the bump. Rule for W4: run `git fetch origin && pnpm
+release:check-versions` again immediately after the task commit and record
+that exit code.
+
+### 2026-08-26 · general · worked-well · negative control proves isolation
+
+The implementer's negative control (smoke file passes with
+`packages/cli/assets` moved aside) is the only evidence that actually proves
+the consumer reads the isolated bundle — the temp bundle is byte-identical to
+the shared one. Rule for containment lanes: require a negative control in the
+brief. The reviewer's mutation probes then showed the restore/cleanup path was
+correct but unasserted (two surviving mutants) — a second file-level `after`
+closes it (round-1 m4).
+
+### 2026-08-26 · general · friction · cross-model fix applied at one site only
+
+Codex named the hermeticity regression at `assets.test.ts`; the implementer
+fixed that site and did not sweep the other default-binding call site the
+change exposed (`gate/index.test.ts:479`, six failures under an ambient
+override — round-1 M2). Rule: a cross-model finding that names a class gets a
+repo-wide sweep, not a point fix.

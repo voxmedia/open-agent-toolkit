@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: null # p01-t01 implemented; phase review in progress
+oat_last_commit: 4019f98c # p01-t01 implementation commit
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260817-let-resolveassetsroot-honor' }
@@ -88,13 +88,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T23:08:35.576Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-26T23:22:23.493Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T00:07:42.004Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-3-execution
 
-**Status:** Implement — p01 dispatched (plan gate passed round 1, run 59ebe179)
+**Status:** Implement — p01 implemented (`4019f98c`); review round 1 received (0C/0I/2M/4m); bounded fix round in progress
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
@@ -120,7 +120,9 @@ integration checkout `wave-3-execution` (BASE_SHA `39cea801`; code baseline
 - ✓ Wave-boundary drift refresh: 1 PASS / 0 MINOR-DRIFT / 0 STOP (rule-1 addendum recorded)
 - ✓ Wrapper scaffolded (discovery, plan, orchestration log)
 - ✓ Configured plan gate passed round 1 (cursor-gpt-5-6-sol-xhigh, run 59ebe179, 0C/0I/0M/0m)
-- ⧗ Phase p01 via `oat-project-implement` (Opus implementer, request w3-p01-impl-001)
+- ✓ Phase p01 implemented by the Opus implementer (`4019f98c`; DoD 10/10; Codex review P2 fixed)
+- ✓ Phase review round 1 (Opus, six probes; 0C/0I/2M/4m — probe 1 weaker-anywhere clean)
+- ⧗ Fix round `w3-p01-fix-001` (M1, M2, m1, m3, m4; m2 → document step) → narrowed review round 2
 
 ## Blockers
 
@@ -128,4 +130,4 @@ None
 
 ## Next Milestone
 
-p01 implementation → phase review (Opus implementer) → phase review → final review → configured exit gate → post-implement sequence → PR → merge → wave-close. Completion tail: deferred to program close.
+Fix round → p01 review round 2 (narrowed) → final review → configured exit gate → post-implement sequence → PR → merge → wave-close. Completion tail: deferred to program close.
