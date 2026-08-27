@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p02-t12
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,11 +27,11 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 10    | 10/10     |
-| Phase 2 | in_progress | 12    | 11/12     |
+| Phase 2 | in_progress | 12    | 12/12     |
 | Phase 3 | pending     | 10    | 0/10      |
 | Phase 4 | pending     | 11    | 0/11      |
 
-**Total:** 21/43 tasks completed
+**Total:** 22/43 tasks completed
 
 ---
 
@@ -145,16 +145,16 @@ oat_generated: false
 
 ## Phase 2: CLI surface
 
-**Status:** in progress - review-generated systemic task p02-t12 queued
+**Status:** in progress - all 12 tasks complete; awaiting fresh p02 review
 **Started:** 2026-08-27
 
 ### Phase Summary
 
-**Outcome:** All 11 planned CLI-surface tasks are implemented, including scope-aware scaffolding, push/pull/list/scope commands, remote adoption, coordination children, and synced-aware open/pause behavior. One phase recovery updated stale integration expectations after the default changed to synced.
+**Outcome:** All 12 planned CLI-surface tasks are implemented, including scope-aware scaffolding, push/pull/list/scope commands, remote adoption, coordination children, synced-aware open/pause behavior, and one shared canonical identity preflight for every mutating sync target. One phase recovery updated stale integration expectations after the default changed to synced.
 
-**Verification:** Full CLI suite passed 282 files and 3,789 tests after fix cycle 5/5; focused real-worktree alias tests passed 52/52, and CLI lint, format, type-check, and committed boundary checks passed. Review round 6 passed 433 phase tests, 77 command/help/lifecycle tests, the full 3,789-test CLI suite, and 78 control-plane tests plus builds, type-checks, changed-file lint/format, and range diff checks.
+**Verification:** Task p02-t12 passed a 109-test focused real-worktree/entry-point matrix and the full CLI suite at 282 files and 3,799 tests against committed HEAD; CLI type-check, file-scoped lint/format, commit check, and exact five-file boundary passed. Prior review round 6 passed 433 phase tests, 77 command/help/lifecycle tests, the full 3,789-test CLI suite, and 78 control-plane tests plus builds, type-checks, changed-file lint/format, and range diff checks.
 
-**Review disposition:** Six independent rounds and five bounded fix iterations ran. Fix iteration 5 closed command-selected explicit-path and bare-slug aliases before record resolution or mutation. Review round 6 found 1 Important systemic gap: coordination-child pull constructs `SyncTarget` directly, bypasses the command-level guard, and can still rebase a sibling checkout. The structured review was received into new planned task p02-t12, which moves the invariant to the shared low-level mutation boundary before Phase 3 begins.
+**Review disposition:** Six independent rounds and five bounded fix iterations ran. Review round 6's systemic finding became planned task p02-t12. Commit `9eff5cee` centralizes canonical slug/path/ref identity before record access or Git mutation across low-level entry points, coordination children, resolver paths, and reachable split targets. A fresh p02 review is required before Phase 3 begins.
 
 ### Task p02-t01: `projects.defaultScope` config key
 
@@ -210,6 +210,15 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** `34ecc0c30898dbccd20751d37b5adbc864fc587e`
+
+### Task p02-t12: (review) Enforce canonical identity at every mutating sync entry point
+
+**Status:** completed
+**Commit:** `9eff5ceef77a1716c2a56d1a594e707b263ea803`
+
+**Outcome:** Canonical slug/path/ref identity is enforced through one shared low-level preflight before record access or Git mutation across create, push, pull, continue, abort, preflight, removal, rollback, coordination children, resolver paths, and reachable split targets. Absent-checkout create/adopt behavior remains supported.
+
+**Verification:** RED produced the expected 9 alias-safety failures. Against committed HEAD, the focused matrix passed 109/109, the full CLI suite passed 3,799/3,799, and CLI type-check, file-scoped lint/format, commit check, and exact five-file boundary passed.
 
 ---
 
@@ -518,7 +527,7 @@ lifecycle_outcome:
 
 - I1 `code_fix_required` — convert the command-level canonical identity guard into a shared low-level preflight used by every mutating `SyncTarget` entry point; cover coordination-child pull and audit internally constructed split targets.
 
-**Next:** Execute p02-t12 via the `oat-project-implement` skill. After it completes, mark this artifact-identified review event `fixes_completed` and run a fresh p02 review before Phase 3.
+**Next:** Task p02-t12 is complete. Run a fresh p02 review before Phase 3.
 
 ---
 
@@ -527,7 +536,7 @@ lifecycle_outcome:
 **Branch:** `feat/synced-project-scope`
 **Tier:** 1 - subagents
 **Dispatch policy:** managed `high` (Codex pinned variants)
-**Status:** p02 planned revision task p02-t12 ready for implementation
+**Status:** completed - p02-t12 committed and phase verification passed
 
 #### Revision Execution
 
@@ -539,6 +548,8 @@ lifecycle_outcome:
 - Dispatch stamp: `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - Phase recovery: unchanged at 1/10 with `pending_attempt: null`
 - Phase 3: not started
+- Task commit: `9eff5ceef77a1716c2a56d1a594e707b263ea803`
+- Verification: focused 109/109, full CLI 3,799/3,799, type-check, lint, format, commit check, and exact file boundary passed
 
 ---
 
@@ -611,7 +622,7 @@ Chronological log of implementation progress.
 - [x] p02 review fix iteration 5 - command-selected alias defect resolved in `fc14f074`
 - [x] p02 review cycle 6 - blocked at 1 Important / 0 Medium in `reviews/code-p02-review-2026-08-27T153712Z.md`
 - [x] p02 plan revision - shared low-level mutation preflight queued as p02-t12
-- [ ] p02-t12 - execute the review-generated systemic fix
+- [x] p02-t12 - systemic fix completed in `9eff5cee`
 - [ ] p03-t01 - not started
 
 ---
