@@ -282,6 +282,10 @@ function createHarness(options: HarnessOptions = {}): {
         detect: async () => false,
       },
     ] satisfies ProviderAdapter[]);
+  const applyOatCoreGitattributes = vi.fn(async () => ({
+    action: 'no-change' as const,
+    entries: [],
+  }));
   const dependencyOverrides = {
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as Scope,
@@ -325,6 +329,7 @@ function createHarness(options: HarnessOptions = {}): {
       entries: [],
       stateDashboardIndexAction: 'not-tracked' as const,
     })),
+    applyOatCoreGitattributes,
     dirExists: dirExistsFn,
     runToolPacks,
     readOatConfig: vi.fn(async () => ({ version: 1 })),
@@ -375,6 +380,7 @@ function createHarness(options: HarnessOptions = {}): {
     runToolPacks,
     addLocalPaths: addLocalPathsFn,
     applyGitignore: applyGitignoreFn,
+    applyOatCoreGitattributes,
   };
 }
 
@@ -416,9 +422,12 @@ describe('createInitCommand', () => {
   });
 
   it('creates canonical directories and manifest', async () => {
-    const { command, ensureCanonicalDirs, saveManifest } = createHarness({
-      interactive: false,
-    });
+    const {
+      command,
+      ensureCanonicalDirs,
+      saveManifest,
+      applyOatCoreGitattributes,
+    } = createHarness({ interactive: false });
 
     await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
 
@@ -430,6 +439,7 @@ describe('createInitCommand', () => {
       '/tmp/workspace/.oat/sync/manifest.json',
       expect.any(Object),
     );
+    expect(applyOatCoreGitattributes).toHaveBeenCalledWith('/tmp/workspace');
   });
 
   it('bare oat init still works (regression)', async () => {
@@ -1159,6 +1169,10 @@ config_file = "agents/reviewer.toml"
         action: 'no-change' as const,
         entries: [],
         stateDashboardIndexAction: 'not-tracked' as const,
+      })),
+      applyOatCoreGitattributes: vi.fn(async () => ({
+        action: 'no-change' as const,
+        entries: [],
       })),
       dirExists: vi.fn(async () => true),
       confirmAction: vi.fn(async () => false),

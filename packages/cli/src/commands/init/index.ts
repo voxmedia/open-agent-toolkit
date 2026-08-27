@@ -9,6 +9,10 @@ import {
   type ScopeSelectionMode,
 } from '@app/command-context';
 import {
+  applyOatCoreGitattributes,
+  type ApplyOatCoreGitattributesResult,
+} from '@commands/init/gitattributes';
+import {
   type ApplyOatCoreResult,
   applyOatCoreGitignore,
 } from '@commands/init/gitignore';
@@ -217,6 +221,9 @@ interface InitDependencies {
     config: SyncConfig,
   ) => Promise<ConfigAwareAdaptersResult>;
   applyOatCoreGitignore: (repoRoot: string) => Promise<ApplyOatCoreResult>;
+  applyOatCoreGitattributes: (
+    repoRoot: string,
+  ) => Promise<ApplyOatCoreGitattributesResult>;
   dirExists: (dirPath: string) => Promise<boolean>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
   resolveLocalPaths: (config: OatConfig) => string[];
@@ -449,6 +456,7 @@ function createDependencies(): InitDependencies {
     saveSyncConfig,
     getConfigAwareAdapters,
     applyOatCoreGitignore,
+    applyOatCoreGitattributes,
     dirExists,
     readOatConfig,
     resolveLocalPaths,
@@ -958,6 +966,7 @@ async function runInitCommand(
 
     if (scope === 'project') {
       await dependencies.applyOatCoreGitignore(scopeRoot);
+      await dependencies.applyOatCoreGitattributes(scopeRoot);
     }
 
     const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');

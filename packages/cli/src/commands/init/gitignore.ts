@@ -1,9 +1,8 @@
 import { execFile } from 'node:child_process';
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
-import { fileExists } from '@fs/io';
+import { applyManagedBlock } from './managed-block';
 
 const SECTION_START = '# OAT core';
 const SECTION_END = '# END OAT core';
@@ -44,58 +43,17 @@ export async function isSyncedRuleApplied(repoRoot: string): Promise<boolean> {
   }
 }
 
-function buildSection(): string {
-  return `${SECTION_START}\n${CORE_ENTRIES.join('\n')}\n${SECTION_END}`;
-}
-
 export async function applyOatCoreGitignore(
   repoRoot: string,
 ): Promise<ApplyOatCoreResult> {
   const gitignorePath = join(repoRoot, '.gitignore');
-  const exists = await fileExists(gitignorePath);
-  const section = buildSection();
-
-  if (!exists) {
-    await writeFile(gitignorePath, `${section}\n`, 'utf8');
-    return {
-      action: 'created',
-      entries: CORE_ENTRIES,
-      stateDashboardIndexAction: await untrackOatStateDashboard(repoRoot),
-    };
-  }
-
-  const content = await readFile(gitignorePath, 'utf8');
-  const startIdx = content.indexOf(SECTION_START);
-  const endIdx = content.indexOf(SECTION_END);
-
-  if (startIdx !== -1 && endIdx !== -1) {
-    const existingSection = content.slice(
-      startIdx,
-      endIdx + SECTION_END.length,
-    );
-    if (existingSection === section) {
-      return {
-        action: 'no-change',
-        entries: CORE_ENTRIES,
-        stateDashboardIndexAction: await untrackOatStateDashboard(repoRoot),
-      };
-    }
-
-    const before = content.slice(0, startIdx);
-    const after = content.slice(endIdx + SECTION_END.length);
-    await writeFile(gitignorePath, `${before}${section}${after}`, 'utf8');
-    return {
-      action: 'updated',
-      entries: CORE_ENTRIES,
-      stateDashboardIndexAction: await untrackOatStateDashboard(repoRoot),
-    };
-  }
-
-  const separator = content.endsWith('\n') ? '\n' : '\n\n';
-  await writeFile(gitignorePath, `${content}${separator}${section}\n`, 'utf8');
-  return {
-    action: 'updated',
+  const result = await applyManagedBlock(gitignorePath, {
+    start: SECTION_START,
+    end: SECTION_END,
     entries: CORE_ENTRIES,
+  });
+  return {
+    ...result,
     stateDashboardIndexAction: await untrackOatStateDashboard(repoRoot),
   };
 }

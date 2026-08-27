@@ -3,6 +3,7 @@ import { chmod } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { buildCommandContext } from '@app/command-context';
+import { applyOatCoreGitattributes } from '@commands/init/gitattributes';
 import { applyOatCoreGitignore } from '@commands/init/gitignore';
 import {
   copyDirWithStatus,
@@ -45,6 +46,7 @@ const defaultDependencies: UpdateToolsDependencies = {
   fileExists,
   chmod,
   applyOatCoreGitignore,
+  applyOatCoreGitattributes,
 };
 
 export function buildSyncSubprocessArgs(
@@ -135,25 +137,34 @@ export function createToolsUpdateCommand(
       );
       const assetsRoot = dryRun ? null : await dependencies.resolveAssetsRoot();
 
-      if (
-        !dryRun &&
-        shouldBackfillWorkflowGitignore(result) &&
-        dependencies.applyOatCoreGitignore
-      ) {
+      if (!dryRun && shouldBackfillWorkflowGitignore(result)) {
         const repoRoot = await resolveProjectRoot(context.cwd);
-        const gitignoreResult =
-          await dependencies.applyOatCoreGitignore(repoRoot);
-        if (gitignoreResult.action !== 'no-change') {
-          const verb =
-            gitignoreResult.action === 'created' ? 'Created' : 'Updated';
-          logger.info(
-            `${verb} .gitignore OAT core section (${gitignoreResult.entries.length} entries).`,
-          );
+        if (dependencies.applyOatCoreGitignore) {
+          const gitignoreResult =
+            await dependencies.applyOatCoreGitignore(repoRoot);
+          if (gitignoreResult.action !== 'no-change') {
+            const verb =
+              gitignoreResult.action === 'created' ? 'Created' : 'Updated';
+            logger.info(
+              `${verb} .gitignore OAT core section (${gitignoreResult.entries.length} entries).`,
+            );
+          }
+          if (gitignoreResult.stateDashboardIndexAction === 'untracked') {
+            logger.info(
+              'Untracked generated dashboard from git index: .oat/state.md.',
+            );
+          }
         }
-        if (gitignoreResult.stateDashboardIndexAction === 'untracked') {
-          logger.info(
-            'Untracked generated dashboard from git index: .oat/state.md.',
-          );
+        if (dependencies.applyOatCoreGitattributes) {
+          const gitattributesResult =
+            await dependencies.applyOatCoreGitattributes(repoRoot);
+          if (gitattributesResult.action !== 'no-change') {
+            const verb =
+              gitattributesResult.action === 'created' ? 'Created' : 'Updated';
+            logger.info(
+              `${verb} .gitattributes OAT core section (${gitattributesResult.entries.length} entries).`,
+            );
+          }
         }
       }
 

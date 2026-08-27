@@ -202,6 +202,10 @@ describe('createToolsUpdateCommand config writes', () => {
       entries: ['.oat/state.md'],
       stateDashboardIndexAction: 'untracked' as const,
     }));
+    const applyOatCoreGitattributes = vi.fn(async () => ({
+      action: 'updated' as const,
+      entries: ['.oat/projects/shared/** linguist-generated=true'],
+    }));
     const dependencies: UpdateToolsDependencies = {
       scanTools: vi.fn(async (options) =>
         options.scope === 'project'
@@ -222,6 +226,7 @@ describe('createToolsUpdateCommand config writes', () => {
       fileExists: vi.fn(async () => true),
       chmod: vi.fn(async () => {}),
       applyOatCoreGitignore,
+      applyOatCoreGitattributes,
     };
 
     const command = createToolsUpdateCommand(dependencies, {
@@ -235,11 +240,15 @@ describe('createToolsUpdateCommand config writes', () => {
     );
 
     expect(applyOatCoreGitignore).toHaveBeenCalledWith('/tmp/workspace');
+    expect(applyOatCoreGitattributes).toHaveBeenCalledWith('/tmp/workspace');
     expect(loggerCapture.info).toContain(
       'Updated .gitignore OAT core section (1 entries).',
     );
     expect(loggerCapture.info).toContain(
       'Untracked generated dashboard from git index: .oat/state.md.',
+    );
+    expect(loggerCapture.info).toContain(
+      'Updated .gitattributes OAT core section (1 entries).',
     );
     expect(process.exitCode).toBeUndefined();
   });
