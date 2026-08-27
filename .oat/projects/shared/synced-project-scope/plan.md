@@ -1724,6 +1724,7 @@ git commit -m "chore(p04-t10): record skill-sweep dogfood evidence"
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T013313Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T014220Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T015823Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T022840Z.md                | -             | -          | -                        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
