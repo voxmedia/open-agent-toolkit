@@ -846,7 +846,10 @@ describe('review skill contracts', () => {
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.2');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.0');
+    expect(content).toContain(
+      'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
+    );
     expect(content).toContain(
       'Resolve `projectRecap` intent before presenting the batched completion prompt.',
     );
@@ -937,7 +940,7 @@ describe('review skill contracts', () => {
     );
 
     expect(content).toContain(
-      'For `IS_SHARED_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`.',
+      'For `IS_DURABLE_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`.',
     );
     expect(content).toContain(
       'A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence.',
@@ -1024,7 +1027,7 @@ describe('review skill contracts', () => {
     expect(step10Index).toBeGreaterThan(step8Index);
 
     expect(content).toContain(
-      '**Skip if `SHOULD_ARCHIVE` is false or `IS_SHARED_PROJECT` is false.**',
+      '**Skip if `SHOULD_ARCHIVE` is false or `IS_DURABLE_PROJECT` is false.**',
     );
     expect(content).toContain(
       'Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).',

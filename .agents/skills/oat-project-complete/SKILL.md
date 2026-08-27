@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.6.2
+version: 1.7.0
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -43,13 +43,11 @@ fi
 
 PROJECT_NAME=$(basename "$PROJECT_PATH")
 
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
-PROJECTS_ROOT="${PROJECTS_ROOT%/}"
-IS_SHARED_PROJECT="false"
-
-case "$PROJECT_PATH" in
-  "${PROJECTS_ROOT}/"*) IS_SHARED_PROJECT="true" ;;
-esac
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing completion" >&2; exit 1; }
+IS_DURABLE_PROJECT="false"
+if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then
+  IS_DURABLE_PROJECT="true"
+fi
 ```
 
 ### Step 2: Upfront User Questions (Batched)
@@ -142,7 +140,7 @@ implementation ran:
 **Questions to ask (in a single prompt):**
 
 1. **Confirm completion:** "Ready to mark **{PROJECT_NAME}** as complete?"
-2. **Archive** (only if `IS_SHARED_PROJECT` is `true`): "Archive the project after completion?"
+2. **Archive** (only if `IS_DURABLE_PROJECT` is `true`): "Archive the project after completion?"
 3. **Generate or refresh summary** (only if summary status is `missing` or `stale`): present the status explicitly:
    - Missing example: "A summary has not been generated yet. Would you like me to generate it now as part of completion?"
    - Stale example: "The project summary is out of date. Would you like me to refresh it now as part of completion?"
@@ -352,7 +350,7 @@ a warning rather than changing project completion status.
 
 `project-explainer` runs are active-project working artifacts, not durable post-completion reference products. Do not export, re-attest, or add archive-aware PR or summary reference links for a `project-explainer` run.
 
-For `IS_SHARED_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`. A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence. Do not treat local filesystem presence as durability. Completion-bookkeeping durability, relocation re-attestation, and archive-aware recap links are handled by the later durability stage, not by this selection gate.
+For `IS_DURABLE_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`. This is the local scope. A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence. Do not treat local filesystem presence as durability. Shared and synced recaps are exported and attested through the later durability stage.
 
 ### Step 3.7: Project Log Completion Gate
 
@@ -439,12 +437,23 @@ Delegate the canonical `state.md` completion mutation to the CLI:
 
 ```bash
 COMPLETE_STATE_ARGS=("$PROJECT_PATH")
-if [[ "$SHOULD_ARCHIVE" == "true" && "$IS_SHARED_PROJECT" == "true" ]]; then
+if [[ "$SHOULD_ARCHIVE" == "true" && "$IS_DURABLE_PROJECT" == "true" ]]; then
   COMPLETE_STATE_ARGS+=("--archived")
 fi
 
 oat project complete-state "${COMPLETE_STATE_ARGS[@]}"
 ```
+
+For `synced`, immediately persist this finalized lifecycle state before archive:
+
+```bash
+if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): finalize project lifecycle"
+fi
+```
+
+The synced completion order is: finalize → project push → project archive →
+render `oat project links --durable-summary <path>` → update the open PR body.
 
 The CLI command owns both the frontmatter completion fields and the canonical markdown body updates for `state.md`.
 It must set `oat_lifecycle: complete`, completion timestamps, `**Status:** Complete`, `**Last Updated:**`, the canonical `## Current Phase` body, normalized `## Progress`, and `## Next Milestone`.
@@ -511,7 +520,7 @@ Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path
 
 ### Step 8: Archive Project (Conditional)
 
-**Skip if `SHOULD_ARCHIVE` is false or `IS_SHARED_PROJECT` is false.**
+**Skip if `SHOULD_ARCHIVE` is false or `IS_DURABLE_PROJECT` is false.**
 
 This conditional skips archive movement only; it does not skip the Step 3.7
 seal append for an existing project log.
@@ -519,6 +528,9 @@ seal append for an existing project log.
 Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).
 
 The archive-side effects in this step are CLI-owned. Do not reimplement local archive movement, summary export, S3 sync, AWS credential handling, or worktree durability checks in the skill.
+
+Archive refuses a dirty or unpushed synced checkout. The correction is
+`oat project push "$PROJECT_PATH"`; never discard or bypass pending artifacts.
 
 ```bash
 ARCHIVE_OUTPUT=""
@@ -538,8 +550,13 @@ printf '%s\n' "$ARCHIVE_OUTPUT"
 
 Parse `ARCHIVE_OUTPUT` as the `oat project archive --json` report. Require
 `status: "ok"`, `mode: "apply"`, and a non-empty `archivePath`; use its
-`s3Path`, `summaryExportFile`, and `warnings` fields for later reporting. Set
+`s3Path`, `summaryExportFile`, `lifecycleCommit`, and `warnings` fields for later reporting. Set
 `ARCHIVE_PATH` from `archivePath`, then set `PROJECT_PATH="$ARCHIVE_PATH"`.
+
+For a synced project, require a full `lifecycleCommit` SHA in the archive
+report and set `LIFECYCLE_COMMIT` to it. This is the parent-branch record and
+summary-export commit owned by archive; do not replace it with
+`git rev-parse HEAD` and do not create another lifecycle commit.
 
 When `SELECTED_PROJECT_RECAP_RUN` is non-empty, also require the report's
 `projectRecapExport.sourceRunRoot`, `projectRecapExport.exportRoot`, and
@@ -557,7 +574,7 @@ authoritative. A missing, malformed, mismatched, outside-root, or gitignored
 export report is an archive failure; stop before lifecycle bookkeeping.
 Never use the gitignored archive as evidence or a link target.
 
-SELECTED_PROJECT_RECAP_RUN must be project-relative. Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty. The empty case remains the existing archive behavior. Because this step runs only for shared projects, local-scope projects never pass a recap archive argument.
+SELECTED_PROJECT_RECAP_RUN must be project-relative. Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty. The empty case remains the existing archive behavior. Because this step runs only for durable projects, local-scope projects never pass a recap archive argument.
 
 The no-recap invocation remains `oat project archive "$PROJECT_PATH"` with
 `--json` added only to select the machine-readable report.
@@ -577,6 +594,11 @@ Omit either link when its containing artifact does not exist.
 
 Use the current head branch for the blob URL while the PR is open. Never link to `.oat/projects/archived/`; it is gitignored and will return 404 remotely.
 
+When `summaryExportFile` is non-null, render the final synced block with
+`oat project links "$PROJECT_NAME" --durable-summary "$summaryExportFile" --format markdown`
+and replace the delimited block in the PR body. The pinned ref link remains;
+the durable summary is appended rather than substituted.
+
 ### Step 9: Regenerate Dashboard
 
 Regenerate the repo state dashboard so the completion status is reflected before committing.
@@ -588,7 +610,7 @@ oat state refresh
 ### Step 10: Commit + Push Bookkeeping (Required)
 
 Completion is not done until lifecycle changes are committed. This commit also
-anchors commit durability for a selected shared-project recap. Do not push yet
+anchors commit durability for a selected durable-project recap. Do not push yet
 when recap attestation is pending.
 
 Expected changes may include:
@@ -599,17 +621,21 @@ Expected changes may include:
 - `{PROJECT_PATH}/pr/project-pr-*.md` (PR description artifact)
 - `.oat/state.md` is regenerated locally in Step 9 but should not be staged; it is generated dashboard state and normally gitignored.
 - `.oat/config.local.json` (if `activeProject` cleared)
-- Shared-project deletions under `{PROJECTS_ROOT}/{PROJECT_NAME}` (if archived)
+- Shared-project deletions or synced-project record updates (if archived)
 - The complete tracked recap export and tracked summary export reported by
   archive (if present)
 
 Run:
 
 ```bash
-git status --short
-git add -- <exact completion and lifecycle paths>
-git commit -m "chore(oat): complete project lifecycle for ${PROJECT_NAME}"
-LIFECYCLE_COMMIT=$(git rev-parse HEAD)
+if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+  test -n "$LIFECYCLE_COMMIT"
+else
+  git status --short
+  git add -- <exact completion and lifecycle paths>
+  git commit -m "chore(oat): complete project lifecycle for ${PROJECT_NAME}"
+  LIFECYCLE_COMMIT=$(git rev-parse HEAD)
+fi
 ```
 
 Rules:
@@ -641,7 +667,7 @@ with:
 - relocatedFrom: `sourceRunRoot`; and
 - context `artifactCommit`: the full `LIFECYCLE_COMMIT` SHA.
 
-For a shared project that was not archived, use the selected active run and
+For a durable project that was not archived, use the selected active run and
 omit `relocatedFrom`, but keep the same `completion-bookkeeping` mode.
 
 When the finalization plan is `complete` with `built-needs-review` or `failed`,
@@ -681,6 +707,22 @@ ran, push the lifecycle bookkeeping commit once. If verification detects
 contamination or wrong commit order, do not push. If push fails, report the
 failure and do not claim completion is fully recorded.
 
+The evidence update remains a direct, exact-path Git commit. Stage only the
+reported exported `manifest.json` and `build-record.json` under tracked
+`.oat/repo/reference/project-recaps/`:
+
+```bash
+git add -- "$EXPORTED_MANIFEST_PATH" "$EXPORTED_BUILD_RECORD_PATH"
+git commit -m "chore(oat): attest final project recap"
+EVIDENCE_COMMIT=$(git rev-parse HEAD)
+test "$(git rev-parse "$EVIDENCE_COMMIT^")" = "$LIFECYCLE_COMMIT"
+```
+
+Verify the evidence commit contains exactly those two paths, the lifecycle
+commit is its immediate parent, unrelated-change snapshots remain unchanged,
+and then push once. The archive command does not own this evidence transition;
+use the direct exact-path commit above.
+
 ### Step 11: Open PR in GitHub (Conditional)
 
 **Skip if `SHOULD_OPEN_PR` is false.**
@@ -713,7 +755,7 @@ Skip this step when:
 
 - The PR was not yet open at the start (`WAS_PR_OPEN_AT_START="false"`) — Step 11 already created the PR with the archive-aware body.
 - No archive happened (`SHOULD_ARCHIVE="false"`) — the original blob links still resolve.
-- `IS_SHARED_PROJECT="false"` — non-shared projects are not archived in this skill, so no link breakage.
+- `IS_DURABLE_PROJECT="false"` — local projects are not archived in this skill, so no link breakage.
 
 Steps:
 
