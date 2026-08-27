@@ -120,6 +120,10 @@ Phase 4 implemented 7/7 tasks (4790cbd3b..0c189eb5b); implementer returned BLOCK
 
 Phase 4 passed: re-review 0 Critical / 0 Important (1 Medium, 4 Minor deferred to Phase 5), 1 fix loop of 2 configured, 3 recovery attempts of 10 used. See reviews/p04-review-2026-08-27T144000Z.md.
 
+### 2026-08-27 · structural · oat-project-implement · p05
+
+Phase 5 passed: re-review 0 Critical / 0 Important (1 Medium, 5 Minor), 1 fix loop of 2, 0 recovery attempts; reviewer reconnaissance attempted with orchestration evidence in reviews/p05-review-2026-08-27T170000Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
