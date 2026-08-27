@@ -103,37 +103,48 @@ function reportPullResult(
     for (const child of children) {
       if (
         child.status !== 'missing' &&
+        child.status !== 'error' &&
         child.status !== 'conflict' &&
         child.status !== 'dirty'
       ) {
         continue;
       }
       const childArg = shellQuote(child.slug);
-      const diagnostic = child.message ?? 'no diagnostic provided';
+      const diagnostic =
+        child.message ??
+        (child.conflicts?.length
+          ? `conflicts: ${child.conflicts.join(', ')}`
+          : 'no diagnostic provided');
       const retry =
         child.status === 'conflict'
           ? `Resolve its files, then run oat project pull ${childArg} --continue; or oat project pull ${childArg} --abort.`
           : child.status === 'dirty'
             ? `Run oat project push ${childArg}, or explicitly stash/clean it before retrying oat project pull ${childArg}.`
-            : `Retry with oat project pull ${childArg}.`;
+            : child.status === 'error'
+              ? `Repair the reported Git/system failure, then retry oat project pull ${childArg}.`
+              : `Retry with oat project pull ${childArg}.`;
       context.logger.error(
         `Child ${child.slug} ${child.status}: ${diagnostic}. ${retry}`,
       );
     }
   }
-  const childFailed = children.some(
-    (child) =>
-      child.status === 'missing' ||
-      child.status === 'conflict' ||
-      child.status === 'dirty',
-  );
+  const childExitCode = children.reduce<0 | 1 | 2>((highest, child) => {
+    const current =
+      child.exitCode ??
+      (child.status === 'error'
+        ? 2
+        : child.status === 'missing' ||
+            child.status === 'conflict' ||
+            child.status === 'dirty'
+          ? 1
+          : 0);
+    return current > highest ? current : highest;
+  }, 0);
   process.exitCode =
     result.status === 'created' ||
     result.status === 'updated' ||
     result.status === 'up-to-date'
-      ? childFailed
-        ? 1
-        : 0
+      ? childExitCode
       : 1;
 }
 

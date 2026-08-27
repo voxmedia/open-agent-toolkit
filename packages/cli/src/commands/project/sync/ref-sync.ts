@@ -48,11 +48,13 @@ export type PullResult = {
 
 export interface PullChildResult {
   slug: string;
-  status: PullResult['status'] | 'missing';
+  status: PullResult['status'] | 'missing' | 'error';
   sha?: string;
+  conflicts?: string[];
   adopted?: boolean;
   pendingRecordPaths?: string[];
   message?: string;
+  exitCode?: 1 | 2;
 }
 
 export type CheckoutPreflight = {
@@ -469,14 +471,47 @@ export async function pullChildren(
     };
     const recordPath = syncedRecordPath(syncedRoot, slug);
     const adopt = (await readSyncedRecord(recordPath)) === null;
-    try {
-      const result = await pullSynced(childTarget, git, { adopt });
-      results.push({ slug, ...result });
-    } catch (error) {
+    const remote = await git.run(
+      ['ls-remote', '--exit-code', childTarget.remote, childTarget.ref],
+      { cwd: parentTarget.repoRoot, allowFailure: true },
+    );
+    if (
+      remote.code === 2 &&
+      remote.stdout.trim() === '' &&
+      remote.stderr.trim() === ''
+    ) {
       results.push({
         slug,
         status: 'missing',
+        message: `Remote ref ${childTarget.ref} is absent.`,
+        exitCode: 1,
+      });
+      continue;
+    }
+    if (remote.code !== 0) {
+      results.push({
+        slug,
+        status: 'error',
+        message: `git ls-remote ${childTarget.remote} ${childTarget.ref} failed (exit ${remote.code}): ${remote.stderr || remote.stdout || 'unknown Git error'}`,
+        exitCode: 2,
+      });
+      continue;
+    }
+    try {
+      const result = await pullSynced(childTarget, git, { adopt });
+      results.push({
+        slug,
+        ...result,
+        ...(result.status === 'conflict' || result.status === 'dirty'
+          ? { exitCode: 1 as const }
+          : {}),
+      });
+    } catch (error) {
+      results.push({
+        slug,
+        status: 'error',
         message: error instanceof Error ? error.message : String(error),
+        exitCode: error instanceof CliError && error.exitCode === 1 ? 1 : 2,
       });
     }
   }

@@ -7,6 +7,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { CliError } from '@errors/cli-error';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,6 +16,7 @@ import { createProjectPauseCommand } from './index';
 interface HarnessOptions {
   cwd: string;
   pushStatus?: 'pushed' | 'up-to-date' | 'rejected' | 'conflict';
+  resolveError?: Error;
 }
 
 function createHarness(options: HarnessOptions): {
@@ -42,6 +44,13 @@ function createHarness(options: HarnessOptions): {
     resolveProjectRoot: vi.fn(async () => options.cwd),
     now: () => new Date('2026-02-21T12:00:00.000Z'),
     pushSynced,
+    ...(options.resolveError
+      ? {
+          resolveSyncedTarget: vi.fn(async () => {
+            throw options.resolveError;
+          }),
+        }
+      : {}),
   });
 
   return { capture, command, pushSynced };
@@ -293,5 +302,45 @@ describe('oat project pause', () => {
       reason: 'break time',
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    { globals: [], message: 'origin DNS failed' },
+    { globals: ['--json'], message: 'origin DNS failed' },
+  ])(
+    'preserves synced system failures in human and JSON output',
+    async ({ globals, message }) => {
+      const root = await createRepoRoot();
+      await writeProjectState(root, 'synced-demo', 'synced');
+      const { command, capture } = createHarness({
+        cwd: root,
+        resolveError: new CliError(message, 2),
+      });
+
+      await runCommand(command, ['synced-demo'], globals);
+
+      const output = globals.includes('--json')
+        ? JSON.stringify(capture.jsonPayloads[0])
+        : capture.error.join('\n');
+      expect(output).toContain(message);
+      expect(process.exitCode).toBe(2);
+    },
+  );
+
+  it('classifies an unknown synced pause exception as exit 2', async () => {
+    const root = await createRepoRoot();
+    await writeProjectState(root, 'synced-demo', 'synced');
+    const { command, capture } = createHarness({
+      cwd: root,
+      resolveError: new Error('unexpected filesystem failure'),
+    });
+
+    await runCommand(command, ['synced-demo'], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: 'unexpected filesystem failure',
+    });
+    expect(process.exitCode).toBe(2);
   });
 });

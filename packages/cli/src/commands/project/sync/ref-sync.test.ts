@@ -899,7 +899,12 @@ describe('pullChildren', () => {
           status: 'created',
           adopted: true,
         }),
-        expect.objectContaining({ slug: 'missing', status: 'missing' }),
+        expect.objectContaining({
+          slug: 'missing',
+          status: 'missing',
+          exitCode: 1,
+          message: expect.stringContaining('is absent'),
+        }),
       ]);
       expect(
         await readFile(
@@ -907,6 +912,100 @@ describe('pullChildren', () => {
           'utf8',
         ),
       ).toContain('"slug": "child"');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('preserves real child conflict paths', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const parentA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'parent',
+      );
+      const parentB = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        'parent',
+      );
+      const childA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'child',
+      );
+      const childB = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        'child',
+      );
+      await createSyncedProject(childA, defaultGitRunner);
+      await writeFile(join(childA.projectPath, 'state.md'), 'base\n', 'utf8');
+      await pushSynced(childA, defaultGitRunner, { message: 'base child' });
+      await pullSynced(childB, defaultGitRunner);
+      await writeFile(join(childB.projectPath, 'state.md'), 'local\n', 'utf8');
+      git(childB.projectPath, ['add', 'state.md']);
+      git(childB.projectPath, ['commit', '-m', 'local child']);
+      await writeFile(join(childA.projectPath, 'state.md'), 'remote\n', 'utf8');
+      await pushSynced(childA, defaultGitRunner, { message: 'remote child' });
+
+      await createSyncedProject(parentA, defaultGitRunner);
+      await writeFile(
+        join(parentA.projectPath, 'state.md'),
+        '---\noat_kind: coordination\noat_children:\n  - child\n---\n',
+        'utf8',
+      );
+      await pushSynced(parentA, defaultGitRunner, { message: 'parent' });
+      await pullSynced(parentB, defaultGitRunner);
+
+      await expect(pullChildren(parentB, defaultGitRunner)).resolves.toEqual([
+        expect.objectContaining({
+          slug: 'child',
+          status: 'conflict',
+          conflicts: ['state.md'],
+          exitCode: 1,
+        }),
+      ]);
+      await abortSynced(childB, defaultGitRunner);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('preserves child transport failures as system errors', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'parent',
+      );
+      await mkdir(target.projectPath, { recursive: true });
+      await writeFile(
+        join(target.projectPath, 'state.md'),
+        '---\noat_kind: coordination\noat_children:\n  - child\n---\n',
+        'utf8',
+      );
+      const runner: GitRunner = {
+        async run(args) {
+          expect(args[0]).toBe('ls-remote');
+          return {
+            code: 128,
+            stdout: '',
+            stderr: 'fatal: authentication failed',
+          };
+        },
+      };
+
+      await expect(pullChildren(target, runner)).resolves.toEqual([
+        expect.objectContaining({
+          slug: 'child',
+          status: 'error',
+          exitCode: 2,
+          message: expect.stringContaining('authentication failed'),
+        }),
+      ]);
     } finally {
       await fixture.cleanup();
     }

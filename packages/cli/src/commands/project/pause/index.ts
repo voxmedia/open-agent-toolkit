@@ -38,6 +38,7 @@ import {
   type OatLocalConfig,
   readOatLocalConfig,
 } from '@config/oat-config';
+import { CliError } from '@errors/cli-error';
 import { dirExists, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import { assertValidProjectStateFilesystemContent } from '@validation/project-state';
@@ -128,12 +129,13 @@ async function resolveNamedProject(
       : resolve(repoRoot, input);
     const scope = resolveProjectScope(fullProjectPath, sharedRoot);
     if (!scope) {
-      throw new Error(
+      throw new CliError(
         `Project path is outside configured scope roots: ${input}`,
+        1,
       );
     }
     if (!(await dependencies.dirExists(fullProjectPath))) {
-      throw new Error(`Project not found: ${input}`);
+      throw new CliError(`Project not found: ${input}`, 1);
     }
     return {
       projectName: basename(fullProjectPath),
@@ -172,14 +174,15 @@ async function resolveNamedProject(
     });
   }
   if (candidates.length > 1) {
-    throw new Error(
+    throw new CliError(
       `Project name "${input}" is ambiguous across scopes: ${candidates
         .map((candidate) => candidate.scope)
         .join(', ')}. Pass an explicit project path.`,
+      1,
     );
   }
   if (!candidates[0]) {
-    throw new Error(`Project not found: ${input}`);
+    throw new CliError(`Project not found: ${input}`, 1);
   }
   return candidates[0];
 }
@@ -192,8 +195,9 @@ async function publishPausedState(
     message: `chore(oat): pause synced project ${target.slug}`,
   });
   if (result.status !== 'pushed' && result.status !== 'up-to-date') {
-    throw new Error(
+    throw new CliError(
       `Unable to pause synced project ${target.slug}: push ${result.status}; active project pointer was not changed.`,
+      1,
     );
   }
 }
@@ -223,7 +227,7 @@ async function runProjectPause(
       );
     } else {
       if (!activeProject) {
-        throw new Error('No project specified and no active project');
+        throw new CliError('No project specified and no active project', 1);
       }
       resolved = await resolveNamedProject(
         repoRoot,
@@ -240,13 +244,13 @@ async function runProjectPause(
 
     const statePath = join(fullProjectPath, 'state.md');
     if (!(await dependencies.fileExists(statePath))) {
-      throw new Error(`Project state.md not found: ${statePath}`);
+      throw new CliError(`Project state.md not found: ${statePath}`, 1);
     }
 
     const content = await dependencies.readFile(statePath, 'utf8');
     const frontmatter = getFrontmatterBlock(content);
     if (!frontmatter) {
-      throw new Error(`state.md is missing frontmatter: ${statePath}`);
+      throw new CliError(`state.md is missing frontmatter: ${statePath}`, 1);
     }
 
     let nextBlock = upsertFrontmatterField(
@@ -282,10 +286,17 @@ async function runProjectPause(
 
     if (nextBlock !== frontmatter) {
       const nextContent = replaceFrontmatter(content, nextBlock);
-      await assertValidProjectStateFilesystemContent(nextContent, {
-        filePath: statePath,
-        projectPath: fullProjectPath,
-      });
+      try {
+        await assertValidProjectStateFilesystemContent(nextContent, {
+          filePath: statePath,
+          projectPath: fullProjectPath,
+        });
+      } catch (error) {
+        throw new CliError(
+          error instanceof Error ? error.message : String(error),
+          1,
+        );
+      }
       await dependencies.writeFile(statePath, nextContent, 'utf8');
     }
 
@@ -326,7 +337,7 @@ async function runProjectPause(
     } else {
       context.logger.error(message);
     }
-    process.exitCode = 1;
+    process.exitCode = error instanceof CliError ? error.exitCode : 2;
   }
 }
 

@@ -1,7 +1,11 @@
 import { readFile, stat } from 'node:fs/promises';
-import { isAbsolute, join, relative } from 'node:path';
+import { dirname, isAbsolute, join, relative } from 'node:path';
 
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
+import {
+  resolveProjectScope,
+  type ProjectScope,
+} from '@commands/shared/project-scope';
 import YAML from 'yaml';
 
 import type { ChildPlan, SplitPlanDocument } from './child-plan';
@@ -24,6 +28,8 @@ export interface PartialSplit {
   missingChildren: string[];
   parentProjectPath: string;
   projectsRoot: string;
+  scope: ProjectScope;
+  scopeRoot: string;
 }
 
 export interface ResumeSplitOptions {
@@ -61,6 +67,8 @@ function resolveParentPaths(
   absoluteParentPath: string;
   parentProjectPath: string;
   projectsRoot: string;
+  scope: ProjectScope;
+  scopeRoot: string;
 } {
   const absoluteParentPath = isAbsolute(parentPath)
     ? parentPath
@@ -68,17 +76,39 @@ function resolveParentPaths(
   const parentProjectPath = relative(context.repoRoot, absoluteParentPath)
     .split('\\')
     .join('/');
-  const segments = parentProjectPath.split('/');
-  const projectsRoot = segments.slice(0, -1).join('/');
-  return { absoluteParentPath, parentProjectPath, projectsRoot };
+  const scopeRoot = dirname(parentProjectPath).split('\\').join('/');
+  const projectsRoot =
+    context.projectsRoot ??
+    join(dirname(scopeRoot), 'shared').split('\\').join('/');
+  const absoluteProjectsRoot = isAbsolute(projectsRoot)
+    ? projectsRoot
+    : join(context.repoRoot, projectsRoot);
+  const scope = resolveProjectScope(absoluteParentPath, absoluteProjectsRoot);
+  if (!scope) {
+    throw new SplitResumeError(
+      `Cannot derive project scope from persisted parent path: ${parentProjectPath}`,
+    );
+  }
+  return {
+    absoluteParentPath,
+    parentProjectPath,
+    projectsRoot,
+    scope,
+    scopeRoot,
+  };
 }
 
 export async function detectPartialSplit(
   parentPath: string,
   context: SplitProjectContext,
 ): Promise<PartialSplit> {
-  const { absoluteParentPath, parentProjectPath, projectsRoot } =
-    resolveParentPaths(parentPath, context);
+  const {
+    absoluteParentPath,
+    parentProjectPath,
+    projectsRoot,
+    scope,
+    scopeRoot,
+  } = resolveParentPaths(parentPath, context);
   const statePath = join(absoluteParentPath, 'state.md');
   const state = readObjectFrontmatter(
     await readFile(statePath, 'utf8'),
@@ -125,8 +155,11 @@ export async function detectPartialSplit(
   }
 
   const missingChildren: string[] = [];
+  const absoluteScopeRoot = isAbsolute(scopeRoot)
+    ? scopeRoot
+    : join(context.repoRoot, scopeRoot);
   for (const child of document.plan.children) {
-    if (!(await exists(join(context.repoRoot, projectsRoot, child.slug)))) {
+    if (!(await exists(join(absoluteScopeRoot, child.slug)))) {
       missingChildren.push(child.slug);
     }
   }
@@ -137,6 +170,8 @@ export async function detectPartialSplit(
     missingChildren,
     parentProjectPath,
     projectsRoot,
+    scope,
+    scopeRoot,
   };
 }
 
@@ -161,13 +196,20 @@ export async function continueSplitResume(
   if (partial.missingChildren.length > 0) {
     await seedChildren(
       partial.plan,
-      { ...context, projectsRoot: partial.projectsRoot },
+      {
+        ...context,
+        projectsRoot: partial.projectsRoot,
+        scope: partial.scope,
+        scopeRoot: partial.scopeRoot,
+      },
       new Set(partial.missingChildren),
     );
   }
   await finalizeSplit(partial.plan, {
     ...context,
     projectsRoot: partial.projectsRoot,
+    scope: partial.scope,
+    scopeRoot: partial.scopeRoot,
   });
   return partial;
 }

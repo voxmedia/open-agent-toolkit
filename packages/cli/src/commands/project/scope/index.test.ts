@@ -3,12 +3,16 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { CliError } from '@errors/cli-error';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createProjectScopeCommand } from './index';
 
-function createHarness(activeProject?: string): {
+function createHarness(
+  activeProject?: string,
+  resolveError?: Error,
+): {
   command: Command;
   capture: LoggerCapture;
 } {
@@ -26,7 +30,10 @@ function createHarness(activeProject?: string): {
         interactive: false,
         logger: capture.logger,
       }),
-      resolveProjectRoot: async () => '/repo',
+      resolveProjectRoot: async () => {
+        if (resolveError) throw resolveError;
+        return '/repo';
+      },
       resolveProjectsRoot: async () => '.oat/projects/shared',
       readOatLocalConfig: async () => ({ version: 1, activeProject }),
       readSyncedRecord: async (path) =>
@@ -129,4 +136,35 @@ describe('createProjectScopeCommand', () => {
     expect(capture.error[0]).toContain('Archived projects have no');
     expect(process.exitCode).toBe(1);
   });
+
+  it.each([
+    {
+      error: new CliError('invalid scope input', 1),
+      exitCode: 1,
+      globals: [] as string[],
+    },
+    {
+      error: new CliError('scope storage unavailable', 2),
+      exitCode: 2,
+      globals: ['--json'],
+    },
+    {
+      error: new Error('unknown scope filesystem failure'),
+      exitCode: 2,
+      globals: ['--json'],
+    },
+  ])(
+    'classifies command failure $exitCode',
+    async ({ error, exitCode, globals }) => {
+      const { command, capture } = createHarness(undefined, error);
+
+      await run(command, [], globals);
+
+      const output = globals.includes('--json')
+        ? JSON.stringify(capture.jsonPayloads[0])
+        : capture.error.join('\n');
+      expect(output).toContain(error.message);
+      expect(process.exitCode).toBe(exitCode);
+    },
+  );
 });

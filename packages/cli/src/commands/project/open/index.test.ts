@@ -7,6 +7,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { CliError } from '@errors/cli-error';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -17,6 +18,7 @@ interface HarnessOptions {
   pushStatus?: 'pushed' | 'up-to-date' | 'rejected' | 'conflict';
   materializeOnPull?: boolean;
   remoteOnly?: boolean;
+  resolveError?: Error;
 }
 
 function createHarness(options: HarnessOptions): {
@@ -66,18 +68,24 @@ function createHarness(options: HarnessOptions): {
     pushSynced,
     pullSynced,
     commitRecordChange,
-    ...(options.remoteOnly
+    ...(options.resolveError
       ? {
-          resolveSyncedTarget: vi.fn(async () => ({
-            repoRoot: options.cwd,
-            slug: 'remote',
-            projectPath: join(options.cwd, '.oat/projects/synced/remote'),
-            ref: 'refs/oat/projects/remote',
-            remote: 'origin' as const,
-            adopt: true,
-          })),
+          resolveSyncedTarget: vi.fn(async () => {
+            throw options.resolveError;
+          }),
         }
-      : {}),
+      : options.remoteOnly
+        ? {
+            resolveSyncedTarget: vi.fn(async () => ({
+              repoRoot: options.cwd,
+              slug: 'remote',
+              projectPath: join(options.cwd, '.oat/projects/synced/remote'),
+              ref: 'refs/oat/projects/remote',
+              remote: 'origin' as const,
+              adopt: true,
+            })),
+          }
+        : {}),
   });
 
   return {
@@ -334,12 +342,54 @@ describe('oat project open', () => {
 
   it('errors when project does not exist', async () => {
     const root = await createRepoRoot();
-    const { command, capture } = createHarness({ cwd: root });
+    const { command, capture } = createHarness({
+      cwd: root,
+      resolveError: new CliError('No synced project named missing.', 1),
+    });
 
     await runCommand(command, ['missing']);
 
     expect(process.exitCode).toBe(1);
     expect(capture.error[0]).toContain('Project not found');
+  });
+
+  it.each([
+    { globals: [], expected: 'origin authentication failed' },
+    { globals: ['--json'], expected: 'origin authentication failed' },
+  ])(
+    'preserves a synced transport failure in human and JSON output',
+    async ({ globals, expected }) => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({
+        cwd: root,
+        resolveError: new CliError(expected, 2),
+      });
+
+      await runCommand(command, ['remote'], globals);
+
+      const output = globals.includes('--json')
+        ? JSON.stringify(capture.jsonPayloads[0])
+        : capture.error.join('\n');
+      expect(output).toContain(expected);
+      expect(output).not.toContain('Project not found');
+      expect(process.exitCode).toBe(2);
+    },
+  );
+
+  it('classifies an unknown lookup exception as a system error', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({
+      cwd: root,
+      resolveError: new Error('filesystem unavailable'),
+    });
+
+    await runCommand(command, ['remote'], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: 'filesystem unavailable',
+    });
+    expect(process.exitCode).toBe(2);
   });
 
   it('errors when project state.md is missing', async () => {

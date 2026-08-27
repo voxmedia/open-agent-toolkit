@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import {
   mkdir,
   mkdtemp,
@@ -9,6 +10,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
 import { afterEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
@@ -105,6 +107,39 @@ async function runSplit(
   await writeCoordinationParent(document, { repoRoot });
   await seedChildren(document.plan, { repoRoot });
   await finalizeSplit(document.plan, { repoRoot });
+}
+
+function showOriginFile(originDir: string, slug: string, file: string): string {
+  return execFileSync('git', ['show', `refs/oat/projects/${slug}:${file}`], {
+    cwd: originDir,
+    encoding: 'utf8',
+  });
+}
+
+function expectPublishedSplit(
+  originDir: string,
+  document: SplitPlanDocument,
+): void {
+  const parentState = showOriginFile(
+    originDir,
+    document.plan.parentSlug,
+    'state.md',
+  );
+  expect(parentState).toContain('oat_phase_status: complete');
+  expect(readFrontmatter(parentState)['oat_children']).toEqual(
+    document.plan.children
+      .slice()
+      .sort((left, right) => left.order - right.order)
+      .map((child) => child.slug),
+  );
+  for (const child of document.plan.children) {
+    expect(showOriginFile(originDir, child.slug, 'state.md')).toContain(
+      `oat_parent: ${document.plan.parentSlug}`,
+    );
+    expect(showOriginFile(originDir, child.slug, 'discovery.md')).toContain(
+      `Split from coordination parent \`${document.plan.parentSlug}\``,
+    );
+  }
 }
 
 describe('oat-project-split integration fixtures', () => {
@@ -261,6 +296,53 @@ describe('oat-project-split integration fixtures', () => {
         exists(join(repoRoot, '.oat', 'projects', 'shared', child.slug)),
       ).resolves.toBe(true);
     }
+  });
+
+  it('publishes a fresh synced split parent and every seeded child to origin', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const document = documentFor('declared');
+    const context = {
+      repoRoot: fixture.cloneA,
+      projectsRoot: '.oat/projects/shared',
+      scope: 'synced' as const,
+      scopeRoot: '.oat/projects/synced',
+    };
+
+    await writeCoordinationParent(document, context);
+    await seedChildren(document.plan, context);
+    await finalizeSplit(document.plan, context);
+
+    expectPublishedSplit(fixture.originDir, document);
+  });
+
+  it('publishes final parent and child seeds after a missing-child synced resume', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const document = documentFor('declared');
+    const context = {
+      repoRoot: fixture.cloneA,
+      projectsRoot: '.oat/projects/shared',
+      scope: 'synced' as const,
+      scopeRoot: '.oat/projects/synced',
+    };
+
+    await writeCoordinationParent(document, context);
+    await seedChildren(
+      document.plan,
+      context,
+      new Set([document.plan.children[0]!.slug]),
+    );
+    await resumeSplit(
+      join(fixture.cloneA, '.oat/projects/synced', document.plan.parentSlug),
+      {
+        repoRoot: fixture.cloneA,
+        projectsRoot: '.oat/projects/shared',
+      },
+      { confirmed: true },
+    );
+
+    expectPublishedSplit(fixture.originDir, document);
   });
 
   it('reports post-manual-mutation validation errors', () => {

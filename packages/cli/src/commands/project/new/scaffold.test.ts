@@ -10,9 +10,13 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { instantiateProjectLogTemplate } from '@commands/project/log/append';
+import { createProjectOpenCommand } from '@commands/project/open/index';
 import { createSyncedProject } from '@commands/project/sync/ref-sync';
 import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
+import { Command } from 'commander';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 
@@ -574,6 +578,83 @@ describe('scaffoldProject', () => {
         encoding: 'utf8',
       }),
     ).toContain('record-commit-failure');
+  });
+
+  it('preserves published state and recovers an active-pointer failure through project open', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+
+    await expect(
+      scaffoldProjectImpl(
+        {
+          repoRoot: fixture.cloneA,
+          projectName: 'pointer-failure',
+          scope: 'synced',
+          refreshDashboard: false,
+          setActive: true,
+        },
+        {
+          setActiveProject: async () => {
+            throw new Error('pointer disk failure');
+          },
+        },
+      ),
+    ).rejects.toThrow(
+      /oat project open 'pointer-failure'.*do not rerun project creation/i,
+    );
+
+    expect(
+      execFileSync('git', ['rev-parse', 'refs/oat/projects/pointer-failure'], {
+        cwd: fixture.originDir,
+        encoding: 'utf8',
+      }).trim(),
+    ).toMatch(/^[0-9a-f]{40}$/);
+    await expect(
+      readFile(
+        join(fixture.cloneA, '.oat/projects/synced/pointer-failure.json'),
+        'utf8',
+      ),
+    ).resolves.toContain('pointer-failure');
+
+    const previousExitCode = process.exitCode;
+    process.exitCode = undefined;
+    const capture = createLoggerCapture();
+    const open = createProjectOpenCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneA,
+        home: '/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneA,
+      generateStateDashboard: async () => ({
+        dashboardPath: join(fixture.cloneA, '.oat/state.md'),
+        projectName: 'pointer-failure',
+        projectStatus: 'active',
+        stalenessStatus: 'fresh',
+        recommendedStep: '',
+        recommendedReason: '',
+      }),
+    });
+    const program = new Command().name('oat').exitOverride();
+    const project = new Command('project');
+    project.addCommand(open);
+    program.addCommand(project);
+
+    await program.parseAsync(['project', 'open', 'pointer-failure'], {
+      from: 'user',
+    });
+
+    const config = JSON.parse(
+      await readFile(join(fixture.cloneA, '.oat/config.local.json'), 'utf8'),
+    ) as { activeProject: string };
+    expect(config.activeProject).toBe('.oat/projects/synced/pointer-failure');
+    expect(process.exitCode).toBe(0);
+    process.exitCode = previousExitCode;
   });
 
   it('rejects synced scaffolding without origin before creating state', async () => {

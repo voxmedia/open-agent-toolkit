@@ -47,6 +47,7 @@ import {
   setActiveProject,
   writeOatLocalConfig,
 } from '@config/oat-config';
+import { CliError } from '@errors/cli-error';
 import { dirExists, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import { assertValidProjectStateFilesystemContent } from '@validation/project-state';
@@ -152,8 +153,9 @@ async function materializeSyncedProject(
     adopt: target.adopt,
   });
   if (!successfulPull(result)) {
-    throw new Error(
+    throw new CliError(
       `Unable to open synced project ${target.slug}: pull ${result.status}.`,
+      1,
     );
   }
   if (result.pendingRecordPaths?.length) {
@@ -180,8 +182,9 @@ async function resolveProject(
       : resolve(repoRoot, input);
     const scope = resolveProjectScope(fullProjectPath, sharedRoot);
     if (!scope) {
-      throw new Error(
+      throw new CliError(
         `Project path is outside configured scope roots: ${input}`,
+        1,
       );
     }
     const projectName = basename(fullProjectPath);
@@ -197,7 +200,7 @@ async function resolveProject(
         await materializeSyncedProject(repoRoot, syncTarget, dependencies);
       }
     } else if (!(await dependencies.dirExists(fullProjectPath))) {
-      throw new Error(`Project not found: ${input}`);
+      throw new CliError(`Project not found: ${input}`, 1);
     }
     return {
       projectName,
@@ -228,10 +231,11 @@ async function resolveProject(
     }
   }
   if (candidates.length > 1) {
-    throw new Error(
+    throw new CliError(
       `Project name "${input}" is ambiguous across scopes: ${candidates
         .map((candidate) => candidate.scope)
         .join(', ')}. Pass an explicit project path.`,
+      1,
     );
   }
 
@@ -250,8 +254,11 @@ async function resolveProject(
         fullProjectPath: syncTarget.projectPath,
         present: false,
       };
-    } catch {
-      throw new Error(`Project not found: ${input}`);
+    } catch (error) {
+      if (error instanceof CliError && error.exitCode === 1) {
+        throw new CliError(`Project not found: ${input}`, 1);
+      }
+      throw error;
     }
   }
   if (candidate.scope === 'synced') {
@@ -283,8 +290,9 @@ async function publishSyncedTransition(
     message: `chore(oat): ${action} synced project ${target.slug}`,
   });
   if (result.status !== 'pushed' && result.status !== 'up-to-date') {
-    throw new Error(
+    throw new CliError(
       `Unable to ${action} synced project ${target.slug}: push ${result.status}; active project pointer was not changed.`,
+      1,
     );
   }
 }
@@ -297,7 +305,7 @@ async function maybeResumePausedProject(
   const stateContent = await dependencies.readFile(statePath, 'utf8');
   const frontmatter = getFrontmatterBlock(stateContent);
   if (!frontmatter) {
-    throw new Error(`state.md is missing frontmatter: ${statePath}`);
+    throw new CliError(`state.md is missing frontmatter: ${statePath}`, 1);
   }
 
   if (getFrontmatterField(frontmatter, 'oat_lifecycle') !== 'paused') {
@@ -321,10 +329,17 @@ async function maybeResumePausedProject(
 
   if (nextBlock !== frontmatter) {
     const nextContent = replaceFrontmatter(stateContent, nextBlock);
-    await assertValidProjectStateFilesystemContent(nextContent, {
-      filePath: statePath,
-      projectPath,
-    });
+    try {
+      await assertValidProjectStateFilesystemContent(nextContent, {
+        filePath: statePath,
+        projectPath,
+      });
+    } catch (error) {
+      throw new CliError(
+        error instanceof Error ? error.message : String(error),
+        1,
+      );
+    }
     await dependencies.writeFile(statePath, nextContent, 'utf8');
   }
 
@@ -353,7 +368,7 @@ async function runProjectOpen(
 
     const statePath = join(fullProjectPath, 'state.md');
     if (!(await dependencies.fileExists(statePath))) {
-      throw new Error(`Project state.md not found: ${statePath}`);
+      throw new CliError(`Project state.md not found: ${statePath}`, 1);
     }
 
     const localConfig = await dependencies.readOatLocalConfig(repoRoot);
@@ -439,7 +454,7 @@ async function runProjectOpen(
     } else {
       context.logger.error(message);
     }
-    process.exitCode = 1;
+    process.exitCode = error instanceof CliError ? error.exitCode : 2;
   }
 }
 

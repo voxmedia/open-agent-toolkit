@@ -1,8 +1,17 @@
 import { execFileSync } from 'node:child_process';
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { scaffoldProject } from '@commands/project/new/scaffold';
+import { defaultGitRunner } from '@commands/project/sync/git';
+import {
+  buildSyncTarget,
+  createSyncedProject,
+  pullSynced as pullSyncedReal,
+  pushSynced,
+} from '@commands/project/sync/ref-sync';
 import { CliError } from '@errors/cli-error';
 import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
 import { Command } from 'commander';
@@ -224,7 +233,8 @@ describe('createProjectPullCommand', () => {
       {
         slug: 'conflicted-child',
         status: 'conflict',
-        message: 'state.md is unmerged',
+        conflicts: ['state.md'],
+        exitCode: 1,
       },
       {
         slug: 'missing-child',
@@ -237,12 +247,116 @@ describe('createProjectPullCommand', () => {
 
     const output = setup.capture.error.join('\n');
     expect(output).toContain('Child conflicted-child conflict');
-    expect(output).toContain('state.md is unmerged');
+    expect(output).toContain('conflicts: state.md');
     expect(output).toContain("oat project pull 'conflicted-child' --continue");
     expect(output).toContain('Child missing-child missing');
     expect(output).toContain('remote ref is absent');
     expect(output).toContain("oat project pull 'missing-child'");
     expect(process.exitCode).toBe(1);
+  });
+
+  it.each([{ globals: [] as string[] }, { globals: ['--json'] }])(
+    'reports child transport failures as exit 2 in human and JSON output',
+    async ({ globals }) => {
+      const setup = harness('updated');
+      setup.pullChildren.mockResolvedValueOnce([
+        {
+          slug: 'offline-child',
+          status: 'error',
+          message: 'origin authentication failed',
+          exitCode: 2,
+        },
+      ]);
+
+      await run(setup.command, ['parent'], globals);
+
+      const output = globals.includes('--json')
+        ? JSON.stringify(setup.capture.jsonPayloads[0])
+        : setup.capture.error.join('\n');
+      expect(output).toContain('offline-child');
+      expect(output).toContain('origin authentication failed');
+      expect(process.exitCode).toBe(2);
+    },
+  );
+
+  it('reports a real child conflict while committing the successful parent adoption', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const childA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'child',
+      );
+      const childB = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        'child',
+      );
+      await createSyncedProject(childA, defaultGitRunner);
+      await writeFile(join(childA.projectPath, 'state.md'), 'base\n', 'utf8');
+      await pushSynced(childA, defaultGitRunner, { message: 'base child' });
+      await pullSyncedReal(childB, defaultGitRunner);
+      await writeFile(join(childB.projectPath, 'state.md'), 'local\n', 'utf8');
+      execFileSync('git', ['-C', childB.projectPath, 'add', 'state.md']);
+      execFileSync('git', [
+        '-C',
+        childB.projectPath,
+        'commit',
+        '-q',
+        '-m',
+        'local child',
+      ]);
+      await writeFile(join(childA.projectPath, 'state.md'), 'remote\n', 'utf8');
+      await pushSynced(childA, defaultGitRunner, { message: 'remote child' });
+
+      const parentA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'parent',
+      );
+      await createSyncedProject(parentA, defaultGitRunner);
+      await writeFile(
+        join(parentA.projectPath, 'state.md'),
+        '---\noat_kind: coordination\noat_children:\n  - child\n---\n',
+        'utf8',
+      );
+      await pushSynced(parentA, defaultGitRunner, { message: 'parent' });
+
+      const capture = createLoggerCapture();
+      const command = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB!,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB!,
+      });
+
+      await run(command, ['parent']);
+
+      expect(capture.error.join('\n')).toContain('Child child conflict');
+      expect(capture.error.join('\n')).toContain('state.md');
+      expect(process.exitCode).toBe(1);
+      expect(
+        execFileSync(
+          'git',
+          [
+            '-C',
+            fixture.cloneB!,
+            'show',
+            'HEAD:.oat/projects/synced/parent.json',
+          ],
+          { encoding: 'utf8' },
+        ),
+      ).toContain('"slug": "parent"');
+    } finally {
+      await fixture.cleanup();
+    }
   });
 
   it('adopts an origin-only ref without rewriting it and is idempotent', async () => {

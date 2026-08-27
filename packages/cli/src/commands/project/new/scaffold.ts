@@ -98,6 +98,7 @@ export interface ScaffoldProjectDependencies {
   writeSyncedRecord: typeof writeSyncedRecord;
   applyOatCoreGitignore: typeof applyOatCoreGitignore;
   isSyncedRuleApplied: typeof isSyncedRuleApplied;
+  setActiveProject: typeof setActiveProject;
 }
 
 const DEFAULT_DEPENDENCIES: ScaffoldProjectDependencies = {
@@ -110,6 +111,7 @@ const DEFAULT_DEPENDENCIES: ScaffoldProjectDependencies = {
   writeSyncedRecord,
   applyOatCoreGitignore,
   isSyncedRuleApplied,
+  setActiveProject,
 };
 
 const TEMPLATES_BY_MODE: Record<ProjectScaffoldMode, string[]> = {
@@ -722,8 +724,21 @@ export async function scaffoldProject(
     throw error;
   }
 
+  let activePointerUpdated = false;
   if (setActive) {
-    await setActiveProject(options.repoRoot, projectPath);
+    try {
+      await dependencies.setActiveProject(options.repoRoot, projectPath);
+      activePointerUpdated = true;
+    } catch (error) {
+      if (scope === 'synced' && published) {
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new CliError(
+          `Synced project ${options.projectName} was published and recorded, but its active pointer was not updated: ${detail}. Run oat project open '${options.projectName}' to complete recovery; do not rerun project creation.`,
+          2,
+        );
+      }
+      throw error;
+    }
   }
 
   let dashboardRefreshed = false;
@@ -763,7 +778,7 @@ export async function scaffoldProject(
     projectPath,
     createdFiles,
     skippedFiles,
-    activePointerUpdated: setActive,
+    activePointerUpdated,
     dashboardRefreshed,
     committed,
     commitSha,
