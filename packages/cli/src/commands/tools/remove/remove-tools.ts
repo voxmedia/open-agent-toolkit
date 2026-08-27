@@ -7,6 +7,11 @@ import type {
   PackName,
   ToolInfo,
 } from '@commands/tools/shared/types';
+import {
+  type ManagedRootName,
+  resolveManagedScopeRoots,
+  validateManagedPath,
+} from '@fs/paths';
 import type { ConcreteScope } from '@shared/types';
 
 export type RemoveTarget =
@@ -75,6 +80,17 @@ function isDirectoryAsset(asset: PackAssetDefinition): boolean {
   return asset.kind === 'skill' || asset.kind === 'directory';
 }
 
+interface ManagedRemovalTarget {
+  path: string;
+  isDirectory: boolean;
+}
+
+interface ScopeRemovalPlan {
+  scopeRoot: string;
+  matched: ToolInfo[];
+  managedTargets: ManagedRemovalTarget[];
+}
+
 function selectedPacks(target: Exclude<RemoveTarget, { kind: 'name' }>) {
   return target.kind === 'pack'
     ? [target.pack]
@@ -97,22 +113,31 @@ function selectedManagedAssets(
   );
 }
 
-async function removeManagedPackAssets(
+function managedRootName(asset: PackAssetDefinition): ManagedRootName {
+  const name = asset.destination.split('/')[0];
+  if (name !== '.agents' && name !== '.oat') {
+    throw new Error(
+      `Pack asset ${asset.id} has unsupported managed root: ${asset.destination}`,
+    );
+  }
+  return name;
+}
+
+async function planManagedPackRemoval(
   packs: readonly PackName[],
   scope: ConcreteScope,
   scopeRoot: string,
   dryRun: boolean,
   deps: RemoveToolsDependencies,
-): Promise<void> {
-  if (dryRun) {
-    return;
-  }
-
+): Promise<ManagedRemovalTarget[]> {
   const retainedPaths = new Set<string>();
-  const removedPaths = new Set<string>();
+  const targets = new Map<
+    string,
+    { asset: PackAssetDefinition; isDirectory: boolean }
+  >();
   for (const { asset } of selectedManagedAssets(packs, scope)) {
     const path = join(scopeRoot, asset.destination);
-    if (removedPaths.has(path) || retainedPaths.has(path)) continue;
+    if (targets.has(path) || retainedPaths.has(path)) continue;
     if (asset.sharedOwner) {
       const otherOwners = PACK_MANIFEST.filter(
         ({ name, assets }) =>
@@ -135,17 +160,42 @@ async function removeManagedPackAssets(
       }
     }
 
-    removedPaths.add(path);
-    if (isDirectoryAsset(asset)) {
-      await deps.removeDirectory(path);
+    targets.set(path, { asset, isDirectory: isDirectoryAsset(asset) });
+  }
+
+  if (dryRun) {
+    return [...targets.entries()].map(([path, { isDirectory }]) => ({
+      path,
+      isDirectory,
+    }));
+  }
+
+  const roots = await resolveManagedScopeRoots(scopeRoot);
+  return Promise.all(
+    [...targets.entries()].map(
+      async ([path, { asset, isDirectory }]): Promise<ManagedRemovalTarget> => {
+        await validateManagedPath(path, roots[managedRootName(asset)]);
+        return { path, isDirectory };
+      },
+    ),
+  );
+}
+
+async function executeManagedPackRemoval(
+  targets: ManagedRemovalTarget[],
+  deps: RemoveToolsDependencies,
+): Promise<void> {
+  for (const target of targets) {
+    if (target.isDirectory) {
+      await deps.removeDirectory(target.path);
     } else {
-      await deps.removeFile(path);
+      await deps.removeFile(target.path);
     }
   }
 
   const remaining = (
     await Promise.all(
-      [...removedPaths].map(async (path) =>
+      targets.map(async ({ path }) =>
         (await deps.pathExists(path)) ? path : null,
       ),
     )
@@ -168,36 +218,54 @@ export async function removeTools(
   const removed: RemovedTool[] = [];
   const assetsRoot = await deps.resolveAssetsRoot();
 
+  if (target.kind === 'name') {
+    for (const scope of scopes) {
+      const scopeRoot = await deps.resolveScopeRoot(scope, cwd, home);
+      const tools = await deps.scanTools({ scope, scopeRoot, assetsRoot });
+      const matched = tools.filter((tool) => matchesTarget(tool, target));
+      for (const tool of matched) {
+        await removeTool(tool, scopeRoot, dryRun, deps);
+        removed.push({ name: tool.name, type: tool.type, scope: tool.scope });
+      }
+    }
+
+    return {
+      removed,
+      notInstalled: removed.length === 0 ? [target.name] : [],
+    };
+  }
+
+  const plans: ScopeRemovalPlan[] = [];
   for (const scope of scopes) {
     const scopeRoot = await deps.resolveScopeRoot(scope, cwd, home);
     const tools = await deps.scanTools({ scope, scopeRoot, assetsRoot });
-    const matched = tools.filter((t) => matchesTarget(t, target));
-
-    for (const tool of matched) {
-      if (
-        target.kind === 'name' ||
-        (target.kind === 'all' && tool.pack === 'custom')
-      ) {
-        await removeTool(tool, scopeRoot, dryRun, deps);
-      }
-      removed.push({ name: tool.name, type: tool.type, scope: tool.scope });
-    }
-
-    if (target.kind !== 'name') {
-      await removeManagedPackAssets(
+    const matched = tools.filter((tool) => matchesTarget(tool, target));
+    plans.push({
+      scopeRoot,
+      matched,
+      managedTargets: await planManagedPackRemoval(
         selectedPacks(target),
         scope,
         scopeRoot,
         dryRun,
         deps,
-      );
+      ),
+    });
+  }
+
+  for (const plan of plans) {
+    if (target.kind === 'all') {
+      for (const tool of plan.matched.filter(({ pack }) => pack === 'custom')) {
+        await removeTool(tool, plan.scopeRoot, dryRun, deps);
+      }
     }
+    if (!dryRun) {
+      await executeManagedPackRemoval(plan.managedTargets, deps);
+    }
+    removed.push(
+      ...plan.matched.map(({ name, type, scope }) => ({ name, type, scope })),
+    );
   }
 
-  const notInstalled: string[] = [];
-  if (target.kind === 'name' && removed.length === 0) {
-    notInstalled.push(target.name);
-  }
-
-  return { removed, notInstalled };
+  return { removed, notInstalled: [] };
 }

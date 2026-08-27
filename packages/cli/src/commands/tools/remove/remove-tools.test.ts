@@ -15,7 +15,32 @@ import {
 } from '@commands/tools/shared/scoped-pack-intent';
 import type { ToolInfo } from '@commands/tools/shared/types';
 import { Command } from 'commander';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('@fs/paths', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@fs/paths')>();
+  return {
+    ...actual,
+    resolveManagedScopeRoots: async (scopeRoot: string) => ({
+      '.agents': {
+        name: '.agents',
+        logicalRoot: join(scopeRoot, '.agents'),
+        realRoot: join(scopeRoot, '.agents'),
+        exists: true,
+      },
+      '.oat': {
+        name: '.oat',
+        logicalRoot: join(scopeRoot, '.oat'),
+        realRoot: join(scopeRoot, '.oat'),
+        exists: true,
+      },
+    }),
+    validateManagedPath: async (candidatePath: string) => ({
+      realManagedRoot: join(candidatePath, '..'),
+      realPath: candidatePath,
+    }),
+  };
+});
 
 import { createToolsRemoveCommand } from './index';
 import {

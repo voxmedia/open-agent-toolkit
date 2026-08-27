@@ -7,6 +7,8 @@ const {
   writeOatConfig,
   resolveProjectRoot,
   resolveScopeRoot,
+  resolveManagedScopeRoots,
+  validateManagedPath,
   scanToolsMock,
 } = vi.hoisted(() => ({
   readOatConfig: vi.fn(async () => ({
@@ -22,6 +24,26 @@ const {
     (scope: 'project' | 'user', cwd: string, home: string) =>
       scope === 'project' ? cwd : home,
   ),
+  resolveManagedScopeRoots: vi.fn(async (scopeRoot: string) => ({
+    '.agents': {
+      name: '.agents',
+      logicalRoot: `${scopeRoot}/.agents`,
+      realRoot: `${scopeRoot}/.agents`,
+      exists: true,
+    },
+    '.oat': {
+      name: '.oat',
+      logicalRoot: `${scopeRoot}/.oat`,
+      realRoot: `${scopeRoot}/.oat`,
+      exists: true,
+    },
+  })),
+  validateManagedPath: vi.fn(
+    async (candidatePath: string, managedRoot: { realRoot: string }) => ({
+      realManagedRoot: managedRoot.realRoot,
+      realPath: candidatePath,
+    }),
+  ),
   scanToolsMock: vi.fn(),
 }));
 
@@ -33,6 +55,8 @@ vi.mock('@config/oat-config', () => ({
 vi.mock('@fs/paths', () => ({
   resolveProjectRoot,
   resolveScopeRoot,
+  resolveManagedScopeRoots,
+  validateManagedPath,
 }));
 
 import { createToolsRemoveCommand } from './index';
