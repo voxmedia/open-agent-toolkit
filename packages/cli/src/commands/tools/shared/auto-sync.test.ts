@@ -110,4 +110,24 @@ describe('autoSync', () => {
       },
     ]);
   });
+
+  it('keeps one canonical install input for every affected scope', async () => {
+    const calls: string[][] = [];
+    await autoSync(
+      ['project', 'user'],
+      '/cwd',
+      '/home',
+      createLoggerCapture().logger,
+      {
+        runSync: async ({ installedCanonicalPaths }) => {
+          calls.push(installedCanonicalPaths ?? []);
+        },
+      },
+      { installedCanonicalPaths: ['.agents/skills/oat-brainstorm'] },
+    );
+    expect(calls).toEqual([
+      ['.agents/skills/oat-brainstorm'],
+      ['.agents/skills/oat-brainstorm'],
+    ]);
+  });
 });

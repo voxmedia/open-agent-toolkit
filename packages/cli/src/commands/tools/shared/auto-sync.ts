@@ -16,13 +16,18 @@ export interface AutoSyncResult {
   error: string | null;
 }
 
+export interface AutoSyncOptions {
+  installedCanonicalPaths?: string[];
+  removedCanonicalPaths?: string[];
+}
+
 export async function autoSync(
   scopes: ConcreteScope[],
   cwd: string,
   home: string,
   logger: CliLogger,
   dependencies: AutoSyncDependencies,
-  options?: { installedCanonicalPaths?: string[] },
+  options?: AutoSyncOptions,
 ): Promise<AutoSyncResult> {
   if (scopes.length === 0) {
     return { synced: false, scopes: [], error: null };
