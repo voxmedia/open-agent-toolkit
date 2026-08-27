@@ -21,6 +21,22 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #     pNN:
 #       used_attempts: 0
 #       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {}
+  phase_attempt_usage:
+    p02:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: recovery-p02-01-cli-phase-suite
+        original_request_id: dispatch-synced-project-scope-p02-20260827T063331Z
+        original_task_id: p02-t11
+        original_commit: 34ecc0c30898dbccd20751d37b5adbc864fc587e
+        discovered_by: pnpm --filter @open-agent-toolkit/cli test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: 34ecc0c30898dbccd20751d37b5adbc864fc587e
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit

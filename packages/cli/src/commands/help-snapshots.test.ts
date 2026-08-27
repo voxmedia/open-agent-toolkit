@@ -1085,6 +1085,9 @@ describe('help output snapshots', () => {
         new [options] <name>                         Create or update an OAT project scaffold
         open [options] <name>                        Open or switch to an OAT project
         pause [options] [name]                       Pause an OAT project
+        push [options] [project-path|slug]           Commit and publish a synced OAT project
+        pull [options] [project-path|slug]           Materialize or update a synced OAT project
+        scope [options] [project-path]               Report the scope of an OAT project
         set-mode <mode>                              [deprecated] No-op. Execution mode is no longer selectable.
         split                                        Evaluate, validate, and run oat-project-split payloads
         status [options]                             Show the current OAT project state
@@ -1199,6 +1202,7 @@ describe('help output snapshots', () => {
       Options:
         --mode <mode>       Scaffold mode (choices: "spec-driven", "quick", "import",
                             default: "spec-driven")
+        --scope <scope>     Project scope (choices: "shared", "local", "synced")
         --force             Non-destructive scaffold; create missing files only
         --no-set-active     Do not update active project in local config
         --no-dashboard      Do not refresh .oat/state.md after scaffold

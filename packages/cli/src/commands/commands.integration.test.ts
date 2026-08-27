@@ -754,6 +754,8 @@ describe('CLI command integration', () => {
       'quick-smoke',
       '--mode',
       'quick',
+      '--scope',
+      'shared',
       '--no-dashboard',
       '--no-commit',
     ]);
