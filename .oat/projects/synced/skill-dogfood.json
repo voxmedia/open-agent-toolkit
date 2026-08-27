@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "slug": "skill-dogfood",
+  "scope": "synced",
+  "ref": "refs/oat/projects/skill-dogfood",
+  "remote": "origin",
+  "status": "active",
+  "createdAt": "2026-08-27T22:03:10.254Z",
+  "completedAt": null
+}
