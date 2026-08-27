@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t04
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 7     | 7/7       |
-| Phase 2 | pending   | 9     | 0/9       |
-| Phase 3 | pending   | 5     | 0/5       |
-| Phase 4 | pending   | 7     | 0/7       |
-| Phase 5 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 7     | 7/7       |
+| Phase 2 | in_progress | 9     | 3/9       |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 7     | 0/7       |
+| Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 7/34 tasks completed
+**Total:** 10/34 tasks completed
 
 ## Phase 1: Canonical Pack Contract and Inventory
 
@@ -120,6 +120,31 @@ oat_generated: false
 **Commit:** `e0039d8065b4b8eb5ed45fb42d5c1382132c3104`
 **Fix commit:** `752aaab7d99bdf24655a2b736d437ddb0ba022a0`
 
+## Phase 2: Unified Pack Lifecycle Commands
+
+**Status:** in_progress
+**Started:** 2026-08-27
+
+### Task p02-t01: Build pure reconcile plans
+
+**Status:** completed
+**Commit:** `a2100aae2`
+
+### Task p02-t02: Apply and verify reconcile plans
+
+**Status:** completed
+**Commit:** `9dc413cb0`
+
+### Task p02-t03: Route fresh and aggregate installs through the manifest
+
+**Status:** completed
+**Commit:** `0b9415546476b26e450a52484aad147dfe8741d9`
+**Recovery commit:** `303dd6c75a78da9144ae488d58aa31c0d741d17f`
+
+### Task p02-t04: Unify direct pack installers
+
+**Status:** in_progress
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -135,9 +160,10 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Status    | Tasks | Review | Fix loops |
-| ----- | --------- | ----- | ------ | --------- |
-| p01   | completed | 7/7   | passed | 3         |
+| Phase | Status      | Tasks | Review  | Fix loops |
+| ----- | ----------- | ----- | ------- | --------- |
+| p01   | completed   | 7/7   | passed  | 3         |
+| p02   | in_progress | 3/9   | pending | 0         |
 
 #### Dispatch Notes
 
@@ -151,6 +177,29 @@ oat_generated: false
   `oat-reviewer-gpt-5-6-sol-high`; artifact
   `reviews/p01-review-2026-08-27T031035Z.md`.
 - `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- Phase 2 implementation:
+  `oat-phase-implementer-gpt-5-6-sol-high`, request
+  `d9cf84cf-abf6-459b-831c-8768658de1e8`, base
+  `28eab6e9f613541d07162c0b002834454f30cd42`.
+- `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+### Recovery Event 4bd11825-d39d-4c04-888d-ef704ae4af24
+
+- Phase/task: p02 / p02-t03
+- Original request: d9cf84cf-abf6-459b-831c-8768658de1e8
+- Original commit: 0b9415546476b26e450a52484aad147dfe8741d9
+- Defect class: lint
+- Discovered by: `oxlint --fix`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 303dd6c75a78da9144ae488d58aa31c0d741d17f
+- Verification: focused lint, p02-t03 tests, current Phase 2 shared tests,
+  type-check, and diff check passed before and after commit; root repeated focused
+  lint, 73 task tests, type-check, and diff check successfully.
+- Reason: five mechanically unused imports were removed without behavior or
+  scope changes.
 - Operator authorized up to two additional Phase 1 review/fix iterations. The
   scope-bound temporary total is 4; iterations already used remain 2.
 - Phase 1 fix iteration 3:
@@ -183,7 +232,7 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Begin Phase 2 at `p02-t01`.
+- Continue Phase 2 at `p02-t04`.
 
 ## Final Summary (for PR/docs)
 

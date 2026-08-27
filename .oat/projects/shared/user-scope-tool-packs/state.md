@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: 752aaab7d99bdf24655a2b736d437ddb0ba022a0
+oat_current_task: p02-t04
+oat_last_commit: 303dd6c75a78da9144ae488d58aa31c0d741d17f
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -26,16 +26,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p02:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: '4bd11825-d39d-4c04-888d-ef704ae4af24'
-        original_request_id: 'd9cf84cf-abf6-459b-831c-8768658de1e8'
-        original_task_id: 'p02-t03'
-        original_commit: '0b9415546476b26e450a52484aad147dfe8741d9'
-        discovered_by: 'oxlint --fix'
-        dispatch_target: 'oat-phase-implementer-gpt-5-6-sol-high'
-        reservation_head: '0b9415546476b26e450a52484aad147dfe8741d9'
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -91,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T05:06:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T05:18:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -101,7 +92,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 2 ready
+**Status:** Implementation in progress — Phase 2 task 4
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -118,6 +109,9 @@ Fix iteration 3 completed the containment repair and passed the focused, CLI,
 and workspace verification suites. Fresh independent re-review found no
 Critical or Important findings, so Phase 1 passes. The temporary retry limit is
 restored to the default 2, and Phase 2 is ready to begin.
+Phase 2 tasks 1–3 are complete. A mechanically bounded unused-import defect
+after task 3 consumed recovery attempt 1/10 and was recovered append-only in
+`303dd6c75a78da9144ae488d58aa31c0d741d17f`; the terminal marker is reconciled.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -127,7 +121,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 1 complete; Phase 2 ready)
+- **Implementation:** `implementation.md` (Phase 2 task 4)
 
 ## Progress
 
@@ -161,7 +155,9 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 1 fix iteration 3/4 completed
 - ✓ Phase 1 independent re-review passed with 0 Critical and 0 Important
 - ✓ Phase 1 completed; two Medium findings remain deferred and nonblocking
-- ⧗ Phase 2 ready at `p02-t01`
+- ✓ Phase 2 tasks `p02-t01`–`p02-t03` completed
+- ✓ Phase 2 recovery attempt 1/10 reconciled
+- ⧗ Phase 2 task `p02-t04`
 
 ## Blockers
 
@@ -169,4 +165,4 @@ None.
 
 ## Next Milestone
 
-Begin Phase 2 at `p02-t01`.
+Continue Phase 2 at `p02-t04`.
