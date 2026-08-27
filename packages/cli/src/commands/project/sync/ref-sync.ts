@@ -899,15 +899,39 @@ export async function migrateSharedToSynced(
     );
   }
 
-  let created = false;
-  let activeProjectUpdated = false;
-  try {
-    const ignored = await git.run(['check-ignore', '-q', destinationRelative], {
+  const ignored = await git.run(
+    [
+      'check-ignore',
+      '--quiet',
+      '--no-index',
+      '.oat/projects/synced/__probe__/',
+    ],
+    {
       cwd: target.repoRoot,
       allowFailure: true,
-    });
-    assertExpectedGitResult('git check-ignore synced project', ignored, [0, 1]);
-    if (ignored.code === 1) {
+    },
+  );
+  assertExpectedGitResult('git check-ignore synced project', ignored, [0, 1]);
+  const needsGitignoreHeal = ignored.code === 1;
+  if (needsGitignoreHeal) {
+    const gitignoreStatus = await git.run(
+      ['status', '--porcelain=v1', '--', '.gitignore'],
+      { cwd: target.repoRoot },
+    );
+    if (gitignoreStatus.stdout !== '') {
+      throw new CliError(
+        'Cannot add the synced-project rule because .gitignore has staged or unstaged changes; commit or stash those changes, or add the managed rule manually, then retry migration.',
+        1,
+      );
+    }
+  }
+
+  let created = false;
+  let activeProjectUpdated = false;
+  let gitignoreSelfHealStarted = false;
+  try {
+    if (needsGitignoreHeal) {
+      gitignoreSelfHealStarted = true;
       await (options.applyOatCoreGitignore ?? applyOatCoreGitignore)(
         target.repoRoot,
       );
@@ -935,6 +959,7 @@ export async function migrateSharedToSynced(
     );
     await rm(sourcePath, { recursive: true });
     const gitignoreChanged =
+      gitignoreSelfHealStarted &&
       (await readOptionalFile(gitignorePath)) !== originalGitignore;
     let lifecycleCommit: string | null = null;
     if (options.commit) {
@@ -984,7 +1009,7 @@ export async function migrateSharedToSynced(
         '--',
         sourceRelative,
         repoRelativePath(target.repoRoot, recordPath),
-        '.gitignore',
+        ...(gitignoreSelfHealStarted ? ['.gitignore'] : []),
       ],
       { cwd: target.repoRoot },
     );
@@ -992,10 +1017,12 @@ export async function migrateSharedToSynced(
       cwd: target.repoRoot,
     });
     await rm(recordPath, { force: true });
-    if (originalGitignore === null) {
-      await rm(gitignorePath, { force: true });
-    } else {
-      await writeFile(gitignorePath, originalGitignore, 'utf8');
+    if (gitignoreSelfHealStarted) {
+      if (originalGitignore === null) {
+        await rm(gitignorePath, { force: true });
+      } else {
+        await writeFile(gitignorePath, originalGitignore, 'utf8');
+      }
     }
     if (created) {
       const remoteRef = await git.run(

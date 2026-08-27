@@ -24,6 +24,66 @@ async function run(command: Command, args: string[]): Promise<void> {
   await program.parseAsync(['project', 'migrate', ...args], { from: 'user' });
 }
 
+type GitignoreState = 'staged' | 'unstaged' | 'staged-and-unstaged';
+
+async function makeGitignoreDirty(
+  repoRoot: string,
+  state: GitignoreState,
+): Promise<void> {
+  const original = await readFile(join(repoRoot, '.gitignore'), 'utf8');
+  if (state === 'staged' || state === 'staged-and-unstaged') {
+    await writeFile(
+      join(repoRoot, '.gitignore'),
+      `${original}user-staged\n`,
+      'utf8',
+    );
+    execFileSync('git', ['add', '.gitignore'], { cwd: repoRoot });
+  }
+  if (state === 'unstaged' || state === 'staged-and-unstaged') {
+    const stagedContents = await readFile(join(repoRoot, '.gitignore'), 'utf8');
+    await writeFile(
+      join(repoRoot, '.gitignore'),
+      `${stagedContents}user-unstaged\n`,
+      'utf8',
+    );
+  }
+}
+
+async function captureGitignoreState(repoRoot: string): Promise<{
+  index: string;
+  status: string;
+  worktree: string;
+}> {
+  return {
+    index: execFileSync('git', ['show', ':.gitignore'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }),
+    status: execFileSync(
+      'git',
+      ['status', '--porcelain=v1', '--', '.gitignore'],
+      { cwd: repoRoot, encoding: 'utf8' },
+    ),
+    worktree: await readFile(join(repoRoot, '.gitignore'), 'utf8'),
+  };
+}
+
+async function addTrackedMigrationSource(
+  repoRoot: string,
+  slug: string,
+): Promise<string> {
+  const source = join(repoRoot, '.oat', 'projects', 'shared', slug);
+  await mkdir(source, { recursive: true });
+  await writeFile(join(source, 'state.md'), `# ${slug}\n`, 'utf8');
+  execFileSync('git', ['add', `.oat/projects/shared/${slug}`], {
+    cwd: repoRoot,
+  });
+  execFileSync('git', ['commit', '-m', `add ${slug} source`], {
+    cwd: repoRoot,
+  });
+  return source;
+}
+
 describe('createProjectMigrateCommand', () => {
   let previousExitCode: number | undefined;
   beforeEach(() => {
@@ -205,4 +265,107 @@ describe('createProjectMigrateCommand', () => {
       await fixture.cleanup();
     }
   });
+
+  it.each(['staged', 'unstaged', 'staged-and-unstaged'] as const)(
+    'fails before mutation when the synced rule is missing and .gitignore is %s',
+    async (gitignoreState) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const slug = `missing-rule-${gitignoreState}`;
+        const source = await addTrackedMigrationSource(fixture.cloneA, slug);
+        await writeFile(
+          join(fixture.cloneA, '.gitignore'),
+          '# user rules\n',
+          'utf8',
+        );
+        execFileSync('git', ['add', '.gitignore'], { cwd: fixture.cloneA });
+        execFileSync('git', ['commit', '-m', 'remove synced ignore rule'], {
+          cwd: fixture.cloneA,
+        });
+        await makeGitignoreDirty(fixture.cloneA, gitignoreState);
+        const before = await captureGitignoreState(fixture.cloneA);
+        const headBefore = execFileSync('git', ['rev-parse', 'HEAD'], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }).trim();
+        const target = buildSyncTarget(
+          fixture.cloneA,
+          '.oat/projects/shared',
+          slug,
+        );
+
+        await expect(
+          migrateSharedToSynced(target, defaultGitRunner, {
+            sourcePath: source,
+            commit: true,
+          }),
+        ).rejects.toThrow(/\.gitignore.*staged or unstaged changes/);
+
+        expect(await captureGitignoreState(fixture.cloneA)).toEqual(before);
+        expect(
+          execFileSync('git', ['rev-parse', 'HEAD'], {
+            cwd: fixture.cloneA,
+            encoding: 'utf8',
+          }).trim(),
+        ).toBe(headBefore);
+        await expect(access(target.projectPath)).rejects.toThrow();
+        await expect(
+          access(join(target.syncedRoot, `${slug}.json`)),
+        ).rejects.toThrow();
+        expect(
+          execFileSync('git', ['ls-remote', 'origin', target.ref], {
+            cwd: fixture.cloneA,
+            encoding: 'utf8',
+          }).trim(),
+        ).toBe('');
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+  );
+
+  it.each(['staged', 'unstaged', 'staged-and-unstaged'] as const)(
+    'preserves %s .gitignore state when the managed rule already exists',
+    async (gitignoreState) => {
+      for (const rollback of [false, true]) {
+        const fixture = await createSyncedFixture();
+        try {
+          const slug = `${rollback ? 'rollback' : 'success'}-${gitignoreState}`;
+          const source = await addTrackedMigrationSource(fixture.cloneA, slug);
+          await makeGitignoreDirty(fixture.cloneA, gitignoreState);
+          const before = await captureGitignoreState(fixture.cloneA);
+          const target = buildSyncTarget(
+            fixture.cloneA,
+            '.oat/projects/shared',
+            slug,
+          );
+          const migration = migrateSharedToSynced(target, defaultGitRunner, {
+            sourcePath: source,
+            commit: true,
+            ...(rollback
+              ? {
+                  afterBranchCommit: async () => {
+                    throw new Error('injected migration rollback');
+                  },
+                }
+              : {}),
+          });
+
+          if (rollback) {
+            await expect(migration).rejects.toThrow(
+              'injected migration rollback',
+            );
+          } else {
+            await expect(migration).resolves.toMatchObject({
+              status: 'migrated',
+            });
+          }
+          expect(await captureGitignoreState(fixture.cloneA)).toEqual(before);
+        } finally {
+          await fixture.cleanup();
+        }
+      }
+    },
+    15_000,
+  );
 });
