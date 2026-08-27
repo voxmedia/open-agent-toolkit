@@ -96,6 +96,10 @@ Phase 3 re-review reduced the remaining set to 0 Critical, 1 Important, and 1 Me
 
 Final configured Phase 3 fix iteration 2/2 completed both remaining dispositions in b0a6bc16e5efa5cb22cac853d8a45c2f8358e8f1; decisive re-review pending; see implementation.md.
 
+### 2026-08-27 · structural · oat-project-implement · p03-review-fix2
+
+Decisive Phase 3 re-review closed all Critical and Important findings but left one Medium planner/JSON inconsistency; configured fix iterations exhausted; operator authorization or explicit deferral required; see reviews/p03-review-2026-08-27T083913Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
