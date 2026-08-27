@@ -291,3 +291,14 @@ Plan is now 42 tasks. Gate attempt 8 follows.
 - M2 conflict messages name the explicit target.
 
 **Plan approved by the maintainer after attempt 8** ("sounds good" to: approve after receiving gate 8 unless structural). Eight gate runs, 36 findings, all applied. `plan.md` marked complete; implementation not started.
+
+### Pre-implementation access check (2026-08-27T04:08Z)
+
+Verified by a subagent against `https://github.com/tkstang/disposable-test-repo-for-oat` (repo is empty — no commits, no default branch yet):
+
+- `gh auth status`: `tkstang`, ssh, scopes `gist read:org repo workflow`.
+- Pushed a parentless empty-tree commit `c63e6e8d…` to `refs/oat/spike/access-check-20260827T040832Z` → `* [new reference]`, exit 0.
+- `git ls-remote origin 'refs/oat/*'` showed the ref; `gh api …/git/refs/oat` listed it (REST API surfaces the namespace); `gh api …/commits/<sha>` returned 200 for a commit reachable only from the custom ref.
+- Cleanup: remote + local ref deleted, `ls-remote` empty, clone removed. No branches/tags touched.
+
+Implications for p01-t10: push access and custom-ref acceptance are proven; the spike still needs the workflow-bearing commit + branch positive control + blob-URL check. Because the repo is empty, p01-t10's Step 1 creates `main` with the probe workflow as its first commit.
