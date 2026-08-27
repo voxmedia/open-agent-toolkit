@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -1028,4 +1028,116 @@ individually and independently reproduced by root):**
 
 ## Final Summary (for PR/docs)
 
-Pending implementation completion.
+### What shipped
+
+- **A single canonical pack manifest** is now the one source of truth for every
+  tool pack's skills, agents, templates, scripts, and seed files, with per-scope
+  ownership (`managed` vs `seed-if-missing`) and durable per-scope intent
+  replacing the old boolean-ish config keys.
+- **A unified pack lifecycle.** Install, list, info, `has`, `outdated`, update,
+  remove, and provider sync all route through one reconcile planner and apply
+  path, so the same rules govern every entry point. `has` is complete-only:
+  a partially installed pack no longer reports as present.
+- **Verified, preview-first scope migration.** `oat tools migrate` plans the
+  move, installs and re-verifies the destination _before_ touching the source,
+  refuses to remove a source non-interactively, retains the source on any
+  destination failure, and preserves shared assets another pack still owns.
+- **PJM capability is user-owned; PJM repository adoption is explicit.**
+  `resolvePjmAdoption()` returns a four-state adoption value
+  (`declared`, `inferred-legacy`, `partial-initialization`, `none`), every
+  non-migration PJM write fails closed behind it with a typed recovery error,
+  and `oat decision init` / `oat backlog init` are no longer alternate adoption
+  paths. Repository `AGENTS.md` guidance is now written by the explicit adoption
+  action, never as a side effect of pack placement.
+- **Templates resolve repository → user → bundle**, so a user can keep managed
+  defaults in `~/.oat/templates/` without vendoring them per repository.
+- **Installed-scope resource resolution.** Bundled skills resolve their shared
+  scripts and sibling skills from the scope they were loaded from rather than
+  assuming a repo-relative path, which is what made user-scope installs work at
+  all.
+- **Ownership and drift diagnostics.** `oat status` and `oat doctor` report
+  partial, stale, newer, legacy-false, duplicate, retained-override,
+  unadopted-PJM, and unmaterialized-user-agent states with home paths redacted
+  to `~/`, and emit structured recovery commands.
+
+### Key files and modules
+
+- Manifest and inventory: `packages/cli/src/commands/tools/shared/pack-manifest.ts`,
+  `pack-inventory.ts`, `pack-reconcile.ts`, `pack-paths.ts`
+- Migration: `packages/cli/src/commands/tools/migrate/`
+- PJM adoption and templates: `packages/cli/src/commands/pjm/adoption.ts`,
+  `template-source.ts`, `init.ts`, `doctor.ts`
+- Diagnostics: `packages/cli/src/commands/status/index.ts`,
+  `packages/cli/src/commands/doctor/index.ts`
+- Bundled skills: twelve canonical skills under `.agents/skills/`, each version
+  bumped
+- Docs: ten pages under `apps/oat-docs/docs/`
+
+### Verification performed
+
+- Complete CI gate sequence in CI order, each exit code captured individually
+  and independently reproduced by root at the final head: `pnpm check`,
+  `pnpm type-check`, `pnpm test` (CLI 290 files / 3,906 tests), `pnpm build`,
+  `pnpm run check:skill-bumps`, `pnpm release:check-versions`,
+  `pnpm release:validate`, `pnpm build:docs`, plus `pnpm lint`, `pnpm format`,
+  and `git diff --check`. All exit 0.
+- Five independent phase reviews across fifteen review events, every phase
+  reaching 0 Critical and 0 Important before closing.
+- Behavioral end-to-end verification in throwaway repositories under temporary
+  `HOME` for the adoption boundary, the fail-closed writes, template precedence,
+  and the user-scope agent diagnostic.
+- **Mutation testing on the two P0 safety behaviors.** Disabling `oat tools
+update`'s content refresh, and breaking migration's verify-before-remove
+  ordering, are each now caught by tests that root and an independent reviewer
+  separately confirmed fail under the mutation and pass without it.
+
+### Design deltas
+
+- The plan's declared Phase 4 verification command reached only
+  `src/commands/**`, while the phase edited eight bundled skills whose
+  HEAD-pinned assertions live in `src/validation/**`. It reported a passing
+  phase while three real failures remained, which caused Phase 4 recovery
+  attempts 2/10 and 3/10. The implementation was verified against the full CLI
+  suite plus workspace gates instead. `p05-t06` already runs the complete gate
+  sequence, so no plan edit was required.
+- `design.md:506-507` states tests avoid ambient `HOME` mutation. The Phase 4
+  fix added deliberately `HOME`-mutating negative tests, which is the only way
+  to establish the read/write home divergence contract. The implementation is
+  source of truth; the design sentence is stale.
+- Public packages were bumped `0.2.32` → `0.2.37` rather than the next patch,
+  because `origin/main` had advanced to `0.2.36` while the merge-base was
+  `0.2.32`, and main carries a stricter gate rejecting versions it has
+  overtaken. `0.2.34` would have passed locally and failed in CI.
+- Phase 4's `p04-t04` fixed a command adapter the production CLI does not
+  register, so its regression test passed while production still wrote
+  repository `AGENTS.md`. Caught in review and fixed; the same defect class
+  recurred in `p05-t04`'s migration leg and was fixed there too.
+
+### Known deferred work
+
+Recorded, non-blocking, and not fixed by this project:
+
+- Five packaged user-scope skills still chain into sibling skills by bare
+  repo-relative path (`oat-idea-ideate`, `oat-idea-new`, `oat-idea-summarize`,
+  `oat-project-implement`, `oat-project-plan-writing`), pinned by a ratchet so
+  no new occurrence can be added.
+- `.agents/skills/oat-brainstorm/references/destinations.md:79` retains two bare
+  cross-skill paths; the ratchet scanner is `SKILL.md`-only and its regex
+  requires backticks.
+- `oat pjm migrate` is still keyed on project pack intent
+  (`packages/cli/src/commands/pjm/migrate.ts:474`).
+- The `user-agent-unmaterialized` diagnostic under-reports: its
+  `USER_SCOPE_MANAGED_AGENT_FILES` exclusion is unconditional, but that
+  materialization is provider-conditional, so on a Claude-only `HOME`
+  `oat-reviewer` and `oat-phase-implementer` are not named.
+- Assorted Minor polish: doctor's `'; '` separator collision,
+  `shared-owner-observation` attributing a shared asset to an uninstalled pack,
+  `oat status` degrading less gracefully than `oat doctor` on inventory failure,
+  and two test-quality items.
+
+### Required before merge
+
+This branch is behind `origin/main` on the release line and must be rebased onto
+current main. If main has advanced past `0.2.36`, the lockstep version must be
+re-resolved above the new tip, because this branch's own version gate is the
+older, weaker merge-base copy.

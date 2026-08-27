@@ -1286,9 +1286,14 @@ exit-code evidence.
 | final  | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
 | design | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T012258Z.md | -                                        | gate       | claude-fable-skip-permissions |
-| p03    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
-| p04    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
-| p05    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| p03    | code     | fixes_completed | 2026-08-27 | reviews/p03-review-2026-08-27T074154Z.md                      | 3e2421bce1286dd61852e8e15d87cff1c8c82b5d | manual     | -                             |
+| p04    | code     | fixes_completed | 2026-08-27 | reviews/p04-review-2026-08-27T133629Z.md                      | bed357babe582cec0a32804e38ef05c2194abd01 | manual     | -                             |
+| p05    | code     | fixes_completed | 2026-08-27 | reviews/p05-review-2026-08-27T154500Z.md                      | 17eb63ea5c3f691db8b7b6baae92a6f7fee857d5 | manual     | -                             |
+| p03    | code     | fixes_completed | 2026-08-27 | reviews/p03-review-2026-08-27T081809Z.md                      | 6b0a7fe542f41f2a20143b0f3194242cf63ef770 | manual     | -                             |
+| p03    | code     | fixes_completed | 2026-08-27 | reviews/p03-review-2026-08-27T083913Z.md                      | b0a6bc16e5efa5cb22cac853d8a45c2f8358e8f1 | manual     | -                             |
+| p03    | code     | passed          | 2026-08-27 | reviews/p03-review-2026-08-27T125029Z.md                      | 38233ba2e997f3e18ad2fa3ebc888cab95131688 | manual     | -                             |
+| p04    | code     | passed          | 2026-08-27 | reviews/p04-review-2026-08-27T144000Z.md                      | f337df8b5d3b403322a7461077dac6894c5ba7cc | manual     | -                             |
+| p05    | code     | passed          | 2026-08-27 | reviews/p05-review-2026-08-27T170000Z.md                      | ab9250d685fa89a588ad896ca594b446b173bea4 | manual     | -                             |
 | plan   | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T015201Z.md   | -                                        | gate       | claude-fable-skip-permissions |
 | plan   | artifact | passed          | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020356Z.md   | -                                        | gate       | claude-fable-skip-permissions |
