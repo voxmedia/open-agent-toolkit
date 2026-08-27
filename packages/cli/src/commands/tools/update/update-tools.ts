@@ -2,23 +2,11 @@ import { join } from 'node:path';
 
 import type { ApplyOatCoreResult } from '@commands/init/gitignore';
 import type { CopyStatus } from '@commands/init/tools/shared/copy-helpers';
-import {
-  BRAINSTORM_SKILLS,
-  CORE_SKILLS,
-  DOCS_SKILLS,
-  DOCS_SCRIPTS,
-  IDEA_SKILLS,
-  PROJECT_MANAGEMENT_SKILLS,
-  PROJECT_MANAGEMENT_SCRIPTS,
-  PROJECT_MANAGEMENT_TEMPLATES,
-  RESEARCH_AGENTS,
-  RESEARCH_SKILLS,
-  UTILITY_SKILLS,
-  WORKFLOW_AGENTS,
-  WORKFLOW_SKILLS,
-  WORKFLOW_SCRIPTS,
-  WORKFLOW_TEMPLATES,
-} from '@commands/init/tools/shared/skill-manifest';
+import type {
+  InventoryScopedPackInput,
+  ScopedPackInventory,
+} from '@commands/tools/shared/pack-inventory';
+import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import type { ConcreteScope } from '@shared/types';
@@ -66,6 +54,9 @@ export interface UpdateToolsDependencies {
   fileExists: (path: string) => Promise<boolean>;
   chmod: (path: string, mode: number) => Promise<void>;
   applyOatCoreGitignore?: (repoRoot: string) => Promise<ApplyOatCoreResult>;
+  inventoryScopedPack?: (
+    input: InventoryScopedPackInput,
+  ) => Promise<ScopedPackInventory>;
 }
 
 interface ToolEntry {
@@ -83,66 +74,27 @@ interface BundledPackAssets {
   scripts: readonly string[];
 }
 
-const BUNDLED_PACK_MEMBERS: Record<PackName, BundledPackMember[]> = {
-  core: CORE_SKILLS.map((name) => ({ name, type: 'skill' })),
-  ideas: IDEA_SKILLS.map((name) => ({ name, type: 'skill' })),
-  docs: DOCS_SKILLS.map((name) => ({ name, type: 'skill' })),
-  workflows: [
-    ...WORKFLOW_SKILLS.map((name) => ({ name, type: 'skill' as const })),
-    ...WORKFLOW_AGENTS.map((name) => ({
-      name: name.replace(/\.md$/, ''),
-      type: 'agent' as const,
-    })),
-  ],
-  utility: UTILITY_SKILLS.map((name) => ({ name, type: 'skill' })),
-  'project-management': PROJECT_MANAGEMENT_SKILLS.map((name) => ({
-    name,
-    type: 'skill',
-  })),
-  research: [
-    ...RESEARCH_SKILLS.map((name) => ({ name, type: 'skill' as const })),
-    ...RESEARCH_AGENTS.map((name) => ({
-      name: name.replace(/\.md$/, ''),
-      type: 'agent' as const,
-    })),
-  ],
-  brainstorm: BRAINSTORM_SKILLS.map((name) => ({ name, type: 'skill' })),
-};
-
-const BUNDLED_PACK_ASSETS: Record<PackName, BundledPackAssets> = {
-  core: {
-    templates: [],
-    scripts: [],
-  },
-  ideas: {
-    templates: [],
-    scripts: [],
-  },
-  docs: {
-    templates: [],
-    scripts: DOCS_SCRIPTS,
-  },
-  workflows: {
-    templates: WORKFLOW_TEMPLATES,
-    scripts: WORKFLOW_SCRIPTS,
-  },
-  utility: {
-    templates: [],
-    scripts: [],
-  },
-  'project-management': {
-    templates: PROJECT_MANAGEMENT_TEMPLATES,
-    scripts: PROJECT_MANAGEMENT_SCRIPTS,
-  },
-  research: {
-    templates: [],
-    scripts: [],
-  },
-  brainstorm: {
-    templates: [],
-    scripts: [],
-  },
-};
+function getBundledPackAssets(
+  pack: PackName,
+  scope: ConcreteScope,
+): BundledPackAssets {
+  const assets = getPackDefinition(pack).assets.filter(
+    ({ scopes, ownership }) =>
+      scopes.includes(scope) && ownership[scope] === 'managed',
+  );
+  return {
+    templates: assets
+      .filter(({ kind }) => kind === 'template')
+      .flatMap(({ source }) =>
+        source ? [source.replace(/^templates\//, '')] : [],
+      ),
+    scripts: assets
+      .filter(({ kind }) => kind === 'script')
+      .flatMap(({ source }) =>
+        source ? [source.replace(/^scripts\//, '')] : [],
+      ),
+  };
+}
 
 interface PackAssetTarget {
   pack: PackName;
@@ -169,9 +121,18 @@ export async function updateTools(
   };
 
   const allTools: ToolEntry[] = [];
+  const scopedInventories: ScopedPackInventory[] = [];
+  const scopeRoots = new Map<ConcreteScope, string>();
 
   for (const scope of scopes) {
-    const scopeRoot = await dependencies.resolveScopeRoot(scope, cwd, home);
+    let scopeRoot: string;
+    try {
+      scopeRoot = await dependencies.resolveScopeRoot(scope, cwd, home);
+    } catch (error) {
+      if (scope === 'project' && scopes.includes('user')) continue;
+      throw error;
+    }
+    scopeRoots.set(scope, scopeRoot);
     const tools = await dependencies.scanTools({
       scope,
       scopeRoot,
@@ -179,6 +140,55 @@ export async function updateTools(
     });
     for (const tool of tools) {
       allTools.push({ tool, scopeRoot });
+    }
+    if (dependencies.inventoryScopedPack) {
+      for (const { name: pack } of [
+        getPackDefinition('core'),
+        getPackDefinition('ideas'),
+        getPackDefinition('docs'),
+        getPackDefinition('workflows'),
+        getPackDefinition('utility'),
+        getPackDefinition('project-management'),
+        getPackDefinition('research'),
+        getPackDefinition('brainstorm'),
+      ]) {
+        if (!getPackDefinition(pack).allowedScopes.includes(scope)) continue;
+        scopedInventories.push(
+          await dependencies.inventoryScopedPack({
+            pack,
+            scope,
+            scopeRoot,
+            assetsRoot,
+          }),
+        );
+      }
+    }
+  }
+
+  for (const inventory of scopedInventories) {
+    const selected =
+      target.kind === 'pack'
+        ? target.pack === inventory.pack
+        : target.kind === 'all';
+    if (!selected || !inventory.intent.enabled) continue;
+    const scopeRoot = scopeRoots.get(inventory.scope);
+    if (!scopeRoot) continue;
+    const existing = new Set(allTools.map(({ tool }) => buildEntryKey(tool)));
+    for (const member of getBundledPackMembers(
+      inventory.pack,
+      inventory.scope,
+    )) {
+      const tool: ToolInfo = {
+        name: member.name,
+        type: member.type,
+        scope: inventory.scope,
+        version: null,
+        bundledVersion: null,
+        pack: inventory.pack,
+        status: 'outdated',
+      };
+      if (!existing.has(buildEntryKey(tool)))
+        allTools.push({ tool, scopeRoot });
     }
   }
 
@@ -235,7 +245,7 @@ export async function updateTools(
   }
 
   for (const assetTarget of resolvePackAssetTargets(target, allTools)) {
-    const assets = BUNDLED_PACK_ASSETS[assetTarget.pack];
+    const assets = getBundledPackAssets(assetTarget.pack, assetTarget.scope);
 
     for (const template of assets.templates) {
       const source = join(assetsRoot, 'templates', template);
@@ -343,10 +353,24 @@ function getBundledPackMembers(
   pack: PackName,
   scope: ConcreteScope,
 ): BundledPackMember[] {
-  return BUNDLED_PACK_MEMBERS[pack].filter(
-    (member) =>
-      scope === 'project' || member.type === 'skill' || pack === 'workflows',
-  );
+  return getPackDefinition(pack).assets.flatMap((asset) => {
+    if (
+      !asset.scopes.includes(scope) ||
+      asset.ownership[scope] !== 'managed' ||
+      (asset.kind !== 'skill' && asset.kind !== 'agent')
+    ) {
+      return [];
+    }
+    return [
+      {
+        name:
+          asset.kind === 'agent'
+            ? asset.destination.split('/').at(-1)!.replace(/\.md$/, '')
+            : asset.destination.split('/').at(-1)!,
+        type: asset.kind,
+      },
+    ];
+  });
 }
 
 function resolvePackAssetTargets(
@@ -384,7 +408,7 @@ function resolvePackAssetTargets(
         : [...installedPacks];
 
     for (const pack of packsToExpand) {
-      const assets = BUNDLED_PACK_ASSETS[pack];
+      const assets = getBundledPackAssets(pack, scope);
       if (assets.templates.length === 0 && assets.scripts.length === 0) {
         continue;
       }

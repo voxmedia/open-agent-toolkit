@@ -13,6 +13,8 @@ import {
 import {
   BRAINSTORM_SKILLS,
   DOCS_SCRIPTS,
+  RESEARCH_AGENTS,
+  RESEARCH_SKILLS,
   UTILITY_SKILLS,
   WORKFLOW_AGENTS,
   WORKFLOW_SKILLS,
@@ -345,7 +347,7 @@ describe('updateTools', () => {
     expect(result.current).toHaveLength(1);
     expect(
       deps.copies.some((copy) => copy.source === `/assets/templates/plan.md`),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       deps.copies.some(
         (copy) => copy.source === '/assets/scripts/resolve-tracking.sh',
@@ -506,7 +508,7 @@ describe('updateTools', () => {
     });
   });
 
-  it('reconciles workflow templates and scripts during pack updates', async () => {
+  it('retains project workflow template overrides while refreshing scripts', async () => {
     const tool = createTool({
       name: 'oat-project-new',
       pack: 'workflows',
@@ -529,12 +531,80 @@ describe('updateTools', () => {
       deps.copies.some(
         (copy) => copy.source === `/assets/templates/${WORKFLOW_TEMPLATES[0]}`,
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       deps.copies.some(
         (copy) => copy.source === `/assets/scripts/${WORKFLOW_SCRIPTS[0]}`,
       ),
     ).toBe(true);
+  });
+
+  it('repairs a fully missing intended pack from scoped inventory', async () => {
+    const deps = createDeps({ user: [] });
+    deps.inventoryScopedPack = async ({ pack, scope, scopeRoot }) => ({
+      pack,
+      scope,
+      intent: {
+        pack,
+        scope,
+        enabled: pack === 'research',
+        source: pack === 'research' ? 'declared' : 'none',
+        configPath: `${scopeRoot}/.oat/config.json`,
+        diagnostics: [],
+      },
+      completeness: 'absent',
+      assets:
+        pack === 'research'
+          ? [
+              ...RESEARCH_SKILLS.map((name) => ({
+                definition: {
+                  id: `skill:${name}`,
+                  kind: 'skill' as const,
+                  source: `skills/${name}`,
+                  destination: `.agents/skills/${name}`,
+                  scopes: ['project', 'user'] as const,
+                  ownership: {
+                    project: 'managed' as const,
+                    user: 'managed' as const,
+                  },
+                },
+                path: `${scopeRoot}/.agents/skills/${name}`,
+                status: 'missing' as const,
+                installedVersion: null,
+                bundledVersion: null,
+              })),
+              ...RESEARCH_AGENTS.map((name) => ({
+                definition: {
+                  id: `agent:${name}`,
+                  kind: 'agent' as const,
+                  source: `agents/${name}`,
+                  destination: `.agents/agents/${name}`,
+                  scopes: ['project', 'user'] as const,
+                  ownership: {
+                    project: 'managed' as const,
+                    user: 'managed' as const,
+                  },
+                },
+                path: `${scopeRoot}/.agents/agents/${name}`,
+                status: 'missing' as const,
+                installedVersion: null,
+                bundledVersion: null,
+              })),
+            ]
+          : [],
+      diagnostics: [],
+    });
+    const result = await updateTools(
+      { kind: 'pack', pack: 'research' },
+      ['user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+    expect(result.updated).toHaveLength(
+      RESEARCH_SKILLS.length + RESEARCH_AGENTS.length,
+    );
   });
 
   it('refreshes all four workflows asset classes at user scope', async () => {

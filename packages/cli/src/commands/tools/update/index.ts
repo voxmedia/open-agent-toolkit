@@ -17,6 +17,7 @@ import {
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
+import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
 import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
@@ -45,6 +46,7 @@ const defaultDependencies: UpdateToolsDependencies = {
   fileExists,
   chmod,
   applyOatCoreGitignore,
+  inventoryScopedPack,
 };
 
 export function buildSyncSubprocessArgs(
@@ -170,7 +172,15 @@ export function createToolsUpdateCommand(
         await dependencies.copyDirWithStatus(docsSource, docsDestination, true);
       }
 
-      if (assetsRoot && result.notInstalled.length === 0) {
+      const changedProjectScope =
+        [...result.updated, ...result.current, ...result.newer].some(
+          ({ scope }) => scope === 'project',
+        ) || result.assetRefreshes.some(({ scope }) => scope === 'project');
+      if (
+        assetsRoot &&
+        result.notInstalled.length === 0 &&
+        changedProjectScope
+      ) {
         const repoRoot = await resolveProjectRoot(context.cwd);
         await reconcileProjectToolsConfig(
           {
