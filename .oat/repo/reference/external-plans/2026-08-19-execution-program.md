@@ -150,3 +150,36 @@ supersedes the "execution deferred by operator on 2026-08-19" record.
   gates; live-syntax rereads record flags per subcommand; cross-model review
   stops at two clean rounds or below-Medium and treats root dispositions as
   settled; flag swaps are re-evaluated per example row.
+
+## Program close (2026-08-27)
+
+- **All four waves merged:** W1 PR #215 → `5bb2f914` (0.2.33), W2 PR #217 →
+  `33149b26` (0.2.34), W3 PR #219 → `cd3ba140` (0.2.35), W4 PR #222 →
+  `06f49fb0` (0.2.36); wave-close PRs #216, #218, #221, #223. Coverage
+  invariant: 5 plans in the indexes, 5 rows, all `done`.
+- **Program recap: generated, NOT published.** Manifest
+  `.oat/repo/explainers/2026-08-19-defect-wave-program-recap/manifest.json`,
+  run `run-2200b576-00c1-4803-8a1a-e3563c96d4e2`, recipe `program-recap@1`,
+  outcome `built-durable` (artifact commit `776d4d1a`, attestation
+  `10d0756f`; supplied fact base
+  `.oat/repo/reference/project-recaps/2026-08-19-defect-wave-program.fact-base.json`
+  — 13 sources pinned at `f2917165`, 81 cited claims, 5 unresolved claims
+  recorded honestly). A first attempt, run
+  `run-9bf4ae62-205b-4aed-a638-d0dc0e4152c5`, failed at the visual-review
+  stage on a driver seam-binding defect (binding `visualCritic` for a
+  `program-recap` recipe hard-fails by kit design); the root authorized one
+  corrected re-run with the seam unbound and an out-of-band visual review
+  (pass). Publishing is human-gated and was not invoked.
+- **Per-wave recaps:** manifests `run-051612fb…` (W1), `run-1b2d1eb3…` (W2),
+  `run-6c05d663…` (W3), `run-7dd79e60…` (W4), all built-durable;
+  `recap: deferred to program close` — publication remains human-gated.
+- **Completion tail (archive + S3 + pointer clear) across all four wrapper
+  projects:** `deferred to program close` in every wave row; the
+  HUMAN-GATED program completion checkpoint is presented to the operator at
+  program close and is not answered autonomously. Standing deferral until the
+  operator decides; owner: the operator (`tkstang`).
+- **Backlog filed by the program:** `BL-260826-*` (5, at W2 close),
+  `BL-260827-fail-closed-on-partial-or`, `BL-260827-override-aware-remedy-text`
+  (W3 close), `BL-260827-harden-the-codex-skill-below`,
+  `BL-260827-span-based-prose-guards`, `BL-260827-refresh-provider-codex-md`
+  (W4 close). Decision records: `DR-260826-*` (3), `DR-260827-*` (6).
