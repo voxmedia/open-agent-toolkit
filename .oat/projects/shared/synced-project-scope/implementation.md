@@ -1,7 +1,10 @@
 ---
-oat_status: in_progress
+oat_status: blocked
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p02-review
+    reason: 'Final p02 review round 6 found one Important low-level canonical-target invariant gap after fix cycle 5/5; the configured maximum is exhausted and plan revision is required.'
+    since: 2026-08-27
 oat_last_updated: 2026-08-27
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -24,12 +27,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 10    | 10/10     |
-| Phase 2 | in_progress | 11    | 11/11     |
-| Phase 3 | pending     | 10    | 0/10      |
-| Phase 4 | pending     | 11    | 0/11      |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 10    | 10/10     |
+| Phase 2 | blocked  | 11    | 11/11     |
+| Phase 3 | pending  | 10    | 0/10      |
+| Phase 4 | pending  | 11    | 0/11      |
 
 **Total:** 21/42 tasks completed
 
@@ -145,16 +148,16 @@ oat_generated: false
 
 ## Phase 2: CLI surface
 
-**Status:** in progress - implementation complete; final operator-authorized review fix cycle 5/5
+**Status:** blocked - implementation complete; maximum review-fix cycle 5/5 exhausted
 **Started:** 2026-08-27
 
 ### Phase Summary
 
 **Outcome:** All 11 planned CLI-surface tasks are implemented, including scope-aware scaffolding, push/pull/list/scope commands, remote adoption, coordination children, and synced-aware open/pause behavior. One phase recovery updated stale integration expectations after the default changed to synced.
 
-**Verification:** Full CLI suite passed 282 files and 3,784 tests after fix cycle 4/4; CLI lint, format, and type-check passed against committed HEAD. Review round 5 passed 428 phase tests, 77 command/help/lifecycle tests, and 78 control-plane tests plus type-checks, control-plane build, lint, format, and range diff checks.
+**Verification:** Full CLI suite passed 282 files and 3,789 tests after fix cycle 5/5; focused real-worktree alias tests passed 52/52, and CLI lint, format, type-check, and committed boundary checks passed. Review round 6 passed 433 phase tests, 77 command/help/lifecycle tests, the full 3,789-test CLI suite, and 78 control-plane tests plus builds, type-checks, changed-file lint/format, and range diff checks.
 
-**Review disposition:** Five independent rounds and four bounded fix iterations ran. Fix iteration 4 closed the real split-conflict recovery defect and ordinary lexical descendant rebinding, while stabilizing the prior load-sensitive test. Review round 5 found 1 Important canonical-target identity defect: a direct-child symlink can alias a sibling checkout and permit mutation under the wrong ref identity. On 2026-08-27 the operator authorized final fix cycle 5/5 plus one fresh sixth review; Phase 3 remains unstarted pending that verdict.
+**Review disposition:** Six independent rounds and five bounded fix iterations ran. Fix iteration 5 closed command-selected explicit-path and bare-slug aliases before record resolution or mutation. Review round 6 found 1 Important systemic gap: coordination-child pull constructs `SyncTarget` directly, bypasses the command-level guard, and can still rebase a sibling checkout. The configured maximum is exhausted; plan revision is required before further implementation, and Phase 3 remains unstarted.
 
 ### Task p02-t01: `projects.defaultScope` config key
 
@@ -461,7 +464,7 @@ lifecycle_outcome:
 **Branch:** `feat/synced-project-scope`
 **Tier:** 1 - subagents
 **Dispatch policy:** managed `high` (Codex pinned variants)
-**Status:** p02 final operator extension accepted; fix cycle 5/5 pending
+**Status:** completed - fix cycle 5/5 committed and terminal review dispatched
 
 #### Operator Extension
 
@@ -473,6 +476,26 @@ lifecycle_outcome:
 - Exact implementation target: preserve `oat-phase-implementer-gpt-5-6-sol-high`
 - Review authorization: one fresh sixth p02 reviewer after the bounded fix
 - Stop rule: no further extension; any blocking sixth-review finding requires plan revision
+- Phase recovery: unchanged at 1/10 with `pending_attempt: null`
+- Phase 3: not started
+
+### Run 9 - 2026-08-27T15:44:58Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Codex pinned variants)
+**Status:** blocked - p02 configured maximum exhausted; plan revision required
+
+#### Terminal Outcome
+
+- Fix iteration 5: `fc14f074f1b7289bdf3c974999664c5c58899f60`, continuation `continuation-p02-review-r5-fix-05-20260827T152753Z`; command-selected explicit-path and bare-slug aliases now fail canonical identity before record resolution or mutation
+- Verification: focused real-worktree tests passed 52/52; the full CLI suite passed 282 files and 3,789 tests; CLI type-check, lint, format, commit check, and exact five-file boundary passed
+- Review round 6: blocked with 1 Important and no other findings; artifact `reviews/code-p02-review-2026-08-27T153712Z.md`; reviewed head `fc14f074f1b7289bdf3c974999664c5c58899f60`
+- Review verification: 433 phase tests, 77 command/help/lifecycle tests, 3,789 full CLI tests, and 78 control-plane tests passed; builds, type-checks, lint, format, and range diff checks passed
+- Review dispatch: fresh `oat-reviewer-gpt-5-6-sol-high`, request `dispatch-synced-project-scope-p02-review-r6-20260827T153712Z`, reconnaissance not attempted
+- Important blocker: coordination-child pull constructs `SyncTarget` directly and bypasses command-level canonical identity, allowing a direct-child symlink alias to rebase a sibling checkout under the wrong child/ref identity
+- Required architectural correction: move canonical direct-child identity into a shared low-level preflight used by every mutating `SyncTarget` entry point; add real-worktree child-pull coverage and audit internally constructed split targets
+- Retry authority: fix cycle 5/5 and the sixth review consumed the configured maximum; no further extension is allowed
 - Phase recovery: unchanged at 1/10 with `pending_attempt: null`
 - Phase 3: not started
 
@@ -546,7 +569,9 @@ Chronological log of implementation progress.
 - [x] p02 review fix iteration 4 - both round-4 Important findings resolved in `7a03f675`
 - [x] p02 review cycle 5 - blocked at 1 Important / 0 Medium in `reviews/code-p02-review-2026-08-27T132942Z.md`
 - [x] p02 operator disposition - final bounded cycle authorized
-- [ ] p02 review fix iteration 5 and review cycle 6 - pending
+- [x] p02 review fix iteration 5 - command-selected alias defect resolved in `fc14f074`
+- [x] p02 review cycle 6 - blocked at 1 Important / 0 Medium in `reviews/code-p02-review-2026-08-27T153712Z.md`
+- [ ] p02 plan revision - move canonical identity into shared low-level mutation preflight
 - [ ] p03-t01 - not started
 
 ---
