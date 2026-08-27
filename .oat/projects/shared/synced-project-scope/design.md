@@ -483,6 +483,16 @@ Project-wide: acts on every registered checkout of the slug in every worktree of
 
 For `synced` projects: refuses unless the checkout is clean and pushed; runs steps 3–6 of the completion state machine; commits the record update (and summary export) on the branch. `shared` behavior unchanged.
 
+### `oat project pull` — adoption and children (FR16/FR17)
+
+When the slug has no record and no checkout on the current branch, `pull` fetches `refs/oat/projects/<slug>`; if it exists on `origin`, it creates the checkout, writes the record, and commits it through `commitRecordChange` (`--no-commit` to skip). Nothing about the ref is rewritten and the originating branch is irrelevant — this is how a project parked on another branch, created on another machine, or created by another user becomes local. After pulling a coordination parent (`oat_kind: coordination`), `pull` reads `oat_children` from the pulled `state.md` and pulls each child the same way; `--no-children` opts out; per-child failures are reported and do not roll back the parent or siblings.
+
+**JSON:** adds `adopted: boolean` and `children?: Array<{ slug; status }>`.
+
+### `oat project list [--scope <shared|synced|local>] [--remote]`
+
+`--remote` additionally runs one `ls-remote origin 'refs/oat/projects/*'` and appends rows for refs with no record on the current branch, marked `remote` (`checkout: absent`, hint `oat project pull <slug>`). Offline, `--remote` warns and lists local rows only.
+
 ### `oat project list [--scope <shared|synced|local>]`
 
 Adds a `scope` column and filter; enumerates the `shared`, `synced`, and `local` siblings of `projects.root` (listing `local` is additive — see spec).
@@ -496,6 +506,14 @@ Adds a `scope` column and filter; enumerates the `shared`, `synced`, and `local`
 - `.gitignore` core block: adds `.oat/projects/synced/*/`.
 - `.gitattributes` core block (new): `.oat/projects/shared/** linguist-generated=true`.
 - Both applied by `oat init` and `oat tools update`; the gitignore entry is also self-healed by `oat project new --scope synced`.
+
+## Discovery across machines and users
+
+- **What travels:** the ref (all artifact history) and, once a branch carrying it merges, the record file. The ref alone is sufficient: `oat project list --remote` and adopting `pull` (FR16) work from `ls-remote`, so a project parked on an unmerged branch, created on another machine, or created by a teammate is one command away on any checkout with git access to `origin`.
+- **What does not travel:** `local` scope (never leaves the machine — unchanged), and `refs/oat/*` through GitHub **forks** (forks copy branches and tags only). `git clone` also fetches only `refs/heads/*` and `refs/tags/*`, which is why every sync command fetches the project ref explicitly; `git clone --mirror` / mirror pushes do replicate the namespace.
+- **Garbage collection:** `refs/oat/projects/<slug>` is a real ref locally and on `origin`, so every object reachable from it is a GC root on both sides — the same mechanism that keeps `refs/pull/*` commits alive on GitHub. `git fetch --prune` / `git remote prune` touch only `refs/remotes/*`; `git worktree prune` touches registrations, not refs; a detached nested checkout's HEAD is itself a GC root, so unpushed artifact commits are safe too. Only `oat project prune`, an explicit `push :refs/oat/…`, or repository deletion removes them.
+- **Coordination projects:** each child has its own ref and record; pulling the parent pulls the children (FR17).
+- **Archive contents (FR18):** the local `archived/<name>/` snapshot and the S3 snapshot both omit `reviews/`; S3 additionally omits `pr/` as today.
 
 ## Security Considerations
 

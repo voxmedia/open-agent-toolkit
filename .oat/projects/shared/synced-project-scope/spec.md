@@ -50,6 +50,7 @@ Existing behaviors — `shared` and `local` scopes, local archive, dated S3 snap
 - A configuration that publishes design docs into the repository as durable documentation.
 - A single shared (non-detached) artifact checkout across multiple worktrees on one machine.
 - A live, browsable "latest" URL for artifacts on the git host (that would require a real branch and reintroduce CI/branch-list noise).
+- Propagating `refs/oat/*` through GitHub forks (forks copy branches and tags only); fork-based contributors work with the record file and their own `origin`.
 - Changing how `shared` or `local` projects are stored, committed, or archived. (Listing is the one deliberate additive change: `oat project list` gains `synced` **and** `local` rows — `local` projects were never enumerated before, which the maintainer considers an existing gap, not a boundary to preserve.)
 - Reducing artifact commit churn (moot once artifacts leave the branch).
 
@@ -200,6 +201,32 @@ Existing behaviors — `shared` and `local` scopes, local archive, dated S3 snap
   - Docs build passes.
 - **Priority:** P0
 
+**FR16: Remote discovery and adoption**
+
+- **Description:** A `synced` project that exists on `origin` — parked on another branch, created on another machine, or created by another user — can be discovered and picked up from any checkout without a record on the current branch.
+- **Acceptance Criteria:**
+  - `oat project list --remote` enumerates `refs/oat/projects/*` on `origin` and marks refs that have no record on the current branch as remote/parked, with the adopting command as the hint.
+  - `oat project pull <slug>` with no record and no checkout fetches the ref, creates the checkout, and writes + commits the record on the current branch (`--no-commit` available); subsequent pushes/pulls behave as for any synced project.
+  - Adopting a ref never rewrites its history and never requires the originating branch.
+  - A slug that exists neither as a record nor as a remote ref fails with a clear message.
+- **Priority:** P0
+
+**FR17: Coordination pull**
+
+- **Description:** Pulling a coordination parent also materializes its children.
+- **Acceptance Criteria:**
+  - `oat project pull <parent>` reads `oat_children` from the pulled parent `state.md` and pulls (adopting when needed) each child; `--no-children` opts out.
+  - A failing child pull is reported per child and does not roll back the parent or siblings.
+- **Priority:** P1
+
+**FR18: Archive drops review artifacts**
+
+- **Description:** The completion archive keeps everything except review artifacts, for every scope. (S3 upload already excludes `reviews/*` and `pr/*`; the local `archived/` snapshot did not.)
+- **Acceptance Criteria:**
+  - `.oat/projects/archived/<name>/` contains no `reviews/` directory after completion; all other files (including `pr/` and `summary.md`) are preserved.
+  - Applies to `shared`, `local`, and `synced` — an explicit, maintainer-requested exception to the "existing scopes unchanged" rule (NFR1).
+- **Priority:** P2
+
 **FR15: `shared` rendering courtesy**
 
 - **Description:** A managed git attributes entry marks `shared` artifacts as generated for the git host's diff view.
@@ -214,7 +241,7 @@ Existing behaviors — `shared` and `local` scopes, local archive, dated S3 snap
 
 - **Description:** `shared` and `local` projects behave exactly as today.
 - **Acceptance Criteria:**
-  - Existing `shared` projects are listed, resumed, committed, and archived without behavior change.
+  - Existing `shared` projects are listed, resumed, committed, and archived without behavior change — with one deliberate exception: the local archive snapshot no longer includes `reviews/` (FR18).
   - Existing `local` projects are resumed, committed, and archived without behavior change; they additionally appear in `oat project list` with `scope: local` (additive).
   - Repositories that have not upgraded their gitignore block continue to work for `shared` and `local`.
   - Existing test suites for project creation, archive, and gitignore pass unchanged except for additive cases.
@@ -333,6 +360,9 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 | FR13 | Doctor checks                                                  | P1       | unit: doctor check module                            | p03-t07                                              |
 | FR14 | Documentation                                                  | P0       | manual: docs build + review                          | p04-t07                                              |
 | FR15 | `shared` linguist-generated attribute                          | P2       | unit: gitattributes block                            | p03-t08                                              |
+| FR16 | Remote discovery and adoption (`list --remote`, adopting pull) | P0       | integration: second clone without record             | p02-t09, p02-t10                                     |
+| FR17 | Coordination pull materializes children                        | P1       | integration: parent + children fixture               | p02-t10                                              |
+| FR18 | Archive snapshot drops `reviews/` (all scopes)                 | P2       | integration: archive fixture                         | p03-t04                                              |
 | NFR1 | `shared`/`local` unchanged                                     | P0       | unit + integration: existing suites pass             | p02-t02, p02-t07, p02-t08, p03-t09, p04-t09          |
 | NFR2 | No CI / branch-list footprint                                  | P0       | manual: push to test repo with a workflow            | p01-t10                                              |
 | NFR3 | Git credentials only                                           | P0       | integration: no cloud env consulted                  | p01-t07, p02-t08                                     |

@@ -480,6 +480,7 @@ git commit -m "feat(p01-t08): implement pull, continue, and abort for synced pro
 - `removeSyncedCheckout(t)` on clean + pushed checkout → directory gone, `worktree list` has no entry, no `--force` in args.
 - Dirty checkout → returns `{status:'dirty'}` and leaves it; unpushed commit → `{status:'unpushed'}`.
 - `{force:true}` on dirty → removed with `--force`.
+- `preflightSyncedCheckout(t)` (non-mutating; fetches, then reports `clean` | `dirty` | `unpushed` | `absent`) never runs `worktree remove` (runner spy) and is what `removeSyncedCheckout`, archive, and prune call before mutating.
 - Two branches (cloneA `feat-a`, cloneB `feat-b`) each `commitRecordChange` a different record file; merging both into `main` in the fixture produces no conflict (FR5 concurrent-PR case).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/sync/ref-sync.test.ts`
@@ -494,6 +495,14 @@ export async function commitRecordChange(
   message,
   git,
 ): Promise<{ sha } | null>;
+export type CheckoutPreflight = {
+  status: 'clean' | 'dirty' | 'unpushed' | 'absent';
+  sha?: string;
+};
+export async function preflightSyncedCheckout(
+  t,
+  git,
+): Promise<CheckoutPreflight>; // read-only
 export type RemoveResult = {
   status: 'removed' | 'absent' | 'dirty' | 'unpushed';
 };
@@ -553,14 +562,18 @@ until gh run list --json headSha,status --jq '.[]|select(.headSha=="'$(git rev-p
 **Step 2: Push a custom ref and test the three assumptions**
 
 ```bash
-TREE=$(git hash-object -t tree /dev/null); C=$(git commit-tree "$TREE" -m "oat spike")
+printf '# spike\n\nrendered from a custom ref\n' > spike.md
+BLOB=$(git hash-object -w spike.md); TREE=$(printf '100644 blob %s\tdesign.md\n' "$BLOB" | git mktree)   # a real markdown file named like an artifact
+C=$(git commit-tree "$TREE" -m "oat spike"); rm spike.md
 SPIKE=refs/oat/projects/spike; git update-ref "$SPIKE" "$C" && git push origin "$C:$SPIKE"
 sleep 120   # give Actions time to create any run for the pushed ref
 # A. No workflow run for the spike commit — authoritative negative result (NFR2):
 gh run list --limit 50 --json headSha,event,headBranch --jq '.[]|select(.headSha=="'$C'")'   # expected: empty
-# B. Commit renders although unreachable from any branch (FR7 assumption):
+# B. The *blob* URL renders although the commit is unreachable from any branch/tag (FR7 assumption — this is the link shape the PR block uses):
+BLOB_URL="https://github.com/$(gh repo view --json nameWithOwner --jq .nameWithOwner)/blob/$C/design.md"
+curl -fsSL "$BLOB_URL" | grep -q "rendered from a custom ref" && echo "blob renders: $BLOB_URL"   # expected: prints the URL; open it in a browser too
+gh api "repos/{owner}/{repo}/contents/design.md?ref=$C" --jq .sha                                   # expected: $BLOB
 gh api "repos/{owner}/{repo}/commits/$C" --jq .sha                                              # expected: $C
-gh browse "$C" --no-browser 2>/dev/null || echo "https://github.com/$(gh repo view --json nameWithOwner --jq .nameWithOwner)/commit/$C"  # open and confirm it renders
 # C. Ref absent from branch list:
 gh api "repos/{owner}/{repo}/branches" --jq '.[].name'                                          # expected: main only
 ```
@@ -577,7 +590,7 @@ If pushing to the disposable repository is not permitted for the implementing ag
 
 **Step 4: Record evidence**
 
-Append `### p01-t10 GitHub spike` to `implementation.md` with the repository URL, spike SHA, the three raw outputs (A/B/C), timestamps, and confirmation the spike ref was deleted. If A is non-empty (a run was created for the custom ref) or B fails (commit not served), **stop the phase and surface it** — the design's contingency is a real branch under `refs/heads/oat/projects/*`, which is a design change and needs the user.
+Append `### p01-t10 GitHub spike` to `implementation.md` with the repository URL, spike SHA, blob SHA, the exact blob URL that rendered, the three raw outputs (A/B/C), timestamps, and confirmation the spike ref was deleted. If A is non-empty (a run was created for the custom ref) or B fails (commit not served), **stop the phase and surface it** — the design's contingency is a real branch under `refs/heads/oat/projects/*`, which is a design change and needs the user.
 
 **Step 5: Verify**
 
@@ -925,6 +938,83 @@ git commit -m "test(p02-t08): add synced project lifecycle e2e"
 
 ---
 
+### Task p02-t09: `oat project list --remote`
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/list.ts`
+- Modify: `packages/cli/src/commands/project/list.integration.test.ts`
+
+**Step 1: Write test (RED)**
+
+Fixture with `secondClone: true`: create + push a synced project from cloneA; in cloneB (no record on its branch) `list --remote` shows the slug with `scope: synced`, `origin: remote`, `checkout: absent`, hint `oat project pull <slug>`; a project that has a local record is not duplicated; `--remote` with an unreachable origin (runner returns nonzero) → warning + local rows only, exit 0; without `--remote` the remote row is absent.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/list.integration.test.ts`
+Expected: new cases fail.
+
+**Step 2: Implement (GREEN)**
+
+`--remote` flag → `git ls-remote origin 'refs/oat/projects/*'` via the injected runner; diff against `listSyncedRecords`; append remote rows; `--json` rows gain `origin: 'local' | 'remote'`.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/list.integration.test.ts`
+Expected: green.
+
+**Step 4: Format**
+
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.integration.test.ts`
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.integration.test.ts
+git commit -m "feat(p02-t09): list remote synced projects with --remote"
+```
+
+---
+
+### Task p02-t10: Adopting pull and coordination children
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts` (`pullSynced` adoption path, `pullChildren`)
+- Modify: `packages/cli/src/commands/project/sync/resolve-target.ts` (slug with neither record nor checkout → `{ target, adopt: true }` when the remote ref exists)
+- Modify: `packages/cli/src/commands/project/pull/index.ts` (`--no-children`, `--no-commit`, JSON `adopted`, `children`)
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.test.ts`, `packages/cli/src/commands/project/sync/resolve-target.test.ts`, `packages/cli/src/commands/project/pull/index.test.ts`
+
+**Step 1: Write test (RED)**
+
+- cloneB, no record, ref on origin: `pull <slug>` → `created`, `adopted: true`; checkout present; record written and committed (`ls-tree HEAD` shows it; commit `chore(oat): adopt synced project <slug>`); `--no-commit` leaves the record uncommitted; a second `pull` → `up-to-date`, `adopted: false`.
+- Slug with no record, no checkout, no remote ref → `CliError` "no synced project named <slug> locally or on origin".
+- Adoption never rewrites history: origin ref SHA identical before/after.
+- Coordination fixture: parent `state.md` with `oat_kind: coordination` and `oat_children: [a, b]`, all three pushed from cloneA; in cloneB `pull parent` → parent + `a` + `b` materialized (children adopted, records committed in one commit); `--no-children` → parent only; a child whose ref is missing → reported in `children[]` with `status: 'missing'`, exit 1, parent and sibling still present.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/sync src/commands/project/pull`
+Expected: new cases fail.
+
+**Step 2: Implement (GREEN)**
+
+`resolveSyncedTarget` gains the remote-ref fallback (one `ls-remote --exit-code origin <ref>`); `pullSynced` writes + commits the record when `adopt` is set; `pullChildren(parentTarget)` reads `oat_children` via `parseFrontmatterField` and loops `pullSynced`, collecting per-child results; all record writes for one invocation go into a single `commitRecordChange` (allowlisted paths only).
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/sync src/commands/project/pull`
+Expected: green.
+
+**Step 4: Format**
+
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/sync/ packages/cli/src/commands/project/pull/`
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ packages/cli/src/commands/project/pull/
+git commit -m "feat(p02-t10): adopt remote synced projects on pull and pull coordination children"
+```
+
+---
+
 ## Phase 3: Reviewer and lifecycle surface
 
 Goal: PR links, completion parity, prune/migrate, doctor, gitattributes, local-sync guard, and a real dogfood run.
@@ -1077,9 +1167,9 @@ git commit -m "feat(p03-t03): refresh PR links block on push while a PR is open"
 Using the fixture with a pushed synced project:
 
 - Dirty checkout → archive refuses (`CliError`, names `oat project push`); unpushed commit → refuses; nothing archived, nothing removed.
-- Clean + pushed → archive dir exists with no `.git` entry; `worktree list` has no stale entry; record has `status:'complete'` + `completedAt`; parent `ls-tree HEAD` shows the updated record (and the summary export file when `archive.summaryExportPath` is configured) in one commit `chore(oat): complete synced project <slug>`; `origin` still has the ref; `computeLinksInput` still works.
+- Clean + pushed → archive dir exists with no `.git` entry and **no `reviews/` directory** (FR18; `pr/`, `summary.md`, lifecycle files present); `worktree list` has no stale entry; record has `status:'complete'` + `completedAt`; parent `ls-tree HEAD` shows the updated record (and the summary export file when `archive.summaryExportPath` is configured) in one commit `chore(oat): complete synced project <slug>`; `origin` still has the ref; `computeLinksInput` still works.
 - Re-run after success → idempotent (no second commit, no error).
-- `shared` project → byte-identical behavior to existing tests (existing suite unchanged).
+- `shared` project → identical to existing tests **except** that `reviews/` is no longer copied into `archived/<name>/` (FR18; update the one existing assertion that expected it, if any).
 - e2e: extend the `synced project lifecycle` describe in `packages/cli/src/e2e/workflow.test.ts` (p02-t08) with `project push` → `project archive` through the real program; assert the parent commit, absent checkout, and retained origin ref.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/e2e/workflow.test.ts`
@@ -1087,7 +1177,7 @@ Expected: new cases fail.
 
 **Step 2: Implement (GREEN)**
 
-In `archiveProjectOnCompletion`: `if (await isSyncedCheckout(source))` → precondition via `removeSyncedCheckout` dry-check (`status` must not be `dirty`/`unpushed`) → copy with a filter excluding top-level `.git` (extend `copyDirectory` with an optional `filter`) → existing export/S3 → record update → `commitRecordChange` (unless `commit:false`) → `removeSyncedCheckout`. Dependencies injected for tests.
+In `archiveProjectOnCompletion`: `if (await isSyncedCheckout(source))` → precondition via the **non-mutating** `preflightSyncedCheckout(t, git)` from p01-t09 (returns `clean` | `dirty` | `unpushed` | `absent`; refuse unless `clean`) → copy with a filter excluding top-level `.git` (extend `copyDirectory` with an optional `filter`) → existing export/S3 → record update → `commitRecordChange` (unless `commit:false`) → `removeSyncedCheckout` (called exactly once, last; test asserts the source directory still exists immediately after the copy and the record commit). The copy filter also skips `reviews/` for **every** scope (FR18) — the local snapshot no longer carries review artifacts, matching what S3 already excludes. Dependencies injected for tests.
 
 **Step 3: Verify**
 
@@ -1356,7 +1446,8 @@ Goal: the lifecycle uses the new scope end to end; docs describe it; release gat
 **Canonical skill snippet** (paste verbatim, replacing each inventoried bookkeeping commit; keep the existing `shared` branch unchanged):
 
 ```bash
-PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value 2>/dev/null || echo shared)
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "<same message the git commit used>"
 else
@@ -1364,7 +1455,7 @@ else
 fi
 ```
 
-Arrival guard: `[ "$(oat project scope "$PROJECT_PATH" --format value 2>/dev/null)" = "synced" ] && oat project pull "$PROJECT_PATH"`.
+Arrival guard: `PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1; [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$PROJECT_PATH"` — same fail-closed rule. The p04-t06 validator rule (c) additionally rejects any `|| echo shared`-style fallback (`oat project scope … ||` followed by a literal scope word) around project-artifact commits, with a fixture.
 
 Every touched `SKILL.md` gets a `version:` bump (patch for snippet-only edits, minor when behavior text changes). `oat-phase-implementer.md` is an agent and gets its frontmatter `version` bumped too.
 
@@ -1583,6 +1674,7 @@ git commit -m "feat(p04-t06): validate skills never stage synced artifacts or re
 - Modify: `apps/oat-docs/docs/workflows/projects/artifacts.md`, `lifecycle.md`, `pr-flow.md` (bookkeeping via push; PR links block; completion order)
 - Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md` — the worktree-facing page (FR14 worktree coverage). Add a "Synced projects in worktrees" section covering: fresh-worktree materialization (`oat project pull` on arrival, driven by the record file), one independent detached checkout per worktree reconciled through `origin`, conflict resolution with `pull --continue`/`--abort`, `oat local sync` skipping nested checkouts, and what happens to the nested checkout when a parent worktree is removed (nothing to clean up; `pull` prunes stale registrations).
 - Create: `apps/oat-docs/docs/workflows/projects/reviewing-oat-prs.md` (reviewer-facing: what the record file is, what the links block is, why plan/state aren't linked, editor tip `git.scanRepositories`)
+- Create: `apps/oat-docs/docs/workflows/projects/picking-up-projects.md` — "Picking up a project on another machine or from another user": `oat project list --remote`, adopting `pull`, coordination children, what travels vs. what does not (`local` never; `refs/oat/*` not through forks; clone needs the explicit fetch), why retained refs are never garbage-collected, and what the archive keeps (`reviews/` dropped) — sourced from `design.md` → Discovery across machines and users. Add to the projects `index.md` `## Contents`.
 - Modify: `apps/oat-docs/docs/workflows/projects/index.md` (`## Contents` entry for the new page)
 - Regenerate: `apps/oat-docs/index.md` via `pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
 
@@ -1597,7 +1689,7 @@ Expected: markdownlint clean; docs build succeeds; the worktree section exists.
 
 **Step 3: Format**
 
-Run: `pnpm exec oxfmt --write apps/oat-docs/docs/reference/file-locations.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/reference/cli-reference.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/reviewing-oat-prs.md apps/oat-docs/docs/workflows/projects/index.md`
+Run: `pnpm exec oxfmt --write apps/oat-docs/docs/reference/file-locations.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/reference/cli-reference.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/reviewing-oat-prs.md apps/oat-docs/docs/workflows/projects/picking-up-projects.md apps/oat-docs/docs/workflows/projects/index.md`
 
 **Step 4: Commit**
 
@@ -1751,11 +1843,11 @@ git status --porcelain            # must be empty — the phase is not complete 
 **Summary:**
 
 - Phase 1: 10 tasks - Sync foundations (scope resolver, gitignore rule, git runner, fixture, record, ref-sync create/push/pull/continue/abort, record commits, GitHub spike)
-- Phase 2: 8 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e)
+- Phase 2: 10 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e, `list --remote`, adopting pull + children)
 - Phase 3: 10 tasks - Reviewer and lifecycle surface (links render/compute/refresh, archive state machine, `prune`, `migrate`, doctor, gitattributes, local-sync guard, dogfood)
 - Phase 4: 10 tasks - Skills sweep (A/B/C/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood
 
-**Total: 38 tasks**
+**Total: 40 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
