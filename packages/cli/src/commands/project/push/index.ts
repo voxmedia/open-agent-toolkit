@@ -91,11 +91,20 @@ async function runPush(
           parsed.values.oat_pr_status === 'open' &&
           parsed.values.oat_pr_url
         ) {
-          prRefresh = await dependencies.refreshPrLinks(
-            target,
-            parsed.values.oat_pr_url,
-            { warn: (message) => context.logger.warn(message) },
-          );
+          try {
+            prRefresh = await dependencies.refreshPrLinks(
+              target,
+              parsed.values.oat_pr_url,
+              { warn: (message) => context.logger.warn(message) },
+            );
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : String(error);
+            context.logger.warn(
+              `Could not refresh PR links after successfully pushing ${target.slug}: ${message}`,
+            );
+            prRefresh = 'failed';
+          }
         }
       }
     }

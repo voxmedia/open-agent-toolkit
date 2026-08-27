@@ -272,4 +272,33 @@ describe('createProjectPushCommand', () => {
     await run(setup.command, ['demo']);
     expect(process.exitCode).toBe(0);
   });
+
+  it.each([
+    ['link computation', new Error('could not read synced ref')],
+    ['body-file cleanup', new Error('could not remove temporary body file')],
+  ])(
+    'preserves push success when %s throws during PR refresh',
+    async (_failurePoint, failure) => {
+      const setup = harness('pushed');
+      setup.refreshPrLinks.mockRejectedValueOnce(failure);
+
+      await run(setup.command, ['demo'], ['--json']);
+
+      expect(setup.pushSynced).toHaveBeenCalledOnce();
+      expect(setup.refreshPrLinks).toHaveBeenCalledOnce();
+      expect(setup.capture.warn).toEqual([
+        expect.stringContaining(failure.message),
+      ]);
+      expect(setup.capture.error).toEqual([]);
+      expect(setup.capture.jsonPayloads).toEqual([
+        expect.objectContaining({
+          status: 'pushed',
+          sha: '1234567890123456789012345678901234567890',
+          ref: 'refs/oat/projects/demo',
+          prRefresh: 'failed',
+        }),
+      ]);
+      expect(process.exitCode).toBe(0);
+    },
+  );
 });
