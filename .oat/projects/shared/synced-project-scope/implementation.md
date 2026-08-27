@@ -1,7 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
-oat_blockers: []
+oat_status: blocked
+oat_ready_for: null
+oat_blockers:
+  - task_id: p03-t10
+    reason: 'Dogfood exposed empty synced-ref checkout incompatibility with the repository post-checkout hook. A bounded invocation-scoped hook suppression passed 49 focused tests, but recovery attempt 2/10 failed ambiguous full-CLI verification after different fixed-timeout cases failed on the initial run and allowed no-edit rerun; code was restored and further work requires operator direction.'
+    since: 2026-08-27
 oat_last_updated: 2026-08-27
 oat_current_task_id: p03-t10
 oat_generated: false
@@ -28,10 +31,10 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 10    | 10/10     |
 | Phase 2 | complete | 13    | 13/13     |
-| Phase 3 | pending  | 10    | 0/10      |
+| Phase 3 | blocked  | 10    | 9/10      |
 | Phase 4 | pending  | 11    | 0/11      |
 
-**Total:** 23/44 tasks completed
+**Total:** 32/44 tasks completed
 
 ---
 
@@ -232,6 +235,32 @@ oat_generated: false
 **Outcome:** `pullChildren()` now guards the complete child-specific operation and returns an error row while continuing later siblings. A real-worktree regression proves an aliased first child cannot mutate its sibling or block a healthy child adoption, and successful pending record paths remain committable. The fresh synced split publication test now uses a 15-second bound.
 
 **Verification:** RED failed 1/62 as expected. Against committed HEAD, the focused matrix passed 72/72, CLI type-check and file-scoped lint/format passed, and two clean no-overlap full CLI runs passed 282 files and 3,799 tests each. Root independently verified the exact three-file commit boundary, immutable parent/range, diff checks, clean worktree, unchanged recovery ledger, and focused 72/72 result.
+
+---
+
+## Phase 3: Reviewer and lifecycle surface
+
+**Status:** blocked - 9 of 10 tasks complete; p03-t10 dogfood cannot finish under current verification evidence
+**Started:** 2026-08-27
+
+### Task Outcomes
+
+| Task    | Status    | Commit     | Outcome                                             |
+| ------- | --------- | ---------- | --------------------------------------------------- |
+| p03-t01 | completed | `3742edd5` | Links block rendering                               |
+| p03-t02 | completed | `f04e3602` | Ref-derived links command                           |
+| p03-t03 | completed | `979fd7a1` | PR link refresh after push                          |
+| p03-t04 | completed | `fd044f09` | Worktree-aware archive completion                   |
+| p03-t05 | completed | `0e9a7fb7` | Project-wide prune                                  |
+| p03-t06 | completed | `369bff6b` | Shared-to-synced migration with rollback            |
+| p03-t07 | completed | `22c6ca79` | Synced-project doctor checks                        |
+| p03-t08 | completed | `99729346` | Managed `.gitattributes` block                      |
+| p03-t09 | completed | `41e8bbe7` | Nested-worktree local-sync guard                    |
+| p03-t10 | blocked   | -          | Dogfood blocked by empty-ref post-checkout handling |
+
+**Verification before dogfood:** Full CLI passed 289 files / 3,845 tests after recovery 1; CLI type-check/build, repository lint/format, and diff checks passed. The p03-t07 synced-project doctor check passed, while the overall live doctor command retained unrelated pre-existing warnings.
+
+**Blocker:** The repository's common post-checkout wrapper requires `tools/git-hooks/post-checkout` inside the new checkout, but synced project refs intentionally begin empty. Invocation-scoped `core.hooksPath=/dev/null` for only the two empty-ref `worktree add` commands passed 49/49 focused tests. Recovery attempt 2 produced no code commit because the full CLI run and its one allowed no-edit rerun failed different existing fixed-timeout integration cases. The code files were restored exactly; only failed ledger evidence was committed.
 
 ---
 
@@ -688,7 +717,7 @@ continuation_events:
 **Branch:** `feat/synced-project-scope`
 **Tier:** 1 - subagents
 **Dispatch policy:** managed `high` (Codex pinned variant)
-**Status:** in progress - p03-t01 through p03-t09 complete; p03-t10 cleanup boundary settled
+**Status:** blocked - p03-t01 through p03-t09 complete; p03-t10 recovery verification failed
 
 #### Dispatch Record
 
@@ -751,6 +780,16 @@ continuation_events: []
 - Root cleanup: removed only `/Users/tstang/Code/open-agent-toolkit/.oat/projects/synced/synced-dogfood`; no local/remote project ref, record, or temp branch existed
 - Continuation: same accepted handle resumes p03-t10 after recovery settlement
 
+#### Terminal Outcome
+
+- Recovery attempt 2/10 reserved the bounded empty-ref hook correction in `ref-sync.ts` and `ref-sync.test.ts`
+- Focused verification: 49/49 passed
+- Phase verification: failed different fixed-timeout integration tests on the initial full CLI run and allowed no-edit rerun
+- Code disposition: both bounded code files restored byte-for-byte; no candidate recovery commit exists
+- Failed-marker evidence: `5f68612761928d0f11bbc54bc9da571cfce8a4a2`
+- Dogfood disposition: not retried; no residual worktree, project ref, record, or temp branch
+- Phase 4: not started
+
 ---
 
 ## Recovery Events
@@ -769,6 +808,21 @@ continuation_events: []
 - Recovery commit: 617449d37257f3acb19e1132c0fe6988ba74edd5
 - Verification: focused help snapshot 58/58 and full CLI 3,845/3,845 passed before and after commit; root independently re-ran 58/58
 - Reason: project help snapshot mechanically omitted the p03 links, migrate, and prune registrations; bounded snapshot correction passed authoritative verification
+
+### Recovery Event p03-recovery-02-synced-empty-tree-hook
+
+- Phase/task: p03 / p03-t10
+- Original request: dispatch-synced-project-scope-p03-20260827T173721Z
+- Original commit: 4df5063be546c62abb2ddbf558264fb30fd44439
+- Defect class: composition
+- Discovered by: `pnpm run --silent cli -- project new synced-dogfood --mode quick --no-set-active` with the rejecting common post-checkout wrapper
+- Disposition: failed-attempt
+- Authorization: phase-standing
+- Attempt: 2/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: -
+- Verification: focused ref-sync 49/49 passed; full CLI phase run failed one fixed-timeout split test and the allowed no-edit rerun failed three different fixed-timeout cases
+- Reason: the bounded hook correction was restored because authoritative phase verification remained ambiguous; only failed ledger evidence commit `5f68612761928d0f11bbc54bc9da571cfce8a4a2` remains
 
 ### Recovery Event recovery-p02-01-cli-phase-suite
 
