@@ -137,25 +137,21 @@ oat_docs_updated: skipped # null | skipped | complete — documentation sync sta
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/222 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T01:55:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T06:49:56.008Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_completed: '2026-08-27T06:50:01.122Z' # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-08-27T06:50:01.122Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_lifecycle: complete
 ---
 
 # Project State: wave-4-execution
 
-**Status:** PR #222 open; lifecycle sealed (completion tail deferred to program close)
+**Status:** Complete
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implement (in progress; plan gate passed 2026-08-27) — thin wave wrapper for the single Wave 4 external plan
-(`2026-08-19-refresh-codex-skill-routing.md`); solo phase `p01` on the
-integration checkout `wave-4-execution` (BASE_SHA `3c135e21` = `origin/main`
-after the W3 close; public packages 0.2.35). The plan's STOP #2 (live
-`codex exec --help` has no `--full-auto`) was reported and reconciled
-non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Record).
+Lifecycle complete
 
 ## Artifacts
 
@@ -188,7 +184,7 @@ non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Rec
 - ✓ Bounded fix `w4-final-fix-003` (`601c950b`, test only; root-run 36-probe matrix ALL MATCHED) — `final` row passed; summary.md generated, synthesis written, backlog item archived
 - ✓ Configured exit gate generation 1 passed (cursor-gpt-5-6-sol-xhigh, run 10c732b5, 0C/0I/3M/0m — the two ledgered residuals + closeout prose)
 - ✓ Post-implement sequence complete: summary (`9ed779b0`), document (skipped — no docs reference the old routing), pr (#222, head `c6d1c277`); recap built-durable (`4ca73152`/`faff1b9d`); HiLL approved autonomously (IMPLEMENT-16)
-- ⧗ CI green → root merge (squash) → reconcile main → wave-close → program recap (generate only) → HUMAN-GATED completion-tail checkpoint
+- ✓ Project lifecycle complete
 
 ## Blockers
 
@@ -196,4 +192,4 @@ None
 
 ## Next Milestone
 
-Post-implement sequence (summary → document [skipped: no docs reference the old routing] → pr) → autonomous HiLL → complete-state → CI → merge → wave-close → program recap (generate only) → HUMAN-GATED completion-tail checkpoint. Completion tail: deferred to program close.
+None. Project complete.
