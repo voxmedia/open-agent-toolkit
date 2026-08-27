@@ -18,7 +18,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 2 # default restored after the authorized p03 extension reached a passing verdict
 oat_phase_recovery_policy:
   default_attempt_limit: 10
@@ -84,11 +84,11 @@ oat_workflow_origin: native # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/225' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T23:18:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T23:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -98,166 +98,13 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation and final closeout review complete
+**Status:** PR open — awaiting human review
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Phase 1 produced seven verified task commits. Its independent root-owned review
-found two Critical and two Important issues; bounded fix iteration 1 completed
-those four. Re-review found one Critical and one Important removal/ownership
-edge; final configured fix iteration 2 completed both. The final re-review found
-a new Critical managed-root containment defect in recursive removal. The
-operator authorized up to two additional Phase 1 iterations, raising the
-temporary total to 4 while preserving the two already used.
-Fix iteration 3 completed the containment repair and passed the focused, CLI,
-and workspace verification suites. Fresh independent re-review found no
-Critical or Important findings, so Phase 1 passes. The temporary retry limit is
-restored to the default 2, and Phase 2 is ready to begin.
-Phase 2 tasks 1–3 are complete. A mechanically bounded unused-import defect
-after task 3 consumed recovery attempt 1/10 and was recovered append-only in
-`303dd6c75a78da9144ae488d58aa31c0d741d17f`; the terminal marker is reconciled.
-All nine Phase 2 task commits are now present. A stale help snapshot discovered
-by the full CLI suite consumed recovery attempt 2/10 and was recovered in
-`95a692812238255c5aba2e25c23aa8ee4560d3e2`; that marker is also reconciled.
-Phase 2 implementation and its verification gates are complete. Self-review
-found that the new shared reconcile planner/apply modules may have no production
-callers, so Phase 2 requires independent review before it can pass.
-Independent review confirmed the integration gap and found five Critical, two
-Important, and one Medium issue. The first of two default review-fix iterations
-is authorized and pending.
-Fix iteration 1 completed all seven blocking dispositions in one append-only
-commit and passed focused, phase, CLI, workspace, type, lint, and format gates.
-Fresh independent re-review is pending.
-Re-review reduced the blocking set to two Critical and one Important finding,
-plus one bounded Medium. Final configured fix iteration 2/2 is pending.
-Fix iteration 2 completed all four dispositions and passed focused, phase, CLI,
-workspace, type, lint, and format gates. Decisive fresh re-review is pending.
-Decisive re-review found no findings at any severity, so Phase 2 passes and
-Phase 3 is ready to begin.
-All five Phase 3 task commits are present. A bounded preview-composition defect
-consumed recovery attempt 1/10 and was recovered in
-`3e2421bce1286dd61852e8e15d87cff1c8c82b5d`; the marker is reconciled.
-All Phase 3 gates pass: 43 focused tests, 3,749 CLI tests, workspace tests,
-type-check, lint, format, and diff check. Independent review must specifically
-verify shared-owner retention during source removal because the migration path
-uses generic remove reconciliation rather than the remove command's explicit
-shared-owner retention adapter.
-Independent review confirmed that defect and found a second Critical
-provider-sync recovery gap, two Important preview/adoption contract gaps, and
-one Medium canonical-authority duplication. All five findings are accepted for
-the first of two configured fix iterations.
-Fix iteration 1 completed all five dispositions in
-`6b0a7fe542f41f2a20143b0f3194242cf63ef770` and passed focused, phase, CLI,
-workspace, type-check, lint, format, and diff gates. Fresh independent re-review
-is pending.
-Fresh re-review closed three original findings and reduced the remaining set to
-one Important recovery-context gap and one Medium blocked-preview
-classification overlap. Both are accepted for final configured fix iteration
-2/2.
-Final fix iteration 2 completed both dispositions in
-`b0a6bc16e5efa5cb22cac853d8a45c2f8358e8f1` and passed all focused, phase,
-CLI, workspace, type-check, lint, format, and diff gates. Decisive fresh
-independent re-review is pending.
-Decisive re-review closed all Critical and Important findings but found one
-Medium planner/JSON contract inconsistency: a blocked conflict is removed from
-preview additions while its operation remains in the serialized destination
-plan. Runtime execution is still blocked. Both configured fix iterations are
-exhausted, so operator authorization or explicit deferral is required.
-The operator authorized one additional bounded Phase 3 fix/re-review
-iteration, temporarily raising the limit to 3. The remaining Medium finding is
-assigned to fix iteration 3/3.
-Authorized fix iteration 3 completed the remaining disposition in
-`38233ba2e997f3e18ad2fa3ebc888cab95131688` and passed all focused,
-regression, phase, CLI, workspace, type-check, lint, format, and diff gates.
-Decisive fresh independent re-review is pending.
-Decisive re-review found no findings at any severity, so Phase 3 passes. Its
-temporary retry limit is restored to the default 2, and Phase 4 is ready to
-begin.
-All seven Phase 4 task commits are present, from `4790cbd3b` to `0c189eb5b`.
-The dispatching Codex root was interrupted before recording the p04 request ID,
-so the phase implementer returned BLOCKED with a mechanically eligible but
-unauthorizable recovery: it consumed no attempt, made no edit, and left the
-worktree clean. That provenance was recovered from the launcher's primary
-`spawn_agent` record, and the operator authorized a recorded root-inline
-correction because the original handle was unresumable and its exact target
-unbindable from the active provider. Recovery attempt 1/10 fixed a stale
-`1.11.2` bundle-contract assertion left behind by the `1.12.0` skill bump in
-`p04-t05`, committed append-only as
-`db9c0b1ed97d981d586c78d1c58b23577faa6ed4`; the marker is reconciled.
-Phase 4 verification now passes: 395/395 phase tests before and after the
-recovery commit, plus lint, format, and the skill-bump gate.
-The broader CLI suite then exposed three further failures that the plan's
-declared Phase 4 verification command could not reach, because that command
-scopes only `src/commands/**` and never `src/validation/**`. All three were the
-same stale-HEAD-assertion drift caused by the phase's own skill version bumps.
-Recovery attempt 2/10 realigned the version pins in
-`src/validation/skills.test.ts` (`55cf8de74`), and attempt 3/10 remapped the
-`oat-project-summary` prompt sites retired by the p04-t07 gate rewrite
-(`bed357bab`). Three p04 recovery events triggered the elevated
-recovery-volume warning; every eligibility condition still held, so the run
-continued. The full CLI suite now passes 3,787/3,787, and `pnpm check`,
-`pnpm type-check`, `pnpm lint`, `pnpm format`, `check:skill-bumps`, and
-`git diff --check` all pass.
-Independent Phase 4 review (Claude High ceiling, model `opus`) returned a
-blocking verdict: 0 Critical, 2 Important, 3 Medium, 1 Minor, artifact
-`reviews/archived/p04-review-2026-08-27T133629Z.md`. Five of six required audit targets
-were upheld. Both blocking findings sit on the pack-placement-is-not-adoption
-boundary: production project-scope placement still writes repository root
-`AGENTS.md` because the CLI registers the reconciled pack command rather than
-the adapter p04-t04 fixed, and generated decision guidance still recommends
-`oat decision init`, which p04-t02 made fail closed. Root independently
-confirmed both. The operator authorized routing the first of two configured review-fix
-iterations to a Claude High implementer because the original phase target is
-unbindable from the active provider, and chose to fold the three Medium
-findings into the same iteration.
-Fix iteration 1/2 closed all five findings in one append-only commit,
-`f337df8b5d3b403322a7461077dac6894c5ba7cc`. Root independently verified the
-commit boundary and reproduced the phase suite (404/404), full CLI
-(3,797/3,797), `check:skill-bumps`, `pnpm check`, `pnpm type-check`, and the
-I1/I2 behavioral acceptance end-to-end.
-Decisive fresh independent re-review passed with 0 Critical and 0 Important
-(1 Medium, 4 Minor), closing all five findings, so Phase 4 passes. The
-re-reviewer independently re-derived the ratchet scanner regex, confirmed the
-retargeted I1 test fails when the fix is reverted, and upheld all three
-implementer bounding decisions. The Medium and four Minor findings are deferred
-and non-blocking, and are routed to Phase 5. Phase 5 is ready to begin.
-All six Phase 5 task commits are present, from `f66e6d794` to `17eb63ea5`, with
-no recovery attempt reserved. The complete CI gate sequence passes with
-individually captured exit codes, independently reproduced by root: `pnpm check`,
-`type-check`, `test` (290 files / 3,890 tests), `build`, `check:skill-bumps`,
-`release:check-versions`, `release:validate` (five public packages at `0.2.37`),
-`build:docs`, plus `lint`, `format`, and `git diff --check`. The public version
-was set to `0.2.37` rather than the next patch because `origin/main` is at
-`0.2.36` while the merge-base is `0.2.32`, and main carries a stricter gate
-rejecting versions it has overtaken; root confirmed all three facts. The branch
-still needs a rebase onto current main before merge. Independent Phase 5 review returned a blocking verdict: 0 Critical, 3 Important,
-4 Medium, 8 Minor, artifact `reviews/archived/p05-review-2026-08-27T154500Z.md`, with
-reconnaissance `attempted` and complete orchestration evidence. Production code
-was found sound; the blocking set is the two test-only commits plus one
-shipped-contract gap. User-scope canonical agents install but reach no provider
-with no diagnostic; `oat tools update`'s content refresh is unbound by the whole
-suite (the reviewer disabled it and the 290-file CLI suite stayed green twice);
-and the migration/rollback leg never touches the production migrate path. Fix iteration 1/2 closed all three Important, all four Medium, and four named
-Minor findings in one append-only commit,
-`ab9250d685fa89a588ad896ca594b446b173bea4`. Root independently reproduced the
-decisive I2 mutation test (8/8 fail with the mutation, 8/8 pass without),
-verified the commit boundary, and re-ran the complete CI gate sequence: all
-eleven gates exit 0 with 3,906 CLI tests. Decisive fresh independent re-review passed with 0 Critical and 0 Important
-(1 Medium, 5 Minor), so Phase 5 passes and all five phases are complete. The
-re-reviewer reproduced root's I2 mutation result exactly and killed three of
-four further mutations with the new tests, so both P0 safety behaviours —
-update's content refresh and migration's verify-before-remove ordering — are now
-defended by tests proven to catch real regressions. All four implementer
-judgment calls were upheld. One residual Medium remains: the
-`USER_SCOPE_MANAGED_AGENT_FILES` exclusion is unconditional while that
-materialization is provider-conditional, so on a Claude-only HOME
-`oat-reviewer` and `oat-phase-implementer` are under-reported by the new
-diagnostic. The reviewer recommends shipping with that Medium fixed, plus two
-docs minors and a rebase onto current main.
-The run remains under the managed High dispatch maximum, with a final-phase
-HiLL checkpoint and automatic checkpoint review.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -268,6 +115,9 @@ HiLL checkpoint and automatic checkpoint review.
 - **Implementation:** `implementation.md` (all five phases complete and passing)
 
 ## Progress
+
+- ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/225
+- ⧗ Awaiting human review
 
 - ✓ Discovery started
 - ✓ Downstream lifecycle files scaffolded
@@ -373,5 +223,8 @@ None.
 
 ## Next Milestone
 
-Run documentation synchronization, publish the final PR, and complete the
-project lifecycle.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
