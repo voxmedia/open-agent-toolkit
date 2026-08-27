@@ -80,6 +80,10 @@ Phase p02 passed after fix iteration 2/2; decisive review reviews/p02-review-202
 
 Phase 3 implementation and verification complete; independent review pending; see implementation.md.
 
+### 2026-08-27 · structural · oat-project-implement · p03-review
+
+Independent Phase 3 review blocked with 2 Critical, 2 Important, and 1 Medium finding; fix iteration 1/2 authorized; see reviews/p03-review-2026-08-27T074154Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
