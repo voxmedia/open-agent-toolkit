@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 10    | 10/10     |
-| Phase 2 | complete | 13    | 13/13     |
-| Phase 3 | complete | 19    | 19/19     |
-| Phase 4 | pending  | 11    | 0/11      |
+| Phase   | Status         | Tasks | Completed |
+| ------- | -------------- | ----- | --------- |
+| Phase 1 | complete       | 10    | 10/10     |
+| Phase 2 | complete       | 13    | 13/13     |
+| Phase 3 | complete       | 19    | 19/19     |
+| Phase 4 | review_pending | 11    | 11/11     |
 
-**Total:** 42/53 tasks completed
+**Total:** 53/53 tasks completed
 
 ---
 
@@ -397,6 +397,59 @@ feature_tree_mismatches=0
 **Fix completion:** Tasks p03-t12 through p03-t18 are complete in seven verified commits. The review event is `fixes_completed`, not passed.
 
 **Next:** Run a fresh fix-delta review over `2896efe062bc7b45bd8a69a49ddff210b208429b..40f019f6c9bc9d4696f34a998bd88d16bb3f4f3b` before Phase 4.
+
+---
+
+## Phase 4: Skills, docs, release
+
+**Status:** review_pending - 11 of 11 tasks complete
+**Started:** 2026-08-27
+
+### Task Outcomes
+
+| Task    | Status    | Commit     | Outcome                                                   |
+| ------- | --------- | ---------- | --------------------------------------------------------- |
+| p04-t01 | completed | `140194f3` | Authoring skill bookkeeping is scope-aware                |
+| p04-t02 | completed | `9bcd2bb3` | Execution skills and phase implementer push synced state  |
+| p04-t03 | completed | `73270c84` | Summary, docs, retro, brainstorm, and wave writes persist |
+| p04-t04 | completed | `b3e89013` | Arrival workflows pull before reading synced artifacts    |
+| p04-t05 | completed | `35b8731b` | PR and completion workflows support durable synced state  |
+| p04-t06 | completed | `b59d2232` | Validator enforces scope guards and bookkeeping inventory |
+| p04-t07 | completed | `95516d18` | User, worktree, reviewer, and cross-machine docs shipped  |
+| p04-t08 | completed | `8f6bab98` | Public packages advanced in lockstep to 0.2.37            |
+| p04-t09 | completed | `20c83263` | CI-order Definition of Done evidence recorded             |
+| p04-t10 | completed | `3b423779` | Real summary/progress dogfood and cleanup verified        |
+| p04-t11 | completed | `13a858f1` | Remaining lifecycle writers and router are scope-aware    |
+
+### Phase Summary
+
+**Outcome:** The complete lifecycle now preserves synced project artifacts
+through explicit pull-on-arrival and push-on-write behavior. The checked-in
+bookkeeping inventory covers CLI resolvers and lifecycle writers, the public
+docs explain synced operation across worktrees and machines, and all five
+publishable packages are aligned at 0.2.37.
+
+**Manual verification:** The shipped `oat-project-summary` workflow pushed a
+fresh summary to the scratch project ref, and the shipped
+`oat-project-progress` workflow materialized that project from an absent
+checkout in a linked worktree. Root-owned cleanup removed only the scratch
+record, ref, checkout, worktree, and branch and restored the active project.
+
+**Recovery:** Attempt 1/10 failed closed on a later packaged fixture. Attempt
+2/10 refreshed the bounded scope-contract fixtures and passed. Attempt 3/10
+aligned the final `oat-project-next` version pins and retro ordering wording;
+focused tests passed 191/191 and full `pnpm test` passed before and after its
+append-only recovery commit. The p04 ledger is settled at 3/10 with no pending
+attempt.
+
+**Final-head verification:** `pnpm check=0`; `pnpm type-check=0`;
+`pnpm test=0` (4,820 tests); `pnpm build=0`;
+`pnpm run check:skill-bumps=0`; `pnpm release:check-versions=0`;
+`pnpm release:validate=0`; `pnpm build:docs=0`; `pnpm lint=0`;
+`pnpm format=0`; `git diff --check=0`.
+
+**Review disposition:** Implementation is complete. The root-owned independent
+Phase 4 review remains pending and must run against this bookkeeping handoff.
 
 ---
 
@@ -1145,29 +1198,55 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | ------------- |
 | 1     | 60        | 60     | 0      | not collected |
 | 2     | 3,777     | 3,777  | 0      | not collected |
+| 4     | 4,820     | 4,820  | 0      | not collected |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- A first-class `synced` project scope backed by retained custom refs,
+  per-worktree detached checkouts, and small tracked discovery records.
+- Scope-aware project creation, push/pull, listing/adoption, coordination-child
+  pulls, links, archive, prune, migration, doctor, open, and pause commands.
+- Lifecycle skills that pull before reading and push after writing synced
+  project artifacts, enforced by a checked-in bookkeeping inventory.
+- Reviewer-facing pinned artifact links, end-to-end documentation, and the
+  lockstep 0.2.37 public-package release surface.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- New projects default to the configured project scope; synced projects keep
+  durable artifacts off the feature branch while remaining discoverable and
+  adoptable across worktrees and clones.
+- PR workflows render immutable artifact links, and completion/archive flows
+  preserve durable summaries without treating local-only projects as shared.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/project/sync/` - synced ref, checkout, record, and
+  conflict state machines.
+- `packages/cli/src/commands/shared/project-scope.ts` - canonical scope and path
+  resolution.
+- `packages/cli/src/validation/synced-bookkeeping-sites.json` - lifecycle
+  resolver/arrival/write inventory.
+- `.agents/skills/oat-project-*/` - scope-aware lifecycle authoring, execution,
+  review, PR, completion, and routing behavior.
+- `apps/oat-docs/docs/workflows/projects/` - synced project operating and
+  reviewer guidance.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Full CI-order Definition of Done sequence, repository lint/format, skill
+  validator and version-bump gates, and diff checks all passed.
+- Real source-built CLI dogfood covered synced creation, push, cross-worktree
+  pull, immutable links, archive/prune cleanup, and shipped skill workflows.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- No behavioral design deviation. Self-migration of this active project remains
+  intentionally sequenced after implementation, as recorded in the plan, so
+  the running workflow could first gain the synced bookkeeping behavior it
+  needs.
 
 ## References
 

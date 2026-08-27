@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t11
+oat_current_task: null
 oat_last_commit: 75b8f8351
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -93,19 +93,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T22:27:20.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T22:29:43.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation in progress - Phase 4 final-head gates
+**Status:** Phase 4 implementation complete - independent review pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation - Phase 4 task p04-t11 final-head verification
+Implementation - Phase 4 complete; independent review pending
 
 ## Artifacts
 
@@ -113,7 +113,7 @@ Implementation - Phase 4 task p04-t11 final-head verification
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress - 42/53 tasks complete)
+- **Implementation:** `implementation.md` (in progress - 53/53 tasks complete; Phase 4 review pending)
 
 ## Progress
 
@@ -161,11 +161,12 @@ Implementation - Phase 4 task p04-t11 final-head verification
 - ✓ Phase 4 recovery attempt 2/10 validated and settled
 - ✓ Phase 4 tasks p04-t09 through p04-t11 complete, including real-skill dogfood and verified cleanup
 - ✓ Phase 4 recovery attempt 3/10 validated and settled
+- ✓ Phase 4 final-head Definition of Done gates pass in CI order, plus lint, format, and diff checks
 
 ## Blockers
 
-None. Recovery attempt 3 passed committed-HEAD focused and full-suite verification; final-head gates may resume.
+None. Recovery attempt 3 is settled and every Phase 4 final-head gate passes.
 
 ## Next Milestone
 
-Complete remaining final-head gates and Phase 4 bookkeeping, then run the independent Phase 4 review.
+Run the root-owned independent Phase 4 review against the bookkeeping handoff commit.

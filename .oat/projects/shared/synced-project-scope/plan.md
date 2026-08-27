@@ -1941,6 +1941,10 @@ git commit -m "fix(p03-t19): detect index-only synced leaks"
 
 Goal: the lifecycle uses the new scope end to end; docs describe it; release gates pass.
 
+**Implementation handoff:** All eleven Phase 4 tasks are complete and the
+final-head gate sequence passes. The `p04` review row remains pending for the
+root-owned independent review.
+
 **Canonical skill snippet** (paste verbatim, replacing each inventoried bookkeeping commit; keep the existing `shared` branch unchanged):
 
 ```bash
