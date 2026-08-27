@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04-t09
-oat_last_commit: cb212e61d
+oat_last_commit: 35a35f5e8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -33,16 +33,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p04:
       used_attempts: 2
-      pending_attempt:
-        attempt: 2
-        event_id: p04-recovery-02-skill-contract-fixtures
-        original_request_id: dispatch-synced-project-scope-p04-20260827T204100Z
-        original_task_id: p04-t08
-        original_commit: 8f6bab98146df73235ea16771b6ceaef781454c5
-        discovered_by: pnpm test
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: c91f25fbb16d9cc3548f28a23f74899e54a1436f
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -102,13 +93,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T21:41:35.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T21:53:41.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation in progress - Phase 4 definition-of-done recovery
+**Status:** Implementation in progress - Phase 4 definition-of-done gates
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
@@ -167,11 +158,12 @@ Implementation - Phase 4 task p04-t09 definition-of-done recovery
 - ✓ Phase 3 complete; Phase 4 may proceed
 - ✓ Phase 4 tasks p04-t01 through p04-t08 complete
 - ⨯ Phase 4 recovery attempt 1/10 failed full-suite verification; bounded corrections restored
+- ✓ Phase 4 recovery attempt 2/10 validated and settled
 
 ## Blockers
 
-None. Recovery attempt 1 is settled with the three mechanically related contract corrections identified for a fresh bounded attempt.
+None. Recovery attempt 2 passed committed-HEAD focused and full-suite verification; p04-t09 may resume.
 
 ## Next Milestone
 
-Resume p04-t09 with recovery attempt 2/10, then complete the definition-of-done gates and dogfood.
+Complete the p04-t09 definition-of-done gates, then run p04-t10 dogfood.

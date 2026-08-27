@@ -1020,6 +1020,21 @@ continuation_events: []
 - Verification: focused autonomy-inventory and project-log fixtures passed 10/10; three prior timeout cases passed individually; full `pnpm test` passed CLI 3,935/3,935 and smoke 140/140, then failed 1 of 586 packaged-skill tests at `oat-explainer-kit/tests/completion.integration.test.mjs:294`; root independently reproduced the exact packaged-skill failure at 18/19
 - Reason: phase verification exposed a third stale `oat-project-complete` scope-wording fixture after the first two bounded corrections; both correction files were restored byte-for-byte, immutable ancestry and the clean boundary were verified, and ledger-only failure evidence remains in `cb212e61dd8d52f2d3dc10498e3e0b56540d7b9d`
 
+### Recovery Event p04-recovery-02-skill-contract-fixtures
+
+- Phase/task: p04 / p04-t08 phase verification
+- Original request: dispatch-synced-project-scope-p04-20260827T204100Z
+- Original commit: 8f6bab98146df73235ea16771b6ceaef781454c5
+- Defect class: composition
+- Discovered by: `pnpm test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 2/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 35a35f5e88c4de86c5f3e4d66106e40dc66a0f9c
+- Verification: committed-HEAD autonomy-inventory and project-log fixtures passed 10/10, completion integration passed 19/19, and full `pnpm test` passed; lint, format, diff, exact four-file boundary, immediate parentage, and worktree cleanliness passed; root independently re-ran the focused 10/10 and 19/19 suites
+- Reason: refreshed deterministic prompt-site hashes, isolated the project-log fixture from globally installed CLI drift with a test-local shared-scope result, and aligned the packaged completion fixture with durable-project/local-scope terminology
+
 ### Recovery Event recovery-p02-01-cli-phase-suite
 
 - Phase/task: p02 / p02-t11 phase verification
