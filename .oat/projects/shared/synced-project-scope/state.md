@@ -1,7 +1,10 @@
 ---
 oat_current_task: null
 oat_last_commit: 7fd8c344f
-oat_blockers: []
+oat_blockers:
+  [
+    'Plan gate blocked twice (maxAttempts exhausted); awaiting maintainer direction — see implementation.md',
+  ]
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -11,8 +14,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -80,19 +83,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T01:09:47.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T01:46:45.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Design complete
+**Status:** Plan drafted — gate escalation pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
 ## Current Phase
 
-Design - Ready for implementation planning
+Plan - Drafted and self-reviewed; plan gate blocked twice, awaiting maintainer direction
 
 ## Artifacts
 
@@ -109,12 +112,13 @@ Design - Ready for implementation planning
 - ✓ Discovery complete (seeded from brainstorm session 2026-08-26)
 - ✓ Specification complete (folded into design)
 - ✓ Design complete (artifact review passed after revisions)
-- ⧗ Awaiting implementation plan
+- ✓ Plan drafted (38 tasks, 4 phases); structured self-review x2 applied
+- ⧗ Plan gate: blocked on 2 attempts; findings applied; awaiting maintainer decision
 
 ## Blockers
 
-None
+- Plan gate exhausted its 2 attempts (both `blocked`); all findings applied except one product decision (list `local` projects?) resolved toward the spec by default. See `implementation.md` → Plan Gate Escalation.
 
 ## Next Milestone
 
-Run `oat-project-plan` to produce plan.md
+Maintainer: confirm I3 (`local` unlisted) and authorize a third plan gate run or approve the plan; then `oat-project-implement`

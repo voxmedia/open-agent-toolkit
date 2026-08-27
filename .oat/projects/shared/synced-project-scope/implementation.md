@@ -208,3 +208,25 @@ Track test execution during implementation.
 - Plan: `plan.md`
 - Design: `design.md`
 - Spec: `spec.md`
+
+## Plan Gate Escalation (2026-08-27)
+
+The configured `oat-project-plan` gate (`oat gate review --review-type artifact --review-scope plan --exit-nonzero-on important`, target `cursor-gpt-5-6-sol-xhigh`, `onFailure: block`, `maxAttempts: 2`) blocked on both attempts. Attempts are exhausted; per the gate contract the plan stays `in_progress` pending human direction. Accumulated feedback:
+
+**Attempt 1 — `reviews/archived/artifact-plan-review-2026-08-27T013313Z.md`** (0 critical, 2 important, 2 medium) — all resolved in `plan.md`:
+
+- I1 NFR2 spike could not prove no-CI-trigger in this repo (all workflows filter to `main`) → p01-t10 now uses a disposable GitHub repo with an unfiltered `on: [push]` workflow, waits, queries by SHA, deletes the repo.
+- I2 FR14 worktree docs uncovered → p04-t07 adds a "Synced projects in worktrees" section to `workflows/projects/implementation-execution.md`.
+- M1 p03-t04 file surface → `fs/io.ts` in Files; e2e in GREEN verify + format.
+- M2 p04-t01 negated `jq` grep → `! grep …`.
+
+**Attempt 2 — `reviews/archived/artifact-plan-review-2026-08-27T014220Z.md`** (2 critical, 3 important, 1 medium) — five resolved in `plan.md`/`design.md`, one resolved by a reversible product default:
+
+- C1 `commitRecordChange` must exclude pre-staged unrelated changes → p01-t09 requires pathspec-limited commits (`git commit -m … -- <pathspecs>`) and a pre-staged-file test.
+- C2 `oat-project-review-provide` Step 9.5 missing from the sweep; validator too literal → added to p04-t02; p04-t06 gains rule (c) guarded-variable-pathspec check and rule (d) checked-in bookkeeping-site inventory.
+- I1 prune could bypass the open-PR guard with no checkout → p03-t05 reads `git show <ref>:state.md` when the checkout is absent; new test.
+- I2 migration rollback not retryable → single rollback contract (remove everything migrate created, restore source); design.md updated; step-5 failure-injection test added.
+- I3 listing `local` conflicts with the spec non-goal → **resolved toward the spec as written**: `list` enumerates `shared` + `synced` only; `local` stays unenumerated. Reversible: if the maintainer prefers to list `local`, amend spec Non-Goals/NFR1 and restore the p02-t07 `local` cases (design.md notes this).
+- M1 dangling `received` ledger rows → both gate rows now point at archived provenance with invocation/target filled.
+
+**Needed from the maintainer:** confirm the I3 default (or reverse it), then either authorize a third gate attempt (`oat gate review …` as configured) or approve the plan without a further gate run. `plan.md` frontmatter remains `oat_status: in_progress` until then.

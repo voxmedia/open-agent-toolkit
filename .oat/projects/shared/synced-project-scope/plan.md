@@ -475,6 +475,7 @@ git commit -m "feat(p01-t08): implement pull, continue, and abort for synced pro
 
 - `commitRecordChange(repoRoot, [recordPath], msg)` stages exactly that path (runner spy: `add -- <path>`), commits, returns `{sha}`; parent `ls-tree HEAD` contains the record; nothing else staged even when an unrelated file is dirty.
 - Returns `null` and makes no commit when nothing changed.
+- **Pre-staged unrelated change:** stage `src/unrelated.ts` first, then call the helper for the record → the new commit's `diff-tree --name-only` lists only the record; `src/unrelated.ts` is still staged and uncommitted afterwards (NFR4). Implementation must commit with pathspecs (`git commit -m <msg> -- <pathspecs>`, the semantics the existing `commitScaffold` already relies on) — never a bare `git commit` after `git add`.
 - Rejects a non-allowlisted pathspec before any `git add` (spy: no `add` call).
 - `removeSyncedCheckout(t)` on clean + pushed checkout → directory gone, `worktree list` has no entry, no `--force` in args.
 - Dirty checkout → returns `{status:'dirty'}` and leaves it; unpushed commit → `{status:'unpushed'}`.
@@ -850,8 +851,8 @@ git commit -m "feat(p02-t06): add oat project pull command"
 
 **Step 1: Write test (RED)**
 
-- Fixture with one project in each of `shared/`, `synced/` (record + checkout), `local/` → all three listed with `scope`; a `synced` record whose checkout is absent is still listed (`checkout: absent` in JSON).
-- `--scope local` → only local; invalid value → choices error.
+- Fixture with one project in each of `shared/`, `synced/` (record + checkout), `local/` → `shared` and `synced` listed with `scope`; **`local` is not listed** (spec non-goal: `local` listing behavior unchanged — it was never enumerated); a `synced` record whose checkout is absent is still listed (`checkout: absent` in JSON).
+- `--scope shared|synced` filters; `--scope local` → choices error naming the non-goal; invalid value → choices error.
 - Table output has a `Scope` column; existing column order otherwise unchanged (snapshot the header).
 - Existing list tests pass unchanged.
 
@@ -860,7 +861,7 @@ Expected: new cases fail.
 
 **Step 2: Implement (GREEN)**
 
-`listProjects` is called once per scope root (`shared` = `projects.root`, plus `synced`, `local` siblings when they exist); for `synced`, merge `listSyncedRecords` so absent checkouts appear; tag each summary with `scope`.
+`listProjects` is called once per scope root (`shared` = `projects.root`, plus the `synced` sibling when it exists; `local` stays unenumerated per spec); for `synced`, merge `listSyncedRecords` so absent checkouts appear; tag each summary with `scope`.
 
 **Step 3: Verify**
 
@@ -875,7 +876,7 @@ Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/list.ts packages
 
 ```bash
 git add packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.integration.test.ts packages/control-plane/src/types.ts
-git commit -m "feat(p02-t07): list projects across shared, synced, and local scopes"
+git commit -m "feat(p02-t07): list projects across shared and synced scopes"
 ```
 
 ---
@@ -1117,13 +1118,14 @@ git commit -m "feat(p03-t04): archive synced projects with worktree-aware comple
 - `state.md` `oat_pr_status: open` → refuses without `--force`; dirty/unpushed → refuses; message warns pinned links will stop resolving.
 - `--force` → remote ref gone (`ls-remote`), local ref gone, `worktree list` clean, record file deleted, parent commit `chore(oat): prune synced project <slug>` contains only the record deletion; `--no-commit` leaves the deletion staged-free (record removed from disk, not committed).
 - Completed project (checkout already absent, record `complete`) → prunes ref + record without touching worktrees.
+- **Active record, absent checkout, `oat_pr_status: open` on the ref** → refuses without `--force` (state read via `git show <ref>:state.md`).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/prune/index.test.ts`
 Expected: fails.
 
 **Step 2: Implement (GREEN)**
 
-`pruneSynced(t, git, { force, commit })`: `push <remote> :<ref>` → `update-ref -d` → `removeSyncedCheckout({force})` → `rm record` → `commitRecordChange`. Command reads `state.md` from the checkout or, if absent, `.oat/projects/archived/<slug>/state.md`.
+`pruneSynced(t, git, { force, commit })`: `push <remote> :<ref>` → `update-ref -d` → `removeSyncedCheckout({force})` → `rm record` → `commitRecordChange`. Command reads `state.md` from the checkout when present; otherwise it fetches the ref and reads `git show <ref>:state.md` (an active project with a record and remote ref but no checkout — fresh worktree or clone — must still be guarded); only when the ref is gone does it fall back to `.oat/projects/archived/<slug>/state.md`.
 
 **Step 3: Verify**
 
@@ -1159,6 +1161,7 @@ Fixture with a tracked, committed `shared/legacy` project (scaffold `--scope sha
 - Success → six end-state assertions from the design: source absent from index and disk; `synced/legacy` registered (`worktree list`) and clean; parent `status --porcelain` empty with exactly one new commit `chore(oat): migrate legacy to synced scope`; record in `ls-tree HEAD`; ref on `origin` with one content commit above init; `activeProject` retargeted when it pointed at the source.
 - Dirty source → refuses; untracked source → refuses; existing ref/record/destination → refuses; no `origin` → refuses.
 - Failure injected at step 4 (push fails) → branch untouched (`status` empty, no new commit), destination worktree removed, local ref deleted.
+- **Failure injected at step 5 (`commitRecordChange` throws)** → full rollback: source restored (`git reset -q -- <src> <record>` + `git checkout -- <src>`, index clean), record file deleted, destination worktree removed, local ref deleted, **remote ref deleted** (`push :<ref>`); `status --porcelain` empty; a retry of the same migrate command then succeeds from clean preconditions.
 - `--to shared` → "not supported in v1" error.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/migrate/index.test.ts`
@@ -1166,7 +1169,7 @@ Expected: fails.
 
 **Step 2: Implement (GREEN)**
 
-`migrateSharedToSynced(t, git, opts)` implementing the six-step algorithm and rollback boundaries from `design.md`; command wrapper with `--to <synced>` (choices) and `--no-commit`.
+`migrateSharedToSynced(t, git, opts)` implementing the six-step algorithm from `design.md` with a single recovery contract: **any** failure after the ref/worktree were created rolls back everything migrate created (destination worktree, local ref, remote ref, record file, and — for step-5 failures — the source restore), so a retry always starts from the documented preconditions. Command wrapper with `--to <synced>` (choices) and `--no-commit`.
 
 **Step 3: Verify**
 
@@ -1401,6 +1404,7 @@ git commit -m "feat(p04-t01): push synced artifacts from authoring skills"
 - Modify: `.agents/agents/oat-phase-implementer.md` — no literal `git add` exists in this file; add a short **Synced-scope bookkeeping** paragraph under the ledger/recovery commit guidance stating that artifact and ledger commits use the scope guard + `oat project push`, while code task commits (`feat(pNN-tNN)`) are unchanged; bump frontmatter `version`
 - Modify: `.agents/skills/oat-project-review-receive/SKILL.md` (`:529-534` only — `:399-400` is the generated _code_ fix-commit template and stays a branch commit; add a one-line note there: "fix tasks that edit synced artifacts use `oat project push`")
 - Modify: `.agents/skills/oat-project-review-receive-remote/SKILL.md` (`:270-271`)
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md` (Step 9.5 `:1064` — the required atomic commit of the review artifact + `plan.md`; for `synced` projects this becomes `oat project push` under the guard, since a branch commit cannot persist files inside the nested checkout)
 - Modify: `.agents/skills/oat-project-revise/SKILL.md` (`:271-272` only — `:185-186` is the code fix-commit template; same one-line note)
 - Modify: `.agents/skills/oat-project-reconcile/SKILL.md` (`:681-691`)
 
@@ -1415,12 +1419,12 @@ Expected: pass. Note: `check:skill-bumps` only inspects `SKILL.md`; `references/
 
 **Step 3: Format**
 
-Run: `pnpm exec oxfmt --write .agents/skills/oat-project-implement .agents/agents/oat-phase-implementer.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-review-receive-remote/SKILL.md .agents/skills/oat-project-revise/SKILL.md .agents/skills/oat-project-reconcile/SKILL.md`
+Run: `pnpm exec oxfmt --write .agents/skills/oat-project-implement .agents/agents/oat-phase-implementer.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-review-receive-remote/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-revise/SKILL.md .agents/skills/oat-project-reconcile/SKILL.md`
 
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/oat-project-implement .agents/agents/oat-phase-implementer.md .agents/skills/oat-project-review-receive .agents/skills/oat-project-review-receive-remote .agents/skills/oat-project-revise .agents/skills/oat-project-reconcile
+git add .agents/skills/oat-project-implement .agents/agents/oat-phase-implementer.md .agents/skills/oat-project-review-receive .agents/skills/oat-project-review-receive-remote .agents/skills/oat-project-review-provide .agents/skills/oat-project-revise .agents/skills/oat-project-reconcile
 git commit -m "feat(p04-t02): push synced artifacts from execution skills and phase implementer"
 ```
 
@@ -1527,10 +1531,11 @@ git commit -m "feat(p04-t05): embed pinned artifact links in PRs and complete sy
 
 - Modify: `packages/cli/src/validation/skills.ts`
 - Modify: `packages/cli/src/validation/skills.test.ts`
+- Create: `packages/cli/src/validation/synced-bookkeeping-sites.json`
 
 **Step 1: Write test (RED)**
 
-Validator fails any `oat-*` SKILL.md or `references/*.md` that (a) contains `git add` with a pathspec under `.oat/projects/synced/` (tree-wide), or (b) pipes `oat project scope` output into `jq` / parses its `--json` instead of using `--format value` (tree-wide, pattern-based: `project scope[^\n]*\|[^\n]*jq`). Do **not** ban the `jq` token globally — `oat-wrap-up`, `oat-project-review-provide-remote`, `oat-review-provide-remote`, `oat-docs-analyze`, `oat-docs-apply`, `oat-repo-knowledge-index`, `oat-agent-instructions-analyze`, and `oat-agent-instructions-apply` use `jq`/`--jq` legitimately today. Passes the real skill tree after p04-t01..t05; fails a fixture skill for each rule.
+Validator fails any `oat-*` SKILL.md or `references/*.md` that (a) contains `git add` with a pathspec under `.oat/projects/synced/` (tree-wide), or (b) pipes `oat project scope` output into `jq` / parses its `--json` instead of using `--format value` (tree-wide, pattern-based: `project scope[^\n]*\|[^\n]*jq`). Do **not** ban the `jq` token globally — `oat-wrap-up`, `oat-project-review-provide-remote`, `oat-review-provide-remote`, `oat-docs-analyze`, `oat-docs-apply`, `oat-repo-knowledge-index`, `oat-agent-instructions-analyze`, and `oat-agent-instructions-apply` use `jq`/`--jq` legitimately today. Rule (c), lifecycle-scoped (`oat-project-*`, `oat-worktree-*`, `oat-brainstorm`, `oat-wave-execute`, `.agents/agents/oat-phase-implementer.md`): any `git add`/`git commit` line whose pathspec references a project-artifact variable (`$PROJECT_PATH`, `{PROJECT_PATH}`, `$ARTIFACT_PATH`, `$ACTIVE_PROJECT`, `$REVIEW_PATH`) must be preceded within the same fenced code block by the scope guard (`oat project scope … --format value`); an unguarded occurrence fails with file:line. Rule (d), inventory: a checked-in list `packages/cli/src/validation/synced-bookkeeping-sites.json` of every bookkeeping site swept in p04-t01..t05 (file + unique anchor phrase); the validator asserts each anchor still exists and is guarded, so procedural rewrites cannot silently drop a site. Fixtures: one passing guarded skill, one unguarded `$PROJECT_PATH` commit modeled on `oat-project-review-provide` Step 9.5, one with a stale inventory anchor. Passes the real skill tree after p04-t01..t05; fails a fixture skill for each rule.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
 Expected: fails.
@@ -1551,7 +1556,7 @@ Run: `pnpm exec oxfmt --write packages/cli/src/validation/skills.ts packages/cli
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts
+git add packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts packages/cli/src/validation/synced-bookkeeping-sites.json
 git commit -m "feat(p04-t06): validate skills never stage synced artifacts or require jq"
 ```
 
@@ -1712,8 +1717,8 @@ git commit -m "chore(p04-t10): record skill-sweep dogfood evidence"
 | design | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -             | manual     | -                        |
 | plan   | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -             | auto       | -                        |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T013313Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T013313Z.md                | -             | -          | -                        |
-| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T014220Z.md                | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T013313Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T014220Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
