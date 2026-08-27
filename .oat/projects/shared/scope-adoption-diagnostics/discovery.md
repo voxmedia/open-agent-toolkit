@@ -1,142 +1,129 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-08-27
 oat_generated: false
 ---
 
-# Discovery: scope-adoption-diagnostics
-
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
+# Discovery: Scope and Adoption Diagnostics
 
 ## Initial Request
 
-{Copy of user's initial request}
+Create a bounded follow-up to the completed user-scope tool-pack work for the
+remaining PJM adoption and scoped-diagnostic defects, plus the associated small
+output and test-quality cleanup. This project graduates backlog item
+[`BL-260827-correct-scope-and-adoption`](../../../repo/pjm/backlog/items/BL-260827-correct-scope-and-adoption.md).
 
-## Clarifying Questions
+## Classification
 
-### Question 1: {Topic}
+**Well-understood.** The final implementation and review residue identify the
+affected behavior, source seams, and regression surfaces. No new architecture,
+data model, or public command is required, so this quick workflow goes straight
+to a runnable plan without a lightweight design.
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+## Chosen Direction
 
-## Solution Space
+Apply the smallest coherent correction at each existing ownership boundary:
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+- resolve canonical PJM adoption for migration context, but decide whether the
+  explicit migration command may write from recognized legacy-source evidence
+  rather than project-pack intent or an adoption-state label alone;
+- make user-agent reachability diagnostics conditional on the active provider
+  materialization contract;
+- retain one shared inventory model while making owner attribution and
+  inventory-failure rendering precise in both `doctor` and `status`;
+- close the known output separator and test-harness quality residue; and
+- treat CLI, bundled documentation, and their lockstep public package versions
+  as one release unit.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Workflow depth:** Use quick mode, straight to plan. The work corrects
+   existing contracts and does not need a design artifact.
+2. **PJM authority:** Resolve the canonical repository adoption state once for
+   context and recovery, but keep recognized legacy input as an independent
+   migration precondition. `declared` and `inferred-legacy` are inspected;
+   `partial-initialization` and `none` are also inspected because a genuine old
+   `reference/` layout may resolve to either state. A complete current layout
+   returns `already-migrated`; recognized legacy input may dry-run/apply from
+   any state; no recognized input skips with state-specific recovery and zero
+   writes.
+3. **Provider authority:** Materialization uses the same config-aware adapter
+   resolution as sync for the applicable scope: explicitly enabled is active
+   even without detection, explicitly disabled is inactive even when detected,
+   unset plus detected is active, and unset plus undetected is inactive. Only
+   active Codex/Cursor adapters supply the user managed-role extension; Claude
+   does not.
+4. **Diagnostic consistency:** Human and JSON surfaces continue to consume the
+   canonical pack inventory. Failures degrade to explicit diagnostics rather
+   than silently falling back or terminating `oat status`.
+5. **Test cleanup:** Replace tautological or impossible fixtures with assertions
+   that can fail against production behavior; keep process-global test state
+   exception-safe.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve fail-closed PJM writes and the existing adoption states:
+  `declared`, `inferred-legacy`, `partial-initialization`, and `none`. Adoption
+  labels do not substitute for a legacy-source inventory.
+- Do not broaden user-scope agent syncing or change `SCOPE_CONTENT_TYPES`; this
+  project reports provider reachability accurately.
+- Preserve home-path redaction, bounded path reporting, and hook-mode status
+  behavior.
+- Shared-owner evidence must not make an uninstalled or unintended pack appear
+  installed.
+- Shipped CLI/docs changes require all five public package versions to advance
+  together above current `origin/main`.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- `oat pjm migrate` has regression coverage for every adoption state, current
+  and legacy input shapes, and no longer reads project-management pack intent
+  as its gate.
+- `user-agent-unmaterialized` names every genuinely unreachable managed agent
+  for the active provider set without false positives when a Codex/Cursor
+  materialization extension is active.
+- Shared-owner observations name only applicable installed/intended packs;
+  `oat status` returns a structured, human-readable inventory-unavailable state
+  instead of throwing; doctor findings cannot split on text embedded in a
+  detail.
+- Both test-quality follow-up groups are corrected and their focused suites can
+  fail on a real behavior regression.
+- Focused suites and the repository's complete eight-step CI/release gate
+  sequence pass with explicit exit-code evidence.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
-
-## Deferred Ideas
-
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
-
-## Open Questions
-
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
-
-## Assumptions
-
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Portable sibling-skill reference cleanup; it is tracked in the separate
+  `portable-skill-references` quick project.
+- New tool-pack scope types, provider adapters, migration commands, or manifest
+  ownership models.
+- Remediating unrelated findings from the broad final review that were not
+  accepted into the associated backlog item.
 
 ## Risks
 
-{Potential risks identified during discovery}
+- **Provider false classification:** Deriving materialization from filesystem
+  presence instead of config-aware active adapters could repeat the original
+  bug. **Mitigation:** cover enabled-undetected, disabled-detected,
+  detected-unset, and absent-unset cases for Codex/Cursor, plus Claude-only and
+  mixed configurations.
+- **Legacy migration regression:** Gating directly on adoption state could
+  block the old layouts the command exists to migrate. **Mitigation:** test the
+  four adoption states independently from recognized legacy evidence and
+  assert zero writes when neither current nor legacy evidence permits action.
+- **Diagnostic divergence:** Fixing only one renderer would leave human and JSON
+  output inconsistent. **Mitigation:** test shared inventory output through
+  both `doctor` and `status`.
 
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+## Open Questions
+
+None. The migration matrix and provider-activation authority are resolved
+above. Managed High dispatch is configured, the additional cross-runtime phase
+gate is disabled, and the plan-review outcome remains a workflow gate.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Review and finalize `plan.md`, resolve dispatch and optional phase-review
+policy, then hand the project to `oat-project-implement`.
