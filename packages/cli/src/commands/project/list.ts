@@ -6,6 +6,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { listSyncedRecords } from '@commands/project/sync/record';
 import { parseFrontmatterField } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
@@ -35,6 +36,7 @@ interface ProjectListDependencies {
   directoryExists: (path: string) => Promise<boolean>;
   readProjectMetadata: (projectPath: string) => Promise<ProjectListMetadata>;
   processEnv: NodeJS.ProcessEnv;
+  gitRunner: GitRunner;
 }
 
 interface ProjectListMetadata {
@@ -46,6 +48,7 @@ interface ProjectListMetadata {
 interface ProjectListOptions {
   includeCoordination?: boolean;
   scope?: ProjectScope;
+  remote?: boolean;
 }
 
 const DEFAULT_DEPENDENCIES: ProjectListDependencies = {
@@ -57,6 +60,7 @@ const DEFAULT_DEPENDENCIES: ProjectListDependencies = {
   directoryExists,
   readProjectMetadata,
   processEnv: process.env,
+  gitRunner: defaultGitRunner,
 };
 
 async function directoryExists(path: string): Promise<boolean> {
@@ -269,6 +273,55 @@ async function collectProjectRows(
   );
 }
 
+async function appendRemoteRows(
+  rows: ProjectListRow[],
+  repoRoot: string,
+  context: CommandContext,
+  dependencies: ProjectListDependencies,
+): Promise<ProjectListRow[]> {
+  const remote = await dependencies.gitRunner.run(
+    ['ls-remote', 'origin', 'refs/oat/projects/*'],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  if (remote.code !== 0) {
+    context.logger.warn(
+      `Warning: unable to list remote synced projects: ${remote.stderr || remote.stdout || 'origin is unreachable'}`,
+    );
+    return rows;
+  }
+  const localSlugs = new Set(
+    rows.filter((row) => row.scope === 'synced').map((row) => row.name),
+  );
+  for (const line of remote.stdout.split('\n')) {
+    const [, ref] = line.trim().split(/\s+/);
+    if (!ref?.startsWith('refs/oat/projects/')) continue;
+    const name = ref.slice('refs/oat/projects/'.length);
+    if (!name || localSlugs.has(name)) continue;
+    rows.push({
+      kind: 'remote',
+      name,
+      scope: 'synced',
+      origin: 'remote',
+      checkout: 'absent',
+      ref,
+      phase: null,
+      phaseStatus: null,
+      workflowMode: null,
+      lifecycle: null,
+      progress: null,
+      recommendation: {
+        skill: 'oat project pull',
+        reason: 'not adopted on this branch',
+      },
+    });
+  }
+  return rows.sort(
+    (left, right) =>
+      left.name.localeCompare(right.name) ||
+      left.scope.localeCompare(right.scope),
+  );
+}
+
 async function runProjectList(
   context: CommandContext,
   dependencies: ProjectListDependencies,
@@ -280,12 +333,20 @@ async function runProjectList(
       repoRoot,
       dependencies.processEnv,
     );
-    const projects = await collectProjectRows(
+    let projects = await collectProjectRows(
       repoRoot,
       projectsRoot,
       options,
       dependencies,
     );
+    if (options.remote) {
+      projects = await appendRemoteRows(
+        projects,
+        repoRoot,
+        context,
+        dependencies,
+      );
+    }
 
     if (context.json) {
       context.logger.json({ status: 'ok', projects });
@@ -326,6 +387,7 @@ export function createProjectListCommand(
         PROJECT_SCOPES,
       ),
     )
+    .option('--remote', 'Include synced projects discovered on origin')
     .action(async (options: ProjectListOptions, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),

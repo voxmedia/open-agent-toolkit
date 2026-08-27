@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { createProgram } from '@app/create-program';
+import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { registerCommands } from '../index';
@@ -222,6 +223,48 @@ describe('oat project list coordination integration', () => {
     };
     expect(filteredPayload.projects.every((row) => row.scope === 'local')).toBe(
       true,
+    );
+  });
+
+  it('lists unadopted remote refs only when --remote is requested', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    tempDirs.push(fixture.rootDir);
+    const created = await runCli(fixture.cloneA, [
+      'project',
+      'new',
+      'remote-only',
+      '--no-dashboard',
+      '--json',
+    ]);
+    expect(created.exitCode).toBe(0);
+
+    const withoutRemote = await runCli(fixture.cloneB!, [
+      'project',
+      'list',
+      '--json',
+    ]);
+    expect(withoutRemote.stdout).not.toContain('remote-only');
+
+    const remote = await runCli(fixture.cloneB!, [
+      'project',
+      'list',
+      '--remote',
+      '--json',
+    ]);
+    expect(remote.exitCode).toBe(0);
+    const payload = JSON.parse(remote.stdout) as {
+      projects: Array<Record<string, unknown>>;
+    };
+    expect(payload.projects).toContainEqual(
+      expect.objectContaining({
+        kind: 'remote',
+        name: 'remote-only',
+        scope: 'synced',
+        origin: 'remote',
+        checkout: 'absent',
+        ref: 'refs/oat/projects/remote-only',
+        phase: null,
+      }),
     );
   });
 });

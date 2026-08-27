@@ -60,6 +60,9 @@ function createHarness(options: HarnessOptions): {
         }
       );
     }),
+    gitRunner: {
+      run: vi.fn(async () => ({ code: 0, stdout: '', stderr: '' })),
+    },
     processEnv: options.env ?? {},
   });
 
@@ -269,6 +272,42 @@ describe('oat project list', () => {
     await runCommand(command, []);
 
     expect(capture.info.join('\n')).toContain('coordination-parent');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns and preserves local rows when origin is unreachable', async () => {
+    const capture = createLoggerCapture();
+    const command = createProjectListCommand({
+      buildCommandContext: (): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: true,
+        cwd: '/repo',
+        home: '/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveProjectRoot: async () => '/repo',
+      resolveProjectsRoot: async () => '.oat/projects/shared',
+      listProjects: async () => [projectSummary('local-row')],
+      listSyncedRecords: async () => [],
+      directoryExists: async (path) => path.endsWith('/shared'),
+      readProjectMetadata: async () => ({
+        kind: 'implementation',
+        phase: 'plan',
+        phaseStatus: 'complete',
+      }),
+      gitRunner: {
+        run: async () => ({ code: 2, stdout: '', stderr: 'offline' }),
+      },
+      processEnv: {},
+    });
+    await runCommand(command, ['--remote']);
+    expect(capture.warn[0]).toContain('offline');
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      projects: [expect.objectContaining({ name: 'local-row' })],
+    });
     expect(process.exitCode).toBe(0);
   });
 });
