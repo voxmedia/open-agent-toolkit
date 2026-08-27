@@ -1005,6 +1005,21 @@ continuation_events: []
 - Verification: focused hook/scaffold suites passed 99/99 and full CLI passed 3,906/3,906 before and after commit; CLI type-check, scoped lint, format, diff, commit-boundary, and cleanliness checks passed; root independently re-ran focused hook/scaffold 99/99 and verified the exact committed boundary
 - Reason: the upstream-integrated baseline preserved the bounded assumptions; invocation-scoped hook suppression now covers materialization, commit, push, rebase, continue, and abort inside intentionally minimal synced worktrees without changing parent-checkout or persistent Git configuration
 
+### Recovery Event p04-recovery-01-skill-contract-fixtures
+
+- Phase/task: p04 / p04-t08 phase verification
+- Original request: dispatch-synced-project-scope-p04-20260827T204100Z
+- Original commit: 8f6bab98146df73235ea16771b6ceaef781454c5
+- Defect class: composition
+- Discovered by: `pnpm test`
+- Disposition: failed-attempt
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: -
+- Verification: focused autonomy-inventory and project-log fixtures passed 10/10; three prior timeout cases passed individually; full `pnpm test` passed CLI 3,935/3,935 and smoke 140/140, then failed 1 of 586 packaged-skill tests at `oat-explainer-kit/tests/completion.integration.test.mjs:294`; root independently reproduced the exact packaged-skill failure at 18/19
+- Reason: phase verification exposed a third stale `oat-project-complete` scope-wording fixture after the first two bounded corrections; both correction files were restored byte-for-byte, immutable ancestry and the clean boundary were verified, and ledger-only failure evidence remains in `cb212e61dd8d52f2d3dc10498e3e0b56540d7b9d`
+
 ### Recovery Event recovery-p02-01-cli-phase-suite
 
 - Phase/task: p02 / p02-t11 phase verification
