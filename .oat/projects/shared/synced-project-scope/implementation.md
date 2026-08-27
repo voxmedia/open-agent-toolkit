@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p03-t12
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,10 +28,10 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 10    | 10/10     |
 | Phase 2 | complete    | 13    | 13/13     |
-| Phase 3 | in_progress | 18    | 11/18     |
+| Phase 3 | in_progress | 18    | 18/18     |
 | Phase 4 | pending     | 11    | 0/11      |
 
-**Total:** 34/52 tasks completed
+**Total:** 41/52 tasks completed
 
 ---
 
@@ -237,7 +237,7 @@ oat_generated: false
 
 ## Phase 3: Reviewer and lifecycle surface
 
-**Status:** review fixes pending - 11 of 18 tasks complete
+**Status:** review fixes complete - 18 of 18 tasks complete; fresh fix-delta review pending
 **Started:** 2026-08-27
 
 ### Task Outcomes
@@ -255,13 +255,15 @@ oat_generated: false
 | p03-t09 | completed | `41e8bbe7` | Nested-worktree local-sync guard                     |
 | p03-t10 | completed | this task  | Synced scope dogfood and cleanup verified            |
 | p03-t11 | completed | `a72c8cf8` | Integrated and reviewed `origin/main` before Phase 4 |
-| p03-t12 | pending   | -          | Fail closed on missing synced archive records        |
-| p03-t13 | pending   | -          | Preserve archive retry/export identity               |
-| p03-t14 | pending   | -          | Preserve migration `.gitignore` index/worktree state |
-| p03-t15 | pending   | -          | Detect tracked synced artifacts with real Git        |
-| p03-t16 | pending   | -          | Preserve push success on PR-refresh exceptions       |
-| p03-t17 | pending   | -          | Make merge-fidelity evidence reproducible            |
-| p03-t18 | pending   | -          | Surface local-sync skip reasons in text output       |
+| p03-t12 | completed | `c546025d` | Missing-record synced archives fail closed           |
+| p03-t13 | completed | `bdd96887` | Archive retries preserve one durable export identity |
+| p03-t14 | completed | `118f6d12` | Migration preserves dirty `.gitignore` states        |
+| p03-t15 | completed | `38e923c2` | Real Git detects tracked synced artifacts            |
+| p03-t16 | completed | `d04fa3cd` | PR-refresh exceptions preserve successful pushes     |
+| p03-t17 | completed | `dd4036f6` | Merge fidelity uses reproducible tree equality       |
+| p03-t18 | completed | `40f019f6` | Text sync output surfaces stable skip reasons        |
+
+**Review-fix verification:** Every task's RED/focused verification passed after implementation. The committed fix range passed the full CLI suite (290 files / 3,926 tests), CLI type-check, scoped oxlint/oxfmt, `git diff --check`, exact seven-commit ordering, and per-commit file-boundary checks. Phase 3 remains in progress until a fresh fix-delta review independently passes.
 
 **Verification before dogfood:** Full CLI passed 289 files / 3,845 tests after recovery 1; CLI type-check/build, repository lint/format, and diff checks passed. The p03-t07 synced-project doctor check passed, while the overall live doctor command retained unrelated pre-existing warnings.
 
@@ -360,7 +362,9 @@ feature_tree_mismatches=0
 - M2 `artifact_alignment_required` → p03-t17 replaces the opaque digest with exact, reproducible per-path tree-object equality evidence.
 - m1 `code_fix_required` → p03-t18 surfaces the nested-worktree skip reason in human-readable output.
 
-**Next:** Execute p03-t12 through p03-t18, mark this review event `fixes_completed`, and run a fresh fix-delta review before Phase 4.
+**Fix completion:** Tasks p03-t12 through p03-t18 are complete in seven verified commits. The review event is `fixes_completed`, not passed.
+
+**Next:** Run a fresh fix-delta review over `2896efe062bc7b45bd8a69a49ddff210b208429b..40f019f6c9bc9d4696f34a998bd88d16bb3f4f3b` before Phase 4.
 
 ---
 

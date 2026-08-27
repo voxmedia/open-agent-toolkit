@@ -2334,7 +2334,7 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 | p02     | code     | fixes_completed | 2026-08-27 | reviews/archived/code-p02-review-2026-08-27T160020Z.md            | 9eff5ceef77a1716c2a56d1a594e707b263ea803 | auto       | -                        |
 | p02-t13 | code     | passed          | 2026-08-27 | reviews/code-p02-t13-review-2026-08-27T173345Z.md                 | 9da82464b5fa93477303027a598ff3e9c768905c | auto       | -                        |
 | p03-t11 | code     | passed          | 2026-08-27 | reviews/p03-t11-upstream-review-2026-08-27T191902Z.md             | a72c8cf8b49afabfe33afd101f9c92a3b85f373a | manual     | -                        |
-| p03     | code     | fixes_added     | 2026-08-27 | reviews/archived/code-p03-review-2026-08-27T194810Z.md            | 3ad8104319e54b9595bc5529d28624194b4c0d7a | manual     | -                        |
+| p03     | code     | fixes_completed | 2026-08-27 | reviews/archived/code-p03-review-2026-08-27T194810Z.md            | 3ad8104319e54b9595bc5529d28624194b4c0d7a | manual     | -                        |
 | p04     | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | final   | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                        |

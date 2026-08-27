@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t12
-oat_last_commit: 3ad810431
+oat_current_task: p04-t01
+oat_last_commit: 40f019f6c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -90,19 +90,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T19:53:29.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T20:19:28.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation in progress - Phase 3 review fixes
+**Status:** Implementation in progress - Phase 3 fix-delta review pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation - Phase 3 task p03-t12 review fix
+Implementation - Phase 3 fresh fix-delta review
 
 ## Artifacts
 
@@ -110,7 +110,7 @@ Implementation - Phase 3 task p03-t12 review fix
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress - 34/52 tasks complete)
+- **Implementation:** `implementation.md` (in progress - 41/52 tasks complete)
 
 ## Progress
 
@@ -147,11 +147,13 @@ Implementation - Phase 3 task p03-t12 review fix
 - ✓ Phase 3 tasks p03-t01 through p03-t11 complete
 - ⨯ Phase 3 full review blocked with 1 Critical, 4 Important, 2 Medium, and 1 Minor finding
 - ✓ Phase 3 review findings received into p03-t12 through p03-t18; state drift resolved during receive
+- ✓ Phase 3 review-fix tasks p03-t12 through p03-t18 completed and verified
+- … Phase 3 fresh fix-delta review pending
 
 ## Blockers
 
-None. Seven planned Phase 3 review-fix tasks are ready; Phase 4 remains gated by their implementation and fresh fix-delta review.
+None. All 18 Phase 3 tasks are complete; Phase 4 remains gated by a fresh fix-delta review.
 
 ## Next Milestone
 
-Execute p03-t12 through p03-t18, then run a fresh Phase 3 fix-delta review before Phase 4.
+Run a fresh Phase 3 review limited to `2896efe062bc7b45bd8a69a49ddff210b208429b..40f019f6c9bc9d4696f34a998bd88d16bb3f4f3b`. Do not begin p04-t01 until that review passes.
