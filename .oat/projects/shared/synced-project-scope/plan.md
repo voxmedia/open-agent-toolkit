@@ -2481,6 +2481,7 @@ git commit -m "fix(p04-t15): commit synced summary decisions durably"
 
 - Modify: `.agents/skills/oat-project-retro/references/apply-procedure.md`
 - Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/validation/synced-bookkeeping-sites.json` (update only the mechanically changed retro push anchor)
 
 **Step 1: Understand**
 
@@ -2490,6 +2491,8 @@ Map the repository target commit, retro-artifact writeback, `Applied-ref`, and i
 
 For synced projects, format and verify the exact repository targets, commit those paths on the parent branch first, and capture that commit plus target paths as `Applied-ref`. Then write back and push the retro artifact in a separate ref commit. Define recovery for interruption before the parent commit, between the two commits, and after both commits.
 
+Update the existing validator inventory entry to match the new JSON-capturing retro push command; do not expand or otherwise restructure the inventory.
+
 **Step 3: Verify**
 
 Add contract cases for ordinary docs and decision-record targets under a synced project, including the two-commit ordering and recovery markers. Run the focused contract suite, `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm lint`, and `pnpm format`.
@@ -2497,7 +2500,7 @@ Add contract cases for ordinary docs and decision-record targets under a synced 
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/oat-project-retro/references/apply-procedure.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git add .agents/skills/oat-project-retro/references/apply-procedure.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/validation/synced-bookkeeping-sites.json
 git commit -m "fix(p04-t16): commit synced retro targets before writeback"
 ```
 
