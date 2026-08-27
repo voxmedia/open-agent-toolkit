@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 
 import { initializeBacklog } from '@commands/backlog/init';
@@ -7,11 +7,14 @@ import { initializeDecisionRecords } from '@commands/decision/init';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 
+import { resolvePjmTemplate } from './template-source';
+
 export interface InitializeRepoReferenceOptions {
   repoRoot: string;
   assetsRoot: string;
   templatesRoot?: string;
   projectRoot?: string;
+  home?: string;
 }
 
 export interface RepoReferenceInitResult {
@@ -81,46 +84,6 @@ async function pathExists(path: string): Promise<boolean> {
   }
 }
 
-async function readIfExists(path: string): Promise<string | null> {
-  try {
-    return await readFile(path, 'utf8');
-  } catch (error) {
-    const code =
-      error && typeof error === 'object' && 'code' in error
-        ? String(error.code)
-        : null;
-
-    if (code !== 'ENOENT') {
-      throw error;
-    }
-
-    return null;
-  }
-}
-
-async function resolveTemplateContent(
-  name: string,
-  options: InitializeRepoReferenceOptions,
-): Promise<string> {
-  if (options.templatesRoot) {
-    const localTemplate = await readIfExists(join(options.templatesRoot, name));
-    if (localTemplate !== null) {
-      return localTemplate;
-    }
-  }
-
-  const bundledTemplate = await readIfExists(
-    join(options.assetsRoot, 'templates', name),
-  );
-  if (bundledTemplate !== null) {
-    return bundledTemplate;
-  }
-
-  throw new Error(
-    `Template ${name} was not found in repo-local templates or bundled assets.`,
-  );
-}
-
 async function writeFileIfMissing(
   filePath: string,
   content: string,
@@ -147,10 +110,15 @@ export async function initializeRepoReference(
       continue;
     }
 
-    const template = await resolveTemplateContent(target.template, options);
+    const template = await resolvePjmTemplate({
+      name: target.template,
+      assetsRoot: options.assetsRoot,
+      templatesRoot: options.templatesRoot,
+      home: options.home,
+    });
     const status = await writeFileIfMissing(
       targetPath,
-      stripTemplateFrontmatter(template),
+      stripTemplateFrontmatter(template.content),
     );
     if (status === 'created') {
       created.push(target.target);

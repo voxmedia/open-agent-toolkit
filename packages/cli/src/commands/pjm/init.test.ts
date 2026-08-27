@@ -286,6 +286,26 @@ describe('initializeRepoReference', () => {
     ).resolves.toContain('# roadmap.md');
   });
 
+  it('uses user-managed defaults when repository overrides are absent', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
+    tempDirs.push(root);
+    const assetsRoot = join(root, 'assets');
+    const repoRoot = join(root, '.oat', 'repo');
+    const home = join(root, 'home');
+    await seedTemplates(join(assetsRoot, 'templates'));
+    await seedTemplate(
+      join(home, '.oat', 'templates'),
+      'current-state.md',
+      '# User Current State\n',
+    );
+
+    await initializeRepoReference({ assetsRoot, repoRoot, home });
+
+    await expect(
+      readFile(join(repoRoot, 'pjm', 'current-state.md'), 'utf8'),
+    ).resolves.toContain('# User Current State');
+  });
+
   it('strips template frontmatter from instantiated docs and AGENTS guides', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
     tempDirs.push(root);
@@ -321,7 +341,7 @@ describe('initializeRepoReference', () => {
     await expect(
       initializeRepoReference({ assetsRoot, repoRoot, templatesRoot }),
     ).rejects.toThrow(
-      'Template reference-agents.md was not found in repo-local templates or bundled assets.',
+      'Template reference-agents.md was not found in repository, user, or bundled PJM templates.',
     );
     await expect(readOatConfig(root)).resolves.not.toHaveProperty('pjm');
   });
