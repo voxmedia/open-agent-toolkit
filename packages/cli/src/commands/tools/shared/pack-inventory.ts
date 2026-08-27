@@ -115,11 +115,16 @@ async function inventoryStaticAsset(
   installedPath: string,
   bundledPath: string,
 ): Promise<PackAssetInventory> {
-  const digest = definition.kind === 'directory' ? digestDirectory : digestFile;
-  const [installedDigest, bundledDigest] = await Promise.all([
-    digest(installedPath),
-    digest(bundledPath),
-  ]);
+  const [installedDigest, bundledDigest] =
+    definition.kind === 'directory'
+      ? await Promise.all([
+          digestDirectory(installedPath),
+          digestDirectory(bundledPath),
+        ])
+      : await Promise.all([
+          digestFile(installedPath),
+          digestFile(bundledPath, definition.executable ? 0o755 : undefined),
+        ]);
   return {
     definition,
     path: installedPath,
@@ -240,7 +245,9 @@ export async function inventoryScopedPack(
   };
 }
 
-function scopeHasPlacement(inventory: ScopedPackInventory): boolean {
+export function hasScopedPackPlacementEvidence(
+  inventory: ScopedPackInventory,
+): boolean {
   return (
     inventory.intent.enabled ||
     inventory.assets.some(
@@ -275,7 +282,7 @@ export async function inventoryPack(
         : [];
     }),
   );
-  const active = scopes.filter(scopeHasPlacement);
+  const active = scopes.filter(hasScopedPackPlacementEvidence);
   const placement =
     active.length === 2
       ? 'both'
@@ -290,7 +297,7 @@ export async function inventoryPack(
       ({ definition: asset, status }) =>
         asset.sharedOwner !== undefined && status !== 'missing',
     );
-    if (shared.length > 0 && !scopeHasPlacement(scoped)) {
+    if (shared.length > 0 && !hasScopedPackPlacementEvidence(scoped)) {
       diagnostics.push({
         code: 'shared-owner-observation',
         message: `Pack ${input.pack} has shared managed assets at ${scoped.scope} scope without pack ownership evidence`,

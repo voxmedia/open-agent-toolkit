@@ -211,6 +211,7 @@ interface OutdatedSkillRecord {
 
 interface InitToolsRunMetadata {
   affectedScopes: ConcreteScope[];
+  appliedScopes: ConcreteScope[];
 }
 
 function formatVersionForDisplay(version: string | null): string {
@@ -231,6 +232,7 @@ const ALL_TOOL_PACKS = [
 type UserEligiblePack = Exclude<ToolPack, 'core'>;
 
 let lastRunInitToolsMetadata: InitToolsRunMetadata | null = null;
+const appliedScopesByCommand = new WeakMap<Command, ConcreteScope[]>();
 
 const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   buildCommandContext,
@@ -870,7 +872,7 @@ export async function runInitTools(
       selectedPacks.push('project-management');
     }
     if (selectedPacks.length === 0) {
-      lastRunInitToolsMetadata = { affectedScopes: [] };
+      lastRunInitToolsMetadata = { affectedScopes: [], appliedScopes: [] };
       if (!context.json) {
         context.logger.info('No tool packs selected.');
       }
@@ -1321,8 +1323,14 @@ export async function runInitTools(
     }
 
     const affectedScopesList = [...affectedScopes];
+    const appliedScopes = [
+      ...new Set(
+        packScopeInfo.flatMap(({ scope }) => scopesForEndState(scope)),
+      ),
+    ];
     lastRunInitToolsMetadata = {
       affectedScopes: affectedScopesList,
+      appliedScopes,
     };
     reportSuccess(context, packScopeInfo, affectedScopesList);
     process.exitCode = 0;
@@ -1406,6 +1414,10 @@ function createReconciledPackCommand(
           ),
         );
         const results = await dependencies.reconcilePacks!(requests);
+        appliedScopesByCommand.set(
+          command,
+          results.map(({ request }) => request.scope),
+        );
         setInstalledCanonicalPaths(command, canonicalPathsForPacks([pack]));
 
         const projectRequest = requests.find(
@@ -1489,7 +1501,14 @@ export function createInitToolsCommand(
     const context = dependencies.buildCommandContext(
       readGlobalOptions(actionCommand),
     );
-    if (context.scope === 'user') return;
+    const appliedScopes =
+      appliedScopesByCommand.get(actionCommand) ??
+      (dependencies.reconcilePacks
+        ? []
+        : context.scope === 'user'
+          ? ['user']
+          : ['project']);
+    if (!appliedScopes.includes('project')) return;
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     await reconcileProjectToolsConfig(
       {
@@ -1548,6 +1567,10 @@ export function createInitToolsCommand(
       readGlobalOptions(actionCommand),
     );
     const selectedPacks = await runInitTools(context, dependencies);
+    appliedScopesByCommand.set(
+      actionCommand,
+      lastRunInitToolsMetadata?.appliedScopes ?? [],
+    );
     setInstalledCanonicalPaths(
       actionCommand,
       canonicalPathsForPacks(selectedPacks),

@@ -6,7 +6,10 @@ import type {
   InventoryScopedPackInput,
   ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
-import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
+import {
+  hasScopedPackPlacementEvidence,
+  inventoryScopedPack,
+} from '@commands/tools/shared/pack-inventory';
 import {
   type PackLifecycleRequest,
   type PackLifecycleResult,
@@ -152,8 +155,7 @@ export async function updateTools(
           scopeRoot,
           assetsRoot,
         });
-        if (!before.intent.enabled && before.completeness === 'absent')
-          continue;
+        if (!hasScopedPackPlacementEvidence(before)) continue;
         requests.push({
           pack: definition.name,
           scope,

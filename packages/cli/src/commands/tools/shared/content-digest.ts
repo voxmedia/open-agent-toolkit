@@ -11,11 +11,14 @@ function updateField(hash: ReturnType<typeof createHash>, value: string): void {
   hash.update(value);
 }
 
-export async function digestFile(path: string): Promise<string> {
+export async function digestFile(
+  path: string,
+  normalizedMode?: number,
+): Promise<string> {
   const [content, metadata] = await Promise.all([readFile(path), lstat(path)]);
   const hash = createHash('sha256');
   updateField(hash, 'file');
-  updateField(hash, executableMode(metadata.mode));
+  updateField(hash, executableMode(normalizedMode ?? metadata.mode));
   hash.update(`${content.length}:`);
   hash.update(content);
   return hash.digest('hex');

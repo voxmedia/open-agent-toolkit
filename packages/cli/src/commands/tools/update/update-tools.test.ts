@@ -1,4 +1,12 @@
-import { chmod, mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
+import {
+  chmod,
+  lstat,
+  mkdir,
+  mkdtemp,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -21,10 +29,12 @@ import {
   WORKFLOW_SCRIPTS,
   WORKFLOW_TEMPLATES,
 } from '@commands/init/tools/shared/skill-manifest';
+import { removeTools } from '@commands/tools/remove/remove-tools';
 import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
 import { reconcilePackLifecycles } from '@commands/tools/shared/pack-lifecycle';
 import { serializePackReconcilePlan } from '@commands/tools/shared/pack-reconcile';
 import {
+  hasScopedPackOwnershipEvidence,
   readScopedPackIntent,
   writeScopedPackIntent,
 } from '@commands/tools/shared/scoped-pack-intent';
@@ -37,6 +47,18 @@ import {
   type UpdateToolsDependencies,
   updateTools,
 } from './update-tools';
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await lstat(path);
+    return true;
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return false;
+    }
+    throw error;
+  }
+}
 
 function createTool(overrides: Partial<ToolInfo> = {}): ToolInfo {
   return {
@@ -475,6 +497,99 @@ describe('updateTools', () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  it.each([
+    { removed: 'docs' as const, retained: 'workflows' as const },
+    { removed: 'workflows' as const, retained: 'docs' as const },
+  ])(
+    'does not recreate removed $removed from shared data retained by $retained during update-all',
+    async ({ removed, retained }) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-update-shared-owner-'));
+      try {
+        const assetsRoot = await resolveAssetsRoot();
+        await reconcilePackLifecycles(
+          [removed, retained].map((pack) => ({
+            pack,
+            scope: 'user' as const,
+            scopeRoot: root,
+            assetsRoot,
+            action: 'install' as const,
+          })),
+        );
+        await removeTools(
+          { kind: 'pack', pack: removed },
+          ['user'],
+          root,
+          root,
+          false,
+          {
+            scanTools: async () => [],
+            resolveScopeRoot: async () => root,
+            resolveAssetsRoot: async () => assetsRoot,
+            removeDirectory: async (path) =>
+              rm(path, { recursive: true, force: true }),
+            removeFile: async (path) => rm(path, { force: true }),
+            pathExists,
+            hasPackOwnershipEvidence: async (pack, scope, scopeRoot) =>
+              hasScopedPackOwnershipEvidence({ pack, scope, scopeRoot }),
+          },
+        );
+        await writeScopedPackIntent({
+          pack: removed,
+          scope: 'user',
+          scopeRoot: root,
+          enabled: false,
+        });
+
+        const deps = createDeps();
+        deps.resolveAssetsRoot = async () => assetsRoot;
+        deps.resolveScopeRoot = async () => root;
+        deps.inventoryScopedPack = inventoryScopedPack;
+        deps.reconcilePacks = reconcilePackLifecycles;
+
+        const dryRun = await updateTools(
+          { kind: 'all' },
+          ['user'],
+          root,
+          root,
+          true,
+          deps,
+        );
+        expect(dryRun.plans.map(({ pack }) => pack)).not.toContain(removed);
+        expect(dryRun.plans.map(({ pack }) => pack)).toContain(retained);
+        await expect(
+          readScopedPackIntent({
+            pack: removed,
+            scope: 'user',
+            scopeRoot: root,
+          }),
+        ).resolves.toMatchObject({ enabled: false, source: 'none' });
+
+        const applied = await updateTools(
+          { kind: 'all' },
+          ['user'],
+          root,
+          root,
+          false,
+          deps,
+        );
+        expect(applied.plans.map(({ pack }) => pack)).not.toContain(removed);
+        await expect(
+          inventoryScopedPack({
+            pack: removed,
+            scope: 'user',
+            scopeRoot: root,
+            assetsRoot,
+          }),
+        ).resolves.toMatchObject({
+          completeness: 'partial',
+          intent: { enabled: false, source: 'none' },
+        });
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+  );
 
   it('handles not-bundled tools', async () => {
     const tool = createTool({

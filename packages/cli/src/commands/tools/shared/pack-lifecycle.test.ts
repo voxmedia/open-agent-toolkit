@@ -4,6 +4,7 @@ import {
   mkdtemp,
   readFile,
   rm,
+  stat,
   symlink,
   writeFile,
 } from 'node:fs/promises';
@@ -17,6 +18,7 @@ import {
   reconcilePackLifecycle,
   reconcilePackLifecycles,
 } from './pack-lifecycle';
+import { getPackDefinition } from './pack-manifest';
 import { serializePackReconcilePlan } from './pack-reconcile';
 import {
   readScopedPackIntent,
@@ -150,6 +152,54 @@ describe('production pack lifecycle', () => {
     );
     expect(applied.apply?.inventory.completeness).toBe('complete');
   });
+
+  it.each(['docs', 'workflows'] as const)(
+    'is idempotent across repeated %s install and update for every executable asset',
+    async (pack) => {
+      const scopeRoot = await temporaryRoot(`oat-lifecycle-${pack}-`);
+      const assetsRoot = await resolveAssetsRoot();
+      const installRequest = {
+        pack,
+        scope: 'user' as const,
+        scopeRoot,
+        assetsRoot,
+        action: 'install' as const,
+      };
+
+      const installed = await reconcilePackLifecycle(installRequest);
+      expect(installed.apply?.inventory.intent).toMatchObject({
+        enabled: true,
+        source: 'declared',
+      });
+      const executableAssets = getPackDefinition(pack).assets.filter(
+        ({ executable, scopes }) => executable && scopes.includes('user'),
+      );
+      expect(executableAssets.length).toBeGreaterThan(0);
+      for (const asset of executableAssets) {
+        await expect(
+          stat(join(scopeRoot, asset.destination)).then(
+            ({ mode }) => mode & 0o777,
+          ),
+        ).resolves.toBe(0o755);
+        expect(
+          installed.apply?.inventory.assets.find(
+            ({ definition }) => definition.id === asset.id,
+          )?.status,
+        ).toBe('current');
+      }
+
+      const repeatedInstall = await reconcilePackLifecycle(installRequest);
+      expect(repeatedInstall.plan.operations).toEqual([]);
+
+      const updateRequest = { ...installRequest, action: 'update' as const };
+      const dryRun = await reconcilePackLifecycle(updateRequest, {
+        dryRun: true,
+      });
+      expect(dryRun.plan.operations).toEqual([]);
+      const repeatedUpdate = await reconcilePackLifecycle(updateRequest);
+      expect(repeatedUpdate.plan.operations).toEqual([]);
+    },
+  );
 
   it('rejects a later nested symlink before any pack write or intent mutation', async () => {
     const scopeRoot = await temporaryRoot('oat-lifecycle-preflight-');

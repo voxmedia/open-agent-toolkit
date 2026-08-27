@@ -124,6 +124,16 @@ function assertExpectedInventory(
       `Pack ${plan.pack} ${plan.scope} verification expected ${plan.expectedCompleteness} but found ${inventory.completeness}`,
     );
   }
+  if (plan.action === 'remove') return;
+  const drifted = inventory.assets.filter(
+    ({ definition, status }) =>
+      definition.ownership[plan.scope] === 'managed' && status !== 'current',
+  );
+  if (drifted.length > 0) {
+    throw new Error(
+      `Pack ${plan.pack} ${plan.scope} verification found drifted managed assets: ${drifted.map(({ definition, status }) => `${definition.id} (${status})`).join(', ')}`,
+    );
+  }
 }
 
 export async function applyPackReconcilePlan(
@@ -195,12 +205,15 @@ export async function applyPackReconcilePlan(
     applied.push(operation);
   }
 
-  const inventory = await dependencies.inventory();
-  assertExpectedInventory(plan, inventory);
+  const verifiedInventory = await dependencies.inventory();
+  assertExpectedInventory(plan, verifiedInventory);
   for (const intent of intents) {
     await dependencies.writeIntent(intent);
     applied.push(intent);
   }
+  const inventory =
+    intents.length > 0 ? await dependencies.inventory() : verifiedInventory;
+  assertExpectedInventory(plan, inventory);
 
   const shouldSync = plan.changedCanonicalPaths.length > 0 && dependencies.sync;
   if (shouldSync) {

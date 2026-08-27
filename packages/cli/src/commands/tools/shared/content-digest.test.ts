@@ -39,6 +39,18 @@ describe('content digests', () => {
     await expect(digestFile(first)).resolves.not.toBe(await digestFile(second));
   });
 
+  it('can normalize a bundled file to its manifest target mode', async () => {
+    const root = await makeTempDir();
+    const source = join(root, 'source.sh');
+    const installed = join(root, 'installed.sh');
+    await writeFile(source, '#!/bin/sh\n', { mode: 0o644 });
+    await writeFile(installed, '#!/bin/sh\n', { mode: 0o755 });
+
+    await expect(digestFile(source, 0o755)).resolves.toBe(
+      await digestFile(installed),
+    );
+  });
+
   it('produces stable tree digests independent of creation order', async () => {
     const root = await makeTempDir();
     const first = join(root, 'first');

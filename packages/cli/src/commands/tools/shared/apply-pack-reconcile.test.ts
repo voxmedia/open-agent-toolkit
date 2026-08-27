@@ -95,6 +95,7 @@ describe('applyPackReconcilePlan', () => {
       'copy',
       'inventory',
       'intent',
+      'inventory',
       'sync:.agents/skills/oat-brainstorm',
     ]);
     expect(result.synced).toBe(true);
@@ -135,6 +136,68 @@ describe('applyPackReconcilePlan', () => {
       }),
     ).rejects.toThrow('expected complete but found partial');
     expect(writeIntent).not.toHaveBeenCalled();
+  });
+
+  it('does not write intent when a complete pack still has managed drift', async () => {
+    const writeIntent = vi.fn();
+    const drifted = inventory('complete');
+    drifted.assets.push({
+      definition: {
+        id: 'skill:oat-brainstorm',
+        kind: 'skill',
+        source: 'skills/oat-brainstorm',
+        destination: '.agents/skills/oat-brainstorm',
+        scopes: ['user'],
+        ownership: { user: 'managed' },
+      },
+      path: '/scope/.agents/skills/oat-brainstorm',
+      status: 'outdated',
+      installedVersion: '1.0.0',
+      bundledVersion: '2.0.0',
+    });
+    await expect(
+      applyPackReconcilePlan(plan(), '/scope', {
+        resolveManagedRoots: async () => roots,
+        validatePath: async (path) => ({
+          realManagedRoot: '/scope/.agents',
+          realPath: path,
+        }),
+        copyDirectory: vi.fn(),
+        writeGenerated: vi.fn(),
+        inventory: async () => drifted,
+        writeIntent,
+      }),
+    ).rejects.toThrow(/drifted managed assets.*oat-brainstorm/i);
+    expect(writeIntent).not.toHaveBeenCalled();
+  });
+
+  it('returns final inventory after intent persistence', async () => {
+    let intentWritten = false;
+    const result = await applyPackReconcilePlan(plan(), '/scope', {
+      resolveManagedRoots: async () => roots,
+      validatePath: async (path) => ({
+        realManagedRoot: '/scope/.agents',
+        realPath: path,
+      }),
+      copyDirectory: vi.fn(),
+      writeGenerated: vi.fn(),
+      inventory: async () => ({
+        ...inventory('complete'),
+        intent: {
+          ...inventory('complete').intent,
+          enabled: intentWritten,
+          source: intentWritten ? 'declared' : 'none',
+        },
+      }),
+      writeIntent: async () => {
+        intentWritten = true;
+      },
+    });
+
+    expect(result.inventory.intent).toMatchObject({
+      enabled: true,
+      source: 'declared',
+    });
   });
 
   it('is an identical no-op when the plan has no operations', async () => {
