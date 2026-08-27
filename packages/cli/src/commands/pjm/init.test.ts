@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 import { initializeDecisionAgentsGuidance } from '@commands/decision/agents-guidance';
 import { initializeDecisionRecords } from '@commands/decision/init';
+import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { initializeRepoReference, INSTRUCTIONS_SYNC_HINT } from './init';
@@ -114,6 +115,9 @@ describe('initializeRepoReference', () => {
         access(join(repoRoot, relativePath)),
       ).resolves.toBeUndefined();
     }
+    await expect(readOatConfig(root)).resolves.toMatchObject({
+      pjm: { initialized: true, schemaVersion: 1 },
+    });
     await expect(
       access(join(repoRoot, 'reference', 'decision-record.md')),
     ).rejects.toThrow();
@@ -213,10 +217,18 @@ describe('initializeRepoReference', () => {
     await seedTemplates(join(assetsRoot, 'templates'));
 
     await initializeRepoReference({ assetsRoot, repoRoot });
+    await writeOatConfig(root, {
+      ...(await readOatConfig(root)),
+      git: { defaultBranch: 'trunk' },
+    });
     const second = await initializeRepoReference({ assetsRoot, repoRoot });
 
     expect(second.created).toEqual([]);
     expect(second.skipped).toEqual(EXPECTED_FILES);
+    await expect(readOatConfig(root)).resolves.toMatchObject({
+      git: { defaultBranch: 'trunk' },
+      pjm: { initialized: true, schemaVersion: 1 },
+    });
   });
 
   it('composes with an existing standalone decision scaffold', async () => {
@@ -311,6 +323,7 @@ describe('initializeRepoReference', () => {
     ).rejects.toThrow(
       'Template reference-agents.md was not found in repo-local templates or bundled assets.',
     );
+    await expect(readOatConfig(root)).resolves.not.toHaveProperty('pjm');
   });
 });
 

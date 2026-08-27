@@ -274,6 +274,20 @@ describe('oat-config', () => {
     });
   });
 
+  it('reads and writes PJM adoption config round-trip', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await writeOatConfig(repoRoot, {
+      version: 1,
+      pjm: { initialized: true, schemaVersion: 1 },
+    });
+
+    await expect(readOatConfig(repoRoot)).resolves.toEqual({
+      version: 1,
+      pjm: { initialized: true, schemaVersion: 1 },
+    });
+  });
+
   it('preserves tools.brainstorm through readOatConfig round-trip', async () => {
     const repoRoot = await createRepoRoot();
 

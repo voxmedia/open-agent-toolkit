@@ -1,15 +1,17 @@
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import { initializeBacklog } from '@commands/backlog/init';
 import { initializeScopedDecisionAgentsGuidance } from '@commands/decision/agents-guidance';
 import { initializeDecisionRecords } from '@commands/decision/init';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
+import { readOatConfig, writeOatConfig } from '@config/oat-config';
 
 export interface InitializeRepoReferenceOptions {
   repoRoot: string;
   assetsRoot: string;
   templatesRoot?: string;
+  projectRoot?: string;
 }
 
 export interface RepoReferenceInitResult {
@@ -58,6 +60,8 @@ export const CANONICAL_REPO_REFERENCE_PATHS = [
   ...BACKLOG_PATHS,
   ...DECISION_PATHS,
 ] as const;
+
+export const PJM_ADOPTION_SCHEMA_VERSION = 1;
 
 async function pathExists(path: string): Promise<boolean> {
   try {
@@ -195,6 +199,27 @@ export async function initializeRepoReference(
       created.push(relativePath);
     }
   }
+
+  for (const relativePath of CANONICAL_REPO_REFERENCE_PATHS) {
+    if (!(await pathExists(join(options.repoRoot, relativePath)))) {
+      throw new Error(
+        `PJM scaffold verification failed: missing ${relativePath}.`,
+      );
+    }
+  }
+
+  const repoParent = dirname(options.repoRoot);
+  const projectRoot =
+    options.projectRoot ??
+    (basename(repoParent) === '.oat' ? dirname(repoParent) : repoParent);
+  const config = await readOatConfig(projectRoot);
+  await writeOatConfig(projectRoot, {
+    ...config,
+    pjm: {
+      initialized: true,
+      schemaVersion: PJM_ADOPTION_SCHEMA_VERSION,
+    },
+  });
 
   return {
     repoRoot: options.repoRoot,

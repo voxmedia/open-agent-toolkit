@@ -893,6 +893,11 @@ export type OatToolsConfig = Partial<
   >
 >;
 
+export interface OatPjmConfig {
+  initialized?: boolean;
+  schemaVersion?: number;
+}
+
 const VALID_TOOL_PACKS = [
   'core',
   'ideas',
@@ -918,6 +923,25 @@ function normalizeToolsConfig(value: unknown): OatToolsConfig | undefined {
   return Object.keys(tools).length > 0 ? tools : undefined;
 }
 
+function normalizePjmConfig(value: unknown): OatPjmConfig | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const pjm: OatPjmConfig = {};
+  if (typeof value.initialized === 'boolean') {
+    pjm.initialized = value.initialized;
+  }
+  if (
+    typeof value.schemaVersion === 'number' &&
+    Number.isInteger(value.schemaVersion) &&
+    value.schemaVersion > 0
+  ) {
+    pjm.schemaVersion = value.schemaVersion;
+  }
+  return Object.keys(pjm).length > 0 ? pjm : undefined;
+}
+
 export interface OatConfig {
   version: number;
   worktrees?: { root: string };
@@ -926,6 +950,7 @@ export interface OatConfig {
   archive?: OatArchiveConfig;
   explainers?: OatExplainersConfig;
   tools?: OatToolsConfig;
+  pjm?: OatPjmConfig;
   documentation?: OatDocumentationConfig;
   localPaths?: string[];
   autoReviewAtCheckpoints?: boolean;
@@ -1133,6 +1158,11 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
   const tools = normalizeToolsConfig(parsed.tools);
   if (tools) {
     next.tools = tools;
+  }
+
+  const pjm = normalizePjmConfig(parsed.pjm);
+  if (pjm) {
+    next.pjm = pjm;
   }
 
   if (isRecord(parsed.documentation)) {
