@@ -1,10 +1,7 @@
 ---
-oat_current_task: p01-t10
-oat_last_commit: 30688df4e
-oat_blockers:
-  - task_id: p01-t10
-    reason: 'Maintainer confirmation is required that the private GitHub blob page rendered, or that authenticated API proof is accepted instead.'
-    since: 2026-08-27
+oat_current_task: p02-t01
+oat_last_commit: 60787fce5
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -83,19 +80,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T05:08:11.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T06:31:48.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation parked - p01-t10 needs maintainer context
+**Status:** Implementation in progress - Phase 1 passed
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation - Phase 1 parked at p01-t10
+Implementation - Phase 2 starting at p02-t01
 
 ## Artifacts
 
@@ -103,7 +100,7 @@ Implementation - Phase 1 parked at p01-t10
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress - 9/42 tasks complete)
+- **Implementation:** `implementation.md` (in progress - 10/42 tasks complete)
 
 ## Progress
 
@@ -114,13 +111,14 @@ Implementation - Phase 1 parked at p01-t10
 - ✓ Design complete (artifact review passed after revisions)
 - ✓ Plan drafted (38 tasks, 4 phases); structured self-review x2 applied
 - ✓ Plan complete (42 tasks, 4 phases; 8 plan-gate runs, all findings applied; maintainer approved)
-- ✓ Phase 1 tasks p01-t01 through p01-t09 complete
-- ⧗ p01-t10 awaiting maintainer confirmation
+- ✓ Phase 1 tasks p01-t01 through p01-t10 complete
+- ✓ Phase 1 independent review passed after one bounded fix iteration
+- ⧗ Phase 2 starts at p02-t01
 
 ## Blockers
 
-- p01-t10: confirm the logged-in private blob page rendered, or explicitly accept the authenticated API proof.
+None.
 
 ## Next Milestone
 
-Supply the p01-t10 browser-check disposition, then resume `oat-project-implement` through the existing phase handle.
+Implement Phase 2 CLI surface tasks beginning with p02-t01.

@@ -1,12 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p01-t10
-    reason: 'Maintainer confirmation is required that the private GitHub blob page rendered, or that authenticated API proof is accepted instead.'
-    since: 2026-08-27
+oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p01-t10
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -27,20 +24,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | blocked | 10    | 9/10      |
-| Phase 2 | pending | 11    | 0/11      |
-| Phase 3 | pending | 10    | 0/10      |
-| Phase 4 | pending | 11    | 0/11      |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 10    | 10/10     |
+| Phase 2 | pending  | 11    | 0/11      |
+| Phase 3 | pending  | 10    | 0/10      |
+| Phase 4 | pending  | 11    | 0/11      |
 
-**Total:** 9/42 tasks completed
+**Total:** 10/42 tasks completed
 
 ---
 
 ## Phase 1: Sync foundations
 
-**Status:** blocked
+**Status:** complete
 **Started:** 2026-08-27
 
 ### Phase Summary
@@ -49,7 +46,8 @@ oat_generated: false
 
 - The scope resolver, synced-ref naming, discovery records, and nested-worktree Git primitives are implemented.
 - Push, pull, continue, abort, path-limited parent commits, checkout preflight, and safe checkout removal are covered by focused tests.
-- The final manual evidence task is parked pending one maintainer-supplied browser-rendering fact.
+- The manual GitHub spike confirmed that custom refs do not trigger the branch workflow, remain blob-addressable while privately authenticated, and stay out of the branch list.
+- Independent review found five Git-safety and resilience defects; one bounded fix commit resolved all five and the fresh re-review passed.
 
 **Key files touched:**
 
@@ -60,11 +58,11 @@ oat_generated: false
 **Verification:**
 
 - Run: focused Vitest suites, oxlint over the 12 changed TypeScript files, and CLI type-check.
-- Result: code verification passed (6 test files, 50 tests); phase completion is pending p01-t10.
+- Result: phase verification passed (6 test files, 60 tests), plus oxlint, oxfmt, and CLI type-check. Fresh review passed with 0 Critical and 0 Important findings.
 
 **Notes / Decisions:**
 
-- No plan or design deviation has been accepted. The private blob ref remains present until the visual check is confirmed or explicitly waived.
+- No plan or design deviation was accepted. The maintainer confirmed the private blob rendered, and the scratch custom ref was deleted and verified absent.
 
 ### Task p01-t01: Scope resolver module
 
@@ -256,6 +254,37 @@ lifecycle_outcome:
 - p01-t10: maintainer confirmation of the private blob page, or explicit acceptance of authenticated API proof.
 - After context: continue the same accepted handle, record evidence, delete only `refs/oat/projects/spike`, verify it is absent, and commit p01-t10.
 
+### Run 2 - 2026-08-27T06:31:48Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Codex pinned variants)
+**Status:** p01 passed; advancing to p02
+
+#### Phase Outcomes
+
+| Phase | Verdict | Tasks | Root review | Fix loops |
+| ----- | ------- | ----- | ----------- | --------- |
+| p01   | passed  | 10/10 | passed      | 1         |
+
+**Implementation dispatch:** `oat-phase-implementer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high), request `dispatch-synced-project-scope-p01-20260827T044031Z`.
+
+**Task commits:** `61cadfdb`, `52b2b34d`, `9e46c5a1`, `642047af`, `a84118dd`, `d22af48b`, `db698714`, `9c694954`, `30688df4`, `82525eff`.
+
+**Review round 1:** blocked with 2 Critical, 1 Important, and 2 Medium findings; artifact `reviews/code-p01-review-2026-08-27T055958Z.md`; reviewed head `82525efff71247350983816d180445980330400f`.
+
+**Fix iteration 1:** commit `60787fce522cb9685d7076b56a0862296ffd82c4`; all five findings resolved; phase recovery usage remained 0/10.
+
+**Review round 2:** passed with 0 Critical, 0 Important, 1 Medium, and 1 Minor finding; artifact `reviews/code-p01-review-2026-08-27T062203Z.md`; reviewed head `60787fce522cb9685d7076b56a0862296ffd82c4`.
+
+**Review dispatch:** `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) for both rounds. Neither reviewer attempted nested reconnaissance.
+
+**Parallel groups:** None - the validated plan is fully sequential.
+
+**Outstanding items:**
+
+- Non-blocking Minor: replace the `@shared/../__tests__/synced-fixture` test import with a traversal-free explicit alias when that import surface is next touched.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -290,6 +319,13 @@ Chronological log of implementation progress.
 
 **Session End:** 05:08Z (parked)
 
+### 2026-08-27 - p01 completion
+
+- [x] p01-t10 - maintainer confirmed the private blob rendered; scratch custom ref deleted and verified absent
+- [x] p01 review fix iteration 1 - five findings resolved in `60787fce`
+- [x] p01 fresh re-review - passed at 0 Critical / 0 Important
+- [ ] p02-t01 - next task
+
 ---
 
 ## Deviations from Plan / Design
@@ -306,7 +342,7 @@ Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage      |
 | ----- | --------- | ------ | ------ | ------------- |
-| 1     | 50        | 50     | 0      | not collected |
+| 1     | 60        | 60     | 0      | not collected |
 | 2     | -         | -      | -      | -             |
 
 ## Final Summary (for PR/docs)
