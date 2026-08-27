@@ -55,6 +55,8 @@ evidence instead of presence or version metadata alone.
 
 - Modify: `packages/cli/src/commands/tools/shared/pack-inventory.ts`
 - Modify: `packages/cli/src/commands/tools/shared/pack-inventory.test.ts`
+- Modify: `packages/cli/src/commands/doctor/index.test.ts`
+- Modify: `packages/cli/src/commands/status/index.test.ts`
 
 **Step 1: Write tests (RED)**
 
@@ -65,9 +67,12 @@ override and is never overwritten by inventory. Also cover generated seeds for
 projects-root default, projects-config default, and empty-file generation;
 assert they retain their generation-aware presence/schema contracts and are not
 treated as byte-for-byte bundled files.
+At the doctor and status boundaries, assert identical source-backed seeds do
+not contribute to human or JSON retained-override counts while a modified seed
+contributes exactly once.
 
 Run:
-`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-inventory.test.ts`
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-inventory.test.ts src/commands/doctor/index.test.ts src/commands/status/index.test.ts`
 
 Expected: fail because every present seed-if-missing asset currently collapses
 to the same status.
@@ -84,7 +89,7 @@ read-only inventory semantics.
 **Step 3: Format**
 
 Run:
-`pnpm exec oxfmt --write packages/cli/src/commands/tools/shared/pack-inventory.ts packages/cli/src/commands/tools/shared/pack-inventory.test.ts`
+`pnpm exec oxfmt --write packages/cli/src/commands/tools/shared/pack-inventory.ts packages/cli/src/commands/tools/shared/pack-inventory.test.ts packages/cli/src/commands/doctor/index.test.ts packages/cli/src/commands/status/index.test.ts`
 
 **Step 4: Verify**
 
@@ -168,7 +173,10 @@ packs, custom tools, and a second idempotent run. Assert the reconciler returns
 the exact newly adopted pack names in canonical order and writes only when the
 set is non-empty. At both install and update command boundaries, assert one
 human-visible report per adopted pack and an ordered adopted-pack field in JSON
-output; the second run emits neither human nor JSON adoption output.
+output. Aggregate install, direct-pack install, and update each emit exactly one
+JSON document: reconciliation completes before the existing result is emitted,
+and that result gains the ordered field. The second run emits one normal result
+document with no adoption field or human adoption lines.
 
 Run:
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/project-tools-config.test.ts src/commands/init/tools/index.test.ts src/commands/tools/update/index.test.ts`
@@ -179,8 +187,9 @@ Expected: fail because the reconciler returns only `written` or `unchanged`.
 
 Return a structured result containing action and adopted pack names. Preserve
 the canonical scanner and one atomic config write. Update both concrete callers
-to surface the adoption set in human and JSON results without changing which
-detected packs are eligible.
+to finish reconciliation before rendering and surface the adoption set inside
+their existing human and JSON results without changing which detected packs are
+eligible or emitting a second structured document.
 
 **Step 3: Format**
 
@@ -299,7 +308,13 @@ change, advance lockstep packages, and reproduce every CI gate.
 - Modify: `packages/docs-config/package.json`
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
 - Modify: `pnpm-lock.yaml`
+- Move on completion:
+  `.oat/repo/pjm/backlog/items/BL-260827-clean-up-tool-pack-lifecycle.md` to
+  `.oat/repo/pjm/backlog/archived/`
+- Modify: `.oat/repo/pjm/backlog/completed.md`
+- Modify: `.oat/repo/pjm/backlog/index.md`
 
 **Step 1: Confirm the documentation delta**
 
@@ -317,6 +332,10 @@ current main. Summarize removal of the inert per-pack flag and any config-set
 compatibility guidance in the existing tool-pack upgrade section when the
 public behavior is not already clear.
 
+Regenerate `packages/cli/assets/public-package-versions.json` through the
+repository bundle workflow after the lockstep version is selected. Do not
+hand-author the generated asset.
+
 **Step 3: Format**
 
 Run:
@@ -327,10 +346,24 @@ versions change.
 
 **Step 4: Verify focused integration**
 
-Run the Phase 1 and Phase 2 verification commands together; expected: all
-focused lifecycle/config suites pass.
+Run the Phase 1 and Phase 2 verification commands together, plus:
 
-**Step 5: Run definition-of-done gates**
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts`
+
+Expected: all focused lifecycle/config suites pass and the generated public
+package-version asset matches the five manifests.
+
+**Step 5: Close the graduated backlog item**
+
+After all acceptance criteria are verified, run:
+
+`pnpm run cli -- backlog archive BL-260827-clean-up-tool-pack-lifecycle --summary "Closed lifecycle/config consistency gaps with content-aware inventory, explicit adoption reporting, supported config state, and corrected CLI help."`
+
+Inspect and stage the moved item, completed ledger, and regenerated index. Run
+`pnpm run cli -- pjm doctor --json`; its adoption check must pass, and any
+pre-existing layout warnings must be called out separately from this change.
+
+**Step 6: Run definition-of-done gates**
 
 Run in CI order and capture every exit code independently:
 
@@ -346,7 +379,10 @@ Run in CI order and capture every exit code independently:
 Also run `pnpm lint`, `pnpm format`, and `git diff --check` because the touched
 CLI/docs surfaces are broader than the CI overlap guarantees.
 
-**Step 6: Commit**
+Confirm `git diff --check` and `git status --short` show no unplanned generated
+asset after the gates.
+
+**Step 7: Commit**
 
 `git commit -m "chore(p03-t01): verify lifecycle config cleanup release"`
 
@@ -355,16 +391,16 @@ with captured logs.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | passed   | 2026-08-27 | -                                                  | -             | auto       | -           |
-| plan   | artifact | received | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T225534Z.md | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target              |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------------ |
+| p01    | code     | pending         | -          | -                                                           | -             | -          | -                        |
+| p02    | code     | pending         | -          | -                                                           | -             | -          | -                        |
+| p03    | code     | pending         | -          | -                                                           | -             | -          | -                        |
+| final  | code     | pending         | -          | -                                                           | -             | -          | -                        |
+| spec   | artifact | pending         | -          | -                                                           | -             | -          | -                        |
+| design | artifact | pending         | -          | -                                                           | -             | -          | -                        |
+| plan   | artifact | passed          | 2026-08-27 | -                                                           | -             | auto       | -                        |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T225534Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 ## Implementation Complete
 
