@@ -2,209 +2,108 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-20
+oat_last_updated: 2026-08-27
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
 
 # Implementation: user-scope-tool-packs
 
-**Started:** 2026-08-20
-**Last Updated:** 2026-08-20
+**Started:** 2026-08-27
+**Last Updated:** 2026-08-27
 
-> This document is used to resume interrupted implementation sessions.
->
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+> This document is the durable implementation and orchestration ledger.
+> `oat_current_task_id` points to the next planned task.
 
 ## Progress Overview
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 7     | 0/7       |
+| Phase 2 | pending     | 9     | 0/9       |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 7     | 0/7       |
+| Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/34 tasks completed
 
----
-
-## Phase 1: {Phase Name}
+## Phase 1: Canonical Pack Contract and Inventory
 
 **Status:** in_progress
-**Started:** 2026-08-20
+**Started:** 2026-08-27
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
-**Outcome (what changed):**
+**Outcome:** Pending
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+**Verification:** Pending
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Phase execution is delegated as one bounded phase to the exact resolver-selected implementer.
 
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Define pack manifest types and validation
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
+### Task p01-t02: Populate every pack asset and derive legacy exports
 
 **Status:** pending
 **Commit:** -
 
----
+### Task p01-t03: Add deterministic file and directory comparison
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t04: Add scoped project and user intent storage
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t05: Preserve legacy installs and derived false compatibility
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t06: Implement complete per-scope pack inventory
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t07: Harden managed-root path validation
+
+**Status:** pending
+**Commit:** -
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1 — 2026-08-27T02:31:54Z
 
-<!-- orchestration-runs-end -->
+**Status:** in_progress
+**Branch:** feat/oat-plugin
+**Tier:** 1 — subagents
+**Dispatch policy:** managed High maximum (project state)
+**Schedule:** p01 → p02 → p03 → p04 → p05
+**HiLL:** p05 only; automatic checkpoint review enabled
 
----
+#### Phase Outcomes
 
-## Implementation Log
+| Phase | Status      | Tasks | Review  | Fix loops |
+| ----- | ----------- | ----- | ------- | --------- |
+| p01   | in_progress | 0/7   | pending | 0         |
 
-Chronological log of implementation progress.
+#### Dispatch Notes
 
-### 2026-08-20
+- Phase 1 dispatch pending.
 
-**Session Start:** {time}
+#### Outstanding Items
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-08-20
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
-
-## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
-
-## Test Results
-
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+- Phase 1 implementation and independent root-owned review.
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
-
-## References
-
-- Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+Pending implementation completion.

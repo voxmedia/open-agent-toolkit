@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: a8c63f078
+oat_current_task: p01-t01
+oat_last_commit: 931a65dd1
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -17,8 +17,8 @@ oat_dispatch_policy:
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -82,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T02:25:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T02:31:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -92,15 +92,15 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Planning complete — ready for implementation
+**Status:** Implementation in progress — Phase 1
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Planning is complete. The executable 34-task plan passed the configured Fable
-gate after one bounded fix cycle, and the passing review's non-blocking findings
-were resolved during receipt.
+Implementation has started at `p01-t01`. The run uses Tier 1 phase agents
+under the managed High dispatch maximum, with a final-phase HiLL checkpoint and
+automatic checkpoint review.
 
 ## Artifacts
 
@@ -108,7 +108,7 @@ were resolved during receipt.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Implementation:** `implementation.md` (Run 1 initialized — Phase 1)
 
 ## Progress
 
@@ -129,7 +129,9 @@ were resolved during receipt.
 - ✓ Fable verification gate passed with no blocking findings
 - ✓ Passing review received and non-blocking findings resolved
 - ✓ Planning complete
-- ⧗ Awaiting implementation
+- ✓ Managed High dispatch maximum configured
+- ✓ Final-phase HiLL checkpoint and auto-review configured
+- ⧗ Phase 1 implementation
 
 ## Blockers
 
@@ -137,4 +139,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` when implementation should begin.
+Complete and independently review Phase 1.

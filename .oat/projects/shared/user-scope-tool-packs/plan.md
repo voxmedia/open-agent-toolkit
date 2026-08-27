@@ -7,6 +7,8 @@ oat_last_updated: 2026-08-27
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: []
+oat_plan_hill_phases: ['p05']
+oat_auto_review_at_hill_checkpoints: true
 oat_generated: false
 oat_template: false
 ---
@@ -37,7 +39,7 @@ Vitest, pnpm/Turborepo, oxfmt/oxlint.
 - [x] Defer HiLL checkpoint confirmation to oat-project-implement
 - [x] Evaluated phases for parallelism; shared manifest/inventory files require sequential execution
 - [x] Keep `oat_plan_parallel_groups: []`
-- [x] Dispatch ladder complete; project policy is Inherit Host Defaults
+- [x] Dispatch ladder complete; project managed maximum is High
 - [x] Project explainer skipped for this project
 - [x] Phase gate review left disabled because no implementation-phase selection was requested
 
