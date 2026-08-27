@@ -44,6 +44,10 @@ Entries are chronological and append-only.
 
 target=cursor-gpt-5-6-sol-xhigh threshold=important exit=1 status=targeting_correlation_failed artifact=.oat/projects/shared/scope-adoption-diagnostics/reviews/artifact-plan-review-2026-08-27T215450Z.md
 
+### 2026-08-27 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/portable-skill-references/reviews/artifact-plan-review-2026-08-27T220007Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
