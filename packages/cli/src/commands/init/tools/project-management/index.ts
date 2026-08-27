@@ -11,13 +11,14 @@ import {
   type UpsertSectionResult,
   upsertAgentsMdSection,
 } from '@commands/shared/agents-md';
+import { withScopeOption } from '@commands/shared/scope-option';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   canonicalPathsForPack,
   setInstalledCanonicalPaths,
 } from '@commands/tools/shared/install-sync-context';
 import { resolveAssetsRoot } from '@fs/assets';
-import { resolveProjectRoot } from '@fs/paths';
+import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import {
@@ -37,6 +38,11 @@ interface InitToolsProjectManagementOptions {
 interface InitToolsProjectManagementDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
+  resolveScopeRoot: (
+    scope: 'project' | 'user',
+    cwd: string,
+    home: string,
+  ) => string;
   resolveAssetsRoot: () => Promise<string>;
   installProjectManagement: (
     options: InstallProjectManagementOptions,
@@ -46,6 +52,7 @@ interface InitToolsProjectManagementDependencies {
 const DEFAULT_DEPENDENCIES: InitToolsProjectManagementDependencies = {
   buildCommandContext,
   resolveProjectRoot,
+  resolveScopeRoot,
   resolveAssetsRoot,
   installProjectManagement: defaultInstallProjectManagement,
 };
@@ -58,39 +65,33 @@ export function createInitToolsProjectManagementCommand(
     ...overrides,
   };
 
-  return new Command('project-management')
+  return withScopeOption(new Command('project-management'))
     .description('Install OAT project-management skills and templates')
     .option('--force', 'Overwrite existing files where applicable')
     .action(
       async (options: InitToolsProjectManagementOptions, command: Command) => {
-        // project-management always installs at project scope. If the caller
-        // explicitly passed a conflicting --scope on an ancestor (init or tools
-        // install), reject it rather than silently ignoring it. A matching
-        // --scope project, or no explicit --scope, proceeds unchanged.
-        if (command.getOptionValueSourceWithGlobals('scope') === 'cli') {
-          const opts = command.optsWithGlobals() as { scope?: string };
-          if (opts.scope !== 'project') {
-            const context = dependencies.buildCommandContext(
-              readGlobalOptions(command),
-            );
-            const msg =
-              'the project-management pack always installs at project scope; remove --scope or pass --scope project';
-            if (context.json) {
-              context.logger.json({ status: 'error', message: msg });
-            } else {
-              context.logger.error(msg);
-            }
-            process.exitCode = 1;
-            return;
-          }
-        }
-
         let didInstall = false;
         try {
           const context = dependencies.buildCommandContext(
             readGlobalOptions(command),
           );
-          const targetRoot = await dependencies.resolveProjectRoot(context.cwd);
+          const optionScope = (command.optsWithGlobals() as { scope?: string })
+            .scope;
+          const scope =
+            command.getOptionValueSourceWithGlobals('scope') === 'cli' &&
+            (optionScope === 'project' || optionScope === 'user')
+              ? optionScope
+              : context.scope === 'project' || context.scope === 'user'
+                ? context.scope
+                : 'user';
+          const targetRoot =
+            scope === 'project'
+              ? await dependencies.resolveProjectRoot(context.cwd)
+              : dependencies.resolveScopeRoot(
+                  'user',
+                  context.cwd,
+                  context.home,
+                );
           const assetsRoot = await dependencies.resolveAssetsRoot();
           const result = await dependencies.installProjectManagement({
             assetsRoot,
@@ -104,30 +105,33 @@ export function createInitToolsProjectManagementCommand(
             | undefined;
           let decisionGuidanceAction: UpsertSectionResult['action'] | undefined;
           let agentsGuidanceWarning: string | undefined;
-          try {
-            const projectManagementGuidanceResult = await upsertAgentsMdSection(
-              targetRoot,
-              PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
-              buildProjectManagementAgentsSectionBody(),
-            );
-            projectManagementGuidanceAction =
-              projectManagementGuidanceResult.action;
-            const decisionGuidanceResult = await upsertAgentsMdSection(
-              targetRoot,
-              DECISION_AGENTS_SECTION_KEY,
-              buildDecisionAgentsSectionBody(),
-            );
-            decisionGuidanceAction = decisionGuidanceResult.action;
-          } catch (error) {
-            const message =
-              error instanceof Error ? error.message : String(error);
-            agentsGuidanceWarning = `Could not update AGENTS.md project-management guidance: ${message}`;
+          if (scope === 'project') {
+            try {
+              const projectManagementGuidanceResult =
+                await upsertAgentsMdSection(
+                  targetRoot,
+                  PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+                  buildProjectManagementAgentsSectionBody(),
+                );
+              projectManagementGuidanceAction =
+                projectManagementGuidanceResult.action;
+              const decisionGuidanceResult = await upsertAgentsMdSection(
+                targetRoot,
+                DECISION_AGENTS_SECTION_KEY,
+                buildDecisionAgentsSectionBody(),
+              );
+              decisionGuidanceAction = decisionGuidanceResult.action;
+            } catch (error) {
+              const message =
+                error instanceof Error ? error.message : String(error);
+              agentsGuidanceWarning = `Could not update AGENTS.md project-management guidance: ${message}`;
+            }
           }
 
           if (context.json) {
             context.logger.json({
               status: 'ok',
-              scope: 'project',
+              scope,
               targetRoot,
               assetsRoot,
               result,
@@ -163,7 +167,7 @@ export function createInitToolsProjectManagementCommand(
             if (agentsGuidanceWarning !== undefined) {
               context.logger.warn(agentsGuidanceWarning);
             }
-            context.logger.info('Run: oat sync --scope project');
+            context.logger.info(`Run: oat sync --scope ${scope}`);
           }
           process.exitCode = 0;
         } catch (error) {

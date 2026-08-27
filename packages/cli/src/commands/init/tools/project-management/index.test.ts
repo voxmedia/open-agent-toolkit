@@ -75,12 +75,12 @@ async function runViaParent(
   return result;
 }
 
-describe('createInitToolsProjectManagementCommand — scope conflict rejection', () => {
+describe('createInitToolsProjectManagementCommand — universal scope', () => {
   beforeEach(() => {
     upsertAgentsMdSection.mockClear();
   });
 
-  it('rejects explicit --scope user with exit code 1', async () => {
+  it('accepts explicit --scope user without repository guidance writes', async () => {
     const logger = makeLogger();
     const installProjectManagement = makeInstallProjectManagement();
     const cmd = createInitToolsProjectManagementCommand({
@@ -97,15 +97,14 @@ describe('createInitToolsProjectManagementCommand — scope conflict rejection',
       'project-management',
     ]);
 
-    expect(exitCode).toBe(1);
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('project scope'),
+    expect(exitCode).toBe(0);
+    expect(installProjectManagement).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/test/home' }),
     );
-    // Install must not run when scope is rejected
-    expect(installProjectManagement).not.toHaveBeenCalled();
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
   });
 
-  it('rejects explicit --scope all with exit code 1', async () => {
+  it('uses the manifest user default for --scope all', async () => {
     const logger = makeLogger();
     const installProjectManagement = makeInstallProjectManagement();
     const cmd = createInitToolsProjectManagementCommand({
@@ -122,11 +121,10 @@ describe('createInitToolsProjectManagementCommand — scope conflict rejection',
       'project-management',
     ]);
 
-    expect(exitCode).toBe(1);
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('project scope'),
+    expect(exitCode).toBe(0);
+    expect(installProjectManagement).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/test/home' }),
     );
-    expect(installProjectManagement).not.toHaveBeenCalled();
   });
 
   it('accepts explicit --scope project and proceeds with install', async () => {
@@ -150,7 +148,7 @@ describe('createInitToolsProjectManagementCommand — scope conflict rejection',
     expect(installProjectManagement).toHaveBeenCalled();
   });
 
-  it('accepts absent --scope (defaulted) and proceeds with install', async () => {
+  it('defaults absent --scope to user and proceeds with install', async () => {
     const installProjectManagement = makeInstallProjectManagement();
     const cmd = createInitToolsProjectManagementCommand({
       buildCommandContext: () => makeContext(),
@@ -164,7 +162,9 @@ describe('createInitToolsProjectManagementCommand — scope conflict rejection',
     const exitCode = await runViaParent(parent, ['project-management']);
 
     expect(exitCode).not.toBe(1);
-    expect(installProjectManagement).toHaveBeenCalled();
+    expect(installProjectManagement).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/test/home' }),
+    );
   });
 
   it('writes root AGENTS guidance after a successful direct install', async () => {
@@ -177,7 +177,11 @@ describe('createInitToolsProjectManagementCommand — scope conflict rejection',
     });
     const parent = wrapWithScopeParent(cmd);
 
-    const exitCode = await runViaParent(parent, ['project-management']);
+    const exitCode = await runViaParent(parent, [
+      '--scope',
+      'project',
+      'project-management',
+    ]);
 
     expect(exitCode).not.toBe(1);
     expect(upsertAgentsMdSection).toHaveBeenCalledWith(
@@ -204,7 +208,11 @@ describe('createInitToolsProjectManagementCommand — scope conflict rejection',
     });
     const parent = wrapWithScopeParent(cmd);
 
-    const exitCode = await runViaParent(parent, ['project-management']);
+    const exitCode = await runViaParent(parent, [
+      '--scope',
+      'project',
+      'project-management',
+    ]);
 
     expect(exitCode).toBe(0);
     expect(logger.info).toHaveBeenCalledWith(

@@ -13,6 +13,7 @@ import {
   canonicalPathsForPack,
   setInstalledCanonicalPaths,
 } from '@commands/tools/shared/install-sync-context';
+import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -48,7 +49,9 @@ const DEFAULT_DEPENDENCIES: InitToolsIdeasDependencies = {
 };
 
 function resolveInstallScope(context: CommandContext): InstallScope {
-  return context.scope === 'user' ? 'user' : 'project';
+  return context.scope === 'project' || context.scope === 'user'
+    ? context.scope
+    : getPackDefinition('ideas').defaultScope;
 }
 
 function getCountSummary(result: InstallIdeasResult): {

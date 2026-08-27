@@ -129,16 +129,16 @@ describe('createInitToolsWorkflowsCommand', () => {
     process.exitCode = originalExitCode;
   });
 
-  it('default scope (all) resolves as project', async () => {
+  it('default scope (all) resolves to the manifest user default', async () => {
     const { command, resolveProjectRoot, installWorkflows } = createHarness({
       scope: 'all',
     });
 
     await runCommand(command);
 
-    expect(resolveProjectRoot).toHaveBeenCalledWith('/tmp/workspace');
+    expect(resolveProjectRoot).not.toHaveBeenCalled();
     expect(installWorkflows).toHaveBeenCalledWith(
-      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+      expect.objectContaining({ targetRoot: '/tmp/home', scope: 'user' }),
     );
   });
 
