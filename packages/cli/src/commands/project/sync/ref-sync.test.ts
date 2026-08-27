@@ -942,6 +942,36 @@ describe('pullChildren', () => {
       await fixture.cleanup();
     }
   });
+
+  it.each([
+    '---\noat_kind: coordination\n---\n',
+    '---\noat_kind: coordination\noat_children: child\n---\n',
+  ])('rejects a malformed coordination child list', async (state) => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'parent',
+      );
+      await mkdir(target.projectPath, { recursive: true });
+      await writeFile(join(target.projectPath, 'state.md'), state, 'utf8');
+      const calls: string[][] = [];
+      const recordingRunner: GitRunner = {
+        async run(args) {
+          calls.push([...args]);
+          throw new Error('git should not run');
+        },
+      };
+
+      await expect(pullChildren(target, recordingRunner)).rejects.toThrow(
+        /oat_children must be an array/i,
+      );
+      expect(calls).toEqual([]);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
 });
 
 describe('commitRecordChange', () => {

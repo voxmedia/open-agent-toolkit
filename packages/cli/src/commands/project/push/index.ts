@@ -11,6 +11,7 @@ import {
 } from '@commands/project/sync/ref-sync';
 import { resolveSyncedTarget } from '@commands/project/sync/resolve-target';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
@@ -69,10 +70,15 @@ async function runPush(
       context.logger.info(`Pushed ${target.slug} at ${result.sha}.`);
     } else if (result.status === 'up-to-date') {
       context.logger.info(`${target.slug} is up to date at ${result.sha}.`);
+    } else if (result.status === 'conflict') {
+      const targetArg = pathOrSlug ?? target.projectPath;
+      context.logger.error(
+        `Push conflict${result.conflicts?.length ? ` (${result.conflicts.join(', ')})` : ''}. Resolve the files, then run oat project pull ${shellQuote(targetArg)} --continue; or run oat project pull ${shellQuote(targetArg)} --abort.`,
+      );
     } else {
       const targetArg = pathOrSlug ?? target.projectPath;
       context.logger.error(
-        `Push ${result.status}. Run oat project pull ${shellQuote(targetArg)} --continue, then push again.`,
+        `Push rejected. Run oat project pull ${shellQuote(targetArg)}, then run oat project push ${shellQuote(targetArg)}.`,
       );
     }
     process.exitCode =
@@ -85,7 +91,7 @@ async function runPush(
     } else {
       context.logger.error(message);
     }
-    process.exitCode = 1;
+    process.exitCode = error instanceof CliError ? error.exitCode : 2;
   }
 }
 

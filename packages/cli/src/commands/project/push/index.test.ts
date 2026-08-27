@@ -1,5 +1,6 @@
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { CliError } from '@errors/cli-error';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -78,15 +79,38 @@ describe('createProjectPushCommand', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it.each(['rejected', 'conflict'] as const)(
-    'returns exit 1 with targeted recovery text for %s',
-    async (status) => {
-      const { command, capture } = harness(status);
-      await run(command, ['demo']);
-      expect(capture.error[0]).toContain("oat project pull 'demo' --continue");
-      expect(process.exitCode).toBe(1);
-    },
-  );
+  it('uses normal pull then push guidance for a rejection', async () => {
+    const { command, capture } = harness('rejected');
+    await run(command, ['demo']);
+    expect(capture.error[0]).toContain("oat project pull 'demo'");
+    expect(capture.error[0]).not.toContain('--continue');
+    expect(capture.error[0]).toContain("oat project push 'demo'");
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('uses continue and abort guidance only for a conflict', async () => {
+    const { command, capture } = harness('conflict');
+    await run(command, ['demo']);
+    expect(capture.error[0]).toContain("oat project pull 'demo' --continue");
+    expect(capture.error[0]).toContain("oat project pull 'demo' --abort");
+    expect(capture.error[0]).toContain('state.md');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('preserves injected system exit codes and JSON diagnostics', async () => {
+    const { command, capture, resolveTarget } = harness('pushed');
+    resolveTarget.mockRejectedValueOnce(
+      new CliError('origin authentication failed', 2),
+    );
+
+    await run(command, ['demo'], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toEqual({
+      status: 'error',
+      message: 'origin authentication failed',
+    });
+    expect(process.exitCode).toBe(2);
+  });
 
   it('emits the stable json envelope', async () => {
     const { command, capture } = harness('pushed');

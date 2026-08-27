@@ -438,7 +438,12 @@ export async function pullChildren(
   const frontmatter = parsed as Record<string, unknown>;
   if (frontmatter['oat_kind'] !== 'coordination') return [];
   const children = frontmatter['oat_children'];
-  if (!Array.isArray(children)) return [];
+  if (!Array.isArray(children)) {
+    throw new CliError(
+      `Malformed coordination state for ${parentTarget.slug}: oat_children must be an array.`,
+      1,
+    );
+  }
   const slugs = children.map((value) => {
     if (
       typeof value !== 'string' ||
@@ -609,6 +614,23 @@ export async function removeSyncedCheckout(
   );
   await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
   return { status: 'removed' };
+}
+
+/**
+ * Compensate only a synced checkout/ref created by the current invocation.
+ * Callers must establish that ownership before invoking this helper.
+ */
+export async function rollbackCreatedSyncedProject(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<void> {
+  if (await isTargetRegistered(target, git)) {
+    await git.run(['worktree', 'remove', '--force', target.projectPath], {
+      cwd: target.repoRoot,
+    });
+  }
+  await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
+  await git.run(['update-ref', '-d', target.ref], { cwd: target.repoRoot });
 }
 
 export async function assertNestedWorktree(

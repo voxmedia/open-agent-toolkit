@@ -19,6 +19,7 @@ import {
   type ResolvedSyncTarget,
 } from '@commands/project/sync/resolve-target';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
@@ -89,10 +90,36 @@ function reportPullResult(
     context.logger.info(
       `Pull ${result.status}: ${target.slug} at ${result.sha}.`,
     );
-  } else {
+  } else if (result.status === 'conflict') {
     context.logger.error(
       `Pull ${result.status}${result.conflicts?.length ? ` (${result.conflicts.join(', ')})` : ''}. Resolve the files, then run oat project pull ${shellQuote(targetArg)} --continue; or run oat project pull ${shellQuote(targetArg)} --abort.`,
     );
+  } else {
+    context.logger.error(
+      `Pull dirty. Commit and publish with oat project push ${shellQuote(targetArg)}, or explicitly stash/clean the synced checkout before retrying oat project pull ${shellQuote(targetArg)}.`,
+    );
+  }
+  if (!context.json) {
+    for (const child of children) {
+      if (
+        child.status !== 'missing' &&
+        child.status !== 'conflict' &&
+        child.status !== 'dirty'
+      ) {
+        continue;
+      }
+      const childArg = shellQuote(child.slug);
+      const diagnostic = child.message ?? 'no diagnostic provided';
+      const retry =
+        child.status === 'conflict'
+          ? `Resolve its files, then run oat project pull ${childArg} --continue; or oat project pull ${childArg} --abort.`
+          : child.status === 'dirty'
+            ? `Run oat project push ${childArg}, or explicitly stash/clean it before retrying oat project pull ${childArg}.`
+            : `Retry with oat project pull ${childArg}.`;
+      context.logger.error(
+        `Child ${child.slug} ${child.status}: ${diagnostic}. ${retry}`,
+      );
+    }
   }
   const childFailed = children.some(
     (child) =>
@@ -118,7 +145,10 @@ async function runPull(
 ): Promise<void> {
   try {
     if (options.continue && options.abort) {
-      throw new Error('`--continue` and `--abort` are mutually exclusive.');
+      throw new CliError(
+        '`--continue` and `--abort` are mutually exclusive.',
+        1,
+      );
     }
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     const target: ResolvedSyncTarget = await dependencies.resolveSyncedTarget(
@@ -175,7 +205,7 @@ async function runPull(
     } else {
       context.logger.error(message);
     }
-    process.exitCode = 1;
+    process.exitCode = error instanceof CliError ? error.exitCode : 2;
   }
 }
 

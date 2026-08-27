@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 
@@ -17,6 +17,7 @@ import {
   commitRecordChange,
   createSyncedProject,
   pushSynced,
+  rollbackCreatedSyncedProject,
 } from '@commands/project/sync/ref-sync';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
@@ -93,6 +94,7 @@ export interface ScaffoldProjectDependencies {
   createSyncedProject: typeof createSyncedProject;
   pushSynced: typeof pushSynced;
   commitRecordChange: typeof commitRecordChange;
+  rollbackCreatedSyncedProject: typeof rollbackCreatedSyncedProject;
   writeSyncedRecord: typeof writeSyncedRecord;
   applyOatCoreGitignore: typeof applyOatCoreGitignore;
   isSyncedRuleApplied: typeof isSyncedRuleApplied;
@@ -104,6 +106,7 @@ const DEFAULT_DEPENDENCIES: ScaffoldProjectDependencies = {
   createSyncedProject,
   pushSynced,
   commitRecordChange,
+  rollbackCreatedSyncedProject,
   writeSyncedRecord,
   applyOatCoreGitignore,
   isSyncedRuleApplied,
@@ -232,13 +235,15 @@ function assertNoUnresolvedOatPlaceholders(
 
 function validateProjectName(name: string): void {
   if (name.startsWith('-')) {
-    throw new Error(
+    throw new CliError(
       `Invalid project name "${name}". Project names must not start with a dash.`,
+      1,
     );
   }
   if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
-    throw new Error(
+    throw new CliError(
       `Invalid project name "${name}". Use only letters, numbers, dash, and underscore.`,
+      1,
     );
   }
 }
@@ -300,7 +305,7 @@ interface CommitScaffoldResult {
  */
 async function commitScaffold(
   cwd: string,
-  projectPath: string,
+  absoluteProjectPath: string,
   projectName: string,
   createdFiles: string[],
   dependencies: ScaffoldProjectDependencies,
@@ -318,7 +323,7 @@ async function commitScaffold(
   if (createdFiles.length === 0) {
     return { status: 'skipped_nothing', committed: false };
   }
-  const pathspecs = createdFiles.map((file) => join(projectPath, file));
+  const pathspecs = createdFiles.map((file) => join(absoluteProjectPath, file));
 
   try {
     const commit = await dependencies.commitRecordChange(
@@ -341,7 +346,7 @@ async function commitScaffold(
 async function scaffoldModeTemplates(
   userOatRoot: string,
   repoRoot: string,
-  projectPath: string,
+  absoluteProjectPath: string,
   projectName: string,
   mode: ProjectScaffoldMode,
   today: string,
@@ -356,7 +361,7 @@ async function scaffoldModeTemplates(
       repoRoot,
       templateFile,
     );
-    const dest = join(repoRoot, projectPath, templateFile);
+    const dest = join(absoluteProjectPath, templateFile);
 
     if (await fileExists(dest)) {
       skippedFiles.push(templateFile);
@@ -385,12 +390,12 @@ async function scaffoldModeTemplates(
 async function scaffoldProjectLog(
   userOatRoot: string,
   repoRoot: string,
-  projectPath: string,
+  absoluteProjectPath: string,
   projectName: string,
   today: string,
 ): Promise<'created' | 'skipped'> {
   const templateFile = 'project-log.md';
-  const dest = join(repoRoot, projectPath, templateFile);
+  const dest = join(absoluteProjectPath, templateFile);
   if (await fileExists(dest)) {
     return 'skipped';
   }
@@ -425,23 +430,79 @@ async function resolveTemplateSource(
 }
 
 async function ensureStructure(
-  repoRoot: string,
-  projectPath: string,
+  absoluteProjectPath: string,
   mode: ProjectScaffoldMode,
 ): Promise<void> {
-  const projectRoot = join(repoRoot, projectPath);
-  await mkdir(projectRoot, { recursive: true });
-  await mkdir(join(projectRoot, 'reviews'), { recursive: true });
-  await mkdir(join(projectRoot, 'pr'), { recursive: true });
+  await mkdir(absoluteProjectPath, { recursive: true });
+  await mkdir(join(absoluteProjectPath, 'reviews'), { recursive: true });
+  await mkdir(join(absoluteProjectPath, 'pr'), { recursive: true });
 
   if (mode === 'import') {
-    const referencesDir = join(projectRoot, 'references');
+    const referencesDir = join(absoluteProjectPath, 'references');
     await mkdir(referencesDir, { recursive: true });
     const gitkeepPath = join(referencesDir, '.gitkeep');
     if (!(await fileExists(gitkeepPath))) {
       await writeFile(gitkeepPath, '', 'utf8');
     }
   }
+}
+
+interface GitignoreRepair {
+  changed: boolean;
+  before: string | null | undefined;
+}
+
+async function ensureScopedProjectIgnored(
+  repoRoot: string,
+  absoluteScopeRoot: string,
+  scope: 'local' | 'synced',
+  dependencies: ScaffoldProjectDependencies,
+): Promise<GitignoreRepair> {
+  const scopeRelative = relative(resolve(repoRoot), absoluteScopeRoot);
+  if (
+    scopeRelative === '..' ||
+    scopeRelative.startsWith('../') ||
+    scopeRelative.startsWith('..\\') ||
+    isAbsolute(scopeRelative)
+  ) {
+    return { changed: false, before: undefined };
+  }
+
+  const probe = join(absoluteScopeRoot, '__probe__', 'artifact.md');
+  const ignored = await dependencies.gitRunner.run(
+    ['check-ignore', '--quiet', '--no-index', probe],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  if (ignored.code === 0) return { changed: false, before: undefined };
+  if (ignored.code !== 1) {
+    throw new CliError(
+      `git check-ignore failed (exit ${ignored.code}): ${ignored.stderr || ignored.stdout || 'unknown Git error'}`,
+      2,
+    );
+  }
+
+  const gitignorePath = join(repoRoot, '.gitignore');
+  const before = (await fileExists(gitignorePath))
+    ? await readFile(gitignorePath, 'utf8')
+    : null;
+  if (!(await dependencies.isSyncedRuleApplied(repoRoot))) {
+    await dependencies.applyOatCoreGitignore(repoRoot);
+  }
+  const normalizedRoot = scopeRelative.split('\\').join('/');
+  const rule =
+    scope === 'local' ? `/${normalizedRoot}/**` : `/${normalizedRoot}/*/`;
+  const current = (await fileExists(gitignorePath))
+    ? await readFile(gitignorePath, 'utf8')
+    : '';
+  if (!current.split('\n').includes(rule)) {
+    const separator = current === '' || current.endsWith('\n') ? '' : '\n';
+    await writeFile(gitignorePath, `${current}${separator}${rule}\n`, 'utf8');
+  }
+  return {
+    changed:
+      before === null || (await readFile(gitignorePath, 'utf8')) !== before,
+    before,
+  };
 }
 
 export async function scaffoldProject(
@@ -474,98 +535,191 @@ export async function scaffoldProject(
       ? resolve(options.repoRoot, projectsRoot)
       : resolveScopeRoot(options.repoRoot, projectsRoot, scope);
   const absoluteProjectPath = join(absoluteScopeRoot, options.projectName);
-  const projectPath = (
-    isAbsolute(projectsRoot)
+  const relativeProjectPath = relative(
+    resolve(options.repoRoot),
+    absoluteProjectPath,
+  );
+  const projectPath =
+    relativeProjectPath === '..' ||
+    relativeProjectPath.startsWith('../') ||
+    relativeProjectPath.startsWith('..\\') ||
+    isAbsolute(relativeProjectPath)
       ? absoluteProjectPath
-      : relative(options.repoRoot, absoluteProjectPath)
-  )
-    .split('\\')
-    .join('/');
+      : relativeProjectPath.split('\\').join('/');
   // `--force` is currently accepted for compatibility with the legacy script.
   // Scaffold behavior is always non-destructive (create missing files only).
   void options.force;
 
   let gitignoreChanged = false;
+  let gitignoreBefore: string | null | undefined;
   let syncTarget: ReturnType<typeof buildSyncTarget> | undefined;
-  if (scope === 'synced') {
-    const remote = await dependencies.gitRunner.run(
-      ['remote', 'get-url', 'origin'],
-      { cwd: options.repoRoot, allowFailure: true },
-    );
-    if (remote.code !== 0) {
-      throw new CliError(
-        'Synced project creation requires a configured origin remote. Configure origin or use --scope local.',
-        1,
-      );
-    }
-    if (!(await dependencies.isSyncedRuleApplied(options.repoRoot))) {
-      const applied = await dependencies.applyOatCoreGitignore(
-        options.repoRoot,
-      );
-      gitignoreChanged = applied.action !== 'no-change';
-      console.error(
-        'Warning: applied the OAT synced-project rule to .gitignore before scaffolding.',
-      );
-    }
-    syncTarget = buildSyncTarget(
-      options.repoRoot,
-      projectsRoot,
-      options.projectName,
-    );
-    await dependencies.createSyncedProject(syncTarget, dependencies.gitRunner);
-  }
-
-  await ensureStructure(options.repoRoot, projectPath, mode);
-  const { createdFiles, skippedFiles } = await scaffoldModeTemplates(
-    userOatRoot,
-    options.repoRoot,
-    projectPath,
-    options.projectName,
-    mode,
-    today,
-    nowUtc,
-  );
-  const effectiveProjectLog =
-    options.projectLog ??
-    (await resolveEffectiveConfig(options.repoRoot, userOatRoot, env)).resolved[
-      'workflow.projectLog'
-    ]?.value === true;
-  if (effectiveProjectLog) {
-    const projectLogResult = await scaffoldProjectLog(
-      userOatRoot,
-      options.repoRoot,
-      projectPath,
-      options.projectName,
-      today,
-    );
-    if (projectLogResult === 'created') {
-      createdFiles.push('project-log.md');
-    } else {
-      skippedFiles.push('project-log.md');
-    }
-  }
-
+  let syncedCreatedByInvocation = false;
+  let published = false;
+  let recordWritten = false;
   let ref: string | undefined;
   let sha: string | undefined;
-  if (scope === 'synced' && syncTarget) {
-    const pushed = await dependencies.pushSynced(
-      syncTarget,
-      dependencies.gitRunner,
-      { message: `chore(oat): scaffold ${options.projectName}` },
-    );
-    if (pushed.status !== 'pushed' && pushed.status !== 'up-to-date') {
+  let committed = false;
+  let commitSha: string | undefined;
+  let commitStatus: CommitScaffoldStatus = 'skipped_disabled';
+  let commitError: string | undefined;
+  let createdFiles: string[] = [];
+  let skippedFiles: string[] = [];
+
+  try {
+    if (scope === 'local') {
+      const repair = await ensureScopedProjectIgnored(
+        options.repoRoot,
+        absoluteScopeRoot,
+        scope,
+        dependencies,
+      );
+      if (repair.changed) {
+        console.error(
+          'Warning: applied the OAT local-project rule to .gitignore before scaffolding.',
+        );
+      }
+    }
+    if (scope === 'synced') {
+      const remote = await dependencies.gitRunner.run(
+        ['remote', 'get-url', 'origin'],
+        { cwd: options.repoRoot, allowFailure: true },
+      );
+      if (remote.code !== 0) {
+        throw new CliError(
+          'Synced project creation requires a configured origin remote. Configure origin or use --scope local.',
+          1,
+        );
+      }
+      const repair = await ensureScopedProjectIgnored(
+        options.repoRoot,
+        absoluteScopeRoot,
+        scope,
+        dependencies,
+      );
+      gitignoreBefore = repair.before;
+      gitignoreChanged = repair.changed;
+      if (gitignoreChanged) {
+        console.error(
+          'Warning: applied the OAT synced-project rule to .gitignore before scaffolding.',
+        );
+      }
+      syncTarget = buildSyncTarget(
+        options.repoRoot,
+        projectsRoot,
+        options.projectName,
+      );
+      await dependencies.createSyncedProject(
+        syncTarget,
+        dependencies.gitRunner,
+      );
+      syncedCreatedByInvocation = true;
+    }
+
+    await ensureStructure(absoluteProjectPath, mode);
+    ({ createdFiles, skippedFiles } = await scaffoldModeTemplates(
+      userOatRoot,
+      options.repoRoot,
+      absoluteProjectPath,
+      options.projectName,
+      mode,
+      today,
+      nowUtc,
+    ));
+    const effectiveProjectLog =
+      options.projectLog ??
+      (await resolveEffectiveConfig(options.repoRoot, userOatRoot, env))
+        .resolved['workflow.projectLog']?.value === true;
+    if (effectiveProjectLog) {
+      const projectLogResult = await scaffoldProjectLog(
+        userOatRoot,
+        options.repoRoot,
+        absoluteProjectPath,
+        options.projectName,
+        today,
+      );
+      if (projectLogResult === 'created') {
+        createdFiles.push('project-log.md');
+      } else {
+        skippedFiles.push('project-log.md');
+      }
+    }
+
+    if (scope === 'synced' && syncTarget) {
+      const pushed = await dependencies.pushSynced(
+        syncTarget,
+        dependencies.gitRunner,
+        { message: `chore(oat): scaffold ${options.projectName}` },
+      );
+      if (pushed.status !== 'pushed' && pushed.status !== 'up-to-date') {
+        throw new CliError(
+          `Unable to publish synced project ${options.projectName}: ${pushed.status}.`,
+          1,
+        );
+      }
+      published = true;
+      ref = syncTarget.ref;
+      sha = pushed.sha;
+      const recordPath = syncedRecordPath(
+        absoluteScopeRoot,
+        options.projectName,
+      );
+      await dependencies.writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(options.projectName, new Date(nowUtc)),
+      );
+      recordWritten = true;
+
+      if (options.commit) {
+        const recordCommit = await dependencies.commitRecordChange(
+          options.repoRoot,
+          [recordPath, ...(gitignoreChanged ? ['.gitignore'] : [])],
+          `chore(oat): scaffold ${options.projectName}`,
+          dependencies.gitRunner,
+          { additionalAllowlistedPaths: [recordPath] },
+        );
+        committed = recordCommit !== null;
+        commitSha = recordCommit?.sha;
+        commitStatus = recordCommit ? 'committed' : 'skipped_nothing';
+      }
+    }
+  } catch (error) {
+    if (scope === 'synced' && syncTarget && !published) {
+      if (syncedCreatedByInvocation) {
+        await dependencies.rollbackCreatedSyncedProject(
+          syncTarget,
+          dependencies.gitRunner,
+        );
+      }
+      if (gitignoreChanged && gitignoreBefore !== undefined) {
+        const gitignorePath = join(options.repoRoot, '.gitignore');
+        if (gitignoreBefore === null) {
+          await rm(gitignorePath, { force: true });
+        } else {
+          await writeFile(gitignorePath, gitignoreBefore, 'utf8');
+        }
+      }
+    }
+    if (scope === 'synced' && published) {
+      const detail = error instanceof Error ? error.message : String(error);
+      if (!recordWritten) {
+        throw new CliError(
+          `Synced project ${options.projectName} was published, but its discovery record was not written: ${detail}. Run oat project pull '${options.projectName}' to resume record adoption; do not rerun project creation.`,
+          2,
+        );
+      }
+      const recordPath = syncedRecordPath(
+        absoluteScopeRoot,
+        options.projectName,
+      );
+      const relativeRecordPath = relative(options.repoRoot, recordPath)
+        .split('\\')
+        .join('/');
       throw new CliError(
-        `Unable to publish synced project ${options.projectName}: ${pushed.status}.`,
-        1,
+        `Synced project ${options.projectName} and its discovery record were written, but the parent commit failed: ${detail}. Repair Git, then run git add -- '${relativeRecordPath}'${gitignoreChanged ? " '.gitignore'" : ''} && git commit -m 'chore(oat): scaffold ${options.projectName}' -- '${relativeRecordPath}'${gitignoreChanged ? " '.gitignore'" : ''}; do not rerun project creation.`,
+        2,
       );
     }
-    ref = syncTarget.ref;
-    sha = pushed.sha;
-    const recordPath = syncedRecordPath(absoluteScopeRoot, options.projectName);
-    await dependencies.writeSyncedRecord(
-      recordPath,
-      buildSyncedRecord(options.projectName, new Date(nowUtc)),
-    );
+    throw error;
   }
 
   if (setActive) {
@@ -586,16 +740,12 @@ export async function scaffoldProject(
     }
   }
 
-  let committed = false;
-  let commitSha: string | undefined;
-  let commitStatus: CommitScaffoldStatus = 'skipped_disabled';
-  let commitError: string | undefined;
   if (options.commit && scope === 'shared') {
     // `projectPath` is relative to `repoRoot`, so git must run there for the
     // pathspecs to resolve to the scaffolded files.
     const commitResult = await commitScaffold(
       options.repoRoot,
-      projectPath,
+      absoluteProjectPath,
       options.projectName,
       createdFiles,
       dependencies,
@@ -604,22 +754,6 @@ export async function scaffoldProject(
     commitSha = commitResult.commitSha;
     commitStatus = commitResult.status;
     commitError = commitResult.error;
-  } else if (options.commit && scope === 'synced') {
-    const recordPath = syncedRecordPath(absoluteScopeRoot, options.projectName);
-    try {
-      const recordCommit = await dependencies.commitRecordChange(
-        options.repoRoot,
-        [recordPath, ...(gitignoreChanged ? ['.gitignore'] : [])],
-        `chore(oat): scaffold ${options.projectName}`,
-        dependencies.gitRunner,
-      );
-      committed = recordCommit !== null;
-      commitSha = recordCommit?.sha;
-      commitStatus = recordCommit ? 'committed' : 'skipped_nothing';
-    } catch (error) {
-      commitStatus = 'failed';
-      commitError = error instanceof Error ? error.message : String(error);
-    }
   }
 
   return {

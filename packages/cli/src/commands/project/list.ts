@@ -16,6 +16,7 @@ import {
   type ProjectScope,
 } from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
 import {
   listProjects,
@@ -339,7 +340,7 @@ async function runProjectList(
       options,
       dependencies,
     );
-    if (options.remote) {
+    if (options.remote && (!options.scope || options.scope === 'synced')) {
       projects = await appendRemoteRows(
         projects,
         repoRoot,
@@ -364,7 +365,7 @@ async function runProjectList(
     } else {
       context.logger.error(message);
     }
-    process.exitCode = 1;
+    process.exitCode = error instanceof CliError ? error.exitCode : 2;
   }
 }
 

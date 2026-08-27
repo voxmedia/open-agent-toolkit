@@ -7,6 +7,7 @@ import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   resolveProjectScope,
   resolveScopeRoot,
+  syncedRefName,
   syncedRecordPath,
 } from '@commands/shared/project-scope';
 import { readOatLocalConfig, type OatLocalConfig } from '@config/oat-config';
@@ -122,7 +123,20 @@ export async function resolveSyncedTarget(
         ['ls-remote', '--exit-code', 'origin', `refs/oat/projects/${slug}`],
         { cwd: context.repoRoot, allowFailure: true },
       );
-      adopt = remote.code === 0;
+      if (remote.code === 0) {
+        adopt = true;
+      } else if (
+        !(
+          remote.code === 2 &&
+          remote.stdout.trim() === '' &&
+          remote.stderr.trim() === ''
+        )
+      ) {
+        throw new CliError(
+          `git ls-remote origin ${syncedRefName(slug)} failed (exit ${remote.code}): ${remote.stderr || remote.stdout || 'unknown Git error'}`,
+          2,
+        );
+      }
     }
     if (!adopt) {
       throw new CliError(
@@ -132,6 +146,8 @@ export async function resolveSyncedTarget(
     }
   } else if (!checkoutExists && !options.allowMissingCheckout) {
     throw new CliError(`No synced project named ${slug}.`, 1);
+  } else if (checkoutExists && !record && options.allowMissingCheckout) {
+    adopt = true;
   }
 
   return { ...buildSyncTarget(context.repoRoot, projectsRoot, slug), adopt };

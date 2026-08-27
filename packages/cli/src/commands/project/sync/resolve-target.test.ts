@@ -31,7 +31,7 @@ function deps(
           }
         : null,
     gitRunner: {
-      run: async () => ({ code: 2, stdout: '', stderr: 'missing' }),
+      run: async () => ({ code: 2, stdout: '', stderr: '' }),
     },
   };
 }
@@ -105,6 +105,47 @@ describe('resolveSyncedTarget', () => {
       resolveSyncedTarget({ repoRoot: '/repo', env: {} }, 'demo', injected, {
         allowMissingCheckout: true,
       }),
+    ).resolves.toMatchObject({ slug: 'demo', adopt: true });
+  });
+
+  it('treats only an empty exit-2 ls-remote result as a missing ref', async () => {
+    await expect(
+      resolveSyncedTarget({ repoRoot: '/repo', env: {} }, 'missing', deps(), {
+        allowMissingCheckout: true,
+      }),
+    ).rejects.toMatchObject({
+      message: 'No synced project named missing locally or on origin.',
+      exitCode: 1,
+    });
+  });
+
+  it.each([
+    { code: 128, stderr: 'fatal: unable to access origin: DNS failure' },
+    { code: 2, stderr: 'injected transport failure' },
+  ])('preserves ls-remote diagnostics for $stderr', async (failure) => {
+    const injected = deps();
+    injected.gitRunner = {
+      run: async () => ({ ...failure, stdout: '' }),
+    };
+
+    await expect(
+      resolveSyncedTarget({ repoRoot: '/repo', env: {} }, 'demo', injected, {
+        allowMissingCheckout: true,
+      }),
+    ).rejects.toMatchObject({
+      message: expect.stringContaining(failure.stderr),
+      exitCode: 2,
+    });
+  });
+
+  it('marks an existing checkout without a record for repair adoption', async () => {
+    await expect(
+      resolveSyncedTarget(
+        { repoRoot: '/repo', env: {} },
+        'demo',
+        deps({ existing: ['/synced/demo'] }),
+        { allowMissingCheckout: true },
+      ),
     ).resolves.toMatchObject({ slug: 'demo', adopt: true });
   });
 });

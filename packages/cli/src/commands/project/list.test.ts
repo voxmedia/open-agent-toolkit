@@ -5,6 +5,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { CliError } from '@errors/cli-error';
 import type { ProjectSummary } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -20,18 +21,28 @@ interface HarnessOptions {
     string,
     { kind: string; phase: string; phaseStatus: string }
   >;
+  remoteOutput?: string;
+  resolveError?: Error;
 }
 
 function createHarness(options: HarnessOptions): {
   capture: LoggerCapture;
   command: Command;
   listProjects: ReturnType<typeof vi.fn>;
+  gitRunner: { run: ReturnType<typeof vi.fn> };
 } {
   const capture = createLoggerCapture();
   const listProjects = vi.fn(async (root: string) =>
     root.endsWith('/shared') ? (options.projects ?? []) : [],
   );
 
+  const gitRunner = {
+    run: vi.fn(async () => ({
+      code: 0,
+      stdout: options.remoteOutput ?? '',
+      stderr: '',
+    })),
+  };
   const command = createProjectListCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
@@ -43,7 +54,10 @@ function createHarness(options: HarnessOptions): {
       interactive: !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
-    resolveProjectRoot: vi.fn(async () => options.cwd),
+    resolveProjectRoot: vi.fn(async () => {
+      if (options.resolveError) throw options.resolveError;
+      return options.cwd;
+    }),
     resolveProjectsRoot: vi.fn(
       async () => options.projectsRoot ?? '.oat/projects/shared',
     ),
@@ -60,13 +74,11 @@ function createHarness(options: HarnessOptions): {
         }
       );
     }),
-    gitRunner: {
-      run: vi.fn(async () => ({ code: 0, stdout: '', stderr: '' })),
-    },
+    gitRunner,
     processEnv: options.env ?? {},
   });
 
-  return { capture, command, listProjects };
+  return { capture, command, listProjects, gitRunner };
 }
 
 async function runCommand(
@@ -275,6 +287,33 @@ describe('oat project list', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it.each([
+    { scope: 'shared', queriesRemote: false },
+    { scope: 'local', queriesRemote: false },
+    { scope: 'synced', queriesRemote: true },
+  ] as const)(
+    'respects --scope $scope when combined with --remote',
+    async ({ scope, queriesRemote }) => {
+      const { command, capture, gitRunner } = createHarness({
+        cwd: '/repo',
+        remoteOutput:
+          '1234567890123456789012345678901234567890\trefs/oat/projects/remote-only',
+      });
+
+      await runCommand(command, ['--scope', scope, '--remote'], ['--json']);
+
+      expect(gitRunner.run).toHaveBeenCalledTimes(queriesRemote ? 1 : 0);
+      const projects = (
+        capture.jsonPayloads[0] as { projects: Array<{ scope: string }> }
+      ).projects;
+      expect(projects.every((row) => row.scope === scope)).toBe(true);
+      expect(projects.some((row) => row.scope === 'synced')).toBe(
+        scope === 'synced',
+      );
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
   it('warns and preserves local rows when origin is unreachable', async () => {
     const capture = createLoggerCapture();
     const command = createProjectListCommand({
@@ -309,6 +348,32 @@ describe('oat project list', () => {
       projects: [expect.objectContaining({ name: 'local-row' })],
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    {
+      name: 'preserves an actionable CliError exit code',
+      error: new CliError('invalid project scope state', 1),
+      expectedExitCode: 1,
+    },
+    {
+      name: 'classifies an unknown exception as a system error',
+      error: new Error('filesystem unavailable'),
+      expectedExitCode: 2,
+    },
+  ])('$name', async ({ error, expectedExitCode }) => {
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      resolveError: error,
+    });
+
+    await runCommand(command, [], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toEqual({
+      status: 'error',
+      message: error.message,
+    });
+    expect(process.exitCode).toBe(expectedExitCode);
   });
 });
 

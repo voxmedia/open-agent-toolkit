@@ -3,6 +3,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { CliError } from '@errors/cli-error';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -32,7 +33,7 @@ interface HarnessOptions {
     commitStatus: CommitScaffoldStatus;
     commitError?: string;
   };
-  throwError?: boolean;
+  throwError?: 'actionable' | 'system';
 }
 
 function createHarness(options: HarnessOptions = {}): {
@@ -43,7 +44,9 @@ function createHarness(options: HarnessOptions = {}): {
   const capture = createLoggerCapture();
   const scaffoldProject = vi.fn(async () => {
     if (options.throwError) {
-      throw new Error('invalid project name');
+      throw options.throwError === 'actionable'
+        ? new CliError('invalid project name', 1)
+        : new Error('filesystem unavailable');
     }
     return (
       options.result ?? {
@@ -341,7 +344,7 @@ describe('createProjectNewCommand', () => {
 
     await runCommand(command, ['demo', '--mode', 'import'], ['--json']);
 
-    expect(capture.jsonPayloads[0]).toMatchObject({
+    expect(capture.jsonPayloads[0]).toEqual({
       status: 'ok',
       projectName: 'demo',
       mode: 'import',
@@ -349,10 +352,16 @@ describe('createProjectNewCommand', () => {
       ref: 'refs/oat/projects/demo',
       sha: '1234567890123456789012345678901234567890',
       projectPath: '.oat/projects/shared/demo',
+      projectsRoot: '.oat/projects/shared',
+      createdFiles: ['state.md'],
+      skippedFiles: ['plan.md'],
       activePointerUpdated: false,
       dashboardRefreshed: false,
       committed: false,
+      scaffoldCommit: undefined,
+      commitSha: undefined,
       commitStatus: 'skipped_no_worktree',
+      commitError: undefined,
     });
     expect(process.exitCode).toBe(0);
   });
@@ -410,12 +419,24 @@ describe('createProjectNewCommand', () => {
   });
 
   it('returns exit code 1 for scaffolding errors', async () => {
-    const { command, capture } = createHarness({ throwError: true });
+    const { command, capture } = createHarness({ throwError: 'actionable' });
 
     await runCommand(command, ['demo']);
 
     expect(capture.error[0]).toContain('invalid project name');
     expect(process.exitCode).toBe(1);
+  });
+
+  it('classifies unknown scaffold exceptions as system errors', async () => {
+    const { command, capture } = createHarness({ throwError: 'system' });
+
+    await runCommand(command, ['demo'], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toEqual({
+      status: 'error',
+      message: 'filesystem unavailable',
+    });
+    expect(process.exitCode).toBe(2);
   });
 
   it('shows help instead of scaffolding when name starts with a dash', async () => {

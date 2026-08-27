@@ -8,6 +8,7 @@ import {
   type ProjectScope,
 } from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { CliError } from '@errors/cli-error';
 import { Command, Option } from 'commander';
 
 import {
@@ -73,6 +74,7 @@ function reportSuccess(
       activePointerUpdated: result.activePointerUpdated,
       dashboardRefreshed: result.dashboardRefreshed,
       committed: result.committed,
+      scaffoldCommit: result.commitSha,
       commitSha: result.commitSha,
       commitStatus: result.commitStatus,
       commitError: result.commitError,
@@ -140,7 +142,7 @@ async function runProjectNew(
     } else {
       context.logger.error(message);
     }
-    process.exitCode = 1;
+    process.exitCode = error instanceof CliError ? error.exitCode : 2;
   }
 }
 

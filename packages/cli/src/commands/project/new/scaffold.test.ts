@@ -1,9 +1,17 @@
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { instantiateProjectLogTemplate } from '@commands/project/log/append';
+import { createSyncedProject } from '@commands/project/sync/ref-sync';
 import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
@@ -283,6 +291,289 @@ describe('scaffoldProject', () => {
         { cwd: fixture.originDir, encoding: 'utf8' },
       ),
     ).toContain('oat_workflow_mode: spec-driven');
+  });
+
+  it('uses canonical filesystem paths with an absolute in-repo projects root in every scope', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const absoluteSharedRoot = join(
+      fixture.cloneA,
+      '.oat',
+      'absolute-projects',
+      'shared',
+    );
+    const env = { OAT_PROJECTS_ROOT: absoluteSharedRoot };
+    const gitignorePath = join(fixture.cloneA, '.gitignore');
+    await writeFile(
+      gitignorePath,
+      `${await readFile(gitignorePath, 'utf8')}/.oat/absolute-projects/local/**\n/.oat/absolute-projects/synced/*/\n`,
+      'utf8',
+    );
+    execFileSync('git', ['add', '.gitignore'], { cwd: fixture.cloneA });
+    execFileSync('git', ['commit', '-q', '-m', 'configure absolute roots'], {
+      cwd: fixture.cloneA,
+    });
+
+    const shared = await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'absolute-shared',
+      scope: 'shared',
+      env,
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+    const local = await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'absolute-local',
+      scope: 'local',
+      env,
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+    const synced = await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'absolute-synced',
+      scope: 'synced',
+      env,
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+
+    expect(shared.projectPath).toBe(
+      '.oat/absolute-projects/shared/absolute-shared',
+    );
+    expect(local.projectPath).toBe(
+      '.oat/absolute-projects/local/absolute-local',
+    );
+    expect(synced.projectPath).toBe(
+      '.oat/absolute-projects/synced/absolute-synced',
+    );
+    for (const path of [
+      shared.projectPath,
+      local.projectPath,
+      synced.projectPath,
+    ]) {
+      await expect(
+        readFile(join(fixture.cloneA, path, 'state.md'), 'utf8'),
+      ).resolves.toContain('oat_workflow_mode: spec-driven');
+      expect(
+        (await stat(join(fixture.cloneA, path, 'reviews'))).isDirectory(),
+      ).toBe(true);
+      expect((await stat(join(fixture.cloneA, path, 'pr'))).isDirectory()).toBe(
+        true,
+      );
+    }
+    const remoteFiles = execFileSync(
+      'git',
+      ['ls-tree', '-r', '--name-only', 'refs/oat/projects/absolute-synced'],
+      { cwd: fixture.originDir, encoding: 'utf8' },
+    ).trim();
+    expect(remoteFiles).toContain('state.md');
+    expect(remoteFiles).toContain('implementation.md');
+    expect(
+      execFileSync(
+        'git',
+        ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'],
+        { cwd: fixture.cloneA, encoding: 'utf8' },
+      ).trim(),
+    ).toBe('.oat/absolute-projects/synced/absolute-synced.json');
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe('');
+  });
+
+  it('rolls back invocation-owned worktree/ref and a self-healed gitignore on render failure', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    execFileSync('git', ['rm', '-q', '.gitignore'], { cwd: fixture.cloneA });
+    execFileSync('git', ['commit', '-q', '-m', 'remove gitignore'], {
+      cwd: fixture.cloneA,
+    });
+    const home = await mkdtemp(join(tmpdir(), 'oat-bad-template-'));
+    tempDirs.push(home);
+    await writeMarkerTemplate(
+      join(home, '.oat', 'templates'),
+      'state.md',
+      '{OAT_UNRESOLVED}',
+    );
+
+    await expect(
+      scaffoldProjectImpl({
+        repoRoot: fixture.cloneA,
+        projectName: 'render-failure',
+        scope: 'synced',
+        home,
+        refreshDashboard: false,
+        setActive: false,
+      }),
+    ).rejects.toThrow(/unresolved OAT placeholder/i);
+
+    await expect(
+      readFile(join(fixture.cloneA, '.gitignore'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(() =>
+      execFileSync(
+        'git',
+        ['show-ref', '--verify', '--quiet', 'refs/oat/projects/render-failure'],
+        { cwd: fixture.cloneA, stdio: 'ignore' },
+      ),
+    ).toThrow();
+    expect(
+      execFileSync('git', ['worktree', 'list', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }),
+    ).not.toContain('render-failure');
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe('');
+  });
+
+  it('rolls back an invocation-owned worktree/ref after a template write failure', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+
+    await expect(
+      scaffoldProjectImpl(
+        {
+          repoRoot: fixture.cloneA,
+          projectName: 'write-failure',
+          scope: 'synced',
+          refreshDashboard: false,
+          setActive: false,
+        },
+        {
+          createSyncedProject: async (target, runner) => {
+            await createSyncedProject(target, runner);
+            await mkdir(join(target.projectPath, 'state.md'));
+          },
+        },
+      ),
+    ).rejects.toThrow();
+
+    expect(() =>
+      execFileSync(
+        'git',
+        ['show-ref', '--verify', '--quiet', 'refs/oat/projects/write-failure'],
+        { cwd: fixture.cloneA, stdio: 'ignore' },
+      ),
+    ).toThrow();
+  });
+
+  it('rolls back invocation-owned local resources when the first push is rejected', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+
+    await expect(
+      scaffoldProjectImpl(
+        {
+          repoRoot: fixture.cloneA,
+          projectName: 'push-failure',
+          scope: 'synced',
+          refreshDashboard: false,
+          setActive: false,
+        },
+        {
+          pushSynced: async () => ({
+            status: 'rejected',
+            sha: 'a'.repeat(40),
+          }),
+        },
+      ),
+    ).rejects.toThrow(/rejected/);
+
+    expect(() =>
+      execFileSync(
+        'git',
+        ['show-ref', '--verify', '--quiet', 'refs/oat/projects/push-failure'],
+        { cwd: fixture.cloneA, stdio: 'ignore' },
+      ),
+    ).toThrow();
+  });
+
+  it('preserves a published checkout and gives pull-based recovery when record write fails', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+
+    await expect(
+      scaffoldProjectImpl(
+        {
+          repoRoot: fixture.cloneA,
+          projectName: 'record-write-failure',
+          scope: 'synced',
+          refreshDashboard: false,
+          setActive: false,
+        },
+        {
+          writeSyncedRecord: async () => {
+            throw new Error('record disk failure');
+          },
+        },
+      ),
+    ).rejects.toThrow(
+      /oat project pull 'record-write-failure'.*do not rerun project creation/i,
+    );
+
+    expect(
+      execFileSync(
+        'git',
+        ['rev-parse', 'refs/oat/projects/record-write-failure'],
+        { cwd: fixture.originDir, encoding: 'utf8' },
+      ).trim(),
+    ).toMatch(/^[0-9a-f]{40}$/);
+    expect(
+      execFileSync('git', ['worktree', 'list', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }),
+    ).toContain('record-write-failure');
+  });
+
+  it('preserves published state and gives exact parent commit recovery when record commit fails', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+
+    await expect(
+      scaffoldProjectImpl(
+        {
+          repoRoot: fixture.cloneA,
+          projectName: 'record-commit-failure',
+          scope: 'synced',
+          commit: true,
+          refreshDashboard: false,
+          setActive: false,
+        },
+        {
+          commitRecordChange: async () => {
+            throw new Error('parent commit failure');
+          },
+        },
+      ),
+    ).rejects.toThrow(
+      /git add -- '.oat\/projects\/synced\/record-commit-failure.json'.*do not rerun project creation/i,
+    );
+
+    await expect(
+      readFile(
+        join(fixture.cloneA, '.oat/projects/synced/record-commit-failure.json'),
+        'utf8',
+      ),
+    ).resolves.toContain('record-commit-failure');
+    expect(
+      execFileSync('git', ['worktree', 'list', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }),
+    ).toContain('record-commit-failure');
   });
 
   it('rejects synced scaffolding without origin before creating state', async () => {

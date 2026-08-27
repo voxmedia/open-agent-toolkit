@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { scaffoldProject } from '@commands/project/new/scaffold';
+import { CliError } from '@errors/cli-error';
 import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -120,23 +121,43 @@ describe('createProjectPullCommand', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it.each(['conflict', 'dirty'] as const)(
-    'prints target-preserving recovery commands for %s',
-    async (status) => {
-      const { command, capture } = harness(status);
-      await run(command, ['other-project']);
-      expect(capture.error[0]).toContain(
-        "oat project pull 'other-project' --continue",
-      );
-      expect(capture.error[0]).toContain(
-        "oat project pull 'other-project' --abort",
-      );
-      if (status === 'conflict') {
-        expect(capture.error[0]).toContain('state.md');
-      }
-      expect(process.exitCode).toBe(1);
-    },
-  );
+  it('prints continue and abort recovery commands for a conflict', async () => {
+    const { command, capture } = harness('conflict');
+    await run(command, ['other-project']);
+    expect(capture.error[0]).toContain(
+      "oat project pull 'other-project' --continue",
+    );
+    expect(capture.error[0]).toContain(
+      "oat project pull 'other-project' --abort",
+    );
+    expect(capture.error[0]).toContain('state.md');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('prints push or stash/clean guidance for a dirty checkout', async () => {
+    const { command, capture } = harness('dirty');
+    await run(command, ['other-project']);
+    expect(capture.error[0]).toContain("oat project push 'other-project'");
+    expect(capture.error[0]).toContain('stash/clean');
+    expect(capture.error[0]).not.toContain('--continue');
+    expect(capture.error[0]).not.toContain('--abort');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('preserves injected system exit codes and JSON diagnostics', async () => {
+    const { command, capture, resolveTarget } = harness('created');
+    resolveTarget.mockRejectedValueOnce(
+      new CliError('origin DNS lookup failed', 2),
+    );
+
+    await run(command, ['demo'], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toEqual({
+      status: 'error',
+      message: 'origin DNS lookup failed',
+    });
+    expect(process.exitCode).toBe(2);
+  });
 
   it('emits the json envelope', async () => {
     const { command, capture } = harness('up-to-date');
@@ -194,6 +215,33 @@ describe('createProjectPullCommand', () => {
         expect.objectContaining({ slug: 'b', status: 'missing' }),
       ],
     });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('reports each failed coordination child with a targeted human retry', async () => {
+    const setup = harness('updated');
+    setup.pullChildren.mockResolvedValueOnce([
+      {
+        slug: 'conflicted-child',
+        status: 'conflict',
+        message: 'state.md is unmerged',
+      },
+      {
+        slug: 'missing-child',
+        status: 'missing',
+        message: 'remote ref is absent',
+      },
+    ]);
+
+    await run(setup.command, ['parent']);
+
+    const output = setup.capture.error.join('\n');
+    expect(output).toContain('Child conflicted-child conflict');
+    expect(output).toContain('state.md is unmerged');
+    expect(output).toContain("oat project pull 'conflicted-child' --continue");
+    expect(output).toContain('Child missing-child missing');
+    expect(output).toContain('remote ref is absent');
+    expect(output).toContain("oat project pull 'missing-child'");
     expect(process.exitCode).toBe(1);
   });
 
