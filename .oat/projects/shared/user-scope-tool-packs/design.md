@@ -141,7 +141,13 @@ release-defined source of truth.
 **Interfaces:**
 
 ```typescript
-type PackAssetKind = 'skill' | 'agent' | 'template' | 'script' | 'seed';
+type PackAssetKind =
+  | 'skill'
+  | 'agent'
+  | 'template'
+  | 'script'
+  | 'directory'
+  | 'seed';
 type PackAssetOwnership = 'managed' | 'seed-if-missing';
 
 interface PackAssetDefinition {
@@ -150,7 +156,7 @@ interface PackAssetDefinition {
   source: string;
   destination: string;
   scopes: readonly ConcreteScope[];
-  ownership: PackAssetOwnership;
+  ownership: Partial<Record<ConcreteScope, PackAssetOwnership>>;
   executable?: boolean;
 }
 
@@ -167,9 +173,11 @@ interface PackDefinition {
 - Define all eight packs, stable member order, allowed scopes, and fresh-install
   defaults.
 - Include workflow and research agents at both scopes.
-- Include workflow/PJM templates and scripts as managed static assets.
-- Model ideas backlog/scratchpad and other mutable scaffolds as
-  `seed-if-missing`, not managed update/removal targets.
+- Include workflow/PJM templates and scripts with scope-specific ownership.
+- Model ideas backlog/scratchpad, workflow project-root/config scaffolding, and
+  project `.gitkeep` files as `seed-if-missing`, not managed update/removal
+  targets.
+- Model core's bundled docs tree as a managed `directory` at `~/.oat/docs`.
 - Treat references/scripts nested under a skill directory as part of the skill
   directory asset rather than separate global assets.
 - Supply derived helpers for canonical provider paths, members by kind, and
@@ -184,7 +192,8 @@ interface PackDefinition {
 - Destination paths are relative to a validated scope root. Absolute and parent
   traversal paths are rejected at manifest validation.
 - Existing installer exports may temporarily re-export derived lists to avoid a
-  large unsafe flag day, but tests prohibit independent authoritative arrays.
+  large unsafe flag day, but tests prohibit independent authoritative arrays,
+  including the legacy `oat remove skills` pack subset.
 
 ### Scoped Pack Intent Store
 
@@ -221,8 +230,12 @@ function writeScopedPackIntent(input: IntentWriteInput): Promise<void>;
 
 The existing boolean shape remains compatible. Reads are deliberately
 scope-specific instead of using a merged config, because merged values lose
-ownership provenance. `reconcileProjectToolsConfig` stops deriving booleans
-from “any member found”; explicit lifecycle operations own intent writes.
+ownership provenance. Project reads consult only `.oat/config.json`, never the
+checkout-local `.oat/config.local.json`. User reads extend `UserConfig`, its
+normalizer/owned-key set, and user-sync preservation rules to support `tools`
+without dropping unrelated user settings. `reconcileProjectToolsConfig` stops
+deriving all eight booleans from “any member found”; explicit lifecycle
+operations own intent writes.
 
 **Legacy adoption:**
 
@@ -231,7 +244,13 @@ from “any member found”; explicit lifecycle operations own intent writes.
 - Read-only commands never persist the inference.
 - Install/update/remove at an explicit scope include the proposed intent change
   in dry-run output and persist only after their filesystem safety boundary.
-- An explicit `false` is authoritative and is never overridden by inference.
+- The new intent store writes `true` on install/adoption and deletes the scoped
+  key on successful removal. It does not write `false`.
+- Existing `false` values are legacy derived snapshots, not authoritative
+  opt-outs. They behave like an absent key for inference and produce a
+  `legacy-false-conflict` diagnostic when physical managed assets exist.
+- A future durable opt-out would require an explicit provenance/schema marker;
+  the bare legacy boolean cannot safely represent it.
 
 ### Pack Inventory
 
@@ -275,13 +294,19 @@ interface PackInventory {
 
 **Rules:**
 
-- Completeness considers all `managed` assets valid at the concrete scope.
-  `seed-if-missing` state is reported separately and cannot make a pack partial.
+- Completeness considers assets whose ownership at the concrete scope is
+  `managed`. `seed-if-missing` state is reported separately and never makes a
+  pack partial.
 - Skill status uses frontmatter versions; agent status uses agent frontmatter;
-  non-versioned static assets use presence plus the existing copy comparison
-  contract where available.
+  non-versioned files use SHA-256 content comparison, and directory assets use
+  a deterministic tree digest over sorted relative paths, file modes where
+  relevant, and file bytes. Apply skips byte-identical content, so repeated
+  install/update is a no-op rather than an unconditional refresh.
 - `has --pack` returns success only for complete intended or complete legacy
-  placement. Partial intent is a distinct failure result with missing members.
+  placement. This intentionally tightens the legacy any-member success rule;
+  JSON adds `completeness` and `missing`, and the consuming workflow skill and
+  troubleshooting/lifecycle docs are updated in the same release. Partial
+  intent is a distinct failure result with missing members.
 - List/info/status/doctor may still enumerate custom tools, but pack inventory
   never recursively scans the user's home directory.
 - Duplicate scope diagnostics show both canonical paths and versions without
@@ -326,20 +351,29 @@ interface PackReconcilePlan {
 
 Planning is pure and stable; apply consumes the plan. Dry-run serializes the
 same plan without execution. All destination and removal paths pass
-`validatePathWithinScope`; existing paths that may traverse symlinks also pass
-`validateRealPathWithinScope` before destructive action.
+`validatePathWithinScope`. For real-path safety, the executor resolves the
+managed roots (`<scope>/.agents` and `<scope>/.oat`) once, validates the nearest
+existing ancestor for a destination that does not exist yet, and then validates
+the resulting real destination beneath that managed root. A user-managed
+symlinked `.agents` or `.oat` root is therefore supported, while a nested
+managed-path symlink escaping its resolved root is rejected with the offending
+path and recovery guidance.
 
 Static project templates require a policy distinction:
 
 - User-scope templates are managed defaults and update with the pack.
 - A repository template is an override surface. Installation seeds it only when
-  absent; update/removal never overwrites or deletes an existing repository
-  override.
+  absent. A byte-identical pristine seed may be refreshed or removed safely;
+  any differing repository copy is an override that never makes the pack
+  partial and is excluded from update, removal, and migration source removal.
+  Results report `repository override retained` with the path.
 - Bundled CLI templates remain the fallback when neither higher tier exists.
 
 This safety-first rule intentionally treats legacy repository templates as
 repository-owned because OAT cannot prove whether a pre-provenance file was
-customized.
+customized. It is a deliberate compatibility change from today's unconditional
+`tools update` force-refresh: preservation wins, and the help/docs call out that
+deleting an override restores managed-default behavior.
 
 ### Lifecycle Command Adapters
 
@@ -352,6 +386,7 @@ through the shared model.
 - `oat tools list|info|has|outdated`
 - `oat tools update [name|--pack|--all]`
 - `oat tools remove [name|--pack|--all]`
+- Legacy `oat remove skills` compatibility routing
 - New `oat tools migrate --pack <name> --from <scope> --to <scope>`
 - Guided setup, `oat status`, `oat doctor`, and automatic provider sync.
 
@@ -364,14 +399,22 @@ through the shared model.
 - Direct pack subcommands and aggregate install call the same planner.
 - User-only operations resolve the home scope directly and do not call
   `resolveProjectRoot`, write `AGENTS.md`, or reconcile repository config.
-- Repository guidance is updated only when project-scope pack intent changes or
-  the user invokes an explicit repository setup command.
+- For the default `--scope all` outside Git, user scope proceeds and project
+  scope is skipped with a structured `project-scope-unavailable` diagnostic.
+  Inside Git, project scope always uses the resolved Git toplevel, not raw cwd.
+- Repository AGENTS guidance belongs to explicit repository/PJM adoption, not
+  pack placement. Pack migration/removal leaves adopted guidance untouched and
+  says so; explicit repo setup/init owns upsert or cleanup.
 - Update/outdated/all use declared intent first and legacy inference second;
   they no longer discover installed packs from one arbitrary member.
 - Remove operates from the manifest even if some or all assets are already
   absent, allowing it to clear durable intent safely.
-- Sync is called once per affected scope with the exact changed canonical skill
-  and agent paths. Templates/scripts do not masquerade as provider paths.
+- Install/update sync is called once per affected scope with exact changed
+  canonical skill and agent paths. Removal introduces a symmetric internal
+  `--remove-canonical` sync filter: provider planners verify the canonical source
+  is absent and prune only its materialized views. Templates/scripts do not
+  masquerade as provider paths. Tests prove install and removal filtering for
+  each provider.
 
 ### Scope Migration Command
 
@@ -409,11 +452,22 @@ initialization or authorize writes.
 
 **Contract:**
 
-- `oat pjm init` is the only capability in this surface allowed to create the
-  canonical PJM scaffold from an uninitialized state.
+- `oat pjm init` writes repository config
+  `pjm: { initialized: true, schemaVersion: 1 }` only after the canonical
+  scaffold is successfully present. This is the explicit adoption marker.
+- Legacy repositories with the complete canonical `.oat/repo/AGENTS.md` and
+  `.oat/repo/pjm/AGENTS.md` pair are accepted as `inferred-legacy`; a successful
+  explicit `oat pjm init` backfills the marker. A partial pair is
+  `partial-initialization` and blocks writes with doctor/re-init guidance.
+- `oat pjm init` is the only normal capability allowed to create the canonical
+  PJM scaffold from an uninitialized state. Existing migration commands may
+  scaffold only within their explicit migration contract.
 - Other mutating commands resolve a Git repository, inspect the canonical PJM
-  adoption markers, and throw a typed `CliError` before creating directories or
-  files when adoption is absent.
+  adoption state, and throw a typed `CliError` before creating directories or
+  files when adoption is absent or partial.
+- `oat backlog init`, decision initialization, and their implicit initialization
+  helpers remain usable only after adoption; they no longer form alternate
+  partial-adoption paths and otherwise direct the user to `oat pjm init`.
 - The error identifies the repository and says to run `oat pjm init`.
 - `oat pjm doctor` remains read-only and reports disabled/uninitialized state.
 - Skills perform the CLI/read-only preflight before any write instruction.
@@ -458,14 +512,26 @@ Every skill that needs static resources must ship them beneath its own installed
 directory and describe resolution relative to the loaded `SKILL.md` directory.
 PJM skills must not instruct an agent to read
 `<repo>/.agents/skills/<skill>/references/...`. Bundle consistency tests recurse
-skill directories and verify referenced packaged files exist. Shared templates
-needed by CLI commands remain independently declared manifest assets.
+skill directories and verify referenced packaged files exist.
+
+The existing `resolve-tracking.sh` is intentionally shared by four docs skills.
+Each consuming skill derives the scope root from the actual loaded
+`<scope>/.agents/skills/<skill>/SKILL.md`, then resolves
+`<scope>/.oat/scripts/resolve-tracking.sh`. This pairs a user-loaded skill with
+the user-managed script and a project-loaded skill with the project script; it
+does not silently cross scopes or assume cwd is the source root. A contract test
+rejects bare repo-relative `.oat/scripts/...` references without this
+scope-derived lookup. Other shared templates/scripts use the same explicit
+scope-pairing rule or become skill-private resources.
 
 ## Data Models and Validation
 
 The manifest is TypeScript-owned and validated at module/test boundaries.
-Layered config retains the existing `tools: Record<PackName, boolean>` JSON
-shape. No new migration file or database schema is required.
+Project and user config retain the compatible
+`tools: Partial<Record<PackName, boolean>>` JSON shape; user config parsing,
+owned-key preservation, and legacy sync rewriting are extended explicitly. PJM
+adds the repository-owned adoption record described above. No database schema
+is required.
 
 **Validation invariants:**
 
@@ -473,8 +539,13 @@ shape. No new migration file or database schema is required.
 - Asset IDs are unique within a pack; canonical destination paths do not collide
   across packs unless an explicit shared-owner contract exists.
 - Every default scope is allowed.
-- `managed` destinations are canonical and remain within a scope root.
-- `seed-if-missing` assets are excluded from update and removal plans.
+- Ownership is defined for every allowed asset/scope pair.
+- `managed` destinations are canonical and remain within their resolved managed
+  root.
+- `seed-if-missing` assets are excluded from completeness, update, and removal.
+- Core's bundled docs directory and all independently shipped templates/scripts
+  are represented; reverse consistency finds bundled assets missing from the
+  manifest.
 - Agent filenames and skill directory names map to provider canonical paths.
 - Every bundled manifest source exists and every pack-owned bundled asset is
   represented, enforced by consistency tests.
@@ -595,11 +666,13 @@ simulate rollback.
 ### Unit Tests
 
 - Manifest validation, derived members, destination ownership, and defaults.
-- Intent precedence: explicit true/false, absent, inferred legacy.
+- Intent precedence: explicit true, absent, legacy false conflict, and inferred
+  legacy; config-local exclusion and user-config preservation.
 - Inventory state matrix across asset kinds and scopes.
-- Reconcile plan ordering, dry-run parity, removal exclusions, and changed
-  canonical paths.
-- PJM template resolution and adoption guards.
+- File/tree digest comparison, reconcile ordering, dry-run parity,
+  scope-specific ownership, removal exclusions, and changed canonical paths.
+- PJM template resolution, explicit/legacy/partial adoption guards, and guidance
+  ownership.
 - Human and JSON result rendering.
 
 ### Integration Tests
@@ -608,12 +681,15 @@ simulate rollback.
 - Fresh install, repeat install, update from older fixture, missing-member
   repair, complete disappearance with retained intent, remove, and reinstall.
 - Workflow/research agents and workflow/PJM templates/scripts at user scope.
-- Legacy installs with no intent and combined duplicate versions.
+- Core docs directory and docs shared-script scope pairing at user scope.
+- Legacy installs with absent/false intent and combined duplicate versions.
 - Migration destination failure, verification failure, declined removal,
-  removal failure, and successful retry.
+  removal failure, retained repository overrides, and successful retry.
 - PJM init and post-init operations using each template tier; uninitialized
   operations assert an unchanged filesystem snapshot.
-- Provider auto-sync receives exact scope and canonical paths.
+- Symlinked managed roots, nested symlink escape rejection, and fresh paths.
+- `--scope all` outside Git skips project and still completes user work.
+- Provider auto-sync receives exact install/remove scope and canonical paths.
 
 ### End-to-End and Release Validation
 
@@ -736,9 +812,10 @@ None beyond existing Node.js and CLI dependencies.
 - **Legacy intent inference opts into the wrong pack:** Medium probability,
   high impact.
   - **Mitigation:** Read-only inference is non-mutating; only explicit scoped
-    mutation persists it, with dry-run visibility.
-  - **Contingency:** Explicit false disables inference; removal can clear intent
-    even when files are absent.
+    mutation persists it, with dry-run visibility. Derived legacy false values
+    are diagnosed rather than mistaken for user intent.
+  - **Contingency:** Removal deletes the intent key and can finish even when
+    files are absent; a future opt-out requires versioned provenance.
 - **Repository template updates surprise current users:** Medium probability,
   medium impact.
   - **Mitigation:** Treat existing repository templates as owner overrides;
@@ -752,6 +829,34 @@ None beyond existing Node.js and CLI dependencies.
 - **Cross-cutting command regressions:** Medium probability, high impact.
   - **Mitigation:** Migrate in phases behind shared pure planning APIs and run
     existing plus new lifecycle integration matrices.
+
+## Review Disposition
+
+The single authorized Fable artifact review ran on 2026-08-27. This bounded fix
+pass resolves every finding in the design; no second design review is planned.
+
+- **I1:** Legacy derived `false` values are non-authoritative, diagnosed, and
+  replaced by true-or-absent intent semantics.
+- **I2:** Asset ownership is scope-specific; repository template overrides have
+  explicit completeness/update/removal/migration behavior.
+- **I3:** A managed directory kind covers core's `~/.oat/docs` tree.
+- **I4:** Shared scripts resolve from the same scope root as the loaded skill.
+- **M1:** Non-versioned file and directory status uses deterministic digests.
+- **M2:** PJM has an explicit config marker plus complete/partial legacy rules;
+  alternate init paths no longer create partial adoption.
+- **M3:** The complete-only `has --pack` compatibility change and consumers are
+  explicit.
+- **M4:** Managed-root symlinks and not-yet-existing destinations have a
+  concrete real-path policy.
+- **M5:** Repository guidance belongs to adoption, not pack placement.
+- **M6:** Removal uses a scoped `--remove-canonical` provider-sync contract.
+- **M7:** `--scope all` outside Git completes user work and reports project scope
+  unavailable.
+- **m1:** Legacy `oat remove skills` derives its pack authority from the manifest.
+- **m2:** Mutable ideas/workflow seed assets are enumerated and unowned.
+- **m3:** Scoped intent explicitly excludes `config.local.json`.
+- **m4:** User config parsing, owned keys, and rewrite preservation include
+  `tools`.
 
 ## References
 

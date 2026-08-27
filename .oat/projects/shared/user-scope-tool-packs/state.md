@@ -84,20 +84,20 @@ oat_generated: false
 
 # Project State: user-scope-tool-packs
 
-**Status:** Design drafted — awaiting independent review
+**Status:** Design review fix pass complete — awaiting lifecycle completion
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-26
 
 ## Current Phase
 
-Specification is complete and the draft technical design is ready for one
-independent Fable review/fix pass.
+Specification is complete. The one authorized Fable review and bounded design
+fix pass are complete; lifecycle metadata can now mark design approved.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete and approved)
 - **Spec:** `spec.md` (complete)
-- **Design:** `design.md` (drafted — review pending)
+- **Design:** `design.md` (reviewed — bounded fixes complete)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
@@ -110,7 +110,8 @@ independent Fable review/fix pass.
 - ✓ Discovery HiLL checkpoint approved
 - ✓ Specification confirmed
 - ✓ Technical design drafted
-- ⧗ Independent design review and bounded fix pass
+- ✓ Independent Fable design review received
+- ✓ One bounded design fix pass applied
 
 ## Blockers
 
@@ -118,5 +119,5 @@ None
 
 ## Next Milestone
 
-Run the approved Fable design gate once, apply one bounded fix pass, then mark
-design complete and continue to `oat-project-plan`.
+Mark design complete and continue directly to `oat-project-plan` under the
+user's approved continuation instruction.
