@@ -26,6 +26,17 @@ export interface CanonicalSyncFilter {
   paths: string[];
 }
 
+/**
+ * Advisory diagnostic emitted when the CLI version that produced a scope's sync
+ * manifest differs from the CLI version invoking sync. Comparison is symmetric
+ * string inequality: the contract is version identity, not which side is newer.
+ */
+export interface SyncVersionSkew {
+  scope: ConcreteScope;
+  producingVersion: string;
+  invokingVersion: string;
+}
+
 export interface ScopeSyncPlan {
   scope: ConcreteScope;
   scopeRoot: string;
@@ -35,6 +46,7 @@ export interface ScopeSyncPlan {
   canonical?: CanonicalEntry[];
   activeAdapterNames?: string[];
   providerMismatches?: SyncProviderMismatches;
+  versionSkew?: SyncVersionSkew;
   materializationExtensionPlans: MaterializationPlan[];
   materializationExtensions: MaterializationExtensionSummary[];
 }
@@ -52,6 +64,7 @@ export interface SyncJsonPayload {
   plans: SyncPlan[];
   summary: SyncSummary;
   providerMismatches?: SyncProviderMismatches[];
+  versionSkew?: SyncVersionSkew[];
   materializationExtensions?: MaterializationExtensionSummary[];
   /** Retained for compatibility with existing Codex JSON consumers. */
   codexExtensions?: CodexExtensionSummary[];

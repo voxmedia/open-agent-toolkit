@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "explainer-kit.content-approval/v2",
+  "runId": "run-2200b576-00c1-4803-8a1a-e3563c96d4e2",
+  "mode": "unattended",
+  "status": "approved",
+  "marking": "auto-drafted",
+  "reviewedSource": {
+    "kind": "approved-fact-base",
+    "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/bug-triage/.oat/repo/reference/project-recaps/2026-08-19-defect-wave-program.fact-base.json"
+  },
+  "authorResultPaths": [
+    "source/author/program-recap.json"
+  ],
+  "attempts": [],
+  "artifacts": [
+    {
+      "artifactId": "program-recap",
+      "origin": "floor",
+      "authoring": "markdown",
+      "contentPath": "source/content/program-recap.md",
+      "authorResultPath": "source/author/program-recap.json"
+    }
+  ]
+}

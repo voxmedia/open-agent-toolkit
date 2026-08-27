@@ -1,0 +1,2189 @@
+{
+  "schemaVersion": "explainer-kit.fact-base/v1",
+  "generatedAt": "2026-08-27T07:22:30.107Z",
+  "mode": "supplied",
+  "freshnessPolicy": "live-wins",
+  "sources": [
+    {
+      "id": "program",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L1-L152",
+      "role": "program",
+      "sourceSetId": "execution-program",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+      "lineRange": {
+        "start": 1,
+        "end": 152
+      },
+      "hash": "sha256:408a040bd054f89531df514584a12cd6e921064004c5a8f0cb73bddd5278ea2e",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "program-overview",
+        "wave-map",
+        "per-wave-outcomes",
+        "follow-up-ledger"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L1-L152"
+    },
+    {
+      "id": "w1-summary",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L1-L184",
+      "role": "wave-completion-record",
+      "sourceSetId": "wave-1-execution",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/projects/shared/wave-1-execution/summary.md",
+      "lineRange": {
+        "start": 1,
+        "end": 184
+      },
+      "hash": "sha256:7e6618073611f1fe4168f978121b0a9a34a33ea2265a6c0e538d1387608fc872",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "per-wave-outcomes",
+        "follow-up-ledger"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L1-L184"
+    },
+    {
+      "id": "w1-implementation",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/implementation.md#L1-L523",
+      "role": "wave-implementation-record",
+      "sourceSetId": "wave-1-execution",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/projects/shared/wave-1-execution/implementation.md",
+      "lineRange": {
+        "start": 1,
+        "end": 523
+      },
+      "hash": "sha256:210f398748f57cf85f27cd23ffcb6702c72be9c7e1f137ad32b5d793087e8027",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "aggregate-numbers",
+        "per-wave-outcomes"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/implementation.md#L1-L523"
+    },
+    {
+      "id": "w1-orchestration-log",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/orchestration-log.md#L1-L319",
+      "role": "wave-orchestration-log",
+      "sourceSetId": "wave-1-execution",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/projects/shared/wave-1-execution/orchestration-log.md",
+      "lineRange": {
+        "start": 1,
+        "end": 319
+      },
+      "hash": "sha256:d2d4a1cabe95793551ae9f50ae5d5c6a780f4fd4b3e8b15ea0b0335231d5798f",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "convention-evolution"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/orchestration-log.md#L1-L319"
+    },
+    {
+      "id": "w2-summary",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L1-L125",
+      "role": "wave-completion-record",
+      "sourceSetId": "wave-2-execution",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/projects/shared/wave-2-execution/summary.md",
+      "lineRange": {
+        "start": 1,
+        "end": 125
+      },
+      "hash": "sha256:ecf807d4926d49ea73463497ff81fd7043d4d1eb2fd7d071ce30dd82cc4d04c7",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "per-wave-outcomes",
+        "follow-up-ledger"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L1-L125"
+    },
+    {
+      "id": "w2-implementation",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/implementation.md#L1-L286",
+      "role": "wave-implementation-record",
+      "sourceSetId": "wave-2-execution",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/projects/shared/wave-2-execution/implementation.md",
+      "lineRange": {
+        "start": 1,
+        "end": 286
+      },
+      "hash": "sha256:cac257e19cb963bf87680c8cde9e6381e95ea0910552ea33a297171455007bc4",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "aggregate-numbers",
+        "per-wave-outcomes"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/implementation.md#L1-L286"
+    },
+    {
+      "id": "w2-orchestration-log",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L1-L160",
+      "role": "wave-orchestration-log",
+      "sourceSetId": "wave-2-execution",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/projects/shared/wave-2-execution/orchestration-log.md",
+      "lineRange": {
+        "start": 1,
+        "end": 160
+      },
+      "hash": "sha256:2b169cd3e8c2c501f5a7e4d2a34e6e12039adf8a7bf2455d356784567b97c01f",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "convention-evolution"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L1-L160"
+    },
+    {
+      "id": "w3-summary",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L1-L126",
+      "role": "wave-completion-record",
+      "sourceSetId": "wave-3-execution",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/projects/shared/wave-3-execution/summary.md",
+      "lineRange": {
+        "start": 1,
+        "end": 126
+      },
+      "hash": "sha256:8c30d697922b829438e747cfa6f03f51e5a679214caf7e753e61af0d34c0731c",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "per-wave-outcomes",
+        "follow-up-ledger"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L1-L126"
+    },
+    {
+      "id": "w3-implementation",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/implementation.md#L1-L268",
+      "role": "wave-implementation-record",
+      "sourceSetId": "wave-3-execution",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/projects/shared/wave-3-execution/implementation.md",
+      "lineRange": {
+        "start": 1,
+        "end": 268
+      },
+      "hash": "sha256:d30140f67b3a5f0d7b51a84f605e47516c172afcf1699f82ff2da1917ca057ab",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "aggregate-numbers",
+        "per-wave-outcomes"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/implementation.md#L1-L268"
+    },
+    {
+      "id": "w3-orchestration-log",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/orchestration-log.md#L1-L152",
+      "role": "wave-orchestration-log",
+      "sourceSetId": "wave-3-execution",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/projects/shared/wave-3-execution/orchestration-log.md",
+      "lineRange": {
+        "start": 1,
+        "end": 152
+      },
+      "hash": "sha256:e71e3f3d2018be2beaed3ecc4ce83d8d3dd528e7a27cac0e77202bc26fcd487a",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "convention-evolution"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/orchestration-log.md#L1-L152"
+    },
+    {
+      "id": "w4-summary",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L1-L140",
+      "role": "wave-completion-record",
+      "sourceSetId": "wave-4-execution",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/projects/shared/wave-4-execution/summary.md",
+      "lineRange": {
+        "start": 1,
+        "end": 140
+      },
+      "hash": "sha256:a2d9b7681d8c1d3f49f718ac6bacbb5c096d44b3dffb359f0a9e56c92dd6a6fa",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "per-wave-outcomes",
+        "follow-up-ledger"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L1-L140"
+    },
+    {
+      "id": "w4-implementation",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/implementation.md#L1-L360",
+      "role": "wave-implementation-record",
+      "sourceSetId": "wave-4-execution",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/projects/shared/wave-4-execution/implementation.md",
+      "lineRange": {
+        "start": 1,
+        "end": 360
+      },
+      "hash": "sha256:3fe89f354b4a8efa2457f2dc4c53b200799920a9c3df11511857cfe8230d70a8",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "aggregate-numbers",
+        "per-wave-outcomes"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/implementation.md#L1-L360"
+    },
+    {
+      "id": "w4-orchestration-log",
+      "kind": "github",
+      "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L1-L239",
+      "role": "wave-orchestration-log",
+      "sourceSetId": "wave-4-execution",
+      "revision": "f291716544dadfbd10684450679a7e1c21990638",
+      "repository": "voxmedia/open-agent-toolkit",
+      "path": ".oat/projects/shared/wave-4-execution/orchestration-log.md",
+      "lineRange": {
+        "start": 1,
+        "end": 239
+      },
+      "hash": "sha256:d09e491442cf73cb61c7ed7f207471f68cce3def539f1f751cf237e732343c6d",
+      "observedAt": "2026-08-27T07:22:30.107Z",
+      "authoritativeFor": [
+        "convention-evolution"
+      ],
+      "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L1-L239"
+    }
+  ],
+  "claims": [
+    {
+      "id": "program-scope",
+      "text": "The execution program is a durable map rather than an executable plan: it records wave composition and status, each wave runs as a thin wrapper OAT project, and every lane's implementation contract stays its own immutable external plan file.",
+      "status": "confirmed",
+      "sections": [
+        "program-overview"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L13-L17",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 13,
+            "end": 17
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L13-L17"
+        }
+      ]
+    },
+    {
+      "id": "program-composition",
+      "text": "Five external plans map onto four waves with full coverage — five plans against five index rows — verified on 2026-08-19 and re-verified on 2026-08-25, and every plan row now reads done.",
+      "status": "confirmed",
+      "sections": [
+        "program-overview",
+        "wave-map"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L33-L41",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 33,
+            "end": 41
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L33-L41"
+        }
+      ]
+    },
+    {
+      "id": "program-authorization",
+      "text": "The operator approved the four-wave composition and authorized autonomous execution on 2026-08-25 under session-scoped autonomy, with wave PRs created and merged by the root orchestrator once the required gates pass; that record superseded an earlier deferral.",
+      "status": "confirmed",
+      "sections": [
+        "program-overview"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L21-L24",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 21,
+            "end": 24
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L21-L24"
+        }
+      ]
+    },
+    {
+      "id": "program-current-state",
+      "text": "All four wave rows read merged, each names a wrapper project at lifecycle complete, and each carries a built-durable per-wave recap plus a completion tail deferred to program close.",
+      "status": "confirmed",
+      "sections": [
+        "program-overview",
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L26-L31",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 26,
+            "end": 31
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L26-L31"
+        }
+      ]
+    },
+    {
+      "id": "program-definition-of-done",
+      "text": "Wave 4 records the remaining close-out work explicitly: generate — not publish — the program recap, and treat the completion tail across all four wrapper projects as human-gated.",
+      "status": "confirmed",
+      "sections": [
+        "program-overview",
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L129-L130",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 129,
+            "end": 130
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L129-L130"
+        }
+      ]
+    },
+    {
+      "id": "program-close-unblocked",
+      "text": "Wave 4 was designated the final program wave, the one that unblocks program closeout once merged.",
+      "status": "confirmed",
+      "sections": [
+        "program-overview"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L130-L131",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 130,
+            "end": 131
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L130-L131"
+        }
+      ]
+    },
+    {
+      "id": "program-first-bump",
+      "text": "The version arc starts at Wave 1, which carried a lockstep bump from 0.2.32 to 0.2.33 across the five public packages plus the generated version manifest.",
+      "status": "confirmed",
+      "sections": [
+        "program-overview",
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L42-L43",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/summary.md",
+          "lineRange": {
+            "start": 42,
+            "end": 43
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L42-L43"
+        }
+      ]
+    },
+    {
+      "id": "program-version-arc",
+      "text": "Each later wave moved the public packages exactly once more — 0.2.34, then 0.2.35, then 0.2.36 — so the program ends four lockstep bumps above where it started.",
+      "status": "confirmed",
+      "sections": [
+        "program-overview",
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L29-L31",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 29,
+            "end": 31
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L29-L31"
+        }
+      ]
+    },
+    {
+      "id": "wave-1-shape",
+      "text": "Wave 1 is the only multi-lane wave: two containment defects dispatched as one parallel group because their write surfaces separate the smoke runner from the release tooling, with smoke cleanup merged first so the bounded signal harness protects the release lane's integration run.",
+      "status": "confirmed",
+      "sections": [
+        "wave-map"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L45-L57",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 45,
+            "end": 57
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L45-L57"
+        }
+      ]
+    },
+    {
+      "id": "wave-1-baseline",
+      "text": "Wave 1 started from a clean planning baseline at ccf3725e, and existed to unblock later full-suite validation and to put a current-main release guard in place before any shipped-package wave began.",
+      "status": "confirmed",
+      "sections": [
+        "wave-map"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L51-L53",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 51,
+            "end": 53
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L51-L53"
+        }
+      ]
+    },
+    {
+      "id": "wave-2-shape",
+      "text": "Wave 2 is solo on purpose: it changes shipped CLI behavior and all five lockstep manifests, so isolating it stopped a second plan from competing for the same release baseline and kept rollback reviewable.",
+      "status": "confirmed",
+      "sections": [
+        "wave-map"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L72-L79",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 72,
+            "end": 79
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L72-L79"
+        }
+      ]
+    },
+    {
+      "id": "wave-3-shape",
+      "text": "Wave 3 is solo and sequenced after Wave 2's merged package versions, and it had to pass an isolated built-CLI smoke proof and release validation before Wave 4 could start.",
+      "status": "confirmed",
+      "sections": [
+        "wave-map"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L98-L107",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 98,
+            "end": 107
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L98-L107"
+        }
+      ]
+    },
+    {
+      "id": "wave-4-shape",
+      "text": "Wave 4 was scheduled last deliberately: a policy and review surface unlike the code defects, carrying both a canonical-skill bump and a lockstep package bump, placed at the end to minimize stale model-catalog risk and release-file contention.",
+      "status": "confirmed",
+      "sections": [
+        "wave-map"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L125-L135",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 125,
+            "end": 135
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L125-L135"
+        }
+      ]
+    },
+    {
+      "id": "chain-w2-base",
+      "text": "Wave 2 ran from base commit 1bd5424b, recorded as origin/main after the Wave 1 close.",
+      "status": "confirmed",
+      "sections": [
+        "wave-map"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L21",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 21,
+            "end": 21
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L21"
+        }
+      ]
+    },
+    {
+      "id": "chain-w3-base",
+      "text": "Wave 3 ran from base commit 39cea801, recorded as origin/main after the Wave 2 close.",
+      "status": "confirmed",
+      "sections": [
+        "wave-map"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/orchestration-log.md#L26",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 26,
+            "end": 26
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/orchestration-log.md#L26"
+        }
+      ]
+    },
+    {
+      "id": "chain-w4-base",
+      "text": "Wave 4 ran from base commit 3c135e21, recorded as origin/main after the Wave 3 close.",
+      "status": "confirmed",
+      "sections": [
+        "wave-map"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L33",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 33,
+            "end": 33
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L33"
+        }
+      ]
+    },
+    {
+      "id": "chain-w3-package-baseline",
+      "text": "Wave 3 opened on its own integration checkout with a code baseline of 33149b26 at public packages 0.2.34, running in quick mode where the external plan is the requirements document.",
+      "status": "confirmed",
+      "sections": [
+        "wave-map"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L16-L21",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/summary.md",
+          "lineRange": {
+            "start": 16,
+            "end": 21
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L16-L21"
+        }
+      ]
+    },
+    {
+      "id": "chain-w4-package-baseline",
+      "text": "Wave 4 opened on its own integration checkout at public packages 0.2.35, also in quick mode with the external plan as the requirements document.",
+      "status": "confirmed",
+      "sections": [
+        "wave-map"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L16-L21",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 16,
+            "end": 21
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L16-L21"
+        }
+      ]
+    },
+    {
+      "id": "w1-merge",
+      "text": "Wave 1 merged as PR #215, squashed at 2026-08-26T19:00:19Z to the commit the ledger records in full as 5bb2f914, with the wrapper project complete the same day.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L28",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 28,
+            "end": 28
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L28"
+        }
+      ]
+    },
+    {
+      "id": "w1-shipped-harness",
+      "text": "Wave 1's smoke harness now awaits a bounded child exit, escalates a missed SIGTERM to SIGKILL with a bounded reap, detaches an unreapable child without stalling the event loop, and fails loudly with the paused stage and captured output instead of hanging the test run.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L26-L33",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/summary.md",
+          "lineRange": {
+            "start": 26,
+            "end": 33
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L26-L33"
+        }
+      ]
+    },
+    {
+      "id": "w1-shipped-guard",
+      "text": "Wave 1's release guard additionally rejects any lockstep version not strictly greater than origin/main, fails closed on malformed or missing evidence, never runs when no publishable roots changed, and leaves the merge-base lockstep rule and its error ordering untouched.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L34-L41",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/summary.md",
+          "lineRange": {
+            "start": 34,
+            "end": 41
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L34-L41"
+        }
+      ]
+    },
+    {
+      "id": "w1-unplanned-bump",
+      "text": "Wave 1 also carried an unanticipated lockstep bump plus a definition-of-done docs note and a formatter guard for immutable explainer-kit run packages, because test files under the CLI package count as publishable changes — a drift the wave's refresh had not predicted.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes",
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L58-L62",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 58,
+            "end": 62
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L58-L62"
+        }
+      ]
+    },
+    {
+      "id": "w1-bump-decision",
+      "text": "The root bumped all five packages once after fan-in rather than loosening the version-policy ignore patterns, on the grounds that the repository guardrail mandated the bump and the policy question was an operator decision outside the plan.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L55-L60",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/summary.md",
+          "lineRange": {
+            "start": 55,
+            "end": 60
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L55-L60"
+        }
+      ]
+    },
+    {
+      "id": "w1-reviews",
+      "text": "Wave 1 was the most review-heavy wave: the plan artifact gate passed only on its third launch, phase p01 took three review rounds and p02 two, the final review ran four rounds, and the exit gate needed a second generation after generation 1 went stale behind post-gate commits.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L45-L51",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/summary.md",
+          "lineRange": {
+            "start": 45,
+            "end": 51
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L45-L51"
+        }
+      ]
+    },
+    {
+      "id": "w1-probe-yield",
+      "text": "Wave 1's most serious finding — a post-detach re-reap that could never settle, losing the diagnostic and leaking temp directories — plus the follow-on reorder gap were found only by reviewer-designed probes and mutation runs, while every implementer gate and cross-model pass was green.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L81-L84",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/summary.md",
+          "lineRange": {
+            "start": 81,
+            "end": 84
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L81-L84"
+        }
+      ]
+    },
+    {
+      "id": "w2-merge",
+      "text": "Wave 2 merged as PR #217, squashed at 2026-08-26T22:56:20Z to the commit the ledger records in full as 33149b26, taking the public packages to 0.2.34.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L29",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 29,
+            "end": 29
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L29"
+        }
+      ]
+    },
+    {
+      "id": "w2-shipped",
+      "text": "Wave 2 emits one warning per skewed scope before the dry-run and apply branch, and therefore before any manifest restamp, exposes the same diagnostic as a structured array in both JSON envelopes, and derives the apply-time restamp from that diagnostic so the two cannot drift apart; exit codes, counts, eligibility and schema are unchanged.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L25-L37",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/summary.md",
+          "lineRange": {
+            "start": 25,
+            "end": 37
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L25-L37"
+        }
+      ]
+    },
+    {
+      "id": "w2-exit-gate",
+      "text": "Wave 2's exit gate blocked in generation 1 on a same-family target configured with an avoid-nothing flag, after two attempts whose headless child yielded on background work; the operator removed the flag and generation 2 passed on Cursor with the full definition of done in the foreground.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L49-L52",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/summary.md",
+          "lineRange": {
+            "start": 49,
+            "end": 52
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L49-L52"
+        }
+      ]
+    },
+    {
+      "id": "w2-gate-disposition",
+      "text": "The run classified that failure as the gate target's headless behavior rather than a finding against the wave, reproduced it in three of three children, and raised it to the operator as a boundary because replacing the route, prompt, or provider was outside its authority.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes",
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L154",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 154,
+            "end": 154
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L154"
+        }
+      ]
+    },
+    {
+      "id": "w3-merge",
+      "text": "Wave 3 merged as PR #219, squashed at 2026-08-27T01:47:39Z to the commit the ledger records in full as cd3ba140, taking the public packages to 0.2.35.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L30",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 30,
+            "end": 30
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L30"
+        }
+      ]
+    },
+    {
+      "id": "w3-shipped",
+      "text": "Wave 3 resolves a non-empty trimmed assets-root override and then applies the unchanged validation, so missing, malformed, or version-mismatched overrides fail closed with the existing errors and never fall back, while unset or blank values keep the packaged root; the coverage smoke consumer bundles into a private temp root and asserts its own restore and cleanup.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L25-L47",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/summary.md",
+          "lineRange": {
+            "start": 25,
+            "end": 47
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L25-L47"
+        }
+      ]
+    },
+    {
+      "id": "w3-review-yield",
+      "text": "Ten green repository gates and the implementer's own tests passed over three real defects in Wave 3 — a silent conditional skip that removed the only default-binding coverage, an unswept ambient-environment class, and correct-but-unasserted restore and cleanup — all found by reviewer probes and fixed in one append-only round.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L89-L92",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/summary.md",
+          "lineRange": {
+            "start": 89,
+            "end": 92
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L89-L92"
+        }
+      ]
+    },
+    {
+      "id": "w3-reviews",
+      "text": "Wave 3's plan artifact gate passed on round 1 with zero findings, its phase review closed in two rounds, two cross-model rounds ran alongside, and its exit gate passed on generation 1 as configured.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L55-L64",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/summary.md",
+          "lineRange": {
+            "start": 55,
+            "end": 64
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L55-L64"
+        }
+      ]
+    },
+    {
+      "id": "w4-merge",
+      "text": "Wave 4 merged as PR #222, squashed at 2026-08-27T06:55:51Z to the commit the ledger records in full as 06f49fb0.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L31",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 31,
+            "end": 31
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L31"
+        }
+      ]
+    },
+    {
+      "id": "w4-versions",
+      "text": "Wave 4 carried two independent version moves: public packages to 0.2.36 and the canonical Codex skill from 1.2.0 to 1.3.0.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L136-L137",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 136,
+            "end": 137
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L136-L137"
+        }
+      ]
+    },
+    {
+      "id": "w4-shipped",
+      "text": "Wave 4 classifies work by task class and takes model and reasoning effort from the live provider reference named as the source of truth, makes the repository-check bypass conditional and authorization-gated, validates every example against the live CLI, and adds an eight-case prose contract test with logical-line normalization and a structural exemption rule.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L27-L54",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 27,
+            "end": 54
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L27-L54"
+        }
+      ]
+    },
+    {
+      "id": "w4-stop-condition",
+      "text": "Wave 4 tripped its plan's second STOP condition — the live help had no flag the skill was using — reported it at the drift refresh, and had it reconciled non-narrowingly by the operator inside the plan's own step 2.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L21-L24",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 21,
+            "end": 24
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L21-L24"
+        }
+      ]
+    },
+    {
+      "id": "w4-stop-decision",
+      "text": "The reconciliation kept the lane inside its plan: replacing a dead flag with live documented approval flags is the same file, no behavior weakening and no undocumented flags, with each example row re-evaluated for sandbox semantics rather than swapped mechanically.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes",
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L78-L82",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 78,
+            "end": 82
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L78-L82"
+        }
+      ]
+    },
+    {
+      "id": "w4-cycle-cap",
+      "text": "Both Wave 4 review scopes ran three rounds and hit the cycle cap, and in both the final round's fixes were applied as reviewer-specified, root-verified bounded changes to test files only, then independently verified by the final review.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L63-L74",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 63,
+            "end": 74
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L63-L74"
+        }
+      ]
+    },
+    {
+      "id": "w4-cycle-cap-decision",
+      "text": "The cycle-cap disposition was recorded as a decision rather than an improvisation: bounded root-verified patches with a probe runner and a no-tests-ran guard, independently confirmed, and no self-authorized fourth cycle.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes",
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L87-L90",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 87,
+            "end": 90
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L87-L90"
+        }
+      ]
+    },
+    {
+      "id": "w4-codex-catch",
+      "text": "Cross-model review earned its keep in Wave 4 by catching a sandbox-weakening flag mapping before it was committed, and the program-level requirement to reread live provider guidance caught a dead flag the plan's own authoring evidence had missed.",
+      "status": "confirmed",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L216-L223",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 216,
+            "end": 223
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L216-L223"
+        }
+      ]
+    },
+    {
+      "id": "convention-w1-cause",
+      "text": "Wave 1's convention verdicts name the incidents behind its rule changes: the drift refresh held for code but missed release change-detection roots, a cwd drift put a commit on the wrong branch, and the plan gate hit a pre-child provider rejection the existing rules did not classify.",
+      "status": "confirmed",
+      "sections": [
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/orchestration-log.md#L254-L264",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 254,
+            "end": 264
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/orchestration-log.md#L254-L264"
+        }
+      ]
+    },
+    {
+      "id": "convention-w1-adopted",
+      "text": "Wave 1 adopted five rules for the waves that followed: absolute paths or explicit repository flags for every root command, a drift refresh that reports release change-detection roots and pre-plans forced bumps, literal gate invocation with per-gate exit logs the root reads instead of the stream, delete- and reorder-class mutations for ordering and containment claims, and a pre-child provider rejection treated as a boundary after one identical retry.",
+      "status": "confirmed",
+      "sections": [
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/orchestration-log.md#L294-L304",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 294,
+            "end": 304
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/orchestration-log.md#L294-L304"
+        }
+      ]
+    },
+    {
+      "id": "convention-mutation-payoff",
+      "text": "The mutation rule paid off in the very next wave, where the reorder mutation exposed an unpinned restamp-only path and the reviewer's desync mutation is now caught only by the new coupling test.",
+      "status": "confirmed",
+      "sections": [
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L104-L106",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 104,
+            "end": 106
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L104-L106"
+        }
+      ]
+    },
+    {
+      "id": "convention-w2-adopted",
+      "text": "Wave 2 added four rules: bootstrap the worktree before scaffolding and verify the active project before any lifecycle command, always list the release surfaces the source plan writes and fetch before checking versions, state that the post-commit release check is the load-bearing evidence for a lockstep bump, and use the direct formatter and linter binaries for file-scoped checks.",
+      "status": "confirmed",
+      "sections": [
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L121-L130",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 121,
+            "end": 130
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L121-L130"
+        }
+      ]
+    },
+    {
+      "id": "convention-w2-gate-rule",
+      "text": "The Wave 2 boundary produced a configuration rule rather than a workaround: keep the gate as reconfigured after the offending flag was removed, and verify the selected target in the gate-start line before walking away.",
+      "status": "confirmed",
+      "sections": [
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L158-L160",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 158,
+            "end": 160
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L158-L160"
+        }
+      ]
+    },
+    {
+      "id": "convention-carry-forward",
+      "text": "By Wave 3 the carry-forward was mechanical: reusing the previous wave's gate-passed wrapper text with a freshly re-derived addendum passed the plan artifact gate on round 1, and the reviewer probe set again found gaps ten repository gates had missed.",
+      "status": "confirmed",
+      "sections": [
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/orchestration-log.md#L128-L135",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 128,
+            "end": 135
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/orchestration-log.md#L128-L135"
+        }
+      ]
+    },
+    {
+      "id": "convention-w3-adopted",
+      "text": "Wave 3 added five rules for Wave 4: check focused-test verify lines against the repository's real runner before dispatch, re-run the release version check immediately after every task commit and record the exit code, sweep a named class repository-wide and state the fixture shape used, require a negative control and restore-and-cleanup mutation checks for containment lanes, and dry-run bookkeeping script anchors before writing.",
+      "status": "confirmed",
+      "sections": [
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/orchestration-log.md#L145-L152",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 145,
+            "end": 152
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/orchestration-log.md#L145-L152"
+        }
+      ]
+    },
+    {
+      "id": "convention-committed-state-w3",
+      "text": "Wave 3 recorded the post-commit release-check re-run as a standing rule precisely because that gate evaluates committed state only.",
+      "status": "confirmed",
+      "sections": [
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L77-L79",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/summary.md",
+          "lineRange": {
+            "start": 77,
+            "end": 79
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L77-L79"
+        }
+      ]
+    },
+    {
+      "id": "convention-committed-state-w4",
+      "text": "Wave 4 found a second gate with the same property — the skill version check also reports a no-op pass before the commit — so post-commit re-runs became standing for both.",
+      "status": "confirmed",
+      "sections": [
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L111-L113",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 111,
+            "end": 113
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L111-L113"
+        }
+      ]
+    },
+    {
+      "id": "convention-w4-adopted",
+      "text": "Wave 4 closed with five rules for program close and future waves: post-commit re-runs cover both committed-state-only gates, live-syntax rereads record the flag set per subcommand, cross-model review stops at two consecutive clean rounds or below-Medium findings and treats root dispositions as settled, prose contract tests scan backticked spans and key exceptions on documented phrases with anchored probe records, and flag swaps are re-evaluated per example row when the replacement carries sandbox semantics.",
+      "status": "confirmed",
+      "sections": [
+        "convention-evolution"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L232-L239",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 232,
+            "end": 239
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L232-L239"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-w1-suite",
+      "text": "After Wave 1 the repository test run stood at 273 files and 3672 tests, alongside a 19-case bounded smoke harness and 43 focused release cases.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-implementation",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/implementation.md#L486-L489",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/implementation.md",
+          "lineRange": {
+            "start": 486,
+            "end": 489
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/implementation.md#L486-L489"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-w2-suite",
+      "text": "After Wave 2 the same run stood at 273 files and 3686 tests.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-implementation",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/implementation.md#L237-L239",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/implementation.md",
+          "lineRange": {
+            "start": 237,
+            "end": 239
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/implementation.md#L237-L239"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-w2-focused",
+      "text": "Wave 2 added 14 cases to its two focused suites, taking them from 41 to 55, covering ordering, JSON-only mode, equal, older and newer versions, absent and invalid manifests, multi-scope attribution, and the advisory-to-restamp coupling.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L38-L39",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/summary.md",
+          "lineRange": {
+            "start": 38,
+            "end": 39
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L38-L39"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-w3-suite",
+      "text": "After Wave 3 the run stood at 273 files and 3695 tests, with 9 cases added to the assets suite and a 3-case smoke consumer plus a cleanup-assertion hook, green with and without an ambient override.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L51-L53",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/summary.md",
+          "lineRange": {
+            "start": 51,
+            "end": 53
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L51-L53"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-w4-skills",
+      "text": "Wave 4 added its 8 cases to the skills suite instead, taking it to 586 of 586, and left the CLI run at 273 files and 3695 tests.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L59-L61",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 59,
+            "end": 61
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L59-L61"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-decisions-w1",
+      "text": "Wave 1 recorded three key decisions: the wave-level lockstep bump instead of exempting test paths, a non-narrowing reconciliation of the release-guard plan, and merging phase branches without rebase so every reviewed commit stayed immutable.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L55-L68",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/summary.md",
+          "lineRange": {
+            "start": 55,
+            "end": 68
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L55-L68"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-decisions-w2",
+      "text": "Wave 2 recorded two key decisions, both pinned to durable decision records: deriving the apply restamp from the skew diagnostic, and pre-planning the lockstep bump as part of the lane.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L56-L64",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/summary.md",
+          "lineRange": {
+            "start": 56,
+            "end": 64
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L56-L64"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-decisions-w3",
+      "text": "Wave 3 recorded three key decisions, all pinned to decision records: closing the ambient-environment class at the runner seam, keeping the plan-mandated error messages instead of widening the change, and re-running the release version check after the commit.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L68-L79",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/summary.md",
+          "lineRange": {
+            "start": 68,
+            "end": 79
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L68-L79"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-decisions-w4",
+      "text": "Wave 4 recorded four key decisions — three of them pinned to decision records: the non-narrowing STOP reconciliation, structural rather than keyword-based guarding, the cycle-cap disposition, and a cross-model review stopping rule.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L78-L93",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 78,
+            "end": 93
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L78-L93"
+        }
+      ]
+    },
+    {
+      "id": "backlog-closed-w1",
+      "text": "Wave 1 closed two backlog items, one per lane, and archived both at close.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers",
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L143-L146",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/summary.md",
+          "lineRange": {
+            "start": 143,
+            "end": 146
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L143-L146"
+        }
+      ]
+    },
+    {
+      "id": "backlog-closed-w2",
+      "text": "Wave 2 closed the sync version-skew backlog item and archived it at close.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers",
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L105-L107",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/summary.md",
+          "lineRange": {
+            "start": 105,
+            "end": 107
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L105-L107"
+        }
+      ]
+    },
+    {
+      "id": "backlog-closed-w3",
+      "text": "Wave 3 closed the assets-root backlog item.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers",
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L118-L120",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/summary.md",
+          "lineRange": {
+            "start": 118,
+            "end": 120
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L118-L120"
+        }
+      ]
+    },
+    {
+      "id": "backlog-closed-w4",
+      "text": "Wave 4 closed the Codex skill routing backlog item, completing one closure per plan across the program.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers",
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L132-L134",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 132,
+            "end": 134
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L132-L134"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-dod-w3",
+      "text": "Wave 3's closeout baseline ran the full ten-gate definition of done literally, one log per gate with exit codes captured, all zero, ending with a clean tree and no leaked smoke worktrees.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-implementation",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/implementation.md#L230-L234",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/implementation.md",
+          "lineRange": {
+            "start": 230,
+            "end": 234
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/implementation.md#L230-L234"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-dod-w4",
+      "text": "Wave 4 repeated the same ten-gate closeout baseline with per-gate logs and exit codes, all zero, including post-commit re-runs of both committed-state-only gates at every code commit.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-implementation",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/implementation.md#L320-L324",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/implementation.md",
+          "lineRange": {
+            "start": 320,
+            "end": 324
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/implementation.md#L320-L324"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-recap-manifests",
+      "text": "Each wave row names its per-wave recap run identifier and records the package as built-durable, giving four independently addressable recap packages at program close.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L28-L31",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 28,
+            "end": 31
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L28-L31"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-recap-w1-attestation",
+      "text": "Wave 1's recap needed a second attestation: the pre-commit formatter rewrote 9 of the 27 immutable package files at the artifact commit, the first durability run recorded nine hash mismatches, and only after the pre-format bytes were restored did a fresh attestation record the package as durable.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L125-L127",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/summary.md",
+          "lineRange": {
+            "start": 125,
+            "end": 127
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L125-L127"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-recap-w2",
+      "text": "Wave 2's recap built one hub with real Chromium evidence at 320, 768 and 1440 and passed visual review on attempt 1.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L92",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/summary.md",
+          "lineRange": {
+            "start": 92,
+            "end": 92
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L92"
+        }
+      ]
+    },
+    {
+      "id": "aggregate-recap-w3",
+      "text": "Wave 3's recap matched that shape exactly — one hub, the same three viewports, visual review passed on attempt 1 — which is what makes the four packages comparable.",
+      "status": "confirmed",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L107",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/summary.md",
+          "lineRange": {
+            "start": 107,
+            "end": 107
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L107"
+        }
+      ]
+    },
+    {
+      "id": "followup-w1-candidates",
+      "text": "Wave 1 carried four backlog candidates to file at wave close: a gate exec-target entitlement probe with post-selection fallback, resolver stamp output, the version policy for test-only paths, and smoke-tier worktree hygiene in linked worktrees.",
+      "status": "confirmed",
+      "sections": [
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L136-L139",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/summary.md",
+          "lineRange": {
+            "start": 136,
+            "end": 139
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L136-L139"
+        }
+      ]
+    },
+    {
+      "id": "followup-w2-filed",
+      "text": "Wave 2 filed the accumulated follow-ups as backlog items: silent version restamps outside sync, the gate headless-yield contract with a configuration audit, resolver stamp output, the test-only version policy, and deterministic-smoke worktree hygiene.",
+      "status": "confirmed",
+      "sections": [
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L87-L90",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 87,
+            "end": 90
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L87-L90"
+        }
+      ]
+    },
+    {
+      "id": "followup-w3-filed",
+      "text": "Wave 3 filed two backlog items: a structural check so partial override bundles fail closed, and override-aware remedy wording in the fail-closed errors.",
+      "status": "confirmed",
+      "sections": [
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L116-L117",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 116,
+            "end": 117
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L116-L117"
+        }
+      ]
+    },
+    {
+      "id": "followup-w3-candidates",
+      "text": "Wave 3's own follow-up list names the same two items as the ones to file at wave close, alongside a documentation entry that landed at the document step.",
+      "status": "confirmed",
+      "sections": [
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L109-L116",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/summary.md",
+          "lineRange": {
+            "start": 109,
+            "end": 116
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L109-L116"
+        }
+      ]
+    },
+    {
+      "id": "followup-w4-filed",
+      "text": "Wave 4 filed three backlog items: widening the below-floor guard beyond a phrase literal, span-based prose guards with anchored probe records, and a provider reference refresh covering the new effort tier and a dated model retirement.",
+      "status": "confirmed",
+      "sections": [
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L146-L148",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 146,
+            "end": 148
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L146-L148"
+        }
+      ]
+    },
+    {
+      "id": "followup-w4-candidates",
+      "text": "Wave 4's follow-up list adds the detail: a generalized probe runner for skill contract tests, and per-subcommand flag coverage in the provider reference refresh.",
+      "status": "confirmed",
+      "sections": [
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L125-L128",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 125,
+            "end": 128
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L125-L128"
+        }
+      ]
+    },
+    {
+      "id": "followup-w1-minors",
+      "text": "Wave 1 deferred three minors with an explicit trigger rather than filing them: quoting in the malformed-version diagnostic, regression coverage for the forced and timed-out diagnostic branches, and zombie-child wording — all due on the next release-tooling or smoke-harness touch.",
+      "status": "confirmed",
+      "sections": [
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L131-L135",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/summary.md",
+          "lineRange": {
+            "start": 131,
+            "end": 135
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L131-L135"
+        }
+      ]
+    },
+    {
+      "id": "followup-w2-minor",
+      "text": "Wave 2 deferred one minor to a named trigger: making the skew field non-optional on the next touch of the sync types.",
+      "status": "confirmed",
+      "sections": [
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "w2-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L100-L101",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-2-execution/summary.md",
+          "lineRange": {
+            "start": 100,
+            "end": 101
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L100-L101"
+        }
+      ]
+    },
+    {
+      "id": "followup-recap-deferral",
+      "text": "Every wave row defers the same two things to program close — the completion tail and recap publication — so publication stayed one human decision instead of four.",
+      "status": "confirmed",
+      "sections": [
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L26-L31",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 26,
+            "end": 31
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L26-L31"
+        }
+      ]
+    },
+    {
+      "id": "followup-oatversion-open",
+      "text": "The sync manifest version still trails the package versions, a pre-existing repository-wide pattern that is exactly the class Wave 2 shipped the advisory for and that its backlog item tracks.",
+      "status": "confirmed",
+      "sections": [
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "w3-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L103-L105",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-3-execution/summary.md",
+          "lineRange": {
+            "start": 103,
+            "end": 105
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L103-L105"
+        }
+      ]
+    },
+    {
+      "id": "followup-provider-codex-open",
+      "text": "The Codex provider reference remains a consumed authority whose own refresh is now due: the live docs list a new effort tier and a model retirement dated 2026-08-31, filed as a follow-up on the way out of Wave 4.",
+      "status": "confirmed",
+      "sections": [
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-summary",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L117-L121",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/summary.md",
+          "lineRange": {
+            "start": 117,
+            "end": 121
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L117-L121"
+        }
+      ]
+    }
+  ],
+  "unresolvedClaims": [
+    {
+      "id": "wave-close-pr-numbers",
+      "text": "The four wave-close PR numbers are supplied by the dispatching operator, but no reconciled source at this revision records them; only the resulting main commits after each close are cited, and the Wave 4 close commit is the revision this recap was generated from.",
+      "reason": "missing-evidence",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L33",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 33,
+            "end": 33
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L33"
+        }
+      ]
+    },
+    {
+      "id": "w4-contract-test-case-count",
+      "text": "Wave 4's completion record states an eight-case contract test and eighteen cross-model rounds, while the same wave's end-of-run synthesis states seven cases and sixteen rounds. The completion record is treated as authoritative here and the synthesis figures as a pre-final snapshot.",
+      "reason": "contradictory",
+      "sections": [
+        "per-wave-outcomes"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L204-L209",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 204,
+            "end": 209
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L204-L209"
+        }
+      ]
+    },
+    {
+      "id": "program-commit-total",
+      "text": "No program-wide commit total is derivable: Wave 4's synthesis counts one implementer commit and five append-only fixes where its completion record names six, so the four squash merges are the only aggregate commit figure this recap asserts.",
+      "reason": "contradictory",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w4-orchestration-log",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L206-L209",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-4-execution/orchestration-log.md",
+          "lineRange": {
+            "start": 206,
+            "end": 209
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L206-L209"
+        }
+      ]
+    },
+    {
+      "id": "w1-added-test-count",
+      "text": "Wave 1's net added test count is not recoverable from its records, which report post-wave totals without the pre-wave baseline, so program-level suite growth is stated from Wave 2 onward.",
+      "reason": "missing-evidence",
+      "sections": [
+        "aggregate-numbers"
+      ],
+      "citations": [
+        {
+          "sourceId": "w1-implementation",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/implementation.md#L484-L489",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/projects/shared/wave-1-execution/implementation.md",
+          "lineRange": {
+            "start": 484,
+            "end": 489
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/implementation.md#L484-L489"
+        }
+      ]
+    },
+    {
+      "id": "backlog-item-total",
+      "text": "No source states a program-wide count or current status for the backlog items the waves filed, so this ledger lists what each wave filed and leaves the total unasserted.",
+      "reason": "needs-confirmation",
+      "sections": [
+        "follow-up-ledger"
+      ],
+      "citations": [
+        {
+          "sourceId": "program",
+          "locator": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L87-L90",
+          "repository": "voxmedia/open-agent-toolkit",
+          "revision": "f291716544dadfbd10684450679a7e1c21990638",
+          "path": ".oat/repo/reference/external-plans/2026-08-19-execution-program.md",
+          "lineRange": {
+            "start": 87,
+            "end": 90
+          },
+          "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L87-L90"
+        }
+      ]
+    }
+  ],
+  "overrides": []
+}

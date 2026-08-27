@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "explainer-kit.set-plan-ledger/v1",
+  "planId": "defect-wave-program-recap-floor",
+  "terminology": [
+    {
+      "term": "wrapper project",
+      "meaning": "The thin OAT project a wave runs as; it adds ordering, isolation, gates and bookkeeping over an immutable external plan."
+    },
+    {
+      "term": "lockstep",
+      "meaning": "The five public packages whose versions must move together in one PR."
+    },
+    {
+      "term": "drift refresh",
+      "meaning": "The wave-boundary re-derivation of a plan against current main before the lane starts."
+    },
+    {
+      "term": "cycle cap",
+      "meaning": "The ceiling on review rounds for one scope, after which fixes must be reviewer-specified and root-verified."
+    },
+    {
+      "term": "completion tail",
+      "meaning": "The post-merge wrapper-project bookkeeping deferred to program close."
+    },
+    {
+      "term": "built-durable",
+      "meaning": "An explainer package whose immutable bytes are committed and verified against its manifest hashes."
+    }
+  ],
+  "statuses": [
+    {
+      "subject": "waves",
+      "value": "4 of 4 merged"
+    },
+    {
+      "subject": "plans",
+      "value": "5 of 5 done"
+    },
+    {
+      "subject": "completion tail",
+      "value": "human-gated"
+    },
+    {
+      "subject": "program recap",
+      "value": "generated for review only"
+    }
+  ],
+  "numbers": [
+    {
+      "subject": "waves merged",
+      "value": 4,
+      "unit": "waves"
+    },
+    {
+      "subject": "plans executed",
+      "value": 5,
+      "unit": "plans"
+    },
+    {
+      "subject": "key decisions recorded",
+      "value": 12,
+      "unit": "decisions"
+    },
+    {
+      "subject": "cli suite after wave 3",
+      "value": 3695,
+      "unit": "tests"
+    },
+    {
+      "subject": "skills suite after wave 4",
+      "value": 586,
+      "unit": "tests"
+    }
+  ]
+}

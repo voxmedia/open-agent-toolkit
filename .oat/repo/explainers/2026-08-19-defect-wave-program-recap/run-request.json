@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "explainer-kit.run-request/v1",
+  "recipe": {
+    "id": "program-recap",
+    "version": "1"
+  },
+  "slug": "2026-08-19-defect-wave-program-recap",
+  "outputRoot": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/bug-triage/.oat/repo/explainers",
+  "factBase": {
+    "mode": "supplied",
+    "freshnessPolicy": "live-wins",
+    "path": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/bug-triage/.oat/repo/reference/project-recaps/2026-08-19-defect-wave-program.fact-base.json"
+  },
+  "mode": "unattended",
+  "theme": {
+    "renderStrategy": "default-only"
+  }
+}
