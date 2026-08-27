@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t07
+oat_current_task: p05-t01
 oat_last_commit: f337df8b5d3b403322a7461077dac6894c5ba7cc
 oat_blockers: []
 associated_issues: [
@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T14:35:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T14:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -98,7 +98,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 4 review blocking
+**Status:** Implementation in progress — Phase 5 ready
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -216,8 +216,13 @@ Fix iteration 1/2 closed all five findings in one append-only commit,
 `f337df8b5d3b403322a7461077dac6894c5ba7cc`. Root independently verified the
 commit boundary and reproduced the phase suite (404/404), full CLI
 (3,797/3,797), `check:skill-bumps`, `pnpm check`, `pnpm type-check`, and the
-I1/I2 behavioral acceptance end-to-end. Decisive fresh independent re-review is
-pending.
+I1/I2 behavioral acceptance end-to-end.
+Decisive fresh independent re-review passed with 0 Critical and 0 Important
+(1 Medium, 4 Minor), closing all five findings, so Phase 4 passes. The
+re-reviewer independently re-derived the ratchet scanner regex, confirmed the
+retargeted I1 test fails when the fix is reverted, and upheld all three
+implementer bounding decisions. The Medium and four Minor findings are deferred
+and non-blocking, and are routed to Phase 5. Phase 5 is ready to begin.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -227,7 +232,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 4 implemented; review pending)
+- **Implementation:** `implementation.md` (Phase 4 complete; Phase 5 ready)
 
 ## Progress
 
@@ -304,7 +309,9 @@ HiLL checkpoint and automatic checkpoint review.
 - ✗ Phase 4 review: 0 Critical, 2 Important, 3 Medium, 1 Minor
 - ✓ Operator authorized a Claude High fix route and folded in the Mediums
 - ✓ Phase 4 fix iteration 1/2 completed in `f337df8b5`
-- ⧗ Phase 4 fresh independent re-review pending
+- ✓ Phase 4 decisive fresh independent re-review passed (0 Critical, 0 Important)
+- ✓ Phase 4 completed; 1 Medium and 4 Minor deferred to Phase 5
+- ⧗ Phase 5 ready at `p05-t01`
 
 ## Blockers
 
@@ -312,4 +319,4 @@ None.
 
 ## Next Milestone
 
-Fresh independent Phase 4 re-review of fix commit `f337df8b5`.
+Begin Phase 5 at `p05-t01`.

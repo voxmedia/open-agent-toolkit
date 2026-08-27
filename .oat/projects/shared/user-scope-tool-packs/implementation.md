@@ -22,7 +22,7 @@ oat_generated: false
 | Phase 1 | completed | 7     | 7/7       |
 | Phase 2 | completed | 9     | 9/9       |
 | Phase 3 | completed | 5     | 5/5       |
-| Phase 4 | review    | 7     | 7/7       |
+| Phase 4 | completed | 7     | 7/7       |
 | Phase 5 | pending   | 6     | 0/6       |
 
 **Total:** 28/34 tasks completed
@@ -334,9 +334,9 @@ oat_generated: false
 
 ## Phase 4: PJM Ownership and Portable Resources
 
-**Status:** implementation complete; independent review pending
+**Status:** completed
 **Started:** 2026-08-27
-**Completed:** —
+**Completed:** 2026-08-27
 
 ### Phase Summary
 
@@ -377,6 +377,15 @@ oat_generated: false
   no plan edit is required for correctness. The narrow phase command is recorded
   here as the cause of recovery attempts 2/10 and 3/10 rather than silently
   absorbed.
+
+**Second divergence (recorded, from re-review Minor m4):**
+
+- `design.md:506-507` states that tests avoid ambient HOME mutation. Fix
+  iteration 1 added deliberately HOME-mutating negative tests to prove the M1
+  read/write home divergence, which is the only way to establish that contract.
+- Source of truth: the implementation. `design.md` is stale on this sentence.
+- Follow-up: amend that design sentence during Phase 5 documentation rather than
+  reverting the tests.
 
 **Review outcome:**
 
@@ -456,12 +465,12 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Status    | Tasks | Review   | Fix loops |
-| ----- | --------- | ----- | -------- | --------- |
-| p01   | completed | 7/7   | passed   | 3         |
-| p02   | completed | 9/9   | passed   | 2         |
-| p03   | completed | 5/5   | passed   | 3         |
-| p04   | review    | 7/7   | blocking | 1         |
+| Phase | Status    | Tasks | Review | Fix loops |
+| ----- | --------- | ----- | ------ | --------- |
+| p01   | completed | 7/7   | passed | 3         |
+| p02   | completed | 9/9   | passed | 2         |
+| p03   | completed | 5/5   | passed | 3         |
+| p04   | completed | 7/7   | passed | 1         |
 
 #### Root-inline phase
 
@@ -490,6 +499,30 @@ oat_generated: false
   this entry, and the omission is what caused the child's terminal
   direction-required stop.
 - `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Passing Phase 4 re-review: `oat-reviewer` at the Claude High ceiling, model
+  `opus`; artifact `reviews/p04-review-2026-08-27T144000Z.md`, range
+  `bed357bab..f337df8b5`; reconnaissance `not-attempted`. Verdict pass:
+  0 Critical, 0 Important, 1 Medium, 4 Minor. All five prior findings closed.
+  The re-reviewer independently re-derived the ratchet scanner regex, confirmed
+  the retargeted I1 test fails when the fix is reverted, and adjudicated all
+  three implementer concerns: the M3 ratchet bound is correct rather than
+  under-delivery, `migratePjmRepo` writing root AGENTS is correct and in-scope,
+  and `destinations.md:79` should not have been left but is only Minor.
+- `Dispatch: scope=p04-rereview1 action=review role=reviewer producer=claude provenance=resolver model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer(model=opus)`
+- Phase 4 deferred non-blocking findings, all routed to Phase 5:
+  - Medium: five packaged user-scope skills still chain via bare repo-relative
+    paths (`oat-idea-ideate:120`, `oat-idea-new:143`,
+    `oat-idea-summarize:84,117`, `oat-project-implement:23-24`,
+    `oat-project-plan-writing:29-30`); pinned by the ratchet, not fixed.
+  - Minor m1: `oat-brainstorm/references/destinations.md:79` retains two bare
+    cross-skill paths and now contradicts `SKILL.md:400`.
+  - Minor m2: the ratchet scanner is `SKILL.md`-only and its regex requires
+    backticks.
+  - Minor m3: `oat pjm migrate` is still keyed on project pack intent
+    (`migrate.ts:474`); same class as the deferred aggregate-doctor Minor. Fold
+    into `p05-t01`.
+  - Minor m4: artifact drift — `design.md:506-507` says tests avoid ambient HOME
+    mutation, but the new negative tests mutate it deliberately.
 - Phase 4 fix iteration 1/2: `oat-phase-implementer` at the Claude High
   ceiling, model `opus`, operator-scope authorized route change linked to
   original request `call_yFu85ZIagHG2fzbtGD5Qz5wq`; the original target
@@ -777,7 +810,7 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Fresh independent Phase 4 re-review of fix commit `f337df8b5`.
+- Begin Phase 5 at `p05-t01`.
 
 ## Final Summary (for PR/docs)
 
