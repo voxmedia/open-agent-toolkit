@@ -204,13 +204,13 @@ git commit -m "feat(p01-t01): route codex-skill through provider guidance and ma
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target              |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------------ |
-| p01    | code     | pending | -          | -                                                           | -             | -          | -                        |
-| final  | code     | pending | -          | -                                                           | -             | -          | -                        |
-| plan   | artifact | passed  | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020212Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| spec   | artifact | pending | -          | -                                                           | -             | -          | -                        |
-| design | artifact | pending | -          | -                                                           | -             | -          | -                        |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | fixes_added | 2026-08-27 | reviews/archived/p01-review-2026-08-27T033338Z.md           | b97408f2b968c656f00ca07933e148f4f0ff30cb | auto       | -                        |
+| final  | code     | pending     | -          | -                                                           | -                                        | -          | -                        |
+| plan   | artifact | passed      | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020212Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                        |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -                        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

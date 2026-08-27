@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: null # p01-t01 implemented; phase review in progress
+oat_last_commit: b97408f2 # p01-t01 implementation commit
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260819-refresh-codex-skill-model' }
@@ -88,13 +88,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T01:55:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T02:05:52.735Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T03:37:11.036Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-4-execution
 
-**Status:** Implement — p01 dispatched (plan gate passed round 1, run 0d369be4, one medium resolved in-artifact)
+**Status:** Implement — p01 review round 1 received (0C/0I/3M/4m); bounded fix round in progress
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
@@ -122,7 +122,9 @@ non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Rec
 - ✓ Wave-boundary drift refresh incl. live Codex CLI/docs reread: 1 PASS / 0 MINOR-DRIFT / 0 STOP after reconciliation
 - ✓ Wrapper scaffolded (discovery, plan, orchestration log)
 - ✓ Configured plan gate passed round 1 (cursor-gpt-5-6-sol-xhigh, run 0d369be4, 0C/0I/1M/0m — mutation probes mapped into rule 8)
-- ⧗ Phase p01 via `oat-project-implement` (Opus implementer, request w4-p01-impl-001)
+- ✓ Phase p01 implemented by the Opus implementer (`b97408f2`; DoD 10/10; Codex 7 rounds, 9 fixed)
+- ✓ Phase review round 1 (Opus; 0C/0I/3M/4m — HEAD correct, guard coverage + one wording claim)
+- ⧗ Fix round `w4-p01-fix-001` (M1, M3, m1–m4; M2 root bookkeeping) → narrowed review round 2
 
 ## Blockers
 
@@ -130,4 +132,4 @@ None
 
 ## Next Milestone
 
-Plan gate `passed` → dispatch p01 (Opus implementer) → phase review → final review → configured exit gate → post-implement sequence → PR → merge → wave-close → program recap (generate only) → HUMAN-GATED completion-tail checkpoint. Completion tail: deferred to program close.
+p01 phase review → final review → configured exit gate → post-implement sequence → PR → merge → wave-close → program recap (generate only) → HUMAN-GATED completion-tail checkpoint. Completion tail: deferred to program close.

@@ -44,3 +44,38 @@ mutation-probe requirement was not mapped into the wrapper's phase-review
 checklist → rule 8 extended (two bounded reviewer-run mutation probes; class
 findings trigger a repo-wide sweep). Resolved in-artifact; archived at
 `reviews/archived/artifact-plan-review-2026-08-27T020212Z.md`.
+
+### 2026-08-27 · structural · oat-project-implement · p01 implemented
+
+`w4-p01-impl-001` (Opus) returned DONE at `b97408f2` (one commit, DoD 10/10,
+post-commit `release:check-versions` and `check:skill-bumps` re-runs 0; Codex
+cross-model review seven rounds, 9 findings fixed); `w4-p01-review-001`
+(Opus, fresh) dispatched against `b97408f2`.
+
+### 2026-08-27 · general · friction · two committed-state-only gates, not one
+
+`pnpm run check:skill-bumps` reported "0 canonical skills changed … nothing
+to validate" for the whole uncommitted phase and only became a real check
+after the commit — the same class as `release:check-versions` (W3 rule).
+Rule: the post-commit re-run covers both gates.
+
+### 2026-08-27 · general · friction · live-CLI reread must diff flags per subcommand
+
+The drift record captured `--skip-git-repo-check` on `exec` and
+`exec resume` but not that `-s`, `-C`, and `--approve-for-me` are absent
+from `exec resume`; the implementer found it and normalized the resume
+examples accordingly. **Skill signal (gap):** a live-syntax reread should
+record the flag set per subcommand, not per binary.
+
+### 2026-08-27 · general · worked-well · mechanical flag swaps are not behavior-neutral
+
+Mapping `--full-auto` → a bypass flag on the `danger-full-access` row would
+have weakened sandbox posture (plan STOP #3); Codex review round 2 caught it
+before commit. A like-for-like swap must be re-evaluated per row when the
+replacement carries its own sandbox semantics.
+
+### 2026-08-27 · general · friction · cross-model review needs a stopping rule
+
+Rounds 1–2 caught real defects; rounds 3–6 were narrowing fidelity refinements
+of the same paragraph; seven rounds exceeded the lane's budget. Rule: stop at
+two consecutive clean rounds or when findings drop below Medium.
