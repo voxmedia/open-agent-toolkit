@@ -1,7 +1,7 @@
 ---
 id: BL-260819-refresh-codex-skill-model
 title: Refresh codex-skill model routing and repository-check policy
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - safety
 assignee: null
 created: 2026-08-19T23:15:06.285Z
-updated: 2026-08-20T02:37:32Z
+updated: '2026-08-27T06:11:33Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-19-refresh-codex-skill-routing.md

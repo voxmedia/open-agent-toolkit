@@ -1,0 +1,738 @@
+# Fact base
+
+## Confirmed claims
+
+- **implementation:** ---
+oat_status: in_progress
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-08-27
+oat_current_task_id: null
+oat_generated: false
+---
+
+# Implementation: wave-4-execution
+
+**Started:** 2026-08-27
+**Last Updated:** 2026-08-27
+
+> This document is used to resume interrupted implementation sessions.
+>
+> Conventions:
+>
+> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
+> - When all plan tasks are complete, set `oat_current_task_id: null`.
+> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
+> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
+> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+
+## Progress Overview
+
+| Phase    | Status   | Tasks | Completed |
+| -------- | -------- | ----- | --------- |
+| Phase 01 | complete | 1     | 1/1       |
+
+**Total:** 1/1 tasks completed (phase passed after three review cycles)
+
+## Phase 01: refresh-codex-skill-routing (solo)
+
+**Source plan (the contract):** `.oat/repo/reference/external-plans/2026-08-19-refresh-codex-skill-routing.md`
+**Status:** passed — three review cycles; round-3 fixes root-verified under the cycle cap at `44fb2327`
+
+### Phase Summary (fill when phase is complete)
+
+Source plan executed in full: `codex-skill` classifies work by OAT task class and takes model and effort from `provider-codex.md` (named as the source of truth; dated examples never override it; compatibility snapshots never defaults); routes offered as one combined model+effort choice; a valid user-supplied pair is honored (below-floor: say so once without blocking; direct-API specialist classification: confirm before launching); if the reference is unavailable the skill stops and asks. `--skip-git-repo-check` removed from ordinary initial-run, `-C`, and resume commands and kept only for a non-Git target directory with reason + authorization; resume examples normalized to the live `codex exec resume` usage; the dead `--full-auto` replaced under the operator-reconciled STOP #2 (`--approve-for-me` only with `-s workspace-write`; network inside a write sandbox via `-c sandbox_workspace_write.network_access=true`; `-s danger-full-access` for genuine broad-filesystem needs; the bypass-all flag for externally sandboxed automation) — sandbox and high-impact authorization retained and tightened. Eight-case prose contract test with logical-line normalization, an exemption rule keyed on any `codex` invocation and on a row's use-case cell, and property-based assertions; 36-probe mutation matrix (with isolation controls) in the required state; two guard residuals (broadened exception row, anaphoric clause) ledgered to backlog at the cycle cap and independently reproduced by the exit gate. `codex-skill` 1.2.0 → 1.3.0 once; lockstep 0.2.35 → 0.2.36. Three p01 review rounds (0C/0I/3M/4m → 0C/0I/3M/2m → 0C/0I/1M/1m) plus final-scope rounds (0C/1I/4M/1m → 0C/0I/2M/1m → 0C/0I/3M/0m), eighteen Codex rounds across seven commits; `SKILL.md` unchanged since `39121c35`.
+
+### Task p01-t01: Execute external plan — Route codex-skill through current model guidance and preserve repository checks
+
+- **Status:** done · **Commit:** `b97408f2b968c656f00ca07933e148f4f0ff30cb` (sole commit; parent `51c7ec57`)
+- **Implementer:** `oat-phase-implementer` (Opus), request `w4-p01-impl-001`; recovery attempts 0.
+- **Drift check:** PASS — plan drift command differs from `6f443c08` only in the five manifests' `version` line; addendum 1 (release surfaces vs fetched `origin/main` = `3c135e21`, baseline 0.2.35): empty; addendum 2 (live Codex, `codex-cli 0.149.1`, captured to `$TMPDIR/w4-p01/codex-help.txt`): `exec` has `-m`, `-c`, `-s`, `-C`, `--skip-git-repo-check`, `--approve-for-me`, `--dangerously-bypass-approvals-and-sandbox`, no `--full-auto`, no effort flag; `exec resume` lacks `-s`, `-C`, and `--approve-for-me` (new fact beyond the drift record — drove the resume normalization); addendum 3: `package.json` and `bundle-inputs.mjs` unchanged (`codex-skill` repo-only). STOP #1 clear; STOP #2 under the operator reconciliation; STOP #3–#5 not tripped.
+- **What changed:** `.agents/skills/codex-skill/SKILL.md` (frontmatter `version` 1.2.0 → 1.3.0): step 1 classifies the work by OAT task class and names `provider-codex.md` as the source of truth for model and effort (examples are dated, snapshots never defaults); routes offered as one combined model+effort choice; user-supplied pairs honored with a warn-not-block matrix check; direct-API-only routes excluded (a user-supplied direct-API-only model stops and asks for a CLI route); `--skip-git-repo-check` removed from ordinary initial-run, `-C`, and resume commands and kept only for a non-Git target directory (reason + `AskUserQuestion` authorization); the dead `--full-auto` replaced per the operator reconciliation — `--approve-for-me` only with `-s workspace-write`, `--dangerously-bypass-approvals-and-sandbox` reserved for externally sandboxed automation (the `danger-full-access` row no longer carries a bypass); resume examples normalized to the live `exec resume` usage (options after `resume`; `-c sandbox_mode=` verified accepted on resume via `--strict-config` with a bogus-key control); high-impact flag list names the live flags. New `.agents/skills/codex-skill/tests/codex-skill-contract.test.mjs` (`node:test`, 7 cases: authority named; no stale pair offered as a choice; no blanket bypass; non-repository condition + authorization stated; initial/`-C`/resume examples omit the bypass by default; no false resume-inheritance claim). Lockstep 0.2.35 → 0.2.36 (five manifests); `public-package-versions.json` regenerated by `pnpm build`; lockfile unchanged.
+- **Verify gates:** step 1 `rg "gpt-5\.3-codex|gpt-5\.4" SKILL.md` → no matches; step 2 three `skip-git-repo-check` mentions, all conditional/authorized (`SKILL.md:52-55`, `:91`, `:117-120`); step 3 `pnpm test:skills` 0 (585 = 578 + 7), `check:skill-bumps` 0, fetch-first `release:check-versions` 0; focused `node --test .agents/skills/codex-skill/tests/*.test.mjs` 7/7. Implementer mutation self-probes on a temp copy: stale pair reintroduced → 1 failure; blanket bypass reintroduced → 2 failures.
+- **DoD (pre-commit, all exit 0, logs `$TMPDIR/w4-p01/`):** check, type-check, test, build, check:skill-bumps, fetch + release:check-versions, release:validate, build:docs, lint, format; post-commit re-runs: `release:check-versions` 0 and `check:skill-bumps` 0 (both committed-state-only).
+- **Cross-model review (plan Step 4):** `codex review --uncommitted` — seven rounds, 9 findings, 9 fixed, 0 dismissed, round 7 clean. Notable: R2 P1 — the mechanical `--full-auto` → bypass mapping on the `danger-full-access` row would have weakened sandbox posture (plan STOP #3) → fixed; R3 P2 — `-c sandbox_mode=` is accepted on resume (verified before accepting); R4 P2 — the stale-model regex also rejected legitimate prose and `gpt-5.4-mini` → narrowed.
+- **Self-identified risks (handed to the reviewer):** resume-configuration wording is the softest fact; `--approve-for-me` semantics documented by one help line; contract-test regex breadth after narrowing; nine review-driven wording edits beyond the plan's minimal text (non-narrowing?); `public-package-versions.json` regenerated, not hand-edited.
+
+## Orchestration Runs
+
+_Each run from `oat-project-implement` appends an entry below with:_
+_- Run header (number, timestamp, branch, tier, policy, phase counts)_
+_- Phase Outcomes table_
+_- Parallel Groups list_
+_- Outstanding Items_
+
+<!-- orchestration-runs-start -->
+
+### Run 1 — 2026-08-27 (complete: 1 phase passed, 0 failed, 0 stopped)
+
+- Branch: `wave-4-execution`; Tier 1 (native `oat-phase-implementer` /
+  `oat-reviewer`); dispatch policy managed / `high` (Claude `opus`, enforced —
+  Task model arg); schedule `[p01]` (solo, integration checkout).
+- Phase recovery policy: default limit 10; usage ledger in `state.md`.
+
+#### Dispatch records
+
+- `w4-p01-impl-001` — caller `oat-project-implement`; scope `p01`; action
+  implementation; role `oat-phase-implementer` (class worker); provider claude;
+  dispatch_context root-native (Task tool); catalog: Task-tool model enum
+  {sonnet, opus, haiku, fable} observed 2026-08-27; role_selector
+  `oat-phase-implementer`; model_selector `opus` (tier-alias); effort
+  not-exposed (`effort_axis=not-applicable`); selection_source native-default;
+  selection_reason native-catalog; candidates_considered [opus]; task_class
+  default-implementation (classification_source caller: bounded skill-contract
+  rewrite + prose contract test + lockstep bump in one lane; policy boundary
+  reviewed separately as consequential); floor satisfied; authority: write in
+  the integration checkout within the source plan's scope; retry_limit 0
+  (phase recovery contract owns post-commit repair); resolver
+  `oat project dispatch-ceiling resolve` (`w4-resolve-p01-implementer.json`).
+  Stamp:
+  `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=opus`
+- `w4-p01-review-001` — caller `oat-project-implement`; scope `p01`; action
+  review; role `oat-reviewer` (class reviewer, fresh); provider claude;
+  model_selector `opus` (configured review ceiling); task_class consequential
+  (repository-check bypass / sandbox authorization boundary); brief mandates the
+  plan-gate-mapped mutation probes plus five more; resolver output
+  `w4-resolve-p01-reviewer.json`. Stamp:
+  `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=opus`
+- Enforcement log: `Dispatch policy: high; selected=opus; cap=opus (claude, enforced — Task model arg)`.
+- Launch acceptance (2026-08-27): `w4-p01-impl-001` accepted by the Claude Code Task tool (native, `subagent_type: oat-phase-implementer`, `model: opus`) on the integration checkout at `51c7ec57`; returned DONE at `b97408f2`. `w4-p01-review-001` accepted (native, `subagent_type: oat-reviewer`, `model: opus`) against `b97408f2`.
+
+#### Phase Outcomes
+
+| Phase | Worktree                                  | Implementer outcome                                                                               | Review outcome                                                                                                    | Fix rounds | Merged |
+| ----- | ----------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
+| p01   | integration checkout (`wave-4-execution`) | DONE (b97408f2 + fixes d9ce0c33, 39121c35, 44fb2327; DoD 10/10 green; codex 7 + 3 + 2 + 1 rounds) | passed (rounds: 0C/0I/3M/4m → 0C/0I/3M/2m → 0C/0I/1M/1m; cap; round-3 fixes root-verified, final review verifies) | 3          | n/a    |
+
+_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
+<!-- orchestration-runs-end -->
+
+---
+
+### Review Received: p01 (round 1)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/p01-review-2026-08-27T033338Z.md (reviewed head `b97408f2b968c656f00ca07933e148f4f0ff30cb`, range `3c135e21..b97408f2`, invocation auto, dispatch `w4-p01-review-001`, model opus; probes: live-syntax validation per subcommand, contract-test mutation matrix, authority check, bypass semantics, release bookkeeping, scope verdict on the nine Codex-driven edits, STOP/reconciliation check)
+
+**Findings:** Critical 0 · Important 0 · Medium 3 · Minor 4 — HEAD is correct (all three surviving bypass mentions conditional and authorization-gated; no example carries the bypass; sandbox/high-impact authorization not weakened; the nine Codex-driven edits judged in scope); the gaps are guard coverage and one unsupported wording claim.
+
+**Dispositions (bounded fix round, append-only, resumed implementer handle `w4-p01-impl-001` → fix request `w4-p01-fix-001`):**
+
+- M1 contract test blind spots (`/only/i` exempts `read-only` lines; Quick Reference rows lack the literal `codex exec`, so a bypass added there passes — probes c2/g1 green) → **fix**: derive the checked set from command-ish content (backticked `codex …` or `-s `/`--sandbox`) and replace the exclusion with an explicit allowlist on the documented exception phrase (`/not a Git repo/i`); probes c2 and g1 must fail afterwards.
+- M2 phase bookkeeping still template at the reviewed head (root-owned) → **resolved by the root** in this commit: Run 1 record, task record with `b97408f2`, Progress Overview 1/1, `oat_last_commit`; `§ Done-criteria confirmation` is added at final-review receive (W3 pattern).
+- M3 "cannot run through the Codex CLI" asserts a capability limit the reference does not establish (it is a routing classification; user instruction overrides the dated examples) → **fix**: restate as the routing classification and downgrade the hard stop to warn-then-confirm, matching the below-floor treatment.
+- m1 narrowed stale-model regex evadable by a single retired slug (probes g2/g4 green; the pair is still caught) → **fix**: assert on the slug with a negative lookahead for live specialist suffixes (``/`gpt-5\.[0-3][^`]*`|`gpt-5\.4`(?!-)/i``), verify g2/g4 fail and `SKILL.md:38-40` + the test comment still pass.
+- m2 `danger-full-access` recommended where a narrower documented control exists (`-c sandbox_workspace_write.network_access=true`, reviewer-verified real key) → **fix**: split the row (network inside a write sandbox vs genuine broad filesystem access); both stay in the high-impact list.
+- m3 no fallback when the provider reference is unreadable → **fix**: one clause — stop and ask for an explicit model and effort rather than falling back to the dated examples.
+- m4 `--approve-for-me` / `-s` interaction unguarded in the numbered steps → **fix**: "pair `--approve-for-me` only with `-s workspace-write`".
+
+**Fix round `w4-p01-fix-001` (resumed implementer handle, append-only commit `d9ce0c332a2b13a27a04239ea037d0f4320a3c42` on `b97408f2`; 2 files, +44/−26; skill version still 1.3.0, packages still 0.2.36):**
+
+- M1 → command set derived from command-ish content (backticked `codex …` or `-s `/`--sandbox`), exception allowlist `/not a Git repo/i`; round-1 probes c2 and g1 now fail (were exit 0 at `b97408f2`).
+- M3 → "cannot run through the Codex CLI" removed; direct-API specialist routes stated as the reference's routing classification with warn-then-confirm (`SKILL.md:24-30`).
+- m1 → slug-keyed stale-model assertion with the live-suffix lookahead; probes g2/g4 fail, the `gpt-5.4-mini` false-positive control passes.
+- m2 → Quick Reference split: network inside a write sandbox (`-s workspace-write -c sandbox_workspace_write.network_access=true`) vs genuine broad filesystem access (`-s danger-full-access`, configured approval policy kept); both in the high-impact list (reordered so a rewrapped bullet cannot pair a sandbox flag with the bypass on one line).
+- m3 → missing-reference fallback: stop, ask for an explicit model and effort, run exactly what is named, skip the matrix checks the missing reference cannot answer (the last clause from Codex round 1).
+- m4 → `--approve-for-me` paired only with `-s workspace-write` in the numbered steps.
+- M2 → root bookkeeping: the Run 1 record, task record with the SHA, and `oat_last_commit` landed at `dd5f1da9`; the Progress Overview, Implementation Log scaffold, phantom Test Results row, and `oat_current_task_id` were NOT fixed there (round-2 M2) and are corrected in the round-2 receive commit.
+- DoD all ten exit 0 (`$TMPDIR/w4-p01-fix/`) plus `test:skills` 585/585 and focused 7/7; post-commit `release:check-versions` 0 and `check:skill-bumps` 0. Codex: round 1 P2 (fallback unusable) fixed; round 2 clean; round 3 asked to re-assert the M3 hard stop — dismissed as re-litigating a root disposition without new evidence; stopped per the stopping rule.
+
+**Verification record (root):** what — the fix commit's parent chain (`b97408f2` unchanged, `git rev-list --count b97408f2..HEAD` = 2), file list (2), version fields (1.3.0 / 0.2.36); how — `git log`/`git show --stat`/grep at HEAD; where — this entry; independent verification of each disposition — round-2 narrowed review `w4-p01-review-002`.
+
+**Review row `p01` → `fixes_completed` at `d9ce0c33`; narrowed round 2 dispatched.**
+
+### Review Received: p01 (round 2, narrowed)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/p01-review-2026-08-27T040820Z.md (reviewed head `d9ce0c332a2b13a27a04239ea037d0f4320a3c42`, range `b97408f2..d9ce0c33`, invocation auto, dispatch `w4-p01-review-002`, model opus, disposition-verification brief; 11 probes, `SKILL.md` sha256 identical before/after, nine gates exit 0)
+
+**Findings:** Critical 0 · Important 0 · Medium 3 · Minor 2 — m1–m4 verified; M1, M2, M3 partially verified. HEAD is still correct (three conditional, authorization-gated bypass mentions; no example carries it) — the residuals are guard breadth, one wording regression, and root bookkeeping.
+
+**Dispositions (second bounded fix round, append-only, resumed implementer handle → `w4-p01-fix-002`; round 3 narrowed review follows within the 3-cycle cap):**
+
+- M1 the new derivation requires a backtick before `codex ` and misses flag-bearing table rows (probes n1 fenced example, n2 table row: green; the exception allowlist is dead code at HEAD) → **fix**: reviewer-verified derivation — `/(?:^|[`\s])codex\s/`OR`/-s |--sandbox/` OR table rows with a backticked flag (`/^\s*\|.*`-{1,2}[a-z]/`); c2/g1/n1/n2 must fail, suite 7/7 otherwise.
+- M3 the rewrite made the below-floor case block on confirmation (plan step 1: no question when a valid model+effort was supplied) → **fix**: split the conditions — below-floor says so once without blocking; only the direct-API specialist classification confirms before launching; add a contract assertion pinning the non-blocking clause.
+- M2 root bookkeeping only partially landed and the `dd5f1da9` note overstated it → **resolved by the root in this commit**: Progress Overview 1/1, Implementation Log rewritten, phantom Test Results row removed, `oat_current_task_id: null`, disposition note corrected.
+- m1 line-position sensitivity (rewrapping the high-impact list or a stronger prohibition sentence produces false failures) → **fix**: exempt non-example prose explicitly (allowlist for the high-impact inventory and prohibition sentences) so wording improvements pass.
+- m2 stale-slug guard misses `gpt-5.5` (a compatibility route per `provider-codex.md:29`) → **fix**: add the 5.5 family to the assertion without the `gpt-5.4-mini` false positive; re-confirm the controls.
+
+**Fix round `w4-p01-fix-002` (resumed implementer handle, append-only commit `39121c35e3ee07d8b7785d783565ae89e087d337` on `d9ce0c33`; 2 files, +66/−15; skill version still 1.3.0, packages still 0.2.36):**
+
+- M1 → reviewer-verified derivation (`codex ` with or without a backtick, `-s `/`--sandbox`, flag-bearing table rows); probes c2/g1/n1/n2 all fail (n1/n2 were green at `d9ce0c33`).
+- M3 → two clauses: below-floor pairing "say so once, without blocking"; direct-API specialist classification "confirm before launching" (`SKILL.md:27-30`); 8th contract case pins the non-blocking clause (reverting to "confirm" → `not ok 3`).
+- m1 → soft-wrapped lines unwrapped into logical lines before filtering, then an explicit prose allowlist (`not a Git repo`, `high-impact flags`, `Do **not** add`/`Never pass`); probes r1/r2 now pass (were false failures); the allowlist is live code.
+- m2 → `gpt-5.5` family added to the stale-slug assertion; the legacy-block probe fails; `gpt-5.4-mini` control and GPT-5.6 prose pass.
+- DoD all ten exit 0 (`$TMPDIR/w4-p01-fix2/`), `test:skills` 586/586, focused 8/8; post-commit `release:check-versions` 0 and `check:skill-bumps` 0. Codex: two consecutive clean rounds → stopped; nothing re-opened.
+
+**Verification record (root):** what — parent chain (`b97408f2`, `d9ce0c33` unchanged; `git rev-list --count d9ce0c33..HEAD` = 2), file list (2), versions (1.3.0 / 0.2.36), focused test 8/8 run by the root; how — `git log`/`git show --stat`/grep/`node --test` at HEAD; where — this entry; independent verification — round-3 narrowed review `w4-p01-review-003`.
+
+**Review row `p01` → `fixes_completed` at `39121c35`; narrowed round 3 (cycle 3 of 3) dispatched.**
+
+### Review Received: p01 (round 3, narrowed — cycle 3 of 3)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/p01-review-2026-08-27T043458Z.md (reviewed head `39121c35e3ee07d8b7785d783565ae89e087d337`, range `d9ce0c33..39121c35`, invocation auto, dispatch `w4-p01-review-003`, model opus; probe matrix reproduced plus reviewer-designed probes u1–u9/w1; `SKILL.md` sha256 identical before/after)
+
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 1 (+ Deferred ledger D1–D4) — all round-2 dispositions verified; HEAD's skill content is correct (three conditional, authorization-gated bypass mentions; no example carries it). Residuals are guard hardening in the contract test, not shipped-behavior defects; the gate threshold is `important`.
+
+**Cycle-cap disposition (REVIEWRECEIVE-02):** scope `p01` has consumed its three review cycles; the root does not self-authorize a fourth. The reviewer supplied and byte-copy-verified the fixes for M1 and D1 and a concrete suggestion for m1. Disposition: a **bounded, reviewer-specified, root-verified fix** (append-only `w4-p01-fix-003`) with the probe matrix re-run by the root as the stored verification record; independent verification is delegated to the **final review** (scope `final`, its own cycles), which is briefed to verify these three items explicitly, and to the configured exit gate.
+
+- M1 `documentsTheException` exempts on keyword alone (probes u6/u7/u9 single lines and u1/u3 wrapped continuations escape; u8 control fails) → **fix**: reviewer-verified predicate — an exempted line must not itself run `codex exec|resume`; drop or justify the dead `Do **not** add|Never pass` branch; align the comment.
+- m1 below-floor assertion pins phrase co-location to one clause (probe u5, a clearer rewrite, fails) → **fix**: assert the property semantically (`without blocking` within 200 chars of `below the route` in either order; no clause pairs `below the route` with `confirm before launching`; `>= 1` matches).
+- D1 cross-directory assertion iterates physical lines (probe w1 escapes at all three heads) → **fix**: use `logicalLines` (reviewer-validated one-liner).
+- D2 paragraph-level over-strictness → accepted (no current false failure). D3 drifted line citations in the dispatch brief → accepted (cosmetic). D4 in-flight `oat_last_commit` → the `state.md` half was resolved in this commit; the Implementation Log fix-round-2 line was destroyed by a botched edit in `6075a705` and restored at the final-review receive (final round-1 I1).
+
+**Fix round `w4-p01-fix-003` (resumed implementer handle, append-only commit `44fb232773ee0360e4c891123ef069fc0bc137d6` on `39121c35`; test file only, +28/−19; `SKILL.md` byte-identical to `39121c35`; skill 1.3.0, packages 0.2.36):**
+
+- M1 → structural exemption: an exempted line must not itself run `codex exec|resume` (`tests/…:37-48`); the prohibition branch kept with a one-line justification (dropping it would re-fail probe r2).
+- m1 → semantic below-floor assertion: whole-file co-location window plus a no-clause-pairs-with-`confirm before launching` loop; `>= 1` matches (`:110-127`).
+- D1 → cross-directory assertion on `logicalLines` (`:181-183`).
+- DoD all ten exit 0 (`$TMPDIR/w4-p01-fix3/`), `test:skills` 586/586, focused 8/8; post-commit `release:check-versions` 0 and `check:skill-bumps` 0. Codex: one round, one P2 (widen the phrase-literal `confirm before launching` check to `\bconfirm`) — dismissed for scope (root-specified patch), recorded for the final review's ledger.
+
+**Verification record (root, cycle-cap disposition):** what — the 22-probe matrix (c2, g1, n1, n2, u1–u9, w1, g2, g4, g5, m3rev → fail; control, r1, r2, u4, u5, fp → pass) re-run by the root against HEAD `44fb2327` with the implementer's reproducible runner (temp copies; repository never written; `NO-TESTS-RAN` guard); how — `$TMPDIR/w4-p01-fix3/probes/run-all.sh` → `ALL PROBES MATCHED`, runner exit 0 (log `scratchpad/w4/root-probe-run.log`; runner copied to `scratchpad/w4/probes/`), plus `git show --stat` (one file) and `git diff --stat 39121c35 HEAD -- SKILL.md` empty; where — this entry; independent verification — the final review (scope `final`), briefed to re-run the matrix and attempt an evasion of the structural rule.
+
+**Review row `p01` → `passed` at `44fb2327` (round 3 dispositions root-verified under the cycle cap; final review verifies independently). Next: closeout baseline → root DoD → final review → configured exit gate.**
+
+### Review Received: final (round 1)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/final-review-2026-08-27T050607Z.md (reviewed head `41da6443304b0296d5fda899b9c3f10d1bc6815b`, range `3c135e21..41da6443`, invocation auto, dispatch `w4-final-review-001`, model opus)
+
+**Findings:** Critical 0 · Important 1 · Medium 4 · Minor 1 — no shipped-behavior defect: DoD 10/10 re-run by the reviewer at `41da6443`; every command example valid against live help; every offered/excluded route consistent with `provider-codex.md`; weaker-anywhere clean; the 22-probe matrix reproduces (`ALL PROBES MATCHED`); docs: no page references the old routing or bypass (`oat_docs_updated` → `skipped` at the document step is consistent). Two findings are contract-test guard breadth (the round-3 structural rule keys on two literal subcommand tokens; the below-floor assertion is evadable by paraphrase — the Codex `\bconfirm` patch is rejected but the concern is upheld); four are wrapper bookkeeping.
+
+**Deferred Findings Re-evaluation:** the reviewer's ledger closes R1 m1–m4, R2 m1–m2, R3 m1/D1, accepts D2/D3 and the STOP #2 reconciliation, and escalates the half-resolved D4 (now I1) and the R3 M1 partial closure (now M1).
+
+**Dispositions (bounded fix round on the final scope — cycle 1 of 3 for scope `final` — append-only `w4-final-fix-001` for the two test items; root bookkeeping in this commit):**
+
+- I1 Implementation Log: a botched edit in `6075a705` wrote a replacement callback's source in place of the round-2 line and dropped the round-3 line → **fixed** (both lines restored verbatim); D4 note corrected. Root cause: the receive script's `once` helper accepted a function as the replacement; the helper now rejects non-string replacements.
+- M1 structural exemption keys on `codex exec|resume` only (evasions e1 flag-only row with an allowlist phrase, e2 bare `codex`, e3 `codex e` alias) → **fix** (implementer): negative test on any live invocation of the binary (`/(?:^|[`\s])codex(?:\s|`)/`) and deny the exemption to flag-bearing table rows; e1–e3 must fail, the 22-probe matrix must stay matched.
+- M2 below-floor assertion evadable by paraphrase (b1 "ask for confirmation before running" passes; `\bconfirm` would false-fail b2) → **fix** (implementer): property-based denial of a confirmation/authorization _requirement_ in the below-floor clause set while allowing negated mentions; b1 must fail, b2/u4/u5/control must pass.
+- M3 Reviews ledger `p01` row paired the round-3 artifact with `44fb2327`, a head it never reviewed → **fixed**: head restored to `39121c35` with a note pointing at the root verification record; the root-verified pass at `44fb2327` is carried by this final review.
+- M4 stale status prose (`state.md` Artifacts/comment/Next Milestone; `implementation.md` Total line) → **fixed**.
+- m1 References `design.md`/`spec.md` residue → **fixed** (`N/A (quick mode)`).
+
+**Verification record (root):** what — I1/M3/M4/m1 edits; how — `rg -n 'm=>m|not started|day one|round 2 in progress|phase review in progress' <project>` returns nothing, `rg -n '39121c35' implementation.md` shows the restored line, `validate-plan` valid, `oxfmt --check` clean; where — this entry; independent verification — narrowed final round 2 after the implementer's fix commit.
+
+**Fix round `w4-final-fix-001` (resumed implementer handle, append-only commit `94d6f74d342e1b272fbc7d1ebed2cffe8de8330f` on `a4a96489`; test file only; `SKILL.md` unchanged since `39121c35`):**
+
+- M1 → exemption keys on the binary: `invokesCodex` = any `codex` invocation (bare, `e` alias, subcommands) is never exempt; flag-bearing table rows can be exempted only by the documented non-repository exception, never by authorization/prohibition wording (stated deviation from the literal "never exempt" — a blanket denial fails the unprobed control because the documented exception row at `SKILL.md:99` is itself flag-bearing; e1 still fails). Evasions e1/e2/e3 fail; controls e4/e5 fail; r1/r2/u4/u5/fp/control pass.
+- M2 → property-based confirmation check (`requiresConfirmation` / `negatesConfirmation`); b1 fails, b2 passes; `\bconfirm` not adopted.
+- 29-probe runner ALL PROBES MATCHED (before-run mismatches were exactly e1, e2, e3, b1). DoD all ten 0 (`$TMPDIR/w4-final-fix/`); `test:skills` 586/586; post-commit `release:check-versions` 0 and `check:skill-bumps` 0. Codex: one round, two P2 dismissed — (1) factually wrong (the regex matches `confirmation` via the `confirm` prefix; verified by execution); (2) a negated mention can mask a positive requirement in the same clause — true, reproduced, out of this round's root-prescribed semantics → final-review ledger.
+
+**Verification record (root):** what — the fix commit's file list (1) and parent chain, `SKILL.md` unchanged since `39121c35` (`git diff --stat` empty), the extended 29-probe runner re-run by the root at HEAD; how — `git show --stat`, `git diff`, `run-all.sh` → ALL PROBES MATCHED (log `scratchpad/w4/root-probe-run-2.log`; runner copied to `scratchpad/w4/probes/`); where — this entry; independent verification — narrowed final round 2 `w4-final-review-002`.
+
+**Review row `final` → `fixes_completed` at `94d6f74d`; narrowed round 2 dispatched.**
+
+### Review Received: final (round 2, narrowed)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/final-review-2026-08-27T053039Z.md (reviewed head `6b81bea96da62fe1533a870c9d522fb640967eed`, range `41da6443..6b81bea9`, invocation auto, dispatch `w4-final-review-002`, model opus)
+
+**Findings:** Critical 0 · Important 0 · Medium 2 · Minor 1 — all round-1 dispositions (I1, M1–M4, m1, docs) verified fixed; 29-probe matrix independently reproduced; 8/8 gates re-run; `SKILL.md` byte-identical since `39121c35`. Two genuine residual evasions of the contract guard remain (each with an isolation control), and one artifact-drift minor.
+
+**Dispositions (bounded fix round `w4-final-fix-002`, append-only, test file only; round 3 — the last final cycle — verifies):**
+
+- M1 the `not a Git repo` carve-out is row-scoped (probe x1: the shipped `Apply local edits` row with the bypass plus a trailing "(covers a target that is not a Git repo)" note is exempted; x1c control fails) → **fix**: for a flag-bearing table row, require the exception phrase in the use-case cell (`line.split('|')[1]`), evaluated before the whole-line test.
+- M2 `negatesConfirmation` skips the whole clause (probes x6 negation mask and x4 "and with no delay" insertion evade; x6c control fails) and is dead weight (b2 never matches `requiresConfirmation`) → **fix**: delete the skip so the requirement assertion applies to every below-floor clause.
+- m1 Final Summary / task-record summary lag the final-scope commits and the 29-probe matrix → **fixed at the round-3 receive** (so the text names the last code commit).
+
+**Fix round `w4-final-fix-002` (resumed implementer handle, append-only commit `495d4b9a20f80463f59ea0a7d4eed267a6fd610f` on `0316397f`; test file only, +12/−10; `SKILL.md` unchanged since `39121c35`):**
+
+- M1 → row branch evaluated first; the exception phrase must sit in the row's use-case cell (`tests/…:43-58`); exempt set at HEAD unchanged (the documented exception row `SKILL.md:99` and the high-impact bullet only); x1 fails, x1c/g1/n2/e1 fail, control passes.
+- M2 → `negatesConfirmation` and its `continue` deleted (`:120-133`); x4/x6/b1/m3rev fail, x6c fails, b2/u4/u5/fp/r1/r2/control pass.
+- m1 → Final Summary and task-record summary aligned in this receive commit.
+- 34-probe runner ALL PROBES MATCHED (before-run mismatches exactly x1, x4, x6; both isolation controls identical at both heads). DoD all ten 0 (`$TMPDIR/w4-final-fix2/`); `test:skills` 586/586; post-commit `release:check-versions` 0 and `check:skill-bumps` 0. Codex: two consecutive clean rounds.
+
+**Verification record (root):** what — the fix commit's file list (1) and parent chain, `SKILL.md` unchanged since `39121c35`, the 34-probe runner re-run by the root at HEAD; how — `git show --stat`, `git diff --stat`, `run-all.sh` → ALL PROBES MATCHED (log `scratchpad/w4/root-probe-run-3.log`); where — this entry; independent verification — narrowed final round 3 `w4-final-review-003` (cycle 3 of 3).
+
+**Review row `final` → `fixes_completed` at `495d4b9a`; narrowed round 3 (the program's last review cycle) dispatched.**
+
+### Review Received: final (round 3, narrowed — cycle 3 of 3)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/final-review-2026-08-27T055358Z.md (reviewed head `067bfad9f0f221f076d1aeea1358b2b03b21f8c8`, range `6b81bea9..067bfad9`, invocation auto, dispatch `w4-final-review-003`, model opus)
+
+**Findings:** Critical 0 · Important 0 · Medium 3 · Minor 0 — every round-2 disposition verified; 34-probe matrix reproduced; eight gates green; `SKILL.md` byte-identical since `39121c35`; nothing blocks the shipped skill. The three Mediums are contract-guard breadth, each with an isolation control and a reviewer-applied, matrix-verified patch.
+
+**Cycle-cap disposition (REVIEWRECEIVE-02, scope `final`, third and last cycle):** the root does not open a fourth cycle. Independent verification of the whole range is provided by the configured implementation exit gate (a full-project cross-family review), which follows.
+
+- M1 the bypass re-added as a bare option bullet under step 4 — byte-for-byte the pre-fix construct the plan was chartered to remove — escapes the guard (probe y4; y4c control fails) → **bounded, reviewer-specified, root-verified fix** (`w4-final-fix-003`, one line: `--skip-git-repo-check` becomes a `commandLines` marker; reviewer-verified non-regressing across 34 probes with the step-5 prohibition line entering the exempt set via the existing branch). Root re-runs the runner with y4/y4c added as the verification record.
+- M2 the exception row stays exempt if its use case is broadened while retaining the phrase (probe y1; y1c control fails) → **ledger + backlog** (phrase-level narrowing with a stated brittleness trade-off; `SKILL.md` correct at HEAD).
+- M3 an anaphoric blocking requirement in the clause after the below-floor clause escapes the per-clause filter (probe y5; y5c control fails) → **ledger + backlog** (the reviewer's own caveat: `in that case` narrows rather than closes; a proximity window false-fails the shipped text).
+- Backlog item to file at wave close: "span-based prose guards …" (already drafted) extended with y1/y5 and the M2/M3 patches as candidate directions.
+
+**Bounded fix `w4-final-fix-003` (resumed implementer handle, append-only commit `601c950b07b5d87776e7da0e02aae430ca5c701e` on `b5233d30`; test file only, +4; `SKILL.md` unchanged since `39121c35`):** `--skip-git-repo-check` is a `commandLines` marker (`tests/…:32-42`); `commandLines` 16 → 17, exempt 2 → 3 (the step-5 prohibition line via the existing branch), checked 14; y4 fails, y4c fails; control/r2 pass; DoD all ten 0 (`$TMPDIR/w4-final-fix3/`); post-commit `release:check-versions` 0 and `check:skill-bumps` 0; Codex two clean rounds.
+
+**Verification record (root, cycle-cap disposition):** what — the fix commit's file list (1) and parent chain, `SKILL.md` unchanged since `39121c35` (`git diff --stat` empty), the 36-probe runner re-run by the root at HEAD; how — `git show --stat`, `git diff`, `run-all.sh` → ALL PROBES MATCHED (log `scratchpad/w4/root-probe-run-4.log`; runner copied to `scratchpad/w4/probes/`); where — this entry; independent verification — the configured implementation exit gate (full-project cross-family review), which follows.
+
+**Review row `final` → `passed` at `601c950b` (root-verified under the cycle cap; M2/M3 ledgered with a backlog item). Next: configured exit gate (generation 1).**
+
+### Review Received: final (gate, generation 1)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/final-review-2026-08-27T062832Z.md (reviewed head `ca5378b4d4bc2c1bb837624439e1c307c8599279`, full range `3c135e21..ca5378b4`, invocation gate, run `10c732b5-bee1-4760-b239-e98ea4ff8f78`, target `cursor-gpt-5-6-sol-xhigh`, model gpt-5.6-sol-xhigh)
+
+**Findings:** Critical 0 · Important 0 · Medium 3 · Minor 0 — gate passed at the important threshold; configured gate run as configured (default same-family avoidance → Cursor), detached launch with receipt, 20 minutes; the gate independently reproduced the two guard residuals ledgered at final round 3 (its M1 = round-3 M2 broadened exception row; its M2 = round-3 M3 anaphoric clause), confirming the cycle-cap disposition's independent-verification path.
+
+**Dispositions (root, this commit):**
+
+- M1 broadened non-repository row can exempt a blanket bypass → **accepted as ledgered** (final round-3 M2; `SKILL.md` correct at HEAD; phrase-level narrowing with a brittleness trade-off) → backlog item at wave close (span-based prose guards).
+- M2 adjacent anaphoric clause can reintroduce a below-floor gate → **accepted as ledgered** (final round-3 M3) → same backlog item.
+- M3 closeout prose predates `601c950b` / the 36-probe matrix / the final-scope rounds → **fixed**: `summary.md`, the Final Summary verification paragraph, and `state.md` Next Milestone aligned.
+
+**Gate review row `final` → `passed`; exit gate generation 1 allowed. Next: post-implement sequence (summary → document [skipped] → pr).**
+
+## Implementation Log
+
+Chronological log of implementation progress.
+
+### 2026-08-27
+
+- Preflight from main `3c135e21` (`worktree:init`, build, type-check exit 0; manifest restamp `f9db417c`); wrapper scaffolded `8e903a0c`; plan gate passed round 1 (`cursor-gpt-5-6-sol-xhigh`, run `0d369be4`, one medium mapped into rule 8); implement phase opened `51c7ec57`.
+- [x] p01-t01: Execute external plan — `b97408f2` (Opus implementer `w4-p01-impl-001`; DoD 10/10; Codex seven rounds, nine findings fixed pre-commit).
+- [x] p01-t01 fix round 1 — `d9ce0c33` (append-only; round-1 M1/M3/m1–m4; Codex three rounds under the stopping rule).
+- [x] p01-t01 fix round 2 — `39121c35` (append-only; round-2 M1/M3/m1/m2: logical-line derivation + prose allowlist, non-blocking below-floor clause with an 8th contract case, `gpt-5.5` slug; Codex two clean rounds).
+- [x] p01-t01 fix round 3 — `44fb2327` (append-only; round-3 M1/m1/D1 — structural exemption rule, semantic below-floor assertion, logical-line cross-directory check; test file only; root-run 22-probe matrix ALL MATCHED).
+- [x] p01-t01 final-scope fix — `94d6f74d` (append-only; final round-1 M1/M2 — exemption keyed on any `codex` invocation, property-based confirmation check; test file only; root-run 29-probe matrix ALL MATCHED).
+- [x] p01-t01 final-scope fix 2 — `495d4b9a` (append-only; final round-2 M1/M2 — row exemption scoped to its use-case cell, negation skip deleted; test file only; root-run 34-probe matrix ALL MATCHED).
+- [x] p01-t01 final-scope fix 3 — `601c950b` (append-only; final round-3 M1 — the bypass flag itself is command-ish; test file only; root-run 36-probe matrix ALL MATCHED; M2/M3 ledgered).
+- Decisions: the operator-reconciled `--full-auto` replacement is evaluated per example row (a mechanical swap weakened the `danger-full-access` row and was caught by Codex); prose guards key on documented phrases and command-ish content, not hedging words; cross-model review stops at two clean rounds or below-Medium findings.
+- Blockers: none.
+
+## Deviations from Plan / Design
+
+Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| -             | -               | -                    | -                 | -      | -               | -         |
+
+## Test Results
+
+**Final verification (root, closeout baseline) at `6075a705`** — full definition of done invoked literally, one log per gate under the session scratchpad `w4-dod/`, exit codes in `exits.txt`: `pnpm check` 0 · `pnpm type-check` 0 · `pnpm test` 0 · `pnpm build` 0 · `pnpm run check:skill-bumps` 0 · `git fetch origin` 0 then `pnpm release:check-versions` 0 (0.2.36 vs `origin/main` 0.2.35) · `pnpm release:validate` 0 · `pnpm build:docs` 0 · `pnpm lint` 0 · `pnpm format` 0. Tree clean after the run; no deterministic-smoke worktrees left behind.
+
+Earlier evidence: implementer DoD 10/10 at `b97408f2`, `d9ce0c33`, `39121c35`, `44fb2327` (post-commit `release:check-versions` and `check:skill-bumps` re-runs 0 each time); `pnpm test:skills` 586/586 (578 + 8 new); focused contract test 8/8; root-run 22-probe mutation matrix ALL MATCHED at `44fb2327`; reviewer re-runs at every head.
+
+## Final Summary (for PR/docs)
+
+**What shipped:** `codex-skill` (1.2.0 → 1.3.0) routes model and reasoning effort through OAT's live Codex provider reference by task class instead of a stale two-model list; the repository-check bypass is conditional (non-Git target only) and authorization-gated; every command example validates against codex-cli 0.149.1 with the dead `--full-auto` replaced under the operator-reconciled STOP #2 (sandbox and high-impact authorization retained and tightened); an eight-case prose contract test guards the stale pair, single retired slugs, blanket or example-default bypass across every command-ish line, the authority sentence, the non-repository condition, and the non-blocking below-floor rule. Lockstep bump 0.2.35 → 0.2.36.
+
+**User-facing behavioral change:** agents following `codex-skill` now classify work, read `provider-codex.md`, and offer only currently eligible model+effort routes; ordinary Codex runs keep the repository check; unattended edits require `--approve-for-me` with a write sandbox; network access no longer implies the broadest sandbox.
+
+**Key files:** `.agents/skills/codex-skill/SKILL.md`, `.agents/skills/codex-skill/tests/codex-skill-contract.test.mjs` (new), five `packages/*/package.json`, `packages/cli/assets/public-package-versions.json` (regenerated).
+
+**Verification:** DoD 10/10 at every code commit — `b97408f2`, `d9ce0c33`, `39121c35`, `44fb2327`, `94d6f74d`, `495d4b9a` (post-commit `release:check-versions` and `check:skill-bumps` re-runs 0 each time) — and by the root at `6075a705`; `test:skills` 586/586; reviewer probes across three p01 rounds and the final-scope rounds — live-syntax validation per subcommand, a 36-probe mutation matrix with isolation controls (root-run at HEAD: all matched), provider-reference consistency, weaker-anywhere on sandbox/authorization, scope verdict on the Codex-driven edits. `SKILL.md` is byte-identical since `39121c35`; every later commit hardened the contract test only.
+
+**Design deltas:** N/A (quick mode; no `design.md`). Reconciliation: the plan's STOP #2 (`--full-auto` absent from live help) resolved non-narrowingly by operator direction inside the plan's own step 2 (recorded once in `plan.md` § Drift Refresh Record).
+
+## Done-criteria confirmation (source plan)
+
+Lifted from the final review round 1 (`reviews/archived/final-review-2026-08-27T050607Z.md`), reviewer-verified at `41da6443` from source plus live-help validation and the mutation matrix; re-verified by rounds 2–3 at `6b81bea9`/`067bfad9` (`SKILL.md` unchanged since `39121c35`; later commits hardened the contract test only, root-verified at `601c950b`).
+
+| Requirement                                                                                              | Status  | Notes                                                                                                                                                                                                                                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DC1** Model/effort selection names the provider reference as authority; obsolete fixed pair gone       | covered | `SKILL.md:13-23` classifies by task class and names `provider-codex.md` as "**the source of truth**"; `:19-20` demotes named models to dated examples and forbids snapshot defaults. `rg 'gpt-5\.3-codex\|gpt-5\.4' SKILL.md` → 0 matches.                                                                                                          |
+| **DC2** Normal repository commands omit `--skip-git-repo-check`                                          | covered | Only three occurrences remain (`:59`, `:99`, `:125`); none is in a default example. Verified independently by the 22-probe matrix, which fails on every attempt to add it to an initial-run, `-C`, resume, fenced, or table-row example.                                                                                                            |
+| **DC3** Every remaining bypass path has a documented need and authorization                              | covered | `:59-62` non-Git-repository condition + "state the reason and obtain the user's authorization via `AskUserQuestion`"; `:99` "only for this case, after explaining it and getting authorization"; `:101-102` reinforces; `:125-128` keeps it permission-gated as high-impact.                                                                        |
+| **DC4** Initial-run, `-C`, and resume examples mutually consistent                                       | covered | Initial-run `:48-58` + `:93-96`; `-C` `:58`, `:98`; resume `:65`, `:97`, `:112`, `:114` — all four resume examples are the identical `echo … \| codex exec resume --last 2>/dev/null` shape, all omit the bypass, all agree on "current config defaults" (`:97` vs `:66-71` vs `:113-117`).                                                         |
+| **DC5** Contract test, skill-version gate, lockstep release gates pass                                   | covered | Run by me at HEAD: `node --test .agents/skills/codex-skill/tests/*.test.mjs` 8/8; `pnpm test` 0; `pnpm run check:skill-bumps` 0; `pnpm release:check-versions` 0 (after `git fetch origin`); `pnpm release:validate` 0.                                                                                                                             |
+| **DC6** `git status --short` contains only the skill, its test, and required release metadata            | covered | `b97408f2` touches exactly `SKILL.md`, the new test, five public manifests, and the build-regenerated `public-package-versions.json`. `d9ce0c33`/`39121c35`/`44fb2327` touch only the skill and its test. Tree clean at HEAD. `f9db417c` (`.oat/sync` manifest) predates execution and is AGENTS.md-mandated `worktree:init` output, not plan work. |
+| **RF1** Provider reference treated as the load-bearing routing authority                                 | covered | See the route-audit table under Adversarial Probes: no unlisted route offered, direct-API-only routes excluded, matrix consulted rather than copied.                                                                                                                                                                                                |
+| **RF2** Every command example checked for a reintroduced blanket bypass, not just numbered steps         | partial | Manually verified clean at HEAD across all 13 command-bearing lines. But the _automated_ guard that must keep it clean has three live evasions — Medium 1.                                                                                                                                                                                          |
+| **RF3** Skill version and five public package versions move exactly once in the final diff               | covered | `git log -S` over the full range: one move each, all in `b97408f2`. `1.2.0 → 1.3.0` and `0.2.35 → 0.2.36`.                                                                                                                                                                                                                                          |
+| **Test plan** — contract test under `tests/`, `node:test`, repo-relative resolution, semantic assertions | covered | `.agents/skills/codex-skill/tests/codex-skill-contract.test.mjs` uses `node:test` + `new URL('../SKILL.md', import.meta.url)`, matching neighbouring skill contract tests. Assertions are semantic enough that `r1`/`r2`/`u4`/`u5`/`fp` all pass. Case count 8 exceeds the four required.                                                           |
+| **STOP conditions** — none silently worked around                                                        | covered | #1 clear (every task class has an eligible CLI route). #2 reconciled by the operator, recorded exactly once at `plan.md:127-138`. #3 not tripped — weaker-anywhere analysis clean. #4 not tripped — only lockstep metadata changed. #5 not tripped — no gate failed twice.                                                                          |
+| **Out of scope** respected                                                                               | covered | `provider-codex.md` unmodified in the range; no CLI behavior changed and no undocumented flag probed (all `-c` keys validated against the CLI's own declared schema); no other provider skill touched; `packages/cli/assets/**` changed only by `pnpm build` regeneration.                                                                          |
+
+## References
+
+- Plan: `plan.md`
+- Design/Spec: N/A (quick mode)
+- **plan:** ---
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_blockers: []
+oat_last_updated: 2026-08-27
+oat_phase: plan
+oat_phase_status: complete
+oat_plan_hill_phases: ['p01'] # final (only) phase; workflow.hillCheckpointDefault=final
+oat_auto_review_at_hill_checkpoints: true # from workflow.autoReviewAtHillCheckpoints
+oat_plan_parallel_groups: [] # solo lane — one ungrouped phase (validate-plan rejects singleton groups)
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
+oat_generated: false
+oat_template: false
+---
+
+# Implementation Plan: wave-4-execution (Wave 4 external-plan wrapper)
+
+> Execute this plan using `oat-project-implement` — one ungrouped phase
+> executed sequentially. Concurrency ceiling: 3 worktrees (operator decision);
+> this wave uses 1.
+
+**Goal:** Execute the 1 Wave 4 external plan (route `codex-skill` through the
+current Codex provider guidance and make the repository-check bypass
+conditional) through the wave→project wrapper pattern
+(DR-260713-wave-project-wrapper-over).
+
+**Architecture:** Thin wrapper. The task's **entire and only implementation
+contract** is its external plan under `.oat/repo/reference/external-plans/`. The
+task below carries wrapper-owned metadata exclusively: the source-plan path,
+ordering/dependencies, wrapper-level verification gates, the commit convention, and
+review mapping. Nothing in this file restates, narrows, or overrides the source plan.
+
+**Commit Convention:** `{type}(p{NN}-t{NN}): {description}` — the external plan
+governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
+
+**Wrapper execution contract (applies to every task):**
+
+1. **Drift check first.** Run the source plan's `## Drift check` against current
+   HEAD (plus the rule-1 addendum below). A material mismatch (per that plan's own
+   definition) is a STOP. The wave-boundary drift refresh (see record below) does
+   not replace the in-worktree re-check.
+2. **Execute the source plan's `## Implementation steps`** in order with each
+   step's embedded Verify gate; honor its `## STOP conditions` verbatim (the
+   second condition is already reconciled by the operator — see the record).
+3. **Confirm the source plan's `## Done criteria`**, then run the full DoD gates
+   in this order, invoking each gate literally and capturing each exit code to a
+   log file: `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`,
+   `pnpm run check:skill-bumps`, `git fetch origin` then `pnpm release:check-versions`,
+   `pnpm release:validate`, `pnpm build:docs`, then `pnpm lint` and `pnpm format`
+   (required: this wave touches `.agents/skills`). Run `git fetch origin && pnpm
+release:check-versions` again immediately after the task commit and record
+   that exit code (the gate is committed-state-only — W3 rule). Toolchain:
+   Node 22.17.0 / pnpm 10.13.1; `pnpm run worktree:init` already ran.
+4. **STOP → BLOCKED at phase level.** A source-plan STOP parks the phase (record
+   in `state.md` `oat_blockers` + `implementation.md`).
+5. **Group-dependency rule:** not applicable (single phase).
+6. **Merge serialization:** not applicable (the phase runs on the integration
+   checkout; no phase worktree merges).
+7. **Backlog archival is NOT part of the task** — once, serialized on the
+   integration branch after the phase passes (DR-260713-shared-tracked-surfaces).
+8. **Phase review checklist = the source plan's `## Review focus`, plus two
+   bounded reviewer-run mutation probes on the focused contract test:**
+   reintroduce the stale fixed model pair, and separately reintroduce the
+   blanket repository-check bypass; each mutation must make the test fail;
+   restore the intended content byte-exact and rerun the test green. A finding
+   that names a regression class triggers a repository-wide sweep (W3 rule).
+9. **Artifact hygiene:** every agent runs `pnpm exec oxfmt --write <file>` on
+   markdown it writes and reports observations for `orchestration-log.md`
+   (workers report; the root appends).
+10. **Commit verification after ambiguous results:** inspect `git log`/HEAD before
+    retrying; record the SHA in `implementation.md`.
+
+## Parallelism
+
+None — one phase, executed sequentially on the integration checkout.
+
+> The recon observations below are **non-authoritative grouping evidence only** —
+> they never constrain the source plan: its own live checks govern at execution
+> time.
+
+- Write surface: `.agents/skills/codex-skill/SKILL.md` (frontmatter `version`
+  1.2.0 → next), new `.agents/skills/codex-skill/tests/codex-skill-contract.test.mjs`,
+  the five public package manifests, `pnpm-lock.yaml` (likely no-op), and the
+  build-generated `packages/cli/assets/public-package-versions.json`. Read-only
+  authorities: `.agents/skills/subagent-orchestration/references/provider-codex.md`
+  and live `codex --help`. `codex-skill` is repo-only (absent from
+  `packages/cli/scripts/bundle-inputs.mjs`), so no bundled copy exists or is
+  regenerated; the lockstep bump still applies because `.agents/skills` is a
+  version-policy root. The skill is symlink-synced to `.claude/skills/codex-skill`.
+
+## Dispatch Profile
+
+_No per-phase overrides. Runtime selection applies, capped by the project's named
+dispatch policy in `state.md` (managed / `high`); provider-specific model/effort
+selection is owned by runtime resolution, not this plan. Cross-model review is
+embedded in the lane: the Codex CLI itself reviews the diff (`codex review`) of
+a Codex-facing skill contract._
+
+## Drift Refresh Record (2026-08-27, vs `3c135e212dfb1d386650089e7d9f95263565ee82`)
+
+**1 PASS / 0 MINOR-DRIFT / 0 STOP after operator reconciliation.** Non-authoritative
+recon evidence (one bounded read-only recon agent, Sonnet 5, native dispatch,
+run against `39cea801` and re-checked by the root against `3c135e212dfb1d386650089e7d9f95263565ee82`); the lane
+re-runs its drift check in-worktree.
+
+- Drift-check diff `6f443c08..3c135e212dfb1d386650089e7d9f95263565ee82` over the plan's listed paths touches only
+  the `version` line of the five public manifests (0.2.32 → 0.2.35 via W1–W3);
+  `.agents/skills/codex-skill/**`, `provider-codex.md`, `packages/cli/src/validation/**`,
+  and `pnpm-lock.yaml` are byte-identical to the authoring commit. Plan evidence
+  lines re-verified (`SKILL.md:13`, `:22`, `:35` vs `:41`; `provider-codex.md:16`,
+  `:34–42`; frontmatter `version: 1.2.0`; `tests/` does not exist yet — closest
+  prose-contract precedent
+  `.agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs`).
+- **Live Codex reread (program requirement):** `codex-cli 0.149.1`. `-m/--model`,
+  `-C/--cd`, `-s/--sandbox`, `--skip-git-repo-check` (on `exec` and `exec resume`,
+  not on bare `resume`); effort only via `-c model_reasoning_effort="…"` (no
+  `--effort` flag) — consistent with the configured gate target
+  `codex exec --model gpt-5.6-sol -c model_reasoning_effort="xhigh"`. The live
+  models page lists GPT-5.6 Sol/Terra/Luna (matches `provider-codex.md`,
+  `guidance_version 2026-07-25`, `review_after 2026-09-08`), plus an `ultra`
+  effort tier the reference lacks, and notes GPT-5.4 / 5.4-mini retire from
+  Codex on 2026-08-31. The reference is a consumed authority and stays out of
+  scope; every task class still has an eligible route (STOP #1 clear).
+- **STOP #2 reconciliation (operator-approved 2026-08-27, non-narrowing):**
+  `codex exec --help` has no `--full-auto` (live approval flags are
+  `--approve-for-me` and `--dangerously-bypass-approvals-and-sandbox`), while
+  `SKILL.md` uses `--full-auto` at `:19`, `:33`, `:34`, `:47`. The plan's own
+  step 2 requires every command example to agree and to use flags in valid
+  positions, and Done criterion 4 requires mutually consistent examples; the
+  operator directed that replacing the dead flag with the live documented
+  approval flag is part of that step — same file, no behavior change, no
+  undocumented flags, sandbox and high-impact authorization rules retained (the
+  high-impact list at `:47` names the live flag). WHERE the fix lands changes;
+  WHAT must be true (consistent, valid, authorization-gated examples) does not.
+  Recorded once here; pointer-only elsewhere.
+- **Rule-1 addendum (coverage gaps):** the source plan's drift command omits
+  surfaces the lane writes or depends on. The in-worktree drift check MUST
+  additionally run, before editing:
+  1. `git fetch origin && git diff --stat 3c135e212dfb1d386650089e7d9f95263565ee82..origin/main -- packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml packages/cli/assets/public-package-versions.json`
+     (release surfaces vs the recorded wave baseline on a freshly fetched
+     `origin/main`) — any advance of the public-package baseline after planning
+     is a material mismatch: STOP and report the new baseline. Run
+     `git fetch origin` immediately before every `pnpm release:check-versions`.
+  2. `codex --version && codex exec --help && codex exec resume --help` —
+     re-confirm the live flag set recorded above; a CLI upgrade that removes or
+     renames `-m`, `-C`, `-s`, `--skip-git-repo-check`, or the approval flags is
+     a material mismatch against the plan's second STOP condition.
+  3. `git diff --stat 6f443c08..HEAD -- package.json packages/cli/scripts/bundle-inputs.mjs`
+     (the `test:skills` invocation and the bundle allowlist that establish
+     `codex-skill` as repo-only; a change is a material mismatch to compare
+     against the plan).
+- **Release-root intersection (W1 rule):** `.agents/skills` is a
+  `versionPolicyAdditionalRoots` entry of the `packages/cli` contract
+  (`public-package-contract.ts:113`), so the lane's skill edit is a publishable
+  change; the plan's step 3 lockstep bump **0.2.35 → 0.2.36** is required and
+  pre-planned as part of the lane, together with the single `codex-skill`
+  frontmatter bump (`pnpm run check:skill-bumps`). `origin/main` = `3c135e212dfb1d386650089e7d9f95263565ee82`
+  at 0.2.35, so the strict-greater guard passes at 0.2.36.
+- Implementer notes (non-narrowing): `pnpm test:skills` runs
+  `node --test .agents/skills/*/tests/*.test.mjs`; `pnpm lint`/`pnpm format`
+  cover `.agents/skills/**/*.md`; `pnpm-lock.yaml` records workspace links
+  (unchanged lockfile is not a failure); `public-package-versions.json` is
+  regenerated by `pnpm build`.
+
+---
+
+## Phase 01: refresh-codex-skill-routing (solo)
+
+**Milestone:** the source plan's `## Done criteria` fully satisfied.
+
+### Task p01-t01: Execute external plan — Route codex-skill through current model guidance and preserve repository checks
+
+**Source plan (the contract):**
+`.oat/repo/reference/external-plans/2026-08-19-refresh-codex-skill-routing.md`
+
+**Ordering:** solo; runs on the integration checkout (`wave-4-execution`).
+
+**Step 1: Drift check** — per the source plan's `## Drift check`, plus the rule-1
+addendum above.
+
+**Step 2: Execute** the source plan in full.
+
+**Step 3: Verify (wrapper gate)**
+
+Run: the source plan's `## Done criteria` checks, then the full DoD gates from
+the wrapper execution contract.
+Expected: all green.
+
+**Step 4: Cross-model review** — before committing, obtain an independent
+cross-model review of the uncommitted diff via the runtime-configured reviewer
+(provider/model/effort owned by dispatch configuration, not this plan);
+disposition every finding in the phase report.
+
+**Step 5: Commit**
+
+```bash
+git commit -m "feat(p01-t01): route codex-skill through provider guidance and make repo-check bypass conditional"
+```
+
+---
+
+## Reviews
+
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | passed  | 2026-08-27 | reviews/archived/p01-review-2026-08-27T043458Z.md           | 39121c35e3ee07d8b7785d783565ae89e087d337 | auto       | -                        |
+| final  | code     | passed  | 2026-08-27 | reviews/archived/final-review-2026-08-27T055358Z.md         | 067bfad9f0f221f076d1aeea1358b2b03b21f8c8 | auto       | -                        |
+| plan   | artifact | passed  | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020212Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                        |
+| design | artifact | pending | -          | -                                                           | -                                        | -          | -                        |
+| final  | code     | passed  | 2026-08-27 | reviews/archived/final-review-2026-08-27T062832Z.md         | ca5378b4d4bc2c1bb837624439e1c307c8599279 | gate       | cursor-gpt-5-6-sol-xhigh |
+
+**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
+
+Note: the `p01` row cites the round-3 artifact at the head it reviewed (`39121c35`); the `final` row cites the round-3 final artifact at `067bfad9`. The cycle-cap fixes `44fb2327` (p01) and `601c950b` (final) landed as reviewer-specified, root-verified bounded fixes (`implementation.md` § "Verification record (root, cycle-cap disposition)") and are independently covered by the configured exit-gate row.
+
+## Implementation Complete
+
+Strictly ordered — each item depends on the one before it (wave-execute Step 6
+closeout sequence):
+
+1. [x] 1/1 phases, 1/1 tasks complete; the source plan's `## Done criteria`
+       confirmed (recorded in `implementation.md` § Done-criteria confirmation, lifted from the final review at `41da6443`)
+2. [x] Full DoD gates green on the integration branch (root final verification at
+       `6075a705`, exit codes captured per gate, including `pnpm lint` and `pnpm format`;
+       post-commit `release:check-versions` and `check:skill-bumps` re-runs 0 at every code commit)
+3. [x] Orchestration-log end-of-run synthesis written and rolled up into
+       `summary.md` (generated at final-review receive; `oat project log rollup`) — before any archive step of the project
+4. [x] **Serialized backlog bookkeeping:** `oat backlog archive
+BL-260819-refresh-codex-skill-model` with a real outcome summary (this receive commit, after item 3)
+
+## References
+
+- Source plan: `.oat/repo/reference/external-plans/2026-08-19-refresh-codex-skill-routing.md`
+- Program artifact: `.oat/repo/reference/external-plans/2026-08-19-execution-program.md`
+- Program index: `.oat/repo/reference/external-plans/2026-08-19-backlog-review-plan-index.md`
+- Pattern: `DR-260713-wave-project-wrapper-over`; prior wave summaries
+  `.oat/projects/shared/wave-1-execution/summary.md`,
+  `.oat/projects/shared/wave-2-execution/summary.md`,
+  `.oat/projects/shared/wave-3-execution/summary.md`
+- **summary:** ---
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-08-27
+oat_generated: true
+oat_summary_last_task: p01-t01
+oat_summary_revision_count: 0
+oat_summary_includes_revisions: []
+---
+
+# Summary: wave-4-execution
+
+## Overview
+
+Wave 4 ("Codex skill policy correction") — the final wave of the 2026-08-19
+execution program — executed as a thin wrapper OAT project over the immutable
+external plan `2026-08-19-refresh-codex-skill-routing.md`. One solo lane
+(`p01`) on the integration checkout `wave-4-execution`, from main `3c135e21`
+(public packages 0.2.35). Quick mode: discovery + wrapper plan; the external
+plan is the requirements. The plan's STOP #2 (live `codex exec --help` has no
+`--full-auto`, which the skill used) was reported at the drift refresh and
+reconciled non-narrowingly by the operator (option 1, 2026-08-27) inside the
+plan's own step 2.
+
+## What Was Implemented
+
+- **Authority-based model/effort selection:** `codex-skill` classifies the
+  requested work by OAT task class and takes the model and reasoning effort
+  from `.agents/skills/subagent-orchestration/references/provider-codex.md`,
+  named as the source of truth (dated examples never override it; compatibility
+  snapshots are never defaults); routes are offered as one combined model+effort
+  choice; a valid user-supplied pair is honored — below-floor pairings are
+  reported once without blocking, direct-API specialist classifications confirm
+  before launching; if the reference is unavailable the skill stops and asks.
+- **Conditional, authorized repository-check bypass:** `--skip-git-repo-check`
+  removed from ordinary initial-run, `-C`, and resume commands; used only for a
+  non-Git target directory (or another documented Codex requirement) with the
+  reason stated and `AskUserQuestion` authorization.
+- **Examples validated against codex-cli 0.149.1:** resume examples normalized
+  to the live `codex exec resume` usage; the dead `--full-auto` replaced —
+  `--approve-for-me` only with `-s workspace-write`, network inside a write
+  sandbox via `-c sandbox_workspace_write.network_access=true`,
+  `-s danger-full-access` reserved for genuine broad-filesystem needs, the
+  bypass-all flag for externally sandboxed automation; sandbox and high-impact
+  authorization rules retained and tightened.
+- **Prose contract test** (`.agents/skills/codex-skill/tests/codex-skill-contract.test.mjs`,
+  8 cases): logical-line normalization, a structural exemption rule (an
+  exempted line must not itself run the command), semantic assertions; rejects
+  the stale `gpt-5.3-codex`/`gpt-5.4` pair and any single retired slug
+  (without a `gpt-5.4-mini` false positive), a blanket or example-default
+  bypass across every command-ish line including Quick Reference rows and
+  fenced blocks, a removed authority sentence, and a blocking below-floor
+  clause. Root-run 36-probe mutation matrix (with isolation controls) in the required state; two phrase-level guard residuals ledgered to backlog at the cycle cap.
+- **Release bookkeeping:** `codex-skill` 1.2.0 → 1.3.0 (once); lockstep
+  0.2.35 → 0.2.36 across the five public packages;
+  `packages/cli/assets/public-package-versions.json` regenerated; lockfile
+  unchanged. `codex-skill` is repo-only (not bundled).
+- **Tests:** `pnpm test:skills` 586/586 (578 + 8 new); focused 8/8; CLI suite
+  273 files / 3695 tests. `SKILL.md` is byte-identical since `39121c35`; every
+  later commit hardened the contract test only.
+
+Reviews: plan artifact gate passed on round 1 (`cursor-gpt-5-6-sol-xhigh`,
+run `0d369be4`, one medium — mutation probes mapped into the wrapper
+checklist); p01 code review three rounds (0C/0I/3M/4m → 0C/0I/3M/2m →
+0C/0I/1M/1m) with append-only fixes `d9ce0c33`, `39121c35`, and — at the
+cycle cap — the reviewer-specified, root-verified `44fb2327` (test file only);
+final-scope review three rounds (0C/1I/4M/1m → 0C/0I/2M/1m → 0C/0I/3M/0m)
+with append-only test-only fixes `94d6f74d`, `495d4b9a`, `601c950b` (the last a
+reviewer-specified, root-verified bounded fix at the cap); eighteen Codex
+cross-model rounds across seven commits (a sandbox-weakening `--full-auto`
+mapping caught before commit); root final verification 10/10 at `6075a705`;
+configured exit gate generation 1 passed on `cursor-gpt-5-6-sol-xhigh` (run
+`10c732b5`, 0C/0I/3M/0m — the two ledgered residuals plus closeout prose).
+
+## Key Decisions
+
+1. **Reconcile the STOP #2 contradiction non-narrowingly** (operator option 1):
+   replacing the dead `--full-auto` with the live documented approval flags is
+   part of the plan's step 2 and Done criterion 4 — same file, no behavior
+   weakening, no undocumented flags — with each example row re-evaluated for
+   sandbox semantics rather than swapped mechanically. (`DR-260827-reconcile-a-plan-stop-condition`)
+2. **Guard structurally, not by keyword:** after three guard widenings each
+   opened a narrower hole, the contract test keys exemptions on "an exempted
+   line must not itself run the command" and normalizes soft-wrapped prose to
+   logical lines; wording dispositions get their own assertion. (`DR-260827-structural-exemptions-and-property`)
+3. **Cycle-cap disposition:** at the third p01 review cycle the reviewer's
+   verified patches were applied as a bounded root-verified fix (22-probe
+   runner, `NO-TESTS-RAN` guard) and independently verified by the final
+   review — no self-authorized fourth cycle. (`DR-260827-cycle-cap-disposition-bounded`)
+4. **Cross-model review stopping rule:** two consecutive clean rounds or
+   below-Medium findings; root dispositions are settled (Codex re-litigated one
+   twice).
+
+## Design Deltas
+
+N/A (quick mode; no `design.md`). Nine Codex-review-driven wording edits beyond
+the plan's minimal text (combined route choice, warn-not-block, direct-API-only
+handling, effort as the exact reference string, resume configuration wording,
+sandbox row split) were judged in scope and non-narrowing by the phase
+reviewers.
+
+## Notable Challenges
+
+- The program-level live-guidance reread caught a dead flag the plan's authoring
+  evidence missed, and the implementer's per-subcommand help capture found that
+  `codex exec resume` lacks `-s`, `-C`, and `--approve-for-me`.
+- Guard coverage took three rounds to converge (bare `only` matched
+  `read-only`; backtick-keyed derivation missed fenced examples; keyword
+  allowlists exempted prohibition-shaped sentences).
+- Two committed-state-only gates (`release:check-versions`,
+  `check:skill-bumps`) report no-op passes before the commit; post-commit
+  re-runs are now standing.
+
+## Integration Notes
+
+- `provider-codex.md` stays a consumed authority: the live docs list a new
+  `ultra` effort tier and note GPT-5.4 / 5.4-mini retire from Codex on
+  2026-08-31 (its `review_after` is 2026-09-08) — filed as a follow-up.
+- `.oat/sync/manifest.json` `oatVersion` sits at 0.2.35 while packages are
+  0.2.36 (pre-existing pattern; `BL-260826-warn-on-silent-oatversion`).
+
+## Follow-up Items
+
+- Backlog candidates (file at wave close): widen the below-floor guard from the
+  phrase literal to `\bconfirm`; span-based prose guards + anchored probe
+  records + a generalized probe runner for skill contract tests; refresh
+  `provider-codex.md` (ultra tier, GPT-5.4 retirement, per-subcommand flags).
+- Program close: generate (not publish) the program recap; the completion tail
+  across all four wrapper projects is HUMAN-GATED.
+
+## Associated Issues
+
+- `BL-260819-refresh-codex-skill-model` — closed by this wave.
+
+## Workflow Observations
+
+### 2026-08-27 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-4-execution/reviews/artifact-plan-review-2026-08-27T020212Z.md
+
+## Unresolved claims
+
+- None.
