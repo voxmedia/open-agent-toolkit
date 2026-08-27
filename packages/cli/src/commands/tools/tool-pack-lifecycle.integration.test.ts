@@ -1,0 +1,501 @@
+import {
+  lstat,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { createProgram } from '@app/create-program';
+import { registerCommands } from '@commands/index';
+import {
+  hasScopedPackPlacementEvidence,
+  inventoryPack,
+  inventoryScopedPack,
+  type ScopedPackInventory,
+} from '@commands/tools/shared/pack-inventory';
+import {
+  reconcilePackLifecycle,
+  type PackLifecycleResult,
+} from '@commands/tools/shared/pack-lifecycle';
+import {
+  getPackDefinition,
+  PACK_NAMES,
+} from '@commands/tools/shared/pack-manifest';
+import type { PackName } from '@commands/tools/shared/types';
+import { readOatConfig, readUserConfig } from '@config/oat-config';
+import { resolveAssetsRoot } from '@fs/assets';
+import type { ConcreteScope } from '@shared/types';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+
+const temporaryRoots: string[] = [];
+
+let assetsRoot: string;
+
+beforeAll(async () => {
+  assetsRoot = await resolveAssetsRoot();
+});
+
+afterEach(async () => {
+  await Promise.all(
+    temporaryRoots.map((root) => rm(root, { recursive: true, force: true })),
+  );
+  temporaryRoots.length = 0;
+});
+
+interface LifecycleRoots {
+  project: string;
+  user: string;
+}
+
+/**
+ * Reusable temp-root fixture. Roots are plain directories with no Git
+ * metadata, so every user-scope assertion in this file also proves the
+ * lifecycle never depends on a repository.
+ */
+async function createRoots(
+  prefix = 'oat-pack-lifecycle',
+): Promise<LifecycleRoots> {
+  const [project, user] = await Promise.all([
+    mkdtemp(join(tmpdir(), `${prefix}-project-`)),
+    mkdtemp(join(tmpdir(), `${prefix}-user-`)),
+  ]);
+  temporaryRoots.push(project, user);
+  return { project, user };
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await lstat(path);
+    return true;
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function run(
+  pack: PackName,
+  scope: ConcreteScope,
+  roots: LifecycleRoots,
+  action: 'install' | 'update' | 'remove',
+  options: { dryRun?: boolean } = {},
+): Promise<PackLifecycleResult> {
+  return reconcilePackLifecycle(
+    { pack, scope, scopeRoot: roots[scope], assetsRoot, action },
+    options,
+  );
+}
+
+async function inventoryAt(
+  pack: PackName,
+  scope: ConcreteScope,
+  roots: LifecycleRoots,
+): Promise<ScopedPackInventory> {
+  return inventoryScopedPack({
+    pack,
+    scope,
+    scopeRoot: roots[scope],
+    assetsRoot,
+  });
+}
+
+function managedAssets(
+  inventory: ScopedPackInventory,
+): ScopedPackInventory['assets'] {
+  return inventory.assets.filter(
+    ({ definition }) => definition.ownership[inventory.scope] === 'managed',
+  );
+}
+
+async function readIntent(
+  pack: PackName,
+  scope: ConcreteScope,
+  roots: LifecycleRoots,
+): Promise<boolean | undefined> {
+  const config =
+    scope === 'project'
+      ? await readOatConfig(roots.project)
+      : await readUserConfig(join(roots.user, '.oat'));
+  return config.tools?.[pack];
+}
+
+async function runCli(
+  cwd: string,
+  home: string,
+  args: string[],
+): Promise<number> {
+  const program = createProgram();
+  registerCommands(program);
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStderrWrite = process.stderr.write.bind(process.stderr);
+  const previousExitCode = process.exitCode;
+  const previousHome = process.env.HOME;
+  process.exitCode = undefined;
+  process.env.HOME = home;
+  (process.stdout.write as unknown as (chunk: unknown) => boolean) = () => true;
+  (process.stderr.write as unknown as (chunk: unknown) => boolean) = () => true;
+  try {
+    await program.parseAsync(['--cwd', cwd, ...args], { from: 'user' });
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.stderr.write = originalStderrWrite;
+    if (previousHome === undefined) delete process.env.HOME;
+    else process.env.HOME = previousHome;
+  }
+  const exitCode = process.exitCode ?? 0;
+  process.exitCode = previousExitCode;
+  return exitCode;
+}
+
+describe('tool pack lifecycle acceptance matrix', () => {
+  describe.each(PACK_NAMES)('%s', (pack) => {
+    const definition = getPackDefinition(pack);
+
+    it.each(definition.allowedScopes)(
+      'installs completely at %s scope from a fresh root',
+      async (scope) => {
+        const roots = await createRoots();
+
+        const result = await run(pack, scope, roots, 'install');
+        expect(result.plan.expectedCompleteness).toBe('complete');
+
+        const inventory = await inventoryAt(pack, scope, roots);
+        expect(inventory.completeness).toBe('complete');
+        expect(inventory.intent.enabled).toBe(true);
+        expect(inventory.intent.source).toBe('declared');
+        expect(await readIntent(pack, scope, roots)).toBe(true);
+
+        // Every managed asset the current release declares is present at the
+        // manifest-declared destination for this scope.
+        for (const asset of managedAssets(inventory)) {
+          expect(asset.status).not.toBe('missing');
+          expect(
+            await pathExists(join(roots[scope], asset.definition.destination)),
+          ).toBe(true);
+        }
+      },
+    );
+
+    it('is a no-op when reinstalled at its default scope', async () => {
+      const roots = await createRoots();
+      const scope = definition.defaultScope;
+
+      await run(pack, scope, roots, 'install');
+      const second = await run(pack, scope, roots, 'install');
+
+      // Intent is already declared and every asset is byte-identical, so the
+      // only work left is nothing at all.
+      expect(
+        second.plan.operations.filter(
+          (operation) =>
+            operation.kind !== 'chmod' && operation.kind !== 'write-intent',
+        ),
+      ).toEqual([]);
+      expect(second.plan.changedCanonicalPaths).toEqual([]);
+      expect((await inventoryAt(pack, scope, roots)).completeness).toBe(
+        'complete',
+      );
+    });
+
+    it('repairs a fully missing install from declared intent', async () => {
+      const roots = await createRoots();
+      const scope = definition.defaultScope;
+      await run(pack, scope, roots, 'install');
+
+      const before = await inventoryAt(pack, scope, roots);
+      for (const asset of managedAssets(before)) {
+        await rm(join(roots[scope], asset.definition.destination), {
+          recursive: true,
+          force: true,
+        });
+      }
+      const emptied = await inventoryAt(pack, scope, roots);
+      expect(emptied.completeness).toBe('absent');
+      // Intent survives the missing files, so the pack is repairable.
+      expect(emptied.intent.enabled).toBe(true);
+
+      await run(pack, scope, roots, 'update');
+      expect((await inventoryAt(pack, scope, roots)).completeness).toBe(
+        'complete',
+      );
+    });
+
+    it('reconciles a partial install to current release membership', async () => {
+      const roots = await createRoots();
+      const scope = definition.defaultScope;
+      await run(pack, scope, roots, 'install');
+
+      const installed = await inventoryAt(pack, scope, roots);
+      const dropped = managedAssets(installed).at(-1)!;
+      await rm(join(roots[scope], dropped.definition.destination), {
+        recursive: true,
+        force: true,
+      });
+
+      const partial = await inventoryAt(pack, scope, roots);
+      expect(partial.completeness).toBe(
+        managedAssets(installed).length === 1 ? 'absent' : 'partial',
+      );
+
+      await run(pack, scope, roots, 'update');
+      const repaired = await inventoryAt(pack, scope, roots);
+      expect(repaired.completeness).toBe('complete');
+      expect(
+        await pathExists(join(roots[scope], dropped.definition.destination)),
+      ).toBe(true);
+    });
+
+    it('removes only manifest-managed assets and deletes scoped intent', async () => {
+      const roots = await createRoots();
+      const scope = definition.defaultScope;
+      await run(pack, scope, roots, 'install');
+
+      const installed = await inventoryAt(pack, scope, roots);
+      const seeded = installed.assets.filter(
+        ({ definition: asset }) => asset.ownership[scope] === 'seed-if-missing',
+      );
+
+      await run(pack, scope, roots, 'remove');
+
+      const removed = await inventoryAt(pack, scope, roots);
+      expect(removed.completeness).toBe('absent');
+      // Intent is deleted, never rewritten as false.
+      expect(await readIntent(pack, scope, roots)).toBeUndefined();
+      expect(removed.intent.enabled).toBe(false);
+      expect(removed.intent.source).toBe('none');
+
+      // Owner-owned seeds and overrides survive removal.
+      for (const asset of seeded) {
+        expect(
+          await pathExists(join(roots[scope], asset.definition.destination)),
+        ).toBe(true);
+      }
+    });
+  });
+
+  it('reports duplicate cross-scope installs without inferring precedence', async () => {
+    const roots = await createRoots();
+    await run('ideas', 'project', roots, 'install');
+    await run('ideas', 'user', roots, 'install');
+
+    const inventory = await inventoryPack({
+      pack: 'ideas',
+      assetsRoot,
+      projectRoot: roots.project,
+      userRoot: roots.user,
+    });
+
+    expect(inventory.placement).toBe('both');
+    expect(inventory.scopes.every(hasScopedPackPlacementEvidence)).toBe(true);
+    const duplicate = inventory.diagnostics.find(
+      ({ code }) => code === 'duplicate-scope',
+    );
+    expect(duplicate).toBeDefined();
+    expect(duplicate!.message).toContain('provider precedence is not inferred');
+    expect(
+      duplicate!.paths.some((path) => path.startsWith(roots.project)),
+    ).toBe(true);
+    expect(duplicate!.paths.some((path) => path.startsWith(roots.user))).toBe(
+      true,
+    );
+  });
+
+  it('migrates a pack project to user and rolls it back safely', async () => {
+    const roots = await createRoots();
+    await run('research', 'project', roots, 'install');
+
+    // Forward: install at the destination, verify, then release the source.
+    await run('research', 'user', roots, 'install');
+    expect((await inventoryAt('research', 'user', roots)).completeness).toBe(
+      'complete',
+    );
+    await run('research', 'project', roots, 'remove');
+
+    expect((await inventoryAt('research', 'project', roots)).completeness).toBe(
+      'absent',
+    );
+    expect(await readIntent('research', 'project', roots)).toBeUndefined();
+    expect((await inventoryAt('research', 'user', roots)).completeness).toBe(
+      'complete',
+    );
+
+    // Rollback is the same two-phase operation in the opposite direction.
+    await run('research', 'project', roots, 'install');
+    expect((await inventoryAt('research', 'project', roots)).completeness).toBe(
+      'complete',
+    );
+    await run('research', 'user', roots, 'remove');
+
+    expect((await inventoryAt('research', 'user', roots)).completeness).toBe(
+      'absent',
+    );
+    expect(await readIntent('research', 'user', roots)).toBeUndefined();
+    expect((await inventoryAt('research', 'project', roots)).completeness).toBe(
+      'complete',
+    );
+  });
+
+  it('preserves PJM owner data across update, removal, and reinstall', async () => {
+    const roots = await createRoots();
+    await run('project-management', 'project', roots, 'install');
+
+    const inventory = await inventoryAt('project-management', 'project', roots);
+    const override = inventory.assets.find(
+      ({ definition }) => definition.ownership.project === 'seed-if-missing',
+    )!;
+    const overridePath = join(roots.project, override.definition.destination);
+    await writeFile(overridePath, '# repository owned template\n', 'utf8');
+
+    await run('project-management', 'project', roots, 'update');
+    await expect(readFile(overridePath, 'utf8')).resolves.toBe(
+      '# repository owned template\n',
+    );
+
+    await run('project-management', 'project', roots, 'remove');
+    await expect(readFile(overridePath, 'utf8')).resolves.toBe(
+      '# repository owned template\n',
+    );
+
+    await run('project-management', 'project', roots, 'install');
+    await expect(readFile(overridePath, 'utf8')).resolves.toBe(
+      '# repository owned template\n',
+    );
+  });
+
+  it('keeps the managed user default independent of a repository override', async () => {
+    const roots = await createRoots();
+    await run('project-management', 'project', roots, 'install');
+    await run('project-management', 'user', roots, 'install');
+
+    const projectInventory = await inventoryAt(
+      'project-management',
+      'project',
+      roots,
+    );
+    const override = projectInventory.assets.find(
+      ({ definition }) => definition.ownership.project === 'seed-if-missing',
+    )!;
+    const overridePath = join(roots.project, override.definition.destination);
+    await writeFile(overridePath, '# repository owned template\n', 'utf8');
+
+    const userInventory = await inventoryAt(
+      'project-management',
+      'user',
+      roots,
+    );
+    const managedDefault = userInventory.assets.find(
+      ({ definition }) => definition.id === override.definition.id,
+    )!;
+    expect(managedDefault.definition.ownership.user).toBe('managed');
+    expect(managedDefault.status).toBe('current');
+    await expect(
+      readFile(join(roots.user, managedDefault.definition.destination), 'utf8'),
+    ).resolves.not.toBe('# repository owned template\n');
+  });
+
+  it('retains a shared script while another installed pack still owns it', async () => {
+    const roots = await createRoots();
+    await run('docs', 'user', roots, 'install');
+    await run('workflows', 'user', roots, 'install');
+
+    const sharedPath = join(
+      roots.user,
+      '.oat',
+      'scripts',
+      'resolve-tracking.sh',
+    );
+    expect(await pathExists(sharedPath)).toBe(true);
+
+    // Shared-owner retention is resolved by the `oat tools remove` command
+    // path, so the acceptance check runs the real command.
+    expect(
+      await runCli(roots.project, roots.user, [
+        'tools',
+        'remove',
+        '--pack',
+        'docs',
+        '--scope',
+        'user',
+        '--no-sync',
+      ]),
+    ).toBe(0);
+    expect(await pathExists(sharedPath)).toBe(true);
+    expect(await readIntent('docs', 'user', roots)).toBeUndefined();
+    expect((await inventoryAt('workflows', 'user', roots)).completeness).toBe(
+      'complete',
+    );
+
+    expect(
+      await runCli(roots.project, roots.user, [
+        'tools',
+        'remove',
+        '--pack',
+        'workflows',
+        '--scope',
+        'user',
+        '--no-sync',
+      ]),
+    ).toBe(0);
+    expect(await pathExists(sharedPath)).toBe(false);
+    expect(await readIntent('workflows', 'user', roots)).toBeUndefined();
+  });
+
+  it('installs at user scope from a directory that is not a Git repository', async () => {
+    const roots = await createRoots('oat-pack-lifecycle-nogit');
+    expect(await pathExists(join(roots.project, '.git'))).toBe(false);
+
+    const exitCode = await runCli(roots.project, roots.user, [
+      'tools',
+      'install',
+      'ideas',
+      '--scope',
+      'user',
+    ]);
+    expect(exitCode).toBe(0);
+
+    const inventory = await inventoryAt('ideas', 'user', roots);
+    expect(inventory.completeness).toBe('complete');
+    expect(await readIntent('ideas', 'user', roots)).toBe(true);
+
+    // No repository state is written by a user-only install.
+    expect(await pathExists(join(roots.project, '.oat', 'config.json'))).toBe(
+      false,
+    );
+    expect(await pathExists(join(roots.project, '.agents'))).toBe(false);
+  });
+
+  it('previews a dry-run install without touching the filesystem', async () => {
+    const roots = await createRoots();
+
+    const planned = await run('brainstorm', 'user', roots, 'install', {
+      dryRun: true,
+    });
+    expect(planned.apply).toBeNull();
+    expect(planned.plan.operations.length).toBeGreaterThan(0);
+
+    const inventory = await inventoryAt('brainstorm', 'user', roots);
+    expect(inventory.completeness).toBe('absent');
+    expect(await readIntent('brainstorm', 'user', roots)).toBeUndefined();
+    expect(await pathExists(join(roots.user, '.agents'))).toBe(false);
+  });
+
+  it('rejects a scope the pack does not allow', async () => {
+    const roots = await createRoots();
+    await mkdir(join(roots.project, '.oat'), { recursive: true });
+
+    await expect(run('core', 'project', roots, 'install')).rejects.toThrow(
+      /does not allow project scope/,
+    );
+  });
+});

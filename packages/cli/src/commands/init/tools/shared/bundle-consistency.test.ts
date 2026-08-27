@@ -382,6 +382,72 @@ describe('bundle asset inventory consistency', () => {
     expect(sources).toContain(inventory.docsRoot.replace('apps/oat-docs/', ''));
   });
 
+  it('resolves every manifest asset source to a bundled asset', () => {
+    const inventory = readBundleInventory();
+    const bundledDocsRoot = inventory.docsRoot.replace('apps/oat-docs/', '');
+    const unresolved: string[] = [];
+
+    for (const { name, assets } of PACK_MANIFEST) {
+      for (const asset of assets) {
+        if (!asset.source) {
+          // Generated seeds have no bundled source by design.
+          expect(asset.generation, `${name}/${asset.id}`).toBeDefined();
+          continue;
+        }
+        const [kind, ...rest] = asset.source.split('/');
+        const name_ = rest.join('/');
+        const resolved =
+          (kind === 'skills' && inventory.skills.includes(name_)) ||
+          (kind === 'agents' && inventory.agents.includes(name_)) ||
+          (kind === 'scripts' && inventory.oatScripts.includes(name_)) ||
+          (kind === 'templates' &&
+            (inventory.templateFiles.includes(name_) ||
+              inventory.templateDirectories.some(
+                (directory) =>
+                  name_ === directory || name_.startsWith(`${directory}/`),
+              ))) ||
+          asset.source === bundledDocsRoot;
+        if (!resolved) unresolved.push(`${name}/${asset.id} → ${asset.source}`);
+      }
+    }
+
+    expect(
+      unresolved,
+      `Manifest assets without a bundled source: ${unresolved.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('declares a usable default scope and ownership for every manifest pack', () => {
+    for (const { name, allowedScopes, defaultScope, assets } of PACK_MANIFEST) {
+      expect(allowedScopes.length, `${name} allowed scopes`).toBeGreaterThan(0);
+      expect(allowedScopes, `${name} default scope`).toContain(defaultScope);
+
+      for (const asset of assets) {
+        expect(
+          asset.scopes.length,
+          `${name}/${asset.id} scopes`,
+        ).toBeGreaterThan(0);
+        // Every declared scope has explicit ownership, and no ownership entry
+        // exists for a scope the asset does not apply to.
+        for (const scope of asset.scopes) {
+          expect(allowedScopes, `${name}/${asset.id} scope ${scope}`).toContain(
+            scope,
+          );
+          expect(
+            asset.ownership[scope],
+            `${name}/${asset.id} ownership ${scope}`,
+          ).toBeDefined();
+        }
+        for (const scope of Object.keys(asset.ownership)) {
+          expect(
+            asset.scopes,
+            `${name}/${asset.id} stray ownership ${scope}`,
+          ).toContain(scope);
+        }
+      }
+    }
+  });
+
   it('covers every user-facing workflow lifecycle skill in the workflow pack', () => {
     expect(
       [...WORKFLOW_SKILLS].sort(),
