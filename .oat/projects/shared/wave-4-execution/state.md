@@ -1,6 +1,6 @@
 ---
 oat_current_task: null # p01 passed at 44fb2327 (root-verified); closeout in progress
-oat_last_commit: 94d6f74d # final-scope fix commit (last code commit; test file only)
+oat_last_commit: 495d4b9a # final-scope fix 2 (last code commit; test file only)
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260819-refresh-codex-skill-model' }
@@ -88,13 +88,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T01:55:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T05:34:49.391Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T05:46:34.486Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-4-execution
 
-**Status:** Implement — final review round 2 received (0C/0I/2M/1m: two residual guard evasions, reviewer-verified fix); fix round then narrowed round 3 (last final cycle) → configured exit gate
+**Status:** Implement — final-scope fix 2 landed (`495d4b9a`); narrowed final round 3 (last cycle) in progress → configured exit gate
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
@@ -133,7 +133,8 @@ non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Rec
 - ✓ Final review round 1 (fresh Opus): DoD 10/10, live-help + provider-reference + weaker-anywhere clean, 22-probe matrix matched; 0C/1I/4M/1m — bookkeeping (fixed) + two guard-breadth items (implementer fix round)
 - ✓ Fix round `w4-final-fix-001` (`94d6f74d`, test only; root-run 29-probe matrix ALL MATCHED)
 - ✓ Narrowed final round 2: 0C/0I/2M/1m (x1 row-scoped carve-out, x6/x4 negation mask; artifact drift)
-- ⧗ Fix round `w4-final-fix-002` → narrowed final round 3 (cycle 3 of 3) → configured exit gate → post-implement sequence
+- ✓ Fix round `w4-final-fix-002` (`495d4b9a`, test only; root-run 34-probe matrix ALL MATCHED)
+- ⧗ Narrowed final round 3 (cycle 3 of 3) → configured exit gate → post-implement sequence
 
 ## Blockers
 
