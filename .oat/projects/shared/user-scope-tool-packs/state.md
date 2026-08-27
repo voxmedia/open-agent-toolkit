@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04-t07
-oat_last_commit: db9c0b1ed97d981d586c78d1c58b23577faa6ed4
+oat_last_commit: bed357babe582cec0a32804e38ef05c2194abd01
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -32,17 +32,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p04:
       used_attempts: 3
-      pending_attempt:
-        attempt: 3
-        event_id: '8a81a198-e58a-4d66-8393-9c1bdaf662b5'
-        original_request: 'call_yFu85ZIagHG2fzbtGD5Qz5wq'
-        original_task: p04-t07
-        original_commit: '0c189eb5b4f07a3ff07b811ce4f0e7b593812fa1'
-        discovered_by: 'pnpm --filter @open-agent-toolkit/cli test'
-        dispatch_target: 'oat-phase-implementer-gpt-5-6-sol-high'
-        executing_target: 'root-inline:claude-opus-5'
-        reservation_head: 'e6d18390d'
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -98,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T13:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T13:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -197,8 +187,19 @@ unbindable from the active provider. Recovery attempt 1/10 fixed a stale
 `p04-t05`, committed append-only as
 `db9c0b1ed97d981d586c78d1c58b23577faa6ed4`; the marker is reconciled.
 Phase 4 verification now passes: 395/395 phase tests before and after the
-recovery commit, plus lint, format, and the skill-bump gate. Independent
-Phase 4 review is pending.
+recovery commit, plus lint, format, and the skill-bump gate.
+The broader CLI suite then exposed three further failures that the plan's
+declared Phase 4 verification command could not reach, because that command
+scopes only `src/commands/**` and never `src/validation/**`. All three were the
+same stale-HEAD-assertion drift caused by the phase's own skill version bumps.
+Recovery attempt 2/10 realigned the version pins in
+`src/validation/skills.test.ts` (`55cf8de74`), and attempt 3/10 remapped the
+`oat-project-summary` prompt sites retired by the p04-t07 gate rewrite
+(`bed357bab`). Three p04 recovery events triggered the elevated
+recovery-volume warning; every eligibility condition still held, so the run
+continued. The full CLI suite now passes 3,787/3,787, and `pnpm check`,
+`pnpm type-check`, `pnpm lint`, `pnpm format`, `check:skill-bumps`, and
+`git diff --check` all pass. Independent Phase 4 review is pending.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -276,6 +277,11 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Operator authorized a recorded root-inline recovery
 - ✓ Phase 4 recovery attempt 1/10 reconciled
 - ✓ Phase 4 verification passed: 37 files / 395 tests, lint, format, skill-bumps
+- ✗ Broader CLI suite exposed 3 failures outside the declared phase command
+- ✓ Phase 4 recovery attempt 2/10 reconciled (validation version pins)
+- ✓ Phase 4 recovery attempt 3/10 reconciled (prompt-site inventory)
+- ⚠ Elevated recovery-volume warning recorded at 3 p04 events
+- ✓ Full CLI suite passed 3,787/3,787 with all workspace gates green
 - ⧗ Phase 4 independent review pending
 
 ## Blockers

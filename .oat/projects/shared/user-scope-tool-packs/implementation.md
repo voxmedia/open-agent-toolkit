@@ -353,13 +353,30 @@ oat_generated: false
 
 **Verification:**
 
-- Phase suite: 37 files and 395 tests passed, before and after the recovery
-  commit; root ran both.
-- `pnpm lint`, `pnpm format`, and `pnpm run check:skill-bumps` passed at
-  committed HEAD `db9c0b1ed`.
-- Commit range `29fbb4e55..db9c0b1ed` is linear and append-only; each planned
+- Phase suite: 37 files and 395 tests passed after every recovery commit.
+- Full CLI suite: 289 files and 3,787 tests passed at committed HEAD
+  `bed357bab`.
+- `pnpm check`, `pnpm type-check`, `pnpm lint`, `pnpm format`,
+  `pnpm run check:skill-bumps`, and `git diff --check` passed.
+- Commit range `29fbb4e55..bed357bab` is linear and append-only; each planned
   task is exactly one commit in plan order touching only its declared files.
 - The worktree was clean at validation.
+
+**Plan divergence (recorded):**
+
+- The plan's declared Phase 4 Verification command scopes only
+  `src/commands/pjm`, `src/commands/backlog`, `src/commands/decision`,
+  `src/commands/init/tools/project-management`, and
+  `src/commands/init/tools/shared`. Phase 4 edits eight bundled skills, whose
+  HEAD-pinned assertions live in `src/validation/`, which that command cannot
+  reach. The declared command therefore reported a passing phase while three
+  real failures remained.
+- Source of truth: the implementation. Phase 4 was verified against the full
+  CLI suite plus the workspace gates rather than the narrower declared command.
+- Follow-up: `p05-t06` already runs the complete repository gate sequence, so
+  no plan edit is required for correctness. The narrow phase command is recorded
+  here as the cause of recovery attempts 2/10 and 3/10 rather than silently
+  absorbed.
 
 **Review concern:**
 
@@ -661,6 +678,55 @@ oat_generated: false
   architecture, security, product scope, requirements, or public behavior. The
   missing provenance that blocked the child was recovered from the launcher's
   primary `spawn_agent` record rather than reconstructed.
+
+### Recovery Event 2e6b74fd-752f-403a-8a3c-2f6e02efde08
+
+- Phase/task: p04 / p04-t07
+- Original request: `call_yFu85ZIagHG2fzbtGD5Qz5wq`
+- Original commit: `0c189eb5b4f07a3ff07b811ce4f0e7b593812fa1`
+- Defect class: test
+- Discovered by: `pnpm --filter @open-agent-toolkit/cli test`
+- Disposition: recovered
+- Authorization: operator-scope
+- Attempt: 2/10
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high` (executed
+  root-inline as `claude-opus-5`; see the run anchor's `Root-inline phase`)
+- Recovery commit: `55cf8de74c4b0e2bf55205ccd761d75df042558a`
+- Verification: `src/validation/skills.test.ts` 134/134 and the Phase 4 suite
+  395/395 passed before the commit and again against committed HEAD.
+- Reason: `src/validation/skills.test.ts` pinned prior versions of
+  `oat-agent-instructions-analyze`, `oat-project-summary`, and
+  `oat-project-document`, all bumped by p04-t05 and p04-t07 under the
+  repository skill-bump rule. Three mechanically related assertions in one file
+  from one verification command were corrected in one atomic attempt. Test-only;
+  no behavior change.
+
+### Recovery Event 8a81a198-e58a-4d66-8393-9c1bdaf662b5
+
+- Phase/task: p04 / p04-t07
+- Original request: `call_yFu85ZIagHG2fzbtGD5Qz5wq`
+- Original commit: `0c189eb5b4f07a3ff07b811ce4f0e7b593812fa1`
+- Defect class: composition
+- Discovered by: `pnpm --filter @open-agent-toolkit/cli test`
+- Disposition: recovered
+- Authorization: operator-scope
+- Attempt: 3/10
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high` (executed
+  root-inline as `claude-opus-5`; see the run anchor's `Root-inline phase`)
+- Recovery commit: `bed357babe582cec0a32804e38ef05c2194abd01`
+- Verification: `src/validation/autonomy-gate-inventory.test.ts` 4/4, the full
+  CLI suite 3,787/3,787, and the Phase 4 suite 395/395 passed before the commit
+  and again against committed HEAD.
+- Reason: the p04-t07 Step 7.1 rewrite in `oat-project-summary/SKILL.md`
+  retired prompt sites `ac36f854dd6b`, `e73bd88837ea`, and `83257ff6cb68` and
+  introduced `f979b2342d28` and `803bf40ec423`. Both new sites are explicitly
+  non-prompting ("auto, no prompt", "Do NOT ask the user"), so they inherit the
+  retired sites' `NG` disposition. The boundary expansion to
+  `.agents/docs/autonomy-contract.md` is mechanically derived from the p04-t07
+  skill edit and remains in-phase. Inventory-only; no gate semantics changed.
+- Note: this is the third p04 recovery event. The elevated recovery-volume
+  warning was raised and the run continued because every eligibility condition
+  still held.
 
 #### Outstanding Items
 
