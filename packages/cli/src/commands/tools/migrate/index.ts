@@ -10,9 +10,16 @@ import {
 import { confirmAction } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
-import type { PackReconcileOperation } from '@commands/tools/shared/pack-reconcile';
-import { writeScopedPackIntent } from '@commands/tools/shared/scoped-pack-intent';
-import type { PackName } from '@commands/tools/shared/types';
+import { isPackName, PACK_NAMES } from '@commands/tools/shared/pack-manifest';
+import {
+  resolveSharedOwnerRetentions,
+  type PackReconcileOperation,
+  type ResolveSharedOwnerRetentionsInput,
+} from '@commands/tools/shared/pack-reconcile';
+import {
+  hasScopedPackOwnershipEvidence,
+  writeScopedPackIntent,
+} from '@commands/tools/shared/scoped-pack-intent';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { CliError } from '@errors/index';
 import { resolveAssetsRoot } from '@fs/assets';
@@ -30,17 +37,6 @@ import {
   type PlanPackMigrationInput,
 } from './migrate-pack';
 
-const PACK_NAMES = [
-  'core',
-  'ideas',
-  'docs',
-  'workflows',
-  'utility',
-  'project-management',
-  'research',
-  'brainstorm',
-] as const satisfies readonly PackName[];
-
 interface MigrationCommandRuntime {
   context: CommandContext;
   assetsRoot: string;
@@ -52,6 +48,9 @@ export interface MigrationCommandDependencies {
   resolveScopeRoot: (scope: ConcreteScope, cwd: string, home: string) => string;
   resolveAssetsRoot: () => Promise<string>;
   inventory: typeof inventoryScopedPack;
+  resolveSharedRetentions: (
+    input: ResolveSharedOwnerRetentionsInput,
+  ) => ReturnType<typeof resolveSharedOwnerRetentions>;
   plan: (input: PlanPackMigrationInput) => PackMigrationPreview;
   executeDestination: (
     preview: PackMigrationPreview,
@@ -141,13 +140,13 @@ async function defaultExecuteDestination(
           scopeRoot: destinationRoot,
           assetsRoot: runtime.assetsRoot,
         }),
-      sync: async ({ scope, changedCanonicalPaths }) =>
-        runSync({
-          context: runtime.context,
-          scope,
-          installedCanonicalPaths: changedCanonicalPaths,
-        }),
     },
+    sync: async ({ scope, canonicalPaths }) =>
+      runSync({
+        context: runtime.context,
+        scope,
+        installedCanonicalPaths: canonicalPaths,
+      }),
   });
 }
 
@@ -175,13 +174,21 @@ async function defaultCompleteSourceRemoval(
           scopeRoot: input.sourceRoot,
           enabled: operation.enabled,
         }),
-      sync: async ({ scope, changedCanonicalPaths }) =>
-        runSync({
-          context: runtime.context,
-          scope,
-          removedCanonicalPaths: changedCanonicalPaths,
-        }),
     },
+    resolveSourceRetentions: async () =>
+      resolveSharedOwnerRetentions({
+        packs: [preview.pack],
+        scope: preview.from,
+        scopeRoot: input.sourceRoot,
+        hasOwnershipEvidence: async (pack, scope, scopeRoot) =>
+          hasScopedPackOwnershipEvidence({ pack, scope, scopeRoot }),
+      }),
+    sync: async ({ scope, canonicalPaths }) =>
+      runSync({
+        context: runtime.context,
+        scope,
+        removedCanonicalPaths: canonicalPaths,
+      }),
   });
 }
 
@@ -191,15 +198,12 @@ const defaultDependencies: MigrationCommandDependencies = {
   resolveScopeRoot,
   resolveAssetsRoot,
   inventory: inventoryScopedPack,
+  resolveSharedRetentions: resolveSharedOwnerRetentions,
   plan: planPackMigration,
   executeDestination: defaultExecuteDestination,
   completeSourceRemoval: defaultCompleteSourceRemoval,
   confirmAction,
 };
-
-function isPackName(value: string): value is PackName {
-  return PACK_NAMES.includes(value as PackName);
-}
 
 async function resolveMigrationScopeRoot(
   scope: ConcreteScope,
@@ -218,11 +222,26 @@ function renderPreview(
   context.logger.info(
     `Migration preview: ${preview.pack} (${preview.from} -> ${preview.to})`,
   );
-  context.logger.info(`Additions: ${preview.additions.length}`);
-  context.logger.info(`Duplicates: ${preview.duplicates.length}`);
-  context.logger.info(`Conflicts: ${preview.conflicts.length}`);
-  context.logger.info(`Source removals: ${preview.removals.length}`);
-  context.logger.info(`Retained owner data: ${preview.retained.length}`);
+  const groups = [
+    ['Additions', preview.additions],
+    ['Duplicates', preview.duplicates],
+    ['Conflicts', preview.conflicts],
+    ['Source removals', preview.removals],
+    ['Retained owner data', preview.retained],
+  ] as const;
+  for (const [label, entries] of groups) {
+    context.logger.info(`${label}: ${entries.length}`);
+    for (const entry of entries) {
+      context.logger.info(
+        `  - ${entry.assetId} [${entry.kind}] ${entry.scope} ${entry.status}: ${entry.path}${entry.reason ? ` (${entry.reason})` : ''}`,
+      );
+    }
+  }
+  for (const diagnostic of preview.diagnostics) {
+    context.logger.info(
+      `Diagnostic ${diagnostic.code}: ${diagnostic.message} (${diagnostic.paths.join(', ')})`,
+    );
+  }
 }
 
 function emitOutcome(
@@ -246,9 +265,18 @@ function emitOutcome(
     context.logger.warn(
       `Destination is verified; ${outcome.preview.pack} remains installed at both scopes.`,
     );
-  } else if (outcome.status === 'source-removal-failed') {
+  } else if (outcome.status === 'blocked') {
+    context.logger.error('Migration is blocked by destination conflicts.');
+  } else if (
+    outcome.status === 'source-removal-failed' ||
+    outcome.status === 'source-sync-failed'
+  ) {
     context.logger.error(
       `Destination is verified, but ${outcome.preview.from} source removal did not complete.`,
+    );
+  } else if (outcome.status === 'destination-sync-failed') {
+    context.logger.error(
+      `Destination canonical files are verified, but provider sync did not complete; source was retained.`,
     );
   }
   for (const recovery of outcome.recovery ?? []) {
@@ -271,7 +299,11 @@ export function createToolsMigrateCommand(
 ): Command {
   return new Command('migrate')
     .description('Move an installed tool pack between scopes safely')
-    .requiredOption('--pack <pack>', 'Pack to migrate')
+    .addOption(
+      new Option('--pack <pack>', 'Pack to migrate')
+        .choices([...PACK_NAMES])
+        .makeOptionMandatory(),
+    )
     .addOption(
       new Option('--from <scope>', 'Source scope')
         .choices(['project', 'user'])
@@ -305,20 +337,32 @@ export function createToolsMigrateCommand(
           resolveMigrationScopeRoot(to, context, dependencies),
           dependencies.resolveAssetsRoot(),
         ]);
-        const [sourceInventory, destinationInventory] = await Promise.all([
-          dependencies.inventory({
-            pack,
-            scope: from,
-            scopeRoot: sourceRoot,
-            assetsRoot,
-          }),
-          dependencies.inventory({
-            pack,
-            scope: to,
-            scopeRoot: destinationRoot,
-            assetsRoot,
-          }),
-        ]);
+        const [sourceInventory, destinationInventory, sourceRetentions] =
+          await Promise.all([
+            dependencies.inventory({
+              pack,
+              scope: from,
+              scopeRoot: sourceRoot,
+              assetsRoot,
+            }),
+            dependencies.inventory({
+              pack,
+              scope: to,
+              scopeRoot: destinationRoot,
+              assetsRoot,
+            }),
+            dependencies.resolveSharedRetentions({
+              packs: [pack],
+              scope: from,
+              scopeRoot: sourceRoot,
+              hasOwnershipEvidence: async (owner, scope, root) =>
+                hasScopedPackOwnershipEvidence({
+                  pack: owner,
+                  scope,
+                  scopeRoot: root,
+                }),
+            }),
+          ]);
         preview = dependencies.plan({
           pack,
           from,
@@ -328,6 +372,7 @@ export function createToolsMigrateCommand(
           assetsRoot,
           sourceInventory,
           destinationInventory,
+          sourceRetentions,
         });
       } catch (error) {
         emitError(error, context, 1);
@@ -337,15 +382,21 @@ export function createToolsMigrateCommand(
       if (options.dryRun) {
         const outcome: PackMigrationOutcome = {
           preview,
-          status: 'previewed',
+          status: preview.status === 'blocked' ? 'blocked' : 'previewed',
         };
         if (context.json) emitOutcome(outcome, true, context);
         else renderPreview(preview, context);
-        process.exitCode = 0;
+        process.exitCode = preview.status === 'blocked' ? 1 : 0;
         return;
       }
 
       if (!context.json) renderPreview(preview, context);
+      if (preview.status === 'blocked') {
+        const outcome: PackMigrationOutcome = { preview, status: 'blocked' };
+        emitOutcome(outcome, false, context);
+        process.exitCode = 1;
+        return;
+      }
       try {
         const runtime = { context, assetsRoot };
         const destination = await dependencies.executeDestination(
@@ -353,6 +404,11 @@ export function createToolsMigrateCommand(
           destinationRoot,
           runtime,
         );
+        if (destination.status === 'destination-sync-failed') {
+          emitOutcome(destination, false, context);
+          process.exitCode = 2;
+          return;
+        }
         const confirmation = context.interactive
           ? (await dependencies.confirmAction(
               `Destination verified. Remove ${pack} from ${from} scope?`,
@@ -368,7 +424,8 @@ export function createToolsMigrateCommand(
         );
         emitOutcome(outcome, false, context);
         process.exitCode =
-          outcome.status === 'source-removal-failed'
+          outcome.status === 'source-removal-failed' ||
+          outcome.status === 'source-sync-failed'
             ? 2
             : confirmation === 'non-interactive'
               ? 1

@@ -4,21 +4,16 @@ import {
   type InventoryScopedPackInput,
   type ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
-import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
+import {
+  getPackDefinition,
+  isPackName,
+  PACK_NAMES,
+} from '@commands/tools/shared/pack-manifest';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import type { ConcreteScope } from '@shared/types';
 
-export const PACK_NAMES = [
-  'core',
-  'ideas',
-  'docs',
-  'workflows',
-  'utility',
-  'project-management',
-  'research',
-  'brainstorm',
-] as const satisfies readonly PackName[];
+export { isPackName, PACK_NAMES };
 
 export interface PackAvailability {
   pack: PackName;
@@ -42,10 +37,6 @@ export interface PackAvailabilityDependencies {
   inventoryScopedPack?: (
     input: InventoryScopedPackInput,
   ) => Promise<ScopedPackInventory>;
-}
-
-export function isPackName(value: string): value is PackName {
-  return (PACK_NAMES as readonly string[]).includes(value);
 }
 
 export async function resolvePackAvailability(

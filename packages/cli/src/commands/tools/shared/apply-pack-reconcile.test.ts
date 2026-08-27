@@ -47,6 +47,7 @@ function plan(): PackReconcilePlan {
     action: 'install',
     expectedCompleteness: 'complete',
     changedCanonicalPaths: ['.agents/skills/oat-brainstorm'],
+    retainedAssets: [],
     operations: [
       {
         kind: 'copy-dir',

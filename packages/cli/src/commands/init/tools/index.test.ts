@@ -277,6 +277,7 @@ function createHarness(options: HarnessOptions = {}) {
           operations: [operation],
           expectedCompleteness: 'complete' as const,
           changedCanonicalPaths: [],
+          retainedAssets: [],
         };
         return {
           request,

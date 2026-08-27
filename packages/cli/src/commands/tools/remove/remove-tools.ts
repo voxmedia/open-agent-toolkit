@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
+import { resolveSharedOwnerRetentions } from '@commands/tools/shared/pack-reconcile';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type {
   PackAssetDefinition,
@@ -143,7 +144,13 @@ async function planManagedPackRemoval(
   dryRun: boolean,
   deps: RemoveToolsDependencies,
 ): Promise<ManagedPackRemovalPlan> {
-  const retainedPaths = new Set<string>();
+  const retentions = await resolveSharedOwnerRetentions({
+    packs,
+    scope,
+    scopeRoot,
+    hasOwnershipEvidence: deps.hasPackOwnershipEvidence,
+  });
+  const retainedPaths = new Set(retentions.map(({ path }) => path));
   const targets = new Map<
     string,
     { asset: PackAssetDefinition; isDirectory: boolean }
@@ -151,28 +158,6 @@ async function planManagedPackRemoval(
   for (const { asset } of selectedManagedAssets(packs, scope)) {
     const path = join(scopeRoot, asset.destination);
     if (targets.has(path) || retainedPaths.has(path)) continue;
-    if (asset.sharedOwner) {
-      const otherOwners = PACK_MANIFEST.filter(
-        ({ name, assets }) =>
-          !packs.includes(name) &&
-          assets.some(
-            (candidate) =>
-              candidate.sharedOwner === asset.sharedOwner &&
-              candidate.destination === asset.destination &&
-              candidate.scopes.includes(scope),
-          ),
-      );
-      const retainedByAnotherPack = await Promise.all(
-        otherOwners.map(({ name }) =>
-          deps.hasPackOwnershipEvidence(name, scope, scopeRoot),
-        ),
-      );
-      if (retainedByAnotherPack.some(Boolean)) {
-        retainedPaths.add(path);
-        continue;
-      }
-    }
-
     targets.set(path, { asset, isDirectory: isDirectoryAsset(asset) });
   }
 

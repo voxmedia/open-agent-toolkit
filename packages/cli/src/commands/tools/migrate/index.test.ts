@@ -1,6 +1,7 @@
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import type { ScopedPackInventory } from '@commands/tools/shared/pack-inventory';
+import { PACK_NAMES } from '@commands/tools/shared/pack-manifest';
 import type { ConcreteScope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -41,11 +42,12 @@ function preview(): PackMigrationPreview {
     status: 'ready',
     additions: [
       {
-        kind: 'copy-dir',
         assetId: 'skill:oat-idea-new',
-        source: '/assets/skills/oat-idea-new',
-        destination: '/user/.agents/skills/oat-idea-new',
-        force: true,
+        kind: 'skill',
+        scope: 'user',
+        path: '/user/.agents/skills/oat-idea-new',
+        status: 'missing',
+        reason: 'destination-reconcile',
       },
     ],
     duplicates: [],
@@ -53,11 +55,15 @@ function preview(): PackMigrationPreview {
     removals: [
       {
         assetId: 'skill:oat-idea-new',
+        kind: 'skill',
+        scope: 'project',
         path: '/project/.agents/skills/oat-idea-new',
         status: 'current',
+        reason: 'source-managed',
       },
     ],
     retained: [],
+    diagnostics: [],
     destinationPlan: {
       pack: 'ideas',
       scope: 'user',
@@ -65,6 +71,7 @@ function preview(): PackMigrationPreview {
       operations: [],
       expectedCompleteness: 'complete',
       changedCanonicalPaths: ['.agents/skills/oat-idea-new'],
+      retainedAssets: [],
     },
   };
 }
@@ -75,13 +82,15 @@ function createHarness(
     confirmed?: boolean;
     completionStatus?: PackMigrationOutcome['status'];
     planError?: Error;
+    preview?: PackMigrationPreview;
+    destinationStatus?: PackMigrationOutcome['status'];
   } = {},
 ) {
   const capture = createLoggerCapture();
-  const migrationPreview = preview();
+  const migrationPreview = options.preview ?? preview();
   const destination: PackMigrationOutcome = {
     preview: migrationPreview,
-    status: 'destination-verified',
+    status: options.destinationStatus ?? 'destination-verified',
     destinationInventory: scopedInventory('user'),
   };
   const completionStatus = options.completionStatus ?? 'migrated';
@@ -114,6 +123,7 @@ function createHarness(
     resolveScopeRoot: (_scope, _cwd, home) => home,
     resolveAssetsRoot: async () => '/assets',
     inventory: async ({ scope }) => scopedInventory(scope),
+    resolveSharedRetentions: async () => [],
     plan: () => {
       if (options.planError) throw options.planError;
       return migrationPreview;
@@ -179,6 +189,9 @@ describe('createToolsMigrateCommand', () => {
     expect(command.options.map(({ long }) => long)).not.toEqual(
       expect.arrayContaining(['--force', '--yes']),
     );
+    expect(
+      command.options.find(({ long }) => long === '--pack')?.argChoices,
+    ).toEqual(PACK_NAMES);
   });
 
   it('renders a preview and applies nothing during a human dry-run', async () => {
@@ -187,10 +200,57 @@ describe('createToolsMigrateCommand', () => {
 
     expect(harness.capture.info.join('\n')).toMatch(/migration preview/i);
     expect(harness.capture.info.join('\n')).toMatch(/additions: 1/i);
+    expect(harness.capture.info.join('\n')).toContain(
+      'skill:oat-idea-new [skill] project current: /project/.agents/skills/oat-idea-new',
+    );
     expect(harness.executeDestination).not.toHaveBeenCalled();
     expect(harness.completeSourceRemoval).not.toHaveBeenCalled();
     expect(harness.confirmAction).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(0);
+  });
+
+  it('returns an inspectable typed blocked preview without mutating', async () => {
+    const blocked = preview();
+    blocked.status = 'blocked';
+    blocked.conflicts = [
+      {
+        assetId: 'skill:oat-idea-new',
+        kind: 'skill',
+        scope: 'user',
+        path: '/user/.agents/skills/oat-idea-new',
+        status: 'newer',
+        reason: 'newer-destination-asset',
+      },
+    ];
+    const harness = createHarness({ preview: blocked });
+    await runCommand(harness.command, requiredArgs, ['--json']);
+
+    expect(harness.capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      preview: {
+        conflicts: [
+          {
+            assetId: 'skill:oat-idea-new',
+            path: '/user/.agents/skills/oat-idea-new',
+            status: 'newer',
+          },
+        ],
+      },
+    });
+    expect(harness.executeDestination).not.toHaveBeenCalled();
+    expect(harness.confirmAction).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('stops before source confirmation when destination provider sync fails', async () => {
+    const harness = createHarness({
+      destinationStatus: 'destination-sync-failed',
+    });
+    await runCommand(harness.command, requiredArgs, ['--json']);
+
+    expect(harness.confirmAction).not.toHaveBeenCalled();
+    expect(harness.completeSourceRemoval).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(2);
   });
 
   it('emits one stable JSON preview document in dry-run mode', async () => {

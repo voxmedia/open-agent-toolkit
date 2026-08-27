@@ -189,38 +189,53 @@ describe('planPackMigration', () => {
     );
   });
 
-  it('blocks newer destination conflicts and legacy-false conflicts before mutation', () => {
-    expect(() =>
-      planPackMigration({
-        pack: 'ideas',
-        from: 'project',
-        to: 'user',
-        sourceRoot: '/project',
-        destinationRoot: '/user',
-        assetsRoot: '/assets',
-        sourceInventory: inventory('project'),
-        destinationInventory: inventory('user', {
-          intent: 'none',
-          statuses: { 'skill:oat-idea-new': 'newer' },
-        }),
+  it('returns typed newer conflicts and adopts physically complete legacy-false destinations', () => {
+    const blocked = planPackMigration({
+      pack: 'ideas',
+      from: 'project',
+      to: 'user',
+      sourceRoot: '/project',
+      destinationRoot: '/user',
+      assetsRoot: '/assets',
+      sourceInventory: inventory('project'),
+      destinationInventory: inventory('user', {
+        intent: 'none',
+        statuses: { 'skill:oat-idea-new': 'newer' },
       }),
-    ).toThrow(/destination conflict.*oat-idea-new/i);
+    });
+    expect(blocked).toMatchObject({
+      status: 'blocked',
+      conflicts: [
+        expect.objectContaining({
+          assetId: 'skill:oat-idea-new',
+          kind: 'skill',
+          scope: 'user',
+          path: '/user/.agents/skills/oat-idea-new',
+          status: 'newer',
+        }),
+      ],
+    });
 
-    expect(() =>
-      planPackMigration({
-        pack: 'ideas',
-        from: 'project',
-        to: 'user',
-        sourceRoot: '/project',
-        destinationRoot: '/user',
-        assetsRoot: '/assets',
-        sourceInventory: inventory('project'),
-        destinationInventory: inventory('user', {
-          intent: 'inferred-legacy',
-          legacyFalseConflict: true,
-        }),
+    const legacyFalse = planPackMigration({
+      pack: 'ideas',
+      from: 'project',
+      to: 'user',
+      sourceRoot: '/project',
+      destinationRoot: '/user',
+      assetsRoot: '/assets',
+      sourceInventory: inventory('project'),
+      destinationInventory: inventory('user', {
+        intent: 'inferred-legacy',
+        legacyFalseConflict: true,
       }),
-    ).toThrow(/legacy false/i);
+    });
+    expect(legacyFalse).toMatchObject({
+      status: 'ready',
+      diagnostics: [expect.objectContaining({ code: 'legacy-false-conflict' })],
+    });
+    expect(legacyFalse.destinationPlan.operations).toContainEqual(
+      expect.objectContaining({ kind: 'write-intent', enabled: true }),
+    );
   });
 });
 
@@ -240,9 +255,10 @@ function migrationPreview(): PackMigrationPreview {
 function destinationDependencies(options: {
   copyFailure?: boolean;
   verificationFailure?: boolean;
+  intentWritten?: boolean;
   events: string[];
 }): ApplyPackReconcileDependencies {
-  let intentWritten = false;
+  let intentWritten = options.intentWritten ?? false;
   return {
     resolveManagedRoots: async (scopeRoot) => ({
       '.agents': {
@@ -335,6 +351,9 @@ describe('executeMigrationDestination', () => {
       '/user',
       {
         applyDependencies: destinationDependencies({ events }),
+        sync: async ({ scope, canonicalPaths }) => {
+          events.push(`sync:${scope}:${canonicalPaths.join(',')}`);
+        },
       },
     );
 
@@ -343,8 +362,60 @@ describe('executeMigrationDestination', () => {
       completeness: 'complete',
       intent: { enabled: true, source: 'declared' },
     });
-    expect(events.slice(-3)).toEqual(['inventory', 'intent', 'inventory']);
+    expect(events.slice(-4, -1)).toEqual(['inventory', 'intent', 'inventory']);
+    expect(events.at(-1)).toMatch(/^sync:user:/);
     expect(events).not.toContain('source');
+  });
+
+  it('retains source on destination sync failure and retries all canonical paths even when current', async () => {
+    const events: string[] = [];
+    const failed = await executeMigrationDestination(
+      migrationPreview(),
+      '/user',
+      {
+        applyDependencies: destinationDependencies({ events }),
+        sync: async () => {
+          throw new Error('injected destination sync failure');
+        },
+      },
+    );
+    expect(failed).toMatchObject({
+      status: 'destination-sync-failed',
+      pendingSync: { scope: 'user', action: 'install' },
+    });
+    expect(failed.recovery).toContainEqual(
+      expect.stringMatching(/source was retained/i),
+    );
+
+    const currentPreview = planPackMigration({
+      pack: 'ideas',
+      from: 'project',
+      to: 'user',
+      sourceRoot: '/project',
+      destinationRoot: '/user',
+      assetsRoot: '/assets',
+      sourceInventory: inventory('project'),
+      destinationInventory: inventory('user'),
+    });
+    let synced: readonly string[] = [];
+    const recovered = await executeMigrationDestination(
+      currentPreview,
+      '/user',
+      {
+        applyDependencies: destinationDependencies({
+          events: [],
+          intentWritten: true,
+        }),
+        sync: async ({ canonicalPaths }) => {
+          synced = canonicalPaths;
+        },
+      },
+    );
+    expect(recovered.status).toBe('destination-verified');
+    expect(synced).toEqual(
+      expect.arrayContaining(['.agents/skills/oat-idea-new']),
+    );
+    expect(synced.length).toBeGreaterThan(0);
   });
 });
 
@@ -422,14 +493,15 @@ function sourceRemovalDependencies(options: {
         options.events.push(`intent:${operation.enabled}`);
         intentCleared = !operation.enabled;
       },
-      sync: async (input: {
-        scope: 'project' | 'user';
-        changedCanonicalPaths: readonly string[];
-      }) => {
-        options.events.push(
-          `sync:${input.scope}:${input.changedCanonicalPaths.join(',')}`,
-        );
-      },
+    },
+    resolveSourceRetentions: async () => [],
+    sync: async (input: {
+      scope: 'project' | 'user';
+      canonicalPaths: readonly string[];
+    }) => {
+      options.events.push(
+        `sync:${input.scope}:${input.canonicalPaths.join(',')}`,
+      );
     },
     setFailAfter(value: number | undefined) {
       options.failAfter = value;
@@ -533,5 +605,48 @@ describe('completeMigrationSourceRemoval', () => {
       dependencies,
     );
     expect(retried.status).toBe('migrated');
+  });
+
+  it('returns exact source sync recovery and converges without repeating removal', async () => {
+    const events: string[] = [];
+    const dependencies = sourceRemovalDependencies({ events });
+    let failSync = true;
+    dependencies.sync = async ({ scope, canonicalPaths }) => {
+      events.push(`sync:${scope}:${canonicalPaths.join(',')}`);
+      if (failSync) throw new Error('injected source sync failure');
+    };
+    const failed = await completeMigrationSourceRemoval(
+      verifiedDestination(),
+      {
+        confirmation: 'confirmed',
+        sourceRoot: '/project',
+        assetsRoot: '/assets',
+      },
+      dependencies,
+    );
+    expect(failed).toMatchObject({
+      status: 'source-sync-failed',
+      pendingSync: { scope: 'project', action: 'remove' },
+    });
+    expect(failed.pendingSync?.command).toMatch(
+      /^oat sync --scope project --remove-canonical /,
+    );
+    const removalsBeforeRetry = events.filter((event) =>
+      event.startsWith('remove:'),
+    ).length;
+    failSync = false;
+    const recovered = await completeMigrationSourceRemoval(
+      failed,
+      {
+        confirmation: 'confirmed',
+        sourceRoot: '/project',
+        assetsRoot: '/assets',
+      },
+      dependencies,
+    );
+    expect(recovered.status).toBe('migrated');
+    expect(events.filter((event) => event.startsWith('remove:'))).toHaveLength(
+      removalsBeforeRetry,
+    );
   });
 });

@@ -4,6 +4,7 @@ import type { ScopedPackInventory } from './pack-inventory';
 import { getPackDefinition } from './pack-manifest';
 import {
   planPackReconcile,
+  resolveSharedOwnerRetentions,
   serializePackReconcilePlan,
 } from './pack-reconcile';
 
@@ -116,6 +117,44 @@ describe('planPackReconcile', () => {
       },
     ]);
     expect(plan.expectedCompleteness).toBe('absent');
+  });
+
+  it('retains a shared path owned by another installed pack while verifying selected removal', async () => {
+    const scoped: ScopedPackInventory = {
+      ...inventory('workflows', 'project', {}, true),
+      assets: inventory('workflows', 'project', {}, true).assets.map((asset) =>
+        asset.definition.destination === '.oat/scripts/resolve-tracking.sh'
+          ? { ...asset, status: 'current' }
+          : asset,
+      ),
+    };
+    const retainedAssets = await resolveSharedOwnerRetentions({
+      packs: ['workflows'],
+      scope: 'project',
+      scopeRoot: '/scope',
+      hasOwnershipEvidence: async (pack) => pack === 'docs',
+    });
+    const plan = planPackReconcile({
+      pack: 'workflows',
+      scope: 'project',
+      scopeRoot: '/scope',
+      assetsRoot: '/assets',
+      action: 'remove',
+      inventory: scoped,
+      retainedAssets,
+    });
+
+    expect(retainedAssets).toEqual([
+      expect.objectContaining({
+        assetId: 'script:resolve-tracking.sh',
+        retainedBy: ['docs'],
+      }),
+    ]);
+    expect(plan.operations).not.toContainEqual(
+      expect.objectContaining({ assetId: 'script:resolve-tracking.sh' }),
+    );
+    expect(plan.retainedAssets).toEqual(retainedAssets);
+    expect(plan.expectedCompleteness).toBe('partial');
   });
 
   it('serializes the same stable plan for dry-run output', () => {

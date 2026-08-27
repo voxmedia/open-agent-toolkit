@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import type { ConcreteScope } from '@shared/types';
 
 import type { ScopedPackInventory } from './pack-inventory';
-import { getPackDefinition } from './pack-manifest';
+import { getPackDefinition, PACK_MANIFEST } from './pack-manifest';
 import type {
   PackAssetDefinition,
   PackAssetGeneration,
@@ -47,6 +47,14 @@ export interface PackReconcilePlan {
   operations: readonly PackReconcileOperation[];
   expectedCompleteness: PackCompleteness;
   changedCanonicalPaths: readonly string[];
+  retainedAssets: readonly PackSharedOwnerRetention[];
+}
+
+export interface PackSharedOwnerRetention {
+  assetId: string;
+  path: string;
+  retainedBy: readonly PackName[];
+  reason: 'retained-shared-owner';
 }
 
 export interface PlanPackReconcileInput {
@@ -56,6 +64,73 @@ export interface PlanPackReconcileInput {
   assetsRoot: string;
   action: PackReconcileAction;
   inventory: ScopedPackInventory;
+  retainedAssets?: readonly PackSharedOwnerRetention[];
+}
+
+export interface ResolveSharedOwnerRetentionsInput {
+  packs: readonly PackName[];
+  scope: ConcreteScope;
+  scopeRoot: string;
+  hasOwnershipEvidence: (
+    pack: PackName,
+    scope: ConcreteScope,
+    scopeRoot: string,
+  ) => Promise<boolean>;
+}
+
+export async function resolveSharedOwnerRetentions(
+  input: ResolveSharedOwnerRetentionsInput,
+): Promise<PackSharedOwnerRetention[]> {
+  const selected = new Set(input.packs);
+  const retentions: PackSharedOwnerRetention[] = [];
+  const seen = new Set<string>();
+  for (const definition of PACK_MANIFEST.filter(({ name }) =>
+    selected.has(name),
+  )) {
+    for (const asset of definition.assets) {
+      if (
+        !asset.sharedOwner ||
+        !asset.scopes.includes(input.scope) ||
+        asset.ownership[input.scope] !== 'managed' ||
+        seen.has(asset.destination)
+      ) {
+        continue;
+      }
+      const otherOwners = PACK_MANIFEST.filter(
+        ({ name, assets }) =>
+          !selected.has(name) &&
+          assets.some(
+            (candidate) =>
+              candidate.sharedOwner === asset.sharedOwner &&
+              candidate.destination === asset.destination &&
+              candidate.scopes.includes(input.scope) &&
+              candidate.ownership[input.scope] === 'managed',
+          ),
+      );
+      const evidence = await Promise.all(
+        otherOwners.map(async ({ name }) => ({
+          name,
+          retained: await input.hasOwnershipEvidence(
+            name,
+            input.scope,
+            input.scopeRoot,
+          ),
+        })),
+      );
+      const retainedBy = evidence
+        .filter(({ retained }) => retained)
+        .map(({ name }) => name);
+      if (retainedBy.length === 0) continue;
+      seen.add(asset.destination);
+      retentions.push({
+        assetId: asset.id,
+        path: join(input.scopeRoot, asset.destination),
+        retainedBy,
+        reason: 'retained-shared-owner',
+      });
+    }
+  }
+  return retentions;
 }
 
 function isDirectoryAsset(asset: PackAssetDefinition): boolean {
@@ -119,6 +194,9 @@ function removalOperation(
   input: PlanPackReconcileInput,
 ): PackReconcileOperation | null {
   if (asset.ownership[input.scope] !== 'managed') return null;
+  if (input.retainedAssets?.some(({ assetId }) => assetId === asset.id)) {
+    return null;
+  }
   const observed = input.inventory.assets.find(
     ({ definition }) => definition.id === asset.id,
   );
@@ -141,15 +219,16 @@ export function planPackReconcile(
       'Pack reconcile inventory does not match requested pack and scope',
     );
   }
-  const definition = getPackDefinition(input.pack);
-  if (!definition.allowedScopes.includes(input.scope)) {
+  const packDefinition = getPackDefinition(input.pack);
+  if (!packDefinition.allowedScopes.includes(input.scope)) {
     throw new Error(`Pack ${input.pack} does not allow ${input.scope} scope`);
   }
-  const applicableAssets = definition.assets.filter(({ scopes }) =>
+  const applicableAssets = packDefinition.assets.filter(({ scopes }) =>
     scopes.includes(input.scope),
   );
   const changedCanonicalPaths: string[] = [];
   const operations: PackReconcileOperation[] = [];
+  const retainedAssets = input.retainedAssets ?? [];
 
   for (const asset of applicableAssets) {
     const assetOperations =
@@ -179,13 +258,33 @@ export function planPackReconcile(
     });
   }
 
+  const managedAssets = applicableAssets.filter(
+    (asset) => asset.ownership[input.scope] === 'managed',
+  );
+  const retainedPresent = managedAssets.filter(
+    (asset) =>
+      retainedAssets.some(({ assetId }) => assetId === asset.id) &&
+      input.inventory.assets.some(
+        ({ definition, status }) =>
+          definition.id === asset.id && status !== 'missing',
+      ),
+  ).length;
+  const expectedRemovalCompleteness =
+    retainedPresent === 0
+      ? 'absent'
+      : retainedPresent === managedAssets.length
+        ? 'complete'
+        : 'partial';
+
   return {
     pack: input.pack,
     scope: input.scope,
     action: input.action,
     operations,
-    expectedCompleteness: input.action === 'remove' ? 'absent' : 'complete',
+    expectedCompleteness:
+      input.action === 'remove' ? expectedRemovalCompleteness : 'complete',
     changedCanonicalPaths: [...new Set(changedCanonicalPaths)],
+    retainedAssets,
   };
 }
 

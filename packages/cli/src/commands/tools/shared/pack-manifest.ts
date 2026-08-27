@@ -19,7 +19,7 @@ export type {
   PackDefinition,
 };
 
-const ALL_PACK_NAMES = [
+export const PACK_NAMES = [
   'core',
   'ideas',
   'docs',
@@ -29,6 +29,10 @@ const ALL_PACK_NAMES = [
   'research',
   'brainstorm',
 ] as const satisfies readonly PackName[];
+
+export function isPackName(value: string): value is PackName {
+  return (PACK_NAMES as readonly string[]).includes(value);
+}
 
 const BOTH_SCOPES = ['project', 'user'] as const;
 const BOTH_MANAGED = { project: 'managed', user: 'managed' } as const;
@@ -471,8 +475,8 @@ export function validatePackManifest(
   }
 
   if (manifest === PACK_MANIFEST) {
-    const missing = ALL_PACK_NAMES.filter((name) => !packNames.has(name));
-    if (missing.length > 0 || packNames.size !== ALL_PACK_NAMES.length) {
+    const missing = PACK_NAMES.filter((name) => !packNames.has(name));
+    if (missing.length > 0 || packNames.size !== PACK_NAMES.length) {
       throw new Error(
         `Pack manifest must cover every PackName exactly once; missing: ${missing.join(', ') || 'none'}`,
       );

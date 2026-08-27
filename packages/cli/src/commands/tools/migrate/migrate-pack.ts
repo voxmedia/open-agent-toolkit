@@ -9,15 +9,22 @@ import {
 import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import {
   planPackReconcile,
-  type PackReconcileOperation,
+  type PackSharedOwnerRetention,
   type PackReconcilePlan,
 } from '@commands/tools/shared/pack-reconcile';
-import type { PackAssetStatus, PackName } from '@commands/tools/shared/types';
+import type {
+  PackAssetKind,
+  PackAssetStatus,
+  PackName,
+} from '@commands/tools/shared/types';
 import type { ConcreteScope } from '@shared/types';
 export interface MigrationAssetPreview {
   assetId: string;
+  kind: PackAssetKind;
+  scope: ConcreteScope;
   path: string;
   status: PackAssetStatus;
+  reason?: string;
 }
 
 export interface PackMigrationPreview {
@@ -25,26 +32,38 @@ export interface PackMigrationPreview {
   from: ConcreteScope;
   to: ConcreteScope;
   sourceIntent: ScopedPackInventory['intent']['source'];
-  status: 'ready';
-  additions: readonly PackReconcileOperation[];
+  status: 'ready' | 'blocked';
+  additions: readonly MigrationAssetPreview[];
   duplicates: readonly MigrationAssetPreview[];
   conflicts: readonly MigrationAssetPreview[];
   removals: readonly MigrationAssetPreview[];
   retained: readonly MigrationAssetPreview[];
+  diagnostics: ScopedPackInventory['intent']['diagnostics'];
   destinationPlan: PackReconcilePlan;
+}
+
+export interface MigrationPendingSync {
+  scope: ConcreteScope;
+  action: 'install' | 'remove';
+  canonicalPaths: readonly string[];
+  command: string;
 }
 
 export interface PackMigrationOutcome {
   preview: PackMigrationPreview;
   status:
     | 'previewed'
+    | 'blocked'
     | 'destination-verified'
+    | 'destination-sync-failed'
     | 'retained-both'
     | 'migrated'
-    | 'source-removal-failed';
+    | 'source-removal-failed'
+    | 'source-sync-failed';
   destinationInventory?: ScopedPackInventory;
   sourceInventory?: ScopedPackInventory;
   recovery?: readonly string[];
+  pendingSync?: MigrationPendingSync;
 }
 
 export interface PlanPackMigrationInput {
@@ -56,11 +75,19 @@ export interface PlanPackMigrationInput {
   assetsRoot: string;
   sourceInventory: ScopedPackInventory;
   destinationInventory: ScopedPackInventory;
+  sourceRetentions?: readonly PackSharedOwnerRetention[];
+}
+
+export interface MigrationSyncInput {
+  scope: ConcreteScope;
+  action: 'install' | 'remove';
+  canonicalPaths: readonly string[];
 }
 
 export interface ExecuteMigrationDestinationDependencies {
   apply?: typeof applyPackReconcilePlan;
   applyDependencies: ApplyPackReconcileDependencies;
+  sync?: (input: MigrationSyncInput) => Promise<void>;
 }
 
 export interface CompleteMigrationSourceRemovalInput {
@@ -74,6 +101,8 @@ export interface CompleteMigrationSourceRemovalDependencies {
   plan?: typeof planPackReconcile;
   apply?: typeof applyPackReconcilePlan;
   applyDependencies: Omit<ApplyPackReconcileDependencies, 'inventory'>;
+  resolveSourceRetentions?: () => Promise<PackSharedOwnerRetention[]>;
+  sync?: (input: MigrationSyncInput) => Promise<void>;
 }
 
 function assertInventory(
@@ -91,11 +120,16 @@ function assertInventory(
 
 function previewAsset(
   asset: ScopedPackInventory['assets'][number],
+  scope: ConcreteScope,
+  reason?: string,
 ): MigrationAssetPreview {
   return {
     assetId: asset.definition.id,
+    kind: asset.definition.kind,
+    scope,
     path: asset.path,
     status: asset.status,
+    ...(reason ? { reason } : {}),
   };
 }
 
@@ -105,13 +139,13 @@ export function planPackMigration(
   if (input.from === input.to) {
     throw new Error('Migration source and destination scopes must differ');
   }
-  const definition = getPackDefinition(input.pack);
-  if (!definition.allowedScopes.includes(input.from)) {
+  const packDefinition = getPackDefinition(input.pack);
+  if (!packDefinition.allowedScopes.includes(input.from)) {
     throw new Error(
       `Pack ${input.pack} does not allow ${input.from} source scope`,
     );
   }
-  if (!definition.allowedScopes.includes(input.to)) {
+  if (!packDefinition.allowedScopes.includes(input.to)) {
     throw new Error(
       `Pack ${input.pack} does not allow ${input.to} destination scope`,
     );
@@ -129,25 +163,10 @@ export function planPackMigration(
     );
   }
 
-  const legacyConflicts = input.destinationInventory.intent.diagnostics.filter(
-    ({ code }) => code === 'legacy-false-conflict',
-  );
-  if (legacyConflicts.length > 0) {
-    throw new Error(
-      `Migration destination conflict: ${legacyConflicts.map(({ message }) => message).join('; ')}`,
-    );
-  }
-
   const conflicts = input.destinationInventory.assets.filter(
     ({ definition: asset, status }) =>
       asset.ownership[input.to] === 'managed' && status === 'newer',
   );
-  if (conflicts.length > 0) {
-    throw new Error(
-      `Migration destination conflict: ${conflicts.map(({ definition: asset }) => asset.id).join(', ')}`,
-    );
-  }
-
   const destinationPlan = planPackReconcile({
     pack: input.pack,
     scope: input.to,
@@ -156,33 +175,63 @@ export function planPackMigration(
     action: 'migrate-destination',
     inventory: input.destinationInventory,
   });
-  const additions = destinationPlan.operations.filter(
-    ({ kind }) => kind !== 'write-intent',
+  const additionIds = new Set(
+    destinationPlan.operations.flatMap((operation) =>
+      operation.kind === 'write-intent' ? [] : [operation.assetId],
+    ),
   );
+  const additions = input.destinationInventory.assets
+    .filter(({ definition }) => additionIds.has(definition.id))
+    .map((asset) => previewAsset(asset, input.to, 'destination-reconcile'));
   const duplicates = input.destinationInventory.assets
     .filter(
       ({ definition: asset, status }) =>
         asset.ownership[input.to] === 'managed' && status === 'current',
     )
-    .map(previewAsset);
+    .map((asset) => previewAsset(asset, input.to, 'already-current'));
+  const retainedIds = new Set(
+    (input.sourceRetentions ?? []).map(({ assetId }) => assetId),
+  );
   const removals = input.sourceInventory.assets
     .filter(
       ({ definition: asset, status }) =>
-        asset.ownership[input.from] === 'managed' && status !== 'missing',
+        asset.ownership[input.from] === 'managed' &&
+        status !== 'missing' &&
+        !retainedIds.has(asset.id),
     )
-    .map(previewAsset);
-  const retained = [
-    ...input.sourceInventory.assets.filter(
+    .map((asset) => previewAsset(asset, input.from, 'source-managed'));
+  const retained = input.sourceInventory.assets
+    .filter(
       ({ definition: asset, status }) =>
         asset.ownership[input.from] === 'seed-if-missing' &&
         status !== 'missing',
-    ),
-    ...input.destinationInventory.assets.filter(
-      ({ definition: asset, status }) =>
-        asset.ownership[input.to] === 'seed-if-missing' && status !== 'missing',
-    ),
-  ]
-    .map(previewAsset)
+    )
+    .map((asset) => previewAsset(asset, input.from, 'scope-owner-data'))
+    .concat(
+      input.destinationInventory.assets
+        .filter(
+          ({ definition: asset, status }) =>
+            asset.ownership[input.to] === 'seed-if-missing' &&
+            status !== 'missing',
+        )
+        .map((asset) => previewAsset(asset, input.to, 'scope-owner-data')),
+    )
+    .concat(
+      (input.sourceRetentions ?? []).flatMap((retention) => {
+        const asset = input.sourceInventory.assets.find(
+          ({ definition }) => definition.id === retention.assetId,
+        );
+        return asset
+          ? [
+              previewAsset(
+                asset,
+                input.from,
+                `shared owner: ${retention.retainedBy.join(', ')}`,
+              ),
+            ]
+          : [];
+      }),
+    )
     .filter(
       (entry, index, entries) =>
         entries.findIndex(
@@ -197,12 +246,15 @@ export function planPackMigration(
     from: input.from,
     to: input.to,
     sourceIntent: input.sourceInventory.intent.source,
-    status: 'ready',
+    status: conflicts.length > 0 ? 'blocked' : 'ready',
     additions,
     duplicates,
-    conflicts: conflicts.map(previewAsset),
+    conflicts: conflicts.map((asset) =>
+      previewAsset(asset, input.to, 'newer-destination-asset'),
+    ),
     removals,
     retained,
+    diagnostics: input.destinationInventory.intent.diagnostics,
     destinationPlan,
   };
 }
@@ -219,7 +271,7 @@ export async function executeMigrationDestination(
   ) {
     throw new Error('Migration destination plan does not match the preview');
   }
-  if (preview.conflicts.length > 0) {
+  if (preview.status === 'blocked' || preview.conflicts.length > 0) {
     throw new Error(
       `Migration destination conflicts must be resolved before mutation: ${preview.conflicts.map(({ assetId }) => assetId).join(', ')}`,
     );
@@ -228,7 +280,7 @@ export async function executeMigrationDestination(
   const applied = await (dependencies.apply ?? applyPackReconcilePlan)(
     preview.destinationPlan,
     destinationRoot,
-    dependencies.applyDependencies,
+    { ...dependencies.applyDependencies, sync: undefined },
   );
   const destinationInventory = applied.inventory;
   const drifted = destinationInventory.assets.filter(
@@ -248,6 +300,33 @@ export async function executeMigrationDestination(
     );
   }
 
+  const canonicalPaths = getPackDefinition(preview.pack)
+    .assets.filter(
+      ({ kind, scopes }) =>
+        scopes.includes(preview.to) && (kind === 'skill' || kind === 'agent'),
+    )
+    .map(({ destination }) => destination);
+  try {
+    await dependencies.sync?.({
+      scope: preview.to,
+      action: 'install',
+      canonicalPaths,
+    });
+  } catch (error) {
+    const pendingSync = pendingSyncState(preview.to, 'install', canonicalPaths);
+    return {
+      preview,
+      status: 'destination-sync-failed',
+      destinationInventory,
+      pendingSync,
+      recovery: [
+        `Destination provider sync failed: ${error instanceof Error ? error.message : String(error)}`,
+        `Source was retained. Retry provider sync: ${pendingSync.command}`,
+        migrationRetry(preview),
+      ],
+    };
+  }
+
   return {
     preview,
     status: 'destination-verified',
@@ -259,6 +338,26 @@ function migrationRetry(preview: PackMigrationPreview): string {
   return `Re-run interactively: oat tools migrate --pack ${preview.pack} --from ${preview.from} --to ${preview.to}`;
 }
 
+function pendingSyncState(
+  scope: ConcreteScope,
+  action: 'install' | 'remove',
+  canonicalPaths: readonly string[],
+): MigrationPendingSync {
+  const flag =
+    action === 'install' ? '--install-canonical' : '--remove-canonical';
+  return {
+    scope,
+    action,
+    canonicalPaths,
+    command: [
+      'oat sync',
+      '--scope',
+      scope,
+      ...canonicalPaths.flatMap((path) => [flag, path]),
+    ].join(' '),
+  };
+}
+
 export async function completeMigrationSourceRemoval(
   destination: PackMigrationOutcome,
   input: CompleteMigrationSourceRemovalInput,
@@ -266,7 +365,8 @@ export async function completeMigrationSourceRemoval(
 ): Promise<PackMigrationOutcome> {
   if (
     destination.status !== 'destination-verified' &&
-    destination.status !== 'source-removal-failed'
+    destination.status !== 'source-removal-failed' &&
+    destination.status !== 'source-sync-failed'
   ) {
     throw new Error(
       'Migration source removal requires a verified destination outcome',
@@ -278,6 +378,35 @@ export async function completeMigrationSourceRemoval(
     );
   }
   const preview = destination.preview;
+  if (destination.status === 'source-sync-failed') {
+    if (
+      !destination.pendingSync ||
+      destination.pendingSync.action !== 'remove'
+    ) {
+      throw new Error('Source sync retry is missing its canonical path state');
+    }
+    try {
+      await dependencies.sync?.({
+        scope: destination.pendingSync.scope,
+        action: 'remove',
+        canonicalPaths: destination.pendingSync.canonicalPaths,
+      });
+      return {
+        ...destination,
+        status: 'migrated',
+        pendingSync: undefined,
+        recovery: undefined,
+      };
+    } catch (error) {
+      return {
+        ...destination,
+        recovery: [
+          `Source provider sync failed: ${error instanceof Error ? error.message : String(error)}`,
+          `Retry provider sync: ${destination.pendingSync.command}`,
+        ],
+      };
+    }
+  }
   if (input.confirmation !== 'confirmed') {
     return {
       ...destination,
@@ -293,6 +422,8 @@ export async function completeMigrationSourceRemoval(
 
   const sourceBefore = await dependencies.inventory();
   assertInventory(sourceBefore, preview.pack, preview.from, 'source');
+  const sourceRetentions =
+    (await dependencies.resolveSourceRetentions?.()) ?? [];
   const sourcePlan = (dependencies.plan ?? planPackReconcile)({
     pack: preview.pack,
     scope: preview.from,
@@ -300,6 +431,7 @@ export async function completeMigrationSourceRemoval(
     assetsRoot: input.assetsRoot,
     action: 'remove',
     inventory: sourceBefore,
+    retainedAssets: sourceRetentions,
   });
 
   try {
@@ -309,8 +441,33 @@ export async function completeMigrationSourceRemoval(
       {
         ...dependencies.applyDependencies,
         inventory: dependencies.inventory,
+        sync: undefined,
       },
     );
+    try {
+      await dependencies.sync?.({
+        scope: preview.from,
+        action: 'remove',
+        canonicalPaths: sourcePlan.changedCanonicalPaths,
+      });
+    } catch (error) {
+      const pendingSync = pendingSyncState(
+        preview.from,
+        'remove',
+        sourcePlan.changedCanonicalPaths,
+      );
+      return {
+        preview,
+        status: 'source-sync-failed',
+        destinationInventory: destination.destinationInventory,
+        sourceInventory: applied.inventory,
+        pendingSync,
+        recovery: [
+          `Source provider sync failed: ${error instanceof Error ? error.message : String(error)}`,
+          `Retry provider sync: ${pendingSync.command}`,
+        ],
+      };
+    }
     return {
       preview,
       status: 'migrated',
@@ -331,7 +488,9 @@ export async function completeMigrationSourceRemoval(
     const remaining = sourceInventory.assets
       .filter(
         ({ definition: asset, status }) =>
-          asset.ownership[preview.from] === 'managed' && status !== 'missing',
+          asset.ownership[preview.from] === 'managed' &&
+          status !== 'missing' &&
+          !sourceRetentions.some(({ assetId }) => assetId === asset.id),
       )
       .map(({ path }) => path);
     const detail = error instanceof Error ? error.message : String(error);

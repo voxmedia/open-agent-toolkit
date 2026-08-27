@@ -19,13 +19,22 @@ import {
   type ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
 import { reconcilePackLifecycle } from '@commands/tools/shared/pack-lifecycle';
-import type { PackReconcileOperation } from '@commands/tools/shared/pack-reconcile';
 import {
+  resolveSharedOwnerRetentions,
+  type PackReconcileOperation,
+} from '@commands/tools/shared/pack-reconcile';
+import {
+  hasScopedPackOwnershipEvidence,
   readScopedPackIntent,
   writeScopedPackIntent,
 } from '@commands/tools/shared/scoped-pack-intent';
 import type { PackName } from '@commands/tools/shared/types';
-import { readOatConfig, writeOatConfig } from '@config/oat-config';
+import {
+  readOatConfig,
+  readUserConfig,
+  writeOatConfig,
+  writeUserConfig,
+} from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import type { ConcreteScope } from '@shared/types';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -92,7 +101,7 @@ interface MigrationRoots {
 }
 interface SyncCall {
   scope: ConcreteScope;
-  action: 'migrate-destination' | 'remove';
+  action: 'install' | 'remove';
   paths: readonly string[];
 }
 
@@ -119,6 +128,13 @@ async function previewMigration(
     inventoryAt(pack, from, roots),
     inventoryAt(pack, to, roots),
   ]);
+  const sourceRetentions = await resolveSharedOwnerRetentions({
+    packs: [pack],
+    scope: from,
+    scopeRoot: roots[from],
+    hasOwnershipEvidence: async (owner, scope, scopeRoot) =>
+      hasScopedPackOwnershipEvidence({ pack: owner, scope, scopeRoot }),
+  });
   return planPackMigration({
     pack,
     from,
@@ -128,6 +144,7 @@ async function previewMigration(
     assetsRoot: roots.assets,
     sourceInventory,
     destinationInventory,
+    sourceRetentions,
   });
 }
 
@@ -142,6 +159,27 @@ async function installSource(
     scopeRoot: roots[scope],
     assetsRoot: roots.assets,
     action: 'install',
+  });
+}
+
+async function writeLegacyFalse(
+  pack: PackName,
+  scope: ConcreteScope,
+  roots: MigrationRoots,
+): Promise<void> {
+  if (scope === 'project') {
+    const config = await readOatConfig(roots.project);
+    await writeOatConfig(roots.project, {
+      ...config,
+      tools: { ...config.tools, [pack]: false },
+    });
+    return;
+  }
+  const configDir = join(roots.user, '.oat');
+  const config = await readUserConfig(configDir);
+  await writeUserConfig(configDir, {
+    ...config,
+    tools: { ...config.tools, [pack]: false },
   });
 }
 
@@ -173,9 +211,9 @@ async function installDestination(
           enabled: operation.enabled,
         }),
       inventory: async () => inventoryAt(preview.pack, preview.to, roots),
-      sync: async ({ scope, action, changedCanonicalPaths }) => {
-        syncCalls.push({ scope, action, paths: changedCanonicalPaths });
-      },
+    },
+    sync: async ({ scope, action, canonicalPaths }) => {
+      syncCalls.push({ scope, action, paths: canonicalPaths });
     },
   });
 }
@@ -205,9 +243,17 @@ async function removeSource(
             scopeRoot: sourceRoot,
             enabled: operation.enabled,
           }),
-        sync: async ({ scope, action, changedCanonicalPaths }) => {
-          syncCalls.push({ scope, action, paths: changedCanonicalPaths });
-        },
+      },
+      resolveSourceRetentions: async () =>
+        resolveSharedOwnerRetentions({
+          packs: [preview.pack],
+          scope: preview.from,
+          scopeRoot: sourceRoot,
+          hasOwnershipEvidence: async (owner, scope, scopeRoot) =>
+            hasScopedPackOwnershipEvidence({ pack: owner, scope, scopeRoot }),
+        }),
+      sync: async ({ scope, action, canonicalPaths }) => {
+        syncCalls.push({ scope, action, paths: canonicalPaths });
       },
     },
   );
@@ -267,7 +313,7 @@ describe('pack migration integration', () => {
       { completeness: 'absent', intent: { enabled: false } },
     );
     expect(syncCalls).toEqual([
-      expect.objectContaining({ scope: 'user', action: 'migrate-destination' }),
+      expect.objectContaining({ scope: 'user', action: 'install' }),
       expect.objectContaining({ scope: 'project', action: 'remove' }),
     ]);
     expect(syncCalls.flatMap(({ paths }) => paths)).not.toEqual(
@@ -351,6 +397,96 @@ describe('pack migration integration', () => {
       readFile(join(roots.user, '.oat', 'templates', 'roadmap.md'), 'utf8'),
     ).resolves.not.toBe('repository-owned roadmap\n');
   });
+
+  it.each([
+    ['project', 'user', 'docs', 'workflows', 'declared'],
+    ['project', 'user', 'workflows', 'docs', 'inferred-legacy'],
+    ['user', 'project', 'docs', 'workflows', 'inferred-legacy'],
+    ['user', 'project', 'workflows', 'docs', 'declared'],
+  ] as const)(
+    'moves %s to %s for %s while retaining %s shared ownership from %s evidence',
+    async (from, to, selected, owner, evidence) => {
+      const roots = await createRoots();
+      const syncCalls: SyncCall[] = [];
+      await installSource(selected, from, roots);
+      await installSource(owner, from, roots);
+      if (evidence === 'inferred-legacy') {
+        await writeScopedPackIntent({
+          pack: owner,
+          scope: from,
+          scopeRoot: roots[from],
+          enabled: false,
+        });
+      }
+      const sharedPath = join(
+        roots[from],
+        '.oat',
+        'scripts',
+        'resolve-tracking.sh',
+      );
+      const preview = await previewMigration(selected, from, to, roots);
+      expect(preview.retained).toContainEqual(
+        expect.objectContaining({
+          assetId: 'script:resolve-tracking.sh',
+          path: sharedPath,
+          scope: from,
+        }),
+      );
+      const destination = await installDestination(preview, roots, syncCalls);
+      const result = await removeSource(
+        destination,
+        roots,
+        syncCalls,
+        'confirmed',
+      );
+
+      expect(result.status).toBe('migrated');
+      await expect(pathExists(sharedPath)).resolves.toBe(true);
+      await expect(inventoryAt(selected, from, roots)).resolves.toMatchObject({
+        completeness: 'partial',
+        intent: { enabled: false },
+      });
+      await expect(inventoryAt(owner, from, roots)).resolves.toMatchObject({
+        completeness: 'complete',
+        intent: { source: evidence },
+      });
+      await expect(inventoryAt(selected, to, roots)).resolves.toMatchObject({
+        completeness: 'complete',
+        intent: { enabled: true, source: 'declared' },
+      });
+    },
+  );
+
+  it.each([
+    ['project', 'user'],
+    ['user', 'project'],
+  ] as const)(
+    'adopts a physically complete legacy-false destination from %s to %s only after verification',
+    async (from, to) => {
+      const roots = await createRoots();
+      const syncCalls: SyncCall[] = [];
+      await installSource('ideas', from, roots);
+      await installSource('ideas', to, roots);
+      await writeLegacyFalse('ideas', to, roots);
+      const preview = await previewMigration('ideas', from, to, roots);
+      expect(preview).toMatchObject({
+        status: 'ready',
+        diagnostics: [
+          expect.objectContaining({ code: 'legacy-false-conflict' }),
+        ],
+      });
+      const destination = await installDestination(preview, roots, syncCalls);
+      expect(destination.status).toBe('destination-verified');
+      await expect(inventoryAt('ideas', to, roots)).resolves.toMatchObject({
+        completeness: 'complete',
+        intent: { enabled: true, source: 'declared' },
+      });
+      await expect(inventoryAt('ideas', from, roots)).resolves.toMatchObject({
+        completeness: 'complete',
+        intent: { enabled: true },
+      });
+    },
+  );
 
   it('keeps source authoritative across destination failure and recovers partial source removal on rerun', async () => {
     const roots = await createRoots();
