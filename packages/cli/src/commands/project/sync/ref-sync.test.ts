@@ -44,6 +44,21 @@ async function materializeRemoteTarget(target: SyncTarget): Promise<void> {
   );
 }
 
+async function installRejectingPostCheckoutHook(
+  repoRoot: string,
+): Promise<void> {
+  const hooksDir = git(repoRoot, [
+    'rev-parse',
+    '--path-format=absolute',
+    '--git-path',
+    'hooks',
+  ]);
+  await mkdir(hooksDir, { recursive: true });
+  await writeFile(join(hooksDir, 'post-checkout'), '#!/bin/sh\nexit 97\n', {
+    mode: 0o755,
+  });
+}
+
 describe('createSyncedProject', () => {
   it('creates an empty-tree ref in a nested detached worktree', async () => {
     const fixture = await createSyncedFixture();
@@ -71,6 +86,26 @@ describe('createSyncedProject', () => {
           .then((result) => result.stdout),
       );
       expect(git(fixture.cloneA, ['status', '--porcelain'])).toBe('');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('does not run the common post-checkout hook for empty-tree creation', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'hook-safe-create',
+      );
+      await installRejectingPostCheckoutHook(fixture.cloneA);
+
+      await createSyncedProject(target, defaultGitRunner);
+
+      expect(git(target.projectPath, ['rev-parse', 'HEAD'])).toBe(
+        git(fixture.cloneA, ['rev-parse', target.ref]),
+      );
     } finally {
       await fixture.cleanup();
     }
@@ -177,7 +212,12 @@ describe('createSyncedProject', () => {
       );
       const failingRunner: GitRunner = {
         async run(args, options) {
-          if (args[0] === 'worktree' && args[1] === 'add') {
+          if (
+            args[0] === '-c' &&
+            args[1] === 'core.hooksPath=/dev/null' &&
+            args[2] === 'worktree' &&
+            args[3] === 'add'
+          ) {
             throw new CliError('injected worktree failure', 2);
           }
           return defaultGitRunner.run(args, options);
@@ -734,6 +774,35 @@ describe('pullSynced', () => {
         git(fixture.cloneB!, ['worktree', 'list', '--porcelain']),
       ).toContain(targetB.projectPath);
       expect(repeated.status).toBe('up-to-date');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('does not run the common post-checkout hook for fresh pull materialization', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const targetA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'hook-safe-pull',
+      );
+      const targetB = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        'hook-safe-pull',
+      );
+      await createSyncedProject(targetA, defaultGitRunner);
+      await writeFile(join(targetA.projectPath, 'state.md'), 'published\n');
+      await pushSynced(targetA, defaultGitRunner, {});
+      await installRejectingPostCheckoutHook(fixture.cloneB!);
+
+      const result = await pullSynced(targetB, defaultGitRunner);
+
+      expect(result.status).toBe('created');
+      expect(
+        await readFile(join(targetB.projectPath, 'state.md'), 'utf8'),
+      ).toBe('published\n');
     } finally {
       await fixture.cleanup();
     }

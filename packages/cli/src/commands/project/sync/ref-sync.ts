@@ -258,7 +258,15 @@ export async function createSyncedProject(
   try {
     await mkdir(dirname(target.projectPath), { recursive: true });
     await git.run(
-      ['worktree', 'add', '--detach', target.projectPath, target.ref],
+      [
+        '-c',
+        'core.hooksPath=/dev/null',
+        'worktree',
+        'add',
+        '--detach',
+        target.projectPath,
+        target.ref,
+      ],
       { cwd: target.repoRoot },
     );
     worktreeAdded = true;
@@ -495,7 +503,15 @@ export async function pullSynced(
   if (!checkoutExists) {
     await mkdir(dirname(target.projectPath), { recursive: true });
     await git.run(
-      ['worktree', 'add', '--detach', target.projectPath, target.ref],
+      [
+        '-c',
+        'core.hooksPath=/dev/null',
+        'worktree',
+        'add',
+        '--detach',
+        target.projectPath,
+        target.ref,
+      ],
       { cwd: target.repoRoot },
     );
     await assertNestedWorktree(target, git);

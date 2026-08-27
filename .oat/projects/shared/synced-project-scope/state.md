@@ -29,8 +29,17 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p03:
-      used_attempts: 2
-      pending_attempt: null
+      used_attempts: 3
+      pending_attempt:
+        attempt: 3
+        event_id: p03-recovery-03-synced-empty-tree-hook
+        original_request_id: dispatch-synced-project-scope-p03-20260827T173721Z
+        original_task_id: p03-t10
+        original_commit: 4df5063be546c62abb2ddbf558264fb30fd44439
+        discovered_by: pnpm run --silent cli -- project new synced-dogfood --mode quick --no-set-active (rejecting common post-checkout wrapper)
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: e44e78859ead4cb44bd218143f3b34af504e27fe
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
