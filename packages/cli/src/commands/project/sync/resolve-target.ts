@@ -1,5 +1,5 @@
 import { stat } from 'node:fs/promises';
-import { basename, isAbsolute, resolve } from 'node:path';
+import { isAbsolute, relative, resolve, sep } from 'node:path';
 
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { readSyncedRecord } from '@commands/project/sync/record';
@@ -91,11 +91,7 @@ export async function resolveSyncedTarget(
     : isAbsolute(requested)
       ? resolve(requested)
       : resolve(context.repoRoot, requested);
-  const slug = bareSlug ? requested : basename(projectPath);
-  const checkoutExists = await dependencies.pathExists(projectPath);
-  const record = await dependencies.readSyncedRecord(
-    syncedRecordPath(syncedRoot, slug),
-  );
+  let slug = requested;
 
   if (!bareSlug) {
     const scope = resolveProjectScope(
@@ -114,7 +110,28 @@ export async function resolveSyncedTarget(
         1,
       );
     }
+
+    const directChild = relative(syncedRoot, projectPath);
+    if (
+      directChild === '' ||
+      directChild === '..' ||
+      directChild.startsWith(`..${sep}`) ||
+      isAbsolute(directChild) ||
+      directChild.includes(sep) ||
+      !isBareSlug(directChild)
+    ) {
+      throw new CliError(
+        `Project path must identify exactly one direct child of the synced project root: ${requested}`,
+        1,
+      );
+    }
+    slug = directChild;
   }
+
+  const checkoutExists = await dependencies.pathExists(projectPath);
+  const record = await dependencies.readSyncedRecord(
+    syncedRecordPath(syncedRoot, slug),
+  );
 
   let adopt = false;
   if (!checkoutExists && !record) {

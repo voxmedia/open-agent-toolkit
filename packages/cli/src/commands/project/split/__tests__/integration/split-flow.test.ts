@@ -12,7 +12,13 @@ import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
-import { pushSynced } from '@commands/project/sync/ref-sync';
+import { createProjectPullCommand } from '@commands/project/pull/index';
+import { defaultGitRunner } from '@commands/project/sync/git';
+import {
+  buildSyncTarget,
+  pullSynced,
+  pushSynced,
+} from '@commands/project/sync/ref-sync';
 import { CliError } from '@errors/cli-error';
 import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
 import { Command } from 'commander';
@@ -179,6 +185,36 @@ function createSplitCommand(
   const split = new Command('split');
   split.addCommand(run);
   project.addCommand(split);
+  program.addCommand(project);
+  return { capture, program };
+}
+
+function createPullCommand(repoRoot: string): {
+  capture: ReturnType<typeof createLoggerCapture>;
+  program: Command;
+} {
+  const capture = createLoggerCapture();
+  const pull = createProjectPullCommand({
+    buildCommandContext: (options: GlobalOptions): CommandContext => ({
+      scope: 'project',
+      dryRun: false,
+      verbose: options.verbose ?? false,
+      json: options.json ?? false,
+      cwd: repoRoot,
+      home: '/home',
+      interactive: false,
+      logger: capture.logger,
+    }),
+    resolveProjectRoot: async () => repoRoot,
+    processEnv: {},
+  });
+  const program = new Command()
+    .name('oat')
+    .option('--json')
+    .option('--verbose')
+    .exitOverride();
+  const project = new Command('project');
+  project.addCommand(pull);
   program.addCommand(project);
   return { capture, program };
 }
@@ -444,6 +480,133 @@ describe('oat-project-split integration fixtures', () => {
     expectPublishedSplit(fixture.originDir, document);
     process.exitCode = previousExitCode;
   });
+
+  it('guides and safely resumes a real mid-publication child rebase conflict', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    tempDirs.push(fixture.rootDir);
+    const document = documentFor('declared');
+    const planFile = join(fixture.cloneA, 'split-plan-conflict.json');
+    await writeFile(planFile, `${JSON.stringify(document, null, 2)}\n`, 'utf8');
+    await mkdir(join(fixture.cloneA, '.oat'), { recursive: true });
+    await writeFile(
+      join(fixture.cloneA, '.oat/config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/synced/source' })}\n`,
+      'utf8',
+    );
+
+    let publicationCalls = 0;
+    let injectConflict = true;
+    let seededState = '';
+    let conflictedTargetPath = '';
+    const conflictingPush: typeof pushSynced = async (
+      target,
+      gitRunner,
+      options,
+    ) => {
+      publicationCalls += 1;
+      if (injectConflict && publicationCalls === 2) {
+        conflictedTargetPath = target.projectPath;
+        seededState = await readFile(
+          join(target.projectPath, 'state.md'),
+          'utf8',
+        );
+        const competingTarget = buildSyncTarget(
+          fixture.cloneB!,
+          '.oat/projects/shared',
+          target.slug,
+        );
+        await pullSynced(competingTarget, defaultGitRunner);
+        const competingStatePath = join(
+          competingTarget.projectPath,
+          'state.md',
+        );
+        const competingState = await readFile(competingStatePath, 'utf8');
+        await writeFile(
+          competingStatePath,
+          competingState.replace(
+            'oat_parent: null',
+            'oat_parent: concurrent-parent',
+          ),
+          'utf8',
+        );
+        await pushSynced(competingTarget, defaultGitRunner, {
+          message: 'concurrent child state',
+        });
+      }
+      return pushSynced(target, gitRunner, options);
+    };
+    const previousExitCode = process.exitCode;
+    process.exitCode = undefined;
+
+    const first = createSplitCommand(fixture.cloneA, conflictingPush);
+    await first.program.parseAsync(
+      ['project', 'split', 'run', '--plan-file', planFile],
+      { from: 'user' },
+    );
+
+    const targetArg = `'${conflictedTargetPath}'`;
+    const firstError = first.capture.error.join('\n');
+    expect(firstError).toContain(`oat project pull ${targetArg} --continue`);
+    expect(firstError).toContain(`oat project pull ${targetArg} --abort`);
+    expect(process.exitCode).toBe(1);
+    expect(
+      execFileSync(
+        'git',
+        ['-C', conflictedTargetPath, 'rev-parse', '--verify', 'REBASE_HEAD'],
+        { encoding: 'utf8' },
+      ).trim(),
+    ).toMatch(/^[0-9a-f]{40}$/);
+    const parentStatePath = join(
+      fixture.cloneA,
+      '.oat/projects/synced',
+      document.plan.parentSlug,
+      'state.md',
+    );
+    expect(
+      readFrontmatter(await readFile(parentStatePath, 'utf8')),
+    ).toMatchObject({ oat_phase_status: 'in_progress' });
+
+    injectConflict = false;
+    publicationCalls = 0;
+    process.exitCode = undefined;
+    const blockedResume = createSplitCommand(fixture.cloneA, conflictingPush);
+    await blockedResume.program.parseAsync(
+      ['project', 'split', 'run', '--plan-file', planFile, '--resume'],
+      { from: 'user' },
+    );
+
+    const resumeError = blockedResume.capture.error.join('\n');
+    expect(resumeError).toContain(`oat project pull ${targetArg} --continue`);
+    expect(resumeError).toContain(`oat project pull ${targetArg} --abort`);
+    expect(publicationCalls).toBe(0);
+    expect(process.exitCode).toBe(1);
+
+    await writeFile(
+      join(conflictedTargetPath, 'state.md'),
+      seededState,
+      'utf8',
+    );
+    execFileSync('git', ['-C', conflictedTargetPath, 'add', 'state.md']);
+    process.exitCode = undefined;
+    const recovery = createPullCommand(fixture.cloneA);
+    await recovery.program.parseAsync(
+      ['project', 'pull', conflictedTargetPath, '--continue'],
+      { from: 'user' },
+    );
+    expect(recovery.capture.info.join('\n')).toContain('Pull updated');
+    expect(process.exitCode).toBe(0);
+
+    process.exitCode = undefined;
+    const resumed = createSplitCommand(fixture.cloneA, pushSynced);
+    await resumed.program.parseAsync(
+      ['project', 'split', 'run', '--plan-file', planFile, '--resume'],
+      { from: 'user' },
+    );
+
+    expect(process.exitCode).toBe(0);
+    expectPublishedSplit(fixture.originDir, document);
+    process.exitCode = previousExitCode;
+  }, 15_000);
 
   it('reports post-manual-mutation validation errors', () => {
     const document = documentFor('declared');

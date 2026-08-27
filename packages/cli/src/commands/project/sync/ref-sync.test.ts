@@ -454,6 +454,25 @@ describe('pushSynced', () => {
           cwd: targetA.projectPath,
         }),
       ).not.toThrow();
+
+      const retryCalls: string[][] = [];
+      const recordingRunner: GitRunner = {
+        async run(args, options) {
+          retryCalls.push([...args]);
+          return defaultGitRunner.run(args, options);
+        },
+      };
+      await expect(
+        pushSynced(targetA, recordingRunner, { message: 'unsafe retry' }),
+      ).resolves.toMatchObject({
+        status: 'conflict',
+        conflicts: ['state.md'],
+      });
+      expect(retryCalls).not.toContainEqual(['add', '-A']);
+      expect(retryCalls.flat()).not.toContain('fetch');
+      expect(retryCalls.flat()).not.toContain('rebase');
+      expect(retryCalls.flat()).not.toContain('push');
+
       git(targetA.projectPath, ['rebase', '--abort']);
       expect(git(targetA.projectPath, ['rev-parse', 'HEAD'])).toBe(result.sha);
     } finally {

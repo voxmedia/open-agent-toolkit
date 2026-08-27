@@ -220,6 +220,23 @@ async function listConflicts(
     .sort();
 }
 
+export async function pendingRebaseConflicts(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<string[] | null> {
+  await assertNestedWorktree(target, git);
+  for (const rebaseDirectory of ['rebase-merge', 'rebase-apply']) {
+    const gitPath = await git.run(
+      ['rev-parse', '--path-format=absolute', '--git-path', rebaseDirectory],
+      { cwd: target.projectPath },
+    );
+    if (await pathExists(gitPath.stdout)) {
+      return listConflicts(target, git);
+    }
+  }
+  return null;
+}
+
 function isMissingRemoteRef(stderr: string): boolean {
   return /couldn't find remote ref|no such ref was fetched/i.test(stderr);
 }
@@ -248,7 +265,14 @@ export async function pushSynced(
   git: GitRunner,
   options: { message?: string },
 ): Promise<PushResult> {
-  await assertNestedWorktree(target, git);
+  const pendingConflicts = await pendingRebaseConflicts(target, git);
+  if (pendingConflicts !== null) {
+    return {
+      status: 'conflict',
+      sha: await headSha(target, git),
+      conflicts: pendingConflicts,
+    };
+  }
   await git.run(['add', '-A'], { cwd: target.projectPath });
   const staged = await git.run(['diff', '--cached', '--quiet'], {
     cwd: target.projectPath,

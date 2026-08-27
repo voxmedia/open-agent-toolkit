@@ -1,4 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { resolveSyncedTarget } from './resolve-target';
 
@@ -37,6 +41,15 @@ function deps(
 }
 
 describe('resolveSyncedTarget', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
   it('resolves a bare slug under the synced root', async () => {
     const target = await resolveSyncedTarget(
       { repoRoot: '/repo', env: {} },
@@ -66,6 +79,45 @@ describe('resolveSyncedTarget', () => {
       resolveSyncedTarget({ repoRoot: '/repo', env: {} }, undefined, injected),
     ).resolves.toMatchObject({ slug: 'demo' });
   });
+
+  it.each(['relative', 'absolute'] as const)(
+    'rejects a %s descendant before reading the matching sibling checkout or record',
+    async (kind) => {
+      const repoRoot = await mkdtemp(join(tmpdir(), 'oat-resolve-target-'));
+      tempDirs.push(repoRoot);
+      const syncedRoot = join(repoRoot, '.oat/projects/synced');
+      await mkdir(join(syncedRoot, 'demo', 'reviews'), { recursive: true });
+      await mkdir(join(syncedRoot, 'reviews'), { recursive: true });
+      const pathExists = vi.fn(async () => true);
+      const readSyncedRecord = vi.fn(async () => ({
+        schemaVersion: 1 as const,
+        slug: 'reviews',
+        scope: 'synced' as const,
+        ref: 'refs/oat/projects/reviews',
+        remote: 'origin' as const,
+        status: 'active' as const,
+        createdAt: '2026-08-27T00:00:00.000Z',
+        completedAt: null,
+      }));
+      const requested =
+        kind === 'absolute'
+          ? join(syncedRoot, 'demo', 'reviews')
+          : '.oat/projects/synced/demo/reviews';
+
+      await expect(
+        resolveSyncedTarget({ repoRoot, env: {} }, requested, {
+          ...deps(),
+          pathExists,
+          readSyncedRecord,
+        }),
+      ).rejects.toMatchObject({
+        message: expect.stringContaining('exactly one direct child'),
+        exitCode: 1,
+      });
+      expect(pathExists).not.toHaveBeenCalled();
+      expect(readSyncedRecord).not.toHaveBeenCalled();
+    },
+  );
 
   it('allows an absent checkout when a record exists', async () => {
     await expect(

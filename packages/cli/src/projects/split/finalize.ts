@@ -4,7 +4,9 @@ import { join } from 'node:path';
 import { defaultGitRunner } from '@commands/project/sync/git';
 import {
   buildSyncTarget,
+  pendingRebaseConflicts,
   pushSynced as defaultPushSynced,
+  type SyncTarget,
 } from '@commands/project/sync/ref-sync';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import { replaceFrontmatter } from '@commands/shared/frontmatter-write';
@@ -34,6 +36,19 @@ export interface FinalizeSplitResult {
   activeProjectPath: string;
 }
 
+function shellQuote(value: string): string {
+  return `'${value.replaceAll("'", `'\\''`)}'`;
+}
+
+function conflictError(target: SyncTarget, conflicts: string[]): CliError {
+  const detail = conflicts.length > 0 ? ` (${conflicts.join(', ')})` : '';
+  const targetArg = shellQuote(target.projectPath);
+  return new CliError(
+    `Failed to publish synced split project ${target.slug}: conflict${detail}. Resolve the files, then run oat project pull ${targetArg} --continue; or run oat project pull ${targetArg} --abort. After recovery, rerun split with --resume.`,
+    1,
+  );
+}
+
 export async function finalizeSplit(
   plan: ChildPlan,
   context: SplitProjectContext,
@@ -44,6 +59,25 @@ export async function finalizeSplit(
   const statePath = join(context.repoRoot, parentPath, 'state.md');
   const stateContent = await readFile(statePath, 'utf8');
   const frontmatter = readObjectFrontmatter(stateContent, statePath);
+
+  const gitRunner = context.gitRunner ?? defaultGitRunner;
+  const syncTargets =
+    context.scope === 'synced'
+      ? [
+          plan.parentSlug,
+          ...plan.children
+            .slice()
+            .sort((left, right) => left.order - right.order)
+            .map((child) => child.slug),
+        ].map((slug) => buildSyncTarget(context.repoRoot, projectsRoot, slug))
+      : [];
+  for (const target of syncTargets) {
+    const conflicts = await pendingRebaseConflicts(target, gitRunner);
+    if (conflicts !== null) {
+      throw conflictError(target, conflicts);
+    }
+  }
+
   frontmatter['oat_phase'] = 'decomposition';
   frontmatter['oat_phase_status'] = 'complete';
   await writeFile(
@@ -53,24 +87,18 @@ export async function finalizeSplit(
   );
 
   if (context.scope === 'synced') {
-    const gitRunner = context.gitRunner ?? defaultGitRunner;
     const pushSynced = context.pushSynced ?? defaultPushSynced;
     try {
-      for (const slug of [
-        plan.parentSlug,
-        ...plan.children
-          .slice()
-          .sort((left, right) => left.order - right.order)
-          .map((child) => child.slug),
-      ]) {
-        const result = await pushSynced(
-          buildSyncTarget(context.repoRoot, projectsRoot, slug),
-          gitRunner,
-          { message: `chore(oat): finalize split ${plan.parentSlug}` },
-        );
+      for (const target of syncTargets) {
+        const result = await pushSynced(target, gitRunner, {
+          message: `chore(oat): finalize split ${plan.parentSlug}`,
+        });
         if (result.status !== 'pushed' && result.status !== 'up-to-date') {
+          if (result.status === 'conflict') {
+            throw conflictError(target, result.conflicts ?? []);
+          }
           throw new CliError(
-            `Failed to publish synced split project ${slug}: ${result.status}`,
+            `Failed to publish synced split project ${target.slug}: ${result.status}`,
             1,
           );
         }

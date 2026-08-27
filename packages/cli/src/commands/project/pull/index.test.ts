@@ -168,6 +168,21 @@ describe('createProjectPullCommand', () => {
     expect(process.exitCode).toBe(2);
   });
 
+  it('does not pull when an explicit descendant target is rejected', async () => {
+    const setup = harness('created');
+    setup.resolveTarget.mockRejectedValueOnce(
+      new CliError(
+        'Project path must identify exactly one direct child of the synced project root',
+        1,
+      ),
+    );
+
+    await run(setup.command, ['.oat/projects/synced/demo/reviews']);
+
+    expect(setup.pullSynced).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
+
   it('emits the json envelope', async () => {
     const { command, capture } = harness('up-to-date');
     await run(command, ['demo'], ['--json']);

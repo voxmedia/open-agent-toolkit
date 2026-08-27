@@ -392,6 +392,27 @@ describe('oat project open', () => {
     expect(process.exitCode).toBe(2);
   });
 
+  it('does not mutate a sibling when an explicit synced descendant is rejected', async () => {
+    const root = await createRepoRoot();
+    await mkdir(join(root, '.oat/projects/synced/demo/reviews'), {
+      recursive: true,
+    });
+    await writeProjectState(root, 'reviews', 'active', 'synced');
+    const { command, pullSynced, pushSynced } = createHarness({
+      cwd: root,
+      resolveError: new CliError(
+        'Project path must identify exactly one direct child of the synced project root',
+        1,
+      ),
+    });
+
+    await runCommand(command, ['.oat/projects/synced/demo/reviews']);
+
+    expect(pullSynced).not.toHaveBeenCalled();
+    expect(pushSynced).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
+
   it('errors when project state.md is missing', async () => {
     const root = await createRepoRoot();
     await mkdir(join(root, '.oat', 'projects', 'shared', 'demo'), {
