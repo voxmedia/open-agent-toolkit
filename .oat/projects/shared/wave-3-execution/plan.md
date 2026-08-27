@@ -184,13 +184,13 @@ git commit -m "feat(p01-t01): honor OAT_ASSETS_DIR in resolveAssetsRoot and isol
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
-| p01    | code     | passed  | 2026-08-27 | reviews/archived/p01-review-2026-08-27T003545Z.md           | 6dc9cdd19e90b16cafd5e980378f81a27134da70 | auto       | -                        |
-| final  | code     | pending | -          | -                                                           | -                                        | -          | -                        |
-| plan   | artifact | passed  | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T231805Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                        |
-| design | artifact | pending | -          | -                                                           | -                                        | -          | -                        |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | passed          | 2026-08-27 | reviews/archived/p01-review-2026-08-27T003545Z.md           | 6dc9cdd19e90b16cafd5e980378f81a27134da70 | auto       | -                        |
+| final  | code     | fixes_completed | 2026-08-27 | reviews/archived/final-review-2026-08-27T005219Z.md         | 9a2e659b5c02b2118977b9ee9898f05c140dd435 | auto       | -                        |
+| plan   | artifact | passed          | 2026-08-26 | reviews/archived/artifact-plan-review-2026-08-26T231805Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -200,13 +200,15 @@ Strictly ordered — each item depends on the one before it (wave-execute Step 6
 closeout sequence):
 
 1. [x] 1/1 phases, 1/1 tasks complete; the source plan's `## Done criteria`
-       confirmed (recorded in `implementation.md` § Done-criteria confirmation — filled at final-review receive)
+       confirmed (recorded in `implementation.md` § Done-criteria confirmation, lifted from the final review at `9a2e659b`)
 2. [x] Full DoD gates green on the integration branch (root final verification at
        `cf53e818`, exit codes captured per gate, including `pnpm lint` and `pnpm format`)
-3. [ ] Orchestration-log end-of-run synthesis written and rolled up into
-       `summary.md` — before any archive step of the project
-4. [ ] **Serialized backlog bookkeeping:** `oat backlog archive
-BL-260817-let-resolveassetsroot-honor` with a real outcome summary, one commit
+3. [x] Orchestration-log end-of-run synthesis written and rolled up into
+       `summary.md` (generated at final-review receive; `oat project log rollup`) — before any archive step of the project
+4. [x] **Serialized backlog bookkeeping:** `oat backlog archive
+BL-260817-let-resolveassetsroot-honor` with a real outcome summary (this receive commit, after item 3)
+5. [ ] `document` step (post-implement sequence): document `OAT_ASSETS_DIR` in
+       `apps/oat-docs/docs/cli-utilities/configuration.md` (p01 round-1 m2) and refresh PJM current state
 
 ## References
 

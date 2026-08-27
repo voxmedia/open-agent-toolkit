@@ -104,3 +104,49 @@ sensitivity should state which fixture shape it used.
 `w3-p01-review-002` (narrowed) → 0C/0I/0M/0m; all six dispositions verified
 with reviewer-run evidence; `vitest.config.ts` seam change judged in scope
 and non-masking. Phase p01 `passed` at `6dc9cdd1`; Run 1 complete.
+
+### 2026-08-27 · structural · oat-project-implement · final review round 1
+
+`w3-final-review-001` (Opus, fresh) at `9a2e659b` → 0C/2I/4M/7m, all
+wrapper-bookkeeping or conformant forward-looking notes (no code defect; DoD
+10/10 re-run; six built-CLI probe groups clean). Resolved at receive; two
+backlog candidates recorded (partial-bundle structural check; override-aware
+error remedy). Note: the `project-log.md` plan-gate entry cites the
+pre-archive artifact path — append-only, left as is.
+
+---
+
+## End-of-run synthesis (2026-08-27)
+
+**Outcome.** Wave 3 shipped its single lane in full: `resolveAssetsRoot` honors
+a non-empty `OAT_ASSETS_DIR` with the unchanged fail-closed validation, the
+package-coverage smoke consumer reads a private per-file bundle and asserts its
+own restore/cleanup, and the lockstep bump 0.2.34 → 0.2.35 landed inside the
+lane. One implementer commit, one append-only fix commit, two phase-review
+rounds (0C/0I/2M/4m → 0/0/0/0), two Codex cross-model rounds, root DoD 10/10.
+
+**What worked.** Carrying W2's gate-passed wrapper text forward with a freshly
+re-derived rule-1 addendum passed the plan gate on round 1. The reviewer-designed
+probe set (weaker-anywhere, blank/relative semantics, delete/reorder mutations,
+built-CLI proof, process-global hygiene) found real gaps — a silent
+`it.skipIf` skip, an unswept ambient-env class, unasserted cleanup — that all
+ten repo gates and the implementer's own tests had passed over. The
+implementer's negative control (shared assets moved aside) is the only evidence
+that proves isolation. Detached gate launches with receipt watchers held.
+
+**Friction.** The plan's focused-test Verify command does not filter under
+vitest; `release:check-versions` is committed-state-only and needs a post-commit
+re-run; round-1 M2 under-scoped a class by an order of magnitude (fixture shape
+decides the failure count) and the proportionate fix was one line at the
+test-runner env seam. Two bookkeeping scripts mis-anchored on first run (a
+removed section, a not-yet-advanced status line); each was caught by the
+assertion and re-applied.
+
+**Rules adopted for W4.** (1) Focused-test Verify lines are checked against the
+repo's runner before dispatch. (2) `git fetch origin && pnpm
+release:check-versions` runs again immediately after every task commit and the
+exit code is recorded. (3) A cross-model or reviewer finding that names a class
+gets a repo-wide sweep and states the fixture shape it used. (4) Containment
+lanes require a negative control in the implementer brief and mutation checks
+on restore/cleanup paths in the reviewer brief. (5) Bookkeeping scripts are
+applied once per commit with a dry-run assertion pass before the write.

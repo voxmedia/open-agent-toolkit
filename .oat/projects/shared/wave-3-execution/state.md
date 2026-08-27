@@ -1,6 +1,6 @@
 ---
-oat_current_task: null # p01-t01 implemented; phase review in progress
-oat_last_commit: 6dc9cdd1 # p01-t01 fix commit (code)
+oat_current_task: null # p01 passed at 6dc9cdd1; closeout in progress
+oat_last_commit: 6dc9cdd1 # last CODE commit (bookkeeping commits follow; HEAD advances with closeout)
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260817-let-resolveassetsroot-honor' }
@@ -88,13 +88,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T23:08:35.576Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T00:42:24.267Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T00:59:43.947Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-3-execution
 
-**Status:** Implement — p01 passed (round 2 clean at `6dc9cdd1`); closeout: final verification → final review → exit gate
+**Status:** Implement — final review round 1 received (0C/2I/4M/7m, all bookkeeping, resolved); narrowed round 2 → configured exit gate
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
@@ -111,8 +111,8 @@ integration checkout `wave-3-execution` (BASE_SHA `39cea801`; code baseline
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode)
 - **Plan:** `plan.md` (complete — wrapper plan with drift-refresh record and rule-1 addendum)
-- **Implementation:** `implementation.md` (scaffolded — not started)
-- **Orchestration log:** `orchestration-log.md` (day one)
+- **Implementation:** `implementation.md` (complete — p01 passed at `6dc9cdd1`; Run 1 complete; final review received)
+- **Orchestration log:** `orchestration-log.md` (Run 1 complete; end-of-run synthesis written)
 
 ## Progress
 
@@ -125,7 +125,8 @@ integration checkout `wave-3-execution` (BASE_SHA `39cea801`; code baseline
 - ✓ Fix round `w3-p01-fix-001` (`6dc9cdd1`: M1, M2 incl. runner-seam closure, m1, m3, m4; m2 → document step; DoD 10/10; Codex clean)
 - ✓ p01 review round 2 (narrowed): 0C/0I/0M/0m — phase passed
 - ✓ Closeout baseline / final verification: root DoD 10/10 at `cf53e818`
-- ⧗ Final review (fresh Opus, end-to-end probes) → configured exit gate
+- ✓ Final review round 1 (fresh Opus, built-CLI probes): 0C/2I/4M/7m — bookkeeping only, resolved at receive; summary.md generated, synthesis written, backlog item archived
+- ⧗ Final review round 2 (narrowed) → configured exit gate → post-implement sequence (summary → document → pr)
 
 ## Blockers
 

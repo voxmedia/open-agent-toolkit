@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-26
-oat_current_task_id: p01-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,14 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase    | Status | Tasks | Completed |
+| -------- | ------ | ----- | --------- |
+| Phase 01 | passed | 1     | 1/1       |
 
-**Total:** 0/{N} tasks completed
-
----
+**Total:** 1/1 tasks completed
 
 ## Phase 01: hermetic-cli-assets-root (solo)
 
@@ -150,84 +147,89 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Review row `p01` → `passed` at `6dc9cdd1`. Next: closeout baseline → final verification → final review → configured exit gate.**
 
+### Review Received: final (round 1)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/final-review-2026-08-27T005219Z.md (reviewed head `9a2e659b5c02b2118977b9ee9898f05c140dd435`, range `33149b26..9a2e659b`, invocation auto, dispatch `w3-final-review-001`, model opus)
+
+**Findings:** Critical 0 · Important 2 · Medium 4 · Minor 7 — no code defect; all nine Done-criteria / Review-focus items covered from source plus six built-CLI probe groups (override honored by a real command with a distinguishing marker; six invalid classes → six exit-2 rejections; content-delivery probe; cleanup guard load-bearing; isolation with the shared root absent); DoD 10/10 re-run at `9a2e659b`. Extra work (`vitest.config.ts` seam, explicit gate test call site) accepted with no finding.
+
+**Deferred Findings Re-evaluation:** the reviewer's ledger closes R1 M1/M2/m1/m3/m4, agrees with the three accepted risks and the R2 non-finding, and escalates the two closeout template gaps (now I1/I2 here) and the docs carrier (M3).
+
+**Dispositions (all bookkeeping or forward-looking notes; resolved by the root in this commit unless stated):**
+
+- I1 Final Summary unfilled template → filled (what shipped, user-facing change, key files, verification, design deltas).
+- I2 resume state stale (`oat_status`, `oat_current_task_id`, Progress Overview, phantom Phase 2) → `complete` / `null` / single real phase row / `1/1`.
+- M1 plan item 1 checked against a missing record → `## Done-criteria confirmation (source plan)` added (final-review coverage table, verified at `9a2e659b`); item text corrected.
+- M2 Implementation Log scaffold with a phantom `p01-t02` → replaced by one real session entry.
+- M3 docs follow-up carrier too weak → explicit `plan.md` § Implementation Complete item 5 (`document` step: `OAT_ASSETS_DIR` entry in `configuration.md`) plus a Deviations row.
+- M4 `state.md` § Artifacts "not started" → refreshed to reality.
+- m1 "4 cases" → "3 cases plus a file-level cleanup-assertion `after` hook". m2 References `design.md`/`spec.md` → source plan + discovery. m3 stale frontmatter comments → refreshed (`oat_last_commit` explicitly scoped to the last code commit).
+- m4 metadata-only override roots degrade silently (conformant with the plan's metadata-validation bar) → **backlog candidate** (structural check for partial bundles), filed at wave close.
+- m5 fail-closed error text points override users at `pnpm build` (plan mandated the existing messages) → **backlog candidate** (override-aware remedy wording), filed at wave close.
+- m6 `.oat/sync/manifest.json` `oatVersion` 0.2.34 vs packages 0.2.35 → accepted as noted (pre-existing repo pattern, tracked by `BL-260826-warn-on-silent-oatversion`); no action in this lane.
+- m7 `project-log.md` gate entry cites the pre-archive artifact path → accepted (append-only contract); correcting note in the orchestration-log synthesis.
+
+**Verification record (root):** what — each disposition above; how — root edits verified by `pnpm exec oxfmt --check`, `oat project validate-plan`/`project status` parse, and table-structure grep; where — this entry, independently verified by the narrowed round-2 final review.
+
+**Review row `final` → `fixes_completed`; narrowed round 2 next.**
+
 ## Implementation Log
 
 Chronological log of implementation progress.
 
-### 2026-08-26
+### 2026-08-26 — 2026-08-27
 
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-08-26
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+- Preflight from main `39cea801` (`worktree:init`, build, type-check exit 0; manifest restamp `0da7e477`); wrapper scaffolded `b9a181f5`; plan gate passed round 1 (`cursor-gpt-5-6-sol-xhigh`, run `59ebe179`); implement phase opened `ee3f6ea6`.
+- [x] p01-t01: Execute external plan — `4019f98c` (Opus implementer `w3-p01-impl-001`; DoD 10/10; Codex P2 fixed pre-commit).
+- [x] p01-t01 fix round — `6dc9cdd1` (append-only; round-1 M1/M2/m1/m3/m4; Codex clean).
+- Reviews: p01 round 1 `0C/0I/2M/4m` → round 2 `0/0/0/0` (`passed` at `6dc9cdd1`); root final verification 10/10 at `cf53e818` (`9a2e659b`); final review round 1 `0C/2I/4M/7m` — all bookkeeping/notes, resolved at receive.
+- Decisions: close the ambient-override hermeticity class at the vitest `test.env` seam (one line) rather than N call-site edits; keep the plan-mandated existing error messages on the override path (remedy wording → backlog).
+- Blockers: none.
 
 ## Deviations from Plan / Design
 
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review                         | Source Artifact             | Planned / Documented                                                                           | Actual / Accepted                                                                                                                                                      | Reason                                                                                                                                           | Source of Truth                                               | Follow-up                  |
+| ------------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | -------------------------- |
+| p01-t01 fix round (review round-1 M2) | external plan `## In scope` | four in-scope surfaces (`assets.ts`, `assets.test.ts`, smoke consumer file, release manifests) | also `packages/cli/vitest.config.ts` (`test.env: { OAT_ASSETS_DIR: '' }`), `gate/index.test.ts:479` (`resolveAssetsRoot({})`), and a comment fix in `bundle-assets.sh` | test-hermeticity consequences of the change itself (every zero-argument call site became env-sensitive); comment corrected a now-false rationale | round-2 and final reviews (accepted, non-masking, no finding) | none                       |
+| closeout                              | wrapper checklist           | `document` step owns docs                                                                      | `OAT_ASSETS_DIR` docs deferred to the `document` step (round-1 m2)                                                                                                     | plan's in-scope list excludes docs                                                                                                               | `plan.md` § Implementation Complete item 5                    | apply at the document step |
 
 ## Test Results
 
 **Final verification (root, closeout baseline) at `cf53e818`** — full definition of done invoked literally, one log per gate under the session scratchpad `w3-dod/`, exit codes captured in `exits.txt`: `pnpm check` 0 · `pnpm type-check` 0 · `pnpm test` 0 · `pnpm build` 0 · `pnpm run check:skill-bumps` 0 · `git fetch origin` 0 then `pnpm release:check-versions` 0 (0.2.35 vs `origin/main` 0.2.34) · `pnpm release:validate` 0 · `pnpm build:docs` 0 · `pnpm lint` 0 · `pnpm format` 0. Tree clean after the run; no deterministic-smoke worktrees left behind.
 
-Earlier evidence: implementer DoD 10/10 at `4019f98c` and again at `6dc9cdd1` (post-commit `release:check-versions` re-run 0); reviewer re-runs at both heads; focused suites `src/fs/assets.test.ts` 14 cases, `gate/index.test.ts` 198, smoke consumer file 4 cases (incl. the restore/cleanup guard), all green with and without an ambient `OAT_ASSETS_DIR`.
+Earlier evidence: implementer DoD 10/10 at `4019f98c` and again at `6dc9cdd1` (post-commit `release:check-versions` re-run 0); reviewer re-runs at both heads; focused suites `src/fs/assets.test.ts` 14 cases, `gate/index.test.ts` 198, smoke consumer file 3 cases plus a file-level cleanup-assertion `after` hook, all green with and without an ambient `OAT_ASSETS_DIR`.
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
+**What shipped:** `resolveAssetsRoot(env = process.env)` honors a non-empty (trimmed) `OAT_ASSETS_DIR` — relative values resolve against the process working directory — and applies the unchanged `stat` + bundle-metadata / `OAT_VERSION` validation on both paths, so missing, malformed, or version-mismatched overrides fail closed with the existing actionable errors and never fall back; unset/blank keep the packaged root. The package-coverage smoke consumer bundles once per file into a private temp root, sets `OAT_ASSETS_DIR` before importing built consumers, proves the built `dist` reads the temp root, and restores/cleans on every path with a guard hook asserting it. Lockstep bump 0.2.34 → 0.2.35.
 
-- {capability 1}
-- {capability 2}
+**User-facing behavioral change:** a new public runtime environment variable on the published CLI (`OAT_ASSETS_DIR`) that redirects which bundled skills/agents/templates/scripts the CLI reads; documented at the `document` step (`apps/oat-docs/docs/cli-utilities/configuration.md`).
 
-**Behavioral changes (user-facing):**
+**Key files:** `packages/cli/src/fs/assets.ts`, `packages/cli/src/fs/assets.test.ts`, `packages/cli/vitest.config.ts`, `packages/cli/src/commands/gate/index.test.ts`, `packages/cli/scripts/bundle-assets.sh` (comment), `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs`, five `packages/*/package.json`, `packages/cli/assets/public-package-versions.json`.
 
-- {bullet}
+**Verification:** DoD 10/10 at `4019f98c`, `6dc9cdd1`, `cf53e818` (root), and `9a2e659b` (final reviewer); reviewer probes — weaker-anywhere on both resolution paths, blank/whitespace/relative semantics, delete/reorder mutations on restore/cleanup (both mutants die), built-CLI isolation proof, end-to-end fail-closed probes through the built CLI (six invalid classes, six exit-2 rejections), negative control with the shared assets moved aside.
 
-**Key files / modules:**
+**Design deltas:** N/A (quick mode; no `design.md`). Extra work accepted by review: `vitest.config.ts` `test.env` seam + explicit `gate/index.test.ts` call site (test-hermeticity consequences of the change).
 
-- `{path}` - {purpose}
+## Done-criteria confirmation (source plan)
 
-**Verification performed:**
+Lifted from the final review round 1 (`reviews/archived/final-review-2026-08-27T005219Z.md`), reviewer-verified at `9a2e659b` from source plus built-CLI probes; DC = Done criteria, RF = Review focus.
 
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+| Requirement                                                                                          | Status  | Evidence                                                                                                                                                                                                                                                       |
+| ---------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DC1 — a non-empty `OAT_ASSETS_DIR` is resolved and validated before use                              | covered | `packages/cli/src/fs/assets.ts:88-90` (trim + `resolve`), `:92-106` (`stat` + directory check), `:108` (`validateAssetsBundle`); Probe 1 (built CLI reads the marked temp bundle)                                                                              |
+| DC2 — missing, malformed, and version-mismatched explicit overrides fail closed                      | covered | Probe 2 (a)-(d) and Probe 3 A/B/G — all exit 2 with the pre-existing message naming the override path; `assets.ts:97-100` rethrows `CliError` unchanged so no path can degrade to the packaged root                                                            |
+| DC3 — unset or blank overrides preserve the packaged default                                         | covered | `assets.ts:88` (`?.trim() ?? ''`), `:90` (`override.length > 0 ? … : resolvePackagedAssetsRoot()`); Probe 3 E (empty and whitespace both exit 0 on packaged content); `assets.test.ts:73-87`                                                                   |
+| DC4 — the package-coverage smoke file builds and reads only its temporary bundle                     | covered | `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs:41-63` (one `mkdtemp` + one `bundle-assets.sh` per file), `:95-105` (asserts resolved root === temp root); Probe 6 (passes 3/3 with `packages/cli/assets` absent)                               |
+| DC5 — all five public package versions move together and release gates pass                          | covered | `packages/cli`, `control-plane`, `docs-config`, `docs-theme`, `docs-transforms` all `0.2.35`; `pnpm release:check-versions` exit 0; `pnpm release:validate` exit 0 ("validated … 5 public packages", 5 tarballs at 0.2.35)                                     |
+| DC6 — `git status --short` contains only scoped implementation, tests, and required release metadata | covered | `git status --porcelain` empty at HEAD and after all ten gates; `4019f98c` touches 9 files (4 code/test, 5 manifests + the build-generated `public-package-versions.json`), `6dc9cdd1` touches 6, all in scope                                                 |
+| RF1 — confirm explicit overrides fail closed instead of falling back silently                        | covered | Probe 2 and Probe 3 A/B/G: six invalid classes, six exit-2 rejections, zero tool listings emitted; single shared post-selection code path (`assets.ts:88-108`) makes divergence structurally impossible                                                        |
+| RF2 — check environment restoration and temp-directory cleanup on failures                           | covered | `package-coverage-consumers.test.mjs:50-57` (release on `before` failure), `:64` (`after(releaseIsolatedAssets)`), `:66-78` (guard asserting env-key presence/value and temp-root removal), `:80-91`; Probe 5 proves the guard is load-bearing (mutant exit 1) |
+| RF3 — confirm the smoke proof exercises built CLI code and not only the unit-test injection seam     | covered | `package-coverage-consumers.test.mjs:101` imports `dist/fs/assets.js` via `importDist`; Probe 6 (shared root absent, still 3/3) and Probes 1-4 all drive `packages/cli/dist/index.js`                                                                          |
 
 ## References
 
-- Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Source plan (the contract): `.oat/repo/reference/external-plans/2026-08-19-hermetic-cli-assets-root.md`
+- Discovery: `discovery.md`; Plan: `plan.md`; Orchestration log: `orchestration-log.md`
+- Program artifact: `.oat/repo/reference/external-plans/2026-08-19-execution-program.md`
