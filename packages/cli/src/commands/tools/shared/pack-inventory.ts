@@ -134,7 +134,6 @@ async function inventoryAsset(
   managedRoots: Record<ManagedRootName, ResolvedManagedRoot>,
 ): Promise<PackAssetInventory> {
   const installedPath = join(scopeRoot, definition.destination);
-  const bundledPath = join(assetsRoot, definition.source);
   const managedRootName = definition.destination.split('/')[0];
   if (managedRootName !== '.agents' && managedRootName !== '.oat') {
     throw new Error(
@@ -164,6 +163,12 @@ async function inventoryAsset(
       bundledVersion: null,
     };
   }
+  if (!definition.source) {
+    throw new Error(
+      `Managed pack asset ${definition.id} has no materialized source`,
+    );
+  }
+  const bundledPath = join(assetsRoot, definition.source);
   if (definition.kind === 'skill' || definition.kind === 'agent') {
     const inventory = await inventoryVersionedAsset(
       definition,

@@ -4,6 +4,7 @@ import type { ConcreteScope } from '@shared/types';
 
 import type {
   PackAssetDefinition,
+  PackAssetGeneration,
   PackAssetKind,
   PackAssetOwnership,
   PackDefinition,
@@ -12,6 +13,7 @@ import type {
 
 export type {
   PackAssetDefinition,
+  PackAssetGeneration,
   PackAssetKind,
   PackAssetOwnership,
   PackDefinition,
@@ -74,7 +76,7 @@ function template(
   };
 }
 
-function script(name: string): PackAssetDefinition {
+function script(name: string, sharedOwner?: string): PackAssetDefinition {
   return {
     id: `script:${name}`,
     kind: 'script',
@@ -83,19 +85,25 @@ function script(name: string): PackAssetDefinition {
     scopes: BOTH_SCOPES,
     ownership: BOTH_MANAGED,
     executable: true,
+    sharedOwner,
   };
 }
 
 function seed(
   id: string,
-  source: string,
   destination: string,
-  scopes: readonly ConcreteScope[] = BOTH_SCOPES,
+  options: {
+    source?: string;
+    generation?: PackAssetGeneration;
+    scopes?: readonly ConcreteScope[];
+  },
 ): PackAssetDefinition {
+  const scopes = options.scopes ?? BOTH_SCOPES;
   return {
     id: `seed:${id}`,
     kind: 'seed',
-    source,
+    source: options.source,
+    generation: options.generation,
     destination,
     scopes,
     ownership: Object.fromEntries(
@@ -175,16 +183,12 @@ export const PACK_MANIFEST: readonly PackDefinition[] = [
         'oat-idea-summarize',
         'oat-idea-scratchpad',
       ].map((name) => skill(name)),
-      seed(
-        'ideas-backlog',
-        'templates/ideas/ideas-backlog.md',
-        '.oat/ideas/backlog.md',
-      ),
-      seed(
-        'ideas-scratchpad',
-        'templates/ideas/ideas-scratchpad.md',
-        '.oat/ideas/scratchpad.md',
-      ),
+      seed('ideas-backlog', '.oat/ideas/backlog.md', {
+        source: 'templates/ideas/ideas-backlog.md',
+      }),
+      seed('ideas-scratchpad', '.oat/ideas/scratchpad.md', {
+        source: 'templates/ideas/ideas-scratchpad.md',
+      }),
       template('ideas/idea-discovery.md'),
       template('ideas/idea-summary.md'),
     ],
@@ -205,7 +209,7 @@ export const PACK_MANIFEST: readonly PackDefinition[] = [
       ].map((name) => skill(name)),
       template('docs-app-mkdocs', 'directory'),
       template('docs-app-fuma', 'directory'),
-      script('resolve-tracking.sh'),
+      script('resolve-tracking.sh', 'resolve-tracking'),
     ],
   },
   {
@@ -234,31 +238,28 @@ export const PACK_MANIFEST: readonly PackDefinition[] = [
         'generate-oat-state.sh',
         'generate-thin-index.sh',
         'resolve-tracking.sh',
-      ].map((name) => script(name)),
-      seed(
-        'projects-root',
-        'generated/workflows/projects-root',
-        '.oat/projects-root',
-        ['project'],
+      ].map((name) =>
+        script(
+          name,
+          name === 'resolve-tracking.sh' ? 'resolve-tracking' : undefined,
+        ),
       ),
-      seed(
-        'projects-config',
-        'generated/workflows/projects-config',
-        '.oat/config.json',
-        ['project'],
-      ),
-      seed(
-        'projects-local-gitkeep',
-        'generated/workflows/gitkeep',
-        '.oat/projects/local/.gitkeep',
-        ['project'],
-      ),
-      seed(
-        'projects-archived-gitkeep',
-        'generated/workflows/gitkeep',
-        '.oat/projects/archived/.gitkeep',
-        ['project'],
-      ),
+      seed('projects-root', '.oat/projects-root', {
+        generation: 'projects-root-default',
+        scopes: ['project'],
+      }),
+      seed('projects-config', '.oat/config.json', {
+        generation: 'projects-config-default',
+        scopes: ['project'],
+      }),
+      seed('projects-local-gitkeep', '.oat/projects/local/.gitkeep', {
+        generation: 'empty-file',
+        scopes: ['project'],
+      }),
+      seed('projects-archived-gitkeep', '.oat/projects/archived/.gitkeep', {
+        generation: 'empty-file',
+        scopes: ['project'],
+      }),
     ],
   },
   {
@@ -344,6 +345,9 @@ export function getPackMemberNames(
   kind: 'skill' | 'agent' | 'template' | 'script',
 ): string[] {
   return getPackAssets(pack, kind).map(({ source }) => {
+    if (!source) {
+      throw new Error(`Pack ${pack} ${kind} asset has no materialized source`);
+    }
     const prefix = `${kind === 'template' ? 'templates' : `${kind}s`}/`;
     return source.slice(prefix.length);
   });
@@ -361,6 +365,7 @@ function validateRelativePath(
   field: 'source' | 'destination',
 ): void {
   const value = asset[field];
+  if (value === undefined) return;
   const segments = value.replaceAll('\\', '/').split('/');
   if (
     value.length === 0 ||
@@ -376,6 +381,11 @@ function validateRelativePath(
 }
 
 function validateAsset(pack: PackDefinition, asset: PackAssetDefinition): void {
+  if ((asset.source === undefined) === (asset.generation === undefined)) {
+    throw new Error(
+      `Pack ${pack.name} asset ${asset.id} must declare exactly one source or generation contract`,
+    );
+  }
   validateRelativePath(pack.name, asset, 'source');
   validateRelativePath(pack.name, asset, 'destination');
 
@@ -409,6 +419,10 @@ export function validatePackManifest(
   manifest: readonly PackDefinition[] = PACK_MANIFEST,
 ): void {
   const packNames = new Set<PackName>();
+  const destinations = new Map<
+    string,
+    Array<{ pack: PackName; asset: PackAssetDefinition }>
+  >();
 
   for (const pack of manifest) {
     if (packNames.has(pack.name)) {
@@ -429,6 +443,30 @@ export function validatePackManifest(
       }
       assetIds.add(asset.id);
       validateAsset(pack, asset);
+      for (const scope of asset.scopes) {
+        const key = `${scope}:${asset.destination}`;
+        const entries = destinations.get(key) ?? [];
+        entries.push({ pack: pack.name, asset });
+        destinations.set(key, entries);
+      }
+    }
+  }
+
+  for (const [destination, entries] of destinations) {
+    if (entries.length < 2) continue;
+    const [first, ...rest] = entries;
+    const compatible =
+      first!.asset.sharedOwner !== undefined &&
+      rest.every(
+        ({ asset }) =>
+          asset.sharedOwner === first!.asset.sharedOwner &&
+          asset.source === first!.asset.source &&
+          asset.kind === first!.asset.kind,
+      );
+    if (!compatible) {
+      throw new Error(
+        `Pack assets collide at ${destination} without a compatible shared owner: ${entries.map(({ pack, asset }) => `${pack}/${asset.id}`).join(', ')}`,
+      );
     }
   }
 

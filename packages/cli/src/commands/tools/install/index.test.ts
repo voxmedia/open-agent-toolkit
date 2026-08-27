@@ -325,13 +325,6 @@ describe('createToolsInstallCommand', () => {
       '/tmp/workspace',
       expect.objectContaining({
         tools: {
-          core: false,
-          ideas: false,
-          docs: false,
-          workflows: false,
-          utility: false,
-          'project-management': false,
-          research: false,
           brainstorm: true,
         },
       }),

@@ -200,6 +200,87 @@ describe('removeTools', () => {
     }
   });
 
+  it('retains the shared tracking script while docs remains intended', async () => {
+    const deps = createDeps({
+      user: [
+        createTool({
+          name: 'oat-project-new',
+          scope: 'user',
+          pack: 'workflows',
+        }),
+      ],
+    });
+    deps.isPackIntended = async (pack) => pack === 'docs';
+
+    await removeTools(
+      { kind: 'pack', pack: 'workflows' },
+      ['user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(deps.removedFiles).not.toContain(
+      '/home/user/.oat/scripts/resolve-tracking.sh',
+    );
+    expect(deps.removedFiles).toContain(
+      '/home/user/.oat/scripts/generate-oat-state.sh',
+    );
+  });
+
+  it('retains the shared tracking script while workflows remains intended', async () => {
+    const deps = createDeps({
+      user: [
+        createTool({
+          name: 'oat-docs-analyze',
+          scope: 'user',
+          pack: 'docs',
+        }),
+      ],
+    });
+    deps.isPackIntended = async (pack) => pack === 'workflows';
+
+    await removeTools(
+      { kind: 'pack', pack: 'docs' },
+      ['user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(deps.removedFiles).not.toContain(
+      '/home/user/.oat/scripts/resolve-tracking.sh',
+    );
+  });
+
+  it('removes the shared tracking script when the other owner is not intended', async () => {
+    const deps = createDeps({
+      user: [
+        createTool({
+          name: 'oat-docs-analyze',
+          scope: 'user',
+          pack: 'docs',
+        }),
+      ],
+    });
+    deps.isPackIntended = async () => false;
+
+    await removeTools(
+      { kind: 'pack', pack: 'docs' },
+      ['user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(deps.removedFiles).toContain(
+      '/home/user/.oat/scripts/resolve-tracking.sh',
+    );
+  });
+
   it('removes all tools with --all', async () => {
     const tools = [
       createTool({ name: 'oat-idea-new', pack: 'ideas' }),
@@ -223,7 +304,14 @@ describe('removeTools', () => {
 
     expect(result.removed).toHaveLength(3);
     expect(deps.removedDirs).toHaveLength(2); // two skills
-    expect(deps.removedFiles).toHaveLength(1); // one agent
+    expect(deps.removedFiles).toContain(
+      '/project/.agents/agents/oat-reviewer.md',
+    );
+    expect(
+      deps.removedFiles.filter(
+        (path) => path === '/project/.oat/scripts/resolve-tracking.sh',
+      ),
+    ).toHaveLength(1);
   });
 
   it('dry-run previews removal without deleting', async () => {

@@ -107,13 +107,14 @@ describe('createToolsRemoveCommand config writes', () => {
       ];
     });
 
+    const removeDirectory = vi.fn(async () => {});
     const dependencies: RemoveToolsDependencies = {
       scanTools: scanToolsMock,
       resolveScopeRoot: vi.fn(async (scope, cwd, home) =>
         scope === 'project' ? cwd : home,
       ),
       resolveAssetsRoot: vi.fn(async () => '/assets'),
-      removeDirectory: vi.fn(async () => {}),
+      removeDirectory,
       removeFile: vi.fn(async () => {}),
     };
 
@@ -129,6 +130,41 @@ describe('createToolsRemoveCommand config writes', () => {
 
     expect(writeOatConfig).toHaveBeenCalledWith('/tmp/workspace', {
       version: 1,
+      tools: { ideas: true },
+    });
+    expect(removeDirectory.mock.invocationCallOrder[0]).toBeLessThan(
+      writeOatConfig.mock.invocationCallOrder[0]!,
+    );
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it('clears explicit stale intent even when no installed tools are scanned', async () => {
+    scanToolsMock.mockResolvedValue([]);
+
+    const dependencies: RemoveToolsDependencies = {
+      scanTools: scanToolsMock,
+      resolveScopeRoot: vi.fn(async (scope, cwd, home) =>
+        scope === 'project' ? cwd : home,
+      ),
+      resolveAssetsRoot: vi.fn(async () => '/assets'),
+      removeDirectory: vi.fn(async () => {}),
+      removeFile: vi.fn(async () => {}),
+      isPackIntended: vi.fn(async () => false),
+    };
+
+    const command = createToolsRemoveCommand(dependencies, {
+      runSync: vi.fn(async () => {}),
+    });
+
+    await runCommand(
+      command,
+      ['--pack', 'project-management', '--no-sync'],
+      ['--scope', 'project', '--cwd', '/tmp/workspace'],
+    );
+
+    expect(writeOatConfig).toHaveBeenCalledWith('/tmp/workspace', {
+      version: 1,
+      tools: { ideas: true },
     });
     expect(process.exitCode).toBeUndefined();
   });

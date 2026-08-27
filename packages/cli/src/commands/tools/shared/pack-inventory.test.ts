@@ -51,7 +51,7 @@ async function materializeManagedPack(
   scopeRoot: string,
 ): Promise<void> {
   for (const asset of getPackDefinition(pack).assets) {
-    await writeAsset(assetsRoot, asset.source, asset);
+    if (asset.source) await writeAsset(assetsRoot, asset.source, asset);
     if (asset.ownership[scope] === 'managed') {
       await writeAsset(scopeRoot, asset.destination, asset);
     }
@@ -70,7 +70,7 @@ describe('pack inventory', () => {
     const assetsRoot = await makeRoot('oat-assets-');
     const scopeRoot = await makeRoot('oat-user-');
     for (const asset of getPackDefinition('core').assets) {
-      await writeAsset(assetsRoot, asset.source, asset);
+      if (asset.source) await writeAsset(assetsRoot, asset.source, asset);
     }
 
     await expect(

@@ -1220,14 +1220,8 @@ describe('createInitToolsCommand', () => {
       '/tmp/workspace',
       expect.objectContaining({
         tools: {
-          core: false,
-          ideas: false,
           docs: true,
           workflows: true,
-          utility: false,
-          'project-management': false,
-          research: false,
-          brainstorm: false,
         },
       }),
     );
@@ -1514,8 +1508,7 @@ describe('PACK_METADATA-driven default scope (interactive picker)', () => {
     expect(choices?.[0]?.value).toBe('user');
   });
 
-  it('per-pack selector defaults to project scope when pack has no metadata entry', async () => {
-    // No PACK_METADATA entry for ideas → falls back to 'project' default.
+  it('per-pack selector uses the canonical manifest default', async () => {
     const { command, selectWithAbort } = createHarness({
       interactive: true,
       packSelection: [['ideas']],
@@ -1532,7 +1525,7 @@ describe('PACK_METADATA-driven default scope (interactive picker)', () => {
       (call) => call[0] === 'Where should ideas install?',
     );
     const choices = ideasCall?.[1] as Array<{ value: string; label: string }>;
-    expect(choices?.[0]?.value).toBe('project');
+    expect(choices?.[0]?.value).toBe('user');
   });
 });
 
@@ -1565,9 +1558,7 @@ describe('PACK_METADATA-driven default scope (non-interactive resolver)', () => 
     );
   });
 
-  it('non-interactive install defaults to project scope for packs without metadata', async () => {
-    // Sanity check that the existing project-default behavior is preserved
-    // for packs that have not opted in to PACK_METADATA.
+  it('non-interactive install uses the canonical manifest default', async () => {
     const { command, installDocs } = createHarness({
       interactive: false,
       toolsByScope: {
@@ -1579,7 +1570,7 @@ describe('PACK_METADATA-driven default scope (non-interactive resolver)', () => 
     await runCommand(command, [], ['--scope', 'all']);
 
     expect(installDocs).toHaveBeenCalledWith(
-      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
     );
   });
 

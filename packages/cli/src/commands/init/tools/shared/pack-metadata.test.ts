@@ -45,7 +45,7 @@ describe('legacy manifest compatibility views', () => {
       expect(views[pack.name]).toEqual(
         pack.assets
           .filter(({ kind }) => kind === 'skill')
-          .map(({ source }) => source.replace('skills/', '')),
+          .map(({ source }) => source!.replace('skills/', '')),
       );
     }
   });

@@ -101,4 +101,54 @@ describe('PACK_MANIFEST', () => {
       ]),
     ).toThrow(/ownership.*user/i);
   });
+
+  it('requires a source or explicit generation contract for every asset', () => {
+    expect(() =>
+      validatePackManifest([
+        fixture({
+          assets: [{ ...fixture().assets[0], source: undefined }],
+        }),
+      ]),
+    ).toThrow(/source or generation contract/i);
+  });
+
+  it('rejects destination collisions without compatible shared ownership', () => {
+    const colliding = {
+      ...fixture().assets[0],
+      id: 'fixture-collision',
+    };
+    expect(() =>
+      validatePackManifest([
+        fixture(),
+        fixture({ name: 'docs', assets: [colliding] }),
+      ]),
+    ).toThrow(/collide.*shared owner/i);
+
+    expect(() =>
+      validatePackManifest([
+        fixture({
+          assets: [{ ...fixture().assets[0], sharedOwner: 'fixture' }],
+        }),
+        fixture({
+          name: 'docs',
+          assets: [{ ...colliding, sharedOwner: 'fixture' }],
+        }),
+      ]),
+    ).not.toThrow();
+  });
+
+  it('declares resolve-tracking as a compatible docs/workflows shared asset', () => {
+    const owners = PACK_MANIFEST.flatMap((pack) =>
+      pack.assets
+        .filter(
+          ({ destination }) =>
+            destination === '.oat/scripts/resolve-tracking.sh',
+        )
+        .map((asset) => ({ pack: pack.name, owner: asset.sharedOwner })),
+    );
+    expect(owners).toEqual([
+      { pack: 'docs', owner: 'resolve-tracking' },
+      { pack: 'workflows', owner: 'resolve-tracking' },
+    ]);
+  });
 });

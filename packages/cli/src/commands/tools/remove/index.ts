@@ -11,10 +11,12 @@ import {
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
-import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
+import {
+  readScopedPackIntent,
+  writeScopedPackIntent,
+} from '@commands/tools/shared/scoped-pack-intent';
 import type { PackName } from '@commands/tools/shared/types';
-import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -38,6 +40,8 @@ const defaultDependencies: RemoveToolsDependencies = {
   removeFile: async (path) => {
     await rm(path, { force: true });
   },
+  isPackIntended: async (pack, scope, scopeRoot) =>
+    (await readScopedPackIntent({ pack, scope, scopeRoot })).enabled,
 };
 
 const defaultSyncDependencies: AutoSyncDependencies = {
@@ -104,21 +108,22 @@ export function createToolsRemoveCommand(
         dependencies,
       );
 
-      if (!dryRun && result.removed.length > 0) {
-        const repoRoot = await resolveProjectRoot(context.cwd);
-        await reconcileProjectToolsConfig(
-          {
-            repoRoot,
-            cwd: context.cwd,
-            home: context.home,
-          },
-          {
-            resolveAssetsRoot: dependencies.resolveAssetsRoot,
-            scanTools: dependencies.scanTools,
-            readOatConfig,
-            writeOatConfig,
-          },
-        );
+      if (!dryRun && target.kind !== 'name') {
+        const packs = target.kind === 'pack' ? [target.pack] : [...VALID_PACKS];
+        for (const scope of scopes) {
+          const scopeRoot =
+            scope === 'project'
+              ? await resolveProjectRoot(context.cwd)
+              : await resolveScopeRoot(scope, context.cwd, context.home);
+          for (const pack of packs) {
+            await writeScopedPackIntent({
+              pack,
+              scope,
+              scopeRoot,
+              enabled: false,
+            });
+          }
+        }
       }
 
       if (result.notInstalled.length > 0) {

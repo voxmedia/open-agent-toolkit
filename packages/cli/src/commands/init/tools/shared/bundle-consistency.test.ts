@@ -319,7 +319,9 @@ describe('bundle asset inventory consistency', () => {
   it('maps every bundled managed asset into the canonical manifest', () => {
     const inventory = readBundleInventory();
     const sources = new Set(
-      PACK_MANIFEST.flatMap(({ assets }) => assets.map(({ source }) => source)),
+      PACK_MANIFEST.flatMap(({ assets }) =>
+        assets.flatMap(({ source }) => (source ? [source] : [])),
+      ),
     );
 
     for (const skill of inventory.skills) {

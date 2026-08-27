@@ -20,14 +20,21 @@ export type PackAssetKind =
 
 export type PackAssetOwnership = 'managed' | 'seed-if-missing';
 
+export type PackAssetGeneration =
+  | 'projects-root-default'
+  | 'projects-config-default'
+  | 'empty-file';
+
 export interface PackAssetDefinition {
   id: string;
   kind: PackAssetKind;
-  source: string;
+  source?: string;
+  generation?: PackAssetGeneration;
   destination: string;
   scopes: readonly ConcreteScope[];
   ownership: Partial<Record<ConcreteScope, PackAssetOwnership>>;
   executable?: boolean;
+  sharedOwner?: string;
 }
 
 export interface PackDefinition {
