@@ -1,10 +1,7 @@
 ---
 oat_current_task: null
-oat_last_commit: 7fd8c344f
-oat_blockers:
-  [
-    'Plan gate blocked twice (maxAttempts exhausted); awaiting maintainer direction — see implementation.md',
-  ]
+oat_last_commit: 785dcdb0c
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
