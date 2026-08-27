@@ -2525,7 +2525,7 @@ git commit -m "fix(p04-t16): commit synced retro targets before writeback"
 | p03     | code     | fixes_completed | 2026-08-27 | reviews/archived/code-p03-review-2026-08-27T202636Z.md            | 947e9d92e0b510fefa287e94c27b582bf1dc429b | manual     | -                        |
 | p03-t19 | code     | passed          | 2026-08-27 | reviews/code-p03-t19-review-2026-08-27T203907Z.md                 | 4cf94b72b99cb1110f33720b80ce65fc9b715f98 | manual     | -                        |
 | p04     | code     | fixes_completed | 2026-08-27 | reviews/archived/p04-review-2026-08-27T223316Z.md                 | 1caa8e9989c11c3ebb1355785fc1f7f502837563 | manual     | -                        |
-| p04     | code     | received        | 2026-08-27 | reviews/p04-review-2026-08-27T232826Z.md                          | 743c9cbe952cf6f4ad3eeba24eabebebec9884c7 | manual     | -                        |
+| p04     | code     | passed          | 2026-08-27 | reviews/p04-review-2026-08-27T232826Z.md                          | 743c9cbe952cf6f4ad3eeba24eabebebec9884c7 | manual     | -                        |
 | final   | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                        |

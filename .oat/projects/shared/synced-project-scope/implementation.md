@@ -24,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status         | Tasks | Completed |
-| ------- | -------------- | ----- | --------- |
-| Phase 1 | complete       | 10    | 10/10     |
-| Phase 2 | complete       | 13    | 13/13     |
-| Phase 3 | complete       | 19    | 19/19     |
-| Phase 4 | review_pending | 16    | 16/16     |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 10    | 10/10     |
+| Phase 2 | complete | 13    | 13/13     |
+| Phase 3 | complete | 19    | 19/19     |
+| Phase 4 | complete | 16    | 16/16     |
 
 **Total:** 58/58 tasks completed
 
@@ -402,7 +402,7 @@ feature_tree_mismatches=0
 
 ## Phase 4: Skills, docs, release
 
-**Status:** implementation complete - 16 of 16 tasks complete; independent re-review pending
+**Status:** complete - 16 of 16 tasks complete; independent re-review passed
 **Started:** 2026-08-27
 
 ### Task Outcomes
@@ -456,9 +456,8 @@ with no pending attempt.
 `pnpm format=0`; `git diff --check=0`.
 
 **Review disposition:** The independent Phase 4 review requested changes. All
-five Important findings are now implemented as p04-t12 through p04-t16. The
-event is `fixes_completed`, not passed; a fresh independent re-review is
-pending.
+five Important findings were implemented as p04-t12 through p04-t16, and the
+fresh independent re-review passed with no findings.
 
 ### Review Received: p04 - 2026-08-27T22:33:16Z
 
@@ -492,7 +491,16 @@ gate passed in exact CI order with explicit exit `0`: `pnpm check`,
 `pnpm release:validate`, and `pnpm build:docs`. The additional `pnpm lint`,
 `pnpm format`, and `git diff --check` checks also exited `0`.
 
-**Next:** Root-owned independent re-review of the repaired Phase 4 delta.
+**Next:** Final project code review.
+
+### Phase 4 re-review - 2026-08-27T23:28:26Z
+
+- Review artifact: `reviews/p04-review-2026-08-27T232826Z.md`
+- Reviewed range: `1caa8e9989c11c3ebb1355785fc1f7f502837563..743c9cbe952cf6f4ad3eeba24eabebebec9884c7`
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Verdict: passed; all five findings from the prior Phase 4 review are closed
+- Verification: 228 focused tests plus full test, build, docs, lint, format, type-check, skill validation/bump, release, and provider-drift checks passed
+- Phase outcome: Phase 4 complete; proceed to final project code review
 
 ---
 
