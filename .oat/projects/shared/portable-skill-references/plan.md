@@ -339,6 +339,7 @@ merge path.
 | design | artifact | pending         | -          | -                                                    | -             | -          | -           |
 | plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md` | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220007Z.md` | -             | -          | -           |
+| plan   | artifact | received        | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220505Z.md` | -             | -          | -           |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
