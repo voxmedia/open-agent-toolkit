@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.6.0
+version: 1.6.1
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
@@ -399,6 +399,9 @@ Expected: {expected outcome}
 git add {files}
 git commit -m "fix({task_id}): {description}"
 ```
+
+Fix tasks that edit synced artifacts use `oat project push` under the scope
+guard instead of the branch commit template above.
 ````
 
 ````
@@ -526,12 +529,18 @@ Rules:
 Commit all modified OAT tracking files atomically:
 
 ```bash
-git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
-# Capture the Step 7.5 archive move: stages both the deletion of the original
-# review path and the new archived location. Scope to the project's reviews/
-# directory — never use repo-wide `git add -A`.
-git add "$PROJECT_PATH/reviews/"
-git diff --cached --quiet || git commit -m "chore(oat): record review findings and add fix tasks ({scope})"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): record review findings and add fix tasks ({scope})"
+else
+  git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
+  # Capture the Step 7.5 archive move: stages both the deletion of the original
+  # review path and the new archived location. Scope to the project's reviews/
+  # directory — never use repo-wide `git add -A`.
+  git add "$PROJECT_PATH/reviews/"
+  git diff --cached --quiet || git commit -m "chore(oat): record review findings and add fix tasks ({scope})"
+fi
 ```
 
 Do not use `git add -A` or glob patterns that reach outside `"$PROJECT_PATH/reviews/"`. Do not include unrelated implementation or code files in this commit. Do not defer this commit without explicit user approval — if deferred, clearly state in the summary that bookkeeping is uncommitted so the original agent knows to commit on return.

@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive-remote
-version: 1.5.0
+version: 1.5.1
 description: Use when processing GitHub PR review comments within project context. Fetches PR comments, creates plan tasks, and updates project artifacts.
 disable-model-invocation: true
 user-invocable: true
@@ -267,8 +267,14 @@ Update `state.md`:
 Commit all modified OAT tracking files atomically:
 
 ```bash
-git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$REMOTE_REVIEW_PATH"
-git diff --cached --quiet || git commit -m "chore(oat): record remote review findings and add fix tasks (pr-#$PR_NUMBER)"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): record remote review findings and add fix tasks (pr-#$PR_NUMBER)"
+else
+  git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$REMOTE_REVIEW_PATH"
+  git diff --cached --quiet || git commit -m "chore(oat): record remote review findings and add fix tasks (pr-#$PR_NUMBER)"
+fi
 ```
 
 Do not use `git add -A` or glob patterns. Do not include unrelated implementation or code files. Do not defer this commit without explicit user approval.

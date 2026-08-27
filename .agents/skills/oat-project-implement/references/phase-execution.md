@@ -662,9 +662,15 @@ Bookkeeping is mandatory:
 
 ```bash
 oat state refresh
-git add {PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/plan.md
-[ -f {PROJECT_PATH}/project-log.md ] && git add {PROJECT_PATH}/project-log.md
-git commit -m "chore(oat): bookkeeping after {pNN} {pass|fail}"
+PROJECT_SCOPE=$(oat project scope "{PROJECT_PATH}" --format value) || { echo "oat: cannot resolve project scope for {PROJECT_PATH}; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "{PROJECT_PATH}" --message "chore(oat): bookkeeping after {pNN} {pass|fail}"
+else
+  git add {PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/plan.md
+  [ -f {PROJECT_PATH}/project-log.md ] && git add {PROJECT_PATH}/project-log.md
+  git commit -m "chore(oat): bookkeeping after {pNN} {pass|fail}"
+fi
 ```
 
 `project-log.md` is tracked, so leaving it unstaged carries the log's dirt into

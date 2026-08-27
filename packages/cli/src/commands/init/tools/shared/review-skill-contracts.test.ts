@@ -387,6 +387,34 @@ describe('review skill contracts', () => {
     }
   });
 
+  it('materializes synced projects before implementation and review validation', () => {
+    const implement = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const reviewProvide = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+
+    for (const [name, content] of [
+      ['project implement', implement],
+      ['project review provide', reviewProvide],
+    ] as const) {
+      expect(content, `${name} pulls before validation`).toContain(
+        'The pull runs before directory and `state.md` validation.',
+      );
+      expect(content, `${name} supports an absent synced checkout`).toContain(
+        'This materializes an\nabsent synced checkout when its discovery record or remote ref exists',
+      );
+      expect(content, `${name} runs the adopting pull`).toContain(
+        'oat project pull "$PROJECT_PATH"',
+      );
+    }
+
+    expect(reviewProvide).toContain(
+      'git -C "$PROJECT_PATH" status --porcelain -- discovery.md spec.md design.md plan.md implementation.md state.md',
+    );
+  });
+
   it('pins oat-project-summary project-log graduation and roll-up ordering', () => {
     const content = readRepoFile('.agents/skills/oat-project-summary/SKILL.md');
     const graduationIndex = content.indexOf(
@@ -586,7 +614,7 @@ describe('review skill contracts', () => {
       .slice(contractStart, cleanStart)
       .replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.1');
     expect(contractStart).toBeGreaterThanOrEqual(0);
     expect(contractStart).toBeLessThan(cleanStart);
     expect(contractStart).toBeLessThan(findingsStart);

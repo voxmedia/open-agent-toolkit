@@ -2,6 +2,9 @@
 
 This reference preserves the route-specific implementation contract. Load it only when the entry skill routes execution here.
 
+Step 0 of the entry skill has already pulled and materialized any discoverable
+synced project before this route validates or reads its artifacts.
+
 ### Step 1: Check Plan Complete
 
 ```bash

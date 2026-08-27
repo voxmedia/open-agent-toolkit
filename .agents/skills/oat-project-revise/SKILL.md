@@ -1,6 +1,6 @@
 ---
 name: oat-project-revise
-version: 1.0.0
+version: 1.0.1
 description: Use when a project has an open PR and human feedback needs to be incorporated. Creates revision tasks and re-enters implementation.
 disable-model-invocation: true
 user-invocable: true
@@ -185,6 +185,9 @@ Expected: {expected outcome}
 git add {files}
 git commit -m "fix(prev{N}-t01): {description}"
 ```
+
+Fix tasks that edit synced artifacts use `oat project push` under the scope
+guard instead of the branch commit template above.
 ````
 
 ````
@@ -268,8 +271,14 @@ After the delegated skill completes:
 ### Step 6: Commit Bookkeeping
 
 ```bash
-git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
-git diff --cached --quiet || git commit -m "chore(oat): create revision tasks for {project-name}"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): create revision tasks for {project-name}"
+else
+  git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
+  git diff --cached --quiet || git commit -m "chore(oat): create revision tasks for {project-name}"
+fi
 ```
 
 ### Step 7: Output Summary
