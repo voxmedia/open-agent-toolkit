@@ -10,7 +10,12 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { pushSynced } from '@commands/project/sync/ref-sync';
+import { CliError } from '@errors/cli-error';
 import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
+import { Command } from 'commander';
 import { afterEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
@@ -20,6 +25,7 @@ import { resumeSplit } from '../../../../../projects/split/resume';
 import { seedChildren } from '../../../../../projects/split/seed-children';
 import { validateChildPlan } from '../../../../../projects/split/validation';
 import { writeCoordinationParent } from '../../../../../projects/split/write-parent';
+import { createProjectSplitRunCommand } from '../../run';
 
 async function exists(path: string): Promise<boolean> {
   try {
@@ -140,6 +146,41 @@ function expectPublishedSplit(
       `Split from coordination parent \`${document.plan.parentSlug}\``,
     );
   }
+}
+
+function createSplitCommand(
+  repoRoot: string,
+  push: typeof pushSynced,
+): { capture: ReturnType<typeof createLoggerCapture>; program: Command } {
+  const capture = createLoggerCapture();
+  const run = createProjectSplitRunCommand({
+    buildCommandContext: (options: GlobalOptions): CommandContext => ({
+      scope: 'project',
+      dryRun: false,
+      verbose: options.verbose ?? false,
+      json: options.json ?? false,
+      cwd: repoRoot,
+      home: '/home',
+      interactive: false,
+      logger: capture.logger,
+    }),
+    resolveProjectRoot: async () => repoRoot,
+    resolveProjectsRoot: async () => '.oat/projects/shared',
+    refreshDashboard: async () => undefined,
+    pushSynced: push,
+    processEnv: {},
+  });
+  const program = new Command()
+    .name('oat')
+    .option('--json')
+    .option('--verbose')
+    .exitOverride();
+  const project = new Command('project');
+  const split = new Command('split');
+  split.addCommand(run);
+  project.addCommand(split);
+  program.addCommand(project);
+  return { capture, program };
 }
 
 describe('oat-project-split integration fixtures', () => {
@@ -343,6 +384,65 @@ describe('oat-project-split integration fixtures', () => {
     );
 
     expectPublishedSplit(fixture.originDir, document);
+  });
+
+  it('rolls back a failed terminal marker and republishes every ref through normal resume', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const document = documentFor('declared');
+    const planFile = join(fixture.cloneA, 'split-plan-input.json');
+    await writeFile(planFile, `${JSON.stringify(document, null, 2)}\n`, 'utf8');
+    await mkdir(join(fixture.cloneA, '.oat'), { recursive: true });
+    await writeFile(
+      join(fixture.cloneA, '.oat/config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/synced/source' })}\n`,
+      'utf8',
+    );
+    let failPublication = true;
+    let publicationCalls = 0;
+    const injectedPush: typeof pushSynced = async (target, git, options) => {
+      publicationCalls += 1;
+      if (failPublication && publicationCalls === 3) {
+        throw new CliError('injected origin transport failure', 2);
+      }
+      return pushSynced(target, git, options);
+    };
+    const previousExitCode = process.exitCode;
+    process.exitCode = undefined;
+
+    const first = createSplitCommand(fixture.cloneA, injectedPush);
+    await first.program.parseAsync(
+      ['project', 'split', 'run', '--plan-file', planFile],
+      { from: 'user' },
+    );
+
+    expect(first.capture.error.join('\n')).toContain(
+      'injected origin transport failure',
+    );
+    expect(process.exitCode).toBe(2);
+    const parentStatePath = join(
+      fixture.cloneA,
+      '.oat/projects/synced',
+      document.plan.parentSlug,
+      'state.md',
+    );
+    expect(
+      readFrontmatter(await readFile(parentStatePath, 'utf8')),
+    ).toMatchObject({ oat_phase_status: 'in_progress' });
+
+    failPublication = false;
+    publicationCalls = 0;
+    process.exitCode = undefined;
+    const resumed = createSplitCommand(fixture.cloneA, injectedPush);
+    await resumed.program.parseAsync(
+      ['project', 'split', 'run', '--plan-file', planFile, '--resume'],
+      { from: 'user' },
+    );
+
+    expect(process.exitCode).toBe(0);
+    expect(publicationCalls).toBe(1 + document.plan.children.length);
+    expectPublishedSplit(fixture.originDir, document);
+    process.exitCode = previousExitCode;
   });
 
   it('reports post-manual-mutation validation errors', () => {

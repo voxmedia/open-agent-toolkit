@@ -9,6 +9,7 @@ import {
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import { replaceFrontmatter } from '@commands/shared/frontmatter-write';
 import { setActiveProject } from '@config/oat-config';
+import { CliError } from '@errors/cli-error';
 import YAML from 'yaml';
 
 import type { ChildPlan } from './child-plan';
@@ -54,23 +55,36 @@ export async function finalizeSplit(
   if (context.scope === 'synced') {
     const gitRunner = context.gitRunner ?? defaultGitRunner;
     const pushSynced = context.pushSynced ?? defaultPushSynced;
-    for (const slug of [
-      plan.parentSlug,
-      ...plan.children
-        .slice()
-        .sort((left, right) => left.order - right.order)
-        .map((child) => child.slug),
-    ]) {
-      const result = await pushSynced(
-        buildSyncTarget(context.repoRoot, projectsRoot, slug),
-        gitRunner,
-        { message: `chore(oat): finalize split ${plan.parentSlug}` },
-      );
-      if (result.status !== 'pushed' && result.status !== 'up-to-date') {
-        throw new Error(
-          `Failed to publish synced split project ${slug}: ${result.status}`,
+    try {
+      for (const slug of [
+        plan.parentSlug,
+        ...plan.children
+          .slice()
+          .sort((left, right) => left.order - right.order)
+          .map((child) => child.slug),
+      ]) {
+        const result = await pushSynced(
+          buildSyncTarget(context.repoRoot, projectsRoot, slug),
+          gitRunner,
+          { message: `chore(oat): finalize split ${plan.parentSlug}` },
+        );
+        if (result.status !== 'pushed' && result.status !== 'up-to-date') {
+          throw new CliError(
+            `Failed to publish synced split project ${slug}: ${result.status}`,
+            1,
+          );
+        }
+      }
+    } catch (error) {
+      try {
+        await writeFile(statePath, stateContent, 'utf8');
+      } catch (rollbackError) {
+        throw new CliError(
+          `Failed to restore resumable split state after publication failure: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}. Original failure: ${error instanceof Error ? error.message : String(error)}`,
+          2,
         );
       }
+      throw error;
     }
   }
 

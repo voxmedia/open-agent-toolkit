@@ -250,6 +250,10 @@ function validateProjectName(name: string): void {
   }
 }
 
+function shellQuote(value: string): string {
+  return `'${value.replaceAll("'", "'\\''")}'`;
+}
+
 function applyTemplateReplacements(
   template: string,
   projectName: string,
@@ -733,7 +737,7 @@ export async function scaffoldProject(
       if (scope === 'synced' && published) {
         const detail = error instanceof Error ? error.message : String(error);
         throw new CliError(
-          `Synced project ${options.projectName} was published and recorded, but its active pointer was not updated: ${detail}. Run oat project open '${options.projectName}' to complete recovery; do not rerun project creation.`,
+          `Synced project ${options.projectName} was published and recorded, but its active pointer was not updated: ${detail}. Run oat project open ${shellQuote(projectPath)} to complete recovery; do not rerun project creation.`,
           2,
         );
       }

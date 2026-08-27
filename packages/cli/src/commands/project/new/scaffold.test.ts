@@ -583,6 +583,16 @@ describe('scaffoldProject', () => {
   it('preserves published state and recovers an active-pointer failure through project open', async () => {
     const fixture = await createSyncedFixture();
     tempDirs.push(fixture.rootDir);
+    const duplicateSharedRoot = join(
+      fixture.cloneA,
+      '.oat/projects/shared/pointer-failure',
+    );
+    await mkdir(duplicateSharedRoot, { recursive: true });
+    await writeFile(
+      join(duplicateSharedRoot, 'state.md'),
+      '---\noat_phase: plan\noat_phase_status: complete\noat_lifecycle: active\n---\n',
+      'utf8',
+    );
 
     await expect(
       scaffoldProjectImpl(
@@ -600,7 +610,7 @@ describe('scaffoldProject', () => {
         },
       ),
     ).rejects.toThrow(
-      /oat project open 'pointer-failure'.*do not rerun project creation/i,
+      /oat project open '\.oat\/projects\/synced\/pointer-failure'.*do not rerun project creation/i,
     );
 
     expect(
@@ -645,9 +655,10 @@ describe('scaffoldProject', () => {
     project.addCommand(open);
     program.addCommand(project);
 
-    await program.parseAsync(['project', 'open', 'pointer-failure'], {
-      from: 'user',
-    });
+    await program.parseAsync(
+      ['project', 'open', '.oat/projects/synced/pointer-failure'],
+      { from: 'user' },
+    );
 
     const config = JSON.parse(
       await readFile(join(fixture.cloneA, '.oat/config.local.json'), 'utf8'),
