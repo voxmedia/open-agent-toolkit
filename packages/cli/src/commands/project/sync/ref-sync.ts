@@ -45,6 +45,8 @@ export type RemoveResult = {
   status: 'removed' | 'absent' | 'dirty' | 'unpushed';
 };
 
+const ZERO_OBJECT_ID = '0000000000000000000000000000000000000000';
+
 export function buildSyncTarget(
   repoRoot: string,
   projectsRoot: string,
@@ -60,10 +62,85 @@ export function buildSyncTarget(
   };
 }
 
+async function registeredWorktreePaths(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<string[]> {
+  const result = await git.run(['worktree', 'list', '--porcelain'], {
+    cwd: target.repoRoot,
+  });
+  return result.stdout
+    .split('\n')
+    .filter((line) => line.startsWith('worktree '))
+    .map((line) => resolve(line.slice('worktree '.length)));
+}
+
+async function canonicalTargetPath(target: SyncTarget): Promise<string> {
+  const canonicalRepoRoot = await realpath(target.repoRoot);
+  return resolve(
+    canonicalRepoRoot,
+    relative(resolve(target.repoRoot), resolve(target.projectPath)),
+  );
+}
+
+async function isTargetRegistered(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<boolean> {
+  const expected = await canonicalTargetPath(target);
+  return (await registeredWorktreePaths(target, git)).includes(expected);
+}
+
+async function assertCreateTargetAvailable(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<void> {
+  if (await pathExists(target.projectPath)) {
+    throw new CliError(
+      `Synced project ${target.slug} already exists at ${target.projectPath}.`,
+      2,
+    );
+  }
+  if (await isTargetRegistered(target, git)) {
+    throw new CliError(
+      `Synced project ${target.slug} already has a registered worktree at ${target.projectPath}.`,
+      2,
+    );
+  }
+
+  const localRef = await git.run(
+    ['show-ref', '--verify', '--quiet', target.ref],
+    {
+      cwd: target.repoRoot,
+      allowFailure: true,
+    },
+  );
+  assertExpectedGitResult('git show-ref --verify', localRef, [0, 1]);
+  if (localRef.code === 0) {
+    throw new CliError(
+      `Synced project ${target.slug} local ref ${target.ref} already exists.`,
+      2,
+    );
+  }
+
+  const remoteRef = await git.run(
+    ['ls-remote', '--exit-code', target.remote, target.ref],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  assertExpectedGitResult('git ls-remote synced ref', remoteRef, [0, 2]);
+  if (remoteRef.code === 0) {
+    throw new CliError(
+      `Synced project ${target.slug} remote ref ${target.ref} already exists on ${target.remote}.`,
+      2,
+    );
+  }
+}
+
 export async function createSyncedProject(
   target: SyncTarget,
   git: GitRunner,
 ): Promise<void> {
+  await assertCreateTargetAvailable(target, git);
   const tree = await git.run(['hash-object', '-t', 'tree', '/dev/null'], {
     cwd: target.repoRoot,
   });
@@ -76,15 +153,31 @@ export async function createSyncedProject(
     ],
     { cwd: target.repoRoot },
   );
-  await git.run(['update-ref', target.ref, commit.stdout], {
+  await git.run(['update-ref', target.ref, commit.stdout, ZERO_OBJECT_ID], {
     cwd: target.repoRoot,
   });
-  await mkdir(dirname(target.projectPath), { recursive: true });
-  await git.run(
-    ['worktree', 'add', '--detach', target.projectPath, target.ref],
-    { cwd: target.repoRoot },
-  );
-  await assertNestedWorktree(target, git);
+
+  let worktreeAdded = false;
+  try {
+    await mkdir(dirname(target.projectPath), { recursive: true });
+    await git.run(
+      ['worktree', 'add', '--detach', target.projectPath, target.ref],
+      { cwd: target.repoRoot },
+    );
+    worktreeAdded = true;
+    await assertNestedWorktree(target, git);
+  } catch (error) {
+    if (worktreeAdded && (await isTargetRegistered(target, git))) {
+      await git.run(['worktree', 'remove', '--force', target.projectPath], {
+        cwd: target.repoRoot,
+      });
+      await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
+    }
+    await git.run(['update-ref', '-d', target.ref, commit.stdout], {
+      cwd: target.repoRoot,
+    });
+    throw error;
+  }
 }
 
 async function headSha(target: SyncTarget, git: GitRunner): Promise<string> {
@@ -96,20 +189,24 @@ async function listConflicts(
   target: SyncTarget,
   git: GitRunner,
 ): Promise<string[]> {
-  const status = await git.run(['status', '--porcelain'], {
+  const unmerged = await git.run(['diff', '--name-only', '--diff-filter=U'], {
     cwd: target.projectPath,
   });
-  const conflictStatuses = new Set(['UU', 'AA', 'DU', 'UD']);
-  return status.stdout
+  return unmerged.stdout
     .split('\n')
-    .filter((line) => conflictStatuses.has(line.slice(0, 2)))
-    .map((line) => line.slice(3).trim())
+    .map((line) => line.trim())
     .filter(Boolean)
     .sort();
 }
 
 function isMissingRemoteRef(stderr: string): boolean {
   return /couldn't find remote ref|no such ref was fetched/i.test(stderr);
+}
+
+function isNonFastForwardPushRejection(stderr: string): boolean {
+  return /(?:! \[rejected\]|\brejected\b)[\s\S]*\((?:non-fast-forward|fetch first)\)/i.test(
+    stderr,
+  );
 }
 
 function assertExpectedGitResult(
@@ -193,7 +290,10 @@ export async function pushSynced(
     { cwd: target.repoRoot, allowFailure: true },
   );
   if (pushed.code !== 0) {
-    return { status: 'rejected', sha: pushedHead };
+    if (isNonFastForwardPushRejection(pushed.stderr)) {
+      return { status: 'rejected', sha: pushedHead };
+    }
+    assertExpectedGitResult('git push synced ref', pushed, [0]);
   }
   await git.run(['update-ref', target.ref, pushedHead], {
     cwd: target.repoRoot,
@@ -385,6 +485,13 @@ export async function removeSyncedCheckout(
 ): Promise<RemoveResult> {
   const preflight = await preflightSyncedCheckout(target, git);
   if (preflight.status === 'absent') {
+    await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
+    if (await isTargetRegistered(target, git)) {
+      throw new CliError(
+        `Unable to remove stale worktree registration for ${target.projectPath}.`,
+        2,
+      );
+    }
     return { status: 'absent' };
   }
   if (

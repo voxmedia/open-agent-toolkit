@@ -45,6 +45,12 @@ describe('SyncedProjectRecordSchema', () => {
         ref: 'refs/oat/projects/other',
       }),
     ).toThrow(/slug/);
+    expect(() =>
+      SyncedProjectRecordSchema.parse({
+        ...canonical,
+        remote: 'upstream',
+      }),
+    ).toThrow(/origin/);
   });
 
   it('names the upgrade path for unknown schema versions', () => {

@@ -10,7 +10,7 @@ export interface SyncedProjectRecord {
   slug: string;
   scope: 'synced';
   ref: string;
-  remote: string;
+  remote: typeof SYNCED_REMOTE;
   status: 'active' | 'complete';
   createdAt: string;
   completedAt: string | null;
@@ -26,7 +26,7 @@ export const SyncedProjectRecordSchema: z.ZodType<SyncedProjectRecord> = z
     slug: z.string().min(1),
     scope: z.literal('synced'),
     ref: z.string().min(1),
-    remote: z.string().min(1),
+    remote: z.literal(SYNCED_REMOTE),
     status: z.enum(['active', 'complete']),
     createdAt: z.string().datetime(),
     completedAt: z.string().datetime().nullable(),

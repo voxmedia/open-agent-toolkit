@@ -100,6 +100,166 @@ describe('createSyncedProject', () => {
       await fixture.cleanup();
     }
   });
+
+  it('refuses duplicate creation without changing the existing ref or files', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'example',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(
+        join(target.projectPath, 'draft.md'),
+        'preserve me\n',
+        'utf8',
+      );
+      git(target.projectPath, ['add', 'draft.md']);
+      git(target.projectPath, ['commit', '-m', 'unpushed draft']);
+      const existingRef = git(fixture.cloneA, ['rev-parse', target.ref]);
+      const existingHead = git(target.projectPath, ['rev-parse', 'HEAD']);
+
+      await expect(
+        createSyncedProject(target, defaultGitRunner),
+      ).rejects.toThrow(/already exists/i);
+
+      expect(git(fixture.cloneA, ['rev-parse', target.ref])).toBe(existingRef);
+      expect(git(target.projectPath, ['rev-parse', 'HEAD'])).toBe(existingHead);
+      expect(await readFile(join(target.projectPath, 'draft.md'), 'utf8')).toBe(
+        'preserve me\n',
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('refuses a remote ref collision before creating local state', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const targetA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'example',
+      );
+      const targetB = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        'example',
+      );
+      await createSyncedProject(targetA, defaultGitRunner);
+      await pushSynced(targetA, defaultGitRunner, {});
+
+      await expect(
+        createSyncedProject(targetB, defaultGitRunner),
+      ).rejects.toThrow(/remote ref.*already exists/i);
+      expect(() =>
+        execFileSync('git', ['show-ref', '--verify', '--quiet', targetB.ref], {
+          cwd: fixture.cloneB!,
+          stdio: 'ignore',
+        }),
+      ).toThrow();
+      expect(existsSync(targetB.projectPath)).toBe(false);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('rolls back only its new ref when worktree creation fails', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'example',
+      );
+      const failingRunner: GitRunner = {
+        async run(args, options) {
+          if (args[0] === 'worktree' && args[1] === 'add') {
+            throw new CliError('injected worktree failure', 2);
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await expect(createSyncedProject(target, failingRunner)).rejects.toThrow(
+        /injected worktree failure/,
+      );
+      expect(() =>
+        execFileSync('git', ['show-ref', '--verify', '--quiet', target.ref], {
+          cwd: fixture.cloneA,
+          stdio: 'ignore',
+        }),
+      ).toThrow();
+      expect(existsSync(target.projectPath)).toBe(false);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('refuses a stale worktree registration before replacing its ref', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'stale-create',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      const existingRef = git(fixture.cloneA, ['rev-parse', target.ref]);
+      await rm(target.projectPath, { recursive: true, force: true });
+
+      await expect(
+        createSyncedProject(target, defaultGitRunner),
+      ).rejects.toThrow(/registered worktree/i);
+      expect(git(fixture.cloneA, ['rev-parse', target.ref])).toBe(existingRef);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('removes the new worktree and ref when nested assertion fails', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'assertion-failure',
+      );
+      const failingRunner: GitRunner = {
+        async run(args, options) {
+          if (
+            options.cwd === target.projectPath &&
+            args[0] === 'rev-parse' &&
+            args[1] === '--show-toplevel'
+          ) {
+            return {
+              code: 0,
+              stdout: fixture.cloneA,
+              stderr: '',
+            };
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await expect(createSyncedProject(target, failingRunner)).rejects.toThrow(
+        /expected nested toplevel/i,
+      );
+      expect(() =>
+        execFileSync('git', ['show-ref', '--verify', '--quiet', target.ref], {
+          cwd: fixture.cloneA,
+          stdio: 'ignore',
+        }),
+      ).toThrow();
+      expect(existsSync(target.projectPath)).toBe(false);
+      expect(
+        git(fixture.cloneA, ['worktree', 'list', '--porcelain']),
+      ).not.toContain(target.projectPath);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
 });
 
 describe('mutation invariants', () => {
@@ -300,6 +460,41 @@ describe('pushSynced', () => {
     }
   });
 
+  it('reports every rename/rename unmerged path from a push rebase', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const targetA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'rename-push',
+      );
+      const targetB = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        'rename-push',
+      );
+      await createSyncedProject(targetA, defaultGitRunner);
+      await writeFile(join(targetA.projectPath, 'old.md'), 'base\n', 'utf8');
+      await pushSynced(targetA, defaultGitRunner, { message: 'base rename' });
+      await materializeRemoteTarget(targetB);
+
+      git(targetA.projectPath, ['mv', 'old.md', 'remote-name.md']);
+      await pushSynced(targetA, defaultGitRunner, { message: 'remote rename' });
+      git(targetB.projectPath, ['mv', 'old.md', 'local-name.md']);
+
+      await expect(
+        pushSynced(targetB, defaultGitRunner, { message: 'local rename' }),
+      ).resolves.toMatchObject({
+        status: 'conflict',
+        conflicts: ['local-name.md', 'old.md', 'remote-name.md'],
+      });
+      await abortSynced(targetB, defaultGitRunner);
+      expect(git(targetB.projectPath, ['status', '--porcelain'])).toBe('');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('reports a concurrent non-fast-forward rejection without forcing', async () => {
     const fixture = await createSyncedFixture({ secondClone: true });
     try {
@@ -357,6 +552,41 @@ describe('pushSynced', () => {
       ]);
       expect(calls.flat()).not.toContain('--force');
       expect(calls.flat()).not.toContain('--force-with-lease');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it.each([
+    [
+      'missing remote',
+      "fatal: 'missing' does not appear to be a git repository",
+    ],
+    ['network failure', 'ssh: Could not resolve hostname example.invalid'],
+  ])('preserves diagnostics for a %s push failure', async (_name, stderr) => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'push-error',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      const failingRunner: GitRunner = {
+        async run(args, options) {
+          if (args.includes('push')) {
+            return { code: 128, stdout: '', stderr };
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await expect(pushSynced(target, failingRunner, {})).rejects.toMatchObject(
+        {
+          name: 'CliError',
+          message: expect.stringContaining(stderr),
+        },
+      );
     } finally {
       await fixture.cleanup();
     }
@@ -473,6 +703,42 @@ describe('pullSynced', () => {
       await expect(
         pushSynced(targetB, defaultGitRunner, {}),
       ).resolves.toMatchObject({ status: 'pushed' });
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('reports every rename/rename unmerged path from a pull rebase', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const targetA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'rename-pull',
+      );
+      const targetB = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        'rename-pull',
+      );
+      await createSyncedProject(targetA, defaultGitRunner);
+      await writeFile(join(targetA.projectPath, 'old.md'), 'base\n', 'utf8');
+      await pushSynced(targetA, defaultGitRunner, { message: 'base rename' });
+      await pullSynced(targetB, defaultGitRunner);
+
+      git(targetB.projectPath, ['mv', 'old.md', 'local-name.md']);
+      git(targetB.projectPath, ['commit', '-m', 'local rename']);
+      git(targetA.projectPath, ['mv', 'old.md', 'remote-name.md']);
+      await pushSynced(targetA, defaultGitRunner, { message: 'remote rename' });
+
+      await expect(
+        pullSynced(targetB, defaultGitRunner),
+      ).resolves.toMatchObject({
+        status: 'conflict',
+        conflicts: ['local-name.md', 'old.md', 'remote-name.md'],
+      });
+      await abortSynced(targetB, defaultGitRunner);
+      expect(git(targetB.projectPath, ['status', '--porcelain'])).toBe('');
     } finally {
       await fixture.cleanup();
     }
@@ -860,6 +1126,32 @@ describe('synced checkout removal', () => {
         removeSyncedCheckout(target, defaultGitRunner, { force: true }),
       ).resolves.toMatchObject({ status: 'removed' });
       expect(existsSync(target.projectPath)).toBe(false);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('prunes a stale registration when the checkout directory is absent', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'stale-remove',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await pushSynced(target, defaultGitRunner, {});
+      await rm(target.projectPath, { recursive: true, force: true });
+      expect(
+        git(fixture.cloneA, ['worktree', 'list', '--porcelain']),
+      ).toContain(target.projectPath);
+
+      await expect(
+        removeSyncedCheckout(target, defaultGitRunner),
+      ).resolves.toEqual({ status: 'absent' });
+      expect(
+        git(fixture.cloneA, ['worktree', 'list', '--porcelain']),
+      ).not.toContain(target.projectPath);
     } finally {
       await fixture.cleanup();
     }
