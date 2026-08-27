@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: 38233ba2e997f3e18ad2fa3ebc888cab95131688
+oat_current_task: p04-t07
+oat_last_commit: db9c0b1ed97d981d586c78d1c58b23577faa6ed4
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -32,17 +32,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p04:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: '76178ef7-3252-4953-aff7-8687eba22bd1'
-        original_request: 'call_yFu85ZIagHG2fzbtGD5Qz5wq'
-        original_task: p04-t05
-        original_commit: '7c48d5b70e5bcf1aebb70c54d358ac6a7dbf9448'
-        discovered_by: 'pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm src/commands/backlog src/commands/decision src/commands/init/tools/project-management src/commands/init/tools/shared'
-        dispatch_target: 'oat-phase-implementer-gpt-5-6-sol-high'
-        executing_target: 'root-inline:claude-opus-5'
-        reservation_head: '0c189eb5b4f07a3ff07b811ce4f0e7b593812fa1'
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -98,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T12:51:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T13:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -108,7 +98,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 4 ready
+**Status:** Implementation in progress — Phase 4 awaiting independent review
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -185,6 +175,20 @@ Decisive fresh independent re-review is pending.
 Decisive re-review found no findings at any severity, so Phase 3 passes. Its
 temporary retry limit is restored to the default 2, and Phase 4 is ready to
 begin.
+All seven Phase 4 task commits are present, from `4790cbd3b` to `0c189eb5b`.
+The dispatching Codex root was interrupted before recording the p04 request ID,
+so the phase implementer returned BLOCKED with a mechanically eligible but
+unauthorizable recovery: it consumed no attempt, made no edit, and left the
+worktree clean. That provenance was recovered from the launcher's primary
+`spawn_agent` record, and the operator authorized a recorded root-inline
+correction because the original handle was unresumable and its exact target
+unbindable from the active provider. Recovery attempt 1/10 fixed a stale
+`1.11.2` bundle-contract assertion left behind by the `1.12.0` skill bump in
+`p04-t05`, committed append-only as
+`db9c0b1ed97d981d586c78d1c58b23577faa6ed4`; the marker is reconciled.
+Phase 4 verification now passes: 395/395 phase tests before and after the
+recovery commit, plus lint, format, and the skill-bump gate. Independent
+Phase 4 review is pending.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -194,7 +198,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 3 complete; Phase 4 ready)
+- **Implementation:** `implementation.md` (Phase 4 implemented; review pending)
 
 ## Progress
 
@@ -256,7 +260,13 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 3 fix iteration 3/3 completed
 - ✓ Phase 3 decisive fresh independent re-review passed with no findings
 - ✓ Phase 3 completed
-- ⧗ Phase 4 ready at `p04-t01`
+- ✓ Phase 4 tasks `p04-t01`–`p04-t07` committed
+- ✓ Phase 4 implementer returned BLOCKED (direction-required, 0/10 consumed)
+- ✓ Missing p04 request provenance recovered from the launcher record
+- ✓ Operator authorized a recorded root-inline recovery
+- ✓ Phase 4 recovery attempt 1/10 reconciled
+- ✓ Phase 4 verification passed: 37 files / 395 tests, lint, format, skill-bumps
+- ⧗ Phase 4 independent review pending
 
 ## Blockers
 
@@ -264,4 +274,4 @@ None.
 
 ## Next Milestone
 
-Begin Phase 4 at `p04-t01`.
+Dispatch the independent Phase 4 review.

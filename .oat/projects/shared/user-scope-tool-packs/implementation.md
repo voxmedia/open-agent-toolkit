@@ -332,6 +332,77 @@ oat_generated: false
 **Commit:** `7a4c1ab45`
 **Recovery commit:** `3e2421bce1286dd61852e8e15d87cff1c8c82b5d`
 
+## Phase 4: PJM Ownership and Portable Resources
+
+**Status:** implementation complete; independent review pending
+**Started:** 2026-08-27
+**Completed:** —
+
+### Phase Summary
+
+**Outcome:**
+
+- Made PJM capability user-owned while keeping repository adoption explicit and
+  fail-closed, across seven task commits from `4790cbd3b` to `0c189eb5b`.
+- Added durable `resolvePjmAdoption()` state, guarded every non-migration PJM
+  write behind adoption, introduced repository→user→bundle template precedence,
+  completed the user-scope project-management installation, and made all
+  referenced static skill resources resolve from their installed scope.
+- Recovery attempt 1/10 corrected a stale bundle-contract version assertion; the
+  attempt is reconciled with no pending marker.
+
+**Verification:**
+
+- Phase suite: 37 files and 395 tests passed, before and after the recovery
+  commit; root ran both.
+- `pnpm lint`, `pnpm format`, and `pnpm run check:skill-bumps` passed at
+  committed HEAD `db9c0b1ed`.
+- Commit range `29fbb4e55..db9c0b1ed` is linear and append-only; each planned
+  task is exactly one commit in plan order touching only its declared files.
+- The worktree was clean at validation.
+
+**Review concern:**
+
+- Independent review should confirm that `adoption.state` branching in the four
+  consuming skill contracts cannot be satisfied by global pack presence, and
+  that the user-scope installation leaves no repository-scoped writes behind.
+
+### Task p04-t01: Add durable PJM adoption state
+
+**Status:** completed
+**Commit:** `4790cbd3b`
+
+### Task p04-t02: Fail PJM writes closed before initialization
+
+**Status:** completed
+**Commit:** `6a77fba68`
+
+### Task p04-t03: Resolve PJM templates by repository, user, then bundle
+
+**Status:** completed
+**Commit:** `8eaf127f3`
+
+### Task p04-t04: Complete project-management user installation
+
+**Status:** completed
+**Commit:** `342f3afea`
+
+### Task p04-t05: Make shared docs scripts scope-relative
+
+**Status:** completed
+**Commit:** `7c48d5b70`
+**Recovery commit:** `db9c0b1ed97d981d586c78d1c58b23577faa6ed4`
+
+### Task p04-t06: Make PJM skill resources and preflights portable
+
+**Status:** completed
+**Commit:** `52c93f19d`
+
+### Task p04-t07: Separate PJM capability presence from repository adoption
+
+**Status:** completed
+**Commit:** `0c189eb5b`
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -347,14 +418,44 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Status    | Tasks | Review | Fix loops |
-| ----- | --------- | ----- | ------ | --------- |
-| p01   | completed | 7/7   | passed | 3         |
-| p02   | completed | 9/9   | passed | 2         |
-| p03   | completed | 5/5   | passed | 3         |
+| Phase | Status    | Tasks | Review  | Fix loops |
+| ----- | --------- | ----- | ------- | --------- |
+| p01   | completed | 7/7   | passed  | 3         |
+| p02   | completed | 9/9   | passed  | 2         |
+| p03   | completed | 5/5   | passed  | 3         |
+| p04   | review    | 7/7   | pending | 0         |
+
+#### Root-inline phase
+
+- Phase/scope: p04 recovery attempt 1/10 (not phase implementation)
+- Root model: `claude-opus-5`
+- Reason: the accepted p04 handle (`/root/p04_implement`, Codex thread
+  `01a04348-4b75-7c63-9dfb-3ca71dbd9dac`) became unresumable when its Codex root
+  turn was interrupted, and its exact target
+  `oat-phase-implementer-gpt-5-6-sol-high` is unbindable from the active
+  provider. Handle-continuity branches 1 and 2 were therefore both unavailable.
+- Authorization: operator-scope. The operator was presented with the
+  contract-compliant Codex-resume option and explicitly authorized a recorded
+  root-inline correction instead.
+- Boundary: the mechanical, test-only correction named by the child's
+  direction-required report. No planned task was replayed and no review finding
+  was consumed.
 
 #### Dispatch Notes
 
+- Phase 4 implementation:
+  `oat-phase-implementer-gpt-5-6-sol-high`, request
+  `call_yFu85ZIagHG2fzbtGD5Qz5wq`, accepted `2026-08-27T12:53:25Z` as
+  `/root/p04_implement`; seven commits from `4790cbd3b` to `0c189eb5b`. The
+  acceptance is recorded here retroactively from the launcher's primary
+  `spawn_agent` record: the dispatching root was interrupted before it wrote
+  this entry, and the omission is what caused the child's terminal
+  direction-required stop.
+- `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Phase 4 report: `BLOCKED`, 7/7 tasks done, phase verification fail, recovery
+  attempts 0/10, worktree clean, no reservation or edit. Validated against the
+  pre-attempt `direction-required` row: `pending_attempt` was null, usage was
+  unchanged, and history was immutable.
 - Phase 1 implementation:
   `oat-phase-implementer-gpt-5-6-sol-high`, request
   `df4bacdb-5eef-4b4d-8616-4a340a843c8f`, seven commits from
@@ -518,9 +619,52 @@ oat_generated: false
   finding require fix iteration 2.
 - `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 
+### Recovery Event dea684e8-bf70-403f-b163-5b56d0e95686
+
+- Phase/task: p04 / p04-t05
+- Original request: `call_yFu85ZIagHG2fzbtGD5Qz5wq`
+- Original commit: `7c48d5b70e5bcf1aebb70c54d358ac6a7dbf9448`
+- Defect class: test
+- Discovered by: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm src/commands/backlog src/commands/decision src/commands/init/tools/project-management src/commands/init/tools/shared`
+- Disposition: direction-required
+- Authorization: phase-standing
+- Attempt: 0/10
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Recovery commit: -
+- Verification: 394/395 Phase 4 tests passed; one stale version assertion failed
+- Reason: the correction was mechanically eligible, but the dispatching root was
+  interrupted before recording the p04 request ID, so the child had no
+  authoritative original-request provenance. Fail-closed rules forbade reserving
+  an attempt or editing without it. Worktree clean; no reservation, edit, or
+  commit occurred.
+
+### Recovery Event 76178ef7-3252-4953-aff7-8687eba22bd1
+
+- Phase/task: p04 / p04-t05
+- Original request: `call_yFu85ZIagHG2fzbtGD5Qz5wq`
+- Original commit: `7c48d5b70e5bcf1aebb70c54d358ac6a7dbf9448`
+- Defect class: test
+- Discovered by: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm src/commands/backlog src/commands/decision src/commands/init/tools/project-management src/commands/init/tools/shared`
+- Disposition: recovered
+- Authorization: operator-scope
+- Attempt: 1/10
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high` (executed
+  root-inline as `claude-opus-5` under recorded operator-scope authorization;
+  see the run anchor's `Root-inline phase` heading)
+- Recovery commit: `db9c0b1ed97d981d586c78d1c58b23577faa6ed4`
+- Verification: focused contract suite 5/5 and Phase 4 suite 395/395 passed
+  before the commit and again against committed HEAD; `pnpm lint`,
+  `pnpm format`, and `pnpm run check:skill-bumps` also passed.
+- Reason: p04-t05 correctly bumped `oat-agent-instructions-analyze` to `1.12.0`
+  under the repository skill-bump rule, but `agent-instructions-bundle-contract.test.ts`
+  still asserted `1.11.2`. The one-line, test-only correction changed no
+  architecture, security, product scope, requirements, or public behavior. The
+  missing provenance that blocked the child was recovered from the launcher's
+  primary `spawn_agent` record rather than reconstructed.
+
 #### Outstanding Items
 
-- Begin Phase 4 at `p04-t01`.
+- Dispatch the independent Phase 4 review.
 
 ## Final Summary (for PR/docs)
 
