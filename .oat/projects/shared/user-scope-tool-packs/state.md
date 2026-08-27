@@ -1,8 +1,7 @@
 ---
 oat_current_task: p03-t05
 oat_last_commit: b0a6bc16e5efa5cb22cac853d8a45c2f8358e8f1
-oat_blockers:
-  - Phase 3 review retry limit exhausted with one unresolved Medium finding; operator authorization or deferral decision required.
+oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
   ] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -20,7 +19,7 @@ oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints h
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-oat_orchestration_retry_limit: 2 # default restored after the authorized p01 extension reached a passing verdict
+oat_orchestration_retry_limit: 3 # temporary p03 override authorized by the operator; restore to 2 after p03 reaches a terminal verdict
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
@@ -86,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T08:40:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T12:35:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -96,7 +95,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Blocked — Phase 3 review retry limit exhausted
+**Status:** Implementation in progress — Phase 3 fix iteration 3/3
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -163,6 +162,9 @@ Medium planner/JSON contract inconsistency: a blocked conflict is removed from
 preview additions while its operation remains in the serialized destination
 plan. Runtime execution is still blocked. Both configured fix iterations are
 exhausted, so operator authorization or explicit deferral is required.
+The operator authorized one additional bounded Phase 3 fix/re-review
+iteration, temporarily raising the limit to 3. The remaining Medium finding is
+assigned to fix iteration 3/3.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -172,7 +174,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 3 retry-exhaustion blocker)
+- **Implementation:** `implementation.md` (Phase 3 fix iteration 3/3)
 
 ## Progress
 
@@ -230,15 +232,14 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 3 final configured fix iteration 2/2 completed
 - ✓ Phase 3 decisive fresh independent re-review received
 - ✗ Phase 3 decisive re-review: 0 Critical, 0 Important, 1 Medium
-- ⧗ Operator authorization or explicit Medium deferral required
+- ✓ Operator authorized one additional bounded Phase 3 iteration
+- ⧗ Phase 3 fix iteration 3/3
 
 ## Blockers
 
-- Phase 3 exhausted its two configured review/fix iterations with one Medium
-  planner/JSON contract inconsistency unresolved. Runtime execution remains
-  safely blocked, but another source edit requires explicit operator approval.
+None.
 
 ## Next Milestone
 
-Choose whether to authorize an additional Phase 3 fix/re-review iteration or
-explicitly defer the remaining Medium finding.
+Complete authorized Phase 3 fix iteration 3/3, then run a decisive fresh
+re-review.

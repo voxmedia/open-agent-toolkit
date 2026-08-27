@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Phase 3 review retry limit exhausted with one unresolved Medium finding; operator authorization or deferral decision required.
+oat_blockers: []
 oat_last_updated: 2026-08-27
 oat_current_task_id: p03-t05
 oat_generated: false
@@ -292,6 +291,9 @@ oat_generated: false
 - Both configured fix iterations are exhausted. A third source fix requires
   explicit operator authorization, or the operator may explicitly defer this
   Medium finding.
+- The operator authorized one additional bounded Phase 3 fix/re-review
+  iteration. The temporary limit is 3 for this phase and must return to the
+  default 2 after Phase 3 reaches a terminal verdict.
 
 ### Task p03-t01: Define migration plans and result state
 
@@ -497,8 +499,8 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Obtain operator authorization for an additional Phase 3 fix/re-review
-  iteration or explicit deferral of the remaining Medium finding.
+- Execute authorized Phase 3 fix iteration 3/3 for the serialized blocked-plan
+  inconsistency, then run a decisive fresh re-review.
 
 ## Final Summary (for PR/docs)
 
