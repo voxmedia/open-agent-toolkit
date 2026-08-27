@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: f337df8b5d3b403322a7461077dac6894c5ba7cc
+oat_current_task: p05-t06
+oat_last_commit: 17eb63ea5
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T14:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T15:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -98,7 +98,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 5 ready
+**Status:** Implementation in progress — Phase 5 awaiting independent review
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -223,6 +223,17 @@ re-reviewer independently re-derived the ratchet scanner regex, confirmed the
 retargeted I1 test fails when the fix is reverted, and upheld all three
 implementer bounding decisions. The Medium and four Minor findings are deferred
 and non-blocking, and are routed to Phase 5. Phase 5 is ready to begin.
+All six Phase 5 task commits are present, from `f66e6d794` to `17eb63ea5`, with
+no recovery attempt reserved. The complete CI gate sequence passes with
+individually captured exit codes, independently reproduced by root: `pnpm check`,
+`type-check`, `test` (290 files / 3,890 tests), `build`, `check:skill-bumps`,
+`release:check-versions`, `release:validate` (five public packages at `0.2.37`),
+`build:docs`, plus `lint`, `format`, and `git diff --check`. The public version
+was set to `0.2.37` rather than the next patch because `origin/main` is at
+`0.2.36` while the merge-base is `0.2.32`, and main carries a stricter gate
+rejecting versions it has overtaken; root confirmed all three facts. The branch
+still needs a rebase onto current main before merge. Independent Phase 5 review
+is pending.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -232,7 +243,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 4 complete; Phase 5 ready)
+- **Implementation:** `implementation.md` (all phases implemented; p05 review pending)
 
 ## Progress
 
@@ -311,7 +322,10 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 4 fix iteration 1/2 completed in `f337df8b5`
 - ✓ Phase 4 decisive fresh independent re-review passed (0 Critical, 0 Important)
 - ✓ Phase 4 completed; 1 Medium and 4 Minor deferred to Phase 5
-- ⧗ Phase 5 ready at `p05-t01`
+- ✓ Phase 5 tasks `p05-t01`-`p05-t06` completed
+- ✓ Phase 5 complete CI gate sequence passed and independently reproduced
+- ✓ Phase 4 deferred aggregate-doctor Minor closed inside `p05-t01`
+- ⧗ Phase 5 independent review pending
 
 ## Blockers
 
@@ -319,4 +333,4 @@ None.
 
 ## Next Milestone
 
-Begin Phase 5 at `p05-t01`.
+Dispatch the independent Phase 5 review.

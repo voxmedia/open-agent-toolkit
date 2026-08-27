@@ -23,9 +23,9 @@ oat_generated: false
 | Phase 2 | completed | 9     | 9/9       |
 | Phase 3 | completed | 5     | 5/5       |
 | Phase 4 | completed | 7     | 7/7       |
-| Phase 5 | pending   | 6     | 0/6       |
+| Phase 5 | review    | 6     | 6/6       |
 
-**Total:** 28/34 tasks completed
+**Total:** 34/34 tasks completed
 
 ## Phase 1: Canonical Pack Contract and Inventory
 
@@ -450,6 +450,121 @@ oat_generated: false
 **Status:** completed
 **Commit:** `0c189eb5b`
 
+## Phase 5: Diagnostics, Documentation, and Release Readiness
+
+**Status:** implementation complete; independent review pending
+**Started:** 2026-08-27
+**Completed:** -
+
+### Phase Summary
+
+**Outcome:**
+
+- Re-keyed scoped pack ownership and drift diagnostics onto shared inventory and
+  adoption state, documented the user-scope pack contract across ten docs pages,
+  pinned scoped provider materialization, added a full lifecycle acceptance
+  matrix, and satisfied the lockstep release gates, in five task commits from
+  `f66e6d794` to `17eb63ea5`.
+- The aggregate doctor no longer gates PJM checks on
+  `config.tools?.['project-management']`; it resolves adoption through
+  `resolvePjmAdoption()` and skips PJM only when adoption is `none` and
+  `.oat/repo` is absent. This closes the Minor deferred from Phase 4 that fell
+  inside `p05-t01`'s declared files.
+- No recovery attempt was reserved or consumed; the p05 ledger is untouched.
+
+**Verification (p05-t06, complete CI gate sequence, exit codes captured
+individually and independently reproduced by root):**
+
+| #   | Gate                          | Exit                              |
+| --- | ----------------------------- | --------------------------------- |
+| 1   | `pnpm check`                  | 0                                 |
+| 2   | `pnpm type-check`             | 0                                 |
+| 3   | `pnpm test`                   | 0 (CLI 290 files / 3,890 tests)   |
+| 4   | `pnpm build`                  | 0                                 |
+| 5   | `pnpm run check:skill-bumps`  | 0                                 |
+| 6   | `pnpm release:check-versions` | 0                                 |
+| 7   | `pnpm release:validate`       | 0 (5 public packages at `0.2.37`) |
+| 8   | `pnpm build:docs`             | 0                                 |
+| +   | `pnpm lint`                   | 0                                 |
+| +   | `pnpm format`                 | 0                                 |
+| +   | `git diff --check`            | 0                                 |
+
+- The implementer's first `pnpm test` run hit one timeout in
+  `src/commands/gate/index.test.ts` under concurrent Turbo load, in a file
+  untouched by Phase 5. It used its one permitted no-edit rerun, which passed.
+  Root's independent full run passed 3,890/3,890 on the first attempt, so the
+  timeout is corroborated as load flake rather than a defect. No attempt was
+  consumed.
+
+**Plan divergences (recorded):**
+
+- `p05-t05` Step 1 could not reproduce its expected RED: the lockstep bump
+  `0.2.32` to `0.2.33` had already landed on this branch in `eeda0085b` during
+  the Phase 1 fix, so `pnpm release:check-versions` already passed at the phase
+  base. The task's commit was produced anyway, as the plan requires.
+- `p05-t05` bumped to `0.2.37` rather than the plan-implied next patch.
+  `origin/main` is at `0.2.36` while the merge-base is `0.2.32`, and main
+  carries a newer release gate rejecting versions overtaken by main. `0.2.34`
+  would pass locally and fail on main. Root independently confirmed all three
+  version facts. Source of truth: the implementation.
+- `p05-t03` found no provider adapter gaps, so its commit is test-only, which
+  its `test(...)` type already implies.
+- `p05-t06` is recorded and committed by root rather than by the phase
+  implementer, because the plan assigned it `implementation.md`, which is
+  root-owned bookkeeping. The gate evidence above is the implementer's, verified
+  by root re-running the full sequence.
+
+**Concerns carried to independent review:**
+
+- The branch is behind main on the release line (`origin/main` `0.2.36`,
+  merge-base `0.2.32`). `0.2.37` satisfies the stricter on-main gate today, but
+  the version must be re-resolved if main advances before merge. This branch
+  still needs a rebase onto current main, which is PR territory.
+- `createPjmDisabledCheck()` is now a dead export at
+  `packages/cli/src/commands/pjm/doctor.ts:209`; root confirmed zero call sites
+  remain. Deleting it needs `pjm/doctor.ts`, outside `p05-t01`'s declared files.
+- `oat status` deliberately does not set `process.exitCode` for pack findings,
+  keeping its exit contract about provider-sync drift only so the `--hook`
+  pre-commit contract is not perturbed; `oat doctor` is the surface that exits 1
+  on actionable pack drift.
+- Strongest follow-up candidate: `SCOPE_CONTENT_TYPES.user` is `['skill']`
+  (`packages/cli/src/shared/types.ts:14`), so a user-scope canonical agent in
+  `~/.agents/agents/` is never mirrored into `~/.claude/agents/`. Since the
+  `workflows` pack now installs agents at user scope by default, an arbitrary
+  user-scope pack agent is invisible to Claude. The current contract was pinned
+  in tests rather than changed, because widening user scope to agents across all
+  adapters is not a bounded adapter fix.
+
+### Task p05-t01: Surface pack state in status and doctor
+
+**Status:** completed
+**Commit:** `f66e6d794`
+
+### Task p05-t02: Update tool-pack and PJM documentation
+
+**Status:** completed
+**Commit:** `213908687`
+
+### Task p05-t03: Verify provider materialization across scopes
+
+**Status:** completed
+**Commit:** `0b9764fe7`
+
+### Task p05-t04: Add complete lifecycle acceptance coverage
+
+**Status:** completed
+**Commit:** `5496806e1`
+
+### Task p05-t05: Bump lockstep public package versions
+
+**Status:** completed
+**Commit:** `17eb63ea5`
+
+### Task p05-t06: Run the complete repository gate sequence
+
+**Status:** completed
+**Commit:** recorded by root in this bookkeeping commit
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -471,6 +586,17 @@ oat_generated: false
 | p02   | completed | 9/9   | passed | 2         |
 | p03   | completed | 5/5   | passed | 3         |
 | p04   | completed | 7/7   | passed | 1         |
+
+#### Phase 5 dispatch
+
+- Phase 5 implementation: `oat-phase-implementer` at the Claude High ceiling,
+  model `opus`, resolved fresh for the active provider. This is a new phase
+  dispatch, not a continuation, so no pinned-target constraint applies.
+- `Dispatch: scope=p05 action=implementation role=implementer producer=claude provenance=resolver model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer(model=opus)`
+- Report: `DONE_WITH_CONCERNS`, 6/6 tasks, phase verification pass, 0 recovery
+  attempts, clean worktree. Root independently verified the five task commit
+  boundaries, the lockstep version set, the three release-line version facts,
+  the untouched deferred items, and re-ran the complete CI gate sequence.
 
 #### Root-inline phase
 
@@ -810,7 +936,7 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Begin Phase 5 at `p05-t01`.
+- Dispatch the independent Phase 5 review.
 
 ## Final Summary (for PR/docs)
 
