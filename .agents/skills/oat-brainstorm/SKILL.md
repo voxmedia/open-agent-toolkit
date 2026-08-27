@@ -1,6 +1,6 @@
 ---
 name: oat-brainstorm
-version: 1.1.2
+version: 1.2.0
 description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
@@ -217,7 +217,11 @@ Run pack-detection and active-project resolution **once** per session, before th
 
 ```bash
 IDEAS_INSTALLED=$(oat tools has ideas 2>/dev/null || echo "false")
-PJM_INSTALLED=$(oat tools has project-management 2>/dev/null || echo "false")
+PJM_CAPABILITY=$(oat tools has project-management 2>/dev/null || echo "false")
+PJM_ADOPTION_STATE=""
+if [ "$PJM_CAPABILITY" = "true" ]; then
+  PJM_ADOPTION_STATE=$(oat pjm doctor --json 2>/dev/null | jq -r '.adoption.state // ""')
+fi
 WORKFLOWS_INSTALLED=$(oat tools has workflows 2>/dev/null || echo "false")
 ACTIVE_PROJECT=$(oat config get activeProject 2>/dev/null || echo "")
 
@@ -290,7 +294,10 @@ If "keep going", return to step 5. If "wrap up", surface the **pack-filtered ter
 2. Filter by pack:
    - Always-available: `Inline only`, `Doc-to-path`.
    - Gated by `IDEAS_INSTALLED == "true"`: `Capture as new idea`, `Extend existing idea`, `Summarize idea directly`.
-   - Gated by `PJM_INSTALLED == "true"`: `Scoped backlog item`.
+   - Gated by `PJM_CAPABILITY == "true"` **and** `PJM_ADOPTION_STATE` equal to
+     `declared` or `inferred-legacy`: `Scoped backlog item`. Capability without
+     repository adoption never enables this write destination; for `none` or
+     `partial-initialization`, explain that `oat pjm init` is required.
    - Gated by `WORKFLOWS_INSTALLED == "true"` AND `ACTIVE_PROJECT_VALID != "true"`: `Promote to new OAT project`.
    - Gated by `WORKFLOWS_INSTALLED == "true"` AND `ACTIVE_PROJECT_VALID == "true"`: `Active project: fold-back` and `Active project: brainstorming reference file`. When this branch fires, present the **3-way active-project router first** (see step 9 active-project branches) — its outcome controls whether the rest of the picker is even surfaced.
 3. Evaluate whether the accumulated brainstorm scope is large enough to offer a split destination. Track the same four split signals used by discovery and evaluate them through the installed CLI:

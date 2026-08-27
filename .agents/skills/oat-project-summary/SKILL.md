@@ -1,6 +1,6 @@
 ---
 name: oat-project-summary
-version: 1.3.5
+version: 1.4.0
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
@@ -360,24 +360,30 @@ append-based `project` → `general` promotion in Step 2.5.
 
 Run this step **after** `summary.md` (including its `## Key Decisions` section) has been written/refreshed and its frontmatter updated. It promotes the project's Key Decisions out of per-project prose and into the canonical, repo-wide `reference/decisions/` log so they stop being siloed in `summary.md`. This step is **additive and non-interactive** — it never prompts.
 
-**7.1 — PJM gate (auto, no prompt).** Check whether the PJM tool pack is effectively available:
+**7.1 — PJM capability and adoption gate (auto, no prompt).** Check capability
+availability, then inspect repository adoption read-only:
 
 ```bash
 PJM_ENABLED=$(oat tools has project-management 2>/dev/null || echo "")
+PJM_ADOPTION_STATE=""
+if [ "$PJM_ENABLED" = "true" ]; then
+  PJM_ADOPTION_STATE=$(oat pjm doctor --json 2>/dev/null | jq -r '.adoption.state // ""')
+fi
 ```
 
-- If `PJM_ENABLED` is `true` → perform the promotion automatically. Do NOT ask the user.
-- Otherwise (any other value, empty, or unset) → **skip this entire step silently.** Do not print a warning or prompt.
+- If `PJM_ADOPTION_STATE` is `declared` or `inferred-legacy` → perform the
+  promotion automatically. Do NOT ask the user.
+- If capability is absent → skip this entire step silently.
+- If adoption is `none` or `partial-initialization` → skip every PJM write and
+  report that `oat pjm init` is required before decision promotion.
 
 **7.2 — Skip if nothing to promote.** If `summary.md` has no `## Key Decisions` section, or that section has no decision content, skip the step. There is nothing to promote.
 
-**7.3 — Ensure the decisions surface exists.** The canonical decisions root is `.oat/repo/reference/decisions` (the `oat decision` default; pass `--decisions-root <path>` only for an explicit override). If its managed index is missing — i.e. `.oat/repo/reference/decisions/index.md` does not exist — initialize it first so `oat decision new` can succeed:
-
-```bash
-test -f .oat/repo/reference/decisions/index.md || oat decision init
-```
-
-`oat decision init` is idempotent; running it when the scaffold already exists is harmless.
+**7.3 — Verify the decisions surface exists.** The canonical decisions root is
+`.oat/repo/reference/decisions` (the `oat decision` default; pass
+`--decisions-root <path>` only for an explicit override). If its managed index
+is missing, stop decision promotion and recommend `oat pjm init`. Never use
+`oat decision init` as an alternate repository-adoption path.
 
 **7.4 — Idempotent, date-independent promotion (critical).** For each decision in `## Key Decisions`:
 

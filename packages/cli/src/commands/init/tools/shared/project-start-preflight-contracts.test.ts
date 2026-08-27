@@ -16,6 +16,12 @@ const PJM_WRITE_SKILLS = [
   'oat-pjm-review-backlog',
 ] as const;
 
+const PJM_CONSUMER_SKILLS = [
+  'oat-project-document',
+  'oat-project-summary',
+  'oat-brainstorm',
+] as const;
+
 function readSkill(name: string): string {
   return readFileSync(
     join(
@@ -132,6 +138,24 @@ describe('project-start preflight contracts', () => {
     );
     expect(content).not.toContain(
       '.agents/skills/oat-pjm-review-backlog/references/',
+    );
+  });
+
+  it.each(PJM_CONSUMER_SKILLS)(
+    '%s separates capability presence from repository adoption',
+    (name) => {
+      const content = readSkill(name);
+      expect(content).toContain('oat tools has project-management');
+      expect(content).toContain('oat pjm doctor --json');
+      expect(content).toContain('adoption.state');
+      expect(content).toContain('partial-initialization');
+      expect(content).toContain('oat pjm init');
+    },
+  );
+
+  it('does not initialize decisions as an implicit PJM adoption path', () => {
+    expect(readSkill('oat-project-summary')).not.toContain(
+      'test -f .oat/repo/reference/decisions/index.md || oat decision init',
     );
   });
 });
