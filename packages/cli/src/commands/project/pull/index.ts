@@ -6,12 +6,18 @@ import {
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
   abortSynced as defaultAbortSynced,
+  commitRecordChange as defaultCommitRecordChange,
   continueSynced as defaultContinueSynced,
+  pullChildren as defaultPullChildren,
   pullSynced as defaultPullSynced,
+  type PullChildResult,
   type PullResult,
   type SyncTarget,
 } from '@commands/project/sync/ref-sync';
-import { resolveSyncedTarget } from '@commands/project/sync/resolve-target';
+import {
+  resolveSyncedTarget,
+  type ResolvedSyncTarget,
+} from '@commands/project/sync/resolve-target';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -19,13 +25,24 @@ import { Command } from 'commander';
 interface ProjectPullOptions {
   continue?: boolean;
   abort?: boolean;
+  children: boolean;
+  commit: boolean;
 }
 
 interface ProjectPullDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
   resolveSyncedTarget: typeof resolveSyncedTarget;
-  pullSynced: (target: SyncTarget, git: GitRunner) => Promise<PullResult>;
+  pullSynced: (
+    target: SyncTarget,
+    git: GitRunner,
+    options?: { adopt?: boolean; now?: Date },
+  ) => Promise<PullResult>;
+  pullChildren: (
+    target: SyncTarget,
+    git: GitRunner,
+  ) => Promise<PullChildResult[]>;
+  commitRecordChange: typeof defaultCommitRecordChange;
   continueSynced: (target: SyncTarget, git: GitRunner) => Promise<PullResult>;
   abortSynced: (target: SyncTarget, git: GitRunner) => Promise<void>;
   gitRunner: GitRunner;
@@ -37,6 +54,8 @@ const DEFAULT_DEPENDENCIES: ProjectPullDependencies = {
   resolveProjectRoot,
   resolveSyncedTarget,
   pullSynced: defaultPullSynced,
+  pullChildren: defaultPullChildren,
+  commitRecordChange: defaultCommitRecordChange,
   continueSynced: defaultContinueSynced,
   abortSynced: defaultAbortSynced,
   gitRunner: defaultGitRunner,
@@ -52,8 +71,14 @@ function reportPullResult(
   result: PullResult,
   target: SyncTarget,
   targetArg: string,
+  children: PullChildResult[] = [],
 ): void {
-  const payload = { ...result, ref: target.ref };
+  const payload = {
+    ...result,
+    adopted: result.adopted ?? false,
+    ref: target.ref,
+    children,
+  };
   if (context.json) {
     context.logger.json(payload);
   } else if (
@@ -69,11 +94,19 @@ function reportPullResult(
       `Pull ${result.status}${result.conflicts?.length ? ` (${result.conflicts.join(', ')})` : ''}. Resolve the files, then run oat project pull ${shellQuote(targetArg)} --continue; or run oat project pull ${shellQuote(targetArg)} --abort.`,
     );
   }
+  const childFailed = children.some(
+    (child) =>
+      child.status === 'missing' ||
+      child.status === 'conflict' ||
+      child.status === 'dirty',
+  );
   process.exitCode =
     result.status === 'created' ||
     result.status === 'updated' ||
     result.status === 'up-to-date'
-      ? 0
+      ? childFailed
+        ? 1
+        : 0
       : 1;
 }
 
@@ -88,7 +121,7 @@ async function runPull(
       throw new Error('`--continue` and `--abort` are mutually exclusive.');
     }
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-    const target = await dependencies.resolveSyncedTarget(
+    const target: ResolvedSyncTarget = await dependencies.resolveSyncedTarget(
       { repoRoot, env: dependencies.processEnv },
       pathOrSlug,
       {},
@@ -107,8 +140,34 @@ async function runPull(
     }
     const result = options.continue
       ? await dependencies.continueSynced(target, dependencies.gitRunner)
-      : await dependencies.pullSynced(target, dependencies.gitRunner);
-    reportPullResult(context, result, target, targetArg);
+      : await dependencies.pullSynced(target, dependencies.gitRunner, {
+          adopt: target.adopt,
+        });
+    const successful =
+      result.status === 'created' ||
+      result.status === 'updated' ||
+      result.status === 'up-to-date';
+    const children =
+      successful && !options.continue && options.children !== false
+        ? await dependencies.pullChildren(target, dependencies.gitRunner)
+        : [];
+    const pendingRecordPaths = [
+      ...(result.pendingRecordPaths ?? []),
+      ...children.flatMap((child) => child.pendingRecordPaths ?? []),
+    ];
+    if (options.commit !== false && pendingRecordPaths.length > 0) {
+      const slugs = [
+        ...(result.adopted ? [target.slug] : []),
+        ...children.filter((child) => child.adopted).map((child) => child.slug),
+      ];
+      await dependencies.commitRecordChange(
+        repoRoot,
+        pendingRecordPaths,
+        `chore(oat): adopt synced project${slugs.length === 1 ? '' : 's'} ${slugs.join(', ')}`,
+        dependencies.gitRunner,
+      );
+    }
+    reportPullResult(context, result, target, targetArg, children);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
@@ -129,6 +188,8 @@ export function createProjectPullCommand(
     .argument('[project-path|slug]', 'Synced project path or slug')
     .option('--continue', 'Continue a resolved sync rebase')
     .option('--abort', 'Abort an in-progress sync rebase')
+    .option('--no-children', 'Do not pull coordination child projects')
+    .option('--no-commit', 'Leave adopted discovery records uncommitted')
     .action(
       async (
         pathOrSlug: string | undefined,

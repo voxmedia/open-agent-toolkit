@@ -1,5 +1,9 @@
+import { execFileSync } from 'node:child_process';
+
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { scaffoldProject } from '@commands/project/new/scaffold';
+import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -17,12 +21,15 @@ function harness(
   const pullSynced = vi.fn(async () => result);
   const continueSynced = vi.fn(async () => result);
   const abortSynced = vi.fn(async () => undefined);
+  const pullChildren = vi.fn(async () => []);
+  const commitRecordChange = vi.fn(async () => null);
   const resolveTarget = vi.fn(async () => ({
     repoRoot: '/repo',
     slug: 'demo',
     projectPath: '/repo/.oat/projects/synced/demo',
     ref: 'refs/oat/projects/demo',
     remote: 'origin',
+    adopt: false,
   }));
   const command = createProjectPullCommand({
     buildCommandContext: (options: GlobalOptions): CommandContext => ({
@@ -40,6 +47,8 @@ function harness(
     pullSynced,
     continueSynced,
     abortSynced,
+    pullChildren,
+    commitRecordChange,
     gitRunner: { run: vi.fn() },
     processEnv: {},
   });
@@ -50,6 +59,8 @@ function harness(
     pullSynced,
     continueSynced,
     abortSynced,
+    pullChildren,
+    commitRecordChange,
   };
 }
 
@@ -135,5 +146,133 @@ describe('createProjectPullCommand', () => {
       sha: '1234567890123456789012345678901234567890',
       ref: 'refs/oat/projects/demo',
     });
+  });
+
+  it('commits successful parent and child adoptions once despite a missing child', async () => {
+    const setup = harness('created');
+    setup.resolveTarget.mockResolvedValueOnce({
+      repoRoot: '/repo',
+      slug: 'parent',
+      projectPath: '/repo/.oat/projects/synced/parent',
+      ref: 'refs/oat/projects/parent',
+      remote: 'origin',
+      adopt: true,
+    });
+    setup.pullSynced.mockResolvedValueOnce({
+      status: 'created',
+      sha: '1234567890123456789012345678901234567890',
+      adopted: true,
+      pendingRecordPaths: ['/repo/.oat/projects/synced/parent.json'],
+    });
+    setup.pullChildren.mockResolvedValueOnce([
+      {
+        slug: 'a',
+        status: 'created',
+        sha: '1234567890123456789012345678901234567890',
+        adopted: true,
+        pendingRecordPaths: ['/repo/.oat/projects/synced/a.json'],
+      },
+      { slug: 'b', status: 'missing', message: 'missing ref' },
+    ]);
+
+    await run(setup.command, ['parent'], ['--json']);
+
+    expect(setup.commitRecordChange).toHaveBeenCalledOnce();
+    expect(setup.commitRecordChange).toHaveBeenCalledWith(
+      '/repo',
+      [
+        '/repo/.oat/projects/synced/parent.json',
+        '/repo/.oat/projects/synced/a.json',
+      ],
+      'chore(oat): adopt synced projects parent, a',
+      expect.anything(),
+    );
+    expect(setup.capture.jsonPayloads[0]).toMatchObject({
+      adopted: true,
+      children: [
+        expect.objectContaining({ slug: 'a', adopted: true }),
+        expect.objectContaining({ slug: 'b', status: 'missing' }),
+      ],
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('adopts an origin-only ref without rewriting it and is idempotent', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      await scaffoldProject({
+        repoRoot: fixture.cloneA,
+        projectName: 'adopt-me',
+        scope: 'synced',
+        commit: false,
+        refreshDashboard: false,
+        setActive: false,
+      });
+      const originBefore = execFileSync(
+        'git',
+        ['rev-parse', 'refs/oat/projects/adopt-me'],
+        { cwd: fixture.originDir, encoding: 'utf8' },
+      ).trim();
+
+      const capture = createLoggerCapture();
+      const command = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB!,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB!,
+      });
+      await run(command, ['adopt-me'], ['--json']);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'created',
+        adopted: true,
+      });
+      expect(
+        execFileSync(
+          'git',
+          [
+            'ls-tree',
+            '--name-only',
+            'HEAD',
+            '.oat/projects/synced/adopt-me.json',
+          ],
+          { cwd: fixture.cloneB, encoding: 'utf8' },
+        ).trim(),
+      ).toBe('.oat/projects/synced/adopt-me.json');
+      expect(
+        execFileSync('git', ['rev-parse', 'refs/oat/projects/adopt-me'], {
+          cwd: fixture.originDir,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe(originBefore);
+
+      const secondCapture = createLoggerCapture();
+      const second = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB!,
+          home: '/home',
+          interactive: false,
+          logger: secondCapture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB!,
+      });
+      await run(second, ['adopt-me'], ['--json']);
+      expect(secondCapture.jsonPayloads[0]).toMatchObject({
+        status: 'up-to-date',
+        adopted: false,
+      });
+    } finally {
+      await fixture.cleanup();
+    }
   });
 });

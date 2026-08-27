@@ -30,6 +30,9 @@ function deps(
             completedAt: null,
           }
         : null,
+    gitRunner: {
+      run: async () => ({ code: 2, stdout: '', stderr: 'missing' }),
+    },
   };
 }
 
@@ -85,6 +88,23 @@ describe('resolveSyncedTarget', () => {
     ).rejects.toThrow('shared scope');
     await expect(
       resolveSyncedTarget({ repoRoot: '/repo', env: {} }, 'missing', deps()),
-    ).rejects.toThrow('No synced project named missing');
+    ).rejects.toThrow('No synced project named missing locally or on origin');
+  });
+
+  it('marks an origin-only ref for adoption', async () => {
+    const injected = deps();
+    injected.gitRunner = {
+      run: async () => ({
+        code: 0,
+        stdout:
+          '1234567890123456789012345678901234567890\trefs/oat/projects/demo',
+        stderr: '',
+      }),
+    };
+    await expect(
+      resolveSyncedTarget({ repoRoot: '/repo', env: {} }, 'demo', injected, {
+        allowMissingCheckout: true,
+      }),
+    ).resolves.toMatchObject({ slug: 'demo', adopt: true });
   });
 });

@@ -20,6 +20,7 @@ import {
   continueSynced,
   createSyncedProject,
   preflightSyncedCheckout,
+  pullChildren,
   pullSynced,
   pushSynced,
   removeSyncedCheckout,
@@ -853,6 +854,90 @@ describe('pullSynced', () => {
       expect(
         git(target.projectPath, ['rev-parse', '--show-toplevel']),
       ).toContain('.oat/projects/synced/example');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
+
+describe('pullChildren', () => {
+  it('adopts available coordination children and reports missing children', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const parentA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'parent',
+      );
+      const childA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'child',
+      );
+      const parentB = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        'parent',
+      );
+      await createSyncedProject(childA, defaultGitRunner);
+      await writeFile(join(childA.projectPath, 'state.md'), 'child\n', 'utf8');
+      await pushSynced(childA, defaultGitRunner, {});
+      await createSyncedProject(parentA, defaultGitRunner);
+      await writeFile(
+        join(parentA.projectPath, 'state.md'),
+        '---\noat_kind: coordination\noat_children:\n  - child\n  - missing\n---\n',
+        'utf8',
+      );
+      await pushSynced(parentA, defaultGitRunner, {});
+      await pullSynced(parentB, defaultGitRunner);
+
+      const results = await pullChildren(parentB, defaultGitRunner);
+
+      expect(results).toEqual([
+        expect.objectContaining({
+          slug: 'child',
+          status: 'created',
+          adopted: true,
+        }),
+        expect.objectContaining({ slug: 'missing', status: 'missing' }),
+      ]);
+      expect(
+        await readFile(
+          join(fixture.cloneB!, '.oat/projects/synced/child.json'),
+          'utf8',
+        ),
+      ).toContain('"slug": "child"');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('rejects every invalid child slug before running git', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'parent',
+      );
+      await mkdir(target.projectPath, { recursive: true });
+      await writeFile(
+        join(target.projectPath, 'state.md'),
+        '---\noat_kind: coordination\noat_children:\n  - valid\n  - ../invalid\n---\n',
+        'utf8',
+      );
+      const calls: string[][] = [];
+      const recordingRunner: GitRunner = {
+        async run(args) {
+          calls.push([...args]);
+          throw new Error('git should not run');
+        },
+      };
+
+      await expect(pullChildren(target, recordingRunner)).rejects.toThrow(
+        /invalid child slug/i,
+      );
+      expect(calls).toEqual([]);
     } finally {
       await fixture.cleanup();
     }

@@ -1,6 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { basename, isAbsolute, resolve } from 'node:path';
 
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { readSyncedRecord } from '@commands/project/sync/record';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
@@ -29,6 +30,11 @@ export interface ResolveSyncedTargetDependencies {
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
   readSyncedRecord: typeof readSyncedRecord;
   pathExists: (path: string) => Promise<boolean>;
+  gitRunner: GitRunner;
+}
+
+export interface ResolvedSyncTarget extends SyncTarget {
+  adopt: boolean;
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -48,6 +54,7 @@ const DEFAULT_DEPENDENCIES: ResolveSyncedTargetDependencies = {
   readOatLocalConfig,
   readSyncedRecord,
   pathExists,
+  gitRunner: defaultGitRunner,
 };
 
 function isBareSlug(value: string): boolean {
@@ -59,7 +66,7 @@ export async function resolveSyncedTarget(
   pathOrSlug?: string,
   overrides: Partial<ResolveSyncedTargetDependencies> = {},
   options: ResolveSyncedTargetOptions = {},
-): Promise<SyncTarget> {
+): Promise<ResolvedSyncTarget> {
   const dependencies = { ...DEFAULT_DEPENDENCIES, ...overrides };
   const projectsRoot = await dependencies.resolveProjectsRoot(
     context.repoRoot,
@@ -108,9 +115,24 @@ export async function resolveSyncedTarget(
     }
   }
 
-  if (!checkoutExists && !(options.allowMissingCheckout && record)) {
+  let adopt = false;
+  if (!checkoutExists && !record) {
+    if (options.allowMissingCheckout) {
+      const remote = await dependencies.gitRunner.run(
+        ['ls-remote', '--exit-code', 'origin', `refs/oat/projects/${slug}`],
+        { cwd: context.repoRoot, allowFailure: true },
+      );
+      adopt = remote.code === 0;
+    }
+    if (!adopt) {
+      throw new CliError(
+        `No synced project named ${slug} locally or on origin.`,
+        1,
+      );
+    }
+  } else if (!checkoutExists && !options.allowMissingCheckout) {
     throw new CliError(`No synced project named ${slug}.`, 1);
   }
 
-  return buildSyncTarget(context.repoRoot, projectsRoot, slug);
+  return { ...buildSyncTarget(context.repoRoot, projectsRoot, slug), adopt };
 }

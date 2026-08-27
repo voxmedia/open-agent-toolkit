@@ -1,15 +1,23 @@
-import { mkdir, realpath, stat } from 'node:fs/promises';
+import { mkdir, readFile, realpath, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 
+import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import {
   isSyncedCheckout,
   resolveScopeRoot,
   SYNCED_REMOTE,
   syncedRefName,
+  syncedRecordPath,
 } from '@commands/shared/project-scope';
 import { CliError } from '@errors/cli-error';
+import YAML from 'yaml';
 
 import type { GitRunner } from './git';
+import {
+  buildSyncedRecord,
+  readSyncedRecord,
+  writeSyncedRecord,
+} from './record';
 
 export interface SyncTarget {
   repoRoot: string;
@@ -34,7 +42,18 @@ export type PullResult = {
   status: 'created' | 'updated' | 'up-to-date' | 'conflict' | 'dirty';
   sha: string;
   conflicts?: string[];
+  adopted?: boolean;
+  pendingRecordPaths?: string[];
 };
+
+export interface PullChildResult {
+  slug: string;
+  status: PullResult['status'] | 'missing';
+  sha?: string;
+  adopted?: boolean;
+  pendingRecordPaths?: string[];
+  message?: string;
+}
 
 export type CheckoutPreflight = {
   status: 'clean' | 'dirty' | 'unpushed' | 'absent';
@@ -363,6 +382,7 @@ async function reconcilePulledRef(
 export async function pullSynced(
   target: SyncTarget,
   git: GitRunner,
+  options: { adopt?: boolean; now?: Date } = {},
 ): Promise<PullResult> {
   await git.run(['fetch', target.remote, `+${target.ref}:${target.ref}`], {
     cwd: target.repoRoot,
@@ -376,10 +396,86 @@ export async function pullSynced(
       { cwd: target.repoRoot },
     );
     await assertNestedWorktree(target, git);
-    return { status: 'created', sha: await headSha(target, git) };
+    const result: PullResult = {
+      status: 'created',
+      sha: await headSha(target, git),
+    };
+    return options.adopt
+      ? await writeAdoptionRecord(target, result, options.now ?? new Date())
+      : result;
   }
 
-  return reconcilePulledRef(target, git);
+  const result = await reconcilePulledRef(target, git);
+  return options.adopt &&
+    (result.status === 'updated' || result.status === 'up-to-date')
+    ? await writeAdoptionRecord(target, result, options.now ?? new Date())
+    : result;
+}
+
+async function writeAdoptionRecord(
+  target: SyncTarget,
+  result: PullResult,
+  now: Date,
+): Promise<PullResult> {
+  const recordPath = syncedRecordPath(dirname(target.projectPath), target.slug);
+  await writeSyncedRecord(recordPath, buildSyncedRecord(target.slug, now));
+  return {
+    ...result,
+    adopted: true,
+    pendingRecordPaths: [recordPath],
+  };
+}
+
+export async function pullChildren(
+  parentTarget: SyncTarget,
+  git: GitRunner,
+): Promise<PullChildResult[]> {
+  const statePath = resolve(parentTarget.projectPath, 'state.md');
+  const block = getFrontmatterBlock(await readFile(statePath, 'utf8'));
+  if (!block) return [];
+  const parsed: unknown = YAML.parse(block);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return [];
+  const frontmatter = parsed as Record<string, unknown>;
+  if (frontmatter['oat_kind'] !== 'coordination') return [];
+  const children = frontmatter['oat_children'];
+  if (!Array.isArray(children)) return [];
+  const slugs = children.map((value) => {
+    if (
+      typeof value !== 'string' ||
+      value.startsWith('-') ||
+      !/^[a-zA-Z0-9_-]+$/.test(value)
+    ) {
+      throw new CliError(
+        'Coordination parent contains an invalid child slug.',
+        2,
+      );
+    }
+    return value;
+  });
+
+  const syncedRoot = dirname(parentTarget.projectPath);
+  const results: PullChildResult[] = [];
+  for (const slug of slugs) {
+    const childTarget: SyncTarget = {
+      ...parentTarget,
+      slug,
+      projectPath: resolve(syncedRoot, slug),
+      ref: syncedRefName(slug),
+    };
+    const recordPath = syncedRecordPath(syncedRoot, slug);
+    const adopt = (await readSyncedRecord(recordPath)) === null;
+    try {
+      const result = await pullSynced(childTarget, git, { adopt });
+      results.push({ slug, ...result });
+    } catch (error) {
+      results.push({
+        slug,
+        status: 'missing',
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  return results;
 }
 
 export async function continueSynced(
