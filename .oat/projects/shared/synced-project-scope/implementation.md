@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t10
 oat_generated: false
 ---
 
@@ -688,7 +688,7 @@ continuation_events:
 **Branch:** `feat/synced-project-scope`
 **Tier:** 1 - subagents
 **Dispatch policy:** managed `high` (Codex pinned variant)
-**Status:** in progress - Phase 3 dispatch prepared
+**Status:** in progress - p03-t01 through p03-t09 complete; p03-t10 cleanup boundary settled
 
 #### Dispatch Record
 
@@ -742,9 +742,33 @@ continuation_events: []
 - Phase recovery: 0/10, `pending_attempt: null`
 - Dispatch stamp: `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 
+#### Partial Outcome
+
+- Task commits p03-t01 through p03-t09: `3742edd539e27e9f398e5fcacb527c68e16e1f4a..41e8bbe7daf180260edc8700d8e0af257764f928`
+- Recovery commit: `617449d37257f3acb19e1132c0fe6988ba74edd5`
+- Phase verification: CLI 289 files / 3,845 tests, type-check, build, repository lint/format, and diff checks passed before dogfood setup
+- p03-t10 setup failure: post-checkout hook absent in a newly registered detached empty nested worktree
+- Root cleanup: removed only `/Users/tstang/Code/open-agent-toolkit/.oat/projects/synced/synced-dogfood`; no local/remote project ref, record, or temp branch existed
+- Continuation: same accepted handle resumes p03-t10 after recovery settlement
+
 ---
 
 ## Recovery Events
+
+### Recovery Event p03-recovery-01-project-help-snapshot
+
+- Phase/task: p03 / p03-t06
+- Original request: dispatch-synced-project-scope-p03-20260827T173721Z
+- Original commit: 369bff6b91c7c9c3277572c3f341f4fd338af530
+- Defect class: composition
+- Discovered by: `pnpm --filter @open-agent-toolkit/cli exec vitest run`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 617449d37257f3acb19e1132c0fe6988ba74edd5
+- Verification: focused help snapshot 58/58 and full CLI 3,845/3,845 passed before and after commit; root independently re-ran 58/58
+- Reason: project help snapshot mechanically omitted the p03 links, migrate, and prune registrations; bounded snapshot correction passed authoritative verification
 
 ### Recovery Event recovery-p02-01-cli-phase-suite
 
