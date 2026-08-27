@@ -4,7 +4,7 @@ version: 1.0.2
 description: Use when the user requests or confirms filing proposed feedback from a project retro into repository or upstream GitHub issues and OAT backlog items. Runs destination capability, duplicate, approval, and sanitization checks before filing, then writes destinations and statuses back to the retro artifact.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(pnpm:*), Bash(gh:*), Bash(oat backlog:*), Bash(oat config:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(pnpm:*), Bash(gh:*), Bash(oat backlog:*), Bash(oat config:*), Bash(oat project push:*), Bash(oat project scope:*), Glob, Grep, AskUserQuestion
 ---
 
 # File Project Retro Feedback
@@ -278,10 +278,13 @@ strengthened local backlog destination:
    not reachable from it, means `unpushed`.
 5. Only after the receipt is confirmed, write back the retro in a subsequent
    commit with `Destination`, `Destination-receipt`, and `Remote-visibility`.
-6. Capture the full writeback commit SHA, require it to differ from the
-   destination commit, and run
+6. Capture the full writeback commit SHA and require it to differ from the
+   destination commit. For shared/local projects, run
    `git merge-base --is-ancestor "$DESTINATION_COMMIT" "$WRITEBACK_COMMIT"`.
-   This proves the destination commit predates the retro writeback commit.
+   For synced projects, the writeback lives on the independent project ref, so
+   ancestry is not expected; verify the destination commit and exact-path
+   receipt first, then perform the project push and retain both SHAs as the
+   ordering proof.
 
 If the destination mutation commit fails, stop that item without retro
 writeback; a failed destination commit yields no receipt and must never yield
@@ -357,6 +360,34 @@ confirmed. GitHub destinations are represented by their validated URLs and
 explicit `—` local receipt fields. On re-run, skip a `filed` item only after the
 pre-selection integrity pass proves its destination-type state complete and
 valid; retry all eligible unsettled statuses.
+
+Resolve project scope and fail closed before committing the writeback. For a
+synced project, capture the project-ref commit returned by the push; otherwise
+commit only the retro artifact on the current branch:
+
+```bash
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
+  echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2
+  exit 1
+}
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  RETRO_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): record project retro filing writeback" --json)
+  WRITEBACK_COMMIT=$(printf '%s\n' "$RETRO_PUSH" | jq -er '.sha') || exit 1
+else
+  git add "$RETRO_PATH"
+  git diff --cached --quiet || git commit -m "chore(oat): record project retro filing writeback"
+  WRITEBACK_COMMIT=$(git rev-parse HEAD)
+fi
+
+if [ -n "${DESTINATION_COMMIT:-}" ]; then
+  [ "$DESTINATION_COMMIT" != "$WRITEBACK_COMMIT" ] || exit 1
+  if [ "$PROJECT_SCOPE" = "synced" ]; then
+    git cat-file -e "${DESTINATION_COMMIT}^{commit}" || exit 1
+  else
+    git merge-base --is-ancestor "$DESTINATION_COMMIT" "$WRITEBACK_COMMIT" || exit 1
+  fi
+fi
+```
 
 ## Final Report
 

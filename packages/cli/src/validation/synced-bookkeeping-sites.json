@@ -215,13 +215,43 @@
     "kind": "write"
   },
   {
+    "file": ".agents/skills/oat-project-capture/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): capture existing work for {name}\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-promote-spec-driven/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): promote {project-name} to spec-driven\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-autonomous/SKILL.md",
+    "anchor": "  [ \"$PROJECT_SCOPE\" = \"synced\" ] && oat project pull \"$PROJECT_PATH\"",
+    "kind": "arrival"
+  },
+  {
+    "file": ".agents/skills/oat-project-autonomous/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): persist autonomous explainer intent\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-autonomous/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): update autonomous execution learnings\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-next/SKILL.md",
+    "anchor": "  [ \"$PROJECT_SCOPE\" = \"synced\" ] && oat project pull \"$PROJECT_PATH\"",
+    "kind": "arrival"
+  },
+  {
     "file": ".agents/skills/oat-project-retro/SKILL.md",
     "anchor": "PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)",
     "kind": "resolve"
   },
   {
     "file": ".agents/skills/oat-project-retro-file/SKILL.md",
-    "anchor": "RETRO_PATH=\"${PROJECT_PATH}/references/project-retro.md\"",
+    "anchor": "  RETRO_PUSH=$(oat project push \"$PROJECT_PATH\" --message \"chore(oat): record project retro filing writeback\" --json)",
     "kind": "write"
   },
   {

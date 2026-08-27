@@ -1,10 +1,10 @@
 ---
 name: oat-project-next
-version: 1.0.11
+version: 1.0.12
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Bash(git:*), Skill
+allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), Skill
 ---
 
 # Project Next
@@ -75,6 +75,16 @@ This skill is purely a reader and dispatcher — it never mutates project state.
 PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
 PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"
+```
+
+Before reading project state, resolve the active project's scope and pull a
+synced checkout. Scope resolution fails closed:
+
+```bash
+if [ -n "$PROJECT_PATH" ]; then
+  PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1
+  [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$PROJECT_PATH"
+fi
 ```
 
 **If `PROJECT_PATH` is missing or invalid (directory does not exist):**

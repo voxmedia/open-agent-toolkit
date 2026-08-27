@@ -1,6 +1,6 @@
 ---
 name: oat-project-capture
-version: 1.0.0
+version: 1.0.1
 description: Use when work happened outside the OAT project workflow and needs retroactive project tracking. Creates a full project from an existing branch and conversation context.
 disable-model-invocation: true
 user-invocable: true
@@ -74,13 +74,14 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators with the `[N/N]` format:
-  - `[1/7] Resolving branch context…`
-  - `[2/7] Inferring project name…`
-  - `[3/7] Analyzing branch commits…`
-  - `[4/7] Scaffolding project…`
-  - `[5/7] Synthesizing discovery from conversation…`
-  - `[6/7] Capturing implementation from commits…`
-  - `[7/7] Setting lifecycle state + refreshing dashboard…`
+  - `[1/8] Resolving branch context…`
+  - `[2/8] Inferring project name…`
+  - `[3/8] Analyzing branch commits…`
+  - `[4/8] Scaffolding project…`
+  - `[5/8] Synthesizing discovery from conversation…`
+  - `[6/8] Capturing implementation from commits…`
+  - `[7/8] Persisting captured artifacts…`
+  - `[8/8] Refreshing dashboard and reporting…`
 
 ## Process
 
@@ -252,7 +253,26 @@ Update `implementation.md`:
 
 - `oat_status: in_progress`
 
-### Step 7: Refresh Dashboard and Report
+### Step 7: Persist Captured Artifacts
+
+Resolve the created project's scope and fail closed before committing its
+captured artifact rewrites:
+
+```bash
+PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
+  echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2
+  exit 1
+}
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): capture existing work for {name}"
+else
+  git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
+  git diff --cached --quiet || git commit -m "chore(oat): capture existing work for {name}"
+fi
+```
+
+### Step 8: Refresh Dashboard and Report
 
 ```bash
 oat state refresh

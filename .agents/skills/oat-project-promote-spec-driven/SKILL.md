@@ -1,6 +1,6 @@
 ---
 name: oat-project-promote-spec-driven
-version: 1.2.0
+version: 1.2.1
 description: Use when a quick or imported project now needs Spec-Driven lifecycle rigor. Backfills missing discovery, spec, and design artifacts in place.
 argument-hint: '[--project <name>]'
 disable-model-invocation: true
@@ -137,7 +137,25 @@ Recommended default phase after promotion:
 - if implementation has not started: `plan` complete
 - if implementation has started: `implement` in_progress/complete based on current task state
 
-### Step 6: Report Promotion Outcome
+### Step 6: Persist Promotion Artifacts
+
+Resolve the project's scope and fail closed before committing the promotion
+writeback:
+
+```bash
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
+  echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2
+  exit 1
+}
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): promote {project-name} to spec-driven"
+else
+  git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
+  git diff --cached --quiet || git commit -m "chore(oat): promote {project-name} to spec-driven"
+fi
+```
+
+### Step 7: Report Promotion Outcome
 
 Output:
 
