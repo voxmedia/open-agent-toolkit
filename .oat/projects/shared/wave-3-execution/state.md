@@ -84,52 +84,67 @@ oat_workflow_origin: native # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_implement_exit_gate:
-  status: pending
+  status: allowed # generation 1 passed (run c89b7975, cursor-gpt-5-6-sol-xhigh)
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:9fbcb0c285de3d6f04890eccd1630329d1584f88da6575ec5437f074902b36e7' # same declaration as W2 generation 2 (--avoid none removed by the operator 2026-08-26)
   resolved_command: 'OAT_GATE_EXEC_TIMEOUT_MS=2400000 oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings. Run every verification command in the foreground of your own turn: do not use background tasks, monitors, or waiters, and do not end your turn until the review artifact has been written and committed."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0 # generation 1
+  attempts_completed: 1 # generation 1
   reviewed_head: e9a9575b761bb014c3c5a858dca4dbf24ed7acc4 # final review round 2 (passed) reviewed head; last code commit 6dc9cdd1
   implementation_base_ref: origin/main # 39cea8017b73b602f247cb50a372d1fb9cae34f1
   implementation_fingerprint: 'sha256:effective-delta-v1:0cb477cebd555533670fc670a813bde259b93d90f033ebcdc30276d2fa726a17' # effective delta at the last code commit 6dc9cdd1
-  freshness_head: null # set at receive (rolling checkpoint over closeout-only descendants)
-  freshness_fingerprint: null
-  launch_state: intent_persisted
+  freshness_head: b1c60abcc4787be401eaeb77ca7688e8d70810a4 # gate reviewed head (closeout-only descendants of the last code commit 6dc9cdd1)
+  freshness_fingerprint: 'sha256:effective-delta-v1:pending' # recomputed at the post-document-step checkpoint
+  launch_state: result_persisted # completed 2026-08-27T01:21:45Z, exit 0
   launch_attempt_id: 'w3-exit-gate-g1-a1'
   launch_started_at: '2026-08-27T01:08:10Z'
   launch_result_receipt: '/private/tmp/claude-502/-Users-thomas-stang-orca-workspaces-open-agent-toolkit-bug-triage/99821df5-a46b-4bd0-a700-8b9284593b2c/scratchpad/w3-exit-gate-g1-a1.receipt.json'
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
-  receive_commit: null
-  receive_eligible: false
-  receive_completed: false
+  gate_run_marker: '/var/folders/ch/kmbmcdfd4gb807zjsjt2td4h0000gp/T/oat-gate-runs/c89b7975-266a-48ba-a459-8ce880cc0813.json'
+  gate_run_id: 'c89b7975-266a-48ba-a459-8ce880cc0813'
+  envelope_status: ok
+  artifact: '.oat/projects/shared/wave-3-execution/reviews/final-review-2026-08-27T011826Z.md'
+  handoff: 'Gate passed at the important threshold with no findings; run oat-project-review-receive for final-review-2026-08-27T011826Z.md'
+  receive_state: completed
+  receive_correlation: 'run=c89b7975-266a-48ba-a459-8ce880cc0813; handoff=receive; source=reviews/final-review-2026-08-27T011826Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/wave-3-execution/reviews/final-review-2026-08-27T011826Z.md'
+  receive_archived_artifact: '.oat/projects/shared/wave-3-execution/reviews/archived/final-review-2026-08-27T011826Z.md'
+  receive_event_identity: 'final | code | final-review-2026-08-27T011826Z.md'
+  receive_pre_head: f51f0d45 # gate bookkeeping commit
+  receive_commit: pending # filled at the next state write
+  receive_eligible: true
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-27T01:08:10.324Z'
+  updated_at: '2026-08-27T01:24:31.201Z'
+oat_post_implement_sequence:
+  status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  source: configured # workflow.postImplementSequence
+  final_phase: p01
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending # pending | approved | not_required
+  approval_source: null # null | user | oat-autonomous
+  post_approval: []
+  post_approval_completed: []
+  failure: null
+oat_project_recap:
+  decision: generate
+  source: autonomous_policy
+  decided_at: '2026-08-27T01:24:31.201Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T23:08:35.576Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T01:08:10.325Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T01:24:31.201Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-3-execution
 
-**Status:** Implement — final review passed (round 2 at `e9a9575b`); configured exit gate generation 1 launched
+**Status:** Implement — exit gate generation 1 passed (run c89b7975); post-implement sequence in progress
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-26
 
@@ -162,7 +177,8 @@ integration checkout `wave-3-execution` (BASE_SHA `39cea801`; code baseline
 - ✓ Closeout baseline / final verification: root DoD 10/10 at `cf53e818`
 - ✓ Final review round 1 (fresh Opus, built-CLI probes): 0C/2I/4M/7m — bookkeeping only, resolved at receive; summary.md generated, synthesis written, backlog item archived
 - ✓ Final review round 2 (narrowed): 0/0/0/0 — `passed` at `e9a9575b`
-- ⧗ Configured exit gate generation 1 → post-implement sequence (summary → document → pr)
+- ✓ Configured exit gate generation 1 passed (cursor-gpt-5-6-sol-xhigh, run c89b7975, 0/0/0/0)
+- ⧗ Post-implement sequence: summary → document → pr
 
 ## Blockers
 
