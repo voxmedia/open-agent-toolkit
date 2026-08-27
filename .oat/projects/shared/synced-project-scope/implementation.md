@@ -1,7 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p02-review
+    reason: 'Operator-extended p02 review round 4 found two Important target/recovery defects after fix cycle 3/3; another cycle or plan revision requires operator direction.'
+    since: 2026-08-27
 oat_last_updated: 2026-08-27
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -24,12 +27,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 10    | 10/10     |
-| Phase 2 | in_progress | 11    | 11/11     |
-| Phase 3 | pending     | 10    | 0/10      |
-| Phase 4 | pending     | 11    | 0/11      |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 10    | 10/10     |
+| Phase 2 | blocked  | 11    | 11/11     |
+| Phase 3 | pending  | 10    | 0/10      |
+| Phase 4 | pending  | 11    | 0/11      |
 
 **Total:** 21/42 tasks completed
 
@@ -145,16 +148,16 @@ oat_generated: false
 
 ## Phase 2: CLI surface
 
-**Status:** in progress - implementation complete; operator-authorized review fix cycle 3/3
+**Status:** blocked - implementation complete; operator-extended review cycle exhausted
 **Started:** 2026-08-27
 
 ### Phase Summary
 
 **Outcome:** All 11 planned CLI-surface tasks are implemented, including scope-aware scaffolding, push/pull/list/scope commands, remote adoption, coordination children, and synced-aware open/pause behavior. One phase recovery updated stale integration expectations after the default changed to synced.
 
-**Verification:** Full CLI suite passed at 3,777 tests after final fixes; focused affected surfaces, p02 e2e/split flows, CLI lint/format/type-check, and control-plane build/tests/type-check passed against committed HEAD.
+**Verification:** Full CLI suite passed at 3,778 tests after fix cycle 3/3; focused affected surfaces, p02 e2e/split flows, CLI lint/format/type-check, and control-plane build/tests/type-check passed against committed HEAD. Review round 4's combined Git-heavy run passed 421/422 tests with one load-sensitive timeout that passed 8/8 in isolation.
 
-**Review disposition:** Three independent rounds ran. Two bounded fix iterations resolved 11 findings, but review round 3 still found 2 Important retry-path defects. On 2026-08-27 the operator explicitly raised the fix limit to 3 and authorized one additional bounded fix plus fresh review; Phase 3 remains unstarted pending that verdict.
+**Review disposition:** Four independent rounds ran. Three bounded fix iterations resolved the prior findings, including the two findings targeted by the operator extension. Review round 4 found 2 new Important whole-phase defects and 1 Medium test-stability issue. The operator-authorized extension is exhausted; Phase 3 did not start.
 
 ### Task p02-t01: `projects.defaultScope` config key
 
@@ -387,7 +390,7 @@ lifecycle_outcome:
 **Branch:** `feat/synced-project-scope`
 **Tier:** 1 - subagents
 **Dispatch policy:** managed `high` (Codex pinned variants)
-**Status:** p02 operator extension accepted; fix cycle 3/3 pending
+**Status:** completed - fix cycle 3/3 committed and terminal review dispatched
 
 #### Operator Extension
 
@@ -396,6 +399,25 @@ lifecycle_outcome:
 - Scope: only the two Important findings in `reviews/code-p02-review-2026-08-27T081844Z.md`
 - Exact implementation target: `oat-phase-implementer-gpt-5-6-sol-high`
 - Review authorization: one fresh fourth p02 reviewer after the bounded fix; this explicitly extends the ordinary three-cycle review cap for p02 by one cycle
+- Phase recovery: unchanged at 1/10 with `pending_attempt: null`
+- Phase 3: not started
+
+### Run 5 - 2026-08-27T12:59:31Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Codex pinned variants)
+**Status:** blocked - p02 operator extension exhausted
+
+#### Terminal Outcome
+
+- Fix iteration 3: `7c8ee775bb12a24346927819de70cd0ff648350a`, continuation `continuation-p02-review-r3-fix-03-20260827T123547Z`; the two round-3 Important findings are closed
+- Review round 4: blocked with 2 Important and 1 Medium; artifact `reviews/code-p02-review-2026-08-27T124656Z.md`; reviewed head `7c8ee775bb12a24346927819de70cd0ff648350a`
+- Review dispatch: fresh `oat-reviewer-gpt-5-6-sol-high`, request `dispatch-synced-project-scope-p02-review-r4-20260827T124656Z`, reconnaissance not attempted
+- Important blocker 1: explicit descendant paths can resolve to and mutate a different sibling synced project
+- Important blocker 2: split finalization conflicts leave a child in rebase without safe normal-resume detection or target-specific recovery guidance
+- Medium: the new Git-backed split recovery test can exceed the default timeout under suite load, although it passes in isolation
+- Retry authority: fix cycle 3/3 and the explicitly extended fourth review are consumed; another cycle or a plan revision requires operator direction
 - Phase recovery: unchanged at 1/10 with `pending_attempt: null`
 - Phase 3: not started
 
@@ -464,7 +486,9 @@ Chronological log of implementation progress.
 - [x] p02-t01 through p02-t11 - eleven verified planned commits
 - [x] p02 recovery attempt 1/10 - recovered and settled
 - [x] p02 review fix iterations 1 and 2 - eleven findings resolved
-- [ ] p02 review cycle 4 - operator-authorized bounded fix and fresh review pending
+- [x] p02 review fix iteration 3 - two round-3 findings resolved in `7c8ee775`
+- [x] p02 review cycle 4 - blocked at 2 Important / 1 Medium in `reviews/code-p02-review-2026-08-27T124656Z.md`
+- [ ] p02 operator disposition - another bounded cycle or plan revision required
 - [ ] p03-t01 - not started
 
 ---
