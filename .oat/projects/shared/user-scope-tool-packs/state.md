@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: cf56b5150
+oat_last_commit: 3352bcdc7af847d0272632a26784c33ac4448e17
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T18:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T18:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -357,7 +357,9 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Final verification passed (test, lint, type-check, build)
 - ✓ Final project review received (Claude High, `opus`)
 - ✗ Final review: 0 Critical, 2 Important, 9 Medium, 6 Minor
-- ⧗ Final review fix pass pending
+- ✓ Final review fix pass completed in `3352bcdc7`
+- ✓ Root reproduced both Important defects and verified all three fixes
+- ⧗ Merge `origin/main` and re-run gates at the merged head
 
 ## Blockers
 

@@ -1070,6 +1070,39 @@ individually and independently reproduced by root):**
   mechanical resolution, and the full gate sequence must be re-run afterwards
   because the gates were verified at `dd359d2bb`, not at the post-rebase head.
 
+### Final Review Fix Pass
+
+- `oat-phase-implementer` at the Claude High ceiling, model `opus`. One
+  append-only commit `3352bcdc7` on parent `4fdac74b1`, 10 files.
+- `Dispatch: scope=final-fix1 action=fix role=implementer producer=claude provenance=resolver model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer(model=opus)`
+- **fI2 was fixed by reusing the aggregate resolver rather than copying the
+  rule**, which was the point: `resolvePackDefaultEndState` was widened from
+  `UserEligiblePack` to `ToolPack` and is now the single definition of
+  existing-placement precedence, fed by the same `inventoryPack` +
+  `buildPackInstallStateMapFromInventory` pair the aggregate path uses. Explicit
+  `--scope` short-circuits ahead of the lookup.
+- **fI1** gates intent clearing on per-pack removal evidence rather than
+  `target.kind`. The implementer found a case the brief did not anticipate: a
+  pack whose only footprint is a shared asset retained for another declared
+  owner deletes no bytes but is still a real removal. Evidence is therefore
+  physical presence, not bytes deleted, which preserves the shared-owner
+  contract that three existing tests encode.
+- Root independently reproduced both original defects before the fix and
+  re-verified all three fixes after it: intent survives a no-op remove; a bare
+  per-pack install on an existing project-scope placement stays at project scope
+  with 0 operations and no `duplicate-scope` finding; explicit `--scope user` is
+  still honored; and `oat tools has docs` outside a repository now exits 0.
+- Also closed: M3 (docs no longer route to `oat decision init`), M4, M8, and a
+  new `## Upgrading from an earlier CLI` section covering the previously
+  undocumented user-visible behavior changes.
+- Deliberate additive JSON change: `RemoveResult` gained `packOutcomes`, which
+  surfaces in `oat tools remove --json`. NFR3-compatible but a new public
+  surface not named in the review.
+- Fault-tolerance note: `resolvePackCommandScopes` swallows inventory errors and
+  falls back to `defaultScope`, chosen so placement detection can never block an
+  install. A genuinely broken inventory would therefore reproduce the old
+  duplicate-install behavior rather than surfacing an error.
+
 ## Final Summary (for PR/docs)
 
 ### What shipped
