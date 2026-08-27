@@ -1180,4 +1180,28 @@ describe('review skill contracts', () => {
     );
     expect(content).toContain('`archive.summaryExportPath`.');
   });
+
+  it('routes absent-checkout synced and local-only projects through all-scope selection', () => {
+    const content = readFileSync(
+      repoFilePath('.agents/skills/oat-project-next/SKILL.md'),
+      'utf8',
+    );
+
+    expect(content).toContain(
+      'PROJECT_LIST_JSON=$(oat project list --json) || exit 1',
+    );
+    expect(content).not.toContain('ls -d "$PROJECTS_ROOT"/*/');
+    expect(content).toMatch(
+      /structured `projects` array[\s\S]*?local-only[\s\S]*?synced records whose detached checkout is absent/,
+    );
+    expect(content).toMatch(
+      /`projects` array is empty[\s\S]*?oat-project-new[\s\S]*?STOP/,
+    );
+    expect(content).toMatch(
+      /`projects` array is non-empty[\s\S]*?scope[\s\S]*?checkout[\s\S]*?invoke `oat-project-open`/,
+    );
+    expect(content).toMatch(
+      /absent-checkout synced record and a local-only project both take\s+this selection route/,
+    );
+  });
 });

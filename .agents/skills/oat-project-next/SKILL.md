@@ -73,8 +73,6 @@ This skill is purely a reader and dispatcher — it never mutates project state.
 
 ```bash
 PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
-PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
 Before reading project state, resolve the active project's scope and pull a
@@ -89,21 +87,29 @@ fi
 
 **If `PROJECT_PATH` is missing or invalid (directory does not exist):**
 
-Check whether any projects exist:
+Ask the CLI for its all-scope project inventory. Do not probe only the shared
+projects root:
 
 ```bash
-ls -d "$PROJECTS_ROOT"/*/ 2>/dev/null
+PROJECT_LIST_JSON=$(oat project list --json) || exit 1
 ```
 
-- **No projects exist:** Report error and suggest:
+Read the structured `projects` array. It includes shared projects, local-only
+projects, and synced records whose detached checkout is absent.
+
+- **The `projects` array is empty:** Report error and suggest:
   - `oat-project-new` — Create a spec-driven project
   - `oat-project-quick-start` — Start a quick workflow project
   - `oat-project-import-plan` — Import an external plan
   - **STOP.** Do not attempt routing.
 
-- **Projects exist but none is active:** Report error and suggest:
-  - `oat-project-open` — Select an existing project
-  - **STOP.** Do not attempt routing.
+- **The `projects` array is non-empty but the active pointer is missing or
+  invalid:** Show the available project names with their `scope` and `checkout`
+  state, then invoke `oat-project-open` so the user selects an existing
+  project. An absent-checkout synced record and a local-only project both take
+  this selection route; never suggest creating a replacement project. **STOP**
+  this router after the selection workflow returns so the next invocation can
+  pull/read the chosen project normally.
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the basename of the path.
 
