@@ -37,6 +37,15 @@ export interface PackDefinition {
   assets: readonly PackAssetDefinition[];
 }
 
+export type PackAssetStatus =
+  | 'missing'
+  | 'current'
+  | 'outdated'
+  | 'newer'
+  | 'present';
+
+export type PackCompleteness = 'complete' | 'partial' | 'absent';
+
 export interface ToolInfo {
   name: string;
   type: 'skill' | 'agent';
