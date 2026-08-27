@@ -83,18 +83,53 @@ oat_workflow_origin: native # native | imported
 #   receive_completed: false
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: 'sha256:9fbcb0c285de3d6f04890eccd1630329d1584f88da6575ec5437f074902b36e7' # same declaration as W2 generation 2 and W3
+  resolved_command: 'OAT_GATE_EXEC_TIMEOUT_MS=2400000 oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings. Run every verification command in the foreground of your own turn: do not use background tasks, monitors, or waiters, and do not end your turn until the review artifact has been written and committed."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0 # generation 1
+  reviewed_head: 601c950b07b5d87776e7da0e02aae430ca5c701e # last code commit (root-verified cycle-cap fix); final review round 3 reviewed head 067bfad9
+  implementation_base_ref: origin/main # 3c135e212dfb1d386650089e7d9f95263565ee82
+  implementation_fingerprint: 'sha256:effective-delta-v1:fb2e6bb01b0160558dd57ab42ecd7d5dd5d1e00fb94c78534c545dddb368b6c0'
+  freshness_head: null # set at receive
+  freshness_fingerprint: null
+  launch_state: intent_persisted
+  launch_attempt_id: 'w4-exit-gate-g1-a1'
+  launch_started_at: '2026-08-27T06:12:10Z'
+  launch_result_receipt: '/private/tmp/claude-502/-Users-thomas-stang-orca-workspaces-open-agent-toolkit-bug-triage/99821df5-a46b-4bd0-a700-8b9284593b2c/scratchpad/w4-exit-gate-g1-a1.receipt.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-08-27T06:12:10.409Z'
 oat_docs_updated: skipped # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T01:55:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T06:11:33.326Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T06:12:10.409Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-4-execution
 
-**Status:** Implement — final review passed (root-verified at `601c950b`); summary + synthesis written, backlog archived; configured exit gate next
+**Status:** Implement — configured exit gate generation 1 launched (final review passed; closeout bookkeeping complete)
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
