@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -35,6 +36,7 @@ const NOW = '2026-07-28T20:00:00.000Z';
 // rebuild republishing that directory, so the file bundles once into a private
 // temporary root and points OAT_ASSETS_DIR at it for the whole file.
 let isolatedAssetsRoot = null;
+let capturedAssetsRoot = null;
 let previousAssetsDir;
 let previousAssetsDirWasSet = false;
 
@@ -44,6 +46,7 @@ before(async () => {
   isolatedAssetsRoot = await mkdtemp(
     join(tmpdir(), 'explainer-coverage-assets-'),
   );
+  capturedAssetsRoot = isolatedAssetsRoot;
 
   try {
     await execFileAsync('bash', [BUNDLE_SCRIPT], {
@@ -60,6 +63,20 @@ before(async () => {
 });
 
 after(releaseIsolatedAssets);
+
+// Registered after the release hook, so it observes the post-cleanup state and
+// is the regression guard for environment restoration and temp-root removal:
+// without it, dropping the release hook or its unset branch fails silently.
+after(() => {
+  assert.equal('OAT_ASSETS_DIR' in process.env, previousAssetsDirWasSet);
+  if (previousAssetsDirWasSet) {
+    assert.equal(process.env.OAT_ASSETS_DIR, previousAssetsDir);
+  }
+
+  if (capturedAssetsRoot) {
+    assert.equal(existsSync(capturedAssetsRoot), false);
+  }
+});
 
 async function releaseIsolatedAssets() {
   if (previousAssetsDirWasSet) {

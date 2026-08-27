@@ -80,6 +80,7 @@ function resolvePackagedAssetsRoot(): string {
  * directory and bundle-integrity checks, and an explicit root never falls back
  * to the packaged one: a missing, non-directory, malformed, or
  * version-mismatched override fails closed with the same actionable errors.
+ * A relative value is resolved against the process working directory.
  */
 export async function resolveAssetsRoot(
   env: NodeJS.ProcessEnv = process.env,

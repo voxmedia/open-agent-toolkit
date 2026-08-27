@@ -476,7 +476,9 @@ describe('oat gate', () => {
     root: string,
     projectPath: string,
   ): Promise<string> {
-    const assetsRoot = await resolveAssetsRoot();
+    // Explicit empty env: this helper wants the packaged root, and the
+    // default binding would otherwise follow an ambient OAT_ASSETS_DIR.
+    const assetsRoot = await resolveAssetsRoot({});
     const template = await readFile(
       join(assetsRoot, 'templates', 'project-log.md'),
       'utf8',

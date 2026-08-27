@@ -1,9 +1,9 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 
 import { OAT_VERSION } from '@shared/oat-version';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { resolveAssetsRoot, validateAssetsBundle } from './assets';
 
@@ -22,18 +22,21 @@ async function createBundle(oatVersion: string): Promise<string> {
 }
 
 describe('resolveAssetsRoot', () => {
-  // The only case that calls through the default `env` parameter, so it reads
-  // the ambient environment by design. A runner that exports its own
-  // OAT_ASSETS_DIR now legitimately resolves that root instead, and the
-  // packaged-root expectation only holds without one.
-  it.skipIf(Boolean(process.env.OAT_ASSETS_DIR?.trim()))(
-    'defaults to the packaged root when the ambient environment sets no override',
-    async () => {
+  // The only case that calls through the default `env` parameter — the binding
+  // every production call site uses. `vi.stubEnv` neutralises an ambient
+  // OAT_ASSETS_DIR through vitest's managed seam (auto-restored, no direct
+  // `process.env` assignment) so the assertion stays hard instead of skipping.
+  it('defaults to the packaged root when the ambient environment sets no override', async () => {
+    vi.stubEnv('OAT_ASSETS_DIR', '');
+
+    try {
       const root = await resolveAssetsRoot();
 
       expect(root).toMatch(PACKAGED_ASSETS_PATTERN);
-    },
-  );
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
 
   it('resolves a valid OAT_ASSETS_DIR override instead of the packaged root', async () => {
     const assetsRoot = await createBundle(OAT_VERSION);
@@ -43,6 +46,24 @@ describe('resolveAssetsRoot', () => {
 
       expect(root).toBe(assetsRoot);
       expect(root).not.toMatch(PACKAGED_ASSETS_PATTERN);
+    } finally {
+      await rm(assetsRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('resolves a relative override against the process working directory', async () => {
+    const assetsRoot = await createBundle(OAT_VERSION);
+    const relativeOverride = relative(process.cwd(), assetsRoot);
+
+    try {
+      expect(relativeOverride).not.toBe(assetsRoot);
+
+      const root = await resolveAssetsRoot({
+        OAT_ASSETS_DIR: relativeOverride,
+      });
+
+      expect(root).toBe(resolve(process.cwd(), relativeOverride));
+      expect(root).toBe(assetsRoot);
     } finally {
       await rm(assetsRoot, { recursive: true, force: true });
     }
