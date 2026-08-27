@@ -1,4 +1,4 @@
-import { mkdir, readFile, realpath, stat } from 'node:fs/promises';
+import { mkdir, readFile, realpath, rm, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
@@ -71,6 +71,11 @@ export type CheckoutPreflight = {
 
 export type RemoveResult = {
   status: 'removed' | 'absent' | 'dirty' | 'unpushed';
+};
+
+export type PruneResult = {
+  status: 'pruned';
+  lifecycleCommit: string | null;
 };
 
 const ZERO_OBJECT_ID = '0000000000000000000000000000000000000000';
@@ -721,6 +726,65 @@ export async function removeSyncedCheckout(
   );
   await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
   return { status: 'removed' };
+}
+
+export async function pruneSynced(
+  target: SyncTarget,
+  git: GitRunner,
+  options: { force: boolean; commit: boolean },
+): Promise<PruneResult> {
+  await assertCanonicalSyncTargetIdentity(target);
+  const checkoutSuffix = ['synced', target.slug].join('/');
+  const checkoutPaths = (await registeredWorktreePaths(target, git)).filter(
+    (worktreePath) =>
+      worktreePath.split(sep).join('/').endsWith(`/${checkoutSuffix}`),
+  );
+
+  const checkouts = checkoutPaths.map((projectPath) => ({
+    ...target,
+    syncedRoot: dirname(projectPath),
+    projectPath,
+  }));
+  for (const checkout of checkouts) {
+    const preflight = await preflightSyncedCheckout(checkout, git);
+    if (
+      !options.force &&
+      (preflight.status === 'dirty' || preflight.status === 'unpushed')
+    ) {
+      throw new CliError(
+        `Refusing to prune ${target.slug}: checkout ${checkout.projectPath} is ${preflight.status}. Push it first or pass --force. Pinned PR links will stop resolving after prune.`,
+        1,
+      );
+    }
+  }
+
+  for (const checkout of checkouts) {
+    const removed = await removeSyncedCheckout(checkout, git, {
+      force: options.force,
+    });
+    if (removed.status !== 'removed' && removed.status !== 'absent') {
+      throw new CliError(
+        `Refusing to prune ${target.slug}: checkout ${checkout.projectPath} is ${removed.status}.`,
+        1,
+      );
+    }
+  }
+
+  await git.run(['push', target.remote, `:${target.ref}`], {
+    cwd: target.repoRoot,
+  });
+  await git.run(['update-ref', '-d', target.ref], { cwd: target.repoRoot });
+  const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+  await rm(recordPath, { force: true });
+  const committed = options.commit
+    ? await commitRecordChange(
+        target.repoRoot,
+        [recordPath],
+        `chore(oat): prune synced project ${target.slug}`,
+        git,
+      )
+    : null;
+  return { status: 'pruned', lifecycleCommit: committed?.sha ?? null };
 }
 
 /**
