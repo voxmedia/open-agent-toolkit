@@ -119,6 +119,14 @@ After formatting, run the repository's applicable gate set over the produced
 diff, explicitly including artifact writes. This supplements rather than
 replaces every task and phase verification command below.
 
+## Synced-Scope Bookkeeping
+
+Artifact and recovery-ledger bookkeeping commits must first resolve scope with
+`oat project scope "$PROJECT_PATH" --format value`. A `synced` project uses
+`oat project push` with the original bookkeeping message; other scopes keep the
+existing scoped `git add` and `git commit` commands. Scope resolution fails
+closed. Planned code task commits such as `feat(pNN-tNN)` are unchanged.
+
 ## Prevention and Post-Commit Recovery
 
 Prevention is the first recovery control. Before every planned task commit:
