@@ -16,6 +16,7 @@ import {
 } from '@commands/decision/regenerate-index';
 import { describe, expect, it } from 'vitest';
 
+import { PACK_MANIFEST } from '../../../tools/shared/pack-manifest';
 import { CORE_SKILLS } from '../core/install-core';
 import { DOCS_SKILLS } from '../docs/install-docs';
 import { IDEA_SKILLS } from '../ideas/install-ideas';
@@ -35,6 +36,9 @@ type BundleInventory = {
   skills: string[];
   agents: string[];
   templateFiles: string[];
+  templateDirectories: string[];
+  oatScripts: string[];
+  docsRoot: string;
   publicVersionPackages: string[];
 };
 
@@ -310,6 +314,40 @@ describe('bundle asset inventory consistency', () => {
       orphans,
       `Bundled but not in any pack: ${orphans.join(', ')}`,
     ).toEqual([]);
+  });
+
+  it('maps every bundled managed asset into the canonical manifest', () => {
+    const inventory = readBundleInventory();
+    const sources = new Set(
+      PACK_MANIFEST.flatMap(({ assets }) => assets.map(({ source }) => source)),
+    );
+
+    for (const skill of inventory.skills) {
+      expect(sources, `manifest skill ${skill}`).toContain(`skills/${skill}`);
+    }
+    for (const agent of inventory.agents) {
+      expect(sources, `manifest agent ${agent}`).toContain(`agents/${agent}`);
+    }
+    for (const template of inventory.templateFiles) {
+      expect(sources, `manifest template ${template}`).toContain(
+        `templates/${template}`,
+      );
+    }
+    for (const template of inventory.templateDirectories) {
+      const prefix = `templates/${template}`;
+      expect(
+        [...sources].some(
+          (source) => source === prefix || source.startsWith(`${prefix}/`),
+        ),
+        `manifest template directory ${template}`,
+      ).toBe(true);
+    }
+    for (const script of inventory.oatScripts) {
+      expect(sources, `manifest script ${script}`).toContain(
+        `scripts/${script}`,
+      );
+    }
+    expect(sources).toContain(inventory.docsRoot.replace('apps/oat-docs/', ''));
   });
 
   it('covers every user-facing workflow lifecycle skill in the workflow pack', () => {
