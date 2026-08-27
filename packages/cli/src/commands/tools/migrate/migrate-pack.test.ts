@@ -218,6 +218,18 @@ describe('planPackMigration', () => {
     expect(blocked.additions).not.toContainEqual(
       expect.objectContaining({ assetId: 'skill:oat-idea-new' }),
     );
+    expect(blocked.destinationPlan.operations).not.toContainEqual(
+      expect.objectContaining({ assetId: 'skill:oat-idea-new' }),
+    );
+    expect(blocked.destinationPlan.changedCanonicalPaths).not.toContain(
+      '.agents/skills/oat-idea-new',
+    );
+    expect(blocked.destinationPlan.operations).toContainEqual(
+      expect.objectContaining({ assetId: 'skill:oat-idea-ideate' }),
+    );
+    expect(blocked.destinationPlan.changedCanonicalPaths).toContain(
+      '.agents/skills/oat-idea-ideate',
+    );
 
     const legacyFalse = planPackMigration({
       pack: 'ideas',

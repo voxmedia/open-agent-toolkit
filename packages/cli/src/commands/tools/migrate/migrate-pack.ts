@@ -169,7 +169,7 @@ export function planPackMigration(
     ({ definition: asset, status }) =>
       asset.ownership[input.to] === 'managed' && status === 'newer',
   );
-  const destinationPlan = planPackReconcile({
+  const unfilteredDestinationPlan = planPackReconcile({
     pack: input.pack,
     scope: input.to,
     scopeRoot: input.destinationRoot,
@@ -177,13 +177,32 @@ export function planPackMigration(
     action: 'migrate-destination',
     inventory: input.destinationInventory,
   });
+  const conflictIds = new Set(
+    conflicts.map(({ definition: asset }) => asset.id),
+  );
+  const conflictCanonicalPaths = new Set(
+    conflicts.flatMap(({ definition: asset }) =>
+      asset.kind === 'skill' || asset.kind === 'agent'
+        ? [asset.destination]
+        : [],
+    ),
+  );
+  const destinationPlan: PackReconcilePlan = {
+    ...unfilteredDestinationPlan,
+    operations: unfilteredDestinationPlan.operations.filter(
+      (operation) =>
+        operation.kind === 'write-intent' ||
+        !conflictIds.has(operation.assetId),
+    ),
+    changedCanonicalPaths:
+      unfilteredDestinationPlan.changedCanonicalPaths.filter(
+        (path) => !conflictCanonicalPaths.has(path),
+      ),
+  };
   const additionIds = new Set(
     destinationPlan.operations.flatMap((operation) =>
       operation.kind === 'write-intent' ? [] : [operation.assetId],
     ),
-  );
-  const conflictIds = new Set(
-    conflicts.map(({ definition: asset }) => asset.id),
   );
   const additions = input.destinationInventory.assets
     .filter(

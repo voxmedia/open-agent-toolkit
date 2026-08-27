@@ -1,7 +1,12 @@
+import { join } from 'node:path';
+
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import type { ScopedPackInventory } from '@commands/tools/shared/pack-inventory';
-import { PACK_NAMES } from '@commands/tools/shared/pack-manifest';
+import {
+  getPackDefinition,
+  PACK_NAMES,
+} from '@commands/tools/shared/pack-manifest';
 import type { ConcreteScope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,10 +15,76 @@ import {
   createToolsMigrateCommand,
   type MigrationCommandDependencies,
 } from './index';
-import type {
-  PackMigrationOutcome,
-  PackMigrationPreview,
+import {
+  planPackMigration,
+  type PackMigrationOutcome,
+  type PackMigrationPreview,
 } from './migrate-pack';
+
+function plannerInventory(
+  scope: ConcreteScope,
+  source: 'declared' | 'none',
+  conflictAssetId?: string,
+): ScopedPackInventory {
+  const definition = getPackDefinition('ideas');
+  const assets: ScopedPackInventory['assets'] = definition.assets
+    .filter(({ scopes }) => scopes.includes(scope))
+    .map((asset) => ({
+      definition: asset,
+      path: join(`/${scope}`, asset.destination),
+      status:
+        asset.id === conflictAssetId
+          ? 'newer'
+          : source === 'none'
+            ? 'missing'
+            : asset.ownership[scope] === 'managed'
+              ? 'current'
+              : 'present',
+      installedVersion: null,
+      bundledVersion: null,
+    }));
+  const managed = assets.filter(
+    ({ definition: asset }) => asset.ownership[scope] === 'managed',
+  );
+  const present = managed.filter(({ status }) => status !== 'missing').length;
+  return {
+    pack: 'ideas',
+    scope,
+    intent: {
+      pack: 'ideas',
+      scope,
+      enabled: source === 'declared',
+      source,
+      configPath: join(`/${scope}`, '.oat/config.json'),
+      diagnostics: [],
+    },
+    completeness:
+      present === 0
+        ? 'absent'
+        : present === managed.length
+          ? 'complete'
+          : 'partial',
+    assets,
+    diagnostics: [],
+  };
+}
+
+function blockedPlannerPreview(): PackMigrationPreview {
+  return planPackMigration({
+    pack: 'ideas',
+    from: 'project',
+    to: 'user',
+    sourceRoot: '/project',
+    destinationRoot: '/user',
+    assetsRoot: '/assets',
+    sourceInventory: plannerInventory('project', 'declared'),
+    destinationInventory: plannerInventory(
+      'user',
+      'none',
+      'skill:oat-idea-new',
+    ),
+  });
+}
 
 function scopedInventory(scope: ConcreteScope): ScopedPackInventory {
   return {
@@ -211,26 +282,13 @@ describe('createToolsMigrateCommand', () => {
   });
 
   it('returns an inspectable typed blocked preview without mutating', async () => {
-    const blocked = preview();
-    blocked.status = 'blocked';
-    blocked.additions = [];
-    blocked.conflicts = [
-      {
-        assetId: 'skill:oat-idea-new',
-        kind: 'skill',
-        scope: 'user',
-        path: '/user/.agents/skills/oat-idea-new',
-        status: 'newer',
-        reason: 'newer-destination-asset',
-      },
-    ];
+    const blocked = blockedPlannerPreview();
     const harness = createHarness({ preview: blocked });
     await runCommand(harness.command, requiredArgs, ['--json']);
 
     expect(harness.capture.jsonPayloads[0]).toMatchObject({
       status: 'blocked',
       preview: {
-        additions: [],
         conflicts: [
           {
             assetId: 'skill:oat-idea-new',
@@ -240,6 +298,19 @@ describe('createToolsMigrateCommand', () => {
         ],
       },
     });
+    const payload = harness.capture.jsonPayloads[0] as {
+      preview: PackMigrationPreview;
+    };
+    expect(payload.preview.additions).not.toContainEqual(
+      expect.objectContaining({ assetId: 'skill:oat-idea-new' }),
+    );
+    expect(payload.preview.additions.length).toBeGreaterThan(0);
+    expect(payload.preview.destinationPlan.operations).not.toContainEqual(
+      expect.objectContaining({ assetId: 'skill:oat-idea-new' }),
+    );
+    expect(payload.preview.destinationPlan.changedCanonicalPaths).not.toContain(
+      '.agents/skills/oat-idea-new',
+    );
     expect(harness.executeDestination).not.toHaveBeenCalled();
     expect(harness.confirmAction).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(1);
@@ -248,11 +319,14 @@ describe('createToolsMigrateCommand', () => {
     const human = createHarness({ preview: blocked });
     await runCommand(human.command, requiredArgs);
     const rendered = human.capture.info.join('\n');
-    expect(rendered).toMatch(/additions: 0/i);
-    expect(rendered).toContain(
-      'skill:oat-idea-new [skill] user newer: /user/.agents/skills/oat-idea-new',
+    expect(rendered).toMatch(
+      new RegExp(`additions: ${blocked.additions.length}`, 'i'),
     );
-    expect(rendered).not.toContain('destination-reconcile');
+    const conflictLine = rendered
+      .split('\n')
+      .find((line) => line.includes('skill:oat-idea-new [skill] user newer'));
+    expect(conflictLine).toContain('/user/.agents/skills/oat-idea-new');
+    expect(conflictLine).not.toContain('destination-reconcile');
   });
 
   it('stops before source confirmation when destination provider sync fails', async () => {
