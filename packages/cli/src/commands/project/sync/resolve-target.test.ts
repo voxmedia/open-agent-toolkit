@@ -156,14 +156,14 @@ describe('resolveSyncedTarget', () => {
   );
 
   it('allows an absent checkout when a record exists', async () => {
+    const injected = deps({ record: true });
+    injected.realpath = vi.fn(async (path: string) => path);
     await expect(
-      resolveSyncedTarget(
-        { repoRoot: '/repo', env: {} },
-        'demo',
-        deps({ record: true }),
-        { allowMissingCheckout: true },
-      ),
+      resolveSyncedTarget({ repoRoot: '/repo', env: {} }, 'demo', injected, {
+        allowMissingCheckout: true,
+      }),
     ).resolves.toMatchObject({ slug: 'demo' });
+    expect(injected.realpath).not.toHaveBeenCalled();
   });
 
   it('rejects non-synced paths and unknown slugs', async () => {

@@ -5,6 +5,7 @@ import {
   readFile,
   rm,
   stat,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -391,6 +392,71 @@ describe('oat-project-split integration fixtures', () => {
     await finalizeSplit(document.plan, context);
 
     expectPublishedSplit(fixture.originDir, document);
+  });
+
+  it('rejects an internally constructed child target aliased to a sibling before git mutation', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const document = documentFor('declared');
+    const context = {
+      repoRoot: fixture.cloneA,
+      projectsRoot: '.oat/projects/shared',
+      scope: 'synced' as const,
+      scopeRoot: '.oat/projects/synced',
+    };
+    await writeCoordinationParent(document, context);
+    await seedChildren(document.plan, context);
+    const aliasedSlug = document.plan.children[0]!.slug;
+    const siblingSlug = document.plan.children[1]!.slug;
+    const aliasedPath = join(
+      fixture.cloneA,
+      '.oat/projects/synced',
+      aliasedSlug,
+    );
+    const siblingPath = join(
+      fixture.cloneA,
+      '.oat/projects/synced',
+      siblingSlug,
+    );
+    const siblingHead = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: siblingPath,
+      encoding: 'utf8',
+    }).trim();
+    const siblingStatus = execFileSync('git', ['status', '--porcelain'], {
+      cwd: siblingPath,
+      encoding: 'utf8',
+    });
+    await rm(aliasedPath, { recursive: true, force: true });
+    await symlink(siblingPath, aliasedPath, 'dir');
+    const calls: Array<{ args: string[]; cwd: string }> = [];
+    const recordingRunner: typeof defaultGitRunner = {
+      async run(args, options) {
+        calls.push({ args: [...args], cwd: options.cwd });
+        if (options.cwd === aliasedPath) {
+          throw new Error('git must not run through the aliased child target');
+        }
+        return defaultGitRunner.run(args, options);
+      },
+    };
+
+    await expect(
+      finalizeSplit(document.plan, { ...context, gitRunner: recordingRunner }),
+    ).rejects.toMatchObject({
+      message: expect.stringContaining('canonical direct child'),
+    });
+    expect(calls.some((call) => call.cwd === aliasedPath)).toBe(false);
+    expect(
+      execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: siblingPath,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe(siblingHead);
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: siblingPath,
+        encoding: 'utf8',
+      }),
+    ).toBe(siblingStatus);
   });
 
   it('publishes final parent and child seeds after a missing-child synced resume', async () => {

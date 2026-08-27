@@ -13,7 +13,11 @@ import {
 import { readOatLocalConfig, type OatLocalConfig } from '@config/oat-config';
 import { CliError } from '@errors/cli-error';
 
-import { buildSyncTarget, type SyncTarget } from './ref-sync';
+import {
+  assertCanonicalSyncTargetIdentity,
+  buildSyncTarget,
+  type SyncTarget,
+} from './ref-sync';
 
 const PROJECT_SLUG_PATTERN = /^(?!-)[a-zA-Z0-9_-]+$/;
 
@@ -130,20 +134,12 @@ export async function resolveSyncedTarget(
     slug = directChild;
   }
 
-  const checkoutExists = await dependencies.pathExists(projectPath);
-  if (checkoutExists) {
-    const [canonicalCheckout, canonicalSyncedRoot] = await Promise.all([
-      dependencies.realpath(projectPath),
-      dependencies.realpath(syncedRoot),
-    ]);
-    const canonicalDirectChild = resolve(canonicalSyncedRoot, slug);
-    if (canonicalCheckout !== canonicalDirectChild) {
-      throw new CliError(
-        `Project checkout must resolve to its canonical direct child of the synced project root: ${requested}`,
-        1,
-      );
-    }
-  }
+  const target = buildSyncTarget(context.repoRoot, projectsRoot, slug);
+  const checkoutExists = await assertCanonicalSyncTargetIdentity(target, {
+    pathExists: dependencies.pathExists,
+    realpath: dependencies.realpath,
+    exitCode: 1,
+  });
   const record = await dependencies.readSyncedRecord(
     syncedRecordPath(syncedRoot, slug),
   );
@@ -182,5 +178,5 @@ export async function resolveSyncedTarget(
     adopt = true;
   }
 
-  return { ...buildSyncTarget(context.repoRoot, projectsRoot, slug), adopt };
+  return { ...target, adopt };
 }

@@ -21,10 +21,17 @@ import {
 
 export interface SyncTarget {
   repoRoot: string;
+  syncedRoot: string;
   slug: string;
   projectPath: string;
   ref: string;
   remote: string;
+}
+
+export interface SyncTargetIdentityOptions {
+  pathExists?: (path: string) => Promise<boolean>;
+  realpath?: (path: string) => Promise<string>;
+  exitCode?: 1 | 2;
 }
 
 export interface AllowlistedPathspecOptions {
@@ -76,11 +83,47 @@ export function buildSyncTarget(
   const syncedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'synced');
   return {
     repoRoot: resolve(repoRoot),
+    syncedRoot,
     slug,
     projectPath: resolve(syncedRoot, slug),
     ref: syncedRefName(slug),
     remote: SYNCED_REMOTE,
   };
+}
+
+export async function assertCanonicalSyncTargetIdentity(
+  target: SyncTarget,
+  options: SyncTargetIdentityOptions = {},
+): Promise<boolean> {
+  const exitCode = options.exitCode ?? 2;
+  const expectedRef = syncedRefName(target.slug);
+  const expectedPath = resolve(target.syncedRoot, target.slug);
+  if (
+    resolve(target.projectPath) !== expectedPath ||
+    target.ref !== expectedRef
+  ) {
+    throw new CliError(
+      `Refusing synced mutation: ${target.projectPath} must identify the canonical direct child and ref for ${target.slug}.`,
+      exitCode,
+    );
+  }
+
+  const exists = await (options.pathExists ?? pathExists)(target.projectPath);
+  if (!exists) return false;
+
+  const canonicalize = options.realpath ?? realpath;
+  const [canonicalCheckout, canonicalSyncedRoot] = await Promise.all([
+    canonicalize(target.projectPath),
+    canonicalize(target.syncedRoot),
+  ]);
+  const canonicalDirectChild = resolve(canonicalSyncedRoot, target.slug);
+  if (canonicalCheckout !== canonicalDirectChild) {
+    throw new CliError(
+      `Refusing synced mutation: ${target.projectPath} must resolve to its canonical direct child of the synced project root.`,
+      exitCode,
+    );
+  }
+  return true;
 }
 
 async function registeredWorktreePaths(
@@ -161,6 +204,7 @@ export async function createSyncedProject(
   target: SyncTarget,
   git: GitRunner,
 ): Promise<void> {
+  await assertCanonicalSyncTargetIdentity(target);
   await assertCreateTargetAvailable(target, git);
   const tree = await git.run(['hash-object', '-t', 'tree', '/dev/null'], {
     cwd: target.repoRoot,
@@ -410,12 +454,13 @@ export async function pullSynced(
   git: GitRunner,
   options: { adopt?: boolean; now?: Date } = {},
 ): Promise<PullResult> {
+  const checkoutExists = await assertCanonicalSyncTargetIdentity(target);
   await git.run(['fetch', target.remote, `+${target.ref}:${target.ref}`], {
     cwd: target.repoRoot,
   });
   await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
 
-  if (!(await pathExists(target.projectPath))) {
+  if (!checkoutExists) {
     await mkdir(dirname(target.projectPath), { recursive: true });
     await git.run(
       ['worktree', 'add', '--detach', target.projectPath, target.ref],
@@ -456,6 +501,7 @@ export async function pullChildren(
   parentTarget: SyncTarget,
   git: GitRunner,
 ): Promise<PullChildResult[]> {
+  await assertCanonicalSyncTargetIdentity(parentTarget);
   const statePath = resolve(parentTarget.projectPath, 'state.md');
   const block = getFrontmatterBlock(await readFile(statePath, 'utf8'));
   if (!block) return [];
@@ -493,6 +539,7 @@ export async function pullChildren(
       projectPath: resolve(syncedRoot, slug),
       ref: syncedRefName(slug),
     };
+    await assertCanonicalSyncTargetIdentity(childTarget);
     const recordPath = syncedRecordPath(syncedRoot, slug);
     const adopt = (await readSyncedRecord(recordPath)) === null;
     const remote = await git.run(
@@ -608,6 +655,7 @@ export async function preflightSyncedCheckout(
   target: SyncTarget,
   git: GitRunner,
 ): Promise<CheckoutPreflight> {
+  const checkoutExists = await assertCanonicalSyncTargetIdentity(target);
   const fetched = await git.run(
     ['fetch', target.remote, `+${target.ref}:${target.ref}`],
     { cwd: target.repoRoot, allowFailure: true },
@@ -617,7 +665,7 @@ export async function preflightSyncedCheckout(
     assertExpectedGitResult('git fetch synced ref', fetched, [0]);
   }
 
-  if (!(await pathExists(target.projectPath))) {
+  if (!checkoutExists) {
     return { status: 'absent' };
   }
 
@@ -683,6 +731,7 @@ export async function rollbackCreatedSyncedProject(
   target: SyncTarget,
   git: GitRunner,
 ): Promise<void> {
+  await assertCanonicalSyncTargetIdentity(target);
   if (await isTargetRegistered(target, git)) {
     await git.run(['worktree', 'remove', '--force', target.projectPath], {
       cwd: target.repoRoot,
@@ -696,6 +745,7 @@ export async function assertNestedWorktree(
   target: SyncTarget,
   git: GitRunner,
 ): Promise<void> {
+  await assertCanonicalSyncTargetIdentity(target);
   if (
     resolve(target.projectPath) === resolve(target.repoRoot) ||
     !(await isSyncedCheckout(target.projectPath))

@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { CliError } from '@errors/cli-error';
@@ -24,6 +24,7 @@ import {
   pullSynced,
   pushSynced,
   removeSyncedCheckout,
+  rollbackCreatedSyncedProject,
   type SyncTarget,
 } from './ref-sync';
 
@@ -264,6 +265,93 @@ describe('createSyncedProject', () => {
 });
 
 describe('mutation invariants', () => {
+  it.each([
+    [
+      'create',
+      (target: SyncTarget, runner: GitRunner) =>
+        createSyncedProject(target, runner),
+    ],
+    [
+      'push',
+      (target: SyncTarget, runner: GitRunner) => pushSynced(target, runner, {}),
+    ],
+    [
+      'pull',
+      (target: SyncTarget, runner: GitRunner) => pullSynced(target, runner),
+    ],
+    [
+      'continue',
+      (target: SyncTarget, runner: GitRunner) => continueSynced(target, runner),
+    ],
+    [
+      'abort',
+      (target: SyncTarget, runner: GitRunner) => abortSynced(target, runner),
+    ],
+    [
+      'preflight',
+      (target: SyncTarget, runner: GitRunner) =>
+        preflightSyncedCheckout(target, runner),
+    ],
+    [
+      'remove',
+      (target: SyncTarget, runner: GitRunner) =>
+        removeSyncedCheckout(target, runner),
+    ],
+    [
+      'rollback',
+      (target: SyncTarget, runner: GitRunner) =>
+        rollbackCreatedSyncedProject(target, runner),
+    ],
+  ] as const)(
+    'rejects a sibling checkout symlink before %s can run git',
+    async (_operation, mutate) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const sibling = buildSyncTarget(
+          fixture.cloneA,
+          '.oat/projects/shared',
+          'sibling',
+        );
+        const target = buildSyncTarget(
+          fixture.cloneA,
+          '.oat/projects/shared',
+          'alias',
+        );
+        await createSyncedProject(sibling, defaultGitRunner);
+        await writeFile(
+          join(sibling.projectPath, 'preserve.md'),
+          'preserve sibling\n',
+          'utf8',
+        );
+        const siblingStatus = git(sibling.projectPath, [
+          'status',
+          '--porcelain',
+        ]);
+        await symlink(sibling.projectPath, target.projectPath, 'dir');
+        const calls: string[][] = [];
+        const recordingRunner: GitRunner = {
+          async run(args) {
+            calls.push([...args]);
+            throw new Error('git should not run');
+          },
+        };
+
+        await expect(mutate(target, recordingRunner)).rejects.toMatchObject({
+          message: expect.stringContaining('canonical direct child'),
+        });
+        expect(calls).toEqual([]);
+        expect(
+          await readFile(join(sibling.projectPath, 'preserve.md'), 'utf8'),
+        ).toBe('preserve sibling\n');
+        expect(git(sibling.projectPath, ['status', '--porcelain'])).toBe(
+          siblingStatus,
+        );
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+  );
+
   it('rejects a parent checkout as the nested mutation target', async () => {
     const fixture = await createSyncedFixture();
     try {
@@ -880,6 +968,69 @@ describe('pullSynced', () => {
 });
 
 describe('pullChildren', () => {
+  it('rejects a child symlink to a sibling before record access or git mutation', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const parent = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'parent',
+      );
+      const sibling = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'sibling',
+      );
+      const child = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'child',
+      );
+      await createSyncedProject(parent, defaultGitRunner);
+      await writeFile(
+        join(parent.projectPath, 'state.md'),
+        '---\noat_kind: coordination\noat_children:\n  - child\n---\n',
+        'utf8',
+      );
+      await createSyncedProject(sibling, defaultGitRunner);
+      await writeFile(
+        join(sibling.projectPath, 'preserve.md'),
+        'preserve sibling\n',
+        'utf8',
+      );
+      await symlink(sibling.projectPath, child.projectPath, 'dir');
+      const recordPath = join(
+        fixture.cloneA,
+        '.oat/projects/synced/child.json',
+      );
+      await mkdir(dirname(recordPath), { recursive: true });
+      await writeFile(recordPath, '{ invalid json\n', 'utf8');
+      const siblingStatus = git(sibling.projectPath, ['status', '--porcelain']);
+      const calls: string[][] = [];
+      const recordingRunner: GitRunner = {
+        async run(args) {
+          calls.push([...args]);
+          throw new Error('git should not run');
+        },
+      };
+
+      await expect(pullChildren(parent, recordingRunner)).rejects.toMatchObject(
+        {
+          message: expect.stringContaining('canonical direct child'),
+        },
+      );
+      expect(calls).toEqual([]);
+      expect(
+        await readFile(join(sibling.projectPath, 'preserve.md'), 'utf8'),
+      ).toBe('preserve sibling\n');
+      expect(git(sibling.projectPath, ['status', '--porcelain'])).toBe(
+        siblingStatus,
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('adopts available coordination children and reports missing children', async () => {
     const fixture = await createSyncedFixture({ secondClone: true });
     try {
