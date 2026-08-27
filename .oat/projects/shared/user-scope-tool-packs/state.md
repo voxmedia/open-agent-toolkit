@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: null
+oat_last_commit: aa7cac726
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -13,8 +13,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -84,20 +84,20 @@ oat_generated: false
 
 # Project State: user-scope-tool-packs
 
-**Status:** Discovery complete — ready for design
+**Status:** Design drafted — awaiting independent review
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-26
 
 ## Current Phase
 
-Discovery complete. Requirements and product boundaries are approved; the
-project is ready for `oat-project-design`.
+Specification is complete and the draft technical design is ready for one
+independent Fable review/fix pass.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete and approved)
-- **Spec:** `spec.md` (scaffolded template — authored inline by `oat-project-design`)
-- **Design:** `design.md` (scaffolded template — not started)
+- **Spec:** `spec.md` (complete)
+- **Design:** `design.md` (drafted — review pending)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
@@ -108,6 +108,9 @@ project is ready for `oat-project-design`.
 - ✓ Unified user-scope pack contract selected
 - ✓ Pack membership, PJM ownership, template precedence, and migration safety defined
 - ✓ Discovery HiLL checkpoint approved
+- ✓ Specification confirmed
+- ✓ Technical design drafted
+- ⧗ Independent design review and bounded fix pass
 
 ## Blockers
 
@@ -115,5 +118,5 @@ None
 
 ## Next Milestone
 
-Begin `oat-project-design` to confirm the formal requirements and produce the
-technical design.
+Run the approved Fable design gate once, apply one bounded fix pass, then mark
+design complete and continue to `oat-project-plan`.
