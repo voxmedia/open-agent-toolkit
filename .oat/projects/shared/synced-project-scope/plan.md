@@ -1061,6 +1061,44 @@ git commit -m "feat(p02-t10): adopt remote synced projects on pull and pull coor
 
 ---
 
+### Task p02-t11: Scope-aware `oat project open` and `oat project pause`
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/open/index.ts` (`:129-143` resolves names only under `projects.root`)
+- Modify: `packages/cli/src/commands/project/pause/index.ts` (`:81-166` writes `state.md` then clears the active pointer without publishing)
+- Modify: `packages/cli/src/commands/project/open/index.test.ts`, `packages/cli/src/commands/project/pause/index.test.ts`
+
+**Step 1: Write test (RED)**
+
+- `open <slug>` resolves across `shared`, `synced`, and `local` roots (exact match; ambiguity across scopes → error listing candidates); a synced slug with a record but no checkout → pulls (adopting if needed) before opening; sets `activeProject` to the scope-correct path.
+- `pause` on a synced project: writes `state.md`, then `pushSynced` (message `chore(oat): pause <slug>`) **before** clearing the active pointer; push failure leaves the pointer set and exits 1 with the push error; `shared`/`local` behavior unchanged (existing tests pass).
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/open src/commands/project/pause`
+Expected: new cases fail.
+
+**Step 2: Implement (GREEN)**
+
+Both commands use `project-scope.ts` roots and `resolveSyncedTarget`; `pause` injects `pushSynced`.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/open src/commands/project/pause`
+Expected: green.
+
+**Step 4: Format**
+
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/open/ packages/cli/src/commands/project/pause/`
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/open/ packages/cli/src/commands/project/pause/
+git commit -m "feat(p02-t11): make oat project open and pause synced-aware"
+```
+
+---
+
 ## Phase 3: Reviewer and lifecycle surface
 
 Goal: PR links, completion parity, prune/migrate, doctor, gitattributes, local-sync guard, and a real dogfood run.
@@ -1205,6 +1243,8 @@ git commit -m "feat(p03-t03): refresh PR links block on push while a PR is open"
 - Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
 - Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
 - Modify: `packages/cli/src/commands/project/archive/index.ts` (+ `index.test.ts`) for the `--no-commit` flag and JSON fields
+- Modify: `packages/cli/src/commands/project/archive/push-runner.ts` (+ `push-runner.test.ts`) — owns `ArchivePushOptions`, report construction, and option plumbing: the `--no-commit` option, the `lifecycleCommit` / `recapExportPaths` / `snapshotId` report fields, and the synced commit behavior live here; `index.ts` only wires the flag
+- Modify: `packages/cli/src/commands/project/sync/record.ts` (`archiveSnapshot?: string` — the stable snapshot name recorded on the first archive attempt so retries reuse it)
 - Modify: `packages/cli/src/fs/io.ts` (`copyDirectory` gains an optional `filter`)
 - Modify: `packages/cli/src/e2e/workflow.test.ts` (archive step)
 
@@ -1215,6 +1255,8 @@ Using the fixture with a pushed synced project:
 - Dirty checkout → archive refuses (`CliError`, names `oat project push`); unpushed commit → refuses; nothing archived, nothing removed.
 - Clean + pushed → archive dir exists with no `.git` entry and **no `reviews/` directory** (FR18; `pr/`, `summary.md`, lifecycle files present); `worktree list` has no stale entry; record has `status:'complete'` + `completedAt`; parent `ls-tree HEAD` shows the updated record (and the summary export file when `archive.summaryExportPath` is configured) in one commit `chore(oat): complete synced project <slug>`; `origin` still has the ref; `computeLinksInput` still works.
 - Re-run after success → idempotent (no second commit, no error).
+- **Retry identity:** the first attempt writes `record.archiveSnapshot = <snapshot name>` before copying; failure injected after the copy, after summary export/S3, after the record commit, and before checkout removal each leave a state from which a re-run **reuses the same snapshot path and export file** (no `-<suffix>` target, no duplicate export, no second lifecycle commit) and completes; the checkout is removed only after every durable write succeeded.
+- **Recap transaction (FR8/NFR1 parity with today's Steps 10–10.6):** with a selected project recap (`--project-recap-run`), the archive report exposes the exact tracked recap-export paths; the lifecycle commit made by `commitRecordChange` contains the record, the summary export, and the **immutable** recap export paths (allowlist extended to `projectRecapExport.exportRoot`, excluding `manifest.json`/`build-record.json`); the report returns that `lifecycleCommit` SHA for re-attestation; a second `commitRecordChange` (invoked by the skill after Step 10.5) commits only `manifest.json` + `build-record.json`; tests cover recap and no-recap completion, exact path containment of both commits, commit order, and recovery when the second commit fails (re-run commits only the evidence).
 - `shared` project → identical to existing tests **except** that `reviews/` is no longer copied into `archived/<name>/` (FR18; update the one existing assertion that expected it, if any).
 - e2e: extend the `synced project lifecycle` describe in `packages/cli/src/e2e/workflow.test.ts` (p02-t08) with `project push` → `project archive` through the real program; assert the parent commit, absent checkout, and retained origin ref.
 
@@ -1223,7 +1265,7 @@ Expected: new cases fail.
 
 **Step 2: Implement (GREEN)**
 
-In `archiveProjectOnCompletion`: `if (await isSyncedCheckout(source))` → precondition via the **non-mutating** `preflightSyncedCheckout(t, git)` from p01-t09 (returns `clean` | `dirty` | `unpushed` | `absent`; refuse unless `clean`) → copy with a filter excluding top-level `.git` (extend `copyDirectory` with an optional `filter`) → existing export/S3 → record update → `commitRecordChange` (unless `commit:false`) → `removeSyncedCheckout` (called exactly once, last; test asserts the source directory still exists immediately after the copy and the record commit). The copy filter also skips `reviews/` for **every** scope (FR18) — the local snapshot no longer carries review artifacts, matching what S3 already excludes. Dependencies injected for tests.
+In `archiveProjectOnCompletion`: `if (await isSyncedCheckout(source))` → precondition via the **non-mutating** `preflightSyncedCheckout(t, git)` from p01-t09 (returns `clean` | `dirty` | `unpushed` | `absent`; refuse unless `clean`) → copy with a filter excluding top-level `.git` (extend `copyDirectory` with an optional `filter`) → persist `record.archiveSnapshot` (retry identity; `resolveArchiveProjectTarget` must honor it instead of suffixing) → existing export/S3 → record update → `commitRecordChange([record, summaryExport, ...immutableRecapExportPaths])` (unless `commit:false`; returns `lifecycleCommit`) → `removeSyncedCheckout` (called exactly once, last, only after every durable write; test asserts the source directory still exists immediately after the copy and the record commit). The copy filter also skips `reviews/` for **every** scope (FR18) — the local snapshot no longer carries review artifacts, matching what S3 already excludes. Dependencies injected for tests.
 
 **Step 3: Verify**
 
@@ -1643,7 +1685,7 @@ git commit -m "feat(p04-t04): pull synced artifacts on arrival and document scop
 
 - Modify: `.agents/skills/oat-project-pr-final/SKILL.md` — for `synced` projects the PR step becomes an explicit ordered sequence: (1) generate/refresh `summary.md` and the `pr/` artifact as today; (2) **`oat project push`** so the ref contains the summary and any moved artifacts (`oat project links` reads the ref — a summary that exists only in the checkout would be omitted); (3) render the block with `oat project links "$PROJECT_PATH"` and insert it into the body (`:280-320`); (4) `gh pr create`; (5) set `oat_pr_status: open` and `oat_pr_url` in `state.md` (`:408`, unchanged); (6) **`oat project push`** again so the ref carries the authoritative PR metadata and the push path refreshes the block to the new ref SHA. `:299-301`: synced artifact paths are never linked as References — the block replaces them.
 - Modify: `.agents/skills/oat-project-pr-progress/SKILL.md` (`:227-265`, `:246-247`, `:312`) — same six-step sequence; **new behavior:** progress PRs must persist `oat_pr_status: open` / `oat_pr_url` in `state.md` (today they do not), otherwise p03-t03's push-time refresh never fires for mid-project PRs. Verification for both skills (manual, recorded in `implementation.md` during p04-t10): a freshly generated `summary.md` appears in the initial block; after a progress PR, one more `oat project push` re-renders the block with the new SHA.
-- Modify: `.agents/skills/oat-project-complete/SKILL.md` — **first** replace the Step 1 shared-only classification (`:48-51`, `IS_SHARED_PROJECT` derived from `projects.root` prefix) with a single `PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value)` and a derived `IS_DURABLE_PROJECT` that is true for `shared` **and** `synced`; then audit and update every `IS_SHARED_PROJECT` condition — archive offer `:145`, recap/export durability gate `:355`, archive execution `:442`, `:514`, link-breakage note `:716` — so `shared` and `synced` receive identical archive/recap/durable behavior (including when `workflow.archiveOnComplete` is unset) while `local` stays exactly as today; **then** steps 7–11.5 for synced projects run the design's 7-step state machine (finalize → `oat project push` → `oat project archive` (steps 3–6, commits record + summary export) → `oat project links --durable-summary <path>` → `gh pr edit`); step 10's bookkeeping commit becomes a no-op for synced projects; keep the anti-pattern note about never linking `archived/` paths
+- Modify: `.agents/skills/oat-project-complete/SKILL.md` — **first** replace the Step 1 shared-only classification (`:48-51`, `IS_SHARED_PROJECT` derived from `projects.root` prefix) with a single `PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value)` and a derived `IS_DURABLE_PROJECT` that is true for `shared` **and** `synced`; then audit and update every `IS_SHARED_PROJECT` condition — archive offer `:145`, recap/export durability gate `:355`, archive execution `:442`, `:514`, link-breakage note `:716` — so `shared` and `synced` receive identical archive/recap/durable behavior (including when `workflow.archiveOnComplete` is unset) while `local` stays exactly as today; **then** steps 7–11.5 for synced projects run the design's 7-step state machine (finalize → `oat project push` → `oat project archive` (steps 3–6, commits record + summary export) → `oat project links --durable-summary <path>` → `gh pr edit`); Step 10 for synced projects is **not** a no-op: the lifecycle commit is the one `oat project archive` makes (its JSON `lifecycleCommit` SHA replaces the `git rev-parse HEAD` the skill uses today for recap re-attestation in Step 10.5); Step 10.6's evidence commit (`manifest.json` + `build-record.json`) becomes `oat project archive --commit-evidence` (a thin `commitRecordChange` wrapper exposed by push-runner) so the two-commit-then-one-push protocol at `:588-680` is preserved exactly; the `IS_SHARED_PROJECT="false"` recap sentence at `:355` becomes scope-aware so `synced` recaps are exported and attested like `shared`; keep the anti-pattern note about never linking `archived/` paths
 - Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` (`:802-912` pins the shared-only wording, e.g. the `IS_SHARED_PROJECT="false"` recap sentence at `:912`) — update the pinned strings to the scope-aware wording and add an assertion that the skill classifies `synced` as durable
 
 **Step 1: Apply**
@@ -1683,7 +1725,7 @@ git commit -m "feat(p04-t05): embed pinned artifact links in PRs and complete sy
 
 **Step 1: Write test (RED)**
 
-Validator fails any `oat-*` SKILL.md or `references/*.md` that (a) contains `git add` with a pathspec under `.oat/projects/synced/` (tree-wide), or (b) pipes `oat project scope` output into `jq` / parses its `--json` instead of using `--format value` (tree-wide, pattern-based: `project scope[^\n]*\|[^\n]*jq`). Do **not** ban the `jq` token globally — `oat-wrap-up`, `oat-project-review-provide-remote`, `oat-review-provide-remote`, `oat-docs-analyze`, `oat-docs-apply`, `oat-repo-knowledge-index`, `oat-agent-instructions-analyze`, and `oat-agent-instructions-apply` use `jq`/`--jq` legitimately today. Rule (c), lifecycle-scoped (`oat-project-*`, `oat-worktree-*`, `oat-brainstorm`, `oat-wave-execute`, `.agents/agents/oat-phase-implementer.md`): any `git add`/`git commit` line whose pathspec references a project-artifact variable (`$PROJECT_PATH`, `{PROJECT_PATH}`, `$ARTIFACT_PATH`, `$ACTIVE_PROJECT`, `$REVIEW_PATH`) must be preceded within the same fenced code block by the scope guard (`oat project scope … --format value`); an unguarded occurrence fails with file:line. Rule (d), inventory: a checked-in list `packages/cli/src/validation/synced-bookkeeping-sites.json` of every bookkeeping site swept in p04-t01..t05 (file + unique anchor phrase); the validator asserts each anchor still exists and is guarded, so procedural rewrites cannot silently drop a site. Fixtures: one passing guarded skill, one unguarded `$PROJECT_PATH` commit modeled on `oat-project-review-provide` Step 9.5, one with a stale inventory anchor. Passes the real skill tree after p04-t01..t05; fails a fixture skill for each rule.
+Validator fails any `oat-*` SKILL.md or `references/*.md` that (a) contains `git add` with a pathspec under `.oat/projects/synced/` (tree-wide), or (b) pipes `oat project scope` output into `jq` / parses its `--json` instead of using `--format value` (tree-wide, pattern-based: `project scope[^\n]*\|[^\n]*jq`). Do **not** ban the `jq` token globally — `oat-wrap-up`, `oat-project-review-provide-remote`, `oat-review-provide-remote`, `oat-docs-analyze`, `oat-docs-apply`, `oat-repo-knowledge-index`, `oat-agent-instructions-analyze`, and `oat-agent-instructions-apply` use `jq`/`--jq` legitimately today. Rule (c), lifecycle-scoped (`oat-project-*`, `oat-worktree-*`, `oat-brainstorm`, `oat-wave-execute`, `.agents/agents/oat-phase-implementer.md`): any `git add`/`git commit` line whose pathspec references a project-artifact variable (`$PROJECT_PATH`, `{PROJECT_PATH}`, `$ARTIFACT_PATH`, `$ACTIVE_PROJECT`, `$REVIEW_PATH`) must be preceded within the same fenced code block by the scope guard (`oat project scope … --format value`); an unguarded occurrence fails with file:line. Rule (d), inventory: a checked-in list `packages/cli/src/validation/synced-bookkeeping-sites.json` of **every command, skill, and agent that resolves a project path, reads artifacts on arrival, or writes project artifacts** — the bookkeeping sites swept in p04-t01..t05 and p04-t11, the arrival sites, the PR/completion sites, and the CLI resolvers (`open`, `pause`, `list`, `status`, `push`, `pull`, `links`, `prune`, `migrate`, `archive`) — each with file + unique anchor phrase + kind (`resolve` | `arrival` | `write`); the validator asserts each anchor still exists and is guarded, and a separate completeness test greps `.agents/skills/oat-*` and `.agents/agents/*` for `activeProject`/`PROJECT_PATH` writers not present in the inventory, so future additions cannot silently bypass synced durability. Fixtures: one passing guarded skill, one unguarded `$PROJECT_PATH` commit modeled on `oat-project-review-provide` Step 9.5, one with a stale inventory anchor. Passes the real skill tree after p04-t01..t05; fails a fixture skill for each rule.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
 Expected: fails.
@@ -1819,11 +1861,13 @@ Exercise at least one rewritten bookkeeping site and one arrival site end to end
 ```bash
 oat() { pnpm run --silent cli -- "$@"; }
 oat project new skill-dogfood --mode quick            # synced; becomes the active project
-# 1. Bookkeeping site: run `oat-project-quick-start` discovery capture in this session (or paste its Step
-#    snippet verbatim into a shell) so it executes the scope guard → `oat project push`.
+# 1. Bookkeeping site — a REAL artifact-writing lifecycle skill, executed end to end on the prepared active project:
+#    run `oat-project-summary` (writes summary.md, then its bookkeeping site pushes). Acceptance is the skill's own
+#    run, not a pasted fragment; snippet-only execution is a separate mechanical check recorded alongside.
 git status --porcelain                                 # parent clean except the record file already committed
 git -C .oat/projects/synced/skill-dogfood log --oneline # shows the bookkeeping commit
-# 2. Arrival site: in a linked worktree run `oat-project-progress` (or its arrival snippet) and confirm it pulls.
+# 2. Arrival/routing site — a REAL skill in the linked worktree: run `oat-project-progress` and confirm its Step 0 pulled
+#    the checkout before reporting status (the arrival snippet alone is not the acceptance path).
 git worktree add ../oat-skill-wt -b tmp/skill-dogfood
 (cd ../oat-skill-wt && pnpm run worktree:init && oat() { pnpm run --silent cli -- "$@"; } && oat config set activeProject .oat/projects/synced/skill-dogfood && oat project pull skill-dogfood && ls .oat/projects/synced/skill-dogfood)
 oat project prune skill-dogfood --force
@@ -1865,6 +1909,39 @@ git status --porcelain            # must be empty — the phase is not complete 
 
 ---
 
+### Task p04-t11: Bookkeeping sweep D — capture, promote, autonomous, next, retro-file
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-capture/SKILL.md` (`:147-253` creates a project — now `synced` by default — then rewrites discovery/state/implementation without a push → push after the rewrite under the guard)
+- Modify: `.agents/skills/oat-project-promote-spec-driven/SKILL.md` (artifact rewrites → push under the guard)
+- Modify: `.agents/skills/oat-project-autonomous/SKILL.md` (`:240-281` persists state/learnings outside an owning lifecycle commit → push under the guard at each persistence point; arrival pull at start)
+- Modify: `.agents/skills/oat-project-next/SKILL.md` (routing/orchestration entry point → arrival pull before reading state)
+- Modify: `.agents/skills/oat-project-retro-file/SKILL.md` (writes destinations/statuses back to the retro artifact under the project → push under the guard)
+- Modify: `packages/cli/src/validation/synced-bookkeeping-sites.json` (add every site above, plus `oat project open`/`pause`/`list`/`status` as CLI resolvers)
+
+**Step 1: Apply**
+
+Canonical snippet and arrival guard as in p04-t01..t04; bump each `version:`.
+
+**Step 2: Verify**
+
+Run: `pnpm oat:validate-skills && pnpm run check:skill-bumps`
+Expected: pass (the p04-t06 inventory validator now asserts these sites are guarded).
+
+**Step 3: Format**
+
+Run: `pnpm exec oxfmt --write .agents/skills/oat-project-capture/SKILL.md .agents/skills/oat-project-promote-spec-driven/SKILL.md .agents/skills/oat-project-autonomous/SKILL.md .agents/skills/oat-project-next/SKILL.md .agents/skills/oat-project-retro-file/SKILL.md packages/cli/src/validation/synced-bookkeeping-sites.json`
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-capture .agents/skills/oat-project-promote-spec-driven .agents/skills/oat-project-autonomous .agents/skills/oat-project-next .agents/skills/oat-project-retro-file packages/cli/src/validation/synced-bookkeeping-sites.json
+git commit -m "feat(p04-t11): push synced artifacts from capture, promote, autonomous, next, and retro-file"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                          | Reviewed Head | Invocation | Gate Target              |
@@ -1883,7 +1960,7 @@ git status --porcelain            # must be empty — the phase is not complete 
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T022840Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T025742Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T031106Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T032056Z.md                | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T032056Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1894,11 +1971,11 @@ git status --porcelain            # must be empty — the phase is not complete 
 **Summary:**
 
 - Phase 1: 10 tasks - Sync foundations (scope resolver, gitignore rule, git runner, fixture, record, ref-sync create/push/pull/continue/abort, record commits, GitHub spike)
-- Phase 2: 10 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e, `list --remote`, adopting pull + children)
+- Phase 2: 11 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e, `list --remote`, adopting pull + children, synced-aware `open`/`pause`)
 - Phase 3: 10 tasks - Reviewer and lifecycle surface (links render/compute/refresh, archive state machine, `prune`, `migrate`, doctor, gitattributes, local-sync guard, dogfood)
-- Phase 4: 10 tasks - Skills sweep (A/B/C/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood
+- Phase 4: 11 tasks - Skills sweep (A/B/C/D/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood
 
-**Total: 40 tasks**
+**Total: 42 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

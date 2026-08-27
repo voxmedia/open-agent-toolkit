@@ -271,3 +271,13 @@ Status after attempt 4: still `blocked`; all findings applied. Awaiting maintain
 - M1 ledger reconciled: duplicate 013313Z row removed (my accidental duplicate; the gate's row kept), stale 025742Z row set to archived/fixes_completed.
 
 Gate attempt 7 authorized by the fold-in decision.
+
+**Attempt 7 — `reviews/archived/artifact-plan-review-2026-08-27T032056Z.md`** (2 critical, 1 important, 2 medium) — all resolved:
+
+- C1 recap two-commit protocol preserved for synced completion (lifecycle commit incl. immutable recap exports → attestation → evidence commit → one push); allowlist extended; tests.
+- C2 inventory gaps → new p02-t11 (`open`/`pause` synced-aware) and p04-t11 (capture, promote-spec-driven, autonomous, next, retro-file); p04-t06 inventory now covers every resolver/arrival/writer with a completeness test.
+- I1 archive retry identity: `record.archiveSnapshot` persisted before copy; failure injection at every boundary; checkout removed last.
+- M1 dogfood runs real skills (`oat-project-summary`, `oat-project-progress`).
+- M2 `push-runner.ts` added to p03-t04.
+
+Plan is now 42 tasks. Gate attempt 8 follows.
