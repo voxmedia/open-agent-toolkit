@@ -96,8 +96,8 @@ oat_implement_exit_gate:
   reviewed_head: e9a9575b761bb014c3c5a858dca4dbf24ed7acc4 # final review round 2 (passed) reviewed head; last code commit 6dc9cdd1
   implementation_base_ref: origin/main # 39cea8017b73b602f247cb50a372d1fb9cae34f1
   implementation_fingerprint: 'sha256:effective-delta-v1:0cb477cebd555533670fc670a813bde259b93d90f033ebcdc30276d2fa726a17' # effective delta at the last code commit 6dc9cdd1
-  freshness_head: b1c60abcc4787be401eaeb77ca7688e8d70810a4 # gate reviewed head (closeout-only descendants of the last code commit 6dc9cdd1)
-  freshness_fingerprint: 'sha256:effective-delta-v1:pending' # recomputed at the post-document-step checkpoint
+  freshness_head: 681ac33fb44ba60a672b0d1da8defc4c2f5aab3d # post-gate descendants: gate receive, sequence snapshot, summary step (decisions), document step (docs page + PJM) — the docs change is the recorded document-step task (plan item 5; anticipated by the final reviews); no code changed after 6dc9cdd1; pnpm check exit=0, pnpm build:docs exit=0 at this head
+  freshness_fingerprint: 'sha256:effective-delta-v1:2526e28e23f762a95b0792e3758afd3f60196b6680b2efa9f790a8368cf3f49b'
   launch_state: result_persisted # completed 2026-08-27T01:21:45Z, exit 0
   launch_attempt_id: 'w3-exit-gate-g1-a1'
   launch_started_at: '2026-08-27T01:08:10Z'
@@ -117,7 +117,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-08-27T01:24:31.201Z'
+  updated_at: '2026-08-27T01:25:13.308Z'
 oat_post_implement_sequence:
   status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
   source: configured # workflow.postImplementSequence
@@ -138,7 +138,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T23:08:35.576Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T01:24:40.999Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T01:25:13.308Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
