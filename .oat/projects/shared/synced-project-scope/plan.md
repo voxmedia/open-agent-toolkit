@@ -658,6 +658,8 @@ git commit -m "feat(p02-t01): add projects.defaultScope config key"
 - Modify: `packages/cli/src/commands/project/new/scaffold.test.ts`
 - Modify: `packages/cli/src/commands/project/log/lifecycle.integration.test.ts` (`:134` — pass `scope: 'shared'`; the temp repo has no `origin`)
 - Modify: `packages/cli/src/projects/split/seed-children.ts` (`:144`) and `packages/cli/src/projects/split/write-parent.ts` (`:189`) — children and coordination parents inherit the parent's scope via `resolveProjectScope(parentPath, projectsRoot)`, never the config default
+- Modify: `packages/cli/src/projects/split/finalize.ts` (`:35-48` builds parent/child/active paths from `projectsRoot` — carry the resolved parent **scope root** through write → seed → finalize so a `synced` split finalizes and activates `synced/<child>`, never `shared/<child>`) and `packages/cli/src/commands/project/split/run.ts` (thread the scope through the split context)
+- Split of a `synced` parent must **push again after all post-scaffold mutations**: `scaffoldProject` publishes each ref before `writeCoordinationParent`/`seedChildren` write `oat_children`, `oat_parent`, siblings, and discovery seeds; finalize therefore calls `pushSynced` for the parent and every child so the remote parent ref actually carries `oat_children` (FR17 depends on it)
 - Modify: `packages/cli/src/projects/split/__tests__/*` (add "split of a shared parent produces shared children")
 
 **Step 1: Write test (RED)**
@@ -665,6 +667,7 @@ git commit -m "feat(p02-t01): add projects.defaultScope config key"
 Using `createSyncedFixture()` (scaffold tests already use temp git repos; switch the new cases to the fixture so `origin` exists):
 
 - `oat project split` of a `shared` parent → every child scaffolded under `shared/`, no refs created (NFR1); of a `synced` parent → children `synced`.
+- **End-to-end synced split** (fixture with origin): `oat project split` of a `synced` parent → `activeProject` is `synced/<initial-child>`; `git show refs/oat/projects/<parent>:state.md` on **origin** contains the full `oat_children` list; each child ref's `state.md` carries `oat_parent`; parent `status --porcelain` shows only the record files.
 
 - `scaffoldProject({ scope: 'shared' })` → identical result to today's tests (path under `shared/`, scaffold commit stages the project dir). Existing tests must pass unchanged with `scope` omitted **when** `resolveDefaultScope` is injected to return `shared` — add that injection to the existing suite's default deps so they keep exercising `shared`.
 - `scope: 'local'` → path under `local/`, no commit attempted.
@@ -863,7 +866,50 @@ git commit -m "feat(p02-t06): add oat project pull command"
 - Modify: `packages/cli/src/commands/project/list.ts`
 - Modify: `packages/cli/src/commands/project/list.integration.test.ts` and `packages/cli/src/commands/project/list.test.ts` (if present; include it in format + commit when touched)
 - Modify: `packages/control-plane/README.md` (document the additive `ProjectSummary.scope` field — the package's AGENTS.md requires public API changes to be reflected there)
-- Modify: `packages/control-plane/src/types.ts` (`ProjectSummary.scope?: 'shared' | 'local' | 'synced'`) — additive optional field
+- Modify: `packages/control-plane/src/types.ts` — additive `ProjectSummary.scope?: 'shared' | 'local' | 'synced'` **plus** a discriminated list-row contract so rows without a materialized checkout never invent lifecycle values:
+
+  ```typescript
+  export type ProjectListRow =
+    | ({ kind: 'materialized' } & ProjectSummary & {
+          scope: ProjectScope;
+          checkout: 'present';
+        })
+    | {
+        kind: 'recorded-absent';
+        name;
+        path;
+        scope: 'synced';
+        checkout: 'absent';
+        phase: null;
+        phaseStatus: null;
+        workflowMode: null;
+        lifecycle: null;
+        progress: null;
+        recommendation: {
+          skill: 'oat project pull';
+          reason: 'checkout absent';
+        };
+      }
+    | {
+        kind: 'remote';
+        name;
+        scope: 'synced';
+        origin: 'remote';
+        checkout: 'absent';
+        ref;
+        phase: null;
+        phaseStatus: null;
+        workflowMode: null;
+        lifecycle: null;
+        progress: null;
+        recommendation: {
+          skill: 'oat project pull';
+          reason: 'not adopted on this branch';
+        };
+      };
+  ```
+
+  `oat project list --json` returns `ProjectListRow[]`; the human table renders `—` for null lifecycle cells and a `Hint` column. Existing consumers of `ProjectSummary` are unaffected (materialized rows are a superset). Document in `packages/control-plane/README.md`.
 
 **Step 1: Write test (RED)**
 
@@ -954,7 +1000,7 @@ Expected: new cases fail.
 
 **Step 2: Implement (GREEN)**
 
-`--remote` flag → `git ls-remote origin 'refs/oat/projects/*'` via the injected runner; diff against `listSyncedRecords`; append remote rows; `--json` rows gain `origin: 'local' | 'remote'`.
+`--remote` flag → `git ls-remote origin 'refs/oat/projects/*'` via the injected runner; diff against `listSyncedRecords`; append `kind: 'remote'` rows per the `ProjectListRow` contract from p02-t07 (no invented lifecycle values; `—` placeholders in the table); offline → warning, local rows only, exit 0; JSON tests assert the exact row shape for all three kinds.
 
 **Step 3: Verify**
 
@@ -995,7 +1041,7 @@ Expected: new cases fail.
 
 **Step 2: Implement (GREEN)**
 
-`resolveSyncedTarget` gains the remote-ref fallback (one `ls-remote --exit-code origin <ref>`); `pullSynced` writes + commits the record when `adopt` is set; `pullChildren(parentTarget)` reads `oat_children` via `parseFrontmatterField` and loops `pullSynced`, collecting per-child results; all record writes for one invocation go into a single `commitRecordChange` (allowlisted paths only).
+`resolveSyncedTarget` gains the remote-ref fallback (one `ls-remote --exit-code origin <ref>`). **Commit ownership is single-level:** the low-level `pullSynced` never commits — when `adopt` is set it writes the record file and returns `{ …, adopted: true, pendingRecordPaths: [recordPath] }`; the `oat project pull` command orchestrates: pull the target, then (unless `--no-children`) `pullChildren(parentTarget)`, collect every successful adoption's pending record path, and call `commitRecordChange` **once** with all of them (`chore(oat): adopt synced project(s) <slugs>`), or not at all under `--no-commit`. Partial child failure: successful adoptions are still committed together, failed children are listed in `children[]` with `status`, exit code 1, and nothing is rolled back. `pullChildren` reads `oat_children` by parsing the YAML frontmatter block as an object (`YAML.parse(getFrontmatterBlock(state))`, the inverse of `write-parent.ts`'s `YAML.stringify`) — **not** `parseFrontmatterField`, which is scalar-only and would return a raw string for the block sequence; every child must satisfy the slug regex or the pull fails before any network call; the test feeds the exact block-sequence output `writeCoordinationParent` produces.
 
 **Step 3: Verify**
 
@@ -1496,11 +1542,11 @@ git commit -m "feat(p04-t01): push synced artifacts from authoring skills"
 
 **Files:**
 
-- Modify: `.agents/skills/oat-project-implement/references/plan-and-resume.md` (arrival pull where resume resolves the next boundary), `references/phase-execution.md` (`:665-667`), `references/completion-and-closeout.md` (`:112-114`, `:872-874`); `SKILL.md` version bump
+- Modify: `.agents/skills/oat-project-implement/SKILL.md` **Step 0** (`:157-170`): before the directory/`state.md` validation and before the `${PROJECTS_ROOT}/<name>` fallback, if the configured path is under the `synced` root and a record or remote ref exists, run `oat project pull` (adopting if needed); only then apply the existing invalid-project route. `references/plan-and-resume.md` gets a one-line pointer (the pull already happened in Step 0). Also `references/phase-execution.md` (`:665-667`), `references/completion-and-closeout.md` (`:112-114`, `:872-874`); `SKILL.md` version bump
 - Modify: `.agents/agents/oat-phase-implementer.md` — no literal `git add` exists in this file; add a short **Synced-scope bookkeeping** paragraph under the ledger/recovery commit guidance stating that artifact and ledger commits use the scope guard + `oat project push`, while code task commits (`feat(pNN-tNN)`) are unchanged; bump frontmatter `version`
 - Modify: `.agents/skills/oat-project-review-receive/SKILL.md` (`:529-534` only — `:399-400` is the generated _code_ fix-commit template and stays a branch commit; add a one-line note there: "fix tasks that edit synced artifacts use `oat project push`")
 - Modify: `.agents/skills/oat-project-review-receive-remote/SKILL.md` (`:270-271`)
-- Modify: `.agents/skills/oat-project-review-provide/SKILL.md` — two sites: Step 1.6 `:250` (committed-artifact baseline) becomes scope-aware: for `synced`, run `git -C "$PROJECT_PATH" status --porcelain -- discovery.md spec.md design.md plan.md implementation.md state.md` inside the nested checkout and stop on any pending change (the parent-worktree check cannot see inside the ignored checkout); if the checkout is absent, run `oat project pull` before artifact validation; Step 9.5 `:1064` (the required atomic commit of the review artifact + `plan.md`) becomes `oat project push` under the guard, since a branch commit cannot persist files inside the nested checkout. Add a skill-contract test case in `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` asserting the Step 1.6 synced baseline wording is present
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md` — three sites: **Step 0** `:105` (project resolution) gains the same pull-before-validation rule as implement Step 0 (an absent synced checkout with a record/ref is pulled before the directory and `state.md` are required); Step 1.6 `:250` (committed-artifact baseline) becomes scope-aware: for `synced`, run `git -C "$PROJECT_PATH" status --porcelain -- discovery.md spec.md design.md plan.md implementation.md state.md` inside the nested checkout and stop on any pending change (the parent-worktree check cannot see inside the ignored checkout); Step 9.5 `:1064` (the required atomic commit of the review artifact + `plan.md`) becomes `oat project push` under the guard, since a branch commit cannot persist files inside the nested checkout. Add skill-contract test cases in `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` asserting (a) implement Step 0 and review-provide Step 0 both contain the pull-before-validation wording for an absent synced checkout with a valid record, and (b) the Step 1.6 synced baseline wording is present
 - Modify: `.agents/skills/oat-project-revise/SKILL.md` (`:271-272` only — `:185-186` is the code fix-commit template; same one-line note)
 - Modify: `.agents/skills/oat-project-reconcile/SKILL.md` (`:681-691`)
 
@@ -1717,7 +1763,7 @@ Run: `pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/p
 
 **Step 2: Verify**
 
-Run: `pnpm release:check-versions > gate.log 2>&1; echo "exit=$?"; pnpm release:validate > gate2.log 2>&1; echo "exit=$?"`
+Run: `LOGDIR=$(mktemp -d); pnpm release:check-versions > "$LOGDIR/check-versions.log" 2>&1; echo "exit=$?"; pnpm release:validate > "$LOGDIR/validate.log" 2>&1; echo "exit=$?"; rm -rf "$LOGDIR"`
 Expected: both `exit=0`.
 
 **Step 3: Commit**
@@ -1738,11 +1784,13 @@ git commit -m "chore(p04-t08): bump public packages to 0.2.33"
 **Step 1: Run every gate, capturing exit codes explicitly**
 
 ```bash
+LOGDIR=$(mktemp -d)   # logs never live in the worktree — the clean-status assertions below must hold
 for g in check type-check test build "run check:skill-bumps" release:check-versions release:validate build:docs; do
-  pnpm $g > "gate-$(echo $g | tr ' :' '__').log" 2>&1; echo "$g exit=$?"
+  pnpm $g > "$LOGDIR/gate-$(echo $g | tr ' :' '__').log" 2>&1; echo "$g exit=$?"
 done
-pnpm lint > gate-lint.log 2>&1; echo "lint exit=$?"      # required: .agents/skills touched
-pnpm format > gate-format.log 2>&1; echo "format exit=$?"  # required: .agents/skills touched
+pnpm lint > "$LOGDIR/gate-lint.log" 2>&1; echo "lint exit=$?"      # required: .agents/skills touched
+pnpm format > "$LOGDIR/gate-format.log" 2>&1; echo "format exit=$?"  # required: .agents/skills touched
+# copy only the exit summary into implementation.md, then: rm -rf "$LOGDIR"
 ```
 
 **Step 2: Fix and re-run** until every exit is 0. Every correction is committed **before** the evidence commit as its own scoped commit (`fix(p04-t09): <what>`, staging only the corrected paths; skill edits also get their version bump and pass `pnpm run check:skill-bumps`, `pnpm lint`, `pnpm format`). Record the final exit list and the fix-commit SHAs in `implementation.md`.
@@ -1797,9 +1845,11 @@ Expected: validator passes; no `skill-dogfood` ref.
 If any file under `.agents/skills` or `.agents/agents` was edited in this task, also re-run the skill-covering gates with explicit exit codes and append the results to the p04-t09 gate record in `implementation.md`:
 
 ```bash
-pnpm run check:skill-bumps > gate-skill-bumps.log 2>&1; echo "skill-bumps exit=$?"
-pnpm lint > gate-lint.log 2>&1; echo "lint exit=$?"
-pnpm format > gate-format.log 2>&1; echo "format exit=$?"
+LOGDIR=$(mktemp -d)
+pnpm run check:skill-bumps > "$LOGDIR/skill-bumps.log" 2>&1; echo "skill-bumps exit=$?"
+pnpm lint > "$LOGDIR/lint.log" 2>&1; echo "lint exit=$?"
+pnpm format > "$LOGDIR/format.log" 2>&1; echo "format exit=$?"
+rm -rf "$LOGDIR"
 ```
 
 All three must exit 0 before the commit below (these are the only gates covering `.agents/skills`, and CI runs neither `lint` nor `format`).
@@ -1828,12 +1878,11 @@ git status --porcelain            # must be empty — the phase is not complete 
 | design | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -             | manual     | -                        |
 | plan   | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -             | auto       | -                        |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T013313Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T013313Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T014220Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T015823Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T022840Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T025742Z.md                | -             | -          | -                        |
-| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T031106Z.md                | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T025742Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T031106Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

@@ -259,3 +259,15 @@ Status after attempt 4: still `blocked`; all findings applied. Awaiting maintain
 - I3 spike never requested a blob URL → spike commit carries `design.md`; `blob/<sha>/design.md` fetched and content-checked.
 
 **Scope fold-in (maintainer direction 2026-08-27):** FR16 remote discovery & adoption (`list --remote`, adopting `pull`) and FR17 coordination pull added to spec; design gains the API additions and a "Discovery across machines and users" section (forks, clone refspec, GC roots); plan gains p02-t09/p02-t10 and a "picking up projects" docs page (40 tasks); FR18 (archive drops reviews/ for all scopes; S3 already excluded them) folded into p03-t04. Gate attempt 6 authorized on the combined change.
+
+**Attempt 6 — `reviews/archived/artifact-plan-review-2026-08-27T031106Z.md`** (2 critical, 4 important, 1 medium; on the FR16/FR17 fold-in) — all resolved in `plan.md`:
+
+- C1 synced split: `finalize.ts`/`split/run.ts` carry the parent scope root; parent + children re-pushed after post-scaffold mutations; e2e asserts remote parent `oat_children`.
+- C2 arrival ordering: implement Step 0 and review-provide Step 0 pull before validating the directory; contract fixtures.
+- I1 `oat_children` parsed from the YAML frontmatter object, not the scalar helper; slug validation; test uses `writeCoordinationParent` output.
+- I2 single commit owner: `pullSynced` returns pending record paths; the command commits once (or not, `--no-commit`); partial-failure semantics specified.
+- I3 `ProjectListRow` discriminated contract (materialized / recorded-absent / remote) with null lifecycle fields; README.
+- I4 gate logs written to `mktemp -d`, removed before clean-status assertions.
+- M1 ledger reconciled: duplicate 013313Z row removed (my accidental duplicate; the gate's row kept), stale 025742Z row set to archived/fixes_completed.
+
+Gate attempt 7 authorized by the fold-in decision.
