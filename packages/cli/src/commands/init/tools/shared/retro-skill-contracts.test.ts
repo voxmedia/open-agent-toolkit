@@ -687,7 +687,7 @@ describe('retro skill content contracts', () => {
     );
     expect(applyProcedure).toContain('--type feedback');
     expect(applyProcedure).toMatch(
-      /correction commit[\s\S]*?later retro-only writeback\s+commit/i,
+      /project-log correction route[\s\S]*?repository target commit[\s\S]*?retro-only project-ref writeback\s+commit/i,
     );
   });
 });
