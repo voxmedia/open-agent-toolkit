@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { fileExists } from '@fs/io';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { syncLocalPaths } from './sync';
@@ -245,5 +246,54 @@ describe('oat local sync', () => {
 
     expect(result.missing).toBe(1);
     expect(result.copied).toBe(0);
+  });
+
+  it('skips a local path rooted at a linked worktree git file', async () => {
+    const source = await createDir();
+    const target = await createDir();
+    const localPath = '.oat/projects/synced/example';
+
+    await mkdir(join(source, localPath), { recursive: true });
+    await writeFile(
+      join(source, localPath, '.git'),
+      'gitdir: /tmp/example.git/worktrees/example\n',
+      'utf8',
+    );
+    await writeFile(join(source, localPath, 'state.md'), 'state', 'utf8');
+
+    const result = await syncLocalPaths({
+      sourceRoot: source,
+      targetRoot: target,
+      localPaths: [localPath],
+      direction: 'to',
+      force: false,
+    });
+
+    expect(result.entries).toEqual([
+      { path: localPath, status: 'skipped', reason: 'nested-worktree' },
+    ]);
+    expect(await fileExists(join(target, localPath))).toBe(false);
+  });
+
+  it('skips a local path rooted at a nested repository git directory', async () => {
+    const source = await createDir();
+    const target = await createDir();
+    const localPath = '.oat/projects/synced/example';
+
+    await mkdir(join(source, localPath, '.git'), { recursive: true });
+    await writeFile(join(source, localPath, 'state.md'), 'state', 'utf8');
+
+    const result = await syncLocalPaths({
+      sourceRoot: source,
+      targetRoot: target,
+      localPaths: [localPath],
+      direction: 'to',
+      force: false,
+    });
+
+    expect(result.entries).toEqual([
+      { path: localPath, status: 'skipped', reason: 'nested-worktree' },
+    ]);
+    expect(await fileExists(join(target, localPath))).toBe(false);
   });
 });

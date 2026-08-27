@@ -10,6 +10,7 @@ export type SyncStatus = 'copied' | 'skipped' | 'missing';
 export interface SyncEntry {
   path: string;
   status: SyncStatus;
+  reason?: 'nested-worktree';
 }
 
 export interface SyncResult {
@@ -56,6 +57,16 @@ export async function syncLocalPaths(
 
     if (!sourceExists) {
       entries.push({ path: localPath, status: 'missing' });
+      continue;
+    }
+
+    const gitMarker = join(sourcePath, '.git');
+    if ((await dirExists(gitMarker)) || (await fileExists(gitMarker))) {
+      entries.push({
+        path: localPath,
+        status: 'skipped',
+        reason: 'nested-worktree',
+      });
       continue;
     }
 
