@@ -1,10 +1,7 @@
 ---
-oat_current_task: p03-t01
+oat_current_task: p02-t12
 oat_last_commit: fc14f074f
-oat_blockers:
-  - task_id: p02-review
-    reason: 'Final p02 review round 6 found one Important low-level canonical-target invariant gap after fix cycle 5/5; the configured maximum is exhausted and plan revision is required.'
-    since: 2026-08-27
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -90,19 +87,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T15:44:58.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T15:47:47.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation blocked - p02 maximum review-fix cycle exhausted
+**Status:** Implementation in progress - p02 systemic revision task queued
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation - Phase 2 review round 6 blocked after fix cycle 5/5
+Implementation - Phase 2 task p02-t12 queued from review round 6
 
 ## Artifacts
 
@@ -110,7 +107,7 @@ Implementation - Phase 2 review round 6 blocked after fix cycle 5/5
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (blocked - 21/42 tasks complete)
+- **Implementation:** `implementation.md` (in progress - 21/43 tasks complete)
 
 ## Progress
 
@@ -129,12 +126,12 @@ Implementation - Phase 2 review round 6 blocked after fix cycle 5/5
 - ⨯ Phase 2 review round 5 blocked with 1 Important finding
 - ✓ Phase 2 final operator-extended fix cycle 5/5 completed
 - ⨯ Phase 2 review round 6 blocked with 1 Important finding
+- ⧗ Phase 2 review finding received into planned task p02-t12
 
 ## Blockers
 
-- Coordination-child pull constructs `SyncTarget` directly and bypasses the command-level canonical identity guard, so a direct-child symlink can still rebase a sibling checkout under the wrong child/ref identity.
-- The configured maximum fix cycle 5/5 is exhausted; Phase 3 has not started.
+None. The systemic review finding is represented by pending planned task p02-t12; Phase 3 has not started.
 
 ## Next Milestone
 
-Revise the plan so every mutating `SyncTarget` entry point shares a low-level canonical direct-child preflight, including coordination-child pull and internally constructed split targets. Phase 3 remains unstarted until the revised p02 work passes review.
+Execute p02-t12 through `$oat-project-implement`, then run a fresh p02 review. Phase 3 remains unstarted until the revised p02 work passes.

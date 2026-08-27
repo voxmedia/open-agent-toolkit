@@ -1,12 +1,9 @@
 ---
-oat_status: blocked
+oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p02-review
-    reason: 'Final p02 review round 6 found one Important low-level canonical-target invariant gap after fix cycle 5/5; the configured maximum is exhausted and plan revision is required.'
-    since: 2026-08-27
+oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t12
 oat_generated: false
 ---
 
@@ -27,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 10    | 10/10     |
-| Phase 2 | blocked  | 11    | 11/11     |
-| Phase 3 | pending  | 10    | 0/10      |
-| Phase 4 | pending  | 11    | 0/11      |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 10    | 10/10     |
+| Phase 2 | in_progress | 12    | 11/12     |
+| Phase 3 | pending     | 10    | 0/10      |
+| Phase 4 | pending     | 11    | 0/11      |
 
-**Total:** 21/42 tasks completed
+**Total:** 21/43 tasks completed
 
 ---
 
@@ -148,7 +145,7 @@ oat_generated: false
 
 ## Phase 2: CLI surface
 
-**Status:** blocked - implementation complete; maximum review-fix cycle 5/5 exhausted
+**Status:** in progress - review-generated systemic task p02-t12 queued
 **Started:** 2026-08-27
 
 ### Phase Summary
@@ -157,7 +154,7 @@ oat_generated: false
 
 **Verification:** Full CLI suite passed 282 files and 3,789 tests after fix cycle 5/5; focused real-worktree alias tests passed 52/52, and CLI lint, format, type-check, and committed boundary checks passed. Review round 6 passed 433 phase tests, 77 command/help/lifecycle tests, the full 3,789-test CLI suite, and 78 control-plane tests plus builds, type-checks, changed-file lint/format, and range diff checks.
 
-**Review disposition:** Six independent rounds and five bounded fix iterations ran. Fix iteration 5 closed command-selected explicit-path and bare-slug aliases before record resolution or mutation. Review round 6 found 1 Important systemic gap: coordination-child pull constructs `SyncTarget` directly, bypasses the command-level guard, and can still rebase a sibling checkout. The configured maximum is exhausted; plan revision is required before further implementation, and Phase 3 remains unstarted.
+**Review disposition:** Six independent rounds and five bounded fix iterations ran. Fix iteration 5 closed command-selected explicit-path and bare-slug aliases before record resolution or mutation. Review round 6 found 1 Important systemic gap: coordination-child pull constructs `SyncTarget` directly, bypasses the command-level guard, and can still rebase a sibling checkout. The structured review was received into new planned task p02-t12, which moves the invariant to the shared low-level mutation boundary before Phase 3 begins.
 
 ### Task p02-t01: `projects.defaultScope` config key
 
@@ -503,6 +500,28 @@ lifecycle_outcome:
 
 ---
 
+### Review Received: p02
+
+**Date:** 2026-08-27
+**Review artifact:** `reviews/archived/code-p02-review-2026-08-27T153712Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** p02-t12
+
+**Finding disposition:**
+
+- I1 `code_fix_required` — convert the command-level canonical identity guard into a shared low-level preflight used by every mutating `SyncTarget` entry point; cover coordination-child pull and audit internally constructed split targets.
+
+**Next:** Execute p02-t12 via the `oat-project-implement` skill. After it completes, mark this artifact-identified review event `fixes_completed` and run a fresh p02 review before Phase 3.
+
+---
+
 ## Recovery Events
 
 ### Recovery Event recovery-p02-01-cli-phase-suite
@@ -571,7 +590,8 @@ Chronological log of implementation progress.
 - [x] p02 operator disposition - final bounded cycle authorized
 - [x] p02 review fix iteration 5 - command-selected alias defect resolved in `fc14f074`
 - [x] p02 review cycle 6 - blocked at 1 Important / 0 Medium in `reviews/code-p02-review-2026-08-27T153712Z.md`
-- [ ] p02 plan revision - move canonical identity into shared low-level mutation preflight
+- [x] p02 plan revision - shared low-level mutation preflight queued as p02-t12
+- [ ] p02-t12 - execute the review-generated systemic fix
 - [ ] p03-t01 - not started
 
 ---

@@ -1108,6 +1108,55 @@ git commit -m "feat(p02-t11): make oat project open and pause synced-aware"
 
 ---
 
+### Task p02-t12: (review) Enforce canonical identity at every mutating sync entry point
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts` (shared canonical direct-child preflight and every mutating `SyncTarget` entry point)
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.test.ts` (real-worktree coordination-child alias regression and low-level mutation coverage)
+- Modify: `packages/cli/src/commands/project/sync/resolve-target.ts`, `packages/cli/src/commands/project/sync/resolve-target.test.ts` (reuse the shared invariant without weakening command-selected checks)
+- Modify: `packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts` (internally constructed split-target alias coverage when the audit shows a reachable mutation path)
+
+**Step 1: Write tests (RED)**
+
+- Create a real coordination parent whose declared child path is a direct-child symlink to a sibling synced checkout. `pullChildren(parent)` must reject the alias before record access, fetch, rebase, checkout staging, or record write; assert zero Git calls through the injected runner and an unchanged sibling HEAD/worktree.
+- Exercise the shared preflight through every public mutating `SyncTarget` entry point (`create`, `push`, `pull`, `continue`, `abort`, and checkout removal where applicable) so callers that construct targets directly cannot bypass slug/path/ref identity.
+- Enumerate internally constructed split publication targets. If an alias can reach mutation, add a real-worktree split regression proving rejection before publication; otherwise pin the audited construction invariant in the closest focused test.
+- Preserve the existing explicit-path and bare-slug command regressions for `push`, `pull`, and `open`.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/sync/ref-sync.test.ts src/commands/project/sync/resolve-target.test.ts src/commands/project/push/index.test.ts src/commands/project/pull/index.test.ts src/commands/project/open/index.test.ts src/commands/project/split/__tests__/integration/split-flow.test.ts`
+Expected: the new low-level coordination-child and direct-construction cases fail before implementation.
+
+**Step 2: Implement (GREEN)**
+
+Move the canonical direct-child invariant into one shared low-level preflight that canonicalizes the synced root and existing checkout, derives the canonical child from the target slug, and rejects any mismatch with `CliError` before record access or Git mutation. Invoke it from every mutating `SyncTarget` entry point, including `pullChildren()` paths and any split publication path that constructs targets directly. `resolveSyncedTarget` must reuse the same invariant rather than carry a command-only copy. Absent checkouts remain valid for create/adopt flows; existing canonical worktrees and non-mutating discovery behavior remain unchanged.
+
+**Step 3: Format and lint**
+
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts packages/cli/src/commands/project/sync/resolve-target.ts packages/cli/src/commands/project/sync/resolve-target.test.ts packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts`
+
+Run: `pnpm exec oxlint packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts packages/cli/src/commands/project/sync/resolve-target.ts packages/cli/src/commands/project/sync/resolve-target.test.ts packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts`
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/sync/ref-sync.test.ts src/commands/project/sync/resolve-target.test.ts src/commands/project/push/index.test.ts src/commands/project/pull/index.test.ts src/commands/project/open/index.test.ts src/commands/project/split/__tests__/integration/split-flow.test.ts`
+Expected: all focused identity and real-worktree regressions pass.
+
+Run: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: the full CLI suite passes.
+
+Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: TypeScript passes.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts packages/cli/src/commands/project/sync/resolve-target.ts packages/cli/src/commands/project/sync/resolve-target.test.ts packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts
+git commit -m "fix(p02-t12): enforce canonical sync target identity"
+```
+
+---
+
 ## Phase 3: Reviewer and lifecycle surface
 
 Goal: PR links, completion parity, prune/migrate, doctor, gitattributes, local-sync guard, and a real dogfood run.
@@ -1966,7 +2015,7 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 | p02    | code     | fixes_completed | 2026-08-27 | reviews/code-p02-review-2026-08-27T081844Z.md                     | 00c9f24efb6b4a5fd4aaaadd40765853377c9b27 | auto       | -                        |
 | p02    | code     | fixes_completed | 2026-08-27 | reviews/code-p02-review-2026-08-27T124656Z.md                     | 7c8ee775bb12a24346927819de70cd0ff648350a | auto       | -                        |
 | p02    | code     | fixes_completed | 2026-08-27 | reviews/code-p02-review-2026-08-27T132942Z.md                     | 7a03f675a74fbf687b75ae17e8205167d9899345 | auto       | -                        |
-| p02    | code     | received        | 2026-08-27 | reviews/code-p02-review-2026-08-27T153712Z.md                     | fc14f074f1b7289bdf3c974999664c5c58899f60 | auto       | -                        |
+| p02    | code     | fixes_added     | 2026-08-27 | reviews/archived/code-p02-review-2026-08-27T153712Z.md            | fc14f074f1b7289bdf3c974999664c5c58899f60 | auto       | -                        |
 | p03    | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | p04    | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | final  | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
@@ -1991,11 +2040,11 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 **Summary:**
 
 - Phase 1: 10 tasks - Sync foundations (scope resolver, gitignore rule, git runner, fixture, record, ref-sync create/push/pull/continue/abort, record commits, GitHub spike)
-- Phase 2: 11 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e, `list --remote`, adopting pull + children, synced-aware `open`/`pause`)
+- Phase 2: 12 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e, `list --remote`, adopting pull + children, synced-aware `open`/`pause`, shared canonical mutation preflight)
 - Phase 3: 10 tasks - Reviewer and lifecycle surface (links render/compute/refresh, archive state machine, `prune`, `migrate`, doctor, gitattributes, local-sync guard, dogfood)
 - Phase 4: 11 tasks - Skills sweep (A/B/C/D/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood
 
-**Total: 42 tasks**
+**Total: 43 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
