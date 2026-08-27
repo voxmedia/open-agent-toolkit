@@ -32,8 +32,17 @@ oat_phase_recovery_policy:
       used_attempts: 5
       pending_attempt: null
     p04:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: p04-recovery-02-skill-contract-fixtures
+        original_request_id: dispatch-synced-project-scope-p04-20260827T204100Z
+        original_task_id: p04-t08
+        original_commit: 8f6bab98146df73235ea16771b6ceaef781454c5
+        discovered_by: pnpm test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: c91f25fbb16d9cc3548f28a23f74899e54a1436f
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit

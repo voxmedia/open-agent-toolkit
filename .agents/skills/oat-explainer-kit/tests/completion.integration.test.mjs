@@ -293,7 +293,7 @@ test('excludes project explainers from durable completion references', () => {
 test('keeps local-project recaps untracked and built-not-durable without publish evidence', () => {
   assert.match(
     completionSkill,
-    /For `IS_SHARED_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`/,
+    /For `IS_DURABLE_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`/,
   );
   assert.match(
     completionSkill,
