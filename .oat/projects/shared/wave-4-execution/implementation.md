@@ -210,7 +210,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Verification record (root):** what — I1/M3/M4/m1 edits; how — `rg -n 'm=>m|not started|day one|round 2 in progress|phase review in progress' <project>` returns nothing, `rg -n '39121c35' implementation.md` shows the restored line, `validate-plan` valid, `oxfmt --check` clean; where — this entry; independent verification — narrowed final round 2 after the implementer's fix commit.
 
-**Review row `final` → `fixes_added`; implementer fix round then narrowed round 2.**
+**Fix round `w4-final-fix-001` (resumed implementer handle, append-only commit `94d6f74d342e1b272fbc7d1ebed2cffe8de8330f` on `a4a96489`; test file only; `SKILL.md` unchanged since `39121c35`):**
+
+- M1 → exemption keys on the binary: `invokesCodex` = any `codex` invocation (bare, `e` alias, subcommands) is never exempt; flag-bearing table rows can be exempted only by the documented non-repository exception, never by authorization/prohibition wording (stated deviation from the literal "never exempt" — a blanket denial fails the unprobed control because the documented exception row at `SKILL.md:99` is itself flag-bearing; e1 still fails). Evasions e1/e2/e3 fail; controls e4/e5 fail; r1/r2/u4/u5/fp/control pass.
+- M2 → property-based confirmation check (`requiresConfirmation` / `negatesConfirmation`); b1 fails, b2 passes; `\bconfirm` not adopted.
+- 29-probe runner ALL PROBES MATCHED (before-run mismatches were exactly e1, e2, e3, b1). DoD all ten 0 (`$TMPDIR/w4-final-fix/`); `test:skills` 586/586; post-commit `release:check-versions` 0 and `check:skill-bumps` 0. Codex: one round, two P2 dismissed — (1) factually wrong (the regex matches `confirmation` via the `confirm` prefix; verified by execution); (2) a negated mention can mask a positive requirement in the same clause — true, reproduced, out of this round's root-prescribed semantics → final-review ledger.
+
+**Verification record (root):** what — the fix commit's file list (1) and parent chain, `SKILL.md` unchanged since `39121c35` (`git diff --stat` empty), the extended 29-probe runner re-run by the root at HEAD; how — `git show --stat`, `git diff`, `run-all.sh` → ALL PROBES MATCHED (log `scratchpad/w4/root-probe-run-2.log`; runner copied to `scratchpad/w4/probes/`); where — this entry; independent verification — narrowed final round 2 `w4-final-review-002`.
+
+**Review row `final` → `fixes_completed` at `94d6f74d`; narrowed round 2 dispatched.**
 
 ## Implementation Log
 
@@ -223,6 +231,7 @@ Chronological log of implementation progress.
 - [x] p01-t01 fix round 1 — `d9ce0c33` (append-only; round-1 M1/M3/m1–m4; Codex three rounds under the stopping rule).
 - [x] p01-t01 fix round 2 — `39121c35` (append-only; round-2 M1/M3/m1/m2: logical-line derivation + prose allowlist, non-blocking below-floor clause with an 8th contract case, `gpt-5.5` slug; Codex two clean rounds).
 - [x] p01-t01 fix round 3 — `44fb2327` (append-only; round-3 M1/m1/D1 — structural exemption rule, semantic below-floor assertion, logical-line cross-directory check; test file only; root-run 22-probe matrix ALL MATCHED).
+- [x] p01-t01 final-scope fix — `94d6f74d` (append-only; final round-1 M1/M2 — exemption keyed on any `codex` invocation, property-based confirmation check; test file only; root-run 29-probe matrix ALL MATCHED).
 - Decisions: the operator-reconciled `--full-auto` replacement is evaluated per example row (a mechanical swap weakened the `danger-full-access` row and was caught by Codex); prose guards key on documented phrases and command-ish content, not hedging words; cross-model review stops at two clean rounds or below-Medium findings.
 - Blockers: none.
 
