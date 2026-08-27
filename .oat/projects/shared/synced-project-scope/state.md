@@ -29,8 +29,17 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p03:
-      used_attempts: 3
-      pending_attempt: null
+      used_attempts: 4
+      pending_attempt:
+        attempt: 4
+        event_id: p03-recovery-04-synced-ref-hooks
+        original_request_id: dispatch-synced-project-scope-p03-20260827T173721Z
+        original_task_id: p03-t10
+        original_commit: 460b519217d8e2d40e92e81d88d87fc5d49be33f
+        discovered_by: pnpm run --silent cli -- project new synced-dogfood --mode quick --no-set-active (common pre-commit wrapper rejected scaffold commit)
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: 460b519217d8e2d40e92e81d88d87fc5d49be33f
+        status: failed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
