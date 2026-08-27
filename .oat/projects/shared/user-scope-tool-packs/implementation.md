@@ -55,7 +55,8 @@ oat_generated: false
 - Phase execution is delegated as one bounded phase to the exact resolver-selected implementer.
 - Phase review artifact:
   `reviews/p01-review-2026-08-27T031035Z.md` (2 Critical, 2 Important,
-  1 Medium). Fix iteration 1 is pending.
+  1 Medium). Fix iteration 1 completed in
+  `eeda0085b00cf508eec3e4b288bd4069477b84ec`; re-review is pending.
 - Deferred non-blocking Medium: dual declared intent with no physical files is
   misreported as duplicate canonical assets. Revisit after the blocking fixes
   or during final review.
@@ -110,9 +111,9 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Status      | Tasks | Review  | Fix loops |
-| ----- | ----------- | ----- | ------- | --------- |
-| p01   | in_progress | 7/7   | blocked | 1         |
+| Phase | Status      | Tasks | Review    | Fix loops |
+| ----- | ----------- | ----- | --------- | --------- |
+| p01   | in_progress | 7/7   | re-review | 1         |
 
 #### Dispatch Notes
 
@@ -126,11 +127,14 @@ oat_generated: false
   `oat-reviewer-gpt-5-6-sol-high`; artifact
   `reviews/p01-review-2026-08-27T031035Z.md`.
 - `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- Phase 1 fix iteration 1:
+  `eeda0085b00cf508eec3e4b288bd4069477b84ec`; all four blocking findings
+  resolved, focused suites passed 241/241 and 21/21, CLI passed 3,668/3,668,
+  and the workspace test/check/build/release/docs gates passed.
 
 #### Outstanding Items
 
-- Phase 1 fix iteration 1 for the four Critical/Important findings, followed by
-  a fresh root-owned re-review.
+- Fresh root-owned Phase 1 re-review after fix iteration 1.
 
 ## Final Summary (for PR/docs)
 

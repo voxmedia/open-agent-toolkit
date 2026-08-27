@@ -1,6 +1,6 @@
 ---
 oat_current_task: p01-t07
-oat_last_commit: e0039d8065b4b8eb5ed45fb42d5c1382132c3104
+oat_last_commit: eeda0085b00cf508eec3e4b288bd4069477b84ec
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -82,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T03:13:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T03:44:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -99,7 +99,8 @@ oat_project_explainer:
 ## Current Phase
 
 Phase 1 produced seven verified task commits. Its independent root-owned review
-found two Critical and two Important issues; bounded fix iteration 1 is next.
+found two Critical and two Important issues; bounded fix iteration 1 completed
+all four and a fresh re-review is next.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -109,7 +110,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 1 review fixes in progress)
+- **Implementation:** `implementation.md` (Phase 1 re-review pending)
 
 ## Progress
 
@@ -134,7 +135,8 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Final-phase HiLL checkpoint and auto-review configured
 - ✓ Phase 1 task commits and focused verification completed
 - ✓ Independent Phase 1 review received
-- ⧗ Phase 1 bounded review fix iteration 1
+- ✓ Phase 1 bounded review fix iteration 1 completed
+- ⧗ Phase 1 re-review
 
 ## Blockers
 
@@ -142,4 +144,4 @@ None
 
 ## Next Milestone
 
-Fix and re-review Phase 1.
+Re-review Phase 1.
