@@ -1,12 +1,9 @@
 ---
-oat_status: blocked
-oat_ready_for: null
-oat_blockers:
-  - task_id: p02-review
-    reason: 'Post-revision p02 review round 7 found one Important FR17 child-failure isolation defect and one Medium split-test timeout after the authorized revision; further review-receive or implementation requires operator direction.'
-    since: 2026-08-27
+oat_status: in_progress
+oat_ready_for: oat-project-implement
+oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t13
 oat_generated: false
 ---
 
@@ -27,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 10    | 10/10     |
-| Phase 2 | blocked  | 12    | 12/12     |
-| Phase 3 | pending  | 10    | 0/10      |
-| Phase 4 | pending  | 11    | 0/11      |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 10    | 10/10     |
+| Phase 2 | in_progress | 13    | 12/13     |
+| Phase 3 | pending     | 10    | 0/10      |
+| Phase 4 | pending     | 11    | 0/11      |
 
-**Total:** 22/43 tasks completed
+**Total:** 22/44 tasks completed
 
 ---
 
@@ -148,16 +145,16 @@ oat_generated: false
 
 ## Phase 2: CLI surface
 
-**Status:** blocked - all 12 tasks complete; post-revision review round 7 blocked
+**Status:** in progress - 12 of 13 tasks complete; p02-t13 queued from round-7 review
 **Started:** 2026-08-27
 
 ### Phase Summary
 
-**Outcome:** All 12 planned CLI-surface tasks are implemented, including scope-aware scaffolding, push/pull/list/scope commands, remote adoption, coordination children, synced-aware open/pause behavior, and one shared canonical identity preflight for every mutating sync target. One phase recovery updated stale integration expectations after the default changed to synced.
+**Outcome:** The first 12 CLI-surface tasks are implemented, including scope-aware scaffolding, push/pull/list/scope commands, remote adoption, coordination children, synced-aware open/pause behavior, and one shared canonical identity preflight for every mutating sync target. One phase recovery updated stale integration expectations after the default changed to synced. Task p02-t13 will close the remaining per-child isolation and test-timeout findings.
 
 **Verification:** Task p02-t12 passed a 109-test focused real-worktree/entry-point matrix and the full CLI suite at 282 files and 3,799 tests against committed HEAD; CLI type-check, file-scoped lint/format, commit check, and exact five-file boundary passed. Prior review round 6 passed 433 phase tests, 77 command/help/lifecycle tests, the full 3,789-test CLI suite, and 78 control-plane tests plus builds, type-checks, changed-file lint/format, and range diff checks.
 
-**Review disposition:** Seven independent rounds and five bounded fix iterations ran, followed by one planned revision task. Task p02-t12 closed the mutation-safety defect, but review round 7 found 1 Important FR17 isolation gap: child preflight failures escape the per-child result boundary and prevent later siblings. It also found 1 Medium load-sensitive split-test timeout. Further review-receive or implementation requires operator direction; Phase 3 has not started.
+**Review disposition:** Seven independent rounds and five bounded fix iterations ran, followed by one planned revision task. Task p02-t12 closed the mutation-safety defect. The operator authorized one additional planned task, p02-t13, to resolve round 7's Important FR17 isolation gap and Medium load-sensitive split-test timeout, followed by a task-delta-only review. Phase 3 has not started.
 
 ### Task p02-t01: `projects.defaultScope` config key
 
@@ -222,6 +219,14 @@ oat_generated: false
 **Outcome:** Canonical slug/path/ref identity is enforced through one shared low-level preflight before record access or Git mutation across create, push, pull, continue, abort, preflight, removal, rollback, coordination children, resolver paths, and reachable split targets. Absent-checkout create/adopt behavior remains supported.
 
 **Verification:** RED produced the expected 9 alias-safety failures. Against committed HEAD, the focused matrix passed 109/109, the full CLI suite passed 3,799/3,799, and CLI type-check, file-scoped lint/format, commit check, and exact five-file boundary passed.
+
+### Task p02-t13: (review) Isolate coordination-child failures and stabilize fresh split coverage
+
+**Status:** pending
+
+**Source:** Round-7 review `reviews/archived/code-p02-review-2026-08-27T160020Z.md`
+
+**Scope:** Preserve canonical mutation safety while converting identity, record, remote, and pull failures into isolated per-child results so healthy later siblings continue; add a bounded timeout to the load-sensitive fresh split integration test.
 
 ---
 
@@ -577,6 +582,16 @@ lifecycle_outcome:
 
 ---
 
+### Review Received: p02 round 7 - 2026-08-27T17:04:42Z
+
+- Artifact archived: `reviews/archived/code-p02-review-2026-08-27T160020Z.md`
+- Important I1: code fix required in p02-t13 - isolate all coordination-child preflight/pull failures and continue healthy siblings while preserving successful record commits.
+- Medium M1: code fix required in p02-t13 - apply a bounded 15-second timeout to the fresh synced split real-Git test and verify full-suite stability twice.
+- Operator authorization: one planned task plus one task-delta-only review; no full-phase review restart.
+- Phase 3: remains unstarted until p02-t13 and its task-delta review pass.
+
+---
+
 ## Recovery Events
 
 ### Recovery Event recovery-p02-01-cli-phase-suite
@@ -647,8 +662,10 @@ Chronological log of implementation progress.
 - [x] p02 review cycle 6 - blocked at 1 Important / 0 Medium in `reviews/code-p02-review-2026-08-27T153712Z.md`
 - [x] p02 plan revision - shared low-level mutation preflight queued as p02-t12
 - [x] p02-t12 - systemic fix completed in `9eff5cee`
-- [x] p02 review cycle 7 - blocked at 1 Important / 1 Medium in `reviews/code-p02-review-2026-08-27T160020Z.md`
-- [ ] p02 operator disposition - receive round-7 findings into another planned task or stop
+- [x] p02 review cycle 7 - blocked at 1 Important / 1 Medium in `reviews/archived/code-p02-review-2026-08-27T160020Z.md`
+- [x] p02 operator disposition - one planned task and task-delta-only review authorized
+- [x] p02 review cycle 7 findings received into p02-t13
+- [ ] p02-t13 - isolate child failures and stabilize fresh split coverage
 - [ ] p03-t01 - not started
 
 ---

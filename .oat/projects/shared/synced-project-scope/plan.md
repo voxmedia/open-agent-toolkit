@@ -1157,6 +1157,54 @@ git commit -m "fix(p02-t12): enforce canonical sync target identity"
 
 ---
 
+### Task p02-t13: (review) Isolate coordination-child failures and stabilize fresh split coverage
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts` (guard each coordination child across identity, record, remote, and pull work)
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.test.ts` (real-worktree aliased-first-child and healthy-later-child regression)
+- Modify: `packages/cli/src/commands/project/pull/index.test.ts` (command-level partial-success record commit coverage, if the focused low-level regression cannot prove it)
+- Modify: `packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts` (bounded timeout for the fresh synced publication case)
+
+**Step 1: Write test (RED)**
+
+- Create a real coordination parent with declared children `[alias, later]`, where `alias` is a direct-child symlink to a sibling synced checkout and `later` is a healthy missing or stale child.
+- Assert `pullChildren(parent)` returns an error row for `alias`, still pulls or adopts `later`, leaves the sibling alias target HEAD/worktree unchanged, and preserves successful pending adoption-record paths for the command layer to commit.
+- Add command-level coverage only if needed to prove a mixed child result still commits the successful parent/child record updates.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/sync/ref-sync.test.ts src/commands/project/pull/index.test.ts`
+Expected: the aliased first child aborts the call or prevents the healthy later child before implementation.
+
+**Step 2: Implement (GREEN)**
+
+Move identity preflight, record lookup, remote probing, and child pull into one per-child guarded helper or `try` block. Convert every child-specific failure into an `error` result and continue the loop without weakening the canonical mutation preflight or rolling back successful parent/sibling work. Give the fresh synced split publication integration test the same explicit 15-second bound as the neighboring real-Git conflict test.
+
+**Step 3: Format and lint**
+
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts packages/cli/src/commands/project/pull/index.test.ts packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts`
+
+Run: `pnpm exec oxlint packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts packages/cli/src/commands/project/pull/index.test.ts packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts`
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/sync/ref-sync.test.ts src/commands/project/pull/index.test.ts src/commands/project/split/__tests__/integration/split-flow.test.ts`
+Expected: all focused isolation, partial-success, mutation-safety, and split regressions pass.
+
+Run twice against committed HEAD: `pnpm --filter @open-agent-toolkit/cli test`
+Expected: both full CLI suite runs pass without the fresh split timeout.
+
+Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: TypeScript passes.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts packages/cli/src/commands/project/pull/index.test.ts packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts
+git commit -m "fix(p02-t13): preserve child pull isolation"
+```
+
+---
+
 ## Phase 3: Reviewer and lifecycle surface
 
 Goal: PR links, completion parity, prune/migrate, doctor, gitattributes, local-sync guard, and a real dogfood run.
@@ -2016,7 +2064,7 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 | p02    | code     | fixes_completed | 2026-08-27 | reviews/code-p02-review-2026-08-27T124656Z.md                     | 7c8ee775bb12a24346927819de70cd0ff648350a | auto       | -                        |
 | p02    | code     | fixes_completed | 2026-08-27 | reviews/code-p02-review-2026-08-27T132942Z.md                     | 7a03f675a74fbf687b75ae17e8205167d9899345 | auto       | -                        |
 | p02    | code     | fixes_completed | 2026-08-27 | reviews/archived/code-p02-review-2026-08-27T153712Z.md            | fc14f074f1b7289bdf3c974999664c5c58899f60 | auto       | -                        |
-| p02    | code     | received        | 2026-08-27 | reviews/code-p02-review-2026-08-27T160020Z.md                     | 9eff5ceef77a1716c2a56d1a594e707b263ea803 | auto       | -                        |
+| p02    | code     | fixes_added     | 2026-08-27 | reviews/archived/code-p02-review-2026-08-27T160020Z.md            | 9eff5ceef77a1716c2a56d1a594e707b263ea803 | auto       | -                        |
 | p03    | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | p04    | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | final  | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
@@ -2041,11 +2089,11 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 **Summary:**
 
 - Phase 1: 10 tasks - Sync foundations (scope resolver, gitignore rule, git runner, fixture, record, ref-sync create/push/pull/continue/abort, record commits, GitHub spike)
-- Phase 2: 12 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e, `list --remote`, adopting pull + children, synced-aware `open`/`pause`, shared canonical mutation preflight)
+- Phase 2: 13 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e, `list --remote`, adopting pull + children, synced-aware `open`/`pause`, shared canonical mutation preflight, isolated child failures + stable split coverage)
 - Phase 3: 10 tasks - Reviewer and lifecycle surface (links render/compute/refresh, archive state machine, `prune`, `migrate`, doctor, gitattributes, local-sync guard, dogfood)
 - Phase 4: 11 tasks - Skills sweep (A/B/C/D/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood
 
-**Total: 43 tasks**
+**Total: 44 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

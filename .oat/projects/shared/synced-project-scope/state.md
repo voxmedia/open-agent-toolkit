@@ -1,10 +1,7 @@
 ---
-oat_current_task: p03-t01
+oat_current_task: p02-t13
 oat_last_commit: 9eff5ceef
-oat_blockers:
-  - task_id: p02-review
-    reason: 'Post-revision p02 review round 7 found one Important FR17 child-failure isolation defect and one Medium split-test timeout after the authorized revision; further review-receive or implementation requires operator direction.'
-    since: 2026-08-27
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -90,19 +87,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T16:09:02.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T17:04:42.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation blocked - post-revision p02 review round 7
+**Status:** Implementation in progress - p02-t13 queued
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation - Phase 2 review round 7 blocked after planned revision
+Implementation - Phase 2 task p02-t13
 
 ## Artifacts
 
@@ -110,7 +107,7 @@ Implementation - Phase 2 review round 7 blocked after planned revision
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress - 22/43 tasks complete)
+- **Implementation:** `implementation.md` (in progress - 22/44 tasks complete)
 
 ## Progress
 
@@ -132,13 +129,13 @@ Implementation - Phase 2 review round 7 blocked after planned revision
 - ✓ Phase 2 review finding received into planned task p02-t12
 - ✓ Phase 2 task p02-t12 completed and verified
 - ⨯ Phase 2 review round 7 blocked with 1 Important and 1 Medium finding
+- ✓ Phase 2 review round 7 findings received into planned task p02-t13
+- … Phase 2 task p02-t13 queued; task-delta-only review follows
 
 ## Blockers
 
-- FR17 child-failure isolation: `pullChildren()` runs identity/record/remote preflight outside its per-child error boundary, so an invalid first child prevents healthy later siblings and structured results.
-- The fresh split publication integration test can exceed Vitest's default 5-second timeout under full-suite load.
-- The authorized plan revision has been consumed; Phase 3 has not started.
+None. Phase 3 remains unstarted until p02-t13 and its authorized task-delta-only review pass.
 
 ## Next Milestone
 
-Obtain operator direction before receiving round-7 findings into another p02 task. Phase 3 remains unstarted until p02 passes.
+Implement p02-t13, verify it, and run one fresh review limited to that task's delta. Phase 3 remains unstarted until p02 passes.
