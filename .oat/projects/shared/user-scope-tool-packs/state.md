@@ -1,5 +1,5 @@
 ---
-oat_current_task: p01-t07
+oat_current_task: p02-t01
 oat_last_commit: 752aaab7d99bdf24655a2b736d437ddb0ba022a0
 oat_blockers: []
 associated_issues: [
@@ -19,7 +19,7 @@ oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints h
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-oat_orchestration_retry_limit: 4 # temporary p01 operator extension; restore to 2 after p01 terminal verdict
+oat_orchestration_retry_limit: 2 # default restored after the authorized p01 extension reached a passing verdict
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -82,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T04:58:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T05:06:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -92,7 +92,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 1 re-review pending
+**Status:** Implementation in progress — Phase 2 ready
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -106,7 +106,9 @@ a new Critical managed-root containment defect in recursive removal. The
 operator authorized up to two additional Phase 1 iterations, raising the
 temporary total to 4 while preserving the two already used.
 Fix iteration 3 completed the containment repair and passed the focused, CLI,
-and workspace verification suites. A fresh independent re-review is pending.
+and workspace verification suites. Fresh independent re-review found no
+Critical or Important findings, so Phase 1 passes. The temporary retry limit is
+restored to the default 2, and Phase 2 is ready to begin.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -116,7 +118,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 1 re-review pending)
+- **Implementation:** `implementation.md` (Phase 1 complete; Phase 2 ready)
 
 ## Progress
 
@@ -148,7 +150,9 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Critical managed-root containment finding fixed in iteration 3
 - ✓ Operator authorized up to two additional Phase 1 iterations
 - ✓ Phase 1 fix iteration 3/4 completed
-- ⧗ Phase 1 independent re-review
+- ✓ Phase 1 independent re-review passed with 0 Critical and 0 Important
+- ✓ Phase 1 completed; two Medium findings remain deferred and nonblocking
+- ⧗ Phase 2 ready at `p02-t01`
 
 ## Blockers
 
@@ -156,5 +160,4 @@ None.
 
 ## Next Milestone
 
-Run a fresh root-owned Phase 1 re-review against
-`752aaab7d99bdf24655a2b736d437ddb0ba022a0`.
+Begin Phase 2 at `p02-t01`.
