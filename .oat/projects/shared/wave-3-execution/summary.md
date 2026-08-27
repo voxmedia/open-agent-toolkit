@@ -59,6 +59,10 @@ hermeticity regression fixed pre-commit; then clean); root final verification
 10/10 at `cf53e818`; final review round 1 at `9a2e659b` 0C/2I/4M/7m — all
 wrapper bookkeeping or conformant notes, resolved at receive.
 
+Exit gate: generation 1 passed on `cursor-gpt-5-6-sol-xhigh` (run `c89b7975`,
+run as configured, 0/0/0/0) at `b1c60abc`; final review round 2 (narrowed) was
+clean.
+
 ## Key Decisions
 
 1. **Close the ambient-env class at the runner seam:** round-1 M2 named one
@@ -66,13 +70,13 @@ wrapper bookkeeping or conformant notes, resolved at receive.
    following the new override through seven command paths (52 failures under a
    metadata-only ambient bundle, none under a complete one). One `test.env`
    line in `vitest.config.ts` closed it; the explicit call-site fixes stay as
-   defense in depth. Verified non-masking by two reviewers.
+   defense in depth. Verified non-masking by two reviewers. (`DR-260827-close-ambient-environment-sensitivity`)
 2. **Keep the plan-mandated existing error messages on the override path**
    (remedy wording that says "run `pnpm build`" is misdirected for an operator
-   override) — recorded as a backlog candidate rather than widening the change.
+   override) — recorded as a backlog candidate rather than widening the change. (`DR-260827-keep-plan-mandated-error-messages`)
 3. **Pre-planned lockstep bump inside the lane** (W1/W2 rule), with the
    post-commit `release:check-versions` re-run adopted as a standing rule
-   because the gate is committed-state-only.
+   because the gate is committed-state-only. (`DR-260827-re-run-release-check-versions`)
 
 ## Design Deltas
 

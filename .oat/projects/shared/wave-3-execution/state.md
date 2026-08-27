@@ -113,7 +113,7 @@ oat_implement_exit_gate:
   receive_archived_artifact: '.oat/projects/shared/wave-3-execution/reviews/archived/final-review-2026-08-27T011826Z.md'
   receive_event_identity: 'final | code | final-review-2026-08-27T011826Z.md'
   receive_pre_head: f51f0d45 # gate bookkeeping commit
-  receive_commit: pending # filled at the next state write
+  receive_commit: d13d7061 # receive commit for the gen-1 gate artifact
   receive_eligible: true
   receive_completed: true
   failure: null
@@ -123,7 +123,7 @@ oat_post_implement_sequence:
   source: configured # workflow.postImplementSequence
   final_phase: p01
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: pending # pending | approved | not_required
   approval_source: null # null | user | oat-autonomous
   post_approval: []
@@ -138,7 +138,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T23:08:35.576Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T01:24:31.201Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T01:24:36.842Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
