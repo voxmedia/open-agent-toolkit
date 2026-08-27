@@ -4,12 +4,13 @@
 
 ## Curated Overview
 
-- User-scope tool-pack closeout follow-ups are split into two medium features:
+- User-scope tool-pack closeout follow-ups are split into three bounded features:
   `BL-260827-make-packaged-skill-references` owns portable cross-skill links and
-  their ratchet, while `BL-260827-correct-scope-and-adoption` owns the remaining
-  PJM adoption and diagnostic correctness edges. They are intentionally
-  separate so skill packaging/release work does not share a review boundary
-  with runtime diagnostic behavior.
+  their ratchet; `BL-260827-correct-scope-and-adoption` owns PJM adoption and
+  diagnostic correctness edges; and `BL-260827-clean-up-tool-pack-lifecycle`
+  owns the remaining lifecycle/config consistency findings. They are
+  intentionally separate so packaging, diagnostics, and lifecycle cleanup do
+  not share implementation or review boundaries.
 - User-scope tool distribution is now a high-priority cross-pack initiative:
   `BL-260818-make-the-project-management` covers every tool pack, including
   `project-management`, while keeping PJM operational data repo-owned. The
@@ -168,6 +169,7 @@
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                    | open   | medium   | feature | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                | open   | medium   | feature | M        |
+| BL-260827-clean-up-tool-pack-lifecycle   | Clean up tool-pack lifecycle and config contracts                                                     | open   | medium   | feature | S        |
 | BL-260827-correct-scope-and-adoption     | Correct scope and adoption diagnostics                                                                | open   | medium   | feature | M        |
 | BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path            | open   | medium   | task    | S        |
 | BL-260826-deterministic-smoke-tier-leaks | Deterministic smoke tier leaks worktrees on interrupted runs                                          | open   | medium   | task    | S        |
