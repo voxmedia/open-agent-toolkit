@@ -635,6 +635,21 @@ describe('oat-config', () => {
       });
     });
 
+    it('normalizes and round-trips user-scoped tool intent', async () => {
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-tools-'));
+      tempDirs.push(userConfigDir);
+
+      await writeUserConfig(userConfigDir, {
+        version: 1,
+        tools: { workflows: true, research: false },
+      });
+
+      await expect(readUserConfig(userConfigDir)).resolves.toEqual({
+        version: 1,
+        tools: { workflows: true, research: false },
+      });
+    });
+
     it('does not expose legacy known strays as a general user preference', async () => {
       const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-config-'));
       tempDirs.push(userConfigDir);
