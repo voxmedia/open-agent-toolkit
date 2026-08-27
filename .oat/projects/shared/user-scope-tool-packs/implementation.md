@@ -141,6 +141,11 @@ oat_generated: false
   `reviews/p02-review-2026-08-27T055129Z.md` (5 Critical, 2 Important,
   1 Medium). Fix iteration 1/2 must integrate production reconciliation and
   close the install, update, scope, inventory, and diagnostic defects.
+- Fix iteration 1 completed in
+  `5c9e194746e1cc55d23a8ef0bad4a4335c136d9e`. Production aggregate install
+  and update now route through the canonical lifecycle adapter; all seven
+  blocking findings have focused regression coverage. Fresh re-review is
+  pending.
 
 **Verification:**
 
@@ -221,7 +226,7 @@ oat_generated: false
 | Phase | Status      | Tasks | Review | Fix loops |
 | ----- | ----------- | ----- | ------ | --------- |
 | p01   | completed   | 7/7   | passed | 3         |
-| p02   | in_progress | 9/9   | fixes  | 1         |
+| p02   | in_progress | 9/9   | review | 1         |
 
 #### Dispatch Notes
 
@@ -247,6 +252,12 @@ oat_generated: false
   `reviews/p02-review-2026-08-27T055129Z.md`; 5 Critical, 2 Important,
   1 Medium. All seven blocking findings are assigned to fix iteration 1/2.
 - `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- Phase 2 fix iteration 1:
+  `5c9e194746e1cc55d23a8ef0bad4a4335c136d9e`; 159 focused tests,
+  569 Phase 2 tests, 3,715 CLI tests, workspace tests, type-check, lint, format,
+  and diff check passed. Root repeated the production call-path search,
+  114 focused tests, type-check, and diff check successfully.
+- `Dispatch: scope=p02-fix1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 
 ### Recovery Event 4bd11825-d39d-4c04-888d-ef704ae4af24
 
@@ -314,8 +325,7 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Complete Phase 2 review fix iteration 1/2 and run a fresh independent
-  re-review.
+- Run a fresh independent Phase 2 re-review against fix iteration 1.
 
 ## Final Summary (for PR/docs)
 

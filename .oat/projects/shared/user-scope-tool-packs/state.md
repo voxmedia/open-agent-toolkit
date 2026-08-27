@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02-t09
-oat_last_commit: 95a692812238255c5aba2e25c23aa8ee4560d3e2
+oat_last_commit: 5c9e194746e1cc55d23a8ef0bad4a4335c136d9e
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -82,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T05:53:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T06:24:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -92,7 +92,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 2 fix iteration 1
+**Status:** Implementation in progress — Phase 2 re-review pending
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -121,6 +121,9 @@ callers, so Phase 2 requires independent review before it can pass.
 Independent review confirmed the integration gap and found five Critical, two
 Important, and one Medium issue. The first of two default review-fix iterations
 is authorized and pending.
+Fix iteration 1 completed all seven blocking dispositions in one append-only
+commit and passed focused, phase, CLI, workspace, type, lint, and format gates.
+Fresh independent re-review is pending.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -130,7 +133,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 2 fix iteration 1/2)
+- **Implementation:** `implementation.md` (Phase 2 re-review pending)
 
 ## Progress
 
@@ -171,7 +174,8 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 2 verification passed: 56 files / 554 tests
 - ✓ Phase 2 independent review received
 - ✗ Phase 2 review: 5 Critical, 2 Important, 1 Medium
-- ⧗ Phase 2 fix iteration 1/2
+- ✓ Phase 2 fix iteration 1/2 completed
+- ⧗ Phase 2 fresh independent re-review
 
 ## Blockers
 
@@ -179,4 +183,5 @@ None.
 
 ## Next Milestone
 
-Complete Phase 2 fix iteration 1/2 and run a fresh independent re-review.
+Run a fresh independent Phase 2 re-review against
+`5c9e194746e1cc55d23a8ef0bad4a4335c136d9e`.
