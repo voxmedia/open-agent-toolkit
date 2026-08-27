@@ -1282,6 +1282,37 @@ Disposition for implementation: p01-t10 copies this evidence into its section; n
 (empty)
 ```
 
+### p04-t09 Definition-of-Done gates
+
+Final gate sweep run from clean HEAD `be5b12c59e81f3b8d06a961d9459379a974d302c`
+after fetching `origin/main`. Logs were captured outside the worktree in a
+temporary directory and only this exit summary was retained. Gates ran in CI
+order, followed by the required skill-surface checks:
+
+```text
+pnpm check exit=0
+pnpm type-check exit=0
+pnpm test exit=0
+pnpm build exit=0
+pnpm run check:skill-bumps exit=0
+pnpm release:check-versions exit=0
+pnpm release:validate exit=0
+pnpm build:docs exit=0
+pnpm lint exit=0
+pnpm format exit=0
+git diff --check exit=0
+```
+
+Scoped correction commit produced before this evidence commit:
+
+- `35a35f5e88c4de86c5f3e4d66106e40dc66a0f9c` — refreshed the deterministic
+  autonomy prompt-site inventory, isolated the project-log staging fixture from
+  a stale global CLI, and aligned the packaged completion fixture with the
+  durable-project/local-scope contract. Focused verification passed 10/10 and
+  19/19; the committed-HEAD full `pnpm test` rerun also passed.
+
+No additional correction was required during the final gate sweep.
+
 #### A-prime - branch positive control at 2026-08-27T04:21:44Z
 
 ```json
