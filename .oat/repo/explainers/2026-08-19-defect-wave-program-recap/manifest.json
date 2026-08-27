@@ -1,0 +1,480 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v1",
+  "runId": "run-2200b576-00c1-4803-8a1a-e3563c96d4e2",
+  "slug": "2026-08-19-defect-wave-program-recap",
+  "recipe": {
+    "id": "program-recap",
+    "version": "1"
+  },
+  "createdAt": "2026-08-27T07:36:00.230Z",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:18f8b51c42170db1bc9005ffcf1c36832c7c8f90732f34d4277c801e83b58b02",
+    "inputHashes": {
+      "inputs/program": "sha256:408a040bd054f89531df514584a12cd6e921064004c5a8f0cb73bddd5278ea2e",
+      "inputs/w1-summary": "sha256:7e6618073611f1fe4168f978121b0a9a34a33ea2265a6c0e538d1387608fc872",
+      "inputs/w1-implementation": "sha256:210f398748f57cf85f27cd23ffcb6702c72be9c7e1f137ad32b5d793087e8027",
+      "inputs/w1-orchestration-log": "sha256:d2d4a1cabe95793551ae9f50ae5d5c6a780f4fd4b3e8b15ea0b0335231d5798f",
+      "inputs/w2-summary": "sha256:ecf807d4926d49ea73463497ff81fd7043d4d1eb2fd7d071ce30dd82cc4d04c7",
+      "inputs/w2-implementation": "sha256:cac257e19cb963bf87680c8cde9e6381e95ea0910552ea33a297171455007bc4",
+      "inputs/w2-orchestration-log": "sha256:2b169cd3e8c2c501f5a7e4d2a34e6e12039adf8a7bf2455d356784567b97c01f",
+      "inputs/w3-summary": "sha256:8c30d697922b829438e747cfa6f03f51e5a679214caf7e753e61af0d34c0731c",
+      "inputs/w3-implementation": "sha256:d30140f67b3a5f0d7b51a84f605e47516c172afcf1699f82ff2da1917ca057ab",
+      "inputs/w3-orchestration-log": "sha256:e71e3f3d2018be2beaed3ecc4ce83d8d3dd528e7a27cac0e77202bc26fcd487a",
+      "inputs/w4-summary": "sha256:a2d9b7681d8c1d3f49f718ac6bacbb5c096d44b3dffb359f0a9e56c92dd6a6fa",
+      "inputs/w4-implementation": "sha256:3fe89f354b4a8efa2457f2dc4c53b200799920a9c3df11511857cfe8230d70a8",
+      "inputs/w4-orchestration-log": "sha256:d09e491442cf73cb61c7ed7f207471f68cce3def539f1f751cf237e732343c6d"
+    },
+    "backlinks": [
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L1-L152"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L116-L117"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L125-L135"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L13-L17"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L130-L131"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L136-L137"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L146-L148"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L21-L24"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L26-L31"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L28"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L28-L31"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L29"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L29-L31"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L30"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L31"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L33-L41"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L45-L57"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L51-L53"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L58-L62"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L72-L79"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L87-L90"
+      },
+      {
+        "sourceId": "program",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/repo/reference/external-plans/2026-08-19-execution-program.md#L98-L107"
+      },
+      {
+        "sourceId": "w1-implementation",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/implementation.md#L1-L523"
+      },
+      {
+        "sourceId": "w1-implementation",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/implementation.md#L484-L489"
+      },
+      {
+        "sourceId": "w1-implementation",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/implementation.md#L486-L489"
+      },
+      {
+        "sourceId": "w1-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/orchestration-log.md#L1-L319"
+      },
+      {
+        "sourceId": "w1-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/orchestration-log.md#L254-L264"
+      },
+      {
+        "sourceId": "w1-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/orchestration-log.md#L294-L304"
+      },
+      {
+        "sourceId": "w1-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L1-L184"
+      },
+      {
+        "sourceId": "w1-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L125-L127"
+      },
+      {
+        "sourceId": "w1-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L131-L135"
+      },
+      {
+        "sourceId": "w1-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L136-L139"
+      },
+      {
+        "sourceId": "w1-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L143-L146"
+      },
+      {
+        "sourceId": "w1-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L26-L33"
+      },
+      {
+        "sourceId": "w1-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L34-L41"
+      },
+      {
+        "sourceId": "w1-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L42-L43"
+      },
+      {
+        "sourceId": "w1-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L45-L51"
+      },
+      {
+        "sourceId": "w1-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L55-L60"
+      },
+      {
+        "sourceId": "w1-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L55-L68"
+      },
+      {
+        "sourceId": "w1-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-1-execution/summary.md#L81-L84"
+      },
+      {
+        "sourceId": "w2-implementation",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/implementation.md#L1-L286"
+      },
+      {
+        "sourceId": "w2-implementation",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/implementation.md#L237-L239"
+      },
+      {
+        "sourceId": "w2-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L1-L160"
+      },
+      {
+        "sourceId": "w2-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L104-L106"
+      },
+      {
+        "sourceId": "w2-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L121-L130"
+      },
+      {
+        "sourceId": "w2-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L154"
+      },
+      {
+        "sourceId": "w2-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L158-L160"
+      },
+      {
+        "sourceId": "w2-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/orchestration-log.md#L21"
+      },
+      {
+        "sourceId": "w2-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L1-L125"
+      },
+      {
+        "sourceId": "w2-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L100-L101"
+      },
+      {
+        "sourceId": "w2-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L105-L107"
+      },
+      {
+        "sourceId": "w2-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L25-L37"
+      },
+      {
+        "sourceId": "w2-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L38-L39"
+      },
+      {
+        "sourceId": "w2-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L49-L52"
+      },
+      {
+        "sourceId": "w2-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L56-L64"
+      },
+      {
+        "sourceId": "w2-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-2-execution/summary.md#L92"
+      },
+      {
+        "sourceId": "w3-implementation",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/implementation.md#L1-L268"
+      },
+      {
+        "sourceId": "w3-implementation",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/implementation.md#L230-L234"
+      },
+      {
+        "sourceId": "w3-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/orchestration-log.md#L1-L152"
+      },
+      {
+        "sourceId": "w3-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/orchestration-log.md#L128-L135"
+      },
+      {
+        "sourceId": "w3-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/orchestration-log.md#L145-L152"
+      },
+      {
+        "sourceId": "w3-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/orchestration-log.md#L26"
+      },
+      {
+        "sourceId": "w3-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L1-L126"
+      },
+      {
+        "sourceId": "w3-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L103-L105"
+      },
+      {
+        "sourceId": "w3-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L107"
+      },
+      {
+        "sourceId": "w3-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L109-L116"
+      },
+      {
+        "sourceId": "w3-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L118-L120"
+      },
+      {
+        "sourceId": "w3-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L16-L21"
+      },
+      {
+        "sourceId": "w3-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L25-L47"
+      },
+      {
+        "sourceId": "w3-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L51-L53"
+      },
+      {
+        "sourceId": "w3-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L55-L64"
+      },
+      {
+        "sourceId": "w3-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L68-L79"
+      },
+      {
+        "sourceId": "w3-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L77-L79"
+      },
+      {
+        "sourceId": "w3-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-3-execution/summary.md#L89-L92"
+      },
+      {
+        "sourceId": "w4-implementation",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/implementation.md#L1-L360"
+      },
+      {
+        "sourceId": "w4-implementation",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/implementation.md#L320-L324"
+      },
+      {
+        "sourceId": "w4-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L1-L239"
+      },
+      {
+        "sourceId": "w4-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L204-L209"
+      },
+      {
+        "sourceId": "w4-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L206-L209"
+      },
+      {
+        "sourceId": "w4-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L216-L223"
+      },
+      {
+        "sourceId": "w4-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L232-L239"
+      },
+      {
+        "sourceId": "w4-orchestration-log",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/orchestration-log.md#L33"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L1-L140"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L111-L113"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L117-L121"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L125-L128"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L129-L130"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L132-L134"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L16-L21"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L21-L24"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L27-L54"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L59-L61"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L63-L74"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L78-L82"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L78-L93"
+      },
+      {
+        "sourceId": "w4-summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/f291716544dadfbd10684450679a7e1c21990638/.oat/projects/shared/wave-4-execution/summary.md#L87-L90"
+      }
+    ],
+    "authorResultPaths": [
+      "source/author/program-recap.json"
+    ]
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:483ad6f5121e8645f454feefbf8547e11c995fa9ad23343cd1ccfd43f487801f",
+    "derived": false
+  },
+  "artifacts": [
+    {
+      "id": "program-recap",
+      "type": "hub",
+      "contentPath": "source/content/program-recap.md",
+      "renderedPath": "site/initiatives/2026-08-19-defect-wave-program-recap/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:7cbad5beeffc440cb990220210424a6adebce50c03c7bee68a5728497246c3dd",
+      "rebuildable": false,
+      "durableEvidence": [
+        {
+          "kind": "commit",
+          "ref": "776d4d1a385fc5481d09d087a276bc66e5155a76",
+          "paths": [
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/run-request.json",
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/source/fact-base.json",
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/source/fact-base.md",
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/source/content-approval.json",
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/source/set-plan/request.json",
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/source/set-plan/result.json",
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/source/set-plan/ledger.json",
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/source/set-plan/portfolio.json",
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/source/set-plan/drafts.json",
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/source/author/program-recap.json",
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/source/content/program-recap.md",
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/theme.resolved.json",
+            ".oat/repo/explainers/2026-08-19-defect-wave-program-recap/site/initiatives/2026-08-19-defect-wave-program-recap/index.html"
+          ],
+          "attestedAt": "2026-08-27T07:39:20.146Z"
+        }
+      ]
+    }
+  ],
+  "immutableHashes": {
+    "run-request.json": "sha256:47a7ce156c9ca3d7b11fa37557b56c5b803be00b9d1b8be0ab80004a1211722e",
+    "source/fact-base.json": "sha256:8b1c48640d8c2476e4a4939e9a5f214d96fe7b9710bf8084a2614a2bb0941c2a",
+    "source/fact-base.md": "sha256:8e7266692e246ffddf32b790394eba3aa0395389277bee3b1d8b1e277b2a9e49",
+    "source/content-approval.json": "sha256:7a6f8d3597e77c5e144cb38b974029af9fc55a33474bf7debfe914ff4f77410c",
+    "source/set-plan/request.json": "sha256:5f49bc42be6f3b516920088571f9bf53010e16fb8cefbf57b46f2f5c54506400",
+    "source/set-plan/result.json": "sha256:32099ddff6b1f0b0323759f0aee03897cfee22672cf996b2a0293231ce689ef2",
+    "source/set-plan/ledger.json": "sha256:54f6c20ae7ff7e269b4b80b25e6f327e890fd713d0fcc1030d46faa8d15e0878",
+    "source/set-plan/portfolio.json": "sha256:2f7330eb10e1cc159ceaff2cd4c0f8a023021f6916ac4b5533b33875d7b40115",
+    "source/set-plan/drafts.json": "sha256:6d5ae7ea6a669caf0e28badeb5ec5cd9946f7758ecaf00c4ced13c6091a261ca",
+    "source/author/program-recap.json": "sha256:d99d449b17e641cdb9bd90143722705eef8135e43774104d6b36652e21b356b7",
+    "source/content/program-recap.md": "sha256:f4d4cba340c3da5359e38f28a95c32dca5197b6b3c4cd02e3d121ae297e3af8c",
+    "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27",
+    "site/initiatives/2026-08-19-defect-wave-program-recap/index.html": "sha256:7cbad5beeffc440cb990220210424a6adebce50c03c7bee68a5728497246c3dd"
+  },
+  "outcome": "built-durable",
+  "buildRecord": {
+    "path": "build-record.json",
+    "hash": "sha256:ea90dfb9b22741513c5ab52d4836be21e54523059902cdd525e74e8e1ee52e43"
+  },
+  "warnings": [
+    "theme-selection-normalized"
+  ]
+}

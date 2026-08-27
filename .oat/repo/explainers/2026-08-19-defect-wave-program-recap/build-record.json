@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "explainer-kit.build-record/v1",
+  "runId": "run-2200b576-00c1-4803-8a1a-e3563c96d4e2",
+  "renderStrategy": "default-only",
+  "startedAt": "2026-08-27T07:35:59.269Z",
+  "stages": [
+    {
+      "id": "validate",
+      "status": "passed",
+      "outputPaths": [
+        "run-request.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-27T07:35:59.291Z",
+      "completedAt": "2026-08-27T07:35:59.301Z"
+    },
+    {
+      "id": "fact-base",
+      "status": "passed",
+      "outputPaths": [
+        "source/fact-base.json",
+        "source/fact-base.md"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-27T07:35:59.311Z",
+      "completedAt": "2026-08-27T07:35:59.358Z"
+    },
+    {
+      "id": "content",
+      "status": "passed",
+      "outputPaths": [
+        "source/set-plan/request.json",
+        "source/set-plan/result.json",
+        "source/set-plan/ledger.json",
+        "source/set-plan/portfolio.json",
+        "source/set-plan/drafts.json",
+        "source/content/program-recap.md",
+        "source/author/program-recap.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-27T07:35:59.371Z",
+      "completedAt": "2026-08-27T07:35:59.459Z"
+    },
+    {
+      "id": "theme",
+      "status": "warned",
+      "outputPaths": [
+        "theme.resolved.json"
+      ],
+      "warnings": [
+        "theme-selection-normalized"
+      ],
+      "startedAt": "2026-08-27T07:35:59.468Z",
+      "completedAt": "2026-08-27T07:35:59.486Z"
+    },
+    {
+      "id": "render",
+      "status": "passed",
+      "outputPaths": [
+        "site/initiatives/2026-08-19-defect-wave-program-recap/index.html"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-27T07:35:59.494Z",
+      "completedAt": "2026-08-27T07:35:59.520Z"
+    },
+    {
+      "id": "qa",
+      "status": "passed",
+      "outputPaths": [
+        "site/initiatives/2026-08-19-defect-wave-program-recap/index.html"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-27T07:35:59.530Z",
+      "completedAt": "2026-08-27T07:36:00.188Z"
+    },
+    {
+      "id": "durability",
+      "status": "passed",
+      "outputPaths": [
+        "manifest.json",
+        "build-record.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-08-27T07:36:00.210Z",
+      "completedAt": "2026-08-27T07:39:20.146Z"
+    },
+    {
+      "id": "publish",
+      "status": "skipped",
+      "outputPaths": [],
+      "warnings": [],
+      "startedAt": "2026-08-27T07:36:00.220Z",
+      "completedAt": "2026-08-27T07:36:00.220Z"
+    }
+  ],
+  "outcome": "built-durable",
+  "completedAt": "2026-08-27T07:36:00.220Z"
+}
