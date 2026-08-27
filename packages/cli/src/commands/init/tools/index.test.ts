@@ -37,6 +37,7 @@ interface HarnessOptions {
   interactive?: boolean;
   packSelection?: Array<string[] | null>;
   scopeSelection?: Array<string | null>;
+  projectRootUnavailable?: boolean;
   toolsByScope?: Partial<
     Record<
       'project' | 'user',
@@ -255,7 +256,10 @@ function createHarness(options: HarnessOptions = {}) {
       scopeSelection: options.contextScopeSelection,
       logger: capture.logger,
     }),
-    resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
+    resolveProjectRoot: vi.fn(async () => {
+      if (options.projectRootUnavailable) throw new Error('not a repository');
+      return '/tmp/workspace';
+    }),
     resolveScopeRoot: vi.fn((_scope: 'project' | 'user', _cwd, home) => home),
     resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
     scanTools,
@@ -635,11 +639,10 @@ describe('createInitToolsCommand', () => {
     expect(removeFile).not.toHaveBeenCalled();
   });
 
-  it('deferred gate: not shown at all when no user-eligible pack is selected', async () => {
+  it('deferred gate includes project-management now that it supports user scope', async () => {
     const { command, selectWithAbort } = createHarness({
       interactive: true,
       contextScopeSelection: 'gate',
-      // Only the project-only pack — no user-eligible packs in the selection.
       packSelection: [['project-management']],
       scopeSelection: [],
       toolsByScope: {
@@ -651,7 +654,7 @@ describe('createInitToolsCommand', () => {
     await runCommand(command, [], ['--scope', 'all']);
 
     const messages = selectWithAbort.mock.calls.map((call) => call[0]);
-    expect(messages).not.toContain('Customize per-pack scope? (y/N)');
+    expect(messages).toContain('Customize per-pack scope? (y/N)');
   });
 
   it('deferred gate (non-interactive): never prompts and applies additive defaults', async () => {
@@ -1242,10 +1245,29 @@ describe('createInitToolsCommand', () => {
     expect(installBrainstorm).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/home' }),
     );
-    expect(scanTools).toHaveBeenCalledWith(
+    expect(scanTools).not.toHaveBeenCalledWith(
       expect.objectContaining({ scope: 'project' }),
     );
     expect(writeOatConfig).not.toHaveBeenCalled();
+  });
+
+  it('installs every selected pack at user scope without requiring Git', async () => {
+    const { command, installProjectManagement, upsertAgentsMdSection } =
+      createHarness({
+        interactive: true,
+        projectRootUnavailable: true,
+        packSelection: [['project-management']],
+        scopeSelection: ['user'],
+        toolsByScope: { user: [] },
+      });
+
+    await runCommand(command, [], ['--scope', 'user']);
+
+    expect(installProjectManagement).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
   });
 
   it('logs AGENTS.md tool packs section update', async () => {
@@ -1283,7 +1305,7 @@ describe('createInitToolsCommand', () => {
     expect(body).toContain('`~/.agents/skills/`');
   });
 
-  it('marks core as user-scoped in AGENTS section and includes user sync instruction', async () => {
+  it('keeps user-only core installs out of repository AGENTS guidance', async () => {
     const { command, capture, upsertAgentsMdSection } = createHarness({
       interactive: true,
       packSelection: [['core']],
@@ -1291,9 +1313,7 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
-    expect(body).toMatch(/\*\*core\*\*.*_\(user scope\)_/);
-    expect(body).toContain('`~/.agents/skills/`');
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
     expect(capture.info.join('\n')).toContain('Run: oat sync --scope user');
   });
 

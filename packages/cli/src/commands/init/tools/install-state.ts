@@ -1,3 +1,4 @@
+import type { PackInventory } from '@commands/tools/shared/pack-inventory';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 
 export type PackInstallLocation = 'not-installed' | 'project' | 'user' | 'both';
@@ -60,4 +61,29 @@ export function buildPackInstallStateMap<TPack extends PackName>(
   }
 
   return state;
+}
+
+export function buildPackInstallStateMapFromInventory<TPack extends PackName>(
+  packs: readonly TPack[],
+  inventories: readonly PackInventory[],
+): Record<TPack, PackInstallState> {
+  return Object.fromEntries(
+    packs.map((pack) => {
+      const inventory = inventories.find(
+        (candidate) => candidate.pack === pack,
+      );
+      const hasScope = (scope: 'project' | 'user'): boolean =>
+        inventory?.scopes.some(
+          (candidate) =>
+            candidate.scope === scope &&
+            (candidate.intent.enabled || candidate.completeness !== 'absent'),
+        ) ?? false;
+      const project = hasScope('project');
+      const user = hasScope('user');
+      return [
+        pack,
+        { project, user, location: resolvePackInstallLocation(project, user) },
+      ];
+    }),
+  ) as Record<TPack, PackInstallState>;
 }

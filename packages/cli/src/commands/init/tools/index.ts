@@ -32,6 +32,7 @@ import {
   getInstalledCanonicalPaths,
   setInstalledCanonicalPaths,
 } from '@commands/tools/shared/install-sync-context';
+import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
@@ -99,9 +100,7 @@ import {
   RESEARCH_SKILLS,
   UTILITY_SKILLS,
   WORKFLOW_AGENTS,
-  WORKFLOW_SCRIPTS,
   WORKFLOW_SKILLS,
-  WORKFLOW_TEMPLATES,
   resolvePackDefaultScope,
 } from './shared/skill-manifest';
 import { createInitToolsUtilityCommand } from './utility';
@@ -216,40 +215,7 @@ const ALL_TOOL_PACKS = [
   'brainstorm',
 ] as const satisfies readonly ToolPack[];
 
-type UserEligiblePack = Extract<
-  ToolPack,
-  'ideas' | 'docs' | 'workflows' | 'utility' | 'research' | 'brainstorm'
->;
-
-const USER_ELIGIBLE_PACK_MEMBERS: Record<
-  UserEligiblePack,
-  { skills: readonly string[]; agents: readonly string[] }
-> = {
-  ideas: {
-    skills: IDEA_SKILLS,
-    agents: [],
-  },
-  docs: {
-    skills: DOCS_SKILLS,
-    agents: [],
-  },
-  workflows: {
-    skills: WORKFLOW_SKILLS,
-    agents: WORKFLOW_AGENTS,
-  },
-  utility: {
-    skills: UTILITY_SKILLS,
-    agents: [],
-  },
-  research: {
-    skills: RESEARCH_SKILLS,
-    agents: RESEARCH_AGENTS,
-  },
-  brainstorm: {
-    skills: BRAINSTORM_SKILLS,
-    agents: [],
-  },
-};
+type UserEligiblePack = Exclude<ToolPack, 'core'>;
 
 let lastRunInitToolsMetadata: InitToolsRunMetadata | null = null;
 
@@ -300,6 +266,7 @@ const USER_ELIGIBLE_PACKS: ReadonlySet<ToolPack> = new Set([
   'docs',
   'workflows',
   'utility',
+  'project-management',
   'research',
   'brainstorm',
 ]);
@@ -411,17 +378,19 @@ function unionScopeWithCurrent(
 }
 
 async function loadInstalledPackStates(
-  projectRoot: string,
+  projectRoot: string | null,
   userRoot: string,
   assetsRoot: string,
   dependencies: InitToolsDependencies,
 ): Promise<PackInstallStateMap> {
   const [projectTools, userTools] = await Promise.all([
-    dependencies.scanTools({
-      scope: 'project',
-      scopeRoot: projectRoot,
-      assetsRoot,
-    }),
+    projectRoot
+      ? dependencies.scanTools({
+          scope: 'project',
+          scopeRoot: projectRoot,
+          assetsRoot,
+        })
+      : Promise.resolve([]),
     dependencies.scanTools({
       scope: 'user',
       scopeRoot: userRoot,
@@ -470,7 +439,7 @@ function buildPackChoices(
       checked: true,
     },
     {
-      label: `Project Management [project]${installedPackStates['project-management'].location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates['project-management'].location)})`}`,
+      label: `Project Management [project|user]${installedPackStates['project-management'].location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates['project-management'].location)})`}`,
       value: 'project-management',
       checked: false,
     },
@@ -505,25 +474,20 @@ export function consumeInitToolsRunMetadata(): InitToolsRunMetadata | null {
 
 async function removePackFromScope(
   pack: UserEligiblePack,
+  scope: ConcreteScope,
   root: string,
   dependencies: InitToolsDependencies,
 ): Promise<void> {
-  const members = USER_ELIGIBLE_PACK_MEMBERS[pack];
-
-  for (const skill of members.skills) {
-    await dependencies.removeDirectory(join(root, '.agents', 'skills', skill));
-  }
-
-  for (const agent of members.agents) {
-    await dependencies.removeFile(join(root, '.agents', 'agents', agent));
-  }
-
-  if (pack === 'workflows') {
-    for (const template of WORKFLOW_TEMPLATES) {
-      await dependencies.removeFile(join(root, '.oat', 'templates', template));
+  for (const asset of getPackDefinition(pack).assets) {
+    if (!asset.scopes.includes(scope) || asset.ownership[scope] !== 'managed') {
+      continue;
     }
-    for (const script of WORKFLOW_SCRIPTS) {
-      await dependencies.removeFile(join(root, '.oat', 'scripts', script));
+    if (asset.kind === 'seed') continue;
+    const target = join(root, asset.destination);
+    if (asset.kind === 'skill' || asset.kind === 'directory') {
+      await dependencies.removeDirectory(target);
+    } else {
+      await dependencies.removeFile(target);
     }
   }
 }
@@ -581,9 +545,9 @@ async function resolvePackScopes(
 ): Promise<PackScopeMap> {
   const scopes: Partial<PackScopeMap> = {};
 
-  // Packs outside the user-eligible set are project-only.
+  // Scope eligibility is release-owned by the canonical manifest.
   for (const pack of selections) {
-    if (!USER_ELIGIBLE_PACKS.has(pack)) {
+    if (!getPackDefinition(pack).allowedScopes.includes('user')) {
       scopes[pack] = 'project';
     }
   }
@@ -876,13 +840,18 @@ export async function runInitTools(
   lastRunInitToolsMetadata = null;
 
   try {
-    const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
     const userRoot = dependencies.resolveScopeRoot(
       'user',
       context.cwd,
       context.home,
     );
     const assetsRoot = await dependencies.resolveAssetsRoot();
+    let projectRoot: string | null = null;
+    try {
+      projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+    } catch (error) {
+      if (context.scope !== 'user') throw error;
+    }
     const initialPackStates = await loadInstalledPackStates(
       projectRoot,
       userRoot,
@@ -925,7 +894,11 @@ export async function runInitTools(
     );
 
     function scopeRoot(scope: ConcreteScope): string {
-      return scope === 'user' ? userRoot : projectRoot;
+      if (scope === 'user') return userRoot;
+      if (!projectRoot) {
+        throw new Error('Project scope is unavailable outside a repository');
+      }
+      return projectRoot;
     }
 
     // Reconcile current placement vs the desired end-state per user-eligible
@@ -952,8 +925,8 @@ export async function runInitTools(
     // already-present scope is an idempotent copy.
     function packTargets(pack: ToolPack): string[] {
       return packScopes[pack] === 'both'
-        ? [projectRoot, userRoot]
-        : [packScopes[pack] === 'user' ? userRoot : projectRoot];
+        ? [scopeRoot('project'), userRoot]
+        : [scopeRoot(packScopes[pack] === 'user' ? 'user' : 'project')];
     }
 
     // Only scopes that received a new add for this pack should be auto-synced.
@@ -1124,7 +1097,9 @@ export async function runInitTools(
             `${projectsBase}/**/reviews/archived`,
           ];
 
-          const existingConfig = await dependencies.readOatConfig(projectRoot);
+          const existingConfig = await dependencies.readOatConfig(
+            scopeRoot('project'),
+          );
           const existingLocalPaths = new Set(
             dependencies.resolveLocalPaths(existingConfig),
           );
@@ -1158,13 +1133,18 @@ export async function runInitTools(
 
             if (makeLocal) {
               const addResult = await dependencies.addLocalPaths(
-                projectRoot,
+                scopeRoot('project'),
                 PR_ARCHIVE_LOCAL_PATHS,
               );
               if (addResult.added.length > 0) {
-                const config = await dependencies.readOatConfig(projectRoot);
+                const config = await dependencies.readOatConfig(
+                  scopeRoot('project'),
+                );
                 const allPaths = dependencies.resolveLocalPaths(config);
-                await dependencies.applyGitignore(projectRoot, allPaths);
+                await dependencies.applyGitignore(
+                  scopeRoot('project'),
+                  allPaths,
+                );
               }
             }
           }
@@ -1196,19 +1176,25 @@ export async function runInitTools(
     }
 
     if (selectedPacks.includes('project-management')) {
-      const targetRoot = projectRoot;
-      affectedScopes.add('project');
-      const projectManagementResult =
-        await dependencies.installProjectManagement({
-          assetsRoot,
-          targetRoot,
-        });
-      for (const skill of projectManagementResult.outdatedSkills) {
-        outdatedSkills.push({
-          ...skill,
-          targetRoot,
-          selectionKey: `${skill.name}:${targetRoot}`,
-        });
+      const projectManagementAdded = addedScopes('project-management');
+      for (const targetRoot of packTargets('project-management')) {
+        const targetScope: ConcreteScope =
+          targetRoot === userRoot ? 'user' : 'project';
+        if (projectManagementAdded.has(targetScope)) {
+          affectedScopes.add(targetScope);
+        }
+        const projectManagementResult =
+          await dependencies.installProjectManagement({
+            assetsRoot,
+            targetRoot,
+          });
+        for (const skill of projectManagementResult.outdatedSkills) {
+          outdatedSkills.push({
+            ...skill,
+            targetRoot,
+            selectionKey: `${skill.name}:${targetRoot}`,
+          });
+        }
       }
     }
 
@@ -1260,7 +1246,7 @@ export async function runInitTools(
     // Apply confirmed removals only after every add has succeeded, so a failed
     // replacement install can never leave a pack uninstalled in both scopes.
     for (const { pack, scope } of stagedRemovals) {
-      await removePackFromScope(pack, scopeRoot(scope), dependencies);
+      await removePackFromScope(pack, scope, scopeRoot(scope), dependencies);
       affectedScopes.add(scope);
     }
 
@@ -1306,30 +1292,37 @@ export async function runInitTools(
       pack,
       scope: packScopes[pack],
     }));
+    const adoptsProject = packScopeInfo.some(({ scope }) => scope !== 'user');
     const sectionBody = buildToolPacksSectionBody(packScopeInfo);
-    const sectionResult = await dependencies.upsertAgentsMdSection(
-      projectRoot,
-      'tools',
-      sectionBody,
-    );
-    const projectManagementSectionResult = selectedPacks.includes(
-      'project-management',
-    )
+    const sectionResult = adoptsProject
       ? await dependencies.upsertAgentsMdSection(
-          projectRoot,
-          PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
-          buildProjectManagementAgentsSectionBody(),
+          scopeRoot('project'),
+          'tools',
+          sectionBody,
         )
-      : null;
-    const decisionSectionResult = selectedPacks.includes('project-management')
-      ? await dependencies.upsertAgentsMdSection(
-          projectRoot,
-          DECISION_AGENTS_SECTION_KEY,
-          buildDecisionAgentsSectionBody(),
-        )
-      : null;
-    // Migrate: remove legacy <!-- OAT workflows --> section if present
-    await dependencies.removeAgentsMdSection(projectRoot, 'workflows');
+      : { action: 'no-change' as const };
+    const projectManagementSectionResult =
+      adoptsProject && selectedPacks.includes('project-management')
+        ? await dependencies.upsertAgentsMdSection(
+            scopeRoot('project'),
+            PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+            buildProjectManagementAgentsSectionBody(),
+          )
+        : null;
+    const decisionSectionResult =
+      adoptsProject && selectedPacks.includes('project-management')
+        ? await dependencies.upsertAgentsMdSection(
+            scopeRoot('project'),
+            DECISION_AGENTS_SECTION_KEY,
+            buildDecisionAgentsSectionBody(),
+          )
+        : null;
+    if (adoptsProject) {
+      await dependencies.removeAgentsMdSection(
+        scopeRoot('project'),
+        'workflows',
+      );
+    }
 
     if (!context.json && sectionResult.action !== 'no-change') {
       context.logger.info(
@@ -1400,6 +1393,7 @@ export function createInitToolsCommand(
     const context = dependencies.buildCommandContext(
       readGlobalOptions(actionCommand),
     );
+    if (context.scope === 'user') return;
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     await reconcileProjectToolsConfig(
       {
