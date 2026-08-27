@@ -737,6 +737,228 @@ describe('archive utils', () => {
     },
   );
 
+  it.each([
+    'after-copy',
+    'after-summary',
+    'after-s3',
+    'after-lifecycle',
+    'after-checkout-removal',
+  ] as const)(
+    'reuses one durable synced archive identity on retry %s with and without a recap',
+    async (failureBoundary) => {
+      for (const withRecap of [false, true]) {
+        const fixture = await createSyncedFixture();
+        try {
+          const slug = `${failureBoundary}-${withRecap ? 'recap' : 'plain'}`;
+          const target = buildSyncTarget(
+            fixture.cloneA,
+            '.oat/projects/shared',
+            slug,
+          );
+          await createSyncedProject(target, defaultGitRunner);
+          await writeFile(
+            join(target.projectPath, 'state.md'),
+            '# state\n',
+            'utf8',
+          );
+          await writeFile(
+            join(target.projectPath, 'summary.md'),
+            '# summary\n',
+            'utf8',
+          );
+          const recap = withRecap
+            ? await createRecapPackage(target.projectPath)
+            : null;
+          await pushSynced(target, defaultGitRunner, {});
+          const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+          await writeSyncedRecord(
+            recordPath,
+            buildSyncedRecord(slug, new Date('2026-08-27T00:00:00Z')),
+          );
+          await mkdir(
+            join(fixture.cloneA, '.oat', 'projects', 'archived', slug),
+            { recursive: true },
+          );
+
+          const commitsBefore = Number(
+            (
+              await defaultGitRunner.run(['rev-list', '--count', 'HEAD'], {
+                cwd: fixture.cloneA,
+              })
+            ).stdout,
+          );
+          const s3Calls: string[][] = [];
+          const successfulExecFile = vi.fn(
+            async (_file: string, args: readonly string[]) => {
+              s3Calls.push([...args]);
+              return { stdout: '', stderr: '' };
+            },
+          );
+          const options = {
+            repoRoot: fixture.cloneA,
+            projectPath: target.projectPath,
+            projectName: slug,
+            projectsRoot: '.oat/projects/shared',
+            summaryExportPath: '.oat/repo/reference/project-summaries',
+            s3Uri: 's3://archive-bucket/projects',
+            s3SyncOnComplete: true,
+            ...(recap ? { projectRecapRun: recap.relativeRunPath } : {}),
+          };
+          const commonDependencies = {
+            ensureS3ArchiveAccess: vi.fn(async () => ({
+              ok: true,
+              warnings: [],
+            })),
+            execFile: successfulExecFile,
+          };
+          const firstDependencies = {
+            ...commonDependencies,
+            timestamp: () => '2026-08-27T12:00:00Z',
+            ...(failureBoundary === 'after-copy'
+              ? {
+                  copySingleFile: async (
+                    source: string,
+                    destination: string,
+                  ) => {
+                    if (destination.includes('project-summaries')) {
+                      throw new Error('injected after-copy failure');
+                    }
+                    await copyFile(source, destination);
+                  },
+                }
+              : {}),
+            ...(failureBoundary === 'after-summary'
+              ? {
+                  execFile: vi.fn(async () => {
+                    throw new Error('injected after-summary failure');
+                  }),
+                }
+              : {}),
+            ...(failureBoundary === 'after-s3'
+              ? {
+                  commitRecordChange: vi.fn(async () => {
+                    throw new Error('injected after-s3 failure');
+                  }),
+                }
+              : {}),
+            ...(failureBoundary === 'after-lifecycle'
+              ? {
+                  removeSyncedCheckout: vi.fn(async () => {
+                    throw new Error('injected after-lifecycle failure');
+                  }),
+                }
+              : {}),
+          };
+
+          if (failureBoundary === 'after-checkout-removal') {
+            await archiveProjectOnCompletion(options, firstDependencies);
+          } else {
+            await expect(
+              archiveProjectOnCompletion(options, firstDependencies),
+            ).rejects.toThrow(/injected/);
+          }
+
+          const retried = await archiveProjectOnCompletion(options, {
+            ...commonDependencies,
+            timestamp: () => '2026-08-28T12:00:00Z',
+          });
+          const snapshotId = `${slug}-20260827120000`;
+          expect(retried.snapshotId).toBe(snapshotId);
+          expect(retried.archivePath).toBe(
+            join(fixture.cloneA, '.oat', 'projects', 'archived', snapshotId),
+          );
+          expect(retried.summaryExportFile).toBe(
+            join(
+              fixture.cloneA,
+              '.oat',
+              'repo',
+              'reference',
+              'project-summaries',
+              `${snapshotId}.md`,
+            ),
+          );
+          expect(retried.s3Path).toBe(
+            `s3://archive-bucket/projects/clone-a/projects/${snapshotId}`,
+          );
+          expect(retried.projectRecapExport?.exportRoot ?? null).toBe(
+            recap
+              ? join(
+                  fixture.cloneA,
+                  '.oat',
+                  'repo',
+                  'reference',
+                  'project-recaps',
+                  snapshotId,
+                )
+              : null,
+          );
+          if (
+            failureBoundary === 'after-lifecycle' ||
+            failureBoundary === 'after-checkout-removal'
+          ) {
+            expect(retried.lifecycleCommit).toBeNull();
+          } else {
+            expect(retried.lifecycleCommit).toMatch(/^[a-f0-9]{40}$/);
+          }
+          await expect(access(target.projectPath)).rejects.toThrow();
+          expect(await readSyncedRecord(recordPath)).toMatchObject({
+            archiveSnapshot: snapshotId,
+            completedAt:
+              failureBoundary === 'after-copy' ||
+              failureBoundary === 'after-summary'
+                ? '2026-08-28T12:00:00Z'
+                : '2026-08-27T12:00:00Z',
+            status: 'complete',
+          });
+          const commitsAfter = Number(
+            (
+              await defaultGitRunner.run(['rev-list', '--count', 'HEAD'], {
+                cwd: fixture.cloneA,
+              })
+            ).stdout,
+          );
+          expect(commitsAfter - commitsBefore).toBe(1);
+          expect(
+            await readdir(
+              join(
+                fixture.cloneA,
+                '.oat',
+                'repo',
+                'reference',
+                'project-summaries',
+              ),
+            ),
+          ).toEqual([`${snapshotId}.md`]);
+          if (recap) {
+            expect(
+              await readdir(
+                join(
+                  fixture.cloneA,
+                  '.oat',
+                  'repo',
+                  'reference',
+                  'project-recaps',
+                ),
+              ),
+            ).toEqual([snapshotId]);
+          }
+          expect(
+            s3Calls
+              .filter((args) => args[0] === 's3' && args[1] === 'sync')
+              .map((args) => args[3]),
+          ).toEqual(
+            expect.arrayContaining([
+              `s3://archive-bucket/projects/clone-a/projects/${snapshotId}`,
+            ]),
+          );
+        } finally {
+          await fixture.cleanup();
+        }
+      }
+    },
+    20_000,
+  );
+
   it.each(['failed', 'incomplete'] as const)(
     'exports only the selected %s recap package before deleting the active project',
     async (outcome) => {

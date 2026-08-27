@@ -608,6 +608,34 @@ async function writeArchiveSnapshotMetadata(
   );
 }
 
+async function verifyArchiveSnapshotMetadata(
+  archivePath: string,
+  expected: ArchiveSnapshotMetadata,
+): Promise<void> {
+  let actual: unknown;
+  try {
+    actual = JSON.parse(
+      await readFile(
+        join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+        'utf8',
+      ),
+    );
+  } catch {
+    throw new CliError(
+      `Existing archive \`${archivePath}\` cannot be verified for retry; restore or remove it before retrying.`,
+    );
+  }
+  if (
+    !isRecord(actual) ||
+    actual.projectName !== expected.projectName ||
+    actual.snapshotName !== expected.snapshotName
+  ) {
+    throw new CliError(
+      `Existing archive \`${archivePath}\` does not match persisted snapshot \`${expected.snapshotName}\`; refusing to overwrite it.`,
+    );
+  }
+}
+
 async function exportProjectSummary(
   archivePath: string,
   snapshotName: string,
@@ -623,6 +651,18 @@ async function exportProjectSummary(
 
   const summaryTarget = join(repoRoot, summaryExportPath, `${snapshotName}.md`);
   const copySummary = dependencies.copySingleFile ?? copySingleFile;
+  if (await pathExists(summaryTarget)) {
+    const [sourceContents, targetContents] = await Promise.all([
+      readFile(summarySource),
+      readFile(summaryTarget),
+    ]);
+    if (!sourceContents.equals(targetContents)) {
+      throw new CliError(
+        `Existing summary export \`${summaryTarget}\` does not match persisted snapshot \`${snapshotName}\`; refusing to overwrite it.`,
+      );
+    }
+    return summaryTarget;
+  }
   await copySummary(summarySource, summaryTarget);
   return summaryTarget;
 }
@@ -1263,9 +1303,57 @@ async function exportSelectedProjectRecap(
     snapshotName,
   );
   if (await pathExists(exportRoot)) {
-    throw new CliError(
-      `Project recap export destination \`${exportRoot}\` already exists; refusing to overwrite it.`,
+    let exportedManifestContents: string;
+    try {
+      exportedManifestContents = await readFile(
+        join(exportRoot, 'manifest.json'),
+        'utf8',
+      );
+    } catch {
+      throw new CliError(
+        `Project recap export destination \`${exportRoot}\` already exists and cannot be verified for retry.`,
+      );
+    }
+    if (exportedManifestContents !== sourceManifestContents) {
+      throw new CliError(
+        `Existing project recap export \`${exportRoot}\` does not match persisted snapshot \`${snapshotName}\`.`,
+      );
+    }
+    const exportedManifest = await parseProjectRecapManifest(
+      exportedManifestContents,
     );
+    const verifiedArtifactCount = await verifyProjectRecapImmutableHashes(
+      exportRoot,
+      exportedManifest,
+    );
+    await verifyProjectRecapTerminalEvidence(
+      exportRoot,
+      exportedManifest,
+      sourceTerminalEvidence ?? undefined,
+    );
+    const exactCoverage = (await loadExplainerPackageCoverage()) as Awaited<
+      ReturnType<typeof loadExplainerPackageCoverage>
+    > &
+      ExactRunPackageCoverage;
+    try {
+      await exactCoverage.enforceRunPackageInventory(
+        exportRoot,
+        exportedManifest,
+        { includeTerminalEvidence: sourceTerminalEvidence !== null },
+      );
+    } catch {
+      throw new CliError(
+        `Existing project recap export \`${exportRoot}\` has invalid content.`,
+      );
+    }
+    return {
+      sourceRunRoot,
+      exportRoot,
+      manifest: {
+        relativePath: 'manifest.json',
+        verifiedArtifactCount,
+      },
+    };
   }
 
   const temporaryRoot = `${exportRoot}.tmp-${randomUUID()}`;
@@ -1405,48 +1493,46 @@ export async function archiveProjectOnCompletion(
   assertDurableArchiveProjectTarget(archiveTarget);
   const archivePath = archiveTarget.archivePath;
   const snapshotId = basename(archivePath);
-
-  if (
-    syncTarget &&
-    activeRecord?.status === 'complete' &&
-    activeRecord.archiveSnapshot &&
-    !(await pathExists(options.projectPath)) &&
-    (await (dependencies.dirExists ?? dirExists)(archivePath))
-  ) {
-    return {
-      archivePath,
-      s3Path: null,
-      summaryExportFile: null,
-      projectRecapExport: null,
-      warnings: [],
-      lifecycleCommit: null,
-      recapExportPaths: [],
-      snapshotId,
-    };
-  }
+  const exportIdentity = syncTarget ? snapshotId : snapshotName;
 
   if (syncTarget && activeRecord && !activeRecord.archiveSnapshot) {
     activeRecord = { ...activeRecord, archiveSnapshot: snapshotId };
     await writeRecord(recordPath, activeRecord);
   }
+
+  const archiveExists = await (dependencies.dirExists ?? dirExists)(
+    archivePath,
+  );
+  if (archiveExists) {
+    await verifyArchiveSnapshotMetadata(archivePath, {
+      projectName: options.projectName,
+      snapshotName: exportIdentity,
+    });
+  }
+  const projectSourcePath = (await pathExists(options.projectPath))
+    ? options.projectPath
+    : archivePath;
   const projectRecapExport = await exportSelectedProjectRecap(
-    options,
-    snapshotName,
+    { ...options, projectPath: projectSourcePath },
+    exportIdentity,
     dependencies,
   );
 
   try {
-    await makeDir(dirname(archivePath));
-    await copyProjectDirectory(
-      options.projectPath,
-      archivePath,
-      (_sourcePath, relativePath) =>
-        relativePath !== 'reviews' && (!syncTarget || relativePath !== '.git'),
-    );
-    await writeArchiveSnapshotMetadata(archivePath, {
-      projectName: options.projectName,
-      snapshotName,
-    });
+    if (!archiveExists) {
+      await makeDir(dirname(archivePath));
+      await copyProjectDirectory(
+        options.projectPath,
+        archivePath,
+        (_sourcePath, relativePath) =>
+          relativePath !== 'reviews' &&
+          (!syncTarget || relativePath !== '.git'),
+      );
+      await writeArchiveSnapshotMetadata(archivePath, {
+        projectName: options.projectName,
+        snapshotName: exportIdentity,
+      });
+    }
     if (!syncTarget) {
       await removePath(options.projectPath, { recursive: true, force: true });
     }
@@ -1467,7 +1553,7 @@ export async function archiveProjectOnCompletion(
     try {
       summaryExportFile = await exportProjectSummary(
         archivePath,
-        snapshotName,
+        exportIdentity,
         options.summaryExportPath,
         options.repoRoot,
         dependencies,
@@ -1518,7 +1604,7 @@ export async function archiveProjectOnCompletion(
       s3Path = buildProjectArchiveS3Uri(
         options.s3Uri,
         remoteRepoRoot,
-        snapshotName,
+        exportIdentity,
       );
 
       try {
@@ -1568,7 +1654,7 @@ export async function archiveProjectOnCompletion(
     activeRecord = {
       ...activeRecord,
       status: 'complete',
-      completedAt: timestamp,
+      completedAt: activeRecord.completedAt ?? timestamp,
     };
     await writeRecord(recordPath, activeRecord);
     if (options.commit !== false) {
