@@ -1227,29 +1227,46 @@ update`'s content refresh, and breaking migration's verify-before-remove
 
 ### Known deferred work
 
-Recorded, non-blocking, and not fixed by this project:
+Recorded, accepted as non-blocking for this project, and split into three
+implementation-ready follow-ups with distinct write/review boundaries:
 
-- Five packaged user-scope skills still chain into sibling skills by bare
-  repo-relative path (`oat-idea-ideate`, `oat-idea-new`, `oat-idea-summarize`,
-  `oat-project-implement`, `oat-project-plan-writing`), pinned by a ratchet so
-  no new occurrence can be added.
-- `.agents/skills/oat-brainstorm/references/destinations.md:79` retains two bare
-  cross-skill paths; the ratchet scanner is `SKILL.md`-only and its regex
-  requires backticks.
-- `oat pjm migrate` is still keyed on project pack intent
-  (`packages/cli/src/commands/pjm/migrate.ts:474`).
-- The `user-agent-unmaterialized` diagnostic under-reports: its
-  `USER_SCOPE_MANAGED_AGENT_FILES` exclusion is unconditional, but that
-  materialization is provider-conditional, so on a Claude-only `HOME`
-  `oat-reviewer` and `oat-phase-implementer` are not named.
-- Assorted Minor polish: doctor's `'; '` separator collision,
-  `shared-owner-observation` attributing a shared asset to an uninstalled pack,
-  `oat status` degrading less gracefully than `oat doctor` on inventory failure,
-  and two test-quality items.
+- [`portable-skill-references`](../portable-skill-references/) / backlog
+  [`BL-260827-make-packaged-skill-references`](../../../repo/pjm/backlog/items/BL-260827-make-packaged-skill-references.md)
+  owns the five packaged skills that still use bare sibling-skill paths, the
+  two brainstorm reference paths, portable resolution, and the ratchet.
+- [`scope-adoption-diagnostics`](../scope-adoption-diagnostics/) / backlog
+  [`BL-260827-correct-scope-and-adoption`](../../../repo/pjm/backlog/items/BL-260827-correct-scope-and-adoption.md)
+  owns PJM migration eligibility, provider-aware user-agent diagnostics,
+  shared-owner attribution, status inventory failures, doctor output
+  delimiting, and the two test-quality corrections.
+- [`tool-pack-lifecycle-config-cleanup`](../tool-pack-lifecycle-config-cleanup/) /
+  backlog
+  [`BL-260827-clean-up-tool-pack-lifecycle`](../../../repo/pjm/backlog/items/BL-260827-clean-up-tool-pack-lifecycle.md)
+  owns the five residual lifecycle/config findings: source-backed
+  seed-if-missing digest classification (prior M1), exact adopted-pack human
+  and JSON reporting (M2), equal-version content drift detection (M5),
+  prevention of newly-written `tools.<pack>: false` conflict state (M6), and
+  removal of the inert per-pack `--force` surface (M7).
 
-### Required before merge
+Prior Medium disposition is complete: M3, M4, and M8 were fixed in the final
+implementation pass; M9 is an accepted compatibility break with explicit
+upgrade documentation; M1, M2, M5, M6, and M7 are durably deferred to the
+third follow-up above. Portable-reference and scope/diagnostic residue are
+durably assigned to the first two follow-ups.
 
-This branch is behind `origin/main` on the release line and must be rebased onto
-current main. If main has advanced past `0.2.36`, the lockstep version must be
-re-resolved above the new tip, because this branch's own version gate is the
-older, weaker merge-base copy.
+Prior Minor disposition is also explicit. Shared-owner attribution, inventory
+failure handling, output delimiting, and test-quality cleanup are assigned to
+`scope-adoption-diagnostics`; portable path cleanup is assigned to
+`portable-skill-references`. Remaining path-display formatting, migration
+remedy direction, `has --json` absent-scope noise, and PJM guard wording are
+accepted as non-blocking polish: current behavior remains safe and actionable,
+and expanding any of the three bounded projects solely for wording/noise would
+weaken their implementation and review boundaries.
+
+### Merge closeout resolved
+
+The required mainline integration completed in merge `e270a776e`. It retained
+the lockstep public package version `0.2.37`, above the integrated mainline
+`0.2.36`, and the complete post-merge gate sequence passed at that merged
+implementation head. No additional rebase or version selection is pending for
+this project.
