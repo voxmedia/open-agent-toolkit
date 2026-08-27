@@ -93,4 +93,38 @@ describe('skills bundled docs contract', () => {
       `Skill(s) reference a shared doc that won't ship with the bundle:\n${detail}`,
     ).toEqual([]);
   });
+
+  it('resolves shared tracking scripts from each loaded skill scope', () => {
+    const consumers: string[] = [];
+    const bareReferences: string[] = [];
+
+    for (const skill of listSkillDirs()) {
+      const skillFile = join(SKILLS_DIR, skill, 'SKILL.md');
+      const content = readFileSync(skillFile, 'utf8');
+      if (!content.includes('resolve-tracking.sh')) continue;
+      consumers.push(skill);
+      if (
+        content.includes('TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"')
+      ) {
+        bareReferences.push(skill);
+      }
+      expect(content, skill).toContain(
+        'SCOPE_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"',
+      );
+      expect(content, skill).toContain(
+        'TRACKING_SCRIPT="$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh"',
+      );
+    }
+
+    expect(consumers).toEqual(
+      expect.arrayContaining([
+        'oat-docs-analyze',
+        'oat-docs-apply',
+        'oat-agent-instructions-analyze',
+        'oat-agent-instructions-apply',
+        'oat-repo-knowledge-index',
+      ]),
+    );
+    expect(bareReferences).toEqual([]);
+  });
 });

@@ -101,6 +101,28 @@ describe('resolve-tracking.sh', () => {
     },
   );
 
+  it('runs from either a project-installed or user-installed scope root', () => {
+    for (const placement of ['project', 'user']) {
+      const root = createGitRepo();
+      const scopeRoot = join(root, placement);
+      const installedScript = join(
+        scopeRoot,
+        '.oat',
+        'scripts',
+        'resolve-tracking.sh',
+      );
+      mkdirSync(join(scopeRoot, '.oat', 'scripts'), { recursive: true });
+      writeFileSync(installedScript, readFileSync(SCRIPT_PATH, 'utf8'), 'utf8');
+
+      expect(
+        execFileSync('bash', [installedScript, 'root'], {
+          cwd: root,
+          encoding: 'utf8',
+        }),
+      ).toContain('commitHash');
+    }
+  });
+
   it('does not write agentInstructions when the analysis artifact is present but untracked', () => {
     const root = createGitRepo();
     const { hash, branch } = rootTarget(root);

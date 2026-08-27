@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-apply
-version: 1.6.2
+version: 1.7.0
 description: Run when you have an agent instructions analysis artifact and want to generate or update instruction files. Creates a branch, generates files from templates, and optionally opens a PR.
 disable-model-invocation: true
 user-invocable: true
@@ -155,8 +155,11 @@ Then stop.
 ### Step 1: Resolve Providers
 
 ```bash
-SCRIPT_DIR=".agents/skills/oat-agent-instructions-analyze/scripts"
-TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"
+# Set SKILL_DIR to the absolute directory containing the loaded
+# oat-agent-instructions-analyze SKILL.md.
+SCRIPT_DIR="$SKILL_DIR/scripts"
+SCOPE_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
+TRACKING_SCRIPT="$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh"
 PROVIDERS=$(bash "$SCRIPT_DIR/resolve-providers.sh" --non-interactive)
 ```
 
@@ -462,7 +465,9 @@ PR creation failed. To create manually:
 **Update tracking:**
 
 ```bash
-TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"
+# Set SKILL_DIR to the absolute directory containing this loaded SKILL.md.
+SCOPE_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
+TRACKING_SCRIPT="$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh"
 ROOT_TARGET=$(bash "$TRACKING_SCRIPT" root)
 ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
 ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
@@ -506,4 +511,5 @@ Apply complete.
 - Templates: `references/instruction-file-templates/`
 - Canonical rule frontmatter reference: `references/instruction-file-templates/frontmatter/canonical-rule.md`
 - Apply plan template: `references/apply-plan-template.md`
-- Tracking script: `.oat/scripts/resolve-tracking.sh`
+- Tracking script: `$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh`, where
+  `SCOPE_ROOT` is derived from the loaded skill directory.
