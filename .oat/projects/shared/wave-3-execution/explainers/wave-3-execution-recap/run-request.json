@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "explainer-kit.run-request/v1",
+  "recipe": {
+    "id": "project-recap",
+    "version": "2"
+  },
+  "slug": "wave-3-execution-recap",
+  "outputRoot": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/bug-triage/.oat/projects/shared/wave-3-execution/explainers",
+  "factBase": {
+    "mode": "federated",
+    "freshnessPolicy": "live-wins",
+    "sources": [
+      {
+        "id": "plan",
+        "kind": "file",
+        "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/bug-triage/.oat/projects/shared/wave-3-execution/plan.md",
+        "role": "project",
+        "sourceSetId": "wave-3-execution",
+        "authoritativeFor": [
+          "phases",
+          "validation-approach"
+        ]
+      },
+      {
+        "id": "implementation",
+        "kind": "file",
+        "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/bug-triage/.oat/projects/shared/wave-3-execution/implementation.md",
+        "role": "project",
+        "sourceSetId": "wave-3-execution",
+        "authoritativeFor": [
+          "key-agent-decisions",
+          "as-built-architecture",
+          "implementation-record",
+          "validation-evidence"
+        ]
+      },
+      {
+        "id": "summary",
+        "kind": "file",
+        "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/bug-triage/.oat/projects/shared/wave-3-execution/summary.md",
+        "role": "project",
+        "sourceSetId": "wave-3-execution",
+        "authoritativeFor": [
+          "outcome"
+        ]
+      }
+    ]
+  },
+  "durability": {
+    "strategy": "none"
+  },
+  "privacy": {
+    "retainRawArtDirection": false
+  },
+  "mode": "unattended",
+  "recapMode": "artistic",
+  "theme": {
+    "renderStrategy": "default-only"
+  }
+}

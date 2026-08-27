@@ -1,7 +1,7 @@
 ---
 id: BL-260817-let-resolveassetsroot-honor
 title: Let resolveAssetsRoot honor OAT_ASSETS_DIR and make smoke asset reads hermetic
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - flake
 assignee: null
 created: 2026-08-17T09:21:32.316Z
-updated: 2026-08-20T02:37:32Z
+updated: '2026-08-27T01:00:36Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-19-hermetic-cli-assets-root.md

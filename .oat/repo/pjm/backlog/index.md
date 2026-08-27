@@ -164,7 +164,6 @@
 | BL-260818-extend-guarded-prose-contract  | Extend guarded-prose contract tests to docs-app mirrors                                    | open   | medium   | task    | S        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                             | open   | medium   | task    |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                          | open   | medium   | feature | L        |
-| BL-260817-let-resolveassetsroot-honor    | Let resolveAssetsRoot honor OAT_ASSETS_DIR and make smoke asset reads hermetic             | open   | medium   | task    | S        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                  | open   | medium   | feature | M        |
 | BL-260819-refresh-codex-skill-model      | Refresh codex-skill model routing and repository-check policy                              | open   | medium   | task    | S        |
 | BL-260819-repair-verified-bundled-skill  | Repair verified bundled skill contract drift                                               | open   | medium   | task    | M        |

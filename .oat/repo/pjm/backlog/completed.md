@@ -8,6 +8,7 @@
 
 ## Completed Items
 
+- 2026-08-27 — BL-260817-let-resolveassetsroot-honor — Let resolveAssetsRoot honor OAT_ASSETS_DIR and make smoke asset reads hermetic — Closed by wave-3-execution: resolveAssetsRoot honors a validated OAT_ASSETS_DIR (fail-closed), the package-coverage smoke consumer reads a private per-file bundle, lockstep 0.2.35.
 - 2026-08-26 — BL-260718-warn-when-oat-sync-uses — Warn when oat sync uses a different producing CLI version — oat sync now warns (human) and reports (JSON versionSkew) when the loaded manifest's oatVersion differs from the invoking CLI, before any restamp; apply restamp derives from the same diagnostic; shipped in wave-2-execution (PR pending) with the 0.2.34 lockstep bump.
 - 2026-08-26 — BL-260817-detect-branch-behind-published — Detect branch-behind-published-main package versions in CI — release:check-versions now rejects lockstep versions not strictly greater than origin/main (numeric comparator, fail-closed evidence, composes with the merge-base rule); shipped in wave-1-execution (PR pending) with a 0.2.33 lockstep bump.
 - 2026-08-26 — BL-260818-bound-the-smoke-cleanup — Bound the smoke cleanup SIGTERM harness with a timeout — Bounded the smoke cleanup SIGTERM harness: bounded exit wait, SIGKILL + bounded reap/detach before temp-dir cleanup, stage-aware diagnostics; shipped in wave-1-execution (PR pending) via tools/smoke/runner/cleanup.test.mjs.
