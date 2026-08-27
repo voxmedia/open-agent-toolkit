@@ -1,5 +1,5 @@
 import { access, readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import {
   BACKLOG_ITEM_STATUSES,
@@ -10,6 +10,7 @@ import {
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import type { DoctorCheck } from '@ui/output';
 
+import { resolvePjmAdoption, type PjmAdoption } from './adoption';
 import { CANONICAL_REPO_REFERENCE_PATHS } from './init';
 
 const ALLOWED_TOP_LEVEL_DIRECTORIES = new Set([
@@ -198,16 +199,20 @@ function warnStatus(items: string[]): 'pass' | 'warn' {
 }
 
 export interface PjmDoctorOptions {
+  projectRoot?: string;
+  adoption?: PjmAdoption;
+  /** @deprecated Global doctor compatibility; adoption is authoritative. */
   projectManagementEnabled?: boolean;
 }
 
+/** @deprecated Retained until the Phase 5 aggregate-doctor migration. */
 export function createPjmDisabledCheck(): DoctorCheck {
   return {
     name: 'pjm:disabled',
     description: 'Project-management pack enablement',
     status: 'pass',
     message: 'Project-management pack is disabled; PJM checks skipped.',
-    fix: 'Run `oat init tools project-management` to install and enable PJM checks.',
+    fix: 'Run `oat init tools project-management` to install PJM capability.',
   };
 }
 
@@ -215,11 +220,40 @@ export async function runPjmDoctorChecks(
   repoRoot: string,
   options: PjmDoctorOptions = {},
 ): Promise<DoctorCheck[]> {
-  if (options.projectManagementEnabled === false) {
-    return [createPjmDisabledCheck()];
+  const repoParent = dirname(repoRoot);
+  const projectRoot =
+    options.projectRoot ??
+    (basename(repoParent) === '.oat' ? dirname(repoParent) : repoParent);
+  const adoption =
+    options.adoption ?? (await resolvePjmAdoption({ repoRoot, projectRoot }));
+
+  const adoptionCheck: DoctorCheck = {
+    name: 'pjm:adoption',
+    description: 'Repository PJM adoption',
+    status:
+      adoption.state === 'none'
+        ? 'warn'
+        : adoption.state === 'partial-initialization'
+          ? 'fail'
+          : 'pass',
+    message:
+      adoption.state === 'declared'
+        ? 'Repository has explicit PJM adoption state.'
+        : adoption.state === 'inferred-legacy'
+          ? 'Repository has a complete legacy PJM scaffold without an explicit marker.'
+          : adoption.state === 'partial-initialization'
+            ? 'Repository has a partial PJM scaffold and is not adopted.'
+            : 'Repository has not adopted PJM.',
+    fix: adoption.recovery
+      ? `Run \`${adoption.recovery}\` to initialize this repository.`
+      : undefined,
+  };
+
+  if (adoption.state === 'none') {
+    return [adoptionCheck];
   }
 
-  const checks: DoctorCheck[] = [];
+  const checks: DoctorCheck[] = [adoptionCheck];
 
   const missingCanonical: string[] = [];
   for (const relativePath of CANONICAL_REPO_REFERENCE_PATHS) {

@@ -8,6 +8,7 @@ import { resolveProjectRoot } from '@fs/paths';
 import { formatDoctorResults, type DoctorCheck } from '@ui/output';
 import { Command } from 'commander';
 
+import { resolvePjmAdoption } from './adoption';
 import { runPjmDoctorChecks } from './doctor';
 import { initializeRepoReference, INSTRUCTIONS_SYNC_HINT } from './init';
 import { migratePjmRepo, readPjmMigrationPrompt } from './migrate';
@@ -32,6 +33,7 @@ interface PjmCommandDependencies {
   resolveProjectRoot: typeof resolveProjectRoot;
   resolveAssetsRoot: typeof resolveAssetsRoot;
   readOatConfig: typeof readOatConfig;
+  resolvePjmAdoption: typeof resolvePjmAdoption;
   initializeRepoReference: typeof initializeRepoReference;
   runPjmDoctorChecks: typeof runPjmDoctorChecks;
   migratePjmRepo: typeof migratePjmRepo;
@@ -43,6 +45,7 @@ const DEFAULT_DEPENDENCIES: PjmCommandDependencies = {
   resolveProjectRoot,
   resolveAssetsRoot,
   readOatConfig,
+  resolvePjmAdoption,
   initializeRepoReference,
   runPjmDoctorChecks,
   migratePjmRepo,
@@ -161,6 +164,7 @@ export function createPjmCommand(
         );
         const assetsRoot = await dependencies.resolveAssetsRoot();
         const result = await dependencies.initializeRepoReference({
+          projectRoot,
           repoRoot,
           assetsRoot,
           templatesRoot: resolve(projectRoot, '.oat', 'templates'),
@@ -206,15 +210,17 @@ export function createPjmCommand(
           projectRoot,
           options.repoRoot,
         );
-        const config = await dependencies.readOatConfig(projectRoot);
+        const adoption = await dependencies.resolvePjmAdoption({
+          projectRoot,
+          repoRoot,
+        });
         const checks = await dependencies.runPjmDoctorChecks(repoRoot, {
-          projectManagementEnabled:
-            config.tools?.['project-management'] === true,
+          adoption,
         });
         const status = doctorStatus(checks);
 
         if (context.json) {
-          context.logger.json({ status, repoRoot, checks });
+          context.logger.json({ status, repoRoot, adoption, checks });
         } else {
           context.logger.info(formatDoctorResults(checks));
         }

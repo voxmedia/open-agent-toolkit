@@ -1,7 +1,9 @@
 import { resolve } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { resolvePjmAdoption } from '@commands/pjm/adoption';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { CliError } from '@errors/index';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -39,6 +41,7 @@ interface DecisionCommandDependencies {
   buildCommandContext: typeof buildCommandContext;
   resolveProjectRoot: typeof resolveProjectRoot;
   resolveAssetsRoot: typeof resolveAssetsRoot;
+  resolvePjmAdoption: typeof resolvePjmAdoption;
   initializeDecisionAgentsGuidance: typeof initializeDecisionAgentsGuidance;
   initializeDecisionRecords: typeof initializeDecisionRecords;
   regenerateDecisionIndex: typeof regenerateDecisionIndex;
@@ -50,6 +53,7 @@ const DEFAULT_DEPENDENCIES: DecisionCommandDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   resolveAssetsRoot,
+  resolvePjmAdoption,
   initializeDecisionAgentsGuidance,
   initializeDecisionRecords,
   regenerateDecisionIndex,
@@ -91,6 +95,25 @@ function reportError(context: CommandContext, error: unknown): void {
   process.exitCode = 1;
 }
 
+async function requireRepositoryPjm(
+  context: CommandContext,
+  dependencies: DecisionCommandDependencies,
+): Promise<string> {
+  const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+  const repoRoot = resolve(projectRoot, '.oat', 'repo');
+  const adoption = await dependencies.resolvePjmAdoption({
+    projectRoot,
+    repoRoot,
+  });
+  if (adoption.state !== 'declared' && adoption.state !== 'inferred-legacy') {
+    throw new CliError(
+      `PJM is not initialized for repository ${repoRoot}. Run \`oat pjm init\` before writing PJM state.`,
+      1,
+    );
+  }
+  return projectRoot;
+}
+
 export function createDecisionCommand(
   overrides: Partial<DecisionCommandDependencies> = {},
 ): Command {
@@ -115,7 +138,7 @@ export function createDecisionCommand(
         readGlobalOptions(command),
       );
       try {
-        const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+        const projectRoot = await requireRepositoryPjm(context, dependencies);
         const decisionsRoot = await resolveDecisionsRoot(
           context,
           projectRoot,
@@ -174,7 +197,7 @@ export function createDecisionCommand(
         readGlobalOptions(command),
       );
       try {
-        const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+        const projectRoot = await requireRepositoryPjm(context, dependencies);
         const decisionsRoot = await resolveDecisionsRoot(
           context,
           projectRoot,
@@ -214,7 +237,7 @@ export function createDecisionCommand(
         readGlobalOptions(command),
       );
       try {
-        const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+        const projectRoot = await requireRepositoryPjm(context, dependencies);
         const decisionsRoot = await resolveDecisionsRoot(
           context,
           projectRoot,
