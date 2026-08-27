@@ -79,3 +79,36 @@ replacement carries its own sandbox semantics.
 Rounds 1–2 caught real defects; rounds 3–6 were narrowing fidelity refinements
 of the same paragraph; seven rounds exceeded the lane's budget. Rule: stop at
 two consecutive clean rounds or when findings drop below Medium.
+
+### 2026-08-27 · structural · oat-project-implement · p01 fix round landed
+
+`w4-p01-fix-001` (resumed implementer handle) → append-only `d9ce0c33`; all
+six code/wording dispositions implemented (M2 was root bookkeeping at
+`dd5f1da9`); DoD 10/10, post-commit `release:check-versions` and
+`check:skill-bumps` 0; Codex three rounds under the new stopping rule (one
+fix, one clean, one dismissed re-litigation of a root disposition); narrowed
+round 2 `w4-p01-review-002` dispatched.
+
+### 2026-08-27 · general · worked-well · key prose guards on documented phrases, not hedging words
+
+The contract test's `/only|unless/` exclusion exempted `read-only` — the
+skill's own default sandbox — so the most natural initial-run example could
+carry the bypass unnoticed (round-1 M1). Keying the exception on the documented
+phrase (`not a Git repo`) and deriving the command set from command-ish
+content made the guard robust; line-based derivation stays wrapping-sensitive
+(a span-based scan of backticked fragments would be immune).
+**Skill signal (gap):** prose contract tests should scan fragments, not lines,
+and probe records should carry the insertion anchor, not just the inserted
+text (the g2/g4 reproduction depended on it).
+
+### 2026-08-27 · structural · oat-project-implement · p01 round 2 received
+
+`w4-p01-review-002` → 0C/0I/3M/2m: the round-1 M1 fix regressed fenced-example
+coverage (a guard derivation keyed on a backtick before `codex`), the M3
+rewrite made the below-floor case blocking, and the root's run-1 script had
+missed the Progress Overview / Implementation Log scaffold (they sit outside
+the section it replaced). Second fix round `w4-p01-fix-002` dispatched;
+narrowed round 3 will be the third and last cycle for scope p01.
+**Skill signal (gap):** a scaffold-replacement script must enumerate every
+template block (Progress Overview, Implementation Log, Test Results, Final
+Summary), not only the phase section — W3's final review found the same class.

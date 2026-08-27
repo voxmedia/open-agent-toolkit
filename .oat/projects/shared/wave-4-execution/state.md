@@ -1,6 +1,6 @@
 ---
 oat_current_task: null # p01-t01 implemented; phase review in progress
-oat_last_commit: b97408f2 # p01-t01 implementation commit
+oat_last_commit: d9ce0c33 # p01-t01 fix commit (last code commit)
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260819-refresh-codex-skill-model' }
@@ -88,13 +88,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T01:55:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T03:37:11.036Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T04:11:47.771Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-4-execution
 
-**Status:** Implement — p01 review round 1 received (0C/0I/3M/4m); bounded fix round in progress
+**Status:** Implement — p01 review round 2 received (0C/0I/3M/2m, partial verifications); second bounded fix round in progress
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
@@ -124,7 +124,9 @@ non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Rec
 - ✓ Configured plan gate passed round 1 (cursor-gpt-5-6-sol-xhigh, run 0d369be4, 0C/0I/1M/0m — mutation probes mapped into rule 8)
 - ✓ Phase p01 implemented by the Opus implementer (`b97408f2`; DoD 10/10; Codex 7 rounds, 9 fixed)
 - ✓ Phase review round 1 (Opus; 0C/0I/3M/4m — HEAD correct, guard coverage + one wording claim)
-- ⧗ Fix round `w4-p01-fix-001` (M1, M3, m1–m4; M2 root bookkeeping) → narrowed review round 2
+- ✓ Fix round `w4-p01-fix-001` (`d9ce0c33`: M1, M3, m1–m4; DoD 10/10; Codex stopped per rule)
+- ✓ p01 review round 2 (narrowed): 0C/0I/3M/2m — guard breadth, one wording regression, root bookkeeping
+- ⧗ Fix round `w4-p01-fix-002` (M1, M3, m1, m2; M2 root) → narrowed review round 3 (cycle 3 of 3)
 
 ## Blockers
 

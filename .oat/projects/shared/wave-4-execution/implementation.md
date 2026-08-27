@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p01-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,14 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase    | Status   | Tasks | Completed |
+| -------- | -------- | ----- | --------- |
+| Phase 01 | complete | 1     | 1/1       |
 
-**Total:** 0/{N} tasks completed
-
----
+**Total:** 1/1 tasks completed (phase review round 2 in progress)
 
 ## Phase 01: refresh-codex-skill-routing (solo)
 
@@ -99,9 +96,9 @@ _- Outstanding Items_
 
 #### Phase Outcomes
 
-| Phase | Worktree                                  | Implementer outcome                                                      | Review outcome | Fix rounds | Merged |
-| ----- | ----------------------------------------- | ------------------------------------------------------------------------ | -------------- | ---------- | ------ |
-| p01   | integration checkout (`wave-4-execution`) | DONE (b97408f2; DoD 10/10 green; codex 7 rounds, 9 fixed, round 7 clean) | pending        | 0          | n/a    |
+| Phase | Worktree                                  | Implementer outcome                                                 | Review outcome                                | Fix rounds | Merged |
+| ----- | ----------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------- | ---------- | ------ |
+| p01   | integration checkout (`wave-4-execution`) | DONE (b97408f2 + fix d9ce0c33; DoD 10/10 green; codex 7 + 3 rounds) | round 1: 0C/0I/3M/4m → fixes; round 2 pending | 1          | n/a    |
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
@@ -126,7 +123,37 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - m3 no fallback when the provider reference is unreadable → **fix**: one clause — stop and ask for an explicit model and effort rather than falling back to the dated examples.
 - m4 `--approve-for-me` / `-s` interaction unguarded in the numbered steps → **fix**: "pair `--approve-for-me` only with `-s workspace-write`".
 
-**Review row `p01` → `fixes_added`; narrowed round 2 after the fix commit.**
+**Fix round `w4-p01-fix-001` (resumed implementer handle, append-only commit `d9ce0c332a2b13a27a04239ea037d0f4320a3c42` on `b97408f2`; 2 files, +44/−26; skill version still 1.3.0, packages still 0.2.36):**
+
+- M1 → command set derived from command-ish content (backticked `codex …` or `-s `/`--sandbox`), exception allowlist `/not a Git repo/i`; round-1 probes c2 and g1 now fail (were exit 0 at `b97408f2`).
+- M3 → "cannot run through the Codex CLI" removed; direct-API specialist routes stated as the reference's routing classification with warn-then-confirm (`SKILL.md:24-30`).
+- m1 → slug-keyed stale-model assertion with the live-suffix lookahead; probes g2/g4 fail, the `gpt-5.4-mini` false-positive control passes.
+- m2 → Quick Reference split: network inside a write sandbox (`-s workspace-write -c sandbox_workspace_write.network_access=true`) vs genuine broad filesystem access (`-s danger-full-access`, configured approval policy kept); both in the high-impact list (reordered so a rewrapped bullet cannot pair a sandbox flag with the bypass on one line).
+- m3 → missing-reference fallback: stop, ask for an explicit model and effort, run exactly what is named, skip the matrix checks the missing reference cannot answer (the last clause from Codex round 1).
+- m4 → `--approve-for-me` paired only with `-s workspace-write` in the numbered steps.
+- M2 → root bookkeeping: the Run 1 record, task record with the SHA, and `oat_last_commit` landed at `dd5f1da9`; the Progress Overview, Implementation Log scaffold, phantom Test Results row, and `oat_current_task_id` were NOT fixed there (round-2 M2) and are corrected in the round-2 receive commit.
+- DoD all ten exit 0 (`$TMPDIR/w4-p01-fix/`) plus `test:skills` 585/585 and focused 7/7; post-commit `release:check-versions` 0 and `check:skill-bumps` 0. Codex: round 1 P2 (fallback unusable) fixed; round 2 clean; round 3 asked to re-assert the M3 hard stop — dismissed as re-litigating a root disposition without new evidence; stopped per the stopping rule.
+
+**Verification record (root):** what — the fix commit's parent chain (`b97408f2` unchanged, `git rev-list --count b97408f2..HEAD` = 2), file list (2), version fields (1.3.0 / 0.2.36); how — `git log`/`git show --stat`/grep at HEAD; where — this entry; independent verification of each disposition — round-2 narrowed review `w4-p01-review-002`.
+
+**Review row `p01` → `fixes_completed` at `d9ce0c33`; narrowed round 2 dispatched.**
+
+### Review Received: p01 (round 2, narrowed)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/p01-review-2026-08-27T040820Z.md (reviewed head `d9ce0c332a2b13a27a04239ea037d0f4320a3c42`, range `b97408f2..d9ce0c33`, invocation auto, dispatch `w4-p01-review-002`, model opus, disposition-verification brief; 11 probes, `SKILL.md` sha256 identical before/after, nine gates exit 0)
+
+**Findings:** Critical 0 · Important 0 · Medium 3 · Minor 2 — m1–m4 verified; M1, M2, M3 partially verified. HEAD is still correct (three conditional, authorization-gated bypass mentions; no example carries it) — the residuals are guard breadth, one wording regression, and root bookkeeping.
+
+**Dispositions (second bounded fix round, append-only, resumed implementer handle → `w4-p01-fix-002`; round 3 narrowed review follows within the 3-cycle cap):**
+
+- M1 the new derivation requires a backtick before `codex ` and misses flag-bearing table rows (probes n1 fenced example, n2 table row: green; the exception allowlist is dead code at HEAD) → **fix**: reviewer-verified derivation — `/(?:^|[`\s])codex\s/`OR`/-s |--sandbox/` OR table rows with a backticked flag (`/^\s*\|.*`-{1,2}[a-z]/`); c2/g1/n1/n2 must fail, suite 7/7 otherwise.
+- M3 the rewrite made the below-floor case block on confirmation (plan step 1: no question when a valid model+effort was supplied) → **fix**: split the conditions — below-floor says so once without blocking; only the direct-API specialist classification confirms before launching; add a contract assertion pinning the non-blocking clause.
+- M2 root bookkeeping only partially landed and the `dd5f1da9` note overstated it → **resolved by the root in this commit**: Progress Overview 1/1, Implementation Log rewritten, phantom Test Results row removed, `oat_current_task_id: null`, disposition note corrected.
+- m1 line-position sensitivity (rewrapping the high-impact list or a stronger prohibition sentence produces false failures) → **fix**: exempt non-example prose explicitly (allowlist for the high-impact inventory and prohibition sentences) so wording improvements pass.
+- m2 stale-slug guard misses `gpt-5.5` (a compatibility route per `provider-codex.md:29`) → **fix**: add the 5.5 family to the assertion without the `gpt-5.4-mini` false positive; re-confirm the controls.
+
+**Review row `p01` → `fixes_added` at `d9ce0c33`; fix round 2 then narrowed round 3.**
 
 ## Implementation Log
 
@@ -134,38 +161,12 @@ Chronological log of implementation progress.
 
 ### 2026-08-27
 
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-08-27
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+- Preflight from main `3c135e21` (`worktree:init`, build, type-check exit 0; manifest restamp `f9db417c`); wrapper scaffolded `8e903a0c`; plan gate passed round 1 (`cursor-gpt-5-6-sol-xhigh`, run `0d369be4`, one medium mapped into rule 8); implement phase opened `51c7ec57`.
+- [x] p01-t01: Execute external plan — `b97408f2` (Opus implementer `w4-p01-impl-001`; DoD 10/10; Codex seven rounds, nine findings fixed pre-commit).
+- [x] p01-t01 fix round 1 — `d9ce0c33` (append-only; round-1 M1/M3/m1–m4; Codex three rounds under the stopping rule).
+- [ ] p01-t01 fix round 2 — round-2 M1/M3/m1/m2 (guard derivation, below-floor non-blocking clause, prose allowlist, `gpt-5.5` slug) — in progress.
+- Decisions: the operator-reconciled `--full-auto` replacement is evaluated per example row (a mechanical swap weakened the `danger-full-access` row and was caught by Codex); prose guards key on documented phrases and command-ish content, not hedging words; cross-model review stops at two clean rounds or below-Medium findings.
+- Blockers: none.
 
 ## Deviations from Plan / Design
 
@@ -177,12 +178,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+_Filled at final verification (root DoD on the integration branch)._ Interim: implementer DoD 10/10 at `b97408f2` and `d9ce0c33` (post-commit `release:check-versions` and `check:skill-bumps` re-runs 0); `pnpm test:skills` 585/585 (578 + 7 new); focused contract test 7/7; reviewer re-runs at both heads.
 
 ## Final Summary (for PR/docs)
 
