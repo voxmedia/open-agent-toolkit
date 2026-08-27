@@ -139,9 +139,9 @@ oat_generated: false
 
 ### Task p01-t10: GitHub custom-ref spike
 
-**Status:** blocked
-**Commit:** -
-**Blocker:** Confirm that the private blob URL rendered in a logged-in browser, or explicitly authorize the authenticated contents/commits API evidence as sufficient. The scratch ref remains at the recorded spike SHA.
+**Status:** completed
+**Commit:** `chore(p01-t10): record GitHub custom-ref spike evidence` (this task commit)
+**Outcome:** The custom ref did not trigger the unfiltered push workflow, the same commit did trigger it when published as a branch, the commit and blob remained available through the authenticated API and logged-in browser, and the custom ref never appeared in the branch list. Both scratch refs are deleted.
 
 ---
 
@@ -445,3 +445,51 @@ Run by a subagent against `https://github.com/tkstang/disposable-test-repo-for-o
 - Side finding: in zsh, `"$C:refs/heads/x"` expands `$C:r` as a modifier — use `"${C}:…"`. Plan commands updated.
 
 Disposition for implementation: p01-t10 copies this evidence into its section; no re-push needed unless the repo is recreated.
+
+### p01-t10 GitHub spike
+
+- Repository: `https://github.com/tkstang/disposable-test-repo-for-oat`
+- Spike commit: `e36cc034464607ba353751fe92984dc5f3def096`
+- Blob: `fadfd33f73706ee6f939a374644390e61117a99e`
+- Rendered blob URL: `https://github.com/tkstang/disposable-test-repo-for-oat/blob/e36cc034464607ba353751fe92984dc5f3def096/design.md`
+- Maintainer visual confirmation: on 2026-08-27, after viewing the private page in a logged-in browser, the maintainer confirmed, “I see it, proceed.”
+
+#### A - custom ref Actions query at 2026-08-27T04:18:37Z
+
+```text
+(empty)
+```
+
+#### A-prime - branch positive control at 2026-08-27T04:21:44Z
+
+```json
+{
+  "event": "push",
+  "headBranch": "oat-spike-branch",
+  "headSha": "e36cc034464607ba353751fe92984dc5f3def096"
+}
+```
+
+The final run-list check at 2026-08-27T04:22:30Z contained runs for `main` and `oat-spike-branch` only; no run had the spike SHA under the custom ref.
+
+#### B - authenticated blob and commit checks after branch deletion
+
+```text
+contents/design.md blob: fadfd33f73706ee6f939a374644390e61117a99e
+commit e36cc034464607ba353751fe92984dc5f3def096: HTTP 200
+```
+
+The authenticated contents result matched the expected blob, and the maintainer's logged-in browser confirmation on 2026-08-27 established that the rendered page was available while the commit was reachable only through the custom ref.
+
+#### C - branch-list output
+
+```text
+main
+```
+
+Cleanup completed on 2026-08-27: `refs/heads/oat-spike-branch` and `refs/oat/projects/spike` are deleted, the same-named local custom ref is absent, and the repository itself remains for the operator. Final verification:
+
+```text
+$ git ls-remote https://github.com/tkstang/disposable-test-repo-for-oat 'refs/oat/*'
+(empty)
+```
