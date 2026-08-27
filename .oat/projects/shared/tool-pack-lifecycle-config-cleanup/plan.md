@@ -355,15 +355,16 @@ with captured logs.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -        | -             | -          | -           |
-| p02    | code     | pending | -          | -        | -             | -          | -           |
-| p03    | code     | pending | -          | -        | -             | -          | -           |
-| final  | code     | pending | -          | -        | -             | -          | -           |
-| spec   | artifact | pending | -          | -        | -             | -          | -           |
-| design | artifact | pending | -          | -        | -             | -          | -           |
-| plan   | artifact | passed  | 2026-08-27 | -        | -             | auto       | -           |
+| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
+| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| plan   | artifact | passed   | 2026-08-27 | -                                                  | -             | auto       | -           |
+| plan   | artifact | received | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T225534Z.md | -             | -          | -           |
 
 ## Implementation Complete
 
