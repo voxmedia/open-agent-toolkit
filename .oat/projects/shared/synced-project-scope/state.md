@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t10
-oat_last_commit: 0359d9648
+oat_current_task: p03-t12
+oat_last_commit: 3ad810431
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -90,19 +90,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T19:30:30.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T19:53:29.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation in progress - Phase 3 dogfood
+**Status:** Implementation in progress - Phase 3 review fixes
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation - Phase 3 task p03-t10 dogfood
+Implementation - Phase 3 task p03-t12 review fix
 
 ## Artifacts
 
@@ -110,7 +110,7 @@ Implementation - Phase 3 task p03-t10 dogfood
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress - 33/45 tasks complete)
+- **Implementation:** `implementation.md` (in progress - 34/52 tasks complete)
 
 ## Progress
 
@@ -144,11 +144,14 @@ Implementation - Phase 3 task p03-t10 dogfood
 - ⨯ Phase 3 recovery attempt 4/10 failed full-suite verification; code restored
 - ✓ Phase 3 task p03-t11 integrated and reviewed `origin/main`
 - ✓ Phase 3 recovery attempt 5/10 validated and settled
+- ✓ Phase 3 tasks p03-t01 through p03-t11 complete
+- ⨯ Phase 3 full review blocked with 1 Critical, 4 Important, 2 Medium, and 1 Minor finding
+- ✓ Phase 3 review findings received into p03-t12 through p03-t18; state drift resolved during receive
 
 ## Blockers
 
-None. Upstream integration passed review at 0 Critical/0 Important and recovery attempt 5 passed; p03-t10 dogfood remains before Phase 3 review and Phase 4.
+None. Seven planned Phase 3 review-fix tasks are ready; Phase 4 remains gated by their implementation and fresh fix-delta review.
 
 ## Next Milestone
 
-Complete p03-t10 dogfood, then run the full Phase 3 review before Phase 4.
+Execute p03-t12 through p03-t18, then run a fresh Phase 3 fix-delta review before Phase 4.

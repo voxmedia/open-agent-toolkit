@@ -1682,6 +1682,225 @@ Append the exact pre/post merge SHAs, conflict disposition, verification exit co
 
 ---
 
+### Task p03-t12: (review) Fail closed when a synced archive record is missing
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `packages/cli/src/commands/project/archive/index.test.ts` if command-level recovery guidance needs coverage
+
+**Step 1: Write tests (RED)**
+
+- Create real-Git synced checkouts below the configured synced root without their parent discovery records in clean, dirty, and unpushed states.
+- Assert archive identifies synced scope from the canonical path independently of record readability, fails closed with actionable pull/adopt recovery guidance, and creates no snapshot, removes no checkout, copies no nested `.git` pointer, and mutates no worktree registration.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive`
+Expected: the missing-record cases fail before implementation.
+
+**Step 2: Implement (GREEN)**
+
+Never route anything under the canonical synced scope through plain-directory archive deletion. Resolve scope first; require the synced record before constructing the target or performing durable work, and fail closed without mutation when the record is missing.
+
+**Step 3: Verify and format**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive && pnpm --filter @open-agent-toolkit/cli type-check`
+
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts packages/cli/src/commands/project/archive/index.test.ts`
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/
+git commit -m "fix(p03-t12): fail closed on missing synced archive records"
+```
+
+---
+
+### Task p03-t13: (review) Reuse one durable archive identity across retries and exports
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `packages/cli/src/commands/project/archive/index.test.ts` and archive explainer helpers only where the retry/export contract requires it
+
+**Step 1: Write tests (RED)**
+
+- Persist one canonical snapshot identifier before any durable side effect and inject failures after copy, summary export, S3 export, lifecycle commit, and synced-checkout removal.
+- Retry on a later date with and without a recap; assert the archive path, summary filename, S3 key, recap export, and lifecycle commit all reuse the persisted identity, never create a second dated export, and resume matching existing exports after verifying identity/content.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive`
+Expected: retry/export identity cases fail before implementation.
+
+**Step 2: Implement (GREEN)**
+
+Derive every archive/export name from the persisted `archiveSnapshot` identity rather than the invocation date. Treat an existing matching export as resumable only after validating its identity/content; preserve the single-lifecycle-commit contract across every retry boundary.
+
+**Step 3: Verify and format**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive && pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli type-check`
+
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/archive/`
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/
+git commit -m "fix(p03-t13): preserve archive retry identity"
+```
+
+---
+
+### Task p03-t14: (review) Preserve user `.gitignore` state during migration
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts`
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.test.ts`
+- Modify: `packages/cli/src/commands/project/migrate/index.test.ts`
+
+**Step 1: Write tests (RED)**
+
+- Cover successful and rolled-back shared-to-synced migration when `.gitignore` has pre-existing staged edits, unstaged edits, and both states while the synced ignore rule is missing.
+- Assert migration never consumes, overwrites, unstages, or commits the user's edits; it must fail before mutation when safe self-healing cannot preserve the exact index/worktree state.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/sync/ref-sync.test.ts src/commands/project/migrate/index.test.ts`
+Expected: staged-state preservation cases fail before implementation.
+
+**Step 2: Implement (GREEN)**
+
+Before self-healing `.gitignore`, verify both its index and worktree state are safe. Fail closed with actionable guidance when the managed rule is missing and either state is dirty; do not weaken migration behavior when the rule already exists. Preserve rollback byte-for-byte and index-for-index.
+
+**Step 3: Verify and format**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/sync/ref-sync.test.ts src/commands/project/migrate/index.test.ts && pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli type-check`
+
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts packages/cli/src/commands/project/migrate/index.test.ts`
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts packages/cli/src/commands/project/migrate/index.test.ts
+git commit -m "fix(p03-t14): preserve migration gitignore state"
+```
+
+---
+
+### Task p03-t15: (review) Detect tracked synced artifacts with real Git
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/doctor/synced-projects.ts`
+- Modify: `packages/cli/src/commands/doctor/synced-projects.test.ts`
+
+**Step 1: Write test (RED)**
+
+Create a real Git fixture that commits a file below `synced/<slug>/`; the doctor check must fail and name the leaked tracked artifact. Add explicit coverage for unexpected `git ls-files` failures.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/synced-projects.test.ts`
+Expected: the real-Git leak case is missed before implementation.
+
+**Step 2: Implement (GREEN)**
+
+Use a verified pathspec/prefix that matches descendants below the synced root without a terminal slash and treat unexpected Git failures explicitly rather than as an empty result.
+
+**Step 3: Verify, format, and commit**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/synced-projects.test.ts src/commands/doctor/index.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
+
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/doctor/synced-projects.ts packages/cli/src/commands/doctor/synced-projects.test.ts`
+
+```bash
+git add packages/cli/src/commands/doctor/synced-projects.ts packages/cli/src/commands/doctor/synced-projects.test.ts
+git commit -m "fix(p03-t15): detect tracked synced artifacts"
+```
+
+---
+
+### Task p03-t16: (review) Keep PR refresh failures best-effort after push
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/push/index.ts`
+- Modify: `packages/cli/src/commands/project/push/index.test.ts`
+
+**Step 1: Write tests (RED)**
+
+After a successful `pushSynced`, make link computation and body-file writing/cleanup reject independently. Assert the command warns, reports `prRefresh: 'failed'`, preserves the successful push result and exit code, and never retries or rolls back the published ref.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/push/index.test.ts`
+Expected: thrown refresh dependencies currently fail the command.
+
+**Step 2: Implement (GREEN)**
+
+Make PR refresh total/best-effort at the post-push boundary. Catch unexpected refresh exceptions, warn with useful context, and return the already-successful push result with failed refresh metadata.
+
+**Step 3: Verify, format, and commit**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/push/index.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
+
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/push/index.ts packages/cli/src/commands/project/push/index.test.ts`
+
+```bash
+git add packages/cli/src/commands/project/push/index.ts packages/cli/src/commands/project/push/index.test.ts
+git commit -m "fix(p03-t16): preserve push success on refresh errors"
+```
+
+---
+
+### Task p03-t17: (review) Replace opaque merge digest with reproducible evidence
+
+**Files:**
+
+- Modify: `.oat/projects/shared/synced-project-scope/implementation.md`
+
+**Step 1: Apply**
+
+Replace the unreproducible binary-diff digest with direct per-path tree-object equality evidence for the 229 upstream paths and 95 feature paths, including the exact commands used and their exit results.
+
+**Step 2: Verify and commit**
+
+Run the recorded tree-equality commands again, then run `pnpm exec oxfmt --check .oat/projects/shared/synced-project-scope/implementation.md && git diff --check`.
+
+```bash
+git add .oat/projects/shared/synced-project-scope/implementation.md
+git commit -m "docs(p03-t17): make merge evidence reproducible"
+```
+
+---
+
+### Task p03-t18: (review) Surface local-sync skip reasons in text output
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/local/index.ts`
+- Modify: the closest command-level local sync test under `packages/cli/src/commands/local/`
+
+**Step 1: Write test (RED)**
+
+Assert human-readable local sync output distinguishes `nested-worktree` from destination-exists and other skipped reasons while JSON output remains unchanged.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/local`
+Expected: text output omits the reason before implementation.
+
+**Step 2: Implement (GREEN)**
+
+Append the stable skip reason to human-readable skipped entries without changing the JSON contract or successful-entry output.
+
+**Step 3: Verify, format, and commit**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/local && pnpm --filter @open-agent-toolkit/cli type-check`
+
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/local/`
+
+```bash
+git add packages/cli/src/commands/local/
+git commit -m "fix(p03-t18): surface local sync skip reasons"
+```
+
+---
+
 ## Phase 4: Skills, docs, release
 
 Goal: the lifecycle uses the new scope end to end; docs describe it; release gates pass.
@@ -2115,7 +2334,7 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 | p02     | code     | fixes_completed | 2026-08-27 | reviews/archived/code-p02-review-2026-08-27T160020Z.md            | 9eff5ceef77a1716c2a56d1a594e707b263ea803 | auto       | -                        |
 | p02-t13 | code     | passed          | 2026-08-27 | reviews/code-p02-t13-review-2026-08-27T173345Z.md                 | 9da82464b5fa93477303027a598ff3e9c768905c | auto       | -                        |
 | p03-t11 | code     | passed          | 2026-08-27 | reviews/p03-t11-upstream-review-2026-08-27T191902Z.md             | a72c8cf8b49afabfe33afd101f9c92a3b85f373a | manual     | -                        |
-| p03     | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
+| p03     | code     | fixes_added     | 2026-08-27 | reviews/archived/code-p03-review-2026-08-27T194810Z.md            | 3ad8104319e54b9595bc5529d28624194b4c0d7a | manual     | -                        |
 | p04     | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | final   | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                        |
@@ -2140,10 +2359,10 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 
 - Phase 1: 10 tasks - Sync foundations (scope resolver, gitignore rule, git runner, fixture, record, ref-sync create/push/pull/continue/abort, record commits, GitHub spike)
 - Phase 2: 13 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e, `list --remote`, adopting pull + children, synced-aware `open`/`pause`, shared canonical mutation preflight, isolated child failures + stable split coverage)
-- Phase 3: 11 tasks - Reviewer and lifecycle surface (links render/compute/refresh, archive state machine, `prune`, `migrate`, doctor, gitattributes, local-sync guard, dogfood, upstream integration)
+- Phase 3: 18 tasks - Reviewer and lifecycle surface plus seven received review fixes (archive safety/retry identity, migration index safety, doctor leak detection, PR refresh isolation, reproducible merge evidence, local-sync text reason)
 - Phase 4: 11 tasks - Skills sweep (A/B/C/D/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood
 
-**Total: 45 tasks**
+**Total: 52 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

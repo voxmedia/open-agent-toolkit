@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: null
+oat_current_task_id: p03-t12
 oat_generated: false
 ---
 
@@ -28,10 +28,10 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 10    | 10/10     |
 | Phase 2 | complete    | 13    | 13/13     |
-| Phase 3 | in_progress | 11    | 11/11     |
+| Phase 3 | in_progress | 18    | 11/18     |
 | Phase 4 | pending     | 11    | 0/11      |
 
-**Total:** 34/45 tasks completed
+**Total:** 34/52 tasks completed
 
 ---
 
@@ -237,7 +237,7 @@ oat_generated: false
 
 ## Phase 3: Reviewer and lifecycle surface
 
-**Status:** implementation complete - 11 of 11 tasks complete; independent review pending
+**Status:** review fixes pending - 11 of 18 tasks complete
 **Started:** 2026-08-27
 
 ### Task Outcomes
@@ -255,6 +255,13 @@ oat_generated: false
 | p03-t09 | completed | `41e8bbe7` | Nested-worktree local-sync guard                     |
 | p03-t10 | completed | this task  | Synced scope dogfood and cleanup verified            |
 | p03-t11 | completed | `a72c8cf8` | Integrated and reviewed `origin/main` before Phase 4 |
+| p03-t12 | pending   | -          | Fail closed on missing synced archive records        |
+| p03-t13 | pending   | -          | Preserve archive retry/export identity               |
+| p03-t14 | pending   | -          | Preserve migration `.gitignore` index/worktree state |
+| p03-t15 | pending   | -          | Detect tracked synced artifacts with real Git        |
+| p03-t16 | pending   | -          | Preserve push success on PR-refresh exceptions       |
+| p03-t17 | pending   | -          | Make merge-fidelity evidence reproducible            |
+| p03-t18 | pending   | -          | Surface local-sync skip reasons in text output       |
 
 **Verification before dogfood:** Full CLI passed 289 files / 3,845 tests after recovery 1; CLI type-check/build, repository lint/format, and diff checks passed. The p03-t07 synced-project doctor check passed, while the overall live doctor command retained unrelated pre-existing warnings.
 
@@ -291,6 +298,32 @@ oat_generated: false
 **Merged-tree gates:** `pnpm check=0`; `pnpm type-check=0`; `pnpm test=0`; `pnpm build=0`; `pnpm run check:skill-bumps=0`; `pnpm release:check-versions=1`; `pnpm release:validate=1`; `pnpm build:docs=0`; `pnpm lint=0`; `pnpm format=0`; `git diff --check=0`. Both release-policy failures have the same planned cause: shipped CLI/control-plane changes require all five public packages to advance above upstream `0.2.36`. Phase 4 task p04-t08 owns the lockstep bump; the branch is not CI-green or release-ready until that task makes both gates pass.
 
 **Review:** `reviews/p03-t11-upstream-review-2026-08-27T191902Z.md` reviewed merge `a72c8cf8b49afabfe33afd101f9c92a3b85f373a` and passed the p03-t11 threshold with 0 Critical, 0 Important, 1 Medium, and 0 Minor findings. M1 identified stale p04-t08 version literals; this bookkeeping change aligns the plan from `0.2.32 → 0.2.33` to the merged `0.2.36 → 0.2.37` baseline/target before Phase 4. No implementation change was required.
+
+### Review Received: p03 - 2026-08-27T19:48:10Z
+
+**Review artifact:** `reviews/archived/code-p03-review-2026-08-27T194810Z.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 4
+- Medium: 2
+- Minor: 1
+
+**New tasks added:** p03-t12, p03-t13, p03-t14, p03-t15, p03-t16, p03-t17, p03-t18
+
+**Finding disposition:**
+
+- C1 `code_fix_required` → p03-t12: synced archive scope must fail closed before any snapshot/deletion when the discovery record is missing.
+- I1 `code_fix_required` → p03-t13: one persisted archive identity must drive paths, summaries, S3 keys, recaps, and lifecycle commits across retries.
+- I2 `code_fix_required` → p03-t14: migration must not consume or destroy a user's staged/unstaged `.gitignore` state.
+- I3 `code_fix_required` → p03-t15: doctor must use a real-Git-verified descendant pathspec and fail explicitly on Git errors.
+- I4 `code_fix_required` → p03-t16: unexpected PR-refresh exceptions remain best-effort after a successful push.
+- M1 `artifact_alignment_required` → resolved in this receive bookkeeping by routing state/current task to p03-t12 and recording the blocked review outcome; Phase 4 is not marked in progress.
+- M2 `artifact_alignment_required` → p03-t17 replaces the opaque digest with exact, reproducible per-path tree-object equality evidence.
+- m1 `code_fix_required` → p03-t18 surfaces the nested-worktree skip reason in human-readable output.
+
+**Next:** Execute p03-t12 through p03-t18, mark this review event `fixes_completed`, and run a fresh fix-delta review before Phase 4.
 
 ---
 
@@ -981,9 +1014,10 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact                                          | Planned / Documented              | Actual / Accepted                                   | Reason                                   | Source of Truth                  | Follow-up                                             |
+| ------------- | -------------------------------------------------------- | --------------------------------- | --------------------------------------------------- | ---------------------------------------- | -------------------------------- | ----------------------------------------------------- |
+| p03 review M1 | `reviews/archived/code-p03-review-2026-08-27T194810Z.md` | State routed to completed p03-t10 | State routes to first received fix task p03-t12     | Full-phase review blocked before Phase 4 | Received review and current plan | Re-review p03 fix delta after p03-t12 through p03-t18 |
+| p03 review M2 | `reviews/archived/code-p03-review-2026-08-27T194810Z.md` | Opaque merge-delta digest         | Reproducible per-path tree-object equality evidence | Preserve truthful integration evidence   | Git parent trees                 | p03-t17                                               |
 
 ## Test Results
 
