@@ -21,6 +21,9 @@ bullet lines over rewriting whole sections, and reference backlog records by ID
 - **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
+- **BL-260827-make-packaged-skill-references: Make packaged skill references portable** — Replace bare sibling-skill paths with packaged resolution and strengthen the ratchet. Project: portable-skill-references.
+- **BL-260827-correct-scope-and-adoption: Correct scope and adoption diagnostics** — Align PJM migration eligibility, provider-aware user-agent materialization, shared-owner attribution, and failure rendering. Project: scope-adoption-diagnostics.
+- **BL-260827-clean-up-tool-pack-lifecycle: Clean up tool-pack lifecycle and config contracts** — Add content-accurate inventory, explicit adoption reporting, supported config state, and corrected per-pack CLI help. Project: tool-pack-lifecycle-config-cleanup.
 - **BL-260806-fail-closed-when-configured: Fail closed when configured closeout snapshot is absent** — Persist the normalized closeout sequence before child dispatch and prevent terminal completion until every configured child is durably recorded.
 - **BL-260718-mandatory-skill-load-clause: Mandatory skill-load clause for lifecycle steps that name skills** — High-priority workflow-integrity fix: lifecycle text naming a skill as a step must require loading it; evidence from the wave-skills-promotion closeout. Project: wave-skills-promotion follow-up.
 - **Wave-workflow follow-ups (grouped)** — **BL-260718-add-oat-wave-lifecycle-cli** + **BL-260718-document-execution-program** (CLI family + stable artifact contract, trigger: second consumer / post-W6 prioritization); **BL-260718-rewrite-worktree-bootstrap** (tested TS bootstrap-group); **BL-260718-remove-post-w6-reviews-row** (closes on stoa W6 observation). Project: wave-skills-promotion.

@@ -34,6 +34,17 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.37` makes every OAT tool pack user-scope eligible through one
+  intent-aware install/update/remove/migrate lifecycle while keeping curated
+  PJM state and adoption repository-owned. Inventory, status, and doctor now
+  distinguish intent from placement and ownership; migration is preview-first,
+  verifies the destination before removing managed sources, supports rollback,
+  and preserves shared assets and repository customizations. Provider sync
+  keeps user scope skills-only where required and reports unmaterialized agents
+  explicitly. All eleven repository gates and a zero-finding final closeout
+  review passed. Closed `BL-260818-make-the-project-management`; portable skill
+  references, scope/adoption diagnostics, and lifecycle/config polish remain as
+  three implementation-ready follow-up projects.
 - CLI `0.2.31` (explainer-improvements-v2, branch pending merge) hardens the
   Explainer Kit publication boundary end to end: publication-root and receipt
   screening is version-agnostic (a future contract version cannot silently

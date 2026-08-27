@@ -160,7 +160,6 @@
 | BL-260826-gate-targets-must-not-yield    | Gate targets must not yield on background work in headless mode                                       | open   | high     | task    | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                                | open   | high     | feature | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature | L        |
-| BL-260818-make-the-project-management    | Make every OAT tool pack user-scope eligible                                                          | open   | high     | feature | XL       |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                                          | open   | high     | task    | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                                      | open   | high     | task    | S        |
 | BL-260826-populate-native-subagent       | Populate native subagent runtime identity from provider transcript metadata                           | open   | high     | feature | M        |

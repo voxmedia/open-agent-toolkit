@@ -1,7 +1,7 @@
 ---
 id: BL-260818-make-the-project-management
 title: Make every OAT tool pack user-scope eligible
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: XL
@@ -11,7 +11,7 @@ labels:
   - user-scope
 assignee: null
 created: 2026-08-18T20:43:22.823Z
-updated: 2026-08-20T19:45:34Z
+updated: '2026-08-27T23:12:00Z'
 associated_issues: []
 external_plans: []
 ---
