@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t10
-oat_last_commit: d666f4b07
+oat_current_task: p03-t11
+oat_last_commit: c5f28c640
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -30,16 +30,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p03:
       used_attempts: 4
-      pending_attempt:
-        attempt: 4
-        event_id: p03-recovery-04-synced-ref-hooks
-        original_request_id: dispatch-synced-project-scope-p03-20260827T173721Z
-        original_task_id: p03-t10
-        original_commit: 460b519217d8e2d40e92e81d88d87fc5d49be33f
-        discovered_by: pnpm run --silent cli -- project new synced-dogfood --mode quick --no-set-active (common pre-commit wrapper rejected scaffold commit)
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 460b519217d8e2d40e92e81d88d87fc5d49be33f
-        status: failed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -99,19 +90,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T18:47:22.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T19:10:54.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation in progress - Phase 3 dogfood
+**Status:** Implementation in progress - Phase 3 upstream integration
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation - Phase 3 task p03-t10 dogfood
+Implementation - Phase 3 task p03-t11 upstream integration
 
 ## Artifacts
 
@@ -150,12 +141,13 @@ Implementation - Phase 3 task p03-t10 dogfood
 - ⨯ Phase 3 recovery attempt 2/10 failed phase verification; code restored
 - ⨯ Phase 3 task p03-t10 blocked before dogfood completion
 - ✓ Phase 3 recovery attempt 3/10 validated and settled
+- ⨯ Phase 3 recovery attempt 4/10 failed full-suite verification; code restored
 - … Phase 3 task p03-t11 queued to integrate `origin/main` before Phase 4
 
 ## Blockers
 
-None. Phase 4 remains gated by p03-t10, p03-t11, and Phase 3 review.
+None. Attempt 4 is settled; p03-t11 may integrate and verify upstream before p03-t10 recovery is reassessed. Phase 4 remains gated by both tasks and Phase 3 review.
 
 ## Next Milestone
 
-Resume p03-t10 dogfood, then complete p03-t11 upstream integration and review before Phase 4.
+Complete p03-t11 upstream integration and review, then reassess p03-t10 recovery on the merged baseline before Phase 4.
