@@ -1,10 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p02-review
-    reason: 'Terminal p02 review cycle found two Important retry-path defects after both configured fix iterations were consumed; operator direction is required.'
-    since: 2026-08-27
+oat_blockers: []
 oat_last_updated: 2026-08-27
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -27,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 10    | 10/10     |
-| Phase 2 | blocked  | 11    | 11/11     |
-| Phase 3 | pending  | 10    | 0/10      |
-| Phase 4 | pending  | 11    | 0/11      |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 10    | 10/10     |
+| Phase 2 | in_progress | 11    | 11/11     |
+| Phase 3 | pending     | 10    | 0/10      |
+| Phase 4 | pending     | 11    | 0/11      |
 
 **Total:** 21/42 tasks completed
 
@@ -148,7 +145,7 @@ oat_generated: false
 
 ## Phase 2: CLI surface
 
-**Status:** blocked - implementation complete; terminal review retry exhausted
+**Status:** in progress - implementation complete; operator-authorized review fix cycle 3/3
 **Started:** 2026-08-27
 
 ### Phase Summary
@@ -157,7 +154,7 @@ oat_generated: false
 
 **Verification:** Full CLI suite passed at 3,777 tests after final fixes; focused affected surfaces, p02 e2e/split flows, CLI lint/format/type-check, and control-plane build/tests/type-check passed against committed HEAD.
 
-**Review disposition:** Three independent rounds ran. Two bounded fix iterations resolved 11 findings, but the terminal review still found 2 Important retry-path defects. Automatic fix authority is exhausted; Phase 3 did not start.
+**Review disposition:** Three independent rounds ran. Two bounded fix iterations resolved 11 findings, but review round 3 still found 2 Important retry-path defects. On 2026-08-27 the operator explicitly raised the fix limit to 3 and authorized one additional bounded fix plus fresh review; Phase 3 remains unstarted pending that verdict.
 
 ### Task p02-t01: `projects.defaultScope` config key
 
@@ -385,6 +382,23 @@ lifecycle_outcome:
 - Make mid-sequence synced split publication failure resumable and preserve transport/system exit classification; a normal `--resume` must republish every parent/child ref.
 - Configured review-fix iterations are exhausted at 2/2. Phase 3 has not started.
 
+### Run 4 - 2026-08-27T12:35:47Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Codex pinned variants)
+**Status:** p02 operator extension accepted; fix cycle 3/3 pending
+
+#### Operator Extension
+
+- Direction: `add one cycle and proceed`
+- Durable retry limit: `oat_orchestration_retry_limit: 3`
+- Scope: only the two Important findings in `reviews/code-p02-review-2026-08-27T081844Z.md`
+- Exact implementation target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Review authorization: one fresh fourth p02 reviewer after the bounded fix; this explicitly extends the ordinary three-cycle review cap for p02 by one cycle
+- Phase recovery: unchanged at 1/10 with `pending_attempt: null`
+- Phase 3: not started
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -450,7 +464,7 @@ Chronological log of implementation progress.
 - [x] p02-t01 through p02-t11 - eleven verified planned commits
 - [x] p02 recovery attempt 1/10 - recovered and settled
 - [x] p02 review fix iterations 1 and 2 - eleven findings resolved
-- [ ] p02 terminal review - 2 Important findings remain; retry limit exhausted
+- [ ] p02 review cycle 4 - operator-authorized bounded fix and fresh review pending
 - [ ] p03-t01 - not started
 
 ---

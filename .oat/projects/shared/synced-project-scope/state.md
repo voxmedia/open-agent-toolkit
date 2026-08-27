@@ -1,10 +1,7 @@
 ---
 oat_current_task: p03-t01
 oat_last_commit: 00c9f24ef
-oat_blockers:
-  - task_id: p02-review
-    reason: 'Terminal p02 review cycle found two Important retry-path defects after both configured fix iterations were consumed; operator direction is required.'
-    since: 2026-08-27
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -16,7 +13,7 @@ oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints h
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-# oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
+oat_orchestration_retry_limit: 3 # operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -90,19 +87,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T08:26:53.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T12:35:47.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation blocked - p02 review retry exhausted
+**Status:** Implementation in progress - p02 operator-extended review fix
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation - Phase 2 tasks complete; terminal review blocked
+Implementation - Phase 2 review fix cycle 3/3 authorized
 
 ## Artifacts
 
@@ -129,8 +126,8 @@ Implementation - Phase 2 tasks complete; terminal review blocked
 
 ## Blockers
 
-- p02 terminal review: two Important retry-path defects remain; automatic fix-loop authority is exhausted at 2/2.
+None. The operator authorized one additional bounded p02 fix-and-review cycle.
 
 ## Next Milestone
 
-Obtain operator direction for the two terminal p02 review findings; Phase 3 has not started.
+Resolve the two p02 retry-path findings on the original phase handle, then run one fresh independent review. Phase 3 remains unstarted until p02 passes.
