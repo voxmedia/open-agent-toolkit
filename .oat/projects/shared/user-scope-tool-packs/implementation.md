@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Phase 3 review retry limit exhausted with one unresolved Medium finding; operator authorization or deferral decision required.
 oat_last_updated: 2026-08-27
 oat_current_task_id: p03-t05
 oat_generated: false
@@ -283,6 +284,14 @@ oat_generated: false
 - The implementer passed 133 review-focused tests, 55 Phase 3 tests, 3,762 CLI
   tests, workspace tests, type-check, lint, format, and diff check. Root
   independently repeated the 133-test review boundary.
+- Decisive re-review `reviews/p03-review-2026-08-27T083913Z.md` closed the
+  recovery-context finding but found one remaining Medium planner/JSON contract
+  inconsistency: a blocked conflict is absent from preview additions but remains
+  inside the serialized executable destination plan. Runtime execution remains
+  blocked, but Phase 3 does not pass at the configured standard.
+- Both configured fix iterations are exhausted. A third source fix requires
+  explicit operator authorization, or the operator may explicitly defer this
+  Medium finding.
 
 ### Task p03-t01: Define migration plans and result state
 
@@ -325,11 +334,11 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Status      | Tasks | Review  | Fix loops |
-| ----- | ----------- | ----- | ------- | --------- |
-| p01   | completed   | 7/7   | passed  | 3         |
-| p02   | completed   | 9/9   | passed  | 2         |
-| p03   | in_progress | 5/5   | pending | 2         |
+| Phase | Status      | Tasks | Review   | Fix loops |
+| ----- | ----------- | ----- | -------- | --------- |
+| p01   | completed   | 7/7   | passed   | 3         |
+| p02   | completed   | 9/9   | passed   | 2         |
+| p03   | in_progress | 5/5   | blocking | 2         |
 
 #### Dispatch Notes
 
@@ -399,6 +408,10 @@ oat_generated: false
   findings addressed. Review-focused, phase, full CLI, workspace, type-check,
   lint, format, and diff gates passed; root repeated 133 load-bearing tests.
 - `Dispatch: scope=p03-fix2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Decisive Phase 3 re-review after fix iteration 2:
+  `reviews/p03-review-2026-08-27T083913Z.md`; 0 Critical, 0 Important,
+  1 Medium, 0 Minor. The configured two fix iterations are exhausted.
+- `Dispatch: scope=p03-review-fix2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 
 ### Recovery Event d8c701a8-4297-4028-bd4b-e60f404686fa
 
@@ -484,7 +497,8 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Run a decisive fresh independent Phase 3 re-review over fix iteration 2.
+- Obtain operator authorization for an additional Phase 3 fix/re-review
+  iteration or explicit deferral of the remaining Medium finding.
 
 ## Final Summary (for PR/docs)
 

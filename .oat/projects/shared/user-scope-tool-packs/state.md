@@ -1,7 +1,8 @@
 ---
 oat_current_task: p03-t05
 oat_last_commit: b0a6bc16e5efa5cb22cac853d8a45c2f8358e8f1
-oat_blockers: []
+oat_blockers:
+  - Phase 3 review retry limit exhausted with one unresolved Medium finding; operator authorization or deferral decision required.
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
   ] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -85,7 +86,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T08:34:52Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T08:40:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -95,7 +96,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 3 decisive re-review
+**Status:** Blocked — Phase 3 review retry limit exhausted
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -157,6 +158,11 @@ Final fix iteration 2 completed both dispositions in
 `b0a6bc16e5efa5cb22cac853d8a45c2f8358e8f1` and passed all focused, phase,
 CLI, workspace, type-check, lint, format, and diff gates. Decisive fresh
 independent re-review is pending.
+Decisive re-review closed all Critical and Important findings but found one
+Medium planner/JSON contract inconsistency: a blocked conflict is removed from
+preview additions while its operation remains in the serialized destination
+plan. Runtime execution is still blocked. Both configured fix iterations are
+exhausted, so operator authorization or explicit deferral is required.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -166,7 +172,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 3 awaiting decisive re-review)
+- **Implementation:** `implementation.md` (Phase 3 retry-exhaustion blocker)
 
 ## Progress
 
@@ -222,12 +228,17 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 3 fresh independent re-review received
 - ✗ Phase 3 re-review: 0 Critical, 1 Important, 1 Medium
 - ✓ Phase 3 final configured fix iteration 2/2 completed
-- ⧗ Phase 3 decisive fresh independent re-review
+- ✓ Phase 3 decisive fresh independent re-review received
+- ✗ Phase 3 decisive re-review: 0 Critical, 0 Important, 1 Medium
+- ⧗ Operator authorization or explicit Medium deferral required
 
 ## Blockers
 
-None.
+- Phase 3 exhausted its two configured review/fix iterations with one Medium
+  planner/JSON contract inconsistency unresolved. Runtime execution remains
+  safely blocked, but another source edit requires explicit operator approval.
 
 ## Next Milestone
 
-Run a decisive fresh independent Phase 3 re-review over fix iteration 2.
+Choose whether to authorize an additional Phase 3 fix/re-review iteration or
+explicitly defer the remaining Medium finding.
