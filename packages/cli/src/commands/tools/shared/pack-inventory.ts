@@ -9,7 +9,10 @@ import {
   resolveManagedScopeRoots,
   validateManagedPath,
 } from '@fs/paths';
-import type { ConcreteScope } from '@shared/types';
+import {
+  type ConcreteScope,
+  USER_SCOPE_MANAGED_AGENT_FILES,
+} from '@shared/types';
 
 import { digestDirectory, digestFile } from './content-digest';
 import { getPackDefinition } from './pack-manifest';
@@ -37,7 +40,8 @@ export interface PackDiagnostic {
   code:
     | 'legacy-false-conflict'
     | 'duplicate-scope'
-    | 'shared-owner-observation';
+    | 'shared-owner-observation'
+    | 'user-agent-unmaterialized';
   message: string;
   paths: string[];
   versions?: Array<string | null>;
@@ -209,6 +213,38 @@ function intentDiagnostic(diagnostic: PackIntentDiagnostic): PackDiagnostic {
   return { ...diagnostic };
 }
 
+/**
+ * User-scope canonical agents are installed into `~/.agents/agents/` but no
+ * provider view is generated for them: `SCOPE_CONTENT_TYPES.user` enumerates
+ * skills only, and the sole user-scope agent materialization is the bundled
+ * managed role file set (`USER_SCOPE_MANAGED_AGENT_FILES`). Completeness alone
+ * therefore reports such a pack as complete while the declared agent surface is
+ * unreachable, so the gap is named here instead of staying silent.
+ */
+function userAgentMaterializationDiagnostics(
+  pack: PackName,
+  scope: ConcreteScope,
+  assets: PackAssetInventory[],
+): PackDiagnostic[] {
+  if (scope !== 'user') return [];
+  const bundledRoleFiles = new Set<string>(USER_SCOPE_MANAGED_AGENT_FILES);
+  const unmaterialized = assets.filter(
+    ({ definition, status }) =>
+      definition.kind === 'agent' &&
+      definition.ownership.user === 'managed' &&
+      status !== 'missing' &&
+      !bundledRoleFiles.has(definition.destination.split('/').at(-1) ?? ''),
+  );
+  if (unmaterialized.length === 0) return [];
+  return [
+    {
+      code: 'user-agent-unmaterialized',
+      message: `Pack ${pack} installs user-scope canonical agents that no provider view materializes; user-scope agent materialization is limited to the bundled managed role files (${USER_SCOPE_MANAGED_AGENT_FILES.join(', ')}). Install this pack at project scope to make these agents available to providers.`,
+      paths: unmaterialized.map(({ path }) => path),
+    },
+  ];
+}
+
 export async function inventoryScopedPack(
   input: InventoryScopedPackInput,
 ): Promise<ScopedPackInventory> {
@@ -234,7 +270,10 @@ export async function inventoryScopedPack(
       ),
     ),
   ]);
-  const diagnostics = intent.diagnostics.map(intentDiagnostic);
+  const diagnostics = [
+    ...intent.diagnostics.map(intentDiagnostic),
+    ...userAgentMaterializationDiagnostics(input.pack, input.scope, assets),
+  ];
   return {
     pack: input.pack,
     scope: input.scope,

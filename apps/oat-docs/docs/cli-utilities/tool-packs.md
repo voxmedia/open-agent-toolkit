@@ -131,11 +131,34 @@ declares for that scope is present, **partial** when only some are, and
 | Asset kind        | Project scope                                                                      | User scope                   | Ownership                                           |
 | ----------------- | ---------------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------------- |
 | Skill             | `.agents/skills/<name>/`                                                           | `~/.agents/skills/<name>/`   | Managed — updated and removed by OAT                |
-| Agent             | `.agents/agents/<name>.md`                                                         | `~/.agents/agents/<name>.md` | Managed                                             |
+| Agent             | `.agents/agents/<name>.md`                                                         | `~/.agents/agents/<name>.md` | Managed (see the user-scope agent limitation below) |
 | Template          | `.oat/templates/<name>`                                                            | `~/.oat/templates/<name>`    | Seeded once at project scope; managed at user scope |
 | Script            | `.oat/scripts/<name>`                                                              | `~/.oat/scripts/<name>`      | Managed, executable                                 |
 | Bundled docs tree | not applicable                                                                     | `~/.oat/docs/`               | Managed directory (core pack)                       |
-| Seed file         | `.oat/ideas/…`, `.oat/projects-root`, `.oat/config.json`, project `.gitkeep` files | not applicable               | Seeded once, then owned by you                      |
+| Seed file         | `.oat/ideas/…`, `.oat/projects-root`, `.oat/config.json`, project `.gitkeep` files | `~/.oat/ideas/…`             | Seeded once, then owned by you                      |
+
+Seed files default to both scopes, so `oat tools install ideas --scope user`
+creates `~/.oat/ideas/backlog.md` and `~/.oat/ideas/scratchpad.md`. Only the
+`workflows` project-scaffold seeds — `.oat/projects-root`, `.oat/config.json`,
+and the project `.gitkeep` files — are pinned to project scope.
+
+#### User-scope agents reach no provider
+
+Canonical **agents** are installed at either scope, but only project scope
+materializes a provider view for them. At user scope the sync pipeline
+enumerates skills only, and the sole user-scope agent materialization is the
+bundled managed role file set (`oat-phase-implementer.md` and
+`oat-reviewer.md`). A pack installed at user scope therefore writes its agents
+to `~/.agents/agents/` where no provider can see them — for example
+`oat tools install workflows --scope user` leaves `oat-codebase-mapper` without
+a provider agent, and `oat tools install research --scope user` does the same
+for `skeptical-evaluator`.
+
+`oat status` and `oat doctor` name the affected agents with a
+`user-agent-unmaterialized` finding rather than reporting the pack as complete
+without qualification. Install the pack at **project scope** when you need its
+agents; `oat tools update` cannot repair this, because it is a scope limitation
+rather than drift.
 
 Repository templates under `.oat/templates/` are **owner overrides**. Once a
 project-scope template exists, OAT will not rewrite it: the managed default now
@@ -401,7 +424,7 @@ Key behavior:
 - Tracks installed vs bundled skill versions and reports outdated skills
 - Writes pack intent into the config file for the scope you installed into: a project install sets `tools.<pack>: true` in `.oat/config.json`, and a user install sets it in `~/.oat/config.json`. A user-only install never writes repository config
 - A user-only install needs no Git repository and performs no repository writes
-- Refreshes the managed `OAT tools` section in the repository-root `AGENTS.md` **only for project-scope installs**
+- Refreshes the managed `OAT tools` section in the repository-root `AGENTS.md` **only for project-scope runs of the aggregate `oat tools install`**. The per-pack subcommands (`oat tools install workflows`, `oat tools install docs`, and the rest) never write `AGENTS.md`, at either scope
 - Repository `AGENTS.md` guidance for project management is owned by adoption, not by pack placement. Installing the `project-management` pack no longer upserts a managed `OAT project-management` section; `oat pjm init` writes that repository guidance when the repository actually adopts PJM
 - Interactive runs can prompt to update selected outdated skills
 - Successful installs report the final scope chosen for each pack, including `project + user` when a pack is installed in both, and auto-sync only the scopes actually changed by the install so untouched scopes are never re-synced or pruned

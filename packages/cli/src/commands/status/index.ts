@@ -49,6 +49,12 @@ import {
   type ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
 import { PACK_NAMES } from '@commands/tools/shared/pack-manifest';
+import {
+  formatPackPath,
+  formatPackPaths,
+  type PackPathRoots,
+  updatePackRecovery,
+} from '@commands/tools/shared/pack-paths';
 import type { PackIntentSource } from '@commands/tools/shared/scoped-pack-intent';
 import type { PackCompleteness, PackName } from '@commands/tools/shared/types';
 import {
@@ -430,49 +436,6 @@ function formatStrayChoiceLabel(
   return `[${scope}] ${basename(providerPath)} (${provider})`;
 }
 
-interface PackPathRoots {
-  projectRoot?: string;
-  userRoot?: string;
-}
-
-const MAX_REPORTED_PACK_PATHS = 3;
-
-/**
- * Renders a managed path relative to the scope root that owns it. User-scope
- * paths collapse to `~/...` so status never echoes unrelated home content.
- */
-function formatPackPath(path: string, roots: PackPathRoots): string {
-  const normalized = normalizeToPosixPath(path);
-  for (const [root, prefix] of [
-    [roots.projectRoot, ''],
-    [roots.userRoot, '~/'],
-  ] as const) {
-    if (!root) continue;
-    const normalizedRoot = normalizeToPosixPath(root);
-    if (
-      normalized === normalizedRoot ||
-      normalized.startsWith(`${normalizedRoot}/`)
-    ) {
-      return `${prefix}${normalizeToPosixPath(relative(root, path))}`;
-    }
-  }
-  return normalized;
-}
-
-function formatPackPaths(paths: string[], roots: PackPathRoots): string {
-  const shown = paths
-    .slice(0, MAX_REPORTED_PACK_PATHS)
-    .map((path) => formatPackPath(path, roots));
-  const remaining = paths.length - shown.length;
-  return remaining > 0
-    ? `${shown.join(', ')}, +${remaining} more`
-    : shown.join(', ');
-}
-
-function updatePackRecovery(pack: PackName, scope: ConcreteScope): string {
-  return `oat tools update --pack ${pack} --scope ${scope}`;
-}
-
 function packDiagnosticRecovery(
   pack: PackName,
   diagnostic: PackDiagnostic,
@@ -633,7 +596,10 @@ async function collectPackReport(
     unavailableScopes,
     pjm: {
       state: adoption.state,
-      repoRoot: adoption.repoRoot,
+      // Every other path in this payload is redacted through `formatPackPath`;
+      // the PJM repo root follows the same contract rather than emitting a raw
+      // absolute path.
+      repoRoot: formatPackPath(adoption.repoRoot, roots),
       recovery: adoption.recovery,
     },
   };

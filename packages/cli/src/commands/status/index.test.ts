@@ -1985,6 +1985,24 @@ describe('createStatusCommand', () => {
       expect(output).not.toContain('oat pjm init');
     });
 
+    it('redacts the PJM repo root in JSON output like every other pack path', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        pjmAdoption: {
+          state: 'declared',
+          repoRoot: '/tmp/workspace/.oat/repo',
+          recovery: null,
+        },
+      });
+
+      await runStatusCommand(command, ['--scope', 'project', '--json']);
+
+      const payload = capture.jsonPayloads[0] as {
+        packs: { pjm: { repoRoot: string } | null };
+      };
+      expect(payload.packs.pjm?.repoRoot).toBe('.oat/repo');
+    });
+
     it('skips managed pack inventory in hook mode', async () => {
       const { command, inventoryPack, resolvePjmAdoption } = createHarness({
         driftReports: [],

@@ -151,9 +151,20 @@ Both commands report managed pack state with a scoped recovery command:
 - `newer` — installed assets are ahead of the bundle. This is informational and
   usually means the CLI is older than the assets; update the CLI rather than
   downgrading the pack.
-- `retained-override` — a project-scope repository template exists, so the
-  managed default is intentionally not applied there. Delete the repository copy
-  under `.oat/templates/` to resume managed-default behavior.
+- `retained-override` — an owner-owned seeded asset exists at the scope, so the
+  managed default is intentionally not applied there. This covers repository
+  templates under `.oat/templates/` **and** seeded content such as
+  `.oat/ideas/backlog.md` and `.oat/ideas/scratchpad.md`. Deleting the file is
+  the right move only for a **template** you want OAT to manage again; never
+  delete seeded content you have edited, because the next install or update
+  reseeds the bundled default in its place and your edits are gone. The finding
+  is informational and carries no recovery command for exactly that reason.
+- `user-agent-unmaterialized` — the pack installed canonical agents into
+  `~/.agents/agents/`, but user scope materializes no provider view for them
+  beyond the bundled managed role files. `oat tools update` cannot fix this.
+  Install the pack at project scope (`oat tools install <pack> --scope project`)
+  when you need its agents. See
+  [Tool packs](../cli-utilities/tool-packs.md) for the full limitation.
 
 ## `status` or `doctor` reports `legacy-false-conflict`
 

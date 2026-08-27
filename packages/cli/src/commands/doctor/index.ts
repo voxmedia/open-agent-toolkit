@@ -7,7 +7,7 @@ import {
   symlink,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import {
   buildCommandContext,
@@ -37,6 +37,11 @@ import {
   type PackInventory,
 } from '@commands/tools/shared/pack-inventory';
 import { PACK_NAMES } from '@commands/tools/shared/pack-manifest';
+import {
+  formatPackPaths,
+  type PackPathRoots,
+  updatePackRecovery,
+} from '@commands/tools/shared/pack-paths';
 import type { PackName } from '@commands/tools/shared/types';
 import {
   walkDispatchMatrix,
@@ -52,11 +57,7 @@ import {
   type UserConfig,
 } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
-import {
-  normalizeToPosixPath,
-  resolveProjectRoot,
-  resolveScopeRoot,
-} from '@fs/paths';
+import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import TOML from '@iarna/toml';
 import { loadManifest, type Manifest } from '@manifest/index';
 import { claudeAdapter } from '@providers/claude';
@@ -772,7 +773,8 @@ type PackStateFindingCode =
   | 'retained-override'
   | 'legacy-false-conflict'
   | 'duplicate-scope'
-  | 'shared-owner-observation';
+  | 'shared-owner-observation'
+  | 'user-agent-unmaterialized';
 
 interface PackStateFinding {
   pack: PackName;
@@ -781,49 +783,6 @@ interface PackStateFinding {
   detail: string;
   paths: string[];
   recovery: string | null;
-}
-
-interface PackPathRoots {
-  projectRoot?: string;
-  userRoot?: string;
-}
-
-const MAX_REPORTED_PACK_PATHS = 3;
-
-/**
- * Renders a managed path relative to the scope root that owns it. User-scope
- * paths collapse to `~/...` so diagnostics never echo unrelated home content.
- */
-function formatPackPath(path: string, roots: PackPathRoots): string {
-  const normalized = normalizeToPosixPath(path);
-  for (const [root, prefix] of [
-    [roots.projectRoot, ''],
-    [roots.userRoot, '~/'],
-  ] as const) {
-    if (!root) continue;
-    const normalizedRoot = normalizeToPosixPath(root);
-    if (
-      normalized === normalizedRoot ||
-      normalized.startsWith(`${normalizedRoot}/`)
-    ) {
-      return `${prefix}${normalizeToPosixPath(relative(root, path))}`;
-    }
-  }
-  return normalized;
-}
-
-function formatPackPaths(paths: string[], roots: PackPathRoots): string {
-  const shown = paths
-    .slice(0, MAX_REPORTED_PACK_PATHS)
-    .map((path) => formatPackPath(path, roots));
-  const remaining = paths.length - shown.length;
-  return remaining > 0
-    ? `${shown.join(', ')}, +${remaining} more`
-    : shown.join(', ');
-}
-
-function updatePackRecovery(pack: PackName, scope: ConcreteScope): string {
-  return `oat tools update --pack ${pack} --scope ${scope}`;
 }
 
 function collectPackStateFindings(
@@ -913,16 +872,32 @@ function collectPackStateFindings(
       }
 
       for (const diagnostic of scoped.diagnostics) {
-        if (diagnostic.code !== 'legacy-false-conflict') continue;
-        findings.push({
-          pack: inventory.pack,
-          scope,
-          code: 'legacy-false-conflict',
-          detail:
-            'legacy false intent with installed managed assets; adopt or remove the install',
-          paths: diagnostic.paths,
-          recovery: updatePackRecovery(inventory.pack, scope),
-        });
+        if (diagnostic.code === 'legacy-false-conflict') {
+          findings.push({
+            pack: inventory.pack,
+            scope,
+            code: 'legacy-false-conflict',
+            detail:
+              'legacy false intent with installed managed assets; adopt or remove the install',
+            paths: diagnostic.paths,
+            recovery: updatePackRecovery(inventory.pack, scope),
+          });
+          continue;
+        }
+        if (diagnostic.code === 'user-agent-unmaterialized') {
+          // A documented scope limitation rather than drift: `oat tools update`
+          // cannot repair it, so no recovery command is offered and the check
+          // stays a pass. The message still names every affected agent so the
+          // absent capability is not reported as a complete pack.
+          findings.push({
+            pack: inventory.pack,
+            scope,
+            code: 'user-agent-unmaterialized',
+            detail: `${diagnostic.paths.length} user-scope agent(s) reach no provider; user-scope agent materialization is limited to the bundled managed role files, so install this pack at project scope to use them`,
+            paths: diagnostic.paths,
+            recovery: null,
+          });
+        }
       }
     }
 
@@ -1266,16 +1241,18 @@ async function runChecksForScope(
     );
     // PJM capability now normally lives at user scope, so repository pack
     // intent is no longer evidence of repository adoption. Adoption state is
-    // authoritative; a repository with neither adoption nor any scaffold has
-    // nothing to diagnose.
+    // authoritative and already covers every case where a PJM canonical file
+    // exists (`partial-initialization` is returned whenever any is present), so
+    // the presence of `.oat/repo` adds nothing. Keying off it as well would fire
+    // only when `.oat/repo` exists with zero PJM canonical files — a repository
+    // that uses `.oat/repo` for non-PJM content such as `oat index` knowledge,
+    // and deliberately declined PJM. That is a false positive, and it made
+    // `oat doctor` disagree with `oat status`'s `shouldReportPjmAdoption`.
     const adoption = await dependencies.resolvePjmAdoption({
       projectRoot: scopeRoot,
       repoRoot: repoReferenceRoot,
     });
-    if (
-      adoption.state !== 'none' ||
-      (await dependencies.pathExists(repoReferenceRoot))
-    ) {
+    if (adoption.state !== 'none') {
       checks.push(
         ...(await dependencies.runPjmDoctorChecks(repoReferenceRoot, {
           projectRoot: scopeRoot,

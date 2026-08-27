@@ -201,19 +201,6 @@ function warnStatus(items: string[]): 'pass' | 'warn' {
 export interface PjmDoctorOptions {
   projectRoot?: string;
   adoption?: PjmAdoption;
-  /** @deprecated Global doctor compatibility; adoption is authoritative. */
-  projectManagementEnabled?: boolean;
-}
-
-/** @deprecated Retained until the Phase 5 aggregate-doctor migration. */
-export function createPjmDisabledCheck(): DoctorCheck {
-  return {
-    name: 'pjm:disabled',
-    description: 'Project-management pack enablement',
-    status: 'pass',
-    message: 'Project-management pack is disabled; PJM checks skipped.',
-    fix: 'Run `oat init tools project-management` to install PJM capability.',
-  };
 }
 
 export async function runPjmDoctorChecks(

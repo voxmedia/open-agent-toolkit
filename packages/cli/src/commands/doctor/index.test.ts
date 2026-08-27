@@ -704,6 +704,30 @@ describe('createDoctorCommand', () => {
     expect(capture.info[0]).not.toContain('pjm:');
   });
 
+  it('skips PJM checks for an unadopted repository that uses .oat/repo for non-PJM content', async () => {
+    const { command, capture, runPjmDoctorChecks } = createHarness({
+      pjmAdoption: {
+        state: 'none',
+        repoRoot: '/tmp/workspace/.oat/repo',
+        recovery: 'oat pjm init',
+      },
+      pathExists: {
+        '/tmp/workspace/.agents/skills': true,
+        '/tmp/workspace/.agents/agents': true,
+        '/tmp/workspace/.oat/sync/manifest.json': true,
+        // Written by `oat index`, not by PJM. Adoption is still `none`, so the
+        // repository declined PJM and must not be warned about it.
+        '/tmp/workspace/.oat/repo': true,
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(runPjmDoctorChecks).not.toHaveBeenCalled();
+    expect(capture.info[0]).not.toContain('pjm:');
+    expect(process.exitCode).toBe(0);
+  });
+
   it('passes dispatch matrix availability when all configured cells validate', async () => {
     const { command, capture, validateMatrixCell } = createHarness({
       oatConfig: {
@@ -1633,6 +1657,54 @@ config_file = "agents/${roleName}.toml"
       'oat tools update --pack research --scope project',
     );
     expect(process.exitCode).toBe(1);
+  });
+
+  it('names user-scope agents that reach no provider without demanding a repair', async () => {
+    const { command, capture } = createHarness({
+      scope: 'user',
+      packInventories: [
+        packInventory('research', [
+          scopedInventory(
+            'research',
+            'user',
+            'complete',
+            [packAsset('.agents/skills/analyze', 'current', 'user')],
+            {
+              diagnostics: [
+                {
+                  code: 'user-agent-unmaterialized',
+                  message:
+                    'Pack research installs user-scope canonical agents that no provider view materializes',
+                  paths: ['/tmp/home/.agents/agents/skeptical-evaluator.md'],
+                },
+              ],
+            },
+          ),
+        ]),
+      ],
+    });
+
+    await runDoctor(command, { scope: 'user', globalArgs: ['--json'] });
+
+    const payload = capture.jsonPayloads[0] as { checks: DoctorCheck[] };
+    const packCheck = payload.checks.find(
+      (check) => check.name === 'user:pack_state',
+    );
+    expect(packCheck?.message).toContain(
+      'research [user-agent-unmaterialized]',
+    );
+    // The affected agent is named, and the user-scope root is redacted.
+    expect(packCheck?.message).toContain(
+      '~/.agents/agents/skeptical-evaluator.md',
+    );
+    expect(packCheck?.message).not.toContain('/tmp/home/.agents');
+    expect(packCheck?.message).toContain(
+      'limited to the bundled managed role files',
+    );
+    // `oat tools update` cannot repair a scope limitation, so no recovery
+    // command is offered and the check itself does not warn.
+    expect(packCheck?.fix).toBeUndefined();
+    expect(packCheck?.status).toBe('pass');
   });
 
   it('warns about duplicate cross-scope packs and offers migration', async () => {

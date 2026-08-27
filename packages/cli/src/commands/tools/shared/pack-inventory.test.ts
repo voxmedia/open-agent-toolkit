@@ -183,6 +183,93 @@ describe('pack inventory', () => {
     ).toMatchObject({ status: 'outdated' });
   });
 
+  it('names user-scope canonical agents that reach no provider view', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const scopeRoot = await makeRoot('oat-user-');
+    await materializeManagedPack('research', 'user', assetsRoot, scopeRoot);
+
+    const inventory = await inventoryScopedPack({
+      pack: 'research',
+      scope: 'user',
+      scopeRoot,
+      assetsRoot,
+    });
+
+    // The pack is complete by asset presence, so the unreachable agent surface
+    // is only visible because it is diagnosed explicitly.
+    expect(inventory.completeness).toBe('complete');
+    const diagnostic = inventory.diagnostics.find(
+      ({ code }) => code === 'user-agent-unmaterialized',
+    );
+    expect(diagnostic).toBeDefined();
+    expect(diagnostic!.paths).toEqual([
+      join(scopeRoot, '.agents', 'agents', 'skeptical-evaluator.md'),
+    ]);
+    expect(diagnostic!.message).toContain('oat-phase-implementer.md');
+  });
+
+  it('excludes bundled managed role files and project scope from the agent diagnostic', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const userRoot = await makeRoot('oat-user-');
+    const projectRoot = await makeRoot('oat-project-');
+    await materializeManagedPack('workflows', 'user', assetsRoot, userRoot);
+    await materializeManagedPack(
+      'workflows',
+      'project',
+      assetsRoot,
+      projectRoot,
+    );
+
+    const user = await inventoryScopedPack({
+      pack: 'workflows',
+      scope: 'user',
+      scopeRoot: userRoot,
+      assetsRoot,
+    });
+    const diagnostic = user.diagnostics.find(
+      ({ code }) => code === 'user-agent-unmaterialized',
+    );
+    // `oat-phase-implementer.md` and `oat-reviewer.md` are materialized from
+    // the bundle at user scope, so only the third agent is unreachable.
+    expect(diagnostic!.paths).toEqual([
+      join(userRoot, '.agents', 'agents', 'oat-codebase-mapper.md'),
+    ]);
+
+    const project = await inventoryScopedPack({
+      pack: 'workflows',
+      scope: 'project',
+      scopeRoot: projectRoot,
+      assetsRoot,
+    });
+    expect(
+      project.diagnostics.some(
+        ({ code }) => code === 'user-agent-unmaterialized',
+      ),
+    ).toBe(false);
+  });
+
+  it('does not diagnose user-scope agents that are not installed', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const scopeRoot = await makeRoot('oat-user-');
+    for (const asset of getPackDefinition('research').assets) {
+      if (asset.source) await writeAsset(assetsRoot, asset.source, asset);
+    }
+
+    const inventory = await inventoryScopedPack({
+      pack: 'research',
+      scope: 'user',
+      scopeRoot,
+      assetsRoot,
+    });
+
+    expect(inventory.completeness).toBe('absent');
+    expect(
+      inventory.diagnostics.some(
+        ({ code }) => code === 'user-agent-unmaterialized',
+      ),
+    ).toBe(false);
+  });
+
   it('reports duplicate project and user placement with canonical paths', async () => {
     const assetsRoot = await makeRoot('oat-assets-');
     const projectRoot = await makeRoot('oat-project-');
