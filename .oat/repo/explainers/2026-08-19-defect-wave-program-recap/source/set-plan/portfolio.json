@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "explainer-kit.set-plan-portfolio/v1",
+  "planId": "defect-wave-program-recap-floor",
+  "artifacts": [
+    {
+      "artifactId": "program-recap",
+      "artifactType": "hub",
+      "profileId": "recipe-floor",
+      "required": true,
+      "sourceIds": [
+        "program",
+        "w1-summary",
+        "w1-implementation",
+        "w1-orchestration-log",
+        "w2-summary",
+        "w2-implementation",
+        "w2-orchestration-log",
+        "w3-summary",
+        "w3-implementation",
+        "w3-orchestration-log",
+        "w4-summary",
+        "w4-implementation",
+        "w4-orchestration-log"
+      ],
+      "draft": "One self-contained narrative hub for a completed four-wave defect program whose last wave is merged and whose close-out is deliberately unfinished. Open with the aggregate outcome and the two things still held back, then cover the program as a map rather than a plan with a status strip and the single authorization it ran under, the wave ordering as a release argument with an inline serial flow diagram and a comparison table of shape and baseline, per-wave outcomes as one comparable review-and-merge table followed by the distinguishing story of each wave, the convention evolution as a dated timeline of adopted rule sets plus a table of the three rules that changed outcomes, aggregate numbers as an evidence table with units and an explicit statement of the two figures the records do not support, and a follow-up ledger with owner, status and next action plus the trigger-bound minors and the human-gated items still open.",
+      "visualIntent": "Editorial hub on the narrative path. One dominant serif title over a short framing statement, then deliberately varied section treatments rather than one repeated card: a two-column status strip, a bounded-scroll inline SVG flow diagram carrying the version baseline on each edge, three comparison tables with comparable columns, a dated timeline for rule adoption, GFM callouts for the human gate and the unresolved-claim disclosure, and a task list for what is still open. Every section carries its own cited source list."
+    }
+  ]
+}

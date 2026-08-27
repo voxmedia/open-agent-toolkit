@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v1",
+  "runId": "run-7dd79e60-3b34-47ba-b7b5-dfe64694c9f3",
+  "slug": "wave-4-execution-recap",
+  "recipe": {
+    "id": "project-recap",
+    "version": "2"
+  },
+  "createdAt": "2026-08-27T06:45:22.847Z",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:0c63ad3ccaa84967ec9837ea27ae6b89ada6328cfc3f645adad7d5cc709e7745",
+    "inputHashes": {
+      "inputs/plan": "sha256:d1d2a2ddcf58cf19fff9eabc3166c06e0dc42a60106dbcff2af6c316c17794c4",
+      "inputs/implementation": "sha256:065914e18333a6d8e81478f56cbf3048c87320cc97e2e619f087ca2f95e7af7f",
+      "inputs/summary": "sha256:a2d9b7681d8c1d3f49f718ac6bacbb5c096d44b3dffb359f0a9e56c92dd6a6fa",
+      "inputs/critic-wave-4-recap-fact-critic": "sha256:2370f7ef49131709cab85bd82af448a730521738818a806bf9ad34b814499594"
+    },
+    "backlinks": [
+      {
+        "sourceId": "implementation",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/c4be950b54c3ba2f425a70d1fa79b807c4c3f221/.oat/projects/shared/wave-4-execution/implementation.md#L1-L347"
+      },
+      {
+        "sourceId": "plan",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/c4be950b54c3ba2f425a70d1fa79b807c4c3f221/.oat/projects/shared/wave-4-execution/plan.md#L1-L243"
+      },
+      {
+        "sourceId": "summary",
+        "url": "https://github.com/voxmedia/open-agent-toolkit/blob/c4be950b54c3ba2f425a70d1fa79b807c4c3f221/.oat/projects/shared/wave-4-execution/summary.md#L1-L140"
+      }
+    ],
+    "authorResultPaths": [
+      "source/author/project-recap.json"
+    ]
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:483ad6f5121e8645f454feefbf8547e11c995fa9ad23343cd1ccfd43f487801f",
+    "derived": false
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "contentPath": "source/content/project-recap.html",
+      "renderedPath": "site/initiatives/wave-4-execution-recap/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:773948ca996d1b8bf8ec03bd9ef7cfd947dc1203137cba8dfcc1abc09653b3ed",
+      "rebuildable": false,
+      "durableEvidence": [
+        {
+          "kind": "commit",
+          "ref": "4ca731528be870850dbd2b3b536c972a614e17a6",
+          "paths": [
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/run-request.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/source/fact-base.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/source/fact-base.md",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/source/content-approval.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/source/set-plan/request.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/source/set-plan/result.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/source/set-plan/ledger.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/source/set-plan/portfolio.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/source/set-plan/drafts.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/source/author/project-recap.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/source/content/project-recap.html",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/browser/project-recap/mobile.png",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/browser/project-recap/mobile.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/browser/project-recap/tablet.png",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/browser/project-recap/tablet.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/browser/project-recap/desktop.png",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/browser/project-recap/desktop.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/visual-review/attempt-1/evidence/project-recap/mobile.png",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/visual-review/attempt-1/evidence/project-recap/mobile.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/visual-review/attempt-1/evidence/project-recap/tablet.png",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/visual-review/attempt-1/evidence/project-recap/tablet.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/visual-review/attempt-1/evidence/project-recap/desktop.png",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/visual-review/attempt-1/evidence/project-recap/desktop.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/visual-review/attempt-1/request.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/qa/visual-review/attempt-1/result.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/theme.resolved.json",
+            ".oat/projects/shared/wave-4-execution/explainers/wave-4-execution-recap/site/initiatives/wave-4-execution-recap/index.html"
+          ],
+          "attestedAt": "2026-08-27T06:46:58.048Z"
+        }
+      ]
+    }
+  ],
+  "immutableHashes": {
+    "run-request.json": "sha256:73c8679a82e7739eb21eee27d531d27ee6c337f491cc54f30983fce5583f3f51",
+    "source/fact-base.json": "sha256:7d43720b5d53cbd9b93f88a4a1cde4abf92d4fd80db6877c8a4c0d36587e12b0",
+    "source/fact-base.md": "sha256:b25c3d93745c8af9abd9370b404fffc0bac64983f3de4838f539e50249a24f23",
+    "source/content-approval.json": "sha256:c9640bc2d20cebf44a43f460269728fff58e39a961d7f0339344c33482ec3855",
+    "source/set-plan/request.json": "sha256:22c13dea6810261088ce057a51344366b3cd0ee9960ab28a5316eefd39df4647",
+    "source/set-plan/result.json": "sha256:2908d81314ea3b3b49585c783bd175de276e73219750612b54214260def68080",
+    "source/set-plan/ledger.json": "sha256:07bc9addcce1bf35534ab262a23ff30c10c0bfed4a25d2a7c07290a6ab86d6c9",
+    "source/set-plan/portfolio.json": "sha256:c5920fcdd91abb5b16ec16ba3a38965ec94beab2a8c65d022567a2a22544ba95",
+    "source/set-plan/drafts.json": "sha256:1f61e11ed875d19e0d524aebeda533628848071c5a6876df000bfa346247d99f",
+    "source/author/project-recap.json": "sha256:511b193a06ce2d3daead58c9973f3c74eeb9478f91474e0c68becc7c30c09220",
+    "source/content/project-recap.html": "sha256:773948ca996d1b8bf8ec03bd9ef7cfd947dc1203137cba8dfcc1abc09653b3ed",
+    "qa/browser/project-recap/mobile.png": "sha256:19f0d536a8d10828447986737d7890151f518e9d8c470f0ddd1189fdc65c5b1b",
+    "qa/browser/project-recap/mobile.json": "sha256:0a7ba1bbfc52ae0209495fe04f62725662452a274204ea2be222858e13f546cf",
+    "qa/browser/project-recap/tablet.png": "sha256:27f7d9de41137cd0079072b2db3fbd1b96b0bf8ea72238182e4749d2c208e749",
+    "qa/browser/project-recap/tablet.json": "sha256:40a77b957f818d3315e5e5c5a95c5f10a4177fc94853b9a6c97f60fbb50571dc",
+    "qa/browser/project-recap/desktop.png": "sha256:b327d7d47e0148b10cf50ddc8ce5036f543052504c418b0d773cf62de4f98dfc",
+    "qa/browser/project-recap/desktop.json": "sha256:1c8f73d5fc597f6239cfa688999bb3bb57a164c2519d731f6c19feb83f5547e2",
+    "qa/visual-review/attempt-1/evidence/project-recap/mobile.png": "sha256:19f0d536a8d10828447986737d7890151f518e9d8c470f0ddd1189fdc65c5b1b",
+    "qa/visual-review/attempt-1/evidence/project-recap/mobile.json": "sha256:0a7ba1bbfc52ae0209495fe04f62725662452a274204ea2be222858e13f546cf",
+    "qa/visual-review/attempt-1/evidence/project-recap/tablet.png": "sha256:27f7d9de41137cd0079072b2db3fbd1b96b0bf8ea72238182e4749d2c208e749",
+    "qa/visual-review/attempt-1/evidence/project-recap/tablet.json": "sha256:40a77b957f818d3315e5e5c5a95c5f10a4177fc94853b9a6c97f60fbb50571dc",
+    "qa/visual-review/attempt-1/evidence/project-recap/desktop.png": "sha256:b327d7d47e0148b10cf50ddc8ce5036f543052504c418b0d773cf62de4f98dfc",
+    "qa/visual-review/attempt-1/evidence/project-recap/desktop.json": "sha256:1c8f73d5fc597f6239cfa688999bb3bb57a164c2519d731f6c19feb83f5547e2",
+    "qa/visual-review/attempt-1/request.json": "sha256:92eb9d7a58f405aae1fe329572b8149b7d5a70c6f598fa694bc039d74ea5eb04",
+    "qa/visual-review/attempt-1/result.json": "sha256:9c2f21465ad134bda7b88ee2ae6f04d2267952d76a9fafada5c1da6e7377cd17",
+    "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27",
+    "site/initiatives/wave-4-execution-recap/index.html": "sha256:773948ca996d1b8bf8ec03bd9ef7cfd947dc1203137cba8dfcc1abc09653b3ed"
+  },
+  "outcome": "built-durable",
+  "buildRecord": {
+    "path": "build-record.json",
+    "hash": "sha256:696fb257d7c114cd945b3d62520bf0a8d19810ef564ad5043b169a7d13830461"
+  },
+  "warnings": [
+    "theme-selection-normalized"
+  ]
+}

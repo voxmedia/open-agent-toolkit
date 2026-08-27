@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "explainer-kit.set-plan-request/v1",
+  "recipe": {
+    "id": "program-recap",
+    "version": "1"
+  },
+  "factBaseHash": "sha256:18f8b51c42170db1bc9005ffcf1c36832c7c8f90732f34d4277c801e83b58b02",
+  "sourceIds": [
+    "program",
+    "w1-summary",
+    "w1-implementation",
+    "w1-orchestration-log",
+    "w2-summary",
+    "w2-implementation",
+    "w2-orchestration-log",
+    "w3-summary",
+    "w3-implementation",
+    "w3-orchestration-log",
+    "w4-summary",
+    "w4-implementation",
+    "w4-orchestration-log"
+  ],
+  "discovery": {
+    "rounds": 0,
+    "findings": [],
+    "reason": "not-requested"
+  },
+  "planHash": "sha256:45b749cb999584479a0373a0c7c98aecb48f71d4dc20a0ac3e27ffb643b94c6c"
+}

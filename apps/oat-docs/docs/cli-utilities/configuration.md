@@ -198,6 +198,26 @@ project settings. Neither has a config key.
 
 Both accept `1`, `true` or `on`.
 
+### Bundled assets root (`OAT_ASSETS_DIR`)
+
+The CLI reads its bundled skills, agents, templates, and scripts from the
+packaged `assets/` directory next to the installed CLI. Setting a non-empty
+`OAT_ASSETS_DIR` makes `resolveAssetsRoot` read that directory instead:
+
+- The value is trimmed; unset, empty, or whitespace-only values keep the
+  packaged default. A relative value is resolved against the process working
+  directory.
+- The override is validated exactly like the packaged root and fails closed:
+  the path must be a directory containing bundle metadata whose version matches
+  the running CLI (`OAT_VERSION`). A missing, malformed, or version-mismatched
+  override is an error — the CLI never silently falls back to packaged assets.
+- Produce a matching bundle with `bash packages/cli/scripts/bundle-assets.sh`
+  while `OAT_ASSETS_DIR` points at the target directory (the script already
+  honors the variable as its destination).
+
+This is primarily a test-isolation and packaging seam; day-to-day use of the CLI
+does not need it.
+
 `EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT` disables an anti-SSRF control. Public
 verification issues an outbound GET against whatever `publicBaseUrl` names, so
 by default the connector refuses internal addresses — including the

@@ -40,7 +40,7 @@ Every change runs the checks CI gates on, in this order:
 3. `pnpm test`
 4. `pnpm build`
 5. `pnpm run check:skill-bumps`
-6. `pnpm release:check-versions`
+6. `pnpm release:check-versions` (fetch `origin/main` first: the gate also requires every lockstep version to be strictly greater than current `origin/main`)
 7. `pnpm release:validate`
 8. `pnpm build:docs`
 

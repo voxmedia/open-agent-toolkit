@@ -50,6 +50,33 @@ copying their content here. -->
   bundling publishes by atomic staged rename. Delivered through six final
   review rounds and five bounded fix batches; deferred residue lives in six
   `BL-260817-*` backlog items.
+- CLI `0.2.35` closes the hermetic-assets defect from the 2026-08-19 defect wave
+  program (wave 3 wrapper project `wave-3-execution`): `resolveAssetsRoot`
+  honors a non-empty `OAT_ASSETS_DIR` with the unchanged fail-closed bundle
+  validation (missing, malformed, or version-mismatched overrides error out
+  instead of falling back), the package-coverage smoke consumer reads a private
+  per-file bundle and asserts its own environment restoration and cleanup, and
+  the CLI unit suite neutralizes an ambient override at the vitest env seam.
+  Closed `BL-260817-let-resolveassetsroot-honor`.
+- CLI `0.2.34` closes the sync version-skew defect from the 2026-08-19 defect
+  wave program (wave 2 wrapper project `wave-2-execution`): `oat sync` now
+  compares each scope manifest's `oatVersion` with the invoking CLI before the
+  dry-run/apply branch and logs an advisory warning naming the scope and both
+  versions (JSON mode reports the same data as a `versionSkew` array in the
+  dry-run and apply envelopes); the apply-path manifest restamp is derived from
+  the same diagnostic so the advisory and the restamp cannot drift apart.
+  Closed `BL-260718-warn-when-oat-sync-uses`.
+- CLI `0.2.33` closes two containment defects from the 2026-08-19 defect wave
+  program (wave 1 wrapper project `wave-1-execution`): the smoke cleanup SIGTERM
+  regression harness is bounded (bounded child-exit wait, SIGKILL plus bounded
+  reap or detach before temp-dir cleanup, stage-aware diagnostics) so
+  `pnpm test` can no longer wedge on a missed signal, and
+  `pnpm release:check-versions` additionally rejects lockstep public-package
+  versions that are not strictly greater than current `origin/main` (numeric
+  comparator, fail-closed evidence, composes with the merge-base rule). Test
+  files under `packages/cli/src/` count as publishable changes, so the wave
+  carried the lockstep bump. Closed `BL-260818-bound-the-smoke-cleanup` and
+  `BL-260817-detect-branch-behind-published`.
 - CLI `0.2.30` adds evidence-grounded project retrospectives to the lifecycle
   tail. `retro` is a post-approval-only closeout step; `oat-project-retro`
   generates and idempotently applies machine-scannable promotion findings, and

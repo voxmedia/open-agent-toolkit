@@ -65,6 +65,14 @@ Key behavior:
 - Upgrade cleanup removes only verified clean legacy Cursor or Copilot skill views.
   Changed or unverified views are preserved and detached from obsolete manifest
   ownership.
+- Before the dry-run/apply branch, each scope's sync manifest `oatVersion` is
+  compared with the invoking CLI version. Any difference (older or newer) logs
+  an advisory warning naming the scope and both versions; the run continues and
+  the apply path restamps the manifest with the invoking version. JSON output
+  suppresses the warning and reports the same data under a top-level
+  `versionSkew` array (`{ scope, producingVersion, invokingVersion }`) in both
+  `--dry-run` and apply envelopes; a scope without skew is omitted from the
+  array.
 
 Preview project and user cleanup before applying it:
 

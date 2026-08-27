@@ -27,5 +27,10 @@ export default defineConfig({
   test: {
     passWithNoTests: true,
     include: ['src/**/*.test.ts'],
+    // `resolveAssetsRoot` honours a non-empty OAT_ASSETS_DIR, so an ambient
+    // value in a developer shell or CI image would silently redirect every
+    // production call site the unit suite exercises. Neutralise it once here;
+    // tests that need a specific root inject `env` or pass it to a child.
+    env: { OAT_ASSETS_DIR: '' },
   },
 });
