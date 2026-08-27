@@ -1145,4 +1145,39 @@ describe('review skill contracts', () => {
       'If `gh pr edit` fails (e.g. PR was merged between Step 2 and now',
     );
   });
+
+  it('always publishes final synced links for new and existing completion PRs', () => {
+    const content = readFileSync(
+      repoFilePath('.agents/skills/oat-project-complete/SKILL.md'),
+      'utf8',
+    );
+
+    const finalLinksIndex = content.indexOf(
+      '#### Step 8.6: Render Final Synced Project Links',
+    );
+    const newPrIndex = content.indexOf('### Step 11: Open PR in GitHub');
+    const existingPrIndex = content.indexOf(
+      '### Step 11.5: Sync Open-PR Description on GitHub',
+    );
+
+    expect(finalLinksIndex).toBeGreaterThanOrEqual(0);
+    expect(newPrIndex).toBeGreaterThan(finalLinksIndex);
+    expect(existingPrIndex).toBeGreaterThan(newPrIndex);
+    expect(content).toMatch(
+      /required even when no project recap was selected and\s+`summaryExportFile` is null/,
+    );
+    expect(content).toContain(
+      'FINAL_LINK_ARGS=("$PROJECT_NAME" --format markdown)',
+    );
+    expect(content).toContain(
+      'FINAL_LINK_ARGS+=(--durable-summary "$SUMMARY_EXPORT_FILE")',
+    );
+    expect(content).toMatch(
+      /WAS_PR_OPEN_AT_START="false"[\s\S]*?Step 11 creates the new PR[\s\S]*?WAS_PR_OPEN_AT_START="true"[\s\S]*?Step 11\.5 updates the already-open PR/,
+    );
+    expect(content).toContain(
+      'Neither path depends on `projectRecapExport` or a configured',
+    );
+    expect(content).toContain('`archive.summaryExportPath`.');
+  });
 });

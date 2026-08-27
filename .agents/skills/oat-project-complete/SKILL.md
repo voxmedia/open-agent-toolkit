@@ -551,7 +551,8 @@ printf '%s\n' "$ARCHIVE_OUTPUT"
 Parse `ARCHIVE_OUTPUT` as the `oat project archive --json` report. Require
 `status: "ok"`, `mode: "apply"`, and a non-empty `archivePath`; use its
 `s3Path`, `summaryExportFile`, `lifecycleCommit`, and `warnings` fields for later reporting. Set
-`ARCHIVE_PATH` from `archivePath`, then set `PROJECT_PATH="$ARCHIVE_PATH"`.
+`ARCHIVE_PATH` from `archivePath`, set `SUMMARY_EXPORT_FILE` from
+`summaryExportFile` (empty when null), then set `PROJECT_PATH="$ARCHIVE_PATH"`.
 
 For a synced project, require a full `lifecycleCommit` SHA in the archive
 report and set `LIFECYCLE_COMMIT` to it. This is the parent-branch record and
@@ -594,10 +595,41 @@ Omit either link when its containing artifact does not exist.
 
 Use the current head branch for the blob URL while the PR is open. Never link to `.oat/projects/archived/`; it is gitignored and will return 404 remotely.
 
-When `summaryExportFile` is non-null, render the final synced block with
-`oat project links "$PROJECT_NAME" --durable-summary "$summaryExportFile" --format markdown`
-and replace the delimited block in the PR body. The pinned ref link remains;
-the durable summary is appended rather than substituted.
+The final synced links block is rendered independently in Step 8.6. Do not
+make pinned project links conditional on a recap export.
+
+#### Step 8.6: Render Final Synced Project Links
+
+Run this for every synced completion after the final project ref or archive SHA
+is known. It is required even when no project recap was selected and
+`summaryExportFile` is null.
+
+Locate the PR-description artifact under the current `PROJECT_PATH` (which is
+the archive path after Step 8). Render the canonical pinned block:
+
+```bash
+FINAL_LINK_ARGS=("$PROJECT_NAME" --format markdown)
+if [[ -n "${SUMMARY_EXPORT_FILE:-}" ]]; then
+  test -f "$SUMMARY_EXPORT_FILE" || exit 1
+  git ls-files --error-unmatch -- "$SUMMARY_EXPORT_FILE" >/dev/null || exit 1
+  git check-ignore --quiet -- "$SUMMARY_EXPORT_FILE" && exit 1
+  FINAL_LINK_ARGS+=(--durable-summary "$SUMMARY_EXPORT_FILE")
+fi
+FINAL_PROJECT_LINKS=$(oat project links "${FINAL_LINK_ARGS[@]}") || exit 1
+```
+
+Insert `FINAL_PROJECT_LINKS` when the body has no
+`<!-- oat:project-links:start -->` block, or replace exactly the existing
+delimited block through `<!-- oat:project-links:end -->`. Do not duplicate the
+markers. The base invocation remains
+`oat project links "$PROJECT_NAME" --format markdown`; add
+`--durable-summary` only for the verified tracked export above.
+
+Both PR paths consume this final body: when
+`WAS_PR_OPEN_AT_START="false"`, Step 11 creates the new PR with it; when
+`WAS_PR_OPEN_AT_START="true"`, Step 11.5 updates the already-open PR with it.
+Neither path depends on `projectRecapExport` or a configured
+`archive.summaryExportPath`.
 
 ### Step 9: Regenerate Dashboard
 
