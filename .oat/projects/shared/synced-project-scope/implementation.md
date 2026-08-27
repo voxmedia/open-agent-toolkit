@@ -1,9 +1,12 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p02-review
+    reason: 'Terminal p02 review cycle found two Important retry-path defects after both configured fix iterations were consumed; operator direction is required.'
+    since: 2026-08-27
 oat_last_updated: 2026-08-27
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,11 +30,11 @@ oat_generated: false
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 10    | 10/10     |
-| Phase 2 | pending  | 11    | 0/11      |
+| Phase 2 | blocked  | 11    | 11/11     |
 | Phase 3 | pending  | 10    | 0/10      |
 | Phase 4 | pending  | 11    | 0/11      |
 
-**Total:** 10/42 tasks completed
+**Total:** 21/42 tasks completed
 
 ---
 
@@ -145,13 +148,71 @@ oat_generated: false
 
 ## Phase 2: CLI surface
 
-**Status:** pending
-**Started:** -
+**Status:** blocked - implementation complete; terminal review retry exhausted
+**Started:** 2026-08-27
+
+### Phase Summary
+
+**Outcome:** All 11 planned CLI-surface tasks are implemented, including scope-aware scaffolding, push/pull/list/scope commands, remote adoption, coordination children, and synced-aware open/pause behavior. One phase recovery updated stale integration expectations after the default changed to synced.
+
+**Verification:** Full CLI suite passed at 3,777 tests after final fixes; focused affected surfaces, p02 e2e/split flows, CLI lint/format/type-check, and control-plane build/tests/type-check passed against committed HEAD.
+
+**Review disposition:** Three independent rounds ran. Two bounded fix iterations resolved 11 findings, but the terminal review still found 2 Important retry-path defects. Automatic fix authority is exhausted; Phase 3 did not start.
 
 ### Task p02-t01: `projects.defaultScope` config key
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `90f1cbcb5a5825d1e1e3faafd87157bdba87ff59`
+
+### Task p02-t02: Scope-aware scaffold
+
+**Status:** completed
+**Commit:** `38d5e05fdeb94914ffeb039d268583e66b7603a8`
+
+### Task p02-t03: `oat project new --scope`
+
+**Status:** completed
+**Commit:** `25ccd72816af2f40d1efb75eb7e6cec71b2f3f74`
+
+### Task p02-t04: `oat project scope`
+
+**Status:** completed
+**Commit:** `50bab322a99658d6a147923a22f0f1ed1295c38c`
+
+### Task p02-t05: `oat project push`
+
+**Status:** completed
+**Commit:** `6c2c463dc517fda7a0efae0a89410358e9bc33ca`
+
+### Task p02-t06: `oat project pull`
+
+**Status:** completed
+**Commit:** `b5f9d74dc189c2d8925442983e4c8a88c11f656c`
+
+### Task p02-t07: `oat project list` across scopes
+
+**Status:** completed
+**Commit:** `8a949417f26581f000be94793ca2c006f521d6ad`
+
+### Task p02-t08: End-to-end synced lifecycle
+
+**Status:** completed
+**Commit:** `9d9c591de2872028e71b30843ac1caa33584b618`
+
+### Task p02-t09: `oat project list --remote`
+
+**Status:** completed
+**Commit:** `d4750c84290410baab8ddfc24cf9514e6543de96`
+
+### Task p02-t10: Adopting pull and coordination children
+
+**Status:** completed
+**Commit:** `87f688fab14db8acd44fa139cb1fb6d91b9aeb18`
+
+### Task p02-t11: Scope-aware `oat project open` and `oat project pause`
+
+**Status:** completed
+**Commit:** `34ecc0c30898dbccd20751d37b5adbc864fc587e`
 
 ---
 
@@ -285,6 +346,45 @@ lifecycle_outcome:
 
 - Non-blocking Minor: replace the `@shared/../__tests__/synced-fixture` test import with a traversal-free explicit alias when that import surface is next touched.
 
+### Run 3 - 2026-08-27T08:26:53Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Codex pinned variants)
+**Status:** blocked - p02 terminal review retry exhausted
+
+#### Phase Outcomes
+
+| Phase | Verdict | Tasks | Root review | Fix loops |
+| ----- | ------- | ----- | ----------- | --------- |
+| p02   | blocked | 11/11 | blocked     | 2/2       |
+
+**Implementation dispatch:** `oat-phase-implementer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high), request `dispatch-synced-project-scope-p02-20260827T063331Z`.
+
+**Task commits:** `90f1cbcb`, `38d5e05f`, `25ccd728`, `50bab322`, `6c2c463d`, `b5f9d74d`, `8a949417`, `9d9c591d`, `d4750c84`, `87f688fa`, `34ecc0c3`.
+
+**Phase recovery:** attempt 1/10 recovered stale integration expectations in `43820a76`; canonical event `recovery-p02-01-cli-phase-suite`; ledger settled at 1/10 with `pending_attempt: null`.
+
+**Review round 1:** blocked with 1 Critical, 4 Important, 2 Medium; artifact `reviews/code-p02-review-2026-08-27T071958Z.md`; reviewed head `7082c2b4205c8e287d79442e4d09bc76ced8ed80`.
+
+**Fix iteration 1:** `1fef87205999940086aeb9e14d0c3d80d8309c5a`, continuation `continuation-p02-review-r1-fix-01-20260827T073752Z`; all seven findings addressed.
+
+**Review round 2:** blocked with 4 Important; artifact `reviews/code-p02-review-2026-08-27T075217Z.md`; reviewed head `1fef87205999940086aeb9e14d0c3d80d8309c5a`.
+
+**Fix iteration 2:** `00c9f24efb6b4a5fd4aaaadd40765853377c9b27`, continuation `continuation-p02-review-r2-fix-02-20260827T080529Z`; all four findings addressed.
+
+**Review round 3:** terminal blocked with 2 Important; artifact `reviews/code-p02-review-2026-08-27T081844Z.md`; reviewed head `00c9f24efb6b4a5fd4aaaadd40765853377c9b27`.
+
+**Review dispatch:** every round used fresh `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high). No reviewer attempted nested reconnaissance.
+
+**Parallel groups:** None - the validated plan is fully sequential.
+
+**Outstanding items requiring operator direction:**
+
+- Make post-publication active-pointer recovery use the scope-correct project path so duplicate slugs across scopes cannot make the emitted recovery command ambiguous.
+- Make mid-sequence synced split publication failure resumable and preserve transport/system exit classification; a normal `--resume` must republish every parent/child ref.
+- Configured review-fix iterations are exhausted at 2/2. Phase 3 has not started.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -345,6 +445,14 @@ Chronological log of implementation progress.
 - [x] p01 fresh re-review - passed at 0 Critical / 0 Important
 - [ ] p02-t01 - next task
 
+### 2026-08-27 - p02 terminal review stop
+
+- [x] p02-t01 through p02-t11 - eleven verified planned commits
+- [x] p02 recovery attempt 1/10 - recovered and settled
+- [x] p02 review fix iterations 1 and 2 - eleven findings resolved
+- [ ] p02 terminal review - 2 Important findings remain; retry limit exhausted
+- [ ] p03-t01 - not started
+
 ---
 
 ## Deviations from Plan / Design
@@ -362,7 +470,7 @@ Track test execution during implementation.
 | Phase | Tests Run | Passed | Failed | Coverage      |
 | ----- | --------- | ------ | ------ | ------------- |
 | 1     | 60        | 60     | 0      | not collected |
-| 2     | -         | -      | -      | -             |
+| 2     | 3,777     | 3,777  | 0      | not collected |
 
 ## Final Summary (for PR/docs)
 
