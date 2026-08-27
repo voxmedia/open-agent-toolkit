@@ -3,6 +3,10 @@ import { join } from 'node:path';
 
 import { compareVersions } from '@commands/init/tools/shared/version';
 import { getSkillVersion } from '@commands/shared/frontmatter';
+import {
+  digestDirectory,
+  digestFile,
+} from '@commands/tools/shared/content-digest';
 import { copyDirectory, copySingleFile, dirExists, fileExists } from '@fs/io';
 
 export type CopyStatus = 'copied' | 'updated' | 'skipped';
@@ -52,6 +56,11 @@ export async function copyDirWithStatus(
   }
 
   if (exists && force) {
+    if (
+      (await digestDirectory(source)) === (await digestDirectory(destination))
+    ) {
+      return 'skipped';
+    }
     await rm(destination, { recursive: true, force: true });
     await copyDirectory(source, destination);
     await ensureNestedScriptsExecutable(destination);
@@ -75,6 +84,9 @@ export async function copyFileWithStatus(
   }
 
   if (exists && force) {
+    if ((await digestFile(source)) === (await digestFile(destination))) {
+      return 'skipped';
+    }
     await rm(destination, { recursive: true, force: true });
     await copySingleFile(source, destination);
     return 'updated';
@@ -98,6 +110,11 @@ export async function copyDirWithVersionCheck(
   }
 
   if (force) {
+    if (
+      (await digestDirectory(source)) === (await digestDirectory(destination))
+    ) {
+      return { status: 'skipped' };
+    }
     await rm(destination, { recursive: true, force: true });
     await copyDirectory(source, destination);
     await ensureNestedScriptsExecutable(destination);
