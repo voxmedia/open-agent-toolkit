@@ -81,6 +81,7 @@ async function findPhysicalManagedAssets(
   const paths = getPackDefinition(input.pack)
     .assets.filter(
       (asset) =>
+        asset.sharedOwner === undefined &&
         asset.scopes.includes(input.scope) &&
         asset.ownership[input.scope] === 'managed',
     )
@@ -89,6 +90,32 @@ async function findPhysicalManagedAssets(
     paths.map(async (path) => ((await pathExists(path)) ? path : null)),
   );
   return observed.filter((path): path is string => path !== null);
+}
+
+/**
+ * Returns ownership evidence that is safe to use when deciding whether a
+ * shared managed asset must be retained. A shared asset cannot prove that any
+ * one of its possible owners is installed, so only declared intent or a
+ * non-shared managed asset is considered.
+ */
+export async function hasScopedPackOwnershipEvidence(
+  input: IntentReadInput,
+): Promise<boolean> {
+  const config = await readConcreteConfig(input);
+  if (config.tools?.[input.pack] === true) {
+    return true;
+  }
+
+  const paths = getPackDefinition(input.pack)
+    .assets.filter(
+      (asset) =>
+        asset.sharedOwner === undefined &&
+        asset.scopes.includes(input.scope) &&
+        asset.ownership[input.scope] === 'managed',
+    )
+    .map(({ destination }) => join(input.scopeRoot, destination));
+
+  return (await Promise.all(paths.map(pathExists))).some(Boolean);
 }
 
 export async function readScopedPackIntent(

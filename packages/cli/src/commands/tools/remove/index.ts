@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { rm } from 'node:fs/promises';
+import { lstat, rm } from 'node:fs/promises';
 
 import { buildCommandContext } from '@app/command-context';
 import { withScopeOption } from '@commands/shared/scope-option';
@@ -13,7 +13,7 @@ import {
 } from '@commands/tools/shared/auto-sync';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import {
-  readScopedPackIntent,
+  hasScopedPackOwnershipEvidence,
   writeScopedPackIntent,
 } from '@commands/tools/shared/scoped-pack-intent';
 import type { PackName } from '@commands/tools/shared/types';
@@ -40,8 +40,24 @@ const defaultDependencies: RemoveToolsDependencies = {
   removeFile: async (path) => {
     await rm(path, { force: true });
   },
-  isPackIntended: async (pack, scope, scopeRoot) =>
-    (await readScopedPackIntent({ pack, scope, scopeRoot })).enabled,
+  pathExists: async (path) => {
+    try {
+      await lstat(path);
+      return true;
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
+        return false;
+      }
+      throw error;
+    }
+  },
+  hasPackOwnershipEvidence: async (pack, scope, scopeRoot) =>
+    hasScopedPackOwnershipEvidence({ pack, scope, scopeRoot }),
 };
 
 const defaultSyncDependencies: AutoSyncDependencies = {
@@ -111,10 +127,11 @@ export function createToolsRemoveCommand(
       if (!dryRun && target.kind !== 'name') {
         const packs = target.kind === 'pack' ? [target.pack] : [...VALID_PACKS];
         for (const scope of scopes) {
-          const scopeRoot =
-            scope === 'project'
-              ? await resolveProjectRoot(context.cwd)
-              : await resolveScopeRoot(scope, context.cwd, context.home);
+          const scopeRoot = await dependencies.resolveScopeRoot(
+            scope,
+            context.cwd,
+            context.home,
+          );
           for (const pack of packs) {
             await writeScopedPackIntent({
               pack,

@@ -116,6 +116,8 @@ describe('createToolsRemoveCommand config writes', () => {
       resolveAssetsRoot: vi.fn(async () => '/assets'),
       removeDirectory,
       removeFile: vi.fn(async () => {}),
+      pathExists: vi.fn(async () => false),
+      hasPackOwnershipEvidence: vi.fn(async () => false),
     };
 
     const command = createToolsRemoveCommand(dependencies, {
@@ -149,7 +151,8 @@ describe('createToolsRemoveCommand config writes', () => {
       resolveAssetsRoot: vi.fn(async () => '/assets'),
       removeDirectory: vi.fn(async () => {}),
       removeFile: vi.fn(async () => {}),
-      isPackIntended: vi.fn(async () => false),
+      pathExists: vi.fn(async () => false),
+      hasPackOwnershipEvidence: vi.fn(async () => false),
     };
 
     const command = createToolsRemoveCommand(dependencies, {
@@ -167,5 +170,33 @@ describe('createToolsRemoveCommand config writes', () => {
       tools: { ideas: true },
     });
     expect(process.exitCode).toBeUndefined();
+  });
+
+  it('does not clear intent when a managed asset remains after removal', async () => {
+    scanToolsMock.mockResolvedValue([]);
+    const dependencies: RemoveToolsDependencies = {
+      scanTools: scanToolsMock,
+      resolveScopeRoot: vi.fn(async (scope, cwd, home) =>
+        scope === 'project' ? cwd : home,
+      ),
+      resolveAssetsRoot: vi.fn(async () => '/assets'),
+      removeDirectory: vi.fn(async () => {}),
+      removeFile: vi.fn(async () => {}),
+      pathExists: vi.fn(async () => true),
+      hasPackOwnershipEvidence: vi.fn(async () => false),
+    };
+    const command = createToolsRemoveCommand(dependencies, {
+      runSync: vi.fn(async () => {}),
+    });
+
+    await expect(
+      runCommand(
+        command,
+        ['--pack', 'project-management', '--no-sync'],
+        ['--scope', 'project', '--cwd', '/tmp/workspace'],
+      ),
+    ).rejects.toThrow('Managed pack removal incomplete');
+
+    expect(writeOatConfig).not.toHaveBeenCalled();
   });
 });

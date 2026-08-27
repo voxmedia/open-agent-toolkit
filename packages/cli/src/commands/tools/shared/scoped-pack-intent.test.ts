@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  hasScopedPackOwnershipEvidence,
   readScopedPackIntent,
   writeScopedPackIntent,
 } from './scoped-pack-intent';
@@ -164,5 +165,60 @@ describe('scoped pack intent', () => {
     await expect(
       readScopedPackIntent({ pack: 'workflows', scope: 'project', scopeRoot }),
     ).resolves.toMatchObject({ enabled: true, source: 'declared' });
+  });
+
+  it('does not treat a shared asset as legacy ownership evidence', async () => {
+    const scopeRoot = await makeScopeRoot();
+    const sharedScript = join(
+      scopeRoot,
+      '.oat',
+      'scripts',
+      'resolve-tracking.sh',
+    );
+    await mkdir(join(scopeRoot, '.oat', 'scripts'), { recursive: true });
+    await writeFile(sharedScript, '#!/bin/sh\n');
+
+    await expect(
+      hasScopedPackOwnershipEvidence({
+        pack: 'docs',
+        scope: 'user',
+        scopeRoot,
+      }),
+    ).resolves.toBe(false);
+    await expect(
+      hasScopedPackOwnershipEvidence({
+        pack: 'workflows',
+        scope: 'user',
+        scopeRoot,
+      }),
+    ).resolves.toBe(false);
+  });
+
+  it('accepts declared intent or a non-shared physical managed asset', async () => {
+    const scopeRoot = await makeScopeRoot();
+    await writeScopedPackIntent({
+      pack: 'docs',
+      scope: 'user',
+      scopeRoot,
+      enabled: true,
+    });
+    await mkdir(join(scopeRoot, '.agents', 'skills', 'oat-project-implement'), {
+      recursive: true,
+    });
+
+    await expect(
+      hasScopedPackOwnershipEvidence({
+        pack: 'docs',
+        scope: 'user',
+        scopeRoot,
+      }),
+    ).resolves.toBe(true);
+    await expect(
+      hasScopedPackOwnershipEvidence({
+        pack: 'workflows',
+        scope: 'user',
+        scopeRoot,
+      }),
+    ).resolves.toBe(true);
   });
 });

@@ -1,15 +1,12 @@
 import { join } from 'node:path';
 
-import {
-  WORKFLOW_AGENTS,
-  WORKFLOW_TEMPLATES,
-} from '@commands/init/tools/shared/skill-manifest';
-import {
-  getPackAssets,
-  PACK_MANIFEST,
-} from '@commands/tools/shared/pack-manifest';
+import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
-import type { PackName, ToolInfo } from '@commands/tools/shared/types';
+import type {
+  PackAssetDefinition,
+  PackName,
+  ToolInfo,
+} from '@commands/tools/shared/types';
 import type { ConcreteScope } from '@shared/types';
 
 export type RemoveTarget =
@@ -27,7 +24,8 @@ export interface RemoveToolsDependencies {
   resolveAssetsRoot: () => Promise<string>;
   removeDirectory: (path: string) => Promise<void>;
   removeFile: (path: string) => Promise<void>;
-  isPackIntended?: (
+  pathExists: (path: string) => Promise<boolean>;
+  hasPackOwnershipEvidence: (
     pack: PackName,
     scope: ConcreteScope,
     scopeRoot: string,
@@ -73,46 +71,52 @@ async function removeTool(
   }
 }
 
-async function removePackCompanionAssets(
-  pack: PackName,
-  target: RemoveTarget,
+function isDirectoryAsset(asset: PackAssetDefinition): boolean {
+  return asset.kind === 'skill' || asset.kind === 'directory';
+}
+
+function selectedPacks(target: Exclude<RemoveTarget, { kind: 'name' }>) {
+  return target.kind === 'pack'
+    ? [target.pack]
+    : PACK_MANIFEST.map(({ name }) => name);
+}
+
+function selectedManagedAssets(
+  packs: readonly PackName[],
+  scope: ConcreteScope,
+): Array<{ pack: PackName; asset: PackAssetDefinition }> {
+  return PACK_MANIFEST.filter(({ name }) => packs.includes(name)).flatMap(
+    ({ name, assets }) =>
+      assets
+        .filter(
+          (asset) =>
+            asset.scopes.includes(scope) &&
+            asset.ownership[scope] === 'managed',
+        )
+        .map((asset) => ({ pack: name, asset })),
+  );
+}
+
+async function removeManagedPackAssets(
+  packs: readonly PackName[],
   scope: ConcreteScope,
   scopeRoot: string,
   dryRun: boolean,
-  removedFiles: Set<string>,
   deps: RemoveToolsDependencies,
 ): Promise<void> {
   if (dryRun) {
     return;
   }
 
-  if (pack === 'workflows' && scope === 'user') {
-    for (const agent of WORKFLOW_AGENTS) {
-      const path = join(scopeRoot, '.agents', 'agents', agent);
-      if (!removedFiles.has(path)) {
-        removedFiles.add(path);
-        await deps.removeFile(path);
-      }
-    }
-
-    for (const template of WORKFLOW_TEMPLATES) {
-      const path = join(scopeRoot, '.oat', 'templates', template);
-      if (!removedFiles.has(path)) {
-        removedFiles.add(path);
-        await deps.removeFile(path);
-      }
-    }
-  }
-
-  for (const asset of getPackAssets(pack, 'script')) {
-    if (!asset.scopes.includes(scope) || asset.ownership[scope] !== 'managed') {
-      continue;
-    }
-
+  const retainedPaths = new Set<string>();
+  const removedPaths = new Set<string>();
+  for (const { asset } of selectedManagedAssets(packs, scope)) {
+    const path = join(scopeRoot, asset.destination);
+    if (removedPaths.has(path) || retainedPaths.has(path)) continue;
     if (asset.sharedOwner) {
       const otherOwners = PACK_MANIFEST.filter(
         ({ name, assets }) =>
-          name !== pack &&
+          !packs.includes(name) &&
           assets.some(
             (candidate) =>
               candidate.sharedOwner === asset.sharedOwner &&
@@ -121,26 +125,35 @@ async function removePackCompanionAssets(
           ),
       );
       const retainedByAnotherPack = await Promise.all(
-        otherOwners.map(async ({ name }) => {
-          const selectedForRemoval =
-            target.kind === 'all' ||
-            (target.kind === 'pack' && target.pack === name);
-          return (
-            !selectedForRemoval &&
-            (await deps.isPackIntended?.(name, scope, scopeRoot)) === true
-          );
-        }),
+        otherOwners.map(({ name }) =>
+          deps.hasPackOwnershipEvidence(name, scope, scopeRoot),
+        ),
       );
       if (retainedByAnotherPack.some(Boolean)) {
+        retainedPaths.add(path);
         continue;
       }
     }
 
-    const path = join(scopeRoot, asset.destination);
-    if (!removedFiles.has(path)) {
-      removedFiles.add(path);
+    removedPaths.add(path);
+    if (isDirectoryAsset(asset)) {
+      await deps.removeDirectory(path);
+    } else {
       await deps.removeFile(path);
     }
+  }
+
+  const remaining = (
+    await Promise.all(
+      [...removedPaths].map(async (path) =>
+        (await deps.pathExists(path)) ? path : null,
+      ),
+    )
+  ).filter((path): path is string => path !== null);
+  if (remaining.length > 0) {
+    throw new Error(
+      `Managed pack removal incomplete; assets remain: ${remaining.join(', ')}`,
+    );
   }
 }
 
@@ -153,7 +166,6 @@ export async function removeTools(
   deps: RemoveToolsDependencies,
 ): Promise<RemoveResult> {
   const removed: RemovedTool[] = [];
-  const removedCompanionFiles = new Set<string>();
   const assetsRoot = await deps.resolveAssetsRoot();
 
   for (const scope of scopes) {
@@ -162,26 +174,23 @@ export async function removeTools(
     const matched = tools.filter((t) => matchesTarget(t, target));
 
     for (const tool of matched) {
-      await removeTool(tool, scopeRoot, dryRun, deps);
+      if (
+        target.kind === 'name' ||
+        (target.kind === 'all' && tool.pack === 'custom')
+      ) {
+        await removeTool(tool, scopeRoot, dryRun, deps);
+      }
       removed.push({ name: tool.name, type: tool.type, scope: tool.scope });
     }
 
     if (target.kind !== 'name') {
-      const selectedPacks =
-        target.kind === 'pack'
-          ? [target.pack]
-          : PACK_MANIFEST.map(({ name }) => name);
-      for (const pack of selectedPacks) {
-        await removePackCompanionAssets(
-          pack,
-          target,
-          scope,
-          scopeRoot,
-          dryRun,
-          removedCompanionFiles,
-          deps,
-        );
-      }
+      await removeManagedPackAssets(
+        selectedPacks(target),
+        scope,
+        scopeRoot,
+        dryRun,
+        deps,
+      );
     }
   }
 
