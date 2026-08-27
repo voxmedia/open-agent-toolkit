@@ -655,6 +655,88 @@ describe('archive utils', () => {
     }
   });
 
+  it.each(['clean', 'dirty', 'unpushed'] as const)(
+    'fails closed for a %s synced checkout without its discovery record',
+    async (checkoutState) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const target = buildSyncTarget(
+          fixture.cloneA,
+          '.oat/projects/shared',
+          `missing-record-${checkoutState}`,
+        );
+        await createSyncedProject(target, defaultGitRunner);
+        await writeFile(
+          join(target.projectPath, 'state.md'),
+          '# state\n',
+          'utf8',
+        );
+        await pushSynced(target, defaultGitRunner, {});
+
+        if (checkoutState === 'dirty') {
+          await writeFile(
+            join(target.projectPath, 'pending.md'),
+            'dirty\n',
+            'utf8',
+          );
+        } else if (checkoutState === 'unpushed') {
+          await writeFile(
+            join(target.projectPath, 'state.md'),
+            '# state\nunpushed\n',
+            'utf8',
+          );
+          await defaultGitRunner.run(['add', 'state.md'], {
+            cwd: target.projectPath,
+          });
+          await defaultGitRunner.run(
+            [
+              '-c',
+              'core.hooksPath=/dev/null',
+              'commit',
+              '-m',
+              'test: leave synced project unpushed',
+            ],
+            { cwd: target.projectPath },
+          );
+        }
+
+        const registrationsBefore = await defaultGitRunner.run(
+          ['worktree', 'list', '--porcelain'],
+          { cwd: fixture.cloneA },
+        );
+        const archiveRoot = join(
+          fixture.cloneA,
+          '.oat',
+          'projects',
+          'archived',
+        );
+
+        await expect(
+          archiveProjectOnCompletion({
+            repoRoot: fixture.cloneA,
+            projectPath: target.projectPath,
+            projectName: target.slug,
+            projectsRoot: '.oat/projects/shared',
+            s3SyncOnComplete: false,
+          }),
+        ).rejects.toThrow(/missing its discovery record.*project pull/s);
+
+        await expect(access(target.projectPath)).resolves.toBeUndefined();
+        await expect(
+          access(join(target.projectPath, '.git')),
+        ).resolves.toBeUndefined();
+        await expect(access(archiveRoot)).rejects.toThrow();
+        const registrationsAfter = await defaultGitRunner.run(
+          ['worktree', 'list', '--porcelain'],
+          { cwd: fixture.cloneA },
+        );
+        expect(registrationsAfter.stdout).toBe(registrationsBefore.stdout);
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+  );
+
   it.each(['failed', 'incomplete'] as const)(
     'exports only the selected %s recap package before deleting the active project',
     async (outcome) => {

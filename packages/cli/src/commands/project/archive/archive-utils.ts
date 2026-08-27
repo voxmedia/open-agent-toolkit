@@ -1359,8 +1359,7 @@ export async function archiveProjectOnCompletion(
   const writeRecord = dependencies.writeSyncedRecord ?? writeSyncedRecord;
   const record = await readRecord(recordPath);
   const isSynced =
-    resolveProjectScope(options.projectPath, options.projectsRoot) ===
-      'synced' && record !== null;
+    resolveProjectScope(options.projectPath, options.projectsRoot) === 'synced';
   const syncTarget = isSynced
     ? buildSyncTarget(
         options.repoRoot,
@@ -1374,7 +1373,7 @@ export async function archiveProjectOnCompletion(
   if (syncTarget) {
     if (!activeRecord) {
       throw new CliError(
-        `Synced project ${options.projectName} is missing its discovery record.`,
+        `Synced project ${options.projectName} is missing its discovery record; restore the record or run oat project pull ${options.projectName} from a clean checkout to adopt the project before archiving.`,
         2,
       );
     }
