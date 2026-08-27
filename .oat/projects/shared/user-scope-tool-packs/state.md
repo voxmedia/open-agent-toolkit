@@ -18,7 +18,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 2 # default restored after the authorized p03 extension reached a passing verdict
 oat_phase_recovery_policy:
   default_attempt_limit: 10
@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T23:05:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T23:08:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -98,7 +98,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation complete and merged with main — final closeout re-review pending
+**Status:** Implementation and final closeout review complete
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -365,7 +365,7 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Final closeout decision: finish the original project before follow-up implementation
 - ✓ Three deferred-work backlog items and implementation-ready quick projects recorded
 - ✓ Final closeout review findings converted into durable tracker/ledger fixes
-- ⧗ Decisive final closeout re-review
+- ✓ Decisive final closeout re-review passed with zero findings
 
 ## Blockers
 
@@ -373,5 +373,5 @@ None.
 
 ## Next Milestone
 
-Pass the decisive final closeout re-review, then document, publish, and complete
-the project lifecycle.
+Run documentation synchronization, publish the final PR, and complete the
+project lifecycle.
