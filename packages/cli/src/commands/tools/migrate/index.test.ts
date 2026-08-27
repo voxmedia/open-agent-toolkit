@@ -38,6 +38,7 @@ function preview(): PackMigrationPreview {
     pack: 'ideas',
     from: 'project',
     to: 'user',
+    projectRoot: '/project',
     sourceIntent: 'declared',
     status: 'ready',
     additions: [
@@ -101,7 +102,7 @@ function createHarness(
     recovery:
       completionStatus === 'source-removal-failed'
         ? [
-            'Re-run interactively: oat tools migrate --pack ideas --from project --to user',
+            'Re-run interactively: oat --cwd /project tools migrate --pack ideas --from project --to user',
           ]
         : undefined,
   };
@@ -212,6 +213,7 @@ describe('createToolsMigrateCommand', () => {
   it('returns an inspectable typed blocked preview without mutating', async () => {
     const blocked = preview();
     blocked.status = 'blocked';
+    blocked.additions = [];
     blocked.conflicts = [
       {
         assetId: 'skill:oat-idea-new',
@@ -228,6 +230,7 @@ describe('createToolsMigrateCommand', () => {
     expect(harness.capture.jsonPayloads[0]).toMatchObject({
       status: 'blocked',
       preview: {
+        additions: [],
         conflicts: [
           {
             assetId: 'skill:oat-idea-new',
@@ -240,6 +243,16 @@ describe('createToolsMigrateCommand', () => {
     expect(harness.executeDestination).not.toHaveBeenCalled();
     expect(harness.confirmAction).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(1);
+
+    process.exitCode = undefined;
+    const human = createHarness({ preview: blocked });
+    await runCommand(human.command, requiredArgs);
+    const rendered = human.capture.info.join('\n');
+    expect(rendered).toMatch(/additions: 0/i);
+    expect(rendered).toContain(
+      'skill:oat-idea-new [skill] user newer: /user/.agents/skills/oat-idea-new',
+    );
+    expect(rendered).not.toContain('destination-reconcile');
   });
 
   it('stops before source confirmation when destination provider sync fails', async () => {

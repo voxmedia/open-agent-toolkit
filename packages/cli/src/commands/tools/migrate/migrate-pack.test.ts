@@ -215,6 +215,9 @@ describe('planPackMigration', () => {
         }),
       ],
     });
+    expect(blocked.additions).not.toContainEqual(
+      expect.objectContaining({ assetId: 'skill:oat-idea-new' }),
+    );
 
     const legacyFalse = planPackMigration({
       pack: 'ideas',
@@ -381,7 +384,11 @@ describe('executeMigrationDestination', () => {
     );
     expect(failed).toMatchObject({
       status: 'destination-sync-failed',
-      pendingSync: { scope: 'user', action: 'install' },
+      pendingSync: {
+        scope: 'user',
+        action: 'install',
+        projectRoot: '/project',
+      },
     });
     expect(failed.recovery).toContainEqual(
       expect.stringMatching(/source was retained/i),
@@ -528,7 +535,7 @@ describe('completeMigrationSourceRemoval', () => {
 
       expect(result.status).toBe('retained-both');
       expect(result.recovery).toContain(
-        'Re-run interactively: oat tools migrate --pack ideas --from project --to user',
+        'Re-run interactively: oat --cwd /project tools migrate --pack ideas --from project --to user',
       );
       expect(events).toEqual([]);
     },
@@ -629,7 +636,7 @@ describe('completeMigrationSourceRemoval', () => {
       pendingSync: { scope: 'project', action: 'remove' },
     });
     expect(failed.pendingSync?.command).toMatch(
-      /^oat sync --scope project --remove-canonical /,
+      /^oat --cwd \/project sync --scope project --remove-canonical /,
     );
     const removalsBeforeRetry = events.filter((event) =>
       event.startsWith('remove:'),

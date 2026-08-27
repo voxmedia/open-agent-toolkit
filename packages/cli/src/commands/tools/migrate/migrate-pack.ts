@@ -31,6 +31,7 @@ export interface PackMigrationPreview {
   pack: PackName;
   from: ConcreteScope;
   to: ConcreteScope;
+  projectRoot: string;
   sourceIntent: ScopedPackInventory['intent']['source'];
   status: 'ready' | 'blocked';
   additions: readonly MigrationAssetPreview[];
@@ -45,6 +46,7 @@ export interface PackMigrationPreview {
 export interface MigrationPendingSync {
   scope: ConcreteScope;
   action: 'install' | 'remove';
+  projectRoot: string;
   canonicalPaths: readonly string[];
   command: string;
 }
@@ -180,8 +182,14 @@ export function planPackMigration(
       operation.kind === 'write-intent' ? [] : [operation.assetId],
     ),
   );
+  const conflictIds = new Set(
+    conflicts.map(({ definition: asset }) => asset.id),
+  );
   const additions = input.destinationInventory.assets
-    .filter(({ definition }) => additionIds.has(definition.id))
+    .filter(
+      ({ definition }) =>
+        additionIds.has(definition.id) && !conflictIds.has(definition.id),
+    )
     .map((asset) => previewAsset(asset, input.to, 'destination-reconcile'));
   const duplicates = input.destinationInventory.assets
     .filter(
@@ -245,6 +253,8 @@ export function planPackMigration(
     pack: input.pack,
     from: input.from,
     to: input.to,
+    projectRoot:
+      input.from === 'project' ? input.sourceRoot : input.destinationRoot,
     sourceIntent: input.sourceInventory.intent.source,
     status: conflicts.length > 0 ? 'blocked' : 'ready',
     additions,
@@ -313,7 +323,12 @@ export async function executeMigrationDestination(
       canonicalPaths,
     });
   } catch (error) {
-    const pendingSync = pendingSyncState(preview.to, 'install', canonicalPaths);
+    const pendingSync = pendingSyncState(
+      preview,
+      preview.to,
+      'install',
+      canonicalPaths,
+    );
     return {
       preview,
       status: 'destination-sync-failed',
@@ -335,10 +350,23 @@ export async function executeMigrationDestination(
 }
 
 function migrationRetry(preview: PackMigrationPreview): string {
-  return `Re-run interactively: oat tools migrate --pack ${preview.pack} --from ${preview.from} --to ${preview.to}`;
+  return `Re-run interactively: ${renderCommand([
+    'oat',
+    '--cwd',
+    preview.projectRoot,
+    'tools',
+    'migrate',
+    '--pack',
+    preview.pack,
+    '--from',
+    preview.from,
+    '--to',
+    preview.to,
+  ])}`;
 }
 
 function pendingSyncState(
+  preview: PackMigrationPreview,
   scope: ConcreteScope,
   action: 'install' | 'remove',
   canonicalPaths: readonly string[],
@@ -348,14 +376,29 @@ function pendingSyncState(
   return {
     scope,
     action,
+    projectRoot: preview.projectRoot,
     canonicalPaths,
-    command: [
-      'oat sync',
+    command: renderCommand([
+      'oat',
+      '--cwd',
+      preview.projectRoot,
+      'sync',
       '--scope',
       scope,
       ...canonicalPaths.flatMap((path) => [flag, path]),
-    ].join(' '),
+    ]),
   };
+}
+
+function quoteCommandArgument(argument: string): string {
+  if (/^[a-zA-Z0-9_@+=:,./-]+$/.test(argument)) return argument;
+  return process.platform === 'win32'
+    ? `'${argument.replaceAll("'", "''")}'`
+    : `'${argument.replaceAll("'", `'"'"'`)}'`;
+}
+
+function renderCommand(arguments_: readonly string[]): string {
+  return arguments_.map(quoteCommandArgument).join(' ');
 }
 
 export async function completeMigrationSourceRemoval(
@@ -452,6 +495,7 @@ export async function completeMigrationSourceRemoval(
       });
     } catch (error) {
       const pendingSync = pendingSyncState(
+        preview,
         preview.from,
         'remove',
         sourcePlan.changedCanonicalPaths,

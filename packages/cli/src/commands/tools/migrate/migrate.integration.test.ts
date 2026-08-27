@@ -1,3 +1,4 @@
+import { exec as execCallback } from 'node:child_process';
 import {
   chmod,
   lstat,
@@ -8,7 +9,8 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { promisify } from 'node:util';
 
 import {
   copyDirWithStatus,
@@ -45,9 +47,11 @@ import {
   planPackMigration,
   type PackMigrationOutcome,
   type PackMigrationPreview,
+  type MigrationSyncInput,
 } from './migrate-pack';
 
 const temporaryRoots: string[] = [];
+const execShell = promisify(execCallback);
 
 async function temporaryRoot(prefix: string): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), prefix));
@@ -183,6 +187,51 @@ async function writeLegacyFalse(
   });
 }
 
+function quotePosixArgument(argument: string): string {
+  if (/^[a-zA-Z0-9_@+=:,./-]+$/.test(argument)) return argument;
+  return `'${argument.replaceAll("'", `'"'"'`)}'`;
+}
+
+async function prepareRecoveryCommandRuntime(
+  projectRoot: string,
+): Promise<{ outsideRoot: string; env: NodeJS.ProcessEnv }> {
+  const binRoot = await temporaryRoot('oat-migrate-recovery-bin-');
+  const outsideRoot = await temporaryRoot('oat-migrate-outside-');
+  const repositoryRoot = resolve(process.cwd(), '../..');
+  const oatShim = join(binRoot, 'oat');
+  await writeFile(
+    oatShim,
+    `#!/bin/sh\nexec pnpm --dir ${quotePosixArgument(repositoryRoot)} cli:source -- "$@"\n`,
+    'utf8',
+  );
+  await chmod(oatShim, 0o755);
+  await mkdir(join(projectRoot, '.claude', 'skills'), { recursive: true });
+  await mkdir(join(projectRoot, '.oat', 'sync'), { recursive: true });
+  await writeFile(
+    join(projectRoot, '.oat', 'sync', 'config.json'),
+    JSON.stringify({
+      version: 1,
+      defaultStrategy: 'copy',
+      providers: { claude: { enabled: true, strategy: 'copy' } },
+    }),
+    'utf8',
+  );
+  return {
+    outsideRoot,
+    env: {
+      ...process.env,
+      PATH: `${binRoot}:${process.env.PATH ?? ''}`,
+    },
+  };
+}
+
+async function executeRecoveryCommand(
+  command: string,
+  runtime: { outsideRoot: string; env: NodeJS.ProcessEnv },
+): Promise<void> {
+  await execShell(command, { cwd: runtime.outsideRoot, env: runtime.env });
+}
+
 async function installDestination(
   preview: PackMigrationPreview,
   roots: MigrationRoots,
@@ -193,6 +242,7 @@ async function installDestination(
       destination: string,
       force: boolean,
     ) => Promise<unknown>;
+    sync?: (input: MigrationSyncInput) => Promise<void>;
   } = {},
 ): Promise<PackMigrationOutcome> {
   const destinationRoot = roots[preview.to];
@@ -212,9 +262,11 @@ async function installDestination(
         }),
       inventory: async () => inventoryAt(preview.pack, preview.to, roots),
     },
-    sync: async ({ scope, action, canonicalPaths }) => {
-      syncCalls.push({ scope, action, paths: canonicalPaths });
-    },
+    sync:
+      overrides.sync ??
+      (async ({ scope, action, canonicalPaths }) => {
+        syncCalls.push({ scope, action, paths: canonicalPaths });
+      }),
   });
 }
 
@@ -224,6 +276,7 @@ async function removeSource(
   syncCalls: SyncCall[],
   confirmation: 'confirmed' | 'declined' | 'non-interactive',
   removePath?: (path: string, directory: boolean) => Promise<void>,
+  syncOverride?: (input: MigrationSyncInput) => Promise<void>,
 ): Promise<PackMigrationOutcome> {
   const preview = destination.preview;
   const sourceRoot = roots[preview.from];
@@ -252,15 +305,19 @@ async function removeSource(
           hasOwnershipEvidence: async (owner, scope, scopeRoot) =>
             hasScopedPackOwnershipEvidence({ pack: owner, scope, scopeRoot }),
         }),
-      sync: async ({ scope, action, canonicalPaths }) => {
-        syncCalls.push({ scope, action, paths: canonicalPaths });
-      },
+      sync:
+        syncOverride ??
+        (async ({ scope, action, canonicalPaths }) => {
+          syncCalls.push({ scope, action, paths: canonicalPaths });
+        }),
     },
   );
 }
 
-async function createRoots(): Promise<MigrationRoots> {
-  const project = await temporaryRoot('oat-migrate-project-');
+async function createRoots(
+  projectPrefix = 'oat-migrate-project-',
+): Promise<MigrationRoots> {
+  const project = await temporaryRoot(projectPrefix);
   const user = await temporaryRoot('oat-migrate-user-');
   await mkdir(join(project, '.git'), { recursive: true });
   return { project, user, assets: await resolveAssetsRoot() };
@@ -487,6 +544,99 @@ describe('pack migration integration', () => {
       });
     },
   );
+
+  it('executes destination sync recovery from an unrelated cwd using the resolved project root', async () => {
+    const roots = await createRoots("oat migrate project's destination-");
+    const runtime = await prepareRecoveryCommandRuntime(roots.project);
+    const syncCalls: SyncCall[] = [];
+    await installSource('ideas', 'user', roots);
+    const preview = await previewMigration('ideas', 'user', 'project', roots);
+    const failed = await installDestination(preview, roots, syncCalls, {
+      sync: async () => {
+        throw new Error('injected destination provider sync failure');
+      },
+    });
+
+    expect(failed).toMatchObject({
+      status: 'destination-sync-failed',
+      pendingSync: {
+        scope: 'project',
+        action: 'install',
+        projectRoot: roots.project,
+      },
+    });
+    expect(failed.pendingSync?.command).toMatch(/^oat --cwd '/);
+    expect(failed.recovery).toContainEqual(
+      expect.stringContaining(
+        'tools migrate --pack ideas --from user --to project',
+      ),
+    );
+    await executeRecoveryCommand(failed.pendingSync!.command, runtime);
+
+    await expect(
+      pathExists(
+        join(roots.project, '.claude', 'skills', 'oat-idea-new', 'SKILL.md'),
+      ),
+    ).resolves.toBe(true);
+    await expect(inventoryAt('ideas', 'user', roots)).resolves.toMatchObject({
+      completeness: 'complete',
+      intent: { enabled: true },
+    });
+  }, 20_000);
+
+  it('executes source sync recovery from an unrelated cwd without repeating canonical removal', async () => {
+    const roots = await createRoots("oat migrate project's source-");
+    const runtime = await prepareRecoveryCommandRuntime(roots.project);
+    const syncCalls: SyncCall[] = [];
+    await installSource('ideas', 'project', roots);
+    await executeRecoveryCommand(
+      `oat --cwd ${quotePosixArgument(roots.project)} sync --scope project --install-canonical .agents/skills/oat-idea-new`,
+      runtime,
+    );
+    const providerSkill = join(
+      roots.project,
+      '.claude',
+      'skills',
+      'oat-idea-new',
+    );
+    await expect(pathExists(providerSkill)).resolves.toBe(true);
+
+    const preview = await previewMigration('ideas', 'project', 'user', roots);
+    const destination = await installDestination(preview, roots, syncCalls);
+    let removalCount = 0;
+    const failed = await removeSource(
+      destination,
+      roots,
+      syncCalls,
+      'confirmed',
+      async (path, directory) => {
+        removalCount += 1;
+        await rm(path, { recursive: directory, force: true });
+      },
+      async () => {
+        throw new Error('injected source provider sync failure');
+      },
+    );
+    const removalsBeforeRecovery = removalCount;
+
+    expect(failed).toMatchObject({
+      status: 'source-sync-failed',
+      pendingSync: {
+        scope: 'project',
+        action: 'remove',
+        projectRoot: roots.project,
+      },
+    });
+    expect(failed.pendingSync?.command).toMatch(/^oat --cwd '/);
+    await expect(pathExists(providerSkill)).resolves.toBe(true);
+    await executeRecoveryCommand(failed.pendingSync!.command, runtime);
+
+    await expect(pathExists(providerSkill)).resolves.toBe(false);
+    expect(removalCount).toBe(removalsBeforeRecovery);
+    await expect(inventoryAt('ideas', 'project', roots)).resolves.toMatchObject(
+      { completeness: 'absent', intent: { enabled: false } },
+    );
+  }, 20_000);
 
   it('keeps source authoritative across destination failure and recovers partial source removal on rerun', async () => {
     const roots = await createRoots();
