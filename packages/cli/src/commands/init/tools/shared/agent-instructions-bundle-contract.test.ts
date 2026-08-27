@@ -21,7 +21,7 @@ describe('agent instructions bundle contract', () => {
     );
 
     expect(analyzeSkill.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe(
-      '1.11.2',
+      '1.12.0',
     );
     expect(analyzeSkill).toContain(
       "Fill in all template sections with findings from Steps 2–7, including Step\n3.5's existing-rule validation.",

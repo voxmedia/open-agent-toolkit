@@ -42,7 +42,7 @@ oat_phase_recovery_policy:
         dispatch_target: 'oat-phase-implementer-gpt-5-6-sol-high'
         executing_target: 'root-inline:claude-opus-5'
         reservation_head: '0c189eb5b4f07a3ff07b811ce4f0e7b593812fa1'
-        status: pending
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
