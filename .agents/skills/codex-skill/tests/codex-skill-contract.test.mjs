@@ -40,17 +40,20 @@ const commandLines = logicalLines.filter(
 // `codex e` alias, or bare `codex` — is an example, whatever else it says.
 const invokesCodex = (line) => /(?:^|[`\s])codex(?:\s|`)/.test(line);
 
-// Prose that names the bypass without exemplifying it. Only the documented
-// non-repository exception can exempt a flag-bearing table row: authorization
-// wording is normal in such a row, so it must not buy an exemption there.
+// Prose that names the bypass without exemplifying it. A flag-bearing table row
+// is exempt only when its *use-case cell* is the documented non-repository
+// exception: a phrase sitting in the flag cell of an ordinary default row must
+// not buy an exemption, and authorization wording never does.
 // The prohibition branch does not fire at HEAD (step 5 is not command-ish); it
 // is kept so a rewrap or a stronger prohibition sentence cannot start failing.
 const documentsTheException = (line) => {
   if (invokesCodex(line)) return false;
-  if (/not a Git repo/i.test(line)) return true;
-  if (isFlagBearingTableRow(line)) return false;
+  if (isFlagBearingTableRow(line)) {
+    return /not a Git repo/i.test(line.split('|')[1] ?? '');
+  }
 
   return (
+    /not a Git repo/i.test(line) ||
     /high-impact flags/i.test(line) ||
     /Do \*\*not\*\* add|Never pass/i.test(line)
   );
@@ -121,15 +124,14 @@ test('codex-skill keeps the below-floor warning non-blocking', () => {
     'the below-floor pairing must be reported without blocking the run',
   );
   // Property, not phrase: any construction that *requires* a confirmation or
-  // authorization is rejected, while a negated mention ("you do not need to
-  // confirm") stays legal, so a clearer rewrite cannot fail for wording alone.
+  // authorization is rejected. It applies to every below-floor clause with no
+  // negation escape — a merely negated mention ("you do not need to confirm the
+  // run") matches none of these alternatives, so nothing legitimate needs one,
+  // while a clause-wide skip would let a negation mask a real requirement.
   const requiresConfirmation =
     /\b(?:ask (?:the user )?(?:for|to) (?:a )?confirm|confirm before|must confirm|require[sd]? (?:a )?confirmation|obtain (?:the user'?s )?(?:confirmation|authorization))/i;
-  const negatesConfirmation = /\b(?:do not|don't|no)\b[^.]*\bconfirm/i;
 
   for (const clause of belowFloor) {
-    if (negatesConfirmation.test(clause)) continue;
-
     assert.doesNotMatch(
       clause,
       requiresConfirmation,
