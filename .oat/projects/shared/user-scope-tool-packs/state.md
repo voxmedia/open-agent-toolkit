@@ -10,11 +10,14 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
+oat_dispatch_policy:
+  mode: inherit
+  source: project-state
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -78,27 +81,32 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T01:31:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T01:46:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_project_explainer:
+  decision: skip
+  source: interactive
+  decided_at: '2026-08-27T01:31:26Z'
 ---
 
 # Project State: user-scope-tool-packs
 
-**Status:** Design complete — ready for planning
+**Status:** Plan self-reviewed — Fable gate pending
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Design approved after the one authorized Fable review and bounded fix pass. The
-project is ready for `oat-project-plan`.
+The executable 33-task plan is drafted with requirement traceability and passed
+its inline structured self-review. The configured Fable gate remains before
+implementation readiness.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete and approved)
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
-- **Plan:** `plan.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (self-reviewed — Fable gate pending)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -113,6 +121,10 @@ project is ready for `oat-project-plan`.
 - ✓ Independent Fable design review received
 - ✓ One bounded design fix pass applied
 - ✓ Design HiLL checkpoint completed under the user's continuation instruction
+- ✓ Implementation plan drafted
+- ✓ Requirements mapped to stable task IDs
+- ✓ Inline structured plan self-review passed
+- ⧗ Configured Fable plan gate
 
 ## Blockers
 
@@ -120,4 +132,4 @@ None
 
 ## Next Milestone
 
-Author and review the executable implementation plan.
+Run and receive the configured Fable plan gate.
