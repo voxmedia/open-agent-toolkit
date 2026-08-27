@@ -255,6 +255,7 @@ Run the RED command again; expected: pass.
 - Modify: `packages/cli/src/fs/paths.ts`
 - Modify: `packages/cli/src/fs/paths.test.ts`
 - Modify: `packages/cli/src/commands/tools/shared/pack-inventory.ts`
+- Modify: `packages/cli/src/commands/tools/shared/pack-inventory.test.ts`
 
 **Step 1: Write test (RED)**
 
@@ -270,7 +271,7 @@ execution; do not require a not-yet-created destination to pass `realpath`.
 
 **Step 3: Format**
 
-Run: `pnpm exec oxfmt --write packages/cli/src/fs/paths.ts packages/cli/src/fs/paths.test.ts packages/cli/src/commands/tools/shared/pack-inventory.ts`
+Run: `pnpm exec oxfmt --write packages/cli/src/fs/paths.ts packages/cli/src/fs/paths.test.ts packages/cli/src/commands/tools/shared/pack-inventory.ts packages/cli/src/commands/tools/shared/pack-inventory.test.ts`
 
 **Step 4: Verify**
 
@@ -295,22 +296,27 @@ through one deterministic reconcile surface at project and user scope.
 
 - Create: `packages/cli/src/commands/tools/shared/pack-reconcile.ts`
 - Create: `packages/cli/src/commands/tools/shared/pack-reconcile.test.ts`
+- Modify: `packages/cli/src/commands/tools/shared/install-sync-context.ts`
+- Modify: `packages/cli/src/commands/tools/shared/install-sync-context.test.ts`
 
 **Step 1: Write test (RED)**
 
 Cover install/update/remove operations, stable order, seed exclusion,
-scope-specific template ownership, intent ordering, and dry-run serialization.
+scope-specific template ownership, intent ordering, dry-run serialization, and
+manifest-derived canonical provider paths for every pack.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-reconcile.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-reconcile.test.ts src/commands/tools/shared/install-sync-context.test.ts`
 
 **Step 2: Implement (GREEN)**
 
 Add `planPackReconcile()` returning typed file/chmod/intent operations and exact
-changed canonical provider paths.
+changed canonical provider paths. Replace `canonicalPathsForPack()`'s per-pack
+switch with the manifest helper or a thin wrapper while retaining the existing
+installed-path command hand-off.
 
 **Step 3: Format**
 
-Run: `pnpm exec oxfmt --write packages/cli/src/commands/tools/shared/pack-reconcile.ts packages/cli/src/commands/tools/shared/pack-reconcile.test.ts`
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/tools/shared/pack-reconcile.ts packages/cli/src/commands/tools/shared/pack-reconcile.test.ts packages/cli/src/commands/tools/shared/install-sync-context.ts packages/cli/src/commands/tools/shared/install-sync-context.test.ts`
 
 **Step 4: Verify**
 
@@ -823,14 +829,18 @@ Run the RED command again; expected: pass.
 **Step 1: Write test (RED)**
 
 Snapshot zero writes for uninitialized/partial repos; cover `pjm init` guidance,
-doctor read-only output, and backlog/decision init no longer being alternate adoption.
+backlog/decision init no longer being alternate adoption, and doctor read-only
+output derived from `resolvePjmAdoption()` rather than project pack intent. The
+additive JSON contract is
+`adoption: { state: 'declared' | 'inferred-legacy' | 'partial-initialization' | 'none', repoRoot: string, recovery: 'oat pjm init' | null }`.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm src/commands/backlog/index.test.ts src/commands/decision/index.test.ts`
 
 **Step 2: Implement (GREEN)**
 
 Apply the shared adoption guard before all non-migration mutations; use typed
-`CliError` with repository path and recovery command.
+`CliError` with repository path and recovery command. Re-key doctor status on
+`resolvePjmAdoption()` and emit the fixed additive `adoption` JSON object.
 
 **Step 3: Format**
 
@@ -851,6 +861,7 @@ Run the RED command again; expected: pass with unchanged filesystem snapshots.
 - Create: `packages/cli/src/commands/pjm/template-source.ts`
 - Create: `packages/cli/src/commands/pjm/template-source.test.ts`
 - Modify: `packages/cli/src/commands/pjm/init.ts`
+- Modify: `packages/cli/src/commands/pjm/init.test.ts`
 - Modify: `packages/cli/src/commands/backlog/new.ts`
 - Modify: `packages/cli/src/commands/backlog/new.test.ts`
 - Modify: `packages/cli/src/commands/decision/new.ts`
@@ -869,7 +880,7 @@ Add `resolvePjmTemplate()` and replace duplicated repo/bundle lookup at all call
 
 **Step 3: Format**
 
-Run: `pnpm exec oxfmt --write packages/cli/src/commands/pjm/template-source.ts packages/cli/src/commands/pjm/template-source.test.ts packages/cli/src/commands/pjm/init.ts packages/cli/src/commands/backlog/new.ts packages/cli/src/commands/backlog/new.test.ts packages/cli/src/commands/decision/new.ts packages/cli/src/commands/decision/new.test.ts`
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/pjm/template-source.ts packages/cli/src/commands/pjm/template-source.test.ts packages/cli/src/commands/pjm/init.ts packages/cli/src/commands/pjm/init.test.ts packages/cli/src/commands/backlog/new.ts packages/cli/src/commands/backlog/new.test.ts packages/cli/src/commands/decision/new.ts packages/cli/src/commands/decision/new.test.ts`
 
 **Step 4: Verify**
 
@@ -1010,8 +1021,9 @@ Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/to
 
 Keep `tools has project-management` only as a capability-availability check.
 Update the three consuming skills and brainstorm destination guidance to branch
-on the read-only doctor JSON adoption state before offering or performing PJM
-writes. Bump each changed skill's frontmatter version once for the PR.
+on the exact `adoption.state` field from the read-only doctor JSON before
+offering or performing PJM writes. Bump each changed skill's frontmatter
+version once for the PR.
 
 **Step 3: Format**
 
@@ -1264,9 +1276,9 @@ exit-code evidence.
 | p03    | code     | pending         | -          | -                                                             | -             | -          | -                             |
 | p04    | code     | pending         | -          | -                                                             | -             | -          | -                             |
 | p05    | code     | pending         | -          | -                                                             | -             | -          | -                             |
-| plan   | artifact | pending         | 2026-08-27 | -                                                             | -             | manual     | -                             |
+| plan   | artifact | pending         | -          | -                                                             | -             | -          | -                             |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T015201Z.md   | -             | gate       | claude-fable-skip-permissions |
-| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T020356Z.md            | -             | -          | -                             |
+| plan   | artifact | passed          | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020356Z.md   | -             | gate       | claude-fable-skip-permissions |
 
 Statuses are monotonic: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`. Append new review events; never delete earlier
@@ -1293,4 +1305,5 @@ Ready for implementation after plan artifact review and configured plan gate.
 - Discovery: `discovery.md`
 - Backlog: `.oat/repo/pjm/backlog/items/BL-260818-make-the-project-management.md`
 - Design review: `reviews/archived/artifact-design-review-2026-08-27T012258Z.md`
-- Plan review: `reviews/archived/artifact-plan-review-2026-08-27T015201Z.md`
+- Initial plan review: `reviews/archived/artifact-plan-review-2026-08-27T015201Z.md`
+- Passing plan review: `reviews/archived/artifact-plan-review-2026-08-27T020356Z.md`

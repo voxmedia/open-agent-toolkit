@@ -316,7 +316,7 @@ the copied skill directory and resolve from the installed artifact.
 | NFR1 | Destructive operations fail safely             | P0       | unit + integration: confirmation/path/rollback    | p01-t07, p02-t02, p02-t08, p03-t01, p03-t02, p03-t03, p03-t05                   |
 | NFR2 | Operations are deterministic and idempotent    | P0       | unit + integration: repeat/dry-run parity         | p01-t03, p02-t01, p02-t02, p02-t07, p02-t08, p05-t04                            |
 | NFR3 | Existing CLI/config behavior remains usable    | P0       | integration: compatibility regression suite       | p01-t04, p01-t05, p02-t03, p02-t04, p02-t06, p02-t08, p04-t07, p05-t04          |
-| NFR4 | Diagnostics are structured and actionable      | P1       | unit + integration: human/JSON contracts          | p02-t05, p02-t06, p03-t04, p05-t01                                              |
+| NFR4 | Diagnostics are structured and actionable      | P1       | unit + integration: human/JSON contracts          | p02-t05, p02-t06, p03-t04, p04-t02, p04-t07, p05-t01                            |
 | NFR5 | Inspection remains local and bounded           | P1       | unit: canonical-path enumeration                  | p01-t03, p01-t06, p01-t07                                                       |
 
 ## Open Questions

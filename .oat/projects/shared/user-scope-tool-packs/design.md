@@ -465,6 +465,9 @@ initialization or authorize writes.
 - Other mutating commands resolve a Git repository, inspect the canonical PJM
   adoption state, and throw a typed `CliError` before creating directories or
   files when adoption is absent or partial.
+- `oat pjm doctor` derives adoption from `resolvePjmAdoption()` rather than pack
+  intent and exposes the additive JSON field
+  `adoption: { state: 'declared' | 'inferred-legacy' | 'partial-initialization' | 'none', repoRoot: string, recovery: 'oat pjm init' | null }`.
 - `oat backlog init`, decision initialization, and their implicit initialization
   helpers remain usable only after adoption; they no longer form alternate
   partial-adoption paths and otherwise direct the user to `oat pjm init`.
