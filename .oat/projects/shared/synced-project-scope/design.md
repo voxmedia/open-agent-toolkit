@@ -231,7 +231,7 @@ export async function commitRecordChange(
 - `pull`: `fetch` → if `projectPath` absent: `worktree prune` then `worktree add --detach <projectPath> <ref>` → else if `status --porcelain` non-empty: return `dirty` → else `rebase <ref>`.
 - `continue`/`abort`: `rebase --continue` with `GIT_EDITOR=true` / `rebase --abort`, then re-evaluate as pull.
 - `removeSyncedCheckout` (archive path): precondition `status --porcelain` empty **and** HEAD equals the fetched `<ref>` (i.e. nothing unpushed) → `worktree remove <projectPath>` (no `--force`) → `worktree prune`. Precondition failure returns `dirty` / `unpushed` and names `oat project push` as the fix.
-- `prune`: same preconditions unless the user passed `--force`, in which case `worktree remove --force` is permitted because the user explicitly asked to discard → `push <remote> :<ref>` → `update-ref -d <ref>` → remove checkout → delete record file → `commitRecordChange([recordPath], "chore(oat): prune synced project <slug>")`.
+- `prune` (project-wide): enumerate every registered checkout of `<slug>` across all worktrees of the repository (`worktree list --porcelain`, entries whose path ends in `/.oat/projects/synced/<slug>`) → apply the `removeSyncedCheckout` preconditions to each; refuse without `--force` if any is dirty or unpushed, naming the path; `--force` permits `worktree remove --force` because the user explicitly asked to discard → remove and unregister every checkout → `push <remote> :<ref>` → `update-ref -d <ref>` → delete record file → `commitRecordChange([recordPath], "chore(oat): prune synced project <slug>")`.
 - `migrate` (`shared` → `synced`), one algorithm, in order:
   1. Preconditions: `git status --porcelain -- <src>` empty (source tracked and clean); `origin` configured; no existing `<ref>`, record, or `<dest>` directory; gitignore rule present (self-heal as in `create`).
   2. `create` the ref and register `<dest> = .oat/projects/synced/<slug>` as the detached worktree (empty tree).
@@ -239,7 +239,7 @@ export async function commitRecordChange(
   4. In `<dest>`: `add -A` → `commit -m "chore(oat): migrate <slug> to synced scope"` → `push <remote> HEAD:<ref>` → `update-ref <ref> HEAD`.
   5. Parent branch: `git rm -r -q -- <src>` (removes index entries **and** files) → write the record → `commitRecordChange([<src>, recordPath, ".gitignore" if changed], "chore(oat): migrate <slug> to synced scope")` — exactly one branch commit.
   6. If `activeProject` pointed at `<src>`, retarget it to `<dest>`.
-  - Rollback contract (one for every failure point): remove everything migrate created — `worktree remove --force <dest>`, `update-ref -d <ref>`, `push <remote> :<ref>` if the push had succeeded — and, for failures inside step 5, additionally `git reset -q -- <src> <recordPath>`, `git checkout -- <src>`, and delete the record file. After rollback the migration preconditions hold again, so a retry runs the full algorithm from step 1; nothing is resumed in place.
+  - Rollback contract (one for every failure point; the pre-migration branch HEAD is captured before step 1): remove everything migrate created — `worktree remove --force <dest>`, `update-ref -d <ref>`, `push <remote> :<ref>` if the push had succeeded, delete the record file, restore `.gitignore` if this run self-healed it. For failures inside step 5 before the commit: `git reset -q -- <src> <recordPath>` and `git checkout -- <src>`. For failures after the branch commit (step 6, `activeProject` retarget): `git reset --soft <captured HEAD>` followed by the same path-scoped restore, so unrelated staged or working-tree changes that pre-dated the migration are untouched. After rollback the migration preconditions hold again, so a retry runs the full algorithm from step 1; nothing is resumed in place.
   - End-state assertions (also the integration test): `<src>` absent from the index and filesystem; `<dest>` registered (`worktree list`) and clean; parent `status --porcelain` empty after exactly one new commit; record present in `git ls-tree HEAD`; `<ref>` present on `origin`; `activeProject` retargeted.
 
 **Mutation invariants (replace any single global guard):**
@@ -473,7 +473,7 @@ Prints the block for the **ref's** current commit (fetching first), so it works 
 
 ### `oat project prune <project-path|slug> [--force] [--no-commit]`
 
-Refuses when `state.md` (in the checkout or the last archived snapshot) has `oat_pr_status: open`, or when the checkout is dirty or unpushed, unless `--force`. Warns that pinned links will stop resolving. Removes remote ref, local ref, checkout, and record, then commits the record deletion on the branch (`--no-commit` to skip).
+Project-wide: acts on every registered checkout of the slug in every worktree of the repository, not only the current one. Refuses when `state.md` (in the checkout or the last archived snapshot) has `oat_pr_status: open`, or when the checkout is dirty or unpushed, unless `--force`. Warns that pinned links will stop resolving. Removes remote ref, local ref, checkout, and record, then commits the record deletion on the branch (`--no-commit` to skip).
 
 ### `oat project migrate <project-path> --to synced [--no-commit]`
 

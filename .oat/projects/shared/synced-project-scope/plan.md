@@ -1121,13 +1121,14 @@ git commit -m "feat(p03-t04): archive synced projects with worktree-aware comple
 - `--force` → remote ref gone (`ls-remote`), local ref gone, `worktree list` clean, record file deleted, parent commit `chore(oat): prune synced project <slug>` contains only the record deletion; `--no-commit` leaves the deletion staged-free (record removed from disk, not committed).
 - Completed project (checkout already absent, record `complete`) → prunes ref + record without touching worktrees.
 - **Active record, absent checkout, `oat_pr_status: open` on the ref** → refuses without `--force` (state read via `git show <ref>:state.md`).
+- **Two parent worktrees** (cloneA + `addLinkedWorktree`) each holding a checkout of the slug: prune from cloneA preflights **both** checkouts (`git worktree list --porcelain` filtered to paths ending in `/.oat/projects/synced/<slug>`); if the linked one is dirty/unpushed → refuse without `--force`, naming that path; with clean checkouts (or `--force`) → both directories removed and unregistered, then ref + record deleted; `worktree list` shows neither.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/prune/index.test.ts`
 Expected: fails.
 
 **Step 2: Implement (GREEN)**
 
-`pruneSynced(t, git, { force, commit })`: `push <remote> :<ref>` → `update-ref -d` → `removeSyncedCheckout({force})` → `rm record` → `commitRecordChange`. Command reads `state.md` from the checkout when present; otherwise it fetches the ref and reads `git show <ref>:state.md` (an active project with a record and remote ref but no checkout — fresh worktree or clone — must still be guarded); only when the ref is gone does it fall back to `.oat/projects/archived/<slug>/state.md`.
+`pruneSynced(t, git, { force, commit })` is **project-wide**: enumerate every registered checkout for the slug across all worktrees of the repository (`worktree list --porcelain`, path suffix match) → preflight each for dirty/unpushed → refuse without `--force` if any cannot be removed safely → `removeSyncedCheckout` for each → `push <remote> :<ref>` → `update-ref -d` → `rm record` → `commitRecordChange`. Command reads `state.md` from the checkout when present; otherwise it fetches the ref and reads `git show <ref>:state.md` (an active project with a record and remote ref but no checkout — fresh worktree or clone — must still be guarded); only when the ref is gone does it fall back to `.oat/projects/archived/<slug>/state.md`.
 
 **Step 3: Verify**
 
@@ -1163,7 +1164,8 @@ Fixture with a tracked, committed `shared/legacy` project (scaffold `--scope sha
 - Success → six end-state assertions from the design: source absent from index and disk; `synced/legacy` registered (`worktree list`) and clean; parent `status --porcelain` empty with exactly one new commit `chore(oat): migrate legacy to synced scope`; record in `ls-tree HEAD`; ref on `origin` with one content commit above init; `activeProject` retargeted when it pointed at the source.
 - Dirty source → refuses; untracked source → refuses; existing ref/record/destination → refuses; no `origin` → refuses.
 - Failure injected at step 4 (push fails) → branch untouched (`status` empty, no new commit), destination worktree removed, local ref deleted.
-- **Failure injected at step 5 (`commitRecordChange` throws)** → full rollback: source restored (`git reset -q -- <src> <record>` + `git checkout -- <src>`, index clean), record file deleted, destination worktree removed, local ref deleted, **remote ref deleted** (`push :<ref>`); `status --porcelain` empty; a retry of the same migrate command then succeeds from clean preconditions.
+- **Failure injected at step 5 (`commitRecordChange` throws before committing)** → full rollback: source restored (`git reset -q -- <src> <record>` + `git checkout -- <src>`, index clean), record file deleted, `.gitignore` restored if it was self-healed in this run, destination worktree removed, local ref deleted, **remote ref deleted** (`push :<ref>`); `status --porcelain` empty; a retry of the same migrate command then succeeds from clean preconditions.
+- **Failure injected after the branch commit succeeded** (throw inside step 6, `activeProject` retarget) → rollback also moves the branch back: `git reset --soft <pre-migration HEAD>` (captured at step 1), then the same path-scoped restore as above so unrelated staged/working-tree changes present before migration are untouched (fixture pre-stages `src/unrelated.ts` and asserts it is still staged afterwards); `rev-parse HEAD` equals the captured SHA; retry succeeds.
 - `--to shared` → "not supported in v1" error.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/migrate/index.test.ts`
@@ -1171,7 +1173,7 @@ Expected: fails.
 
 **Step 2: Implement (GREEN)**
 
-`migrateSharedToSynced(t, git, opts)` implementing the six-step algorithm from `design.md` with a single recovery contract: **any** failure after the ref/worktree were created rolls back everything migrate created (destination worktree, local ref, remote ref, record file, and — for step-5 failures — the source restore), so a retry always starts from the documented preconditions. Command wrapper with `--to <synced>` (choices) and `--no-commit`.
+`migrateSharedToSynced(t, git, opts)` implementing the six-step algorithm from `design.md` with a single recovery contract: capture the pre-migration branch HEAD first; **any** failure after the ref/worktree were created rolls back everything migrate created (destination worktree, local ref, remote ref, record file, self-healed `.gitignore`, the source restore for step-5 failures, and `reset --soft <HEAD>` + path-scoped restore for failures after the branch commit), so a retry always starts from the documented preconditions and unrelated index/working-tree state is never disturbed. Command wrapper with `--to <synced>` (choices) and `--no-commit`.
 
 **Step 3: Verify**
 
@@ -1326,7 +1328,7 @@ oat project prune synced-dogfood --force
 git worktree remove ../oat-dogfood-wt && git branch -D tmp/dogfood
 ```
 
-Expected: parent diff at every step is only the record file (then its deletion); pull in the linked worktree shows the pushed edit; links block renders with a real `github.com/.../blob/<sha>/` URL that opens; doctor is green; after prune `git ls-remote origin 'refs/oat/projects/*'` is empty and `git status` is clean except the two record commits (scaffold, prune) which are part of the branch history — squash or keep as evidence.
+Expected: parent diff at every step is only the record file (then its deletion); pull in the linked worktree shows the pushed edit; links block renders with a real `github.com/.../blob/<sha>/` URL that opens; doctor is green; after prune `git ls-remote origin refs/oat/projects/synced-dogfood` is empty (other retained project refs are expected and must be left alone) and `git status` is clean except the two record commits (scaffold, prune) which are part of the branch history — squash or keep as evidence.
 
 **Step 2: Record evidence**
 
@@ -1334,8 +1336,8 @@ Append `### p03-t10 dogfood` to `implementation.md`: commands, observed statuses
 
 **Step 3: Verify**
 
-Run: `git ls-remote origin 'refs/oat/projects/*'; git worktree list`
-Expected: no dogfood ref; no dogfood worktree.
+Run: `git ls-remote origin refs/oat/projects/synced-dogfood; git worktree list`
+Expected: no `synced-dogfood` ref (unrelated `refs/oat/projects/*` refs may exist and are reported, not treated as failures); no dogfood worktree.
 
 **Step 4: Commit**
 
@@ -1501,8 +1503,8 @@ git commit -m "feat(p04-t04): pull synced artifacts on arrival and document scop
 
 **Files:**
 
-- Modify: `.agents/skills/oat-project-pr-final/SKILL.md` (`:280-320`: insert `oat project links "$PROJECT_PATH"` block into the body template for synced projects; `:299-301`: synced artifact paths are never linked as References — the block replaces them)
-- Modify: `.agents/skills/oat-project-pr-progress/SKILL.md` (`:227-265`, `:246-247`, `:312`: same)
+- Modify: `.agents/skills/oat-project-pr-final/SKILL.md` — for `synced` projects the PR step becomes an explicit ordered sequence: (1) generate/refresh `summary.md` and the `pr/` artifact as today; (2) **`oat project push`** so the ref contains the summary and any moved artifacts (`oat project links` reads the ref — a summary that exists only in the checkout would be omitted); (3) render the block with `oat project links "$PROJECT_PATH"` and insert it into the body (`:280-320`); (4) `gh pr create`; (5) set `oat_pr_status: open` and `oat_pr_url` in `state.md` (`:408`, unchanged); (6) **`oat project push`** again so the ref carries the authoritative PR metadata and the push path refreshes the block to the new ref SHA. `:299-301`: synced artifact paths are never linked as References — the block replaces them.
+- Modify: `.agents/skills/oat-project-pr-progress/SKILL.md` (`:227-265`, `:246-247`, `:312`) — same six-step sequence; **new behavior:** progress PRs must persist `oat_pr_status: open` / `oat_pr_url` in `state.md` (today they do not), otherwise p03-t03's push-time refresh never fires for mid-project PRs. Verification for both skills (manual, recorded in `implementation.md` during p04-t10): a freshly generated `summary.md` appears in the initial block; after a progress PR, one more `oat project push` re-renders the block with the new SHA.
 - Modify: `.agents/skills/oat-project-complete/SKILL.md` (steps 7–11.5: for synced projects run the design's 7-step state machine — finalize → `oat project push` → `oat project archive` (steps 3–6, commits record + summary export) → `oat project links --durable-summary <path>` → `gh pr edit`; step 10's bookkeeping commit becomes a no-op for synced projects; keep the anti-pattern note about never linking `archived/` paths)
 
 **Step 1: Apply**
@@ -1676,7 +1678,7 @@ oat config set activeProject .oat/projects/shared/synced-project-scope   # resto
 git worktree remove ../oat-skill-wt && git branch -D tmp/skill-dogfood
 ```
 
-Expected: the skill snippet chose the `synced` branch and pushed (no `git commit` of artifacts on the branch; `git log --oneline -3` shows only record commits); the arrival snippet created the checkout in the linked worktree; prune left `git ls-remote origin 'refs/oat/projects/*'` empty.
+Expected: the skill snippet chose the `synced` branch and pushed (no `git commit` of artifacts on the branch; `git log --oneline -3` shows only record commits); the arrival snippet created the checkout in the linked worktree; prune left `git ls-remote origin refs/oat/projects/skill-dogfood` empty (unrelated retained refs are expected).
 
 **Step 2: Record evidence**
 
@@ -1684,8 +1686,8 @@ Append `### p04-t10 skill dogfood` to `implementation.md`: which sites ran, the 
 
 **Step 3: Verify**
 
-Run: `pnpm oat:validate-skills && git ls-remote origin 'refs/oat/projects/*'`
-Expected: validator passes; no dogfood ref.
+Run: `pnpm oat:validate-skills && git ls-remote origin refs/oat/projects/skill-dogfood`
+Expected: validator passes; no `skill-dogfood` ref.
 
 If any file under `.agents/skills` or `.agents/agents` was edited in this task, also re-run the skill-covering gates with explicit exit codes and append the results to the p04-t09 gate record in `implementation.md`:
 
@@ -1721,7 +1723,7 @@ git commit -m "chore(p04-t10): record skill-sweep dogfood evidence"
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T013313Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T013313Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T014220Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T015823Z.md                | -             | -          | -                        |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T015823Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

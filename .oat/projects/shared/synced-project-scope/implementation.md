@@ -232,3 +232,12 @@ The configured `oat-project-plan` gate (`oat gate review --review-type artifact 
 **Needed from the maintainer:** confirm the I3 default (or reverse it), then either authorize a third gate attempt (`oat gate review …` as configured) or approve the plan without a further gate run. `plan.md` frontmatter remains `oat_status: in_progress` until then.
 
 **Maintainer direction received (2026-08-27):** list `local` projects too (existing gap, not a boundary) — spec Non-Goals/NFR1 amended, p02-t07 and design restored to three-scope listing. Disposable spike repository provided by the maintainer: `https://github.com/tkstang/disposable-test-repo-for-oat` (deletion is an operator step after implementation). Third plan gate attempt authorized; implementation is not to start until the maintainer is told the plan is ready.
+
+**Attempt 3 — `reviews/archived/artifact-plan-review-2026-08-27T015823Z.md`** (1 critical, 2 important, 1 medium) — all resolved in `plan.md`/`design.md`:
+
+- C1 PR skills never push/persist PR state for synced projects → p04-t05 now specifies a six-step sequence for both PR skills (push → links → create → persist `oat_pr_status`/`oat_pr_url` (new for progress PRs) → push).
+- I1 prune only removed the current worktree's checkout → prune is project-wide across all registered checkouts with per-checkout preflight; two-parent-worktree test; design updated.
+- I2 migration rollback after the branch commit → capture pre-migration HEAD; `reset --soft` + path-scoped restore incl. self-healed `.gitignore`; failure injection after commit and at `activeProject` retarget; design updated.
+- M1 dogfood asserted the whole `refs/oat/projects/*` namespace empty → assertions scoped to the scratch slug.
+
+Status after attempt 3: still `blocked` by the gate; all findings applied. Awaiting maintainer: run again or approve.
