@@ -33,11 +33,11 @@ oat_generated: false
 ## Phase 01: refresh-codex-skill-routing (solo)
 
 **Source plan (the contract):** `.oat/repo/reference/external-plans/2026-08-19-refresh-codex-skill-routing.md`
-**Status:** implemented — awaiting phase review (round 1)
+**Status:** passed — three review cycles; round-3 fixes root-verified under the cycle cap at `44fb2327`
 
 ### Phase Summary (fill when phase is complete)
 
-_Pending phase review._
+Source plan executed in full: `codex-skill` classifies work by OAT task class and takes model and effort from `provider-codex.md` (named as the source of truth; dated examples never override it; compatibility snapshots never defaults); routes offered as one combined model+effort choice; a valid user-supplied pair is honored (below-floor: say so once without blocking; direct-API specialist classification: confirm before launching); if the reference is unavailable the skill stops and asks. `--skip-git-repo-check` removed from ordinary initial-run, `-C`, and resume commands and kept only for a non-Git target directory with reason + authorization; resume examples normalized to the live `codex exec resume` usage; the dead `--full-auto` replaced under the operator-reconciled STOP #2 (`--approve-for-me` only with `-s workspace-write`; network inside a write sandbox via `-c sandbox_workspace_write.network_access=true`; `-s danger-full-access` for genuine broad-filesystem needs; the bypass-all flag for externally sandboxed automation) — sandbox and high-impact authorization retained and tightened. Eight-case prose contract test with logical-line normalization, a structural exemption rule, and semantic assertions; 22-probe mutation matrix in the required state. `codex-skill` 1.2.0 → 1.3.0 once; lockstep 0.2.35 → 0.2.36. Three review rounds (0C/0I/3M/4m → 0C/0I/3M/2m → 0C/0I/1M/1m), thirteen Codex rounds across four commits.
 
 ### Task p01-t01: Execute external plan — Route codex-skill through current model guidance and preserve repository checks
 
@@ -60,7 +60,7 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-### Run 1 — 2026-08-27 (in progress: p01 implemented, phase review pending)
+### Run 1 — 2026-08-27 (complete: 1 phase passed, 0 failed, 0 stopped)
 
 - Branch: `wave-4-execution`; Tier 1 (native `oat-phase-implementer` /
   `oat-reviewer`); dispatch policy managed / `high` (Claude `opus`, enforced —
@@ -96,9 +96,9 @@ _- Outstanding Items_
 
 #### Phase Outcomes
 
-| Phase | Worktree                                  | Implementer outcome                                                                 | Review outcome                                                                                                   | Fix rounds | Merged |
-| ----- | ----------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
-| p01   | integration checkout (`wave-4-execution`) | DONE (b97408f2 + fixes d9ce0c33, 39121c35; DoD 10/10 green; codex 7 + 3 + 2 rounds) | round 1: 0C/0I/3M/4m; round 2: 0C/0I/3M/2m; round 3: 0C/0I/1M/1m (cap; bounded root-verified fix → final review) | 3          | n/a    |
+| Phase | Worktree                                  | Implementer outcome                                                                               | Review outcome                                                                                                    | Fix rounds | Merged |
+| ----- | ----------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
+| p01   | integration checkout (`wave-4-execution`) | DONE (b97408f2 + fixes d9ce0c33, 39121c35, 44fb2327; DoD 10/10 green; codex 7 + 3 + 2 + 1 rounds) | passed (rounds: 0C/0I/3M/4m → 0C/0I/3M/2m → 0C/0I/1M/1m; cap; round-3 fixes root-verified, final review verifies) | 3          | n/a    |
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
@@ -179,7 +179,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - D1 cross-directory assertion iterates physical lines (probe w1 escapes at all three heads) → **fix**: use `logicalLines` (reviewer-validated one-liner).
 - D2 paragraph-level over-strictness → accepted (no current false failure). D3 drifted line citations in the dispatch brief → accepted (cosmetic). D4 in-flight `oat_last_commit` → resolved in this commit.
 
-**Review row `p01` → `fixes_added` at `39121c35`; bounded fix round 3 next, then closeout.**
+**Fix round `w4-p01-fix-003` (resumed implementer handle, append-only commit `44fb232773ee0360e4c891123ef069fc0bc137d6` on `39121c35`; test file only, +28/−19; `SKILL.md` byte-identical to `39121c35`; skill 1.3.0, packages 0.2.36):**
+
+- M1 → structural exemption: an exempted line must not itself run `codex exec|resume` (`tests/…:37-48`); the prohibition branch kept with a one-line justification (dropping it would re-fail probe r2).
+- m1 → semantic below-floor assertion: whole-file co-location window plus a no-clause-pairs-with-`confirm before launching` loop; `>= 1` matches (`:110-127`).
+- D1 → cross-directory assertion on `logicalLines` (`:181-183`).
+- DoD all ten exit 0 (`$TMPDIR/w4-p01-fix3/`), `test:skills` 586/586, focused 8/8; post-commit `release:check-versions` 0 and `check:skill-bumps` 0. Codex: one round, one P2 (widen the phrase-literal `confirm before launching` check to `\bconfirm`) — dismissed for scope (root-specified patch), recorded for the final review's ledger.
+
+**Verification record (root, cycle-cap disposition):** what — the 22-probe matrix (c2, g1, n1, n2, u1–u9, w1, g2, g4, g5, m3rev → fail; control, r1, r2, u4, u5, fp → pass) re-run by the root against HEAD `44fb2327` with the implementer's reproducible runner (temp copies; repository never written; `NO-TESTS-RAN` guard); how — `$TMPDIR/w4-p01-fix3/probes/run-all.sh` → `ALL PROBES MATCHED`, runner exit 0 (log `scratchpad/w4/root-probe-run.log`; runner copied to `scratchpad/w4/probes/`), plus `git show --stat` (one file) and `git diff --stat 39121c35 HEAD -- SKILL.md` empty; where — this entry; independent verification — the final review (scope `final`), briefed to re-run the matrix and attempt an evasion of the structural rule.
+
+**Review row `p01` → `passed` at `44fb2327` (round 3 dispositions root-verified under the cycle cap; final review verifies independently). Next: closeout baseline → root DoD → final review → configured exit gate.**
 
 ## Implementation Log
 
@@ -190,7 +199,7 @@ Chronological log of implementation progress.
 - Preflight from main `3c135e21` (`worktree:init`, build, type-check exit 0; manifest restamp `f9db417c`); wrapper scaffolded `8e903a0c`; plan gate passed round 1 (`cursor-gpt-5-6-sol-xhigh`, run `0d369be4`, one medium mapped into rule 8); implement phase opened `51c7ec57`.
 - [x] p01-t01: Execute external plan — `b97408f2` (Opus implementer `w4-p01-impl-001`; DoD 10/10; Codex seven rounds, nine findings fixed pre-commit).
 - [x] p01-t01 fix round 1 — `d9ce0c33` (append-only; round-1 M1/M3/m1–m4; Codex three rounds under the stopping rule).
-- [x] p01-t01 fix round 2 — `39121c35` (append-only; round-2 M1/M3/m1/m2: logical-line derivation + prose allowlist, non-blocking below-floor clause with an 8th contract case, `gpt-5.5` slug; Codex two clean rounds).
+      m=>m+'\n- [x] p01-t01 fix round 3 — `44fb2327` (append-only; round-3 M1/m1/D1 — structural exemption rule, semantic below-floor assertion, logical-line cross-directory check; test file only; root-run 22-probe matrix ALL MATCHED).'
 - Decisions: the operator-reconciled `--full-auto` replacement is evaluated per example row (a mechanical swap weakened the `danger-full-access` row and was caught by Codex); prose guards key on documented phrases and command-ish content, not hedging words; cross-model review stops at two clean rounds or below-Medium findings.
 - Blockers: none.
 
@@ -208,26 +217,15 @@ _Filled at final verification (root DoD on the integration branch)._ Interim: im
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
+**What shipped:** `codex-skill` (1.2.0 → 1.3.0) routes model and reasoning effort through OAT's live Codex provider reference by task class instead of a stale two-model list; the repository-check bypass is conditional (non-Git target only) and authorization-gated; every command example validates against codex-cli 0.149.1 with the dead `--full-auto` replaced under the operator-reconciled STOP #2 (sandbox and high-impact authorization retained and tightened); an eight-case prose contract test guards the stale pair, single retired slugs, blanket or example-default bypass across every command-ish line, the authority sentence, the non-repository condition, and the non-blocking below-floor rule. Lockstep bump 0.2.35 → 0.2.36.
 
-- {capability 1}
-- {capability 2}
+**User-facing behavioral change:** agents following `codex-skill` now classify work, read `provider-codex.md`, and offer only currently eligible model+effort routes; ordinary Codex runs keep the repository check; unattended edits require `--approve-for-me` with a write sandbox; network access no longer implies the broadest sandbox.
 
-**Behavioral changes (user-facing):**
+**Key files:** `.agents/skills/codex-skill/SKILL.md`, `.agents/skills/codex-skill/tests/codex-skill-contract.test.mjs` (new), five `packages/*/package.json`, `packages/cli/assets/public-package-versions.json` (regenerated).
 
-- {bullet}
+**Verification:** DoD 10/10 at `b97408f2`, `d9ce0c33`, `39121c35`, `44fb2327` (post-commit `release:check-versions` and `check:skill-bumps` re-runs 0 each time); `test:skills` 586/586; reviewer probes across three rounds — live-syntax validation per subcommand, 22-probe mutation matrix (root-run at HEAD: all matched), provider-reference consistency, weaker-anywhere on sandbox/authorization, scope verdict on the Codex-driven edits.
 
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+**Design deltas:** N/A (quick mode; no `design.md`). Reconciliation: the plan's STOP #2 (`--full-auto` absent from live help) resolved non-narrowingly by operator direction inside the plan's own step 2 (recorded once in `plan.md` § Drift Refresh Record).
 
 ## References
 

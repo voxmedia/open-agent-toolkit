@@ -143,3 +143,14 @@ and the exit gate — no self-authorized fourth cycle.
 **Skill signal (gap):** three consecutive guard widenings each opened a
 narrower hole; a prose guard needs a structural rule ("an exempted line must
 not itself run the command") rather than keyword lists.
+
+### 2026-08-27 · structural · oat-project-implement · p01 passed (cycle cap, root-verified)
+
+`w4-p01-fix-003` → append-only `44fb2327` (test file only); the root re-ran
+the implementer's reproducible 22-probe runner at HEAD → ALL PROBES MATCHED
+(verification record in `implementation.md`); phase p01 `passed`; Run 1
+complete. Codex flagged one below-Medium follow-up (phrase-literal
+`confirm before launching` check) → final-review ledger.
+**Skill signal (strengthens):** a probe runner that fails loudly when no tests
+ran (`NO-TESTS-RAN`) — the implementer's first "before" run was a silent
+false-green from an unglobbed filename.

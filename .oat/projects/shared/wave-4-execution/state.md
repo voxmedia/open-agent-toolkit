@@ -1,6 +1,6 @@
 ---
 oat_current_task: null # p01-t01 implemented; phase review in progress
-oat_last_commit: 39121c35 # p01-t01 second fix commit (last code commit)
+oat_last_commit: 44fb2327 # p01-t01 third fix commit (last code commit; test file only)
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260819-refresh-codex-skill-model' }
@@ -88,13 +88,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T01:55:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T04:40:36.437Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T04:53:47.885Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-4-execution
 
-**Status:** Implement — p01 review round 3 received (0C/0I/1M/1m; cycle cap reached); bounded reviewer-specified fix round in progress, verified by the final review
+**Status:** Implement — p01 passed at `44fb2327` (round-3 fixes root-verified under the cycle cap); closeout: root DoD → final review → configured exit gate
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
@@ -128,7 +128,8 @@ non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Rec
 - ✓ p01 review round 2 (narrowed): 0C/0I/3M/2m — guard breadth, one wording regression, root bookkeeping
 - ✓ Fix round `w4-p01-fix-002` (`39121c35`: M1, M3 + 8th contract case, m1 logical-line unwrap, m2 `gpt-5.5`; DoD 10/10; Codex two clean rounds)
 - ✓ p01 review round 3 (narrowed, cycle 3 of 3): 0C/0I/1M/1m — guard hardening only; HEAD content correct
-- ⧗ Bounded fix round `w4-p01-fix-003` (reviewer-verified patches; root probe-matrix verification record) → closeout: Final Summary fill → root DoD → final review (verifies the round-3 fixes) → exit gate
+- ✓ Bounded fix round `w4-p01-fix-003` (`44fb2327`, test only; root-run 22-probe matrix ALL MATCHED) — p01 `passed`
+- ⧗ Closeout: root DoD (final verification) → final review (independently verifies the round-3 fixes) → configured exit gate
 
 ## Blockers
 
