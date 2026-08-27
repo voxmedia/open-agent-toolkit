@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues:
@@ -12,8 +12,15 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {}
+  phase_attempt_usage:
+    p01:
+      used_attempts: 0
+      pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -81,19 +88,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T01:55:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T01:55:06.044Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T02:05:52.735Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-4-execution
 
-**Status:** Plan complete — awaiting the configured plan gate, then `oat-project-implement`
+**Status:** Implement — p01 dispatched (plan gate passed round 1, run 0d369be4, one medium resolved in-artifact)
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Plan (complete) — thin wave wrapper for the single Wave 4 external plan
+Implement (in progress; plan gate passed 2026-08-27) — thin wave wrapper for the single Wave 4 external plan
 (`2026-08-19-refresh-codex-skill-routing.md`); solo phase `p01` on the
 integration checkout `wave-4-execution` (BASE_SHA `3c135e21` = `origin/main`
 after the W3 close; public packages 0.2.35). The plan's STOP #2 (live
@@ -114,8 +121,8 @@ non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Rec
 - ✓ Preflight: branch from main `3c135e21`; `pnpm run worktree:init`, `pnpm build`, `pnpm type-check` exit 0
 - ✓ Wave-boundary drift refresh incl. live Codex CLI/docs reread: 1 PASS / 0 MINOR-DRIFT / 0 STOP after reconciliation
 - ✓ Wrapper scaffolded (discovery, plan, orchestration log)
-- ⧗ Configured plan gate
-- ⧗ Phase p01 via `oat-project-implement`
+- ✓ Configured plan gate passed round 1 (cursor-gpt-5-6-sol-xhigh, run 0d369be4, 0C/0I/1M/0m — mutation probes mapped into rule 8)
+- ⧗ Phase p01 via `oat-project-implement` (Opus implementer, request w4-p01-impl-001)
 
 ## Blockers
 

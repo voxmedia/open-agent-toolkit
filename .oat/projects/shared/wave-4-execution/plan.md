@@ -61,7 +61,12 @@ release:check-versions` again immediately after the task commit and record
    checkout; no phase worktree merges).
 7. **Backlog archival is NOT part of the task** — once, serialized on the
    integration branch after the phase passes (DR-260713-shared-tracked-surfaces).
-8. **Phase review checklist = the source plan's `## Review focus`.**
+8. **Phase review checklist = the source plan's `## Review focus`, plus two
+   bounded reviewer-run mutation probes on the focused contract test:**
+   reintroduce the stale fixed model pair, and separately reintroduce the
+   blanket repository-check bypass; each mutation must make the test fail;
+   restore the intended content byte-exact and rerun the test green. A finding
+   that names a regression class triggers a repository-wide sweep (W3 rule).
 9. **Artifact hygiene:** every agent runs `pnpm exec oxfmt --write <file>` on
    markdown it writes and reports observations for `orchestration-log.md`
    (workers report; the root appends).
@@ -199,13 +204,13 @@ git commit -m "feat(p01-t01): route codex-skill through provider guidance and ma
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T020212Z.md | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target              |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------------ |
+| p01    | code     | pending | -          | -                                                           | -             | -          | -                        |
+| final  | code     | pending | -          | -                                                           | -             | -          | -                        |
+| plan   | artifact | passed  | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020212Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| spec   | artifact | pending | -          | -                                                           | -             | -          | -                        |
+| design | artifact | pending | -          | -                                                           | -             | -          | -                        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
