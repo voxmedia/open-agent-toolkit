@@ -244,6 +244,22 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Review row `final` → `fixes_completed` at `495d4b9a`; narrowed round 3 (the program's last review cycle) dispatched.**
 
+### Review Received: final (round 3, narrowed — cycle 3 of 3)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/final-review-2026-08-27T055358Z.md (reviewed head `067bfad9f0f221f076d1aeea1358b2b03b21f8c8`, range `6b81bea9..067bfad9`, invocation auto, dispatch `w4-final-review-003`, model opus)
+
+**Findings:** Critical 0 · Important 0 · Medium 3 · Minor 0 — every round-2 disposition verified; 34-probe matrix reproduced; eight gates green; `SKILL.md` byte-identical since `39121c35`; nothing blocks the shipped skill. The three Mediums are contract-guard breadth, each with an isolation control and a reviewer-applied, matrix-verified patch.
+
+**Cycle-cap disposition (REVIEWRECEIVE-02, scope `final`, third and last cycle):** the root does not open a fourth cycle. Independent verification of the whole range is provided by the configured implementation exit gate (a full-project cross-family review), which follows.
+
+- M1 the bypass re-added as a bare option bullet under step 4 — byte-for-byte the pre-fix construct the plan was chartered to remove — escapes the guard (probe y4; y4c control fails) → **bounded, reviewer-specified, root-verified fix** (`w4-final-fix-003`, one line: `--skip-git-repo-check` becomes a `commandLines` marker; reviewer-verified non-regressing across 34 probes with the step-5 prohibition line entering the exempt set via the existing branch). Root re-runs the runner with y4/y4c added as the verification record.
+- M2 the exception row stays exempt if its use case is broadened while retaining the phrase (probe y1; y1c control fails) → **ledger + backlog** (phrase-level narrowing with a stated brittleness trade-off; `SKILL.md` correct at HEAD).
+- M3 an anaphoric blocking requirement in the clause after the below-floor clause escapes the per-clause filter (probe y5; y5c control fails) → **ledger + backlog** (the reviewer's own caveat: `in that case` narrows rather than closes; a proximity window false-fails the shipped text).
+- Backlog item to file at wave close: "span-based prose guards …" (already drafted) extended with y1/y5 and the M2/M3 patches as candidate directions.
+
+**Review row `final` → `fixes_added` at `067bfad9`; M1 fix then `passed` with the root verification record; exit gate next.**
+
 ## Implementation Log
 
 Chronological log of implementation progress.

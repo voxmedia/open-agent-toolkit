@@ -170,3 +170,17 @@ fix round `w4-final-fix-001` dispatched; narrowed round 2 follows.
 **Skill signal (gap):** the root's `once` helper accepted a function as a
 replacement and wrote its source; helpers must reject non-string replacements
 and every bookkeeping commit needs a post-write grep for `=>`/`$1` residue.
+
+### 2026-08-27 · structural · oat-project-implement · final review rounds 1–3 (cycle cap)
+
+Final scope: round 1 (0C/1I/4M/1m — a root bookkeeping corruption from a
+non-string replacement callback, ledger head mismatch, stale prose, two guard
+evasions), round 2 (0C/0I/2M/1m — row-scoped carve-out, negation mask), round
+3 (0C/0I/3M/0m — bare option-bullet bypass, broadened exception row, anaphoric
+blocking clause). Every code change after `39121c35` hardened the contract
+test only. At the cap the root applied M1 (a plan-named class, one-line fix,
+reviewer-verified) as a bounded root-verified fix and ledgered M2/M3 with a
+backlog item; the configured exit gate is the independent verification.
+**Skill signal (gap):** a prose-contract guard can absorb unbounded reviewer
+creativity; the wrapper should budget guard-hardening rounds explicitly and
+route breadth beyond the plan-named classes to backlog from round 2 onward.
