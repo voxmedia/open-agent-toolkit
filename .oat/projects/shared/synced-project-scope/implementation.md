@@ -237,7 +237,7 @@ oat_generated: false
 
 ## Phase 3: Reviewer and lifecycle surface
 
-**Status:** blocked - 9 of 11 tasks complete; p03-t10 recovery authorized and p03-t11 upstream integration queued
+**Status:** in progress - 9 of 11 tasks complete; p03-t10 dogfood ready and p03-t11 upstream integration queued
 **Started:** 2026-08-27
 
 ### Task Outcomes
@@ -258,7 +258,7 @@ oat_generated: false
 
 **Verification before dogfood:** Full CLI passed 289 files / 3,845 tests after recovery 1; CLI type-check/build, repository lint/format, and diff checks passed. The p03-t07 synced-project doctor check passed, while the overall live doctor command retained unrelated pre-existing warnings.
 
-**Blocker:** The repository's common post-checkout wrapper requires `tools/git-hooks/post-checkout` inside the new checkout, but synced project refs intentionally begin empty. Invocation-scoped `core.hooksPath=/dev/null` for only the two empty-ref `worktree add` commands passed 49/49 focused tests. Recovery attempt 2 produced no code commit because the full CLI run and its one allowed no-edit rerun failed different existing fixed-timeout integration cases. The code files were restored exactly; only failed ledger evidence was committed.
+**Recovery outcome:** Attempt 3 limited invocation-scoped `core.hooksPath=/dev/null` to the two empty-ref `worktree add` commands. The recovery commit passed 49/49 focused tests and 3,847/3,847 full CLI tests before and after commit in a stable host-load window; root independently validated the exact three-file boundary, clean worktree, immutable ancestry, and 49/49 focused result. The recovery ledger is settled at 3/10 with no pending attempt.
 
 **Operator direction (2026-08-27):** Authorize recovery attempt 3/10 with stable-load preflight and the same bounded two-file hook correction. After p03-t10 completes, fetch and merge `origin/main` as planned task p03-t11, resolve any real conflicts, verify and review the merged tree, and do not begin Phase 4 beforehand.
 
@@ -823,6 +823,21 @@ continuation_events: []
 - Recovery commit: -
 - Verification: focused ref-sync 49/49 passed; full CLI phase run failed one fixed-timeout split test and the allowed no-edit rerun failed three different fixed-timeout cases
 - Reason: the bounded hook correction was restored because authoritative phase verification remained ambiguous; only failed ledger evidence commit `5f68612761928d0f11bbc54bc9da571cfce8a4a2` remains
+
+### Recovery Event p03-recovery-03-synced-empty-tree-hook
+
+- Phase/task: p03 / p03-t10
+- Original request: dispatch-synced-project-scope-p03-20260827T173721Z
+- Original commit: 4df5063be546c62abb2ddbf558264fb30fd44439
+- Defect class: composition
+- Discovered by: `pnpm run --silent cli -- project new synced-dogfood --mode quick --no-set-active` with the rejecting common post-checkout wrapper
+- Disposition: recovered
+- Authorization: operator-authorized
+- Attempt: 3/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: d666f4b07cc2f50c787a060d9b4ae4c95b926e48
+- Verification: focused ref-sync 49/49 and full CLI 3,847/3,847 passed before and after commit; CLI type-check, scoped lint, format, and diff checks passed; root independently re-ran focused ref-sync 49/49 and verified the exact committed boundary
+- Reason: invocation-scoped `core.hooksPath=/dev/null` is limited to the two empty synced-ref materializations, with rejecting-hook regressions for create and fresh pull; no shared or global Git configuration was mutated
 
 ### Recovery Event recovery-p02-01-cli-phase-suite
 
