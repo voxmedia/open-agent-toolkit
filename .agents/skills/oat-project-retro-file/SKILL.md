@@ -284,7 +284,9 @@ strengthened local backlog destination:
    For synced projects, the writeback lives on the independent project ref, so
    ancestry is not expected; verify the destination commit and exact-path
    receipt first, then perform the project push and retain both SHAs as the
-   ordering proof.
+   ordering proof. In both branches, the destination commit predates the
+   writeback commit: shared/local history proves it by ancestry, while the
+   synced transaction proves it by verified-before-push sequencing.
 
 If the destination mutation commit fails, stop that item without retro
 writeback; a failed destination commit yields no receipt and must never yield
