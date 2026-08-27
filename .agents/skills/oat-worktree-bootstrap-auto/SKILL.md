@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap-auto
-version: 1.5.6
+version: 1.6.0
 description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]'
 disable-model-invocation: false
@@ -210,10 +210,20 @@ fi
 
 ```bash
 oat local sync "$TARGET_PATH" 2>/dev/null || true
+TARGET_ACTIVE_PROJECT=$(cd "$TARGET_PATH" && oat config get activeProject 2>/dev/null || true)
+if [ -n "$TARGET_ACTIVE_PROJECT" ]; then
+  (
+    cd "$TARGET_PATH"
+    PROJECT_SCOPE=$(oat project scope "$TARGET_ACTIVE_PROJECT" --format value) || exit 1
+    [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$TARGET_ACTIVE_PROJECT"
+  )
+fi
 ```
 
 - Copies configured `localPaths` (e.g., `.oat/ideas/`, `.oat/projects/local/`) into the worktree.
 - Non-blocking: if sync fails or no `localPaths` are configured, bootstrap continues.
+- `oat local sync` skips nested synced-project checkouts; the explicit pull
+  above materializes or reconciles the active synced project non-interactively.
 
 ### Step 2.7: Verify Resolved Base in Worktree HEAD
 

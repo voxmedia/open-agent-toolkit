@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap
-version: 1.2.1
+version: 1.3.0
 description: Use when creating or resuming a git worktree for OAT implementation. Creates or validates a worktree and runs OAT bootstrap checks.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--existing]'
 disable-model-invocation: true
@@ -161,11 +161,21 @@ After config propagation, sync configured `localPaths` into the worktree:
 
 ```bash
 oat local sync "{target-path}" 2>/dev/null || true
+TARGET_ACTIVE_PROJECT=$(cd "{target-path}" && oat config get activeProject 2>/dev/null || true)
+if [ -n "$TARGET_ACTIVE_PROJECT" ]; then
+  (
+    cd "{target-path}"
+    PROJECT_SCOPE=$(oat project scope "$TARGET_ACTIVE_PROJECT" --format value) || exit 1
+    [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$TARGET_ACTIVE_PROJECT"
+  )
+fi
 ```
 
 - Uses the `localPaths` array from `.oat/config.json` to copy local-only directories (e.g., `.oat/ideas/`, `.oat/projects/local/`) into the worktree.
 - Non-blocking: if sync fails or no `localPaths` are configured, bootstrap continues.
 - Does not overwrite existing paths in the target (use `--force` to override).
+- `oat local sync` skips nested synced-project checkouts; the explicit pull
+  above materializes or reconciles the active synced project instead.
 
 ### Step 3: Resolve and Run the Repository Bootstrap
 

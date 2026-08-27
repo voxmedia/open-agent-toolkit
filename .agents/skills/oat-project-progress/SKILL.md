@@ -1,10 +1,10 @@
 ---
 name: oat-project-progress
-version: 1.2.6
+version: 1.3.0
 description: Use when the user explicitly asks to check OAT project progress — e.g. "check progress", "what's next", "where are we", or confirms a previously offered progress check. Do NOT auto-invoke just because a workflow step completed. Reads project status and offers the next route.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Bash(git:*), AskUserQuestion
+allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), AskUserQuestion
 ---
 
 # Progress Router
@@ -42,6 +42,22 @@ This skill is model-invokable for explicit read-only status and routing asks suc
 Do NOT auto-invoke only because another workflow step finished. If model-invoked, offer to check progress first when the user's intent is ambiguous. After reporting status, offer the recommended next skill before routing to it.
 
 ## Process
+
+### Step 0: Materialize the Active Project
+
+Resolve the active project before any status or knowledge-base reads. Pull a
+synced project first so an arriving worktree never reports against a missing or
+stale nested checkout:
+
+```bash
+ACTIVE_PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
+PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
+PROJECTS_ROOT="${PROJECTS_ROOT%/}"
+if [ -n "$ACTIVE_PROJECT_PATH" ]; then
+  PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT_PATH" --format value) || exit 1
+  [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$ACTIVE_PROJECT_PATH"
+fi
+```
 
 ### Step 1: Check Knowledge Base Exists
 
@@ -117,9 +133,7 @@ Consider running the oat-repo-knowledge-index skill to refresh.
 OAT stores active project context in `.oat/config.local.json` (`activeProject`, local-only).
 
 ```bash
-ACTIVE_PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
-PROJECTS_ROOT="${PROJECTS_ROOT%/}"
+oat project list --json
 ```
 
 **If `ACTIVE_PROJECT_PATH` is set and valid (directory exists):**
@@ -132,10 +146,6 @@ Active Project: {basename(ACTIVE_PROJECT_PATH)} ({ACTIVE_PROJECT_PATH})
 
 ```
 Active Project: (not set)
-```
-
-```bash
-ls -d "$PROJECTS_ROOT"/*/ 2>/dev/null
 ```
 
 **If no projects:**
