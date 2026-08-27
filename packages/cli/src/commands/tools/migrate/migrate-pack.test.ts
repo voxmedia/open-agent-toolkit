@@ -6,8 +6,10 @@ import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import { describe, expect, it } from 'vitest';
 
 import {
+  completeMigrationSourceRemoval,
   executeMigrationDestination,
   planPackMigration,
+  type PackMigrationOutcome,
   type PackMigrationPreview,
 } from './migrate-pack';
 
@@ -323,5 +325,193 @@ describe('executeMigrationDestination', () => {
     });
     expect(events.slice(-3)).toEqual(['inventory', 'intent', 'inventory']);
     expect(events).not.toContain('source');
+  });
+});
+
+function verifiedDestination(): PackMigrationOutcome {
+  const preview = migrationPreview();
+  return {
+    preview,
+    status: 'destination-verified',
+    destinationInventory: inventory('user'),
+  };
+}
+
+function sourceRemovalDependencies(options: {
+  events: string[];
+  failAfter?: number;
+}) {
+  const removed = new Set<string>();
+  let intentCleared = false;
+  let removals = 0;
+  const currentInventory = () => {
+    const statuses = Object.fromEntries(
+      getPackDefinition('ideas')
+        .assets.filter(
+          ({ scopes, ownership }) =>
+            scopes.includes('project') && ownership.project === 'managed',
+        )
+        .map((asset) => [
+          asset.id,
+          removed.has(join('/project', asset.destination))
+            ? 'missing'
+            : 'current',
+        ]),
+    );
+    return inventory('project', {
+      intent: intentCleared ? 'none' : 'declared',
+      statuses,
+    });
+  };
+  return {
+    inventory: async () => {
+      options.events.push('inventory-source');
+      return currentInventory();
+    },
+    applyDependencies: {
+      resolveManagedRoots: async (scopeRoot: string) => ({
+        '.agents': {
+          name: '.agents' as const,
+          logicalRoot: join(scopeRoot, '.agents'),
+          realRoot: join(scopeRoot, '.agents'),
+          exists: false,
+        },
+        '.oat': {
+          name: '.oat' as const,
+          logicalRoot: join(scopeRoot, '.oat'),
+          realRoot: join(scopeRoot, '.oat'),
+          exists: false,
+        },
+      }),
+      validatePath: async (path: string) => ({
+        realManagedRoot: '/project',
+        realPath: path,
+      }),
+      removePath: async (path: string) => {
+        removals += 1;
+        options.events.push(`remove:${path}`);
+        if (options.failAfter === removals) {
+          throw new Error('injected source removal failure');
+        }
+        removed.add(path);
+      },
+      writeGenerated: async () => {
+        throw new Error('source removal must not generate');
+      },
+      writeIntent: async (operation: { enabled: boolean }) => {
+        options.events.push(`intent:${operation.enabled}`);
+        intentCleared = !operation.enabled;
+      },
+      sync: async (input: {
+        scope: 'project' | 'user';
+        changedCanonicalPaths: readonly string[];
+      }) => {
+        options.events.push(
+          `sync:${input.scope}:${input.changedCanonicalPaths.join(',')}`,
+        );
+      },
+    },
+    setFailAfter(value: number | undefined) {
+      options.failAfter = value;
+      removals = 0;
+    },
+  };
+}
+
+describe('completeMigrationSourceRemoval', () => {
+  it.each(['declined', 'non-interactive'] as const)(
+    '%s completion retains both scopes without mutation',
+    async (confirmation) => {
+      const events: string[] = [];
+      const dependencies = sourceRemovalDependencies({ events });
+      const result = await completeMigrationSourceRemoval(
+        verifiedDestination(),
+        {
+          confirmation,
+          sourceRoot: '/project',
+          assetsRoot: '/assets',
+        },
+        dependencies,
+      );
+
+      expect(result.status).toBe('retained-both');
+      expect(result.recovery).toContain(
+        'Re-run interactively: oat tools migrate --pack ideas --from project --to user',
+      );
+      expect(events).toEqual([]);
+    },
+  );
+
+  it('removes the source, clears intent after verification, then syncs exact canonical paths', async () => {
+    const events: string[] = [];
+    const dependencies = sourceRemovalDependencies({ events });
+    const result = await completeMigrationSourceRemoval(
+      verifiedDestination(),
+      {
+        confirmation: 'confirmed',
+        sourceRoot: '/project',
+        assetsRoot: '/assets',
+      },
+      dependencies,
+    );
+
+    expect(result.status).toBe('migrated');
+    const intentIndex = events.indexOf('intent:false');
+    const lastRemovalIndex = events.reduce(
+      (last, event, index) => (event.startsWith('remove:') ? index : last),
+      -1,
+    );
+    const syncEvent = events.find((event) => event.startsWith('sync:'));
+    expect(intentIndex).toBeGreaterThan(lastRemovalIndex);
+    expect(events.indexOf(syncEvent!)).toBeGreaterThan(intentIndex);
+    expect(syncEvent).toContain('sync:project:.agents/skills/oat-idea-new');
+    expect(syncEvent).not.toContain('.oat/templates');
+    expect(result.sourceInventory).toMatchObject({
+      completeness: 'absent',
+      intent: { enabled: false },
+    });
+  });
+
+  it('retains destination and recoverable source intent after partial failure, then retries', async () => {
+    const events: string[] = [];
+    const dependencies = sourceRemovalDependencies({ events, failAfter: 2 });
+    const failed = await completeMigrationSourceRemoval(
+      verifiedDestination(),
+      {
+        confirmation: 'confirmed',
+        sourceRoot: '/project',
+        assetsRoot: '/assets',
+      },
+      dependencies,
+    );
+
+    expect(failed).toMatchObject({
+      status: 'source-removal-failed',
+      destinationInventory: { completeness: 'complete' },
+      sourceInventory: {
+        completeness: 'partial',
+        intent: { enabled: true, source: 'declared' },
+      },
+    });
+    expect(failed.recovery).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/re-run interactively/i),
+        expect.stringMatching(/remaining source paths/i),
+      ]),
+    );
+    expect(events).not.toContain('intent:false');
+    expect(events.some((event) => event.startsWith('sync:'))).toBe(false);
+
+    dependencies.setFailAfter(undefined);
+    const retried = await completeMigrationSourceRemoval(
+      failed,
+      {
+        confirmation: 'confirmed',
+        sourceRoot: '/project',
+        assetsRoot: '/assets',
+      },
+      dependencies,
+    );
+    expect(retried.status).toBe('migrated');
   });
 });

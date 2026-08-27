@@ -63,6 +63,19 @@ export interface ExecuteMigrationDestinationDependencies {
   applyDependencies: ApplyPackReconcileDependencies;
 }
 
+export interface CompleteMigrationSourceRemovalInput {
+  confirmation: 'confirmed' | 'declined' | 'non-interactive';
+  sourceRoot: string;
+  assetsRoot: string;
+}
+
+export interface CompleteMigrationSourceRemovalDependencies {
+  inventory: () => Promise<ScopedPackInventory>;
+  plan?: typeof planPackReconcile;
+  apply?: typeof applyPackReconcilePlan;
+  applyDependencies: Omit<ApplyPackReconcileDependencies, 'inventory'>;
+}
+
 function assertInventory(
   inventory: ScopedPackInventory,
   pack: PackName,
@@ -239,4 +252,101 @@ export async function executeMigrationDestination(
     status: 'destination-verified',
     destinationInventory,
   };
+}
+
+function migrationRetry(preview: PackMigrationPreview): string {
+  return `Re-run interactively: oat tools migrate --pack ${preview.pack} --from ${preview.from} --to ${preview.to}`;
+}
+
+export async function completeMigrationSourceRemoval(
+  destination: PackMigrationOutcome,
+  input: CompleteMigrationSourceRemovalInput,
+  dependencies: CompleteMigrationSourceRemovalDependencies,
+): Promise<PackMigrationOutcome> {
+  if (
+    destination.status !== 'destination-verified' &&
+    destination.status !== 'source-removal-failed'
+  ) {
+    throw new Error(
+      'Migration source removal requires a verified destination outcome',
+    );
+  }
+  if (!destination.destinationInventory) {
+    throw new Error(
+      'Migration source removal requires verified destination inventory',
+    );
+  }
+  const preview = destination.preview;
+  if (input.confirmation !== 'confirmed') {
+    return {
+      ...destination,
+      status: 'retained-both',
+      recovery: [
+        input.confirmation === 'non-interactive'
+          ? 'Source removal requires interactive confirmation; both scopes were retained.'
+          : 'Source removal was declined; both scopes were retained.',
+        migrationRetry(preview),
+      ],
+    };
+  }
+
+  const sourceBefore = await dependencies.inventory();
+  assertInventory(sourceBefore, preview.pack, preview.from, 'source');
+  const sourcePlan = (dependencies.plan ?? planPackReconcile)({
+    pack: preview.pack,
+    scope: preview.from,
+    scopeRoot: input.sourceRoot,
+    assetsRoot: input.assetsRoot,
+    action: 'remove',
+    inventory: sourceBefore,
+  });
+
+  try {
+    const applied = await (dependencies.apply ?? applyPackReconcilePlan)(
+      sourcePlan,
+      input.sourceRoot,
+      {
+        ...dependencies.applyDependencies,
+        inventory: dependencies.inventory,
+      },
+    );
+    return {
+      preview,
+      status: 'migrated',
+      destinationInventory: destination.destinationInventory,
+      sourceInventory: applied.inventory,
+    };
+  } catch (error) {
+    let sourceInventory = sourceBefore;
+    let inventoryFailure: string | null = null;
+    try {
+      sourceInventory = await dependencies.inventory();
+    } catch (inventoryError) {
+      inventoryFailure =
+        inventoryError instanceof Error
+          ? inventoryError.message
+          : String(inventoryError);
+    }
+    const remaining = sourceInventory.assets
+      .filter(
+        ({ definition: asset, status }) =>
+          asset.ownership[preview.from] === 'managed' && status !== 'missing',
+      )
+      .map(({ path }) => path);
+    const detail = error instanceof Error ? error.message : String(error);
+    return {
+      preview,
+      status: 'source-removal-failed',
+      destinationInventory: destination.destinationInventory,
+      sourceInventory,
+      recovery: [
+        `Source removal failed: ${detail}`,
+        `Remaining source paths: ${remaining.length > 0 ? remaining.join(', ') : 'inventory unavailable'}`,
+        ...(inventoryFailure
+          ? [`Source re-inventory failed: ${inventoryFailure}`]
+          : []),
+        migrationRetry(preview),
+      ],
+    };
+  }
 }
