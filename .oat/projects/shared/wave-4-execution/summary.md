@@ -51,22 +51,27 @@ plan's own step 2.
   (without a `gpt-5.4-mini` false positive), a blanket or example-default
   bypass across every command-ish line including Quick Reference rows and
   fenced blocks, a removed authority sentence, and a blocking below-floor
-  clause. Root-run 22-probe mutation matrix in the required state.
+  clause. Root-run 36-probe mutation matrix (with isolation controls) in the required state; two phrase-level guard residuals ledgered to backlog at the cycle cap.
 - **Release bookkeeping:** `codex-skill` 1.2.0 → 1.3.0 (once); lockstep
   0.2.35 → 0.2.36 across the five public packages;
   `packages/cli/assets/public-package-versions.json` regenerated; lockfile
   unchanged. `codex-skill` is repo-only (not bundled).
 - **Tests:** `pnpm test:skills` 586/586 (578 + 8 new); focused 8/8; CLI suite
-  273 files / 3695 tests.
+  273 files / 3695 tests. `SKILL.md` is byte-identical since `39121c35`; every
+  later commit hardened the contract test only.
 
 Reviews: plan artifact gate passed on round 1 (`cursor-gpt-5-6-sol-xhigh`,
 run `0d369be4`, one medium — mutation probes mapped into the wrapper
 checklist); p01 code review three rounds (0C/0I/3M/4m → 0C/0I/3M/2m →
 0C/0I/1M/1m) with append-only fixes `d9ce0c33`, `39121c35`, and — at the
 cycle cap — the reviewer-specified, root-verified `44fb2327` (test file only);
-thirteen Codex cross-model rounds across the four commits (a sandbox-weakening
-`--full-auto` mapping caught before commit); root final verification 10/10 at
-`6075a705`.
+final-scope review three rounds (0C/1I/4M/1m → 0C/0I/2M/1m → 0C/0I/3M/0m)
+with append-only test-only fixes `94d6f74d`, `495d4b9a`, `601c950b` (the last a
+reviewer-specified, root-verified bounded fix at the cap); eighteen Codex
+cross-model rounds across seven commits (a sandbox-weakening `--full-auto`
+mapping caught before commit); root final verification 10/10 at `6075a705`;
+configured exit gate generation 1 passed on `cursor-gpt-5-6-sol-xhigh` (run
+`10c732b5`, 0C/0I/3M/0m — the two ledgered residuals plus closeout prose).
 
 ## Key Decisions
 

@@ -37,7 +37,7 @@ oat_generated: false
 
 ### Phase Summary (fill when phase is complete)
 
-Source plan executed in full: `codex-skill` classifies work by OAT task class and takes model and effort from `provider-codex.md` (named as the source of truth; dated examples never override it; compatibility snapshots never defaults); routes offered as one combined model+effort choice; a valid user-supplied pair is honored (below-floor: say so once without blocking; direct-API specialist classification: confirm before launching); if the reference is unavailable the skill stops and asks. `--skip-git-repo-check` removed from ordinary initial-run, `-C`, and resume commands and kept only for a non-Git target directory with reason + authorization; resume examples normalized to the live `codex exec resume` usage; the dead `--full-auto` replaced under the operator-reconciled STOP #2 (`--approve-for-me` only with `-s workspace-write`; network inside a write sandbox via `-c sandbox_workspace_write.network_access=true`; `-s danger-full-access` for genuine broad-filesystem needs; the bypass-all flag for externally sandboxed automation) — sandbox and high-impact authorization retained and tightened. Eight-case prose contract test with logical-line normalization, an exemption rule keyed on any `codex` invocation and on a row's use-case cell, and property-based assertions; 34-probe mutation matrix (with isolation controls) in the required state. `codex-skill` 1.2.0 → 1.3.0 once; lockstep 0.2.35 → 0.2.36. Three p01 review rounds (0C/0I/3M/4m → 0C/0I/3M/2m → 0C/0I/1M/1m) plus final-scope rounds (0C/1I/4M/1m → 0C/0I/2M/1m), sixteen Codex rounds across six commits; `SKILL.md` unchanged since `39121c35`.
+Source plan executed in full: `codex-skill` classifies work by OAT task class and takes model and effort from `provider-codex.md` (named as the source of truth; dated examples never override it; compatibility snapshots never defaults); routes offered as one combined model+effort choice; a valid user-supplied pair is honored (below-floor: say so once without blocking; direct-API specialist classification: confirm before launching); if the reference is unavailable the skill stops and asks. `--skip-git-repo-check` removed from ordinary initial-run, `-C`, and resume commands and kept only for a non-Git target directory with reason + authorization; resume examples normalized to the live `codex exec resume` usage; the dead `--full-auto` replaced under the operator-reconciled STOP #2 (`--approve-for-me` only with `-s workspace-write`; network inside a write sandbox via `-c sandbox_workspace_write.network_access=true`; `-s danger-full-access` for genuine broad-filesystem needs; the bypass-all flag for externally sandboxed automation) — sandbox and high-impact authorization retained and tightened. Eight-case prose contract test with logical-line normalization, an exemption rule keyed on any `codex` invocation and on a row's use-case cell, and property-based assertions; 36-probe mutation matrix (with isolation controls) in the required state; two guard residuals (broadened exception row, anaphoric clause) ledgered to backlog at the cycle cap and independently reproduced by the exit gate. `codex-skill` 1.2.0 → 1.3.0 once; lockstep 0.2.35 → 0.2.36. Three p01 review rounds (0C/0I/3M/4m → 0C/0I/3M/2m → 0C/0I/1M/1m) plus final-scope rounds (0C/1I/4M/1m → 0C/0I/2M/1m → 0C/0I/3M/0m), eighteen Codex rounds across seven commits; `SKILL.md` unchanged since `39121c35`.
 
 ### Task p01-t01: Execute external plan — Route codex-skill through current model guidance and preserve repository checks
 
@@ -264,6 +264,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Review row `final` → `passed` at `601c950b` (root-verified under the cycle cap; M2/M3 ledgered with a backlog item). Next: configured exit gate (generation 1).**
 
+### Review Received: final (gate, generation 1)
+
+**Date:** 2026-08-27
+**Review artifact:** reviews/archived/final-review-2026-08-27T062832Z.md (reviewed head `ca5378b4d4bc2c1bb837624439e1c307c8599279`, full range `3c135e21..ca5378b4`, invocation gate, run `10c732b5-bee1-4760-b239-e98ea4ff8f78`, target `cursor-gpt-5-6-sol-xhigh`, model gpt-5.6-sol-xhigh)
+
+**Findings:** Critical 0 · Important 0 · Medium 3 · Minor 0 — gate passed at the important threshold; configured gate run as configured (default same-family avoidance → Cursor), detached launch with receipt, 20 minutes; the gate independently reproduced the two guard residuals ledgered at final round 3 (its M1 = round-3 M2 broadened exception row; its M2 = round-3 M3 anaphoric clause), confirming the cycle-cap disposition's independent-verification path.
+
+**Dispositions (root, this commit):**
+
+- M1 broadened non-repository row can exempt a blanket bypass → **accepted as ledgered** (final round-3 M2; `SKILL.md` correct at HEAD; phrase-level narrowing with a brittleness trade-off) → backlog item at wave close (span-based prose guards).
+- M2 adjacent anaphoric clause can reintroduce a below-floor gate → **accepted as ledgered** (final round-3 M3) → same backlog item.
+- M3 closeout prose predates `601c950b` / the 36-probe matrix / the final-scope rounds → **fixed**: `summary.md`, the Final Summary verification paragraph, and `state.md` Next Milestone aligned.
+
+**Gate review row `final` → `passed`; exit gate generation 1 allowed. Next: post-implement sequence (summary → document [skipped] → pr).**
+
 ## Implementation Log
 
 Chronological log of implementation progress.
@@ -303,7 +318,7 @@ Earlier evidence: implementer DoD 10/10 at `b97408f2`, `d9ce0c33`, `39121c35`, `
 
 **Key files:** `.agents/skills/codex-skill/SKILL.md`, `.agents/skills/codex-skill/tests/codex-skill-contract.test.mjs` (new), five `packages/*/package.json`, `packages/cli/assets/public-package-versions.json` (regenerated).
 
-**Verification:** DoD 10/10 at every code commit — `b97408f2`, `d9ce0c33`, `39121c35`, `44fb2327`, `94d6f74d`, `495d4b9a` (post-commit `release:check-versions` and `check:skill-bumps` re-runs 0 each time) — and by the root at `6075a705`; `test:skills` 586/586; reviewer probes across three p01 rounds and the final-scope rounds — live-syntax validation per subcommand, a 34-probe mutation matrix with isolation controls (root-run at HEAD: all matched), provider-reference consistency, weaker-anywhere on sandbox/authorization, scope verdict on the Codex-driven edits. `SKILL.md` is byte-identical since `39121c35`; every later commit hardened the contract test only.
+**Verification:** DoD 10/10 at every code commit — `b97408f2`, `d9ce0c33`, `39121c35`, `44fb2327`, `94d6f74d`, `495d4b9a` (post-commit `release:check-versions` and `check:skill-bumps` re-runs 0 each time) — and by the root at `6075a705`; `test:skills` 586/586; reviewer probes across three p01 rounds and the final-scope rounds — live-syntax validation per subcommand, a 36-probe mutation matrix with isolation controls (root-run at HEAD: all matched), provider-reference consistency, weaker-anywhere on sandbox/authorization, scope verdict on the Codex-driven edits. `SKILL.md` is byte-identical since `39121c35`; every later commit hardened the contract test only.
 
 **Design deltas:** N/A (quick mode; no `design.md`). Reconciliation: the plan's STOP #2 (`--full-auto` absent from live help) resolved non-narrowingly by operator direction inside the plan's own step 2 (recorded once in `plan.md` § Drift Refresh Record).
 

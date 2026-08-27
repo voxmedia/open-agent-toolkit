@@ -204,14 +204,14 @@ git commit -m "feat(p01-t01): route codex-skill through provider guidance and ma
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
-| p01    | code     | passed   | 2026-08-27 | reviews/archived/p01-review-2026-08-27T043458Z.md           | 39121c35e3ee07d8b7785d783565ae89e087d337 | auto       | -                        |
-| final  | code     | passed   | 2026-08-27 | reviews/archived/final-review-2026-08-27T055358Z.md         | 067bfad9f0f221f076d1aeea1358b2b03b21f8c8 | auto       | -                        |
-| plan   | artifact | passed   | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020212Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| spec   | artifact | pending  | -          | -                                                           | -                                        | -          | -                        |
-| design | artifact | pending  | -          | -                                                           | -                                        | -          | -                        |
-| final  | code     | received | 2026-08-27 | reviews/final-review-2026-08-27T062832Z.md                  | ca5378b4d4bc2c1bb837624439e1c307c8599279 | gate       | cursor-gpt-5-6-sol-xhigh |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | passed  | 2026-08-27 | reviews/archived/p01-review-2026-08-27T043458Z.md           | 39121c35e3ee07d8b7785d783565ae89e087d337 | auto       | -                        |
+| final  | code     | passed  | 2026-08-27 | reviews/archived/final-review-2026-08-27T055358Z.md         | 067bfad9f0f221f076d1aeea1358b2b03b21f8c8 | auto       | -                        |
+| plan   | artifact | passed  | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020212Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                        |
+| design | artifact | pending | -          | -                                                           | -                                        | -          | -                        |
+| final  | code     | passed  | 2026-08-27 | reviews/archived/final-review-2026-08-27T062832Z.md         | ca5378b4d4bc2c1bb837624439e1c307c8599279 | gate       | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

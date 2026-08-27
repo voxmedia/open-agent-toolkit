@@ -84,52 +84,67 @@ oat_workflow_origin: native # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_implement_exit_gate:
-  status: pending
+  status: allowed # generation 1 passed (run 10c732b5, cursor-gpt-5-6-sol-xhigh)
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:9fbcb0c285de3d6f04890eccd1630329d1584f88da6575ec5437f074902b36e7' # same declaration as W2 generation 2 and W3
   resolved_command: 'OAT_GATE_EXEC_TIMEOUT_MS=2400000 oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings. Run every verification command in the foreground of your own turn: do not use background tasks, monitors, or waiters, and do not end your turn until the review artifact has been written and committed."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0 # generation 1
+  attempts_completed: 1 # generation 1
   reviewed_head: 601c950b07b5d87776e7da0e02aae430ca5c701e # last code commit (root-verified cycle-cap fix); final review round 3 reviewed head 067bfad9
   implementation_base_ref: origin/main # 3c135e212dfb1d386650089e7d9f95263565ee82
   implementation_fingerprint: 'sha256:effective-delta-v1:fb2e6bb01b0160558dd57ab42ecd7d5dd5d1e00fb94c78534c545dddb368b6c0'
-  freshness_head: null # set at receive
-  freshness_fingerprint: null
-  launch_state: intent_persisted
+  freshness_head: ca5378b4d4bc2c1bb837624439e1c307c8599279 # gate reviewed head (closeout-only descendants of the last code commit 601c950b)
+  freshness_fingerprint: 'sha256:effective-delta-v1:pending' # recomputed at the pre-PR checkpoint
+  launch_state: result_persisted # completed 2026-08-27T06:32:48Z, exit 0
   launch_attempt_id: 'w4-exit-gate-g1-a1'
   launch_started_at: '2026-08-27T06:12:10Z'
   launch_result_receipt: '/private/tmp/claude-502/-Users-thomas-stang-orca-workspaces-open-agent-toolkit-bug-triage/99821df5-a46b-4bd0-a700-8b9284593b2c/scratchpad/w4-exit-gate-g1-a1.receipt.json'
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
-  receive_commit: null
-  receive_eligible: false
-  receive_completed: false
+  gate_run_marker: '/var/folders/ch/kmbmcdfd4gb807zjsjt2td4h0000gp/T/oat-gate-runs/10c732b5-bee1-4760-b239-e98ea4ff8f78.json'
+  gate_run_id: '10c732b5-bee1-4760-b239-e98ea4ff8f78'
+  envelope_status: ok
+  artifact: '.oat/projects/shared/wave-4-execution/reviews/final-review-2026-08-27T062832Z.md'
+  handoff: 'Gate passed at the important threshold with 3 medium non-blocking findings; run oat-project-review-receive for final-review-2026-08-27T062832Z.md'
+  receive_state: completed
+  receive_correlation: 'run=10c732b5-bee1-4760-b239-e98ea4ff8f78; handoff=receive; source=reviews/final-review-2026-08-27T062832Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/wave-4-execution/reviews/final-review-2026-08-27T062832Z.md'
+  receive_archived_artifact: '.oat/projects/shared/wave-4-execution/reviews/archived/final-review-2026-08-27T062832Z.md'
+  receive_event_identity: 'final | code | final-review-2026-08-27T062832Z.md'
+  receive_pre_head: 8399e863 # gate bookkeeping commit
+  receive_commit: pending # filled at the next state write
+  receive_eligible: true
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-27T06:12:10.409Z'
+  updated_at: '2026-08-27T06:36:00.378Z'
+oat_post_implement_sequence:
+  status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  source: configured # workflow.postImplementSequence
+  final_phase: p01
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending # pending | approved | not_required
+  approval_source: null # null | user | oat-autonomous
+  post_approval: []
+  post_approval_completed: []
+  failure: null
+oat_project_recap:
+  decision: generate
+  source: autonomous_policy
+  decided_at: '2026-08-27T06:36:00.378Z'
 oat_docs_updated: skipped # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T01:55:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T06:12:10.409Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T06:36:00.378Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-4-execution
 
-**Status:** Implement — configured exit gate generation 1 launched (final review passed; closeout bookkeeping complete)
+**Status:** Implement — exit gate generation 1 passed (run 10c732b5); post-implement sequence in progress
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
@@ -171,7 +186,8 @@ non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Rec
 - ✓ Fix round `w4-final-fix-002` (`495d4b9a`, test only; root-run 34-probe matrix ALL MATCHED)
 - ✓ Narrowed final round 3 (cycle 3 of 3): 0C/0I/3M/0m — guard breadth; `SKILL.md` unchanged since `39121c35`
 - ✓ Bounded fix `w4-final-fix-003` (`601c950b`, test only; root-run 36-probe matrix ALL MATCHED) — `final` row passed; summary.md generated, synthesis written, backlog item archived
-- ⧗ Configured exit gate generation 1 → post-implement sequence (summary → document [skipped] → pr)
+- ✓ Configured exit gate generation 1 passed (cursor-gpt-5-6-sol-xhigh, run 10c732b5, 0C/0I/3M/0m — the two ledgered residuals + closeout prose)
+- ⧗ Post-implement sequence: summary → document [skipped] → pr
 
 ## Blockers
 
@@ -179,4 +195,4 @@ None
 
 ## Next Milestone
 
-Final fix round → narrowed final review round 2 → configured exit gate → post-implement sequence (summary → document [skipped: no docs reference the old routing] → pr) → merge → wave-close → program recap (generate only) → HUMAN-GATED completion-tail checkpoint. Completion tail: deferred to program close.
+Post-implement sequence (summary → document [skipped: no docs reference the old routing] → pr) → autonomous HiLL → complete-state → CI → merge → wave-close → program recap (generate only) → HUMAN-GATED completion-tail checkpoint. Completion tail: deferred to program close.
