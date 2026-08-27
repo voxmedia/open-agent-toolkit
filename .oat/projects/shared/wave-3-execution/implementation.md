@@ -207,6 +207,13 @@ Chronological log of implementation progress.
 - Decisions: close the ambient-override hermeticity class at the vitest `test.env` seam (one line) rather than N call-site edits; keep the plan-mandated existing error messages on the override path (remedy wording → backlog).
 - Blockers: none.
 
+## Implementation-tail project recap (IMPLEMENT-19)
+
+- Intent: `oat_project_recap: generate / autonomous_policy`; no manifest existed → exactly one `project-recap` attempt via `runOatExplainer` (`mode: unattended`, in-process planSet/author/critic/browserSession/visualCritic seams; delegated to an Opus worker, dispatch `w3-recap-001`, driver under `$TMPDIR/w3-recap/`).
+- Result: manifest `explainers/wave-3-execution-recap/manifest.json`, run `run-6c05d663-d933-4480-8740-96709c53deeb`, recipe `project-recap@2` (floor-only portfolio, one hub). Build: validate/fact-base/content/render/qa passed, theme warned `theme-selection-normalized` (only warning); fact critic 3 sources / 3 claims / 0 findings; real Chromium 147.0.7727.15 evidence at 320×640, 768×1024, 1440×900 (clean); visual review `pass` on attempt 1; backlinks pinned to `ea7ce494`; the recap states plainly that the wave PR is not yet opened.
+- Finalizer (`dedicated`): artifact commit `4a052aca` (exactly the 27 immutable paths), attestation `record-durability.mjs` → **built-durable** (`durable: true`, no errors), evidence commit `40c69c28`, `verifyTrackedRunFinalization` `ok: true`. Root re-verified 27/27 immutable hashes against the blobs at HEAD.
+- Deviations from W2 (worker-reported, root-accepted): mandated commit subject instead of the finalizer's default; three bindable sources; no commitlint rejection (bodies pre-checked ≤ 100 chars); one transient Chromium launch timeout in a preflight re-run only (no run attempt consumed); two SVG layout defects caught by a pre-run screenshot pass and fixed before the single run.
+
 ## Deviations from Plan / Design
 
 | Task / Review                         | Source Artifact             | Planned / Documented                                                                           | Actual / Accepted                                                                                                                                                      | Reason                                                                                                                                           | Source of Truth                                               | Follow-up                  |

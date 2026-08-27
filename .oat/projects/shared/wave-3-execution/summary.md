@@ -104,6 +104,8 @@ N/A (quick mode; no `design.md`). Extra work accepted by review:
   0.2.35 (pre-existing repo-wide pattern; tracked by
   `BL-260826-warn-on-silent-oatversion`).
 
+**Explainer outcome:** project-recap **built-durable** — `explainers/wave-3-execution-recap` (run `run-6c05d663-d933-4480-8740-96709c53deeb`, `project-recap@2`, one hub artifact, real Chromium evidence at 320/768/1440, visual review pass on attempt 1; artifact commit `4a052aca`, attestation `40c69c28`).
+
 ## Follow-up Items
 
 - `document` step: `OAT_ASSETS_DIR` entry in
