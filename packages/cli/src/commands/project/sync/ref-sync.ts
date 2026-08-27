@@ -1,6 +1,14 @@
-import { mkdir, readFile, realpath, rm, stat } from 'node:fs/promises';
-import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
+import {
+  mkdir,
+  readFile,
+  realpath,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
+import { applyOatCoreGitignore } from '@commands/init/gitignore';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import {
   isSyncedCheckout,
@@ -9,7 +17,9 @@ import {
   syncedRefName,
   syncedRecordPath,
 } from '@commands/shared/project-scope';
+import { readOatLocalConfig, writeOatLocalConfig } from '@config/oat-config';
 import { CliError } from '@errors/cli-error';
+import { copyDirectory } from '@fs/io';
 import YAML from 'yaml';
 
 import type { GitRunner } from './git';
@@ -77,6 +87,23 @@ export type PruneResult = {
   status: 'pruned';
   lifecycleCommit: string | null;
 };
+
+export type MigrateResult = {
+  status: 'migrated';
+  lifecycleCommit: string | null;
+  sha: string;
+};
+
+export interface MigrateSharedToSyncedOptions {
+  sourcePath: string;
+  commit: boolean;
+  now?: Date;
+  copyDirectory?: typeof copyDirectory;
+  applyOatCoreGitignore?: typeof applyOatCoreGitignore;
+  readOatLocalConfig?: typeof readOatLocalConfig;
+  writeOatLocalConfig?: typeof writeOatLocalConfig;
+  afterBranchCommit?: () => Promise<void>;
+}
 
 const ZERO_OBJECT_ID = '0000000000000000000000000000000000000000';
 
@@ -785,6 +812,185 @@ export async function pruneSynced(
       )
     : null;
   return { status: 'pruned', lifecycleCommit: committed?.sha ?? null };
+}
+
+async function readOptionalFile(path: string): Promise<string | null> {
+  try {
+    return await readFile(path, 'utf8');
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
+}
+
+export async function migrateSharedToSynced(
+  target: SyncTarget,
+  git: GitRunner,
+  options: MigrateSharedToSyncedOptions,
+): Promise<MigrateResult> {
+  const sourcePath = resolve(options.sourcePath);
+  const sourceRelative = repoRelativePath(target.repoRoot, sourcePath);
+  const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+  const destinationRelative = repoRelativePath(
+    target.repoRoot,
+    target.projectPath,
+  );
+  const gitignorePath = join(target.repoRoot, '.gitignore');
+  const preMigrationHead = (
+    await git.run(['rev-parse', 'HEAD'], { cwd: target.repoRoot })
+  ).stdout;
+  const originalGitignore = await readOptionalFile(gitignorePath);
+  const readLocal = options.readOatLocalConfig ?? readOatLocalConfig;
+  const writeLocal = options.writeOatLocalConfig ?? writeOatLocalConfig;
+  const originalLocalConfig = await readLocal(target.repoRoot);
+  const sourceStatus = await git.run(
+    ['status', '--porcelain', '--untracked-files=all', '--', sourceRelative],
+    { cwd: target.repoRoot },
+  );
+  if (sourceStatus.stdout !== '') {
+    throw new CliError(
+      `Shared project ${sourceRelative} is dirty or has untracked files; commit or clean it before migration.`,
+      1,
+    );
+  }
+  const tracked = await git.run(['ls-files', '--', sourceRelative], {
+    cwd: target.repoRoot,
+  });
+  if (!tracked.stdout) {
+    throw new CliError(
+      `Shared project ${sourceRelative} is not tracked on the current branch.`,
+      1,
+    );
+  }
+  await git.run(['remote', 'get-url', target.remote], {
+    cwd: target.repoRoot,
+  });
+  if ((await readSyncedRecord(recordPath)) !== null) {
+    throw new CliError(
+      `Synced project record already exists for ${target.slug}.`,
+      1,
+    );
+  }
+
+  let created = false;
+  let activeProjectUpdated = false;
+  try {
+    const ignored = await git.run(['check-ignore', '-q', destinationRelative], {
+      cwd: target.repoRoot,
+      allowFailure: true,
+    });
+    assertExpectedGitResult('git check-ignore synced project', ignored, [0, 1]);
+    if (ignored.code === 1) {
+      await (options.applyOatCoreGitignore ?? applyOatCoreGitignore)(
+        target.repoRoot,
+      );
+    }
+
+    await createSyncedProject(target, git);
+    created = true;
+    await (options.copyDirectory ?? copyDirectory)(
+      sourcePath,
+      target.projectPath,
+    );
+    const pushed = await pushSynced(target, git, {
+      message: `chore(oat): migrate ${target.slug} artifacts`,
+    });
+    if (pushed.status !== 'pushed' && pushed.status !== 'up-to-date') {
+      throw new CliError(
+        `Unable to publish migrated project ${target.slug}: ${pushed.status}.`,
+        1,
+      );
+    }
+
+    await writeSyncedRecord(
+      recordPath,
+      buildSyncedRecord(target.slug, options.now ?? new Date()),
+    );
+    await rm(sourcePath, { recursive: true });
+    const gitignoreChanged =
+      (await readOptionalFile(gitignorePath)) !== originalGitignore;
+    let lifecycleCommit: string | null = null;
+    if (options.commit) {
+      const committed = await commitRecordChange(
+        target.repoRoot,
+        [sourcePath, recordPath, ...(gitignoreChanged ? [gitignorePath] : [])],
+        `chore(oat): migrate ${target.slug} to synced scope`,
+        git,
+      );
+      lifecycleCommit = committed?.sha ?? null;
+      await options.afterBranchCommit?.();
+    } else {
+      await git.run(
+        [
+          'reset',
+          '-q',
+          '--',
+          sourceRelative,
+          repoRelativePath(target.repoRoot, recordPath),
+          ...(gitignoreChanged ? ['.gitignore'] : []),
+        ],
+        { cwd: target.repoRoot },
+      );
+    }
+
+    if (originalLocalConfig.activeProject === sourceRelative) {
+      activeProjectUpdated = true;
+      await writeLocal(target.repoRoot, {
+        ...originalLocalConfig,
+        activeProject: destinationRelative,
+      });
+    }
+    return { status: 'migrated', lifecycleCommit, sha: pushed.sha };
+  } catch (error) {
+    const currentHead = (
+      await git.run(['rev-parse', 'HEAD'], { cwd: target.repoRoot })
+    ).stdout;
+    if (currentHead !== preMigrationHead) {
+      await git.run(['reset', '--soft', preMigrationHead], {
+        cwd: target.repoRoot,
+      });
+    }
+    await git.run(
+      [
+        'reset',
+        '-q',
+        '--',
+        sourceRelative,
+        repoRelativePath(target.repoRoot, recordPath),
+        '.gitignore',
+      ],
+      { cwd: target.repoRoot },
+    );
+    await git.run(['checkout', '--', sourceRelative], {
+      cwd: target.repoRoot,
+    });
+    await rm(recordPath, { force: true });
+    if (originalGitignore === null) {
+      await rm(gitignorePath, { force: true });
+    } else {
+      await writeFile(gitignorePath, originalGitignore, 'utf8');
+    }
+    if (created) {
+      const remoteRef = await git.run(
+        ['ls-remote', '--exit-code', target.remote, target.ref],
+        { cwd: target.repoRoot, allowFailure: true },
+      );
+      if (remoteRef.code === 0) {
+        await git.run(['push', target.remote, `:${target.ref}`], {
+          cwd: target.repoRoot,
+        });
+      }
+    }
+    if (created) {
+      await rollbackCreatedSyncedProject(target, git);
+    }
+    if (activeProjectUpdated) {
+      await writeLocal(target.repoRoot, originalLocalConfig);
+    }
+    throw error;
+  }
 }
 
 /**

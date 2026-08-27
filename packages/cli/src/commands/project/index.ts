@@ -7,6 +7,7 @@ import { createProjectDispatchCeilingCommand } from './dispatch-ceiling';
 import { createProjectLinksCommand } from './links';
 import { createProjectListCommand } from './list';
 import { createProjectLogCommand } from './log/index';
+import { createProjectMigrateCommand } from './migrate';
 import { createProjectNewCommand } from './new';
 import { createProjectOpenCommand } from './open';
 import { createProjectPauseCommand } from './pause';
@@ -29,6 +30,7 @@ export function createProjectCommand(): Command {
     .addCommand(createProjectListCommand())
     .addCommand(createProjectLinksCommand())
     .addCommand(createProjectLogCommand())
+    .addCommand(createProjectMigrateCommand())
     .addCommand(createProjectNewCommand())
     .addCommand(createProjectOpenCommand())
     .addCommand(createProjectPauseCommand())
