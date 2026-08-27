@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t05
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 7     | 7/7       |
-| Phase 2 | completed | 9     | 9/9       |
-| Phase 3 | pending   | 5     | 0/5       |
-| Phase 4 | pending   | 7     | 0/7       |
-| Phase 5 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 7     | 7/7       |
+| Phase 2 | completed   | 9     | 9/9       |
+| Phase 3 | in_progress | 5     | 5/5       |
+| Phase 4 | pending     | 7     | 0/7       |
+| Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 16/34 tasks completed
+**Total:** 21/34 tasks completed
 
 ## Phase 1: Canonical Pack Contract and Inventory
 
@@ -221,6 +221,37 @@ oat_generated: false
   wiring removal adapters to canonical-path sync, and this is the sole adapter
   that owns both the removal result and the `autoSync()` invocation.
 
+## Phase 3: Verified Scope Migration
+
+**Status:** in_progress
+**Started:** 2026-08-27
+
+### Task p03-t01: Define migration plans and result state
+
+**Status:** completed
+**Commit:** `32d440898`
+
+### Task p03-t02: Install and verify migration destination
+
+**Status:** completed
+**Commit:** `bc7d9d937`
+
+### Task p03-t03: Gate source removal and recovery
+
+**Status:** completed
+**Commit:** `b8c0a081d`
+
+### Task p03-t04: Add the tools migrate CLI
+
+**Status:** completed
+**Commit:** `c49d2f228`
+
+### Task p03-t05: Exercise migration end to end
+
+**Status:** completed
+**Commit:** `7a4c1ab45`
+**Recovery commit:** `3e2421bce1286dd61852e8e15d87cff1c8c82b5d`
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -236,10 +267,11 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Status    | Tasks | Review | Fix loops |
-| ----- | --------- | ----- | ------ | --------- |
-| p01   | completed | 7/7   | passed | 3         |
-| p02   | completed | 9/9   | passed | 2         |
+| Phase | Status      | Tasks | Review  | Fix loops |
+| ----- | ----------- | ----- | ------- | --------- |
+| p01   | completed   | 7/7   | passed  | 3         |
+| p02   | completed   | 9/9   | passed  | 2         |
+| p03   | in_progress | 5/5   | pending | 0         |
 
 #### Dispatch Notes
 
@@ -285,6 +317,29 @@ oat_generated: false
   `reviews/p02-review-2026-08-27T070524Z.md`; 0 Critical, 0 Important,
   0 Medium, 0 Minor.
 - `Dispatch: scope=p02-review-fix2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- Phase 3 implementation:
+  `oat-phase-implementer-gpt-5-6-sol-high`, request
+  `c880105a-9a2e-4e1f-bfb6-fea1b4584a7d`, five task commits from
+  `32d440898` through `7a4c1ab45`.
+- `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+### Recovery Event d8c701a8-4297-4028-bd4b-e60f404686fa
+
+- Phase/task: p03 / p03-t01
+- Original request: c880105a-9a2e-4e1f-bfb6-fea1b4584a7d
+- Original commit: 32d440898285a516a939c552bbbf0afbeac2b490
+- Defect class: composition
+- Discovered by: phase-wide self-review after
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/migrate src/commands/commands.integration.test.ts`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 3e2421bce1286dd61852e8e15d87cff1c8c82b5d
+- Verification: focused 13/13 and phase 43/43 passed before and after commit;
+  root repeated 36 migration/integration tests and diff check successfully.
+- Reason: corrected a bounded preview-composition defect that mislabeled
+  user-managed source templates as retained project overrides.
 
 ### Recovery Event 4bd11825-d39d-4c04-888d-ef704ae4af24
 
@@ -352,7 +407,7 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Begin Phase 3 at `p03-t01`.
+- Complete Phase 3 broader verification and return the phase report.
 
 ## Final Summary (for PR/docs)
 
