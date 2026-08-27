@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 3352bcdc7af847d0272632a26784c33ac4448e17
+oat_last_commit: e270a776e
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T18:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T19:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -98,7 +98,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation tasks complete — final review blocking
+**Status:** Implementation complete and merged with main — awaiting closeout decision
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -359,7 +359,10 @@ HiLL checkpoint and automatic checkpoint review.
 - ✗ Final review: 0 Critical, 2 Important, 9 Medium, 6 Minor
 - ✓ Final review fix pass completed in `3352bcdc7`
 - ✓ Root reproduced both Important defects and verified all three fixes
-- ⧗ Merge `origin/main` and re-run gates at the merged head
+- ✓ Merged `origin/main` (`e270a776e`); 10 conflicts resolved and reviewed
+- ✓ Post-merge gate sequence green: all eleven gates, CLI 3,970 tests
+- ✓ Both Important fixes re-verified against the merged build
+- ⧗ Final closeout decision
 
 ## Blockers
 

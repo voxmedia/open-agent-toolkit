@@ -1103,6 +1103,41 @@ individually and independently reproduced by root):**
   install. A genuinely broken inventory would therefore reproduce the old
   duplicate-install behavior rather than surfacing an error.
 
+### Merge of `origin/main`
+
+- Merged rather than rebased, on the operator's call: rebasing would have
+  replayed 130 commits across surfaces this branch rewrote, resolving each
+  conflict without the context of the commit that follows it. The merge gives
+  one reviewable resolution point and keeps the phase history intact, which
+  matters because this ledger references specific SHAs throughout.
+- Merge commit `e270a776e`, parents `61f2c599e` and `cb69a2869`. Brings in 11
+  commits, including the sync manifest/CLI version-skew warning (#217),
+  `OAT_ASSETS_DIR` fail-closed asset resolution (#219), and the conditional
+  `codex-skill` repo-check bypass (#222).
+- Ten conflicts in three classes. The two files the final review warned about,
+  `sync/index.ts` and `bundle-assets.sh`, auto-merged cleanly.
+  - Lockstep versions (5 `package.json` plus `public-package-versions.json`):
+    kept ours at `0.2.37`; main is at `0.2.36` and the gate requires strictly
+    greater, so no re-resolution was needed.
+  - `sync.types.ts` and `sync/index.test.ts`: independent additions on both
+    sides that collided textually only. Kept main's `SyncVersionSkew` and
+    `versionSkewWarning` alongside our `CanonicalSyncFilter` and our
+    `createCanonicalEntry(name, root)` signature, which the shared body
+    requires. Both imports had already merged cleanly.
+  - Generated state: took main's `oatVersion` in `.oat/sync/manifest.json`, and
+    for the backlog index kept both sides' curated overview additions and then
+    regenerated the table. The naive union had 89 rows including archived
+    items; the regenerated table has 51, matching the 51 open items on disk with
+    zero archived entries.
+- Post-merge verification at `e270a776e`: all eleven gates exit 0, with the CLI
+  suite at **3,970 tests** — both sides' suites coexist rather than one
+  displacing the other. `pnpm release:check-versions` was run after a fresh
+  `git fetch origin main`, as main's updated `AGENTS.md` now requires.
+- Root re-verified both Important fixes and M4 against the merged build, since
+  main touched asset resolution and sync: intent survives a no-op remove, a bare
+  per-pack install stays at project scope with 0 operations, and
+  `oat tools has` outside a repository exits 0.
+
 ## Final Summary (for PR/docs)
 
 ### What shipped
