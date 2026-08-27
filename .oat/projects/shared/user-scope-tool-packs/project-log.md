@@ -116,6 +116,10 @@ Phase 3 passed decisive review with no findings; temporary retry limit restored 
 
 Phase 4 implemented 7/7 tasks (4790cbd3b..0c189eb5b); implementer returned BLOCKED direction-required on missing request provenance, recovered operator-authorized root-inline as attempt 1/10 in db9c0b1ed; phase verification passes; review pending. See implementation.md#orchestration-runs.
 
+### 2026-08-27 · structural · oat-project-implement · p04
+
+Phase 4 passed: re-review 0 Critical / 0 Important (1 Medium, 4 Minor deferred to Phase 5), 1 fix loop of 2 configured, 3 recovery attempts of 10 used. See reviews/p04-review-2026-08-27T144000Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
