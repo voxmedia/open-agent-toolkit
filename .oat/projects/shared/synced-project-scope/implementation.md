@@ -230,3 +230,5 @@ The configured `oat-project-plan` gate (`oat gate review --review-type artifact 
 - M1 dangling `received` ledger rows → both gate rows now point at archived provenance with invocation/target filled.
 
 **Needed from the maintainer:** confirm the I3 default (or reverse it), then either authorize a third gate attempt (`oat gate review …` as configured) or approve the plan without a further gate run. `plan.md` frontmatter remains `oat_status: in_progress` until then.
+
+**Maintainer direction received (2026-08-27):** list `local` projects too (existing gap, not a boundary) — spec Non-Goals/NFR1 amended, p02-t07 and design restored to three-scope listing. Disposable spike repository provided by the maintainer: `https://github.com/tkstang/disposable-test-repo-for-oat` (deletion is an operator step after implementation). Third plan gate attempt authorized; implementation is not to start until the maintainer is told the plan is ready.

@@ -530,11 +530,13 @@ git commit -m "feat(p01-t09): add allowlisted record commits and safe checkout r
 
 **Why a disposable repo:** every `on: push` workflow in this repository is filtered to `branches: [main]`, so "no run after pushing a custom ref here" proves nothing. The negative CI result must come from a repository whose workflow has **no** branch filter.
 
-**Step 1: Create a disposable repository with an unfiltered push workflow**
+**Step 1: Use the maintainer-provided disposable repository and add an unfiltered push workflow**
+
+The maintainer created `https://github.com/tkstang/disposable-test-repo-for-oat` for this spike. Do **not** create or delete repositories; deleting this one is an operator step after implementation completes (see `## Implementation Complete`).
 
 ```bash
-SPIKE_REPO="oat-spike-$(date -u +%Y%m%dT%H%M%SZ)"
-gh repo create "$SPIKE_REPO" --private --clone && cd "$SPIKE_REPO"
+SPIKE_REPO_URL=https://github.com/tkstang/disposable-test-repo-for-oat
+git clone "$SPIKE_REPO_URL" oat-spike && cd oat-spike
 mkdir -p .github/workflows && cat > .github/workflows/probe.yml <<'YML'
 name: probe
 on: [push]            # deliberately unfiltered: any ref push that GitHub considers a trigger runs this
@@ -568,19 +570,19 @@ Optionally also push a **branch** `oat/projects/spike` with the same commit and 
 **Step 3: Clean up**
 
 ```bash
-git push origin ":$SPIKE"; cd .. && gh repo delete "$SPIKE_REPO" --yes && rm -rf "$SPIKE_REPO"
+git push origin ":$SPIKE"; cd .. && rm -rf oat-spike      # delete the spike ref and local clone only; the repository stays for the operator
 ```
 
-If `gh repo create`/`delete` is not permitted for the implementing agent, stop and hand the three checks to the user — this task is a hard prerequisite for Phase 3's links work, not something to skip.
+If pushing to the disposable repository is not permitted for the implementing agent, stop and hand the three checks to the user — this task is a hard prerequisite for Phase 3's links work, not something to skip.
 
 **Step 4: Record evidence**
 
-Append `### p01-t10 GitHub spike` to `implementation.md` with the repository name, spike SHA, the three raw outputs (A/B/C), timestamps, and the deletion confirmation. If A is non-empty (a run was created for the custom ref) or B fails (commit not served), **stop the phase and surface it** — the design's contingency is a real branch under `refs/heads/oat/projects/*`, which is a design change and needs the user.
+Append `### p01-t10 GitHub spike` to `implementation.md` with the repository URL, spike SHA, the three raw outputs (A/B/C), timestamps, and confirmation the spike ref was deleted. If A is non-empty (a run was created for the custom ref) or B fails (commit not served), **stop the phase and surface it** — the design's contingency is a real branch under `refs/heads/oat/projects/*`, which is a design change and needs the user.
 
 **Step 5: Verify**
 
-Run: `gh repo view "$SPIKE_REPO" 2>&1 | head -1`
-Expected: "Could not resolve to a Repository" (disposable repo deleted).
+Run: `git ls-remote "$SPIKE_REPO_URL" 'refs/oat/*'`
+Expected: empty (spike ref deleted; the repository itself remains until the operator deletes it).
 
 **Step 6: Commit**
 
@@ -851,8 +853,8 @@ git commit -m "feat(p02-t06): add oat project pull command"
 
 **Step 1: Write test (RED)**
 
-- Fixture with one project in each of `shared/`, `synced/` (record + checkout), `local/` → `shared` and `synced` listed with `scope`; **`local` is not listed** (spec non-goal: `local` listing behavior unchanged — it was never enumerated); a `synced` record whose checkout is absent is still listed (`checkout: absent` in JSON).
-- `--scope shared|synced` filters; `--scope local` → choices error naming the non-goal; invalid value → choices error.
+- Fixture with one project in each of `shared/`, `synced/` (record + checkout), `local/` → all three listed with `scope` (listing `local` is an explicit additive change — see spec Non-Goals/NFR1); a `synced` record whose checkout is absent is still listed (`checkout: absent` in JSON).
+- `--scope shared|synced|local` filters; invalid value → choices error.
 - Table output has a `Scope` column; existing column order otherwise unchanged (snapshot the header).
 - Existing list tests pass unchanged.
 
@@ -861,7 +863,7 @@ Expected: new cases fail.
 
 **Step 2: Implement (GREEN)**
 
-`listProjects` is called once per scope root (`shared` = `projects.root`, plus the `synced` sibling when it exists; `local` stays unenumerated per spec); for `synced`, merge `listSyncedRecords` so absent checkouts appear; tag each summary with `scope`.
+`listProjects` is called once per scope root (`shared` = `projects.root`, plus the `synced` and `local` siblings when they exist); for `synced`, merge `listSyncedRecords` so absent checkouts appear; tag each summary with `scope`.
 
 **Step 3: Verify**
 
@@ -876,7 +878,7 @@ Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/list.ts packages
 
 ```bash
 git add packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.integration.test.ts packages/control-plane/src/types.ts
-git commit -m "feat(p02-t07): list projects across shared and synced scopes"
+git commit -m "feat(p02-t07): list projects across shared, synced, and local scopes"
 ```
 
 ---
@@ -1736,6 +1738,8 @@ git commit -m "chore(p04-t10): record skill-sweep dogfood evidence"
 **Total: 38 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
+
+**Operator step after implementation:** delete the disposable spike repository `https://github.com/tkstang/disposable-test-repo-for-oat` (used by p01-t10); the implementing agent never deletes repositories.
 
 Ready for code review and merge.
 

@@ -50,7 +50,7 @@ Existing behaviors — `shared` and `local` scopes, local archive, dated S3 snap
 - A configuration that publishes design docs into the repository as durable documentation.
 - A single shared (non-detached) artifact checkout across multiple worktrees on one machine.
 - A live, browsable "latest" URL for artifacts on the git host (that would require a real branch and reintroduce CI/branch-list noise).
-- Changing how `shared` or `local` projects are stored, committed, listed, or archived.
+- Changing how `shared` or `local` projects are stored, committed, or archived. (Listing is the one deliberate additive change: `oat project list` gains `synced` **and** `local` rows — `local` projects were never enumerated before, which the maintainer considers an existing gap, not a boundary to preserve.)
 - Reducing artifact commit churn (moot once artifacts leave the branch).
 
 ## Requirements
@@ -215,6 +215,7 @@ Existing behaviors — `shared` and `local` scopes, local archive, dated S3 snap
 - **Description:** `shared` and `local` projects behave exactly as today.
 - **Acceptance Criteria:**
   - Existing `shared` projects are listed, resumed, committed, and archived without behavior change.
+  - Existing `local` projects are resumed, committed, and archived without behavior change; they additionally appear in `oat project list` with `scope: local` (additive).
   - Repositories that have not upgraded their gitignore block continue to work for `shared` and `local`.
   - Existing test suites for project creation, archive, and gitignore pass unchanged except for additive cases.
 - **Priority:** P0
