@@ -564,10 +564,58 @@ The check happens before any append, so the skill can route around the dirty cas
 
 4. If the guarded persistence succeeded → proceed to step 5 (handoff prompt).
 
-**Step 4 — If the artifact is dirty** (any entry in the porcelain output): pause the fold-back, present the user with three options before any artifact mutation occurs:
+**Step 4 — If the artifact is dirty** (any entry in the porcelain output): pause the fold-back, present the user with three options before any artifact mutation occurs. Carry the scope resolved by the preflight into the selected branch and resolve it again inside every persistence block so failures remain fail-closed.
 
-- **Option A — Commit current artifact changes first** (recommended when prior changes are unrelated to the brainstorm). Skill commits the existing artifact state with a separate, user-described commit message (ask the user for a one-line subject), then proceeds with fold-back as a new scoped commit on top.
-- **Option B — Include current changes in the fold-back commit.** Skill warns explicitly: "The fold-back commit will mix prior unrelated edits with the brainstorm synthesis. The handoff prompt's commit hash will reference both. Confirm?" If user accepts, append synthesis, then `git add -- "$ARTIFACT_PATH"`, then commit with an adjusted message acknowledging the mix (e.g., `chore(oat): integrate brainstorm + prior edits into <artifact> for <project-name>`).
+- **Option A — Commit current artifact changes first** (recommended when prior changes are unrelated to the brainstorm). Ask the user for a one-line subject and persist the existing artifact state before appending the synthesis:
+
+  ```bash
+  PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
+  if [ "$PROJECT_SCOPE" = "synced" ]; then
+    CURRENT_ARTIFACT_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "$CURRENT_ARTIFACT_SUBJECT" --json)
+    CURRENT_ARTIFACT_COMMIT_SHA=$(printf '%s\n' "$CURRENT_ARTIFACT_PUSH" | jq -er '.sha') || exit 1
+  else
+    git add -- "$ARTIFACT_PATH"
+    git commit --only -m "$CURRENT_ARTIFACT_SUBJECT" -- "$ARTIFACT_PATH"
+    CURRENT_ARTIFACT_COMMIT_SHA=$(git rev-parse HEAD)
+  fi
+  ```
+
+  Only after that succeeds, append the synthesis. Persist the fold-back as a
+  second commit on the same scope:
+
+  ```bash
+  PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
+  if [ "$PROJECT_SCOPE" = "synced" ]; then
+    FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" --json)
+    FOLD_BACK_COMMIT_SHA=$(printf '%s\n' "$FOLD_BACK_PUSH" | jq -er '.sha') || exit 1
+  else
+    git add -- "$ARTIFACT_PATH"
+    git commit --only -m "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" -- "$ARTIFACT_PATH"
+    FOLD_BACK_COMMIT_SHA=$(git rev-parse HEAD)
+  fi
+  ```
+
+  For synced projects, the two returned project-ref SHAs prove that the prior
+  dirty state was pushed before the fold-back.
+
+- **Option B — Include current changes in the fold-back commit.** Warn explicitly: "The fold-back commit will mix prior unrelated edits with the brainstorm synthesis. The handoff prompt's commit hash will reference both. Confirm?" If the user accepts, append the synthesis and persist the combined state once:
+
+  ```bash
+  PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
+  if [ "$PROJECT_SCOPE" = "synced" ]; then
+    MIXED_FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm + prior edits into <artifact-basename> for <project-name>" --json)
+    FOLD_BACK_COMMIT_SHA=$(printf '%s\n' "$MIXED_FOLD_BACK_PUSH" | jq -er '.sha') || exit 1
+  else
+    git add -- "$ARTIFACT_PATH"
+    git commit --only -m "chore(oat): integrate brainstorm + prior edits into <artifact-basename> for <project-name>" -- "$ARTIFACT_PATH"
+    FOLD_BACK_COMMIT_SHA=$(git rev-parse HEAD)
+  fi
+  ```
+
+  The `--only` path commit retains the existing non-synced Git route while
+  preserving unrelated staged state. A synced dirty branch never runs parent
+  `git add` for the project artifact.
+
 - **Option C — Abort fold-back; capture as reference file instead.** Switch the destination to **branch 9j** (active-project brainstorming reference file). Upstream artifact is left untouched.
 
 After the user picks A or B and the resulting commit succeeds, proceed to step 5. After option C, jump to branch 9j.

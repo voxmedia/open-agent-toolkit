@@ -1204,4 +1204,31 @@ describe('review skill contracts', () => {
       /absent-checkout synced record and a local-only project both take\s+this selection route/,
     );
   });
+
+  it('persists both dirty brainstorm fold-back choices by project scope', () => {
+    const content = readFileSync(
+      repoFilePath('.agents/skills/oat-brainstorm/SKILL.md'),
+      'utf8',
+    );
+    const dirtySection = content.slice(
+      content.indexOf('**Step 4 — If the artifact is dirty**'),
+      content.indexOf('**Step 5 — Handoff prompt.**'),
+    );
+
+    const currentPushIndex = dirtySection.indexOf('CURRENT_ARTIFACT_PUSH=');
+    const secondPushIndex = dirtySection.indexOf('FOLD_BACK_PUSH=');
+    expect(currentPushIndex).toBeGreaterThanOrEqual(0);
+    expect(secondPushIndex).toBeGreaterThan(currentPushIndex);
+    expect(dirtySection).toContain(
+      "CURRENT_ARTIFACT_COMMIT_SHA=$(printf '%s\\n' \"$CURRENT_ARTIFACT_PUSH\" | jq -er '.sha') || exit 1",
+    );
+    expect(dirtySection).toContain('MIXED_FOLD_BACK_PUSH=$(oat project push');
+    expect(dirtySection).toContain(
+      "FOLD_BACK_COMMIT_SHA=$(printf '%s\\n' \"$MIXED_FOLD_BACK_PUSH\" | jq -er '.sha') || exit 1",
+    );
+    expect(dirtySection.match(/git commit --only/g)).toHaveLength(3);
+    expect(dirtySection).toContain(
+      'A synced dirty branch never runs parent\n  `git add` for the project artifact.',
+    );
+  });
 });
