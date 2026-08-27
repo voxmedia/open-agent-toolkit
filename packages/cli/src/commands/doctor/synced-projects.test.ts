@@ -128,15 +128,64 @@ describe('checkSyncedProjects', () => {
     );
   });
 
+  it('detects an index-retained synced artifact when the working-tree root is absent', async () => {
+    const repoRoot = await createRoot();
+    execFileSync('git', ['init', '-q', '--initial-branch=main'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.email', 'doctor@example.com'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.name', 'Doctor Fixture'], {
+      cwd: repoRoot,
+    });
+    const syncedRoot = join(repoRoot, '.oat/projects/synced');
+    const leakedPath = '.oat/projects/synced/index-only/state.md';
+    await mkdir(join(repoRoot, '.oat/projects/synced/index-only'), {
+      recursive: true,
+    });
+    await writeFile(join(repoRoot, leakedPath), '# index-only leak\n', 'utf8');
+    execFileSync('git', ['add', '-f', leakedPath], { cwd: repoRoot });
+    execFileSync('git', ['commit', '-q', '-m', 'test: index-only leak'], {
+      cwd: repoRoot,
+    });
+    await rm(syncedRoot, { recursive: true });
+
+    expect(
+      execFileSync('git', ['ls-files', '--', '.oat/projects/synced'], {
+        cwd: repoRoot,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe(leakedPath);
+
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: defaultGitRunner,
+      resolveProjectsRoot: async () => '.oat/projects/shared',
+    });
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_tracked_artifacts',
+        status: 'fail',
+        message: expect.stringContaining(leakedPath),
+      }),
+    );
+    expect(checks).not.toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_projects',
+        message: 'No synced projects found.',
+      }),
+    );
+  });
+
   it('reports unexpected git ls-files failures explicitly', async () => {
     const repoRoot = await createRoot();
-    await mkdir(join(repoRoot, '.oat/projects/synced'), { recursive: true });
     const checks = await checkSyncedProjects(repoRoot, {
       git: gitRunner({
         'ls-files --': {
           code: 128,
           stdout: '',
-          stderr: 'fatal: not a git repository',
+          stderr: 'fatal: index file corrupt',
         },
       }),
     });
@@ -145,7 +194,7 @@ describe('checkSyncedProjects', () => {
       expect.objectContaining({
         name: 'project:synced_tracked_artifacts',
         status: 'fail',
-        message: expect.stringContaining('fatal: not a git repository'),
+        message: expect.stringContaining('fatal: index file corrupt'),
       }),
     );
   });

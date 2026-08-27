@@ -98,31 +98,34 @@ export async function checkSyncedProjects(
   const syncedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'synced');
   const syncedRelative = repoRelative(repoRoot, syncedRoot);
   const checks: DoctorCheck[] = [];
-  if (await pathExists(syncedRoot)) {
-    const tracked = await dependencies.git.run(
-      ['ls-files', '--', syncedRelative],
-      { cwd: repoRoot, allowFailure: true },
-    );
-    if (tracked.code !== 0) {
-      checks.push({
-        name: 'project:synced_tracked_artifacts',
-        description: 'Synced artifacts excluded from the parent branch',
-        status: 'fail',
-        message: `Unable to inspect tracked synced artifacts: ${tracked.stderr || tracked.stdout || `git ls-files exited ${tracked.code}`}.`,
-        fix: 'Resolve the Git error, then rerun `oat doctor --scope project`.',
-      });
-    } else if (tracked.stdout.trim()) {
-      checks.push({
-        name: 'project:synced_tracked_artifacts',
-        description: 'Synced artifacts excluded from the parent branch',
-        status: 'fail',
-        message: `Tracked synced artifact files: ${tracked.stdout.split('\n').join(', ')}`,
-        fix: 'Run `oat project migrate` or remove them with `git rm --cached`.',
-      });
-    }
+  const tracked = await dependencies.git.run(
+    ['ls-files', '--', syncedRelative],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  const missingRepository =
+    tracked.code !== 0 &&
+    /not a git repository/i.test(`${tracked.stderr}\n${tracked.stdout}`);
+  if (tracked.code !== 0 && !missingRepository) {
+    checks.push({
+      name: 'project:synced_tracked_artifacts',
+      description: 'Synced artifacts excluded from the parent branch',
+      status: 'fail',
+      message: `Unable to inspect tracked synced artifacts: ${tracked.stderr || tracked.stdout || `git ls-files exited ${tracked.code}`}.`,
+      fix: 'Resolve the Git error, then rerun `oat doctor --scope project`.',
+    });
+  } else if (tracked.code === 0 && tracked.stdout.trim()) {
+    checks.push({
+      name: 'project:synced_tracked_artifacts',
+      description: 'Synced artifacts excluded from the parent branch',
+      status: 'fail',
+      message: `Tracked synced artifact files: ${tracked.stdout.split('\n').join(', ')}`,
+      fix: 'Run `oat project migrate` or remove them with `git rm --cached`.',
+    });
   }
 
-  const entries = await recordEntries(syncedRoot);
+  const entries = (await pathExists(syncedRoot))
+    ? await recordEntries(syncedRoot)
+    : [];
   if (entries.length === 0 && checks.length === 0) {
     return [
       {
