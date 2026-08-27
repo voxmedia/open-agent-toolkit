@@ -592,6 +592,70 @@ lifecycle_outcome:
 
 ---
 
+### Run 12 - 2026-08-27T17:08:23Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Codex pinned variant)
+**Status:** in progress - p02-t13 dispatch prepared
+
+#### Dispatch Record
+
+```yaml
+request_id: dispatch-synced-project-scope-p02-t13-20260827T170823Z
+caller: oat-project-implement
+scope: p02-t13
+objective: Preserve per-child pull isolation and stabilize the fresh synced split integration test.
+action: implementation
+role_name: oat-phase-implementer
+role_class: worker
+provider: codex
+dispatch_context: root-native-existing-handle
+dispatch_policy: high
+dispatch_ceiling: high
+authority: write only the p02-t13 planned file boundary and create its one task commit
+role_selector: oat-phase-implementer-gpt-5-6-sol-high
+model_selector: gpt-5.6-sol
+model_selector_granularity: exact-materialized-role
+effort_selector: high
+reasoning_mode_selector: null
+service_tier_selector: priority
+guidance_reference: subagent-orchestration/references/provider-codex.md
+guidance_version: 2026-07-25
+guidance_verified_at: 2026-07-25
+guidance_status: fresh
+selection_source: policy-resolved
+selection_reason: native-catalog
+candidates_considered:
+  - gpt-5.6-sol/high
+selected_route: native existing-handle continuation
+task_class: hard-reasoning
+model_class_floor: hard-reasoning
+classification_source: caller
+classification_reason: Subtle partial-success and mutation-safety behavior remains after repeated substantive review findings.
+floor_satisfaction: satisfied
+deadline_seconds: 3600
+retry_limit: 0
+launch_status: prepared
+child_outcome: pending
+runtime_confirmation: not-reported
+continuation_events:
+  - resumes dispatch-synced-project-scope-p02-20260827T063331Z through /root/p02_implement
+```
+
+#### Project Dispatch
+
+- Project: `.oat/projects/shared/synced-project-scope`
+- Workflow / phase / task: spec-driven / p02 / p02-t13
+- Phase base HEAD: `21ea007bff79c0a3d89b8cc6bf150abea0cf4696`
+- File boundary: `ref-sync.ts`, `ref-sync.test.ts`, optional `pull/index.test.ts` only if needed for command-level proof, and `split-flow.test.ts`
+- Commit policy: exactly one task commit, `fix(p02-t13): preserve child pull isolation`
+- Recovery: unchanged at 1/10; `pending_attempt: null`
+- Review authorization: one fresh task-delta-only review after the task; no full-phase review restart
+- Dispatch stamp: `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+---
+
 ## Recovery Events
 
 ### Recovery Event recovery-p02-01-cli-phase-suite
