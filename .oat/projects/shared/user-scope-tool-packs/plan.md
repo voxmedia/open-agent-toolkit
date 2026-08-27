@@ -1268,19 +1268,19 @@ exit-code evidence.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target                   |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------------------------- |
-| p01    | code     | pending         | -          | -                                                             | -             | -          | -                             |
-| p02    | code     | pending         | -          | -                                                             | -             | -          | -                             |
-| final  | code     | pending         | -          | -                                                             | -             | -          | -                             |
-| spec   | artifact | pending         | -          | -                                                             | -             | -          | -                             |
-| design | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T012258Z.md | -             | gate       | claude-fable-skip-permissions |
-| p03    | code     | pending         | -          | -                                                             | -             | -          | -                             |
-| p04    | code     | pending         | -          | -                                                             | -             | -          | -                             |
-| p05    | code     | pending         | -          | -                                                             | -             | -          | -                             |
-| plan   | artifact | pending         | -          | -                                                             | -             | -          | -                             |
-| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T015201Z.md   | -             | gate       | claude-fable-skip-permissions |
-| plan   | artifact | passed          | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020356Z.md   | -             | gate       | claude-fable-skip-permissions |
+| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | fixes_added     | 2026-08-27 | reviews/p01-review-2026-08-27T031035Z.md                      | e0039d8065b4b8eb5ed45fb42d5c1382132c3104 | auto       | -                             |
+| p02    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| final  | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
+| design | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T012258Z.md | -                                        | gate       | claude-fable-skip-permissions |
+| p03    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| p04    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| p05    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| plan   | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T015201Z.md   | -                                        | gate       | claude-fable-skip-permissions |
+| plan   | artifact | passed          | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T020356Z.md   | -                                        | gate       | claude-fable-skip-permissions |
 
 Statuses are monotonic: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`. Append new review events; never delete earlier
