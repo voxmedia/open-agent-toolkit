@@ -172,15 +172,16 @@ export function planPackMigration(
     )
     .map(previewAsset);
   const retained = [
-    ...input.sourceInventory.assets,
-    ...input.destinationInventory.assets,
+    ...input.sourceInventory.assets.filter(
+      ({ definition: asset, status }) =>
+        asset.ownership[input.from] === 'seed-if-missing' &&
+        status !== 'missing',
+    ),
+    ...input.destinationInventory.assets.filter(
+      ({ definition: asset, status }) =>
+        asset.ownership[input.to] === 'seed-if-missing' && status !== 'missing',
+    ),
   ]
-    .filter(({ definition: asset, status }) =>
-      asset.ownership[input.from] === 'seed-if-missing' ||
-      asset.ownership[input.to] === 'seed-if-missing'
-        ? status !== 'missing'
-        : false,
-    )
     .map(previewAsset)
     .filter(
       (entry, index, entries) =>

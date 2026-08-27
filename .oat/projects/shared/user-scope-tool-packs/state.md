@@ -27,6 +27,18 @@ oat_phase_recovery_policy:
     p02:
       used_attempts: 2
       pending_attempt: null
+    p03:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: 'd8c701a8-4297-4028-bd4b-e60f404686fa'
+        original_request_id: 'c880105a-9a2e-4e1f-bfb6-fea1b4584a7d'
+        original_task_id: 'p03-t01'
+        original_commit: '32d440898285a516a939c552bbbf0afbeac2b490'
+        discovered_by: 'phase-wide self-review after pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/migrate src/commands/commands.integration.test.ts'
+        dispatch_target: 'oat-phase-implementer-gpt-5-6-sol-high'
+        reservation_head: '7a4c1ab45457c61168b58d20d2e40e85d5df9ebd'
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit

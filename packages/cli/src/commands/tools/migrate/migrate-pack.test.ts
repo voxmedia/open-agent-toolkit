@@ -169,6 +169,26 @@ describe('planPackMigration', () => {
     );
   });
 
+  it('does not mislabel user-managed source assets as retained project overrides', () => {
+    const preview = planPackMigration({
+      pack: 'ideas',
+      from: 'user',
+      to: 'project',
+      sourceRoot: '/user',
+      destinationRoot: '/project',
+      assetsRoot: '/assets',
+      sourceInventory: inventory('user'),
+      destinationInventory: inventory('project', { intent: 'none' }),
+    });
+
+    expect(preview.removals).toContainEqual(
+      expect.objectContaining({ assetId: 'template:ideas/idea-discovery.md' }),
+    );
+    expect(preview.retained).not.toContainEqual(
+      expect.objectContaining({ assetId: 'template:ideas/idea-discovery.md' }),
+    );
+  });
+
   it('blocks newer destination conflicts and legacy-false conflicts before mutation', () => {
     expect(() =>
       planPackMigration({
