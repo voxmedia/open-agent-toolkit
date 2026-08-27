@@ -559,6 +559,39 @@ describe('synced project lifecycle', () => {
           ),
         ).resolves.toContain('# Updated remotely');
 
+        const archived = await runCli(
+          fixture.cloneA,
+          ['project', 'archive', '.oat/projects/synced/demo'],
+          ['--json'],
+        );
+        expect(archived.stderr).toBe('');
+        const archivedPayload = JSON.parse(archived.stdout);
+        expect(archivedPayload).toMatchObject({
+          status: 'ok',
+          projectName: 'demo',
+          snapshotId: 'demo',
+          lifecycleCommit: expect.stringMatching(/^[a-f0-9]{40}$/),
+        });
+        expect(archived.exitCode).toBe(0);
+        await expect(
+          lstat(join(fixture.cloneA, '.oat/projects/synced/demo')),
+        ).rejects.toMatchObject({ code: 'ENOENT' });
+        expect(
+          execFileSync(
+            'git',
+            ['ls-remote', 'origin', 'refs/oat/projects/demo'],
+            { cwd: fixture.cloneA, encoding: 'utf8' },
+          ),
+        ).toContain('refs/oat/projects/demo');
+        expect(
+          JSON.parse(
+            await readFile(
+              join(fixture.cloneA, '.oat/projects/synced/demo.json'),
+              'utf8',
+            ),
+          ),
+        ).toMatchObject({ status: 'complete', archiveSnapshot: 'demo' });
+
         const legacy = await runCli(
           fixture.cloneA,
           ['project', 'new', 'legacy', '--scope', 'shared', '--no-dashboard'],

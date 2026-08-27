@@ -33,6 +33,9 @@ interface HarnessOptions {
       };
     } | null;
     warnings: string[];
+    lifecycleCommit?: string | null;
+    recapExportPaths?: string[];
+    snapshotId?: string;
   };
   archiveTarget?: ArchiveProjectTarget;
   config?: OatConfig;
@@ -70,7 +73,7 @@ function createHarness(options: HarnessOptions = {}): {
     activeProject: '.oat/projects/shared/demo-project',
   };
   const processEnv = options.processEnv ?? { PATH: '/usr/bin' };
-  const archiveResult = options.archiveResult ?? {
+  const archiveResult = {
     archivePath: join(cwd, '.oat', 'projects', 'archived', 'demo-project'),
     s3Path:
       's3://example-bucket/oat-archive/open-agent-toolkit/projects/20260401-demo-project',
@@ -84,6 +87,10 @@ function createHarness(options: HarnessOptions = {}): {
     ),
     projectRecapExport: null,
     warnings: ['Archive completed locally; S3 sync skipped.'],
+    lifecycleCommit: null,
+    recapExportPaths: [],
+    snapshotId: 'demo-project',
+    ...options.archiveResult,
   };
   const archiveTarget: ArchiveProjectTarget = options.archiveTarget ?? {
     archiveProjectPath: '.oat/projects/archived/demo-project',
@@ -503,6 +510,9 @@ describe('oat project archive push', () => {
       summaryExportFile:
         '/tmp/workspace/open-agent-toolkit/.oat/repo/reference/project-summaries/20260401-demo-project.md',
       projectRecapExport: recapExport,
+      lifecycleCommit: null,
+      recapExportPaths: [],
+      snapshotId: 'demo-project',
       warnings: ['Archive completed locally; S3 sync skipped.'],
     });
     expect(process.exitCode).toBe(0);
@@ -531,6 +541,19 @@ describe('oat project archive push', () => {
     });
 
     expect(archiveProjectOnCompletion).toHaveBeenCalledOnce();
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('wires --no-commit into synced archive options', async () => {
+    const { archiveProjectOnCompletion, command } = createHarness();
+
+    await runProjectArchiveCommand(command, {
+      commandArgs: ['.oat/projects/synced/demo-project', '--no-commit'],
+    });
+
+    expect(archiveProjectOnCompletion).toHaveBeenCalledWith(
+      expect.objectContaining({ commit: false }),
+    );
     expect(process.exitCode).toBe(0);
   });
 });

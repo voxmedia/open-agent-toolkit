@@ -3,6 +3,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import {
   lstat,
   readFile,
+  readdir,
   realpath,
   rename,
   rm,
@@ -20,6 +21,23 @@ import {
 } from 'node:path';
 import { promisify } from 'node:util';
 
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
+import {
+  readSyncedRecord,
+  type SyncedProjectRecord,
+  writeSyncedRecord,
+} from '@commands/project/sync/record';
+import {
+  buildSyncTarget,
+  commitRecordChange,
+  preflightSyncedCheckout,
+  removeSyncedCheckout,
+} from '@commands/project/sync/ref-sync';
+import {
+  resolveProjectScope,
+  resolveScopeRoot,
+  syncedRecordPath,
+} from '@commands/shared/project-scope';
 import { CliError } from '@errors/cli-error';
 import {
   copyDirectory,
@@ -100,6 +118,7 @@ export interface ArchiveProjectOnCompletionOptions {
    * semantics as `awsProfile`.
    */
   awsRegion?: string | null;
+  commit?: boolean;
 }
 
 export interface ResolvePrimaryRepoRootDependencies {
@@ -112,6 +131,7 @@ export interface ResolveArchiveProjectTargetOptions {
   repoRoot: string;
   projectsRoot: string;
   projectName: string;
+  archiveSnapshot?: string;
 }
 
 export interface ResolveArchiveProjectTargetDependencies extends ResolvePrimaryRepoRootDependencies {
@@ -144,6 +164,12 @@ interface ArchiveProjectOnCompletionDependencies
   fileExists?: typeof fileExists;
   renamePath?: typeof rename;
   timestamp?: () => string;
+  gitRunner?: GitRunner;
+  readSyncedRecord?: typeof readSyncedRecord;
+  writeSyncedRecord?: typeof writeSyncedRecord;
+  preflightSyncedCheckout?: typeof preflightSyncedCheckout;
+  removeSyncedCheckout?: typeof removeSyncedCheckout;
+  commitRecordChange?: typeof commitRecordChange;
 }
 
 export interface ArchiveProjectRecapExportV1 {
@@ -161,6 +187,9 @@ export interface ArchiveProjectOnCompletionResult {
   summaryExportFile: string | null;
   projectRecapExport: ArchiveProjectRecapExportV1 | null;
   warnings: string[];
+  lifecycleCommit: string | null;
+  recapExportPaths: string[];
+  snapshotId: string;
 }
 
 export const ARCHIVE_SNAPSHOT_METADATA_FILENAME = '.oat-archive-source.json';
@@ -542,10 +571,12 @@ export async function resolveArchiveProjectTarget(
     archiveRepoRoot,
     archiveProjectPath,
   );
-  const archivePath = await resolveUniqueArchivePath(archiveBasePath, {
-    dirExists: dependencies.dirExists,
-    timestamp: dependencies.timestamp,
-  });
+  const archivePath = options.archiveSnapshot
+    ? join(dirname(archiveBasePath), options.archiveSnapshot)
+    : await resolveUniqueArchivePath(archiveBasePath, {
+        dirExists: dependencies.dirExists,
+        timestamp: dependencies.timestamp,
+      });
 
   return {
     archiveProjectPath,
@@ -1318,16 +1349,87 @@ export async function archiveProjectOnCompletion(
   const execFile = dependencies.execFile ?? execFileAsync;
   const timestamp = dependencies.timestamp?.() ?? new Date().toISOString();
   const snapshotName = buildArchiveSnapshotName(options.projectName, timestamp);
+  const syncedRoot = resolveScopeRoot(
+    options.repoRoot,
+    options.projectsRoot,
+    'synced',
+  );
+  const recordPath = syncedRecordPath(syncedRoot, options.projectName);
+  const readRecord = dependencies.readSyncedRecord ?? readSyncedRecord;
+  const writeRecord = dependencies.writeSyncedRecord ?? writeSyncedRecord;
+  const record = await readRecord(recordPath);
+  const isSynced =
+    resolveProjectScope(options.projectPath, options.projectsRoot) ===
+      'synced' && record !== null;
+  const syncTarget = isSynced
+    ? buildSyncTarget(
+        options.repoRoot,
+        options.projectsRoot,
+        options.projectName,
+      )
+    : null;
+  const git = dependencies.gitRunner ?? defaultGitRunner;
+  let activeRecord: SyncedProjectRecord | null = record;
+
+  if (syncTarget) {
+    if (!activeRecord) {
+      throw new CliError(
+        `Synced project ${options.projectName} is missing its discovery record.`,
+        2,
+      );
+    }
+    const preflight = await (
+      dependencies.preflightSyncedCheckout ?? preflightSyncedCheckout
+    )(syncTarget, git);
+    if (
+      preflight.status !== 'clean' &&
+      !(preflight.status === 'absent' && activeRecord.status === 'complete')
+    ) {
+      throw new CliError(
+        `Synced project ${options.projectName} is ${preflight.status}; run oat project push ${options.projectName} before archiving.`,
+        1,
+      );
+    }
+  }
+
   const archiveTarget = await resolveArchiveProjectTarget(
     {
       repoRoot: options.repoRoot,
       projectsRoot: options.projectsRoot,
       projectName: options.projectName,
+      ...(activeRecord?.archiveSnapshot
+        ? { archiveSnapshot: activeRecord.archiveSnapshot }
+        : {}),
     },
     dependencies,
   );
   assertDurableArchiveProjectTarget(archiveTarget);
   const archivePath = archiveTarget.archivePath;
+  const snapshotId = basename(archivePath);
+
+  if (
+    syncTarget &&
+    activeRecord?.status === 'complete' &&
+    activeRecord.archiveSnapshot &&
+    !(await pathExists(options.projectPath)) &&
+    (await (dependencies.dirExists ?? dirExists)(archivePath))
+  ) {
+    return {
+      archivePath,
+      s3Path: null,
+      summaryExportFile: null,
+      projectRecapExport: null,
+      warnings: [],
+      lifecycleCommit: null,
+      recapExportPaths: [],
+      snapshotId,
+    };
+  }
+
+  if (syncTarget && activeRecord && !activeRecord.archiveSnapshot) {
+    activeRecord = { ...activeRecord, archiveSnapshot: snapshotId };
+    await writeRecord(recordPath, activeRecord);
+  }
   const projectRecapExport = await exportSelectedProjectRecap(
     options,
     snapshotName,
@@ -1336,12 +1438,19 @@ export async function archiveProjectOnCompletion(
 
   try {
     await makeDir(dirname(archivePath));
-    await copyProjectDirectory(options.projectPath, archivePath);
+    await copyProjectDirectory(
+      options.projectPath,
+      archivePath,
+      (_sourcePath, relativePath) =>
+        relativePath !== 'reviews' && (!syncTarget || relativePath !== '.git'),
+    );
     await writeArchiveSnapshotMetadata(archivePath, {
       projectName: options.projectName,
       snapshotName,
     });
-    await removePath(options.projectPath, { recursive: true, force: true });
+    if (!syncTarget) {
+      await removePath(options.projectPath, { recursive: true, force: true });
+    }
   } catch (error) {
     if (projectRecapExport) {
       await removePath(projectRecapExport.exportRoot, {
@@ -1366,6 +1475,12 @@ export async function archiveProjectOnCompletion(
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      if (syncTarget) {
+        throw new CliError(
+          `Summary export to \`${options.summaryExportPath}\` failed: ${message}`,
+          1,
+        );
+      }
       warnings.push(
         `Summary export to \`${options.summaryExportPath}\` failed: ${message}`,
       );
@@ -1388,6 +1503,13 @@ export async function archiveProjectOnCompletion(
       },
     );
     warnings.push(...access.warnings);
+
+    if (syncTarget && !access.ok) {
+      throw new CliError(
+        access.warnings.join(' ') || 'Archive S3 access preflight failed.',
+        1,
+      );
+    }
 
     if (access.ok) {
       const remoteRepoRoot = await resolvePrimaryRepoRoot(
@@ -1414,9 +1536,70 @@ export async function archiveProjectOnCompletion(
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
+        if (syncTarget) {
+          throw new CliError(
+            `Archive S3 sync to \`${s3Path}\` failed: ${message}`,
+            1,
+          );
+        }
         warnings.push(`Archive S3 sync to \`${s3Path}\` failed: ${message}`);
         s3Path = null;
       }
+    }
+  }
+
+  let lifecycleCommit: string | null = null;
+  let recapExportPaths: string[] = [];
+  if (syncTarget) {
+    if (!activeRecord) {
+      throw new CliError(
+        `Synced project ${options.projectName} is missing its discovery record.`,
+        2,
+      );
+    }
+    if (projectRecapExport) {
+      recapExportPaths = (
+        await listArchiveExportFiles(projectRecapExport.exportRoot)
+      ).filter(
+        (filePath) =>
+          basename(filePath) !== 'manifest.json' &&
+          basename(filePath) !== 'build-record.json',
+      );
+    }
+    activeRecord = {
+      ...activeRecord,
+      status: 'complete',
+      completedAt: timestamp,
+    };
+    await writeRecord(recordPath, activeRecord);
+    if (options.commit !== false) {
+      const pathspecs = [
+        recordPath,
+        ...(summaryExportFile ? [summaryExportFile] : []),
+        ...recapExportPaths,
+      ];
+      const committed = await (
+        dependencies.commitRecordChange ?? commitRecordChange
+      )(
+        options.repoRoot,
+        pathspecs,
+        `chore(oat): complete synced project ${options.projectName}`,
+        git,
+        {
+          summaryExportPath: options.summaryExportPath,
+          additionalAllowlistedPaths: recapExportPaths,
+        },
+      );
+      lifecycleCommit = committed?.sha ?? null;
+    }
+    const removed = await (
+      dependencies.removeSyncedCheckout ?? removeSyncedCheckout
+    )(syncTarget, git);
+    if (removed.status !== 'removed' && removed.status !== 'absent') {
+      throw new CliError(
+        `Synced checkout became ${removed.status} during archive; run oat project push ${options.projectName} and retry.`,
+        1,
+      );
     }
   }
 
@@ -1426,7 +1609,26 @@ export async function archiveProjectOnCompletion(
     summaryExportFile,
     projectRecapExport,
     warnings,
+    lifecycleCommit,
+    recapExportPaths,
+    snapshotId,
   };
+}
+
+async function listArchiveExportFiles(
+  root: string,
+  current = root,
+): Promise<string[]> {
+  const entries = await readdir(current, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const entryPath = join(current, entry.name);
+      return entry.isDirectory()
+        ? listArchiveExportFiles(root, entryPath)
+        : [entryPath];
+    }),
+  );
+  return files.flat().sort();
 }
 
 export async function ensureS3ArchiveAccess(

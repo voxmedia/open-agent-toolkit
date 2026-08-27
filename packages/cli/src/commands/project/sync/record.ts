@@ -14,6 +14,7 @@ export interface SyncedProjectRecord {
   status: 'active' | 'complete';
   createdAt: string;
   completedAt: string | null;
+  archiveSnapshot?: string;
 }
 
 const schemaVersion = z.custom<1>((value) => value === 1, {
@@ -30,6 +31,7 @@ export const SyncedProjectRecordSchema: z.ZodType<SyncedProjectRecord> = z
     status: z.enum(['active', 'complete']),
     createdAt: z.string().datetime(),
     completedAt: z.string().datetime().nullable(),
+    archiveSnapshot: z.string().min(1).optional(),
   })
   .strict()
   .superRefine((record, context) => {

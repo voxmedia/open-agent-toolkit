@@ -28,6 +28,7 @@ import {
 export interface ArchivePushOptions {
   dryRun?: boolean;
   projectRecapRun?: string;
+  commit?: boolean;
 }
 
 export interface ProjectArchivePushCommandDependencies {
@@ -66,6 +67,9 @@ interface ArchivePushReport {
   summaryExportFile: string | null;
   projectRecapExport?: ArchiveProjectRecapExportV1;
   warnings: string[];
+  lifecycleCommit: string | null;
+  recapExportPaths: string[];
+  snapshotId: string;
 }
 
 export function defaultProjectArchivePushCommandDependencies(): ProjectArchivePushCommandDependencies {
@@ -138,6 +142,7 @@ function buildArchiveOptions(
     projectRecapRun: options.projectRecapRun,
     awsProfile: config.archive?.awsProfile,
     awsRegion: config.archive?.awsRegion,
+    ...(options.commit === false ? { commit: false } : {}),
   };
 }
 
@@ -174,6 +179,9 @@ async function buildDryRunReport(
     s3Path,
     summaryExportFile,
     warnings: [],
+    lifecycleCommit: null,
+    recapExportPaths: [],
+    snapshotId: basename(archiveTarget.archivePath),
   };
 }
 
@@ -294,6 +302,9 @@ export async function runArchivePushCommand(
         ? { projectRecapExport: result.projectRecapExport }
         : {}),
       warnings: result.warnings,
+      lifecycleCommit: result.lifecycleCommit,
+      recapExportPaths: result.recapExportPaths,
+      snapshotId: result.snapshotId,
     };
 
     emitArchivePushReport(report, config.archive?.summaryExportPath, context);
