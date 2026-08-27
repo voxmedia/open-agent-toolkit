@@ -101,13 +101,13 @@ and repository overrides remain local to each repository.
 
 ## Follow-up Items
 
-- [`portable-skill-references`](../portable-skill-references/) — portable
+- [`portable-skill-references`](../../../projects/shared/portable-skill-references/) — portable
   sibling-skill/resource resolution and stronger ratchets
   (`BL-260827-make-packaged-skill-references`).
-- [`scope-adoption-diagnostics`](../scope-adoption-diagnostics/) — PJM
+- [`scope-adoption-diagnostics`](../../../projects/shared/scope-adoption-diagnostics/) — PJM
   migration eligibility, provider-aware agent diagnostics, attribution, and
   failure rendering (`BL-260827-correct-scope-and-adoption`).
-- [`tool-pack-lifecycle-config-cleanup`](../tool-pack-lifecycle-config-cleanup/)
+- [`tool-pack-lifecycle-config-cleanup`](../../../projects/shared/tool-pack-lifecycle-config-cleanup/)
   — content-accurate inventory, exact adoption reporting, supported config
   state, and per-pack CLI cleanup
   (`BL-260827-clean-up-tool-pack-lifecycle`).
