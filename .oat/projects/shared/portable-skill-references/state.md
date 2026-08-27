@@ -1,17 +1,22 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
-associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
+associated_issues:
+  - { type: backlog, ref: 'BL-260827-make-packaged-skill-references' }
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
@@ -76,33 +81,39 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T21:30:45.407Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T21:30:45.407Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T21:34:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: portable-skill-references
 
-**Status:** Discovery
+**Status:** Plan in progress
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Plan - Straight-to-plan quick workflow; managed High dispatch and no additional
+cross-runtime phase gate are configured. The local artifact review passed; the
+configured cross-runtime exit gate is pending a committed baseline.
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete; well-understood)
 - **Spec:** N/A (quick mode)
-- **Design:** N/A (quick mode unless lightweight design is needed)
-- **Plan:** `plan.md` (scaffolded template — not started)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Design:** N/A (straight-to-plan quick workflow)
+- **Plan:** `plan.md` (drafted; review pending)
+- **Implementation:** `implementation.md` (initialized; 0/5 tasks)
 
 ## Progress
 
-- ✓ Discovery started
-- ✓ Execution artifacts scaffolded
-- ⧗ Awaiting user input
+- ✓ Discovery completed from approved backlog scope
+- ✓ Straight-to-plan depth selected; no lightweight design needed
+- ✓ Runnable five-task draft initialized
+- ✓ Managed High dispatch policy configured
+- ✓ Additional cross-runtime phase gate disabled; built-in reviews remain required
+- ✓ Local plan artifact review passed with no findings
+- ⧗ Configured cross-runtime plan exit gate pending
 
 ## Blockers
 
@@ -110,4 +121,5 @@ None
 
 ## Next Milestone
 
-Complete discovery and generate a quick implementation plan
+Commit the reviewed planning baseline, run the configured cross-runtime exit
+gate, and mark the project ready for implementation.

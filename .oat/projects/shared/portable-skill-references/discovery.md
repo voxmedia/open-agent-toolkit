@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-08-27
 oat_generated: false
@@ -8,135 +8,125 @@ oat_generated: false
 
 # Discovery: portable-skill-references
 
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
-
 ## Initial Request
 
-{Copy of user's initial request}
+Turn the portable-skill-reference follow-ups from the completed
+`user-scope-tool-packs` project into a bounded quick-workflow project. Replace
+the remaining repository-relative sibling-skill reads, correct the brainstorm
+handoff reference, and strengthen the regression ratchet that prevents the
+same portability defect from returning.
 
-## Clarifying Questions
+Associated backlog item:
+`BL-260827-make-packaged-skill-references`.
 
-### Question 1: {Topic}
+## Request Classification
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Well-understood.** The completed project review identified the exact
+offenders, the repository already contains an installed-scope resolution
+contract in `oat-brainstorm`, and the existing bundled-docs contract test is
+the natural enforcement point. No new architecture or data-model decision is
+required, so this quick project goes straight to plan without a lightweight
+design.
 
-## Solution Space
+## Chosen Direction
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+Use one consistent installed-scope sibling resolution contract across the
+affected skills:
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+1. derive the sibling skills root from the directory containing the loaded
+   `SKILL.md`;
+2. otherwise probe user scope before project scope;
+3. require the requested sibling `SKILL.md` to exist; and
+4. stop with an actionable message when no candidate resolves rather than
+   reading a repository-relative path or improvising the downstream process.
 
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+Extend the existing ratchet to scan every authored Markdown surface shipped by
+user-default packs, recognize unsupported paths independent of Markdown
+backticks, and retain only an explicit, reviewable baseline for deliberately
+historical examples. Remove baseline entries as executable references are
+remediated.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **One portability contract:** idea, workflow, and brainstorm skills use the
+   same loaded-scope-first resolution order already established by
+   `oat-brainstorm`.
+2. **Executable prose is in scope:** both `SKILL.md` files and operational
+   reference files are scanned; repository-internal historical evidence may
+   remain only behind an explicit baseline.
+3. **No lightweight design:** this is a localized contract and test change,
+   not a component-boundary redesign.
+4. **Release-shaped delivery:** every changed canonical skill gets one
+   PR-scoped version bump, all five public packages advance in lockstep, and
+   the bundled public-package version inventory stays synchronized.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve project-scope installs while making user-scope installs work.
+- Do not weaken mandatory skill-loading or dispatch instructions when replacing
+  their paths.
+- The ratchet must not depend on one Markdown quoting style and must not silently
+  exclude authored reference files.
+- Do not add new legacy baseline entries for executable paths. Any retained
+  historical example must be explicit and justified in the test.
+- Skill version bumps are exactly once per changed skill in the final PR diff.
+- Fetch `origin/main` before choosing the lockstep public package version; the
+  branch version must be strictly greater than the current main version.
+- Run `pnpm lint` and `pnpm format` because canonical skills are touched, in
+  addition to the complete Definition of Done gate sequence.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- `oat-idea-ideate`, `oat-idea-new`, `oat-idea-summarize`,
+  `oat-project-implement`, and `oat-project-plan-writing` no longer execute
+  chained reads through bare `.agents/skills/...` paths.
+- The operational `oat-brainstorm/references/destinations.md` handoff resolves
+  sibling skills through the installed scope.
+- User-scope and project-scope candidates are both represented in the written
+  contract, with a fail-closed missing-sibling outcome.
+- The ratchet recursively scans authored Markdown under user-default packaged
+  skills, catches quoted and unquoted bare cross-skill paths, and reports exact
+  file/target evidence.
+- Any deliberately retained historical references have an explicit baseline;
+  all executable-reference baseline entries are removed.
+- Focused portability and bundle tests pass, skill and public-package version
+  gates pass, and every repository Definition of Done command passes in the
+  documented order.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
-
-## Deferred Ideas
-
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
-
-## Open Questions
-
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
-
-## Assumptions
-
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Changing pack membership, default scope, install/update semantics, or tool
+  discovery.
+- The separate PJM adoption and scope-diagnostic follow-ups tracked by
+  `scope-adoption-diagnostics`.
+- Rewriting historical dogfood reports solely to modernize non-executable
+  evidence paths.
+- Publishing packages or opening/merging a PR.
 
 ## Risks
 
-{Potential risks identified during discovery}
+- **Prose-only false confidence:** a path may look portable but omit a required
+  fallback or missing-skill stop.
+  - **Mitigation:** assert the full contract in focused tests and inspect the
+    bundled copy, not only the source file.
+- **Scanner noise from historical evidence:** recursive scanning may surface
+  examples that are not executable instructions.
+  - **Mitigation:** use an exact file/target baseline with rationale rather than
+    excluding reference directories or weakening the matcher.
+- **Version drift from main:** another release may land before implementation.
+  - **Mitigation:** fetch `origin/main` immediately before selecting the
+    lockstep version and run `release:check-versions` after committing it.
 
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+## Open Questions
 
-## Next Steps
+None block planning. The implementer may choose the smallest test-helper shape
+that makes syntax variants independently testable, provided the repository
+ratchet still scans the real packaged surfaces.
 
-Use this discovery artifact to drive the next workflow step:
+## References
 
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+- Backlog: `.oat/repo/pjm/backlog/items/BL-260827-make-packaged-skill-references.md`
+- Source project residue:
+  `.oat/projects/shared/user-scope-tool-packs/implementation.md#known-deferred-work`
+- Existing contract test:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`

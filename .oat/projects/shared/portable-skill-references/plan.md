@@ -5,208 +5,344 @@ oat_blockers: []
 oat_last_updated: 2026-08-27
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_parallel_groups: []
+oat_phase_review_gate: false
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
+oat_template: true
 ---
 
 # Implementation Plan: portable-skill-references
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> Execute this plan using `oat-project-implement` after the plan-review
+> disposition is resolved.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Make every executable cross-skill reference in the identified
+user-default packs resolve from its installed scope, and enforce that contract
+across all shipped Markdown surfaces.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Approach:** Strengthen the existing bundled-docs ratchet first, then migrate
+the idea, workflow, and brainstorm surfaces in reviewable commits. Finish with
+provider-view refresh, lockstep package metadata, and the complete repository
+release gates.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** Markdown skill contracts, TypeScript/Vitest contract tests,
+pnpm/Turborepo release tooling.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
-
-## Planning Checklist
-
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
-
----
+**Commit Convention:** `{type}(pNN-tNN): {description}`
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
+`oat_plan_parallel_groups` remains empty. All Phase 1 tasks update the same
+ratchet and progressively remove its legacy baseline, while Phase 2 must select
+release versions from the complete Phase 1 diff and current `origin/main`.
+Isolated worktrees would therefore create overlapping writes and could validate
+stale baseline or version state; sequential execution is the safe and faster
+merge path.
 
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
+## Phase 1: Portable sibling resolution and enforcement
 
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
-
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
-
----
-
-## Dispatch Profile
-
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
-
----
-
-RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Other task-body shapes, including non-TDD shapes, are allowed when appropriate, provided the plan preserves stable `pNN-tNN` IDs, per-task verification, and atomic commits.
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Make the cross-skill ratchet recursive and syntax-robust
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
 
-**Step 1: Write test (RED)**
+**Steps:**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+1. Refactor the bare cross-skill path collector so it recursively scans every
+   authored Markdown file under skills shipped by user-default packs, excluding
+   only materialized shared-doc copies already covered by the bundled-docs
+   contract.
+2. Add table-driven matcher coverage for backticked, plain-text, and Markdown
+   link forms of `.agents/skills/<sibling>/SKILL.md`. Do not match portable
+   `${SKILLS_ROOT}` references or a skill's self-reference.
+3. Represent retained cases as an exact file-plus-target baseline with comments
+   distinguishing executable legacy references from deliberately historical
+   evidence. Make failures print the source file and sibling target.
+4. Keep the current repository green at this task boundary by baselining only
+   existing findings; add no wildcard, directory exclusion, or future-proof
+   allowance.
+5. Format:
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+   ```bash
+   pnpm exec oxfmt --write packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   ```
 
-**Step 2: Implement (GREEN)**
+6. Verify:
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
+   ```bash
+   pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   ```
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
+7. Commit:
 
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
-
-**Step 3: Refactor**
-
-{Any cleanup or improvements while tests stay green}
-
-**Step 4: Verify**
-
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
-
-**Step 5: Commit**
-
-```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
-```
+   ```bash
+   git add packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   git commit -m "test(p01-t01): harden packaged skill reference ratchet"
+   ```
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Make idea-workflow sibling reads scope-portable
 
 **Files:**
 
-- {File list}
+- Modify: `.agents/skills/oat-idea-ideate/SKILL.md`
+- Modify: `.agents/skills/oat-idea-new/SKILL.md`
+- Modify: `.agents/skills/oat-idea-summarize/SKILL.md`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
 
-**Step 1: Write test (RED)**
+**Steps:**
 
-{Test code}
+1. Replace each executable bare sibling read with the loaded-scope-first
+   `${SKILLS_ROOT}` resolution contract: loaded `SKILL_DIR` sibling root, then
+   user scope, then project scope, with existence probes and an actionable stop
+   when the target skill is absent.
+2. Preserve the current downstream step boundaries and user interaction; this
+   task changes path resolution, not the idea lifecycle.
+3. Remove the remediated idea-skill entries from the ratchet baseline and add
+   assertions that all three skills state the portable resolution and
+   fail-closed missing-sibling behavior.
+4. Increase each changed skill's frontmatter `version:` exactly once for this
+   PR.
+5. Format:
 
-**Step 2: Implement (GREEN)**
+   ```bash
+   pnpm exec oxfmt --write .agents/skills/oat-idea-ideate/SKILL.md .agents/skills/oat-idea-new/SKILL.md .agents/skills/oat-idea-summarize/SKILL.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   ```
 
-{Implementation code or signatures}
+6. Verify:
 
-**Step 3: Refactor**
+   ```bash
+   pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts
+   ```
 
-{Optional cleanup}
+7. Commit:
 
-**Step 4: Verify**
-
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
-
-**Step 5: Commit**
-
-```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
-```
+   ```bash
+   git add .agents/skills/oat-idea-ideate/SKILL.md .agents/skills/oat-idea-new/SKILL.md .agents/skills/oat-idea-summarize/SKILL.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   git commit -m "fix(p01-t02): resolve idea skills from installed scope"
+   ```
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Make workflow-dispatch sibling reads scope-portable
 
-### Task p02-t01: {Task Name}
+**Files:**
 
-{Continue TDD pattern...}
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+
+**Steps:**
+
+1. Replace the mandatory reads of `oat-project-dispatch-subagents` and
+   `oat-dispatch-subagents` with the same installed-scope resolver. Preserve
+   ordering and the rule that both skill contracts must be loaded before any
+   dispatch.
+2. Fail closed before implementation or plan-review dispatch if either sibling
+   contract cannot be resolved; do not fall back to ambient skill discovery.
+3. Remove the two workflow-skill baseline entries and add focused contract
+   assertions for loaded-scope derivation, fallback ordering, and missing-skill
+   stop behavior.
+4. Increase both changed skills' frontmatter `version:` exactly once for this
+   PR.
+5. Format:
+
+   ```bash
+   pnpm exec oxfmt --write .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-plan-writing/SKILL.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   ```
+
+6. Verify:
+
+   ```bash
+   pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts
+   ```
+
+7. Commit:
+
+   ```bash
+   git add .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-plan-writing/SKILL.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   git commit -m "fix(p01-t03): resolve dispatch skills from installed scope"
+   ```
 
 ---
+
+### Task p01-t04: Make brainstorm handoff references portable
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Modify: `.agents/skills/oat-brainstorm/references/destinations.md`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+
+**Steps:**
+
+1. Rewrite the `Summarize idea directly` handoff in `destinations.md` to use
+   the `${SKILLS_ROOT}` contract already owned by `oat-brainstorm/SKILL.md`,
+   preserving its two-stage `oat-idea-new` then `oat-idea-summarize` sequence.
+2. Ensure the owning `SKILL.md` explicitly says operational reference-file
+   handoffs inherit that resolver and bump its frontmatter `version:` exactly
+   once for this PR.
+3. Remove the operational brainstorm finding from the baseline. Retain only
+   exact historical-evidence entries, if any remain, with a reason beside each;
+   the final repository assertion must have no executable legacy entries.
+4. Add a bundled-copy assertion proving the portable destination text ships in
+   the brainstorm pack rather than existing only in the canonical source.
+5. Format:
+
+   ```bash
+   pnpm exec oxfmt --write .agents/skills/oat-brainstorm/SKILL.md .agents/skills/oat-brainstorm/references/destinations.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   ```
+
+6. Verify:
+
+   ```bash
+   pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/commands/init/tools/shared/project-start-preflight-contracts.test.ts
+   ```
+
+7. Commit:
+
+   ```bash
+   git add .agents/skills/oat-brainstorm/SKILL.md .agents/skills/oat-brainstorm/references/destinations.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   git commit -m "fix(p01-t04): make brainstorm handoffs scope-portable"
+   ```
+
+## Phase 2: Release metadata and full validation
+
+### Task p02-t01: Refresh packaged views and advance the lockstep release
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify only if produced by `oat sync --scope all`: managed provider-linked
+  views corresponding to the six changed canonical skills
+
+**Steps:**
+
+1. Fetch `origin/main`, read the five public package versions at the fetched
+   tip, and choose one stable patch version greater than both those versions
+   and the branch's current versions. Do not assume the version recorded when
+   this plan was drafted is still available.
+2. Set all five public package `package.json` files to that exact version and
+   update every entry in
+   `packages/cli/assets/public-package-versions.json` to the same value.
+3. Run `pnpm run cli -- sync --scope all`. Inspect the diff and include only
+   provider-managed view changes caused by the six canonical skill edits; stop
+   on unrelated generated drift.
+4. Format:
+
+   ```bash
+   pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
+   ```
+
+5. Verify the metadata shape before committing:
+
+   ```bash
+   pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/release/public-package-contract.test.ts
+   pnpm format
+   pnpm lint
+   git diff --check
+   ```
+
+6. Commit the release-shaped delta before running the base-relative version
+   gates, because those gates compare committed `HEAD` with the merge base:
+
+   ```bash
+   git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
+   git add -- <each exact provider-view path confirmed in the inspected sync diff>
+   git commit -m "chore(p02-t01): release portable skill references"
+   ```
+
+   Omit the second `git add` when sync produced no provider-view diff. Never
+   stage a provider directory wholesale or add unrelated generated paths.
+
+7. Run every CI gate in the repository's documented order, capturing and
+   checking each command's own exit code rather than a pager's or filter's:
+
+   ```bash
+   portable_gate_log_dir="$(mktemp -d)"
+   run_portable_gate() {
+     portable_gate_label="$1"
+     shift
+     "$@" >"$portable_gate_log_dir/$portable_gate_label.log" 2>&1
+     portable_gate_exit=$?
+     printf '%s exit=%s\n' "$portable_gate_label" "$portable_gate_exit"
+     if [ "$portable_gate_exit" -ne 0 ]; then
+       tail -n 200 "$portable_gate_log_dir/$portable_gate_label.log"
+       return "$portable_gate_exit"
+     fi
+   }
+
+   run_portable_gate 01-check pnpm check
+   run_portable_gate 02-type-check pnpm type-check
+   run_portable_gate 03-test pnpm test
+   run_portable_gate 04-build pnpm build
+   run_portable_gate 05-skill-bumps pnpm run check:skill-bumps
+   run_portable_gate 06-release-versions pnpm release:check-versions
+   run_portable_gate 07-release-validate pnpm release:validate
+   run_portable_gate 08-build-docs pnpm build:docs
+   ```
+
+8. Re-run the skill-only checks omitted from CI and the final diff check:
+
+   ```bash
+   run_portable_gate 09-lint pnpm lint
+   run_portable_gate 10-format pnpm format
+   run_portable_gate 11-diff-check git diff --check
+   ```
+
+   Record each gate's explicit exit code in `implementation.md`. Any post-commit
+   correction follows the implementation recovery contract rather than being
+   silently amended.
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
+| Scope  | Type     | Status  | Date       | Artifact                                             | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | ---------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -                                                    | -             | -          | -           |
+| p02    | code     | pending | -          | -                                                    | -             | -          | -           |
+| final  | code     | pending | -          | -                                                    | -             | -          | -           |
+| spec   | artifact | pending | -          | -                                                    | -             | -          | -           |
+| design | artifact | pending | -          | -                                                    | -             | -          | -           |
+| plan   | artifact | passed  | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md` | -             | manual     | plan        |
 
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
-
-For code-review events, `Reviewed Head` is the full 40-character SHA at the
-head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
-`Gate Target` is populated only for gate events. Legacy five-column rows remain
-valid. Writers must preserve every existing row and every unknown trailing
-cell; never truncate a widened row back to five columns.
-
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
-
----
+**Status values:** `pending` -> `received` -> `fixes_added` ->
+`fixes_completed` -> `passed`
 
 ## Implementation Complete
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 4 tasks - portable resolution contracts and robust ratchet coverage
+- Phase 2: 1 task - provider views, lockstep release metadata, and full gates
 
-**Total: {N} tasks**
+**Total: 5 tasks**
 
-Ready for code review and merge.
-
----
+Implementation has not started. Completion requires all five tasks and the
+review rows above to reach their lifecycle terminal states.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Backlog:
+  `.oat/repo/pjm/backlog/items/BL-260827-make-packaged-skill-references.md`
+- Source project:
+  `.oat/projects/shared/user-scope-tool-packs/implementation.md`
+- Existing portability contract:
+  `.agents/skills/oat-brainstorm/SKILL.md`
+- Existing ratchet:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
