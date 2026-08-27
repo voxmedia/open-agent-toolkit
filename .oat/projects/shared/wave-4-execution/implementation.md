@@ -296,6 +296,13 @@ Chronological log of implementation progress.
 - Decisions: the operator-reconciled `--full-auto` replacement is evaluated per example row (a mechanical swap weakened the `danger-full-access` row and was caught by Codex); prose guards key on documented phrases and command-ish content, not hedging words; cross-model review stops at two clean rounds or below-Medium findings.
 - Blockers: none.
 
+## Implementation-tail project recap (IMPLEMENT-19)
+
+- Intent: `oat_project_recap: generate / autonomous_policy`; no manifest existed → exactly one `project-recap` attempt via `runOatExplainer` (`mode: unattended`, in-process planSet/author/critic/browserSession/visualCritic seams; delegated to an Opus worker, dispatch `w4-recap-001`, driver under `$TMPDIR/w4-recap/`).
+- Result: manifest `explainers/wave-4-execution-recap/manifest.json`, run `run-7dd79e60-3b34-47ba-b7b5-dfe64694c9f3`, recipe `project-recap@2` (floor-only portfolio, one hub). Build: validate/fact-base/content/render/qa passed, theme warned `theme-selection-normalized` (only warning); fact critic 3 sources / 3 claims / 0 findings; real Chromium 147.0.7727.15 evidence at 320×640, 768×1024, 1440×900 (clean); visual review `pass` on attempt 1; the recap states in three places that the wave PR is not yet opened and that this is the program's final wave with a human-gated completion tail.
+- Finalizer (`dedicated`): artifact commit `4ca73152` (exactly the 27 immutable paths; lint-staged rewrote nothing), attestation `record-durability.mjs` → **built-durable**, evidence commit `faff1b9d`, `verifyTrackedRunFinalization` `ok: true`. Root re-verified 27/27 immutable hashes against the blobs at HEAD.
+- Deviations from W3 (worker-reported, root-accepted): mandated commit subject; first artifact-commit attempt failed on a relative `-F` path (exit 128, no state change; worktree re-hashed 27/27 before the retry); two SVG label collisions fixed pre-run; the diagram declares two side branches (the operator-answered STOP #2 alongside the plan gate).
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
