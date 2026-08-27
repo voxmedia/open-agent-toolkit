@@ -24,6 +24,12 @@ export interface AllowlistedPathspecOptions {
   additionalAllowlistedPaths?: string[];
 }
 
+export type PushResult = {
+  status: 'pushed' | 'up-to-date' | 'rejected' | 'conflict';
+  sha: string;
+  conflicts?: string[];
+};
+
 export function buildSyncTarget(
   repoRoot: string,
   projectsRoot: string,
@@ -64,6 +70,120 @@ export async function createSyncedProject(
     { cwd: target.repoRoot },
   );
   await assertNestedWorktree(target, git);
+}
+
+async function headSha(target: SyncTarget, git: GitRunner): Promise<string> {
+  return (await git.run(['rev-parse', 'HEAD'], { cwd: target.projectPath }))
+    .stdout;
+}
+
+async function listConflicts(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<string[]> {
+  const status = await git.run(['status', '--porcelain'], {
+    cwd: target.projectPath,
+  });
+  const conflictStatuses = new Set(['UU', 'AA', 'DU', 'UD']);
+  return status.stdout
+    .split('\n')
+    .filter((line) => conflictStatuses.has(line.slice(0, 2)))
+    .map((line) => line.slice(3).trim())
+    .filter(Boolean)
+    .sort();
+}
+
+function isMissingRemoteRef(stderr: string): boolean {
+  return /couldn't find remote ref|no such ref was fetched/i.test(stderr);
+}
+
+function assertExpectedGitResult(
+  command: string,
+  result: { code: number; stdout: string; stderr: string },
+  expectedCodes: number[],
+): void {
+  if (!expectedCodes.includes(result.code)) {
+    throw new CliError(
+      `${command} failed (exit ${result.code}): ${result.stderr || result.stdout || 'unknown git error'}`,
+      2,
+    );
+  }
+}
+
+export async function pushSynced(
+  target: SyncTarget,
+  git: GitRunner,
+  options: { message?: string },
+): Promise<PushResult> {
+  await assertNestedWorktree(target, git);
+  await git.run(['add', '-A'], { cwd: target.projectPath });
+  const staged = await git.run(['diff', '--cached', '--quiet'], {
+    cwd: target.projectPath,
+    allowFailure: true,
+  });
+  assertExpectedGitResult('git diff --cached --quiet', staged, [0, 1]);
+  if (staged.code === 1) {
+    await git.run(
+      [
+        'commit',
+        '-m',
+        options.message ?? `chore(oat): sync ${target.slug} artifacts`,
+      ],
+      { cwd: target.projectPath },
+    );
+  }
+
+  const localCommit = await headSha(target, git);
+  const fetched = await git.run(
+    ['fetch', target.remote, `+${target.ref}:${target.ref}`],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  const remoteExists = fetched.code === 0;
+  if (!remoteExists && !isMissingRemoteRef(fetched.stderr)) {
+    assertExpectedGitResult('git fetch synced ref', fetched, [0]);
+  }
+
+  if (remoteExists) {
+    const ancestor = await git.run(
+      ['merge-base', '--is-ancestor', target.ref, 'HEAD'],
+      { cwd: target.projectPath, allowFailure: true },
+    );
+    assertExpectedGitResult('git merge-base --is-ancestor', ancestor, [0, 1]);
+    if (ancestor.code === 1) {
+      const rebased = await git.run(['rebase', target.ref], {
+        cwd: target.projectPath,
+        allowFailure: true,
+      });
+      if (rebased.code !== 0) {
+        const conflicts = await listConflicts(target, git);
+        if (conflicts.length === 0) {
+          assertExpectedGitResult('git rebase synced ref', rebased, [0]);
+        }
+        return { status: 'conflict', sha: localCommit, conflicts };
+      }
+    }
+
+    const currentHead = await headSha(target, git);
+    const fetchedHead = (
+      await git.run(['rev-parse', target.ref], { cwd: target.repoRoot })
+    ).stdout;
+    if (currentHead === fetchedHead) {
+      return { status: 'up-to-date', sha: currentHead };
+    }
+  }
+
+  const pushedHead = await headSha(target, git);
+  const pushed = await git.run(
+    ['-C', target.projectPath, 'push', target.remote, `HEAD:${target.ref}`],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  if (pushed.code !== 0) {
+    return { status: 'rejected', sha: pushedHead };
+  }
+  await git.run(['update-ref', target.ref, pushedHead], {
+    cwd: target.repoRoot,
+  });
+  return { status: 'pushed', sha: pushedHead };
 }
 
 export async function assertNestedWorktree(
