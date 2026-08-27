@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p02-t04
+oat_current_task_id: p02-t09
 oat_generated: false
 ---
 
@@ -207,6 +207,23 @@ oat_generated: false
   lint, 73 task tests, type-check, and diff check successfully.
 - Reason: five mechanically unused imports were removed without behavior or
   scope changes.
+
+### Recovery Event 36a35349-8d93-430f-805a-a670b613ca68
+
+- Phase/task: p02 / p02-t08
+- Original request: d9cf84cf-abf6-459b-831c-8768658de1e8
+- Original commit: 382f13c706295a2bfafdd7f6373bbc8633eb0678
+- Defect class: test
+- Discovered by: `pnpm --filter @open-agent-toolkit/cli test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 2/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 95a692812238255c5aba2e25c23aa8ee4560d3e2
+- Verification: the 58-test help snapshot suite and full 3,700-test CLI suite
+  passed after commit; root repeated both successfully.
+- Reason: p02-t08 expanded the legacy remove-pack choices but left its inline
+  help snapshot stale; the correction was mechanical and test-only.
 - Operator authorized up to two additional Phase 1 review/fix iterations. The
   scope-bound temporary total is 4; iterations already used remain 2.
 - Phase 1 fix iteration 3:
