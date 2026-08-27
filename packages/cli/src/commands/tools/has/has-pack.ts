@@ -1,4 +1,9 @@
 import type { CommandContext } from '@app/command-context';
+import {
+  inventoryScopedPack,
+  type InventoryScopedPackInput,
+  type ScopedPackInventory,
+} from '@commands/tools/shared/pack-inventory';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import type { ConcreteScope } from '@shared/types';
@@ -18,6 +23,10 @@ export interface PackAvailability {
   pack: PackName;
   available: boolean;
   scopes: ConcreteScope[];
+  completeness: Partial<
+    Record<ConcreteScope, ScopedPackInventory['completeness']>
+  >;
+  missing: Array<{ scope: ConcreteScope; asset: string; path: string }>;
 }
 
 export interface PackAvailabilityDependencies {
@@ -28,6 +37,9 @@ export interface PackAvailabilityDependencies {
     home: string,
   ) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
+  inventoryScopedPack?: (
+    input: InventoryScopedPackInput,
+  ) => Promise<ScopedPackInventory>;
 }
 
 export function isPackName(value: string): value is PackName {
@@ -42,6 +54,8 @@ export async function resolvePackAvailability(
 ): Promise<PackAvailability> {
   const assetsRoot = await dependencies.resolveAssetsRoot();
   const matchingScopes: ConcreteScope[] = [];
+  const completeness: PackAvailability['completeness'] = {};
+  const missing: PackAvailability['missing'] = [];
 
   for (const scope of scopes) {
     const scopeRoot = await dependencies.resolveScopeRoot(
@@ -49,12 +63,19 @@ export async function resolvePackAvailability(
       context.cwd,
       context.home,
     );
-    const tools = await dependencies.scanTools({
-      scope,
-      scopeRoot,
-      assetsRoot,
-    });
-    if (tools.some((tool) => tool.pack === pack)) {
+    const inventory = await (
+      dependencies.inventoryScopedPack ?? inventoryScopedPack
+    )({ pack, scope, scopeRoot, assetsRoot });
+    completeness[scope] = inventory.completeness;
+    missing.push(
+      ...inventory.assets
+        .filter(
+          ({ definition, status }) =>
+            definition.ownership[scope] === 'managed' && status === 'missing',
+        )
+        .map(({ definition, path }) => ({ scope, asset: definition.id, path })),
+    );
+    if (inventory.completeness === 'complete') {
       matchingScopes.push(scope);
     }
   }
@@ -63,5 +84,7 @@ export async function resolvePackAvailability(
     pack,
     available: matchingScopes.length > 0,
     scopes: matchingScopes,
+    completeness,
+    missing,
   };
 }
