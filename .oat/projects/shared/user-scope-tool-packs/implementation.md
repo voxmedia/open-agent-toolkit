@@ -1,9 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p01-t07
-    reason: 'Final Phase 1 review found manifest-driven recursive removal bypasses managed-root validation; both configured fix iterations are exhausted.'
+oat_blockers: []
 oat_last_updated: 2026-08-27
 oat_current_task_id: p01-t07
 oat_generated: false
@@ -19,19 +17,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | blocked | 7     | 6/7       |
-| Phase 2 | pending | 9     | 0/9       |
-| Phase 3 | pending | 5     | 0/5       |
-| Phase 4 | pending | 7     | 0/7       |
-| Phase 5 | pending | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 7     | 6/7       |
+| Phase 2 | pending     | 9     | 0/9       |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 7     | 0/7       |
+| Phase 5 | pending     | 6     | 0/6       |
 
 **Total:** 6/34 tasks completed
 
 ## Phase 1: Canonical Pack Contract and Inventory
 
-**Status:** blocked
+**Status:** in_progress
 **Started:** 2026-08-27
 
 ### Phase Summary
@@ -70,8 +68,12 @@ oat_generated: false
     check and partial seed repair.
 - Final re-review artifact:
   `reviews/p01-review-2026-08-27T041427Z.md` (1 Critical, 0 Important,
-  2 Medium). The Critical managed-root containment finding remains after both
-  configured fix iterations, so automatic execution is stopped.
+  2 Medium). The Critical managed-root containment finding remains after two
+  fix iterations.
+- Operator authorization: up to two additional Phase 1 review/fix iterations,
+  raising the temporary total from 2 to 4 and explicitly overriding the
+  three-review governance cap for this scope. Restore the default limit to 2
+  after Phase 1 reaches a terminal verdict.
 
 ### Task p01-t01: Define pack manifest types and validation
 
@@ -105,11 +107,11 @@ oat_generated: false
 
 ### Task p01-t07: Harden managed-root path validation
 
-**Status:** blocked
+**Status:** in_progress
 **Commit:** `e0039d8065b4b8eb5ed45fb42d5c1382132c3104`
-**Blocker:** Manifest-driven recursive removal must validate every target with
-the existing managed-root containment guard before deletion. Review retry limit
-2/2 is exhausted.
+**Current fix:** Validate every manifest-driven recursive removal target with
+the existing managed-root containment guard before deletion. Iteration 3/4 is
+authorized.
 
 ## Orchestration Runs
 
@@ -126,9 +128,9 @@ the existing managed-root containment guard before deletion. Review retry limit
 
 #### Phase Outcomes
 
-| Phase | Status  | Tasks | Review  | Fix loops |
-| ----- | ------- | ----- | ------- | --------- |
-| p01   | blocked | 6/7   | blocked | 2         |
+| Phase | Status      | Tasks | Review | Fix loops |
+| ----- | ----------- | ----- | ------ | --------- |
+| p01   | in_progress | 6/7   | fixes  | 3         |
 
 #### Dispatch Notes
 
@@ -142,6 +144,8 @@ the existing managed-root containment guard before deletion. Review retry limit
   `oat-reviewer-gpt-5-6-sol-high`; artifact
   `reviews/p01-review-2026-08-27T031035Z.md`.
 - `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- Operator authorized up to two additional Phase 1 review/fix iterations. The
+  scope-bound temporary total is 4; iterations already used remain 2.
 - Phase 1 fix iteration 2:
   `309cb7f9ac3d44513dc9836a14f738786dc01772`; complete manifest-managed
   removal and unambiguous shared-owner intent implemented. Focused suites passed
@@ -162,9 +166,9 @@ the existing managed-root containment guard before deletion. Review retry limit
 
 #### Outstanding Items
 
-- Terminal Phase 1 review blocker: manifest-driven recursive removal bypasses
-  managed-root containment validation. Further implementation requires an
-  operator-authorized retry extension or changed disposition.
+- Phase 1 fix iteration 3/4: route every manifest-driven deletion target
+  through managed-root containment validation, then run a fresh root-owned
+  re-review.
 
 ## Final Summary (for PR/docs)
 
