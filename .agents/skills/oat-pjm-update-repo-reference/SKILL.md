@@ -1,6 +1,6 @@
 ---
 name: oat-pjm-update-repo-reference
-version: 1.3.0
+version: 1.4.0
 description: Use when repo reference artifacts need updating — roadmap, decision records, backlog status, or completed history. Frequently invoked at project completion, often chained from `oat-project-document`, to ensure active `.oat/repo/pjm/` state and durable `.oat/repo/reference/` records reflect what shipped.
 disable-model-invocation: false
 user-invocable: true
@@ -35,6 +35,19 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 ## Process
 
+### Step 0: Verify Repository PJM Adoption
+
+Run the read-only preflight before any file write:
+
+```bash
+oat pjm doctor --json
+```
+
+Inspect the exact `adoption.state` field. Continue only for `declared` or
+`inferred-legacy`. For `none` or `partial-initialization`, stop before writing
+and tell the user to run `oat pjm init`. Installed project-management skills
+show capability availability only, not repository adoption.
+
 ### Step 1: Identify What Changed
 
 Write down a 1-3 bullet summary of the implementation change:
@@ -45,22 +58,19 @@ Write down a 1-3 bullet summary of the implementation change:
 - Repo-reference behavior changes
 - File moves, renames, or retirements
 
-### Step 2: Ensure Backlog Scaffold
+### Step 2: Verify Backlog Scaffold
 
-Before editing any backlog files or running backlog regeneration, run:
-
-```bash
-oat backlog init
-```
-
-This command is idempotent and ensures `.oat/repo/pjm/backlog/index.md` exists with the exact managed markers required by the CLI:
+After the adoption preflight succeeds, confirm that
+`.oat/repo/pjm/backlog/index.md` exists with the exact managed markers required
+by the CLI:
 
 ```md
 <!-- OAT BACKLOG-INDEX -->
 <!-- END OAT BACKLOG-INDEX -->
 ```
 
-Do not hand-author or rename those managed markers.
+Do not hand-author or rename those managed markers. If they are absent, stop and
+repair the repository with `oat pjm init`.
 
 ### Step 3: Mine Project Artifacts for Deferred Work and Decisions
 

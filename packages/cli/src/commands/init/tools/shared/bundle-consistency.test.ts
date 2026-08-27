@@ -225,6 +225,36 @@ describe('bundle asset inventory consistency', () => {
     ).toEqual([]);
   });
 
+  it('packages project-management skill-local references', () => {
+    const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-pjm-assets-'));
+    try {
+      execFileSync('bash', [getBundleScriptPath()], {
+        env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+        stdio: 'pipe',
+      });
+
+      for (const name of [
+        'backlog-review-template.md',
+        'priority-alignment-template.md',
+      ]) {
+        expect(
+          existsSync(
+            join(
+              assetsRoot,
+              'skills',
+              'oat-pjm-review-backlog',
+              'references',
+              name,
+            ),
+          ),
+          name,
+        ).toBe(true);
+      }
+    } finally {
+      rmSync(assetsRoot, { recursive: true, force: true });
+    }
+  });
+
   it('bundles every research skill', () => {
     const missing = RESEARCH_SKILLS.filter(
       (skill) => !bundleSkills.includes(skill),

@@ -1,6 +1,6 @@
 ---
 name: oat-pjm-decision
-version: 1.0.0
+version: 1.1.0
 description: Use when the user requests or confirms recording a durable repo decision — e.g. "capture that as a decision", "write an ADR for X", "record this architectural choice", or confirms a previously offered decision capture. Creates a file-per-record decision under reference/decisions/ via `oat decision new` and refreshes the generated decision index. Do NOT auto-invoke for routine choices that do not warrant durable history.
 disable-model-invocation: false
 user-invocable: true
@@ -35,6 +35,19 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 ## Process
 
+### Step 0: Verify Repository PJM Adoption
+
+Run the read-only preflight before any file write:
+
+```bash
+oat pjm doctor --json
+```
+
+Inspect the exact `adoption.state` field. Continue only for `declared` or
+`inferred-legacy`. For `none` or `partial-initialization`, stop before writing
+and tell the user to run `oat pjm init`. Do not use global pack presence as
+evidence that this repository adopted PJM.
+
 ### Step 1: Resolve Inputs
 
 Collect the decision details from the user or surrounding context:
@@ -48,22 +61,20 @@ Collect the decision details from the user or surrounding context:
 If the title is missing, ask the user.
 If context is missing, ask for 1-3 sentences describing the situation.
 
-### Step 2: Ensure Decision Scaffold
+### Step 2: Verify Decision Scaffold
 
-Before creating records, ensure the canonical decision scaffold and exact managed index markers exist:
-
-```bash
-oat decision init
-```
-
-This command is idempotent. The scaffold writes `reference/decisions/index.md` with the exact markers required by the CLI:
+The adoption preflight must succeed before this check. Confirm that
+`reference/decisions/index.md` contains the exact markers required by the CLI:
 
 ```md
 <!-- OAT DECISION-INDEX -->
 <!-- END OAT DECISION-INDEX -->
 ```
 
-Do not hand-create or rename the managed marker block. Decisions default to `.oat/repo/reference/decisions/`; pass `--decisions-root <path>` only when an explicit override is required.
+Do not hand-create or rename the managed marker block. If it is absent, stop and
+repair the repository with `oat pjm init`. Decisions default to
+`.oat/repo/reference/decisions/`; pass `--decisions-root <path>` only when an
+explicit override is required.
 
 ### Step 3: Create the Decision Record
 

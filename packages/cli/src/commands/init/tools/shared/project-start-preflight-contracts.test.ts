@@ -9,6 +9,13 @@ const PROJECT_START_SKILLS = [
   'oat-project-import-plan',
 ] as const;
 
+const PJM_WRITE_SKILLS = [
+  'oat-pjm-add-backlog-item',
+  'oat-pjm-decision',
+  'oat-pjm-update-repo-reference',
+  'oat-pjm-review-backlog',
+] as const;
+
 function readSkill(name: string): string {
   return readFileSync(
     join(
@@ -89,5 +96,42 @@ describe('project-start preflight contracts', () => {
     expect(readSkill('oat-project-quick-start')).toContain('QS-01');
     expect(readSkill('oat-project-new')).not.toContain('QS-01');
     expect(readSkill('oat-project-import-plan')).not.toContain('QS-01');
+  });
+
+  it.each(PJM_WRITE_SKILLS)(
+    '%s checks repository adoption read-only before writes',
+    (name) => {
+      const content = readSkill(name);
+      const processStart = content.indexOf('## Process');
+      const preflight = content.indexOf('oat pjm doctor --json', processStart);
+      const firstWrite = Math.min(
+        ...[
+          'oat backlog new',
+          'oat decision new',
+          'Write the **living** review',
+        ]
+          .map((needle) => content.indexOf(needle, processStart))
+          .filter((index) => index >= 0),
+      );
+
+      expect(preflight).toBeGreaterThanOrEqual(0);
+      expect(preflight).toBeLessThan(firstWrite);
+      expect(content).toContain('adoption.state');
+      expect(content).toContain('partial-initialization');
+      expect(content).toContain('oat pjm init');
+    },
+  );
+
+  it('resolves backlog-review templates from the loaded skill directory', () => {
+    const content = readSkill('oat-pjm-review-backlog');
+    expect(content).toContain(
+      '$SKILL_DIR/references/backlog-review-template.md',
+    );
+    expect(content).toContain(
+      '$SKILL_DIR/references/priority-alignment-template.md',
+    );
+    expect(content).not.toContain(
+      '.agents/skills/oat-pjm-review-backlog/references/',
+    );
   });
 });
