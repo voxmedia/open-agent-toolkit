@@ -3,6 +3,12 @@ import { join } from 'node:path';
 
 import { compareVersions } from '@commands/init/tools/shared/version';
 import { getAgentVersion, getSkillVersion } from '@commands/shared/frontmatter';
+import {
+  type ManagedRootName,
+  type ResolvedManagedRoot,
+  resolveManagedScopeRoots,
+  validateManagedPath,
+} from '@fs/paths';
 import type { ConcreteScope } from '@shared/types';
 
 import { digestDirectory, digestFile } from './content-digest';
@@ -125,10 +131,21 @@ async function inventoryAsset(
   scope: ConcreteScope,
   scopeRoot: string,
   assetsRoot: string,
+  managedRoots: Record<ManagedRootName, ResolvedManagedRoot>,
 ): Promise<PackAssetInventory> {
   const installedPath = join(scopeRoot, definition.destination);
   const bundledPath = join(assetsRoot, definition.source);
-  if (!(await pathExists(installedPath))) {
+  const managedRootName = definition.destination.split('/')[0];
+  if (managedRootName !== '.agents' && managedRootName !== '.oat') {
+    throw new Error(
+      `Pack asset ${definition.id} has unsupported managed root: ${definition.destination}`,
+    );
+  }
+  const { realPath } = await validateManagedPath(
+    installedPath,
+    managedRoots[managedRootName],
+  );
+  if (!(await pathExists(realPath))) {
     return {
       definition,
       path: installedPath,
@@ -148,9 +165,19 @@ async function inventoryAsset(
     };
   }
   if (definition.kind === 'skill' || definition.kind === 'agent') {
-    return inventoryVersionedAsset(definition, installedPath, bundledPath);
+    const inventory = await inventoryVersionedAsset(
+      definition,
+      realPath,
+      bundledPath,
+    );
+    return { ...inventory, path: installedPath };
   }
-  return inventoryStaticAsset(definition, installedPath, bundledPath);
+  const inventory = await inventoryStaticAsset(
+    definition,
+    realPath,
+    bundledPath,
+  );
+  return { ...inventory, path: installedPath };
 }
 
 function completenessForAssets(
@@ -179,11 +206,18 @@ export async function inventoryScopedPack(
   const applicableAssets = definition.assets.filter(({ scopes }) =>
     scopes.includes(input.scope),
   );
+  const managedRoots = await resolveManagedScopeRoots(input.scopeRoot);
   const [intent, assets] = await Promise.all([
     readScopedPackIntent(input),
     Promise.all(
       applicableAssets.map((asset) =>
-        inventoryAsset(asset, input.scope, input.scopeRoot, input.assetsRoot),
+        inventoryAsset(
+          asset,
+          input.scope,
+          input.scopeRoot,
+          input.assetsRoot,
+          managedRoots,
+        ),
       ),
     ),
   ]);

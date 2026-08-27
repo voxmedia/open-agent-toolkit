@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -211,5 +211,23 @@ describe('pack inventory', () => {
         ]),
       }),
     ]);
+  });
+
+  it('rejects a canonical asset path that escapes through a nested symlink', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const scopeRoot = await makeRoot('oat-user-');
+    const outsideRoot = await makeRoot('oat-outside-');
+    await materializeManagedPack('brainstorm', 'user', assetsRoot, outsideRoot);
+    await mkdir(join(scopeRoot, '.agents'), { recursive: true });
+    await symlink(outsideRoot, join(scopeRoot, '.agents', 'skills'), 'dir');
+
+    await expect(
+      inventoryScopedPack({
+        pack: 'brainstorm',
+        scope: 'user',
+        scopeRoot,
+        assetsRoot,
+      }),
+    ).rejects.toThrow(/managed path.*repoint/i);
   });
 });
