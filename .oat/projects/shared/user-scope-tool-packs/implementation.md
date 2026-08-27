@@ -461,7 +461,7 @@ oat_generated: false
 | p01   | completed | 7/7   | passed   | 3         |
 | p02   | completed | 9/9   | passed   | 2         |
 | p03   | completed | 5/5   | passed   | 3         |
-| p04   | review    | 7/7   | blocking | 0         |
+| p04   | review    | 7/7   | blocking | 1         |
 
 #### Root-inline phase
 
@@ -490,6 +490,24 @@ oat_generated: false
   this entry, and the omission is what caused the child's terminal
   direction-required stop.
 - `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Phase 4 fix iteration 1/2: `oat-phase-implementer` at the Claude High
+  ceiling, model `opus`, operator-scope authorized route change linked to
+  original request `call_yFu85ZIagHG2fzbtGD5Qz5wq`; the original target
+  `oat-phase-implementer-gpt-5-6-sol-high` is unbindable from the active
+  provider. One append-only commit `f337df8b5` on parent `f7963a1cc`, 20 files.
+  All five findings (I1, I2, M1, M2, M3) fixed; the Minor was left untouched
+  for `p05-t01`. Root independently verified the commit boundary and re-ran the
+  phase suite (404/404), full CLI (3,797/3,797), `check:skill-bumps`,
+  `pnpm check`, and `pnpm type-check`, and reproduced the I1/I2 behavioral
+  acceptance end-to-end in a throwaway repo under a temporary HOME.
+- `Dispatch: scope=p04-fix1 action=fix role=implementer producer=claude provenance=resolver model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer(model=opus)`
+- Phase 4 fix iteration 1 concerns carried to re-review: the M3 contract
+  assertion is a pinned-inventory ratchet rather than full remediation, because
+  every pack in `PACK_MANIFEST` defaults to user scope and six pre-existing
+  offenders sit outside this phase; `oat-brainstorm/references/destinations.md`
+  still carries two bare cross-skill paths that the new assertion does not scan;
+  and `migratePjmRepo` now also writes the two root AGENTS sections because it
+  calls `initializeRepoReference`.
 - Phase 4 review: `oat-reviewer` at the Claude High ceiling, model `opus`,
   selection branch `matrix-pinned`, resolved via
   `oat project dispatch-ceiling resolve --provider claude --role reviewer`.
@@ -759,7 +777,7 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Resolve the two blocking Phase 4 review findings (I1, I2).
+- Fresh independent Phase 4 re-review of fix commit `f337df8b5`.
 
 ## Final Summary (for PR/docs)
 
