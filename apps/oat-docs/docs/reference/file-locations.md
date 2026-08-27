@@ -29,6 +29,8 @@ For detailed `.oat/` tree semantics, see:
 - Local runtime config (per-developer state): `.oat/config.local.json`
 - Active idea: `activeIdea` in `.oat/config.local.json` (repo) or `~/.oat/config.json` (user)
 - Projects root config: `projects.root` in `.oat/config.json` (read via `oat config get projects.root`)
+- Default project scope: `projects.defaultScope` in `.oat/config.json`
+  (`synced` by default; override with `OAT_PROJECTS_DEFAULT_SCOPE`)
 - Archive config: `archive.s3Uri`, `archive.s3SyncOnComplete`, `archive.summaryExportPath`, `archive.wrapUpExportPath`, `archive.awsProfile`, and `archive.awsRegion` in `.oat/config.json`
 - Workflow gate config: `workflow.gates.skills` and `workflow.gates.execTargets` in `.oat/config.json`, `.oat/config.local.json`, or `~/.oat/config.json` (manage via `oat gate`)
 - Project sync manifest/config: `.oat/sync/`
@@ -63,6 +65,11 @@ Config ownership note:
 ## Project artifact trees
 
 - Shared: `.oat/projects/shared/<project>/`
+- Synced checkout: `.oat/projects/synced/<project>/` (gitignored nested
+  worktree)
+- Synced record: `.oat/projects/synced/<project>.json` (tracked on the parent
+  branch)
+- Synced ref: `refs/oat/projects/<project>` on `origin`
 - Local: `.oat/projects/local/<project>/`
 - Archived: `.oat/projects/archived/<project>/`
 

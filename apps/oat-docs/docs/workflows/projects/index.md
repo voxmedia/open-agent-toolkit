@@ -24,6 +24,8 @@ Projects are where the workflow layer becomes concrete: lifecycle phases, `state
 - [Programmatic Execution](programmatic-execution.md) - Per-harness headless/CLI execution surfaces and where OAT uses them.
 - [Project Artifacts](artifacts.md) - What lives in `state.md`, `discovery.md`, `plan.md`, `implementation.md`, and related files.
 - [Implementation Execution](implementation-execution.md) - Phase dispatch, runtime selection, review/fix loop, and dry-run behavior.
+- [Reviewing OAT PRs](reviewing-oat-prs.md) - Read synced-project records and SHA-pinned reviewer links in a PR.
+- [Picking Up Projects](picking-up-projects.md) - Continue a synced project on another machine or from another user.
 - [Project Splitting](splitting.md) - How broad discoveries or brainstorms become coordination parents and child projects.
 - [State Machine](state-machine.md) - Lifecycle and review status transitions across a project.
 - [Reviews](reviews.md) - How review request/receive loops work inside OAT projects.
@@ -50,6 +52,8 @@ This sub-section is the deep technical surface for how tracked OAT projects exec
 - Split broad scopes into coordination parents and focused children in [Project Splitting](splitting.md).
 - Understand lifecycle and review transitions in [State Machine](state-machine.md).
 - Learn review and PR expectations in [Reviews](reviews.md) and [PR Flow](pr-flow.md).
+- Review a synced project's durable context in [Reviewing OAT PRs](reviewing-oat-prs.md).
+- Continue remote project work with [Picking Up Projects](picking-up-projects.md).
 
 ## Go Deeper
 
@@ -68,4 +72,6 @@ This sub-section is the deep technical surface for how tracked OAT projects exec
 - [State Machine](state-machine.md) - Lifecycle and review status transitions across a project.
 - [Reviews](reviews.md) - How review request/receive loops work inside OAT projects.
 - [PR Flow](pr-flow.md) - Progress and final PR generation expectations.
+- [Reviewing OAT PRs](reviewing-oat-prs.md) - Record metadata, pinned links, and editor discovery for synced projects.
+- [Picking Up Projects](picking-up-projects.md) - Remote discovery, adopting pull, coordination children, and retention boundaries.
 - [Repository PR Comment Analysis](repo-analysis.md) - Repo-wide PR comment collection and triage workflows.

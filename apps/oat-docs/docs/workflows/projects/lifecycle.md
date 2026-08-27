@@ -77,6 +77,12 @@ After implementation closeout finishes:
 On completion, OAT now treats archive handling as part of the closeout lifecycle:
 
 - Local archive is always written to `.oat/projects/archived/<project>/`.
+- For a synced project, closeout first finalizes the project artifacts and
+  pushes them to `refs/oat/projects/<project>`. Archive then requires a clean,
+  fully pushed checkout; copies it without the `.git` pointer or `reviews/`;
+  marks the tracked record complete; commits the record and configured durable
+  exports on the parent branch; removes the nested checkout; and retains the
+  ref. This order keeps SHA-pinned PR links valid after completion.
 - If `.oat/config.json` enables `archive.s3SyncOnComplete` and sets `archive.s3Uri`, completion also attempts an S3 upload for a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/`.
 - If `.oat/config.json` sets `archive.awsProfile` and/or `archive.awsRegion`, those values are forwarded to every `aws` invocation triggered by completion (preflight checks + `aws s3 sync`) and override any ambient shell `AWS_PROFILE` / `AWS_DEFAULT_PROFILE` / `AWS_REGION` / `AWS_DEFAULT_REGION` values. The repo's archive-scoped credentials are treated as deliberate intent so users don't have to unset shell env vars before running completion. See [`config-and-local-state.md`](../../cli-utilities/config-and-local-state.md) for the full precedence chain.
 - If `.oat/config.json` sets `archive.summaryExportPath`, completion copies `summary.md` to `<archive.summaryExportPath>/20260401-<project>.md`.
@@ -292,6 +298,10 @@ Capture lane progression:
 ## Operational rules
 
 - Keep `state.md`, `plan.md`, and `implementation.md` synchronized.
+- For a synced project, publish lifecycle artifact writes with
+  `oat project push`; do not stage `.oat/projects/synced/<project>/` on the
+  parent branch.
+- On arrival, run `oat project pull` before reading a synced project's state.
 - Stop at configured HiLL checkpoints.
 - Do not move lifecycle forward when required review gates are unresolved.
 - Project entry skills (`oat-project-new`, `oat-project-quick-start`, and `oat-project-import-plan`) surface inherited dirty git state before scaffolding. If the dirty list includes `.oat/sync/manifest.json`, `.claude/`, `.cursor/`, or `.codex/`, the skill calls out that those paths are typically sync output and offers Commit now, Proceed anyway, or Abort.

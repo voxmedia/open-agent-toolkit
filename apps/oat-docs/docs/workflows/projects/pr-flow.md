@@ -34,6 +34,25 @@ GitHub PR body policy:
 - Keep YAML frontmatter in local artifact
 - Strip frontmatter from submitted PR body
 
+## Synced project links
+
+For a synced project, PR creation follows a six-step order:
+
+1. write and format the local PR artifact;
+2. run `oat project push` so the project ref contains the latest artifacts;
+3. run `oat project links --format markdown` to generate the delimited links
+   block from that exact ref commit;
+4. include the block in the submitted PR body;
+5. persist `oat_pr_status` and `oat_pr_url` in `state.md`; and
+6. push again so subsequent artifact writes can refresh the open PR body.
+
+The generated block links only `discovery.md`, `design.md`, and `summary.md`
+when present. The URLs are pinned to the project ref's exact commit SHA rather
+than a moving branch name. `plan.md`, `state.md`, `implementation.md`, and
+`reviews/` are intentionally excluded because they contain agent-facing
+execution detail rather than the reviewer-oriented project narrative. See
+[Reviewing OAT PRs](reviewing-oat-prs.md).
+
 ## Post-PR state
 
 After `oat-project-pr-final` creates the PR, `state.md` transitions to `oat_phase_status: pr_open`. This signals "awaiting human review" rather than "done."
@@ -57,7 +76,9 @@ Both completion orderings are supported:
 
 An open PR is not a completion blocker. When completion archives project
 artifacts, the archive-aware flow regenerates and synchronizes the open PR body
-so its artifact links remain valid.
+so its artifact links remain valid. Synced completion retains the project ref,
+which keeps its SHA-pinned links resolvable after the nested checkout is
+removed.
 
 ## Reference artifacts
 

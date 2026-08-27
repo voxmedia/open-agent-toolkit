@@ -56,6 +56,33 @@ The first practical expansion path is to keep improving the existing owners: [Do
 
 Notable commands introduced in the current CLI surface:
 
+- `oat project new <slug> --scope shared|local|synced` - create a project in
+  an explicit scope. Without `--scope`, creation uses
+  `projects.defaultScope`, which defaults to `synced`.
+- `oat project scope [project] --format value|json` - resolve a project's
+  storage scope without inspecting its path manually.
+- `oat project push [project] [--message <message>]` - commit pending synced
+  artifacts, reconcile with the exact project ref on `origin`, publish it, and
+  refresh an open PR's artifact-links block. Use `--no-refresh-pr` to skip the
+  PR edit.
+- `oat project pull [project]` - fetch and materialize or update a synced
+  checkout. Resolve a rebase conflict and run `pull --continue`, or use
+  `pull --abort` to return to the pre-pull state. Coordination children are
+  pulled by default; `--no-children` limits the operation to the selected
+  project.
+- `oat project links [project] --format markdown|json` - render SHA-pinned
+  links for the linkable artifacts on the project ref. `--durable-summary`
+  appends an archive-safe summary link when one is available.
+- `oat project prune <project> [--force]` - remove every checkout, the local
+  and remote project refs, and the tracked record. This is the explicit
+  destructive operation; `--force` may discard dirty or unpushed artifacts.
+- `oat project migrate <path> --to synced` - migrate an existing shared
+  project to synced storage while preserving its artifacts and retargeting the
+  active project pointer.
+- `oat project list --scope shared|local|synced` - filter tracked projects by
+  scope. Add `--remote` to discover project refs that do not yet have a local
+  record or checkout, and `--include-coordination` to include coordination
+  parents.
 - `oat config dump --json` - merged config with source attribution
 - `oat project status --json` - full parsed state for the active tracked project. **Stable contract for skills:** the JSON output is a typed read interface for OAT skills; the field set consumed by migrated skills is locked by `MIGRATED_FIELDS` in `packages/cli/src/commands/project/status.test.ts`. Removing or renaming any of `project.{name, path, phase, phaseStatus, workflowMode, docsUpdated, lastCommit, prStatus, prUrl}` is a breaking change and will fail the contract test.
 - `oat project status --field <path>` - print one arbitrary dot-path field from the same status payload, e.g. `project.workflowMode` or `project.timestamps.stateUpdated`. Missing/null fields print `null`; object and array fields print compact JSON.
