@@ -146,6 +146,11 @@ oat_generated: false
   and update now route through the canonical lifecycle adapter; all seven
   blocking findings have focused regression coverage. Fresh re-review is
   pending.
+- Re-review artifact:
+  `reviews/p02-review-2026-08-27T063435Z.md` (2 Critical, 1 Important,
+  1 Medium). Final configured fix iteration 2/2 must correct default no-Git
+  post-hook routing, executable-mode idempotence, shared-owner update
+  eligibility, and stale returned intent evidence.
 
 **Verification:**
 
@@ -226,7 +231,7 @@ oat_generated: false
 | Phase | Status      | Tasks | Review | Fix loops |
 | ----- | ----------- | ----- | ------ | --------- |
 | p01   | completed   | 7/7   | passed | 3         |
-| p02   | in_progress | 9/9   | review | 1         |
+| p02   | in_progress | 9/9   | fixes  | 2         |
 
 #### Dispatch Notes
 
@@ -258,6 +263,10 @@ oat_generated: false
   and diff check passed. Root repeated the production call-path search,
   114 focused tests, type-check, and diff check successfully.
 - `Dispatch: scope=p02-fix1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Phase 2 re-review after fix iteration 1:
+  `reviews/p02-review-2026-08-27T063435Z.md`; 2 Critical, 1 Important,
+  1 Medium. Final configured fix iteration 2/2 is required.
+- `Dispatch: scope=p02-review-fix1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 
 ### Recovery Event 4bd11825-d39d-4c04-888d-ef704ae4af24
 
@@ -325,7 +334,8 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Run a fresh independent Phase 2 re-review against fix iteration 1.
+- Complete final configured Phase 2 fix iteration 2/2 and run a fresh
+  independent re-review.
 
 ## Final Summary (for PR/docs)
 
