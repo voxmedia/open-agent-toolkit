@@ -82,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T03:44:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T03:53:01Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -100,7 +100,8 @@ oat_project_explainer:
 
 Phase 1 produced seven verified task commits. Its independent root-owned review
 found two Critical and two Important issues; bounded fix iteration 1 completed
-all four and a fresh re-review is next.
+those four. Re-review found one Critical and one Important removal/ownership
+edge; fix iteration 2 is next and is the final configured retry.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -110,7 +111,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 1 re-review pending)
+- **Implementation:** `implementation.md` (Phase 1 fix iteration 2 pending)
 
 ## Progress
 
@@ -136,7 +137,8 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 1 task commits and focused verification completed
 - ✓ Independent Phase 1 review received
 - ✓ Phase 1 bounded review fix iteration 1 completed
-- ⧗ Phase 1 re-review
+- ✓ Phase 1 re-review received
+- ⧗ Phase 1 bounded review fix iteration 2
 
 ## Blockers
 
@@ -144,4 +146,4 @@ None
 
 ## Next Milestone
 
-Re-review Phase 1.
+Fix and re-review Phase 1 within the configured retry limit.

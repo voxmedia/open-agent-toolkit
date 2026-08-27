@@ -1271,6 +1271,7 @@ exit-code evidence.
 | Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
 | p01    | code     | fixes_completed | 2026-08-27 | reviews/p01-review-2026-08-27T031035Z.md                      | e0039d8065b4b8eb5ed45fb42d5c1382132c3104 | auto       | -                             |
+| p01    | code     | fixes_added     | 2026-08-27 | reviews/p01-review-2026-08-27T035112Z.md                      | a1d5ff52d2f460cfdfd28e2edaf5230503195989 | auto       | -                             |
 | p02    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
 | final  | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
