@@ -1,3 +1,4 @@
+import { lstat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import {
@@ -11,6 +12,7 @@ import {
 } from '@config/oat-config';
 import type { ConcreteScope } from '@shared/types';
 
+import { getPackDefinition } from './pack-manifest';
 import type { PackName } from './types';
 
 export type PackIntentSource = 'declared' | 'inferred-legacy' | 'none';
@@ -21,6 +23,13 @@ export interface ScopedPackIntent {
   enabled: boolean;
   source: PackIntentSource;
   configPath: string;
+  diagnostics: PackIntentDiagnostic[];
+}
+
+export interface PackIntentDiagnostic {
+  code: 'legacy-false-conflict';
+  message: string;
+  paths: string[];
 }
 
 export interface IntentReadInput {
@@ -49,17 +58,62 @@ async function readConcreteConfig(
     : readUserConfig(userConfigDir(input.scopeRoot));
 }
 
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await lstat(path);
+    return true;
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function findPhysicalManagedAssets(
+  input: IntentReadInput,
+): Promise<string[]> {
+  const paths = getPackDefinition(input.pack)
+    .assets.filter(
+      (asset) =>
+        asset.scopes.includes(input.scope) &&
+        asset.ownership[input.scope] === 'managed',
+    )
+    .map(({ destination }) => join(input.scopeRoot, destination));
+  const observed = await Promise.all(
+    paths.map(async (path) => ((await pathExists(path)) ? path : null)),
+  );
+  return observed.filter((path): path is string => path !== null);
+}
+
 export async function readScopedPackIntent(
   input: IntentReadInput,
 ): Promise<ScopedPackIntent> {
   const config = await readConcreteConfig(input);
   const declared = config.tools?.[input.pack] === true;
+  const legacyFalse = config.tools?.[input.pack] === false;
+  const physicalAssets = declared ? [] : await findPhysicalManagedAssets(input);
+  const inferred = physicalAssets.length > 0;
+  const diagnostics: PackIntentDiagnostic[] = [];
+  if (legacyFalse && inferred) {
+    diagnostics.push({
+      code: 'legacy-false-conflict',
+      message: `Pack ${input.pack} has legacy false intent but managed assets exist at ${input.scope} scope`,
+      paths: physicalAssets,
+    });
+  }
   return {
     pack: input.pack,
     scope: input.scope,
-    enabled: declared,
-    source: declared ? 'declared' : 'none',
+    enabled: declared || inferred,
+    source: declared ? 'declared' : inferred ? 'inferred-legacy' : 'none',
     configPath: configPathForScope(input.scopeRoot),
+    diagnostics,
   };
 }
 

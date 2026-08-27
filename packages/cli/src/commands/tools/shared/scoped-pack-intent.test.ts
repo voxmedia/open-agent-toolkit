@@ -118,4 +118,51 @@ describe('scoped pack intent', () => {
       ),
     ).toEqual({ version: 1, tools: { docs: true } });
   });
+
+  it('infers legacy physical installs without mutating config', async () => {
+    const scopeRoot = await makeScopeRoot();
+    const skillPath = join(scopeRoot, '.agents', 'skills', 'oat-project-new');
+    await mkdir(skillPath, { recursive: true });
+
+    await expect(
+      readScopedPackIntent({ pack: 'workflows', scope: 'project', scopeRoot }),
+    ).resolves.toMatchObject({ enabled: true, source: 'inferred-legacy' });
+    await expect(
+      readFile(join(scopeRoot, '.oat', 'config.json'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('treats legacy false as absent and diagnoses physical conflicts', async () => {
+    const scopeRoot = await makeScopeRoot();
+    const configPath = join(scopeRoot, '.oat', 'config.json');
+    const rawConfig = JSON.stringify({
+      version: 1,
+      tools: { workflows: false },
+    });
+    await writeFile(configPath, rawConfig);
+    await mkdir(join(scopeRoot, '.agents', 'skills', 'oat-project-new'), {
+      recursive: true,
+    });
+
+    await expect(
+      readScopedPackIntent({ pack: 'workflows', scope: 'project', scopeRoot }),
+    ).resolves.toMatchObject({
+      enabled: true,
+      source: 'inferred-legacy',
+      diagnostics: [{ code: 'legacy-false-conflict' }],
+    });
+    await expect(readFile(configPath, 'utf8')).resolves.toBe(rawConfig);
+  });
+
+  it('keeps explicit true intent when every managed asset is missing', async () => {
+    const scopeRoot = await makeScopeRoot();
+    await writeFile(
+      join(scopeRoot, '.oat', 'config.json'),
+      JSON.stringify({ version: 1, tools: { workflows: true } }),
+    );
+
+    await expect(
+      readScopedPackIntent({ pack: 'workflows', scope: 'project', scopeRoot }),
+    ).resolves.toMatchObject({ enabled: true, source: 'declared' });
+  });
 });
