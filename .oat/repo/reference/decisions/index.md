@@ -12,10 +12,15 @@
 | ---------------------------------------- | ---------- | -------- | ------------------------------------------------------------------------------- | ------ |
 | DR-260827-close-ambient-environment      | 2026-08-27 | accepted | Close ambient environment sensitivity at the test-runner seam                   | -      |
 | DR-260827-cycle-cap-disposition-bounded  | 2026-08-27 | accepted | Cycle-cap disposition: bounded root-verified fix with gate as independent check | -      |
+| DR-260827-destination-first-scope        | 2026-08-27 | accepted | Destination-first scope migration                                               | -      |
 | DR-260827-keep-plan-mandated-error       | 2026-08-27 | accepted | Keep plan-mandated error messages on the assets override path                   | -      |
 | DR-260827-re-run-release-check-versions  | 2026-08-27 | accepted | Re-run release:check-versions after every task commit                           | -      |
 | DR-260827-reconcile-a-plan-stop          | 2026-08-27 | accepted | Reconcile a plan STOP condition non-narrowingly with operator direction         | -      |
+| DR-260827-repository-first-template      | 2026-08-27 | accepted | Repository-first template precedence                                            | -      |
+| DR-260827-repository-owned-pjm-adoption  | 2026-08-27 | accepted | Repository-owned PJM adoption                                                   | -      |
+| DR-260827-scope-neutral-complete-pack    | 2026-08-27 | accepted | Scope-neutral complete pack contract                                            | -      |
 | DR-260827-structural-exemptions          | 2026-08-27 | accepted | Structural exemptions and property assertions for prose contract tests          | -      |
+| DR-260827-user-default-with-project      | 2026-08-27 | accepted | User default with project compatibility                                         | -      |
 | DR-260826-derive-the-sync-apply-restamp  | 2026-08-26 | accepted | Derive the sync apply restamp from the version-skew diagnostic                  | -      |
 | DR-260826-merge-phase-branches-without   | 2026-08-26 | accepted | Merge phase branches without rebase to preserve reviewed SHAs                   | -      |
 | DR-260826-non-narrowing-reconciliation   | 2026-08-26 | accepted | Non-narrowing reconciliation of the release-guard plan                          | -      |
