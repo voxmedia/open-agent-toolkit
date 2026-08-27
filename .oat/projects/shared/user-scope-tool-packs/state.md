@@ -30,6 +30,19 @@ oat_phase_recovery_policy:
     p03:
       used_attempts: 1
       pending_attempt: null
+    p04:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: '76178ef7-3252-4953-aff7-8687eba22bd1'
+        original_request: 'call_yFu85ZIagHG2fzbtGD5Qz5wq'
+        original_task: p04-t05
+        original_commit: '7c48d5b70e5bcf1aebb70c54d358ac6a7dbf9448'
+        discovered_by: 'pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm src/commands/backlog src/commands/decision src/commands/init/tools/project-management src/commands/init/tools/shared'
+        dispatch_target: 'oat-phase-implementer-gpt-5-6-sol-high'
+        executing_target: 'root-inline:claude-opus-5'
+        reservation_head: '0c189eb5b4f07a3ff07b811ce4f0e7b593812fa1'
+        status: pending
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
