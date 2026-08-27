@@ -303,6 +303,12 @@ Chronological log of implementation progress.
 - Finalizer (`dedicated`): artifact commit `4ca73152` (exactly the 27 immutable paths; lint-staged rewrote nothing), attestation `record-durability.mjs` → **built-durable**, evidence commit `faff1b9d`, `verifyTrackedRunFinalization` `ok: true`. Root re-verified 27/27 immutable hashes against the blobs at HEAD.
 - Deviations from W3 (worker-reported, root-accepted): mandated commit subject; first artifact-commit attempt failed on a relative `-F` path (exit 128, no state change; worktree re-hashed 27/27 before the retry); two SVG label collisions fixed pre-run; the diagram declares two side branches (the operator-answered STOP #2 alongside the plan gate).
 
+## Final HiLL approval (IMPLEMENT-16, autonomous)
+
+- Pre-approval sequence (configured `workflow.postImplementSequence`): summary (`9ed779b0` — refresh + three decision records `DR-260827-reconcile-a-plan-stop`, `DR-260827-structural-exemptions`, `DR-260827-cycle-cap-disposition-bounded`), document (skipped — `rg` over `apps/oat-docs/docs/` for the old routing/bypass returns nothing; `oat_docs_updated: skipped`), pr (PR #222, head `c6d1c277`) — all complete; recap gate IMPLEMENT-19 terminal (`built-durable`).
+- Evidence: final review row `passed` (round 3 artifact `reviews/archived/final-review-2026-08-27T055358Z.md` at `067bfad9`, cap fix `601c950b` root-verified); configured exit gate `allowed / passed` generation 1 (run `10c732b5`, `cursor-gpt-5-6-sol-xhigh`, artifact `reviews/archived/final-review-2026-08-27T062832Z.md`, head `ca5378b4`) with a freshness checkpoint at `c4be950b` over closeout-only descendants.
+- Approval: autonomous policy (`OAT_AUTONOMOUS=1`, session-scoped), recorded as `approval_source: oat-autonomous`. Completion tail (archive + S3 + pointer clear): **deferred to program close** per the program contract.
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.

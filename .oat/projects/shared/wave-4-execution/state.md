@@ -13,7 +13,7 @@ oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
@@ -119,13 +119,13 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-08-27T06:36:26.562Z'
 oat_post_implement_sequence:
-  status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  status: complete # pre_approval | awaiting_approval | post_approval | failed | complete
   source: configured # workflow.postImplementSequence
   final_phase: p01
   pre_approval: [summary, document, pr]
   pre_approval_completed: [summary, document, pr] # document: skipped — no docs page references the old codex-skill routing or bypass (oat_docs_updated: skipped)
-  approval: pending # pending | approved | not_required
-  approval_source: null # null | user | oat-autonomous
+  approval: approved # pending | approved | not_required
+  approval_source: oat-autonomous # null | user | oat-autonomous
   post_approval: []
   post_approval_completed: []
   failure: null
@@ -134,17 +134,17 @@ oat_project_recap:
   source: autonomous_policy
   decided_at: '2026-08-27T06:36:00.378Z'
 oat_docs_updated: skipped # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/222 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T01:55:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T06:49:10.501Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T06:49:56.008Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-4-execution
 
-**Status:** Implement — exit gate generation 1 passed (run 10c732b5); post-implement sequence in progress
+**Status:** PR #222 open; lifecycle sealed (completion tail deferred to program close)
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
@@ -187,7 +187,8 @@ non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Rec
 - ✓ Narrowed final round 3 (cycle 3 of 3): 0C/0I/3M/0m — guard breadth; `SKILL.md` unchanged since `39121c35`
 - ✓ Bounded fix `w4-final-fix-003` (`601c950b`, test only; root-run 36-probe matrix ALL MATCHED) — `final` row passed; summary.md generated, synthesis written, backlog item archived
 - ✓ Configured exit gate generation 1 passed (cursor-gpt-5-6-sol-xhigh, run 10c732b5, 0C/0I/3M/0m — the two ledgered residuals + closeout prose)
-- ⧗ Post-implement sequence: summary → document [skipped] → pr
+- ✓ Post-implement sequence complete: summary (`9ed779b0`), document (skipped — no docs reference the old routing), pr (#222, head `c6d1c277`); recap built-durable (`4ca73152`/`faff1b9d`); HiLL approved autonomously (IMPLEMENT-16)
+- ⧗ CI green → root merge (squash) → reconcile main → wave-close → program recap (generate only) → HUMAN-GATED completion-tail checkpoint
 
 ## Blockers
 
