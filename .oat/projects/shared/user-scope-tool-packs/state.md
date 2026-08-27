@@ -82,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T05:45:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T05:53:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -92,7 +92,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 2 review pending
+**Status:** Implementation in progress — Phase 2 fix iteration 1
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -118,6 +118,9 @@ by the full CLI suite consumed recovery attempt 2/10 and was recovered in
 Phase 2 implementation and its verification gates are complete. Self-review
 found that the new shared reconcile planner/apply modules may have no production
 callers, so Phase 2 requires independent review before it can pass.
+Independent review confirmed the integration gap and found five Critical, two
+Important, and one Medium issue. The first of two default review-fix iterations
+is authorized and pending.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -127,7 +130,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 2 review pending)
+- **Implementation:** `implementation.md` (Phase 2 fix iteration 1/2)
 
 ## Progress
 
@@ -166,7 +169,9 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 2 tasks `p02-t04`–`p02-t09` committed
 - ✓ Phase 2 recovery attempt 2/10 reconciled
 - ✓ Phase 2 verification passed: 56 files / 554 tests
-- ⧗ Phase 2 independent review, including reconcile production wiring
+- ✓ Phase 2 independent review received
+- ✗ Phase 2 review: 5 Critical, 2 Important, 1 Medium
+- ⧗ Phase 2 fix iteration 1/2
 
 ## Blockers
 
@@ -174,4 +179,4 @@ None.
 
 ## Next Milestone
 
-Run independent Phase 2 code review against the completed implementation range.
+Complete Phase 2 fix iteration 1/2 and run a fresh independent re-review.

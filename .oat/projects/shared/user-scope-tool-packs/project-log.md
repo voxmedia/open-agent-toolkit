@@ -64,6 +64,10 @@ Phase p01 passed after authorized fix iteration 3/4; review reviews/p01-review-2
 
 Phase p02 completed 9/9 task commits and passed 554 phase tests plus 3,700 CLI tests; independent review must verify the self-reported concern that shared reconcile planner/apply modules have no production callers.
 
+### 2026-08-27 · structural · oat-project-implement · p02-review
+
+Phase p02 review reviews/p02-review-2026-08-27T055129Z.md found 5 Critical, 2 Important, and 1 Medium issue; review-fix iteration 1/2 is required.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

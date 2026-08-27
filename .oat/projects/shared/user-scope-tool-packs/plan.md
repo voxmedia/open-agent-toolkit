@@ -580,8 +580,13 @@ Run the RED command again; expected: pass.
 - Modify: `packages/cli/src/commands/sync/dry-run.ts`
 - Modify: `packages/cli/src/commands/sync/apply.ts`
 - Modify: `packages/cli/src/commands/tools/remove/index.ts`
+- Modify: `packages/cli/src/commands/tools/remove/remove-tools.test.ts`
 - Modify: `packages/cli/src/commands/tools/shared/auto-sync.ts`
 - Modify: `packages/cli/src/commands/tools/shared/auto-sync.test.ts`
+
+`sync/dry-run.ts` and `sync/apply.ts` remain part of the audited task boundary
+but required no code change; `remove-tools.test.ts` supplies the canonical-path
+evidence consumed by the removal adapter.
 
 **Step 1: Write test (RED)**
 
@@ -1275,7 +1280,7 @@ exit-code evidence.
 | p01    | code     | fixes_completed | 2026-08-27 | reviews/p01-review-2026-08-27T035112Z.md                      | a1d5ff52d2f460cfdfd28e2edaf5230503195989 | auto       | -                             |
 | p01    | code     | fixes_completed | 2026-08-27 | reviews/p01-review-2026-08-27T041427Z.md                      | f904f4c544b2fb51d71f0c029493d52d251e8959 | auto       | -                             |
 | p01    | code     | passed          | 2026-08-27 | reviews/p01-review-2026-08-27T050410Z.md                      | 3aba439f46de528b61e9a9d317a96fc455745229 | auto       | -                             |
-| p02    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| p02    | code     | fixes_added     | 2026-08-27 | reviews/p02-review-2026-08-27T055129Z.md                      | 1c43cccbf7bc542e93d4157d13252c43cb352b80 | auto       | -                             |
 | final  | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
 | design | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T012258Z.md | -                                        | gate       | claude-fable-skip-permissions |
