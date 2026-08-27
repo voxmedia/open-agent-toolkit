@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p03-t05
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -17,13 +17,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 7     | 7/7       |
-| Phase 2 | completed   | 9     | 9/9       |
-| Phase 3 | in_progress | 5     | 5/5       |
-| Phase 4 | pending     | 7     | 0/7       |
-| Phase 5 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 7     | 7/7       |
+| Phase 2 | completed | 9     | 9/9       |
+| Phase 3 | completed | 5     | 5/5       |
+| Phase 4 | pending   | 7     | 0/7       |
+| Phase 5 | pending   | 6     | 0/6       |
 
 **Total:** 21/34 tasks completed
 
@@ -223,8 +223,9 @@ oat_generated: false
 
 ## Phase 3: Verified Scope Migration
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-08-27
+**Completed:** 2026-08-27
 
 ### Phase Summary
 
@@ -301,6 +302,9 @@ oat_generated: false
 - The implementer passed 36 fix-focused tests, 133 regression tests, 55 Phase 3
   tests, 3,762 CLI tests, workspace tests, type-check, lint, format, and diff
   check. Root independently repeated the 36-test decisive boundary.
+- Decisive re-review `reviews/p03-review-2026-08-27T125029Z.md` found no
+  findings at any severity. Phase 3 passes, and its temporary retry limit is
+  restored from 3 to the project default 2.
 
 ### Task p03-t01: Define migration plans and result state
 
@@ -343,11 +347,11 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Status      | Tasks | Review  | Fix loops |
-| ----- | ----------- | ----- | ------- | --------- |
-| p01   | completed   | 7/7   | passed  | 3         |
-| p02   | completed   | 9/9   | passed  | 2         |
-| p03   | in_progress | 5/5   | pending | 3         |
+| Phase | Status    | Tasks | Review | Fix loops |
+| ----- | --------- | ----- | ------ | --------- |
+| p01   | completed | 7/7   | passed | 3         |
+| p02   | completed | 9/9   | passed | 2         |
+| p03   | completed | 5/5   | passed | 3         |
 
 #### Dispatch Notes
 
@@ -427,6 +431,10 @@ oat_generated: false
   workspace, type-check, lint, format, and diff gates passed; root repeated 36
   decisive tests.
 - `Dispatch: scope=p03-fix3 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Passing decisive Phase 3 re-review:
+  `reviews/p03-review-2026-08-27T125029Z.md`; 0 Critical, 0 Important,
+  0 Medium, 0 Minor.
+- `Dispatch: scope=p03-review-fix3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 
 ### Recovery Event d8c701a8-4297-4028-bd4b-e60f404686fa
 
@@ -512,8 +520,7 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Run a decisive fresh independent Phase 3 re-review over authorized fix
-  iteration 3/3.
+- Begin Phase 4 at `p04-t01`.
 
 ## Final Summary (for PR/docs)
 

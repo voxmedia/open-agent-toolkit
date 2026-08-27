@@ -1,5 +1,5 @@
 ---
-oat_current_task: p03-t05
+oat_current_task: p04-t01
 oat_last_commit: 38233ba2e997f3e18ad2fa3ebc888cab95131688
 oat_blockers: []
 associated_issues: [
@@ -19,7 +19,7 @@ oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints h
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-oat_orchestration_retry_limit: 3 # temporary p03 override authorized by the operator; restore to 2 after p03 reaches a terminal verdict
+oat_orchestration_retry_limit: 2 # default restored after the authorized p03 extension reached a passing verdict
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
@@ -85,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T12:45:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T12:51:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -95,7 +95,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 3 decisive re-review after iteration 3
+**Status:** Implementation in progress — Phase 4 ready
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -169,6 +169,9 @@ Authorized fix iteration 3 completed the remaining disposition in
 `38233ba2e997f3e18ad2fa3ebc888cab95131688` and passed all focused,
 regression, phase, CLI, workspace, type-check, lint, format, and diff gates.
 Decisive fresh independent re-review is pending.
+Decisive re-review found no findings at any severity, so Phase 3 passes. Its
+temporary retry limit is restored to the default 2, and Phase 4 is ready to
+begin.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -178,7 +181,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 3 awaiting decisive re-review)
+- **Implementation:** `implementation.md` (Phase 3 complete; Phase 4 ready)
 
 ## Progress
 
@@ -238,7 +241,9 @@ HiLL checkpoint and automatic checkpoint review.
 - ✗ Phase 3 decisive re-review: 0 Critical, 0 Important, 1 Medium
 - ✓ Operator authorized one additional bounded Phase 3 iteration
 - ✓ Phase 3 fix iteration 3/3 completed
-- ⧗ Phase 3 decisive fresh independent re-review after iteration 3
+- ✓ Phase 3 decisive fresh independent re-review passed with no findings
+- ✓ Phase 3 completed
+- ⧗ Phase 4 ready at `p04-t01`
 
 ## Blockers
 
@@ -246,5 +251,4 @@ None.
 
 ## Next Milestone
 
-Run a decisive fresh independent Phase 3 re-review over authorized fix
-iteration 3/3.
+Begin Phase 4 at `p04-t01`.
