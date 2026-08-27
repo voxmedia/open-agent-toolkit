@@ -10,6 +10,33 @@ export type PackName =
   | 'research'
   | 'brainstorm';
 
+export type PackAssetKind =
+  | 'skill'
+  | 'agent'
+  | 'template'
+  | 'script'
+  | 'directory'
+  | 'seed';
+
+export type PackAssetOwnership = 'managed' | 'seed-if-missing';
+
+export interface PackAssetDefinition {
+  id: string;
+  kind: PackAssetKind;
+  source: string;
+  destination: string;
+  scopes: readonly ConcreteScope[];
+  ownership: Partial<Record<ConcreteScope, PackAssetOwnership>>;
+  executable?: boolean;
+}
+
+export interface PackDefinition {
+  name: PackName;
+  allowedScopes: readonly ConcreteScope[];
+  defaultScope: ConcreteScope;
+  assets: readonly PackAssetDefinition[];
+}
+
 export interface ToolInfo {
   name: string;
   type: 'skill' | 'agent';
