@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: aa7cac726
+oat_last_commit: 5832c793d
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260818-make-the-project-management' },
@@ -11,10 +11,10 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: ['discovery'] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -78,26 +78,26 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T00:26:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T01:31:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: user-scope-tool-packs
 
-**Status:** Design review fix pass complete — awaiting lifecycle completion
+**Status:** Design complete — ready for planning
 **Started:** 2026-08-20
-**Last Updated:** 2026-08-26
+**Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Specification is complete. The one authorized Fable review and bounded design
-fix pass are complete; lifecycle metadata can now mark design approved.
+Design approved after the one authorized Fable review and bounded fix pass. The
+project is ready for `oat-project-plan`.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete and approved)
 - **Spec:** `spec.md` (complete)
-- **Design:** `design.md` (reviewed — bounded fixes complete)
+- **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
@@ -112,6 +112,7 @@ fix pass are complete; lifecycle metadata can now mark design approved.
 - ✓ Technical design drafted
 - ✓ Independent Fable design review received
 - ✓ One bounded design fix pass applied
+- ✓ Design HiLL checkpoint completed under the user's continuation instruction
 
 ## Blockers
 
@@ -119,5 +120,4 @@ None
 
 ## Next Milestone
 
-Mark design complete and continue directly to `oat-project-plan` under the
-user's approved continuation instruction.
+Author and review the executable implementation plan.
