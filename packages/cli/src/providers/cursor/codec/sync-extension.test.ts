@@ -7,7 +7,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import type { CanonicalEntry } from '@engine/index';
 import type {
@@ -431,6 +431,107 @@ describe('cursor sync extension', () => {
     });
     await expect(
       readFile(join(external, 'oat-reviewer-gpt-5-6-sol-high.md'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('materializes user-scope canonical agents under the user provider root only', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'oat-cursor-user-scope-'));
+    tempDirs.push(home);
+    // User sync requires every managed base role definition to be present.
+    const canonicalEntries = await createCanonicalEntries(home);
+    await mkdir(join(home, '.oat'), { recursive: true });
+    await writeFile(
+      join(home, '.oat', 'config.json'),
+      configWithCursorCandidates(['claude-fable-5-xhigh']),
+    );
+
+    const plan = await computeCursorProjectExtensionPlan(
+      home,
+      canonicalEntries,
+      undefined,
+      { userConfigDir: join(home, '.oat') },
+    );
+
+    expect(plan.operations.map(({ path }) => path)).toEqual(
+      expect.arrayContaining([
+        '.cursor/agents/oat-reviewer-claude-fable-5-xhigh.md',
+      ]),
+    );
+
+    await expect(
+      applyCursorProjectExtensionPlan(home, plan),
+    ).resolves.toMatchObject({ failed: 0 });
+
+    await expect(
+      readFile(
+        join(home, '.cursor', 'agents', 'oat-reviewer-claude-fable-5-xhigh.md'),
+        'utf8',
+      ),
+    ).resolves.toContain('# oat-owner: user-config');
+  });
+
+  it('keeps project and user materialized cursor paths isolated for the same canonical role', async () => {
+    const projectRoot = await mkdtemp(
+      join(tmpdir(), 'oat-cursor-dup-project-'),
+    );
+    const userRoot = await mkdtemp(join(tmpdir(), 'oat-cursor-dup-user-'));
+    tempDirs.push(projectRoot, userRoot);
+
+    const projectEntries = await createCanonicalEntries(projectRoot);
+    const userEntries = await createCanonicalEntries(userRoot);
+    await mkdir(join(userRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(userRoot, '.oat', 'config.json'),
+      configWithCursorCandidates(['claude-fable-5-xhigh']),
+    );
+
+    const projectPlan = await computeCursorProjectExtensionPlan(
+      projectRoot,
+      projectEntries,
+    );
+    const userPlan = await computeCursorProjectExtensionPlan(
+      userRoot,
+      userEntries,
+      undefined,
+      { userConfigDir: join(userRoot, '.oat') },
+    );
+
+    // Every emitted path is scope-relative, so neither scope can write into
+    // the other's provider root and no precedence is implied between them.
+    for (const [root, plan] of [
+      [projectRoot, projectPlan],
+      [userRoot, userPlan],
+    ] as const) {
+      for (const { path } of plan.operations) {
+        expect(path.startsWith('.cursor/agents/')).toBe(true);
+        expect(relative(root, join(root, path)).startsWith('..')).toBe(false);
+      }
+      await expect(
+        applyCursorProjectExtensionPlan(root, plan),
+      ).resolves.toMatchObject({ failed: 0 });
+    }
+
+    await expect(
+      readFile(
+        join(
+          userRoot,
+          '.cursor',
+          'agents',
+          'oat-reviewer-claude-fable-5-xhigh.md',
+        ),
+        'utf8',
+      ),
+    ).resolves.toContain('# oat-owner: user-config');
+    await expect(
+      readFile(
+        join(
+          projectRoot,
+          '.cursor',
+          'agents',
+          'oat-reviewer-claude-fable-5-xhigh.md',
+        ),
+        'utf8',
+      ),
     ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 });

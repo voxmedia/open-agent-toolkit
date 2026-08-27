@@ -49,6 +49,7 @@ interface HarnessOptions {
   configAwareResults?: ConfigAwareAdaptersResult[];
   providerSelectResponses?: Array<string[] | null>;
   canonicalEntries?: CanonicalEntry[];
+  canonicalEntriesByScope?: Partial<Record<Scope, CanonicalEntry[]>>;
   cwd?: string;
   home?: string;
   useDiskCodexExtension?: boolean;
@@ -115,12 +116,52 @@ function createManifest(overrides: Partial<Manifest> = {}): Manifest {
   };
 }
 
-function createCanonicalEntry(name = 'skill-one'): CanonicalEntry {
+function createCanonicalEntry(
+  name = 'skill-one',
+  root = '/tmp/workspace',
+): CanonicalEntry {
   return {
     name,
     type: 'skill',
-    canonicalPath: `/tmp/workspace/.agents/skills/${name}`,
+    canonicalPath: `${root}/.agents/skills/${name}`,
     isFile: false,
+  };
+}
+
+function createAgentCanonicalEntry(
+  name = 'agent-one.md',
+  root = '/tmp/workspace',
+): CanonicalEntry {
+  return {
+    name,
+    type: 'agent',
+    canonicalPath: `${root}/.agents/agents/${name}`,
+    isFile: true,
+  };
+}
+
+function createScopedAdapter(name = 'claude'): ProviderAdapter {
+  const mappings = [
+    {
+      contentType: 'skill' as const,
+      canonicalDir: '.agents/skills',
+      providerDir: `.${name}/skills`,
+      nativeRead: false,
+    },
+    {
+      contentType: 'agent' as const,
+      canonicalDir: '.agents/agents',
+      providerDir: `.${name}/agents`,
+      nativeRead: false,
+    },
+  ];
+  return {
+    name,
+    displayName: name,
+    defaultStrategy: 'symlink',
+    projectMappings: mappings,
+    userMappings: mappings,
+    detect: async () => true,
   };
 }
 
@@ -298,7 +339,12 @@ function createHarness(options: HarnessOptions = {}): {
     saveSyncConfig,
     scanCanonical: options.useDiskScanner
       ? vi.fn(scanCanonicalFromDisk)
-      : vi.fn(async () => options.canonicalEntries ?? [createCanonicalEntry()]),
+      : vi.fn(async (_scopeRoot: string, scope: 'project' | 'user') => {
+          return (
+            options.canonicalEntriesByScope?.[scope] ??
+            options.canonicalEntries ?? [createCanonicalEntry()]
+          );
+        }),
     scanBundledManagedAgents: options.useDiskBundledCodexAgents
       ? vi.fn(scanBundledManagedAgentsFromDisk)
       : vi.fn(async () => []),
@@ -1712,5 +1758,241 @@ describe('createSyncCommand', () => {
       globalArgs: ['--scope', 'project'],
     });
     expect(process.exitCode).toBe(1);
+  });
+
+  describe('scoped provider materialization', () => {
+    it('plans project and user scopes independently for --scope all', async () => {
+      const adapter = createScopedAdapter();
+      const { command, computeSyncPlan } = createHarness({
+        adapters: [adapter],
+        configAwareResults: [
+          {
+            activeAdapters: [adapter],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+          {
+            activeAdapters: [adapter],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+        canonicalEntriesByScope: {
+          project: [
+            createCanonicalEntry('skill-project'),
+            createAgentCanonicalEntry('agent-project.md'),
+          ],
+          user: [
+            createCanonicalEntry('skill-user', '/tmp/home'),
+            createAgentCanonicalEntry('agent-user.md', '/tmp/home'),
+          ],
+        },
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'all'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(computeSyncPlan).toHaveBeenCalledTimes(2);
+      expect(computeSyncPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scope: 'project',
+          scopeRoot: '/tmp/workspace',
+          canonical: [
+            expect.objectContaining({ name: 'skill-project', type: 'skill' }),
+            expect.objectContaining({
+              name: 'agent-project.md',
+              type: 'agent',
+            }),
+          ],
+        }),
+      );
+      expect(computeSyncPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scope: 'user',
+          scopeRoot: '/tmp/home',
+          canonical: [
+            expect.objectContaining({ name: 'skill-user', type: 'skill' }),
+            expect.objectContaining({ name: 'agent-user.md', type: 'agent' }),
+          ],
+        }),
+      );
+    });
+
+    it('keeps duplicate cross-scope canonical sources separate without inferring precedence', async () => {
+      const adapter = createScopedAdapter();
+      const duplicate = 'oat-brainstorm';
+      const { command, computeSyncPlan } = createHarness({
+        adapters: [adapter],
+        configAwareResults: [
+          {
+            activeAdapters: [adapter],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+          {
+            activeAdapters: [adapter],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+        canonicalEntriesByScope: {
+          project: [createCanonicalEntry(duplicate)],
+          user: [createCanonicalEntry(duplicate, '/tmp/home')],
+        },
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'all'],
+        commandArgs: ['--dry-run'],
+      });
+
+      // The same canonical name exists at both scopes. Sync must plan each
+      // scope against its own root and must not drop, dedupe, or reorder one
+      // of them to imply which copy a provider executes.
+      const scopes = computeSyncPlan.mock.calls.map(
+        ([input]: [
+          { scope: string; scopeRoot: string; canonical: CanonicalEntry[] },
+        ]) => ({
+          scope: input.scope,
+          scopeRoot: input.scopeRoot,
+          paths: input.canonical.map((entry) => entry.canonicalPath),
+        }),
+      );
+      expect(scopes).toEqual([
+        {
+          scope: 'project',
+          scopeRoot: '/tmp/workspace',
+          paths: [`/tmp/workspace/.agents/skills/${duplicate}`],
+        },
+        {
+          scope: 'user',
+          scopeRoot: '/tmp/home',
+          paths: [`/tmp/home/.agents/skills/${duplicate}`],
+        },
+      ]);
+    });
+
+    it('applies the exact install filter to every synced scope', async () => {
+      const adapter = createScopedAdapter();
+      const { command, computeSyncPlan } = createHarness({
+        adapters: [adapter],
+        configAwareResults: [
+          {
+            activeAdapters: [adapter],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+          {
+            activeAdapters: [adapter],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'all'],
+        commandArgs: [
+          '--dry-run',
+          '--install-canonical',
+          '.agents/agents/oat-reviewer.md',
+        ],
+      });
+
+      expect(computeSyncPlan).toHaveBeenCalledTimes(2);
+      for (const [input] of computeSyncPlan.mock.calls as Array<
+        [{ allowedCanonicalPaths?: string[] }]
+      >) {
+        expect(input.allowedCanonicalPaths).toEqual([
+          '.agents/agents/oat-reviewer.md',
+        ]);
+      }
+    });
+
+    it('scopes removal pruning to the requested scope only', async () => {
+      const adapter = createScopedAdapter();
+      const removed = '.agents/skills/oat-idea-new';
+      const { command, computeSyncPlan } = createHarness({
+        adapters: [adapter],
+        canonicalEntriesByScope: {
+          // Still present at project scope, already absent at user scope.
+          project: [createCanonicalEntry('oat-idea-new')],
+          user: [],
+        },
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'user'],
+        commandArgs: ['--dry-run', '--remove-canonical', removed],
+      });
+
+      expect(computeSyncPlan).toHaveBeenCalledTimes(1);
+      expect(computeSyncPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scope: 'user',
+          scopeRoot: '/tmp/home',
+          allowedCanonicalPaths: [removed],
+        }),
+      );
+    });
+
+    it('refuses cross-scope removal pruning when any synced scope still has the source', async () => {
+      const adapter = createScopedAdapter();
+      const removed = '.agents/skills/oat-idea-new';
+      const { command, computeSyncPlan } = createHarness({
+        adapters: [adapter],
+        canonicalEntriesByScope: {
+          project: [createCanonicalEntry('oat-idea-new')],
+          user: [],
+        },
+      });
+
+      await expect(
+        runSyncCommand(command, {
+          globalArgs: ['--scope', 'all'],
+          commandArgs: ['--dry-run', '--remove-canonical', removed],
+        }),
+      ).rejects.toMatchObject({
+        message: `Cannot remove canonical provider views while source exists: ${removed}`,
+      });
+      expect(computeSyncPlan).not.toHaveBeenCalled();
+    });
+
+    it('forwards the exact filter into user-scope materialization extension planning', async () => {
+      const adapter = createCodexAdapter();
+      const { command, computeCodexProjectExtensionPlan } = createHarness({
+        adapters: [adapter],
+        configAwareResults: [
+          {
+            activeAdapters: [adapter],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+        canonicalEntriesByScope: {
+          user: [createAgentCanonicalEntry('oat-reviewer.md', '/tmp/home')],
+        },
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'user'],
+        commandArgs: [
+          '--dry-run',
+          '--install-canonical',
+          '.agents/agents/oat-reviewer.md',
+        ],
+      });
+
+      expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+        '/tmp/home',
+        expect.arrayContaining([
+          expect.objectContaining({ name: 'oat-reviewer.md' }),
+        ]),
+        ['.agents/agents/oat-reviewer.md'],
+        expect.objectContaining({ userConfigDir: '/tmp/home/.oat' }),
+      );
+    });
   });
 });

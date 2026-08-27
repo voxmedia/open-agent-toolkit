@@ -1438,4 +1438,100 @@ describe('codex sync extension', () => {
       ),
     );
   });
+
+  it('materializes user-scope canonical agents under the user provider root only', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-user-'));
+    tempDirs.push(home);
+    const canonicalDir = join(home, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalFile = join(canonicalDir, 'oat-reviewer.md');
+    await writeFile(canonicalFile, canonicalAgentFileContent('oat-reviewer'));
+    await mkdir(join(home, '.oat'), { recursive: true });
+    await writeFile(
+      join(home, '.oat', 'config.json'),
+      JSON.stringify({ version: 1 }),
+    );
+
+    const plan = await computeCodexProjectExtensionPlan(
+      home,
+      [
+        {
+          name: 'oat-reviewer.md',
+          type: 'agent',
+          canonicalPath: canonicalFile,
+          isFile: true,
+        },
+      ],
+      undefined,
+      { userConfigDir: join(home, '.oat') },
+    );
+
+    expect(toCodexExtensionOperations(plan).map(({ path }) => path)).toEqual(
+      expect.arrayContaining([
+        '.codex/agents/oat-reviewer.toml',
+        '.codex/config.toml',
+      ]),
+    );
+
+    const applyResult = await applyCodexProjectExtensionPlan(home, plan);
+    expect(applyResult.failed).toBe(0);
+
+    await expect(
+      readFile(join(home, '.codex', 'agents', 'oat-reviewer.toml'), 'utf8'),
+    ).resolves.toContain('developer_instructions');
+    await expect(
+      readFile(join(home, '.codex', 'config.toml'), 'utf8'),
+    ).resolves.toContain('multi_agent = true');
+  });
+
+  it('keeps project and user materialized codex paths isolated for the same canonical role', async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), 'oat-codex-dup-project-'));
+    const userRoot = await mkdtemp(join(tmpdir(), 'oat-codex-dup-user-'));
+    tempDirs.push(projectRoot, userRoot);
+
+    const roots = [projectRoot, userRoot];
+    for (const root of roots) {
+      const canonicalDir = join(root, '.agents', 'agents');
+      await mkdir(canonicalDir, { recursive: true });
+      await writeFile(
+        join(canonicalDir, 'oat-reviewer.md'),
+        canonicalAgentFileContent('oat-reviewer'),
+      );
+    }
+    await mkdir(join(userRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(userRoot, '.oat', 'config.json'),
+      JSON.stringify({ version: 1 }),
+    );
+
+    for (const [index, root] of roots.entries()) {
+      const plan = await computeCodexProjectExtensionPlan(
+        root,
+        [
+          {
+            name: 'oat-reviewer.md',
+            type: 'agent',
+            canonicalPath: join(root, '.agents', 'agents', 'oat-reviewer.md'),
+            isFile: true,
+          },
+        ],
+        undefined,
+        index === 1 ? { userConfigDir: join(userRoot, '.oat') } : undefined,
+      );
+      // Every emitted path stays scope-relative, so neither scope can write
+      // into the other's provider root.
+      for (const { path } of toCodexExtensionOperations(plan)) {
+        expect(relative(root, join(root, path)).startsWith('..')).toBe(false);
+      }
+      await expect(
+        applyCodexProjectExtensionPlan(root, plan),
+      ).resolves.toMatchObject({ failed: 0 });
+    }
+
+    for (const root of roots) {
+      await expect(
+        readFile(join(root, '.codex', 'agents', 'oat-reviewer.toml'), 'utf8'),
+      ).resolves.toContain('developer_instructions');
+    }
+  });
 });
