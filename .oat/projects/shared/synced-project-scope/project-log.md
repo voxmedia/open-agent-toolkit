@@ -68,6 +68,10 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:2,importan
 
 target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:2,important:1,medium:2,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/artifact-plan-review-2026-08-27T032056Z.md
 
+### 2026-08-27 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:1,important:2,medium:2,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/artifact-plan-review-2026-08-27T033204Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
