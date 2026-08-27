@@ -1962,10 +1962,12 @@ Every touched `SKILL.md` gets a `version:` bump (patch for snippet-only edits, m
 - Modify: `.agents/skills/oat-project-design/SKILL.md` (`:324`, `:576`, `:613`, `:762`)
 - Modify: `.agents/skills/oat-project-plan/SKILL.md` (Step 15)
 - Modify: `.agents/skills/oat-project-import-plan/SKILL.md` (`:429-436`)
+- Modify: `.agents/skills/oat-project-retro/SKILL.md` (validator prerequisite only: rename `## Progress Indicators` to `## Progress Indicators (User-Facing)` and bump `version:` now; behavioral edits remain in p04-t03, with no second version bump in this PR)
+- Modify: `.agents/skills/oat-project-retro-file/SKILL.md` (validator prerequisite only: rename `## Progress Indicators` to `## Progress Indicators (User-Facing)` and bump `version:` now; behavioral edits remain in p04-t11, with no second version bump in this PR)
 
 **Step 1: Apply the snippet**
 
-Replace each commit site with the guarded form. Where a site uses `git add "$PROJECT_PATH/"` (whole dir), the `synced` branch is a single `oat project push`. Bump each `version:`.
+Replace each commit site with the guarded form. Where a site uses `git add "$PROJECT_PATH/"` (whole dir), the `synced` branch is a single `oat project push`. Bump each `version:`. Also normalize the exact progress-indicator heading and bump the versions of `oat-project-retro` and `oat-project-retro-file` so the tree-wide validator can pass; do not make their later behavioral changes in this task.
 
 **Step 2: Verify**
 
@@ -1974,12 +1976,12 @@ Expected: exit 0 — validation passes; bump check passes; the negated grep find
 
 **Step 3: Format**
 
-Run: `pnpm exec oxfmt --write .agents/skills/oat-project-quick-start/SKILL.md .agents/skills/oat-project-discover/SKILL.md .agents/skills/oat-project-spec/SKILL.md .agents/skills/oat-project-design/SKILL.md .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-import-plan/SKILL.md`
+Run: `pnpm exec oxfmt --write .agents/skills/oat-project-quick-start/SKILL.md .agents/skills/oat-project-discover/SKILL.md .agents/skills/oat-project-spec/SKILL.md .agents/skills/oat-project-design/SKILL.md .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-import-plan/SKILL.md .agents/skills/oat-project-retro/SKILL.md .agents/skills/oat-project-retro-file/SKILL.md`
 
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/oat-project-quick-start .agents/skills/oat-project-discover .agents/skills/oat-project-spec .agents/skills/oat-project-design .agents/skills/oat-project-plan .agents/skills/oat-project-import-plan
+git add .agents/skills/oat-project-quick-start .agents/skills/oat-project-discover .agents/skills/oat-project-spec .agents/skills/oat-project-design .agents/skills/oat-project-plan .agents/skills/oat-project-import-plan .agents/skills/oat-project-retro/SKILL.md .agents/skills/oat-project-retro-file/SKILL.md
 git commit -m "feat(p04-t01): push synced artifacts from authoring skills"
 ```
 
@@ -2025,7 +2027,7 @@ git commit -m "feat(p04-t02): push synced artifacts from execution skills and ph
 
 - Modify: `.agents/skills/oat-project-summary/SKILL.md` (`:427-447`)
 - Modify: `.agents/skills/oat-project-document/SKILL.md` (`:492-510`, state commit only — doc commits stay on the branch)
-- Modify: `.agents/skills/oat-project-retro/references/apply-procedure.md` (`:87-107`, `:162`, `:192-200`) + `SKILL.md` version bump
+- Modify: `.agents/skills/oat-project-retro/references/apply-procedure.md` (`:87-107`, `:162`, `:192-200`); its `SKILL.md` version was already bumped in p04-t01, so do not bump it again in this PR
 - Modify: `.agents/skills/oat-brainstorm/SKILL.md` (`:543-556` fold-back, `:607-611` reference file) and `references/destinations.md` (`:137-139`, `:174`)
 - Modify: `.agents/skills/oat-wave-execute/SKILL.md` (`:59-66`, `:323` — gate artifact commits when the wrapper project is synced)
 
@@ -2325,12 +2327,12 @@ git status --porcelain            # must be empty — the phase is not complete 
 - Modify: `.agents/skills/oat-project-promote-spec-driven/SKILL.md` (artifact rewrites → push under the guard)
 - Modify: `.agents/skills/oat-project-autonomous/SKILL.md` (`:240-281` persists state/learnings outside an owning lifecycle commit → push under the guard at each persistence point; arrival pull at start)
 - Modify: `.agents/skills/oat-project-next/SKILL.md` (routing/orchestration entry point → arrival pull before reading state)
-- Modify: `.agents/skills/oat-project-retro-file/SKILL.md` (writes destinations/statuses back to the retro artifact under the project → push under the guard)
+- Modify: `.agents/skills/oat-project-retro-file/SKILL.md` (writes destinations/statuses back to the retro artifact under the project → push under the guard; its version was already bumped in p04-t01, so do not bump it again in this PR)
 - Modify: `packages/cli/src/validation/synced-bookkeeping-sites.json` (add every site above, plus `oat project open`/`pause`/`list`/`status` as CLI resolvers)
 
 **Step 1: Apply**
 
-Canonical snippet and arrival guard as in p04-t01..t04; bump each `version:`.
+Canonical snippet and arrival guard as in p04-t01..t04; bump each `version:` except `oat-project-retro-file`, whose PR-scoped bump was already made in p04-t01.
 
 **Step 2: Verify**
 
