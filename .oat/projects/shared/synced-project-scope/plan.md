@@ -1901,6 +1901,37 @@ git commit -m "fix(p03-t18): surface local sync skip reasons"
 
 ---
 
+### Task p03-t19: (review) Detect index-only synced artifact leaks
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/doctor/synced-projects.ts`
+- Modify: `packages/cli/src/commands/doctor/synced-projects.test.ts`
+
+**Step 1: Write test (RED)**
+
+Create a real Git fixture that commits `.oat/projects/synced/<slug>/state.md`, removes or sparse-excludes the synced directory from the working tree without changing the index, and confirms `git ls-files -- .oat/projects/synced` still reports the path. Assert the doctor tracked-artifact check fails rather than returning “No synced projects found.”
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/synced-projects.test.ts`
+Expected: the index-only leak is missed before implementation.
+
+**Step 2: Implement (GREEN)**
+
+Run the Git index query for the synced-root pathspec unconditionally. Keep only filesystem record/checkout enumeration behind the `syncedRoot` existence check, and preserve explicit handling for unexpected Git failures.
+
+**Step 3: Verify, format, and commit**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/synced-projects.test.ts src/commands/doctor/index.test.ts && pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli type-check`
+
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/doctor/synced-projects.ts packages/cli/src/commands/doctor/synced-projects.test.ts`
+
+```bash
+git add packages/cli/src/commands/doctor/synced-projects.ts packages/cli/src/commands/doctor/synced-projects.test.ts
+git commit -m "fix(p03-t19): detect index-only synced leaks"
+```
+
+---
+
 ## Phase 4: Skills, docs, release
 
 Goal: the lifecycle uses the new scope end to end; docs describe it; release gates pass.
@@ -2335,6 +2366,7 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 | p02-t13 | code     | passed          | 2026-08-27 | reviews/code-p02-t13-review-2026-08-27T173345Z.md                 | 9da82464b5fa93477303027a598ff3e9c768905c | auto       | -                        |
 | p03-t11 | code     | passed          | 2026-08-27 | reviews/p03-t11-upstream-review-2026-08-27T191902Z.md             | a72c8cf8b49afabfe33afd101f9c92a3b85f373a | manual     | -                        |
 | p03     | code     | fixes_completed | 2026-08-27 | reviews/archived/code-p03-review-2026-08-27T194810Z.md            | 3ad8104319e54b9595bc5529d28624194b4c0d7a | manual     | -                        |
+| p03     | code     | fixes_added     | 2026-08-27 | reviews/archived/code-p03-review-2026-08-27T202636Z.md            | 947e9d92e0b510fefa287e94c27b582bf1dc429b | manual     | -                        |
 | p04     | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | final   | code     | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                        |
@@ -2359,10 +2391,10 @@ git commit -m "feat(p04-t11): push synced artifacts from capture, promote, auton
 
 - Phase 1: 10 tasks - Sync foundations (scope resolver, gitignore rule, git runner, fixture, record, ref-sync create/push/pull/continue/abort, record commits, GitHub spike)
 - Phase 2: 13 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e, `list --remote`, adopting pull + children, synced-aware `open`/`pause`, shared canonical mutation preflight, isolated child failures + stable split coverage)
-- Phase 3: 18 tasks - Reviewer and lifecycle surface plus seven received review fixes (archive safety/retry identity, migration index safety, doctor leak detection, PR refresh isolation, reproducible merge evidence, local-sync text reason)
+- Phase 3: 19 tasks - Reviewer and lifecycle surface plus eight received review fixes (archive safety/retry identity, migration index safety, doctor working-tree/index leak detection, PR refresh isolation, reproducible merge evidence, local-sync text reason)
 - Phase 4: 11 tasks - Skills sweep (A/B/C/D/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood
 
-**Total: 52 tasks**
+**Total: 53 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

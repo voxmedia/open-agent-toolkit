@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t19
 oat_generated: false
 ---
 
@@ -28,10 +28,10 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 10    | 10/10     |
 | Phase 2 | complete    | 13    | 13/13     |
-| Phase 3 | in_progress | 18    | 18/18     |
+| Phase 3 | in_progress | 19    | 18/19     |
 | Phase 4 | pending     | 11    | 0/11      |
 
-**Total:** 41/52 tasks completed
+**Total:** 41/53 tasks completed
 
 ---
 
@@ -237,7 +237,7 @@ oat_generated: false
 
 ## Phase 3: Reviewer and lifecycle surface
 
-**Status:** review fixes complete - 18 of 18 tasks complete; fresh fix-delta review pending
+**Status:** review fix pending - 18 of 19 tasks complete
 **Started:** 2026-08-27
 
 ### Task Outcomes
@@ -262,8 +262,30 @@ oat_generated: false
 | p03-t16 | completed | `d04fa3cd` | PR-refresh exceptions preserve successful pushes     |
 | p03-t17 | completed | `dd4036f6` | Merge fidelity uses reproducible tree equality       |
 | p03-t18 | completed | `40f019f6` | Text sync output surfaces stable skip reasons        |
+| p03-t19 | pending   | -          | Detect index-only tracked synced artifact leaks      |
 
 **Review-fix verification:** Every task's RED/focused verification passed after implementation. The committed fix range passed the full CLI suite (290 files / 3,926 tests), CLI type-check, scoped oxlint/oxfmt, `git diff --check`, exact seven-commit ordering, and per-commit file-boundary checks. Phase 3 remains in progress until a fresh fix-delta review independently passes.
+
+### Review Received: p03 cycle 2 - 2026-08-27T20:26:36Z
+
+**Review artifact:** `reviews/archived/code-p03-review-2026-08-27T202636Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New task added:** p03-t19
+
+**Finding disposition:**
+
+- I1 `code_fix_required` → p03-t19: query the Git index for tracked synced artifacts even when the synced working-tree directory is absent; only filesystem record/checkout enumeration remains conditional on directory existence.
+
+**Prior review closure:** C1, I1, I2, I4, M1, M2, and m1 from cycle 1 are independently closed. Cycle-1 I3 remains partial only at the index-only leak boundary now owned by p03-t19.
+
+**Next:** Execute p03-t19, mark this review event `fixes_completed`, and run a fresh task-delta review before Phase 4.
 
 **Verification before dogfood:** Full CLI passed 289 files / 3,845 tests after recovery 1; CLI type-check/build, repository lint/format, and diff checks passed. The p03-t07 synced-project doctor check passed, while the overall live doctor command retained unrelated pre-existing warnings.
 
