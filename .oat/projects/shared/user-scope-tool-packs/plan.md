@@ -1217,6 +1217,7 @@ exit-code evidence.
 | p04    | code     | pending         | -          | -                                                             | -             | -          | -                             |
 | p05    | code     | pending         | -          | -                                                             | -             | -          | -                             |
 | plan   | artifact | passed          | 2026-08-27 | -                                                             | -             | manual     | -                             |
+| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T015201Z.md            | -             | -          | -                             |
 
 Statuses are monotonic: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`. Append new review events; never delete earlier
