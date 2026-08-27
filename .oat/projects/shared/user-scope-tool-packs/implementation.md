@@ -59,7 +59,8 @@ oat_generated: false
   `eeda0085b00cf508eec3e4b288bd4069477b84ec`.
 - Re-review artifact:
   `reviews/p01-review-2026-08-27T035112Z.md` (1 Critical, 1 Important,
-  2 Medium). Fix iteration 2 is pending and is the final configured retry.
+  2 Medium). Final configured fix iteration 2 completed in
+  `309cb7f9ac3d44513dc9836a14f738786dc01772`; re-review is pending.
 - Deferred non-blocking Medium findings:
   - dual declared intent with no physical files is misreported as duplicate
     canonical assets;
@@ -116,9 +117,9 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Status      | Tasks | Review  | Fix loops |
-| ----- | ----------- | ----- | ------- | --------- |
-| p01   | in_progress | 7/7   | blocked | 2         |
+| Phase | Status      | Tasks | Review    | Fix loops |
+| ----- | ----------- | ----- | --------- | --------- |
+| p01   | in_progress | 7/7   | re-review | 2         |
 
 #### Dispatch Notes
 
@@ -132,6 +133,10 @@ oat_generated: false
   `oat-reviewer-gpt-5-6-sol-high`; artifact
   `reviews/p01-review-2026-08-27T031035Z.md`.
 - `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- Phase 1 fix iteration 2:
+  `309cb7f9ac3d44513dc9836a14f738786dc01772`; complete manifest-managed
+  removal and unambiguous shared-owner intent implemented. Focused suites passed
+  243/243 and 37/37; CLI passed 3,676/3,676; workspace gates passed.
 - Phase 1 fix iteration 1:
   `eeda0085b00cf508eec3e4b288bd4069477b84ec`; all four blocking findings
   resolved, focused suites passed 241/241 and 21/21, CLI passed 3,668/3,668,
@@ -144,8 +149,7 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Phase 1 fix iteration 2 for complete manifest-managed removal and
-  unambiguous shared-owner intent, followed by a fresh root-owned re-review.
+- Fresh root-owned Phase 1 re-review after final configured fix iteration 2.
 
 ## Final Summary (for PR/docs)
 
