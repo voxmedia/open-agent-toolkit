@@ -19,13 +19,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 7     | 6/7       |
+| Phase 1 | in_progress | 7     | 7/7       |
 | Phase 2 | pending     | 9     | 0/9       |
 | Phase 3 | pending     | 5     | 0/5       |
 | Phase 4 | pending     | 7     | 0/7       |
 | Phase 5 | pending     | 6     | 0/6       |
 
-**Total:** 6/34 tasks completed
+**Total:** 7/34 tasks completed
 
 ## Phase 1: Canonical Pack Contract and Inventory
 
@@ -74,6 +74,10 @@ oat_generated: false
   raising the temporary total from 2 to 4 and explicitly overriding the
   three-review governance cap for this scope. Restore the default limit to 2
   after Phase 1 reaches a terminal verdict.
+- Fix iteration 3 completed the containment repair in
+  `752aaab7d99bdf24655a2b736d437ddb0ba022a0`. Manifest-driven removal now
+  validates all selected targets before any mutation; the focused containment
+  regression and removal suites pass. Fresh independent re-review is pending.
 
 ### Task p01-t01: Define pack manifest types and validation
 
@@ -107,11 +111,9 @@ oat_generated: false
 
 ### Task p01-t07: Harden managed-root path validation
 
-**Status:** in_progress
+**Status:** completed
 **Commit:** `e0039d8065b4b8eb5ed45fb42d5c1382132c3104`
-**Current fix:** Validate every manifest-driven recursive removal target with
-the existing managed-root containment guard before deletion. Iteration 3/4 is
-authorized.
+**Fix commit:** `752aaab7d99bdf24655a2b736d437ddb0ba022a0`
 
 ## Orchestration Runs
 
@@ -130,7 +132,7 @@ authorized.
 
 | Phase | Status      | Tasks | Review | Fix loops |
 | ----- | ----------- | ----- | ------ | --------- |
-| p01   | in_progress | 6/7   | fixes  | 3         |
+| p01   | in_progress | 7/7   | review | 3         |
 
 #### Dispatch Notes
 
@@ -146,6 +148,12 @@ authorized.
 - `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Operator authorized up to two additional Phase 1 review/fix iterations. The
   scope-bound temporary total is 4; iterations already used remain 2.
+- Phase 1 fix iteration 3:
+  `752aaab7d99bdf24655a2b736d437ddb0ba022a0`; manifest-driven targets are
+  preflighted against managed-root containment before any removal or intent
+  cleanup. Focused containment and removal/workflow suites passed 1/1 and
+  37/37; CLI passed 3,677/3,677; the workspace suite passed.
+- `Dispatch: scope=p01-fix3 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - Phase 1 fix iteration 2:
   `309cb7f9ac3d44513dc9836a14f738786dc01772`; complete manifest-managed
   removal and unambiguous shared-owner intent implemented. Focused suites passed
@@ -166,9 +174,7 @@ authorized.
 
 #### Outstanding Items
 
-- Phase 1 fix iteration 3/4: route every manifest-driven deletion target
-  through managed-root containment validation, then run a fresh root-owned
-  re-review.
+- Run a fresh root-owned Phase 1 re-review against the iteration 3 fix head.
 
 ## Final Summary (for PR/docs)
 
