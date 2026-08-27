@@ -1,10 +1,7 @@
 ---
 oat_current_task: p03-t01
 oat_last_commit: 7c8ee775b
-oat_blockers:
-  - task_id: p02-review
-    reason: 'Operator-extended p02 review round 4 found two Important target/recovery defects after fix cycle 3/3; another cycle or plan revision requires operator direction.'
-    since: 2026-08-27
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -16,7 +13,7 @@ oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints h
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-oat_orchestration_retry_limit: 3 # operator-authorized p02 review-fix extension; range 0-5
+oat_orchestration_retry_limit: 4 # operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -90,19 +87,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T12:59:31.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T13:13:53.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Implementation blocked - p02 operator-extended review exhausted
+**Status:** Implementation in progress - p02 operator-extended review fix
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implementation - Phase 2 tasks complete; operator-extended review blocked
+Implementation - Phase 2 review fix cycle 4/4 authorized
 
 ## Artifacts
 
@@ -127,13 +124,12 @@ Implementation - Phase 2 tasks complete; operator-extended review blocked
 - ✓ Phase 2 phase recovery attempt 1/10 recovered and settled
 - ✓ Phase 2 operator-extended fix cycle 3/3 completed
 - ⨯ Phase 2 review round 4 blocked with 2 Important and 1 Medium finding
+- ⧗ Phase 2 operator-extended fix cycle 4/4 authorized
 
 ## Blockers
 
-- Explicit descendant paths can resolve to and mutate a different sibling synced project.
-- Split finalization conflicts leave a child in rebase without safe normal-resume detection or target-specific recovery guidance.
-- The operator-authorized extension is exhausted at fix cycle 3/3 and review round 4; Phase 3 has not started.
+None. The operator authorized one additional bounded p02 fix-and-review cycle.
 
 ## Next Milestone
 
-Operator disposition: authorize another bounded p02 fix/review cycle or revise the accepted plan. Resume with `oat-project-implement`; Phase 3 remains unstarted until p02 passes.
+Resolve the two round-4 Important findings on the original phase handle, then run one fresh fifth review. Phase 3 remains unstarted until p02 passes.

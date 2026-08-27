@@ -1,10 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p02-review
-    reason: 'Operator-extended p02 review round 4 found two Important target/recovery defects after fix cycle 3/3; another cycle or plan revision requires operator direction.'
-    since: 2026-08-27
+oat_blockers: []
 oat_last_updated: 2026-08-27
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -27,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 10    | 10/10     |
-| Phase 2 | blocked  | 11    | 11/11     |
-| Phase 3 | pending  | 10    | 0/10      |
-| Phase 4 | pending  | 11    | 0/11      |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 10    | 10/10     |
+| Phase 2 | in_progress | 11    | 11/11     |
+| Phase 3 | pending     | 10    | 0/10      |
+| Phase 4 | pending     | 11    | 0/11      |
 
 **Total:** 21/42 tasks completed
 
@@ -148,7 +145,7 @@ oat_generated: false
 
 ## Phase 2: CLI surface
 
-**Status:** blocked - implementation complete; operator-extended review cycle exhausted
+**Status:** in progress - implementation complete; operator-authorized review fix cycle 4/4
 **Started:** 2026-08-27
 
 ### Phase Summary
@@ -157,7 +154,7 @@ oat_generated: false
 
 **Verification:** Full CLI suite passed at 3,778 tests after fix cycle 3/3; focused affected surfaces, p02 e2e/split flows, CLI lint/format/type-check, and control-plane build/tests/type-check passed against committed HEAD. Review round 4's combined Git-heavy run passed 421/422 tests with one load-sensitive timeout that passed 8/8 in isolation.
 
-**Review disposition:** Four independent rounds ran. Three bounded fix iterations resolved the prior findings, including the two findings targeted by the operator extension. Review round 4 found 2 new Important whole-phase defects and 1 Medium test-stability issue. The operator-authorized extension is exhausted; Phase 3 did not start.
+**Review disposition:** Four independent rounds ran. Three bounded fix iterations resolved the prior findings, including the two findings targeted by the first operator extension. Review round 4 found 2 new Important whole-phase defects and 1 Medium test-stability issue. On 2026-08-27 the operator raised the fix limit to 4 and authorized one additional bounded fix plus fresh review; Phase 3 remains unstarted pending that verdict.
 
 ### Task p02-t01: `projects.defaultScope` config key
 
@@ -421,6 +418,24 @@ lifecycle_outcome:
 - Phase recovery: unchanged at 1/10 with `pending_attempt: null`
 - Phase 3: not started
 
+### Run 6 - 2026-08-27T13:13:53Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Codex pinned variants)
+**Status:** p02 operator extension accepted; fix cycle 4/4 pending
+
+#### Operator Extension
+
+- Direction: `Authorizing`
+- Interpreted scope: one additional bounded p02 fix/review cycle, matching the explicit choice offered at the prior stop
+- Durable retry limit: `oat_orchestration_retry_limit: 4`
+- Scope: only the two Important findings in `reviews/code-p02-review-2026-08-27T124656Z.md`
+- Exact implementation target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Review authorization: one fresh fifth p02 reviewer after the bounded fix; this extends the ordinary three-cycle review cap for p02 by a second operator-authorized cycle
+- Phase recovery: unchanged at 1/10 with `pending_attempt: null`
+- Phase 3: not started
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -488,7 +503,7 @@ Chronological log of implementation progress.
 - [x] p02 review fix iterations 1 and 2 - eleven findings resolved
 - [x] p02 review fix iteration 3 - two round-3 findings resolved in `7c8ee775`
 - [x] p02 review cycle 4 - blocked at 2 Important / 1 Medium in `reviews/code-p02-review-2026-08-27T124656Z.md`
-- [ ] p02 operator disposition - another bounded cycle or plan revision required
+- [ ] p02 review cycle 5 - operator-authorized bounded fix and fresh review pending
 - [ ] p03-t01 - not started
 
 ---
