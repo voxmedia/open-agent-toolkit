@@ -72,14 +72,10 @@ export function buildPackInstallStateMapFromInventory<TPack extends PackName>(
       const inventory = inventories.find(
         (candidate) => candidate.pack === pack,
       );
-      const hasScope = (scope: 'project' | 'user'): boolean =>
-        inventory?.scopes.some(
-          (candidate) =>
-            candidate.scope === scope &&
-            (candidate.intent.enabled || candidate.completeness !== 'absent'),
-        ) ?? false;
-      const project = hasScope('project');
-      const user = hasScope('user');
+      const project =
+        inventory?.placement === 'project' || inventory?.placement === 'both';
+      const user =
+        inventory?.placement === 'user' || inventory?.placement === 'both';
       return [
         pack,
         { project, user, location: resolvePackInstallLocation(project, user) },

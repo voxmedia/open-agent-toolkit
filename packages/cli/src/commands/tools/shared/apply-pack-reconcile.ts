@@ -57,6 +57,11 @@ export interface ApplyPackReconcileResult {
   synced: boolean;
 }
 
+export interface PackReconcilePreflightDependencies {
+  resolveManagedRoots?: ApplyPackReconcileDependencies['resolveManagedRoots'];
+  validatePath?: ApplyPackReconcileDependencies['validatePath'];
+}
+
 function operationPath(operation: PackReconcileOperation): string | null {
   switch (operation.kind) {
     case 'copy-dir':
@@ -77,6 +82,33 @@ function managedRootForPath(path: string): ManagedRootName {
   if (normalized.includes('/.agents/')) return '.agents';
   if (normalized.includes('/.oat/')) return '.oat';
   throw new Error(`Pack reconcile path is outside a managed root: ${path}`);
+}
+
+export async function preflightPackReconcilePlans(
+  entries: readonly { plan: PackReconcilePlan; scopeRoot: string }[],
+  dependencies: PackReconcilePreflightDependencies = {},
+): Promise<void> {
+  const resolveRoots =
+    dependencies.resolveManagedRoots ?? resolveManagedScopeRoots;
+  const validate = dependencies.validatePath ?? validateManagedPath;
+  const rootsByScope = new Map<
+    string,
+    Record<ManagedRootName, ResolvedManagedRoot>
+  >();
+  for (const { plan, scopeRoot } of entries) {
+    let roots = rootsByScope.get(scopeRoot);
+    if (!roots) {
+      roots = await resolveRoots(scopeRoot);
+      rootsByScope.set(scopeRoot, roots);
+    }
+    const seen = new Set<string>();
+    for (const operation of plan.operations) {
+      const path = operationPath(operation);
+      if (!path || seen.has(path)) continue;
+      await validate(path, roots[managedRootForPath(path)]);
+      seen.add(path);
+    }
+  }
 }
 
 function assertExpectedInventory(

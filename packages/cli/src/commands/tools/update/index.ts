@@ -18,6 +18,7 @@ import {
   autoSync,
 } from '@commands/tools/shared/auto-sync';
 import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
+import { reconcilePackLifecycles } from '@commands/tools/shared/pack-lifecycle';
 import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
@@ -47,6 +48,7 @@ const defaultDependencies: UpdateToolsDependencies = {
   chmod,
   applyOatCoreGitignore,
   inventoryScopedPack,
+  reconcilePacks: reconcilePackLifecycles,
 };
 
 export function buildSyncSubprocessArgs(
@@ -161,7 +163,11 @@ export function createToolsUpdateCommand(
 
       // Refresh ~/.oat/docs/ when the core pack is explicitly updated or
       // reconciled through --all (D3 requirement).
-      if (shouldRefreshCoreDocs(target, result) && assetsRoot) {
+      if (
+        !dependencies.reconcilePacks &&
+        shouldRefreshCoreDocs(target, result) &&
+        assetsRoot
+      ) {
         const userRoot = await dependencies.resolveScopeRoot(
           'user',
           context.cwd,
@@ -175,7 +181,9 @@ export function createToolsUpdateCommand(
       const changedProjectScope =
         [...result.updated, ...result.current, ...result.newer].some(
           ({ scope }) => scope === 'project',
-        ) || result.assetRefreshes.some(({ scope }) => scope === 'project');
+        ) ||
+        result.assetRefreshes.some(({ scope }) => scope === 'project') ||
+        result.plans.some(({ scope }) => scope === 'project');
       if (
         assetsRoot &&
         result.notInstalled.length === 0 &&
@@ -208,15 +216,28 @@ export function createToolsUpdateCommand(
       }
 
       // Auto-sync after mutations (before output so sync errors are captured)
-      if (result.updated.length > 0 && !dryRun && opts.sync !== false) {
-        const affectedScopes = [...new Set(result.updated.map((t) => t.scope))];
-        await autoSync(
-          affectedScopes,
-          context.cwd,
-          context.home,
-          logger,
-          syncDependencies,
-        );
+      if (!dryRun && opts.sync !== false) {
+        for (const scope of scopes) {
+          const installedCanonicalPaths = [
+            ...new Set(
+              result.plans
+                .filter((plan) => plan.scope === scope)
+                .flatMap((plan) => plan.changedCanonicalPaths),
+            ),
+          ];
+          const updatedAtScope = result.updated.some(
+            (tool) => tool.scope === scope,
+          );
+          if (!updatedAtScope && installedCanonicalPaths.length === 0) continue;
+          await autoSync(
+            [scope],
+            context.cwd,
+            context.home,
+            logger,
+            syncDependencies,
+            { installedCanonicalPaths },
+          );
+        }
       }
 
       if (context.json) {
@@ -250,6 +271,12 @@ export function createToolsUpdateCommand(
         logger.info(
           `${action} ${asset.type}: ${asset.name} (${asset.scope} ${asset.pack} pack)`,
         );
+      }
+
+      if (dryRun) {
+        for (const plan of result.plans) {
+          logger.info(JSON.stringify(plan, null, 2));
+        }
       }
 
       if (result.updated.length === 0 && result.assetRefreshes.length === 0) {

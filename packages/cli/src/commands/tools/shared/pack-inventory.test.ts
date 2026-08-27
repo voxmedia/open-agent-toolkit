@@ -230,4 +230,41 @@ describe('pack inventory', () => {
       }),
     ).rejects.toThrow(/managed path.*repoint/i);
   });
+
+  it.each([
+    { removed: 'docs' as const, retained: 'workflows' as const },
+    { removed: 'workflows' as const, retained: 'docs' as const },
+  ])(
+    'does not infer $removed placement from a shared asset retained by $retained',
+    async ({ removed, retained }) => {
+      const assetsRoot = await makeRoot('oat-assets-');
+      const userRoot = await makeRoot('oat-user-');
+      await materializeManagedPack(removed, 'user', assetsRoot, userRoot);
+      await materializeManagedPack(retained, 'user', assetsRoot, userRoot);
+      for (const asset of getPackDefinition(removed).assets) {
+        if (
+          asset.scopes.includes('user') &&
+          asset.ownership.user === 'managed' &&
+          asset.sharedOwner === undefined
+        ) {
+          await rm(join(userRoot, asset.destination), {
+            recursive: true,
+            force: true,
+          });
+        }
+      }
+
+      const inventory = await inventoryPack({
+        pack: removed,
+        assetsRoot,
+        userRoot,
+      });
+      expect(inventory.placement).toBe('unavailable');
+      expect(inventory.diagnostics).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ code: 'shared-owner-observation' }),
+        ]),
+      );
+    },
+  );
 });

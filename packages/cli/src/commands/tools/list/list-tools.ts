@@ -1,5 +1,6 @@
 import type { CommandContext } from '@app/command-context';
 import { resolveConcreteScopes } from '@commands/shared/shared.utils';
+import { formatPackInventoryDetails } from '@commands/tools/shared/format-pack-inventory';
 import {
   inventoryPack,
   type InventoryPackInput,
@@ -71,6 +72,7 @@ export async function runListTools(
     logger.info('Pack inventory:');
     for (const pack of packs) {
       logger.info(`${pack.pack}: ${pack.placement}`);
+      for (const line of formatPackInventoryDetails(pack)) logger.info(line);
     }
     return { tools: allTools, packs };
   }
@@ -120,6 +122,7 @@ export async function runListTools(
     logger.info(
       `${pack.pack.padEnd(20)} ${pack.placement.padEnd(11)} ${states || 'not inspected'}`,
     );
+    for (const line of formatPackInventoryDetails(pack)) logger.info(line);
   }
 
   return { tools: allTools, packs };

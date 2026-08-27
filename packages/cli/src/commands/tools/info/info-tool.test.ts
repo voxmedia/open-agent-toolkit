@@ -186,7 +186,25 @@ describe('runInfoTool', () => {
           },
           completeness: 'partial',
           diagnostics: [],
-          assets: [],
+          assets: [
+            {
+              definition: {
+                id: 'template:ideas/idea-summary.md',
+                kind: 'template',
+                source: 'templates/ideas/idea-summary.md',
+                destination: '.oat/templates/ideas/idea-summary.md',
+                scopes: ['project', 'user'],
+                ownership: {
+                  project: 'seed-if-missing',
+                  user: 'managed',
+                },
+              },
+              path: '/home/.oat/templates/ideas/idea-summary.md',
+              status: 'missing',
+              installedVersion: null,
+              bundledVersion: null,
+            },
+          ],
         },
       ],
     });
@@ -200,5 +218,11 @@ describe('runInfoTool', () => {
       completeness: 'partial',
       intent: { source: 'declared' },
     });
+    expect(capture.info.join('\n')).toContain(
+      'template:ideas/idea-summary.md [template] missing',
+    );
+    expect(capture.info.join('\n')).toContain(
+      'path=/home/.oat/templates/ideas/idea-summary.md',
+    );
   });
 });

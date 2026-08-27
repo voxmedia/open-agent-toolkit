@@ -70,6 +70,43 @@ describe('buildPackInstallStateMapFromInventory', () => {
     );
     expect(result['project-management'].location).toBe('user');
   });
+
+  it('does not restore placement from shared-only partial observations', () => {
+    const result = buildPackInstallStateMapFromInventory(
+      ['docs'],
+      [
+        {
+          pack: 'docs',
+          placement: 'unavailable',
+          diagnostics: [
+            {
+              code: 'shared-owner-observation',
+              message: 'shared only',
+              paths: ['/home/.oat/scripts/resolve-tracking.sh'],
+            },
+          ],
+          scopes: [
+            {
+              pack: 'docs',
+              scope: 'user',
+              intent: {
+                pack: 'docs',
+                scope: 'user',
+                enabled: false,
+                source: 'none',
+                configPath: '/home/.oat/config.json',
+                diagnostics: [],
+              },
+              completeness: 'partial',
+              assets: [],
+              diagnostics: [],
+            },
+          ],
+        },
+      ],
+    );
+    expect(result.docs.location).toBe('not-installed');
+  });
 });
 
 describe('buildPackInstallStateMap', () => {

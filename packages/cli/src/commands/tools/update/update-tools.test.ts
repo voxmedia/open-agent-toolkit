@@ -21,7 +21,15 @@ import {
   WORKFLOW_SCRIPTS,
   WORKFLOW_TEMPLATES,
 } from '@commands/init/tools/shared/skill-manifest';
+import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
+import { reconcilePackLifecycles } from '@commands/tools/shared/pack-lifecycle';
+import { serializePackReconcilePlan } from '@commands/tools/shared/pack-reconcile';
+import {
+  readScopedPackIntent,
+  writeScopedPackIntent,
+} from '@commands/tools/shared/scoped-pack-intent';
 import type { ToolInfo } from '@commands/tools/shared/types';
+import { resolveAssetsRoot } from '@fs/assets';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -401,6 +409,71 @@ describe('updateTools', () => {
 
     expect(result.updated).toHaveLength(1);
     expect(deps.copies).toHaveLength(0);
+  });
+
+  it('repairs a fully missing intended docs pack through the exact dry-run plan', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-update-pack-lifecycle-'));
+    try {
+      const assetsRoot = await resolveAssetsRoot();
+      await writeScopedPackIntent({
+        pack: 'docs',
+        scope: 'user',
+        scopeRoot: root,
+        enabled: true,
+      });
+      const deps = createDeps();
+      deps.resolveAssetsRoot = async () => assetsRoot;
+      deps.resolveScopeRoot = async () => root;
+      deps.inventoryScopedPack = inventoryScopedPack;
+      deps.reconcilePacks = reconcilePackLifecycles;
+
+      const dryRun = await updateTools(
+        { kind: 'pack', pack: 'docs' },
+        ['user'],
+        '/cwd',
+        '/home',
+        true,
+        deps,
+      );
+      expect(dryRun.plans).toHaveLength(1);
+      expect(dryRun.plans[0]!.operations).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: 'copy-dir',
+            assetId: 'template:docs-app-mkdocs',
+          }),
+          expect.objectContaining({
+            kind: 'copy-dir',
+            assetId: 'template:docs-app-fuma',
+          }),
+        ]),
+      );
+
+      const applied = await updateTools(
+        { kind: 'pack', pack: 'docs' },
+        ['user'],
+        '/cwd',
+        '/home',
+        false,
+        deps,
+      );
+      expect(serializePackReconcilePlan(applied.plans[0]!)).toBe(
+        serializePackReconcilePlan(dryRun.plans[0]!),
+      );
+      await expect(
+        inventoryScopedPack({
+          pack: 'docs',
+          scope: 'user',
+          scopeRoot: root,
+          assetsRoot,
+        }),
+      ).resolves.toMatchObject({ completeness: 'complete' });
+      await expect(
+        readScopedPackIntent({ pack: 'docs', scope: 'user', scopeRoot: root }),
+      ).resolves.toMatchObject({ enabled: true, source: 'declared' });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 
   it('handles not-bundled tools', async () => {

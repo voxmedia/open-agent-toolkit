@@ -1,5 +1,6 @@
 import type { CommandContext } from '@app/command-context';
 import { resolveConcreteScopes } from '@commands/shared/shared.utils';
+import { formatPackInventoryDetails } from '@commands/tools/shared/format-pack-inventory';
 import {
   inventoryPack,
   type InventoryPackInput,
@@ -67,19 +68,7 @@ export async function runInfoTool(
     else {
       logger.info(`${pack.pack}`);
       logger.info(`  Placement:   ${pack.placement}`);
-      for (const scoped of pack.scopes) {
-        logger.info(
-          `  ${scoped.scope}: ${scoped.completeness}; intent=${scoped.intent.source}`,
-        );
-        const missing = scoped.assets.filter(
-          ({ status }) => status === 'missing',
-        );
-        if (missing.length > 0) {
-          logger.info(
-            `    Missing: ${missing.map(({ definition }) => definition.id).join(', ')}`,
-          );
-        }
-      }
+      for (const line of formatPackInventoryDetails(pack)) logger.info(line);
     }
     return { found: true, tool: null, pack };
   }

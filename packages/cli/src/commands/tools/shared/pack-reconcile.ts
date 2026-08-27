@@ -167,7 +167,10 @@ export function planPackReconcile(
   }
 
   const desiredIntent = input.action !== 'remove';
-  if (input.inventory.intent.enabled !== desiredIntent) {
+  if (
+    input.inventory.intent.enabled !== desiredIntent ||
+    (desiredIntent && input.inventory.intent.source !== 'declared')
+  ) {
     operations.push({
       kind: 'write-intent',
       pack: input.pack,

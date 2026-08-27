@@ -88,6 +88,7 @@ describe('resolvePackAvailability', () => {
       pack: 'docs',
       available: true,
       scopes: ['project'],
+      unavailableScopes: [],
       completeness: { project: 'complete', user: 'absent' },
       missing: [],
     });
@@ -110,6 +111,7 @@ describe('resolvePackAvailability', () => {
       pack: 'workflows',
       available: true,
       scopes: ['project', 'user'],
+      unavailableScopes: [],
       completeness: { project: 'complete', user: 'complete' },
       missing: [],
     });
@@ -131,6 +133,7 @@ describe('resolvePackAvailability', () => {
       pack: 'research',
       available: false,
       scopes: [],
+      unavailableScopes: [],
       completeness: { project: 'absent' },
       missing: [],
     });

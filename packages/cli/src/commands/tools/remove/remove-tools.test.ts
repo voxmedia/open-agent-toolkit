@@ -10,12 +10,14 @@ import {
   WORKFLOW_TEMPLATES,
 } from '@commands/init/tools/shared/skill-manifest';
 import type { AutoSyncDependencies } from '@commands/tools/shared/auto-sync';
+import { inventoryPack } from '@commands/tools/shared/pack-inventory';
 import {
   hasScopedPackOwnershipEvidence,
   readScopedPackIntent,
   writeScopedPackIntent,
 } from '@commands/tools/shared/scoped-pack-intent';
 import type { ToolInfo } from '@commands/tools/shared/types';
+import { resolveAssetsRoot } from '@fs/assets';
 import { Command } from 'commander';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -572,6 +574,46 @@ describe('removeTools', () => {
       readScopedPackIntent({ pack: 'workflows', scope: 'user', scopeRoot }),
     ).resolves.toMatchObject({ enabled: true, source: 'declared' });
   });
+
+  it.each([
+    { removed: 'docs' as const, retained: 'workflows' as const },
+    { removed: 'workflows' as const, retained: 'docs' as const },
+  ])(
+    'reports $removed unavailable after removal retains shared data for $retained',
+    async ({ removed, retained }) => {
+      const scopeRoot = await makeScopeRoot();
+      const shared = join(scopeRoot, '.oat', 'scripts', 'resolve-tracking.sh');
+      await writeScopedPackIntent({
+        pack: removed,
+        scope: 'user',
+        scopeRoot,
+        enabled: true,
+      });
+      await writeScopedPackIntent({
+        pack: retained,
+        scope: 'user',
+        scopeRoot,
+        enabled: true,
+      });
+      await materialize(shared);
+
+      await runRemoveCommand(scopeRoot, ['--pack', removed, '--no-sync']);
+
+      await expect(pathExists(shared)).resolves.toBe(true);
+      await expect(
+        inventoryPack({
+          pack: removed,
+          assetsRoot: await resolveAssetsRoot(),
+          userRoot: scopeRoot,
+        }),
+      ).resolves.toMatchObject({
+        placement: 'unavailable',
+        diagnostics: [
+          expect.objectContaining({ code: 'shared-owner-observation' }),
+        ],
+      });
+    },
+  );
 
   it('retains a shared script for a legacy owner and removes it with the last owner', async () => {
     const scopeRoot = await makeScopeRoot();

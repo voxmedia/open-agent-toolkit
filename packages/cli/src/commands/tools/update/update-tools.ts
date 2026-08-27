@@ -6,7 +6,13 @@ import type {
   InventoryScopedPackInput,
   ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
+import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
+import {
+  type PackLifecycleRequest,
+  type PackLifecycleResult,
+} from '@commands/tools/shared/pack-lifecycle';
 import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
+import type { PackReconcilePlan } from '@commands/tools/shared/pack-reconcile';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import type { ConcreteScope } from '@shared/types';
@@ -18,7 +24,7 @@ export type UpdateTarget =
 
 export interface PackAssetRefresh {
   name: string;
-  type: 'template' | 'script';
+  type: 'template' | 'script' | 'directory' | 'seed';
   pack: PackName;
   scope: ConcreteScope;
   status: 'planned' | 'refreshed';
@@ -31,6 +37,7 @@ export interface UpdateResult {
   notInstalled: string[];
   notBundled: ToolInfo[];
   assetRefreshes: PackAssetRefresh[];
+  plans: PackReconcilePlan[];
 }
 
 export interface UpdateToolsDependencies {
@@ -57,6 +64,10 @@ export interface UpdateToolsDependencies {
   inventoryScopedPack?: (
     input: InventoryScopedPackInput,
   ) => Promise<ScopedPackInventory>;
+  reconcilePacks?: (
+    requests: readonly PackLifecycleRequest[],
+    options?: { dryRun?: boolean },
+  ) => Promise<PackLifecycleResult[]>;
 }
 
 interface ToolEntry {
@@ -118,7 +129,82 @@ export async function updateTools(
     notInstalled: [],
     notBundled: [],
     assetRefreshes: [],
+    plans: [],
   };
+
+  if (target.kind !== 'name' && dependencies.reconcilePacks) {
+    const inventory = dependencies.inventoryScopedPack ?? inventoryScopedPack;
+    const selectedDefinitions = getSelectedDefinitions(target);
+    const requests: PackLifecycleRequest[] = [];
+    for (const scope of scopes) {
+      let scopeRoot: string;
+      try {
+        scopeRoot = await dependencies.resolveScopeRoot(scope, cwd, home);
+      } catch (error) {
+        if (scope === 'project' && scopes.includes('user')) continue;
+        throw error;
+      }
+      for (const definition of selectedDefinitions) {
+        if (!definition.allowedScopes.includes(scope)) continue;
+        const before = await inventory({
+          pack: definition.name,
+          scope,
+          scopeRoot,
+          assetsRoot,
+        });
+        if (!before.intent.enabled && before.completeness === 'absent')
+          continue;
+        requests.push({
+          pack: definition.name,
+          scope,
+          scopeRoot,
+          assetsRoot,
+          action: 'update',
+        });
+      }
+    }
+    if (target.kind === 'pack' && requests.length === 0) {
+      result.notInstalled.push(target.pack);
+      return result;
+    }
+    const lifecycle = await dependencies.reconcilePacks(requests, { dryRun });
+    result.plans.push(...lifecycle.map(({ plan }) => plan));
+    for (const entry of lifecycle) {
+      const definition = getPackDefinition(entry.request.pack);
+      const changed = new Set(entry.plan.changedCanonicalPaths);
+      for (const asset of definition.assets) {
+        if (!asset.scopes.includes(entry.request.scope)) continue;
+        if (asset.kind === 'skill' || asset.kind === 'agent') {
+          if (!changed.has(asset.destination)) continue;
+          result.updated.push({
+            name: asset.destination.split('/').at(-1)!.replace(/\.md$/, ''),
+            type: asset.kind,
+            scope: entry.request.scope,
+            version: null,
+            bundledVersion: null,
+            pack: entry.request.pack,
+            status: 'outdated',
+          });
+          continue;
+        }
+        if (
+          entry.plan.operations.some(
+            (operation) =>
+              'assetId' in operation && operation.assetId === asset.id,
+          )
+        ) {
+          result.assetRefreshes.push({
+            name: asset.destination,
+            type: asset.kind,
+            pack: entry.request.pack,
+            scope: entry.request.scope,
+            status: dryRun ? 'planned' : 'refreshed',
+          });
+        }
+      }
+    }
+    return result;
+  }
 
   const allTools: ToolEntry[] = [];
   const scopedInventories: ScopedPackInventory[] = [];
@@ -293,6 +379,23 @@ export async function updateTools(
   }
 
   return result;
+}
+
+function getSelectedDefinitions(
+  target: Exclude<UpdateTarget, { kind: 'name' }>,
+) {
+  return target.kind === 'pack'
+    ? [getPackDefinition(target.pack)]
+    : [
+        getPackDefinition('core'),
+        getPackDefinition('ideas'),
+        getPackDefinition('docs'),
+        getPackDefinition('workflows'),
+        getPackDefinition('utility'),
+        getPackDefinition('project-management'),
+        getPackDefinition('research'),
+        getPackDefinition('brainstorm'),
+      ];
 }
 
 function expandInstalledPackEntries(

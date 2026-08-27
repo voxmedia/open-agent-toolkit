@@ -34,7 +34,10 @@ export interface PackAssetInventory {
 }
 
 export interface PackDiagnostic {
-  code: 'legacy-false-conflict' | 'duplicate-scope';
+  code:
+    | 'legacy-false-conflict'
+    | 'duplicate-scope'
+    | 'shared-owner-observation';
   message: string;
   paths: string[];
   versions?: Array<string | null>;
@@ -238,7 +241,15 @@ export async function inventoryScopedPack(
 }
 
 function scopeHasPlacement(inventory: ScopedPackInventory): boolean {
-  return inventory.intent.enabled || inventory.completeness !== 'absent';
+  return (
+    inventory.intent.enabled ||
+    inventory.assets.some(
+      ({ definition, status }) =>
+        definition.sharedOwner === undefined &&
+        definition.ownership[inventory.scope] === 'managed' &&
+        status !== 'missing',
+    )
+  );
 }
 
 export async function inventoryPack(
@@ -274,6 +285,19 @@ export async function inventoryPack(
           ? 'user'
           : 'unavailable';
   const diagnostics = scopes.flatMap(({ diagnostics: values }) => values);
+  for (const scoped of scopes) {
+    const shared = scoped.assets.filter(
+      ({ definition: asset, status }) =>
+        asset.sharedOwner !== undefined && status !== 'missing',
+    );
+    if (shared.length > 0 && !scopeHasPlacement(scoped)) {
+      diagnostics.push({
+        code: 'shared-owner-observation',
+        message: `Pack ${input.pack} has shared managed assets at ${scoped.scope} scope without pack ownership evidence`,
+        paths: shared.map(({ path }) => path),
+      });
+    }
+  }
 
   if (placement === 'both') {
     const assets = active.flatMap(({ assets: values }) =>

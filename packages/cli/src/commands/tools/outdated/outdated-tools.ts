@@ -58,7 +58,8 @@ export async function runOutdatedTools(
       assetsRoot,
     });
     outdated.push(...tools.filter((t) => t.status === 'outdated'));
-    for (const { name: pack } of PACK_MANIFEST) {
+    for (const { name: pack, allowedScopes } of PACK_MANIFEST) {
+      if (!allowedScopes.includes(scope)) continue;
       const inventory = await (
         dependencies.inventoryScopedPack ?? inventoryScopedPack
       )({ pack, scope, scopeRoot, assetsRoot });

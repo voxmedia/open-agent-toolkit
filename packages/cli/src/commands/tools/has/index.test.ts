@@ -139,6 +139,7 @@ describe('createToolsHasCommand', () => {
         pack: 'workflows',
         available: true,
         scopes: ['project', 'user'],
+        unavailableScopes: [],
         completeness: { project: 'complete', user: 'complete' },
         missing: [],
       },

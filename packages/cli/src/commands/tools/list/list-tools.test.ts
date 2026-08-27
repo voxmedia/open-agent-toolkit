@@ -154,7 +154,44 @@ describe('runListTools', () => {
     deps.inventoryPack = async ({ pack }) => ({
       pack,
       placement: pack === 'ideas' ? 'both' : 'unavailable',
-      scopes: [],
+      scopes:
+        pack === 'ideas'
+          ? [
+              {
+                pack,
+                scope: 'project' as const,
+                intent: {
+                  pack,
+                  scope: 'project' as const,
+                  enabled: true,
+                  source: 'declared' as const,
+                  configPath: '/project/.oat/config.json',
+                  diagnostics: [],
+                },
+                completeness: 'complete' as const,
+                assets: [
+                  {
+                    definition: {
+                      id: 'skill:oat-idea-new',
+                      kind: 'skill' as const,
+                      source: 'skills/oat-idea-new',
+                      destination: '.agents/skills/oat-idea-new',
+                      scopes: ['project', 'user'] as const,
+                      ownership: {
+                        project: 'managed' as const,
+                        user: 'managed' as const,
+                      },
+                    },
+                    path: '/project/.agents/skills/oat-idea-new',
+                    status: 'current' as const,
+                    installedVersion: '1.0.0',
+                    bundledVersion: '1.0.0',
+                  },
+                ],
+                diagnostics: [],
+              },
+            ]
+          : [],
       diagnostics:
         pack === 'ideas'
           ? [
@@ -174,5 +211,11 @@ describe('runListTools', () => {
       placement: 'both',
       diagnostics: [{ code: 'duplicate-scope' }],
     });
+    expect(deps.capture.info.join('\n')).toContain(
+      'skill:oat-idea-new [skill] current',
+    );
+    expect(deps.capture.info.join('\n')).toContain(
+      'diagnostic duplicate-scope',
+    );
   });
 });

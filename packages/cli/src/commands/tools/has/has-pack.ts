@@ -4,6 +4,7 @@ import {
   type InventoryScopedPackInput,
   type ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
+import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import type { ConcreteScope } from '@shared/types';
@@ -23,6 +24,7 @@ export interface PackAvailability {
   pack: PackName;
   available: boolean;
   scopes: ConcreteScope[];
+  unavailableScopes: ConcreteScope[];
   completeness: Partial<
     Record<ConcreteScope, ScopedPackInventory['completeness']>
   >;
@@ -56,8 +58,11 @@ export async function resolvePackAvailability(
   const matchingScopes: ConcreteScope[] = [];
   const completeness: PackAvailability['completeness'] = {};
   const missing: PackAvailability['missing'] = [];
+  const allowedScopes = new Set(getPackDefinition(pack).allowedScopes);
+  const unavailableScopes = scopes.filter((scope) => !allowedScopes.has(scope));
 
   for (const scope of scopes) {
+    if (!allowedScopes.has(scope)) continue;
     const scopeRoot = await dependencies.resolveScopeRoot(
       scope,
       context.cwd,
@@ -84,6 +89,7 @@ export async function resolvePackAvailability(
     pack,
     available: matchingScopes.length > 0,
     scopes: matchingScopes,
+    unavailableScopes,
     completeness,
     missing,
   };
