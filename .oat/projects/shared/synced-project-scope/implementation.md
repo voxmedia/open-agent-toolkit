@@ -1,10 +1,7 @@
 ---
-oat_status: blocked
+oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p02-review
-    reason: 'Operator-extended p02 review round 5 found one Important canonical-target identity defect after fix cycle 4/4; another cycle or plan revision requires operator direction.'
-    since: 2026-08-27
+oat_blockers: []
 oat_last_updated: 2026-08-27
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -27,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 10    | 10/10     |
-| Phase 2 | blocked  | 11    | 11/11     |
-| Phase 3 | pending  | 10    | 0/10      |
-| Phase 4 | pending  | 11    | 0/11      |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 10    | 10/10     |
+| Phase 2 | in_progress | 11    | 11/11     |
+| Phase 3 | pending     | 10    | 0/10      |
+| Phase 4 | pending     | 11    | 0/11      |
 
 **Total:** 21/42 tasks completed
 
@@ -148,7 +145,7 @@ oat_generated: false
 
 ## Phase 2: CLI surface
 
-**Status:** blocked - implementation complete; operator-extended review exhausted after fix cycle 4/4
+**Status:** in progress - implementation complete; final operator-authorized review fix cycle 5/5
 **Started:** 2026-08-27
 
 ### Phase Summary
@@ -157,7 +154,7 @@ oat_generated: false
 
 **Verification:** Full CLI suite passed 282 files and 3,784 tests after fix cycle 4/4; CLI lint, format, and type-check passed against committed HEAD. Review round 5 passed 428 phase tests, 77 command/help/lifecycle tests, and 78 control-plane tests plus type-checks, control-plane build, lint, format, and range diff checks.
 
-**Review disposition:** Five independent rounds and four bounded fix iterations ran. Fix iteration 4 closed the real split-conflict recovery defect and ordinary lexical descendant rebinding, while stabilizing the prior load-sensitive test. Review round 5 found 1 Important canonical-target identity defect: a direct-child symlink can alias a sibling checkout and permit mutation under the wrong ref identity. The authorized extension is exhausted, and Phase 3 remains unstarted pending operator disposition.
+**Review disposition:** Five independent rounds and four bounded fix iterations ran. Fix iteration 4 closed the real split-conflict recovery defect and ordinary lexical descendant rebinding, while stabilizing the prior load-sensitive test. Review round 5 found 1 Important canonical-target identity defect: a direct-child symlink can alias a sibling checkout and permit mutation under the wrong ref identity. On 2026-08-27 the operator authorized final fix cycle 5/5 plus one fresh sixth review; Phase 3 remains unstarted pending that verdict.
 
 ### Task p02-t01: `projects.defaultScope` config key
 
@@ -459,6 +456,26 @@ lifecycle_outcome:
 - Phase recovery: unchanged at 1/10 with `pending_attempt: null`
 - Phase 3: not started
 
+### Run 8 - 2026-08-27T15:27:53Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Codex pinned variants)
+**Status:** p02 final operator extension accepted; fix cycle 5/5 pending
+
+#### Operator Extension
+
+- Direction: `Agree, proceed`
+- Interpreted scope: one final bounded p02 fix/review cycle, matching the recommendation accepted by the operator
+- Durable retry limit: `oat_orchestration_retry_limit: 5` (configured maximum)
+- Scope: only the Important canonical-target identity finding in `reviews/code-p02-review-2026-08-27T132942Z.md`
+- Required repair: canonicalize the selected checkout and require equality with the slug's canonical direct child before mutation; add real-worktree regressions for explicit-path and bare-slug symlink aliases
+- Exact implementation target: preserve `oat-phase-implementer-gpt-5-6-sol-high`
+- Review authorization: one fresh sixth p02 reviewer after the bounded fix
+- Stop rule: no further extension; any blocking sixth-review finding requires plan revision
+- Phase recovery: unchanged at 1/10 with `pending_attempt: null`
+- Phase 3: not started
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -528,7 +545,8 @@ Chronological log of implementation progress.
 - [x] p02 review cycle 4 - blocked at 2 Important / 1 Medium in `reviews/code-p02-review-2026-08-27T124656Z.md`
 - [x] p02 review fix iteration 4 - both round-4 Important findings resolved in `7a03f675`
 - [x] p02 review cycle 5 - blocked at 1 Important / 0 Medium in `reviews/code-p02-review-2026-08-27T132942Z.md`
-- [ ] p02 operator disposition - authorize another bounded cycle or revise the plan
+- [x] p02 operator disposition - final bounded cycle authorized
+- [ ] p02 review fix iteration 5 and review cycle 6 - pending
 - [ ] p03-t01 - not started
 
 ---
