@@ -88,7 +88,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T01:55:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T04:53:47.885Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T04:57:28.488Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -129,7 +129,8 @@ non-narrowingly by the operator before scaffolding (plan.md § Drift Refresh Rec
 - ✓ Fix round `w4-p01-fix-002` (`39121c35`: M1, M3 + 8th contract case, m1 logical-line unwrap, m2 `gpt-5.5`; DoD 10/10; Codex two clean rounds)
 - ✓ p01 review round 3 (narrowed, cycle 3 of 3): 0C/0I/1M/1m — guard hardening only; HEAD content correct
 - ✓ Bounded fix round `w4-p01-fix-003` (`44fb2327`, test only; root-run 22-probe matrix ALL MATCHED) — p01 `passed`
-- ⧗ Closeout: root DoD (final verification) → final review (independently verifies the round-3 fixes) → configured exit gate
+- ✓ Closeout baseline / final verification: root DoD 10/10 at `6075a705`
+- ⧗ Final review (fresh Opus; independently verifies the round-3 fixes) → configured exit gate
 
 ## Blockers
 

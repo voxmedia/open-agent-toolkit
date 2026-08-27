@@ -219,11 +219,11 @@ git commit -m "feat(p01-t01): route codex-skill through provider guidance and ma
 Strictly ordered — each item depends on the one before it (wave-execute Step 6
 closeout sequence):
 
-1. [ ] 1/1 phases, 1/1 tasks complete; the source plan's `## Done criteria`
-       confirmed (recorded in `implementation.md` § Done-criteria confirmation)
-2. [ ] Full DoD gates green on the integration branch (exit codes captured per
-       gate, including `pnpm lint` and `pnpm format`, plus the post-commit
-       `release:check-versions` re-run)
+1. [x] 1/1 phases, 1/1 tasks complete; the source plan's `## Done criteria`
+       confirmed (recorded in `implementation.md` § Done-criteria confirmation — lifted from the final review at receive)
+2. [x] Full DoD gates green on the integration branch (root final verification at
+       `6075a705`, exit codes captured per gate, including `pnpm lint` and `pnpm format`;
+       post-commit `release:check-versions` and `check:skill-bumps` re-runs 0 at every code commit)
 3. [ ] Orchestration-log end-of-run synthesis written and rolled up into
        `summary.md` — before any archive step of the project
 4. [ ] **Serialized backlog bookkeeping:** `oat backlog archive

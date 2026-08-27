@@ -213,7 +213,9 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-_Filled at final verification (root DoD on the integration branch)._ Interim: implementer DoD 10/10 at `b97408f2` and `d9ce0c33` (post-commit `release:check-versions` and `check:skill-bumps` re-runs 0); `pnpm test:skills` 585/585 (578 + 7 new); focused contract test 7/7; reviewer re-runs at both heads.
+**Final verification (root, closeout baseline) at `6075a705`** — full definition of done invoked literally, one log per gate under the session scratchpad `w4-dod/`, exit codes in `exits.txt`: `pnpm check` 0 · `pnpm type-check` 0 · `pnpm test` 0 · `pnpm build` 0 · `pnpm run check:skill-bumps` 0 · `git fetch origin` 0 then `pnpm release:check-versions` 0 (0.2.36 vs `origin/main` 0.2.35) · `pnpm release:validate` 0 · `pnpm build:docs` 0 · `pnpm lint` 0 · `pnpm format` 0. Tree clean after the run; no deterministic-smoke worktrees left behind.
+
+Earlier evidence: implementer DoD 10/10 at `b97408f2`, `d9ce0c33`, `39121c35`, `44fb2327` (post-commit `release:check-versions` and `check:skill-bumps` re-runs 0 each time); `pnpm test:skills` 586/586 (578 + 8 new); focused contract test 8/8; root-run 22-probe mutation matrix ALL MATCHED at `44fb2327`; reviewer re-runs at every head.
 
 ## Final Summary (for PR/docs)
 
