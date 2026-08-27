@@ -1266,6 +1266,7 @@ exit-code evidence.
 | p05    | code     | pending         | -          | -                                                             | -             | -          | -                             |
 | plan   | artifact | pending         | 2026-08-27 | -                                                             | -             | manual     | -                             |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T015201Z.md   | -             | gate       | claude-fable-skip-permissions |
+| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T020356Z.md            | -             | -          | -                             |
 
 Statuses are monotonic: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`. Append new review events; never delete earlier
