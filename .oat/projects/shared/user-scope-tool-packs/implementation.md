@@ -251,6 +251,16 @@ oat_generated: false
   migration path delegates directly to generic remove reconciliation, while the
   established remove command has explicit shared-owner retention behavior.
 
+**Independent review:**
+
+- `reviews/p03-review-2026-08-27T074154Z.md` found 2 Critical, 2 Important,
+  1 Medium, and 0 Minor findings. The review confirmed the shared-owner defect
+  and also requires convergent provider-sync recovery, inspectable conflict and
+  removal previews, legacy-false destination adoption, and manifest-derived
+  pack-name validation.
+- All five findings are accepted for bounded fix iteration 1/2; none are
+  deferred.
+
 ### Task p03-t01: Define migration plans and result state
 
 **Status:** completed
@@ -292,11 +302,11 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Status      | Tasks | Review  | Fix loops |
-| ----- | ----------- | ----- | ------- | --------- |
-| p01   | completed   | 7/7   | passed  | 3         |
-| p02   | completed   | 9/9   | passed  | 2         |
-| p03   | in_progress | 5/5   | pending | 0         |
+| Phase | Status      | Tasks | Review   | Fix loops |
+| ----- | ----------- | ----- | -------- | --------- |
+| p01   | completed   | 7/7   | passed   | 3         |
+| p02   | completed   | 9/9   | passed   | 2         |
+| p03   | in_progress | 5/5   | blocking | 0         |
 
 #### Dispatch Notes
 
@@ -347,6 +357,10 @@ oat_generated: false
   `c880105a-9a2e-4e1f-bfb6-fea1b4584a7d`, five task commits from
   `32d440898` through `7a4c1ab45`.
 - `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Phase 3 review:
+  `reviews/p03-review-2026-08-27T074154Z.md`; 2 Critical, 2 Important,
+  1 Medium, 0 Minor. All five findings are assigned to fix iteration 1/2.
+- `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 
 ### Recovery Event d8c701a8-4297-4028-bd4b-e60f404686fa
 
@@ -432,8 +446,8 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Complete fresh independent Phase 3 review, including the shared-owner source
-  retention concern.
+- Execute Phase 3 fix iteration 1/2 for all five independent-review findings,
+  then run a fresh independent re-review.
 
 ## Final Summary (for PR/docs)
 

@@ -85,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-20T19:49:14.674Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T07:35:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T07:44:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -95,7 +95,7 @@ oat_project_explainer:
 
 # Project State: user-scope-tool-packs
 
-**Status:** Implementation in progress — Phase 3 independent review
+**Status:** Implementation in progress — Phase 3 fix iteration 1/2
 **Started:** 2026-08-20
 **Last Updated:** 2026-08-27
 
@@ -141,6 +141,10 @@ type-check, lint, format, and diff check. Independent review must specifically
 verify shared-owner retention during source removal because the migration path
 uses generic remove reconciliation rather than the remove command's explicit
 shared-owner retention adapter.
+Independent review confirmed that defect and found a second Critical
+provider-sync recovery gap, two Important preview/adoption contract gaps, and
+one Medium canonical-authority duplication. All five findings are accepted for
+the first of two configured fix iterations.
 The run remains under the managed High dispatch maximum, with a final-phase
 HiLL checkpoint and automatic checkpoint review.
 
@@ -150,7 +154,7 @@ HiLL checkpoint and automatic checkpoint review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete and approved)
 - **Plan:** `plan.md` (complete and ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (Phase 3 awaiting independent review)
+- **Implementation:** `implementation.md` (Phase 3 fix iteration 1/2)
 
 ## Progress
 
@@ -200,7 +204,9 @@ HiLL checkpoint and automatic checkpoint review.
 - ✓ Phase 3 tasks `p03-t01`–`p03-t05` committed
 - ✓ Phase 3 recovery attempt 1/10 reconciled
 - ✓ Phase 3 broader verification passed
-- ⧗ Phase 3 independent review
+- ✓ Phase 3 independent review received
+- ✗ Phase 3 review: 2 Critical, 2 Important, 1 Medium
+- ⧗ Phase 3 fix iteration 1/2
 
 ## Blockers
 
@@ -208,5 +214,5 @@ None.
 
 ## Next Milestone
 
-Complete fresh independent Phase 3 review, including the shared-owner source
-retention concern.
+Complete Phase 3 fix iteration 1/2 for all five review findings, then run a
+fresh independent re-review.
