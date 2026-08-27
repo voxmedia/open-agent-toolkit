@@ -2,9 +2,19 @@ import {
   readFile as defaultReadFile,
   writeFile as defaultWriteFile,
 } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
+import {
+  pushSynced as defaultPushSynced,
+  type PushResult,
+  type SyncTarget,
+} from '@commands/project/sync/ref-sync';
+import {
+  resolveSyncedTarget,
+  type ResolvedSyncTarget,
+} from '@commands/project/sync/resolve-target';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import {
   removeFrontmatterField,
@@ -12,6 +22,12 @@ import {
   upsertFrontmatterField,
 } from '@commands/shared/frontmatter-write';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  PROJECT_SCOPES,
+  resolveProjectScope,
+  resolveScopeRoot,
+  type ProjectScope,
+} from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   generateStateDashboard as defaultGenerateStateDashboard,
@@ -52,6 +68,13 @@ interface ProjectPauseDependencies {
   writeFile: typeof defaultWriteFile;
   dirExists: typeof dirExists;
   fileExists: typeof fileExists;
+  resolveSyncedTarget: typeof resolveSyncedTarget;
+  pushSynced: (
+    target: SyncTarget,
+    git: GitRunner,
+    options: { message?: string },
+  ) => Promise<PushResult>;
+  gitRunner: GitRunner;
   processEnv: NodeJS.ProcessEnv;
   now: () => Date;
 }
@@ -67,9 +90,113 @@ const DEFAULT_DEPENDENCIES: ProjectPauseDependencies = {
   writeFile: defaultWriteFile,
   dirExists,
   fileExists,
+  resolveSyncedTarget,
+  pushSynced: defaultPushSynced,
+  gitRunner: defaultGitRunner,
   processEnv: process.env,
   now: () => new Date(),
 };
+
+interface ResolvedProject {
+  projectName: string;
+  projectPath: string;
+  fullProjectPath: string;
+  scope: ProjectScope;
+  syncTarget?: ResolvedSyncTarget;
+}
+
+function pointerPath(repoRoot: string, absolutePath: string): string {
+  const relativePath = relative(repoRoot, absolutePath);
+  return relativePath === '..' ||
+    relativePath.startsWith(`..${sep}`) ||
+    isAbsolute(relativePath)
+    ? absolutePath
+    : relativePath.split(sep).join('/');
+}
+
+async function resolveNamedProject(
+  repoRoot: string,
+  projectsRoot: string,
+  input: string,
+  dependencies: ProjectPauseDependencies,
+): Promise<ResolvedProject> {
+  const sharedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'shared');
+  const explicit = isAbsolute(input) || input.includes('/');
+  if (explicit) {
+    const fullProjectPath = isAbsolute(input)
+      ? resolve(input)
+      : resolve(repoRoot, input);
+    const scope = resolveProjectScope(fullProjectPath, sharedRoot);
+    if (!scope) {
+      throw new Error(
+        `Project path is outside configured scope roots: ${input}`,
+      );
+    }
+    if (!(await dependencies.dirExists(fullProjectPath))) {
+      throw new Error(`Project not found: ${input}`);
+    }
+    return {
+      projectName: basename(fullProjectPath),
+      projectPath: pointerPath(repoRoot, fullProjectPath),
+      fullProjectPath,
+      scope,
+      syncTarget:
+        scope === 'synced'
+          ? await dependencies.resolveSyncedTarget(
+              { repoRoot, env: dependencies.processEnv },
+              fullProjectPath,
+            )
+          : undefined,
+    };
+  }
+
+  const candidates: ResolvedProject[] = [];
+  for (const scope of PROJECT_SCOPES) {
+    const fullProjectPath = join(
+      resolveScopeRoot(repoRoot, projectsRoot, scope),
+      input,
+    );
+    if (!(await dependencies.dirExists(fullProjectPath))) continue;
+    candidates.push({
+      projectName: input,
+      projectPath: pointerPath(repoRoot, fullProjectPath),
+      fullProjectPath,
+      scope,
+      syncTarget:
+        scope === 'synced'
+          ? await dependencies.resolveSyncedTarget(
+              { repoRoot, env: dependencies.processEnv },
+              fullProjectPath,
+            )
+          : undefined,
+    });
+  }
+  if (candidates.length > 1) {
+    throw new Error(
+      `Project name "${input}" is ambiguous across scopes: ${candidates
+        .map((candidate) => candidate.scope)
+        .join(', ')}. Pass an explicit project path.`,
+    );
+  }
+  if (!candidates[0]) {
+    throw new Error(`Project not found: ${input}`);
+  }
+  return candidates[0];
+}
+
+async function publishPausedState(
+  target: SyncTarget,
+  dependencies: ProjectPauseDependencies,
+): Promise<void> {
+  const result = await dependencies.pushSynced(target, dependencies.gitRunner, {
+    message: `chore(oat): pause synced project ${target.slug}`,
+  });
+  if (result.status !== 'pushed' && result.status !== 'up-to-date') {
+    throw new Error(
+      `Unable to pause synced project ${target.slug}: push ${result.status}; active project pointer was not changed.`,
+    );
+  }
+}
 
 async function runProjectPause(
   projectName: string | undefined,
@@ -86,24 +213,30 @@ async function runProjectPause(
     const localConfig = await dependencies.readOatLocalConfig(repoRoot);
     const activeProject = localConfig.activeProject ?? null;
 
-    let projectPath: string;
-    let resolvedProjectName: string;
-
+    let resolved: ResolvedProject;
     if (projectName) {
-      projectPath = join(projectsRoot, projectName);
-      resolvedProjectName = projectName;
+      resolved = await resolveNamedProject(
+        repoRoot,
+        projectsRoot,
+        projectName,
+        dependencies,
+      );
     } else {
       if (!activeProject) {
         throw new Error('No project specified and no active project');
       }
-      projectPath = activeProject;
-      resolvedProjectName = projectPath.split('/').at(-1) ?? projectPath;
+      resolved = await resolveNamedProject(
+        repoRoot,
+        projectsRoot,
+        activeProject,
+        dependencies,
+      );
     }
-
-    const fullProjectPath = join(repoRoot, projectPath);
-    if (!(await dependencies.dirExists(fullProjectPath))) {
-      throw new Error(`Project not found: ${resolvedProjectName}`);
-    }
+    const {
+      projectName: resolvedProjectName,
+      projectPath,
+      fullProjectPath,
+    } = resolved;
 
     const statePath = join(fullProjectPath, 'state.md');
     if (!(await dependencies.fileExists(statePath))) {
@@ -156,6 +289,10 @@ async function runProjectPause(
       await dependencies.writeFile(statePath, nextContent, 'utf8');
     }
 
+    if (resolved.syncTarget) {
+      await publishPausedState(resolved.syncTarget, dependencies);
+    }
+
     const pointerCleared = activeProject === projectPath;
     if (pointerCleared) {
       await dependencies.clearActiveProject(repoRoot, {
@@ -170,6 +307,7 @@ async function runProjectPause(
         status: 'ok',
         projectName: resolvedProjectName,
         projectPath,
+        scope: resolved.scope,
         pointerCleared,
         reason: options.reason ?? null,
       });

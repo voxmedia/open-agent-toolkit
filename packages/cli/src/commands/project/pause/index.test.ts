@@ -14,13 +14,19 @@ import { createProjectPauseCommand } from './index';
 
 interface HarnessOptions {
   cwd: string;
+  pushStatus?: 'pushed' | 'up-to-date' | 'rejected' | 'conflict';
 }
 
 function createHarness(options: HarnessOptions): {
   capture: LoggerCapture;
   command: Command;
+  pushSynced: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
+  const pushSynced = vi.fn(async () => ({
+    status: options.pushStatus ?? ('pushed' as const),
+    sha: 'a'.repeat(40),
+  }));
 
   const command = createProjectPauseCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -35,9 +41,10 @@ function createHarness(options: HarnessOptions): {
     }),
     resolveProjectRoot: vi.fn(async () => options.cwd),
     now: () => new Date('2026-02-21T12:00:00.000Z'),
+    pushSynced,
   });
 
-  return { capture, command };
+  return { capture, command, pushSynced };
 }
 
 async function runCommand(
@@ -65,8 +72,12 @@ async function runCommand(
   );
 }
 
-async function writeProjectState(root: string, name: string): Promise<string> {
-  const projectPath = join(root, '.oat', 'projects', 'shared', name);
+async function writeProjectState(
+  root: string,
+  name: string,
+  scope: 'shared' | 'local' | 'synced' = 'shared',
+): Promise<string> {
+  const projectPath = join(root, '.oat', 'projects', scope, name);
   await mkdir(projectPath, { recursive: true });
   const statePath = join(projectPath, 'state.md');
   await writeFile(
@@ -173,6 +184,54 @@ describe('oat project pause', () => {
     expect(localConfig.activeProject).toBe('.oat/projects/shared/alpha');
     expect(localConfig.lastPausedProject ?? null).toBeNull();
     expect(process.exitCode).toBe(0);
+  });
+
+  it('pauses a uniquely named local project across scope roots', async () => {
+    const root = await createRepoRoot();
+    const statePath = await writeProjectState(root, 'local-demo', 'local');
+
+    const { command } = createHarness({ cwd: root });
+    await runCommand(command, ['local-demo']);
+
+    expect(await readFile(statePath, 'utf8')).toContain(
+      'oat_lifecycle: paused',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('requires an explicit path when a name exists in multiple scopes', async () => {
+    const root = await createRepoRoot();
+    await writeProjectState(root, 'duplicate');
+    await writeProjectState(root, 'duplicate', 'local');
+
+    const { command, capture } = createHarness({ cwd: root });
+    await runCommand(command, ['duplicate']);
+
+    expect(capture.error[0]).toContain('ambiguous across scopes');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('publishes a synced pause before clearing the active pointer', async () => {
+    const root = await createRepoRoot();
+    await writeProjectState(root, 'synced-demo', 'synced');
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/synced/synced-demo' })}\n`,
+      'utf8',
+    );
+    const { command, pushSynced } = createHarness({
+      cwd: root,
+      pushStatus: 'rejected',
+    });
+
+    await runCommand(command, []);
+
+    expect(pushSynced).toHaveBeenCalledOnce();
+    const localConfig = JSON.parse(
+      await readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+    );
+    expect(localConfig.activeProject).toBe('.oat/projects/synced/synced-demo');
+    expect(process.exitCode).toBe(1);
   });
 
   it('persists pause reason when provided', async () => {
