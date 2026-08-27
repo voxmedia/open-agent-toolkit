@@ -137,23 +137,21 @@ oat_docs_updated: complete # null | skipped | complete — documentation sync st
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/219 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T23:08:35.576Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T01:42:04.478Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_completed: '2026-08-27T01:42:11.652Z' # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-08-27T01:42:11.652Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_lifecycle: complete
 ---
 
 # Project State: wave-3-execution
 
-**Status:** PR #219 open; lifecycle sealed (completion tail deferred to program close)
+**Status:** Complete
 **Started:** 2026-08-26
-**Last Updated:** 2026-08-26
+**Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Implement (in progress; plan gate passed 2026-08-26, 0 findings) — thin wave wrapper for the single Wave 3 external plan
-(`2026-08-19-hermetic-cli-assets-root.md`); solo phase `p01` on the
-integration checkout `wave-3-execution` (BASE_SHA `39cea801`; code baseline
-`33149b26`, public packages 0.2.34).
+Lifecycle complete
 
 ## Artifacts
 
@@ -179,7 +177,7 @@ integration checkout `wave-3-execution` (BASE_SHA `39cea801`; code baseline
 - ✓ Final review round 2 (narrowed): 0/0/0/0 — `passed` at `e9a9575b`
 - ✓ Configured exit gate generation 1 passed (cursor-gpt-5-6-sol-xhigh, run c89b7975, 0/0/0/0)
 - ✓ Post-implement sequence complete: summary (`11ad442a`), document (`681ac33f`), pr (#219, head `193e7e23`); recap built-durable (`4a052aca`/`40c69c28`); HiLL approved autonomously (IMPLEMENT-16)
-- ⧗ CI green → root merge (squash) → reconcile main → wave-close in the program ledger
+- ✓ Project lifecycle complete
 
 ## Blockers
 
@@ -187,4 +185,4 @@ None
 
 ## Next Milestone
 
-final review → configured exit gate → post-implement sequence → PR → merge → wave-close. Completion tail: deferred to program close.
+None. Project complete.
