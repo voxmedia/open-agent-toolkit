@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -22,10 +22,10 @@ oat_generated: false
 | Phase 1 | completed | 7     | 7/7       |
 | Phase 2 | completed | 9     | 9/9       |
 | Phase 3 | completed | 5     | 5/5       |
-| Phase 4 | pending   | 7     | 0/7       |
+| Phase 4 | review    | 7     | 7/7       |
 | Phase 5 | pending   | 6     | 0/6       |
 
-**Total:** 21/34 tasks completed
+**Total:** 28/34 tasks completed
 
 ## Phase 1: Canonical Pack Contract and Inventory
 
