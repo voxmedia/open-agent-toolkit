@@ -527,32 +527,61 @@ git commit -m "feat(p01-t09): add allowlisted record commits and safe checkout r
 
 - Modify: `.oat/projects/shared/synced-project-scope/implementation.md` (evidence only)
 
-**Step 1: Run the spike**
+**Why a disposable repo:** every `on: push` workflow in this repository is filtered to `branches: [main]`, so "no run after pushing a custom ref here" proves nothing. The negative CI result must come from a repository whose workflow has **no** branch filter.
 
-Against this repository's `origin` (github.com), using a throwaway ref that no tooling reads:
+**Step 1: Create a disposable repository with an unfiltered push workflow**
 
 ```bash
-SPIKE=refs/oat/spike/$(date -u +%Y%m%dT%H%M%SZ)
-TREE=$(git hash-object -t tree /dev/null); C=$(git commit-tree "$TREE" -m "oat spike")
-git update-ref "$SPIKE" "$C" && git push origin "$C:$SPIKE"
-# 1. blob/tree URL renders: gh api "repos/{owner}/{repo}/commits/$C" → 200
-# 2. no workflow run was triggered: gh run list --limit 5 --json headSha,event → none with headSha == $C
-# 3. ref absent from branch list: gh api "repos/{owner}/{repo}/branches" → no entry
-git push origin ":$SPIKE" && git update-ref -d "$SPIKE"
+SPIKE_REPO="oat-spike-$(date -u +%Y%m%dT%H%M%SZ)"
+gh repo create "$SPIKE_REPO" --private --clone && cd "$SPIKE_REPO"
+mkdir -p .github/workflows && cat > .github/workflows/probe.yml <<'YML'
+name: probe
+on: [push]            # deliberately unfiltered: any ref push that GitHub considers a trigger runs this
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps: [ { run: "echo ref=$GITHUB_REF sha=$GITHUB_SHA" } ]
+YML
+git add -A && git commit -qm "probe workflow" && git push -u origin HEAD
+# Wait until the main-branch run appears — this proves the workflow is active before the negative test.
+until gh run list --json headSha,status --jq '.[]|select(.headSha=="'$(git rev-parse HEAD)'")' | grep -q .; do sleep 10; done
 ```
 
-Also open `https://github.com/<owner>/<repo>/commit/<C>` in a browser (or `gh browse <C>`) and confirm it renders while unreachable from any branch.
+**Step 2: Push a custom ref and test the three assumptions**
 
-**Step 2: Record evidence**
+```bash
+TREE=$(git hash-object -t tree /dev/null); C=$(git commit-tree "$TREE" -m "oat spike")
+SPIKE=refs/oat/projects/spike; git update-ref "$SPIKE" "$C" && git push origin "$C:$SPIKE"
+sleep 120   # give Actions time to create any run for the pushed ref
+# A. No workflow run for the spike commit — authoritative negative result (NFR2):
+gh run list --limit 50 --json headSha,event,headBranch --jq '.[]|select(.headSha=="'$C'")'   # expected: empty
+# B. Commit renders although unreachable from any branch (FR7 assumption):
+gh api "repos/{owner}/{repo}/commits/$C" --jq .sha                                              # expected: $C
+gh browse "$C" --no-browser 2>/dev/null || echo "https://github.com/$(gh repo view --json nameWithOwner --jq .nameWithOwner)/commit/$C"  # open and confirm it renders
+# C. Ref absent from branch list:
+gh api "repos/{owner}/{repo}/branches" --jq '.[].name'                                          # expected: main only
+```
 
-Append a `### p01-t10 GitHub spike` note to `implementation.md` with the three results, timestamps, and the deleted ref name. If any check fails, stop the phase and surface it — the design's contingency is a real branch under `refs/heads/oat/projects/*`, which is a design change and needs the user.
+Optionally also push a **branch** `oat/projects/spike` with the same commit and confirm a run **does** appear — that contrast makes the custom-ref result unambiguous.
 
-**Step 3: Verify**
+**Step 3: Clean up**
 
-Run: `git ls-remote origin 'refs/oat/spike/*'`
-Expected: empty (spike ref deleted).
+```bash
+git push origin ":$SPIKE"; cd .. && gh repo delete "$SPIKE_REPO" --yes && rm -rf "$SPIKE_REPO"
+```
 
-**Step 4: Commit**
+If `gh repo create`/`delete` is not permitted for the implementing agent, stop and hand the three checks to the user — this task is a hard prerequisite for Phase 3's links work, not something to skip.
+
+**Step 4: Record evidence**
+
+Append `### p01-t10 GitHub spike` to `implementation.md` with the repository name, spike SHA, the three raw outputs (A/B/C), timestamps, and the deletion confirmation. If A is non-empty (a run was created for the custom ref) or B fails (commit not served), **stop the phase and surface it** — the design's contingency is a real branch under `refs/heads/oat/projects/*`, which is a design change and needs the user.
+
+**Step 5: Verify**
+
+Run: `gh repo view "$SPIKE_REPO" 2>&1 | head -1`
+Expected: "Could not resolve to a Repository" (disposable repo deleted).
+
+**Step 6: Commit**
 
 ```bash
 git add .oat/projects/shared/synced-project-scope/implementation.md
@@ -1036,6 +1065,7 @@ git commit -m "feat(p03-t03): refresh PR links block on push while a PR is open"
 - Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
 - Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
 - Modify: `packages/cli/src/commands/project/archive/index.ts` (+ `index.test.ts`) for the `--no-commit` flag and JSON fields
+- Modify: `packages/cli/src/fs/io.ts` (`copyDirectory` gains an optional `filter`)
 - Modify: `packages/cli/src/e2e/workflow.test.ts` (archive step)
 
 **Step 1: Write test (RED)**
@@ -1057,12 +1087,12 @@ In `archiveProjectOnCompletion`: `if (await isSyncedCheckout(source))` → preco
 
 **Step 3: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/fs`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/fs src/e2e/workflow.test.ts`
 Expected: green.
 
 **Step 4: Format**
 
-Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/archive/ packages/cli/src/fs/io.ts`
+Run: `pnpm exec oxfmt --write packages/cli/src/commands/project/archive/ packages/cli/src/fs/io.ts packages/cli/src/e2e/workflow.test.ts`
 
 **Step 5: Commit**
 
@@ -1347,8 +1377,8 @@ Replace each commit site with the guarded form. Where a site uses `git add "$PRO
 
 **Step 2: Verify**
 
-Run: `pnpm oat:validate-skills && pnpm run check:skill-bumps && grep -rn 'jq' .agents/skills/oat-project-{quick-start,discover,spec,design,plan,import-plan}/SKILL.md`
-Expected: validation passes; bump check passes; no `jq` matches.
+Run: `pnpm oat:validate-skills && pnpm run check:skill-bumps && ! grep -rn 'jq' .agents/skills/oat-project-{quick-start,discover,spec,design,plan,import-plan}/SKILL.md`
+Expected: exit 0 — validation passes; bump check passes; the negated grep finds no `jq` (a match would make the chain exit nonzero).
 
 **Step 3: Format**
 
@@ -1535,6 +1565,7 @@ git commit -m "feat(p04-t06): validate skills never stage synced artifacts or re
 - Modify: `apps/oat-docs/docs/reference/oat-directory-structure.md` (`synced/` layout, config table row, archive behavior for synced)
 - Modify: `apps/oat-docs/docs/reference/cli-reference.md` (`project new --scope`, `scope`, `push`, `pull`, `links`, `prune`, `migrate`, `list --scope`)
 - Modify: `apps/oat-docs/docs/workflows/projects/artifacts.md`, `lifecycle.md`, `pr-flow.md` (bookkeeping via push; PR links block; completion order)
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md` — the worktree-facing page (FR14 worktree coverage). Add a "Synced projects in worktrees" section covering: fresh-worktree materialization (`oat project pull` on arrival, driven by the record file), one independent detached checkout per worktree reconciled through `origin`, conflict resolution with `pull --continue`/`--abort`, `oat local sync` skipping nested checkouts, and what happens to the nested checkout when a parent worktree is removed (nothing to clean up; `pull` prunes stale registrations).
 - Create: `apps/oat-docs/docs/workflows/projects/reviewing-oat-prs.md` (reviewer-facing: what the record file is, what the links block is, why plan/state aren't linked, editor tip `git.scanRepositories`)
 - Modify: `apps/oat-docs/docs/workflows/projects/index.md` (`## Contents` entry for the new page)
 - Regenerate: `apps/oat-docs/index.md` via `pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
@@ -1545,12 +1576,12 @@ Follow `apps/oat-docs/AGENTS.md` (frontmatter `title`/`description`, `.md` links
 
 **Step 2: Verify**
 
-Run: `pnpm check && pnpm build:docs`
-Expected: markdownlint clean; docs build succeeds.
+Run: `pnpm check && pnpm build:docs && grep -n "Synced projects in worktrees" apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+Expected: markdownlint clean; docs build succeeds; the worktree section exists.
 
 **Step 3: Format**
 
-Run: `pnpm exec oxfmt --write apps/oat-docs/docs/reference/file-locations.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/reference/cli-reference.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/workflows/projects/reviewing-oat-prs.md apps/oat-docs/docs/workflows/projects/index.md`
+Run: `pnpm exec oxfmt --write apps/oat-docs/docs/reference/file-locations.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/reference/cli-reference.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/reviewing-oat-prs.md apps/oat-docs/docs/workflows/projects/index.md`
 
 **Step 4: Commit**
 
@@ -1670,17 +1701,18 @@ git commit -m "chore(p04-t10): record skill-sweep dogfood evidence"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                          | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                                                 | -             | -          | -           |
-| p02    | code     | pending         | -          | -                                                                 | -             | -          | -           |
-| p03    | code     | pending         | -          | -                                                                 | -             | -          | -           |
-| p04    | code     | pending         | -          | -                                                                 | -             | -          | -           |
-| final  | code     | pending         | -          | -                                                                 | -             | -          | -           |
-| spec   | artifact | pending         | -          | -                                                                 | -             | -          | -           |
-| design | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -             | manual     | -           |
-| plan   | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -             | auto       | -           |
-| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T013313Z.md                | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                          | Reviewed Head | Invocation | Gate Target              |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------------- | ------------- | ---------- | ------------------------ |
+| p01    | code     | pending         | -          | -                                                                 | -             | -          | -                        |
+| p02    | code     | pending         | -          | -                                                                 | -             | -          | -                        |
+| p03    | code     | pending         | -          | -                                                                 | -             | -          | -                        |
+| p04    | code     | pending         | -          | -                                                                 | -             | -          | -                        |
+| final  | code     | pending         | -          | -                                                                 | -             | -          | -                        |
+| spec   | artifact | pending         | -          | -                                                                 | -             | -          | -                        |
+| design | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -             | manual     | -                        |
+| plan   | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -             | auto       | -                        |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T013313Z.md       | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received        | 2026-08-27 | reviews/artifact-plan-review-2026-08-27T013313Z.md                | -             | -          | -                        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
