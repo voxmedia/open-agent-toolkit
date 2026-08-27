@@ -6,9 +6,16 @@ const route = new URL('../SKILL.md', import.meta.url);
 
 const guidance = await readFile(route, 'utf8');
 
+// Command-ish content: a backticked fragment naming `codex`, or any line that
+// spells a sandbox flag (Quick Reference rows never contain the literal
+// `codex exec`, yet they are the initial-run and cross-directory examples).
 const commandLines = guidance
   .split('\n')
-  .filter((line) => line.includes('codex exec'));
+  .filter((line) => /`[^`\n]*codex /.test(line) || /-s |--sandbox/.test(line));
+
+// The one documented exception: the non-repository example. Anything else that
+// is command-ish must not carry the bypass.
+const documentsTheException = (line) => /not a Git repo/i.test(line);
 
 test('codex-skill routes model and effort through the provider authority', () => {
   assert.match(
@@ -43,10 +50,13 @@ test('codex-skill does not pin the retired fixed model pair', () => {
     );
   }
 
+  // Slug-level guard, no verb required: a retired slug in a backticked route
+  // fails wherever it appears, while live specialist suffixes such as
+  // `gpt-5.4-mini` stay allowed.
   assert.doesNotMatch(
     guidance,
-    /(?:ask|choose|select|which)[\s\S]{0,120}?`gpt-5\.[0-5]/i,
-    'the skill must not offer a retired model slug as a selectable option',
+    /`gpt-5\.[0-3][^`\n]*`|`gpt-5\.4`(?!-)/i,
+    'the skill must not name a retired model slug as a route',
   );
 });
 
@@ -76,7 +86,7 @@ test('codex-skill never mandates the repository-check bypass', () => {
 
 test('codex-skill command examples omit the bypass by default', () => {
   const exampleLines = commandLines.filter(
-    (line) => !/only|unless|not a Git repository/i.test(line),
+    (line) => !documentsTheException(line),
   );
 
   assert.ok(
