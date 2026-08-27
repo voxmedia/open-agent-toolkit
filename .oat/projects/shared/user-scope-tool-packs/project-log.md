@@ -112,6 +112,10 @@ Operator-authorized Phase 3 fix iteration 3/3 completed the remaining Medium dis
 
 Phase 3 passed decisive review with no findings; temporary retry limit restored to 2; Phase 4 ready at p04-t01; see reviews/p03-review-2026-08-27T125029Z.md.
 
+### 2026-08-27 · structural · oat-project-implement · p04
+
+Phase 4 implemented 7/7 tasks (4790cbd3b..0c189eb5b); implementer returned BLOCKED direction-required on missing request provenance, recovered operator-authorized root-inline as attempt 1/10 in db9c0b1ed; phase verification passes; review pending. See implementation.md#orchestration-runs.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
