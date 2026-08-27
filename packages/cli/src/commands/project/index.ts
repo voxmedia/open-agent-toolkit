@@ -9,6 +9,7 @@ import { createProjectLogCommand } from './log/index';
 import { createProjectNewCommand } from './new';
 import { createProjectOpenCommand } from './open';
 import { createProjectPauseCommand } from './pause';
+import { createProjectPushCommand } from './push';
 import { createProjectScopeCommand } from './scope';
 import { createProjectSetModeCommand } from './set-mode';
 import { createProjectSplitCommand } from './split';
@@ -27,6 +28,7 @@ export function createProjectCommand(): Command {
     .addCommand(createProjectNewCommand())
     .addCommand(createProjectOpenCommand())
     .addCommand(createProjectPauseCommand())
+    .addCommand(createProjectPushCommand())
     .addCommand(createProjectScopeCommand())
     .addCommand(createProjectSetModeCommand())
     .addCommand(createProjectSplitCommand())
