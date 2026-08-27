@@ -11,6 +11,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { createProgram } from '@app/create-program';
+import { reconcilePackLifecycle } from '@commands/tools/shared/pack-lifecycle';
+import { resolveAssetsRoot } from '@fs/assets';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { registerCommands } from './index';
@@ -90,7 +92,8 @@ async function runCli(
     const topLevelCommand = args[0];
     const isConsumer =
       topLevelCommand !== undefined &&
-      SCOPE_CONSUMER_COMMANDS.has(topLevelCommand);
+      SCOPE_CONSUMER_COMMANDS.has(topLevelCommand) &&
+      !(topLevelCommand === 'tools' && args[1] === 'migrate');
 
     let finalArgs: string[];
     if (isConsumer) {
@@ -730,6 +733,62 @@ describe('CLI command integration', () => {
 
     const after = await readFile(manifestPath, 'utf8');
     expect(after).toBe(before);
+  });
+
+  it('tools migrate is registered and previews project to user without mutation', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(join(tmpdir(), 'oat-cli-migrate-home-'));
+    tempDirs.push(root, userRoot);
+    const assetsRoot = await resolveAssetsRoot();
+    await reconcilePackLifecycle({
+      pack: 'ideas',
+      scope: 'project',
+      scopeRoot: root,
+      assetsRoot,
+      action: 'install',
+    });
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+
+    try {
+      const result = await runCli(
+        root,
+        [
+          'tools',
+          'migrate',
+          '--pack',
+          'ideas',
+          '--from',
+          'project',
+          '--to',
+          'user',
+          '--dry-run',
+        ],
+        ['--json'],
+      );
+
+      expect(result.exitCode).toBe(0);
+      expect(JSON.parse(result.stdout)).toMatchObject({
+        status: 'previewed',
+        operation: 'migrate',
+        dryRun: true,
+        preview: {
+          pack: 'ideas',
+          from: 'project',
+          to: 'user',
+          status: 'ready',
+        },
+      });
+      await expect(
+        lstat(join(userRoot, '.agents', 'skills', 'oat-idea-new')),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+      await expect(
+        lstat(join(root, '.agents', 'skills', 'oat-idea-new')),
+      ).resolves.toBeDefined();
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
   });
 
   it('internal validate-oat-skills succeeds for valid oat-* skills', async () => {
