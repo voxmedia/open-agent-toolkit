@@ -17,7 +17,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -81,28 +81,29 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T21:30:45.407Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T21:34:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-27T22:12:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: portable-skill-references
 
-**Status:** Plan in progress
+**Status:** Ready for implementation
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Plan - Straight-to-plan quick workflow; managed High dispatch and no additional
-cross-runtime phase gate are configured. The local artifact review passed; the
-configured cross-runtime exit gate is pending a committed baseline.
+Plan complete - Straight-to-plan quick workflow with managed High dispatch and
+no additional cross-runtime phase gate. The local artifact review passed; the
+configured cross-runtime gate passed its Important threshold and all findings
+were consumed within its two-attempt budget.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete; well-understood)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan quick workflow)
-- **Plan:** `plan.md` (drafted; review pending)
+- **Plan:** `plan.md` (complete; ready for implementation)
 - **Implementation:** `implementation.md` (initialized; 0/5 tasks)
 
 ## Progress
@@ -113,7 +114,7 @@ configured cross-runtime exit gate is pending a committed baseline.
 - ✓ Managed High dispatch policy configured
 - ✓ Additional cross-runtime phase gate disabled; built-in reviews remain required
 - ✓ Local plan artifact review passed with no findings
-- ⧗ Configured cross-runtime plan exit gate pending
+- ✓ Configured cross-runtime plan exit gate passed; all findings consumed
 
 ## Blockers
 
@@ -121,5 +122,4 @@ None
 
 ## Next Milestone
 
-Commit the reviewed planning baseline, run the configured cross-runtime exit
-gate, and mark the project ready for implementation.
+Begin `oat-project-implement` at `p01-t01` when implementation is authorized.
