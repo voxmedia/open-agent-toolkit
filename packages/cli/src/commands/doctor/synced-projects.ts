@@ -97,19 +97,29 @@ export async function checkSyncedProjects(
   );
   const syncedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'synced');
   const syncedRelative = repoRelative(repoRoot, syncedRoot);
-  const tracked = await dependencies.git.run(
-    ['ls-files', '--', `${syncedRelative}/*/`],
-    { cwd: repoRoot, allowFailure: true },
-  );
   const checks: DoctorCheck[] = [];
-  if (tracked.code === 0 && tracked.stdout.trim()) {
-    checks.push({
-      name: 'project:synced_tracked_artifacts',
-      description: 'Synced artifacts excluded from the parent branch',
-      status: 'fail',
-      message: `Tracked synced artifact files: ${tracked.stdout.split('\n').join(', ')}`,
-      fix: 'Run `oat project migrate` or remove them with `git rm --cached`.',
-    });
+  if (await pathExists(syncedRoot)) {
+    const tracked = await dependencies.git.run(
+      ['ls-files', '--', syncedRelative],
+      { cwd: repoRoot, allowFailure: true },
+    );
+    if (tracked.code !== 0) {
+      checks.push({
+        name: 'project:synced_tracked_artifacts',
+        description: 'Synced artifacts excluded from the parent branch',
+        status: 'fail',
+        message: `Unable to inspect tracked synced artifacts: ${tracked.stderr || tracked.stdout || `git ls-files exited ${tracked.code}`}.`,
+        fix: 'Resolve the Git error, then rerun `oat doctor --scope project`.',
+      });
+    } else if (tracked.stdout.trim()) {
+      checks.push({
+        name: 'project:synced_tracked_artifacts',
+        description: 'Synced artifacts excluded from the parent branch',
+        status: 'fail',
+        message: `Tracked synced artifact files: ${tracked.stdout.split('\n').join(', ')}`,
+        fix: 'Run `oat project migrate` or remove them with `git rm --cached`.',
+      });
+    }
   }
 
   const entries = await recordEntries(syncedRoot);

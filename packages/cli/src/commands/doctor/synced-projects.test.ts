@@ -1,8 +1,9 @@
+import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import type { GitRunner } from '@commands/project/sync/git';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
   buildSyncedRecord,
   writeSyncedRecord,
@@ -89,6 +90,63 @@ describe('checkSyncedProjects', () => {
     expect(checks.map((check) => check.fix).join('\n')).toContain('Upgrade');
     expect(checks.map((check) => check.fix).join('\n')).toContain(
       'git rm --cached',
+    );
+  });
+
+  it('detects a real branch-tracked file below the synced root', async () => {
+    const repoRoot = await createRoot();
+    execFileSync('git', ['init', '-q', '--initial-branch=main'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.email', 'doctor@example.com'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.name', 'Doctor Fixture'], {
+      cwd: repoRoot,
+    });
+    const leakedPath = '.oat/projects/synced/leaked/state.md';
+    await mkdir(join(repoRoot, '.oat/projects/synced/leaked'), {
+      recursive: true,
+    });
+    await writeFile(join(repoRoot, leakedPath), '# leaked\n', 'utf8');
+    execFileSync('git', ['add', '-f', leakedPath], { cwd: repoRoot });
+    execFileSync('git', ['commit', '-q', '-m', 'test: leak synced artifact'], {
+      cwd: repoRoot,
+    });
+
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: defaultGitRunner,
+      resolveProjectsRoot: async () => '.oat/projects/shared',
+    });
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_tracked_artifacts',
+        status: 'fail',
+        message: expect.stringContaining(leakedPath),
+      }),
+    );
+  });
+
+  it('reports unexpected git ls-files failures explicitly', async () => {
+    const repoRoot = await createRoot();
+    await mkdir(join(repoRoot, '.oat/projects/synced'), { recursive: true });
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: gitRunner({
+        'ls-files --': {
+          code: 128,
+          stdout: '',
+          stderr: 'fatal: not a git repository',
+        },
+      }),
+    });
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_tracked_artifacts',
+        status: 'fail',
+        message: expect.stringContaining('fatal: not a git repository'),
+      }),
     );
   });
 
