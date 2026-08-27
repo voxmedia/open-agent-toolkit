@@ -260,6 +260,16 @@ oat_generated: false
   pack-name validation.
 - All five findings are accepted for bounded fix iteration 1/2; none are
   deferred.
+- Fix iteration 1 completed all five dispositions in
+  `6b0a7fe542f41f2a20143b0f3194242cf63ef770`. Shared-owner retention now lives
+  in common reconcile planning; provider-sync failures have convergent typed
+  recovery; previews expose concrete entries and blocked conflicts; explicit
+  migration adopts physically complete legacy-false destinations; and migrate
+  validation derives from the manifest.
+- The implementer passed 70 focused tests, 53 Phase 3 tests, 3,760 CLI tests,
+  workspace tests, type-check, lint, format, and diff check. Root independently
+  repeated the load-bearing shared/removal/migration suites: 6 files and 67
+  tests passed.
 
 ### Task p03-t01: Define migration plans and result state
 
@@ -302,11 +312,11 @@ oat_generated: false
 
 #### Phase Outcomes
 
-| Phase | Status      | Tasks | Review   | Fix loops |
-| ----- | ----------- | ----- | -------- | --------- |
-| p01   | completed   | 7/7   | passed   | 3         |
-| p02   | completed   | 9/9   | passed   | 2         |
-| p03   | in_progress | 5/5   | blocking | 0         |
+| Phase | Status      | Tasks | Review  | Fix loops |
+| ----- | ----------- | ----- | ------- | --------- |
+| p01   | completed   | 7/7   | passed  | 3         |
+| p02   | completed   | 9/9   | passed  | 2         |
+| p03   | in_progress | 5/5   | pending | 1         |
 
 #### Dispatch Notes
 
@@ -361,6 +371,11 @@ oat_generated: false
   `reviews/p03-review-2026-08-27T074154Z.md`; 2 Critical, 2 Important,
   1 Medium, 0 Minor. All five findings are assigned to fix iteration 1/2.
 - `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- Phase 3 fix iteration 1:
+  `6b0a7fe542f41f2a20143b0f3194242cf63ef770`; all five review findings
+  addressed. Focused, phase, full CLI, workspace, type-check, lint, format, and
+  diff gates passed; root repeated 67 load-bearing tests.
+- `Dispatch: scope=p03-fix1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 
 ### Recovery Event d8c701a8-4297-4028-bd4b-e60f404686fa
 
@@ -446,8 +461,7 @@ oat_generated: false
 
 #### Outstanding Items
 
-- Execute Phase 3 fix iteration 1/2 for all five independent-review findings,
-  then run a fresh independent re-review.
+- Run a fresh independent Phase 3 re-review over fix iteration 1.
 
 ## Final Summary (for PR/docs)
 
