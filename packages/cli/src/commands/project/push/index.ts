@@ -3,6 +3,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { refreshPrLinks } from '@commands/project/links/refresh';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
   pushSynced as defaultPushSynced,
@@ -10,6 +11,10 @@ import {
   type SyncTarget,
 } from '@commands/project/sync/ref-sync';
 import { resolveSyncedTarget } from '@commands/project/sync/resolve-target';
+import {
+  getFrontmatterBlock,
+  parseFrontmatterScalarFields,
+} from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
@@ -31,6 +36,8 @@ interface ProjectPushDependencies {
   ) => Promise<PushResult>;
   gitRunner: GitRunner;
   processEnv: NodeJS.ProcessEnv;
+  refreshPrLinks: typeof refreshPrLinks;
+  readFile: typeof readFile;
 }
 
 const DEFAULT_DEPENDENCIES: ProjectPushDependencies = {
@@ -40,6 +47,8 @@ const DEFAULT_DEPENDENCIES: ProjectPushDependencies = {
   pushSynced: defaultPushSynced,
   gitRunner: defaultGitRunner,
   processEnv: process.env,
+  refreshPrLinks,
+  readFile,
 };
 
 function shellQuote(value: string): string {
@@ -63,7 +72,34 @@ async function runPush(
       dependencies.gitRunner,
       { message: options.message },
     );
-    const payload = { ...result, ref: target.ref, prRefresh: undefined };
+    let prRefresh: 'refreshed' | 'skipped' | 'failed' | undefined;
+    if (
+      options.refreshPr &&
+      (result.status === 'pushed' || result.status === 'up-to-date')
+    ) {
+      const state = await dependencies
+        .readFile(join(target.projectPath, 'state.md'), 'utf8')
+        .catch(() => null);
+      const frontmatter = state ? getFrontmatterBlock(state) : null;
+      if (frontmatter) {
+        const parsed = parseFrontmatterScalarFields(frontmatter, [
+          'oat_pr_status',
+          'oat_pr_url',
+        ]);
+        if (
+          parsed.valid &&
+          parsed.values.oat_pr_status === 'open' &&
+          parsed.values.oat_pr_url
+        ) {
+          prRefresh = await dependencies.refreshPrLinks(
+            target,
+            parsed.values.oat_pr_url,
+            { warn: (message) => context.logger.warn(message) },
+          );
+        }
+      }
+    }
+    const payload = { ...result, ref: target.ref, prRefresh };
     if (context.json) {
       context.logger.json(payload);
     } else if (result.status === 'pushed') {
@@ -83,7 +119,6 @@ async function runPush(
     }
     process.exitCode =
       result.status === 'pushed' || result.status === 'up-to-date' ? 0 : 1;
-    void options.refreshPr;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
@@ -117,3 +152,5 @@ export function createProjectPushCommand(
       },
     );
 }
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';

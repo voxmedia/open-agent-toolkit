@@ -31,6 +31,16 @@ function harness(status: 'pushed' | 'up-to-date' | 'rejected' | 'conflict') {
     ref: 'refs/oat/projects/demo',
     remote: 'origin',
   }));
+  const refreshPrLinks = vi.fn(async () => 'refreshed' as const);
+  const readFile = vi.fn(async () =>
+    [
+      '---',
+      'oat_pr_status: open',
+      'oat_pr_url: https://github.com/o/r/pull/1',
+      '---',
+      '',
+    ].join('\n'),
+  );
   const command = createProjectPushCommand({
     buildCommandContext: (options: GlobalOptions): CommandContext => ({
       scope: 'project',
@@ -46,9 +56,18 @@ function harness(status: 'pushed' | 'up-to-date' | 'rejected' | 'conflict') {
     resolveSyncedTarget: resolveTarget,
     pushSynced,
     gitRunner: { run: vi.fn() },
+    refreshPrLinks,
+    readFile,
     processEnv: {},
   });
-  return { command, capture, pushSynced, resolveTarget };
+  return {
+    command,
+    capture,
+    pushSynced,
+    resolveTarget,
+    refreshPrLinks,
+    readFile,
+  };
 }
 
 async function run(
@@ -221,5 +240,36 @@ describe('createProjectPushCommand', () => {
       ref: 'refs/oat/projects/demo',
     });
     expect(capture.jsonPayloads[0]).toHaveProperty('prRefresh', undefined);
+  });
+
+  it('refreshes an open PR after a successful push', async () => {
+    const { command, refreshPrLinks, capture } = harness('pushed');
+    await run(command, ['demo'], ['--json']);
+    expect(refreshPrLinks).toHaveBeenCalledWith(
+      expect.objectContaining({ slug: 'demo' }),
+      'https://github.com/o/r/pull/1',
+      expect.objectContaining({ warn: expect.any(Function) }),
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({ prRefresh: 'refreshed' });
+  });
+
+  it('skips refresh when disabled or the PR is not open', async () => {
+    const disabled = harness('pushed');
+    await run(disabled.command, ['demo', '--no-refresh-pr']);
+    expect(disabled.refreshPrLinks).not.toHaveBeenCalled();
+
+    const closed = harness('pushed');
+    closed.readFile.mockResolvedValueOnce(
+      '---\noat_pr_status: closed\noat_pr_url: https://github.com/o/r/pull/1\n---\n',
+    );
+    await run(closed.command, ['demo']);
+    expect(closed.refreshPrLinks).not.toHaveBeenCalled();
+  });
+
+  it('does not change push success when refresh fails', async () => {
+    const setup = harness('pushed');
+    setup.refreshPrLinks.mockResolvedValueOnce('failed');
+    await run(setup.command, ['demo']);
+    expect(process.exitCode).toBe(0);
   });
 });
