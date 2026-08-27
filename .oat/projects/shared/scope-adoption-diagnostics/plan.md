@@ -422,6 +422,11 @@ against every repository gate.
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
 - Modify: `packages/cli/assets/public-package-versions.json`
+- Move:
+  `.oat/repo/pjm/backlog/items/BL-260827-correct-scope-and-adoption.md` to
+  `.oat/repo/pjm/backlog/archived/BL-260827-correct-scope-and-adoption.md`
+- Modify: `.oat/repo/pjm/backlog/completed.md`
+- Modify: `.oat/repo/pjm/backlog/index.md`
 
 **Step 1: Establish the release floor (RED)**
 
@@ -442,14 +447,23 @@ version that was next when this plan was authored remains available.
 Run:
 `pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json`
 
-**Step 4: Verify**
+**Step 4: Close the associated backlog item**
+
+Run:
+`pnpm run cli -- backlog archive BL-260827-correct-scope-and-adoption --summary "Corrected PJM migration adoption semantics and made scoped pack diagnostics provider-aware, attributable, and fault-tolerant."`
+
+Inspect and stage the moved archived item, `backlog/completed.md`, and the
+regenerated `backlog/index.md`. Verify the generated lifecycle state with
+`pnpm run cli -- pjm doctor --json`; do not hand-edit those lifecycle changes.
+
+**Step 5: Verify**
 
 Run:
 `pnpm release:check-versions && pnpm release:validate`
 
 Expected: both version and public-package dry-run validation pass.
 
-**Step 5: Commit**
+**Step 6: Commit**
 
 `git commit -m "chore(p04-t01): bump scoped diagnostics release"`
 
@@ -515,7 +529,7 @@ at the final reviewed head.
 | final  | code     | pending | -          | -                                                    | -             | -          | -           |
 | spec   | artifact | pending | -          | -                                                    | -             | -          | -           |
 | design | artifact | pending | -          | -                                                    | -             | -          | -           |
-| plan   | artifact | passed  | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T215450Z.md` | -             | manual     | plan        |
+| plan   | artifact | passed  | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T215450Z.md` | -             | -          | -           |
 
 Status progression: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
