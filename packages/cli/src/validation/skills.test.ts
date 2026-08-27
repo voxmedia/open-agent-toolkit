@@ -70,6 +70,27 @@ function validGateableSkillContent(skillName: string): string {
   ].join('\n');
 }
 
+async function createSyncedBookkeepingInventory(
+  root: string,
+  entries: Array<{ file: string; anchor: string; kind: string }>,
+): Promise<string> {
+  const inventoryPath = join(
+    root,
+    'packages',
+    'cli',
+    'src',
+    'validation',
+    'synced-bookkeeping-sites.json',
+  );
+  await mkdir(join(inventoryPath, '..'), { recursive: true });
+  await writeFile(
+    inventoryPath,
+    `${JSON.stringify(entries, null, 2)}\n`,
+    'utf8',
+  );
+  return inventoryPath;
+}
+
 function currentSkillContent(
   skillName: string,
   version: string,
@@ -318,6 +339,156 @@ describe('validateOatSkills', () => {
     const result = await validateOatSkills(root);
     expect(result.validatedSkillCount).toBe(2);
     expect(result.findings).toEqual([]);
+  });
+
+  it('rejects staging a path under the synced project tree', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-synced-stage',
+      `${validSkillContent('oat-synced-stage')}\n\n\`\`\`bash\ngit add -- .oat/projects/synced/demo/state.md\n\`\`\`\n`,
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: expect.stringMatching(
+        /^Line \d+: Never stage a path under \.oat\/projects\/synced\//,
+      ),
+    });
+  });
+
+  it('rejects jq parsing and json mode for project scope in skill references', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    await createSkillFile(
+      root,
+      'oat-scope-json',
+      validSkillContent('oat-scope-json'),
+    );
+    const referenceDir = join(
+      root,
+      '.agents',
+      'skills',
+      'oat-scope-json',
+      'references',
+    );
+    await mkdir(referenceDir, { recursive: true });
+    const referencePath = join(referenceDir, 'unsafe.md');
+    await writeFile(
+      referencePath,
+      [
+        '```bash',
+        'PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --json | jq -r .scope)',
+        '```',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: referencePath,
+      message: expect.stringMatching(
+        /^Line \d+: Resolve project scope with --format value; do not parse --json or pipe into jq$/,
+      ),
+    });
+  });
+
+  it('accepts a project-artifact commit guarded in the same fenced block', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    await createSkillFile(
+      root,
+      'oat-project-guarded',
+      `${validSkillContent('oat-project-guarded')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts"\nelse\n  git add "$PROJECT_PATH/state.md"\n  git commit -m "chore(oat): persist artifacts"\nfi\n\`\`\`\n`,
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([]);
+  });
+
+  it('rejects an unguarded project-artifact commit in a lifecycle skill', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-unguarded',
+      `${validSkillContent('oat-project-unguarded')}\n\n\`\`\`bash\ngit add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md"\ngit commit -m "chore(oat): record review findings"\n\`\`\`\n`,
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: expect.stringMatching(
+        /^Line \d+: Project-artifact git writes require an oat project scope --format value guard earlier in the same fenced block$/,
+      ),
+    });
+  });
+
+  it('rejects a shared fallback that hides project-scope resolution failure', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-fallback',
+      `${validSkillContent('oat-project-fallback')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value 2>/dev/null || echo shared)\n\`\`\`\n`,
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: expect.stringMatching(
+        /^Line \d+: Project scope resolution must fail closed; do not fall back to shared$/,
+      ),
+    });
+  });
+
+  it('reports a stale synced-bookkeeping inventory anchor', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-inventory',
+      validSkillContent('oat-project-inventory'),
+    );
+    const inventoryPath = await createSyncedBookkeepingInventory(root, [
+      {
+        file: '.agents/skills/oat-project-inventory/SKILL.md',
+        anchor: 'oat project push "$PROJECT_PATH" --message "missing"',
+        kind: 'write',
+      },
+    ]);
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: inventoryPath,
+      message: `Stale synced-bookkeeping inventory anchor in ${skillPath}: oat project push "$PROJECT_PATH" --message "missing"`,
+    });
+  });
+
+  it('reports lifecycle project-artifact writers missing from the inventory', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-uninventoried',
+      `${validSkillContent('oat-project-uninventoried')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts"\nelse\n  git add "$PROJECT_PATH/state.md"\nfi\n\`\`\`\n`,
+    );
+    const inventoryPath = await createSyncedBookkeepingInventory(root, []);
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: inventoryPath,
+      message: `Lifecycle project-artifact writer is missing from synced-bookkeeping inventory: ${skillPath}`,
+    });
   });
 
   it('does not warn when a configured gate targets a gateable skill', async () => {
@@ -1318,7 +1489,7 @@ describe('validateOatSkills', () => {
     } of [
       {
         skillName: 'oat-project-discover',
-        version: '2.2.0',
+        version: '2.2.1',
         finalizedHeading:
           '### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)',
         gateHeading: '### Step 12: Gate Execution',
@@ -1327,7 +1498,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-design',
-        version: '2.3.0',
+        version: '2.3.1',
         finalizedHeading:
           '### Step 6: User-Review Gate (commit-first ordering)',
         gateHeading: '### Step 7: Gate Execution',
@@ -1337,7 +1508,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.4',
+        version: '1.4.5',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -1345,7 +1516,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.5',
+        version: '2.3.6',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -1354,7 +1525,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.2.5',
+        version: '2.3.0',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -1707,7 +1878,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.5');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.0');
   });
 
   it('requires classified resolver calls and effective terminal reviewer notices before launch', async () => {
@@ -1827,9 +1998,10 @@ describe('validateOatSkills', () => {
     // governs every append point listed in the entry and so cannot move to a
     // reference. Raised again from 232 for the direct-implementation record
     // rule, which governs the case where the root does not dispatch and so
-    // never loads the dispatch reference. The structural assertions below
+    // never loads the dispatch reference. Raised again from 234 for the
+    // synced-arrival materialization guard. The structural assertions below
     // still enforce that step bodies stay out of the entry.
-    expect(entry.split('\n').length).toBeLessThanOrEqual(234);
+    expect(entry.split('\n').length).toBeLessThanOrEqual(244);
     for (const path of implementReferencePaths) {
       expect(entry).toContain(`references/${path}`);
     }
@@ -1852,7 +2024,7 @@ describe('validateOatSkills', () => {
       '### Step 2: Create or Reuse Worktree',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.6');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.0');
     expect(detectionIndex).toBeGreaterThanOrEqual(0);
     expect(creationIndex).toBeGreaterThan(detectionIndex);
     expect(content).toContain('BOOTSTRAP_MODE=normal');
@@ -1994,7 +2166,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-worktree-bootstrap/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.0');
     expect(content).toContain(
       'Prefer an explicit worktree bootstrap command when the repository declares',
     );
@@ -2040,7 +2212,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.5');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.0');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -2059,7 +2231,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.0');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -2212,14 +2384,14 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.0.11'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.0'],
       ['.agents/agents/oat-reviewer.md', '1.2.0'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.4.0'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.0'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.3.5'],
-      ['.agents/skills/oat-project-document/SKILL.md', '1.6.2'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.3'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.5'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.0'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.1'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.3.6'],
+      ['.agents/skills/oat-project-document/SKILL.md', '1.6.3'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.0'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.6'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -2522,12 +2694,12 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.11');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.0');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.5');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.0');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -3436,13 +3608,13 @@ describe('validateOatSkills', () => {
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.18'],
-      ['oat-project-review-provide', '1.4.0'],
-      ['oat-project-review-receive', '1.6.0'],
-      ['oat-project-review-receive-remote', '1.5.0'],
-      ['oat-project-implement', '2.2.5'],
-      ['oat-project-pr-final', '1.5.3'],
-      ['oat-project-pr-progress', '1.2.3'],
-      ['oat-project-complete', '1.6.2'],
+      ['oat-project-review-provide', '1.5.0'],
+      ['oat-project-review-receive', '1.6.1'],
+      ['oat-project-review-receive-remote', '1.5.1'],
+      ['oat-project-implement', '2.3.0'],
+      ['oat-project-pr-final', '1.6.0'],
+      ['oat-project-pr-progress', '1.3.0'],
+      ['oat-project-complete', '1.7.0'],
       ['oat-project-next', '1.0.11'],
     ] as const;
 
@@ -3520,7 +3692,7 @@ describe('validateOatSkills', () => {
       receive.indexOf('### Step 2: Parse Findings into Buckets'),
     );
 
-    expect(receive.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.0');
+    expect(receive.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.1');
     expect(resolver).toContain(
       'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
     );
@@ -4338,7 +4510,7 @@ describe('validateOatSkills', () => {
     const progress = await readRepoFile(
       '.agents/skills/oat-project-progress/SKILL.md',
     );
-    expect(progress.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.6');
+    expect(progress.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.0');
 
     const modeSections = [
       [
@@ -4510,10 +4682,10 @@ describe('validateOatSkills', () => {
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.18'],
-      ['oat-project-plan', '1.4.4'],
-      ['oat-project-quick-start', '2.3.5'],
-      ['oat-project-import-plan', '1.4.9'],
-      ['oat-project-review-provide', '1.4.0'],
+      ['oat-project-plan', '1.4.5'],
+      ['oat-project-quick-start', '2.3.6'],
+      ['oat-project-import-plan', '1.4.10'],
+      ['oat-project-review-provide', '1.5.0'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -4528,8 +4700,8 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.2.5'],
-      ['oat-project-review-provide', '1.4.0'],
+      ['oat-project-implement', '2.3.0'],
+      ['oat-project-review-provide', '1.5.0'],
       ['oat-project-review-provide-remote', '1.1.0'],
     ] as const;
 
@@ -5336,7 +5508,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.6');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -5389,7 +5561,7 @@ describe('validateOatSkills', () => {
     expect(
       skillContent,
       'oat-project-design selective-mode contract version must stay explicit',
-    ).toMatch(/^version:\s*2\.3\.0$/m);
+    ).toMatch(/^version:\s*2\.3\.1$/m);
     expect(
       skillContent,
       'Step 4a heading must remain present for selective review-pass flow',

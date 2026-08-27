@@ -46,6 +46,14 @@ interface ValidateOatSkillsDependencies {
   env?: NodeJS.ProcessEnv;
 }
 
+type SyncedBookkeepingKind = 'resolve' | 'arrival' | 'write';
+
+interface SyncedBookkeepingSite {
+  file: string;
+  anchor: string;
+  kind: SyncedBookkeepingKind;
+}
+
 const execFileAsync = promisify(execFileCallback);
 
 async function isDirectory(path: string): Promise<boolean> {
@@ -55,6 +63,282 @@ async function isDirectory(path: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function isFile(path: string): Promise<boolean> {
+  try {
+    const s = await stat(path);
+    return s.isFile();
+  } catch {
+    return false;
+  }
+}
+
+async function listMarkdownFiles(root: string): Promise<string[]> {
+  if (!(await isDirectory(root))) {
+    return [];
+  }
+
+  const files: string[] = [];
+  for (const entry of await readdir(root, { withFileTypes: true })) {
+    const path = join(root, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await listMarkdownFiles(path)));
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      files.push(path);
+    }
+  }
+  return files.sort();
+}
+
+function countOccurrences(content: string, anchor: string): number {
+  if (anchor.length === 0) {
+    return 0;
+  }
+
+  let count = 0;
+  let offset = 0;
+  while ((offset = content.indexOf(anchor, offset)) !== -1) {
+    count += 1;
+    offset += anchor.length;
+  }
+  return count;
+}
+
+function isLifecycleSafetyFile(file: string): boolean {
+  return (
+    /\/\.agents\/skills\/(?:oat-project-[^/]+|oat-worktree-[^/]+|oat-brainstorm|oat-wave-execute)\//.test(
+      file,
+    ) || file.endsWith('/.agents/agents/oat-phase-implementer.md')
+  );
+}
+
+function referencesProjectArtifactVariable(line: string): boolean {
+  return /\$PROJECT_PATH|\$\{PROJECT_PATH\}|\{PROJECT_PATH\}|\$ARTIFACT_PATH|\$\{ARTIFACT_PATH\}|\$ACTIVE_PROJECT(?!_PATH)|\$\{ACTIVE_PROJECT\}|\$REVIEW_PATH|\$\{REVIEW_PATH\}/.test(
+    line,
+  );
+}
+
+function containsProjectArtifactWriter(content: string): boolean {
+  return content.split('\n').some((line) => {
+    const writesProjectArtifact =
+      /\bgit\s+(?:add|commit)\b|\boat\s+project\s+push\b/.test(line) &&
+      referencesProjectArtifactVariable(line);
+    const writesActiveProject = /\boat\s+config\s+set\s+activeProject\b/.test(
+      line,
+    );
+    const describesProjectArtifactWrite =
+      /\bwrite(?:s|ing)?(?:\s+[^\n]{0,40})?\{PROJECT_PATH\}/i.test(line);
+    return (
+      writesProjectArtifact ||
+      writesActiveProject ||
+      describesProjectArtifactWrite
+    );
+  });
+}
+
+function collectSyncedContentFindings(
+  file: string,
+  content: string,
+  findings: ValidationFinding[],
+): void {
+  const lines = content.split('\n');
+  let fenceMarker: string | null = null;
+  let scopeGuardSeen = false;
+
+  for (const [index, line] of lines.entries()) {
+    const lineNumber = index + 1;
+    const fenceMatch = line.match(/^\s*(`{3,}|~{3,})(?:[^`~]*)$/);
+
+    if (fenceMatch) {
+      const marker = fenceMatch[1] ?? '';
+      if (fenceMarker === null) {
+        fenceMarker = marker;
+        scopeGuardSeen = false;
+      } else if (
+        marker[0] === fenceMarker[0] &&
+        marker.length >= fenceMarker.length &&
+        /^\s*[`~]+\s*$/.test(line)
+      ) {
+        fenceMarker = null;
+        scopeGuardSeen = false;
+      }
+      continue;
+    }
+
+    if (/\bgit\s+add\b[^\n]*\.oat\/projects\/synced(?:\/|\b)/.test(line)) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Never stage a path under .oat/projects/synced/; use oat project push`,
+      });
+    }
+
+    if (
+      /\boat\s+project\s+scope\b/.test(line) &&
+      (/--json\b/.test(line) || /\|[^\n]*\bjq\b/.test(line))
+    ) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Resolve project scope with --format value; do not parse --json or pipe into jq`,
+      });
+    }
+
+    if (
+      /\boat\s+project\s+scope\b/.test(line) &&
+      /\|\|\s*echo\s+["']?shared\b/.test(line)
+    ) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Project scope resolution must fail closed; do not fall back to shared`,
+      });
+    }
+
+    if (fenceMarker === null || !isLifecycleSafetyFile(file)) {
+      continue;
+    }
+
+    if (
+      /\boat\s+project\s+scope\b/.test(line) &&
+      /--format\s+value\b/.test(line)
+    ) {
+      scopeGuardSeen = true;
+    }
+
+    if (
+      /\bgit\s+(?:add|commit)\b/.test(line) &&
+      referencesProjectArtifactVariable(line) &&
+      !scopeGuardSeen
+    ) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Project-artifact git writes require an oat project scope --format value guard earlier in the same fenced block`,
+      });
+    }
+  }
+}
+
+async function collectSyncedBookkeepingInventoryFindings(
+  repoRoot: string,
+  safetyFiles: readonly string[],
+  findings: ValidationFinding[],
+): Promise<void> {
+  const inventoryPath = join(
+    repoRoot,
+    'packages',
+    'cli',
+    'src',
+    'validation',
+    'synced-bookkeeping-sites.json',
+  );
+  if (!(await isFile(inventoryPath))) {
+    return;
+  }
+
+  let sites: SyncedBookkeepingSite[];
+  try {
+    const parsed = JSON.parse(await readFile(inventoryPath, 'utf8')) as unknown;
+    if (!Array.isArray(parsed)) {
+      throw new Error('expected a JSON array');
+    }
+    sites = parsed as SyncedBookkeepingSite[];
+  } catch (error) {
+    findings.push({
+      file: inventoryPath,
+      message: `Invalid synced-bookkeeping inventory: ${error instanceof Error ? error.message : String(error)}`,
+    });
+    return;
+  }
+
+  const inventoriedWriterFiles = new Set<string>();
+  for (const site of sites) {
+    if (
+      typeof site?.file !== 'string' ||
+      typeof site?.anchor !== 'string' ||
+      !['resolve', 'arrival', 'write'].includes(site?.kind)
+    ) {
+      findings.push({
+        file: inventoryPath,
+        message:
+          'Each synced-bookkeeping inventory entry requires file, unique anchor, and kind (resolve | arrival | write)',
+      });
+      continue;
+    }
+
+    const sitePath = join(repoRoot, site.file);
+    let content: string;
+    try {
+      content = await readFile(sitePath, 'utf8');
+    } catch {
+      findings.push({
+        file: inventoryPath,
+        message: `Missing synced-bookkeeping inventory file: ${sitePath}`,
+      });
+      continue;
+    }
+
+    const occurrences = countOccurrences(content, site.anchor);
+    if (occurrences === 0) {
+      findings.push({
+        file: inventoryPath,
+        message: `Stale synced-bookkeeping inventory anchor in ${sitePath}: ${site.anchor}`,
+      });
+    } else if (occurrences > 1) {
+      findings.push({
+        file: inventoryPath,
+        message: `Synced-bookkeeping inventory anchor is not unique in ${sitePath}: ${site.anchor}`,
+      });
+    }
+
+    if (site.kind === 'write') {
+      inventoriedWriterFiles.add(sitePath);
+    }
+  }
+
+  for (const file of safetyFiles) {
+    const content = await readFile(file, 'utf8');
+    if (
+      isLifecycleSafetyFile(file) &&
+      containsProjectArtifactWriter(content) &&
+      !inventoriedWriterFiles.has(file)
+    ) {
+      findings.push({
+        file: inventoryPath,
+        message: `Lifecycle project-artifact writer is missing from synced-bookkeeping inventory: ${file}`,
+      });
+    }
+  }
+}
+
+async function collectSyncedSafetyFindings(
+  repoRoot: string,
+  oatSkillDirs: readonly string[],
+  findings: ValidationFinding[],
+): Promise<void> {
+  const skillFiles = (
+    await Promise.all(
+      oatSkillDirs.map((dir) =>
+        listMarkdownFiles(join(repoRoot, '.agents', 'skills', dir)),
+      ),
+    )
+  ).flat();
+  const phaseImplementerPath = join(
+    repoRoot,
+    '.agents',
+    'agents',
+    'oat-phase-implementer.md',
+  );
+  const safetyFiles = (await isFile(phaseImplementerPath))
+    ? [...skillFiles, phaseImplementerPath]
+    : skillFiles;
+
+  for (const file of safetyFiles) {
+    collectSyncedContentFindings(file, await readFile(file, 'utf8'), findings);
+  }
+  await collectSyncedBookkeepingInventoryFindings(
+    repoRoot,
+    safetyFiles,
+    findings,
+  );
 }
 
 function frontmatterHasKey(frontmatter: string, key: string): boolean {
@@ -477,6 +761,8 @@ export async function validateOatSkills(
       validateQuickStartSemantics(skillPath, content, findings);
     }
   }
+
+  await collectSyncedSafetyFindings(repoRoot, oatSkillDirs, findings);
 
   await collectGateabilityFindings(
     skillsRoot,

@@ -1,0 +1,232 @@
+[
+  {
+    "file": "packages/cli/src/commands/project/open/index.ts",
+    "anchor": "const resolved = await resolveProject(",
+    "kind": "resolve"
+  },
+  {
+    "file": "packages/cli/src/commands/project/pause/index.ts",
+    "anchor": "async function resolveNamedProject(",
+    "kind": "resolve"
+  },
+  {
+    "file": "packages/cli/src/commands/project/list.ts",
+    "anchor": "if (options.remote && (!options.scope || options.scope === 'synced')) {",
+    "kind": "resolve"
+  },
+  {
+    "file": "packages/cli/src/commands/project/status.ts",
+    "anchor": "const activeProject = await dependencies.resolveActiveProject(repoRoot);",
+    "kind": "resolve"
+  },
+  {
+    "file": "packages/cli/src/commands/project/push/index.ts",
+    "anchor": "const target = await dependencies.resolveSyncedTarget(",
+    "kind": "resolve"
+  },
+  {
+    "file": "packages/cli/src/commands/project/pull/index.ts",
+    "anchor": "const target: ResolvedSyncTarget = await dependencies.resolveSyncedTarget(",
+    "kind": "resolve"
+  },
+  {
+    "file": "packages/cli/src/commands/project/links/index.ts",
+    "anchor": "const target = await dependencies.resolveSyncedTarget(",
+    "kind": "resolve"
+  },
+  {
+    "file": "packages/cli/src/commands/project/prune/index.ts",
+    "anchor": "const target = await dependencies.resolveSyncedTarget(",
+    "kind": "resolve"
+  },
+  {
+    "file": "packages/cli/src/commands/project/migrate/index.ts",
+    "anchor": "resolveProjectScope(sourcePath, projectsRoot) !== 'shared'",
+    "kind": "resolve"
+  },
+  {
+    "file": "packages/cli/src/commands/project/archive/archive-utils.ts",
+    "anchor": "resolveProjectScope(options.projectPath, options.projectsRoot) === 'synced';",
+    "kind": "resolve"
+  },
+  {
+    "file": ".agents/skills/oat-project-quick-start/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): update quick-start artifacts for {project-name}\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-discover/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"docs: complete discovery for {project-name}",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-spec/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"docs: complete specification for {project-name}",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-design/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): mark design complete for {project-name}\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-plan/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"docs: complete implementation plan for {project-name}",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-import-plan/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): update imported plan artifacts for {project-name}\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-implement/SKILL.md",
+    "anchor": "if [ -n \"$PROJECT_PATH\" ] && [[ \"$PROJECT_PATH\" == \"$SYNCED_PROJECTS_ROOT/\"* ]]; then",
+    "kind": "arrival"
+  },
+  {
+    "file": ".agents/skills/oat-project-implement/SKILL.md",
+    "anchor": "  oat config set activeProject \"$PROJECT_PATH\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-implement/references/plan-and-resume.md",
+    "anchor": "already pulled and materialized any discoverable\nsynced project before this route validates or reads its artifacts",
+    "kind": "arrival"
+  },
+  {
+    "file": ".agents/skills/oat-project-implement/references/phase-execution.md",
+    "anchor": "  oat project push \"{PROJECT_PATH}\" --message \"chore(oat): bookkeeping after {pNN} {pass|fail}\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-implement/references/completion-and-closeout.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): prepare final implementation closeout\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/agents/oat-phase-implementer.md",
+    "anchor": "A `synced` project uses\n`oat project push` with the original bookkeeping message",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-review-receive/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): record review findings and add fix tasks ({scope})\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-review-receive-remote/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): record remote review findings and add fix tasks (pr-#$PR_NUMBER)\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-review-provide/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): record {scope} review artifact\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-review-provide/SKILL.md",
+    "anchor": "    oat project pull \"$PROJECT_PATH\"",
+    "kind": "arrival"
+  },
+  {
+    "file": ".agents/skills/oat-project-revise/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): create revision tasks for {project-name}\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-reconcile/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): reconcile manual implementation ({first_task_id}..{last_task_id})\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-summary/SKILL.md",
+    "anchor": "  SUMMARY_PUSH=$(oat project push \"$PROJECT_PATH\" --message \"docs: generate summary for {project-name}\" --json)",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-document/SKILL.md",
+    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore({project-name}): mark docs updated\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-retro/references/apply-procedure.md",
+    "anchor": "    oat project push \"$PROJECT_PATH\" --message \"chore(oat): record retro application $RP_ID\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-brainstorm/SKILL.md",
+    "anchor": "  REFERENCE_PUSH=$(oat project push \"$ACTIVE_PROJECT\" --message \"chore(oat): capture brainstorming reference for <project-name>\" --json)",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-brainstorm/references/destinations.md",
+    "anchor": "The reference file is a **durable project artifact**",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-wave-execute/SKILL.md",
+    "anchor": "`oat project scope \"$PROJECT_PATH\" --format value` and fail closed",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-progress/SKILL.md",
+    "anchor": "[ \"$PROJECT_SCOPE\" = \"synced\" ] && oat project pull \"$ACTIVE_PROJECT_PATH\"",
+    "kind": "arrival"
+  },
+  {
+    "file": ".agents/skills/oat-worktree-bootstrap/SKILL.md",
+    "anchor": "[ \"$PROJECT_SCOPE\" = \"synced\" ] && oat project pull \"$TARGET_ACTIVE_PROJECT\"",
+    "kind": "arrival"
+  },
+  {
+    "file": ".agents/skills/oat-worktree-bootstrap-auto/SKILL.md",
+    "anchor": "[ \"$PROJECT_SCOPE\" = \"synced\" ] && oat project pull \"$TARGET_ACTIVE_PROJECT\"",
+    "kind": "arrival"
+  },
+  {
+    "file": ".agents/skills/oat-cursor-cloud-projects/SKILL.md",
+    "anchor": "[ \"$PROJECT_SCOPE\" = \"synced\" ] && oat project pull \"$PROJECT_PATH\"",
+    "kind": "arrival"
+  },
+  {
+    "file": ".agents/skills/oat-project-new/SKILL.md",
+    "anchor": "oat project new \"{project-name}\" --mode spec-driven [--scope shared|local|synced]",
+    "kind": "resolve"
+  },
+  {
+    "file": ".agents/skills/oat-doctor/SKILL.md",
+    "anchor": "**Synced project health:** Report `project:synced_tracked_artifacts`",
+    "kind": "resolve"
+  },
+  {
+    "file": ".agents/skills/oat-project-pr-final/SKILL.md",
+    "anchor": "chore(oat): record final PR metadata",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-pr-progress/SKILL.md",
+    "anchor": "chore(oat): record progress PR metadata",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-complete/SKILL.md",
+    "anchor": "chore(oat): finalize project lifecycle",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-retro/SKILL.md",
+    "anchor": "PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)",
+    "kind": "resolve"
+  },
+  {
+    "file": ".agents/skills/oat-project-retro-file/SKILL.md",
+    "anchor": "RETRO_PATH=\"${PROJECT_PATH}/references/project-retro.md\"",
+    "kind": "write"
+  },
+  {
+    "file": ".agents/skills/oat-project-clear-active/SKILL.md",
+    "anchor": "current=$(oat config get activeProject 2>/dev/null || true)",
+    "kind": "resolve"
+  }
+]

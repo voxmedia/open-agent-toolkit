@@ -546,6 +546,8 @@ The check happens before any append, so the skill can route around the dirty cas
 2. Persist **only** the artifact under the scope guard:
 
    ```bash
+   PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
+   # fail closed: never fall back to branch bookkeeping when scope resolution fails
    if [ "$PROJECT_SCOPE" = "synced" ]; then
      FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" --json)
      FOLD_BACK_COMMIT_SHA=$(printf '%s\n' "$FOLD_BACK_PUSH" | jq -r '.sha')
