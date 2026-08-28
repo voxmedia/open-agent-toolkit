@@ -303,6 +303,19 @@ async function registeredWorktreePaths(
     .map((line) => resolve(line.slice('worktree '.length)));
 }
 
+async function canonicalRegisteredWorktreePath(
+  registeredPath: string,
+): Promise<string> {
+  try {
+    return await realpath(registeredPath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return resolve(registeredPath);
+    }
+    throw error;
+  }
+}
+
 async function canonicalTargetPath(target: SyncTarget): Promise<string> {
   const canonicalRepoRoot = await realpath(target.repoRoot);
   return resolve(
@@ -975,7 +988,9 @@ export async function pruneSynced(
   const registeredPaths = await registeredWorktreePaths(target, git);
   const canonicalRegisteredPaths = [
     ...new Set(
-      await Promise.all(registeredPaths.map((path) => realpath(path))),
+      await Promise.all(
+        registeredPaths.map((path) => canonicalRegisteredWorktreePath(path)),
+      ),
     ),
   ];
   const registeredSet = new Set(canonicalRegisteredPaths);

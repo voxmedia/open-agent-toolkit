@@ -1919,6 +1919,61 @@ describe('synced checkout removal', () => {
     }
   });
 
+  it('prunes through a locked missing parent worktree registration', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const linkedRoot = await addLinkedWorktree(
+        fixture.cloneA,
+        'locked-stale-parent',
+      );
+      const linkedTarget = buildSyncTarget(
+        linkedRoot,
+        '.oat/projects/shared',
+        'nested-locked-stale',
+      );
+      await createSyncedProject(linkedTarget, defaultGitRunner);
+      await pushSynced(linkedTarget, defaultGitRunner, {});
+
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        linkedTarget.slug,
+      );
+      await writeSyncedRecord(
+        join(target.syncedRoot, `${target.slug}.json`),
+        buildSyncedRecord(target.slug, new Date('2026-08-28T00:00:00Z')),
+      );
+      git(fixture.cloneA, [
+        'worktree',
+        'lock',
+        '--reason',
+        'test locked stale parent',
+        linkedRoot,
+      ]);
+      await rm(linkedRoot, { recursive: true, force: true });
+      const staleRegistrations = git(fixture.cloneA, [
+        'worktree',
+        'list',
+        '--porcelain',
+      ]);
+      expect(staleRegistrations).toContain(linkedRoot);
+      expect(staleRegistrations).toContain('locked test locked stale parent');
+
+      await expect(
+        pruneSynced(target, defaultGitRunner, {
+          force: true,
+          commit: false,
+        }),
+      ).resolves.toEqual({ status: 'pruned', lifecycleCommit: null });
+
+      expect(
+        git(fixture.cloneA, ['ls-remote', '--refs', 'origin', target.ref]),
+      ).toBe('');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('returns an existing pending adoption record without rewriting its ownership metadata', async () => {
     const fixture = await createSyncedFixture();
     try {
