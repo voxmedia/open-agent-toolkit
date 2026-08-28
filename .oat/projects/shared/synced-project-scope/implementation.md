@@ -2164,6 +2164,12 @@ were not mutated.
 
 **Dispatch stamp:** `Dispatch: scope=p10 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 
+### Implementation Exit Gate Freshness Transition
+
+- Phase 10 changed the substantive effective delta after configured gate attempt 1.
+- The prior gate basis is now `stale`; its run, artifact, receive, and consumed-attempt provenance remain intact.
+- A fresh final lifecycle review must pass before the same persisted gate configuration can start attempt 2.
+
 **Review disposition:** The configured attempt-1 final/code review event is
 `fixes_completed`, never passed. A fresh current final lifecycle review and the
 configured exit gate's second and final attempt remain required.

@@ -72,7 +72,7 @@ oat_dispatch_policy: # project dispatch policy (named maximum tier; set during p
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20
@@ -104,14 +104,14 @@ oat_implement_exit_gate:
   receive_commit: a6e1439818dc8f675a7c05cdb8a77b88b2141bd5
   receive_eligible: true
   receive_completed: true
-  failure: Gate attempt 1 findings are remediated; a fresh final review and gate attempt 2 remain pending.
-  updated_at: '2026-08-28T18:23:05Z'
+  failure: Phase 10 changed the effective implementation delta; a fresh final lifecycle review is pending before gate attempt 2.
+  updated_at: '2026-08-28T18:28:09Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T18:23:05.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T18:28:09.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
