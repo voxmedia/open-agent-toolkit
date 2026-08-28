@@ -1,6 +1,6 @@
 ---
-oat_current_task: p08-t01
-oat_last_commit: 5040b62f7
+oat_current_task: null
+oat_last_commit: a1f0c8941
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: review_pending # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -105,13 +105,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T14:35:30.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T15:15:08.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Phase 8 recap retry fix in progress
+**Status:** Phase 8 recap retry fix complete; review pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-28
 
@@ -125,7 +125,7 @@ Implementation - Phase 8 review fix
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (69/70 tasks complete; Phase 8 fix queued)
+- **Implementation:** `implementation.md` (70/70 tasks complete; final review pending)
 
 ## Progress
 
@@ -208,11 +208,16 @@ Implementation - Phase 8 review fix
 - ⨯ Final review cycle 4 found 1 Critical and no other findings
 - ✓ User explicitly authorized a second additional bounded fix-and-review cycle
 - ✓ Cycle-4 Critical converted into p08-t01 with no deferrals
+- ✓ Phase 8 task p08-t01 completed and verified in `a1f0c8941`
+- ✓ Phase 8 recovery ledger settled at 0/10 with no pending attempt
+- ✓ Phase 8 final-head Definition of Done gates pass in CI order, plus lint, format, and diff checks
+- ✓ Project provider dry-run has no filesystem changes; all 88 managed entries are `in_sync`
+- ✓ Final review cycle-4 event updated to `fixes_completed` (never passed)
 
 ## Blockers
 
-- Phase 8 task p08-t01 and one fresh final fix-delta review block migration, archive, completion, PR publication, and spike-repository deletion.
+- One fresh final fix-delta review blocks migration, archive, completion, PR publication, and spike-repository deletion.
 
 ## Next Milestone
 
-Execute p08-t01, rerun the complete Definition of Done sequence, and run exactly one explicitly authorized fresh final fix-delta review.
+Run exactly one explicitly authorized fresh final fix-delta review.

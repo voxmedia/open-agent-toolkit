@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: review_pending
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: p08-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 10    | 10/10     |
-| Phase 2 | complete    | 13    | 13/13     |
-| Phase 3 | complete    | 19    | 19/19     |
-| Phase 4 | complete    | 16    | 16/16     |
-| Phase 5 | complete    | 7     | 7/7       |
-| Phase 6 | complete    | 3     | 3/3       |
-| Phase 7 | complete    | 1     | 1/1       |
-| Phase 8 | in_progress | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 10    | 10/10     |
+| Phase 2 | complete | 13    | 13/13     |
+| Phase 3 | complete | 19    | 19/19     |
+| Phase 4 | complete | 16    | 16/16     |
+| Phase 5 | complete | 7     | 7/7       |
+| Phase 6 | complete | 3     | 3/3       |
+| Phase 7 | complete | 1     | 1/1       |
+| Phase 8 | complete | 1     | 1/1       |
 
-**Total:** 69/70 tasks completed
+**Total:** 70/70 tasks completed
 
 ---
 
@@ -701,8 +701,9 @@ deletion remain blocked.
 
 ## Phase 8: Second operator-extended recap retry fix
 
-**Status:** in progress - 0 of 1 task complete
+**Status:** complete - 1 of 1 task complete
 **Started:** 2026-08-28
+**Completed:** 2026-08-28
 
 ### Review Received: final - 2026-08-28T11:49:26Z
 
@@ -727,9 +728,50 @@ findings are deferred.
 
 **Deferred ledger:** 0 Medium, 0 Minor.
 
-**Next:** Execute p08-t01, rerun the complete Definition of Done sequence, and
-run exactly one fresh independent final fix-delta review. Migration, archive,
-completion, PR publication, and spike-repository deletion remain blocked.
+### Task Outcomes
+
+| Task    | Status    | Commit      | Outcome                                                                 |
+| ------- | --------- | ----------- | ----------------------------------------------------------------------- |
+| p08-t01 | completed | `a1f0c8941` | Exact recap receipts recover across final-artifact and evidence retries |
+
+### Phase 8 Completion
+
+The completion skill now invokes a production recovery executable that
+recognizes exact final-artifact and recap-evidence heads, validates the full
+pin/final/evidence chain and retained-ref state, and returns structured receipt
+fields. A local evidence receipt missing remotely is published unchanged. The
+repository-backed matrix exercises both configured and interactive archive
+decisions at all four interruption points while preserving the parent record,
+the retained ref, one links block, and unrelated staged state.
+
+Against implementation head `a1f0c8941`, every Definition of Done gate passed
+in exact CI order with explicit exit `0`: `pnpm check`, `pnpm type-check`,
+`pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`, a fresh
+`git fetch origin main` followed by `pnpm release:check-versions`,
+`pnpm release:validate`, and `pnpm build:docs`. Supplemental `pnpm lint`,
+`pnpm format`, and `git diff --check` also exited `0`. Focused transaction,
+contract, archive, skill-test, and skill-validation suites passed.
+
+The project-scoped provider sync dry-run exited `0` without filesystem
+changes. Provider status reported all 88 managed entries `in_sync` with zero
+drifted or missing entries; its exit `1` remains attributable only to 74
+pre-existing unmanaged Cursor strays, which were not mutated.
+
+**Dispatch evidence:** Request
+`dispatch-synced-project-scope-p08-20260828T1435Z`; target
+`oat-phase-implementer-gpt-5-6-sol-high`; model axis
+`selected:gpt-5.6-sol`; effort axis `selected:high`.
+
+**Dispatch stamp:** `Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+**Review disposition:** The archived final review cycle-4 event is
+`fixes_completed`, never passed. One fresh independent final fix-delta review
+is required before migration, archive, completion, PR publication, or
+spike-repository deletion.
+
+**Next:** Run the explicitly authorized fresh independent final fix-delta
+review. Migration, archive, completion, PR publication, and spike-repository
+deletion remain blocked.
 
 ---
 
