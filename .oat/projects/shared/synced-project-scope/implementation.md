@@ -15,8 +15,8 @@ oat_generated: false
 > This document is used to resume interrupted implementation sessions.
 >
 > All 101 implementation and revision tasks are complete. Phase 13 closed the
-> 11 findings from the fresh PR #226-integrated final review; final phase
-> verification is pending before an independent review refreshes PR #227.
+> 11 findings from the fresh PR #226-integrated final review. Final phase
+> verification passed; an independent review is next before PR #227 refresh.
 >
 > Conventions:
 >
@@ -28,22 +28,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 10    | 10/10     |
-| Phase 2      | complete    | 13    | 13/13     |
-| Phase 3      | complete    | 19    | 19/19     |
-| Phase 4      | complete    | 16    | 16/16     |
-| Phase 5      | complete    | 7     | 7/7       |
-| Phase 6      | complete    | 3     | 3/3       |
-| Phase 7      | complete    | 1     | 1/1       |
-| Phase 8      | complete    | 1     | 1/1       |
-| Phase 9      | complete    | 1     | 1/1       |
-| Phase 10     | complete    | 14    | 14/14     |
-| Phase 11     | complete    | 3     | 3/3       |
-| Phase 12     | complete    | 1     | 1/1       |
-| Phase p-rev1 | complete    | 1     | 1/1       |
-| Phase 13     | in progress | 11    | 11/11     |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 10    | 10/10     |
+| Phase 2      | complete | 13    | 13/13     |
+| Phase 3      | complete | 19    | 19/19     |
+| Phase 4      | complete | 16    | 16/16     |
+| Phase 5      | complete | 7     | 7/7       |
+| Phase 6      | complete | 3     | 3/3       |
+| Phase 7      | complete | 1     | 1/1       |
+| Phase 8      | complete | 1     | 1/1       |
+| Phase 9      | complete | 1     | 1/1       |
+| Phase 10     | complete | 14    | 14/14     |
+| Phase 11     | complete | 3     | 3/3       |
+| Phase 12     | complete | 1     | 1/1       |
+| Phase p-rev1 | complete | 1     | 1/1       |
+| Phase 13     | complete | 11    | 11/11     |
 
 **Total:** 101/101 tasks completed
 
@@ -2846,8 +2846,7 @@ and the primary reviewer's reconciliation.
 
 ## Phase 13: Post-merge final review fixes
 
-**Status:** implementation complete - 11 of 11 tasks complete; final phase
-verification in progress
+**Status:** complete - 11 of 11 tasks complete; independent review pending
 
 ### Phase Summary
 
@@ -2915,6 +2914,7 @@ diagnostics:
   - ambient HOME selected installed user templates; clean isolated HOME is the authoritative full-suite boundary
 continuation_events:
   - p13-recovery-01-migration-rollback-mock
+  - p13-recovery-02-e2e-snapshot-identity
 task_class: consequential
 model_class_floor: consequential
 classification_source: caller
@@ -2939,8 +2939,32 @@ dispatch_stamp: 'Dispatch: scope=p13 action=implementation role=worker producer=
 - Reason: one adjacent migration mock still expected the pre-lease rollback argv; the bounded fixture-only correction now recognizes SHA-leased deletion while production behavior remains unchanged
 
 Root settlement commit `646b6e2f6053d15779e27100eae62885ec53b6e1`
-cleared the terminal marker while preserving monotonic usage at 1/10 and
-`pending_attempt: null`.
+cleared the first terminal marker while preserving monotonic usage at 1/10.
+
+### Recovery Event p13-recovery-02-e2e-snapshot-identity
+
+- Phase/task: p13 / p13-t07
+- Original request: 3a81c356-acf5-41ef-9244-56fa59f45196
+- Original commit: e4250e54635fd3de4fa259e20dfc5e8c0553b6d9
+- Defect class: test
+- Discovered by: `env HOME=/tmp/oat-p13-home.ZGktiu pnpm test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 2/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: f21fcc652ad1ddf517b2a9143880c01169c8a68e
+- Verification: focused end-to-end 8/8 and clean-HOME workspace 10/10 with CLI 4,314/4,314 passed before and after the candidate commit
+- Reason: mechanically related stale end-to-end assertions expected the pre-p13-t07 undated archive identity on the result and persisted record; fixture-only assertions now require canonical `YYYYMMDD-demo` identity while production behavior remains unchanged
+
+Root settlement commit `a4837088b9c77e5ff09e70222a27d5484cfcd2b1`
+cleared the second terminal marker while preserving monotonic usage at 2/10
+and `pending_attempt: null`.
+
+The final Definition of Done passed in CI order with explicit exit `0` for
+`pnpm check`, `pnpm type-check`, clean-HOME `pnpm test`, `pnpm build`,
+`pnpm run check:skill-bumps`, fresh-origin `pnpm release:check-versions`,
+`pnpm release:validate`, and `pnpm build:docs`. Repository lint, format, and
+diff checks also passed.
 
 **Review disposition:** The received post-merge final review event is
 `fixes_completed`, never passed. A fresh independent final review is required
