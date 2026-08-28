@@ -86,6 +86,14 @@ const PORTABLE_SKILLS_ROOT_CANDIDATES = [
   '`<repo-root>/.agents/skills`',
 ] as const;
 
+// A materialized agent has no stable loaded-agent source path across Codex,
+// Claude, and Cursor, so it resolves siblings from user scope, then project
+// scope, and must not invent a loaded-agent candidate.
+const PORTABLE_AGENT_SKILLS_ROOT_CANDIDATES = [
+  '`${HOME}/.agents/skills`',
+  '`<repo-root>/.agents/skills`',
+] as const;
+
 function listSkillDirs(): string[] {
   return readdirSync(SKILLS_DIR, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -107,15 +115,14 @@ function listAuthoredMarkdown(skillDir: string): string[] {
     .map((rel) => join(skillDir, rel));
 }
 
-function expectPortableSkillsRootCandidateOrder(
+function expectCandidateOrder(
   content: string,
+  candidates: readonly string[],
   source: string,
 ): void {
-  const positions = PORTABLE_SKILLS_ROOT_CANDIDATES.map((candidate) =>
-    content.indexOf(candidate),
-  );
+  const positions = candidates.map((candidate) => content.indexOf(candidate));
 
-  for (const [index, candidate] of PORTABLE_SKILLS_ROOT_CANDIDATES.entries()) {
+  for (const [index, candidate] of candidates.entries()) {
     expect(
       positions[index],
       `${source} is missing ${candidate}`,
@@ -124,9 +131,27 @@ function expectPortableSkillsRootCandidateOrder(
   for (let index = 1; index < positions.length; index += 1) {
     expect(
       positions[index - 1],
-      `${source} must list ${PORTABLE_SKILLS_ROOT_CANDIDATES[index - 1]} before ${PORTABLE_SKILLS_ROOT_CANDIDATES[index]}`,
+      `${source} must list ${candidates[index - 1]} before ${candidates[index]}`,
     ).toBeLessThan(positions[index]!);
   }
+}
+
+function expectPortableSkillsRootCandidateOrder(
+  content: string,
+  source: string,
+): void {
+  expectCandidateOrder(content, PORTABLE_SKILLS_ROOT_CANDIDATES, source);
+}
+
+function expectPortableAgentSkillsRootCandidateOrder(
+  content: string,
+  source: string,
+): void {
+  expectCandidateOrder(content, PORTABLE_AGENT_SKILLS_ROOT_CANDIDATES, source);
+  // A materialized agent must not claim a loaded-agent or loaded-skill root.
+  expect(content, `${source} must not invent a loaded-agent root`).not.toMatch(
+    /\$\{(?:SKILL_DIR|AGENT_DIR)\}/,
+  );
 }
 
 function collectViolations(): Violation[] {
@@ -333,28 +358,7 @@ const PINNED_HISTORICAL_CROSS_SKILL_READS: readonly CrossSkillReference[] = [
 // Temporary. Every entry is executable debt with a scheduled caller fix. It is
 // deliberately kept separate from the historical baseline so a migration list
 // can never harden into a permanent exemption, and it must reach zero.
-const PINNED_MIGRATION_CROSS_SKILL_READS: readonly CrossSkillReference[] = [
-  {
-    file: '.agents/agents/oat-codebase-mapper.md',
-    targetSkill: 'oat-repo-knowledge-index',
-    targetPath: 'references/templates/',
-  },
-  ...['oat-phase-implementer', 'oat-reviewer'].flatMap((agent) =>
-    (
-      [
-        ['oat-dispatch-subagents', 'SKILL.md'],
-        ['oat-dispatch-subagents', 'references/'],
-        ['oat-project-dispatch-subagents', 'SKILL.md'],
-        ['subagent-orchestration', 'references/'],
-        ['subagent-orchestration', 'references/model-selection-principles.md'],
-      ] as const
-    ).map(([targetSkill, targetPath]) => ({
-      file: `.agents/agents/${agent}.md`,
-      targetSkill,
-      targetPath,
-    })),
-  ),
-];
+const PINNED_MIGRATION_CROSS_SKILL_READS: readonly CrossSkillReference[] = [];
 
 describe('skills bundled docs contract', () => {
   it('no shipped skill references a shared .agents/docs/ doc that does not travel with it', () => {
@@ -913,6 +917,83 @@ describe('skills bundled docs contract', () => {
     );
     expect(collectCrossSkillTargets(content, skill)).toEqual([]);
   });
+
+  it.each([
+    [
+      'oat-phase-implementer',
+      [
+        [
+          'PROJECT_DISPATCH_SKILLS_ROOT',
+          'oat-project-dispatch-subagents/SKILL.md',
+        ],
+        ['DISPATCH_SKILLS_ROOT', 'oat-dispatch-subagents/SKILL.md'],
+        ['DISPATCH_SKILLS_ROOT', 'oat-dispatch-subagents/references/'],
+        [
+          'ORCHESTRATION_SKILLS_ROOT',
+          'subagent-orchestration/references/model-selection-principles.md',
+        ],
+        ['ORCHESTRATION_SKILLS_ROOT', 'subagent-orchestration/references/'],
+      ],
+      ['workflows', 'utility'],
+      'stop the optional launch and implement the task directly',
+    ],
+    [
+      'oat-reviewer',
+      [
+        ['DISPATCH_SKILLS_ROOT', 'oat-dispatch-subagents/SKILL.md'],
+        ['DISPATCH_SKILLS_ROOT', 'oat-dispatch-subagents/references/'],
+        [
+          'ORCHESTRATION_SKILLS_ROOT',
+          'subagent-orchestration/references/model-selection-principles.md',
+        ],
+        ['ORCHESTRATION_SKILLS_ROOT', 'subagent-orchestration/references/'],
+      ],
+      ['utility'],
+      'stop the reconnaissance launch and review inline',
+    ],
+    [
+      'oat-codebase-mapper',
+      [
+        [
+          'KNOWLEDGE_INDEX_SKILLS_ROOT',
+          'oat-repo-knowledge-index/references/templates/',
+        ],
+      ],
+      ['workflows'],
+      'stop before writing any document instead of inventing a format',
+    ],
+  ] as const)(
+    '%s resolves sibling skills from user then project scope',
+    (agent, bindings, packs, stopText) => {
+      const content = readFileSync(join(AGENTS_DIR, `${agent}.md`), 'utf8');
+
+      expectPortableAgentSkillsRootCandidateOrder(content, agent);
+      expect(content).toContain('`<name>/SKILL.md`');
+      expect(content).toMatch(/[Ii]ndependently probe each required/);
+      expect(content).toContain('never ambient discovery');
+      expect(content).toContain(stopText);
+      for (const [root, path] of bindings) {
+        // Independent roots keep mixed-scope installs resolvable, and the exact
+        // target is validated rather than only its containing root.
+        expect(content, `${agent} reads \${${root}}/${path}`).toContain(
+          `\${${root}}/${path}`,
+        );
+      }
+      for (const pack of packs) {
+        expect(content, `${agent} ${pack} install recovery`).toContain(
+          `oat tools install ${pack} --scope <user|project>`,
+        );
+        expect(content, `${agent} ${pack} update recovery`).toContain(
+          `oat tools update --pack ${pack} --scope <user|project>`,
+        );
+      }
+      // No executable bare agent read survives.
+      expect(collectCrossSkillTargets(content, agent)).toEqual([]);
+      expect(content).not.toMatch(
+        /\$\{SKILLS_ROOT\}\/(?:oat-project-dispatch-subagents|oat-dispatch-subagents|subagent-orchestration|oat-repo-knowledge-index)/,
+      );
+    },
+  );
 
   it('binds repo-improve dispatch and orchestration references independently', () => {
     const content = readFileSync(
