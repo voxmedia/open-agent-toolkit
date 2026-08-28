@@ -80,6 +80,10 @@ Interactive project-recap preference resolved to ask; user selected skip. No rec
 
 Revision p-rev1 integrated origin/main at cca0bb5187adfdffd475017e1009a6e643502927 and passed root-owned review with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. Artifact: reviews/archived/p-rev1-review-2026-08-28T120245Z.md
 
+### 2026-08-28 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:2,minor:1 exit=0 status=ok artifact=.oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T175129Z.md
+
 ## End-of-run synthesis
 
 Overall verdict: implementation passed all three phase reviews, the final
