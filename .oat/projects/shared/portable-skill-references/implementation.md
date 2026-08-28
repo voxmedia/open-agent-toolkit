@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: prev1-t03
+oat_current_task_id: prev1-t04
 oat_generated: false
 ---
 
@@ -12,8 +12,8 @@ oat_generated: false
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
-> Revision 1 merged `origin/main` and passed its phase review. Its completed
-> task pointer is cleared, and four final and remote review fixes remain.
+> Revision 1 merged `origin/main` and passed its phase review. Lifecycle and
+> summary artifacts are current, and three code review fixes remain.
 
 ## Progress Overview
 
@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 1: Portable resolution and enforcement | passed | 4     | 4/4       |
 | Phase 2: Release metadata and validation     | passed | 1     | 1/1       |
 | Phase 3: Final review fixes                  | passed | 3     | 3/3       |
-| Revision 1: Merge current main and fixes     | active | 6     | 2/6       |
+| Revision 1: Merge current main and fixes     | active | 6     | 3/6       |
 
-**Total:** 10/14 tasks completed; `prev1-t03` is next.
+**Total:** 11/14 tasks completed; `prev1-t04` is next.
 
 ### Revision Received: Inline Feedback
 
@@ -60,7 +60,7 @@ skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 
 ### Task prev1-t03: Refresh the project summary for Revision 1
 
-**Status:** pending
+**Status:** completed
 
 ### Task prev1-t04: Add actionable sibling-pack recovery commands
 

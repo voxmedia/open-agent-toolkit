@@ -4,9 +4,9 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
 oat_generated: true
-oat_summary_last_task: p03-t03
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
+oat_summary_last_task: prev1-t03
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: [p-rev1]
 ---
 
 # Summary: portable-skill-references
@@ -35,9 +35,12 @@ from returning.
 - Advanced six canonical skill versions and all five public package versions in
   lockstep to `0.2.39`, refreshed bundled provider views, and archived backlog
   item `BL-260827-make-packaged-skill-references`.
-- Completed three implementation phases and eight tasks, including the final
-  review fixes that hardened candidate-order assertions and reconciled closeout
-  evidence.
+- Completed three implementation phases and eight original tasks, then added
+  Revision 1 to semantically integrate current `origin/main` without losing
+  either upstream additions or the branch's portability and release changes.
+- Preserved upstream's repository-only `triage-oat-issues` skill and Claude
+  provider link, produced the 88-entry sync-manifest union, and retained all
+  five public packages at lockstep `0.2.39`.
 
 ## Key Decisions
 
@@ -59,6 +62,9 @@ from returning.
   reproduced missing order and relative-path assertions and found stale
   closeout prose. Those findings became three explicit review-fix tasks; no
   product boundary or original scope changed.
+- Revision 1 added a semantic `origin/main` integration after PR conflicts
+  appeared. The merge preserved main's new repository-only provider content
+  while retaining this branch's generated manifest and `0.2.39` release state.
 
 ## Notable Challenges
 
@@ -71,6 +77,9 @@ from returning.
 - The first final review found that task completion and lifecycle artifacts had
   drifted apart. Phase 3 reconciled state, plan, implementation evidence, and
   review history before closeout continued.
+- Revision 1 required a semantic merge rather than choosing either side of the
+  manifest conflict: the final union kept main's new triage entry and this
+  branch's current package/version inventory.
 
 ## Tradeoffs Made
 
@@ -95,6 +104,17 @@ from returning.
   build, skill-version validation, release-version validation, package release
   validation, docs build, lint, format, and diff checks. A separate Fable exit
   review also passed at the Important threshold with no blocking finding.
+- Revision 1 repeated the full repository gate sequence before and after the
+  merge commit. Its root-owned review passed with no findings at
+  `cca0bb5187adfdffd475017e1009a6e643502927`.
+
+## Revision History
+
+- **p-rev1 — current-main semantic integration:** Merged current `origin/main`
+  after PR conflicts while preserving upstream's `triage-oat-issues` skill and
+  Claude link, the branch's 88-entry sync-manifest union, and lockstep public
+  package version `0.2.39`. The revision passed every repository gate and its
+  root-owned review with no findings.
 
 ## Follow-up Items
 
@@ -141,3 +161,11 @@ Phase p03 passed narrowed re-review at 63b1c7e4076e14369390e7bea9192ecc674f9719 
 ### 2026-08-28 · structural · oat gate review · final
 
 target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T032516Z.md
+
+### 2026-08-28 · structural · oat-project-implement · project-recap-gate
+
+Interactive project-recap preference resolved to ask; user selected skip. No recap was attempted or reused, and the terminal-outcome guard accepted the durable skip intent.
+
+### 2026-08-28 · structural · oat-project-implement · p-rev1
+
+Revision p-rev1 integrated origin/main at cca0bb5187adfdffd475017e1009a6e643502927 and passed root-owned review with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. Artifact: reviews/archived/p-rev1-review-2026-08-28T120245Z.md

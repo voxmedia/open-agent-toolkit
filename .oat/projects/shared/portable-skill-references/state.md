@@ -1,5 +1,5 @@
 ---
-oat_current_task: prev1-t03
+oat_current_task: prev1-t04
 oat_last_commit: cca0bb5187adfdffd475017e1009a6e643502927
 oat_blockers: []
 associated_issues:
@@ -149,8 +149,8 @@ oat_project_recap:
 
 ## Current Phase
 
-Revision 1 merged `origin/main` and passed its phase review. The stale completed
-revision pointer is cleared, and four review fixes remain before re-review.
+Revision 1 merged `origin/main` and passed its phase review. Lifecycle and
+summary artifacts are current, and three code fixes remain before re-review.
 
 ## Artifacts
 
@@ -158,7 +158,7 @@ revision pointer is cleared, and four review fixes remain before re-review.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan quick workflow)
 - **Plan:** `plan.md` (complete; ready for implementation)
-- **Implementation:** `implementation.md` (10/14 tasks complete; fixes in progress)
+- **Implementation:** `implementation.md` (11/14 tasks complete; fixes in progress)
 
 ## Progress
 
@@ -182,7 +182,8 @@ revision pointer is cleared, and four review fixes remain before re-review.
 - ✓ Final post-merge review findings received
 - ✓ Bugbot feedback triaged: two converted, one dismissed with rationale
 - ✓ Review-fix task `prev1-t02` completed; completed revision pointer cleared
-- ▶ Review-fix task `prev1-t03` queued
+- ✓ Review-fix task `prev1-t03` completed; Revision 1 summary refreshed
+- ▶ Review-fix task `prev1-t04` queued
 
 ## Blockers
 
@@ -190,5 +191,5 @@ None
 
 ## Next Milestone
 
-Execute `prev1-t03` through `prev1-t06`, re-review final, refresh the configured
+Execute `prev1-t04` through `prev1-t06`, re-review final, refresh the configured
 exit gate, and push PR #226.
