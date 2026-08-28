@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t09
 oat_last_commit: 99cbb59d9479f3c2d6aeb91c3151e703a423c684
 oat_blockers: []
 associated_issues:
@@ -143,14 +143,14 @@ oat_project_recap:
 
 # Project State: portable-skill-references
 
-**Status:** Task implementation complete; final re-review pending
+**Status:** Provenance-alignment fix queued
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-All 16 planned tasks are complete. Final re-review and the configured exit-gate
-refresh remain before implementation closeout.
+Sixteen of 17 planned tasks are complete. One provenance-alignment fix is
+queued before final re-review and the configured exit-gate refresh.
 
 ## Artifacts
 
@@ -158,7 +158,7 @@ refresh remain before implementation closeout.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan quick workflow)
 - **Plan:** `plan.md` (complete; ready for implementation)
-- **Implementation:** `implementation.md` (16/16 tasks complete; re-review pending)
+- **Implementation:** `implementation.md` (16/17 tasks complete; fix queued)
 
 ## Progress
 
@@ -189,7 +189,8 @@ refresh remain before implementation closeout.
 - ✓ Final behavior re-review confirmed all five intended fixes
 - ✓ Terminal artifact-alignment task `prev1-t07` completed
 - ✓ Terminal summary task `prev1-t08` completed
-- ▶ Final re-review and configured exit-gate refresh pending
+- ✓ Narrowed final re-review reduced remaining findings to one provenance cell
+- ▶ Provenance-alignment task `prev1-t09` queued
 
 ## Blockers
 
@@ -197,4 +198,5 @@ None
 
 ## Next Milestone
 
-Re-review final, refresh the configured exit gate, and push PR #226.
+Execute `prev1-t09`, re-review final, refresh the configured exit gate, and
+push PR #226.

@@ -594,6 +594,25 @@ Source: inline feedback (2026-08-28)
 3. Verify summary freshness, project status, and `git diff --check`.
 4. Commit with `docs(prev1-t08): refresh terminal project summary`.
 
+### Task prev1-t09: (review) Correct review invocation provenance
+
+**Files:**
+
+- Modify: `.oat/projects/shared/portable-skill-references/plan.md`
+- Modify: `.oat/projects/shared/portable-skill-references/implementation.md`
+- Modify: `.oat/projects/shared/portable-skill-references/state.md`
+
+**Steps:**
+
+1. Change only the Invocation cell for
+   `reviews/archived/final-review-2026-08-28T151136Z.md` from `auto` to
+   `manual`, matching its authoritative frontmatter.
+2. Preserve that event's `fixes_completed` status, archived path, reviewed
+   head, and gate-target cell.
+3. Verify with project status, plan validation, formatting, and
+   `git diff --check`.
+4. Commit with `chore(prev1-t09): correct review invocation provenance`.
+
 ## Reviews
 
 | Scope         | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target          |
@@ -614,6 +633,7 @@ Source: inline feedback (2026-08-28)
 | final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T121224Z.md`         | 263bac768e181bfdc2ad85945ed248e3f5bc8066 | auto       | -                    |
 | remote-pr-226 | code     | fixes_completed | 2026-08-28 | `reviews/archived/remote-pr-226-review-2026-08-28T143457Z.md` | -                                        | -          | -                    |
 | final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T151136Z.md`         | 34a4b8268bd85ded4c7c37def94e240bd4734674 | auto       | -                    |
+| final         | code     | fixes_added     | 2026-08-28 | `reviews/archived/final-review-2026-08-28T152436Z.md`         | b15f7c81f11c2a2cad8427eb9eeff8f99f922ee9 | manual     | -                    |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -625,13 +645,13 @@ Source: inline feedback (2026-08-28)
 - Phase 1: 4 tasks - portable resolution contracts and robust ratchet coverage
 - Phase 2: 1 task - provider views, lockstep release metadata, and full gates
 - Phase 3: 3 tasks - final ratchet hardening and lifecycle reconciliation
-- Revision 1: 8 tasks - merge current main plus final and remote review fixes
+- Revision 1: 9 tasks - merge current main plus final and remote review fixes
 
-**Total: 16 tasks**
+**Total: 17 tasks**
 
-All sixteen task scopes are implemented. The root-owned final re-review and
-exit-gate refresh remain before implementation closeout and PR #226 can be
-pushed.
+Sixteen task scopes are implemented. One provenance-alignment task remains
+before the root-owned final re-review and exit-gate refresh can complete and PR
+#226 can be pushed.
 
 ## References
 
