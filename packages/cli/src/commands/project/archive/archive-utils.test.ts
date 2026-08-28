@@ -715,6 +715,93 @@ describe('archive utils', () => {
     }
   });
 
+  it('resolves a same-day synced retry only to its same-scope archive', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const slug = 'same-scope-retry';
+      const timestamp = () => '2026-08-27T12:00:00Z';
+      const sharedProjectPath = join(
+        fixture.cloneA,
+        '.oat',
+        'projects',
+        'shared',
+        slug,
+      );
+      await mkdir(sharedProjectPath, { recursive: true });
+      await writeFile(
+        join(sharedProjectPath, 'summary.md'),
+        '# shared summary\n',
+        'utf8',
+      );
+      const sharedArchive = await archiveProjectOnCompletion(
+        {
+          repoRoot: fixture.cloneA,
+          projectPath: sharedProjectPath,
+          projectName: slug,
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        },
+        { timestamp },
+      );
+
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(
+        join(target.projectPath, 'summary.md'),
+        '# synced summary\n',
+        'utf8',
+      );
+      await pushSynced(target, defaultGitRunner, {});
+      const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(slug, new Date('2026-08-27T00:00:00Z')),
+      );
+      const options = {
+        repoRoot: fixture.cloneA,
+        projectPath: target.projectPath,
+        projectName: slug,
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      };
+
+      const syncedArchive = await archiveProjectOnCompletion(options, {
+        timestamp,
+      });
+      expect(syncedArchive.archivePath).not.toBe(sharedArchive.archivePath);
+      await expect(
+        readFile(join(syncedArchive.archivePath, 'summary.md'), 'utf8'),
+      ).resolves.toBe('# synced summary\n');
+
+      const retried = await archiveProjectOnCompletion(options, {
+        timestamp: () => '2026-08-28T12:00:00Z',
+      });
+      expect(retried.archivePath).toBe(syncedArchive.archivePath);
+      expect(retried.snapshotId).toBe('20260827-same-scope-retry');
+      await expect(
+        readFile(join(retried.archivePath, 'summary.md'), 'utf8'),
+      ).resolves.toBe('# synced summary\n');
+      await expect(
+        readFile(
+          join(sharedArchive.archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+          'utf8',
+        ),
+      ).resolves.toContain('"scope": "shared"');
+      await expect(
+        readFile(
+          join(syncedArchive.archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+          'utf8',
+        ),
+      ).resolves.toContain('"scope": "synced"');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('refuses to archive a dirty synced checkout before creating a snapshot', async () => {
     const fixture = await createSyncedFixture();
     try {

@@ -34,6 +34,7 @@ import {
   removeSyncedCheckout,
 } from '@commands/project/sync/ref-sync';
 import {
+  type ProjectScope,
   resolveProjectScope,
   resolveScopeRoot,
   syncedRecordPath,
@@ -132,6 +133,7 @@ export interface ResolveArchiveProjectTargetOptions {
   projectsRoot: string;
   projectName: string;
   archiveSnapshot?: string;
+  archiveScope?: ProjectScope;
 }
 
 export interface ResolveArchiveProjectTargetDependencies extends ResolvePrimaryRepoRootDependencies {
@@ -204,6 +206,7 @@ export const S3_ARCHIVE_SYNC_EXCLUDES = ['reviews/*', 'pr/*'];
 export interface ArchiveSnapshotMetadata {
   projectName: string;
   snapshotName: string;
+  scope: ProjectScope;
 }
 
 function normalizeS3Uri(s3Uri: string): string {
@@ -517,6 +520,7 @@ async function archiveMatchesSnapshot(
   archivePath: string,
   projectName: string,
   snapshotName: string,
+  archiveScope: ProjectScope,
   dependencies: ResolveArchiveProjectTargetDependencies,
 ): Promise<boolean> {
   const directoryExists = dependencies.dirExists ?? dirExists;
@@ -533,7 +537,8 @@ async function archiveMatchesSnapshot(
     return (
       isRecord(metadata) &&
       metadata.projectName === projectName &&
-      metadata.snapshotName === snapshotName
+      metadata.snapshotName === snapshotName &&
+      metadata.scope === archiveScope
     );
   } catch {
     return false;
@@ -544,6 +549,7 @@ async function resolvePersistedArchivePath(
   archiveBasePath: string,
   projectName: string,
   snapshotName: string,
+  archiveScope: ProjectScope,
   dependencies: ResolveArchiveProjectTargetDependencies,
 ): Promise<string> {
   const archiveRoot = dirname(archiveBasePath);
@@ -567,6 +573,7 @@ async function resolvePersistedArchivePath(
         candidate,
         projectName,
         snapshotName,
+        archiveScope,
         dependencies,
       )
     ) {
@@ -640,17 +647,26 @@ export async function resolveArchiveProjectTarget(
     archiveRepoRoot,
     archiveProjectPath,
   );
-  const archivePath = options.archiveSnapshot
-    ? await resolvePersistedArchivePath(
-        archiveBasePath,
-        options.projectName,
-        options.archiveSnapshot,
-        dependencies,
-      )
-    : await resolveUniqueArchivePath(archiveBasePath, {
-        dirExists: dependencies.dirExists,
-        timestamp: dependencies.timestamp,
-      });
+  let archivePath: string;
+  if (options.archiveSnapshot) {
+    if (!options.archiveScope) {
+      throw new CliError(
+        `Persisted archive snapshot \`${options.archiveSnapshot}\` is missing its originating project scope; refusing an unscoped retry.`,
+      );
+    }
+    archivePath = await resolvePersistedArchivePath(
+      archiveBasePath,
+      options.projectName,
+      options.archiveSnapshot,
+      options.archiveScope,
+      dependencies,
+    );
+  } else {
+    archivePath = await resolveUniqueArchivePath(archiveBasePath, {
+      dirExists: dependencies.dirExists,
+      timestamp: dependencies.timestamp,
+    });
+  }
 
   return {
     archiveProjectPath,
@@ -1519,8 +1535,17 @@ export async function archiveProjectOnCompletion(
   const recordPath = syncedRecordPath(syncedRoot, options.projectName);
   const readRecord = dependencies.readSyncedRecord ?? readSyncedRecord;
   const writeRecord = dependencies.writeSyncedRecord ?? writeSyncedRecord;
-  const isSynced =
-    resolveProjectScope(options.projectPath, options.projectsRoot) === 'synced';
+  const projectScope = resolveProjectScope(
+    options.projectPath,
+    options.projectsRoot,
+  );
+  if (!projectScope) {
+    throw new CliError(
+      `Project path \`${options.projectPath}\` is outside the configured shared, local, and synced scope roots; refusing to archive without an originating scope.`,
+      2,
+    );
+  }
+  const isSynced = projectScope === 'synced';
   const record = isSynced ? await readRecord(recordPath) : null;
   const syncTarget = isSynced
     ? buildSyncTarget(
@@ -1563,7 +1588,10 @@ export async function archiveProjectOnCompletion(
       projectsRoot: options.projectsRoot,
       projectName: options.projectName,
       ...(activeRecord?.archiveSnapshot
-        ? { archiveSnapshot: activeRecord.archiveSnapshot }
+        ? {
+            archiveSnapshot: activeRecord.archiveSnapshot,
+            archiveScope: projectScope,
+          }
         : {}),
     },
     dependencies,
@@ -1589,6 +1617,7 @@ export async function archiveProjectOnCompletion(
     await verifyArchiveSnapshotMetadata(archivePath, {
       projectName: options.projectName,
       snapshotName: exportIdentity,
+      scope: projectScope,
     });
   }
   const projectSourcePath = (await pathExists(options.projectPath))
@@ -1613,6 +1642,7 @@ export async function archiveProjectOnCompletion(
       await writeArchiveSnapshotMetadata(archivePath, {
         projectName: options.projectName,
         snapshotName: exportIdentity,
+        scope: projectScope,
       });
     }
     if (!syncTarget) {
