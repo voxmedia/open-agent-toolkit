@@ -186,6 +186,10 @@ Reconciled receive commit e095995d4 against gate run 3241d71c-b67e-4a04-88f2-4a9
 
 Phase p-rev1 passed after merge task prev1-t01 and independent review; review artifact reviews/archived/p-rev1-review-2026-08-28T220327Z.md reports 0 Critical, 0 Important, 0 Medium, and 1 Minor finding with reviewer reconnaissance attempted.
 
+### 2026-08-28 · structural · oat-project-review-provide · reviews/final-review-2026-08-28T222140Z.md
+
+Fresh final code review completed with reconnaissance attempted; see the review artifact for 2 Critical, 8 Important, and 1 Minor finding.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

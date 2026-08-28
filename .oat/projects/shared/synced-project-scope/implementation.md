@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: p13-t01
 oat_generated: false
 ---
 
@@ -14,9 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All 90 implementation and revision tasks are complete. Revision 1 integrated
-> merged PR #226 and passed its independent phase review; final lifecycle
-> freshness is being re-established before PR #227 is updated.
+> Ninety implementation and revision tasks are complete. A fresh final review
+> of the PR #226-integrated branch added 11 post-merge fix tasks; execution
+> resumes at `p13-t01` before PR #227 is updated.
 >
 > Conventions:
 >
@@ -28,23 +28,24 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 10    | 10/10     |
-| Phase 2      | complete | 13    | 13/13     |
-| Phase 3      | complete | 19    | 19/19     |
-| Phase 4      | complete | 16    | 16/16     |
-| Phase 5      | complete | 7     | 7/7       |
-| Phase 6      | complete | 3     | 3/3       |
-| Phase 7      | complete | 1     | 1/1       |
-| Phase 8      | complete | 1     | 1/1       |
-| Phase 9      | complete | 1     | 1/1       |
-| Phase 10     | complete | 14    | 14/14     |
-| Phase 11     | complete | 3     | 3/3       |
-| Phase 12     | complete | 1     | 1/1       |
-| Phase p-rev1 | complete | 1     | 1/1       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 10    | 10/10     |
+| Phase 2      | complete    | 13    | 13/13     |
+| Phase 3      | complete    | 19    | 19/19     |
+| Phase 4      | complete    | 16    | 16/16     |
+| Phase 5      | complete    | 7     | 7/7       |
+| Phase 6      | complete    | 3     | 3/3       |
+| Phase 7      | complete    | 1     | 1/1       |
+| Phase 8      | complete    | 1     | 1/1       |
+| Phase 9      | complete    | 1     | 1/1       |
+| Phase 10     | complete    | 14    | 14/14     |
+| Phase 11     | complete    | 3     | 3/3       |
+| Phase 12     | complete    | 1     | 1/1       |
+| Phase p-rev1 | complete    | 1     | 1/1       |
+| Phase 13     | in progress | 11    | 0/11      |
 
-**Total:** 90/90 tasks completed
+**Total:** 90/101 tasks completed
 
 ---
 
@@ -2781,3 +2782,64 @@ continuation_events: []
 **Next:** refresh final lifecycle verification, review, and exit-gate freshness
 before updating PR #227. Project completion/archive, migration, deployment,
 merge, and repository deletion remain outside this revision.
+
+### Review Received: final post-merge review - 2026-08-28T22:21:40Z
+
+**Date:** 2026-08-28
+**Review artifact:** `reviews/archived/final-review-2026-08-28T222140Z.md`
+
+**Findings:**
+
+- Critical: 2
+- Important: 8
+- Medium: 0
+- Minor: 1
+
+**Disposition:** auto-invoked code review; all findings converted with no
+deferrals. `C1`→`p13-t01`, `C2`→`p13-t02`, `I1`→`p13-t03`,
+`I2`→`p13-t04`, `I3`→`p13-t05`, `I6`→`p13-t06`, `I4`→`p13-t07`,
+`I5`→`p13-t08`, `I7`→`p13-t09`, `I8`→`p13-t10`, and `m1`→`p13-t11`.
+Task `p13-t11` also carries the required lockstep public package bump for the
+new shipped CLI and bundled-skill fixes.
+
+**New tasks added:** `p13-t01` through `p13-t11`
+
+#### Generic Dispatch Record
+
+```yaml
+request_id: 8e9dc871-860a-4994-8c8e-79fedd46339c
+caller: oat-project-implement
+scope: synced-project-scope/final
+objective: Fresh independent final review after integrating merged PR #226.
+action: review
+role_name: oat-reviewer-gpt-5-6-sol-high
+role_class: reviewer
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+authority: read-only final review plus one project review artifact
+role_selector: oat-reviewer-gpt-5-6-sol-high
+model_selector: gpt-5.6-sol
+model_selector_granularity: materialized-role
+effort_selector: high
+selection_source: native-default
+launch_status: accepted
+child_outcome: completed-with-blocking-findings
+configured_invocation_evidence:
+  - exact registered reviewer type accepted with materialized model and effort controls
+runtime_confirmation: not-reported
+diagnostics: []
+continuation_events: []
+task_class: consequential
+model_class_floor: consequential
+classification_source: caller
+classification_reason: Final destructive Git safety and lifecycle recovery review where subtle misses are expensive.
+floor_satisfaction: satisfied
+```
+
+**Reconnaissance:** attempted; the artifact records two bounded read-only lanes
+and the primary reviewer's reconciliation.
+
+**Next:** Execute Phase 13 via `oat-project-implement`, then mark this event
+`fixes_completed` and run a fresh independent final review.

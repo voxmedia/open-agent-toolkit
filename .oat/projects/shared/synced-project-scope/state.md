@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p13-t01
 oat_last_commit: 17c3b80db
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -56,6 +56,9 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p12:
+      used_attempts: 0
+      pending_attempt: null
+    p13:
       used_attempts: 0
       pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
@@ -134,7 +137,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T22:08:47.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T22:28:26.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -144,13 +147,13 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** All tasks complete; awaiting post-merge final lifecycle review
+**Status:** Phase 13 post-merge final review fixes in progress
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Implementation — tasks complete; awaiting post-merge final lifecycle review.
+Implementation — Phase 13 review fixes; current task `p13-t01`.
 
 ## Artifacts
 
@@ -158,7 +161,7 @@ Implementation — tasks complete; awaiting post-merge final lifecycle review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (90/90 tasks complete)
+- **Implementation:** `implementation.md` (90/101 tasks complete)
 
 ## Progress
 
@@ -282,6 +285,9 @@ Implementation — tasks complete; awaiting post-merge final lifecycle review.
 - ✓ Implementation closeout complete
 - ✓ Revision task prev1-t01 complete: merged PR #226 at `17c3b80db`
 - ✓ Revision p-rev1 independent review passed with 1 non-blocking Minor finding
+- ⨯ Fresh post-merge final review found 2 Critical, 8 Important, and 1 Minor finding
+- ✓ All post-merge findings received into p13-t01 through p13-t11 with no deferrals
+- ⧗ Phase 13 execution starts at p13-t01
 - ⧗ Awaiting human review
 - ✓ Cycle-5 findings converted into consolidated task p09-t01 with no deferrals
 - ✓ Phase 9 task p09-t01 completed and verified in `e193c8ffb`
@@ -298,5 +304,5 @@ None.
 
 ## Next Milestone
 
-Refresh final lifecycle verification, review, and configured exit-gate
-freshness for the post-merge effective delta, then update PR #227.
+Complete Phase 13 fixes and independent review, then refresh the configured
+exit gate for the post-merge effective delta and update PR #227.

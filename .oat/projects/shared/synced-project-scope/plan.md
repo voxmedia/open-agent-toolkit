@@ -3688,7 +3688,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | final   | code     | passed          | 2026-08-28 | reviews/archived/final-review-2026-08-28T192913Z.md               | a521db33c832f92208abaa95ebc12052a0b39237 | auto       | -                             |
 | final   | code     | passed          | 2026-08-28 | reviews/archived/final-review-2026-08-28T194740Z.md               | badbca662babbc995eaea50a6cf50456b0f9bd88 | gate       | claude-fable-skip-permissions |
 | p-rev1  | code     | passed          | 2026-08-28 | reviews/archived/p-rev1-review-2026-08-28T220327Z.md              | 17c3b80db3768261471fc7d8faf403bb31366561 | auto       | -                             |
-| final   | code     | received        | 2026-08-28 | reviews/final-review-2026-08-28T222140Z.md                        | 1379413fb3d8bbb5b5ac9fe9fc4e00fd144ff6e9 | auto       | -                             |
+| final   | code     | fixes_added     | 2026-08-28 | reviews/archived/final-review-2026-08-28T222140Z.md               | 1379413fb3d8bbb5b5ac9fe9fc4e00fd144ff6e9 | auto       | -                             |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                             |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                             |
 | plan    | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -                                        | auto       | -                             |
@@ -3751,6 +3751,344 @@ and complete the merge commit without changing the published branch history.
 
 ---
 
+## Phase 13: Post-merge final review fixes
+
+Goal: close every finding from the fresh final review of the PR #226-integrated
+branch, with executable regression coverage for destructive Git operations,
+retry receipts, continuation behavior, archive parity, and diagnostics.
+
+### Task p13-t01: (review) Make migration rollback ownership-safe
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts`
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.test.ts`
+
+**Step 1: Understand the issue**
+
+Migration rollback can delete a remote project ref created concurrently by a
+different actor because rollback treats existence as ownership.
+
+**Step 2: Implement fix**
+
+Track whether this invocation published the ref and its exact SHA. Delete only
+that owned value with an expected-old-value lease/CAS; preserve any competing
+remote value.
+
+**Step 3: Verify**
+
+Run the focused real-Git migration tests, including a bare-origin race where a
+competitor publishes between preflight and the failed migration push.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts
+git commit -m "fix(p13-t01): lease migration rollback to owned ref"
+```
+
+### Task p13-t02: (review) Recover the exact archived lifecycle receipt on retry
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts`
+
+**Step 1: Understand the issue**
+
+After the lifecycle commit succeeds but checkout removal fails, a no-op archive
+retry returns no lifecycle SHA and cannot finish the completion protocol.
+
+**Step 2: Implement fix**
+
+Recover the prior exact lifecycle commit only after validating its subject,
+path set, record/export contents, and branch relationship; return that verified
+receipt on the retry path.
+
+**Step 3: Verify**
+
+Run archive retry and executable completion-transaction tests spanning the
+post-lifecycle interruption through successful re-attestation.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts packages/cli/src/commands/project/push/completion-transaction.test.ts
+git commit -m "fix(p13-t02): recover archived lifecycle receipt"
+```
+
+### Task p13-t03: (review) Finish pull adoption and child work after continue
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/pull/index.ts`
+- Modify: `packages/cli/src/commands/project/pull/index.test.ts`
+- Modify as needed: `packages/cli/src/commands/project/sync/ref-sync.ts`
+
+**Step 1: Understand the issue**
+
+`pull --continue` completes the rebase but skips the normal successful pull's
+adoption-record commit and coordination-child pull phase.
+
+**Step 2: Implement fix**
+
+After successful continuation, run the same post-pull adoption preparation,
+record commit, and child synchronization used by a conflict-free pull.
+
+**Step 3: Verify**
+
+Add and run integration tests for adoption-with-conflict and a coordination
+parent with children through `--continue`.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/pull/index.ts packages/cli/src/commands/project/pull/index.test.ts packages/cli/src/commands/project/sync/ref-sync.ts
+git commit -m "fix(p13-t03): complete post-rebase pull work"
+```
+
+### Task p13-t04: (review) Isolate shared and local archive from synced records
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+
+**Step 1: Understand the issue**
+
+Archive reads and applies a same-slug synced discovery record before knowing
+that the target is shared or local, coupling unrelated project scopes.
+
+**Step 2: Implement fix**
+
+Resolve scope first and read/apply synced discovery state only for an actual
+synced project.
+
+**Step 3: Verify**
+
+Run same-slug shared/synced and local/synced tests, including a malformed
+unrelated synced record.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts
+git commit -m "fix(p13-t04): isolate archive scope records"
+```
+
+### Task p13-t05: (review) Protect local-sync destination worktrees
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/local/sync.ts`
+- Modify: `packages/cli/src/commands/local/sync.test.ts`
+
+**Step 1: Understand the issue**
+
+`oat local sync --force` checks only the source for nested `.git` markers and
+can recursively remove a nested-worktree destination.
+
+**Step 2: Implement fix**
+
+Inspect both source and destination before any removal or copy and skip when
+either side is a nested repository or worktree.
+
+**Step 3: Verify**
+
+Run destination-marker tests for both `.git` file and directory forms and
+preserve the existing source-marker behavior.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/local/sync.ts packages/cli/src/commands/local/sync.test.ts
+git commit -m "fix(p13-t05): protect local sync destinations"
+```
+
+### Task p13-t06: (review) Validate completed lifecycle state during receipt recovery
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/scripts/recover-completion-receipts.mjs`
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts`
+
+**Step 1: Understand the issue**
+
+Receipt recovery validates commit shape but not that the pin-source tree has
+canonical completed state and a sealed completion log.
+
+**Step 2: Implement fix**
+
+Validate the pin-source `state.md` lifecycle fields and required completion-log
+seal before accepting recovered receipts. Bump the canonical skill version for
+the changed shipped skill bundle.
+
+**Step 3: Verify**
+
+Run repository-backed negative tests for active/incomplete state and missing or
+unsealed completion logs, plus skill validation and skill-bump checks.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete packages/cli/src/commands/project/push/completion-transaction.test.ts
+git commit -m "fix(p13-t06): validate recovered completion state"
+```
+
+### Task p13-t07: (review) Keep a stable dated synced archive identity
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+
+**Step 1: Understand the issue**
+
+The first synced archive replaces the dated export identity with the undated
+local archive directory basename.
+
+**Step 2: Implement fix**
+
+Keep local archive target selection separate from a persisted canonical dated
+snapshot identity used by S3, summary, and recap exports.
+
+**Step 3: Verify**
+
+Test a first archive with no existing destination and a later-date retry,
+asserting stable dated identities across all export surfaces.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts
+git commit -m "fix(p13-t07): preserve dated archive identity"
+```
+
+### Task p13-t08: (review) Preserve warning-only synced S3 completion parity
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+
+**Step 1: Understand the issue**
+
+Synced completion turns missing AWS tooling, unusable credentials, and S3 sync
+failures into blockers even though shared completion and docs promise warnings.
+
+**Step 2: Implement fix**
+
+Keep synced completion warning-only on S3 failure and leave `s3Path` null while
+preserving all other durability receipts.
+
+**Step 3: Verify**
+
+Run shared/synced parity cases for missing CLI, invalid credentials, and failed
+`s3 sync`.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts
+git commit -m "fix(p13-t08): keep synced s3 failures nonblocking"
+```
+
+### Task p13-t09: (review) Prune stale worktree registrations before enumeration
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts`
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.test.ts`
+
+**Step 1: Understand the issue**
+
+Prune resolves registered paths with `realpath` before pruning, so a missing
+registered checkout fails before Git can clean the stale registration.
+
+**Step 2: Implement fix**
+
+Prune Git registrations before enumeration or canonicalize missing registered
+paths without weakening live-path containment checks.
+
+**Step 3: Verify**
+
+Add a real-Git test with a prunable nested registration left by a removed
+parent worktree and run the focused prune matrix.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts
+git commit -m "fix(p13-t09): prune stale registrations first"
+```
+
+### Task p13-t10: (review) Diagnose one-sided synced-ref divergence
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/doctor/synced-projects.ts`
+- Modify: `packages/cli/src/commands/doctor/synced-projects.test.ts`
+
+**Step 1: Understand the issue**
+
+Doctor warns only when both refs exist and differ, omitting local-only and
+remote-only divergence while correctly treating transport failure separately.
+
+**Step 2: Implement fix**
+
+Warn when exactly one successfully queried ref exists and retain the existing
+offline note for actual remote transport failure.
+
+**Step 3: Verify**
+
+Run local-only, remote-only, unequal-present, equal-present, and offline cases.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/doctor/synced-projects.ts packages/cli/src/commands/doctor/synced-projects.test.ts
+git commit -m "fix(p13-t10): report one-sided ref divergence"
+```
+
+### Task p13-t11: (review) Align PJM and release metadata after final fixes
+
+**Files:**
+
+- Modify: `.oat/repo/pjm/current-state.md`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: `pnpm-lock.yaml`
+
+**Step 1: Understand the issue**
+
+PJM still labels PR #226 and synced scope as pending at `0.2.39`; the new CLI
+and bundled-skill fixes also require a fresh lockstep public package version.
+
+**Step 2: Implement fix**
+
+Describe both streams as merged/integrated, then bump all five public packages,
+the generated version asset, and lockfile together from `0.2.40` to `0.2.41`.
+
+**Step 3: Verify**
+
+Run the exact CI-order Definition of Done, plus `pnpm lint`, `pnpm format`, and
+`git diff --check`; fetch `origin/main` immediately before the version gate.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/repo/pjm/current-state.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json pnpm-lock.yaml
+git commit -m "chore(p13-t11): align post-merge release metadata"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -3768,8 +4106,9 @@ and complete the merge commit without changing the published branch history.
 - Phase 11: 3 tasks - Executable completion-retry routing, pull reference closure, and status-blind receipt hygiene
 - Phase 12: 1 task - Normal-route retry decoding and publication-guard regression coverage
 - Phase p-rev1: 1 task - Integrate merged PR #226 and reconcile overlapping skill, validation, docs, sync, and release surfaces
+- Phase 13: 11 tasks - Post-merge final review fixes for Git ownership, lifecycle recovery, pull continuation, archive isolation/parity, worktree safety, prune, doctor, and release metadata
 
-**Total: 90 tasks**
+**Total: 101 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
