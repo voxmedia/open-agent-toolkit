@@ -52,7 +52,8 @@ from returning.
   `manual` value while preserving each event's status, path, reviewed head,
   and gate target.
 - Refreshed terminal closeout artifacts through `prev1-t10` at 18/18 tasks;
-  per the artifact-only fix policy, only the configured exit gate remains.
+  per the artifact-only fix policy, the configured independent exit gate then
+  passed at the Important threshold.
 
 ## Key Decisions
 
@@ -114,9 +115,9 @@ from returning.
   nested authored directories with those names remain in scope.
 - The closeout verification passed `pnpm check`, type checking, full tests,
   build, skill-version validation, release-version validation, package release
-  validation, docs build, lint, format, and diff checks. The earlier Fable exit
-  review passed at the Important threshold but is stale after Revision 1; its
-  configured independent refresh remains.
+  validation, docs build, lint, format, and diff checks. The refreshed Fable
+  exit review passed at the Important threshold with two Medium and one Minor
+  follow-ups explicitly deferred.
 - Revision 1 repeated the full repository gate sequence before and after the
   merge commit. Its root-owned review passed with no findings at
   `cca0bb5187adfdffd475017e1009a6e643502927`.
@@ -134,6 +135,11 @@ from returning.
 
 ## Follow-up Items
 
+- Widen the portable-reference ratchet from sibling `SKILL.md` targets to bare
+  cross-skill `references/*.md` reads.
+- Port the residual user-default agent and utility surfaces that still use
+  repository-relative sibling reads, then remove or explain the phase
+  implementer test exemption.
 - PJM doctor still reports pre-existing repository-layout warnings unrelated to
   this project.
 - Cleanup-timeout flakes remain observable test-infrastructure noise; they did
@@ -185,3 +191,11 @@ Interactive project-recap preference resolved to ask; user selected skip. No rec
 ### 2026-08-28 · structural · oat-project-implement · p-rev1
 
 Revision p-rev1 integrated origin/main at cca0bb5187adfdffd475017e1009a6e643502927 and passed root-owned review with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. Artifact: reviews/archived/p-rev1-review-2026-08-28T120245Z.md
+
+### 2026-08-28 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:2,minor:1 exit=0 status=ok artifact=.oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T175129Z.md
+
+### 2026-08-28 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/portable-skill-references/references/project-retro.md evidence_used=archived-review-markdown,gate-receipts,github-pr,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings promotions=0 upstream=0 apply=skipped filing=skipped
