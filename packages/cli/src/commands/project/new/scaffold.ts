@@ -494,6 +494,23 @@ async function ensureScopedProjectIgnored(
   if (!(await dependencies.isSyncedRuleApplied(repoRoot))) {
     await dependencies.applyOatCoreGitignore(repoRoot);
   }
+  const repaired = await dependencies.gitRunner.run(
+    ['check-ignore', '--quiet', '--no-index', probe],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  if (repaired.code === 0) {
+    return {
+      changed:
+        before === null || (await readFile(gitignorePath, 'utf8')) !== before,
+      before,
+    };
+  }
+  if (repaired.code !== 1) {
+    throw new CliError(
+      `git check-ignore failed after applying the managed block (exit ${repaired.code}): ${repaired.stderr || repaired.stdout || 'unknown Git error'}`,
+      2,
+    );
+  }
   const normalizedRoot = scopeRelative.split('\\').join('/');
   const rule =
     scope === 'local' ? `/${normalizedRoot}/**` : `/${normalizedRoot}/*/`;

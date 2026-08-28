@@ -83,4 +83,3 @@ yarn-error.log*
 .oat/brainstorm/
 .oat/ideas/
 # END OAT local paths
-/.oat/projects/synced/*/

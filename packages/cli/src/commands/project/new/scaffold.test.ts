@@ -327,6 +327,35 @@ describe('scaffoldProject', () => {
     ).toContain('oat_workflow_mode: spec-driven');
   });
 
+  it('adds exactly one synced checkout ignore rule when repairing gitignore', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    execFileSync('git', ['rm', '-q', '.gitignore'], { cwd: fixture.cloneA });
+    execFileSync('git', ['commit', '-q', '-m', 'test: remove gitignore'], {
+      cwd: fixture.cloneA,
+    });
+
+    await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'single-ignore-rule',
+      scope: 'synced',
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+
+    const gitignore = await readFile(
+      join(fixture.cloneA, '.gitignore'),
+      'utf8',
+    );
+    expect(
+      gitignore
+        .split('\n')
+        .filter((line) => line === '.oat/projects/synced/*/'),
+    ).toHaveLength(1);
+    expect(gitignore).not.toContain('/.oat/projects/synced/*/');
+  });
+
   it('uses canonical filesystem paths with an absolute in-repo projects root in every scope', async () => {
     const fixture = await createSyncedFixture();
     tempDirs.push(fixture.rootDir);
