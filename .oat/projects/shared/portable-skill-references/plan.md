@@ -436,6 +436,33 @@ merge path.
    git commit -m "fix(p03-t03): narrow materialized docs exclusion"
    ```
 
+## Phase p-rev1: Revision 1
+
+Source: inline feedback (2026-08-28)
+
+### Task prev1-t01: (revision) Merge origin/main and resolve PR conflicts
+
+**Files:**
+
+- Modify: `.oat/sync/manifest.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+
+**Steps:**
+
+1. Fetch and merge the current `origin/main` into the PR branch.
+2. Resolve conflicts by preserving main's new repository-only skill/provider
+   entries and this branch's lockstep public-package version `0.2.39`.
+3. Refresh generated provider/sync surfaces when required and verify there are
+   no unresolved conflict markers.
+4. Run the complete repository definition-of-done gates in their documented
+   order, plus `pnpm lint`, `pnpm format`, and `git diff --check`.
+5. Commit the merge resolution and push the branch to update PR #226.
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target          |
@@ -463,11 +490,12 @@ merge path.
 - Phase 1: 4 tasks - portable resolution contracts and robust ratchet coverage
 - Phase 2: 1 task - provider views, lockstep release metadata, and full gates
 - Phase 3: 3 tasks - final ratchet hardening and lifecycle reconciliation
+- Revision 1: 1 task - merge current main and resolve PR conflicts
 
-**Total: 8 tasks**
+**Total: 9 tasks**
 
-All eight task scopes are implemented, all three phases passed review, and the
-final lifecycle re-review passed. Completion requires closeout processing.
+The original eight task scopes are implemented and reviewed. Revision 1 is
+pending to reconcile PR #226 with the current `origin/main`.
 
 ## References
 

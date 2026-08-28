@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -12,8 +12,8 @@ oat_generated: false
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
-> All implementation tasks, reviews, verification, and configured closeout
-> steps are complete. PR #226 is open for human review.
+> The original implementation and closeout are complete. Revision 1 is active
+> to merge `origin/main` and resolve PR #226's conflicts.
 
 ## Progress Overview
 
@@ -22,8 +22,22 @@ oat_generated: false
 | Phase 1: Portable resolution and enforcement | passed | 4     | 4/4       |
 | Phase 2: Release metadata and validation     | passed | 1     | 1/1       |
 | Phase 3: Final review fixes                  | passed | 3     | 3/3       |
+| Revision 1: Merge current main               | active | 1     | 0/1       |
 
-**Total:** 8/8 tasks completed; final review passed.
+**Total:** 8/9 tasks completed; revision task `prev1-t01` is active.
+
+### Revision Received: Inline Feedback
+
+**Date:** 2026-08-28
+**Source:** inline conversation
+
+**Changes requested:**
+
+- Merge the current `origin/main` into the PR branch and resolve conflicts.
+
+**New tasks added:** `prev1-t01`
+
+**Next:** Execute Revision 1 through `oat-project-implement`.
 
 ## Phase 1: Portable sibling resolution and enforcement
 
