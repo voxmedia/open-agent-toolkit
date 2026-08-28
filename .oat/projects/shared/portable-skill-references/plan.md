@@ -335,7 +335,7 @@ merge path.
 | Scope  | Type     | Status          | Date       | Artifact                                             | Reviewed Head                            | Invocation | Gate Target |
 | ------ | -------- | --------------- | ---------- | ---------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01    | code     | passed          | 2026-08-28 | `reviews/p01-review-2026-08-28T015302Z.md`           | dba46295a0d02c1bd1bca179a954bf902a2ae1c6 | auto       | -           |
-| p02    | code     | pending         | -          | -                                                    | -                                        | -          | -           |
+| p02    | code     | passed          | 2026-08-28 | `reviews/p02-review-2026-08-28T021707Z.md`           | 9d5be6432d30bb31b6bf3fed01ed152c936640c0 | auto       | -           |
 | final  | code     | pending         | -          | -                                                    | -                                        | -          | -           |
 | spec   | artifact | pending         | -          | -                                                    | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                    | -                                        | -          | -           |
