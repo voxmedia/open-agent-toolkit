@@ -3046,7 +3046,7 @@ git commit -m "fix(p09-t01): harden completion receipt link validation"
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T022122Z.md               | 9537f6dd5872cae9101c3e10a8ead997940a2cb9 | auto       | -                        |
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T114926Z.md               | e22a9b1ecaafc1cb177c8ca34133e73103c30d74 | auto       | -                        |
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T151732Z.md               | 10bbd92cee2291aebf027e5c6e7ac69da2bc4f2b | auto       | -                        |
-| final   | code     | received        | 2026-08-28 | reviews/final-review-2026-08-28T165719Z.md                        | f8bce994d2e542d7ae14bfa35a4847074e280b3c | auto       | -                        |
+| final   | code     | passed          | 2026-08-28 | reviews/archived/final-review-2026-08-28T165719Z.md               | f8bce994d2e542d7ae14bfa35a4847074e280b3c | auto       | -                        |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                        |
 | plan    | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -                                        | auto       | -                        |
@@ -3083,7 +3083,7 @@ git commit -m "fix(p09-t01): harden completion receipt link validation"
 
 **Operator step after implementation:** delete the disposable spike repository `https://github.com/tkstang/disposable-test-repo-for-oat` (used by p01-t10); the implementing agent never deletes repositories.
 
-Ready for code review and merge.
+Final lifecycle review passed with no findings. Implementation closeout remains.
 
 ---
 
