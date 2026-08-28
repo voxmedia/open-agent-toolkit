@@ -71,6 +71,19 @@ oat tools install utility
 oat tools install workflows
 ```
 
+The two packs do not need to share a scope. For example, a repository can keep
+the lifecycle adapter at project scope while reusing the utility contracts from
+user scope:
+
+```bash
+oat tools install workflows --scope project
+oat tools install utility --scope user
+```
+
+Lifecycle skills resolve each required sibling independently from the loaded
+scope, then user scope, then project scope. This makes mixed-scope placement a
+supported execution path rather than relying on one frozen skills root.
+
 The packs remain independently installable. If the workflows adapter is
 present without the utility contracts, it fails closed and reports the missing
 dependency instead of inventing a fallback route. Non-project analytical

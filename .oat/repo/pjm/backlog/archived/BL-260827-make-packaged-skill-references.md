@@ -1,7 +1,7 @@
 ---
 id: BL-260827-make-packaged-skill-references
 title: Make packaged skill references scope-portable
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - user-scope
 assignee: null
 created: 2026-08-27T21:29:42.075Z
-updated: 2026-08-27T21:29:42.075Z
+updated: '2026-08-28T01:58:20Z'
 associated_issues: []
 external_plans: []
 ---

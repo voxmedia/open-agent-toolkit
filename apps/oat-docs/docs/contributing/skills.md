@@ -24,6 +24,33 @@ Skill behavior is defined by frontmatter plus the process contract in each `SKIL
 - Define a pre-work capability and authorization gate for skills that delegate to subagents, workers, or reviewers.
 - Keep output obligations explicit so downstream skills and users know what changed.
 
+## Portable sibling-skill reads
+
+Executable instructions must not assume the skill is running from a repository
+checkout. Before a skill or one of its operational reference files reads a
+sibling `SKILL.md`, resolve a `${SKILLS_ROOT}` in this order:
+
+1. Derive `${SKILL_DIR}/..` from the directory containing the currently loaded
+   `SKILL.md`, when the provider exposes that path.
+2. Try the user-scope root at `${HOME}/.agents/skills`.
+3. Fall back to the project-scope root at `<repo-root>/.agents/skills`.
+
+Probe each candidate for `<sibling>/SKILL.md` and use the first match. If none
+exists, name the missing sibling, give an actionable install or update command,
+and stop that workflow branch instead of improvising the sibling's process.
+
+When a caller needs multiple sibling skills, resolve and bind each sibling
+independently. Do not freeze one `${SKILLS_ROOT}` and assume every dependency is
+installed there: a workflows adapter may be at project scope while its utility
+contracts are at user scope. A missing-sibling recovery must name the owning
+pack and intended scope, using `oat tools install <pack> --scope <user|project>`
+or `oat tools update --pack <pack> --scope <user|project>` as appropriate.
+
+Do not use a bare `.agents/skills/<sibling>/SKILL.md`, `./.agents/...`, or
+`../.agents/...` path for an executable read. Historical examples may retain
+those spellings only when they are non-executable and explicitly baselined by
+the bundled-docs contract test.
+
 ## Contract components
 
 - Mode assertion (purpose, blocked/allowed activities)
@@ -120,6 +147,8 @@ dispatch contract owns capability and authorization checks, live catalog
 evidence, authorized routes, launch acceptance, recovery, and the neutral
 dispatch record. Keep model/effort/reasoning/service-tier axes explicit and do
 not collapse the selection and mechanics references into one provider matrix.
+Before each launch, disclose the resolved dependency sources and effective
+runtime target; never present a bundled recommendation as the selected target.
 
 Keep project lifecycle policy out of that general layer. A lifecycle caller
 loads `oat-project-dispatch-subagents` to resolve project, phase/task, gate,

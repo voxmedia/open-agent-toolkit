@@ -1,6 +1,6 @@
 ---
 name: oat-brainstorm
-version: 1.3.0
+version: 1.3.1
 description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
@@ -411,7 +411,14 @@ read, in order:
 
 Probe each candidate for `<name>/SKILL.md` and treat the first match as
 `${SKILLS_ROOT}`. If no candidate resolves, tell the user the chained skill is
-not installed and stop that branch instead of improvising its process.
+not installed and name its pack: `ideas` for `oat-idea-*`,
+`project-management` for `oat-pjm-*`, and `workflows` for `oat-project-*`.
+At the intended scope, run `oat tools install <pack> --scope <user|project>` or
+`oat tools update --pack <pack> --scope <user|project>`, then stop that branch
+instead of improvising its process.
+Operational handoffs in `references/destinations.md` inherit this resolver;
+resolve `${SKILLS_ROOT}` with this contract before executing any sibling read
+specified there.
 
 #### 9a — Inline only
 
