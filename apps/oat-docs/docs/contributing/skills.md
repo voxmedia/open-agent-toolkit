@@ -24,6 +24,26 @@ Skill behavior is defined by frontmatter plus the process contract in each `SKIL
 - Define a pre-work capability and authorization gate for skills that delegate to subagents, workers, or reviewers.
 - Keep output obligations explicit so downstream skills and users know what changed.
 
+## Portable sibling-skill reads
+
+Executable instructions must not assume the skill is running from a repository
+checkout. Before a skill or one of its operational reference files reads a
+sibling `SKILL.md`, resolve a `${SKILLS_ROOT}` in this order:
+
+1. Derive `${SKILL_DIR}/..` from the directory containing the currently loaded
+   `SKILL.md`, when the provider exposes that path.
+2. Try the user-scope root at `${HOME}/.agents/skills`.
+3. Fall back to the project-scope root at `<repo-root>/.agents/skills`.
+
+Probe each candidate for `<sibling>/SKILL.md` and use the first match. If none
+exists, name the missing sibling, give an actionable install or update command,
+and stop that workflow branch instead of improvising the sibling's process.
+
+Do not use a bare `.agents/skills/<sibling>/SKILL.md`, `./.agents/...`, or
+`../.agents/...` path for an executable read. Historical examples may retain
+those spellings only when they are non-executable and explicitly baselined by
+the bundled-docs contract test.
+
 ## Contract components
 
 - Mode assertion (purpose, blocked/allowed activities)
