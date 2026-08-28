@@ -467,8 +467,9 @@ describe('createProjectMigrateCommand', () => {
         async run(args, options) {
           if (
             args[0] === 'push' &&
-            args[1] === target.remote &&
-            args[2] === `:${target.ref}`
+            args[1]?.startsWith(`--force-with-lease=${target.ref}:`) &&
+            args[2] === target.remote &&
+            args[3] === `:${target.ref}`
           ) {
             throw new Error('injected remote deletion failure');
           }
@@ -504,7 +505,7 @@ describe('createProjectMigrateCommand', () => {
         'injected remote deletion failure',
       );
       expect((failure as Error).message).toContain(
-        `git push ${target.remote} :${target.ref}`,
+        `git push --force-with-lease=${target.ref}:`,
       );
       expect(
         execFileSync('git', ['rev-parse', 'HEAD'], {

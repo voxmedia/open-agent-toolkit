@@ -59,8 +59,17 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p13:
-      used_attempts: 0
-      pending_attempt: null
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p13-recovery-01-migration-rollback-mock
+        original_request_id: 3a81c356-acf5-41ef-9244-56fa59f45196
+        original_task_id: /root/p13_phase_implement
+        original_commit: fea7ac535dd0d549992e3dfe182167abfe8dce9e
+        discovered_by: pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/push/completion-transaction.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: bacd1f5282998a7ef852b57f20b55a0ae9a149d3
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
