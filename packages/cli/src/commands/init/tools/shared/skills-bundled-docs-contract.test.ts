@@ -11,6 +11,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import type { PackDefinition } from '@commands/tools/shared/pack-manifest';
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
 import { describe, expect, it } from 'vitest';
 
@@ -20,6 +21,7 @@ const REPO_ROOT = execFileSync('git', ['rev-parse', '--show-toplevel'], {
 }).trim();
 
 const SKILLS_DIR = join(REPO_ROOT, '.agents', 'skills');
+const AGENTS_DIR = join(REPO_ROOT, '.agents', 'agents');
 const SHARED_DOCS_DIR = join(REPO_ROOT, '.agents', 'docs');
 const BUNDLE_ASSETS_SCRIPT = join(
   REPO_ROOT,
@@ -42,13 +44,41 @@ interface Violation {
   line: string;
 }
 
-interface BareCrossSkillReference {
+// A cross-skill read, identified by the authoring file plus the exact skill and
+// path it points at. Keeping the target path inside the identity stops a new
+// file, a new target skill, or a new target file from silently inheriting an
+// existing exemption.
+interface CrossSkillReference {
   file: string;
-  target: string;
+  targetSkill: string;
+  targetPath: string;
 }
 
-const BARE_CROSS_SKILL_READ =
-  /(?<![/a-zA-Z0-9_-])(?:\.\.?\/)?\.agents\/skills\/([a-zA-Z0-9_-]+)\/SKILL\.md/g;
+interface CrossSkillTarget {
+  targetSkill: string;
+  targetPath: string;
+}
+
+// Authored Markdown shipped by one user-default pack asset.
+interface MarkdownAsset {
+  kind: 'skill' | 'agent';
+  owner: string;
+  files: string[];
+}
+
+// Executable repository-relative cross-skill reads take two spellings, and both
+// dangle once the owning pack is installed at user scope:
+//   - `.agents/skills/<name>/…`, optionally `./`- or `../`-prefixed; and
+//   - `../<name>/…`, a parent-relative hop out of the authoring skill directory.
+// Either spelling can target the sibling's `SKILL.md` or a file or directory at
+// or below the sibling's `references/`.
+//
+// Short forms such as `subagent-orchestration/references/provider-codex.md` are
+// deliberately not matched: they are follow-on reads local to a sibling root
+// that an earlier read already bound and validated. The caller-contract
+// assertions below enforce that anchoring requirement instead.
+const CROSS_SKILL_READ =
+  /(?<![/a-zA-Z0-9_.-])(?:(?:\.\.?\/)?\.agents\/skills\/|\.\.\/)([a-zA-Z0-9_-]+)\/(SKILL\.md|references(?:\/[a-zA-Z0-9_.-]+)*\/?)/g;
 
 const PORTABLE_SKILLS_ROOT_CANDIDATES = [
   '`${SKILL_DIR}/..`',
@@ -134,65 +164,232 @@ function collectViolations(): Violation[] {
   return violations;
 }
 
+function compareCrossSkillTargets(
+  left: CrossSkillTarget,
+  right: CrossSkillTarget,
+): number {
+  return (
+    left.targetSkill.localeCompare(right.targetSkill) ||
+    left.targetPath.localeCompare(right.targetPath)
+  );
+}
+
+function compareCrossSkillReferences(
+  left: CrossSkillReference,
+  right: CrossSkillReference,
+): number {
+  return (
+    left.file.localeCompare(right.file) || compareCrossSkillTargets(left, right)
+  );
+}
+
+function crossSkillReferenceKey({
+  file,
+  targetSkill,
+  targetPath,
+}: CrossSkillReference): string {
+  return `${file}|${targetSkill}|${targetPath}`;
+}
+
+function collectCrossSkillTargets(
+  content: string,
+  owner: string,
+): CrossSkillTarget[] {
+  const targets = new Map<string, CrossSkillTarget>();
+
+  for (const match of content.matchAll(CROSS_SKILL_READ)) {
+    const targetSkill = match[1]!;
+    // A read that names the authoring asset's own skill travels with the
+    // bundle, so it is a local read rather than a cross-skill dependency.
+    if (targetSkill === owner) continue;
+    const targetPath = match[2]!;
+    targets.set(`${targetSkill}/${targetPath}`, { targetSkill, targetPath });
+  }
+
+  return [...targets.values()].sort(compareCrossSkillTargets);
+}
+
 function collectBareCrossSkillTargets(
   content: string,
-  sourceSkill: string,
+  owner: string,
 ): string[] {
   return [
     ...new Set(
-      [...content.matchAll(BARE_CROSS_SKILL_READ)]
-        .map((match) => match[1]!)
-        .filter((target) => target !== sourceSkill),
+      collectCrossSkillTargets(content, owner).map(
+        ({ targetSkill }) => targetSkill,
+      ),
     ),
   ].sort();
 }
 
-function collectBareCrossSkillReferencesForSkill(
-  skillDir: string,
-  sourceSkill: string,
-  relativeRoot: string,
-): BareCrossSkillReference[] {
-  const references: BareCrossSkillReference[] = [];
+/**
+ * Derive the user-default skill and agent asset surface from a pack manifest.
+ * Coverage follows the manifest rather than a hand-curated skill list, so a new
+ * user-default asset is scanned the moment it ships.
+ */
+function selectUserDefaultAssetRefs(
+  manifest: readonly PackDefinition[],
+): { kind: 'skill' | 'agent'; name: string }[] {
+  const refs = new Map<string, { kind: 'skill' | 'agent'; name: string }>();
 
-  for (const file of listAuthoredMarkdown(skillDir)) {
+  for (const pack of manifest) {
+    if (pack.defaultScope !== 'user') continue;
+
+    for (const asset of pack.assets) {
+      if (asset.kind === 'skill') {
+        refs.set(asset.id, {
+          kind: 'skill',
+          name: asset.id.slice('skill:'.length),
+        });
+      } else if (asset.kind === 'agent') {
+        refs.set(asset.id, {
+          kind: 'agent',
+          name: asset.id.slice('agent:'.length).replace(/\.md$/, ''),
+        });
+      }
+    }
+  }
+
+  return [...refs.values()].sort(
+    (left, right) =>
+      left.kind.localeCompare(right.kind) ||
+      left.name.localeCompare(right.name),
+  );
+}
+
+function collectUserDefaultMarkdownAssets(
+  manifest: readonly PackDefinition[] = PACK_MANIFEST,
+): MarkdownAsset[] {
+  const assets: MarkdownAsset[] = [];
+
+  for (const ref of selectUserDefaultAssetRefs(manifest)) {
+    if (ref.kind === 'skill') {
+      const skillDir = join(SKILLS_DIR, ref.name);
+      if (!existsSync(skillDir)) continue;
+      assets.push({
+        kind: 'skill',
+        owner: ref.name,
+        files: listAuthoredMarkdown(skillDir),
+      });
+      continue;
+    }
+
+    const agentFile = join(AGENTS_DIR, `${ref.name}.md`);
+    if (!existsSync(agentFile)) continue;
+    assets.push({ kind: 'agent', owner: ref.name, files: [agentFile] });
+  }
+
+  return assets;
+}
+
+function collectCrossSkillReferencesForAsset(
+  asset: MarkdownAsset,
+  relativeRoot: string,
+): CrossSkillReference[] {
+  const references: CrossSkillReference[] = [];
+
+  for (const file of asset.files) {
     const relFile = file.slice(relativeRoot.length + 1);
-    for (const target of collectBareCrossSkillTargets(
+    for (const { targetSkill, targetPath } of collectCrossSkillTargets(
       readFileSync(file, 'utf8'),
-      sourceSkill,
+      asset.owner,
     )) {
-      references.push({ file: relFile, target });
+      references.push({ file: relFile, targetSkill, targetPath });
     }
   }
 
   return references;
 }
 
-function collectBareCrossSkillReferences(): BareCrossSkillReference[] {
-  const userScopeSkills = new Set(
-    PACK_MANIFEST.filter((pack) => pack.defaultScope === 'user').flatMap(
-      (pack) =>
-        pack.assets
-          .filter((asset) => asset.kind === 'skill')
-          .map((asset) => asset.id.slice('skill:'.length)),
-    ),
-  );
-  const references: BareCrossSkillReference[] = [];
-
-  for (const skill of [...userScopeSkills].sort()) {
-    const skillDir = join(SKILLS_DIR, skill);
-    if (!existsSync(skillDir)) continue;
-
-    references.push(
-      ...collectBareCrossSkillReferencesForSkill(skillDir, skill, REPO_ROOT),
-    );
-  }
-
-  return references.sort(
-    (left, right) =>
-      left.file.localeCompare(right.file) ||
-      left.target.localeCompare(right.target),
-  );
+function collectUserDefaultCrossSkillReferences(): CrossSkillReference[] {
+  return collectUserDefaultMarkdownAssets()
+    .flatMap((asset) => collectCrossSkillReferencesForAsset(asset, REPO_ROOT))
+    .sort(compareCrossSkillReferences);
 }
+
+// Non-executable evidence only. Each entry is pinned by source file, target
+// skill, and target path so it can never widen into a wildcard allowance.
+const PINNED_HISTORICAL_CROSS_SKILL_READS: readonly CrossSkillReference[] = [
+  // Historical dogfood evidence records the paths exercised at that time.
+  ...[
+    'oat-idea-ideate',
+    'oat-idea-new',
+    'oat-idea-summarize',
+    'oat-pjm-add-backlog-item',
+    'oat-project-new',
+  ].map((targetSkill) => ({
+    file: '.agents/skills/oat-brainstorm/references/dogfood-results.md',
+    targetSkill,
+    targetPath: 'SKILL.md',
+  })),
+  // The mini-wave fixture documents the canonical path promoted by its test.
+  {
+    file: '.agents/skills/oat-wave-execute/tests/mini-wave-fixture/README.md',
+    targetSkill: 'oat-wave-program',
+    targetPath: 'SKILL.md',
+  },
+];
+
+// Temporary. Every entry is executable debt with a scheduled caller fix. It is
+// deliberately kept separate from the historical baseline so a migration list
+// can never harden into a permanent exemption, and it must reach zero.
+const PINNED_MIGRATION_CROSS_SKILL_READS: readonly CrossSkillReference[] = [
+  {
+    file: '.agents/agents/oat-codebase-mapper.md',
+    targetSkill: 'oat-repo-knowledge-index',
+    targetPath: 'references/templates/',
+  },
+  ...['oat-phase-implementer', 'oat-reviewer'].flatMap((agent) =>
+    (
+      [
+        ['oat-dispatch-subagents', 'SKILL.md'],
+        ['oat-dispatch-subagents', 'references/'],
+        ['oat-project-dispatch-subagents', 'SKILL.md'],
+        ['subagent-orchestration', 'references/'],
+        ['subagent-orchestration', 'references/model-selection-principles.md'],
+      ] as const
+    ).map(([targetSkill, targetPath]) => ({
+      file: `.agents/agents/${agent}.md`,
+      targetSkill,
+      targetPath,
+    })),
+  ),
+  ...['schema-analysis.md', 'schema-base.md'].map((schema) => ({
+    file: '.agents/skills/analyze/SKILL.md',
+    targetSkill: 'deep-research',
+    targetPath: `references/${schema}`,
+  })),
+  {
+    file: '.agents/skills/compare/SKILL.md',
+    targetSkill: 'deep-research',
+    targetPath: 'references/schema-comparative.md',
+  },
+  {
+    file: '.agents/skills/oat-dispatch-subagents/SKILL.md',
+    targetSkill: 'subagent-orchestration',
+    targetPath: 'references/model-selection-principles.md',
+  },
+  ...[
+    '.agents/skills/oat-project-review-provide/SKILL.md',
+    '.agents/skills/oat-review-provide-remote/SKILL.md',
+  ].map((file) => ({
+    file,
+    targetSkill: 'oat-review-provide',
+    targetPath: 'references/review-artifact-template.md',
+  })),
+  ...(
+    [
+      ['oat-dispatch-subagents', 'SKILL.md'],
+      ['oat-dispatch-subagents', 'references/'],
+      ['subagent-orchestration', 'references/'],
+      ['subagent-orchestration', 'references/model-selection-principles.md'],
+    ] as const
+  ).map(([targetSkill, targetPath]) => ({
+    file: '.agents/skills/oat-repo-improve/SKILL.md',
+    targetSkill,
+    targetPath,
+  })),
+];
 
 describe('skills bundled docs contract', () => {
   it('no shipped skill references a shared .agents/docs/ doc that does not travel with it', () => {
@@ -214,75 +411,205 @@ describe('skills bundled docs contract', () => {
     ).toEqual([]);
   });
 
-  it('does not add bare repo-relative cross-skill reads to user-scope packs', () => {
-    // A skill in a pack that defaults to user scope is normally installed at
-    // `~/.agents/skills/`, so a bare `.agents/skills/<name>/SKILL.md` read
-    // dangles: the repo-relative path does not exist on a default install.
-    // The chained read must resolve the skills root from the loaded skill's
-    // scope (user-scope candidate probed first) instead.
+  it('does not add bare repo-relative cross-skill reads to user-default packs', () => {
+    // A skill or agent in a pack that defaults to user scope is normally
+    // installed under `~/.agents/`, so a repo-relative
+    // `.agents/skills/<name>/…` read — or a `../<name>/…` hop out of the
+    // authoring skill directory — dangles: neither path exists on a default
+    // install. Executable reads must bind an installed root instead.
     //
-    // Every executable legacy reference has been removed. This exact inventory
-    // retains only historical evidence, pinned by source file and target so it
-    // cannot become a wildcard allowance for new authored Markdown.
-    const PINNED_HISTORICAL_BARE_READS: readonly BareCrossSkillReference[] = [
-      // Historical dogfood evidence records the paths exercised at that time.
-      ...[
-        'oat-idea-ideate',
-        'oat-idea-new',
-        'oat-idea-summarize',
-        'oat-pjm-add-backlog-item',
-        'oat-project-new',
-      ].map((target) => ({
-        file: '.agents/skills/oat-brainstorm/references/dogfood-results.md',
-        target,
-      })),
-      // The mini-wave fixture documents the canonical path promoted by its test.
-      {
-        file: '.agents/skills/oat-wave-execute/tests/mini-wave-fixture/README.md',
-        target: 'oat-wave-program',
-      },
-    ];
-
-    const found = collectBareCrossSkillReferences();
+    // The accepted set is exactly the historical evidence plus the temporary
+    // migration inventory. Both are pinned by source file, target skill, and
+    // target path, so no new file or target inherits an exemption.
+    const allowed = [
+      ...PINNED_HISTORICAL_CROSS_SKILL_READS,
+      ...PINNED_MIGRATION_CROSS_SKILL_READS,
+    ].sort(compareCrossSkillReferences);
+    const found = collectUserDefaultCrossSkillReferences();
     const detail = found
-      .map(({ file, target }) => `  ${file} -> ${target}`)
+      .map(
+        ({ file, targetSkill, targetPath }) =>
+          `  ${file} -> ${targetSkill}/${targetPath}`,
+      )
       .join('\n');
 
     expect(
       found,
-      `Bare repo-relative cross-skill reads changed; resolve executable reads from the loaded skill scope and baseline only exact historical evidence:\n${detail}`,
-    ).toEqual(PINNED_HISTORICAL_BARE_READS);
+      `Repo-relative cross-skill reads changed; resolve executable reads from the installed scope and baseline only exact evidence:\n${detail}`,
+    ).toEqual(allowed);
+  });
+
+  it('keeps the temporary migration inventory disjoint from historical evidence', () => {
+    const historical = new Set(
+      PINNED_HISTORICAL_CROSS_SKILL_READS.map(crossSkillReferenceKey),
+    );
+    const overlap = PINNED_MIGRATION_CROSS_SKILL_READS.filter((reference) =>
+      historical.has(crossSkillReferenceKey(reference)),
+    );
+
+    expect(
+      overlap,
+      'Executable migration debt must never be merged into the historical baseline',
+    ).toEqual([]);
   });
 
   it.each([
-    ['backticked', 'Read `.agents/skills/sibling/SKILL.md`.', ['sibling']],
-    ['plain text', 'Read .agents/skills/sibling/SKILL.md next.', ['sibling']],
+    [
+      'backticked SKILL.md',
+      'Read `.agents/skills/sibling/SKILL.md`.',
+      [{ targetSkill: 'sibling', targetPath: 'SKILL.md' }],
+    ],
+    [
+      'plain text SKILL.md',
+      'Read .agents/skills/sibling/SKILL.md next.',
+      [{ targetSkill: 'sibling', targetPath: 'SKILL.md' }],
+    ],
     [
       'dot-relative path',
       'Read ./.agents/skills/sibling/SKILL.md next.',
-      ['sibling'],
+      [{ targetSkill: 'sibling', targetPath: 'SKILL.md' }],
     ],
     [
       'parent-relative path',
       'Read ../.agents/skills/sibling/SKILL.md next.',
-      ['sibling'],
+      [{ targetSkill: 'sibling', targetPath: 'SKILL.md' }],
     ],
     [
       'Markdown link',
       'Read [the sibling contract](.agents/skills/sibling/SKILL.md).',
-      ['sibling'],
+      [{ targetSkill: 'sibling', targetPath: 'SKILL.md' }],
+    ],
+    [
+      'parent-relative sibling hop',
+      'Read `../sibling/SKILL.md` before dispatch.',
+      [{ targetSkill: 'sibling', targetPath: 'SKILL.md' }],
+    ],
+    [
+      'reference file',
+      'Read `.agents/skills/sibling/references/schema-base.md`.',
+      [{ targetSkill: 'sibling', targetPath: 'references/schema-base.md' }],
+    ],
+    [
+      'parent-relative reference file',
+      'Read `../sibling/references/schema-base.md`.',
+      [{ targetSkill: 'sibling', targetPath: 'references/schema-base.md' }],
+    ],
+    [
+      'Markdown-linked reference file',
+      'See [the schema](../sibling/references/schema-base.md).',
+      [{ targetSkill: 'sibling', targetPath: 'references/schema-base.md' }],
+    ],
+    [
+      'reference directory with trailing slash',
+      'Pick one file from `.agents/skills/sibling/references/`.',
+      [{ targetSkill: 'sibling', targetPath: 'references/' }],
+    ],
+    [
+      'reference directory without trailing slash',
+      'Pick one file from `.agents/skills/sibling/references`.',
+      [{ targetSkill: 'sibling', targetPath: 'references' }],
+    ],
+    [
+      'nested reference directory',
+      'Copy the templates in `.agents/skills/sibling/references/templates/`.',
+      [{ targetSkill: 'sibling', targetPath: 'references/templates/' }],
+    ],
+    [
+      'parent-relative reference directory',
+      'Pick the mechanics reference from `../sibling/references/`.',
+      [{ targetSkill: 'sibling', targetPath: 'references/' }],
     ],
     ['portable skills root', 'Read `${SKILLS_ROOT}/sibling/SKILL.md`.', []],
+    [
+      'portable reference read',
+      'Read `${DISPATCH_SKILLS_ROOT}/sibling/references/schema-base.md`.',
+      [],
+    ],
     [
       'user-scope absolute path',
       'Read `${HOME}/.agents/skills/sibling/SKILL.md`.',
       [],
     ],
-    ['self-reference', 'Read `.agents/skills/source/SKILL.md`.', []],
+    [
+      'short-form follow-on read',
+      'Then read `sibling/references/provider-codex.md` under that bound root.',
+      [],
+    ],
+    ['same-owner local reference', 'Read `references/audit-playbook.md`.', []],
+    ['self-reference SKILL.md', 'Read `.agents/skills/source/SKILL.md`.', []],
+    [
+      'self-reference file',
+      'Read `.agents/skills/source/references/plan-template.md`.',
+      [],
+    ],
   ])('matches %s cross-skill syntax', (_name, content, expected) => {
-    expect(collectBareCrossSkillTargets(content as string, 'source')).toEqual(
+    expect(collectCrossSkillTargets(content as string, 'source')).toEqual(
       expected,
     );
+  });
+
+  it('derives the scanned surface from user-default manifest packs', () => {
+    const bothScopes = ['project', 'user'] as const;
+    const asset = (id: string, kind: 'skill' | 'agent' | 'template') => ({
+      id,
+      kind,
+      destination: `.agents/${id}`,
+      scopes: bothScopes,
+      ownership: { project: 'managed', user: 'managed' } as const,
+    });
+    const manifestFixture: readonly PackDefinition[] = [
+      {
+        name: 'utility',
+        allowedScopes: bothScopes,
+        defaultScope: 'user',
+        assets: [
+          asset('skill:user-default-skill', 'skill'),
+          asset('agent:user-default-agent.md', 'agent'),
+          asset('template:ignored.md', 'template'),
+        ],
+      },
+      {
+        name: 'research',
+        allowedScopes: bothScopes,
+        defaultScope: 'project',
+        assets: [
+          asset('skill:project-default-skill', 'skill'),
+          asset('agent:project-default-agent.md', 'agent'),
+        ],
+      },
+    ];
+
+    expect(selectUserDefaultAssetRefs(manifestFixture)).toEqual([
+      { kind: 'agent', name: 'user-default-agent' },
+      { kind: 'skill', name: 'user-default-skill' },
+    ]);
+  });
+
+  it('scans user-default agent assets alongside user-default skills', () => {
+    expect(selectUserDefaultAssetRefs(PACK_MANIFEST)).toEqual(
+      expect.arrayContaining([
+        { kind: 'agent', name: 'oat-codebase-mapper' },
+        { kind: 'agent', name: 'oat-phase-implementer' },
+        { kind: 'agent', name: 'oat-reviewer' },
+        { kind: 'skill', name: 'oat-dispatch-subagents' },
+      ]),
+    );
+
+    const scanned = collectUserDefaultMarkdownAssets().map(
+      ({ kind, owner }) => `${kind}:${owner}`,
+    );
+
+    expect(scanned).toEqual(
+      expect.arrayContaining([
+        'agent:oat-codebase-mapper',
+        'agent:oat-phase-implementer',
+        'agent:oat-reviewer',
+        'skill:oat-dispatch-subagents',
+      ]),
+    );
+    // Skills that ship in no user-default pack stay outside the rule.
+    expect(scanned).not.toContain('skill:codex-skill');
+    expect(scanned).not.toContain('skill:create-oat-skill');
   });
 
   it('skips only the materialized references/docs subtree', () => {
@@ -316,15 +643,19 @@ describe('skills bundled docs contract', () => {
         expect.arrayContaining([authoredReference, nestedAuthoredReference]),
       );
       expect(
-        collectBareCrossSkillReferencesForSkill(
-          fixtureRoot,
-          'source',
+        collectCrossSkillReferencesForAsset(
+          {
+            kind: 'skill',
+            owner: 'source',
+            files: listAuthoredMarkdown(fixtureRoot),
+          },
           fixtureRoot,
         ),
       ).toEqual([
         {
           file: 'examples/references/docs/authored.md',
-          target: 'sibling',
+          targetSkill: 'sibling',
+          targetPath: 'SKILL.md',
         },
       ]);
     } finally {
