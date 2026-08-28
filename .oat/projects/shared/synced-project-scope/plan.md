@@ -6,7 +6,7 @@ oat_last_updated: 2026-08-28
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_hill_phases: ['p07'] # implementation pauses only after the operator-extended final review-fix phase
+oat_plan_hill_phases: ['p08'] # implementation pauses only after the second operator-extended final review-fix phase
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null
@@ -2905,6 +2905,67 @@ git commit -m "fix(p07-t01): finalize non-archive artifact receipt"
 
 ---
 
+## Phase 8: Second operator-extended recap retry fix
+
+Close the one Critical finding from final review cycle 4 under the user's
+second explicit one-cycle override. Keep this phase bounded to recap-stage
+receipt recovery and executable interruption/decision coverage. Preserve the
+existing PR-scoped skill and public-package version bumps; do not bump either
+again.
+
+### Task p08-t01: (review) Recover exact recap receipts across completion retries
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts`
+- Create or modify: the closest production completion-receipt recovery surface invoked by the skill, if a reusable executable surface is needed
+- Modify: `.oat/sync/manifest.json` only as required by canonical skill synchronization
+
+**Step 1: Understand the issue**
+
+Review finding C1: Step 7.5 recognizes only a clean retained ref whose `HEAD`
+is the final-artifact receipt. After recap evidence is committed or published,
+`HEAD` is instead the evidence commit, so completion cannot reuse the exact
+pin/final/evidence chain. The current real-Git test masks this by implementing
+the missing parent unwrap in a test helper, and its configured/interactive
+decision value changes only the test title.
+
+**Step 2: Implement fix**
+
+Add production completion recovery that recognizes both final-artifact `HEAD`
+and exact recap-evidence `HEAD`. Validate commit subjects, exact changed paths,
+parent ordering, the single links block, local/remote state, and the retained
+ref before restoring `PROJECT_LINKS_PIN_COMMIT`, `PROJECT_REF_COMMIT`, and any
+existing evidence receipt. When the exact evidence commit exists locally but
+not remotely, publish that commit rather than rewriting the receipt chain.
+Preserve parent-record confinement, unrelated staged state, archive behavior,
+and failure-closed handling for partial or contradictory state. Do not add a
+second skill-version or lockstep public-package version bump.
+
+**Step 3: Verify**
+
+Make the repository-backed tests exercise the production recovery surface at
+interruptions after final-artifact push, after parent-record commit, after
+evidence commit before push, and after evidence push. Route configured and
+interactive archive decisions through actual decision handling or stop
+claiming them as distinct executable cases. Prove retries preserve the exact
+pin/final/evidence SHAs, retained-ref cleanliness, single final links block,
+record confinement, and unrelated staged state. Run the focused transaction,
+contract, archive, and skill-validation suites; project provider-sync
+dry-run/status; scoped lint/format; `git diff --check`; then the complete
+Definition of Done sequence in CI order.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/SKILL.md .oat/sync/manifest.json packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/commands/project/push/completion-transaction.test.ts <production-recovery-files>
+git commit -m "fix(p08-t01): recover recap completion receipts"
+```
+
+---
+
 ## Reviews
 
 | Scope   | Type     | Status          | Date       | Artifact                                                          | Reviewed Head                            | Invocation | Gate Target              |
@@ -2928,7 +2989,7 @@ git commit -m "fix(p07-t01): finalize non-archive artifact receipt"
 | final   | code     | fixes_completed | 2026-08-27 | reviews/archived/final-review-2026-08-27T234119Z.md               | c5ceac6b06ea29dba92c65834d5aa4c593813f6e | manual     | -                        |
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T013142Z.md               | 30ea3ce3a561e0ce74920976884f021dc637487c | auto       | -                        |
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T022122Z.md               | 9537f6dd5872cae9101c3e10a8ead997940a2cb9 | auto       | -                        |
-| final   | code     | received        | 2026-08-28 | reviews/final-review-2026-08-28T114926Z.md                        | e22a9b1ecaafc1cb177c8ca34133e73103c30d74 | auto       | -                        |
+| final   | code     | fixes_added     | 2026-08-28 | reviews/archived/final-review-2026-08-28T114926Z.md               | e22a9b1ecaafc1cb177c8ca34133e73103c30d74 | auto       | -                        |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                        |
 | plan    | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -                                        | auto       | -                        |
@@ -2956,8 +3017,9 @@ git commit -m "fix(p07-t01): finalize non-archive artifact receipt"
 - Phase 5: 7 tasks - Final-review fixes for non-archive completion, migration/prune confinement, rollback/adoption recovery, semantic guard validation, and test imports
 - Phase 6: 3 tasks - Final re-review fixes for late completion publication, ignored adoption-record durability, and current-pack managed-file repair
 - Phase 7: 1 task - Operator-extended final receipt fix with repository-backed completion coverage
+- Phase 8: 1 task - Second operator-extended recap-stage receipt recovery and interruption coverage
 
-**Total: 69 tasks**
+**Total: 70 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

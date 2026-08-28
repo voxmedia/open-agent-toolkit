@@ -1,9 +1,9 @@
 ---
-oat_status: review_pending
-oat_ready_for: oat-project-review-provide
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: p08-t01
 oat_generated: false
 ---
 
@@ -24,17 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 10    | 10/10     |
-| Phase 2 | complete | 13    | 13/13     |
-| Phase 3 | complete | 19    | 19/19     |
-| Phase 4 | complete | 16    | 16/16     |
-| Phase 5 | complete | 7     | 7/7       |
-| Phase 6 | complete | 3     | 3/3       |
-| Phase 7 | complete | 1     | 1/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 10    | 10/10     |
+| Phase 2 | complete    | 13    | 13/13     |
+| Phase 3 | complete    | 19    | 19/19     |
+| Phase 4 | complete    | 16    | 16/16     |
+| Phase 5 | complete    | 7     | 7/7       |
+| Phase 6 | complete    | 3     | 3/3       |
+| Phase 7 | complete    | 1     | 1/1       |
+| Phase 8 | in_progress | 1     | 0/1       |
 
-**Total:** 69/69 tasks completed
+**Total:** 69/70 tasks completed
 
 ---
 
@@ -695,6 +696,40 @@ spike-repository deletion.
 **Next:** Run the explicitly authorized fresh independent final fix-delta
 review. Migration, archive, completion, PR publication, and spike-repository
 deletion remain blocked.
+
+---
+
+## Phase 8: Second operator-extended recap retry fix
+
+**Status:** in progress - 0 of 1 task complete
+**Started:** 2026-08-28
+
+### Review Received: final - 2026-08-28T11:49:26Z
+
+**Review artifact:** `reviews/archived/final-review-2026-08-28T114926Z.md`
+
+**Reviewed head:** `e22a9b1ecaafc1cb177c8ca34133e73103c30d74`
+
+**Findings:** 1 Critical, 0 Important, 0 Medium, 0 Minor.
+
+**New task added:** p08-t01.
+
+**Finding disposition map:** C1 -> p08-t01 (`code_fix_required`). The reviewer
+confirmed that recap-stage receipt recovery exists only in the test harness:
+the completion skill cannot reuse the exact pin/final/evidence chain after an
+evidence commit is local or published, and the nominal configured/interactive
+matrix does not exercise distinct decision behavior.
+
+**Review-cycle override:** The standard cap and the first operator extension
+were exhausted. On 2026-08-28 the user explicitly authorized one additional
+bounded fix-and-review cycle for this Critical only. No Medium or Minor
+findings are deferred.
+
+**Deferred ledger:** 0 Medium, 0 Minor.
+
+**Next:** Execute p08-t01, rerun the complete Definition of Done sequence, and
+run exactly one fresh independent final fix-delta review. Migration, archive,
+completion, PR publication, and spike-repository deletion remain blocked.
 
 ---
 
