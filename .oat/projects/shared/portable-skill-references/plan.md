@@ -438,19 +438,20 @@ merge path.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                              | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | passed          | 2026-08-28 | `reviews/p01-review-2026-08-28T015302Z.md`            | dba46295a0d02c1bd1bca179a954bf902a2ae1c6 | auto       | -           |
-| p02    | code     | passed          | 2026-08-28 | `reviews/p02-review-2026-08-28T021707Z.md`            | 9d5be6432d30bb31b6bf3fed01ed152c936640c0 | auto       | -           |
-| p03    | code     | fixes_completed | 2026-08-28 | `reviews/archived/p03-review-2026-08-28T024853Z.md`   | 00c641d332a82bd1ccfc4268f90965d517e7ec52 | auto       | -           |
-| p03    | code     | passed          | 2026-08-28 | `reviews/p03-review-2026-08-28T025628Z.md`            | 63b1c7e4076e14369390e7bea9192ecc674f9719 | auto       | -           |
-| final  | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T022049Z.md` | d3c76770f9bb75860486e678bf5281fa8a84b6f4 | auto       | -           |
-| final  | code     | passed          | 2026-08-28 | `reviews/archived/final-review-2026-08-28T030247Z.md` | 637a6289f6e6ea627a536006cc11a36791eedc9a | auto       | -           |
-| spec   | artifact | pending         | -          | -                                                     | -                                        | -          | -           |
-| design | artifact | pending         | -          | -                                                     | -                                        | -          | -           |
-| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md`  | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220007Z.md`  | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220505Z.md`  | -                                        | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                              | Reviewed Head                            | Invocation | Gate Target          |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
+| p01    | code     | passed          | 2026-08-28 | `reviews/p01-review-2026-08-28T015302Z.md`            | dba46295a0d02c1bd1bca179a954bf902a2ae1c6 | auto       | -                    |
+| p02    | code     | passed          | 2026-08-28 | `reviews/p02-review-2026-08-28T021707Z.md`            | 9d5be6432d30bb31b6bf3fed01ed152c936640c0 | auto       | -                    |
+| p03    | code     | fixes_completed | 2026-08-28 | `reviews/archived/p03-review-2026-08-28T024853Z.md`   | 00c641d332a82bd1ccfc4268f90965d517e7ec52 | auto       | -                    |
+| p03    | code     | passed          | 2026-08-28 | `reviews/p03-review-2026-08-28T025628Z.md`            | 63b1c7e4076e14369390e7bea9192ecc674f9719 | auto       | -                    |
+| final  | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T022049Z.md` | d3c76770f9bb75860486e678bf5281fa8a84b6f4 | auto       | -                    |
+| final  | code     | passed          | 2026-08-28 | `reviews/archived/final-review-2026-08-28T030247Z.md` | 637a6289f6e6ea627a536006cc11a36791eedc9a | auto       | -                    |
+| spec   | artifact | pending         | -          | -                                                     | -                                        | -          | -                    |
+| design | artifact | pending         | -          | -                                                     | -                                        | -          | -                    |
+| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md`  | -                                        | -          | -                    |
+| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220007Z.md`  | -                                        | -          | -                    |
+| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220505Z.md`  | -                                        | -          | -                    |
+| final  | code     | received        | 2026-08-28 | `reviews/final-review-2026-08-28T032516Z.md`          | 9586af443af098ee37b7094e00d5b4d69961ccc5 | gate       | cursor-fable-5-xhigh |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
