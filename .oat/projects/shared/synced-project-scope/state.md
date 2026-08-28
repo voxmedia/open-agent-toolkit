@@ -59,8 +59,17 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p13:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: p13-recovery-02-e2e-snapshot-identity
+        original_request_id: 3a81c356-acf5-41ef-9244-56fa59f45196
+        original_task_id: /root/p13_phase_implement
+        original_commit: e4250e54635fd3de4fa259e20dfc5e8c0553b6d9
+        discovered_by: env HOME=/tmp/oat-p13-home.ZGktiu pnpm test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: 139bbba83334b1aafd2e2ebd863748fc98c94ad2
+        status: reserved
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
