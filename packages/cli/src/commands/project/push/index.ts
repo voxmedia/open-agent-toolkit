@@ -1,3 +1,6 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import {
   buildCommandContext,
   type CommandContext,
@@ -161,5 +164,3 @@ export function createProjectPushCommand(
       },
     );
 }
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
