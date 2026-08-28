@@ -68,6 +68,10 @@ Final auto review used two reconnaissance waves and found 1 Important plus 1 Med
 
 Phase p03 passed narrowed re-review at 63b1c7e4076e14369390e7bea9192ecc674f9719 with no findings. Artifact: reviews/p03-review-2026-08-28T025628Z.md
 
+### 2026-08-28 · structural · oat gate review · final
+
+target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T032516Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
