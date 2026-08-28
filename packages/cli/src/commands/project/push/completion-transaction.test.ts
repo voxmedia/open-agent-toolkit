@@ -50,6 +50,27 @@ function git(cwd: string, args: string[]): string {
   return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 }
 
+async function createCompletionFixture() {
+  const fixture = await createSyncedFixture();
+  const localOrigin = git(fixture.cloneA, [
+    'config',
+    '--get',
+    'remote.origin.url',
+  ]);
+  git(fixture.cloneA, [
+    'config',
+    `url.${localOrigin}.insteadOf`,
+    'https://github.com/example/oat-fixture.git',
+  ]);
+  git(fixture.cloneA, [
+    'remote',
+    'set-url',
+    'origin',
+    'https://github.com/example/oat-fixture.git',
+  ]);
+  return fixture;
+}
+
 function changedPaths(cwd: string, commit: string): string[] {
   const output = git(cwd, [
     'diff-tree',
@@ -275,7 +296,7 @@ describe('non-archive synced completion transaction', () => {
   ])(
     'recovers exact recap receipts after $decision interrupted $interruption',
     async ({ decision, interruption }) => {
-      const fixture = await createSyncedFixture();
+      const fixture = await createCompletionFixture();
       try {
         const archiveDecision = resolveArchiveDecision(decision);
         expect(archiveDecision).toEqual({
@@ -485,7 +506,7 @@ describe('non-archive synced completion transaction', () => {
   );
 
   it('fails closed when a recap evidence candidate changes an extra path', async () => {
-    const fixture = await createSyncedFixture();
+    const fixture = await createCompletionFixture();
     try {
       const target = buildSyncTarget(
         fixture.cloneA,
@@ -566,6 +587,29 @@ describe('non-archive synced completion transaction', () => {
 
   it.each([
     {
+      contamination: 'wrong project slug',
+      mutateLinks: (links: string) =>
+        links.replace(
+          `**OAT project** \`${PROJECT_SLUG}\``,
+          '**OAT project** `another-project`',
+        ),
+      error: /must name project/i,
+    },
+    {
+      contamination: 'wrong repository',
+      mutateLinks: (links: string) =>
+        links.replaceAll(
+          'github.com/example/oat-fixture/',
+          'github.com/another/repository/',
+        ),
+      error: /must name repository/i,
+    },
+    {
+      contamination: 'duplicate links block',
+      mutateLinks: (links: string) => `${links}\n\n${links}`,
+      error: /exactly one well-ordered project links block/i,
+    },
+    {
       contamination: 'wrong retained project ref',
       mutateLinks: (links: string) =>
         links.replace(
@@ -588,7 +632,7 @@ describe('non-archive synced completion transaction', () => {
   ])(
     'fails closed before restoring receipts for a $contamination',
     async ({ mutateLinks, error }) => {
-      const fixture = await createSyncedFixture();
+      const fixture = await createCompletionFixture();
       try {
         const target = buildSyncTarget(
           fixture.cloneA,

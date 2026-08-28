@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { basename } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
@@ -125,7 +126,27 @@ async function retainedRemoteCommit(projectPath, remote, retainedRef) {
   return sha;
 }
 
-function requireSingleLinksBlock(content, retainedRef, pinSourceCommit) {
+function parseGitHubRepository(url) {
+  const scp = /^git@github\.com:([^/]+)\/([^/]+?)(?:\.git)?$/.exec(url);
+  if (scp) return `${scp[1]}/${scp[2]}`;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== 'github.com') return null;
+    const parts = parsed.pathname.replace(/^\/+|\/+$/g, '').split('/');
+    if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
+    return `${parts[0]}/${parts[1].replace(/\.git$/, '')}`;
+  } catch {
+    return null;
+  }
+}
+
+function requireSingleLinksBlock(
+  content,
+  retainedRef,
+  pinSourceCommit,
+  expectedSlug,
+  expectedRepository,
+) {
   const starts = content.split(LINKS_START).length - 1;
   const ends = content.split(LINKS_END).length - 1;
   const start = content.indexOf(LINKS_START);
@@ -149,6 +170,11 @@ function requireSingleLinksBlock(content, retainedRef, pinSourceCommit) {
       'Final PR artifact must contain exactly one canonical project links header.',
     );
   }
+  if (headerMatch[1] !== expectedSlug) {
+    throw completionReceiptError(
+      `Final PR artifact links header must name project ${expectedSlug}.`,
+    );
+  }
   if (headerMatch[2] !== retainedRef) {
     throw completionReceiptError(
       `Final PR artifact links header must name retained ref ${retainedRef}.`,
@@ -161,9 +187,12 @@ function requireSingleLinksBlock(content, retainedRef, pinSourceCommit) {
   }
 
   const blobMarkers = block.split('/blob/').length - 1;
-  const blobPins = [...block.matchAll(/\/blob\/([^/\s)]+)\//g)].map(
-    (match) => match[1],
-  );
+  const blobLinks = [
+    ...block.matchAll(
+      /https:\/\/github\.com\/([^/\s)]+)\/([^/\s)]+)\/blob\/([^/\s)]+)\//g,
+    ),
+  ];
+  const blobPins = blobLinks.map((match) => match[3]);
   if (blobPins.length !== blobMarkers) {
     throw completionReceiptError(
       'Final PR artifact links block contains a malformed blob URL.',
@@ -177,6 +206,22 @@ function requireSingleLinksBlock(content, retainedRef, pinSourceCommit) {
     throw completionReceiptError(
       `Final PR artifact blob links must use pin-source commit ${pinSourceCommit}.`,
     );
+  }
+  if (blobLinks.length > 0) {
+    if (expectedRepository === null) {
+      throw completionReceiptError(
+        'Final PR artifact must not contain GitHub blob links for a non-GitHub project remote.',
+      );
+    }
+    if (
+      blobLinks.some(
+        (match) => `${match[1]}/${match[2]}` !== expectedRepository,
+      )
+    ) {
+      throw completionReceiptError(
+        `Final PR artifact blob links must name repository ${expectedRepository}.`,
+      );
+    }
   }
 }
 
@@ -266,6 +311,12 @@ export async function recoverCompletionReceipts({
     prArtifactPath,
     'PR artifact path',
   );
+  const expectedSlug = retainedRef.slice('refs/oat/projects/'.length);
+  if (basename(projectPath) !== expectedSlug) {
+    throw completionReceiptError(
+      `Project checkout basename must match retained project ${expectedSlug}.`,
+    );
+  }
   const exactEvidencePaths = evidencePaths.map((path, index) =>
     requireRelativeGitPath(path, `Evidence path ${index + 1}`),
   );
@@ -300,6 +351,12 @@ export async function recoverCompletionReceipts({
     remote,
     retainedRef,
   );
+  const remoteUrl = await git(projectPath, [
+    'config',
+    '--get',
+    `remote.${remote}.url`,
+  ]);
+  const expectedRepository = parseGitHubRepository(remoteUrl);
   const localSubject = await commitSubject(projectPath, localCommit);
 
   let finalArtifactCommit;
@@ -387,7 +444,13 @@ export async function recoverCompletionReceipts({
     'show',
     `${finalArtifactCommit}:${finalArtifactPath}`,
   ]);
-  requireSingleLinksBlock(finalArtifact, retainedRef, projectLinksPinCommit);
+  requireSingleLinksBlock(
+    finalArtifact,
+    retainedRef,
+    projectLinksPinCommit,
+    expectedSlug,
+    expectedRepository,
+  );
 
   return {
     status: 'recovered',
