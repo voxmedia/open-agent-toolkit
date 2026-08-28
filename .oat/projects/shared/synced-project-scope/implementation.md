@@ -2516,3 +2516,20 @@ unchanged and now records `summary` as completed.
 The root orchestrator verified the documentation and state commits are confined
 to their declared paths. The authoritative sequence snapshot remained intact
 and now records `document` as completed.
+
+#### Pre-approval PR Completed - 2026-08-28T20:19:05Z
+
+- **PR:** [#227](https://github.com/voxmedia/open-agent-toolkit/pull/227),
+  `feat: add synced project scope`
+- **Base/head:** `main` ← `feat/synced-project-scope`
+- **Archive commit:** `2c74aa8e0` moved the eleven residual top-level review
+  artifacts to the ignored project archive and rewrote their plan and
+  implementation references.
+- **PR metadata commit:** `cb81ee1e2e606b2e4fb9b173a0ecfa074506916f`
+- **Verification:** the remote body starts at byte one with its Markdown title,
+  contains no YAML frontmatter, local and remote branch heads matched, the PR
+  state metadata is open, and the worktree was clean.
+
+The PR step did not migrate, complete, archive, deploy, merge, or delete any
+repository. The authoritative sequence snapshot remained intact and now
+records all three configured pre-approval steps as completed.
