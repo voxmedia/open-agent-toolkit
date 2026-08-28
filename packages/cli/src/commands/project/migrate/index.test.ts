@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
-import { defaultGitRunner } from '@commands/project/sync/git';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
   buildSyncTarget,
   migrateSharedToSynced,
@@ -436,6 +436,116 @@ describe('createProjectMigrateCommand', () => {
           sourcePath: source,
           commit: true,
           now: new Date('2026-08-27T12:00:00Z'),
+        }),
+      ).resolves.toMatchObject({ status: 'migrated' });
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('finishes local rollback and reports retained remote state when remote deletion fails', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const slug = 'remote-delete-failure';
+      const source = await addTrackedMigrationSource(fixture.cloneA, slug);
+      const sourceRelative = `.oat/projects/shared/${slug}`;
+      await writeOatLocalConfig(fixture.cloneA, {
+        version: 1,
+        activeProject: sourceRelative,
+      });
+      const originalConfig = await readOatLocalConfig(fixture.cloneA);
+      const before = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim();
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      const deletionFailingRunner: GitRunner = {
+        async run(args, options) {
+          if (
+            args[0] === 'push' &&
+            args[1] === target.remote &&
+            args[2] === `:${target.ref}`
+          ) {
+            throw new Error('injected remote deletion failure');
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+      let configWrites = 0;
+      const writeLocalConfig = async (
+        ...args: Parameters<typeof writeOatLocalConfig>
+      ): Promise<void> => {
+        configWrites += 1;
+        if (configWrites === 1) {
+          throw new Error('injected active config failure');
+        }
+        await writeOatLocalConfig(...args);
+      };
+
+      const failure = await migrateSharedToSynced(
+        target,
+        deletionFailingRunner,
+        {
+          sourcePath: source,
+          commit: true,
+          writeOatLocalConfig: writeLocalConfig,
+        },
+      ).catch((error: unknown) => error);
+
+      expect(failure).toBeInstanceOf(Error);
+      expect((failure as Error).message).toContain(
+        'injected active config failure',
+      );
+      expect((failure as Error).message).toContain(
+        'injected remote deletion failure',
+      );
+      expect((failure as Error).message).toContain(
+        `git push ${target.remote} :${target.ref}`,
+      );
+      expect(
+        execFileSync('git', ['rev-parse', 'HEAD'], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe(before);
+      await expect(readFile(join(source, 'state.md'), 'utf8')).resolves.toBe(
+        `# ${slug}\n`,
+      );
+      await expect(access(target.projectPath)).rejects.toThrow();
+      expect(
+        (
+          await defaultGitRunner.run(['show-ref', '--verify', target.ref], {
+            cwd: fixture.cloneA,
+            allowFailure: true,
+          })
+        ).code,
+      ).not.toBe(0);
+      expect(await readOatLocalConfig(fixture.cloneA)).toEqual(originalConfig);
+      expect(
+        execFileSync('git', ['ls-remote', 'origin', target.ref], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }),
+      ).toContain(target.ref);
+
+      await expect(
+        migrateSharedToSynced(target, defaultGitRunner, {
+          sourcePath: source,
+          commit: true,
+        }),
+      ).rejects.toThrow(/remote ref.*already exists/i);
+
+      execFileSync('git', ['push', target.remote, `:${target.ref}`], {
+        cwd: fixture.cloneA,
+      });
+      await expect(
+        migrateSharedToSynced(target, defaultGitRunner, {
+          sourcePath: source,
+          commit: true,
         }),
       ).resolves.toMatchObject({ status: 'migrated' });
     } finally {

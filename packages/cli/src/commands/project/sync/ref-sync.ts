@@ -190,6 +190,20 @@ export async function assertConfinedMigrationSource(
 const ZERO_OBJECT_ID = '0000000000000000000000000000000000000000';
 const DISABLE_HOOKS_CONFIG = ['-c', 'core.hooksPath=/dev/null'] as const;
 
+interface MigrationCompensationFailure {
+  resource: string;
+  recovery: string;
+  error: unknown;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function shellQuote(value: string): string {
+  return `'${value.replaceAll("'", "'\\''")}'`;
+}
+
 function withHooksDisabled(args: string[]): string[] {
   return [...DISABLE_HOOKS_CONFIG, ...args];
 }
@@ -1102,52 +1116,121 @@ export async function migrateSharedToSynced(
     }
     return { status: 'migrated', lifecycleCommit, sha: pushed.sha };
   } catch (error) {
-    const currentHead = (
-      await git.run(['rev-parse', 'HEAD'], { cwd: target.repoRoot })
-    ).stdout;
-    if (currentHead !== preMigrationHead) {
-      await git.run(['reset', '--soft', preMigrationHead], {
-        cwd: target.repoRoot,
-      });
-    }
-    await git.run(
-      [
-        'reset',
-        '-q',
-        '--',
-        sourceRelative,
-        repoRelativePath(target.repoRoot, recordPath),
-        ...(gitignoreSelfHealStarted ? ['.gitignore'] : []),
-      ],
-      { cwd: target.repoRoot },
-    );
-    await git.run(['checkout', '--', sourceRelative], {
-      cwd: target.repoRoot,
-    });
-    await rm(recordPath, { force: true });
-    if (gitignoreSelfHealStarted) {
-      if (originalGitignore === null) {
-        await rm(gitignorePath, { force: true });
-      } else {
-        await writeFile(gitignorePath, originalGitignore, 'utf8');
-      }
-    }
-    if (created) {
-      const remoteRef = await git.run(
-        ['ls-remote', '--exit-code', target.remote, target.ref],
-        { cwd: target.repoRoot, allowFailure: true },
-      );
-      if (remoteRef.code === 0) {
-        await git.run(['push', target.remote, `:${target.ref}`], {
-          cwd: target.repoRoot,
+    const compensationFailures: MigrationCompensationFailure[] = [];
+    const compensate = async (
+      resource: string,
+      recovery: string,
+      action: () => Promise<void>,
+    ): Promise<void> => {
+      try {
+        await action();
+      } catch (compensationError) {
+        compensationFailures.push({
+          resource,
+          recovery,
+          error: compensationError,
         });
       }
+    };
+
+    await compensate(
+      'parent branch HEAD',
+      `git reset --soft ${preMigrationHead}`,
+      async () => {
+        const currentHead = (
+          await git.run(['rev-parse', 'HEAD'], { cwd: target.repoRoot })
+        ).stdout;
+        if (currentHead !== preMigrationHead) {
+          await git.run(['reset', '--soft', preMigrationHead], {
+            cwd: target.repoRoot,
+          });
+        }
+      },
+    );
+    await compensate(
+      'parent index',
+      `git reset -q -- ${shellQuote(sourceRelative)} ${shellQuote(repoRelativePath(target.repoRoot, recordPath))}`,
+      async () => {
+        await git.run(
+          [
+            'reset',
+            '-q',
+            '--',
+            sourceRelative,
+            repoRelativePath(target.repoRoot, recordPath),
+            ...(gitignoreSelfHealStarted ? ['.gitignore'] : []),
+          ],
+          { cwd: target.repoRoot },
+        );
+      },
+    );
+    await compensate(
+      'shared migration source',
+      `git checkout -- ${shellQuote(sourceRelative)}`,
+      async () => {
+        await git.run(['checkout', '--', sourceRelative], {
+          cwd: target.repoRoot,
+        });
+      },
+    );
+    await compensate(
+      'synced discovery record',
+      `rm -f ${shellQuote(recordPath)}`,
+      async () => rm(recordPath, { force: true }),
+    );
+    if (gitignoreSelfHealStarted) {
+      await compensate(
+        'managed .gitignore rule',
+        `git checkout -- ${shellQuote(gitignorePath)}`,
+        async () => {
+          if (originalGitignore === null) {
+            await rm(gitignorePath, { force: true });
+          } else {
+            await writeFile(gitignorePath, originalGitignore, 'utf8');
+          }
+        },
+      );
     }
     if (created) {
-      await rollbackCreatedSyncedProject(target, git);
+      await compensate(
+        `remote ref ${target.remote}/${target.ref}`,
+        `git push ${target.remote} :${target.ref}`,
+        async () => {
+          const remoteRef = await git.run(
+            ['ls-remote', '--exit-code', target.remote, target.ref],
+            { cwd: target.repoRoot, allowFailure: true },
+          );
+          if (remoteRef.code === 0) {
+            await git.run(['push', target.remote, `:${target.ref}`], {
+              cwd: target.repoRoot,
+            });
+          }
+        },
+      );
+      await compensate(
+        `local checkout ${target.projectPath} and ref ${target.ref}`,
+        `git worktree remove --force ${shellQuote(target.projectPath)} && git update-ref -d ${target.ref}`,
+        async () => rollbackCreatedSyncedProject(target, git),
+      );
     }
     if (activeProjectUpdated) {
-      await writeLocal(target.repoRoot, originalLocalConfig);
+      await compensate(
+        'active project configuration',
+        `oat config set activeProject ${shellQuote(originalLocalConfig.activeProject ?? '')}`,
+        async () => writeLocal(target.repoRoot, originalLocalConfig),
+      );
+    }
+    if (compensationFailures.length > 0) {
+      const retained = compensationFailures
+        .map(
+          ({ resource, recovery, error: compensationError }) =>
+            `- ${resource}: ${errorMessage(compensationError)} Recovery: ${recovery}`,
+        )
+        .join('\n');
+      throw new CliError(
+        `Migration failed: ${errorMessage(error)} Rollback was incomplete; retained resources require recovery:\n${retained}`,
+        2,
+      );
     }
     throw error;
   }
