@@ -103,6 +103,35 @@ async function createCompletionFixture() {
   return fixture;
 }
 
+async function writeCompletedLifecycle(projectPath: string): Promise<void> {
+  await writeFile(
+    `${projectPath}/state.md`,
+    [
+      '---',
+      'oat_lifecycle: complete',
+      'oat_project_completed: "2026-08-28T12:00:00Z"',
+      'oat_project_state_updated: "2026-08-28T12:00:00Z"',
+      '---',
+      '',
+      '# Project State',
+      '',
+    ].join('\n'),
+    'utf8',
+  );
+  await writeFile(
+    `${projectPath}/project-log.md`,
+    [
+      '# Project Log',
+      '',
+      '### 2026-08-28 · structural · oat-project-complete · seal',
+      '',
+      'Completion sealed at 2026-08-28T12:00:00Z; project-log roll-up status: ok.',
+      '',
+    ].join('\n'),
+    'utf8',
+  );
+}
+
 function changedPaths(cwd: string, commit: string): string[] {
   const output = git(cwd, [
     'diff-tree',
@@ -482,12 +511,7 @@ describe('non-archive synced completion transaction', () => {
         );
         await createSyncedProject(target, defaultGitRunner);
 
-        await writeFile(`${target.projectPath}/state.md`, 'complete\n', 'utf8');
-        await writeFile(
-          `${target.projectPath}/project-log.md`,
-          '# Completion log\n\nAlready sealed.\n',
-          'utf8',
-        );
+        await writeCompletedLifecycle(target.projectPath);
         await mkdir(`${target.projectPath}/reviews/archived`, {
           recursive: true,
         });
@@ -759,7 +783,7 @@ describe('non-archive synced completion transaction', () => {
       );
       await createSyncedProject(target, defaultGitRunner);
 
-      await writeFile(`${target.projectPath}/state.md`, 'complete\n', 'utf8');
+      await writeCompletedLifecycle(target.projectPath);
       await writeFile(
         `${target.projectPath}/summary.md`,
         '# Durable summary\n',
@@ -831,6 +855,89 @@ describe('non-archive synced completion transaction', () => {
 
   it.each([
     {
+      state: 'active/incomplete lifecycle state',
+      mutateLifecycle: async (projectPath: string) => {
+        await writeFile(
+          `${projectPath}/state.md`,
+          [
+            '---',
+            'oat_lifecycle: active',
+            'oat_project_completed: null',
+            'oat_project_state_updated: "2026-08-28T12:00:00Z"',
+            '---',
+            '',
+            '# Project State',
+            '',
+          ].join('\n'),
+          'utf8',
+        );
+      },
+      error: /must have oat_lifecycle: complete/i,
+    },
+    {
+      state: 'missing completion log',
+      mutateLifecycle: async (projectPath: string) => {
+        await rm(`${projectPath}/project-log.md`);
+      },
+      error: /missing required completion log project-log\.md/i,
+    },
+    {
+      state: 'unsealed completion log',
+      mutateLifecycle: async (projectPath: string) => {
+        await writeFile(
+          `${projectPath}/project-log.md`,
+          '# Project Log\n\n### 2026-08-28 · structural · another-producer · p01\n\nStill active.\n',
+          'utf8',
+        );
+      },
+      error: /must end with the canonical oat-project-complete seal/i,
+    },
+  ])(
+    'fails closed before recovering receipts from $state',
+    async ({ mutateLifecycle, error }) => {
+      const fixture = await createCompletionFixture();
+      try {
+        const target = buildSyncTarget(
+          fixture.cloneA,
+          '.oat/projects',
+          PROJECT_SLUG,
+        );
+        await createSyncedProject(target, defaultGitRunner);
+        await writeCompletedLifecycle(target.projectPath);
+        await mutateLifecycle(target.projectPath);
+        await writeFile(
+          `${target.projectPath}/summary.md`,
+          '# Durable summary\n',
+          'utf8',
+        );
+        await mkdir(`${target.projectPath}/pr`, { recursive: true });
+        await writeFile(
+          `${target.projectPath}/${PR_ARTIFACT}`,
+          '# Pull request\n\nCompletion body.\n',
+          'utf8',
+        );
+
+        const receipts = await publishFinalArtifact(target.projectPath, target);
+
+        expect(() =>
+          resolveCompletionRetry(target.projectPath, target.ref),
+        ).toThrow(error);
+        expect(git(target.projectPath, ['rev-parse', 'HEAD'])).toBe(
+          receipts.finalArtifactCommit,
+        );
+        expect(git(fixture.originDir, ['rev-parse', target.ref])).toBe(
+          receipts.finalArtifactCommit,
+        );
+        expect(git(target.projectPath, ['status', '--porcelain'])).toBe('');
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+    20_000,
+  );
+
+  it.each([
+    {
       contamination: 'wrong project slug',
       mutateLinks: (links: string) =>
         links.replace(
@@ -885,7 +992,7 @@ describe('non-archive synced completion transaction', () => {
         );
         await createSyncedProject(target, defaultGitRunner);
 
-        await writeFile(`${target.projectPath}/state.md`, 'complete\n', 'utf8');
+        await writeCompletedLifecycle(target.projectPath);
         await writeFile(
           `${target.projectPath}/summary.md`,
           '# Durable summary\n',

@@ -11,6 +11,9 @@ const EVIDENCE_MESSAGE = 'chore(oat): attest final project recap';
 const LINKS_START = '<!-- oat:project-links:start -->';
 const LINKS_END = '<!-- oat:project-links:end -->';
 const FULL_SHA = /^[0-9a-f]{40}$/;
+const UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
+const COMPLETION_SEAL =
+  /(?:^|\n)### (\d{4}-\d{2}-\d{2}) · structural · oat-project-complete · seal\n\nCompletion sealed at (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z); project-log roll-up status: ok\.\s*$/;
 
 function completionReceiptError(message) {
   const error = new Error(message);
@@ -86,6 +89,82 @@ async function changedPaths(projectPath, commit) {
     commit,
   ]);
   return output === '' ? [] : output.split('\n').sort();
+}
+
+async function committedFile(projectPath, commit, path, label) {
+  const content = await git(projectPath, ['show', `${commit}:${path}`], {
+    allowFailure: true,
+  });
+  if (content === null) {
+    throw completionReceiptError(
+      `Recovered pin-source receipt is missing required ${label} ${path}.`,
+    );
+  }
+  return content;
+}
+
+function frontmatterScalar(content, field) {
+  const frontmatter = /^---\n([\s\S]*?)\n---(?:\n|$)/.exec(content)?.[1];
+  if (frontmatter === undefined) {
+    throw completionReceiptError(
+      'Recovered pin-source state.md is missing canonical frontmatter.',
+    );
+  }
+  const matcher = new RegExp(`^${field}:\\s*([^\\n]*?)(?:\\s+#.*)?$`, 'gm');
+  const matches = [...frontmatter.matchAll(matcher)];
+  if (matches.length !== 1) {
+    throw completionReceiptError(
+      `Recovered pin-source state.md must contain exactly one ${field} field.`,
+    );
+  }
+  const raw = matches[0][1]?.trim() ?? '';
+  const value =
+    raw.length >= 2 &&
+    ((raw.startsWith('"') && raw.endsWith('"')) ||
+      (raw.startsWith("'") && raw.endsWith("'")))
+      ? raw.slice(1, -1)
+      : raw;
+  if (value.length === 0) {
+    throw completionReceiptError(
+      `Recovered pin-source state.md has an empty ${field} field.`,
+    );
+  }
+  return value;
+}
+
+function requireCompletedLifecycleState(content) {
+  const lifecycle = frontmatterScalar(content, 'oat_lifecycle');
+  if (lifecycle !== 'complete') {
+    throw completionReceiptError(
+      'Recovered pin-source state.md must have oat_lifecycle: complete.',
+    );
+  }
+  const completedAt = frontmatterScalar(content, 'oat_project_completed');
+  const updatedAt = frontmatterScalar(content, 'oat_project_state_updated');
+  if (
+    !UTC_TIMESTAMP.test(completedAt) ||
+    !UTC_TIMESTAMP.test(updatedAt) ||
+    Number.isNaN(Date.parse(completedAt)) ||
+    Number.isNaN(Date.parse(updatedAt))
+  ) {
+    throw completionReceiptError(
+      'Recovered pin-source state.md completion timestamps must be valid UTC timestamps.',
+    );
+  }
+  if (completedAt !== updatedAt) {
+    throw completionReceiptError(
+      'Recovered pin-source state.md completion timestamps must identify the same lifecycle mutation.',
+    );
+  }
+}
+
+function requireCompletionSeal(content) {
+  const seal = COMPLETION_SEAL.exec(content);
+  if (!seal || seal[1] !== seal[2]?.slice(0, 10)) {
+    throw completionReceiptError(
+      'Recovered pin-source project-log.md must end with the canonical oat-project-complete seal.',
+    );
+  }
 }
 
 function requireExactPaths(actual, expected, label) {
@@ -440,6 +519,20 @@ export async function recoverCompletionReceipts({
       'Recovered pin-source receipt has an unexpected commit subject.',
     );
   }
+  const pinSourceState = await committedFile(
+    projectPath,
+    projectLinksPinCommit,
+    'state.md',
+    'lifecycle state',
+  );
+  requireCompletedLifecycleState(pinSourceState);
+  const pinSourceLog = await committedFile(
+    projectPath,
+    projectLinksPinCommit,
+    'project-log.md',
+    'completion log',
+  );
+  requireCompletionSeal(pinSourceLog);
   const finalArtifact = await git(projectPath, [
     'show',
     `${finalArtifactCommit}:${finalArtifactPath}`,
