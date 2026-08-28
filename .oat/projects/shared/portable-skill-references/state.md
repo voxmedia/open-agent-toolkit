@@ -48,9 +48,9 @@ oat_phase_recovery_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
@@ -71,17 +71,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T032516Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=1). Run oat-project-review-receive for .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T032516Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=f5f3ba50-bf74-4bdd-bc02-6ac2f2ec5153; handoff=receive; source=reviews/final-review-2026-08-28T032516Z.md; scope=final; type=code'
   receive_source_artifact: .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T032516Z.md
   receive_archived_artifact: .oat/projects/shared/portable-skill-references/reviews/archived/final-review-2026-08-28T032516Z.md
   receive_event_identity: 'final | code | final-review-2026-08-28T032516Z.md'
   receive_pre_head: da762b52de7303f6bf87dbe011fe8f6db8a6af46
-  receive_commit: null
+  receive_commit: 599c9cee5da1bb3281ebc9b9aa0a9d39b43ddeb0
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-28T03:28:47Z'
+  updated_at: '2026-08-28T03:29:52Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -122,7 +122,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T21:30:45.407Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T03:28:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T03:29:52Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
