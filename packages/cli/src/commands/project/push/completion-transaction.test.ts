@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -238,6 +238,23 @@ async function recover(
   return JSON.parse(output) as CompletionReceipts;
 }
 
+function detectReceiptCandidate(projectPath: string, ref: string): boolean {
+  const output = execFileSync(
+    process.execPath,
+    [
+      RECOVERY_SCRIPT,
+      '--project-path',
+      projectPath,
+      '--retained-ref',
+      ref,
+      '--detect-candidate',
+      'true',
+    ],
+    { encoding: 'utf8' },
+  );
+  return (JSON.parse(output) as { candidate: boolean }).candidate;
+}
+
 const interruptionStages = [
   'after final-artifact push',
   'after parent-record commit',
@@ -365,6 +382,22 @@ describe('non-archive synced completion transaction', () => {
           });
         }
 
+        await writeFile(`${target.projectPath}/dirty-retry.txt`, 'dirty\n');
+        expect(() =>
+          detectReceiptCandidate(target.projectPath, target.ref),
+        ).toThrow(/clean synced checkout/i);
+        await rm(`${target.projectPath}/dirty-retry.txt`);
+
+        const headBeforeDetection = git(target.projectPath, [
+          'rev-parse',
+          'HEAD',
+        ]);
+        expect(detectReceiptCandidate(target.projectPath, target.ref)).toBe(
+          true,
+        );
+        expect(git(target.projectPath, ['rev-parse', 'HEAD'])).toBe(
+          headBeforeDetection,
+        );
         const recovered = await recover(target.projectPath, target.ref);
         expect(recovered.projectLinksPinCommit).toBe(
           publishedReceipts.pinSourceCommit,

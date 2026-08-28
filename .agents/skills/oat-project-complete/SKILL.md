@@ -408,6 +408,82 @@ a warning rather than changing project completion status.
 
 For `IS_DURABLE_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`. This is the local scope. A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence. Do not treat local filesystem presence as durability. Shared and synced recaps are exported and attested through the later durability stage.
 
+### Step 3.65: Recover a Recognizable Completion Receipt Before Mutation
+
+Initialize `PROJECT_LINKS_PIN_COMMIT=""`, `PROJECT_REF_COMMIT=""`,
+`EVIDENCE_COMMIT=""`, and `COMPLETION_RECEIPTS_RECOVERED="false"`. For a
+synced non-archive run, use the skill-owned detector before the project-log
+probe, seal append, review moves, or `complete-state` mutation:
+
+```bash
+if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "false" ]]; then
+  RECEIPT_CANDIDATE_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT" \
+    --project-path "$ACTIVE_PROJECT_PATH" \
+    --retained-ref "$PROJECT_RETAINED_REF" \
+    --detect-candidate true) || exit 1
+  RECEIPT_CANDIDATE=$(node -e '
+const value = JSON.parse(process.argv[1]);
+if (typeof value.candidate !== "boolean") process.exit(1);
+process.stdout.write(String(value.candidate));
+' "$RECEIPT_CANDIDATE_JSON") || exit 1
+fi
+```
+
+When `RECEIPT_CANDIDATE="true"`, resolve exactly one regular, non-symlinked
+`pr/project-pr-*.md` below `ACTIVE_PROJECT_PATH`, store its normalized
+project-relative path as `PR_DESCRIPTION_RELATIVE_PATH`, and immediately run
+the Step 7.5 recovery invocation and structured restoration. Supply the exact
+selected recap paths when a recap is selected. A recognized candidate must be
+clean and must validate completely; any dirty, malformed, mixed, or
+contradictory candidate fails closed. After successful restoration set
+`COMPLETION_RECEIPTS_RECOVERED="true"` and skip every mutation in Steps 3.7
+through 7, including project-log checks/appends, review moves, `complete-state`,
+active-pointer clearing, and PR-artifact generation. Continue at Step 7.5 with
+the restored receipts. When the detector returns `candidate: false`, follow
+the ordinary flow without changing its existing dirty-worktree guarantees.
+
+Use this exact early restoration before entering Step 3.7:
+
+```bash
+if [[ "${RECEIPT_CANDIDATE:-false}" == "true" ]]; then
+  PR_DESCRIPTION_CANDIDATES=("$ACTIVE_PROJECT_PATH"/pr/project-pr-*.md)
+  test "${#PR_DESCRIPTION_CANDIDATES[@]}" -eq 1 || exit 1
+  PR_DESCRIPTION_PATH="${PR_DESCRIPTION_CANDIDATES[0]}"
+  test -f "$PR_DESCRIPTION_PATH" || exit 1
+  test ! -L "$PR_DESCRIPTION_PATH" || exit 1
+  PR_DESCRIPTION_RELATIVE_PATH="${PR_DESCRIPTION_PATH#"$ACTIVE_PROJECT_PATH"/}"
+  test "$PR_DESCRIPTION_RELATIVE_PATH" != "$PR_DESCRIPTION_PATH" || exit 1
+
+  RECOVERY_ARGS=(
+    --project-path "$ACTIVE_PROJECT_PATH"
+    --retained-ref "$PROJECT_RETAINED_REF"
+    --pr-artifact "$PR_DESCRIPTION_RELATIVE_PATH"
+  )
+  if [[ -n "$SELECTED_PROJECT_RECAP_RUN" ]]; then
+    RECOVERY_ARGS+=(
+      --evidence-path "$SELECTED_PROJECT_RECAP_RUN/manifest.json"
+      --evidence-path "$SELECTED_PROJECT_RECAP_RUN/build-record.json"
+    )
+  fi
+  RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT" \
+    "${RECOVERY_ARGS[@]}") || exit 1
+  RECOVERY_FIELDS=$(node -e '
+const value = JSON.parse(process.argv[1]);
+const sha = /^[0-9a-f]{40}$/;
+if (value.status !== "recovered" || !sha.test(value.projectLinksPinCommit) || !sha.test(value.projectRefCommit)) process.exit(1);
+if (value.evidenceCommit !== null && !sha.test(value.evidenceCommit)) process.exit(1);
+if (typeof value.evidencePushRequired !== "boolean") process.exit(1);
+process.stdout.write([value.projectLinksPinCommit, value.projectRefCommit, value.evidenceCommit ?? "-", String(value.evidencePushRequired)].join("\t"));
+' "$RECOVERY_JSON") || exit 1
+  IFS=$'\t' read -r PROJECT_LINKS_PIN_COMMIT PROJECT_REF_COMMIT \
+    RECOVERED_EVIDENCE_COMMIT EVIDENCE_PUSH_REQUIRED <<< "$RECOVERY_FIELDS"
+  if [[ "$RECOVERED_EVIDENCE_COMMIT" != "-" ]]; then
+    EVIDENCE_COMMIT="$RECOVERED_EVIDENCE_COMMIT"
+  fi
+  COMPLETION_RECEIPTS_RECOVERED="true"
+fi
+```
+
 ### Step 3.7: Project Log Completion Gate
 
 Run the project-log status probe before any lifecycle mutation or archive work:

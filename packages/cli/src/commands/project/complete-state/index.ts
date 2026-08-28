@@ -77,7 +77,9 @@ async function runProjectCompleteState(
       filePath: statePath,
       projectPath: targetProjectPath,
     });
-    await dependencies.writeFile(statePath, updatedContent, 'utf8');
+    if (updatedContent !== content) {
+      await dependencies.writeFile(statePath, updatedContent, 'utf8');
+    }
 
     if (context.json) {
       context.logger.json({

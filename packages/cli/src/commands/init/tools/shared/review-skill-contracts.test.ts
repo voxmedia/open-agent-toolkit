@@ -1110,6 +1110,15 @@ describe('review skill contracts', () => {
     expect(content).toContain(
       'ARCHIVE_DECISION_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"',
     );
+    expect(content).toContain('--detect-candidate true');
+    expect(content.indexOf('--detect-candidate true')).toBeLessThan(
+      content.indexOf('PROJECT_LOG_CHECK=$(oat project log check'),
+    );
+    expect(
+      content.indexOf('RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"'),
+    ).toBeLessThan(
+      content.indexOf('PROJECT_LOG_CHECK=$(oat project log check'),
+    );
     expect(normalizedContent).toContain(
       'The executable completion transaction tests must use this same resolver',
     );
@@ -1378,7 +1387,7 @@ describe('review skill contracts', () => {
       'FINAL_LINK_ARGS=("$PROJECT_NAME" --format markdown)',
     );
     expect(content).toContain(
-      'FINAL_LINK_ARGS+=(--durable-summary "$SUMMARY_EXPORT_FILE")',
+      'FINAL_LINK_ARGS+=(--durable-summary "$SUMMARY_EXPORT_RELATIVE")',
     );
     expect(content).toMatch(
       /WAS_PR_OPEN_AT_START="false"[\s\S]*?Step 11 creates the new PR[\s\S]*?WAS_PR_OPEN_AT_START="true"[\s\S]*?Step 11\.5 updates the already-open PR/,

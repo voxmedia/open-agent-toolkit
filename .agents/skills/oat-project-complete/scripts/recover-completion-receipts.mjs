@@ -200,6 +200,50 @@ export function resolveCompletionArchiveDecision({
   );
 }
 
+export async function detectCompletionReceiptCandidate({
+  projectPath,
+  retainedRef,
+}) {
+  if (typeof projectPath !== 'string' || projectPath.length === 0) {
+    throw completionReceiptError('Project path is required.');
+  }
+  if (
+    typeof retainedRef !== 'string' ||
+    !/^refs\/oat\/projects\/[A-Za-z0-9._-]+$/.test(retainedRef)
+  ) {
+    throw completionReceiptError(
+      'Retained ref must be a canonical OAT project ref.',
+    );
+  }
+  const receiptSubjects = new Set([FINAL_ARTIFACT_MESSAGE, EVIDENCE_MESSAGE]);
+  const head = await git(projectPath, ['rev-parse', 'HEAD']);
+  const retained = await git(
+    projectPath,
+    ['rev-parse', '--verify', retainedRef],
+    { allowFailure: true },
+  );
+  const headSubject = await commitSubject(projectPath, head);
+  const retainedSubject = FULL_SHA.test(retained ?? '')
+    ? await commitSubject(projectPath, retained)
+    : null;
+  const candidate =
+    receiptSubjects.has(headSubject) ||
+    (retainedSubject !== null && receiptSubjects.has(retainedSubject));
+  if (candidate) {
+    const status = await git(projectPath, [
+      'status',
+      '--porcelain=v1',
+      '--untracked-files=all',
+    ]);
+    if (status !== '') {
+      throw completionReceiptError(
+        'Recognized completion receipt candidate requires a clean synced checkout.',
+      );
+    }
+  }
+  return { status: candidate ? 'candidate' : 'none', candidate };
+}
+
 export async function recoverCompletionReceipts({
   projectPath,
   retainedRef,
@@ -376,7 +420,9 @@ function parseArguments(argv) {
     else if (flag === '--pr-artifact') result.prArtifactPath = value;
     else if (flag === '--evidence-path') result.evidencePaths.push(value);
     else if (flag === '--remote') result.remote = value;
-    else if (flag === '--archive-preference') {
+    else if (flag === '--detect-candidate') {
+      result.detectCandidate = parseBoolean(value, flag);
+    } else if (flag === '--archive-preference') {
       result.configuredPreference = parseBoolean(value, flag);
     } else if (flag === '--interactive-archive') {
       result.interactiveAnswer = parseBoolean(value, flag);
@@ -394,6 +440,9 @@ async function main(argv) {
     options.interactiveAnswer !== undefined
   ) {
     return resolveCompletionArchiveDecision(options);
+  }
+  if (options.detectCandidate === true) {
+    return detectCompletionReceiptCandidate(options);
   }
   return recoverCompletionReceipts(options);
 }
