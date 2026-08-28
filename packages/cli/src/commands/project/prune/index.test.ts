@@ -20,7 +20,7 @@ import { syncedRecordPath } from '@commands/shared/project-scope';
 import {
   addLinkedWorktree,
   createSyncedFixture,
-} from '@shared/../__tests__/synced-fixture';
+} from '@test-support/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

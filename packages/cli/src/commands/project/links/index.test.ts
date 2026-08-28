@@ -8,7 +8,7 @@ import {
   removeSyncedCheckout,
   type SyncTarget,
 } from '@commands/project/sync/ref-sync';
-import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

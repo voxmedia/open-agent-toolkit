@@ -10,7 +10,7 @@ import {
   migrateSharedToSynced,
 } from '@commands/project/sync/ref-sync';
 import { readOatLocalConfig, writeOatLocalConfig } from '@config/oat-config';
-import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 

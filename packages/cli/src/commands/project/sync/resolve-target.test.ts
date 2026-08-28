@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { defaultGitRunner } from './git';

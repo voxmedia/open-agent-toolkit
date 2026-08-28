@@ -15,7 +15,7 @@ import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { instantiateProjectLogTemplate } from '@commands/project/log/append';
 import { createProjectOpenCommand } from '@commands/project/open/index';
 import { createSyncedProject } from '@commands/project/sync/ref-sync';
-import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';

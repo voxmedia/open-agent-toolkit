@@ -16,6 +16,7 @@
       "@ui/*": ["./src/ui/*"],
       "@config/*": ["./src/config/*"],
       "@shared/*": ["./src/shared/*"],
+      "@test-support/*": ["./src/__tests__/*"],
       "@fs/*": ["./src/fs/*"],
       "@errors/*": ["./src/errors/*"],
       "@app/*": ["./src/app/*"],

@@ -7,7 +7,7 @@ import { CliError } from '@errors/cli-error';
 import {
   addLinkedWorktree,
   createSyncedFixture,
-} from '@shared/../__tests__/synced-fixture';
+} from '@test-support/synced-fixture';
 import { describe, expect, it } from 'vitest';
 
 import { defaultGitRunner, type GitRunner } from './git';

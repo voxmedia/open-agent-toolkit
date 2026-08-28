@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { createProgram } from '@app/create-program';
-import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { registerCommands } from '../index';

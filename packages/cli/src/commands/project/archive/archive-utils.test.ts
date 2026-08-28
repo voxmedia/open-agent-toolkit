@@ -27,7 +27,7 @@ import {
 } from '@commands/project/sync/ref-sync';
 import { syncedRecordPath } from '@commands/shared/project-scope';
 import { CliError } from '@errors/cli-error';
-import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {

@@ -15,7 +15,7 @@ import { registerCommands } from '@commands/index';
 import type { SyncConfig } from '@config/index';
 import { checkbox, confirm } from '@inquirer/prompts';
 import type { Manifest } from '@manifest/index';
-import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@inquirer/prompts', () => ({

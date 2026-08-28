@@ -21,7 +21,7 @@ import {
   pushSynced,
 } from '@commands/project/sync/ref-sync';
 import { CliError } from '@errors/cli-error';
-import { createSyncedFixture } from '@shared/../__tests__/synced-fixture';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
