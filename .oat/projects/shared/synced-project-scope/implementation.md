@@ -2533,3 +2533,19 @@ and now records `document` as completed.
 The PR step did not migrate, complete, archive, deploy, merge, or delete any
 repository. The authoritative sequence snapshot remained intact and now
 records all three configured pre-approval steps as completed.
+
+#### Implementation-tail Recap Skipped - 2026-08-28T21:13:44Z
+
+- **Decision:** `skip`, explicitly selected by the user.
+- **Intent provenance:** `interactive`; persisted atomically as
+  `oat_project_recap` in `state.md`.
+- **Adapter compatibility:** installed `explainer-kit` `2.1.0` satisfies the
+  required minimum `2.1.0`.
+- **Terminal guard:** `check-terminal-outcome.mjs --intent skip` returned
+  `ok: true` with no manifest required.
+- **Outcome:** no recap was generated, reused, finalized, published, or added
+  to `summary.md`; there is no recap run path.
+
+All configured pre-approval steps are complete, and the closeout snapshot is
+now `awaiting_approval` with `approval: pending`. The final Phase 12 HiLL
+approval remains an explicit user boundary.
