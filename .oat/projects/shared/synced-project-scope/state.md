@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p12-t01
 oat_last_commit: 1a8e36fe2
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: review_pending # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -53,6 +53,9 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p11:
+      used_attempts: 0
+      pending_attempt: null
+    p12:
       used_attempts: 0
       pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
@@ -107,26 +110,26 @@ oat_implement_exit_gate:
   receive_commit: a6e1439818dc8f675a7c05cdb8a77b88b2141bd5
   receive_eligible: true
   receive_completed: true
-  failure: Phase 11 remediated the residual lifecycle-review findings; narrowed re-review and gate attempt 2 remain pending.
-  updated_at: '2026-08-28T19:00:15Z'
+  failure: Phase 12 is closing a Critical normal-route publication regression before gate attempt 2.
+  updated_at: '2026-08-28T19:09:36Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T19:00:15.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T19:09:36.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Phase 11 complete; narrowed re-review and exit-gate attempt 2 pending
+**Status:** Phase 12 in progress; exit-gate attempt 2 remains unlaunched
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Review - narrowed final lifecycle re-review after Phase 11
+Implementation - Phase 12 normal-route publication repair
 
 ## Artifacts
 
@@ -134,7 +137,7 @@ Review - narrowed final lifecycle re-review after Phase 11
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (88/88 tasks complete)
+- **Implementation:** `implementation.md` (88/89 tasks complete)
 
 ## Progress
 
@@ -239,7 +242,9 @@ Review - narrowed final lifecycle re-review after Phase 11
 - ✓ Phase 11 final-head Definition of Done gates pass in exact CI order
 - ✓ Project provider sync dry-run made no filesystem changes; managed entries remain in sync
 - ✓ Residual final lifecycle review event updated to `fixes_completed` (never passed)
-- ◌ Narrowed final lifecycle re-review and configured exit-gate attempt 2 remain
+- ⨯ Narrowed final lifecycle re-review found 1 Critical normal-route publication regression
+- ✓ Critical finding received into p12-t01 with no deferrals
+- ◌ Phase 12 repair, narrowed re-review, and configured exit-gate attempt 2 remain
 - ✓ Cycle-5 findings converted into consolidated task p09-t01 with no deferrals
 - ✓ Phase 9 task p09-t01 completed and verified in `e193c8ffb`
 - ✓ Phase 9 recovery ledger settled at 0/10 with no pending attempt
@@ -255,6 +260,7 @@ None.
 
 ## Next Milestone
 
-Run a narrowed final lifecycle re-review, then start the configured exit gate's
-second and final attempt only if that review passes. Migration, archive,
-completion, PR publication, and spike-repository deletion remain unperformed.
+Execute p12-t01, run a narrowed final lifecycle re-review, then start the
+configured exit gate's second and final attempt only if that review passes.
+Migration, archive, completion, PR publication, and spike-repository deletion
+remain unperformed.

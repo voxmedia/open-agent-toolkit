@@ -1,9 +1,9 @@
 ---
-oat_status: review_pending
-oat_ready_for: oat-project-review-provide
+oat_status: in_progress
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: p12-t01
 oat_generated: false
 ---
 
@@ -14,9 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All 88 implementation tasks are complete. Phase 11 closed the Medium
-> verification gap and two Minor remnants from the fresh lifecycle review;
-> narrowed re-review and configured exit-gate attempt 2 remain pending.
+> 88 of 89 implementation tasks are complete. Phase 12 is correcting the
+> Critical normal-route publication regression found by the narrowed final
+> lifecycle re-review; configured exit-gate attempt 2 remains unlaunched.
 >
 > Conventions:
 >
@@ -28,21 +28,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase    | Status   | Tasks | Completed |
-| -------- | -------- | ----- | --------- |
-| Phase 1  | complete | 10    | 10/10     |
-| Phase 2  | complete | 13    | 13/13     |
-| Phase 3  | complete | 19    | 19/19     |
-| Phase 4  | complete | 16    | 16/16     |
-| Phase 5  | complete | 7     | 7/7       |
-| Phase 6  | complete | 3     | 3/3       |
-| Phase 7  | complete | 1     | 1/1       |
-| Phase 8  | complete | 1     | 1/1       |
-| Phase 9  | complete | 1     | 1/1       |
-| Phase 10 | complete | 14    | 14/14     |
-| Phase 11 | complete | 3     | 3/3       |
+| Phase    | Status      | Tasks | Completed |
+| -------- | ----------- | ----- | --------- |
+| Phase 1  | complete    | 10    | 10/10     |
+| Phase 2  | complete    | 13    | 13/13     |
+| Phase 3  | complete    | 19    | 19/19     |
+| Phase 4  | complete    | 16    | 16/16     |
+| Phase 5  | complete    | 7     | 7/7       |
+| Phase 6  | complete    | 3     | 3/3       |
+| Phase 7  | complete    | 1     | 1/1       |
+| Phase 8  | complete    | 1     | 1/1       |
+| Phase 9  | complete    | 1     | 1/1       |
+| Phase 10 | complete    | 14    | 14/14     |
+| Phase 11 | complete    | 3     | 3/3       |
+| Phase 12 | in_progress | 1     | 0/1       |
 
-**Total:** 88/88 tasks completed
+**Total:** 88/89 tasks completed
 
 ---
 
@@ -2258,3 +2259,34 @@ before configured exit-gate attempt 2 may start.
 exit gate's second and final attempt only if that review passes. Migration,
 archive, completion, PR publication, deployment, and spike-repository deletion
 remain outside Phase 11.
+
+## Phase 12: Preserve normal-route publication guards
+
+**Status:** in progress - 0 of 1 task complete
+**Started:** 2026-08-28
+
+### Review Received: final auto review - 2026-08-28T19:03:06Z
+
+**Review artifact:** `reviews/archived/final-review-2026-08-28T190306Z.md`
+
+**Reviewed head:** `07caa73e332f3bde552f95a20026f499b9c38035`
+
+**Range:** `300504071dd9cfbdcc0f91d6a292fc025293c6a1..07caa73e332f3bde552f95a20026f499b9c38035`
+
+**Findings:** 1 Critical, 0 Important, 0 Medium, 0 Minor.
+
+**New task added:** p12-t01.
+
+**Finding disposition map:**
+
+- C1 -> p12-t01 (`code_fix_required`, Critical): the skill's normal-route
+  decoder writes `-` sentinels into empty publication receipts, causing both
+  required non-archive synced publication guards to skip.
+
+**Deferred findings:** none. Automatic review disposition converted the
+Critical finding. This bounded continuation is owned by the user's authorized
+configured exit-gate closeout; it does not launch or add another configured
+gate attempt.
+
+**Next:** execute Phase 12, run a narrowed final re-review, then start
+configured exit-gate attempt 2 only if that lifecycle review passes.

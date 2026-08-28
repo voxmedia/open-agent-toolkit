@@ -6,7 +6,7 @@ oat_last_updated: 2026-08-28
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_hill_phases: ['p11'] # implementation pauses after the configured exit-gate verification fixes
+oat_plan_hill_phases: ['p12'] # implementation pauses after the configured exit-gate normal-route repair
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null
@@ -3600,6 +3600,62 @@ git commit -m "fix(p11-t03): reject pre-validation push SHA parsing"
 
 ---
 
+## Phase 12: Preserve normal-route publication guards
+
+Close the Critical regression found by the narrowed final lifecycle review
+after Phase 11. This bounded phase remains part of the user-authorized
+configured exit-gate closeout; gate attempt 2 is still unlaunched and remains
+the final allowed configured attempt. Convert the finding with no deferral and
+preserve the existing PR-scoped skill and lockstep package version bumps.
+
+### Task p12-t01: (review) Preserve empty receipts on the normal retry route
+
+**Files:**
+
+- Create: `.agents/skills/oat-project-complete/scripts/parse-completion-retry-fields.mjs`
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Understand the issue**
+
+Final review finding C1: the noncandidate router correctly returns the normal
+route, but the skill decoder emits `-` placeholders for the initialized empty
+pin and final-artifact receipts. The following shell `read` overwrites those
+empty values, so both required `-z "$PROJECT_REF_COMMIT"` publication guards
+skip on a fresh non-archive synced completion.
+
+**Step 2: Implement fix**
+
+Extract the retry-result validation and shell-field decoding into a small
+skill-owned executable consumed by the skill. On the normal route, emit only
+the route so Bash preserves empty receipt/evidence/PR variables. On recovery,
+emit and validate the full receipt field set before assignment. Keep the
+router's fail-closed candidate behavior and eight-row recovery matrix intact.
+
+Add an executable consumer regression that feeds the production router's
+noncandidate JSON through the exact decoder and `IFS`/`read` branch used by the
+skill, proves both normal publication guards execute, and captures full-SHA
+receipts. Retain dirty/contradictory negative coverage and add contract checks
+that the skill invokes the decoder before assigning recovery fields.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/push/completion-transaction.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts && pnpm oat:validate-skills && pnpm run check:skill-bumps && pnpm lint && pnpm format && git diff --check`
+
+Expected: the exact production router/decoder/consumer path leaves normal-route
+receipts empty until both publications capture full SHAs, while every recovery
+and fail-closed case remains green.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/scripts/parse-completion-retry-fields.mjs .agents/skills/oat-project-complete/SKILL.md packages/cli/src/commands/project/push/completion-transaction.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p12-t01): preserve normal completion publications"
+```
+
+---
+
 ## Reviews
 
 | Scope   | Type     | Status          | Date       | Artifact                                                          | Reviewed Head                            | Invocation | Gate Target                   |
@@ -3628,7 +3684,7 @@ git commit -m "fix(p11-t03): reject pre-validation push SHA parsing"
 | final   | code     | passed          | 2026-08-28 | reviews/archived/final-review-2026-08-28T165719Z.md               | f8bce994d2e542d7ae14bfa35a4847074e280b3c | auto       | -                             |
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T174039Z.md               | 0a85a08c8bc0f7527935b7141f22856e89271f8e | gate       | claude-fable-skip-permissions |
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T182836Z.md               | 300504071dd9cfbdcc0f91d6a292fc025293c6a1 | auto       | -                             |
-| final   | code     | received        | 2026-08-28 | reviews/final-review-2026-08-28T190306Z.md                        | 07caa73e332f3bde552f95a20026f499b9c38035 | auto       | -                             |
+| final   | code     | fixes_added     | 2026-08-28 | reviews/archived/final-review-2026-08-28T190306Z.md               | 07caa73e332f3bde552f95a20026f499b9c38035 | auto       | -                             |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                             |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                             |
 | plan    | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -                                        | auto       | -                             |
@@ -3660,15 +3716,16 @@ git commit -m "fix(p11-t03): reject pre-validation push SHA parsing"
 - Phase 9: 1 task - Third operator-extended exact final-links validation and decision-entrypoint coverage
 - Phase 10: 14 tasks - Configured exit-gate remediation across doctor, completion, skill receipt handling, documentation, and project-bound recovery
 - Phase 11: 3 tasks - Executable completion-retry routing, pull reference closure, and status-blind receipt hygiene
+- Phase 12: 1 task - Normal-route retry decoding and publication-guard regression coverage
 
-**Total: 88 tasks**
+**Total: 89 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
 **Operator step after implementation:** delete the disposable spike repository `https://github.com/tkstang/disposable-test-repo-for-oat` (used by p01-t10); the implementing agent never deletes repositories.
 
-The Phase 10 follow-up lifecycle review found one Medium verification gap and
-two Minor remnants. Phase 11 closes those findings before the configured exit
+The Phase 11 follow-up lifecycle review found one Critical regression in the
+normal-route retry decoder. Phase 12 closes it before the configured exit
 gate's second and final attempt.
 
 ---

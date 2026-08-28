@@ -148,6 +148,10 @@ Phase 11 completed p11-t01 through p11-t03 at 1a8e36fe2; tasks=3/3 total=88/88 r
 
 Auto final lifecycle review at head 07caa73e3; no reconnaissance lanes were dispatched; artifact reviews/final-review-2026-08-28T190306Z.md found 1 Critical normal-route publication regression and blocked exit-gate attempt 2.
 
+### 2026-08-28 · structural · oat-project-review-receive · final
+
+Received reviews/archived/final-review-2026-08-28T190306Z.md and converted its 1 Critical finding into p12-t01 with no deferrals; exit-gate attempt 2 remains unlaunched.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
