@@ -5,166 +5,431 @@ oat_blockers: []
 oat_last_updated: 2026-08-28
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_hill_phases: []
+oat_plan_parallel_groups: []
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
+oat_template: true
 ---
 
 # Implementation Plan: portable-agent-references
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> Execute this plan using `oat-project-implement`.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Make every executable cross-skill read shipped by a user-default pack
+scope-portable, and enforce that invariant across canonical skill and agent
+Markdown.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** A manifest-driven ratchet classifies cross-skill `SKILL.md`
+and `references/**/*.md` reads. Loaded skills use loaded/user/project
+resolution; materialized agents use user/project resolution because no stable
+cross-provider loaded-agent path exists.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** TypeScript/Vitest contract tests, canonical Markdown skills and
+agents, OAT bundle/provider sync tooling, pnpm/Turborepo release gates.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
-
-## Planning Checklist
-
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
-
----
+**Commit Convention:** `{type}({task-id}): {description}`
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
+The plan is sequential (`oat_plan_parallel_groups: []`). Phase 1 tasks all
+modify the same exact portability inventory and shared contract tests; running
+them in isolated worktrees would create fragile merge conflicts and could let
+one task reintroduce another task's removed baseline. Phase 2 consumes the
+fully remediated Phase 1 tree and therefore cannot run independently.
 
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
+## Phase 1: Global Ratchet and Portable Callers
 
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
-
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
-
----
-
-## Dispatch Profile
-
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
-
----
-
-RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Other task-body shapes, including non-TDD shapes, are allowed when appropriate, provided the plan preserves stable `pNN-tNN` IDs, per-task verification, and atomic commits.
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Generalize the user-default portability ratchet
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
 
-**Step 1: Write test (RED)**
+**Step 1: Add failing matcher and asset-surface cases**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+Add table-driven cases for cross-skill `SKILL.md` and nested
+`references/**/*.md` targets across backticked, plain, Markdown-link, `./`, and
+`../` spellings. Add manifest fixtures proving that both skill and agent assets
+from user-default packs are included while non-user-default assets are not.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
-
-**Step 2: Implement (GREEN)**
-
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
-
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
-
-**Step 3: Refactor**
-
-{Any cleanup or improvements while tests stay green}
-
-**Step 4: Verify**
-
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
-
-**Step 5: Commit**
+Run:
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
 ```
 
----
+Expected: new cases fail before the collector and matcher are generalized.
 
-### Task p01-t02: {Task Name}
+**Step 2: Implement deterministic cross-skill reference collection**
+
+- Derive user-default skill and agent assets from `PACK_MANIFEST`.
+- Enumerate authored Markdown for directory skills and single-file agents.
+- Record exact `file`, `targetSkill`, and `targetPath` identities.
+- Treat same-owner local references separately from cross-skill reads.
+- Keep historical evidence in its existing exact baseline.
+- Introduce a separate exact migration inventory for current executable debt;
+  never merge it into the historical baseline.
+
+**Step 3: Verify and format**
+
+```bash
+pnpm exec oxfmt --write packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+git diff --check
+```
+
+Expected: matcher/manifest fixtures pass and the exact migration inventory
+matches the current repository with source/target evidence.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+git commit -m "test(p01-t01): generalize portable reference ratchet"
+```
+
+### Task p01-t02: Port utility-pack cross-skill reads
 
 **Files:**
 
-- {File list}
+- Modify: `.agents/skills/oat-dispatch-subagents/SKILL.md`
+- Modify: `.agents/skills/oat-review-provide-remote/SKILL.md`
+- Modify: `.agents/skills/oat-repo-improve/SKILL.md`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
 
-**Step 1: Write test (RED)**
+**Step 1: Add portable caller assertions**
 
-{Test code}
+Assert loaded-skill → user → project candidate order, exact target validation,
+independent roots where multiple dependencies exist, no ambient discovery, and
+`utility` recovery commands. Pin the current skill versions before changing
+content.
 
-**Step 2: Implement (GREEN)**
-
-{Implementation code or signatures}
-
-**Step 3: Refactor**
-
-{Optional cleanup}
-
-**Step 4: Verify**
-
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
-
-**Step 5: Commit**
+Run:
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/validation/skills.test.ts
 ```
 
----
+Expected: the new caller assertions fail against repository-relative reads.
 
-## Phase 2: {Phase Name}
+**Step 2: Port callers and shrink the migration inventory**
 
-### Task p02-t01: {Task Name}
+- Resolve `subagent-orchestration`, `oat-dispatch-subagents`, and
+  `oat-review-provide` reference targets through independently bound installed
+  roots as applicable.
+- Preserve selection, launch, recovery, and review semantics.
+- Fail closed with owning-pack install/update guidance.
+- Remove the remediated exact entries from the migration inventory.
+- Increment each changed canonical skill's frontmatter version exactly once and
+  update its explicit validation pin.
 
-{Continue TDD pattern...}
+**Step 3: Verify and format**
 
----
+```bash
+pnpm exec oxfmt --write '.agents/skills/oat-dispatch-subagents/**/*.md' '.agents/skills/oat-review-provide-remote/**/*.md' '.agents/skills/oat-repo-improve/**/*.md' packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/validation/skills.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/validation/skills.test.ts
+pnpm lint
+pnpm format
+git diff --check
+```
+
+Expected: utility callers satisfy the portable contract and no longer appear
+in the migration inventory.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-dispatch-subagents .agents/skills/oat-review-provide-remote .agents/skills/oat-repo-improve packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p01-t02): port utility cross-skill references"
+```
+
+### Task p01-t03: Port research-pack cross-skill reads
+
+**Files:**
+
+- Modify: `.agents/skills/analyze/SKILL.md`
+- Modify: `.agents/skills/compare/SKILL.md`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Add research caller assertions**
+
+Assert that both research skills resolve `deep-research` reference files
+through the loaded/user/project skill-root contract and stop with `research`
+pack recovery when the exact target is missing.
+
+**Step 2: Port callers and remove their migration entries**
+
+Replace repository-relative and parent-relative cross-skill reads with
+installed-root bindings. Preserve the report schema and orchestration behavior.
+Increment both skill versions once and update their explicit validation pins.
+
+**Step 3: Verify and format**
+
+```bash
+pnpm exec oxfmt --write '.agents/skills/analyze/**/*.md' '.agents/skills/compare/**/*.md' packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/validation/skills.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/validation/skills.test.ts
+pnpm lint
+pnpm format
+git diff --check
+```
+
+Expected: research callers are portable and their exact debt entries are gone.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/analyze .agents/skills/compare packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p01-t03): port research cross-skill references"
+```
+
+### Task p01-t04: Port workflow review-provider references
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Add workflow caller assertions**
+
+Assert that the project review skill resolves the utility-pack review artifact
+template through the installed-scope contract and provides correct recovery.
+
+**Step 2: Port the caller and remove its migration entry**
+
+Bind the exact `oat-review-provide` template through a portable root, preserve
+review output semantics, bump the skill version once, and update its validation
+pin.
+
+**Step 3: Verify and format**
+
+```bash
+pnpm exec oxfmt --write '.agents/skills/oat-project-review-provide/**/*.md' packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/validation/skills.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/validation/skills.test.ts
+pnpm lint
+pnpm format
+git diff --check
+```
+
+Expected: the workflow-to-utility reference is portable and absent from the
+migration inventory.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-review-provide packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p01-t04): port workflow review references"
+```
+
+### Task p01-t05: Port user-default agent references and remove the exemption
+
+**Files:**
+
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `.agents/agents/oat-codebase-mapper.md`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Add agent portable-contract assertions**
+
+Assert user → project order without an invented loaded-agent candidate,
+independent dependency bindings, exact target checks, correct `workflows` and
+`utility` recovery, and absence of executable bare agent reads. Add equivalent
+coverage for the phase implementer, reviewer, and codebase mapper.
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/validation/skills.test.ts
+```
+
+Expected: assertions fail while the three agents retain bare paths.
+
+**Step 2: Port agents and delete the exemption**
+
+- Resolve each required sibling independently from user scope, then project
+  scope.
+- Preserve optional-dispatch, reviewer-reconnaissance, and codebase-mapper
+  responsibilities.
+- Replace the `oat-phase-implementer` test branch that requires bare paths with
+  normal positive portable assertions.
+- Remove all agent entries from the migration inventory.
+- Increment each changed agent version once and update explicit version tests.
+
+**Step 3: Verify generated roles and format**
+
+```bash
+pnpm exec oxfmt --write .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/agents/oat-codebase-mapper.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/validation/skills.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/validation/skills.test.ts
+oat sync --scope all --dry-run
+pnpm lint
+pnpm format
+git diff --check
+```
+
+Expected: canonical agents and provider-role plans contain only portable reads;
+the phase-implementer exemption no longer exists.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/agents/oat-codebase-mapper.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p01-t05): port user-default agent references"
+```
+
+### Task p01-t06: Finalize the zero-debt portability invariant
+
+**Files:**
+
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Remove the temporary migration inventory**
+
+Require the manifest-derived executable finding set to be empty after applying
+only the exact historical/self-reference classification. Retain deterministic
+failure evidence and ensure no migration allowlist remains.
+
+**Step 2: Add bundled-copy assertions**
+
+Run `bundle-assets.sh` against a temporary asset root and assert the changed
+skills and agents preserve candidate order, exact target binding, and
+fail-closed recovery in the shipped copy.
+
+**Step 3: Verify Phase 1**
+
+```bash
+pnpm exec oxfmt --write packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/validation/skills.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/validation/skills.test.ts
+pnpm run check:skill-bumps
+pnpm lint
+pnpm format
+git diff --check
+```
+
+Expected: no executable cross-skill debt remains in user-default skill or agent
+Markdown and the focused suite passes.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/validation/skills.test.ts
+git commit -m "test(p01-t06): enforce zero portable reference debt"
+```
+
+## Phase 2: Documentation, Packaging, and Release Validation
+
+### Task p02-t01: Document the global skill-and-agent portability contract
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/contributing/skills.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md` if the existing
+  mixed-scope section cannot express the agent fallback without ambiguity
+
+**Step 1: Update contributor guidance**
+
+Document manifest-wide skill/agent enforcement, the distinct loaded-skill and
+materialized-agent candidate orders, independent dependency roots, exact
+historical baselines, and pack-specific fail-closed recovery.
+
+**Step 2: Format and verify**
+
+```bash
+pnpm exec oxfmt --write apps/oat-docs/docs/contributing/skills.md apps/oat-docs/docs/cli-utilities/tool-packs.md
+pnpm check
+pnpm build:docs
+git diff --check
+```
+
+Expected: documentation checks and docs build pass without navigation drift.
+
+**Step 3: Commit**
+
+```bash
+git add apps/oat-docs/docs/contributing/skills.md apps/oat-docs/docs/cli-utilities/tool-packs.md
+git commit -m "docs(p02-t01): document portable agent references"
+```
+
+### Task p02-t02: Refresh shipped assets and validate the lockstep release
+
+**Files:**
+
+- Modify: `.oat/sync/manifest.json`
+- Modify: generated provider views selected by `oat sync --scope all`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: lockfile only if the workspace version update requires it
+
+**Step 1: Select and apply the release version**
+
+Fetch `origin/main`, choose one lockstep version strictly greater than every
+public package on current main, update all five packages plus the bundled
+version inventory, and refresh provider views.
+
+```bash
+git fetch origin
+oat sync --scope all
+```
+
+**Step 2: Run the ordered repository gates with explicit exit capture**
+
+```bash
+portable_agent_gate_dir="$(mktemp -d)"
+run_portable_agent_gate() {
+  portable_agent_label="$1"
+  shift
+  "$@" >"$portable_agent_gate_dir/$portable_agent_label.log" 2>&1
+  portable_agent_exit=$?
+  printf '%s exit=%s\n' "$portable_agent_label" "$portable_agent_exit"
+  if [ "$portable_agent_exit" -ne 0 ]; then
+    tail -n 200 "$portable_agent_gate_dir/$portable_agent_label.log"
+    return "$portable_agent_exit"
+  fi
+}
+
+run_portable_agent_gate 01-check pnpm check
+run_portable_agent_gate 02-type-check pnpm type-check
+run_portable_agent_gate 03-test pnpm test
+run_portable_agent_gate 04-build pnpm build
+run_portable_agent_gate 05-skill-bumps pnpm run check:skill-bumps
+run_portable_agent_gate 06-release-versions pnpm release:check-versions
+run_portable_agent_gate 07-release-validate pnpm release:validate
+run_portable_agent_gate 08-build-docs pnpm build:docs
+run_portable_agent_gate 09-lint pnpm lint
+run_portable_agent_gate 10-format pnpm format
+run_portable_agent_gate 11-diff-check git diff --check
+```
+
+Expected: every gate reports exit `0` in the documented order.
+
+**Step 3: Commit**
+
+Stage only the sync, provider, version, inventory, and lockfile paths actually
+changed, then commit:
+
+```bash
+git commit -m "chore(p02-t02): release portable agent references"
+```
 
 ## Reviews
-
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
 | Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
 | ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
@@ -173,40 +438,27 @@ git commit -m "feat(p01-t02): {description}"
 | final  | code     | pending | -    | -        | -             | -          | -           |
 | spec   | artifact | pending | -    | -        | -             | -          | -           |
 | design | artifact | pending | -    | -        | -             | -          | -           |
-
-For code-review events, `Reviewed Head` is the full 40-character SHA at the
-head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
-`Gate Target` is populated only for gate events. Legacy five-column rows remain
-valid. Writers must preserve every existing row and every unknown trailing
-cell; never truncate a widened row back to five columns.
-
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
-
----
+| plan   | artifact | pending | -    | -        | -             | -          | -           |
 
 ## Implementation Complete
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 6 tasks - manifest-driven global ratchet and complete executable
+  caller remediation
+- Phase 2: 2 tasks - documentation, provider sync, lockstep release, and full
+  verification
 
-**Total: {N} tasks**
+**Total: 8 tasks**
 
-Ready for code review and merge.
-
----
+Ready for `oat-project-implement` after artifact review, dispatch policy
+selection, and the configured quick-start gate.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Lightweight design: `design.md`
+- Prior project record:
+  `.oat/repo/reference/project-summaries/20260828-portable-skill-references.md`
+- Prior independent exit review:
+  `.oat/projects/archived/portable-skill-references/reviews/archived/final-review-2026-08-28T175129Z.md`
