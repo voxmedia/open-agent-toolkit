@@ -19,18 +19,16 @@ Execute the implementation plan task-by-task with full state tracking.
 
 ## Shared Subagent Dispatch Contract
 
-Before any launch, resolve each sibling's `${SKILLS_ROOT}` in order: (1) derive
-`${SKILL_DIR}/..` from this loaded `SKILL.md` or provider path; (2) try
-`${HOME}/.agents/skills`; (3) fall back to `<repo-root>/.agents/skills`.
+Before launch, independently probe each sibling in order: `${SKILL_DIR}/..`
+from this loaded skill, `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Use the first `<name>/SKILL.md`; never ambient
+discovery. On a miss, name it, stop every implementation, fix, or reviewer
+dispatch, and give its intended-scope recovery command:
 
-Probe each candidate for `<name>/SKILL.md` and treat the first match as
-`${SKILLS_ROOT}`. Tell the user which required dispatch skill is not installed.
-On failure, stop before any implementation, fix, or reviewer dispatch.
-Do not fall back to ambient skill discovery. Resolve and read
-`${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`, then
-`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`. Both are mandatory in order.
-Display structured resolver notices before implementation launch using the
-effective target. It must not require restart or hot reload.
+- `oat-project-dispatch-subagents`: `oat tools install workflows --scope <user|project>` or `oat tools update --pack workflows --scope <user|project>`.
+- `oat-dispatch-subagents` or `subagent-orchestration`: `oat tools install utility --scope <user|project>` or `oat tools update --pack utility --scope <user|project>`.
+
+Read `${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`, then `${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`; both are mandatory in order. Display structured resolver notices before implementation launch using the effective target. It must not require restart or hot reload.
 
 Read `${SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md`.
 After resolving `ACTIVE_PROVIDER`, read exactly one selection reference there

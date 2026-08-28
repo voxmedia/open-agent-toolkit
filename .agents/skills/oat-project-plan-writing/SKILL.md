@@ -36,8 +36,14 @@ required sibling skill in this order:
 
 Probe each candidate for `<name>/SKILL.md` and treat the first match as
 `${SKILLS_ROOT}`. If no candidate resolves, tell the user which required
-dispatch skill is not installed and stop before the artifact self-review
-dispatch. Do not fall back to ambient skill discovery.
+dispatch skill is not installed. For `oat-project-dispatch-subagents`, run
+`oat tools install workflows --scope <user|project>` or
+`oat tools update --pack workflows --scope <user|project>` at its intended
+scope. For `oat-dispatch-subagents` or `subagent-orchestration`, run
+`oat tools install utility --scope <user|project>` or
+`oat tools update --pack utility --scope <user|project>` at its intended scope.
+Stop before the artifact self-review dispatch. Do not fall back to ambient skill
+discovery.
 
 Resolve, read, and follow
 `${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`, then resolve and read

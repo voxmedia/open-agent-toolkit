@@ -411,7 +411,11 @@ read, in order:
 
 Probe each candidate for `<name>/SKILL.md` and treat the first match as
 `${SKILLS_ROOT}`. If no candidate resolves, tell the user the chained skill is
-not installed and stop that branch instead of improvising its process.
+not installed and name its pack: `ideas` for `oat-idea-*`,
+`project-management` for `oat-pjm-*`, and `workflows` for `oat-project-*`.
+At the intended scope, run `oat tools install <pack> --scope <user|project>` or
+`oat tools update --pack <pack> --scope <user|project>`, then stop that branch
+instead of improvising its process.
 Operational handoffs in `references/destinations.md` inherit this resolver;
 resolve `${SKILLS_ROOT}` with this contract before executing any sibling read
 specified there.

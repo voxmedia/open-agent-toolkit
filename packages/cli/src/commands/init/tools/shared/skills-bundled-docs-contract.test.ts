@@ -338,15 +338,36 @@ describe('skills bundled docs contract', () => {
       const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
 
       expectPortableSkillsRootCandidateOrder(content, skill);
-      expect(content).toContain(
-        'Probe each candidate for `<name>/SKILL.md` and treat the first match as',
-      );
+      expect(content).toContain('Probe each candidate for `<name>/SKILL.md`');
       expect(content).toContain(
         'stop the current branch instead of improvising its process',
+      );
+      expect(content).toContain(
+        'oat tools install ideas --scope <user|project>',
+      );
+      expect(content).toContain(
+        'oat tools update --pack ideas --scope <user|project>',
       );
       expect(collectBareCrossSkillTargets(content, skill)).toEqual([]);
     },
   );
+
+  it('maps brainstorm sibling recovery to the owning pack', () => {
+    const content = readFileSync(
+      join(SKILLS_DIR, 'oat-brainstorm', 'SKILL.md'),
+      'utf8',
+    );
+
+    expect(content).toContain('`ideas` for `oat-idea-*`');
+    expect(content).toContain('`project-management` for `oat-pjm-*`');
+    expect(content).toContain('`workflows` for `oat-project-*`');
+    expect(content).toContain(
+      'oat tools install <pack> --scope <user|project>',
+    );
+    expect(content).toContain(
+      'oat tools update --pack <pack> --scope <user|project>',
+    );
+  });
 
   it('ships the portable brainstorm summarize handoff in the bundled copy', () => {
     const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-portable-assets-'));
@@ -382,10 +403,13 @@ describe('skills bundled docs contract', () => {
   }, 15_000);
 
   it.each([
-    ['oat-project-implement', 'stop before any implementation, fix, or'],
+    [
+      'oat-project-implement',
+      'stop every implementation, fix, or reviewer\ndispatch',
+    ],
     [
       'oat-project-plan-writing',
-      'stop before the artifact self-review\ndispatch',
+      'Stop before the artifact self-review dispatch',
     ],
   ])(
     '%s resolves both dispatch contracts before dispatch',
@@ -397,11 +421,23 @@ describe('skills bundled docs contract', () => {
         '`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`';
 
       expectPortableSkillsRootCandidateOrder(content, skill);
-      expect(content).toContain(
-        'Probe each candidate for `<name>/SKILL.md` and treat the first match as',
-      );
+      expect(content).toContain('`<name>/SKILL.md`');
       expect(content).toContain(stopText);
-      expect(content).toContain('Do not fall back to ambient skill discovery');
+      expect(content).toMatch(
+        /never ambient\s+discovery|Do not fall back to ambient skill\s+discovery/,
+      );
+      expect(content).toContain(
+        'oat tools install workflows --scope <user|project>',
+      );
+      expect(content).toContain(
+        'oat tools update --pack workflows --scope <user|project>',
+      );
+      expect(content).toContain(
+        'oat tools install utility --scope <user|project>',
+      );
+      expect(content).toContain(
+        'oat tools update --pack utility --scope <user|project>',
+      );
       expect(content.indexOf(projectDispatchRead)).toBeLessThan(
         content.indexOf(sharedDispatchRead),
       );

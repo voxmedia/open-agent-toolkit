@@ -46,8 +46,10 @@ Before reading a sibling skill, resolve the skills root in this order:
 
 Probe each candidate for `<name>/SKILL.md` and treat the first match as
 `${SKILLS_ROOT}`. If no candidate resolves, tell the user that the required
-sibling skill `<name>` is not installed, suggest installing or updating the
-`ideas` pack, and stop the current branch instead of improvising its process.
+sibling skill `<name>` is not installed. At the scope containing this loaded
+skill, run `oat tools install ideas --scope <user|project>` or, when the pack is
+already installed there, `oat tools update --pack ideas --scope <user|project>`.
+Then stop the current branch instead of improvising its process.
 
 ### Step 0: Resolve Ideas Level
 
