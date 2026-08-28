@@ -656,7 +656,7 @@ Source: inline feedback (2026-08-28)
 | final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T151136Z.md`         | 34a4b8268bd85ded4c7c37def94e240bd4734674 | manual     | -                             |
 | final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T152436Z.md`         | b15f7c81f11c2a2cad8427eb9eeff8f99f922ee9 | manual     | -                             |
 | final         | code     | passed          | 2026-08-28 | `reviews/archived/final-review-2026-08-28T173122Z.md`         | 44786aa5a32a32cc74ef945498e0fd288a4e04e9 | manual     | -                             |
-| final         | code     | received        | 2026-08-28 | `reviews/final-review-2026-08-28T175129Z.md`                  | 1753e71a336b9cb88f5a6a30ce7d6695e53e493e | gate       | claude-fable-skip-permissions |
+| final         | code     | passed          | 2026-08-28 | `reviews/archived/final-review-2026-08-28T175129Z.md`         | 1753e71a336b9cb88f5a6a30ce7d6695e53e493e | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`

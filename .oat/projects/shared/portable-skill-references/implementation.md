@@ -747,11 +747,12 @@ commit `dba46295a0d02c1bd1bca179a954bf902a2ae1c6`; Phase 2 and Phase 3 used no
 recovery attempts or nested dispatches.
 
 Outstanding non-blocking observations are the pre-existing PJM doctor layout
-warnings and confirmed cleanup-timeout test flakes. All 18 planned tasks are
-complete, including `prev1-t09`'s manual invocation-provenance repair and
-`prev1-t10`'s terminal artifact refresh. Per the explicit artifact-only fix
-policy, only the configured independent exit-gate refresh remains before
-implementation closeout.
+warnings, confirmed cleanup-timeout test flakes, and the explicitly deferred
+portability follow-ups below. All 18 planned tasks are complete, including
+`prev1-t09`'s manual invocation-provenance repair and `prev1-t10`'s terminal
+artifact refresh. The configured independent exit gate passed at the Important
+threshold; its subthreshold findings were dispositioned without reopening a
+standard review cycle under the explicit artifact-only fix policy.
 
 ## Completion Report
 
@@ -759,9 +760,8 @@ implementation closeout.
 - **Reviews:** prior final and remote findings are fixed; the `prev1-t09`
   invocation-provenance repair and `prev1-t10` terminal artifact refresh are
   complete, with no additional standard re-review required
-- **Exit gate:** the earlier `cursor-fable-5-xhigh` pass is stale after the
-  authorized merge and must be refreshed before implementation success; it is
-  the sole remaining implementation lifecycle gate
+- **Exit gate:** refreshed through `claude-fable-skip-permissions`; passed at
+  the Important threshold with no blocking findings
 - **Verification:** repository gates 01-11 passed with exit-zero evidence
 - **Documentation:** contributor guidance updated and validated
 - **Project recap:** skipped by explicit user choice; no recap run or manifest
@@ -783,9 +783,29 @@ implementation closeout.
 `reviews/implement-exit-gate-result-09bb3b6a-6ef4-4334-b0b7-247279858b3b.json`
 **Gate run:** `2e1675d2-e87a-48c9-a0f7-f0fb6a526887`
 **Target:** `claude-fable-skip-permissions`
-**Status:** result persisted; gate passed at the Important threshold
+**Status:** passed at the Important threshold; review received and archived
 **Findings:** 0 Critical, 0 Important, 2 Medium, 1 Minor
-**Receive:** eligible; intent persisted for the passing-gate judgment sweep
+**Receive:** judgment sweep completed; subthreshold findings deferred below
+
+### Deferred Findings (Medium)
+
+- **M1 — widen the ratchet beyond sibling `SKILL.md`:** the current matcher
+  does not detect bare cross-skill `references/*.md` reads. This is outside the
+  five-skill delivery boundary and would expand an already-open release PR.
+  Capture and implement it in the next portability follow-up immediately after
+  this PR merges, with an exact historical baseline for the live references.
+- **M2 — port residual user-default agent and utility surfaces:**
+  `oat-phase-implementer.md`, `oat-reviewer.md`, and
+  `oat-dispatch-subagents/SKILL.md` retain bare executable sibling reads. They
+  were not among this project's five named skills. Enumerate them in the same
+  post-merge portability follow-up and port them with pack-level tests.
+
+### Deferred Finding (Minor)
+
+- Add a rationale comment to the phase-implementer exemption in
+  `skills.test.ts` when M2 removes or ports that exemption. Changing a test-only
+  comment after the passing gate would add closeout churn without changing the
+  delivered contract.
 
 ## References
 

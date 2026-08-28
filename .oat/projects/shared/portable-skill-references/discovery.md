@@ -104,6 +104,9 @@ remediated.
   `scope-adoption-diagnostics`.
 - Rewriting historical dogfood reports solely to modernize non-executable
   evidence paths.
+- Porting residual bare sibling reads in user-default agent surfaces or widening
+  the ratchet from sibling `SKILL.md` targets to cross-skill `references/*.md`;
+  those surfaces are deferred to the next portability follow-up after merge.
 - Publishing packages or opening/merging a PR.
 
 ## Risks
