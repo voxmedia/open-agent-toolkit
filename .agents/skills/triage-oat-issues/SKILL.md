@@ -292,29 +292,40 @@ backlog, or program waves during triage.
 
 ### Step 9: Open the Triage PR and Stop
 
-Commit only the approved triage record and backlog changes. Push the dedicated
-branch and open a pull request that summarizes:
+Use a two-commit handshake so the pull request number reaches the record that
+will eventually merge:
 
-- Scope and evidence baseline
-- Verified dispositions
-- Backlog changes
-- Deferred post-merge GitHub actions
-- Open concerns or questions
-- Exact resume instruction
+1. Commit only the approved triage record and backlog changes, with the record
+   still in `approved` state and `triage_pr: null`.
+2. Push the dedicated branch and open a pull request that summarizes:
+   - Scope and evidence baseline
+   - Verified dispositions
+   - Backlog changes
+   - Deferred post-merge GitHub actions
+   - Open concerns or questions
+   - Exact resume instruction
+
+3. Capture the opened pull request's number and URL.
+4. Set the record status to `pr_open`, replace `triage_pr: null` with the pull
+   request reference, and add the copyable resume instruction.
+5. Format and check the updated record, commit that binding as a second commit,
+   and push it to the open pull request.
+6. Re-read the record from the remote pull request head and verify that it
+   contains the exact pull request reference. Verify that the worktree is clean.
 
 Avoid `Closes #NNN` and similar auto-close keywords. GitHub issue state must not
 change before the triage PR merges.
 
-Set the record status to `pr_open`, add the PR reference, and include a copyable
-instruction such as:
+Use a copyable instruction such as:
 
 ```text
 After merging this PR, invoke:
 /triage-oat-issues resume post-merge PR #123
 ```
 
-Stop after the PR is open. Do not wait for or merge the PR unless the user
-separately requests that action.
+Stop only after the binding commit is visible on the pull request and the remote
+record contains its own pull request reference. Do not wait for or merge the pull
+request unless the user separately requests that action.
 
 ### Step 10: Resume Post-Merge Actions
 
