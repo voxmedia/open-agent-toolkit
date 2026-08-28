@@ -60,8 +60,14 @@ export async function syncLocalPaths(
       continue;
     }
 
-    const gitMarker = join(sourcePath, '.git');
-    if ((await dirExists(gitMarker)) || (await fileExists(gitMarker))) {
+    const sourceGitMarker = join(sourcePath, '.git');
+    const destinationGitMarker = join(destPath, '.git');
+    if (
+      (await dirExists(sourceGitMarker)) ||
+      (await fileExists(sourceGitMarker)) ||
+      (await dirExists(destinationGitMarker)) ||
+      (await fileExists(destinationGitMarker))
+    ) {
       entries.push({
         path: localPath,
         status: 'skipped',

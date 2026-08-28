@@ -296,4 +296,57 @@ describe('oat local sync', () => {
     ]);
     expect(await fileExists(join(target, localPath))).toBe(false);
   });
+
+  it.each(['file', 'directory'] as const)(
+    'preserves a destination rooted at a nested-worktree git %s under force',
+    async (markerKind) => {
+      const source = await createDir();
+      const target = await createDir();
+      const localPath = '.oat/projects/synced/example';
+      const sourcePath = join(source, localPath);
+      const destinationPath = join(target, localPath);
+
+      await mkdir(sourcePath, { recursive: true });
+      await writeFile(join(sourcePath, 'state.md'), 'replacement', 'utf8');
+      await mkdir(destinationPath, { recursive: true });
+      await writeFile(join(destinationPath, 'state.md'), 'preserve', 'utf8');
+      if (markerKind === 'file') {
+        await writeFile(
+          join(destinationPath, '.git'),
+          'gitdir: /tmp/example.git/worktrees/example\n',
+          'utf8',
+        );
+      } else {
+        await mkdir(join(destinationPath, '.git'), { recursive: true });
+        await writeFile(
+          join(destinationPath, '.git', 'config'),
+          '[core]\n',
+          'utf8',
+        );
+      }
+
+      const result = await syncLocalPaths({
+        sourceRoot: source,
+        targetRoot: target,
+        localPaths: [localPath],
+        direction: 'to',
+        force: true,
+      });
+
+      expect(result.entries).toEqual([
+        { path: localPath, status: 'skipped', reason: 'nested-worktree' },
+      ]);
+      await expect(
+        readFile(join(destinationPath, 'state.md'), 'utf8'),
+      ).resolves.toBe('preserve');
+      await expect(
+        readFile(
+          markerKind === 'file'
+            ? join(destinationPath, '.git')
+            : join(destinationPath, '.git', 'config'),
+          'utf8',
+        ),
+      ).resolves.toContain(markerKind === 'file' ? 'gitdir:' : '[core]');
+    },
+  );
 });
