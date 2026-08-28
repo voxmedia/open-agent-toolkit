@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: p13-t12
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,8 +14,8 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> One hundred one implementation and revision tasks are complete. The Phase 13
-> gate review added five follow-up tasks; execution resumes at `p13-t12` before
+> All one hundred six implementation and revision tasks are complete. The Phase
+> 13 gate-review fixes are verified and await fresh independent review before
 > PR #227 is updated.
 >
 > Conventions:
@@ -28,24 +28,24 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 10    | 10/10     |
-| Phase 2      | complete    | 13    | 13/13     |
-| Phase 3      | complete    | 19    | 19/19     |
-| Phase 4      | complete    | 16    | 16/16     |
-| Phase 5      | complete    | 7     | 7/7       |
-| Phase 6      | complete    | 3     | 3/3       |
-| Phase 7      | complete    | 1     | 1/1       |
-| Phase 8      | complete    | 1     | 1/1       |
-| Phase 9      | complete    | 1     | 1/1       |
-| Phase 10     | complete    | 14    | 14/14     |
-| Phase 11     | complete    | 3     | 3/3       |
-| Phase 12     | complete    | 1     | 1/1       |
-| Phase p-rev1 | complete    | 1     | 1/1       |
-| Phase 13     | in progress | 16    | 11/16     |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 10    | 10/10     |
+| Phase 2      | complete | 13    | 13/13     |
+| Phase 3      | complete | 19    | 19/19     |
+| Phase 4      | complete | 16    | 16/16     |
+| Phase 5      | complete | 7     | 7/7       |
+| Phase 6      | complete | 3     | 3/3       |
+| Phase 7      | complete | 1     | 1/1       |
+| Phase 8      | complete | 1     | 1/1       |
+| Phase 9      | complete | 1     | 1/1       |
+| Phase 10     | complete | 14    | 14/14     |
+| Phase 11     | complete | 3     | 3/3       |
+| Phase 12     | complete | 1     | 1/1       |
+| Phase p-rev1 | complete | 1     | 1/1       |
+| Phase 13     | complete | 16    | 16/16     |
 
-**Total:** 101/106 tasks completed
+**Total:** 106/106 tasks completed
 
 ---
 
@@ -2846,7 +2846,7 @@ and the primary reviewer's reconciliation.
 
 ## Phase 13: Post-merge final review fixes
 
-**Status:** complete - 11 of 11 tasks complete; independent review pending
+**Status:** complete - 16 of 16 tasks complete; independent review pending
 
 ### Phase Summary
 
@@ -2871,16 +2871,21 @@ metadata. All planned task commits are append-only and remain in task order.
 | p13-t09 | done   | `c2d986a92` | Real-Git removed-parent nested registration fixture passed (56/56 focused)    |
 | p13-t10 | done   | `4baacec0f` | One-sided, unequal, equal, and offline doctor matrix passed (14/14 focused)   |
 | p13-t11 | done   | `9027fd6a7` | Fresh-origin version gate and five-package release validation passed          |
+| p13-t12 | done   | `49e5cd72e` | Optional-log receipt recovery and canonical skill checks passed               |
+| p13-t13 | done   | `862f450ba` | Same-scope retry and cross-scope archive isolation passed (93/93 focused)     |
+| p13-t14 | done   | `08f86b083` | Failed record write cleanup and single-identity retry passed (94/94 focused)  |
+| p13-t15 | done   | `c1b2f5e35` | Real locked-and-missing worktree registration fixture passed (57/57 focused)  |
+| p13-t16 | done   | `f4df3d1b2` | Local ref-query diagnostic matrix and fresh-origin version gates passed       |
 
-The canonical `oat-project-complete` skill is now `1.7.1`. Receipt recovery
-accepts only the pin-source commit's canonical completed state and final sealed
-completion-log entries: exactly one completion transition, matching valid UTC
-completion/state timestamps, and the canonical `oat-project-complete · seal`
-entry. Active, incomplete, missing-log, and unsealed repository-backed cases
-fail closed.
+The canonical `oat-project-complete` skill is now `1.7.2`. Receipt recovery
+accepts only the pin-source commit's canonical completed state. A project log is
+optional; when present it must retain the final sealed completion-log contract:
+exactly one completion transition, matching valid UTC completion/state
+timestamps, and the canonical `oat-project-complete · seal` entry. Active,
+incomplete, and present-but-unsealed repository-backed cases fail closed.
 
-The five lockstep public packages and generated CLI version asset are `0.2.41`,
-the smallest fresh version above the branch's prior `0.2.40` and current
+The five lockstep public packages and generated CLI version asset are `0.2.42`,
+the smallest fresh version above the branch's prior `0.2.41` and current
 `origin/main`'s `0.2.39`. `pnpm install --lockfile-only` found the lockfile
 already canonical because workspace package versions are not represented in
 it, so no synthetic lockfile delta was created.
@@ -2915,6 +2920,41 @@ diagnostics:
 continuation_events:
   - p13-recovery-01-migration-rollback-mock
   - p13-recovery-02-e2e-snapshot-identity
+task_class: consequential
+model_class_floor: consequential
+classification_source: caller
+classification_reason: Destructive Git rollback safety and lifecycle recovery correctness are load-bearing.
+floor_satisfaction: satisfied
+dispatch_stamp: 'Dispatch: scope=p13 action=implementation role=worker producer=oat-project-implement provenance=native model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high'
+```
+
+### Follow-up Dispatch Record
+
+```yaml
+request_id: c353c79f-3b6d-4d8f-a1ab-dcad59365037
+caller: oat-project-implement
+scope: synced-project-scope/p13
+objective: Implement Phase 13 gate-review follow-up fixes in task order.
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+authority: p13-t12 through p13-t16 declared files, tightly necessary adjacent tests, and Phase 13 bookkeeping
+role_selector: oat-phase-implementer-gpt-5-6-sol-high
+model_selector: gpt-5.6-sol
+model_selector_granularity: materialized-role
+effort_selector: high
+selection_source: native-default
+launch_status: accepted
+child_outcome: completed
+configured_invocation_evidence:
+  - exact registered implementer type accepted with materialized model and effort controls
+runtime_confirmation: not-reported
+diagnostics: []
+continuation_events: []
 task_class: consequential
 model_class_floor: consequential
 classification_source: caller
@@ -3028,5 +3068,6 @@ floor_satisfaction: satisfied
 **Reconnaissance:** not attempted; the reviewer directly inspected the full
 18-commit Phase 13 range and ran 430 focused tests plus version gates.
 
-**Next:** Execute `p13-t12` through `p13-t16`, update this event to
-`fixes_completed`, and run a fresh independent review.
+**Fix completion:** Tasks `p13-t12` through `p13-t16` are complete in five
+verified commits. This exact review event is `fixes_completed`, never passed.
+A fresh independent review is required.

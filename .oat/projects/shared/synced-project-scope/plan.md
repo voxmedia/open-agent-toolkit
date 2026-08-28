@@ -3700,7 +3700,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | plan    | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T031106Z.md       | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
 | plan    | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T032056Z.md       | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
 | plan    | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T033204Z.md       | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| p13     | code     | fixes_added     | 2026-08-28 | reviews/archived/p13-review-2026-08-28T233340Z.md                 | 95cf11abb3f74fe3a63342cf8bc58bb926e1407a | gate       | claude-fable-skip-permissions |
+| p13     | code     | fixes_completed | 2026-08-28 | reviews/archived/p13-review-2026-08-28T233340Z.md                 | 95cf11abb3f74fe3a63342cf8bc58bb926e1407a | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
