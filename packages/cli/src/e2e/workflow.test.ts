@@ -569,7 +569,7 @@ describe('synced project lifecycle', () => {
         expect(archivedPayload).toMatchObject({
           status: 'ok',
           projectName: 'demo',
-          snapshotId: 'demo',
+          snapshotId: expect.stringMatching(/^\d{8}-demo$/),
           lifecycleCommit: expect.stringMatching(/^[a-f0-9]{40}$/),
         });
         expect(archived.exitCode).toBe(0);
@@ -590,7 +590,10 @@ describe('synced project lifecycle', () => {
               'utf8',
             ),
           ),
-        ).toMatchObject({ status: 'complete', archiveSnapshot: 'demo' });
+        ).toMatchObject({
+          status: 'complete',
+          archiveSnapshot: expect.stringMatching(/^\d{8}-demo$/),
+        });
 
         const legacy = await runCli(
           fixture.cloneA,
