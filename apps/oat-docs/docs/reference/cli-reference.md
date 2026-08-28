@@ -71,14 +71,21 @@ Notable commands introduced in the current CLI surface:
   pulled by default; `--no-children` limits the operation to the selected
   project.
 - `oat project links [project] --format markdown|json` - render SHA-pinned
-  links for the linkable artifacts on the project ref. `--durable-summary`
-  appends an archive-safe summary link when one is available.
-- `oat project prune <project> [--force]` - remove every checkout, the local
-  and remote project refs, and the tracked record. This is the explicit
-  destructive operation; `--force` may discard dirty or unpushed artifacts.
-- `oat project migrate <path> --to synced` - migrate an existing shared
-  project to synced storage while preserving its artifacts and retargeting the
-  active project pointer.
+  links for the linkable artifacts on the project ref. On GitHub origins the
+  artifacts become full-SHA blob links; other hosts degrade to the retained ref
+  and short SHA without guessing a web URL. `--durable-summary <path>` accepts
+  only a path contained in the repository, normalizes it repository-relative,
+  and renders it as a code span rather than a guessed remote link.
+- `oat project prune [project] [--force] [--no-commit]` - remove every
+  checkout, the local and remote project refs, and the tracked record. When the
+  project is omitted, the active project is used. This is the explicit
+  destructive operation; `--force` may discard dirty or unpushed artifacts,
+  while `--no-commit` leaves the parent-record deletion for a library caller to
+  commit.
+- `oat project migrate <path> --to synced [--no-commit]` - migrate an existing
+  shared project to synced storage while preserving its artifacts and
+  retargeting the active project pointer. `--no-commit` leaves the parent
+  record and source-tree transition uncommitted for a library caller.
 - `oat project list --scope shared|local|synced` - filter tracked projects by
   scope. Add `--remote` to discover project refs that do not yet have a local
   record or checkout, and `--include-coordination` to include coordination

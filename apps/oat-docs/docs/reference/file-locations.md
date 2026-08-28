@@ -97,13 +97,23 @@ Config ownership note:
 - Local: `.oat/projects/local/<project>/`
 - Archived: `.oat/projects/archived/<project>/`
 
+The OAT-managed block in the repository root `.gitattributes` marks shared
+project artifacts as generated for repository hosting UIs. `oat init` and
+`oat tools update` own that block; preserve non-OAT entries outside its markers
+and do not hand-edit the managed entry.
+
 Archive sync surfaces:
 
 - Local archive root: `.oat/projects/archived/`
 - Remote archive base: `archive.s3Uri` in `.oat/config.json`
 - Archive sync command: `oat repo archive sync` or `oat repo archive sync <project-name>`
 - Remote archive snapshot shape: `<archive.s3Uri>/<repo-slug>/projects/YYYYMMDD-<project-name>/`
-- Summary export target: `<repo>/<archive.summaryExportPath>/YYYYMMDD-<project-name>.md` when configured
+- Summary export target:
+  `<repo>/<archive.summaryExportPath>/YYYYMMDD-<project-name>.md` when
+  configured. The archive report returns this absolute filesystem path, while
+  `oat project links --durable-summary` normalizes a contained path to a
+  repository-relative code span. It does not invent a GitHub-style URL for
+  non-GitHub remotes.
 - Wrap-up export target: `<repo>/<archive.wrapUpExportPath>/YYYY-MM-DD-wrap-up-<label>.md` when configured; otherwise `oat-wrap-up` falls back to `<repo>/.oat/repo/reference/wrap-ups/`
 
 ## Ideas — project level (gitignored)
