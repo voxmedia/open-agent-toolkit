@@ -480,6 +480,44 @@ describe('archived synced completion transaction', () => {
 });
 
 describe('non-archive synced completion transaction', () => {
+  it('recovers receipts when the pin-source project log is absent', async () => {
+    const fixture = await createCompletionFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects',
+        PROJECT_SLUG,
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeCompletedLifecycle(target.projectPath);
+      await rm(`${target.projectPath}/project-log.md`);
+      await writeFile(
+        `${target.projectPath}/summary.md`,
+        '# Durable summary\n',
+        'utf8',
+      );
+      await mkdir(`${target.projectPath}/pr`, { recursive: true });
+      await writeFile(
+        `${target.projectPath}/${PR_ARTIFACT}`,
+        '# Pull request\n\nCompletion body.\n',
+        'utf8',
+      );
+
+      const receipts = await publishFinalArtifact(target.projectPath, target);
+      const recovered = resolveCompletionRetry(target.projectPath, target.ref);
+
+      expect(recovered).toMatchObject({
+        status: 'recovered',
+        route: 'recovery',
+        projectLinksPinCommit: receipts.pinSourceCommit,
+        projectRefCommit: receipts.finalArtifactCommit,
+      });
+      expect(git(target.projectPath, ['status', '--porcelain'])).toBe('');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it.each([
     ...interruptionStages.map((interruption) => ({
       decision: 'configured decline' as const,
@@ -873,13 +911,6 @@ describe('non-archive synced completion transaction', () => {
         );
       },
       error: /must have oat_lifecycle: complete/i,
-    },
-    {
-      state: 'missing completion log',
-      mutateLifecycle: async (projectPath: string) => {
-        await rm(`${projectPath}/project-log.md`);
-      },
-      error: /missing required completion log project-log\.md/i,
     },
     {
       state: 'unsealed completion log',

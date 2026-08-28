@@ -103,6 +103,25 @@ async function committedFile(projectPath, commit, path, label) {
   return content;
 }
 
+async function committedFileIfPresent(projectPath, commit, path, label) {
+  const matchedPath = await git(projectPath, [
+    'ls-tree',
+    '--name-only',
+    commit,
+    '--',
+    path,
+  ]);
+  if (matchedPath === '') {
+    return null;
+  }
+  if (matchedPath !== path) {
+    throw completionReceiptError(
+      `Recovered pin-source receipt resolved unexpected ${label} path ${JSON.stringify(matchedPath)}.`,
+    );
+  }
+  return committedFile(projectPath, commit, path, label);
+}
+
 function frontmatterScalar(content, field) {
   const frontmatter = /^---\n([\s\S]*?)\n---(?:\n|$)/.exec(content)?.[1];
   if (frontmatter === undefined) {
@@ -526,13 +545,15 @@ export async function recoverCompletionReceipts({
     'lifecycle state',
   );
   requireCompletedLifecycleState(pinSourceState);
-  const pinSourceLog = await committedFile(
+  const pinSourceLog = await committedFileIfPresent(
     projectPath,
     projectLinksPinCommit,
     'project-log.md',
     'completion log',
   );
-  requireCompletionSeal(pinSourceLog);
+  if (pinSourceLog !== null) {
+    requireCompletionSeal(pinSourceLog);
+  }
   const finalArtifact = await git(projectPath, [
     'show',
     `${finalArtifactCommit}:${finalArtifactPath}`,

@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.7.1
+version: 1.7.2
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -671,8 +671,9 @@ validated all of the following before returning a receipt:
   the pin source subject equal to the preliminary push message below;
 - canonical `state.md` lifecycle fields in the pin-source tree, including
   `oat_lifecycle: complete` and equal valid UTC completion/update timestamps;
-- a pin-source `project-log.md` whose final entry is the canonical
-  `oat-project-complete` completion seal;
+- when the pin source contains `project-log.md`, its final entry is the
+  canonical `oat-project-complete` completion seal; an absent log remains the
+  supported inert project-log configuration from Step 3.7;
 - exactly one well-ordered links block pinned to the pin-source parent; and
 - either equal local/remote final-artifact receipts, equal local/remote evidence
   receipts, or the one allowed unpublished-evidence state where checkout HEAD
