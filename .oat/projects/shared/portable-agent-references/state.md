@@ -14,13 +14,22 @@ oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
-# oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
-#   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
-#   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
-#   phase_attempt_usage: # authoritative monotonic per-phase attempt ledger
-#     pNN:
-#       used_attempts: 0
-#       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
+oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
+  default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
+  phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
+  phase_attempt_usage: # authoritative monotonic per-phase attempt ledger
+    p01:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: rec-p01-01
+        original_request_id: dispatch-par-run1-p01-impl
+        original_task_id: p01-t05
+        original_commit: 97431c4ff8429358e560da83786adc1dbe8b9626
+        discovered_by: 'pnpm test'
+        dispatch_target: opus
+        reservation_head: 7025a785592d976c8c8af0be82e778bc50623560
+        status: completed
 oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
   mode: managed # managed | inherit
   policy: high # economy | balanced | high | frontier | uncapped; omit when mode: inherit
