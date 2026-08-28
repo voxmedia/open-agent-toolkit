@@ -24,9 +24,9 @@ scope-portable, and enforce that invariant across canonical skill and agent
 Markdown.
 
 **Architecture:** A manifest-driven ratchet classifies cross-skill `SKILL.md`
-and `references/**/*.md` reads. Loaded skills use loaded/user/project
-resolution; materialized agents use user/project resolution because no stable
-cross-provider loaded-agent path exists.
+reads plus file and directory targets under `references/`. Loaded skills use
+loaded/user/project resolution; materialized agents use user/project resolution
+because no stable cross-provider loaded-agent path exists.
 
 **Tech Stack:** TypeScript/Vitest contract tests, canonical Markdown skills and
 agents, OAT bundle/provider sync tooling, pnpm/Turborepo release gates.
@@ -52,10 +52,12 @@ fully remediated Phase 1 tree and therefore cannot run independently.
 
 **Step 1: Add failing matcher and asset-surface cases**
 
-Add table-driven cases for cross-skill `SKILL.md` and nested
-`references/**/*.md` targets across backticked, plain, Markdown-link, `./`, and
-`../` spellings. Add manifest fixtures proving that both skill and agent assets
-from user-default packs are included while non-user-default assets are not.
+Add table-driven cases for cross-skill `SKILL.md` targets plus file-form and
+directory-form targets at or below `references/` across backticked, plain,
+Markdown-link, `./`, and `../` spellings. Include reference directories both
+with and without trailing slashes. Add manifest fixtures proving that both
+skill and agent assets from user-default packs are included while
+non-user-default assets are not.
 
 Run:
 
@@ -124,11 +126,13 @@ Expected: the new caller assertions fail against repository-relative reads.
 - Resolve `subagent-orchestration`, `oat-dispatch-subagents`, and
   `oat-review-provide` reference targets through independently bound installed
   roots as applicable.
+- Treat short-form follow-on reads as local only after their anchoring read has
+  established and validated the corresponding installed sibling root.
 - Preserve selection, launch, recovery, and review semantics.
 - Fail closed with owning-pack install/update guidance.
 - Remove the remediated exact entries from the migration inventory.
-- Increment each changed canonical skill's frontmatter version exactly once and
-  update its explicit validation pin.
+- Increment each changed canonical skill's frontmatter version exactly once;
+  update its explicit validation pin where one exists, otherwise add one.
 
 **Step 3: Verify and format**
 
@@ -170,7 +174,8 @@ pack recovery when the exact target is missing.
 
 Replace repository-relative and parent-relative cross-skill reads with
 installed-root bindings. Preserve the report schema and orchestration behavior.
-Increment both skill versions once and update their explicit validation pins.
+Increment both skill versions once; update their explicit validation pins where
+they exist, otherwise add them.
 
 **Step 3: Verify and format**
 
@@ -209,7 +214,7 @@ template through the installed-scope contract and provides correct recovery.
 
 Bind the exact `oat-review-provide` template through a portable root, preserve
 review output semantics, bump the skill version once, and update its validation
-pin.
+pin where one exists, otherwise add one.
 
 **Step 3: Verify and format**
 
@@ -267,15 +272,20 @@ Expected: assertions fail while the three agents retain bare paths.
 - Replace the `oat-phase-implementer` test branch that requires bare paths with
   normal positive portable assertions.
 - Remove all agent entries from the migration inventory.
-- Increment each changed agent version once and update explicit version tests.
+- Increment each changed agent version once; update its explicit version test
+  where one exists, otherwise add one.
 
 **Step 3: Verify generated roles and format**
 
-Extend the sync integration contract to derive the affected Claude, Cursor,
-and Codex role paths from the materialization plan/manifest, read every
-generated role, require the portable resolver markers in each copy, and reject
-executable bare sibling-skill paths. Cover the phase implementer, reviewer, and
-codebase mapper wherever each provider materializes that role.
+Extend the sync integration contract to materialize the current canonical
+agents through the existing sync harness into a temporary root. Derive the
+affected Claude, Cursor, and Codex role paths from that temporary
+materialization plan/manifest, read every generated role there, require the
+portable resolver markers in each copy, and reject executable bare
+sibling-skill paths. Cover the phase implementer, reviewer, and codebase mapper
+wherever each provider materializes that role. Do not inspect the stale tracked
+provider views for this contract; p02-t02 remains responsible for refreshing
+those tracked views.
 
 ```bash
 pnpm exec oxfmt --write .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/agents/oat-codebase-mapper.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/commands/sync/index.test.ts packages/cli/src/validation/skills.test.ts
@@ -438,15 +448,15 @@ git commit -m "chore(p02-t02): release portable agent references"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                           | Reviewed Head | Invocation                           | Gate Target |
-| ------ | -------- | --------------- | ---------- | -------------------------------------------------- | ------------- | ------------------------------------ | ----------- |
-| p01    | code     | pending         | -          | -                                                  | -             | -                                    | -           |
-| p02    | code     | pending         | -          | -                                                  | -             | -                                    | -           |
-| final  | code     | pending         | -          | -                                                  | -             | -                                    | -           |
-| spec   | artifact | pending         | -          | -                                                  | -             | -                                    | -           |
-| design | artifact | pending         | -          | -                                                  | -             | -                                    | -           |
-| plan   | artifact | fixes_completed | 2026-08-28 | structured in-memory review                        | c47586ce      | native:oat-reviewer-gpt-5-6-sol-high | -           |
-| plan   | artifact | received        | 2026-08-28 | reviews/artifact-plan-review-2026-08-28T223052Z.md | -             | -                                    | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                                            | Reviewed Head | Invocation | Gate Target                   |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------------------------------- | ------------- | ---------- | ----------------------------- |
+| p01    | code     | pending         | -          | -                                                                                   | -             | -          | -                             |
+| p02    | code     | pending         | -          | -                                                                                   | -             | -          | -                             |
+| final  | code     | pending         | -          | -                                                                                   | -             | -          | -                             |
+| spec   | artifact | pending         | -          | -                                                                                   | -             | -          | -                             |
+| design | artifact | pending         | -          | -                                                                                   | -             | -          | -                             |
+| plan   | artifact | fixes_completed | 2026-08-28 | structured in-memory review (head c47586ce; reviewer oat-reviewer-gpt-5-6-sol-high) | -             | -          | -                             |
+| plan   | artifact | fixes_completed | 2026-08-28 | reviews/archived/artifact-plan-review-2026-08-28T223052Z.md                         | -             | gate       | claude-fable-skip-permissions |
 
 ## Implementation Complete
 

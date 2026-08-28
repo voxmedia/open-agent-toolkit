@@ -76,29 +76,29 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-28T21:36:51.245Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T22:22:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T22:41:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: portable-agent-references
 
-**Status:** Plan revised after structured review; Fable gate pending
+**Status:** Fable findings resolved in artifacts; one re-review pending
 **Started:** 2026-08-28
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
 Discovery and lightweight design are complete. The High dispatch policy is
-configured, and the implementation plan has completed structured review and
-awaits the requested Claude Fable gate.
+configured, and all findings from the first Claude Fable artifact gate have
+been resolved directly in the design, plan, and state artifacts.
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
-- **Design:** N/A (quick mode unless lightweight design is needed)
-- **Plan:** `plan.md` (scaffolded template — not started)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Design:** `design.md` (complete lightweight design)
+- **Plan:** `plan.md` (draft complete; Fable fixes applied)
+- **Implementation:** `implementation.md` (initialized for eight planned tasks)
 
 ## Progress
 
@@ -110,7 +110,10 @@ awaits the requested Claude Fable gate.
 - ✓ Eight-task sequential plan drafted
 - ✓ High managed dispatch policy configured
 - ✓ Structured plan review completed; three Important findings fixed
-- ⧗ Claude Fable artifact gate pending
+- ✓ First Claude Fable review received; all seven findings resolved in artifacts
+- Phase gate review: disabled (user preference; built-in root reviews and final
+  gate remain)
+- ⧗ One Claude Fable re-review pending
 
 ## Blockers
 
@@ -118,4 +121,4 @@ None
 
 ## Next Milestone
 
-Run the Claude Fable artifact gate and mark the plan ready
+Run the single authorized Claude Fable re-review and mark the plan ready

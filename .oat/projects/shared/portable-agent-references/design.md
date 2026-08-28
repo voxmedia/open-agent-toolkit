@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: null
+oat_ready_for: oat-project-plan
 oat_blockers: []
 oat_last_updated: 2026-08-28
 oat_generated: false
@@ -15,9 +15,9 @@ This project makes cross-skill reads portable across every Markdown asset
 shipped by a user-default tool pack. The existing ratchet covers authored skill
 Markdown but recognizes only sibling `SKILL.md` targets and ignores agent
 assets. The revised contract derives its scan surface from `PACK_MANIFEST`,
-enumerates both skill and agent Markdown, recognizes cross-skill `SKILL.md` and
-`references/**/*.md` targets, and permits only exact reviewed baselines for
-self-references or historical evidence.
+enumerates both skill and agent Markdown, recognizes cross-skill `SKILL.md`
+targets plus file and directory targets under `references/`, and permits only
+exact reviewed baselines for self-references or historical evidence.
 
 Executable violations are fixed at the caller, not hidden from the scanner.
 Loaded skills use loaded-skill, user, then project resolution. Materialized
@@ -75,7 +75,7 @@ canonical .agents content -> bundle-assets -> provider views -> verification
 2. Enumerate canonical Markdown for each asset, skipping only generated or
    materialized subtrees already excluded by the existing contract.
 3. Normalize Markdown path spellings and extract cross-skill targets ending in
-   `SKILL.md` or `references/**/*.md`.
+   `SKILL.md` or naming a file or directory at or below `references/`.
 4. Ignore same-owner local references; compare remaining findings with the
    exact historical-evidence baseline.
 5. Fail with deterministic `source -> target` evidence for any unapproved
@@ -96,7 +96,7 @@ shipping in any user-default skill or agent.
   skill list.
 - Scan both canonical skill trees and single-file agent assets.
 - Match quoted, unquoted, linked, `./`, and `../` spellings for `SKILL.md` and
-  nested reference targets.
+  both file-form and directory-form reference targets.
 - Report exact source and target values and retain only exact non-executable
   baselines.
 
@@ -124,6 +124,10 @@ asset set and deterministic reference identity, not a particular internal API.
   temporary remediation list cannot become a permanent wildcard exemption.
 - Treat same-skill references as local bundle reads rather than cross-skill
   violations when their target travels with the asset.
+- Treat short-form follow-on reads such as
+  `subagent-orchestration/references/provider-codex.md` as local to an already
+  validated, explicitly bound sibling root. They are outside the bare-read
+  ratchet only when their anchoring read establishes that root first.
 
 ### Loaded-Skill Resolver
 
@@ -201,8 +205,9 @@ normal sync tooling rather than editing generated views as independent source.
 
 ### Unit and Contract Tests
 
-- Table-driven matcher cases cover `SKILL.md`, nested `references/*.md`, quoted,
-  plain, linked, `./`, `../`, portable-variable, and same-owner forms.
+- Table-driven matcher cases cover `SKILL.md`, reference files, reference
+  directories with and without trailing slashes, quoted, plain, linked, `./`,
+  `../`, portable-variable, and same-owner forms.
 - Manifest fixtures prove both user-default skill and agent assets are scanned
   while non-user-default assets remain outside the rule.
 - Exact-baseline tests prevent a new file, target, or executable caller from
@@ -217,8 +222,10 @@ normal sync tooling rather than editing generated views as independent source.
 
 - Run the bundle script into a temporary assets root and inspect all changed
   skills and agents.
-- Run provider sync dry-run/materialization contracts and assert no canonical
-  bare reads reappear in Claude, Cursor, or Codex role content.
+- Materialize the current canonical agents through the sync harness into a
+  temporary root, then assert no canonical bare reads reappear in the derived
+  Claude, Cursor, or Codex role content. Keep the repository sync dry-run as a
+  separate drift check.
 
 ### Repository Verification
 

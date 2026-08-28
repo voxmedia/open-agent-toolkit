@@ -24,19 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 6     | 0/6       |
+| Phase 2 | pending | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/8 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Global Ratchet and Portable Callers
 
-**Status:** in_progress
-**Started:** 2026-08-28
+**Status:** pending
+**Started:** -
 
 ### Phase Summary (fill when phase is complete)
 
@@ -57,51 +57,51 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Generalize the user-default portability ratchet
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
+---
 
-- {Notes will be added during implementation}
+### Task p01-t02: Port utility-pack cross-skill reads
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t03: Port research-pack cross-skill reads
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t04: Port workflow review-provider references
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t05: Port user-default agent references and remove the exemption
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t06: Finalize the zero-debt portability invariant
+
+**Status:** pending
+**Commit:** -
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Documentation, Packaging, and Release Validation
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Document the global skill-and-agent portability contract
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Refresh shipped assets and validate the lockstep release
 
 **Status:** pending
 **Commit:** -
@@ -130,36 +130,31 @@ Chronological log of implementation progress.
 
 ### 2026-08-28
 
-**Session Start:** {time}
+- Quick-workflow discovery, lightweight design, and eight-task plan prepared.
+- High managed dispatch policy selected.
+- Additional implementation phase-gate review explicitly disabled.
+- No implementation tasks executed yet; `p01-t01` remains the next task.
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+### Artifact Review Received: plan
 
-**What changed (high level):**
+**Date:** 2026-08-28
+**Review artifact:**
+`reviews/archived/artifact-plan-review-2026-08-28T223052Z.md`
 
-- {short bullets suitable for PR/docs}
+**Findings:** 0 Critical, 1 Important, 1 Medium, 5 Minor
 
-**Decisions:**
+**Disposition:** All seven findings were resolved directly in lifecycle
+artifacts with user confirmation. No implementation tasks were added.
 
-- {Decision made and rationale}
+- I1: provider verification now materializes canonical agents into a temporary
+  sync-harness root before inspecting generated roles.
+- M1: the ratchet now includes file-form and directory-form `references/`
+  targets.
+- m1-m5: root-bound short forms, ledger provenance, state metadata, the
+  disabled phase-gate choice, and conditional version-pin creation are now
+  explicit.
 
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-08-28
-
-**Session Start:** {time}
-
-{Continue log...}
+**Next:** Run the single authorized Claude Fable artifact re-review.
 
 ---
 
