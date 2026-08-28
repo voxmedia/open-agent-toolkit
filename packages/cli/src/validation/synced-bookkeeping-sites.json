@@ -313,7 +313,7 @@
   },
   {
     "file": ".agents/skills/oat-brainstorm/SKILL.md",
-    "anchor": "FOLD_BACK_PUSH=$(oat project push \"$ACTIVE_PROJECT\" --message \"chore(oat): integrate brainstorm into <artifact-basename> for <project-name>\" --json)\n     FOLD_BACK_COMMIT_SHA=$(printf '%s\\n' \"$FOLD_BACK_PUSH\" | jq -r '.sha')",
+    "anchor": "FOLD_BACK_PUSH=$(oat project push \"$ACTIVE_PROJECT\" --message \"chore(oat): integrate brainstorm into <artifact-basename> for <project-name>\" --json)\n     FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt \"$FOLD_BACK_PUSH\") || { printf '%s\\n' \"$FOLD_BACK_PUSH\" >&2; echo \"Recovery: run oat project pull \\\"$ACTIVE_PROJECT\\\", resolve conflicts, then retry this push.\" >&2; exit 1; }",
     "kind": "write",
     "guard": "project-scope"
   },
@@ -325,7 +325,7 @@
   },
   {
     "file": ".agents/skills/oat-brainstorm/SKILL.md",
-    "anchor": "FOLD_BACK_PUSH=$(oat project push \"$ACTIVE_PROJECT\" --message \"chore(oat): integrate brainstorm into <artifact-basename> for <project-name>\" --json)\n    FOLD_BACK_COMMIT_SHA=$(printf '%s\\n' \"$FOLD_BACK_PUSH\" | jq -er '.sha')",
+    "anchor": "FOLD_BACK_PUSH=$(oat project push \"$ACTIVE_PROJECT\" --message \"chore(oat): integrate brainstorm into <artifact-basename> for <project-name>\" --json)\n    FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt \"$FOLD_BACK_PUSH\") || { printf '%s\\n' \"$FOLD_BACK_PUSH\" >&2; echo \"Recovery: run oat project pull \\\"$ACTIVE_PROJECT\\\", resolve conflicts, then retry this push.\" >&2; exit 1; }",
     "kind": "write",
     "guard": "project-scope"
   },

@@ -272,16 +272,30 @@ function collectSyncedContentFindings(
       /^\s*([A-Z][A-Z0-9_]*)=\$\(oat project push\b[^\n]*--json\b/.exec(line);
     if (pushReceipt) {
       const outputVariable = pushReceipt[1] ?? '';
-      const validationWindow = lines.slice(index + 1, index + 5).join('\n');
-      if (
-        !validationWindow.includes(
-          `parse_synced_push_receipt "$${outputVariable}"`,
-        )
-      ) {
+      const validationLines = lines.slice(index + 1, index + 5);
+      const parserNeedle = `parse_synced_push_receipt "$${outputVariable}"`;
+      const parserOffset = validationLines.findIndex((candidate) =>
+        candidate.includes(parserNeedle),
+      );
+      if (parserOffset === -1) {
         findings.push({
           file,
           message: `Line ${lineNumber}: Synced push JSON receipt must validate status as pushed or up-to-date and require a full SHA before use`,
         });
+      } else {
+        for (const [offset, candidate] of validationLines
+          .slice(0, parserOffset)
+          .entries()) {
+          if (
+            candidate.includes(`$${outputVariable}`) &&
+            /(?:\.sha\b|\[['"]sha['"]\])/.test(candidate)
+          ) {
+            findings.push({
+              file,
+              message: `Line ${lineNumber + offset + 1}: Synced push JSON receipt must not extract or use .sha before parse_synced_push_receipt validation`,
+            });
+          }
+        }
       }
     }
 
