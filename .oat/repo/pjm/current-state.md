@@ -34,6 +34,17 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.39` (synced-project-scope, branch pending merge) adds a Git-native
+  `synced` project scope that keeps lifecycle artifacts off feature branches
+  while publishing them to retained `refs/oat/projects/<slug>` histories.
+  New projects default to the configurable synced scope; explicit `shared` and
+  `local` behavior remains available. Scope-aware creation, push/pull, remote
+  discovery and adoption, coordination pulls, migration, pruning, archive,
+  diagnostics, and open/pause flows are integrated across the CLI and lifecycle
+  skills. Small tracked discovery records and SHA-pinned PR links preserve
+  reviewer access without exposing machine-only artifacts, with canonical
+  identity checks, exact parent-path allowlists, non-forced publication, and
+  resumable completion receipts protecting every cross-repository mutation.
 - CLI `0.2.37` makes every OAT tool pack user-scope eligible through one
   intent-aware install/update/remove/migrate lifecycle while keeping curated
   PJM state and adoption repository-owned. Inventory, status, and doctor now
