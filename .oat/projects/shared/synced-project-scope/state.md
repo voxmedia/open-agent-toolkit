@@ -78,7 +78,7 @@ oat_dispatch_policy: # project dispatch policy (named maximum tier; set during p
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
   disposition: null
   config_fingerprint: sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20
@@ -87,37 +87,37 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: f8bce994d2e542d7ae14bfa35a4847074e280b3c
+  reviewed_head: a521db33c832f92208abaa95ebc12052a0b39237
   implementation_base_ref: origin/main
-  implementation_fingerprint: sha256:effective-delta-v1:40b697c0d01668b7e757d151438f4f6bedd1cb207478227348a5146ff00499c7
-  freshness_head: a6e1439818dc8f675a7c05cdb8a77b88b2141bd5
-  freshness_fingerprint: sha256:effective-delta-v1:ea4638154041577307ce0380fbff4e2f71dd474e5b91f0c47d12179c21c1a02c
-  launch_state: result_persisted
-  launch_attempt_id: 480d9467-e461-459a-8f13-d10afc888de9
-  launch_started_at: '2026-08-28T17:29:31Z'
-  launch_result_receipt: reviews/implement-exit-gate-result-480d9467-e461-459a-8f13-d10afc888de9.json
-  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/c0eed430-e033-45d7-9195-35fcacd8cb9f.json
-  gate_run_id: c0eed430-e033-45d7-9195-35fcacd8cb9f
-  envelope_status: blocked
-  artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T174039Z.md
-  handoff: 'Run oat-project-review-receive for .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T174039Z.md before treating this gate review as consumed.'
-  receive_state: completed
-  receive_correlation: 'run=c0eed430-e033-45d7-9195-35fcacd8cb9f; handoff=receive; source=reviews/final-review-2026-08-28T174039Z.md; scope=final; type=code'
-  receive_source_artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T174039Z.md
-  receive_archived_artifact: .oat/projects/shared/synced-project-scope/reviews/archived/final-review-2026-08-28T174039Z.md
-  receive_event_identity: 'final | code | final-review-2026-08-28T174039Z.md'
-  receive_pre_head: 2fa655b1da2b741a350fd86b41453e5094371651
-  receive_commit: a6e1439818dc8f675a7c05cdb8a77b88b2141bd5
-  receive_eligible: true
-  receive_completed: true
-  failure: Fresh final lifecycle review passed at a521db33c832f92208abaa95ebc12052a0b39237; gate attempt 2 remains unlaunched.
-  updated_at: '2026-08-28T19:38:10Z'
+  implementation_fingerprint: sha256:effective-delta-v1:a8edabb345337ec150205b1a8aedc0f111470d476ecd58582d5845ef3008269f
+  freshness_head: a521db33c832f92208abaa95ebc12052a0b39237
+  freshness_fingerprint: sha256:effective-delta-v1:a8edabb345337ec150205b1a8aedc0f111470d476ecd58582d5845ef3008269f
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-08-28T19:41:11Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T19:38:10.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T19:41:11.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 

@@ -164,6 +164,10 @@ Auto final lifecycle re-review at head a521db33c; no reconnaissance lanes were d
 
 Received reviews/archived/final-review-2026-08-28T192913Z.md as passed at head a521db33c with no findings or deferrals; configured exit-gate attempt 2 remains unlaunched.
 
+### 2026-08-28 · structural · oat-project-implement · exit-gate-attempt-2
+
+Initialized a fresh pending configured-gate generation from reviewed head a521db33c with qualified effective-delta fingerprint a8edabb3 and preserved attempts_completed=1/2; launch_state=not_started.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

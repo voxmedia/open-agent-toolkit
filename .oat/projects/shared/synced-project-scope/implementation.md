@@ -2369,3 +2369,20 @@ with no findings.
 
 **Next:** Start configured exit-gate attempt 2. Migration, archive, completion,
 PR publication, deployment, and spike-repository deletion remain outside Phase 12.
+
+### Configured Exit Gate Attempt 2 - Generation Initialized
+
+- **Status:** pending; launch not started
+- **Reviewed head:** `a521db33c832f92208abaa95ebc12052a0b39237`
+- **Implementation base:** `origin/main` at unique merge base
+  `3ca99ba070f09e395818756c54d9037cf10116ea`
+- **Implementation fingerprint:**
+  `sha256:effective-delta-v1:a8edabb345337ec150205b1a8aedc0f111470d476ecd58582d5845ef3008269f`
+- **Configuration fingerprint:**
+  `sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`
+- **Attempt ledger:** 1 consumed of maximum 2; attempt 2 is unlaunched
+
+The resolved gate declaration exactly reproduces the prior immutable
+configuration. Launch, marker, result, artifact, and receive provenance were
+reset for the new generation; the prior attempt remains preserved in Git
+history.
