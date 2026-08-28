@@ -102,5 +102,16 @@ describe('agent instructions bundle contract', () => {
       '### Step 5: Generate/Update Instruction Files',
     );
     expect(applySkill).toContain('matching pack');
+    expect(applySkill).toContain(
+      '"$(dirname "$APPLY_SKILL_DIR")/oat-agent-instructions-analyze"',
+    );
+    expect(applySkill).toContain(
+      '"${HOME}/.agents/skills/oat-agent-instructions-analyze"',
+    );
+    expect(applySkill).toContain(
+      '"$REPO_ROOT/.agents/skills/oat-agent-instructions-analyze"',
+    );
+    expect(applySkill).toContain('SCRIPT_DIR="$ANALYZE_SKILL_DIR/scripts"');
+    expect(applySkill).not.toContain('SCRIPT_DIR="$SKILL_DIR/scripts"');
   });
 });

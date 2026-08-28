@@ -173,8 +173,12 @@ describe('skills bundled docs contract', () => {
       ) {
         bareReferences.push(skill);
       }
+      const loadedSkillDir =
+        skill === 'oat-agent-instructions-apply'
+          ? 'APPLY_SKILL_DIR'
+          : 'SKILL_DIR';
       expect(content, skill).toContain(
-        'SCOPE_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"',
+        `SCOPE_ROOT="$(cd "$${loadedSkillDir}/../../.." && pwd)"`,
       );
       expect(content, skill).toContain(
         'TRACKING_SCRIPT="$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh"',

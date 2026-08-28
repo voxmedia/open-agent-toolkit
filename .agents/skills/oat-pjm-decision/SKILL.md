@@ -64,7 +64,8 @@ If context is missing, ask for 1-3 sentences describing the situation.
 ### Step 2: Verify Decision Scaffold
 
 The adoption preflight must succeed before this check. Confirm that
-`reference/decisions/index.md` contains the exact markers required by the CLI:
+`.oat/repo/reference/decisions/index.md` contains the exact markers required by
+the CLI:
 
 ```md
 <!-- OAT DECISION-INDEX -->

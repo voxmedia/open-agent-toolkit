@@ -182,6 +182,19 @@ describe('project-start preflight contracts', () => {
     );
   });
 
+  it('checks the canonical decision index during the decision scaffold preflight', () => {
+    const content = readSkill('oat-pjm-decision');
+    const start = content.indexOf('### Step 2: Verify Decision Scaffold');
+    const end = content.indexOf(
+      '### Step 3: Create the Decision Record',
+      start,
+    );
+    const preflight = content.slice(start, end);
+
+    expect(preflight).toContain('`.oat/repo/reference/decisions/index.md`');
+    expect(preflight).not.toContain('`reference/decisions/index.md`');
+  });
+
   it.each(PJM_ADOPTION_BRANCHING_SKILLS)(
     '%s handles an empty or unknown adoption state explicitly',
     (name) => {

@@ -154,11 +154,32 @@ Then stop.
 
 ### Step 1: Resolve Providers
 
+Resolve the analyze sibling from the loaded skill root first, then the canonical
+user root, then the current repository's project root. Stop if none contains
+both the sibling `SKILL.md` and `scripts/resolve-providers.sh`.
+
 ```bash
-# Set SKILL_DIR to the absolute directory containing the loaded
-# oat-agent-instructions-analyze SKILL.md.
-SCRIPT_DIR="$SKILL_DIR/scripts"
-SCOPE_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
+# Set APPLY_SKILL_DIR to the absolute directory containing this loaded SKILL.md.
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+ANALYZE_SKILL_DIR=""
+for CANDIDATE in \
+  "$(dirname "$APPLY_SKILL_DIR")/oat-agent-instructions-analyze" \
+  "${HOME}/.agents/skills/oat-agent-instructions-analyze" \
+  "$REPO_ROOT/.agents/skills/oat-agent-instructions-analyze"
+do
+  if [[ -f "$CANDIDATE/SKILL.md" && -f "$CANDIDATE/scripts/resolve-providers.sh" ]]; then
+    ANALYZE_SKILL_DIR="$CANDIDATE"
+    break
+  fi
+done
+
+if [[ -z "$ANALYZE_SKILL_DIR" ]]; then
+  echo "oat-agent-instructions-analyze is not installed at the loaded, user, or project skill root." >&2
+  exit 1
+fi
+
+SCRIPT_DIR="$ANALYZE_SKILL_DIR/scripts"
+SCOPE_ROOT="$(cd "$APPLY_SKILL_DIR/../../.." && pwd)"
 TRACKING_SCRIPT="$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh"
 PROVIDERS=$(bash "$SCRIPT_DIR/resolve-providers.sh" --non-interactive)
 ```
@@ -465,9 +486,7 @@ PR creation failed. To create manually:
 **Update tracking:**
 
 ```bash
-# Set SKILL_DIR to the absolute directory containing this loaded SKILL.md.
-SCOPE_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
-TRACKING_SCRIPT="$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh"
+# Reuse the apply-skill scope paths resolved in Step 1.
 ROOT_TARGET=$(bash "$TRACKING_SCRIPT" root)
 ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
 ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
