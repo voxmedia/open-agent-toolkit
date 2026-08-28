@@ -44,7 +44,18 @@ fi
 PROJECT_NAME=$(basename "$PROJECT_PATH")
 ACTIVE_PROJECT_PATH="$PROJECT_PATH"
 
+# Set SKILL_DIR to the absolute directory containing this loaded SKILL.md.
+COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"
+test -f "$COMPLETION_RECEIPT_SCRIPT" || {
+  echo "oat: completion receipt recovery script is missing" >&2
+  exit 1
+}
+
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing completion" >&2; exit 1; }
+PROJECT_RETAINED_REF=""
+if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+  PROJECT_RETAINED_REF="refs/oat/projects/${PROJECT_NAME}"
+fi
 IS_DURABLE_PROJECT="false"
 if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then
   IS_DURABLE_PROJECT="true"
@@ -108,6 +119,44 @@ preference is unset and the user declines the batched archive question, the
 interactive archive answer is `false`. Both cases select the same explicit
 non-archive transaction below; declining archive never means skipping synced
 record durability.
+
+Route either source through
+`scripts/recover-completion-receipts.mjs#resolveCompletionArchiveDecision`
+before assigning `SHOULD_ARCHIVE`. Pass `configuredPreference` only when
+`workflow.archiveOnComplete` is set; otherwise pass the accepted batched
+`interactiveAnswer`. Require the result's `source` to be `configured` or
+`interactive` as appropriate and use its `shouldArchive` boolean. An absent or
+non-boolean decision fails closed instead of silently selecting a lifecycle
+path. The executable completion transaction tests must use this same resolver;
+scenario labels alone are not decision coverage.
+
+After the configured preference or accepted interactive answer is available,
+invoke the resolver rather than assigning `SHOULD_ARCHIVE` directly:
+
+```bash
+ARCHIVE_DECISION_ARGS=()
+if [[ "$ARCHIVE_PREF" == "true" || "$ARCHIVE_PREF" == "false" ]]; then
+  ARCHIVE_DECISION_ARGS+=(--archive-preference "$ARCHIVE_PREF")
+else
+  test "$ARCHIVE_INTERACTIVE_ANSWER" = "true" \
+    || test "$ARCHIVE_INTERACTIVE_ANSWER" = "false" \
+    || exit 1
+  ARCHIVE_DECISION_ARGS+=(--interactive-archive "$ARCHIVE_INTERACTIVE_ANSWER")
+fi
+ARCHIVE_DECISION_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT" \
+  "${ARCHIVE_DECISION_ARGS[@]}") || exit 1
+ARCHIVE_DECISION_FIELDS=$(node -e '
+const value = JSON.parse(process.argv[1]);
+if (typeof value.shouldArchive !== "boolean" || !["configured", "interactive"].includes(value.source)) process.exit(1);
+process.stdout.write(`${value.shouldArchive}\t${value.source}`);
+' "$ARCHIVE_DECISION_JSON") || exit 1
+IFS=$'\t' read -r SHOULD_ARCHIVE ARCHIVE_DECISION_SOURCE \
+  <<< "$ARCHIVE_DECISION_FIELDS"
+```
+
+Require `ARCHIVE_DECISION_SOURCE` to match the source selected above. Store an
+unconfigured batched answer as `ARCHIVE_INTERACTIVE_ANSWER` until this resolver
+returns; only then assign `SHOULD_ARCHIVE`.
 
 Resolve `projectRecap` intent before presenting the batched completion prompt.
 Use the `oat-explainer-kit` lifecycle intent resolver in interactive mode with
@@ -502,6 +551,12 @@ fi
 When no PR description artifact exists, write it before the final synced
 project-ref publication, regardless of archive or recap selection.
 
+Retain the one selected or written artifact as `PR_DESCRIPTION_PATH`. Resolve
+`PR_DESCRIPTION_RELATIVE_PATH` from `ACTIVE_PROJECT_PATH`, require it to be a
+normalized project-relative path, and reject zero, multiple, symlinked, or
+outside-project candidates. Step 7.5 passes that exact relative path to the
+receipt recovery surface.
+
 If a PR description artifact already exists at `{PROJECT_PATH}/pr/project-pr-*.md`:
 
 - When `SHOULD_ARCHIVE` is `true`, regenerate it (overwrite). The existing artifact was authored by `oat-project-pr-final` before any archive intent existed and links to artifact paths that will be local-only after Step 8. Regenerating ensures Step 11 / Step 11.5 push a body whose links still resolve on the remote.
@@ -537,16 +592,119 @@ artifact write. This receipt is the immutable pin source used when Step 8.6
 renders the final links. Keep it separate from the final non-archive artifact
 receipt:
 
-Initialize `PROJECT_LINKS_PIN_COMMIT=""` and `PROJECT_REF_COMMIT=""`. For a
-non-archive retry, first recognize an already-finalized artifact receipt only
-when the checkout and retained remote ref are clean and equal, the HEAD subject
-is `chore(oat): publish final project links`, HEAD changes exactly the single
-PR-description artifact, and that artifact contains one valid links block
-pinned to HEAD's immediate parent. In that exact state, reuse HEAD as
-`PROJECT_REF_COMMIT` and HEAD's parent as `PROJECT_LINKS_PIN_COMMIT`; do not run
-the preliminary push or rewrite the block. Any partial or contradictory match
-fails closed. This retry recognition is valid whether the parent discovery
-record is still active or already complete.
+Initialize `PROJECT_LINKS_PIN_COMMIT=""`, `PROJECT_REF_COMMIT=""`, and
+`EVIDENCE_COMMIT=""`. For a non-archive retry, inspect the checkout HEAD and
+retained local ref before publishing. When either names a candidate whose
+subject is `chore(oat): publish final project links` or
+`chore(oat): attest final project recap`, invoke the skill-owned executable
+`scripts/recover-completion-receipts.mjs#recoverCompletionReceipts`. Supply the
+canonical retained ref, the exact PR-description path, and, when a recap was
+selected, its exact active `manifest.json` and `build-record.json` paths. The
+surface is read-only and must validate all of the following before returning a
+receipt:
+
+- a clean synced checkout and the retained local ref;
+- the exact final-artifact and optional evidence subjects;
+- exactly the PR-description path in the final-artifact commit and exactly the
+  two supplied recap record paths in an evidence commit;
+- single-parent pin-source → final-artifact → optional evidence ordering, with
+  the pin source subject equal to the preliminary push message below;
+- exactly one well-ordered links block pinned to the pin-source parent; and
+- either equal local/remote final-artifact receipts, equal local/remote evidence
+  receipts, or the one allowed unpublished-evidence state where checkout HEAD
+  is the exact evidence child while both retained refs remain at its exact
+  final-artifact parent.
+
+Restore the returned `projectLinksPinCommit` as
+`PROJECT_LINKS_PIN_COMMIT`, `projectRefCommit` as `PROJECT_REF_COMMIT`, and a
+non-null `evidenceCommit` as `EVIDENCE_COMMIT`. Any candidate with a malformed
+subject, path set, parent, links block, retained ref, or local/remote relation
+fails closed. Do not fall through to a new pin-source publication after a
+partial or contradictory candidate. This retry recognition is valid whether
+the parent discovery record is still active or already complete.
+
+Use this concrete invocation and structured restoration for the candidate:
+
+```bash
+RECOVERY_ARGS=(
+  --project-path "$ACTIVE_PROJECT_PATH"
+  --retained-ref "$PROJECT_RETAINED_REF"
+  --pr-artifact "$PR_DESCRIPTION_RELATIVE_PATH"
+)
+if [[ -n "$SELECTED_PROJECT_RECAP_RUN" ]]; then
+  RECOVERY_ARGS+=(
+    --evidence-path "$SELECTED_PROJECT_RECAP_RUN/manifest.json"
+    --evidence-path "$SELECTED_PROJECT_RECAP_RUN/build-record.json"
+  )
+fi
+
+parse_completion_receipts() {
+  node -e '
+const value = JSON.parse(process.argv[1]);
+const sha = /^[0-9a-f]{40}$/;
+if (value.status !== "recovered" || !sha.test(value.projectLinksPinCommit) || !sha.test(value.projectRefCommit)) process.exit(1);
+if (value.evidenceCommit !== null && !sha.test(value.evidenceCommit)) process.exit(1);
+if (typeof value.evidencePushRequired !== "boolean") process.exit(1);
+process.stdout.write([
+  value.projectLinksPinCommit,
+  value.projectRefCommit,
+  value.evidenceCommit ?? "-",
+  String(value.evidencePushRequired),
+].join("\t"));
+' "$1"
+}
+
+RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT" \
+  "${RECOVERY_ARGS[@]}") || exit 1
+RECOVERY_FIELDS=$(parse_completion_receipts "$RECOVERY_JSON") || exit 1
+IFS=$'\t' read -r PROJECT_LINKS_PIN_COMMIT PROJECT_REF_COMMIT \
+  RECOVERED_EVIDENCE_COMMIT EVIDENCE_PUSH_REQUIRED <<< "$RECOVERY_FIELDS"
+if [[ "$RECOVERED_EVIDENCE_COMMIT" == "-" ]]; then
+  EVIDENCE_COMMIT=""
+else
+  EVIDENCE_COMMIT="$RECOVERED_EVIDENCE_COMMIT"
+fi
+```
+
+Invoke this block only after exact candidate detection described above. Require
+`EVIDENCE_PUSH_REQUIRED` to be `true` or `false`; no other output is accepted.
+
+When the recovery result reports `evidencePushRequired: true`, publish the
+existing checkout HEAD with `oat project push "$PROJECT_PATH" --json` before
+continuing. Require `status: "pushed"` or `status: "up-to-date"`, the same
+retained ref, and a receipt SHA exactly equal to `EVIDENCE_COMMIT`. This push
+must not create a commit, rerender the PR artifact, or rewrite any receipt.
+Re-run the recovery surface after the push and require the exact same pin,
+final-artifact, and evidence SHAs with `evidencePushRequired: false`.
+
+```bash
+if [[ "$EVIDENCE_PUSH_REQUIRED" == "true" ]]; then
+  RECOVERED_EVIDENCE_PUSH_OUTPUT=$(oat project push \
+    "$PROJECT_PATH" --json) || exit 1
+  RECOVERED_EVIDENCE_PUSH_FIELDS=$(node -e '
+const value = JSON.parse(process.argv[1]);
+if (!["pushed", "up-to-date"].includes(value.status)) process.exit(1);
+if (!/^[0-9a-f]{40}$/.test(value.sha) || typeof value.ref !== "string") process.exit(1);
+process.stdout.write(`${value.ref}\t${value.sha}`);
+' "$RECOVERED_EVIDENCE_PUSH_OUTPUT") || exit 1
+  IFS=$'\t' read -r RECOVERED_PUSH_REF RECOVERED_PUSH_SHA \
+    <<< "$RECOVERED_EVIDENCE_PUSH_FIELDS"
+  test "$RECOVERED_PUSH_REF" = "$PROJECT_RETAINED_REF" || exit 1
+  test "$RECOVERED_PUSH_SHA" = "$EVIDENCE_COMMIT" || exit 1
+  PUBLISHED_RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT" \
+    "${RECOVERY_ARGS[@]}") || exit 1
+  PUBLISHED_RECOVERY_FIELDS=$( \
+    parse_completion_receipts "$PUBLISHED_RECOVERY_JSON"
+  ) || exit 1
+  IFS=$'\t' read -r PUBLISHED_PIN_COMMIT PUBLISHED_REF_COMMIT \
+    PUBLISHED_EVIDENCE_COMMIT PUBLISHED_EVIDENCE_PUSH_REQUIRED \
+    <<< "$PUBLISHED_RECOVERY_FIELDS"
+  test "$PUBLISHED_PIN_COMMIT" = "$PROJECT_LINKS_PIN_COMMIT" || exit 1
+  test "$PUBLISHED_REF_COMMIT" = "$PROJECT_REF_COMMIT" || exit 1
+  test "$PUBLISHED_EVIDENCE_COMMIT" = "$EVIDENCE_COMMIT" || exit 1
+  test "$PUBLISHED_EVIDENCE_PUSH_REQUIRED" = "false" || exit 1
+fi
+```
 
 When retry recognition did not set `PROJECT_REF_COMMIT`, publish the pin
 source:
@@ -689,8 +847,10 @@ artifact with a distinct final push:
 
 ```bash
 if [[ -z "$PROJECT_REF_COMMIT" ]]; then
-  FINAL_PROJECT_PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" \
-    --message "chore(oat): publish final project links" --json) || exit 1
+  FINAL_PROJECT_PUSH_ARGS=("$PROJECT_PATH" \
+    --message "chore(oat): publish final project links" --json)
+  FINAL_PROJECT_PUSH_OUTPUT=$(oat project push \
+    "${FINAL_PROJECT_PUSH_ARGS[@]}") || exit 1
   printf '%s\n' "$FINAL_PROJECT_PUSH_OUTPUT"
 fi
 ```
@@ -810,9 +970,11 @@ Rules:
 
 ### Step 10.5: Re-attest Final Project Recap
 
-Skip when no final recap was selected, for local-scope projects, or when the
+Skip when no final recap was selected, for local-scope projects, when the
 selected recap is already durable solely through independently verified publish
-evidence.
+evidence, or when Step 7.5 restored an exact `EVIDENCE_COMMIT`. In the recovered
+evidence case, verify the selected run's manifest and build record are the two
+exact paths in that commit and continue without re-attesting or rewriting them.
 
 For an archived recap, consume the exact `projectRecapExport` values recorded
 in Step 8. Plan finalization through
@@ -859,7 +1021,7 @@ details, and continue to the evidence commit.
 
 ### Step 10.6: Commit Evidence + Push
 
-When Step 10.5 ran, create the evidence update. Commit only the exported `manifest.json` and `build-record.json` as the evidence update, including warning-bearing records from a failed attestation. On failure, commit the warning-bearing `manifest.json` and `build-record.json`. Run
+When Step 10.5 ran and Step 7.5 did not restore `EVIDENCE_COMMIT`, create the evidence update. Commit only the exported `manifest.json` and `build-record.json` as the evidence update, including warning-bearing records from a failed attestation. On failure, commit the warning-bearing `manifest.json` and `build-record.json`. Run
 `verifyTrackedRunFinalization(...)` with the artifact commit, immediate evidence
 commit parent/order, exact evidence paths, attestation outcome, and unchanged
 unrelated-change snapshots.
@@ -899,6 +1061,13 @@ with `oat project push`, retaining the custom ref and checkout. Require the
 push receipt SHA to equal the evidence commit. Recovery reuses the existing
 project-ref artifact commit and parent-branch record commit; it never moves
 active recap files into archive-export paths.
+
+When Step 7.5 restored `EVIDENCE_COMMIT`, do not stage or commit recap records
+again. Require the retained remote ref to equal that exact evidence SHA, keep
+its immediate parent equal to `PROJECT_REF_COMMIT`, and preserve the recovered
+`PROJECT_LINKS_PIN_COMMIT`. The parent discovery-record commit remains confined
+to its one canonical path, and all unrelated staged-state snapshots must remain
+byte-for-byte unchanged.
 
 ### Step 11: Open PR in GitHub (Conditional)
 

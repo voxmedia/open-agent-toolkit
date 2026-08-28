@@ -1089,6 +1089,66 @@ describe('review skill contracts', () => {
     },
   );
 
+  it('recovers exact non-archive recap receipts through the executable completion surface', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const normalizedContent = content.replace(/\s+/g, ' ');
+    const recoveryIndex = content.indexOf(
+      'scripts/recover-completion-receipts.mjs#recoverCompletionReceipts',
+    );
+    const finalLinksIndex = content.indexOf(
+      '#### Step 8.6: Render Final Synced Project Links',
+    );
+
+    expect(normalizedContent).toContain(
+      '`scripts/recover-completion-receipts.mjs#resolveCompletionArchiveDecision`',
+    );
+    expect(content).toContain(
+      'COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"',
+    );
+    expect(content).toContain(
+      'ARCHIVE_DECISION_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"',
+    );
+    expect(normalizedContent).toContain(
+      'The executable completion transaction tests must use this same resolver',
+    );
+    expect(recoveryIndex).toBeGreaterThan(
+      content.indexOf('#### Step 7.5: Publish Synced Project Pin Source'),
+    );
+    expect(finalLinksIndex).toBeGreaterThan(recoveryIndex);
+    expect(normalizedContent).toContain(
+      'single-parent pin-source → final-artifact → optional evidence ordering',
+    );
+    expect(normalizedContent).toContain(
+      'exactly the two supplied recap record paths in an evidence commit',
+    );
+    expect(normalizedContent).toContain(
+      'the one allowed unpublished-evidence state',
+    );
+    expect(normalizedContent).toContain(
+      'Do not fall through to a new pin-source publication after a partial or contradictory candidate.',
+    );
+    expect(normalizedContent).toContain(
+      'receipt SHA exactly equal to `EVIDENCE_COMMIT`',
+    );
+    expect(content).toContain(
+      'RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"',
+    );
+    expect(content).toContain(
+      "IFS=$'\\t' read -r PROJECT_LINKS_PIN_COMMIT PROJECT_REF_COMMIT",
+    );
+    expect(content).toContain(
+      'PUBLISHED_RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"',
+    );
+    expect(content).toContain(
+      'test "$RECOVERED_PUSH_SHA" = "$EVIDENCE_COMMIT" || exit 1',
+    );
+    expect(normalizedContent).toContain(
+      'When Step 7.5 restored `EVIDENCE_COMMIT`, do not stage or commit recap records again.',
+    );
+  });
+
   it.each([
     ['without a selected recap', 'SELECTED_PROJECT_RECAP_RUN is empty'],
     ['with a selected recap', 'SELECTED_PROJECT_RECAP_RUN is non-empty'],
@@ -1170,7 +1230,7 @@ describe('review skill contracts', () => {
         '#### Step 8.6: Render Final Synced Project Links',
       );
       const finalArtifactPushIndex = content.indexOf(
-        'FINAL_PROJECT_PUSH_OUTPUT=$(oat project push "$PROJECT_PATH"',
+        'FINAL_PROJECT_PUSH_OUTPUT=$(oat project push',
       );
       const nonArchiveTransactionIndex = content.indexOf(
         '### Step 8.7: Non-Archive Synced Completion Transaction',
