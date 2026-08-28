@@ -125,7 +125,7 @@ ratchet still scans the real packaged surfaces.
 
 ## References
 
-- Backlog: `.oat/repo/pjm/backlog/items/BL-260827-make-packaged-skill-references.md`
+- Backlog: `.oat/repo/pjm/backlog/archived/BL-260827-make-packaged-skill-references.md`
 - Source project residue:
   `.oat/projects/shared/user-scope-tool-packs/implementation.md#known-deferred-work`
 - Existing contract test:

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: null
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -17,12 +17,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                        | Status | Tasks | Completed |
-| -------------------------------------------- | ------ | ----- | --------- |
-| Phase 1: Portable resolution and enforcement | passed | 4     | 4/4       |
-| Phase 2: Release metadata and validation     | passed | 1     | 1/1       |
+| Phase                                        | Status  | Tasks | Completed |
+| -------------------------------------------- | ------- | ----- | --------- |
+| Phase 1: Portable resolution and enforcement | passed  | 4     | 4/4       |
+| Phase 2: Release metadata and validation     | passed  | 1     | 1/1       |
+| Phase 3: Final review fixes                  | pending | 2     | 0/2       |
 
-**Total:** 5/5 tasks completed
+**Total:** 5/7 tasks completed
 
 ## Phase 1: Portable sibling resolution and enforcement
 
@@ -58,6 +59,21 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** `9d5be6432d30bb31b6bf3fed01ed152c936640c0`
+
+## Phase 3: Final review fixes
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Harden the portable-reference ratchet
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t02: Reconcile the final lifecycle baseline
+
+**Status:** pending
+**Commit:** -
 
 ## Orchestration Runs
 
@@ -189,13 +205,40 @@ oat_generated: false
   no-edit-rerun test flake; neither blocks completion
 - **Next:** automatic final checkpoint lifecycle review
 
+### Review Received: final
+
+**Date:** 2026-08-28
+**Review artifact:**
+`reviews/archived/final-review-2026-08-28T022049Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Finding dispositions:**
+
+- `I1` -> `p03-t02` (`artifact_alignment_required`): reconcile the verified
+  implementation with stale final-closeout prose, explicit gate evidence, and
+  archived backlog references.
+- `M1` -> `p03-t01` (`code_fix_required`): close ordering, relative-path, and
+  materialized-subtree exclusion gaps in the portability ratchet.
+
+**New tasks added:** `p03-t01`, `p03-t02`
+
+**Next:** Execute Phase 3 through `oat-project-implement`, then re-run and
+receive the final review.
+
 <!-- orchestration-runs-end -->
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact                                       | Planned / Documented                                     | Actual / Accepted                                 | Reason                                      | Source of Truth                    | Follow-up       |
+| ------------- | ----------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------- | ---------------------------------- | --------------- |
+| I1            | `reviews/archived/final-review-2026-08-28T022049Z.md` | Final closeout artifacts reflect verified implementation | `p03-t02` will align lifecycle prose and evidence | Final review found stale interim markers    | Git/task evidence is authoritative | Re-review final |
+| M1            | `reviews/archived/final-review-2026-08-28T022049Z.md` | Ratchet enforces all portable reference forms and order  | `p03-t01` adds missing regression coverage        | Final review reproduced silent matcher gaps | Reviewed final artifact            | Re-review final |
 
 ## Test Results
 
@@ -213,4 +256,4 @@ To be completed from verified implementation evidence.
 - Plan: `plan.md`
 - Discovery: `discovery.md`
 - Backlog:
-  `.oat/repo/pjm/backlog/items/BL-260827-make-packaged-skill-references.md`
+  `.oat/repo/pjm/backlog/archived/BL-260827-make-packaged-skill-references.md`

@@ -330,18 +330,90 @@ merge path.
    correction follows the implementation recovery contract rather than being
    silently amended.
 
+## Phase 3: Final review fixes
+
+### Task p03-t01: (review) Harden the portable-reference ratchet
+
+**Files:**
+
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+
+**Steps:**
+
+1. Add a shared assertion that proves loaded-scope, user-scope, and
+   project-scope candidates occur in strictly increasing order for every idea
+   and dispatch consumer.
+2. Detect or normalize `./.agents/skills/...` and
+   `../.agents/skills/...` repo-relative spellings, with table cases for both.
+3. Replace the substring `references/docs` exclusion with an exact
+   `references/docs/` path-segment check. Add a fixture proving a similarly
+   named authored reference remains scanned.
+4. Format and verify:
+
+   ```bash
+   pnpm exec oxfmt --write packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/validation/skills.test.ts
+   git diff --check
+   ```
+
+5. Commit:
+
+   ```bash
+   git add packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   git commit -m "fix(p03-t01): close portable reference ratchet gaps"
+   ```
+
+---
+
+### Task p03-t02: (review) Reconcile the final lifecycle baseline
+
+**Files:**
+
+- Modify: `.oat/projects/shared/portable-skill-references/discovery.md`
+- Modify: `.oat/projects/shared/portable-skill-references/plan.md`
+- Modify: `.oat/projects/shared/portable-skill-references/implementation.md`
+- Modify: `.oat/projects/shared/portable-skill-references/state.md`
+
+**Steps:**
+
+1. Populate `implementation.md`'s final summary with shipped behavior, key
+   surfaces, verification, recovery/deviation evidence, and outstanding
+   non-blocking observations.
+2. Replace stale `0/5`, "initialized", and "not started" lifecycle prose with
+   the verified task/phase state, without prematurely marking the pending final
+   re-review as passed.
+3. Record gates 01-11 and their explicit exit-zero results, including the
+   permitted no-edit test rerun, in `implementation.md`.
+4. Retarget durable backlog references from `backlog/items/` to the archived
+   item while preserving the historical move command in p02-t01.
+5. Format and verify:
+
+   ```bash
+   pnpm exec oxfmt --write .oat/projects/shared/portable-skill-references/discovery.md .oat/projects/shared/portable-skill-references/plan.md .oat/projects/shared/portable-skill-references/implementation.md .oat/projects/shared/portable-skill-references/state.md
+   pnpm run cli -- project status --project-path .oat/projects/shared/portable-skill-references --json
+   git diff --check
+   ```
+
+6. Commit:
+
+   ```bash
+   git add .oat/projects/shared/portable-skill-references/discovery.md .oat/projects/shared/portable-skill-references/plan.md .oat/projects/shared/portable-skill-references/implementation.md .oat/projects/shared/portable-skill-references/state.md
+   git commit -m "docs(p03-t02): reconcile final closeout artifacts"
+   ```
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                             | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | passed          | 2026-08-28 | `reviews/p01-review-2026-08-28T015302Z.md`           | dba46295a0d02c1bd1bca179a954bf902a2ae1c6 | auto       | -           |
-| p02    | code     | passed          | 2026-08-28 | `reviews/p02-review-2026-08-28T021707Z.md`           | 9d5be6432d30bb31b6bf3fed01ed152c936640c0 | auto       | -           |
-| final  | code     | received        | 2026-08-28 | `reviews/final-review-2026-08-28T022049Z.md`         | d3c76770f9bb75860486e678bf5281fa8a84b6f4 | auto       | -           |
-| spec   | artifact | pending         | -          | -                                                    | -                                        | -          | -           |
-| design | artifact | pending         | -          | -                                                    | -                                        | -          | -           |
-| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md` | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220007Z.md` | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220505Z.md` | -                                        | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                              | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | passed          | 2026-08-28 | `reviews/p01-review-2026-08-28T015302Z.md`            | dba46295a0d02c1bd1bca179a954bf902a2ae1c6 | auto       | -           |
+| p02    | code     | passed          | 2026-08-28 | `reviews/p02-review-2026-08-28T021707Z.md`            | 9d5be6432d30bb31b6bf3fed01ed152c936640c0 | auto       | -           |
+| final  | code     | fixes_added     | 2026-08-28 | `reviews/archived/final-review-2026-08-28T022049Z.md` | d3c76770f9bb75860486e678bf5281fa8a84b6f4 | auto       | -           |
+| spec   | artifact | pending         | -          | -                                                     | -                                        | -          | -           |
+| design | artifact | pending         | -          | -                                                     | -                                        | -          | -           |
+| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md`  | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220007Z.md`  | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220505Z.md`  | -                                        | -          | -           |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -352,17 +424,18 @@ merge path.
 
 - Phase 1: 4 tasks - portable resolution contracts and robust ratchet coverage
 - Phase 2: 1 task - provider views, lockstep release metadata, and full gates
+- Phase 3: 2 tasks - final ratchet hardening and lifecycle reconciliation
 
-**Total: 5 tasks**
+**Total: 7 tasks**
 
-Implementation has not started. Completion requires all five tasks and the
-review rows above to reach their lifecycle terminal states.
+Five of seven tasks are complete. Completion requires both Phase 3 review-fix
+tasks and a passing final re-review.
 
 ## References
 
 - Discovery: `discovery.md`
 - Backlog:
-  `.oat/repo/pjm/backlog/items/BL-260827-make-packaged-skill-references.md`
+  `.oat/repo/pjm/backlog/archived/BL-260827-make-packaged-skill-references.md`
 - Source project:
   `.oat/projects/shared/user-scope-tool-packs/implementation.md`
 - Existing portability contract:
