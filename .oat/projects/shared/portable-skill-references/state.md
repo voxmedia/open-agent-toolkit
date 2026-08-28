@@ -18,6 +18,21 @@ oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_usage:
+    p01:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p01-recovery-001
+        original_request_id: 4b549ebf-9ea6-49eb-a688-9e9ee96ae122
+        original_task_id: p01-t03
+        original_commit: 45512d5f404aee999162a518f3fe4faf916e0b06
+        discovered_by: pnpm test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
+        reservation_head: 42ff227f2e9e87be6d0840131bacd6593914006d
+        status: completed
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery

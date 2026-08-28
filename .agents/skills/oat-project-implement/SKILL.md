@@ -19,40 +19,24 @@ Execute the implementation plan task-by-task with full state tracking.
 
 ## Shared Subagent Dispatch Contract
 
-Before resolving or launching a phase implementer, optional child, fix, or
-reviewer, resolve `${SKILLS_ROOT}` for each required sibling skill in this
-order:
-
-1. Derive it from the directory containing this loaded `SKILL.md`:
-   `${SKILL_DIR}/..`. If the provider exposes the loaded skill path, treat its
-   directory as `${SKILL_DIR}`.
-2. Otherwise try the user-scope root first: `${HOME}/.agents/skills`.
-3. Fall back to the project-scope root: `<repo-root>/.agents/skills`.
+Before any launch, resolve each sibling's `${SKILLS_ROOT}` in order: (1) derive
+`${SKILL_DIR}/..` from this loaded `SKILL.md` or provider path; (2) try
+`${HOME}/.agents/skills`; (3) fall back to `<repo-root>/.agents/skills`.
 
 Probe each candidate for `<name>/SKILL.md` and treat the first match as
-`${SKILLS_ROOT}`. If no candidate resolves, tell the user which required
-dispatch skill is not installed and stop before any implementation, fix, or
-reviewer dispatch. Do not fall back to ambient skill discovery.
+`${SKILLS_ROOT}`. Tell the user which required dispatch skill is not installed.
+On failure, stop before any implementation, fix, or reviewer dispatch.
+Do not fall back to ambient skill discovery. Resolve and read
+`${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`, then
+`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`. Both are mandatory in order.
+Display structured resolver notices before implementation launch using the
+effective target. It must not require restart or hot reload.
 
-Resolve and read
-`${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`, then resolve and read
-`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`. Both reads are mandatory and
-must remain in this order. The former resolves lifecycle scope; the latter owns
-provider-neutral selection, recovery, and evidence.
-Display structured resolver notices before every implementation, fix, or
-reviewer launch. Runtime disclosure uses the effective resolved target, never
-the bundled recommendation version. This explicit load is mandatory, and
-correctness must not require a provider restart or hot reload.
-
-Read
-`${SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md`
-(resolve `${SKILLS_ROOT}` for `subagent-orchestration` first).
-After resolving `ACTIVE_PROVIDER`, read exactly one active-provider selection
-reference from `${SKILLS_ROOT}/subagent-orchestration/references/` and the
-matching mechanics reference from
-`${SKILLS_ROOT}/oat-dispatch-subagents/references/` (`provider-cursor.md`,
-`provider-codex.md`, or `provider-claude.md`). Do not merge provider guidance
-or mechanics.
+Read `${SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md`.
+After resolving `ACTIVE_PROVIDER`, read exactly one selection reference there
+and the matching mechanics reference from
+`${SKILLS_ROOT}/oat-dispatch-subagents/references/`. Do not merge provider
+guidance or mechanics.
 
 ## Project Log Append Points
 
