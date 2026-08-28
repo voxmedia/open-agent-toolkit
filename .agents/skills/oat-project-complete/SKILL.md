@@ -47,12 +47,17 @@ ACTIVE_PROJECT_PATH="$PROJECT_PATH"
 # Set SKILL_DIR to the absolute directory containing this loaded SKILL.md.
 COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"
 COMPLETION_RETRY_SCRIPT="$SKILL_DIR/scripts/resolve-completion-retry.mjs"
+COMPLETION_RETRY_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-completion-retry-fields.mjs"
 test -f "$COMPLETION_RECEIPT_SCRIPT" || {
   echo "oat: completion receipt recovery script is missing" >&2
   exit 1
 }
 test -f "$COMPLETION_RETRY_SCRIPT" || {
   echo "oat: completion retry routing script is missing" >&2
+  exit 1
+}
+test -f "$COMPLETION_RETRY_FIELDS_SCRIPT" || {
+  echo "oat: completion retry field decoder is missing" >&2
   exit 1
 }
 
@@ -416,7 +421,9 @@ For `IS_DURABLE_PROJECT="false"`, never export a tracked project recap and never
 ### Step 3.65: Recover a Recognizable Completion Receipt Before Mutation
 
 Initialize `PROJECT_LINKS_PIN_COMMIT=""`, `PROJECT_REF_COMMIT=""`,
-`EVIDENCE_COMMIT=""`, and `COMPLETION_RECEIPTS_RECOVERED="false"`. For a
+`EVIDENCE_COMMIT=""`, `RECOVERED_EVIDENCE_COMMIT=""`,
+`EVIDENCE_PUSH_REQUIRED=""`, `PR_DESCRIPTION_RELATIVE_PATH=""`, and
+`COMPLETION_RECEIPTS_RECOVERED="false"`. For a
 synced non-archive run, invoke the skill-owned retry router before the
 project-log probe, seal append, review moves, `complete-state`, active-pointer,
 or PR-artifact mutation. This is the one executable routing surface; do not
@@ -436,31 +443,22 @@ if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "false" ]]; then
   fi
   COMPLETION_RETRY_JSON=$(node "$COMPLETION_RETRY_SCRIPT" \
     "${COMPLETION_RETRY_ARGS[@]}") || exit 1
-  COMPLETION_RETRY_FIELDS=$(node -e '
-const value = JSON.parse(process.argv[1]);
-const sha = /^[0-9a-f]{40}$/;
-const mutations = ["project-log", "review-move", "complete-state", "active-pointer", "pr-artifact"];
-if (value.status === "continue") {
-  if (value.route !== "normal" || value.candidate !== false || value.nextStep !== "3.7" || value.skipMutations !== false || !Array.isArray(value.skippedMutations) || value.skippedMutations.length !== 0) process.exit(1);
-  process.stdout.write(["normal", "-", "-", "-", "false", "-"].join("\t"));
-} else {
-  if (value.status !== "recovered" || value.route !== "recovery" || value.candidate !== true || value.nextStep !== "7.5" || value.skipMutations !== true) process.exit(1);
-  if (JSON.stringify(value.skippedMutations) !== JSON.stringify(mutations)) process.exit(1);
-  if (!sha.test(value.projectLinksPinCommit) || !sha.test(value.projectRefCommit)) process.exit(1);
-  if (value.evidenceCommit !== null && !sha.test(value.evidenceCommit)) process.exit(1);
-  if (typeof value.evidencePushRequired !== "boolean" || !/^pr\/project-pr-.*\.md$/.test(value.prArtifactPath)) process.exit(1);
-  process.stdout.write(["recovery", value.projectLinksPinCommit, value.projectRefCommit, value.evidenceCommit ?? "-", String(value.evidencePushRequired), value.prArtifactPath].join("\t"));
-}
-' "$COMPLETION_RETRY_JSON") || exit 1
-  IFS=$'\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT \
-    PROJECT_REF_COMMIT RECOVERED_EVIDENCE_COMMIT EVIDENCE_PUSH_REQUIRED \
-    PR_DESCRIPTION_RELATIVE_PATH <<< "$COMPLETION_RETRY_FIELDS"
+  COMPLETION_RETRY_FIELDS=$(node "$COMPLETION_RETRY_FIELDS_SCRIPT" \
+    "$COMPLETION_RETRY_JSON") || exit 1
+  IFS=$'\t' read -r COMPLETION_RETRY_ROUTE _ \
+    <<< "$COMPLETION_RETRY_FIELDS"
   if [[ "$COMPLETION_RETRY_ROUTE" == "recovery" ]]; then
+    IFS=$'\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT \
+      PROJECT_REF_COMMIT RECOVERED_EVIDENCE_COMMIT EVIDENCE_PUSH_REQUIRED \
+      PR_DESCRIPTION_RELATIVE_PATH <<< "$COMPLETION_RETRY_FIELDS"
     if [[ "$RECOVERED_EVIDENCE_COMMIT" != "-" ]]; then
       EVIDENCE_COMMIT="$RECOVERED_EVIDENCE_COMMIT"
     fi
     PR_DESCRIPTION_PATH="$ACTIVE_PROJECT_PATH/$PR_DESCRIPTION_RELATIVE_PATH"
     COMPLETION_RECEIPTS_RECOVERED="true"
+  elif [[ "$COMPLETION_RETRY_ROUTE" != "normal" || \
+    "$COMPLETION_RETRY_FIELDS" != "normal" ]]; then
+    exit 1
   fi
 fi
 ```

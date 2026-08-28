@@ -1097,6 +1097,18 @@ describe('review skill contracts', () => {
     const retryRouterIndex = content.indexOf(
       'COMPLETION_RETRY_JSON=$(node "$COMPLETION_RETRY_SCRIPT"',
     );
+    const retryDecoderIndex = content.indexOf(
+      'COMPLETION_RETRY_FIELDS=$(node "$COMPLETION_RETRY_FIELDS_SCRIPT"',
+    );
+    const retryRouteReadIndex = content.indexOf(
+      "IFS=$'\\t' read -r COMPLETION_RETRY_ROUTE _",
+    );
+    const recoveryBranchIndex = content.indexOf(
+      'if [[ "$COMPLETION_RETRY_ROUTE" == "recovery" ]]',
+    );
+    const recoveryFieldReadIndex = content.indexOf(
+      "IFS=$'\\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT",
+    );
     const finalLinksIndex = content.indexOf(
       '#### Step 8.6: Render Final Synced Project Links',
     );
@@ -1111,10 +1123,17 @@ describe('review skill contracts', () => {
       'COMPLETION_RETRY_SCRIPT="$SKILL_DIR/scripts/resolve-completion-retry.mjs"',
     );
     expect(content).toContain(
+      'COMPLETION_RETRY_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-completion-retry-fields.mjs"',
+    );
+    expect(content).toContain(
       'ARCHIVE_DECISION_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"',
     );
     expect(content).not.toContain('--detect-candidate true');
     expect(retryRouterIndex).toBeGreaterThan(-1);
+    expect(retryDecoderIndex).toBeGreaterThan(retryRouterIndex);
+    expect(retryRouteReadIndex).toBeGreaterThan(retryDecoderIndex);
+    expect(recoveryBranchIndex).toBeGreaterThan(retryRouteReadIndex);
+    expect(recoveryFieldReadIndex).toBeGreaterThan(recoveryBranchIndex);
     expect(retryRouterIndex).toBeLessThan(
       content.indexOf('PROJECT_LOG_CHECK=$(oat project log check'),
     );
@@ -1145,9 +1164,8 @@ describe('review skill contracts', () => {
     expect(normalizedContent).toContain(
       'receipt SHA exactly equal to `EVIDENCE_COMMIT`',
     );
-    expect(content).toContain(
-      "IFS=$'\\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT",
-    );
+    expect(content).toContain('"$COMPLETION_RETRY_FIELDS" != "normal"');
+    expect(content).not.toContain('["normal", "-", "-", "-", "false", "-"]');
     expect(content).toContain(
       'PUBLISHED_RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"',
     );

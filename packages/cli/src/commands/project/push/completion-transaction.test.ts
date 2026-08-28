@@ -39,6 +39,12 @@ const RETRY_SCRIPT = fileURLToPath(
     import.meta.url,
   ),
 );
+const RETRY_FIELDS_SCRIPT = fileURLToPath(
+  new URL(
+    '../../../../../../.agents/skills/oat-project-complete/scripts/parse-completion-retry-fields.mjs',
+    import.meta.url,
+  ),
+);
 
 interface CompletionReceipts {
   projectLinksPinCommit: string;
@@ -264,7 +270,13 @@ function resolveCompletionRetry(
   projectPath: string,
   ref: string,
 ): CompletionRetryResolution {
-  const output = execFileSync(
+  return JSON.parse(
+    resolveCompletionRetryJson(projectPath, ref),
+  ) as CompletionRetryResolution;
+}
+
+function resolveCompletionRetryJson(projectPath: string, ref: string): string {
+  return execFileSync(
     process.execPath,
     [
       RETRY_SCRIPT,
@@ -279,7 +291,55 @@ function resolveCompletionRetry(
     ],
     { encoding: 'utf8' },
   );
-  return JSON.parse(output) as CompletionRetryResolution;
+}
+
+function consumeCompletionRetryFields(routerJson: string) {
+  const output = execFileSync(
+    '/bin/bash',
+    [
+      '-c',
+      String.raw`
+PROJECT_LINKS_PIN_COMMIT=""
+PROJECT_REF_COMMIT=""
+EVIDENCE_COMMIT=""
+RECOVERED_EVIDENCE_COMMIT=""
+EVIDENCE_PUSH_REQUIRED=""
+PR_DESCRIPTION_RELATIVE_PATH=""
+COMPLETION_RETRY_FIELDS=$(node "$1" "$2") || exit 1
+IFS=$'\t' read -r COMPLETION_RETRY_ROUTE _ <<< "$COMPLETION_RETRY_FIELDS"
+if [[ "$COMPLETION_RETRY_ROUTE" == "recovery" ]]; then
+  IFS=$'\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT \
+    PROJECT_REF_COMMIT RECOVERED_EVIDENCE_COMMIT EVIDENCE_PUSH_REQUIRED \
+    PR_DESCRIPTION_RELATIVE_PATH <<< "$COMPLETION_RETRY_FIELDS"
+  if [[ "$RECOVERED_EVIDENCE_COMMIT" != "-" ]]; then
+    EVIDENCE_COMMIT="$RECOVERED_EVIDENCE_COMMIT"
+  fi
+elif [[ "$COMPLETION_RETRY_ROUTE" != "normal" || \
+  "$COMPLETION_RETRY_FIELDS" != "normal" ]]; then
+  exit 1
+fi
+printf '%s\n' \
+  "route=$COMPLETION_RETRY_ROUTE" \
+  "pin=$PROJECT_LINKS_PIN_COMMIT" \
+  "ref=$PROJECT_REF_COMMIT" \
+  "evidence=$EVIDENCE_COMMIT" \
+  "push=$EVIDENCE_PUSH_REQUIRED" \
+  "pr=$PR_DESCRIPTION_RELATIVE_PATH"`,
+      'completion-retry-consumer',
+      RETRY_FIELDS_SCRIPT,
+      routerJson,
+    ],
+    { encoding: 'utf8' },
+  );
+  return Object.fromEntries(
+    output
+      .trimEnd()
+      .split('\n')
+      .map((line) => {
+        const separator = line.indexOf('=');
+        return [line.slice(0, separator), line.slice(separator + 1)];
+      }),
+  );
 }
 
 const interruptionStages = [
@@ -495,6 +555,16 @@ describe('non-archive synced completion transaction', () => {
         if (recovered.status !== 'recovered') {
           throw new Error('Expected completion receipt recovery route.');
         }
+        expect(consumeCompletionRetryFields(JSON.stringify(recovered))).toEqual(
+          {
+            route: 'recovery',
+            pin: recovered.projectLinksPinCommit,
+            ref: recovered.projectRefCommit,
+            evidence: recovered.evidenceCommit ?? '',
+            push: String(recovered.evidencePushRequired),
+            pr: recovered.prArtifactPath,
+          },
+        );
         expect(recovered.projectLinksPinCommit).toBe(
           publishedReceipts.pinSourceCommit,
         );
@@ -760,7 +830,7 @@ describe('non-archive synced completion transaction', () => {
     20_000,
   );
 
-  it('continues the normal lane without mutation for a noncandidate', async () => {
+  it('preserves empty normal-route receipts until both publications capture full SHAs', async () => {
     const fixture = await createCompletionFixture();
     try {
       const target = buildSyncTarget(
@@ -770,8 +840,12 @@ describe('non-archive synced completion transaction', () => {
       );
       await createSyncedProject(target, defaultGitRunner);
       const head = git(target.projectPath, ['rev-parse', 'HEAD']);
+      const routerJson = resolveCompletionRetryJson(
+        target.projectPath,
+        target.ref,
+      );
 
-      expect(resolveCompletionRetry(target.projectPath, target.ref)).toEqual({
+      expect(JSON.parse(routerJson)).toEqual({
         status: 'continue',
         route: 'normal',
         candidate: false,
@@ -779,10 +853,121 @@ describe('non-archive synced completion transaction', () => {
         skipMutations: false,
         skippedMutations: [],
       });
+      const consumed = consumeCompletionRetryFields(routerJson);
+      expect(consumed).toEqual({
+        route: 'normal',
+        pin: '',
+        ref: '',
+        evidence: '',
+        push: '',
+        pr: '',
+      });
       expect(git(target.projectPath, ['rev-parse', 'HEAD'])).toBe(head);
+      expect(git(target.projectPath, ['status', '--porcelain'])).toBe('');
+
+      await writeFile(`${target.projectPath}/state.md`, 'complete\n', 'utf8');
+      await writeFile(
+        `${target.projectPath}/summary.md`,
+        '# Durable summary\n',
+        'utf8',
+      );
+      await mkdir(`${target.projectPath}/pr`, { recursive: true });
+      await writeFile(
+        `${target.projectPath}/${PR_ARTIFACT}`,
+        '# Pull request\n\nCompletion body.\n',
+        'utf8',
+      );
+
+      let projectLinksPinCommit = consumed.pin;
+      let projectRefCommit = consumed.ref;
+      let pinPublicationRan = false;
+      let finalPublicationRan = false;
+      if (projectRefCommit === '') {
+        pinPublicationRan = true;
+        const receipt = await pushSynced(target, defaultGitRunner, {
+          message: 'chore(oat): finalize project lifecycle',
+        });
+        projectLinksPinCommit = receipt.sha;
+      }
+
+      const artifactPath = `${target.projectPath}/${PR_ARTIFACT}`;
+      const finalLinks = renderLinksBlock({
+        slug: PROJECT_SLUG,
+        sha: projectLinksPinCommit,
+        ref: target.ref,
+        originUrl: 'https://github.com/example/oat-fixture.git',
+        present: ['summary.md'],
+        durableSummaryPath:
+          '.oat/repo/reference/project-summaries/completion-receipt.md',
+        pinnedAt: '2026-08-28T12:00:00Z',
+      });
+      const rendered = replaceLinksBlock(
+        await readFile(artifactPath, 'utf8'),
+        finalLinks,
+      );
+      expect(rendered.malformed).toBe(false);
+      await writeFile(artifactPath, `${rendered.body.trimEnd()}\n`, 'utf8');
+
+      if (projectRefCommit === '') {
+        finalPublicationRan = true;
+        const receipt = await pushSynced(target, defaultGitRunner, {
+          message: FINAL_ARTIFACT_MESSAGE,
+        });
+        projectRefCommit = receipt.sha;
+      }
+
+      expect(pinPublicationRan).toBe(true);
+      expect(finalPublicationRan).toBe(true);
+      expect(projectLinksPinCommit).toMatch(/^[0-9a-f]{40}$/);
+      expect(projectRefCommit).toMatch(/^[0-9a-f]{40}$/);
+      expect(projectRefCommit).not.toBe(projectLinksPinCommit);
+      expect(
+        git(target.projectPath, ['rev-parse', `${projectRefCommit}^`]),
+      ).toBe(projectLinksPinCommit);
       expect(git(target.projectPath, ['status', '--porcelain'])).toBe('');
     } finally {
       await fixture.cleanup();
     }
+  });
+
+  it.each([
+    {
+      label: 'mixed normal result',
+      result: {
+        status: 'continue',
+        route: 'normal',
+        candidate: false,
+        nextStep: '3.7',
+        skipMutations: false,
+        skippedMutations: [],
+        projectRefCommit: 'a'.repeat(40),
+      },
+    },
+    {
+      label: 'partial recovery receipt',
+      result: {
+        status: 'recovered',
+        route: 'recovery',
+        candidate: true,
+        nextStep: '7.5',
+        skipMutations: true,
+        skippedMutations: [
+          'project-log',
+          'review-move',
+          'complete-state',
+          'active-pointer',
+          'pr-artifact',
+        ],
+        projectLinksPinCommit: 'a'.repeat(40),
+        projectRefCommit: 'b'.repeat(7),
+        evidenceCommit: null,
+        evidencePushRequired: false,
+        prArtifactPath: PR_ARTIFACT,
+      },
+    },
+  ])('fails closed before assigning fields for a $label', ({ result }) => {
+    expect(() =>
+      consumeCompletionRetryFields(JSON.stringify(result)),
+    ).toThrow();
   });
 });
