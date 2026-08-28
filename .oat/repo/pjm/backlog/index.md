@@ -180,7 +180,6 @@
 | BL-260827-fail-closed-on-partial-or      | Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles                                        | open   | medium   | task    | S        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                                        | open   | medium   | task    |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature | L        |
-| BL-260827-make-packaged-skill-references | Make packaged skill references scope-portable                                                         | open   | medium   | feature | M        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                             | open   | medium   | feature | M        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags | open   | medium   | task    | S        |
 | BL-260819-repair-verified-bundled-skill  | Repair verified bundled skill contract drift                                                          | open   | medium   | task    | M        |
