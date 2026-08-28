@@ -428,6 +428,13 @@ re-review p03 and final.
   bookkeeping commit corroborate the persisted gate run
 - **Gate state:** `allowed / passed`; receive completed exactly once
 
+### Implementation-Tail Project Recap
+
+- **Intent:** `skip / interactive`, recorded at `2026-08-28T11:28:46Z`
+- **Fresh recap:** none existed
+- **Outcome:** skipped by explicit user choice; no run path or manifest
+- **Terminal guard:** passed for `skip`; summary remains unchanged
+
 <!-- orchestration-runs-end -->
 
 ## Deviations from Plan / Design
