@@ -36,16 +36,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p05:
       used_attempts: 2
-      pending_attempt:
-        attempt: 2
-        event_id: p05-r02-split-fixture-timeouts
-        original_request_id: dispatch-synced-project-scope-p05-20260828T000639Z
-        original_task_id: p05-t07
-        original_commit: 0c01efc0430622597bc8b8f1ec7cf2a8b20a5d50
-        discovered_by: pnpm test
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 98385acfa68f644fbf2b94d9b4a75d6f05e54800
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
