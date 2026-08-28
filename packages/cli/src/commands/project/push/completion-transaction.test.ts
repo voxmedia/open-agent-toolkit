@@ -1,8 +1,9 @@
 import { execFileSync } from 'node:child_process';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { relative } from 'node:path';
+import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { archiveProjectOnCompletion } from '@commands/project/archive/archive-utils';
 import {
   renderLinksBlock,
   replaceLinksBlock,
@@ -19,7 +20,7 @@ import {
   pushSynced,
 } from '@commands/project/sync/ref-sync';
 import { createSyncedFixture } from '@test-support/synced-fixture';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 const PROJECT_SLUG = 'completion-receipt';
 const PR_ARTIFACT = 'pr/project-pr-2026-08-28.md';
@@ -348,6 +349,106 @@ const interruptionStages = [
   'after evidence commit before push',
   'after evidence push',
 ] as const;
+
+describe('archived synced completion transaction', () => {
+  it('recovers the post-lifecycle receipt and anchors retry evidence to it', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const slug = 'archived-receipt-retry';
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(join(target.projectPath, 'state.md'), 'complete\n');
+      await writeFile(join(target.projectPath, 'summary.md'), '# Summary\n');
+      await pushSynced(target, defaultGitRunner, {});
+
+      const recordPath = join(target.syncedRoot, `${slug}.json`);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(slug, new Date('2026-08-28T12:00:00Z')),
+      );
+      git(fixture.cloneA, ['add', relative(fixture.cloneA, recordPath)]);
+      git(fixture.cloneA, ['commit', '-m', 'test: seed synced record']);
+
+      const options = {
+        repoRoot: fixture.cloneA,
+        projectPath: target.projectPath,
+        projectName: slug,
+        projectsRoot: '.oat/projects/shared',
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+        s3SyncOnComplete: false,
+      };
+      await expect(
+        archiveProjectOnCompletion(options, {
+          timestamp: () => '2026-08-28T12:01:00Z',
+          removeSyncedCheckout: vi.fn(async () => {
+            throw new Error('injected post-lifecycle interruption');
+          }),
+        }),
+      ).rejects.toThrow('injected post-lifecycle interruption');
+      const lifecycleCommit = git(fixture.cloneA, ['rev-parse', 'HEAD']);
+
+      const retried = await archiveProjectOnCompletion(options, {
+        timestamp: () => '2026-08-29T12:01:00Z',
+      });
+      expect(retried.lifecycleCommit).toBe(lifecycleCommit);
+      expect(
+        git(fixture.cloneA, ['show', '-s', '--format=%s', lifecycleCommit]),
+      ).toBe(`chore(oat): complete synced project ${slug}`);
+      expect(changedPaths(fixture.cloneA, lifecycleCommit)).toEqual(
+        [
+          relative(fixture.cloneA, recordPath),
+          relative(fixture.cloneA, retried.summaryExportFile!),
+        ].sort(),
+      );
+
+      const evidenceRoot = join(
+        fixture.cloneA,
+        '.oat/repo/reference/project-recaps',
+        retried.snapshotId,
+      );
+      await mkdir(evidenceRoot, { recursive: true });
+      const manifestPath = join(evidenceRoot, 'manifest.json');
+      const buildRecordPath = join(evidenceRoot, 'build-record.json');
+      await writeFile(
+        manifestPath,
+        `${JSON.stringify({ outcome: 'built-durable', artifactCommit: retried.lifecycleCommit })}\n`,
+      );
+      await writeFile(
+        buildRecordPath,
+        `${JSON.stringify({ attested: true, artifactCommit: retried.lifecycleCommit })}\n`,
+      );
+      git(fixture.cloneA, [
+        'add',
+        relative(fixture.cloneA, manifestPath),
+        relative(fixture.cloneA, buildRecordPath),
+      ]);
+      git(fixture.cloneA, [
+        'commit',
+        '-m',
+        EVIDENCE_MESSAGE,
+        '--',
+        relative(fixture.cloneA, manifestPath),
+        relative(fixture.cloneA, buildRecordPath),
+      ]);
+      const evidenceCommit = git(fixture.cloneA, ['rev-parse', 'HEAD']);
+      expect(git(fixture.cloneA, ['rev-parse', `${evidenceCommit}^`])).toBe(
+        retried.lifecycleCommit,
+      );
+      expect(changedPaths(fixture.cloneA, evidenceCommit)).toEqual(
+        [
+          relative(fixture.cloneA, buildRecordPath),
+          relative(fixture.cloneA, manifestPath),
+        ].sort(),
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
 
 describe('non-archive synced completion transaction', () => {
   it.each([

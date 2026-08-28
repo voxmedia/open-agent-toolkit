@@ -1680,7 +1680,15 @@ export async function archiveProjectOnCompletion(
           additionalAllowlistedPaths: recapExportPaths,
         },
       );
-      lifecycleCommit = committed?.sha ?? null;
+      lifecycleCommit =
+        committed?.sha ??
+        (await recoverSyncedLifecycleCommit(
+          options.repoRoot,
+          pathspecs,
+          activeRecord,
+          `chore(oat): complete synced project ${options.projectName}`,
+          git,
+        ));
     }
     const removed = await (
       dependencies.removeSyncedCheckout ?? removeSyncedCheckout
@@ -1703,6 +1711,86 @@ export async function archiveProjectOnCompletion(
     recapExportPaths,
     snapshotId,
   };
+}
+
+async function recoverSyncedLifecycleCommit(
+  repoRoot: string,
+  pathspecs: string[],
+  record: SyncedProjectRecord,
+  expectedSubject: string,
+  git: GitRunner,
+): Promise<string> {
+  const [recordPathspec] = pathspecs;
+  if (!recordPathspec) {
+    throw new CliError(
+      `Unable to recover the prior lifecycle commit for ${record.slug}: no lifecycle paths were supplied.`,
+      2,
+    );
+  }
+  const recordPath = relative(resolve(repoRoot), resolve(recordPathspec))
+    .split(sep)
+    .join('/');
+  const normalizedPathspecs = pathspecs
+    .map((pathspec) => relative(resolve(repoRoot), resolve(pathspec)))
+    .map((pathspec) => pathspec.split(sep).join('/'))
+    .sort();
+  const candidate = (
+    await git.run(['log', '-1', '--format=%H', '--', recordPath], {
+      cwd: repoRoot,
+    })
+  ).stdout;
+  if (!/^[0-9a-f]{40}$/.test(candidate)) {
+    throw new CliError(
+      `Unable to recover the prior lifecycle commit for ${record.slug}.`,
+      2,
+    );
+  }
+
+  const subject = (
+    await git.run(['show', '-s', '--format=%s', candidate], { cwd: repoRoot })
+  ).stdout;
+  const ancestor = await git.run(
+    ['merge-base', '--is-ancestor', candidate, 'HEAD'],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  const changedPaths = (
+    await git.run(
+      ['diff-tree', '--no-commit-id', '--name-only', '-r', candidate],
+      { cwd: repoRoot },
+    )
+  ).stdout
+    .split('\n')
+    .filter(Boolean)
+    .sort();
+  const contentsMatch = await git.run(
+    ['diff', '--quiet', candidate, '--', ...normalizedPathspecs],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  const committedRecord = await git.run(
+    ['show', `${candidate}:${recordPath}`],
+    { cwd: repoRoot },
+  );
+  let parsedRecord: unknown;
+  try {
+    parsedRecord = JSON.parse(committedRecord.stdout);
+  } catch {
+    parsedRecord = null;
+  }
+
+  if (
+    subject !== expectedSubject ||
+    ancestor.code !== 0 ||
+    contentsMatch.code !== 0 ||
+    JSON.stringify(changedPaths) !== JSON.stringify(normalizedPathspecs) ||
+    JSON.stringify(parsedRecord) !== JSON.stringify(record)
+  ) {
+    throw new CliError(
+      `Unable to recover lifecycle commit ${candidate} for ${record.slug}: subject, path set, contents, or branch relationship did not match the completed archive transaction.`,
+      2,
+    );
+  }
+
+  return candidate;
 }
 
 async function listArchiveExportFiles(

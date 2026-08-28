@@ -599,13 +599,14 @@ describe('archive utils', () => {
             projectPath: target.projectPath,
             projectName: 'demo',
             projectsRoot: '.oat/projects/shared',
+            summaryExportPath: '.oat/repo/reference/project-summaries',
             s3SyncOnComplete: false,
           },
           { timestamp: () => '2026-08-28T12:00:00Z' },
         ),
       ).resolves.toMatchObject({
         archivePath: result.archivePath,
-        lifecycleCommit: null,
+        lifecycleCommit: result.lifecycleCommit,
         snapshotId: 'demo',
       });
     } finally {
@@ -857,6 +858,15 @@ describe('archive utils', () => {
               archiveProjectOnCompletion(options, firstDependencies),
             ).rejects.toThrow(/injected/);
           }
+          const committedLifecycleBeforeRetry =
+            failureBoundary === 'after-lifecycle' ||
+            failureBoundary === 'after-checkout-removal'
+              ? (
+                  await defaultGitRunner.run(['rev-parse', 'HEAD'], {
+                    cwd: fixture.cloneA,
+                  })
+                ).stdout
+              : null;
 
           const retried = await archiveProjectOnCompletion(options, {
             ...commonDependencies,
@@ -892,13 +902,9 @@ describe('archive utils', () => {
                 )
               : null,
           );
-          if (
-            failureBoundary === 'after-lifecycle' ||
-            failureBoundary === 'after-checkout-removal'
-          ) {
-            expect(retried.lifecycleCommit).toBeNull();
-          } else {
-            expect(retried.lifecycleCommit).toMatch(/^[a-f0-9]{40}$/);
+          expect(retried.lifecycleCommit).toMatch(/^[a-f0-9]{40}$/);
+          if (committedLifecycleBeforeRetry) {
+            expect(retried.lifecycleCommit).toBe(committedLifecycleBeforeRetry);
           }
           await expect(access(target.projectPath)).rejects.toThrow();
           expect(await readSyncedRecord(recordPath)).toMatchObject({
