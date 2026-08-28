@@ -6074,6 +6074,22 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('keeps arrival scope failures non-blocking in progress and next routing', async () => {
+    for (const skillPath of [
+      '.agents/skills/oat-project-progress/SKILL.md',
+      '.agents/skills/oat-project-next/SKILL.md',
+    ]) {
+      const content = await readRepoFile(skillPath);
+      expect(content).toContain('if ! PROJECT_SCOPE=$(oat project scope');
+      expect(content).toContain(
+        'skipping arrival pull and continuing with available local state',
+      );
+      expect(content).not.toMatch(
+        /PROJECT_SCOPE=\$\(oat project scope[^\n]+\) \|\| exit 1/,
+      );
+    }
+  });
+
   it('requires project-summary decision promotion to pass every record section', async () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-summary/SKILL.md',

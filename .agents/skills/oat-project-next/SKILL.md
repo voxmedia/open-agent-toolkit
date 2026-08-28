@@ -76,12 +76,18 @@ PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
 ```
 
 Before reading project state, resolve the active project's scope and pull a
-synced checkout. Scope resolution fails closed:
+synced checkout. Arrival is read-oriented: if scope resolution fails, warn,
+skip the pull, and continue into the existing missing/invalid-project routing
+instead of terminating the skill.
 
 ```bash
 if [ -n "$PROJECT_PATH" ]; then
-  PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1
-  [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$PROJECT_PATH"
+  if ! PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value); then
+    echo "Warning: Could not resolve active project scope; skipping arrival pull and continuing with available local state." >&2
+    PROJECT_SCOPE=""
+  elif [ "$PROJECT_SCOPE" = "synced" ]; then
+    [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$PROJECT_PATH"
+  fi
 fi
 ```
 

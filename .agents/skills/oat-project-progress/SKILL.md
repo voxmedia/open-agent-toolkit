@@ -54,8 +54,12 @@ ACTIVE_PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
 PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 if [ -n "$ACTIVE_PROJECT_PATH" ]; then
-  PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT_PATH" --format value) || exit 1
-  [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$ACTIVE_PROJECT_PATH"
+  if ! PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT_PATH" --format value); then
+    echo "Warning: Could not resolve active project scope; skipping arrival pull and continuing with available local state." >&2
+    PROJECT_SCOPE=""
+  elif [ "$PROJECT_SCOPE" = "synced" ]; then
+    [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$ACTIVE_PROJECT_PATH"
+  fi
 fi
 ```
 
