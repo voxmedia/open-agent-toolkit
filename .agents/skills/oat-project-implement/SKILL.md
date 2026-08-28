@@ -19,22 +19,24 @@ Execute the implementation plan task-by-task with full state tracking.
 
 ## Shared Subagent Dispatch Contract
 
-Before launch, independently probe each sibling in order: `${SKILL_DIR}/..`
-from this loaded skill, `${HOME}/.agents/skills`, then
-`<repo-root>/.agents/skills`. Use the first `<name>/SKILL.md`; never ambient
+Before launch, independently probe each required `<name>/SKILL.md` in order:
+`${SKILL_DIR}/..` from this loaded skill, `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Bind each first match to its own root:
+`${PROJECT_DISPATCH_SKILLS_ROOT}` for `oat-project-dispatch-subagents`,
+`${DISPATCH_SKILLS_ROOT}` for `oat-dispatch-subagents`, and
+`${ORCHESTRATION_SKILLS_ROOT}` for `subagent-orchestration`; never ambient
 discovery. On a miss, name it, stop every implementation, fix, or reviewer
 dispatch, and give its intended-scope recovery command:
 
 - `oat-project-dispatch-subagents`: `oat tools install workflows --scope <user|project>` or `oat tools update --pack workflows --scope <user|project>`.
 - `oat-dispatch-subagents` or `subagent-orchestration`: `oat tools install utility --scope <user|project>` or `oat tools update --pack utility --scope <user|project>`.
 
-Read `${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`, then `${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`; both are mandatory in order. Display structured resolver notices before every implementation, fix, or reviewer launch. Runtime disclosure uses the effective resolved target, never the bundled recommendation version. Correctness must not require restart or hot reload.
-
-Read `${SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md`.
+Read `${PROJECT_DISPATCH_SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`, then `${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`; both are mandatory in order. Display structured resolver notices before every implementation, fix, or reviewer launch. Runtime disclosure uses the effective resolved target, never the bundled recommendation version. Correctness must not require restart or hot reload.
+Read `${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md`.
 After resolving `ACTIVE_PROVIDER`, read exactly one active-provider selection
 reference there: the named `provider-cursor.md`, `provider-codex.md`, or
 `provider-claude.md` match. Then read the matching mechanics reference from
-`${SKILLS_ROOT}/oat-dispatch-subagents/references/`. Do not merge them.
+`${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/references/`. Do not merge them.
 
 ## Project Log Append Points
 

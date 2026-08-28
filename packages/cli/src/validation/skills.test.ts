@@ -4593,6 +4593,10 @@ describe('validateOatSkills', () => {
       '`${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`';
     const portableEnginePath =
       '`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`';
+    const independentAdapterPath =
+      '`${PROJECT_DISPATCH_SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`';
+    const independentEnginePath =
+      '`${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`';
     const adapter = await readRepoFile(adapterPath);
     const engine = await readRepoFile(enginePath);
     const consumers = [
@@ -4648,6 +4652,13 @@ describe('validateOatSkills', () => {
       if (path === '.agents/agents/oat-phase-implementer.md') {
         expect(content, path).toContain(adapterPath);
         expect(content, path).toContain(enginePath);
+      } else if (path === '.agents/skills/oat-project-implement/SKILL.md') {
+        expect(content, path).toContain(independentAdapterPath);
+        expect(content, path).toContain(independentEnginePath);
+        expect(content, path).not.toContain(portableAdapterPath);
+        expect(content, path).not.toContain(portableEnginePath);
+        expect(content, path).not.toContain(adapterPath);
+        expect(content, path).not.toContain(enginePath);
       } else {
         expect(content, path).toContain(portableAdapterPath);
         expect(content, path).toContain(portableEnginePath);

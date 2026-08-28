@@ -416,9 +416,13 @@ describe('skills bundled docs contract', () => {
     (skill, stopText) => {
       const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
       const projectDispatchRead =
-        '`${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`';
+        skill === 'oat-project-implement'
+          ? '`${PROJECT_DISPATCH_SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`'
+          : '`${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`';
       const sharedDispatchRead =
-        '`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`';
+        skill === 'oat-project-implement'
+          ? '`${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`'
+          : '`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`';
 
       expectPortableSkillsRootCandidateOrder(content, skill);
       expect(content).toContain('`<name>/SKILL.md`');
@@ -461,6 +465,36 @@ describe('skills bundled docs contract', () => {
     );
     expect(content.indexOf('active-provider selection')).toBeLessThan(
       content.indexOf('matching mechanics reference'),
+    );
+  });
+
+  it('resolves implementation dispatch dependencies independently', () => {
+    const content = readFileSync(
+      join(SKILLS_DIR, 'oat-project-implement', 'SKILL.md'),
+      'utf8',
+    );
+    const bindings = [
+      [
+        'PROJECT_DISPATCH_SKILLS_ROOT',
+        'oat-project-dispatch-subagents/SKILL.md',
+      ],
+      ['DISPATCH_SKILLS_ROOT', 'oat-dispatch-subagents/SKILL.md'],
+      [
+        'ORCHESTRATION_SKILLS_ROOT',
+        'subagent-orchestration/references/model-selection-principles.md',
+      ],
+    ] as const;
+
+    expect(content).toContain('independently probe each required');
+    for (const [root, path] of bindings) {
+      expect(content).toContain(`\${${root}}`);
+      expect(content).toContain(`\${${root}}/${path}`);
+    }
+    expect(content).toContain(
+      '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/references/',
+    );
+    expect(content).not.toMatch(
+      /\$\{SKILLS_ROOT\}\/(?:oat-project-dispatch-subagents|oat-dispatch-subagents|subagent-orchestration)/,
     );
   });
 

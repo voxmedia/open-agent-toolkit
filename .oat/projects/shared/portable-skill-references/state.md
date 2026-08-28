@@ -1,5 +1,5 @@
 ---
-oat_current_task: prev1-t06
+oat_current_task: null
 oat_last_commit: cca0bb5187adfdffd475017e1009a6e643502927
 oat_blockers: []
 associated_issues:
@@ -143,14 +143,14 @@ oat_project_recap:
 
 # Project State: portable-skill-references
 
-**Status:** Final and remote review fixes in progress
+**Status:** Final and remote review fixes completed; re-review pending
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Revision 1 merged `origin/main` and passed its phase review. Launch safeguards
-are restored, and one mixed-scope dispatch resolution fix remains.
+Revision 1 and all five bounded review fixes are complete. Final re-review and
+configured exit-gate refresh remain before closeout.
 
 ## Artifacts
 
@@ -158,7 +158,7 @@ are restored, and one mixed-scope dispatch resolution fix remains.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan quick workflow)
 - **Plan:** `plan.md` (complete; ready for implementation)
-- **Implementation:** `implementation.md` (13/14 tasks complete; fixes in progress)
+- **Implementation:** `implementation.md` (14/14 tasks complete; re-review pending)
 
 ## Progress
 
@@ -185,7 +185,8 @@ are restored, and one mixed-scope dispatch resolution fix remains.
 - ✓ Review-fix task `prev1-t03` completed; Revision 1 summary refreshed
 - ✓ Review-fix task `prev1-t04` completed; sibling recovery commands added
 - ✓ Review-fix task `prev1-t05` completed; launch safeguards restored
-- ▶ Review-fix task `prev1-t06` queued
+- ✓ Review-fix task `prev1-t06` completed; dispatch dependencies resolve independently
+- ▶ Final re-review and configured exit-gate refresh pending
 
 ## Blockers
 
@@ -193,5 +194,4 @@ None
 
 ## Next Milestone
 
-Execute `prev1-t06`, re-review final, refresh the configured exit gate, and push
-PR #226.
+Re-review final, refresh the configured exit gate, and push PR #226.
