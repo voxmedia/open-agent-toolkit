@@ -17,7 +17,7 @@ oat_hill_checkpoints: [p02] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_usage:
@@ -129,11 +129,11 @@ oat_post_implement_sequence:
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/226 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T21:30:45.407Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T11:31:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T11:34:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -143,14 +143,14 @@ oat_project_recap:
 
 # Project State: portable-skill-references
 
-**Status:** Implementation in progress
+**Status:** PR open
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-All eight tasks, three phase reviews, and the final lifecycle re-review are
-complete. Implementation closeout is the remaining lifecycle step.
+Implementation is complete through final review and closeout verification. PR
+#226 is open for human review.
 
 ## Artifacts
 
@@ -174,6 +174,8 @@ complete. Implementation closeout is the remaining lifecycle step.
 - ✓ Phase 2 completed and passed root-owned review
 - ✓ Phase 3 passed narrowed re-review after `p03-t03`
 - ✓ Final lifecycle re-review passed with no findings
+- ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/226
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -181,4 +183,5 @@ None
 
 ## Next Milestone
 
-Run implementation closeout.
+PR #226 is open for review. Apply feedback with `oat-project-revise`, or run
+`oat-project-complete` before or after merge when ready to close the project.
