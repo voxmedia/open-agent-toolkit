@@ -65,11 +65,12 @@ Notable commands introduced in the current CLI surface:
   artifacts, reconcile with the exact project ref on `origin`, publish it, and
   refresh an open PR's artifact-links block. Use `--no-refresh-pr` to skip the
   PR edit.
-- `oat project pull [project]` - fetch and materialize or update a synced
+- `oat project pull [project] [--no-commit]` - fetch and materialize or update a synced
   checkout. Resolve a rebase conflict and run `pull --continue`, or use
   `pull --abort` to return to the pre-pull state. Coordination children are
   pulled by default; `--no-children` limits the operation to the selected
-  project.
+  project. When pull adopts a remote project with no local discovery record,
+  `--no-commit` leaves the new record uncommitted for the caller to persist.
 - `oat project links [project] --format markdown|json` - render SHA-pinned
   links for the linkable artifacts on the project ref. On GitHub origins the
   artifacts become full-SHA blob links; other hosts degrade to the retained ref
