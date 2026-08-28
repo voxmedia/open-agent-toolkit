@@ -19,6 +19,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createProjectPullCommand } from './index';
 
+function git(cwd: string, args: string[]): string {
+  return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+}
+
 function harness(
   status: 'created' | 'updated' | 'up-to-date' | 'conflict' | 'dirty',
 ) {
@@ -40,6 +44,7 @@ function harness(
     ref: 'refs/oat/projects/demo',
     remote: 'origin',
     adopt: false,
+    adoptionRecord: 'durable' as const,
   }));
   const command = createProjectPullCommand({
     buildCommandContext: (options: GlobalOptions): CommandContext => ({
@@ -120,6 +125,53 @@ describe('createProjectPullCommand', () => {
     const aborted = harness('updated');
     await run(aborted.command, ['demo', '--abort']);
     expect(aborted.abortSynced).toHaveBeenCalledOnce();
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('finishes parent adoption and coordination children after continue', async () => {
+    const setup = harness('updated');
+    setup.resolveTarget.mockResolvedValueOnce({
+      repoRoot: '/repo',
+      slug: 'parent',
+      projectPath: '/repo/.oat/projects/synced/parent',
+      ref: 'refs/oat/projects/parent',
+      remote: 'origin',
+      adopt: false,
+      adoptionRecord: 'create',
+    });
+    setup.continueSynced.mockResolvedValueOnce({
+      status: 'updated',
+      sha: '1234567890123456789012345678901234567890',
+      adopted: true,
+      pendingRecordPaths: ['/repo/.oat/projects/synced/parent.json'],
+    });
+    setup.pullChildren.mockResolvedValueOnce([
+      {
+        slug: 'child',
+        status: 'created',
+        sha: '1234567890123456789012345678901234567890',
+        adopted: true,
+        pendingRecordPaths: ['/repo/.oat/projects/synced/child.json'],
+      },
+    ]);
+
+    await run(setup.command, ['parent', '--continue'], ['--json']);
+
+    expect(setup.continueSynced).toHaveBeenCalledWith(
+      expect.objectContaining({ slug: 'parent' }),
+      expect.anything(),
+      { adopt: true, adoptionRecord: 'create' },
+    );
+    expect(setup.pullChildren).toHaveBeenCalledOnce();
+    expect(setup.commitRecordChange).toHaveBeenCalledWith(
+      '/repo',
+      [
+        '/repo/.oat/projects/synced/parent.json',
+        '/repo/.oat/projects/synced/child.json',
+      ],
+      'chore(oat): adopt synced projects parent, child',
+      expect.anything(),
+    );
     expect(process.exitCode).toBe(0);
   });
 
@@ -429,6 +481,168 @@ describe('createProjectPullCommand', () => {
           { encoding: 'utf8' },
         ),
       ).toContain('"slug": "parent"');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('commits an adoption record after resolving an origin-only pull conflict', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const slug = 'adopt-after-continue';
+      const targetA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      const targetB = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        slug,
+      );
+      await createSyncedProject(targetA, defaultGitRunner);
+      await writeFile(join(targetA.projectPath, 'state.md'), 'base\n');
+      await pushSynced(targetA, defaultGitRunner, { message: 'base' });
+      await pullSyncedReal(targetB, defaultGitRunner);
+      await writeFile(join(targetB.projectPath, 'state.md'), 'local\n');
+      execFileSync('git', ['add', 'state.md'], { cwd: targetB.projectPath });
+      execFileSync('git', ['commit', '-m', 'local state'], {
+        cwd: targetB.projectPath,
+      });
+      await writeFile(join(targetA.projectPath, 'state.md'), 'remote\n');
+      await pushSynced(targetA, defaultGitRunner, { message: 'remote state' });
+
+      const command = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB!,
+          home: '/home',
+          interactive: false,
+          logger: createLoggerCapture().logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB!,
+      });
+      await run(command, [slug]);
+      expect(process.exitCode).toBe(1);
+
+      const recordPath = `.oat/projects/synced/${slug}.json`;
+      expect(git(fixture.cloneB!, ['ls-files', recordPath])).toBe('');
+      await writeFile(join(targetB.projectPath, 'state.md'), 'resolved\n');
+      execFileSync('git', ['add', 'state.md'], { cwd: targetB.projectPath });
+      process.exitCode = undefined;
+      const continued = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB!,
+          home: '/home',
+          interactive: false,
+          logger: createLoggerCapture().logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB!,
+      });
+      await run(continued, [slug, '--continue']);
+
+      expect(process.exitCode).toBe(0);
+      expect(
+        git(fixture.cloneB!, ['ls-tree', '--name-only', 'HEAD', recordPath]),
+      ).toBe(recordPath);
+      expect(
+        JSON.parse(git(fixture.cloneB!, ['show', `HEAD:${recordPath}`])),
+      ).toMatchObject({ slug, status: 'active' });
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('materializes coordination children after resolving a parent conflict', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const child = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'continued-child',
+      );
+      await createSyncedProject(child, defaultGitRunner);
+      await writeFile(join(child.projectPath, 'state.md'), '# child\n');
+      await pushSynced(child, defaultGitRunner, { message: 'child' });
+
+      const parentA = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'continued-parent',
+      );
+      const parentB = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        'continued-parent',
+      );
+      const coordinationState =
+        '---\noat_kind: coordination\noat_children:\n  - continued-child\n---\n';
+      await createSyncedProject(parentA, defaultGitRunner);
+      await writeFile(join(parentA.projectPath, 'state.md'), coordinationState);
+      await pushSynced(parentA, defaultGitRunner, { message: 'parent base' });
+      await pullSyncedReal(parentB, defaultGitRunner);
+      await writeFile(
+        join(parentB.projectPath, 'state.md'),
+        `${coordinationState}local\n`,
+      );
+      execFileSync('git', ['add', 'state.md'], { cwd: parentB.projectPath });
+      execFileSync('git', ['commit', '-m', 'parent local'], {
+        cwd: parentB.projectPath,
+      });
+      await writeFile(
+        join(parentA.projectPath, 'state.md'),
+        `${coordinationState}remote\n`,
+      );
+      await pushSynced(parentA, defaultGitRunner, { message: 'parent remote' });
+
+      const buildCommand = () =>
+        createProjectPullCommand({
+          buildCommandContext: (options: GlobalOptions): CommandContext => ({
+            scope: 'project',
+            dryRun: false,
+            verbose: false,
+            json: options.json ?? false,
+            cwd: fixture.cloneB!,
+            home: '/home',
+            interactive: false,
+            logger: createLoggerCapture().logger,
+          }),
+          resolveProjectRoot: async () => fixture.cloneB!,
+        });
+      await run(buildCommand(), ['continued-parent']);
+      expect(process.exitCode).toBe(1);
+
+      await writeFile(
+        join(parentB.projectPath, 'state.md'),
+        `${coordinationState}resolved\n`,
+      );
+      execFileSync('git', ['add', 'state.md'], { cwd: parentB.projectPath });
+      process.exitCode = undefined;
+      await run(buildCommand(), ['continued-parent', '--continue']);
+
+      expect(process.exitCode).toBe(0);
+      await expect(
+        readFile(
+          join(
+            fixture.cloneB!,
+            '.oat/projects/synced/continued-child/state.md',
+          ),
+          'utf8',
+        ),
+      ).resolves.toBe('# child\n');
+      for (const slug of ['continued-parent', 'continued-child']) {
+        const recordPath = `.oat/projects/synced/${slug}.json`;
+        expect(
+          git(fixture.cloneB!, ['ls-tree', '--name-only', 'HEAD', recordPath]),
+        ).toBe(recordPath);
+      }
     } finally {
       await fixture.cleanup();
     }

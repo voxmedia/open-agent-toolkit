@@ -798,6 +798,11 @@ export async function pullChildren(
 export async function continueSynced(
   target: SyncTarget,
   git: GitRunner,
+  options: {
+    adopt?: boolean;
+    adoptionRecord?: AdoptionRecordState;
+    now?: Date;
+  } = {},
 ): Promise<PullResult> {
   await assertNestedWorktree(target, git);
   const continued = await git.run(withHooksDisabled(['rebase', '--continue']), {
@@ -816,7 +821,20 @@ export async function continueSynced(
       conflicts,
     };
   }
-  return { status: 'updated', sha: await headSha(target, git) };
+  const result: PullResult = {
+    status: 'updated',
+    sha: await headSha(target, git),
+  };
+  const adoptionRecord =
+    options.adoptionRecord ?? (options.adopt ? 'create' : 'durable');
+  return adoptionRecord === 'durable'
+    ? result
+    : prepareAdoptionRecord(
+        target,
+        result,
+        adoptionRecord,
+        options.now ?? new Date(),
+      );
 }
 
 export async function abortSynced(

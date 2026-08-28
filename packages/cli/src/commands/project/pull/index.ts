@@ -49,7 +49,15 @@ interface ProjectPullDependencies {
     git: GitRunner,
   ) => Promise<PullChildResult[]>;
   commitRecordChange: typeof defaultCommitRecordChange;
-  continueSynced: (target: SyncTarget, git: GitRunner) => Promise<PullResult>;
+  continueSynced: (
+    target: SyncTarget,
+    git: GitRunner,
+    options?: {
+      adopt?: boolean;
+      adoptionRecord?: AdoptionRecordState;
+      now?: Date;
+    },
+  ) => Promise<PullResult>;
   abortSynced: (target: SyncTarget, git: GitRunner) => Promise<void>;
   gitRunner: GitRunner;
   processEnv: NodeJS.ProcessEnv;
@@ -185,7 +193,10 @@ async function runPull(
       return;
     }
     const result = options.continue
-      ? await dependencies.continueSynced(target, dependencies.gitRunner)
+      ? await dependencies.continueSynced(target, dependencies.gitRunner, {
+          adopt: target.adoptionRecord !== 'durable',
+          adoptionRecord: target.adoptionRecord,
+        })
       : await dependencies.pullSynced(target, dependencies.gitRunner, {
           adopt: target.adopt,
           adoptionRecord: target.adoptionRecord,
@@ -195,7 +206,7 @@ async function runPull(
       result.status === 'updated' ||
       result.status === 'up-to-date';
     const children =
-      successful && !options.continue && options.children !== false
+      successful && options.children !== false
         ? await dependencies.pullChildren(target, dependencies.gitRunner)
         : [];
     const pendingRecordPaths = [
