@@ -2549,3 +2549,18 @@ records all three configured pre-approval steps as completed.
 All configured pre-approval steps are complete, and the closeout snapshot is
 now `awaiting_approval` with `approval: pending`. The final Phase 12 HiLL
 approval remains an explicit user boundary.
+
+#### Final Phase 12 Approval Received - 2026-08-28T21:18:58Z
+
+- **Decision:** approved explicitly by the user.
+- **Snapshot transition:** `awaiting_approval` → `post_approval`.
+- **Approval provenance:** `approval: approved`, `approval_source: user`.
+- **Preconditions:** final review passed, configured exit gate remained fresh
+  and `allowed/passed`, recap skip remained terminal, and all configured
+  pre-approval steps were complete.
+- **Post-approval sequence:** empty; no retro or other child action is
+  configured.
+
+This approval authorizes OAT implementation closeout bookkeeping only. It does
+not authorize merging PR #227, project archive/completion, migration,
+deployment, or repository deletion.
