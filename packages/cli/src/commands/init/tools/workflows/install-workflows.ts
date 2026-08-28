@@ -135,11 +135,8 @@ export async function installWorkflows(
   for (const script of WORKFLOW_SCRIPTS) {
     const source = join(options.assetsRoot, 'scripts', script);
     const destination = join(options.targetRoot, '.oat', 'scripts', script);
-    const sourceExists = await fileExists(source);
-
-    if (!sourceExists) {
-      result.skippedScripts.push(script);
-      continue;
+    if (!(await fileExists(source))) {
+      throw new Error(`Required workflow script source is missing: ${source}`);
     }
 
     const copyStatus = await copyFileWithStatus(source, destination, force);

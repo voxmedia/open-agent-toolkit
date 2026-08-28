@@ -1,4 +1,3 @@
-import { rm, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import {
@@ -7,10 +6,6 @@ import {
   type GlobalOptions,
   type ScopeSelectionMode,
 } from '@app/command-context';
-import {
-  buildDecisionAgentsSectionBody,
-  DECISION_AGENTS_SECTION_KEY,
-} from '@commands/decision/agents-guidance';
 import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
 import { applyGitignore } from '@commands/local/apply';
 import { addLocalPaths } from '@commands/local/manage';
@@ -19,6 +14,7 @@ import {
   removeAgentsMdSection,
   upsertAgentsMdSection,
 } from '@commands/shared/agents-md';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   type MultiSelectChoice,
   type PromptContext,
@@ -32,6 +28,17 @@ import {
   getInstalledCanonicalPaths,
   setInstalledCanonicalPaths,
 } from '@commands/tools/shared/install-sync-context';
+import {
+  inventoryPack,
+  type InventoryPackInput,
+  type PackInventory,
+} from '@commands/tools/shared/pack-inventory';
+import {
+  reconcilePackLifecycles,
+  type PackLifecycleRequest,
+  type PackLifecycleResult,
+} from '@commands/tools/shared/pack-lifecycle';
+import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
@@ -73,13 +80,10 @@ import {
 } from './ideas/install-ideas';
 import {
   buildPackInstallStateMap,
+  buildPackInstallStateMapFromInventory,
   type PackInstallState,
 } from './install-state';
 import { createInitToolsProjectManagementCommand } from './project-management';
-import {
-  buildProjectManagementAgentsSectionBody,
-  PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
-} from './project-management/agents-guidance';
 import {
   installProjectManagement as defaultInstallProjectManagement,
   type InstallProjectManagementOptions,
@@ -92,16 +96,9 @@ import {
   type InstallResearchResult,
 } from './research/install-research';
 import {
-  BRAINSTORM_SKILLS,
   DOCS_SKILLS,
-  IDEA_SKILLS,
-  RESEARCH_AGENTS,
   RESEARCH_SKILLS,
   UTILITY_SKILLS,
-  WORKFLOW_AGENTS,
-  WORKFLOW_SCRIPTS,
-  WORKFLOW_SKILLS,
-  WORKFLOW_TEMPLATES,
   resolvePackDefaultScope,
 } from './shared/skill-manifest';
 import { createInitToolsUtilityCommand } from './utility';
@@ -168,8 +165,10 @@ export interface InitToolsDependencies {
     destination: string,
     force: boolean,
   ) => Promise<'copied' | 'updated' | 'skipped'>;
-  removeDirectory: (target: string) => Promise<void>;
-  removeFile: (target: string) => Promise<void>;
+  /** @deprecated Phase 2 installs are additive; retained for test-harness compatibility. */
+  removeDirectory?: (target: string) => Promise<void>;
+  /** @deprecated Phase 2 installs are additive; retained for test-harness compatibility. */
+  removeFile?: (target: string) => Promise<void>;
   addLocalPaths: (
     repoRoot: string,
     paths: string[],
@@ -187,6 +186,11 @@ export interface InitToolsDependencies {
     body: string,
   ) => Promise<UpsertSectionResult>;
   removeAgentsMdSection: (repoRoot: string, key: string) => Promise<boolean>;
+  reconcilePacks?: (
+    requests: readonly PackLifecycleRequest[],
+    options?: { dryRun?: boolean },
+  ) => Promise<PackLifecycleResult[]>;
+  inventoryPack?: (input: InventoryPackInput) => Promise<PackInventory>;
 }
 
 interface OutdatedSkillRecord {
@@ -199,6 +203,7 @@ interface OutdatedSkillRecord {
 
 interface InitToolsRunMetadata {
   affectedScopes: ConcreteScope[];
+  appliedScopes: ConcreteScope[];
 }
 
 function formatVersionForDisplay(version: string | null): string {
@@ -216,42 +221,10 @@ const ALL_TOOL_PACKS = [
   'brainstorm',
 ] as const satisfies readonly ToolPack[];
 
-type UserEligiblePack = Extract<
-  ToolPack,
-  'ideas' | 'docs' | 'workflows' | 'utility' | 'research' | 'brainstorm'
->;
-
-const USER_ELIGIBLE_PACK_MEMBERS: Record<
-  UserEligiblePack,
-  { skills: readonly string[]; agents: readonly string[] }
-> = {
-  ideas: {
-    skills: IDEA_SKILLS,
-    agents: [],
-  },
-  docs: {
-    skills: DOCS_SKILLS,
-    agents: [],
-  },
-  workflows: {
-    skills: WORKFLOW_SKILLS,
-    agents: WORKFLOW_AGENTS,
-  },
-  utility: {
-    skills: UTILITY_SKILLS,
-    agents: [],
-  },
-  research: {
-    skills: RESEARCH_SKILLS,
-    agents: RESEARCH_AGENTS,
-  },
-  brainstorm: {
-    skills: BRAINSTORM_SKILLS,
-    agents: [],
-  },
-};
+type UserEligiblePack = Exclude<ToolPack, 'core'>;
 
 let lastRunInitToolsMetadata: InitToolsRunMetadata | null = null;
+const appliedScopesByCommand = new WeakMap<Command, ConcreteScope[]>();
 
 const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   buildCommandContext,
@@ -270,22 +243,6 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   installResearch: defaultInstallResearch,
   installBrainstorm: defaultInstallBrainstorm,
   copyDirWithStatus,
-  removeDirectory: async (target) => {
-    await rm(target, { recursive: true, force: true });
-  },
-  removeFile: async (target) => {
-    try {
-      await unlink(target);
-    } catch (error) {
-      if (
-        !(error instanceof Error) ||
-        !('code' in error) ||
-        error.code !== 'ENOENT'
-      ) {
-        throw error;
-      }
-    }
-  },
   addLocalPaths,
   applyGitignore,
   readOatConfig,
@@ -293,6 +250,8 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   resolveLocalPaths,
   upsertAgentsMdSection,
   removeAgentsMdSection,
+  reconcilePacks: reconcilePackLifecycles,
+  inventoryPack,
 };
 
 const USER_ELIGIBLE_PACKS: ReadonlySet<ToolPack> = new Set([
@@ -300,6 +259,7 @@ const USER_ELIGIBLE_PACKS: ReadonlySet<ToolPack> = new Set([
   'docs',
   'workflows',
   'utility',
+  'project-management',
   'research',
   'brainstorm',
 ]);
@@ -309,7 +269,6 @@ type PackInstallStateMap = Record<ToolPack, PackInstallState>;
 
 interface ScopeReconcileResult {
   adds: ConcreteScope[];
-  removes: ConcreteScope[];
 }
 
 function isUserEligiblePack(pack: ToolPack): pack is UserEligiblePack {
@@ -361,10 +320,7 @@ function reconcilePackScope(
   const currentScopes = new Set(scopesForLocation(current));
   const desiredScopes = new Set(scopesForEndState(desired));
   const adds = [...desiredScopes].filter((scope) => !currentScopes.has(scope));
-  const removes = [...currentScopes].filter(
-    (scope) => !desiredScopes.has(scope),
-  );
-  return { adds, removes };
+  return { adds };
 }
 
 interface PackScopeChange {
@@ -411,17 +367,32 @@ function unionScopeWithCurrent(
 }
 
 async function loadInstalledPackStates(
-  projectRoot: string,
+  projectRoot: string | null,
   userRoot: string,
   assetsRoot: string,
   dependencies: InitToolsDependencies,
 ): Promise<PackInstallStateMap> {
+  if (dependencies.reconcilePacks && dependencies.inventoryPack) {
+    const inventories = await Promise.all(
+      ALL_TOOL_PACKS.map((pack) =>
+        dependencies.inventoryPack!({
+          pack,
+          assetsRoot,
+          ...(projectRoot ? { projectRoot } : {}),
+          userRoot,
+        }),
+      ),
+    );
+    return buildPackInstallStateMapFromInventory(ALL_TOOL_PACKS, inventories);
+  }
   const [projectTools, userTools] = await Promise.all([
-    dependencies.scanTools({
-      scope: 'project',
-      scopeRoot: projectRoot,
-      assetsRoot,
-    }),
+    projectRoot
+      ? dependencies.scanTools({
+          scope: 'project',
+          scopeRoot: projectRoot,
+          assetsRoot,
+        })
+      : Promise.resolve([]),
     dependencies.scanTools({
       scope: 'user',
       scopeRoot: userRoot,
@@ -470,7 +441,7 @@ function buildPackChoices(
       checked: true,
     },
     {
-      label: `Project Management [project]${installedPackStates['project-management'].location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates['project-management'].location)})`}`,
+      label: `Project Management [project|user]${installedPackStates['project-management'].location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates['project-management'].location)})`}`,
       value: 'project-management',
       checked: false,
     },
@@ -501,31 +472,6 @@ export function consumeInitToolsRunMetadata(): InitToolsRunMetadata | null {
   const metadata = lastRunInitToolsMetadata;
   lastRunInitToolsMetadata = null;
   return metadata;
-}
-
-async function removePackFromScope(
-  pack: UserEligiblePack,
-  root: string,
-  dependencies: InitToolsDependencies,
-): Promise<void> {
-  const members = USER_ELIGIBLE_PACK_MEMBERS[pack];
-
-  for (const skill of members.skills) {
-    await dependencies.removeDirectory(join(root, '.agents', 'skills', skill));
-  }
-
-  for (const agent of members.agents) {
-    await dependencies.removeFile(join(root, '.agents', 'agents', agent));
-  }
-
-  if (pack === 'workflows') {
-    for (const template of WORKFLOW_TEMPLATES) {
-      await dependencies.removeFile(join(root, '.oat', 'templates', template));
-    }
-    for (const script of WORKFLOW_SCRIPTS) {
-      await dependencies.removeFile(join(root, '.oat', 'scripts', script));
-    }
-  }
 }
 
 /**
@@ -581,9 +527,9 @@ async function resolvePackScopes(
 ): Promise<PackScopeMap> {
   const scopes: Partial<PackScopeMap> = {};
 
-  // Packs outside the user-eligible set are project-only.
+  // Scope eligibility is release-owned by the canonical manifest.
   for (const pack of selections) {
-    if (!USER_ELIGIBLE_PACKS.has(pack)) {
+    if (!getPackDefinition(pack).allowedScopes.includes('user')) {
       scopes[pack] = 'project';
     }
   }
@@ -669,19 +615,28 @@ async function resolvePackScopes(
       buildPackEndStateChoices(pack, currentLocation, defaultEndState),
       { interactive: context.interactive },
     );
-    scopes[pack] = selection ?? defaultEndState;
+    const requested = selection ?? defaultEndState;
+    scopes[pack] =
+      requested === 'both'
+        ? 'both'
+        : unionScopeWithCurrent(currentLocation, requested);
   }
 
   return scopes as PackScopeMap;
 }
 
 /**
- * Default end-state offered for a pack in the interactive selector: its
- * current placement when installed, or its configured default scope when not
- * yet present.
+ * Existing-placement precedence: a pack that is already installed keeps the
+ * placement it has, and only a pack that is not present anywhere falls back to
+ * its configured default scope.
+ *
+ * This is the single definition of that rule. It backs the interactive
+ * selector's offered default, non-interactive aggregate resolution, and the
+ * per-pack `oat tools install <pack>` subcommands, so a bare re-install can
+ * never silently migrate or duplicate an existing install across scopes.
  */
 function resolvePackDefaultEndState(
-  pack: UserEligiblePack,
+  pack: ToolPack,
   currentLocation: PackInstallState['location'],
 ): PackInstallTarget {
   switch (currentLocation) {
@@ -876,13 +831,18 @@ export async function runInitTools(
   lastRunInitToolsMetadata = null;
 
   try {
-    const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
     const userRoot = dependencies.resolveScopeRoot(
       'user',
       context.cwd,
       context.home,
     );
     const assetsRoot = await dependencies.resolveAssetsRoot();
+    let projectRoot: string | null = null;
+    try {
+      projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+    } catch (error) {
+      if (context.scope === 'project') throw error;
+    }
     const initialPackStates = await loadInstalledPackStates(
       projectRoot,
       userRoot,
@@ -909,7 +869,7 @@ export async function runInitTools(
       selectedPacks.push('project-management');
     }
     if (selectedPacks.length === 0) {
-      lastRunInitToolsMetadata = { affectedScopes: [] };
+      lastRunInitToolsMetadata = { affectedScopes: [], appliedScopes: [] };
       if (!context.json) {
         context.logger.info('No tool packs selected.');
       }
@@ -925,343 +885,340 @@ export async function runInitTools(
     );
 
     function scopeRoot(scope: ConcreteScope): string {
-      return scope === 'user' ? userRoot : projectRoot;
-    }
-
-    // Reconcile current placement vs the desired end-state per user-eligible
-    // pack into adds/removes. Installs copy idempotently into the full desired
-    // end-state, but only the scopes that actually changed (an add or a
-    // confirmed remove) are recorded in `affectedScopes`, so auto-sync never
-    // prunes a preserved scope.
-    const reconciliationByPack = new Map<
-      UserEligiblePack,
-      ScopeReconcileResult
-    >();
-    for (const pack of selectedPacks) {
-      if (!isUserEligiblePack(pack)) {
-        continue;
+      if (scope === 'user') return userRoot;
+      if (!projectRoot) {
+        throw new Error('Project scope is unavailable outside a repository');
       }
-      reconciliationByPack.set(
-        pack,
-        reconcilePackScope(initialPackStates[pack].location, packScopes[pack]),
-      );
+      return projectRoot;
     }
 
-    // Scopes a pack should install into (its full desired end-state for
-    // user-eligible packs; the resolved scope otherwise). Re-installing an
-    // already-present scope is an idempotent copy.
-    function packTargets(pack: ToolPack): string[] {
-      return packScopes[pack] === 'both'
-        ? [projectRoot, userRoot]
-        : [packScopes[pack] === 'user' ? userRoot : projectRoot];
-    }
-
-    // Only scopes that received a new add for this pack should be auto-synced.
-    function addedScopes(pack: ToolPack): Set<ConcreteScope> {
-      return new Set(reconciliationByPack.get(pack as UserEligiblePack)?.adds);
-    }
     const outdatedSkills: OutdatedSkillRecord[] = [];
     const affectedScopes = new Set<ConcreteScope>();
 
-    // Collect all staged removals across packs. Removals are interactive-only
-    // and gated behind a single batch confirmation (added in p01-t03);
-    // non-interactive paths are strictly additive and can never remove.
-    const stagedRemovals: Array<{
-      pack: UserEligiblePack;
-      scope: ConcreteScope;
-    }> = [];
-    for (const [pack, reconciliation] of reconciliationByPack) {
-      for (const scope of reconciliation.removes) {
-        stagedRemovals.push({ pack, scope });
-      }
-    }
-
-    if (stagedRemovals.length > 0 && !context.interactive) {
-      // Strictly-additive guard: removals must never be applied
-      // non-interactively. This should be unreachable because non-interactive
-      // resolution unions with current placement, but we fail loud rather than
-      // silently delete a user's install.
-      throw new Error(
-        'Non-interactive install attempted to remove a pack from a scope; ' +
-          'install is strictly additive in non-interactive mode.',
-      );
-    }
-
-    // Interactive removal gate: if any pack would lose a scope, surface one
-    // batch change summary and require a single confirmation before mutating
-    // anything. Declining aborts with zero changes (no installs, no removals).
-    if (stagedRemovals.length > 0 && context.interactive) {
-      const stagedAdds: PackScopeChange[] = [];
-      for (const [pack, reconciliation] of reconciliationByPack) {
-        for (const scope of reconciliation.adds) {
-          stagedAdds.push({ pack, scope });
+    if (dependencies.reconcilePacks) {
+      const requests: PackLifecycleRequest[] = [];
+      for (const pack of selectedPacks) {
+        const targets =
+          pack === 'core'
+            ? [{ scope: 'user' as const, root: userRoot }]
+            : scopesForEndState(packScopes[pack]).map((scope) => ({
+                scope,
+                root: scopeRoot(scope),
+              }));
+        for (const target of targets) {
+          requests.push({
+            pack,
+            scope: target.scope,
+            scopeRoot: target.root,
+            assetsRoot,
+            action: 'install',
+          });
         }
       }
-
-      context.logger.info(formatReconcileSummary(stagedAdds, stagedRemovals));
-      const confirmation = await dependencies.selectWithAbort(
-        'Apply these changes? Removals will delete the listed scoped installs.',
-        [
-          {
-            label: 'No, cancel (recommended)',
-            value: 'no',
-            description: 'Make no changes',
-          },
-          {
-            label: 'Yes, apply adds and removals',
-            value: 'yes',
-            description: 'Install adds and delete the listed removals',
-          },
-        ],
-        { interactive: context.interactive },
-      );
-
-      if (confirmation !== 'yes') {
-        lastRunInitToolsMetadata = { affectedScopes: [] };
-        if (!context.json) {
-          context.logger.info('No changes applied.');
-        }
-        process.exitCode = 0;
-        return [];
+      const lifecycle = await dependencies.reconcilePacks(requests);
+      for (const { plan } of lifecycle) {
+        if (plan.operations.length > 0) affectedScopes.add(plan.scope);
       }
-    }
+      if (
+        requests.some(
+          ({ pack, scope }) => pack === 'workflows' && scope === 'project',
+        )
+      ) {
+        const repoRoot = scopeRoot('project');
+        const existingConfig = await dependencies.readOatConfig(repoRoot);
+        const paths = [
+          '.oat/projects/**/pr',
+          '.oat/projects/**/reviews/archived',
+        ];
+        const existing = new Set(
+          dependencies.resolveLocalPaths(existingConfig),
+        );
+        if (!paths.every((path) => existing.has(path))) {
+          const addResult = await dependencies.addLocalPaths(repoRoot, paths);
+          if (addResult.added.length > 0) {
+            const config = await dependencies.readOatConfig(repoRoot);
+            await dependencies.applyGitignore(
+              repoRoot,
+              dependencies.resolveLocalPaths(config),
+            );
+          }
+        }
+      }
+    } else {
+      // Reconcile current placement vs the desired end-state per user-eligible
+      // pack into adds/removes. Installs copy idempotently into the full desired
+      // end-state, but only the scopes that actually changed (an add or a
+      // confirmed remove) are recorded in `affectedScopes`, so auto-sync never
+      // prunes a preserved scope.
+      const reconciliationByPack = new Map<
+        UserEligiblePack,
+        ScopeReconcileResult
+      >();
+      for (const pack of selectedPacks) {
+        if (!isUserEligiblePack(pack)) {
+          continue;
+        }
+        reconciliationByPack.set(
+          pack,
+          reconcilePackScope(
+            initialPackStates[pack].location,
+            packScopes[pack],
+          ),
+        );
+      }
 
-    // Removals are deferred until after the add phase below: for a confirmed
-    // move (e.g. user -> project), the replacement install must succeed before
-    // the preserved scope is deleted. If any installer throws, the catch
-    // handler aborts and these removals never run, so the pack is never left
-    // installed in neither scope (review I1; design.md:86/114).
+      // Scopes a pack should install into (its full desired end-state for
+      // user-eligible packs; the resolved scope otherwise). Re-installing an
+      // already-present scope is an idempotent copy.
+      function packTargets(pack: ToolPack): string[] {
+        return packScopes[pack] === 'both'
+          ? [scopeRoot('project'), userRoot]
+          : [scopeRoot(packScopes[pack] === 'user' ? 'user' : 'project')];
+      }
 
-    if (selectedPacks.includes('core')) {
-      // Core pack always installs at user scope, regardless of userEligibleScope
-      affectedScopes.add('user');
-      const coreResult = await dependencies.installCore({
-        assetsRoot,
-        targetRoot: userRoot,
-      });
-      for (const skill of coreResult.outdatedSkills) {
-        outdatedSkills.push({
-          ...skill,
+      // Only scopes that received a new add for this pack should be auto-synced.
+      function addedScopes(pack: ToolPack): Set<ConcreteScope> {
+        return new Set(
+          reconciliationByPack.get(pack as UserEligiblePack)?.adds,
+        );
+      }
+      if (selectedPacks.includes('core')) {
+        // Core pack always installs at user scope, regardless of userEligibleScope
+        affectedScopes.add('user');
+        const coreResult = await dependencies.installCore({
+          assetsRoot,
           targetRoot: userRoot,
-          selectionKey: `${skill.name}:${userRoot}`,
         });
-      }
-    }
-
-    if (selectedPacks.includes('ideas')) {
-      const ideasAdded = addedScopes('ideas');
-      for (const targetRoot of packTargets('ideas')) {
-        const targetScope: ConcreteScope =
-          targetRoot === userRoot ? 'user' : 'project';
-        if (ideasAdded.has(targetScope)) {
-          affectedScopes.add(targetScope);
-        }
-        const ideasResult = await dependencies.installIdeas({
-          assetsRoot,
-          targetRoot,
-        });
-        for (const skill of ideasResult.outdatedSkills) {
+        for (const skill of coreResult.outdatedSkills) {
           outdatedSkills.push({
             ...skill,
-            targetRoot,
-            selectionKey: `${skill.name}:${targetRoot}`,
+            targetRoot: userRoot,
+            selectionKey: `${skill.name}:${userRoot}`,
           });
         }
       }
-    }
 
-    if (selectedPacks.includes('docs')) {
-      const docsAdded = addedScopes('docs');
-      for (const targetRoot of packTargets('docs')) {
-        const targetScope: ConcreteScope =
-          targetRoot === userRoot ? 'user' : 'project';
-        if (docsAdded.has(targetScope)) {
-          affectedScopes.add(targetScope);
-        }
-        const docsResult = await dependencies.installDocs({
-          assetsRoot,
-          targetRoot,
-          skills: [...DOCS_SKILLS],
-        });
-        for (const skill of docsResult.outdatedSkills) {
-          outdatedSkills.push({
-            ...skill,
+      if (selectedPacks.includes('ideas')) {
+        const ideasAdded = addedScopes('ideas');
+        for (const targetRoot of packTargets('ideas')) {
+          const targetScope: ConcreteScope =
+            targetRoot === userRoot ? 'user' : 'project';
+          if (ideasAdded.has(targetScope)) {
+            affectedScopes.add(targetScope);
+          }
+          const ideasResult = await dependencies.installIdeas({
+            assetsRoot,
             targetRoot,
-            selectionKey: `${skill.name}:${targetRoot}`,
           });
+          for (const skill of ideasResult.outdatedSkills) {
+            outdatedSkills.push({
+              ...skill,
+              targetRoot,
+              selectionKey: `${skill.name}:${targetRoot}`,
+            });
+          }
         }
       }
-    }
 
-    if (selectedPacks.includes('workflows')) {
-      const workflowsAdded = addedScopes('workflows');
-      for (const targetRoot of packTargets('workflows')) {
-        const targetScope: ConcreteScope =
-          targetRoot === userRoot ? 'user' : 'project';
-        if (workflowsAdded.has(targetScope)) {
-          affectedScopes.add(targetScope);
-        }
-
-        const workflowsResult = await dependencies.installWorkflows({
-          assetsRoot,
-          targetRoot,
-          scope: targetScope,
-        });
-        for (const skill of workflowsResult.outdatedSkills) {
-          outdatedSkills.push({
-            ...skill,
+      if (selectedPacks.includes('docs')) {
+        const docsAdded = addedScopes('docs');
+        for (const targetRoot of packTargets('docs')) {
+          const targetScope: ConcreteScope =
+            targetRoot === userRoot ? 'user' : 'project';
+          if (docsAdded.has(targetScope)) {
+            affectedScopes.add(targetScope);
+          }
+          const docsResult = await dependencies.installDocs({
+            assetsRoot,
             targetRoot,
-            selectionKey: `${skill.name}:${targetRoot}`,
+            skills: [...DOCS_SKILLS],
           });
+          for (const skill of docsResult.outdatedSkills) {
+            outdatedSkills.push({
+              ...skill,
+              targetRoot,
+              selectionKey: `${skill.name}:${targetRoot}`,
+            });
+          }
         }
+      }
 
-        if (targetScope === 'project') {
-          const resolvedRoot =
-            workflowsResult.resolvedProjectsRoot || '.oat/projects/shared';
-          const projectsBase = resolvedRoot.replace(/\/[^/]+$/, '');
-          const PR_ARCHIVE_LOCAL_PATHS = [
-            `${projectsBase}/**/pr`,
-            `${projectsBase}/**/reviews/archived`,
-          ];
+      if (selectedPacks.includes('workflows')) {
+        const workflowsAdded = addedScopes('workflows');
+        for (const targetRoot of packTargets('workflows')) {
+          const targetScope: ConcreteScope =
+            targetRoot === userRoot ? 'user' : 'project';
+          if (workflowsAdded.has(targetScope)) {
+            affectedScopes.add(targetScope);
+          }
 
-          const existingConfig = await dependencies.readOatConfig(projectRoot);
-          const existingLocalPaths = new Set(
-            dependencies.resolveLocalPaths(existingConfig),
-          );
-          const alreadyConfigured = PR_ARCHIVE_LOCAL_PATHS.every((p) =>
-            existingLocalPaths.has(p),
-          );
+          const workflowsResult = await dependencies.installWorkflows({
+            assetsRoot,
+            targetRoot,
+            scope: targetScope,
+          });
+          for (const skill of workflowsResult.outdatedSkills) {
+            outdatedSkills.push({
+              ...skill,
+              targetRoot,
+              selectionKey: `${skill.name}:${targetRoot}`,
+            });
+          }
 
-          if (!alreadyConfigured) {
-            let makeLocal = true;
-            if (context.interactive) {
-              const selected = await dependencies.selectWithAbort(
-                'Should shared-project PR directories and archived review history be local-only (gitignored) or version-controlled?',
-                [
-                  {
-                    label: 'Local only (recommended)',
-                    value: 'local',
-                    description:
-                      'PR artifacts and archived reviews stay local; active reviews remain tracked until received',
-                  },
-                  {
-                    label: 'Version controlled',
-                    value: 'tracked',
-                    description:
-                      'PR artifacts and archived reviews are committed to the repo too',
-                  },
-                ],
-                { interactive: context.interactive },
-              );
-              makeLocal = selected !== 'tracked';
-            }
+          if (targetScope === 'project') {
+            const resolvedRoot =
+              workflowsResult.resolvedProjectsRoot || '.oat/projects/shared';
+            const projectsBase = resolvedRoot.replace(/\/[^/]+$/, '');
+            const PR_ARCHIVE_LOCAL_PATHS = [
+              `${projectsBase}/**/pr`,
+              `${projectsBase}/**/reviews/archived`,
+            ];
 
-            if (makeLocal) {
-              const addResult = await dependencies.addLocalPaths(
-                projectRoot,
-                PR_ARCHIVE_LOCAL_PATHS,
-              );
-              if (addResult.added.length > 0) {
-                const config = await dependencies.readOatConfig(projectRoot);
-                const allPaths = dependencies.resolveLocalPaths(config);
-                await dependencies.applyGitignore(projectRoot, allPaths);
+            const existingConfig = await dependencies.readOatConfig(
+              scopeRoot('project'),
+            );
+            const existingLocalPaths = new Set(
+              dependencies.resolveLocalPaths(existingConfig),
+            );
+            const alreadyConfigured = PR_ARCHIVE_LOCAL_PATHS.every((p) =>
+              existingLocalPaths.has(p),
+            );
+
+            if (!alreadyConfigured) {
+              let makeLocal = true;
+              if (context.interactive) {
+                const selected = await dependencies.selectWithAbort(
+                  'Should shared-project PR directories and archived review history be local-only (gitignored) or version-controlled?',
+                  [
+                    {
+                      label: 'Local only (recommended)',
+                      value: 'local',
+                      description:
+                        'PR artifacts and archived reviews stay local; active reviews remain tracked until received',
+                    },
+                    {
+                      label: 'Version controlled',
+                      value: 'tracked',
+                      description:
+                        'PR artifacts and archived reviews are committed to the repo too',
+                    },
+                  ],
+                  { interactive: context.interactive },
+                );
+                makeLocal = selected !== 'tracked';
+              }
+
+              if (makeLocal) {
+                const addResult = await dependencies.addLocalPaths(
+                  scopeRoot('project'),
+                  PR_ARCHIVE_LOCAL_PATHS,
+                );
+                if (addResult.added.length > 0) {
+                  const config = await dependencies.readOatConfig(
+                    scopeRoot('project'),
+                  );
+                  const allPaths = dependencies.resolveLocalPaths(config);
+                  await dependencies.applyGitignore(
+                    scopeRoot('project'),
+                    allPaths,
+                  );
+                }
               }
             }
           }
         }
       }
-    }
 
-    if (selectedPacks.includes('utility')) {
-      const utilityAdded = addedScopes('utility');
-      for (const targetRoot of packTargets('utility')) {
-        const targetScope: ConcreteScope =
-          targetRoot === userRoot ? 'user' : 'project';
-        if (utilityAdded.has(targetScope)) {
-          affectedScopes.add(targetScope);
-        }
-        const utilityResult = await dependencies.installUtility({
-          assetsRoot,
-          targetRoot,
-          skills: [...UTILITY_SKILLS],
-        });
-        for (const skill of utilityResult.outdatedSkills) {
-          outdatedSkills.push({
-            ...skill,
+      if (selectedPacks.includes('utility')) {
+        const utilityAdded = addedScopes('utility');
+        for (const targetRoot of packTargets('utility')) {
+          const targetScope: ConcreteScope =
+            targetRoot === userRoot ? 'user' : 'project';
+          if (utilityAdded.has(targetScope)) {
+            affectedScopes.add(targetScope);
+          }
+          const utilityResult = await dependencies.installUtility({
+            assetsRoot,
             targetRoot,
-            selectionKey: `${skill.name}:${targetRoot}`,
+            skills: [...UTILITY_SKILLS],
           });
+          for (const skill of utilityResult.outdatedSkills) {
+            outdatedSkills.push({
+              ...skill,
+              targetRoot,
+              selectionKey: `${skill.name}:${targetRoot}`,
+            });
+          }
         }
       }
-    }
 
-    if (selectedPacks.includes('project-management')) {
-      const targetRoot = projectRoot;
-      affectedScopes.add('project');
-      const projectManagementResult =
-        await dependencies.installProjectManagement({
-          assetsRoot,
-          targetRoot,
-        });
-      for (const skill of projectManagementResult.outdatedSkills) {
-        outdatedSkills.push({
-          ...skill,
-          targetRoot,
-          selectionKey: `${skill.name}:${targetRoot}`,
-        });
-      }
-    }
-
-    if (selectedPacks.includes('research')) {
-      const researchAdded = addedScopes('research');
-      for (const targetRoot of packTargets('research')) {
-        const targetScope: ConcreteScope =
-          targetRoot === userRoot ? 'user' : 'project';
-        if (researchAdded.has(targetScope)) {
-          affectedScopes.add(targetScope);
+      if (selectedPacks.includes('project-management')) {
+        const projectManagementAdded = addedScopes('project-management');
+        for (const targetRoot of packTargets('project-management')) {
+          const targetScope: ConcreteScope =
+            targetRoot === userRoot ? 'user' : 'project';
+          if (projectManagementAdded.has(targetScope)) {
+            affectedScopes.add(targetScope);
+          }
+          const projectManagementResult =
+            await dependencies.installProjectManagement({
+              assetsRoot,
+              targetRoot,
+            });
+          for (const skill of projectManagementResult.outdatedSkills) {
+            outdatedSkills.push({
+              ...skill,
+              targetRoot,
+              selectionKey: `${skill.name}:${targetRoot}`,
+            });
+          }
         }
-        const researchResult = await dependencies.installResearch({
-          assetsRoot,
-          targetRoot,
-          skills: [...RESEARCH_SKILLS],
-        });
-        for (const skill of researchResult.outdatedSkills) {
-          outdatedSkills.push({
-            ...skill,
+      }
+
+      if (selectedPacks.includes('research')) {
+        const researchAdded = addedScopes('research');
+        for (const targetRoot of packTargets('research')) {
+          const targetScope: ConcreteScope =
+            targetRoot === userRoot ? 'user' : 'project';
+          if (researchAdded.has(targetScope)) {
+            affectedScopes.add(targetScope);
+          }
+          const researchResult = await dependencies.installResearch({
+            assetsRoot,
             targetRoot,
-            selectionKey: `${skill.name}:${targetRoot}`,
+            skills: [...RESEARCH_SKILLS],
           });
+          for (const skill of researchResult.outdatedSkills) {
+            outdatedSkills.push({
+              ...skill,
+              targetRoot,
+              selectionKey: `${skill.name}:${targetRoot}`,
+            });
+          }
         }
       }
-    }
 
-    if (selectedPacks.includes('brainstorm')) {
-      const brainstormAdded = addedScopes('brainstorm');
-      for (const targetRoot of packTargets('brainstorm')) {
-        const targetScope: ConcreteScope =
-          targetRoot === userRoot ? 'user' : 'project';
-        if (brainstormAdded.has(targetScope)) {
-          affectedScopes.add(targetScope);
-        }
-        const brainstormResult = await dependencies.installBrainstorm({
-          assetsRoot,
-          targetRoot,
-        });
-        for (const skill of brainstormResult.outdatedSkills) {
-          outdatedSkills.push({
-            ...skill,
+      if (selectedPacks.includes('brainstorm')) {
+        const brainstormAdded = addedScopes('brainstorm');
+        for (const targetRoot of packTargets('brainstorm')) {
+          const targetScope: ConcreteScope =
+            targetRoot === userRoot ? 'user' : 'project';
+          if (brainstormAdded.has(targetScope)) {
+            affectedScopes.add(targetScope);
+          }
+          const brainstormResult = await dependencies.installBrainstorm({
+            assetsRoot,
             targetRoot,
-            selectionKey: `${skill.name}:${targetRoot}`,
           });
+          for (const skill of brainstormResult.outdatedSkills) {
+            outdatedSkills.push({
+              ...skill,
+              targetRoot,
+              selectionKey: `${skill.name}:${targetRoot}`,
+            });
+          }
         }
       }
-    }
-
-    // Apply confirmed removals only after every add has succeeded, so a failed
-    // replacement install can never leave a pack uninstalled in both scopes.
-    for (const { pack, scope } of stagedRemovals) {
-      await removePackFromScope(pack, scopeRoot(scope), dependencies);
-      affectedScopes.add(scope);
     }
 
     if (outdatedSkills.length > 0) {
@@ -1306,58 +1263,40 @@ export async function runInitTools(
       pack,
       scope: packScopes[pack],
     }));
+    const adoptsProject = packScopeInfo.some(({ scope }) => scope !== 'user');
     const sectionBody = buildToolPacksSectionBody(packScopeInfo);
-    const sectionResult = await dependencies.upsertAgentsMdSection(
-      projectRoot,
-      'tools',
-      sectionBody,
-    );
-    const projectManagementSectionResult = selectedPacks.includes(
-      'project-management',
-    )
+    const sectionResult = adoptsProject
       ? await dependencies.upsertAgentsMdSection(
-          projectRoot,
-          PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
-          buildProjectManagementAgentsSectionBody(),
+          scopeRoot('project'),
+          'tools',
+          sectionBody,
         )
-      : null;
-    const decisionSectionResult = selectedPacks.includes('project-management')
-      ? await dependencies.upsertAgentsMdSection(
-          projectRoot,
-          DECISION_AGENTS_SECTION_KEY,
-          buildDecisionAgentsSectionBody(),
-        )
-      : null;
-    // Migrate: remove legacy <!-- OAT workflows --> section if present
-    await dependencies.removeAgentsMdSection(projectRoot, 'workflows');
+      : { action: 'no-change' as const };
+    // Pack placement never writes the project-management or decisions AGENTS
+    // sections. Those belong to explicit repository adoption (`oat pjm init`,
+    // via `initializeRepoReference`), which owns the `pjm.initialized` marker.
+    if (adoptsProject) {
+      await dependencies.removeAgentsMdSection(
+        scopeRoot('project'),
+        'workflows',
+      );
+    }
 
     if (!context.json && sectionResult.action !== 'no-change') {
       context.logger.info(
         `AGENTS.md tool packs section ${sectionResult.action}.`,
       );
     }
-    if (
-      !context.json &&
-      projectManagementSectionResult !== null &&
-      projectManagementSectionResult.action !== 'no-change'
-    ) {
-      context.logger.info(
-        `AGENTS.md project-management section ${projectManagementSectionResult.action}.`,
-      );
-    }
-    if (
-      !context.json &&
-      decisionSectionResult !== null &&
-      decisionSectionResult.action !== 'no-change'
-    ) {
-      context.logger.info(
-        `AGENTS.md decisions section ${decisionSectionResult.action}.`,
-      );
-    }
 
     const affectedScopesList = [...affectedScopes];
+    const appliedScopes = [
+      ...new Set(
+        packScopeInfo.flatMap(({ scope }) => scopesForEndState(scope)),
+      ),
+    ];
     lastRunInitToolsMetadata = {
       affectedScopes: affectedScopesList,
+      appliedScopes,
     };
     reportSuccess(context, packScopeInfo, affectedScopesList);
     process.exitCode = 0;
@@ -1381,6 +1320,162 @@ export async function runInitToolsWithDefaults(
   return runInitTools(context, { ...DEFAULT_DEPENDENCIES });
 }
 
+/**
+ * Scopes a bare `oat tools install <pack>` (no explicit `--scope`) should
+ * target.
+ *
+ * Delegates to `resolvePackDefaultEndState`, the same existing-placement rule
+ * the aggregate installer uses, so a pack already installed at project scope
+ * stays at project scope instead of gaining a second copy at the pack's
+ * `defaultScope`. Falls back to the configured default only when placement
+ * cannot be observed (no inventory dependency, or an inventory failure).
+ */
+async function resolvePackCommandScopes(
+  pack: ToolPack,
+  context: CommandContext,
+  assetsRoot: string,
+  dependencies: InitToolsDependencies,
+): Promise<ConcreteScope[]> {
+  const definition = getPackDefinition(pack);
+  const inventory = dependencies.inventoryPack;
+  if (!inventory) return [definition.defaultScope];
+
+  try {
+    const userRoot = dependencies.resolveScopeRoot(
+      'user',
+      context.cwd,
+      context.home,
+    );
+    const projectRoot = definition.allowedScopes.includes('project')
+      ? await dependencies
+          .resolveProjectRoot(context.cwd)
+          .catch(() => undefined)
+      : undefined;
+    const packInventory = await inventory({
+      pack,
+      assetsRoot,
+      ...(projectRoot ? { projectRoot } : {}),
+      userRoot,
+    });
+    const states = buildPackInstallStateMapFromInventory(
+      [pack],
+      [packInventory],
+    );
+    return scopesForEndState(
+      resolvePackDefaultEndState(pack, states[pack].location),
+    ).filter((scope) => definition.allowedScopes.includes(scope));
+  } catch {
+    return [definition.defaultScope];
+  }
+}
+
+function createReconciledPackCommand(
+  pack: ToolPack,
+  dependencies: InitToolsDependencies,
+): Command {
+  const definition = getPackDefinition(pack);
+  const descriptions: Record<ToolPack, string> = {
+    core: 'Install OAT core skills (diagnostics, docs)',
+    ideas: 'Install OAT ideas skills, templates, and idea workflow files',
+    docs: 'Install OAT docs workflow skills',
+    'project-management': 'Install OAT project-management skills and templates',
+    workflows: 'Install OAT workflows skills, agents, templates, and scripts',
+    utility: 'Install OAT utility skills',
+    research: 'Install OAT research skills',
+    brainstorm:
+      'Install OAT brainstorm skill (always-on entry point with visual companion)',
+  };
+  const base = new Command(pack).description(descriptions[pack]);
+  const packCommand = pack === 'core' ? base : withScopeOption(base);
+  return packCommand
+    .option('--force', 'Reconcile managed assets to bundled content')
+    .action(async (_options: unknown, command: Command) => {
+      const context = dependencies.buildCommandContext(
+        readGlobalOptions(command),
+      );
+      try {
+        const assetsRoot = await dependencies.resolveAssetsRoot();
+        const explicitScope =
+          command.getOptionValueSourceWithGlobals('scope') === 'cli';
+        const requestedScope =
+          context.scope === 'project' || context.scope === 'user'
+            ? context.scope
+            : null;
+        const scopes: ConcreteScope[] =
+          explicitScope && context.scope === 'all'
+            ? [...definition.allowedScopes]
+            : requestedScope
+              ? [requestedScope]
+              : await resolvePackCommandScopes(
+                  pack,
+                  context,
+                  assetsRoot,
+                  dependencies,
+                );
+        for (const scope of scopes) {
+          if (!definition.allowedScopes.includes(scope)) {
+            throw new Error(`Pack ${pack} does not allow ${scope} scope`);
+          }
+        }
+        const requests = await Promise.all(
+          scopes.map(
+            async (scope): Promise<PackLifecycleRequest> => ({
+              pack,
+              scope,
+              scopeRoot:
+                scope === 'project'
+                  ? await dependencies.resolveProjectRoot(context.cwd)
+                  : dependencies.resolveScopeRoot(
+                      'user',
+                      context.cwd,
+                      context.home,
+                    ),
+              assetsRoot,
+              action: 'install',
+            }),
+          ),
+        );
+        const results = await dependencies.reconcilePacks!(requests);
+        appliedScopesByCommand.set(
+          command,
+          results.map(({ request }) => request.scope),
+        );
+        setInstalledCanonicalPaths(command, canonicalPathsForPacks([pack]));
+
+        // Project-scope placement installs capability only. The
+        // project-management and decisions AGENTS sections are written by the
+        // explicit adoption action (`oat pjm init`), never by pack placement.
+
+        if (context.json) {
+          context.logger.json({
+            status: 'ok',
+            pack,
+            scopes,
+            results,
+          });
+        } else {
+          context.logger.info(`Installed ${pack} tool pack.`);
+          for (const result of results) {
+            context.logger.info(`Scope: ${result.request.scope}`);
+            context.logger.info(`Target root: ${result.request.scopeRoot}`);
+            context.logger.info(
+              `Reconciled operations: ${result.apply!.applied.length}`,
+            );
+            context.logger.info(
+              `Run: oat sync --scope ${result.request.scope}`,
+            );
+          }
+        }
+        process.exitCode = 0;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (context.json) context.logger.json({ status: 'error', message });
+        else context.logger.error(message);
+        process.exitCode = 1;
+      }
+    });
+}
+
 export function createInitToolsCommand(
   overrides: Partial<InitToolsDependencies> = {},
 ): Command {
@@ -1388,6 +1483,22 @@ export function createInitToolsCommand(
     ...DEFAULT_DEPENDENCIES,
     ...overrides,
   };
+  const hasLegacyInstallerOverrides = [
+    'installCore',
+    'installIdeas',
+    'installDocs',
+    'installWorkflows',
+    'installUtility',
+    'installProjectManagement',
+    'installResearch',
+    'installBrainstorm',
+  ].some((key) => Object.prototype.hasOwnProperty.call(overrides, key));
+  if (
+    hasLegacyInstallerOverrides &&
+    !Object.prototype.hasOwnProperty.call(overrides, 'reconcilePacks')
+  ) {
+    dependencies.reconcilePacks = undefined;
+  }
 
   async function reconcileAfterInstall(actionCommand: Command): Promise<void> {
     if (process.exitCode !== undefined && process.exitCode !== 0) {
@@ -1400,6 +1511,14 @@ export function createInitToolsCommand(
     const context = dependencies.buildCommandContext(
       readGlobalOptions(actionCommand),
     );
+    const appliedScopes =
+      appliedScopesByCommand.get(actionCommand) ??
+      (dependencies.reconcilePacks
+        ? []
+        : context.scope === 'user'
+          ? ['user']
+          : ['project']);
+    if (!appliedScopes.includes('project')) return;
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     await reconcileProjectToolsConfig(
       {
@@ -1411,23 +1530,36 @@ export function createInitToolsCommand(
     );
   }
 
-  const packCommands = [
-    createInitToolsCoreCommand(),
-    createInitToolsIdeasCommand(),
-    createInitToolsDocsCommand(),
-    createInitToolsProjectManagementCommand(),
-    createInitToolsWorkflowsCommand(),
-    createInitToolsUtilityCommand(),
-    createInitToolsResearchCommand(),
-    createInitToolsBrainstormCommand({
-      buildCommandContext: dependencies.buildCommandContext,
-      resolveProjectRoot: dependencies.resolveProjectRoot,
-      resolveScopeRoot: dependencies.resolveScopeRoot,
-      resolveAssetsRoot: dependencies.resolveAssetsRoot,
-      installBrainstorm: dependencies.installBrainstorm,
-      scanTools: dependencies.scanTools,
-    }),
-  ];
+  const packCommands = dependencies.reconcilePacks
+    ? (
+        [
+          'core',
+          'ideas',
+          'docs',
+          'project-management',
+          'workflows',
+          'utility',
+          'research',
+          'brainstorm',
+        ] as const
+      ).map((pack) => createReconciledPackCommand(pack, dependencies))
+    : [
+        createInitToolsCoreCommand(),
+        createInitToolsIdeasCommand(),
+        createInitToolsDocsCommand(),
+        createInitToolsProjectManagementCommand(),
+        createInitToolsWorkflowsCommand(),
+        createInitToolsUtilityCommand(),
+        createInitToolsResearchCommand(),
+        createInitToolsBrainstormCommand({
+          buildCommandContext: dependencies.buildCommandContext,
+          resolveProjectRoot: dependencies.resolveProjectRoot,
+          resolveScopeRoot: dependencies.resolveScopeRoot,
+          resolveAssetsRoot: dependencies.resolveAssetsRoot,
+          installBrainstorm: dependencies.installBrainstorm,
+          scanTools: dependencies.scanTools,
+        }),
+      ];
   for (const packCommand of packCommands) {
     packCommand.hook('postAction', async (_thisCommand, actionCommand) => {
       await reconcileAfterInstall(actionCommand);
@@ -1445,6 +1577,10 @@ export function createInitToolsCommand(
       readGlobalOptions(actionCommand),
     );
     const selectedPacks = await runInitTools(context, dependencies);
+    appliedScopesByCommand.set(
+      actionCommand,
+      lastRunInitToolsMetadata?.appliedScopes ?? [],
+    );
     setInstalledCanonicalPaths(
       actionCommand,
       canonicalPathsForPacks(selectedPacks),

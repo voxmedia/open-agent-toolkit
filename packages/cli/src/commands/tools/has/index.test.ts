@@ -63,6 +63,26 @@ function createDependencies(
       scope === 'project' ? '/project' : '/home/user',
     ),
     scanTools: vi.fn(async ({ scope }) => toolsByScope[scope] ?? []),
+    inventoryScopedPack: vi.fn(async ({ pack, scope }) => {
+      const available = (toolsByScope[scope] ?? []).some(
+        (tool) => tool.pack === pack,
+      );
+      return {
+        pack,
+        scope,
+        intent: {
+          pack,
+          scope,
+          enabled: available,
+          source: available ? ('inferred-legacy' as const) : ('none' as const),
+          configPath: `/${scope}/.oat/config.json`,
+          diagnostics: [],
+        },
+        completeness: available ? ('complete' as const) : ('absent' as const),
+        assets: [],
+        diagnostics: [],
+      };
+    }),
   };
 }
 
@@ -119,6 +139,9 @@ describe('createToolsHasCommand', () => {
         pack: 'workflows',
         available: true,
         scopes: ['project', 'user'],
+        unavailableScopes: [],
+        completeness: { project: 'complete', user: 'complete' },
+        missing: [],
       },
     ]);
     expect(process.exitCode).toBe(0);
@@ -139,8 +162,8 @@ describe('createToolsHasCommand', () => {
       ]);
 
       expect(capture.info).toEqual(['true']);
-      expect(dependencies.scanTools).toHaveBeenCalledTimes(1);
-      expect(dependencies.scanTools).toHaveBeenCalledWith(
+      expect(dependencies.inventoryScopedPack).toHaveBeenCalledTimes(1);
+      expect(dependencies.inventoryScopedPack).toHaveBeenCalledWith(
         expect.objectContaining({ scope }),
       );
       expect(process.exitCode).toBe(0);
@@ -166,7 +189,9 @@ describe('createToolsHasCommand', () => {
 
   it('uses the standard error envelope and exit two for runtime failures', async () => {
     const dependencies = createDependencies();
-    dependencies.scanTools.mockRejectedValue(new Error('scanner exploded'));
+    dependencies.inventoryScopedPack!.mockRejectedValue(
+      new Error('scanner exploded'),
+    );
 
     await runCommand(createToolsHasCommand(dependencies), ['docs'], ['--json']);
 

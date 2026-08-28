@@ -53,6 +53,21 @@ function createDeps(
     resolveScopeRoot: async (scope) =>
       scope === 'project' ? '/project' : '/home/user',
     resolveAssetsRoot: async () => '/assets',
+    inventoryScopedPack: async ({ pack, scope }) => ({
+      pack,
+      scope,
+      intent: {
+        pack,
+        scope,
+        enabled: false,
+        source: 'none',
+        configPath: `/${scope}/.oat/config.json`,
+        diagnostics: [],
+      },
+      completeness: 'absent',
+      assets: [],
+      diagnostics: [],
+    }),
   };
 }
 
@@ -101,9 +116,13 @@ describe('runOutdatedTools', () => {
     await runOutdatedTools(context, deps);
 
     expect(capture.jsonPayloads).toHaveLength(1);
-    const payload = capture.jsonPayloads[0] as { tools: ToolInfo[] };
+    const payload = capture.jsonPayloads[0] as {
+      tools: ToolInfo[];
+      packs: unknown[];
+    };
     expect(payload.tools).toHaveLength(1);
     expect(payload.tools[0]!.status).toBe('outdated');
+    expect(payload.packs).toEqual([]);
   });
 
   it('respects --scope filter', async () => {
@@ -121,5 +140,31 @@ describe('runOutdatedTools', () => {
 
     expect(result.tools).toHaveLength(1);
     expect(result.tools[0]!.scope).toBe('project');
+  });
+
+  it('reports intended-but-absent packs as repairable', async () => {
+    const deps = createDeps({});
+    deps.inventoryScopedPack = async ({ pack, scope }) => ({
+      pack,
+      scope,
+      intent: {
+        pack,
+        scope,
+        enabled: pack === 'docs',
+        source: pack === 'docs' ? 'declared' : 'none',
+        configPath: `/${scope}/.oat/config.json`,
+        diagnostics: [],
+      },
+      completeness: 'absent',
+      assets: [],
+      diagnostics: [],
+    });
+    const result = await runOutdatedTools(
+      createContext({ scope: 'user', logger: createLoggerCapture().logger }),
+      deps,
+    );
+    expect(result.packs).toContainEqual(
+      expect.objectContaining({ pack: 'docs', scope: 'user', intended: true }),
+    );
   });
 });

@@ -27,7 +27,17 @@ describe('decision AGENTS guidance', () => {
     expect(body).toContain('oat-pjm-decision');
     expect(body).toContain('otherwise use `oat decision new`');
     expect(body).toContain('oat decision regenerate-index');
-    expect(body).toContain('oat decision init');
+  });
+
+  it('routes a missing decision surface to adoption, not to a guarded init', () => {
+    const body = buildDecisionAgentsSectionBody();
+
+    // `oat decision init` is behind `requireRepositoryPjm()`, so recommending
+    // it for a missing surface recommends a command that always fails.
+    expect(body).not.toContain('oat decision init');
+    expect(body).toContain('oat pjm doctor --json');
+    expect(body).toContain('adoption.state');
+    expect(body).toContain('oat pjm init');
   });
 
   it('creates root and decision-scoped managed guidance idempotently', async () => {

@@ -21,6 +21,11 @@ export interface SyncProviderMismatches {
   detectedDisabled: string[];
 }
 
+export interface CanonicalSyncFilter {
+  mode: 'install' | 'remove';
+  paths: string[];
+}
+
 /**
  * Advisory diagnostic emitted when the CLI version that produced a scope's sync
  * manifest differs from the CLI version invoking sync. Comparison is symmetric

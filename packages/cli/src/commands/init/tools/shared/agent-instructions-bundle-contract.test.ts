@@ -21,7 +21,7 @@ describe('agent instructions bundle contract', () => {
     );
 
     expect(analyzeSkill.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe(
-      '1.11.2',
+      '1.12.0',
     );
     expect(analyzeSkill).toContain(
       "Fill in all template sections with findings from Steps 2–7, including Step\n3.5's existing-rule validation.",
@@ -102,5 +102,16 @@ describe('agent instructions bundle contract', () => {
       '### Step 5: Generate/Update Instruction Files',
     );
     expect(applySkill).toContain('matching pack');
+    expect(applySkill).toContain(
+      '"$(dirname "$APPLY_SKILL_DIR")/oat-agent-instructions-analyze"',
+    );
+    expect(applySkill).toContain(
+      '"${HOME}/.agents/skills/oat-agent-instructions-analyze"',
+    );
+    expect(applySkill).toContain(
+      '"$REPO_ROOT/.agents/skills/oat-agent-instructions-analyze"',
+    );
+    expect(applySkill).toContain('SCRIPT_DIR="$ANALYZE_SKILL_DIR/scripts"');
+    expect(applySkill).not.toContain('SCRIPT_DIR="$SKILL_DIR/scripts"');
   });
 });

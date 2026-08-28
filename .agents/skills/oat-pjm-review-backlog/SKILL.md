@@ -1,6 +1,6 @@
 ---
 name: oat-pjm-review-backlog
-version: 1.5.0
+version: 1.6.0
 description: Use when prioritizing the file-backed repo backlog or evaluating roadmap alignment. Produces value-effort ratings, dependency mapping, execution recommendations, and an optional external-plan handoff.
 argument-hint: '[backlog-root] [--roadmap=<path>] [--output=<path>]'
 disable-model-invocation: true
@@ -67,6 +67,23 @@ Parse from `$ARGUMENTS`:
 - **--archive-dated**: (optional) Also write a dated snapshot alongside the living review at `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review-YYYY-MM-DD.md`. Default: off.
 
 ## Process
+
+### Step 0: Resolve Skill Resources and Verify Adoption
+
+Set `SKILL_DIR` to the absolute directory containing this loaded `SKILL.md`.
+Resolve every bundled template from `$SKILL_DIR/references/`; never assume the
+skill lives under the current repository's `.agents/skills/` tree.
+
+Before any review or alignment file write, run the read-only preflight:
+
+```bash
+oat pjm doctor --json
+```
+
+Inspect the exact `adoption.state` field. Continue only for `declared` or
+`inferred-legacy`. For `none` or `partial-initialization`, stop before writing
+and tell the user to run `oat pjm init`. Pack presence is capability evidence,
+not repository adoption.
 
 ### Step 1: Locate Inputs
 
@@ -172,7 +189,7 @@ If a roadmap was provided:
 
 ### Step 7: Write the Review Document
 
-Use the template at `.agents/skills/oat-pjm-review-backlog/references/backlog-review-template.md`.
+Use the template at `$SKILL_DIR/references/backlog-review-template.md`.
 
 Write the **living** review to the resolved output path (default `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md`). If `--archive-dated` was passed, also write a dated snapshot alongside it (`backlog-and-roadmap-review-YYYY-MM-DD.md` in the same directory). Never split living and dated outputs across different directories — they must live together under `backlog/reviews/`.
 
@@ -222,7 +239,7 @@ If the operator declines, skip Steps 9–10 and continue to the Step 11 external
    - Are there calendar constraints (freezes, releases, time off) that affect ordering?
    - Does the operator want an optional axis like "planning investment" or "design effort" as a column? (Some repos find this useful; many don't. Default: omit unless operator opts in.)
 3. **Iterate on phase names, ordering, and the kickoff stack** until the operator is satisfied. Phase names should reflect the repo's actual initiatives, not generic placeholders.
-4. **Write or update** `.oat/repo/pjm/backlog/reviews/priority-alignment.md` using the template at `.agents/skills/oat-pjm-review-backlog/references/priority-alignment-template.md`. Add a new Changelog entry summarizing what shifted in this pass.
+4. **Write or update** `.oat/repo/pjm/backlog/reviews/priority-alignment.md` using the template at `$SKILL_DIR/references/priority-alignment-template.md`. Add a new Changelog entry summarizing what shifted in this pass.
 5. **Confirm the result** with the operator: file path, top-of-doc Status line, and the kickoff stack.
 
 When referencing backlog items inside the priority-alignment doc, the **Reference Format Convention** still applies — link to the item file and pair the ID with a human-readable title.

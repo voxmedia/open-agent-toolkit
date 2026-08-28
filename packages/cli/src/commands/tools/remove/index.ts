@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
-import { rm } from 'node:fs/promises';
+import { lstat, rm } from 'node:fs/promises';
+import { relative } from 'node:path';
 
 import { buildCommandContext } from '@app/command-context';
 import { withScopeOption } from '@commands/shared/scope-option';
@@ -11,10 +12,12 @@ import {
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
-import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
+import {
+  hasScopedPackOwnershipEvidence,
+  writeScopedPackIntent,
+} from '@commands/tools/shared/scoped-pack-intent';
 import type { PackName } from '@commands/tools/shared/types';
-import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -38,20 +41,43 @@ const defaultDependencies: RemoveToolsDependencies = {
   removeFile: async (path) => {
     await rm(path, { force: true });
   },
+  pathExists: async (path) => {
+    try {
+      await lstat(path);
+      return true;
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
+        return false;
+      }
+      throw error;
+    }
+  },
+  hasPackOwnershipEvidence: async (pack, scope, scopeRoot) =>
+    hasScopedPackOwnershipEvidence({ pack, scope, scopeRoot }),
 };
 
 const defaultSyncDependencies: AutoSyncDependencies = {
-  runSync: async ({ scope, cwd }) => {
+  runSync: async ({ scope, cwd, removedCanonicalPaths }) => {
+    const args = [
+      ...process.execArgv,
+      process.argv[1]!,
+      'sync',
+      '--scope',
+      scope,
+    ];
+    for (const canonicalPath of removedCanonicalPaths ?? []) {
+      args.push('--remove-canonical', canonicalPath);
+    }
     await new Promise<void>((resolve, reject) => {
-      execFile(
-        process.execPath,
-        [...process.execArgv, process.argv[1]!, 'sync', '--scope', scope],
-        { cwd },
-        (error) => {
-          if (error) reject(error);
-          else resolve();
-        },
-      );
+      execFile(process.execPath, args, { cwd }, (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
     });
   },
 };
@@ -104,21 +130,34 @@ export function createToolsRemoveCommand(
         dependencies,
       );
 
-      if (!dryRun && result.removed.length > 0) {
-        const repoRoot = await resolveProjectRoot(context.cwd);
-        await reconcileProjectToolsConfig(
-          {
-            repoRoot,
-            cwd: context.cwd,
-            home: context.home,
-          },
-          {
-            resolveAssetsRoot: dependencies.resolveAssetsRoot,
-            scanTools: dependencies.scanTools,
-            readOatConfig,
-            writeOatConfig,
-          },
-        );
+      if (!dryRun && target.kind !== 'name') {
+        const packs = target.kind === 'pack' ? [target.pack] : [...VALID_PACKS];
+        for (const scope of scopes) {
+          const scopeRoot = await dependencies.resolveScopeRoot(
+            scope,
+            context.cwd,
+            context.home,
+          );
+          for (const pack of packs) {
+            // Durable scoped intent is what lets `oat tools update` restore a
+            // pack whose files are all missing, so it may only be cleared for a
+            // pack this run actually removed something for. A removal that
+            // removed nothing reports nothing and must leave intent alone.
+            const removedForPack = result.packOutcomes.some(
+              (outcome) =>
+                outcome.pack === pack &&
+                outcome.scope === scope &&
+                outcome.removed,
+            );
+            if (!removedForPack) continue;
+            await writeScopedPackIntent({
+              pack,
+              scope,
+              scopeRoot,
+              enabled: false,
+            });
+          }
+        }
       }
 
       if (result.notInstalled.length > 0) {
@@ -132,15 +171,28 @@ export function createToolsRemoveCommand(
       }
 
       // Auto-sync after mutations (before output so sync errors are captured)
-      if (result.removed.length > 0 && !dryRun && opts.sync !== false) {
-        const affectedScopes = [...new Set(result.removed.map((t) => t.scope))];
-        await autoSync(
-          affectedScopes,
-          context.cwd,
-          context.home,
-          logger,
-          syncDependencies,
-        );
+      if (!dryRun && opts.sync !== false) {
+        for (const scope of scopes) {
+          const scopeRoot = await dependencies.resolveScopeRoot(
+            scope,
+            context.cwd,
+            context.home,
+          );
+          const removedCanonicalPaths = canonicalRemovalPaths(
+            result,
+            scope,
+            scopeRoot,
+          );
+          if (removedCanonicalPaths.length === 0) continue;
+          await autoSync(
+            [scope],
+            context.cwd,
+            context.home,
+            logger,
+            syncDependencies,
+            { removedCanonicalPaths },
+          );
+        }
       }
 
       if (context.json) {
@@ -157,6 +209,29 @@ export function createToolsRemoveCommand(
         logger.info('No tools to remove.');
       }
     });
+}
+
+function canonicalRemovalPaths(
+  result: Awaited<ReturnType<typeof removeTools>>,
+  scope: (typeof result.removedAssets)[number]['scope'],
+  scopeRoot: string,
+): string[] {
+  const paths = result.removedAssets
+    .filter((asset) => asset.scope === scope)
+    .map((asset) => relative(scopeRoot, asset.path).replaceAll('\\', '/'))
+    .filter((path) =>
+      /^\.agents\/(?:skills\/[^/]+|agents\/[^/]+\.md)$/.test(path),
+    );
+  paths.push(
+    ...result.removed
+      .filter((tool) => tool.scope === scope)
+      .map((tool) =>
+        tool.type === 'skill'
+          ? `.agents/skills/${tool.name}`
+          : `.agents/agents/${tool.name}.md`,
+      ),
+  );
+  return [...new Set(paths)];
 }
 
 function resolveTarget(

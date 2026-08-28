@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildPackInstallStateMap,
+  buildPackInstallStateMapFromInventory,
   resolvePackInstallLocation,
 } from './install-state';
 
@@ -35,6 +36,76 @@ describe('resolvePackInstallLocation', () => {
 
   it('returns both when a pack is installed in both scopes', () => {
     expect(resolvePackInstallLocation(true, true)).toBe('both');
+  });
+});
+
+describe('buildPackInstallStateMapFromInventory', () => {
+  it('preserves declared placement when all physical members are missing', () => {
+    const result = buildPackInstallStateMapFromInventory(
+      ['project-management'],
+      [
+        {
+          pack: 'project-management',
+          placement: 'user',
+          diagnostics: [],
+          scopes: [
+            {
+              pack: 'project-management',
+              scope: 'user',
+              intent: {
+                pack: 'project-management',
+                scope: 'user',
+                enabled: true,
+                source: 'declared',
+                configPath: '/home/.oat/config.json',
+                diagnostics: [],
+              },
+              completeness: 'absent',
+              assets: [],
+              diagnostics: [],
+            },
+          ],
+        },
+      ],
+    );
+    expect(result['project-management'].location).toBe('user');
+  });
+
+  it('does not restore placement from shared-only partial observations', () => {
+    const result = buildPackInstallStateMapFromInventory(
+      ['docs'],
+      [
+        {
+          pack: 'docs',
+          placement: 'unavailable',
+          diagnostics: [
+            {
+              code: 'shared-owner-observation',
+              message: 'shared only',
+              paths: ['/home/.oat/scripts/resolve-tracking.sh'],
+            },
+          ],
+          scopes: [
+            {
+              pack: 'docs',
+              scope: 'user',
+              intent: {
+                pack: 'docs',
+                scope: 'user',
+                enabled: false,
+                source: 'none',
+                configPath: '/home/.oat/config.json',
+                diagnostics: [],
+              },
+              completeness: 'partial',
+              assets: [],
+              diagnostics: [],
+            },
+          ],
+        },
+      ],
+    );
+    expect(result.docs.location).toBe('not-installed');
   });
 });
 

@@ -83,7 +83,12 @@ Always honor an explicit user-supplied path over the suggestion. Brainstorm docs
 
 ### Destination: Scoped backlog item
 
-**Pack required:** `project-management` (i.e., `oat tools has project-management` returns `true`)
+**Capability required:** `project-management` (`oat tools has project-management`
+returns `true`). This proves only that the workflow is available.
+**Repository adoption required:** the read-only `oat pjm doctor --json` result
+has `adoption.state` equal to `declared` or `inferred-legacy`. For `none` or
+`partial-initialization`, do not offer or perform this write; stop with the
+actionable recovery `oat pjm init`.
 **Trigger phrases:** "track this as a backlog item", "make a ticket", "log this", "open a backlog entry", "add this to the backlog", "create a backlog item for this".
 **Required template fields:** `title` (1-line summary), `description` (problem + proposed approach), `acceptance criteria` (bullet list), `scope` (xs / s / m / l / xl), `priority` (p0 / p1 / p2 / p3). Template: `.oat/templates/backlog-item.md` (consumed via `oat-pjm-add-backlog-item`).
 **Optional template fields:** related items, target release, owner.

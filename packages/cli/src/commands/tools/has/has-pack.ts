@@ -1,23 +1,29 @@
 import type { CommandContext } from '@app/command-context';
+import {
+  inventoryScopedPack,
+  type InventoryScopedPackInput,
+  type ScopedPackInventory,
+} from '@commands/tools/shared/pack-inventory';
+import {
+  getPackDefinition,
+  isPackName,
+  PACK_NAMES,
+} from '@commands/tools/shared/pack-manifest';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import type { ConcreteScope } from '@shared/types';
 
-export const PACK_NAMES = [
-  'core',
-  'ideas',
-  'docs',
-  'workflows',
-  'utility',
-  'project-management',
-  'research',
-  'brainstorm',
-] as const satisfies readonly PackName[];
+export { isPackName, PACK_NAMES };
 
 export interface PackAvailability {
   pack: PackName;
   available: boolean;
   scopes: ConcreteScope[];
+  unavailableScopes: ConcreteScope[];
+  completeness: Partial<
+    Record<ConcreteScope, ScopedPackInventory['completeness']>
+  >;
+  missing: Array<{ scope: ConcreteScope; asset: string; path: string }>;
 }
 
 export interface PackAvailabilityDependencies {
@@ -28,10 +34,9 @@ export interface PackAvailabilityDependencies {
     home: string,
   ) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
-}
-
-export function isPackName(value: string): value is PackName {
-  return (PACK_NAMES as readonly string[]).includes(value);
+  inventoryScopedPack?: (
+    input: InventoryScopedPackInput,
+  ) => Promise<ScopedPackInventory>;
 }
 
 export async function resolvePackAvailability(
@@ -42,19 +47,44 @@ export async function resolvePackAvailability(
 ): Promise<PackAvailability> {
   const assetsRoot = await dependencies.resolveAssetsRoot();
   const matchingScopes: ConcreteScope[] = [];
+  const completeness: PackAvailability['completeness'] = {};
+  const missing: PackAvailability['missing'] = [];
+  const allowedScopes = new Set(getPackDefinition(pack).allowedScopes);
+  const unavailableScopes = scopes.filter((scope) => !allowedScopes.has(scope));
 
   for (const scope of scopes) {
-    const scopeRoot = await dependencies.resolveScopeRoot(
-      scope,
-      context.cwd,
-      context.home,
+    if (!allowedScopes.has(scope)) continue;
+    let scopeRoot: string;
+    try {
+      scopeRoot = await dependencies.resolveScopeRoot(
+        scope,
+        context.cwd,
+        context.home,
+      );
+    } catch (error) {
+      // `has` is an availability probe, and user scope is now the default
+      // install target, so a query that spans both scopes still has a complete
+      // answer outside a Git repository. An explicitly requested project scope
+      // stays a hard failure.
+      if (scope === 'project' && scopes.includes('user')) {
+        unavailableScopes.push(scope);
+        continue;
+      }
+      throw error;
+    }
+    const inventory = await (
+      dependencies.inventoryScopedPack ?? inventoryScopedPack
+    )({ pack, scope, scopeRoot, assetsRoot });
+    completeness[scope] = inventory.completeness;
+    missing.push(
+      ...inventory.assets
+        .filter(
+          ({ definition, status }) =>
+            definition.ownership[scope] === 'managed' && status === 'missing',
+        )
+        .map(({ definition, path }) => ({ scope, asset: definition.id, path })),
     );
-    const tools = await dependencies.scanTools({
-      scope,
-      scopeRoot,
-      assetsRoot,
-    });
-    if (tools.some((tool) => tool.pack === pack)) {
+    if (inventory.completeness === 'complete') {
       matchingScopes.push(scope);
     }
   }
@@ -63,5 +93,8 @@ export async function resolvePackAvailability(
     pack,
     available: matchingScopes.length > 0,
     scopes: matchingScopes,
+    unavailableScopes,
+    completeness,
+    missing,
   };
 }

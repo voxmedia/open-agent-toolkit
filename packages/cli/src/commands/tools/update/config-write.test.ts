@@ -183,14 +183,8 @@ describe('createToolsUpdateCommand config writes', () => {
     expect(writeOatConfig).toHaveBeenCalledWith('/tmp/workspace', {
       version: 1,
       tools: {
-        core: false,
-        ideas: false,
-        docs: false,
         workflows: true,
-        utility: false,
         'project-management': true,
-        research: false,
-        brainstorm: false,
       },
     });
     expect(process.exitCode).toBeUndefined();

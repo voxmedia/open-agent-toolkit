@@ -40,7 +40,8 @@ export function buildDecisionAgentsSectionBody(
     `- Before finalizing a durable repository decision, review \`${decisionsPath}/index.md\` and any relevant records.`,
     '- When the user asks to record a durable decision or confirms a proposed capture, use `oat-pjm-decision` when that skill is installed; otherwise use `oat decision new`.',
     '- Do not hand-edit the generated decision index; run `oat decision regenerate-index` after record changes or to resolve index conflicts.',
-    '- If the decision surface is missing, initialize it with `oat decision init`.',
+    '- Run `oat pjm doctor --json` and inspect `adoption.state` before any decision write.',
+    '- If the decision surface is missing, repository adoption is absent or partial; stop and initialize it with `oat pjm init`.',
   ].join('\n');
 }
 

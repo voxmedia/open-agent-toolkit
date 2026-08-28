@@ -16,7 +16,11 @@ import {
 } from '@app/command-context';
 import { compareVersions } from '@commands/init/tools/shared/version';
 import {
-  createPjmDisabledCheck,
+  resolvePjmAdoption,
+  type PjmAdoption,
+  type ResolvePjmAdoptionOptions,
+} from '@commands/pjm/adoption';
+import {
   runPjmDoctorChecks,
   type PjmDoctorOptions,
 } from '@commands/pjm/doctor';
@@ -26,6 +30,19 @@ import {
   readGlobalOptions,
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
+import {
+  hasScopedPackPlacementEvidence,
+  inventoryPack,
+  type InventoryPackInput,
+  type PackInventory,
+} from '@commands/tools/shared/pack-inventory';
+import { PACK_NAMES } from '@commands/tools/shared/pack-manifest';
+import {
+  formatPackPaths,
+  type PackPathRoots,
+  updatePackRecovery,
+} from '@commands/tools/shared/pack-paths';
+import type { PackName } from '@commands/tools/shared/types';
 import {
   walkDispatchMatrix,
   type DispatchMatrixCellRef,
@@ -104,6 +121,10 @@ interface DoctorDependencies {
     repoRoot: string,
     options?: PjmDoctorOptions,
   ) => Promise<DoctorCheck[]>;
+  resolvePjmAdoption: (
+    options: ResolvePjmAdoptionOptions,
+  ) => Promise<PjmAdoption>;
+  inventoryPack: (input: InventoryPackInput) => Promise<PackInventory>;
   checkSkillVersions: (
     scopeRoot: string,
     assetsRoot: string,
@@ -283,6 +304,8 @@ function createDependencies(): DoctorDependencies {
     validateDispatchMatrixRefs,
     processEnv: process.env,
     runPjmDoctorChecks,
+    resolvePjmAdoption,
+    inventoryPack,
     // Default binding remains self-contained, but still honors the caller-
     // provided pathExists dependency from runChecksForScope when available.
     checkSkillVersions: (
@@ -741,6 +764,300 @@ async function runCodexChecksForScope(
   return checks;
 }
 
+/**
+ * Pack diagnostics are reported by kind so that every finding carries one
+ * scoped, copy-pasteable recovery command (or explicitly none when the state
+ * is owner-owned rather than drifted).
+ */
+type PackStateFindingCode =
+  | 'partial'
+  | 'stale'
+  | 'newer'
+  | 'retained-override'
+  | 'legacy-false-conflict'
+  | 'duplicate-scope'
+  | 'shared-owner-observation'
+  | 'user-agent-unmaterialized';
+
+interface PackStateFinding {
+  pack: PackName;
+  scope: ConcreteScope | null;
+  code: PackStateFindingCode;
+  detail: string;
+  paths: string[];
+  recovery: string | null;
+}
+
+function collectPackStateFindings(
+  inventories: PackInventory[],
+): PackStateFinding[] {
+  const findings: PackStateFinding[] = [];
+
+  for (const inventory of inventories) {
+    for (const scoped of inventory.scopes) {
+      const { scope } = scoped;
+      if (!hasScopedPackPlacementEvidence(scoped)) {
+        const sharedPresent = scoped.assets.filter(
+          (asset) =>
+            asset.definition.sharedOwner !== undefined &&
+            asset.status !== 'missing',
+        );
+        if (sharedPresent.length > 0) {
+          findings.push({
+            pack: inventory.pack,
+            scope,
+            code: 'shared-owner-observation',
+            detail:
+              'shared managed assets are present without pack ownership evidence',
+            paths: sharedPresent.map(({ path }) => path),
+            recovery: null,
+          });
+        }
+        continue;
+      }
+
+      const managed = scoped.assets.filter(
+        (asset) => asset.definition.ownership[scope] === 'managed',
+      );
+      if (scoped.completeness !== 'complete') {
+        const missing = managed.filter(({ status }) => status === 'missing');
+        findings.push({
+          pack: inventory.pack,
+          scope,
+          code: 'partial',
+          detail:
+            scoped.completeness === 'absent'
+              ? 'declared intent with no installed managed assets'
+              : `missing ${missing.length} of ${managed.length} managed asset(s)`,
+          paths: missing.map(({ path }) => path),
+          recovery: updatePackRecovery(inventory.pack, scope),
+        });
+      }
+
+      const stale = scoped.assets.filter(({ status }) => status === 'outdated');
+      if (stale.length > 0) {
+        findings.push({
+          pack: inventory.pack,
+          scope,
+          code: 'stale',
+          detail: `${stale.length} managed asset(s) behind the bundled release`,
+          paths: stale.map(({ path }) => path),
+          recovery: updatePackRecovery(inventory.pack, scope),
+        });
+      }
+
+      const newer = scoped.assets.filter(({ status }) => status === 'newer');
+      if (newer.length > 0) {
+        findings.push({
+          pack: inventory.pack,
+          scope,
+          code: 'newer',
+          detail: `${newer.length} installed asset(s) are newer than the bundled release`,
+          paths: newer.map(({ path }) => path),
+          recovery: null,
+        });
+      }
+
+      const retained = scoped.assets.filter(
+        (asset) =>
+          asset.definition.ownership[scope] === 'seed-if-missing' &&
+          asset.status === 'present',
+      );
+      if (retained.length > 0) {
+        findings.push({
+          pack: inventory.pack,
+          scope,
+          code: 'retained-override',
+          detail: `${retained.length} owner-owned override(s) retained; managed defaults are not applied here`,
+          paths: retained.map(({ path }) => path),
+          recovery: null,
+        });
+      }
+
+      for (const diagnostic of scoped.diagnostics) {
+        if (diagnostic.code === 'legacy-false-conflict') {
+          findings.push({
+            pack: inventory.pack,
+            scope,
+            code: 'legacy-false-conflict',
+            detail:
+              'legacy false intent with installed managed assets; adopt or remove the install',
+            paths: diagnostic.paths,
+            recovery: updatePackRecovery(inventory.pack, scope),
+          });
+          continue;
+        }
+        if (diagnostic.code === 'user-agent-unmaterialized') {
+          // A documented scope limitation rather than drift: `oat tools update`
+          // cannot repair it, so no recovery command is offered and the check
+          // stays a pass. The message still names every affected agent so the
+          // absent capability is not reported as a complete pack.
+          findings.push({
+            pack: inventory.pack,
+            scope,
+            code: 'user-agent-unmaterialized',
+            detail: `${diagnostic.paths.length} user-scope agent(s) reach no provider; user-scope agent materialization is limited to the bundled managed role files, so install this pack at project scope to use them`,
+            paths: diagnostic.paths,
+            recovery: null,
+          });
+        }
+      }
+    }
+
+    for (const diagnostic of inventory.diagnostics) {
+      if (diagnostic.code !== 'duplicate-scope') continue;
+      findings.push({
+        pack: inventory.pack,
+        scope: null,
+        code: 'duplicate-scope',
+        detail:
+          'installed at project and user scope; provider precedence is not inferred',
+        paths: diagnostic.paths,
+        recovery: `oat tools migrate --pack ${inventory.pack} --from project --to user`,
+      });
+    }
+  }
+
+  return findings;
+}
+
+function formatPackFinding(
+  finding: PackStateFinding,
+  roots: PackPathRoots,
+): string {
+  const paths = formatPackPaths(finding.paths, roots);
+  return paths.length > 0
+    ? `${finding.pack} [${finding.code}]: ${finding.detail} (${paths})`
+    : `${finding.pack} [${finding.code}]: ${finding.detail}`;
+}
+
+function uniqueRecoveries(findings: PackStateFinding[]): string[] {
+  return [
+    ...new Set(
+      findings
+        .map(({ recovery }) => recovery)
+        .filter((recovery): recovery is string => recovery !== null),
+    ),
+  ];
+}
+
+function createScopedPackStateCheck(
+  scope: ConcreteScope,
+  findings: PackStateFinding[],
+  roots: PackPathRoots,
+): DoctorCheck {
+  const scoped = findings.filter((finding) => finding.scope === scope);
+  if (scoped.length === 0) {
+    return {
+      name: `${scope}:pack_state`,
+      description: 'Managed pack completeness and drift',
+      status: 'pass',
+      message: 'All installed managed packs are complete and current.',
+    };
+  }
+
+  const recoveries = uniqueRecoveries(scoped);
+  return {
+    name: `${scope}:pack_state`,
+    description: 'Managed pack completeness and drift',
+    status: recoveries.length > 0 ? 'warn' : 'pass',
+    message: scoped
+      .map((finding) => formatPackFinding(finding, roots))
+      .join('; '),
+    fix: recoveries.length > 0 ? recoveries.join('; ') : undefined,
+  };
+}
+
+function createPackDuplicationCheck(
+  findings: PackStateFinding[],
+  roots: PackPathRoots,
+): DoctorCheck {
+  const duplicates = findings.filter(
+    (finding) => finding.code === 'duplicate-scope',
+  );
+  if (duplicates.length === 0) {
+    return {
+      name: 'packs:scope_duplication',
+      description: 'Cross-scope pack duplication',
+      status: 'pass',
+      message: 'No managed pack is installed at both project and user scope.',
+    };
+  }
+
+  return {
+    name: 'packs:scope_duplication',
+    description: 'Cross-scope pack duplication',
+    status: 'warn',
+    message: duplicates
+      .map((finding) => formatPackFinding(finding, roots))
+      .join('; '),
+    fix: uniqueRecoveries(duplicates).join('; '),
+  };
+}
+
+async function createPackStateChecks(
+  scopeRoots: Map<ConcreteScope, string>,
+  dependencies: DoctorDependencies,
+): Promise<DoctorCheck[]> {
+  if (scopeRoots.size === 0) {
+    return [];
+  }
+
+  const roots: PackPathRoots = {
+    ...(scopeRoots.has('project')
+      ? { projectRoot: scopeRoots.get('project')! }
+      : {}),
+    ...(scopeRoots.has('user') ? { userRoot: scopeRoots.get('user')! } : {}),
+  };
+
+  let findings: PackStateFinding[];
+  try {
+    const assetsRoot = await dependencies.resolveAssetsRoot();
+    const inventories = await Promise.all(
+      PACK_NAMES.map((pack) =>
+        dependencies.inventoryPack({ pack, assetsRoot, ...roots }),
+      ),
+    );
+    findings = collectPackStateFindings(inventories);
+  } catch (error) {
+    return [
+      {
+        name: 'packs:inventory',
+        description: 'Managed pack inventory availability',
+        status: 'warn',
+        message:
+          error instanceof Error
+            ? `Unable to inventory managed packs: ${error.message}`
+            : 'Unable to inventory managed packs.',
+        fix: 'Run `pnpm build` and rerun `oat doctor`.',
+      },
+    ];
+  }
+
+  const checks: DoctorCheck[] = [];
+  for (const scope of scopeRoots.keys()) {
+    checks.push(createScopedPackStateCheck(scope, findings, roots));
+  }
+  if (scopeRoots.has('project') && scopeRoots.has('user')) {
+    checks.push(createPackDuplicationCheck(findings, roots));
+  }
+  return checks;
+}
+
+function createScopeUnavailableCheck(
+  scope: ConcreteScope,
+  error: unknown,
+): DoctorCheck {
+  const reason = error instanceof Error ? `: ${error.message}` : '.';
+  return {
+    name: `${scope}:scope_availability`,
+    description: `${scope === 'project' ? 'Project' : 'User'} scope availability`,
+    status: 'warn',
+    message: `${scope === 'project' ? 'Project' : 'User'} scope is unavailable${reason}`,
+    fix: `Run \`oat doctor --scope ${scope === 'project' ? 'user' : 'project'}\`, or rerun inside a directory where ${scope} scope resolves.`,
+  };
+}
+
 async function runChecksForScope(
   scope: ConcreteScope,
   scopeRoot: string,
@@ -926,16 +1243,26 @@ async function runChecksForScope(
         dependencies,
       ),
     );
-    const projectManagementEnabled =
-      config.tools?.['project-management'] === true;
-    if (projectManagementEnabled) {
+    // PJM capability now normally lives at user scope, so repository pack
+    // intent is no longer evidence of repository adoption. Adoption state is
+    // authoritative and already covers every case where a PJM canonical file
+    // exists (`partial-initialization` is returned whenever any is present), so
+    // the presence of `.oat/repo` adds nothing. Keying off it as well would fire
+    // only when `.oat/repo` exists with zero PJM canonical files — a repository
+    // that uses `.oat/repo` for non-PJM content such as `oat index` knowledge,
+    // and deliberately declined PJM. That is a false positive, and it made
+    // `oat doctor` disagree with `oat status`'s `shouldReportPjmAdoption`.
+    const adoption = await dependencies.resolvePjmAdoption({
+      projectRoot: scopeRoot,
+      repoRoot: repoReferenceRoot,
+    });
+    if (adoption.state !== 'none') {
       checks.push(
         ...(await dependencies.runPjmDoctorChecks(repoReferenceRoot, {
-          projectManagementEnabled: true,
+          projectRoot: scopeRoot,
+          adoption,
         })),
       );
-    } else if (await dependencies.pathExists(repoReferenceRoot)) {
-      checks.push(createPjmDisabledCheck());
     }
   }
 
@@ -947,9 +1274,23 @@ async function runDoctorCommand(
   dependencies: DoctorDependencies,
 ): Promise<void> {
   const checks: DoctorCheck[] = [];
+  const scopes = resolveConcreteScopes(context.scope);
+  const scopeRoots = new Map<ConcreteScope, string>();
 
-  for (const scope of resolveConcreteScopes(context.scope)) {
-    const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
+  for (const scope of scopes) {
+    let scopeRoot: string;
+    try {
+      scopeRoot = await dependencies.resolveScopeRoot(scope, context);
+    } catch (error) {
+      // `--scope all` outside a Git repository still completes user-scope
+      // diagnostics; an explicitly requested scope stays a hard failure.
+      if (scope === 'project' && scopes.includes('user')) {
+        checks.push(createScopeUnavailableCheck(scope, error));
+        continue;
+      }
+      throw error;
+    }
+    scopeRoots.set(scope, scopeRoot);
     const scopeChecks = await runChecksForScope(
       scope,
       scopeRoot,
@@ -958,6 +1299,8 @@ async function runDoctorCommand(
     );
     checks.push(...scopeChecks);
   }
+
+  checks.push(...(await createPackStateChecks(scopeRoots, dependencies)));
 
   if (context.json) {
     context.logger.json({ scope: context.scope, checks });

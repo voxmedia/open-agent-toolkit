@@ -128,6 +128,31 @@ describe('createDecisionRecord', () => {
     );
   });
 
+  it('uses an explicitly injected user template before the bundle', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-new-'));
+    tempDirs.push(root);
+    const decisionsRoot = join(root, 'decisions');
+    const assetsRoot = join(root, 'assets');
+    const home = join(root, 'home');
+    await mkdir(decisionsRoot, { recursive: true });
+    await initializeDecisionRecords(decisionsRoot);
+    await seedDecisionTemplate(join(home, '.oat', 'templates'));
+    await seedDecisionTemplate(join(assetsRoot, 'templates'));
+
+    const result = await createDecisionRecord({
+      decisionsRoot,
+      assetsRoot,
+      home,
+      title: 'User Template',
+      createdAt: '2026-06-22T10:30:00Z',
+    });
+
+    expect(result.templateTier).toBe('user');
+    expect(result.templatePath).toBe(
+      join(home, '.oat', 'templates', 'decision.md'),
+    );
+  });
+
   it('fails on a same-day same-slug collision', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-decision-new-'));
     tempDirs.push(root);

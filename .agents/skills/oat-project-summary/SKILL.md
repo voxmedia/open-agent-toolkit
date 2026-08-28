@@ -1,10 +1,10 @@
 ---
 name: oat-project-summary
-version: 1.3.6
+version: 1.5.1
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat pjm:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 ---
 
 # Project Summary
@@ -383,27 +383,36 @@ append-based `project` → `general` promotion in Step 2.5.
 
 Run this step **after** `summary.md` (including its `## Key Decisions` section) has been written/refreshed and its frontmatter updated. It promotes the project's Key Decisions out of per-project prose and into the canonical, repo-wide `reference/decisions/` log so they stop being siloed in `summary.md`. This step is **additive and non-interactive** — it never prompts.
 
-**7.1 — PJM gate (auto, no prompt).** Check whether the PJM tool pack is effectively available:
+**7.1 — PJM capability and adoption gate (auto, no prompt).** Check capability
+availability, then inspect repository adoption read-only:
 
 ```bash
 PJM_ENABLED=$(oat tools has project-management 2>/dev/null || echo "")
-```
-
-- If `PJM_ENABLED` is `true` → perform the promotion automatically. Do NOT ask the user.
-- Otherwise (any other value, empty, or unset) → **skip this entire step silently.** Do not print a warning or prompt.
-
-**7.2 — Skip if nothing to promote.** If `summary.md` has no `## Key Decisions` section, or that section has no decision content, skip the step. There is nothing to promote.
-
-**7.3 — Ensure the decisions surface exists.** The canonical decisions root is `.oat/repo/reference/decisions` (the `oat decision` default; pass `--decisions-root <path>` only for an explicit override). If its managed index is missing — i.e. `.oat/repo/reference/decisions/index.md` does not exist — initialize it first so `oat decision new` can succeed:
-
-```bash
-if [ ! -f "$DECISION_INDEX_PATH" ]; then
-  oat decision init
-  DECISION_INDEX_CHANGED="true"
+PJM_ADOPTION_STATE=""
+if [ "$PJM_ENABLED" = "true" ]; then
+  PJM_ADOPTION_STATE=$(oat pjm doctor --json 2>/dev/null | jq -r '.adoption.state // ""')
 fi
 ```
 
-`oat decision init` is idempotent; running it when the scaffold already exists is harmless.
+- If `PJM_ADOPTION_STATE` is `declared` or `inferred-legacy` → perform the
+  promotion automatically. Do NOT ask the user.
+- If capability is absent → skip this entire step silently.
+- If adoption is `none` or `partial-initialization` → skip every PJM write and
+  report that `oat pjm init` is required before decision promotion.
+- If capability is present but `PJM_ADOPTION_STATE` is empty or holds any value
+  other than the four documented states (`declared`, `inferred-legacy`, `none`,
+  `partial-initialization`) → treat adoption as unverified: skip every PJM
+  write, do not fall through to the promotion branch, and report that adoption
+  could not be determined (usually `jq` missing from `PATH` or a failing
+  `oat pjm doctor`).
+
+**7.2 — Skip if nothing to promote.** If `summary.md` has no `## Key Decisions` section, or that section has no decision content, skip the step. There is nothing to promote.
+
+**7.3 — Verify the decisions surface exists.** The canonical decisions root is
+`.oat/repo/reference/decisions` (the `oat decision` default; pass
+`--decisions-root <path>` only for an explicit override). If its managed index
+is missing, stop decision promotion and recommend `oat pjm init`. Never use
+`oat decision init` as an alternate repository-adoption path.
 
 **7.4 — Idempotent, date-independent promotion (critical).** For each decision in `## Key Decisions`:
 

@@ -9,6 +9,7 @@ import {
   PROJECT_MANAGEMENT_SKILLS,
   PROJECT_MANAGEMENT_TEMPLATES,
 } from '@commands/init/tools/shared/skill-manifest';
+import type { ConcreteScope } from '@shared/types';
 
 export {
   PROJECT_MANAGEMENT_SCRIPTS,
@@ -20,9 +21,12 @@ export interface InstallProjectManagementOptions {
   assetsRoot: string;
   targetRoot: string;
   force?: boolean;
+  scope?: ConcreteScope;
 }
 
 export interface InstallProjectManagementResult {
+  scope: ConcreteScope;
+  targetRoot: string;
   copiedSkills: string[];
   updatedSkills: string[];
   skippedSkills: string[];
@@ -40,8 +44,11 @@ export async function installProjectManagement(
   options: InstallProjectManagementOptions,
 ): Promise<InstallProjectManagementResult> {
   const force = options.force ?? false;
+  const scope = options.scope ?? 'user';
 
   const result: InstallProjectManagementResult = {
+    scope,
+    targetRoot: options.targetRoot,
     copiedSkills: [],
     updatedSkills: [],
     skippedSkills: [],
@@ -78,7 +85,11 @@ export async function installProjectManagement(
   for (const template of PROJECT_MANAGEMENT_TEMPLATES) {
     const source = join(options.assetsRoot, 'templates', template);
     const destination = join(options.targetRoot, '.oat', 'templates', template);
-    const copyStatus = await copyFileWithStatus(source, destination, force);
+    const copyStatus = await copyFileWithStatus(
+      source,
+      destination,
+      scope === 'user' ? force : false,
+    );
 
     if (copyStatus === 'copied') {
       result.copiedTemplates.push(template);

@@ -131,8 +131,8 @@ export async function scanTools(
     });
   }
 
-  // Scan agents (project scope only)
-  if (options.scope === 'project') {
+  // Scan agents at both concrete scopes.
+  {
     const agentsDir = join(options.scopeRoot, '.agents', 'agents');
     const agentsDirExists = await deps.dirExists(agentsDir);
 

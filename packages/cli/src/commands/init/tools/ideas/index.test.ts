@@ -142,16 +142,16 @@ describe('createInitToolsIdeasCommand', () => {
     });
   });
 
-  it('default scope (all) resolves as project', async () => {
+  it('default scope (all) resolves to the manifest user default', async () => {
     const { command, resolveProjectRoot, resolveScopeRoot, installIdeas } =
       createHarness({ scope: 'all' });
 
     await runCommand(command);
 
-    expect(resolveProjectRoot).toHaveBeenCalledTimes(1);
-    expect(resolveScopeRoot).not.toHaveBeenCalled();
+    expect(resolveProjectRoot).not.toHaveBeenCalled();
+    expect(resolveScopeRoot).toHaveBeenCalled();
     expect(installIdeas).toHaveBeenCalledWith(
-      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
     );
   });
 

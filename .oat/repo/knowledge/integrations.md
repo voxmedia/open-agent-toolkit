@@ -1,145 +1,135 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-05-17
-oat_source_head_sha: f3ea8f007f545638a6b9ad86712cf94df98e9758
-oat_source_main_merge_base_sha: f3ea8f007f545638a6b9ad86712cf94df98e9758
+oat_generated_at: 2026-08-19
+oat_source_head_sha: e0408f4676a7b84e4240b4c568b78265f1d5cd0a
+oat_source_main_merge_base_sha: 6f443c0843d75b704168b8ca739b5bcf7f406f07
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
+<!--
+Vendored from: https://github.com/glittercowboy/get-shit-done
+License: MIT
+Original: agents/gsd-codebase-mapper.md (embedded template)
+Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
+-->
+
 # External Integrations
 
-**Analysis Date:** 2026-05-17
+**Analysis Date:** 2026-08-19
 
 ## APIs & External Services
 
-**Version Control & Repository Management:**
+**GitHub:**
 
-- GitHub GraphQL API - Used for collecting PR review comments and repository metadata
-  - Client: `gh` CLI via `execFile` (Node.js child process)
-  - Auth: GitHub CLI authentication (configured in user's `.config/gh/` or similar; uses `gh api graphql`)
-  - Usage location: `packages/cli/src/commands/repo/pr-comments/collect/collect-comments.ts`
-  - Implementation: Uses `gh api graphql` command to query merged PRs and review comments, with support for pagination via GraphQL cursors
+- GitHub GraphQL API - collects merged pull-request review comments and pagination data (`packages/cli/src/commands/repo/pr-comments/collect/graphql-queries.ts`, `packages/cli/src/commands/repo/pr-comments/collect/collect-comments.ts`).
+  - SDK/Client: GitHub CLI `gh api graphql`, invoked through Node `execFile` (`packages/cli/src/commands/repo/pr-comments/collect/collect-comments.ts`).
+  - Auth: delegated to the local `gh` authentication; no application token variable is read in the collector (`packages/cli/src/commands/repo/pr-comments/collect/collect-comments.ts`).
+- GitHub Actions, Releases, and Pages - CI gates, npm release automation, GitHub Release creation, and docs hosting (`.github/workflows/ci.yml`, `.github/workflows/release.yml`, `.github/workflows/deploy-docs.yml`).
+  - SDK/Client: GitHub Actions and first-party/marketplace actions (`.github/workflows/release.yml`, `.github/workflows/deploy-docs.yml`).
+  - Auth: workflow `contents`, `pages`, and OIDC permissions (`.github/workflows/release.yml`, `.github/workflows/deploy-docs.yml`).
 
-**Agent/Provider Integrations:**
+**npm:**
 
-- Claude Code
-  - Configuration: `.claude/` directory marker for detection
-  - File mappings: `packages/cli/src/providers/claude/paths.ts`
-  - Implementation: Provider adapter at `packages/cli/src/providers/claude/adapter.ts`
+- npm registry - interactive CLI update checks request the latest published CLI version (`packages/cli/src/app/update-notifier.ts`).
+  - SDK/Client: Node global `fetch` with a 1.5-second timeout (`packages/cli/src/app/update-notifier.ts`).
+  - Auth: no credential; the endpoint is the public registry URL in source (`packages/cli/src/app/update-notifier.ts`).
+- npm publish - release workflow checks package versions and publishes public tarballs (`.github/workflows/release.yml`, `packages/*/package.json`).
+  - SDK/Client: `npm view`, `npm publish`, and pnpm pack (`.github/workflows/release.yml`).
+  - Auth: npm trusted publishing through GitHub OIDC (`.github/workflows/release.yml`).
 
-- GitHub Copilot
-  - Configuration: `.copilot/`, `.github/copilot-instructions.md`, `.github/agents`, `.github/skills`, `.github/instructions` directory markers
-  - File mappings: `packages/cli/src/providers/copilot/paths.ts`
-  - Implementation: Provider adapter at `packages/cli/src/providers/copilot/adapter.ts`
-  - Rule format: Custom rule format in `.github/` that is normalized to canonical format via `packages/cli/src/providers/copilot/rule-transform.ts`
+**HTTP documentation targets:**
 
-- Gemini CLI
-  - Configuration: `.gemini` directory marker for detection
-  - File mappings: `packages/cli/src/providers/gemini/paths.ts`
-  - Implementation: Provider adapter at `packages/cli/src/providers/gemini/adapter.ts`
+- Documentation link checker - crawls the deployed docs URL and optionally checks external links with HTTP `HEAD`/`GET` requests (`tools/docs/check-links.ts`).
+  - SDK/Client: Node global `fetch`, with Playwright available for the link-checking toolchain (`tools/docs/check-links.ts`, `package.json`).
+  - Auth: no credential is configured; requests use the `oat-link-checker/1.0` user-agent (`tools/docs/check-links.ts`).
 
-- Cursor IDE
-  - Configuration: `.cursor` directory marker for detection
-  - File mappings: `packages/cli/src/providers/cursor/paths.ts`
-  - Implementation: Provider adapter at `packages/cli/src/providers/cursor/adapter.ts`
+**AWS S3:**
 
-- Codex CLI
-  - Configuration: `.codex` directory marker for detection
-  - File mappings: `packages/cli/src/providers/codex/paths.ts`
-  - Implementation: Provider adapter at `packages/cli/src/providers/codex/adapter.ts`
+- S3 archive storage - optional project archive synchronization and completion-time upload (`.oat/config.json`, `scripts/sync-archived-projects-from-s3.sh`, `packages/cli/src/commands/project/archive/archive-utils.ts`).
+  - SDK/Client: AWS CLI `aws s3 sync` and `aws sts get-caller-identity`, spawned by Node or Bash (`scripts/sync-archived-projects-from-s3.sh`, `packages/cli/src/commands/project/archive/archive-utils.ts`).
+  - Auth: `archive.awsProfile`/`archive.awsRegion` map to `AWS_PROFILE`/`AWS_REGION`; credentials remain in the AWS CLI environment (`packages/cli/src/commands/config/index.ts`, `packages/cli/src/commands/project/archive/archive-utils.ts`).
+- Explainer static publishing - supported `s3-static` provider, S3 destination, public base URL, and access-mode configuration (`packages/cli/src/commands/config/index.ts`, `tools/release/validate-explainer-acceptance.mjs`).
+  - SDK/Client: Not detected for the explainer publisher in this repository; the configuration and acceptance validator identify the provider contract (`packages/cli/src/commands/config/index.ts`, `tools/release/validate-explainer-acceptance.mjs`).
+  - Auth: local or user AWS profile configuration is defined for the publishing contract (`packages/cli/src/commands/config/index.ts`).
 
-**Linear (Planned Integration):**
+**Agent Provider Runtimes:**
 
-- Linear MCP Server
-  - Endpoint: `https://mcp.linear.app/mcp` (official MCP server)
-  - Auth: Linear API key or OAuth token configured in agent MCP settings
-  - Status: Design phase; handover document at `.oat/projects/shared/remote-project-management/linear-integration-discovery-handover.md`
-  - Use case: Bidirectional sync of backlog items ↔ Linear issues, status tracking via GitHub integration
+- Codex, Claude, Cursor IDE, and Cursor CLI - smoke harnesses launch provider executables for workflow verification (`tools/smoke/runner/drive.mjs`, `tools/smoke/runner/preflight.mjs`).
+  - SDK/Client: provider command-line executables, with deterministic Node provider as a local alternative (`tools/smoke/runner/drive.mjs`, `tools/smoke/deterministic/provider.mjs`).
+  - Auth: provider-local authentication; Cursor isolated runs use `CURSOR_API_KEY` through a filesystem credential broker (`tools/smoke/runner/cursor-broker-launch.mjs`, `tools/smoke/runner/cursor-broker-client.mjs`).
 
 ## Data Storage
 
 **Databases:**
 
-- Not detected - OAT is a CLI-based toolkit without persistent data storage; state is stored in markdown files within project directories
+- Not detected. The package manifests list filesystem/config parsers and no database driver or ORM (`packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`).
 
 **File Storage:**
 
-- Local filesystem only - All projects, state files, skills, and agents are stored in local `.oat/` and `.agents/` directories and version-controlled via git
+- Local filesystem - `.oat` project state, generated docs, provider assets, smoke reports, and update-notifier cache are written/read locally (`.oat/config.json`, `packages/cli/src/fs`, `tools/smoke/reports`, `packages/cli/src/app/update-notifier.ts`).
+- Amazon S3 - optional remote archive and explainer artifact destination (`.oat/config.json`, `scripts/sync-archived-projects-from-s3.sh`, `packages/cli/src/commands/project/archive/archive-utils.ts`).
 
 **Caching:**
 
-- Not detected
+- Update-check cache - local JSON cache with 24-hour check and 72-hour notice TTLs (`packages/cli/src/app/update-notifier.ts`).
+- Static docs search - build-time/static FlexSearch integration, not a remote cache (`packages/docs-config/src/search-config.ts`, `apps/oat-docs/app/api/search/route.ts`).
 
 ## Authentication & Identity
 
 **Auth Provider:**
 
-- Provider-based authentication
-  - Implementation: Per-provider configuration (e.g., `.claude/`, `.copilot/` directories managed by respective tools)
-  - GitHub: Uses user's configured `gh` CLI authentication for GraphQL queries
-  - Credentials: Managed by provider tools, not by OAT
-  - No centralized auth system; each provider handles its own credentials
+- Provider-specific/local authentication rather than an application identity service - `gh` supplies GitHub auth, AWS CLI supplies S3 auth, and provider CLIs supply agent-runtime auth (`packages/cli/src/commands/repo/pr-comments/collect/collect-comments.ts`, `packages/cli/src/commands/project/archive/archive-utils.ts`, `tools/smoke/runner/preflight.mjs`).
+- Cursor smoke credential broker - parent process reads `CURSOR_API_KEY`, removes it from the driven process, and injects it only into `cursor-agent` children (`tools/smoke/runner/cursor-broker-launch.mjs`).
 
 ## Monitoring & Observability
 
 **Error Tracking:**
 
-- Not detected - No external error tracking service integration
+- Not detected. No hosted error-tracking SDK appears in the package manifests; failures are handled through thrown errors, warnings, and test assertions (`package.json`, `packages/cli/package.json`, `packages/cli/src/commands/project/archive/archive-utils.ts`).
 
 **Logs:**
 
-- CLI logger via `context.logger` in `packages/cli/src/app/command-context.ts`
-- All CLI output routed through logger utilities, no external logging service
+- CLI command logs use the OAT logger and optional JSON output (`packages/cli/src/commands/repo/pr-comments/collect/collect-comments.ts`, `packages/cli/src/ui/logger.ts`).
+- CI and release diagnostics use GitHub Actions step output; smoke harnesses persist JSON/Markdown evidence under repository report directories (`.github/workflows/ci.yml`, `.github/workflows/release.yml`, `tools/smoke/reports`).
 
 ## CI/CD & Deployment
 
 **Hosting:**
 
-- GitHub Pages - OAT docs site deployed to GitHub Pages
-  - Workflow: `.github/workflows/deploy-docs.yml`
-  - Build artifact: `apps/oat-docs/out/` (static build output)
-  - Trigger: Push to main on docs paths or manual workflow_dispatch
+- GitHub Pages hosts the built `apps/oat-docs` site (`.github/workflows/deploy-docs.yml`, `apps/oat-docs/next.config.js`).
+- npm hosts the five public `@open-agent-toolkit/*` package artifacts (`.github/workflows/release.yml`, `packages/cli/package.json`, `packages/control-plane/package.json`).
+- S3 is a configured but optional archive/explainer destination (`.oat/config.json`, `packages/cli/src/commands/config/index.ts`).
 
 **CI Pipeline:**
 
-- GitHub Actions
-  - CI workflow: `.github/workflows/ci.yml` - Runs on push to main and all PRs
-    - Steps: checkout, setup pnpm, install, check (lint/format), type-check, test, build, skill validation, release validation
-  - Release workflow: `.github/workflows/release.yml` - Creates tags and publishes packages on push to main
-    - Uses npm trusted publishing via GitHub OIDC
-    - Supports manual reruns from existing release tags
-  - Release dry-run: `.github/workflows/release-dry-run.yml` - Validates package changes on PRs
-  - Docs deployment: `.github/workflows/deploy-docs.yml` - Builds and deploys docs to GitHub Pages
-
-**Package Registry:**
-
-- npm - Publishable packages under `packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms`
-  - Lockstep versioning: All five public packages must share version bumps for released content
-  - Repository: GitHub (voxmedia/open-agent-toolkit)
+- GitHub Actions runs install, check, type-check, test, build, skill/package validation, release validation, and docs build (`.github/workflows/ci.yml`).
+- Release workflow creates tags, publishes npm packages in lockstep, and creates GitHub Releases (`.github/workflows/release.yml`).
+- Docs workflow builds and deploys the Pages artifact on relevant main-branch changes (`.github/workflows/deploy-docs.yml`).
 
 ## Environment Configuration
 
 **Required env vars:**
 
-- Not detected - No environment variables required for core functionality
-- GitHub CLI (`gh`) uses standard authentication configured outside the toolkit
+- `CURSOR_API_KEY` is required only when the Cursor credential broker is used (`tools/smoke/runner/cursor-broker-launch.mjs`).
+- `OAT_SMOKE_CURSOR_BROKER_DIRECTORY` is set for brokered child processes (`tools/smoke/runner/cursor-broker-launch.mjs`, `tools/smoke/runner/cursor-broker-client.mjs`).
+- `AWS_PROFILE` and `AWS_REGION` are conditional archive/publish overrides; configured OAT values are forwarded into them (`packages/cli/src/commands/project/archive/archive-utils.ts`, `packages/cli/src/commands/config/index.ts`).
+- `CI`, `NO_UPDATE_NOTIFIER`, and provider-specific runtime variables control update-notifier eligibility and smoke behavior (`packages/cli/src/app/update-notifier.ts`, `tools/smoke/runner/preflight.mjs`).
 
 **Secrets location:**
 
-- GitHub Actions secrets: Used in CI/CD workflows for npm publishing via OIDC
-- No local secrets files required or supported; credentials managed by provider tools
+- GitHub Actions uses workflow identity/OIDC permissions for Pages and npm trusted publishing (`.github/workflows/deploy-docs.yml`, `.github/workflows/release.yml`).
+- Local GitHub, AWS, and provider credentials are delegated to the corresponding CLI/environment; no credential values are checked into repository configuration (`packages/cli/src/commands/repo/pr-comments/collect/collect-comments.ts`, `packages/cli/src/commands/project/archive/archive-utils.ts`, `tools/smoke/runner/cursor-broker-launch.mjs`).
 
 ## Webhooks & Callbacks
 
 **Incoming:**
 
-- Not detected
+- No inbound webhook endpoint detected. The only application route is a static Fumadocs search GET route (`apps/oat-docs/app/api/search/route.ts`).
 
 **Outgoing:**
 
-- GitHub GraphQL queries only (read-only) for PR comment collection
-- No webhook subscriptions or outgoing callbacks
+- GitHub GraphQL requests, npm registry fetches, AWS CLI S3/STS calls, and provider CLI subprocesses are initiated by local commands or CI (`packages/cli/src/commands/repo/pr-comments/collect/collect-comments.ts`, `packages/cli/src/app/update-notifier.ts`, `packages/cli/src/commands/project/archive/archive-utils.ts`, `.github/workflows/release.yml`).
 
 ---
 
-_Integration audit: 2026-05-17_
+_Integration audit: 2026-08-19_

@@ -61,6 +61,7 @@ export interface PjmMigrationOptions {
   repoRoot: string;
   assetsRoot: string;
   templatesRoot?: string;
+  home?: string;
   projectManagementEnabled: boolean;
   apply?: boolean;
 }
@@ -541,6 +542,7 @@ export async function migratePjmRepo(
     repoRoot: options.repoRoot,
     assetsRoot: options.assetsRoot,
     templatesRoot: options.templatesRoot,
+    home: options.home,
   });
 
   const preparedAfterMove = await prepareBacklogMigrations(pjmBacklogRoot);

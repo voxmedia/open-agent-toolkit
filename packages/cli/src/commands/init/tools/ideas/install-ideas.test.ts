@@ -173,10 +173,11 @@ describe('installIdeas', () => {
     expect(result.copiedSkills).toEqual([]);
     expect(result.copiedInfraFiles).toEqual([]);
     expect(result.copiedTemplates).toEqual([]);
-    expect(result.updatedSkills).toHaveLength(4);
+    expect(result.updatedSkills).toEqual(['oat-idea-new']);
+    expect(result.skippedSkills).toHaveLength(3);
     expect(result.outdatedSkills).toEqual([]);
-    expect(result.updatedInfraFiles).toHaveLength(2);
-    expect(result.updatedTemplates).toHaveLength(2);
+    expect(result.updatedInfraFiles).toEqual([]);
+    expect(result.updatedTemplates).toEqual([]);
 
     await expect(
       read(join(targetRoot, '.agents', 'skills', 'oat-idea-new', 'SKILL.md')),

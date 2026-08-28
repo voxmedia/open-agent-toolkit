@@ -178,10 +178,12 @@ describe('scanTools', () => {
     );
   });
 
-  it('skips agents in user scope', async () => {
+  it('finds agents in user scope', async () => {
     const deps = createMockDeps({
       readdir: async () => [],
+      readdirFiles: async () => ['skeptical-evaluator.md'],
       dirExists: async () => true,
+      fileExists: async () => true,
       getAgentVersion: async () => '1.0.0',
     });
 
@@ -192,8 +194,13 @@ describe('scanTools', () => {
       dependencies: deps,
     });
 
-    // No agents should appear even though dirExists returns true for all
-    expect(result.filter((t) => t.type === 'agent')).toEqual([]);
+    expect(result.filter((t) => t.type === 'agent')).toEqual([
+      expect.objectContaining({
+        name: 'skeptical-evaluator',
+        scope: 'user',
+        pack: 'research',
+      }),
+    ]);
   });
 
   it('handles missing bundled asset gracefully (not-bundled)', async () => {
