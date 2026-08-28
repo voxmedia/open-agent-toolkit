@@ -303,7 +303,7 @@ oat_generated: false
 
 ### p03-t19 task-delta review - 2026-08-27T20:39:07Z
 
-- Review artifact: `reviews/code-p03-t19-review-2026-08-27T203907Z.md`
+- Review artifact: `reviews/archived/code-p03-t19-review-2026-08-27T203907Z.md`
 - Reviewed HEAD: `4cf94b72b99cb1110f33720b80ce65fc9b715f98`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Verdict: passed; the cycle-2 doctor index-only leak finding is closed
@@ -380,7 +380,7 @@ feature_tree_mismatches=0
 
 **Merged-tree gates:** `pnpm check=0`; `pnpm type-check=0`; `pnpm test=0`; `pnpm build=0`; `pnpm run check:skill-bumps=0`; `pnpm release:check-versions=1`; `pnpm release:validate=1`; `pnpm build:docs=0`; `pnpm lint=0`; `pnpm format=0`; `git diff --check=0`. Both release-policy failures have the same planned cause: shipped CLI/control-plane changes require all five public packages to advance above upstream `0.2.36`. Phase 4 task p04-t08 owns the lockstep bump; the branch is not CI-green or release-ready until that task makes both gates pass.
 
-**Review:** `reviews/p03-t11-upstream-review-2026-08-27T191902Z.md` reviewed merge `a72c8cf8b49afabfe33afd101f9c92a3b85f373a` and passed the p03-t11 threshold with 0 Critical, 0 Important, 1 Medium, and 0 Minor findings. M1 identified stale p04-t08 version literals; this bookkeeping change aligns the plan from `0.2.32 → 0.2.33` to the merged `0.2.36 → 0.2.37` baseline/target before Phase 4. No implementation change was required.
+**Review:** `reviews/archived/p03-t11-upstream-review-2026-08-27T191902Z.md` reviewed merge `a72c8cf8b49afabfe33afd101f9c92a3b85f373a` and passed the p03-t11 threshold with 0 Critical, 0 Important, 1 Medium, and 0 Minor findings. M1 identified stale p04-t08 version literals; this bookkeeping change aligns the plan from `0.2.32 → 0.2.33` to the merged `0.2.36 → 0.2.37` baseline/target before Phase 4. No implementation change was required.
 
 ### Review Received: p03 - 2026-08-27T19:48:10Z
 
@@ -507,7 +507,7 @@ gate passed in exact CI order with explicit exit `0`: `pnpm check`,
 
 ### Phase 4 re-review - 2026-08-27T23:28:26Z
 
-- Review artifact: `reviews/p04-review-2026-08-27T232826Z.md`
+- Review artifact: `reviews/archived/p04-review-2026-08-27T232826Z.md`
 - Reviewed range: `1caa8e9989c11c3ebb1355785fc1f7f502837563..743c9cbe952cf6f4ad3eeba24eabebebec9884c7`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Verdict: passed; all five findings from the prior Phase 4 review are closed
@@ -1013,11 +1013,11 @@ lifecycle_outcome:
 
 **Task commits:** `61cadfdb`, `52b2b34d`, `9e46c5a1`, `642047af`, `a84118dd`, `d22af48b`, `db698714`, `9c694954`, `30688df4`, `82525eff`.
 
-**Review round 1:** blocked with 2 Critical, 1 Important, and 2 Medium findings; artifact `reviews/code-p01-review-2026-08-27T055958Z.md`; reviewed head `82525efff71247350983816d180445980330400f`.
+**Review round 1:** blocked with 2 Critical, 1 Important, and 2 Medium findings; artifact `reviews/archived/code-p01-review-2026-08-27T055958Z.md`; reviewed head `82525efff71247350983816d180445980330400f`.
 
 **Fix iteration 1:** commit `60787fce522cb9685d7076b56a0862296ffd82c4`; all five findings resolved; phase recovery usage remained 0/10.
 
-**Review round 2:** passed with 0 Critical, 0 Important, 1 Medium, and 1 Minor finding; artifact `reviews/code-p01-review-2026-08-27T062203Z.md`; reviewed head `60787fce522cb9685d7076b56a0862296ffd82c4`.
+**Review round 2:** passed with 0 Critical, 0 Important, 1 Medium, and 1 Minor finding; artifact `reviews/archived/code-p01-review-2026-08-27T062203Z.md`; reviewed head `60787fce522cb9685d7076b56a0862296ffd82c4`.
 
 **Review dispatch:** `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) for both rounds. Neither reviewer attempted nested reconnaissance.
 
@@ -1046,15 +1046,15 @@ lifecycle_outcome:
 
 **Phase recovery:** attempt 1/10 recovered stale integration expectations in `43820a76`; canonical event `recovery-p02-01-cli-phase-suite`; ledger settled at 1/10 with `pending_attempt: null`.
 
-**Review round 1:** blocked with 1 Critical, 4 Important, 2 Medium; artifact `reviews/code-p02-review-2026-08-27T071958Z.md`; reviewed head `7082c2b4205c8e287d79442e4d09bc76ced8ed80`.
+**Review round 1:** blocked with 1 Critical, 4 Important, 2 Medium; artifact `reviews/archived/code-p02-review-2026-08-27T071958Z.md`; reviewed head `7082c2b4205c8e287d79442e4d09bc76ced8ed80`.
 
 **Fix iteration 1:** `1fef87205999940086aeb9e14d0c3d80d8309c5a`, continuation `continuation-p02-review-r1-fix-01-20260827T073752Z`; all seven findings addressed.
 
-**Review round 2:** blocked with 4 Important; artifact `reviews/code-p02-review-2026-08-27T075217Z.md`; reviewed head `1fef87205999940086aeb9e14d0c3d80d8309c5a`.
+**Review round 2:** blocked with 4 Important; artifact `reviews/archived/code-p02-review-2026-08-27T075217Z.md`; reviewed head `1fef87205999940086aeb9e14d0c3d80d8309c5a`.
 
 **Fix iteration 2:** `00c9f24efb6b4a5fd4aaaadd40765853377c9b27`, continuation `continuation-p02-review-r2-fix-02-20260827T080529Z`; all four findings addressed.
 
-**Review round 3:** terminal blocked with 2 Important; artifact `reviews/code-p02-review-2026-08-27T081844Z.md`; reviewed head `00c9f24efb6b4a5fd4aaaadd40765853377c9b27`.
+**Review round 3:** terminal blocked with 2 Important; artifact `reviews/archived/code-p02-review-2026-08-27T081844Z.md`; reviewed head `00c9f24efb6b4a5fd4aaaadd40765853377c9b27`.
 
 **Review dispatch:** every round used fresh `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high). No reviewer attempted nested reconnaissance.
 
@@ -1077,7 +1077,7 @@ lifecycle_outcome:
 
 - Direction: `add one cycle and proceed`
 - Durable retry limit: `oat_orchestration_retry_limit: 3`
-- Scope: only the two Important findings in `reviews/code-p02-review-2026-08-27T081844Z.md`
+- Scope: only the two Important findings in `reviews/archived/code-p02-review-2026-08-27T081844Z.md`
 - Exact implementation target: `oat-phase-implementer-gpt-5-6-sol-high`
 - Review authorization: one fresh fourth p02 reviewer after the bounded fix; this explicitly extends the ordinary three-cycle review cap for p02 by one cycle
 - Phase recovery: unchanged at 1/10 with `pending_attempt: null`
@@ -1093,7 +1093,7 @@ lifecycle_outcome:
 #### Terminal Outcome
 
 - Fix iteration 3: `7c8ee775bb12a24346927819de70cd0ff648350a`, continuation `continuation-p02-review-r3-fix-03-20260827T123547Z`; the two round-3 Important findings are closed
-- Review round 4: blocked with 2 Important and 1 Medium; artifact `reviews/code-p02-review-2026-08-27T124656Z.md`; reviewed head `7c8ee775bb12a24346927819de70cd0ff648350a`
+- Review round 4: blocked with 2 Important and 1 Medium; artifact `reviews/archived/code-p02-review-2026-08-27T124656Z.md`; reviewed head `7c8ee775bb12a24346927819de70cd0ff648350a`
 - Review dispatch: fresh `oat-reviewer-gpt-5-6-sol-high`, request `dispatch-synced-project-scope-p02-review-r4-20260827T124656Z`, reconnaissance not attempted
 - Important blocker 1: explicit descendant paths can resolve to and mutate a different sibling synced project
 - Important blocker 2: split finalization conflicts leave a child in rebase without safe normal-resume detection or target-specific recovery guidance
@@ -1114,7 +1114,7 @@ lifecycle_outcome:
 - Direction: `Authorizing`
 - Interpreted scope: one additional bounded p02 fix/review cycle, matching the explicit choice offered at the prior stop
 - Durable retry limit: `oat_orchestration_retry_limit: 4`
-- Scope: only the two Important findings in `reviews/code-p02-review-2026-08-27T124656Z.md`
+- Scope: only the two Important findings in `reviews/archived/code-p02-review-2026-08-27T124656Z.md`
 - Exact implementation target: `oat-phase-implementer-gpt-5-6-sol-high`
 - Review authorization: one fresh fifth p02 reviewer after the bounded fix; this extends the ordinary three-cycle review cap for p02 by a second operator-authorized cycle
 - Phase recovery: unchanged at 1/10 with `pending_attempt: null`
@@ -1131,7 +1131,7 @@ lifecycle_outcome:
 
 - Fix iteration 4: `7a03f675a74fbf687b75ae17e8205167d9899345`, continuation `continuation-p02-review-r4-fix-04-20260827T131353Z`; both round-4 Important findings are closed for ordinary lexical paths and split conflict recovery
 - Verification: the full CLI suite passed 282 files and 3,784 tests; CLI type-check, lint, and format passed
-- Review round 5: blocked with 1 Important and no other findings; artifact `reviews/code-p02-review-2026-08-27T132942Z.md`; reviewed head `7a03f675a74fbf687b75ae17e8205167d9899345`
+- Review round 5: blocked with 1 Important and no other findings; artifact `reviews/archived/code-p02-review-2026-08-27T132942Z.md`; reviewed head `7a03f675a74fbf687b75ae17e8205167d9899345`
 - Review verification: 17 phase files and 428 tests, 3 command/help/lifecycle files and 77 tests, and 78 control-plane tests passed; type-checks, control-plane build, lint, format, and range diff checks passed
 - Review dispatch: fresh `oat-reviewer-gpt-5-6-sol-high`, request `dispatch-synced-project-scope-p02-review-r5-20260827T132942Z`, reconnaissance not attempted
 - Important blocker: a direct-child symlink can alias a sibling synced checkout, pass the nested-worktree invariant, and let push mutate it under the requested slug's different ref identity
@@ -1152,7 +1152,7 @@ lifecycle_outcome:
 - Direction: `Agree, proceed`
 - Interpreted scope: one final bounded p02 fix/review cycle, matching the recommendation accepted by the operator
 - Durable retry limit: `oat_orchestration_retry_limit: 5` (configured maximum)
-- Scope: only the Important canonical-target identity finding in `reviews/code-p02-review-2026-08-27T132942Z.md`
+- Scope: only the Important canonical-target identity finding in `reviews/archived/code-p02-review-2026-08-27T132942Z.md`
 - Required repair: canonicalize the selected checkout and require equality with the slug's canonical direct child before mutation; add real-worktree regressions for explicit-path and bare-slug symlink aliases
 - Exact implementation target: preserve `oat-phase-implementer-gpt-5-6-sol-high`
 - Review authorization: one fresh sixth p02 reviewer after the bounded fix
@@ -1337,7 +1337,7 @@ continuation_events:
 - Scope/range: `p02-t13`, `4b75e312357c16d2ce4415519d4f2db824fc7033..9da82464b5fa93477303027a598ff3e9c768905c`
 - Reviewer target: `oat-reviewer-gpt-5-6-sol-high`
 - Dispatch stamp: `Dispatch: scope=p02-t13 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/code-p02-t13-review-2026-08-27T173345Z.md`
+- Artifact: `reviews/archived/code-p02-t13-review-2026-08-27T173345Z.md`
 - Reconnaissance: not-attempted; no Review Orchestration section
 - Verdict: passed at 0 Critical / 0 Important / 0 Medium / 0 Minor
 - Prior closure: round-7 Important I1 and Medium M1 both closed
@@ -1622,9 +1622,9 @@ Chronological log of implementation progress.
 - [x] p02 recovery attempt 1/10 - recovered and settled
 - [x] p02 review fix iterations 1 and 2 - eleven findings resolved
 - [x] p02 review fix iteration 3 - two round-3 findings resolved in `7c8ee775`
-- [x] p02 review cycle 4 - blocked at 2 Important / 1 Medium in `reviews/code-p02-review-2026-08-27T124656Z.md`
+- [x] p02 review cycle 4 - blocked at 2 Important / 1 Medium in `reviews/archived/code-p02-review-2026-08-27T124656Z.md`
 - [x] p02 review fix iteration 4 - both round-4 Important findings resolved in `7a03f675`
-- [x] p02 review cycle 5 - blocked at 1 Important / 0 Medium in `reviews/code-p02-review-2026-08-27T132942Z.md`
+- [x] p02 review cycle 5 - blocked at 1 Important / 0 Medium in `reviews/archived/code-p02-review-2026-08-27T132942Z.md`
 - [x] p02 operator disposition - final bounded cycle authorized
 - [x] p02 review fix iteration 5 - command-selected alias defect resolved in `fc14f074`
 - [x] p02 review cycle 6 - blocked at 1 Important / 0 Medium in `reviews/code-p02-review-2026-08-27T153712Z.md`
