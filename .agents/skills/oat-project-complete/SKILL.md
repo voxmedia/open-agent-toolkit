@@ -1119,10 +1119,13 @@ reported exported `manifest.json` and `build-record.json` under tracked
 `.oat/repo/reference/project-recaps/`:
 
 ```bash
+UNRELATED_STAGED_PATCH_BEFORE=$(git diff --cached --binary)
 git add -- "$EXPORTED_MANIFEST_PATH" "$EXPORTED_BUILD_RECORD_PATH"
-git commit -m "chore(oat): attest final project recap"
+git commit --only -m "chore(oat): attest final project recap" -- \
+  "$EXPORTED_MANIFEST_PATH" "$EXPORTED_BUILD_RECORD_PATH"
 EVIDENCE_COMMIT=$(git rev-parse HEAD)
 test "$(git rev-parse "$EVIDENCE_COMMIT^")" = "$LIFECYCLE_COMMIT"
+test "$(git diff --cached --binary)" = "$UNRELATED_STAGED_PATCH_BEFORE"
 ```
 
 Verify the evidence commit contains exactly those two paths, the lifecycle
@@ -1139,6 +1142,24 @@ with `oat project push`, retaining the custom ref and checkout. Require the
 push receipt SHA to equal the evidence commit. Recovery reuses the existing
 project-ref artifact commit and parent-branch record commit; it never moves
 active recap files into archive-export paths.
+
+Use the same path-confined commit inside the synced checkout:
+
+```bash
+ACTIVE_MANIFEST_RELATIVE_PATH="$SELECTED_PROJECT_RECAP_RUN/manifest.json"
+ACTIVE_BUILD_RECORD_RELATIVE_PATH="$SELECTED_PROJECT_RECAP_RUN/build-record.json"
+UNRELATED_PROJECT_STAGE_BEFORE=$(git -C "$ACTIVE_PROJECT_PATH" diff --cached --binary)
+git -C "$ACTIVE_PROJECT_PATH" add -- \
+  "$ACTIVE_MANIFEST_RELATIVE_PATH" "$ACTIVE_BUILD_RECORD_RELATIVE_PATH"
+git -C "$ACTIVE_PROJECT_PATH" commit --only \
+  -m "chore(oat): attest final project recap" -- \
+  "$ACTIVE_MANIFEST_RELATIVE_PATH" "$ACTIVE_BUILD_RECORD_RELATIVE_PATH"
+EVIDENCE_COMMIT=$(git -C "$ACTIVE_PROJECT_PATH" rev-parse HEAD)
+test "$(git -C "$ACTIVE_PROJECT_PATH" rev-parse "$EVIDENCE_COMMIT^")" = \
+  "$PROJECT_REF_COMMIT"
+test "$(git -C "$ACTIVE_PROJECT_PATH" diff --cached --binary)" = \
+  "$UNRELATED_PROJECT_STAGE_BEFORE"
+```
 
 When Step 7.5 restored `EVIDENCE_COMMIT`, do not stage or commit recap records
 again. Require the retained remote ref to equal that exact evidence SHA, keep

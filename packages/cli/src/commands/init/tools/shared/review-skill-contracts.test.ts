@@ -1156,6 +1156,13 @@ describe('review skill contracts', () => {
     expect(normalizedContent).toContain(
       'When Step 7.5 restored `EVIDENCE_COMMIT`, do not stage or commit recap records again.',
     );
+    expect(content).toContain(
+      'git commit --only -m "chore(oat): attest final project recap" --',
+    );
+    expect(content).toContain('git -C "$ACTIVE_PROJECT_PATH" commit --only');
+    expect(content).toContain(
+      'test "$(git diff --cached --binary)" = "$UNRELATED_STAGED_PATCH_BEFORE"',
+    );
   });
 
   it.each([
