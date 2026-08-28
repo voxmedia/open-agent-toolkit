@@ -355,11 +355,6 @@ const PINNED_HISTORICAL_CROSS_SKILL_READS: readonly CrossSkillReference[] = [
   },
 ];
 
-// Temporary. Every entry is executable debt with a scheduled caller fix. It is
-// deliberately kept separate from the historical baseline so a migration list
-// can never harden into a permanent exemption, and it must reach zero.
-const PINNED_MIGRATION_CROSS_SKILL_READS: readonly CrossSkillReference[] = [];
-
 describe('skills bundled docs contract', () => {
   it('no shipped skill references a shared .agents/docs/ doc that does not travel with it', () => {
     const violations = collectViolations();
@@ -387,13 +382,10 @@ describe('skills bundled docs contract', () => {
     // authoring skill directory — dangles: neither path exists on a default
     // install. Executable reads must bind an installed root instead.
     //
-    // The accepted set is exactly the historical evidence plus the temporary
-    // migration inventory. Both are pinned by source file, target skill, and
-    // target path, so no new file or target inherits an exemption.
-    const allowed = [
-      ...PINNED_HISTORICAL_CROSS_SKILL_READS,
-      ...PINNED_MIGRATION_CROSS_SKILL_READS,
-    ].sort(compareCrossSkillReferences);
+    // The accepted set is exactly the historical evidence, pinned by source
+    // file, target skill, and target path, so no new file or target inherits
+    // an exemption. There is no migration allowlist: executable debt is fixed
+    // at the caller, never parked in a temporary inventory.
     const found = collectUserDefaultCrossSkillReferences();
     const detail = found
       .map(
@@ -404,22 +396,43 @@ describe('skills bundled docs contract', () => {
 
     expect(
       found,
-      `Repo-relative cross-skill reads changed; resolve executable reads from the installed scope and baseline only exact evidence:\n${detail}`,
-    ).toEqual(allowed);
+      `Repo-relative cross-skill reads changed; resolve executable reads from the installed scope and baseline only exact historical evidence:\n${detail}`,
+    ).toEqual(
+      [...PINNED_HISTORICAL_CROSS_SKILL_READS].sort(
+        compareCrossSkillReferences,
+      ),
+    );
   });
 
-  it('keeps the temporary migration inventory disjoint from historical evidence', () => {
+  it('leaves zero executable cross-skill debt in user-default assets', () => {
+    // Applying only the exact historical/self-reference classification must
+    // leave the manifest-derived executable finding set empty.
     const historical = new Set(
       PINNED_HISTORICAL_CROSS_SKILL_READS.map(crossSkillReferenceKey),
     );
-    const overlap = PINNED_MIGRATION_CROSS_SKILL_READS.filter((reference) =>
-      historical.has(crossSkillReferenceKey(reference)),
+    const executable = collectUserDefaultCrossSkillReferences().filter(
+      (reference) => !historical.has(crossSkillReferenceKey(reference)),
     );
+    const detail = executable
+      .map(
+        ({ file, targetSkill, targetPath }) =>
+          `  ${file} -> ${targetSkill}/${targetPath}`,
+      )
+      .join('\n');
 
     expect(
-      overlap,
-      'Executable migration debt must never be merged into the historical baseline',
+      executable,
+      `Executable cross-skill debt must be fixed at the caller, not baselined:\n${detail}`,
     ).toEqual([]);
+    // Every pinned entry must still describe a real, non-executable read.
+    expect(
+      PINNED_HISTORICAL_CROSS_SKILL_READS.every(
+        ({ file }) =>
+          file.includes('/references/dogfood-results.md') ||
+          file.includes('/tests/'),
+      ),
+      'Historical evidence stays limited to dogfood records and test fixtures',
+    ).toBe(true);
   });
 
   it.each([
@@ -701,6 +714,99 @@ describe('skills bundled docs contract', () => {
       rmSync(assetsRoot, { recursive: true, force: true });
     }
   }, 15_000);
+
+  it('ships portable sibling reads in the bundled skill and agent copies', () => {
+    const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-portable-bundle-'));
+    const bundledSkills = [
+      [
+        'oat-dispatch-subagents',
+        '${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md',
+        'utility',
+      ],
+      [
+        'oat-repo-improve',
+        '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+        'utility',
+      ],
+      [
+        'oat-review-provide-remote',
+        '${REVIEW_PROVIDE_SKILLS_ROOT}/oat-review-provide/references/review-artifact-template.md',
+        'utility',
+      ],
+      [
+        'oat-project-review-provide',
+        '${REVIEW_PROVIDE_SKILLS_ROOT}/oat-review-provide/references/review-artifact-template.md',
+        'utility',
+      ],
+      [
+        'analyze',
+        '${RESEARCH_SKILLS_ROOT}/deep-research/references/schema-base.md',
+        'research',
+      ],
+      [
+        'compare',
+        '${RESEARCH_SKILLS_ROOT}/deep-research/references/schema-comparative.md',
+        'research',
+      ],
+    ] as const;
+    const bundledAgents = [
+      [
+        'oat-phase-implementer',
+        '${PROJECT_DISPATCH_SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md',
+        'workflows',
+      ],
+      [
+        'oat-reviewer',
+        '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+        'utility',
+      ],
+      [
+        'oat-codebase-mapper',
+        '${KNOWLEDGE_INDEX_SKILLS_ROOT}/oat-repo-knowledge-index/references/templates/',
+        'workflows',
+      ],
+    ] as const;
+
+    try {
+      execFileSync('bash', [BUNDLE_ASSETS_SCRIPT], {
+        env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+        stdio: 'pipe',
+      });
+
+      for (const [skill, exactTarget, pack] of bundledSkills) {
+        const content = readFileSync(
+          join(assetsRoot, 'skills', skill, 'SKILL.md'),
+          'utf8',
+        );
+
+        expectPortableSkillsRootCandidateOrder(content, `bundled ${skill}`);
+        expect(content, `bundled ${skill} exact target`).toContain(exactTarget);
+        expect(content, `bundled ${skill} recovery`).toContain(
+          `oat tools install ${pack} --scope <user|project>`,
+        );
+        expect(collectCrossSkillTargets(content, skill)).toEqual([]);
+      }
+
+      for (const [agent, exactTarget, pack] of bundledAgents) {
+        const content = readFileSync(
+          join(assetsRoot, 'agents', `${agent}.md`),
+          'utf8',
+        );
+
+        expectPortableAgentSkillsRootCandidateOrder(
+          content,
+          `bundled ${agent}`,
+        );
+        expect(content, `bundled ${agent} exact target`).toContain(exactTarget);
+        expect(content, `bundled ${agent} recovery`).toContain(
+          `oat tools install ${pack} --scope <user|project>`,
+        );
+        expect(collectCrossSkillTargets(content, agent)).toEqual([]);
+      }
+    } finally {
+      rmSync(assetsRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
 
   it.each([
     [
