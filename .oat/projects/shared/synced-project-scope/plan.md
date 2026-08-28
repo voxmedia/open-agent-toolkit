@@ -3570,6 +3570,7 @@ git commit -m "docs(p11-t02): document pull no-commit behavior"
 - Modify: `.agents/skills/oat-brainstorm/SKILL.md`
 - Modify: `packages/cli/src/validation/skills.ts`
 - Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/validation/synced-bookkeeping-sites.json` (refresh only the two brainstorm anchors changed by this task)
 
 **Step 1: Understand the issue**
 
@@ -3593,7 +3594,7 @@ Expected: the skill contains no status-blind pre-parse and the validator prevent
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/oat-brainstorm/SKILL.md packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts
+git add .agents/skills/oat-brainstorm/SKILL.md packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts packages/cli/src/validation/synced-bookkeeping-sites.json
 git commit -m "fix(p11-t03): reject pre-validation push SHA parsing"
 ```
 
