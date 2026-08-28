@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: review_pending # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -110,26 +110,26 @@ oat_implement_exit_gate:
   receive_commit: a6e1439818dc8f675a7c05cdb8a77b88b2141bd5
   receive_eligible: true
   receive_completed: true
-  failure: Phase 12 remediated the Critical normal-route publication regression; narrowed re-review and gate attempt 2 remain pending.
-  updated_at: '2026-08-28T19:27:20Z'
+  failure: Fresh final lifecycle review passed at a521db33c832f92208abaa95ebc12052a0b39237; gate attempt 2 remains unlaunched.
+  updated_at: '2026-08-28T19:38:10Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T19:27:20.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T19:38:10.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Phase 12 complete; narrowed re-review and exit-gate attempt 2 pending
+**Status:** All 89 tasks and final lifecycle review complete; exit-gate attempt 2 pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Review - narrowed final lifecycle re-review after Phase 12
+Implementation closeout - configured exit-gate attempt 2 pending
 
 ## Artifacts
 
@@ -250,7 +250,8 @@ Review - narrowed final lifecycle re-review after Phase 12
 - ✓ Two different transient `pnpm test` failures were isolated; both exact targets and a clean full run passed at the unchanged task head
 - ✓ Project provider sync dry-run made no filesystem changes; managed entries remain in sync
 - ✓ Narrowed final lifecycle review event updated to `fixes_completed` (never passed)
-- ◌ Narrowed final lifecycle re-review and configured exit-gate attempt 2 remain
+- ✓ Phase 12 narrowed final lifecycle re-review passed at 0 Critical / 0 Important / 0 Medium / 0 Minor
+- ◌ Configured exit-gate attempt 2 remains unlaunched
 - ✓ Cycle-5 findings converted into consolidated task p09-t01 with no deferrals
 - ✓ Phase 9 task p09-t01 completed and verified in `e193c8ffb`
 - ✓ Phase 9 recovery ledger settled at 0/10 with no pending attempt
@@ -266,6 +267,6 @@ None.
 
 ## Next Milestone
 
-Run a narrowed final lifecycle re-review, then start the configured exit gate's
-second and final attempt only if that review passes. Migration, archive,
-completion, PR publication, and spike-repository deletion remain unperformed.
+Start the configured exit gate's second and final attempt from the fresh passed
+review basis. Migration, archive, completion, PR publication, and
+spike-repository deletion remain unperformed.

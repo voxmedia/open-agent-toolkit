@@ -1,6 +1,6 @@
 ---
-oat_status: review_pending
-oat_ready_for: oat-project-review-provide
+oat_status: in_progress
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
 oat_current_task_id: null
@@ -14,9 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All 89 implementation tasks are complete. Phase 12 corrected the Critical
-> normal-route publication regression found by the narrowed final lifecycle
-> re-review; configured exit-gate attempt 2 remains unlaunched.
+> All 89 implementation tasks are complete, and the Phase 12 narrowed final
+> lifecycle re-review passed with no findings. Configured exit-gate attempt 2
+> remains unlaunched.
 >
 > Conventions:
 >
@@ -2337,10 +2337,35 @@ supplied in the Phase 12 dispatch payload.
 
 **Dispatch stamp:** `Dispatch: scope=p12 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 
-**Review disposition:** The narrowed final lifecycle review event is
-`fixes_completed`, never passed. A fresh narrowed re-review must pass before
-configured exit-gate attempt 2 may start.
+**Review disposition:** The Critical final lifecycle review event is
+`fixes_completed`, never passed. The fresh Phase 12 narrowed re-review passed
+with no findings.
 
-**Next:** Run the narrowed final lifecycle re-review, then start configured
-exit-gate attempt 2 only if that review passes. Migration, archive, completion,
+### Final Re-review Passed - 2026-08-28T19:29:13Z
+
+#### Dispatch Record: Phase 12 final lifecycle re-review
+
+- **Route:** Codex native materialized role `oat-reviewer-gpt-5-6-sol-high`
+- **Narrowed range:**
+  `07caa73e332f3bde552f95a20026f499b9c38035..a521db33c832f92208abaa95ebc12052a0b39237`
+- **Prior artifact:**
+  `reviews/archived/final-review-2026-08-28T190306Z.md`
+- **Artifact:**
+  `reviews/archived/final-review-2026-08-28T192913Z.md`
+- **Verdict:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+- **Reconnaissance:** not-attempted
+- **Verification:** focused 63/63, fresh full `pnpm test`, skill validation,
+  skill-bump check, check, lint, format, direct router/decoder probes, and
+  exact-range checks all passed.
+
+#### Review Received: final
+
+- **Date:** 2026-08-28
+- **Result:** passed; Critical C1 closed with no new finding or deferral
+- **Reviewed head:** `a521db33c832f92208abaa95ebc12052a0b39237`
+- **Artifact:**
+  `reviews/archived/final-review-2026-08-28T192913Z.md`
+- **Next:** configured exit-gate attempt 2
+
+**Next:** Start configured exit-gate attempt 2. Migration, archive, completion,
 PR publication, deployment, and spike-repository deletion remain outside Phase 12.
