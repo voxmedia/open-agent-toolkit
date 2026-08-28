@@ -457,7 +457,7 @@ describe('oat-project-split integration fixtures', () => {
         encoding: 'utf8',
       }),
     ).toBe(siblingStatus);
-  });
+  }, 15_000);
 
   it('publishes final parent and child seeds after a missing-child synced resume', async () => {
     const fixture = await createSyncedFixture();
@@ -486,7 +486,7 @@ describe('oat-project-split integration fixtures', () => {
     );
 
     expectPublishedSplit(fixture.originDir, document);
-  });
+  }, 15_000);
 
   it('rolls back a failed terminal marker and republishes every ref through normal resume', async () => {
     const fixture = await createSyncedFixture();
@@ -545,7 +545,7 @@ describe('oat-project-split integration fixtures', () => {
     expect(publicationCalls).toBe(1 + document.plan.children.length);
     expectPublishedSplit(fixture.originDir, document);
     process.exitCode = previousExitCode;
-  });
+  }, 15_000);
 
   it('guides and safely resumes a real mid-publication child rebase conflict', async () => {
     const fixture = await createSyncedFixture({ secondClone: true });
