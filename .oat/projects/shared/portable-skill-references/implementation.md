@@ -404,6 +404,23 @@ re-review p03 and final.
 - **Pre-receive head:** `da762b52de7303f6bf87dbe011fe8f6db8a6af46`
 - **Receive state:** `intent_persisted`
 
+### Review Received: final configured exit gate
+
+- **Date:** 2026-08-28
+- **Run:** `f5f3ba50-bf74-4bdd-bc02-6ac2f2ec5153`
+- **Artifact:**
+  `reviews/archived/final-review-2026-08-28T032516Z.md`
+- **Gate result:** passed at Important threshold; receive eligible and
+  corroborated
+- **Findings:** 0 Critical, 0 Important, 0 Medium, 1 Minor
+- **Minor m1 disposition:** rejected as duplicate coverage. The proposed
+  standalone presence guard would improve local test readability, but both
+  dispatch strings are already required by the companion validation contract,
+  so their deletion cannot ship silently. This is test polish rather than a
+  product or coverage defect, and changing code after the verified exit-gate
+  basis would create disproportionate closeout churn.
+- **Result:** judgment sweep consumed; no fix task or deferred finding remains
+
 <!-- orchestration-runs-end -->
 
 ## Deviations from Plan / Design

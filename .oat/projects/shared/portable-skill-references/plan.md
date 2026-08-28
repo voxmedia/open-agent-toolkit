@@ -451,7 +451,7 @@ merge path.
 | plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md`  | -                                        | -          | -                    |
 | plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220007Z.md`  | -                                        | -          | -                    |
 | plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220505Z.md`  | -                                        | -          | -                    |
-| final  | code     | received        | 2026-08-28 | `reviews/final-review-2026-08-28T032516Z.md`          | 9586af443af098ee37b7094e00d5b4d69961ccc5 | gate       | cursor-fable-5-xhigh |
+| final  | code     | passed          | 2026-08-28 | `reviews/archived/final-review-2026-08-28T032516Z.md` | 9586af443af098ee37b7094e00d5b4d69961ccc5 | gate       | cursor-fable-5-xhigh |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
