@@ -632,8 +632,8 @@ Source: inline feedback (2026-08-28)
 | p-rev1        | code     | passed          | 2026-08-28 | `reviews/archived/p-rev1-review-2026-08-28T120245Z.md`        | cca0bb5187adfdffd475017e1009a6e643502927 | auto       | -                    |
 | final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T121224Z.md`         | 263bac768e181bfdc2ad85945ed248e3f5bc8066 | auto       | -                    |
 | remote-pr-226 | code     | fixes_completed | 2026-08-28 | `reviews/archived/remote-pr-226-review-2026-08-28T143457Z.md` | -                                        | -          | -                    |
-| final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T151136Z.md`         | 34a4b8268bd85ded4c7c37def94e240bd4734674 | auto       | -                    |
-| final         | code     | fixes_added     | 2026-08-28 | `reviews/archived/final-review-2026-08-28T152436Z.md`         | b15f7c81f11c2a2cad8427eb9eeff8f99f922ee9 | manual     | -                    |
+| final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T151136Z.md`         | 34a4b8268bd85ded4c7c37def94e240bd4734674 | manual     | -                    |
+| final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T152436Z.md`         | b15f7c81f11c2a2cad8427eb9eeff8f99f922ee9 | manual     | -                    |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -649,9 +649,8 @@ Source: inline feedback (2026-08-28)
 
 **Total: 17 tasks**
 
-Sixteen task scopes are implemented. One provenance-alignment task remains
-before the root-owned final re-review and exit-gate refresh can complete and PR
-#226 can be pushed.
+All seventeen task scopes are implemented. The root-owned final re-review and
+stale exit-gate refresh remain before PR #226 can be pushed.
 
 ## References
 

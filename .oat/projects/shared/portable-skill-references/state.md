@@ -1,5 +1,5 @@
 ---
-oat_current_task: prev1-t09
+oat_current_task: null
 oat_last_commit: 99cbb59d9479f3c2d6aeb91c3151e703a423c684
 oat_blockers: []
 associated_issues:
@@ -133,7 +133,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/226 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T21:30:45.407Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T15:18:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T17:26:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -143,14 +143,14 @@ oat_project_recap:
 
 # Project State: portable-skill-references
 
-**Status:** Provenance-alignment fix queued
+**Status:** Final re-review pending
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Sixteen of 17 planned tasks are complete. One provenance-alignment fix is
-queued before final re-review and the configured exit-gate refresh.
+All 17 planned tasks are complete. Final re-review and the configured exit-gate
+refresh remain.
 
 ## Artifacts
 
@@ -158,7 +158,7 @@ queued before final re-review and the configured exit-gate refresh.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan quick workflow)
 - **Plan:** `plan.md` (complete; ready for implementation)
-- **Implementation:** `implementation.md` (16/17 tasks complete; fix queued)
+- **Implementation:** `implementation.md` (17/17 tasks complete; re-review pending)
 
 ## Progress
 
@@ -190,7 +190,7 @@ queued before final re-review and the configured exit-gate refresh.
 - ✓ Terminal artifact-alignment task `prev1-t07` completed
 - ✓ Terminal summary task `prev1-t08` completed
 - ✓ Narrowed final re-review reduced remaining findings to one provenance cell
-- ▶ Provenance-alignment task `prev1-t09` queued
+- ✓ Provenance-alignment task `prev1-t09` completed
 
 ## Blockers
 
@@ -198,5 +198,4 @@ None
 
 ## Next Milestone
 
-Execute `prev1-t09`, re-review final, refresh the configured exit gate, and
-push PR #226.
+Re-review final, refresh the configured exit gate, and push PR #226.

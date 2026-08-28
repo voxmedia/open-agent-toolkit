@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: prev1-t09
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -12,8 +12,8 @@ oat_generated: false
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
-> Revision 1 behavior and seven bounded review fixes are complete. One
-> provenance-alignment task is queued before final re-review.
+> Revision 1 behavior and all eight bounded review fixes are complete. Final
+> re-review and the stale configured exit-gate refresh remain.
 
 ## Progress Overview
 
@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 1: Portable resolution and enforcement | passed | 4     | 4/4       |
 | Phase 2: Release metadata and validation     | passed | 1     | 1/1       |
 | Phase 3: Final review fixes                  | passed | 3     | 3/3       |
-| Revision 1: Merge current main and fixes     | active | 9     | 8/9       |
+| Revision 1: Merge current main and fixes     | passed | 9     | 9/9       |
 
-**Total:** 16/17 tasks completed; `prev1-t09` is next.
+**Total:** 17/17 tasks completed; final re-review is next.
 
 ### Revision Received: Inline Feedback
 
@@ -84,12 +84,12 @@ skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 
 ### Task prev1-t09: Correct review invocation provenance
 
-**Status:** pending
+**Status:** completed
 
 ### Review Received: final provenance alignment
 
 **Date:** 2026-08-28
-**Status:** fixes_added
+**Status:** fixes_completed
 **Review artifact:**
 `reviews/archived/final-review-2026-08-28T152436Z.md`
 
@@ -110,8 +110,7 @@ skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 **Review-cycle override:** the user explicitly authorized this additional
 artifact-only fix/re-review iteration on 2026-08-28.
 
-**Next:** Execute `prev1-t09`, then run the narrowed final re-review and
-configured exit gate.
+**Next:** Run the narrowed final re-review and configured exit gate.
 
 ### Review Received: final artifact alignment
 
