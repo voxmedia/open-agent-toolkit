@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: review_pending
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: p10-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,9 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> 71 of 85 implementation tasks are complete. The final lifecycle re-review
-> passed, but the configured implementation exit gate reported blocking
-> findings now planned as Phase 10 remediation.
+> All 85 implementation tasks are complete. Phase 10 remediated every finding
+> from configured exit-gate attempt 1; a fresh final lifecycle review and the
+> configured gate's second and final attempt remain pending.
 >
 > Conventions:
 >
@@ -28,20 +28,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase    | Status      | Tasks | Completed |
-| -------- | ----------- | ----- | --------- |
-| Phase 1  | complete    | 10    | 10/10     |
-| Phase 2  | complete    | 13    | 13/13     |
-| Phase 3  | complete    | 19    | 19/19     |
-| Phase 4  | complete    | 16    | 16/16     |
-| Phase 5  | complete    | 7     | 7/7       |
-| Phase 6  | complete    | 3     | 3/3       |
-| Phase 7  | complete    | 1     | 1/1       |
-| Phase 8  | complete    | 1     | 1/1       |
-| Phase 9  | complete    | 1     | 1/1       |
-| Phase 10 | in_progress | 14    | 0/14      |
+| Phase    | Status   | Tasks | Completed |
+| -------- | -------- | ----- | --------- |
+| Phase 1  | complete | 10    | 10/10     |
+| Phase 2  | complete | 13    | 13/13     |
+| Phase 3  | complete | 19    | 19/19     |
+| Phase 4  | complete | 16    | 16/16     |
+| Phase 5  | complete | 7     | 7/7       |
+| Phase 6  | complete | 3     | 3/3       |
+| Phase 7  | complete | 1     | 1/1       |
+| Phase 8  | complete | 1     | 1/1       |
+| Phase 9  | complete | 1     | 1/1       |
+| Phase 10 | complete | 14    | 14/14     |
 
-**Total:** 71/85 tasks completed
+**Total:** 85/85 tasks completed
 
 ---
 
@@ -2047,8 +2047,9 @@ agent file and required no additional skill-surface gate rerun.
 
 ## Phase 10: Configured exit-gate remediation
 
-**Status:** in progress - 0 of 14 tasks complete
+**Status:** complete - 14 of 14 tasks complete; fresh final review pending
 **Started:** 2026-08-28
+**Completed:** 2026-08-28
 
 ### Review Received: final configured gate - 2026-08-28T17:40:39Z
 
@@ -2106,10 +2107,6 @@ agent file and required no additional skill-surface gate rerun.
 13 findings; no Medium or Minor was rejected or deferred. The compound m5
 finding is represented by two independently verifiable tasks.
 
-**Next:** execute Phase 10 through `oat-project-implement`, then run a current
-final lifecycle review and the configured exit gate's second and final
-remediation attempt.
-
 ### Implementation Exit Gate Receive Completion
 
 - Receive commit: `a6e1439818dc8f675a7c05cdb8a77b88b2141bd5`, descending from the persisted pre-receive head.
@@ -2119,3 +2116,58 @@ remediation attempt.
 - Receive state: `completed`; configured remediation attempt 1 of 2 is consumed.
 - Exit gate remains `blocked` until Phase 10, a current final lifecycle review,
   and the second configured gate attempt succeed.
+
+### Task Outcomes
+
+| Task    | Status    | Commit      | Outcome                                                |
+| ------- | --------- | ----------- | ------------------------------------------------------ |
+| p10-t01 | completed | `2868b00d3` | Synced discovery records are preserved by doctor       |
+| p10-t02 | completed | `96f04c16f` | Durable summary paths are repository-relative          |
+| p10-t03 | completed | `2d57adf46` | Completion retries reach idempotent receipt recovery   |
+| p10-t04 | completed | `bafb48041` | Absent checkout probes use directory semantics         |
+| p10-t05 | completed | `f9b93c502` | Synced gitignore setup removes duplicate rules         |
+| p10-t06 | completed | `f004c48b1` | All synced push receipts are validated before use      |
+| p10-t07 | completed | `b85a5bb44` | Non-archive PR synchronization has one pin owner       |
+| p10-t08 | completed | `a951965da` | Completion evidence commits are path-confined          |
+| p10-t09 | completed | `2fd449654` | Project CLI reference matches shipped behavior         |
+| p10-t10 | completed | `4daafba2c` | Push imports follow repository module layout           |
+| p10-t11 | completed | `f8457d3cb` | Archive recovery guidance recommends the correct pull  |
+| p10-t12 | completed | `78ad766a3` | Receipt recovery binds project and repository identity |
+| p10-t13 | completed | `d1ed6893b` | Brainstorm documents synced persistence                |
+| p10-t14 | completed | `3a6c835de` | Arrival scope failures warn without aborting routing   |
+
+### Phase 10 Completion
+
+All 13 configured exit-gate findings are resolved by 14 independently
+committed tasks with no deferrals. The focused nine-file CLI suite passed 389
+tests, both configured and interactive completion-decision probes returned the
+expected JSON, and skill validation passed for all 63 OAT skills.
+
+Every Definition of Done gate passed against committed HEAD in exact CI order
+with explicit exit `0`: `pnpm check`, `pnpm type-check`, `pnpm test`,
+`pnpm build`, `pnpm run check:skill-bumps`, a fresh `git fetch origin main`
+followed by `pnpm release:check-versions`, `pnpm release:validate`, and
+`pnpm build:docs`. `pnpm lint`, `pnpm format`, and `git diff --check` also
+exited `0`.
+
+The project-scoped provider sync dry-run exited `0` without filesystem changes.
+Provider status continues to exit `1` only for unrelated pre-existing unmanaged
+Cursor strays and retained pack overrides; managed entries remain in sync and
+were not mutated.
+
+**Recovery:** 0/10 attempts used; `pending_attempt: null`.
+
+**Dispatch evidence:** Request
+`p10-implementation-20260828-exit-gate-attempt1-remediation`; target
+`oat-phase-implementer-gpt-5-6-sol-high`; model axis
+`selected:gpt-5.6-sol`; effort axis `selected:high`.
+
+**Dispatch stamp:** `Dispatch: scope=p10 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+**Review disposition:** The configured attempt-1 final/code review event is
+`fixes_completed`, never passed. A fresh current final lifecycle review and the
+configured exit gate's second and final attempt remain required.
+
+**Next:** Run the fresh final lifecycle review, then the configured exit gate's
+second and final attempt. Migration, archive, completion, PR publication,
+deployment, and spike-repository deletion remain outside Phase 10.
