@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: p13-t12
 oat_generated: false
 ---
 
@@ -14,9 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All 101 implementation and revision tasks are complete. Phase 13 closed the
-> 11 findings from the fresh PR #226-integrated final review. Final phase
-> verification passed; an independent review is next before PR #227 refresh.
+> One hundred one implementation and revision tasks are complete. The Phase 13
+> gate review added five follow-up tasks; execution resumes at `p13-t12` before
+> PR #227 is updated.
 >
 > Conventions:
 >
@@ -28,24 +28,24 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 10    | 10/10     |
-| Phase 2      | complete | 13    | 13/13     |
-| Phase 3      | complete | 19    | 19/19     |
-| Phase 4      | complete | 16    | 16/16     |
-| Phase 5      | complete | 7     | 7/7       |
-| Phase 6      | complete | 3     | 3/3       |
-| Phase 7      | complete | 1     | 1/1       |
-| Phase 8      | complete | 1     | 1/1       |
-| Phase 9      | complete | 1     | 1/1       |
-| Phase 10     | complete | 14    | 14/14     |
-| Phase 11     | complete | 3     | 3/3       |
-| Phase 12     | complete | 1     | 1/1       |
-| Phase p-rev1 | complete | 1     | 1/1       |
-| Phase 13     | complete | 11    | 11/11     |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 10    | 10/10     |
+| Phase 2      | complete    | 13    | 13/13     |
+| Phase 3      | complete    | 19    | 19/19     |
+| Phase 4      | complete    | 16    | 16/16     |
+| Phase 5      | complete    | 7     | 7/7       |
+| Phase 6      | complete    | 3     | 3/3       |
+| Phase 7      | complete    | 1     | 1/1       |
+| Phase 8      | complete    | 1     | 1/1       |
+| Phase 9      | complete    | 1     | 1/1       |
+| Phase 10     | complete    | 14    | 14/14     |
+| Phase 11     | complete    | 3     | 3/3       |
+| Phase 12     | complete    | 1     | 1/1       |
+| Phase p-rev1 | complete    | 1     | 1/1       |
+| Phase 13     | in progress | 16    | 11/16     |
 
-**Total:** 101/101 tasks completed
+**Total:** 101/106 tasks completed
 
 ---
 
@@ -2970,3 +2970,63 @@ diff checks also passed.
 `fixes_completed`, never passed. A fresh independent final review is required
 after final phase verification; no PR mutation, merge, completion, archive,
 migration, deployment, or repository deletion is authorized by this phase.
+
+### Review Received: p13 gate review - 2026-08-28T23:33:40Z
+
+**Date:** 2026-08-28
+**Review artifact:** `reviews/archived/p13-review-2026-08-28T233340Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 3
+
+**Disposition:** blocking gate review; all findings converted with no
+deferrals. `I1`→`p13-t12`, `M1`→`p13-t13`, `m1`→`p13-t14`,
+`m2`→`p13-t15`, and `m3`→`p13-t16`. Task `p13-t16` also carries the
+required lockstep public package bump for the shipped follow-up fixes.
+
+**New tasks added:** `p13-t12` through `p13-t16`
+
+#### Generic Dispatch Record
+
+```yaml
+request_id: 5d0af9f1-ca89-445d-852e-436a7ce783a3
+caller: oat-project-implement
+scope: synced-project-scope/p13
+objective: Independent cross-family Phase 13 review after native reviewer thread exhaustion.
+action: review
+role_name: claude-fable-skip-permissions
+role_class: reviewer
+provider: claude
+dispatch_context: oat-gate-review
+dispatch_policy: high
+dispatch_ceiling: opus
+authority: read-only Phase 13 review plus one active artifact and review bookkeeping
+role_selector: claude-fable-skip-permissions
+model_selector: fable
+model_selector_granularity: exec-target
+effort_selector: provider-default
+selection_source: configured-gate-target
+launch_status: accepted
+child_outcome: completed-with-blocking-findings
+configured_invocation_evidence:
+  - gate run 5d0af9f1-ca89-445d-852e-436a7ce783a3 completed against immutable p13 head
+runtime_confirmation: observed-claude
+diagnostics:
+  - native reviewer spawn and reuse were unavailable because the host agent-thread limit was reached
+continuation_events: []
+task_class: consequential
+model_class_floor: consequential
+classification_source: caller
+classification_reason: Destructive Git mutation and completion-recovery safety make subtle misses expensive.
+floor_satisfaction: satisfied
+```
+
+**Reconnaissance:** not attempted; the reviewer directly inspected the full
+18-commit Phase 13 range and ran 430 focused tests plus version gates.
+
+**Next:** Execute `p13-t12` through `p13-t16`, update this event to
+`fixes_completed`, and run a fresh independent review.

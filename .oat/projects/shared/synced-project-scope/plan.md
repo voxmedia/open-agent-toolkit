@@ -3700,7 +3700,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | plan    | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T031106Z.md       | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
 | plan    | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T032056Z.md       | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
 | plan    | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T033204Z.md       | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| p13     | code     | received        | 2026-08-28 | reviews/p13-review-2026-08-28T233340Z.md                          | 95cf11abb3f74fe3a63342cf8bc58bb926e1407a | gate       | claude-fable-skip-permissions |
+| p13     | code     | fixes_added     | 2026-08-28 | reviews/archived/p13-review-2026-08-28T233340Z.md                 | 95cf11abb3f74fe3a63342cf8bc58bb926e1407a | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -4088,6 +4088,162 @@ git add .oat/repo/pjm/current-state.md packages/cli/package.json packages/contro
 git commit -m "chore(p13-t11): align post-merge release metadata"
 ```
 
+### Task p13-t12: (review) Allow receipt recovery without an enabled project log
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/scripts/recover-completion-receipts.mjs`
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts`
+
+**Step 1: Understand the issue**
+
+Recovery now requires `project-log.md` even though the completion workflow
+supports an absent/inert project log through `--no-project-log` and config.
+
+**Step 2: Implement fix**
+
+Accept an absent log at the pin-source commit; when a log exists, retain the
+exact final completion-seal validation. Align the skill prose and bump the
+canonical skill version from `1.7.1` to `1.7.2`.
+
+**Step 3: Verify**
+
+Replace the missing-log negative fixture with a log-absent positive recovery
+case while preserving active-state and unsealed-log negatives. Run the
+repository-backed completion matrix and skill-bump validation.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete packages/cli/src/commands/project/push/completion-transaction.test.ts
+git commit -m "fix(p13-t12): allow logless receipt recovery"
+```
+
+### Task p13-t13: (review) Scope persisted archive retry identity
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+
+**Step 1: Understand the issue**
+
+Persisted dated archive matching uses only project and snapshot names under a
+scope-shared archive root, so same-day same-slug archives can cross scopes.
+
+**Step 2: Implement fix**
+
+Persist and validate the originating scope or an equally strong exact archive
+directory identity, and require it while resolving synced retries.
+
+**Step 3: Verify**
+
+Add a same-day same-slug shared/synced retry test proving the synced retry
+resolves only its own directory and never sources another scope's exports.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts
+git commit -m "fix(p13-t13): scope persisted archive retries"
+```
+
+### Task p13-t14: (review) Avoid orphan archives when record persistence fails
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+
+**Step 1: Understand the issue**
+
+Writing the synced record after copying can leave an orphan archive directory
+when record persistence fails, causing duplicate identities and ambiguity.
+
+**Step 2: Implement fix**
+
+Make identity persistence and archive creation failure-safe by persisting the
+identity before copy or removing the invocation-owned fresh directory when the
+record write fails.
+
+**Step 3: Verify**
+
+Inject record-write failure, assert no orphan/duplicate archive remains, and
+prove a retry reuses exactly one canonical identity.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts
+git commit -m "fix(p13-t14): clean failed archive identity writes"
+```
+
+### Task p13-t15: (review) Handle locked missing worktree registrations
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts`
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.test.ts`
+
+**Step 1: Understand the issue**
+
+`git worktree prune` preserves locked registrations; a locked-but-missing path
+still makes `realpath` fail before the prune workflow can diagnose it.
+
+**Step 2: Implement fix**
+
+Canonicalize missing registrations without requiring filesystem existence, or
+return a precise locked-stale diagnostic, while preserving containment checks
+for live paths.
+
+**Step 3: Verify**
+
+Add a real-Git locked-and-missing registration case alongside the existing
+removed-parent fixture and run the focused prune matrix.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts
+git commit -m "fix(p13-t15): handle locked stale worktrees"
+```
+
+### Task p13-t16: (review) Report local ref-query failures and finalize release metadata
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/doctor/synced-projects.ts`
+- Modify: `packages/cli/src/commands/doctor/synced-projects.test.ts`
+- Modify: all five lockstep public package `package.json` files
+- Modify: `packages/cli/assets/public-package-versions.json`
+
+**Step 1: Understand the issue**
+
+Doctor is silent when local `show-ref` fails with an unexpected exit code,
+unlike the explicit remote transport diagnostic. The shipped follow-up fixes
+also require one fresh lockstep release increment.
+
+**Step 2: Implement fix**
+
+Emit a pass-level local-ref diagnostic that names the Git error without
+misclassifying it as divergence. Fetch current `origin/main`, then bump the
+five public packages and generated asset to the smallest strictly greater
+lockstep version (expected `0.2.42` if upstream remains `0.2.39`).
+
+**Step 3: Verify**
+
+Run local-query failure, local-only, remote-only, equal, unequal, and offline
+doctor cases, then the exact CI-order Definition of Done plus lint, format, and
+diff checks.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/doctor/synced-projects.ts packages/cli/src/commands/doctor/synced-projects.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
+git commit -m "fix(p13-t16): report local ref query failures"
+```
+
 ---
 
 ## Implementation Complete
@@ -4107,9 +4263,9 @@ git commit -m "chore(p13-t11): align post-merge release metadata"
 - Phase 11: 3 tasks - Executable completion-retry routing, pull reference closure, and status-blind receipt hygiene
 - Phase 12: 1 task - Normal-route retry decoding and publication-guard regression coverage
 - Phase p-rev1: 1 task - Integrate merged PR #226 and reconcile overlapping skill, validation, docs, sync, and release surfaces
-- Phase 13: 11 tasks - Post-merge final review fixes for Git ownership, lifecycle recovery, pull continuation, archive isolation/parity, worktree safety, prune, doctor, and release metadata
+- Phase 13: 16 tasks - Post-merge final review fixes plus gate-review corrections for optional logs, scoped archive retries, failure-safe archive identity, locked stale registrations, local diagnostics, and release metadata
 
-**Total: 101 tasks**
+**Total: 106 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
