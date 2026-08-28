@@ -301,4 +301,86 @@ describe('checkSyncedProjects', () => {
       offline.find((check) => check.message.includes('offline'))?.status,
     ).toBe('pass');
   });
+
+  it.each([
+    {
+      relation: 'local-only',
+      local: { code: 0, stdout: 'a'.repeat(40), stderr: '' },
+      remote: { code: 0, stdout: '', stderr: '' },
+      expectedStatus: 'warn',
+      expectedMessage: 'exists locally but is absent from origin',
+    },
+    {
+      relation: 'remote-only',
+      local: { code: 1, stdout: '', stderr: '' },
+      remote: {
+        code: 0,
+        stdout: `${'a'.repeat(40)}\trefs/oat/projects/demo`,
+        stderr: '',
+      },
+      expectedStatus: 'warn',
+      expectedMessage: 'is absent locally but exists on origin',
+    },
+    {
+      relation: 'unequal-present',
+      local: { code: 0, stdout: 'a'.repeat(40), stderr: '' },
+      remote: {
+        code: 0,
+        stdout: `${'b'.repeat(40)}\trefs/oat/projects/demo`,
+        stderr: '',
+      },
+      expectedStatus: 'warn',
+      expectedMessage: 'differs from origin',
+    },
+    {
+      relation: 'equal-present',
+      local: { code: 0, stdout: 'a'.repeat(40), stderr: '' },
+      remote: {
+        code: 0,
+        stdout: `${'a'.repeat(40)}\trefs/oat/projects/demo`,
+        stderr: '',
+      },
+      expectedStatus: null,
+      expectedMessage: null,
+    },
+    {
+      relation: 'offline',
+      local: { code: 0, stdout: 'a'.repeat(40), stderr: '' },
+      remote: { code: 128, stdout: '', stderr: 'offline' },
+      expectedStatus: 'pass',
+      expectedMessage: 'offline',
+    },
+  ] as const)(
+    'classifies $relation synced refs',
+    async ({ local, remote, expectedStatus, expectedMessage }) => {
+      const repoRoot = await createRoot();
+      const syncedRoot = join(repoRoot, '.oat/projects/synced');
+      await writeSyncedRecord(
+        join(syncedRoot, 'demo.json'),
+        buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
+      );
+      await mkdir(join(syncedRoot, 'demo'), { recursive: true });
+
+      const checks = await checkSyncedProjects(repoRoot, {
+        git: gitRunner({
+          'show-ref --hash': local,
+          'ls-remote origin': remote,
+        }),
+      });
+      const refCheck = checks.find(
+        (candidate) =>
+          candidate.name === 'project:synced_demo_ref_sync' ||
+          candidate.name === 'project:synced_demo_remote_ref',
+      );
+
+      if (expectedStatus === null) {
+        expect(refCheck).toBeUndefined();
+      } else {
+        expect(refCheck).toMatchObject({
+          status: expectedStatus,
+          message: expect.stringContaining(expectedMessage!),
+        });
+      }
+    },
+  );
 });

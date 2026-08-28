@@ -215,14 +215,24 @@ export async function checkSyncedProjects(
       );
     } else {
       const remoteSha = remote.stdout.trim().split(/\s+/)[0] ?? '';
-      const localSha = local.stdout.trim();
-      if (localSha && remoteSha && localSha !== remoteSha) {
+      const localQuerySucceeded = local.code === 0 || local.code === 1;
+      const localSha = local.code === 0 ? local.stdout.trim() : '';
+      if (
+        localQuerySucceeded &&
+        (localSha || remoteSha) &&
+        localSha !== remoteSha
+      ) {
+        const relation = localSha
+          ? remoteSha
+            ? 'differs from origin'
+            : 'exists locally but is absent from origin'
+          : 'is absent locally but exists on origin';
         checks.push(
           check(
             record.slug,
             'ref_sync',
             'warn',
-            `Local ref for ${record.slug} differs from origin.`,
+            `Local ref for ${record.slug} ${relation}.`,
             `Run \`oat project pull ${record.slug}\` or \`oat project push ${record.slug}\`.`,
           ),
         );
