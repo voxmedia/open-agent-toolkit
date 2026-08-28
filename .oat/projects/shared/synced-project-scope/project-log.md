@@ -136,6 +136,10 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 
 Phase 10 completed p10-t01 through p10-t14 at 3a6c835de; tasks=14/14 total=85/85 recovery=0/10 gates=pass review-status=fixes_completed awaiting-fresh-final-review=true awaiting-exit-gate-attempt=2 request=p10-implementation-20260828-exit-gate-attempt1-remediation target=oat-phase-implementer-gpt-5-6-sol-high.
 
+### 2026-08-28 · structural · oat-project-review-provide · final
+
+Auto final lifecycle review with two bounded reconnaissance lanes; artifact reviews/final-review-2026-08-28T182836Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
