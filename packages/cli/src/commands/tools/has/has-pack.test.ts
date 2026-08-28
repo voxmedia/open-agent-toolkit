@@ -47,6 +47,26 @@ function createDependencies(
       scope === 'project' ? '/project' : '/home/user',
     ),
     scanTools: vi.fn(async ({ scope }) => toolsByScope[scope] ?? []),
+    inventoryScopedPack: vi.fn(async ({ pack, scope }) => {
+      const available = (toolsByScope[scope] ?? []).some(
+        (tool) => tool.pack === pack,
+      );
+      return {
+        pack,
+        scope,
+        intent: {
+          pack,
+          scope,
+          enabled: available,
+          source: available ? ('inferred-legacy' as const) : ('none' as const),
+          configPath: `/${scope}/.oat/config.json`,
+          diagnostics: [],
+        },
+        completeness: available ? ('complete' as const) : ('absent' as const),
+        assets: [],
+        diagnostics: [],
+      };
+    }),
   };
 }
 
@@ -68,6 +88,9 @@ describe('resolvePackAvailability', () => {
       pack: 'docs',
       available: true,
       scopes: ['project'],
+      unavailableScopes: [],
+      completeness: { project: 'complete', user: 'absent' },
+      missing: [],
     });
   });
 
@@ -88,6 +111,9 @@ describe('resolvePackAvailability', () => {
       pack: 'workflows',
       available: true,
       scopes: ['project', 'user'],
+      unavailableScopes: [],
+      completeness: { project: 'complete', user: 'complete' },
+      missing: [],
     });
   });
 
@@ -107,6 +133,83 @@ describe('resolvePackAvailability', () => {
       pack: 'research',
       available: false,
       scopes: [],
+      unavailableScopes: [],
+      completeness: { project: 'absent' },
+      missing: [],
     });
+  });
+
+  it('requires complete inventory rather than any member presence', async () => {
+    const dependencies = createDependencies({
+      project: [createTool('docs', 'project')],
+    });
+    dependencies.inventoryScopedPack!.mockResolvedValue({
+      pack: 'docs',
+      scope: 'project',
+      intent: {
+        pack: 'docs',
+        scope: 'project',
+        enabled: true,
+        source: 'declared',
+        configPath: '/project/.oat/config.json',
+        diagnostics: [],
+      },
+      completeness: 'partial',
+      assets: [],
+      diagnostics: [],
+    });
+    const result = await resolvePackAvailability(
+      'docs',
+      ['project'],
+      createContext(),
+      dependencies,
+    );
+    expect(result.available).toBe(false);
+    expect(result.completeness).toEqual({ project: 'partial' });
+  });
+
+  it('answers from user scope when project scope is unresolvable', async () => {
+    const dependencies = createDependencies({
+      user: [createTool('docs', 'user')],
+    });
+    dependencies.resolveScopeRoot = vi.fn(async (scope) => {
+      if (scope === 'project')
+        throw new Error('Unable to resolve project root');
+      return '/home/user';
+    });
+
+    await expect(
+      resolvePackAvailability(
+        'docs',
+        ['project', 'user'],
+        createContext(),
+        dependencies,
+      ),
+    ).resolves.toEqual({
+      pack: 'docs',
+      available: true,
+      scopes: ['user'],
+      unavailableScopes: ['project'],
+      completeness: { user: 'complete' },
+      missing: [],
+    });
+  });
+
+  it('still fails when project scope is explicitly requested and unresolvable', async () => {
+    const dependencies = createDependencies({
+      user: [createTool('docs', 'user')],
+    });
+    dependencies.resolveScopeRoot = vi.fn(async () => {
+      throw new Error('Unable to resolve project root');
+    });
+
+    await expect(
+      resolvePackAvailability(
+        'docs',
+        ['project'],
+        createContext(),
+        dependencies,
+      ),
+    ).rejects.toThrow('Unable to resolve project root');
   });
 });

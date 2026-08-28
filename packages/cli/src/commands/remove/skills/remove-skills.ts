@@ -1,15 +1,12 @@
 import { buildCommandContext, type CommandContext } from '@app/command-context';
-import { DOCS_SKILLS } from '@commands/init/tools/docs/install-docs';
-import { IDEA_SKILLS } from '@commands/init/tools/ideas/install-ideas';
-import { RESEARCH_SKILLS } from '@commands/init/tools/research/install-research';
-import { UTILITY_SKILLS } from '@commands/init/tools/utility/install-utility';
-import { WORKFLOW_SKILLS } from '@commands/init/tools/workflows/install-workflows';
 import { withScopeOption } from '@commands/shared/scope-option';
 import {
   confirmAction,
   type PromptContext,
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
+import type { PackName } from '@commands/tools/shared/types';
 import { Command } from 'commander';
 
 import {
@@ -23,15 +20,15 @@ interface RemoveSkillsOptions {
   dryRun?: boolean;
 }
 
-type PackName = 'ideas' | 'docs' | 'workflows' | 'utility' | 'research';
-
-const PACK_SKILLS: Record<PackName, readonly string[]> = {
-  ideas: IDEA_SKILLS,
-  docs: DOCS_SKILLS,
-  workflows: WORKFLOW_SKILLS,
-  utility: UTILITY_SKILLS,
-  research: RESEARCH_SKILLS,
-};
+const PACK_SKILLS = PACK_MANIFEST.reduce<Record<PackName, readonly string[]>>(
+  (packs, { name, assets }) => {
+    packs[name] = assets
+      .filter(({ kind }) => kind === 'skill')
+      .map(({ destination }) => destination.split('/').at(-1)!);
+    return packs;
+  },
+  {} as Record<PackName, readonly string[]>,
+);
 
 interface RemoveSkillsDependencies {
   buildCommandContext: (
@@ -57,13 +54,7 @@ function createDependencies(): RemoveSkillsDependencies {
 }
 
 function isPackName(value: string): value is PackName {
-  return (
-    value === 'ideas' ||
-    value === 'docs' ||
-    value === 'workflows' ||
-    value === 'utility' ||
-    value === 'research'
-  );
+  return Object.hasOwn(PACK_SKILLS, value);
 }
 
 export function createRemoveSkillsCommand(
@@ -78,7 +69,7 @@ export function createRemoveSkillsCommand(
     .description('Remove installed skills by pack')
     .requiredOption(
       '--pack <pack>',
-      'Skill pack to remove (ideas|docs|workflows|utility|research)',
+      `Skill pack to remove (${PACK_MANIFEST.map(({ name }) => name).join('|')})`,
     )
     .option('--dry-run', 'Preview removal without applying')
     .action(async (options: RemoveSkillsOptions, command: Command) => {
@@ -90,7 +81,7 @@ export function createRemoveSkillsCommand(
         const rawPack = (options.pack ?? '').toLowerCase();
         if (!isPackName(rawPack)) {
           throw new Error(
-            `Invalid pack: ${options.pack}. Expected one of: ideas, docs, workflows, utility, research.`,
+            `Invalid pack: ${options.pack}. Expected one of: ${PACK_MANIFEST.map(({ name }) => name).join(', ')}.`,
           );
         }
 

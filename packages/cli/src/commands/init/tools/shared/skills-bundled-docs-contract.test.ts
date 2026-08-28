@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
 import { describe, expect, it } from 'vitest';
 
 const REPO_ROOT = execFileSync('git', ['rev-parse', '--show-toplevel'], {
@@ -92,5 +93,107 @@ describe('skills bundled docs contract', () => {
       violations,
       `Skill(s) reference a shared doc that won't ship with the bundle:\n${detail}`,
     ).toEqual([]);
+  });
+
+  it('does not add bare repo-relative cross-skill reads to user-scope packs', () => {
+    // A skill in a pack that defaults to user scope is normally installed at
+    // `~/.agents/skills/`, so a bare `.agents/skills/<name>/SKILL.md` read
+    // dangles: the repo-relative path does not exist on a default install.
+    // The chained read must resolve the skills root from the loaded skill's
+    // scope (user-scope candidate probed first) instead.
+    //
+    // This inventory is a ratchet, not an endorsement. It pins the reads that
+    // predate the fix so any *new* one fails, while the listed skills are
+    // remediated on their own schedule. Only remove entries here; never add.
+    const PINNED_LEGACY_BARE_READS: Readonly<
+      Record<string, readonly string[]>
+    > = {
+      'oat-idea-ideate': ['oat-idea-new'],
+      'oat-idea-new': ['oat-idea-ideate'],
+      'oat-idea-summarize': ['oat-idea-ideate'],
+      'oat-project-implement': [
+        'oat-dispatch-subagents',
+        'oat-project-dispatch-subagents',
+      ],
+      'oat-project-plan-writing': [
+        'oat-dispatch-subagents',
+        'oat-project-dispatch-subagents',
+      ],
+    };
+
+    const userScopeSkills = new Set(
+      PACK_MANIFEST.filter((pack) => pack.defaultScope === 'user').flatMap(
+        (pack) =>
+          pack.assets
+            .filter((asset) => asset.kind === 'skill')
+            .map((asset) => asset.id.slice('skill:'.length)),
+      ),
+    );
+    expect(userScopeSkills.has('oat-brainstorm')).toBe(true);
+
+    const BARE_CROSS_SKILL_READ =
+      /`\.agents\/skills\/([a-zA-Z0-9_-]+)\/SKILL\.md`/g;
+    const found: Record<string, string[]> = {};
+
+    for (const skill of listSkillDirs()) {
+      if (!userScopeSkills.has(skill)) continue;
+      const skillFile = join(SKILLS_DIR, skill, 'SKILL.md');
+      if (!existsSync(skillFile)) continue;
+      const referenced = new Set<string>();
+      for (const match of readFileSync(skillFile, 'utf8').matchAll(
+        BARE_CROSS_SKILL_READ,
+      )) {
+        if (match[1] !== skill) referenced.add(match[1]!);
+      }
+      if (referenced.size > 0) found[skill] = [...referenced].sort();
+    }
+
+    for (const [skill, referenced] of Object.entries(found)) {
+      expect(
+        PINNED_LEGACY_BARE_READS[skill] ?? [],
+        `${skill} adds a bare repo-relative cross-skill read; resolve the skills root from the loaded skill scope instead`,
+      ).toEqual(expect.arrayContaining(referenced));
+    }
+
+    // The remediated skill must stay clean.
+    expect(found['oat-brainstorm']).toBeUndefined();
+  });
+
+  it('resolves shared tracking scripts from each loaded skill scope', () => {
+    const consumers: string[] = [];
+    const bareReferences: string[] = [];
+
+    for (const skill of listSkillDirs()) {
+      const skillFile = join(SKILLS_DIR, skill, 'SKILL.md');
+      const content = readFileSync(skillFile, 'utf8');
+      if (!content.includes('resolve-tracking.sh')) continue;
+      consumers.push(skill);
+      if (
+        content.includes('TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"')
+      ) {
+        bareReferences.push(skill);
+      }
+      const loadedSkillDir =
+        skill === 'oat-agent-instructions-apply'
+          ? 'APPLY_SKILL_DIR'
+          : 'SKILL_DIR';
+      expect(content, skill).toContain(
+        `SCOPE_ROOT="$(cd "$${loadedSkillDir}/../../.." && pwd)"`,
+      );
+      expect(content, skill).toContain(
+        'TRACKING_SCRIPT="$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh"',
+      );
+    }
+
+    expect(consumers).toEqual(
+      expect.arrayContaining([
+        'oat-docs-analyze',
+        'oat-docs-apply',
+        'oat-agent-instructions-analyze',
+        'oat-agent-instructions-apply',
+        'oat-repo-knowledge-index',
+      ]),
+    );
+    expect(bareReferences).toEqual([]);
   });
 });

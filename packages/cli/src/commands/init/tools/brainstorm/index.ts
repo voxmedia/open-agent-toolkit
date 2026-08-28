@@ -64,7 +64,7 @@ interface ResolvedScope {
 
 async function resolveInstallScope(
   context: CommandContext,
-  projectRoot: string,
+  projectRoot: string | null,
   userRoot: string,
   assetsRoot: string,
   dependencies: InitToolsBrainstormDependencies,
@@ -82,11 +82,13 @@ async function resolveInstallScope(
   // defaultScope is consulted, so re-installing a pack already placed at
   // a particular scope never silently migrates the user across scopes.
   const [projectTools, userTools] = await Promise.all([
-    dependencies.scanTools({
-      scope: 'project',
-      scopeRoot: projectRoot,
-      assetsRoot,
-    }),
+    projectRoot
+      ? dependencies.scanTools({
+          scope: 'project',
+          scopeRoot: projectRoot,
+          assetsRoot,
+        })
+      : Promise.resolve([]),
     dependencies.scanTools({
       scope: 'user',
       scopeRoot: userRoot,
@@ -152,7 +154,14 @@ async function runInitToolsBrainstorm(
   dependencies: InitToolsBrainstormDependencies,
 ): Promise<boolean> {
   try {
-    const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+    let projectRoot: string | null = null;
+    if (context.scope !== 'user') {
+      try {
+        projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+      } catch (error) {
+        if (context.scope === 'project') throw error;
+      }
+    }
     const userRoot = dependencies.resolveScopeRoot(
       'user',
       context.cwd,
@@ -167,7 +176,10 @@ async function runInitToolsBrainstorm(
       assetsRoot,
       dependencies,
     );
-    const targetRoot = scope === 'project' ? projectRoot : userRoot;
+    if (scope === 'project' && !projectRoot) {
+      throw new Error('Project scope is unavailable outside a repository');
+    }
+    const targetRoot = scope === 'project' ? projectRoot! : userRoot;
 
     if (options.force && context.interactive) {
       const confirmed = await dependencies.confirmAction(

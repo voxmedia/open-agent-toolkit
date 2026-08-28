@@ -1,6 +1,10 @@
 import { access, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import {
+  resolvePjmTemplate,
+  type PjmTemplateTier,
+} from '@commands/pjm/template-source';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 import YAML from 'yaml';
 
@@ -21,6 +25,7 @@ export interface CreateBacklogItemOptions {
   backlogRoot: string;
   assetsRoot: string;
   templatesRoot?: string;
+  home?: string;
   title: string;
   priority?: string;
   scope?: string;
@@ -35,6 +40,7 @@ export interface CreateBacklogItemResult {
   backlogRoot: string;
   filePath: string;
   templatePath: string;
+  templateTier: PjmTemplateTier;
   index: RegenerateBacklogIndexResult;
 }
 
@@ -62,34 +68,6 @@ async function pathExists(path: string): Promise<boolean> {
     }
     return false;
   }
-}
-
-async function resolveBacklogTemplate(
-  assetsRoot: string,
-  templatesRoot?: string,
-): Promise<{ content: string; path: string }> {
-  const candidates = [
-    ...(templatesRoot ? [join(templatesRoot, 'backlog-item.md')] : []),
-    join(assetsRoot, 'templates', 'backlog-item.md'),
-  ];
-
-  for (const path of candidates) {
-    try {
-      return { content: await readFile(path, 'utf8'), path };
-    } catch (error) {
-      const code =
-        error && typeof error === 'object' && 'code' in error
-          ? String(error.code)
-          : null;
-      if (code !== 'ENOENT') {
-        throw error;
-      }
-    }
-  }
-
-  throw new Error(
-    'Template backlog-item.md was not found in repo-local templates or bundled assets.',
-  );
 }
 
 function normalizeChoice(
@@ -240,10 +218,12 @@ export async function createBacklogItem(
     );
   }
 
-  const template = await resolveBacklogTemplate(
-    options.assetsRoot,
-    options.templatesRoot,
-  );
+  const template = await resolvePjmTemplate({
+    name: 'backlog-item.md',
+    assetsRoot: options.assetsRoot,
+    templatesRoot: options.templatesRoot,
+    home: options.home,
+  });
   const content = renderBacklogItem(template.content, { id, ...values });
 
   await dependencies.initializeBacklog(options.backlogRoot);
@@ -278,6 +258,7 @@ export async function createBacklogItem(
     backlogRoot: options.backlogRoot,
     filePath,
     templatePath: template.path,
+    templateTier: template.tier,
     index,
   };
 }

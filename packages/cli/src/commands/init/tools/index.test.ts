@@ -5,6 +5,7 @@ import type {
   MultiSelectChoice,
   SelectChoice,
 } from '@commands/shared/shared.prompts';
+import type { PackLifecycleRequest } from '@commands/tools/shared/pack-lifecycle';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -37,6 +38,9 @@ interface HarnessOptions {
   interactive?: boolean;
   packSelection?: Array<string[] | null>;
   scopeSelection?: Array<string | null>;
+  projectRootUnavailable?: boolean;
+  useLifecycle?: boolean;
+  declaredPlacement?: Partial<Record<string, 'project' | 'user' | 'both'>>;
   toolsByScope?: Partial<
     Record<
       'project' | 'user',
@@ -242,6 +246,102 @@ function createHarness(options: HarnessOptions = {}) {
     action: 'updated' as const,
   }));
   const removeAgentsMdSection = vi.fn(async () => false);
+  const reconcilePacks = vi.fn(
+    async (requests: readonly PackLifecycleRequest[]) =>
+      requests.map((request) => {
+        const inventory = {
+          pack: request.pack,
+          scope: request.scope,
+          intent: {
+            pack: request.pack,
+            scope: request.scope,
+            enabled: true,
+            source: 'declared' as const,
+            configPath: `${request.scopeRoot}/.oat/config.json`,
+            diagnostics: [],
+          },
+          completeness: 'complete' as const,
+          assets: [],
+          diagnostics: [],
+        };
+        const operation = {
+          kind: 'write-intent' as const,
+          pack: request.pack,
+          scope: request.scope,
+          enabled: true,
+        };
+        const plan = {
+          pack: request.pack,
+          scope: request.scope,
+          action: request.action,
+          operations: [operation],
+          expectedCompleteness: 'complete' as const,
+          changedCanonicalPaths: [],
+          retainedAssets: [],
+        };
+        return {
+          request,
+          before: inventory,
+          plan,
+          apply: { applied: [operation], inventory, synced: false },
+        };
+      }),
+  );
+  const inventoryPack = vi.fn(
+    async ({
+      pack,
+      projectRoot,
+      userRoot,
+    }: {
+      pack: string;
+      projectRoot?: string;
+      userRoot?: string;
+    }) => {
+      const scopes = (['project', 'user'] as const).flatMap((scope) => {
+        if (scope === 'project' && !projectRoot) return [];
+        if (scope === 'user' && !userRoot) return [];
+        if (pack === 'core' && scope === 'project') return [];
+        const declared = options.declaredPlacement?.[pack];
+        const enabled =
+          declared === scope ||
+          declared === 'both' ||
+          (toolsByScope[scope] ?? []).some((tool) => tool.pack === pack);
+        return [
+          {
+            pack,
+            scope,
+            intent: {
+              pack,
+              scope,
+              enabled,
+              source: enabled
+                ? ('inferred-legacy' as const)
+                : ('none' as const),
+              configPath: `/${scope}/.oat/config.json`,
+              diagnostics: [],
+            },
+            completeness: enabled ? ('complete' as const) : ('absent' as const),
+            assets: [],
+            diagnostics: [],
+          },
+        ];
+      });
+      const active = scopes.filter(({ intent }) => intent.enabled);
+      return {
+        pack,
+        placement:
+          active.length === 2
+            ? ('both' as const)
+            : active[0]?.scope === 'project'
+              ? ('project' as const)
+              : active[0]?.scope === 'user'
+                ? ('user' as const)
+                : ('unavailable' as const),
+        scopes,
+        diagnostics: [],
+      };
+    },
+  );
 
   const command = createInitToolsCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -255,7 +355,10 @@ function createHarness(options: HarnessOptions = {}) {
       scopeSelection: options.contextScopeSelection,
       logger: capture.logger,
     }),
-    resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
+    resolveProjectRoot: vi.fn(async () => {
+      if (options.projectRootUnavailable) throw new Error('not a repository');
+      return '/tmp/workspace';
+    }),
     resolveScopeRoot: vi.fn((_scope: 'project' | 'user', _cwd, home) => home),
     resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
     scanTools,
@@ -279,6 +382,7 @@ function createHarness(options: HarnessOptions = {}) {
     resolveLocalPaths,
     upsertAgentsMdSection,
     removeAgentsMdSection,
+    ...(options.useLifecycle ? { reconcilePacks, inventoryPack } : {}),
   });
 
   return {
@@ -304,6 +408,8 @@ function createHarness(options: HarnessOptions = {}) {
     resolveLocalPaths,
     scanTools,
     upsertAgentsMdSection,
+    reconcilePacks,
+    inventoryPack,
   };
 }
 
@@ -635,11 +741,10 @@ describe('createInitToolsCommand', () => {
     expect(removeFile).not.toHaveBeenCalled();
   });
 
-  it('deferred gate: not shown at all when no user-eligible pack is selected', async () => {
+  it('deferred gate includes project-management now that it supports user scope', async () => {
     const { command, selectWithAbort } = createHarness({
       interactive: true,
       contextScopeSelection: 'gate',
-      // Only the project-only pack — no user-eligible packs in the selection.
       packSelection: [['project-management']],
       scopeSelection: [],
       toolsByScope: {
@@ -651,7 +756,7 @@ describe('createInitToolsCommand', () => {
     await runCommand(command, [], ['--scope', 'all']);
 
     const messages = selectWithAbort.mock.calls.map((call) => call[0]);
-    expect(messages).not.toContain('Customize per-pack scope? (y/N)');
+    expect(messages).toContain('Customize per-pack scope? (y/N)');
   });
 
   it('deferred gate (non-interactive): never prompts and applies additive defaults', async () => {
@@ -908,12 +1013,12 @@ describe('createInitToolsCommand', () => {
     expect(capture.info.join('\n')).toContain('No sync needed.');
   });
 
-  it('batch-confirm gate: dropping user from a both-scope pack removes user on confirm', async () => {
+  it('interactive scope selection is additive for an existing both-scope pack', async () => {
     const { command, installResearch, removeDirectory, removeFile, capture } =
       createHarness({
         interactive: true,
         packSelection: [['research']],
-        // research selector → project (drops user); gate → yes
+        // A project selection cannot narrow the existing user placement.
         scopeSelection: ['project', 'yes'],
         toolsByScope: {
           project: [createScannedTool('analyze', 'research', 'project')],
@@ -923,55 +1028,47 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    // The dropped user scope is removed exactly once (skills + agents under
-    // the user root).
-    expect(removeDirectory).toHaveBeenCalledWith(
-      '/tmp/home/.agents/skills/analyze',
-    );
-    expect(removeFile).toHaveBeenCalledWith(
-      '/tmp/home/.agents/agents/skeptical-evaluator.md',
-    );
-    // The change summary listed the removal.
-    expect(capture.info.join('\n')).toContain('- research@user');
-    // research stays at project (idempotent install), end-state project.
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+    expect(capture.info.join('\n')).not.toContain('- research@user');
     expect(installResearch).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
-    // user is the only changed scope surfaced for sync.
-    expect(capture.info.join('\n')).toContain('oat sync --scope user');
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(capture.info.join('\n')).toContain('No sync needed.');
   });
 
-  it('removes every user-scope workflows asset class when a narrower end-state is confirmed', async () => {
-    const { command, removeDirectory, removeFile } = createHarness({
-      interactive: true,
-      packSelection: [['workflows']],
-      scopeSelection: ['project', 'yes'],
-      toolsByScope: {
-        project: [createScannedTool('oat-project-new', 'workflows', 'project')],
-        user: [createScannedTool('oat-project-new', 'workflows', 'user')],
-      },
-    });
+  it('preserves every user-scope workflows asset class when project is selected', async () => {
+    const { command, installWorkflows, removeDirectory, removeFile } =
+      createHarness({
+        interactive: true,
+        packSelection: [['workflows']],
+        scopeSelection: ['project', 'yes'],
+        toolsByScope: {
+          project: [
+            createScannedTool('oat-project-new', 'workflows', 'project'),
+          ],
+          user: [createScannedTool('oat-project-new', 'workflows', 'user')],
+        },
+      });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(removeDirectory).toHaveBeenCalledWith(
-      '/tmp/home/.agents/skills/oat-project-new',
-    );
-    expect(removeFile).toHaveBeenCalledWith(
-      '/tmp/home/.agents/agents/oat-reviewer.md',
-    );
-    expect(removeFile).toHaveBeenCalledWith('/tmp/home/.oat/templates/plan.md');
-    expect(removeFile).toHaveBeenCalledWith(
-      '/tmp/home/.oat/scripts/generate-oat-state.sh',
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+    expect(installWorkflows).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home', scope: 'user' }),
     );
   });
 
-  it('batch-confirm gate: declining applies no installs and no removals', async () => {
+  it('does not offer a destructive confirmation when selection is narrower', async () => {
     const { command, installResearch, removeDirectory, removeFile, capture } =
       createHarness({
         interactive: true,
         packSelection: [['research']],
-        // research selector → project (drops user); gate → no
+        // The second queued answer is never consumed by a removal gate.
         scopeSelection: ['project', 'no'],
         toolsByScope: {
           project: [createScannedTool('analyze', 'research', 'project')],
@@ -983,8 +1080,8 @@ describe('createInitToolsCommand', () => {
 
     expect(removeDirectory).not.toHaveBeenCalled();
     expect(removeFile).not.toHaveBeenCalled();
-    expect(installResearch).not.toHaveBeenCalled();
-    expect(capture.info.join('\n')).toContain('No changes applied.');
+    expect(installResearch).toHaveBeenCalledTimes(2);
+    expect(capture.info.join('\n')).not.toContain('No changes applied.');
   });
 
   it('batch-confirm gate: a failed replacement add does not remove the preserved scope (review I1)', async () => {
@@ -1021,9 +1118,7 @@ describe('createInitToolsCommand', () => {
   // project to user scope by removing project canonical content" and
   // "normalizes a both-scopes install to project by removing user canonical
   // content and agents") were retired here. Under the additive model, a
-  // scope is only ever removed via the explicit, batch-confirmed interactive
-  // path — covered by the per-pack selector (p01-t02) and confirmation gate
-  // (p01-t03) tests below.
+  // scope is never removed by install; Phase 3 owns explicit migration.
 
   it('bare oat init tools cancellation exits without installing packs', async () => {
     const {
@@ -1166,32 +1261,26 @@ describe('createInitToolsCommand', () => {
     );
   });
 
-  it('writes tool-pack, project-management, and decision AGENTS sections', async () => {
+  it('writes the tool-pack AGENTS section without claiming PJM adoption', async () => {
     const { command, upsertAgentsMdSection } = createHarness({
       interactive: false,
     });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(3);
+    // Pack placement owns the tool-pack inventory section only. The
+    // project-management and decisions sections are adoption-owned and are
+    // written by `oat pjm init` (`initializeRepoReference`).
+    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
     expect(upsertAgentsMdSection).toHaveBeenNthCalledWith(
       1,
       '/tmp/workspace',
       'tools',
       expect.stringContaining('Tool Packs'),
     );
-    expect(upsertAgentsMdSection).toHaveBeenNthCalledWith(
-      2,
-      '/tmp/workspace',
-      'project-management',
-      expect.stringContaining('### Project Management'),
-    );
-    expect(upsertAgentsMdSection).toHaveBeenNthCalledWith(
-      3,
-      '/tmp/workspace',
-      'decisions',
-      expect.stringContaining('### Decision Records'),
-    );
+    const writtenKeys = upsertAgentsMdSection.mock.calls.map((call) => call[1]);
+    expect(writtenKeys).not.toContain('project-management');
+    expect(writtenKeys).not.toContain('decisions');
   });
 
   it('reconciles shared config from project scope after aggregate install', async () => {
@@ -1220,14 +1309,8 @@ describe('createInitToolsCommand', () => {
       '/tmp/workspace',
       expect.objectContaining({
         tools: {
-          core: false,
-          ideas: false,
           docs: true,
           workflows: true,
-          utility: false,
-          'project-management': false,
-          research: false,
-          brainstorm: false,
         },
       }),
     );
@@ -1248,10 +1331,197 @@ describe('createInitToolsCommand', () => {
     expect(installBrainstorm).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/home' }),
     );
-    expect(scanTools).toHaveBeenCalledWith(
+    expect(scanTools).not.toHaveBeenCalledWith(
       expect.objectContaining({ scope: 'project' }),
     );
     expect(writeOatConfig).not.toHaveBeenCalled();
+  });
+
+  it('installs every selected pack at user scope without requiring Git', async () => {
+    const { command, installProjectManagement, upsertAgentsMdSection } =
+      createHarness({
+        interactive: true,
+        projectRootUnavailable: true,
+        packSelection: [['project-management']],
+        scopeSelection: ['user'],
+        toolsByScope: { user: [] },
+      });
+
+    await runCommand(command, [], ['--scope', 'user']);
+
+    expect(installProjectManagement).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('routes the production aggregate install through one lifecycle batch outside Git', async () => {
+    const {
+      command,
+      reconcilePacks,
+      installCore,
+      installDocs,
+      installProjectManagement,
+    } = createHarness({
+      interactive: false,
+      projectRootUnavailable: true,
+      useLifecycle: true,
+      toolsByScope: { project: [], user: [] },
+    });
+
+    await runCommand(command, [], ['--scope', 'user']);
+
+    expect(reconcilePacks).toHaveBeenCalledTimes(1);
+    const requests = reconcilePacks.mock.calls[0]![0];
+    expect(requests).toHaveLength(8);
+    expect(requests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          pack: 'docs',
+          scope: 'user',
+          action: 'install',
+        }),
+        expect.objectContaining({
+          pack: 'project-management',
+          scope: 'user',
+          action: 'install',
+        }),
+      ]),
+    );
+    expect(requests.every((request) => request.scope === 'user')).toBe(true);
+    expect(installCore).not.toHaveBeenCalled();
+    expect(installDocs).not.toHaveBeenCalled();
+    expect(installProjectManagement).not.toHaveBeenCalled();
+  });
+
+  it('preserves declared placement while repairing a fully missing aggregate pack', async () => {
+    const { command, reconcilePacks } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      declaredPlacement: { docs: 'project' },
+      toolsByScope: { project: [], user: [] },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    const requests = reconcilePacks.mock.calls[0]![0];
+    expect(requests).toContainEqual(
+      expect.objectContaining({ pack: 'docs', scope: 'project' }),
+    );
+    expect(requests).not.toContainEqual(
+      expect.objectContaining({ pack: 'docs', scope: 'user' }),
+    );
+  });
+
+  it('routes a direct pack command through the production lifecycle adapter', async () => {
+    const { command, reconcilePacks, installDocs } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+    });
+
+    await runCommand(command, ['docs'], ['--scope', 'user']);
+
+    expect(reconcilePacks).toHaveBeenCalledWith([
+      expect.objectContaining({
+        pack: 'docs',
+        scope: 'user',
+        action: 'install',
+      }),
+    ]);
+    expect(installDocs).not.toHaveBeenCalled();
+  });
+
+  it('keeps a direct pack install at its existing project placement', async () => {
+    // Upgrade path for every pre-user-scope install: the pack's defaultScope is
+    // now `user`, so a bare re-install must consult existing placement or it
+    // silently creates a second copy at the other scope.
+    const { command, reconcilePacks } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      declaredPlacement: { docs: 'project' },
+      toolsByScope: { project: [], user: [] },
+    });
+
+    await runCommand(command, ['docs']);
+
+    expect(reconcilePacks).toHaveBeenCalledWith([
+      expect.objectContaining({
+        pack: 'docs',
+        scope: 'project',
+        action: 'install',
+      }),
+    ]);
+    expect(reconcilePacks.mock.calls[0]![0]).toHaveLength(1);
+  });
+
+  it('honors an explicit scope over an existing direct pack placement', async () => {
+    const { command, reconcilePacks } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      declaredPlacement: { docs: 'project' },
+      toolsByScope: { project: [], user: [] },
+    });
+
+    await runCommand(command, ['docs'], ['--scope', 'user']);
+
+    expect(reconcilePacks).toHaveBeenCalledWith([
+      expect.objectContaining({
+        pack: 'docs',
+        scope: 'user',
+        action: 'install',
+      }),
+    ]);
+  });
+
+  it('falls back to the pack default scope for a direct install with no placement', async () => {
+    const { command, reconcilePacks } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: { project: [], user: [] },
+    });
+
+    await runCommand(command, ['docs']);
+
+    expect(reconcilePacks).toHaveBeenCalledWith([
+      expect.objectContaining({
+        pack: 'docs',
+        scope: 'user',
+        action: 'install',
+      }),
+    ]);
+  });
+
+  it('does not write repository AGENTS guidance from the production project-scope PJM placement', async () => {
+    // Production registers `createReconciledPackCommand` (reconcilePacks is the
+    // default dependency); the legacy adapter is only wired when a caller
+    // injects legacy installer overrides. Assert against the command the CLI
+    // actually registers, so this guards a path users reach.
+    const { command, reconcilePacks, upsertAgentsMdSection } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+    });
+
+    await runCommand(command, ['project-management'], ['--scope', 'project']);
+
+    expect(reconcilePacks).toHaveBeenCalledWith([
+      expect.objectContaining({ pack: 'project-management', scope: 'project' }),
+    ]);
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+  });
+
+  it('installs a direct user-eligible pack completely at both explicit scopes', async () => {
+    const { command, reconcilePacks } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+    });
+
+    await runCommand(command, ['docs'], ['--scope', 'all']);
+
+    expect(reconcilePacks).toHaveBeenCalledWith([
+      expect.objectContaining({ pack: 'docs', scope: 'project' }),
+      expect.objectContaining({ pack: 'docs', scope: 'user' }),
+    ]);
   });
 
   it('logs AGENTS.md tool packs section update', async () => {
@@ -1283,13 +1553,13 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'user']);
 
-    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(3);
+    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
     const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
     expect(body).toContain('_(user scope)_');
     expect(body).toContain('`~/.agents/skills/`');
   });
 
-  it('marks core as user-scoped in AGENTS section and includes user sync instruction', async () => {
+  it('keeps user-only core installs out of repository AGENTS guidance', async () => {
     const { command, capture, upsertAgentsMdSection } = createHarness({
       interactive: true,
       packSelection: [['core']],
@@ -1297,9 +1567,7 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
-    expect(body).toMatch(/\*\*core\*\*.*_\(user scope\)_/);
-    expect(body).toContain('`~/.agents/skills/`');
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
     expect(capture.info.join('\n')).toContain('Run: oat sync --scope user');
   });
 
@@ -1514,8 +1782,7 @@ describe('PACK_METADATA-driven default scope (interactive picker)', () => {
     expect(choices?.[0]?.value).toBe('user');
   });
 
-  it('per-pack selector defaults to project scope when pack has no metadata entry', async () => {
-    // No PACK_METADATA entry for ideas → falls back to 'project' default.
+  it('per-pack selector uses the canonical manifest default', async () => {
     const { command, selectWithAbort } = createHarness({
       interactive: true,
       packSelection: [['ideas']],
@@ -1532,7 +1799,7 @@ describe('PACK_METADATA-driven default scope (interactive picker)', () => {
       (call) => call[0] === 'Where should ideas install?',
     );
     const choices = ideasCall?.[1] as Array<{ value: string; label: string }>;
-    expect(choices?.[0]?.value).toBe('project');
+    expect(choices?.[0]?.value).toBe('user');
   });
 });
 
@@ -1565,9 +1832,7 @@ describe('PACK_METADATA-driven default scope (non-interactive resolver)', () => 
     );
   });
 
-  it('non-interactive install defaults to project scope for packs without metadata', async () => {
-    // Sanity check that the existing project-default behavior is preserved
-    // for packs that have not opted in to PACK_METADATA.
+  it('non-interactive install uses the canonical manifest default', async () => {
     const { command, installDocs } = createHarness({
       interactive: false,
       toolsByScope: {
@@ -1579,7 +1844,7 @@ describe('PACK_METADATA-driven default scope (non-interactive resolver)', () => 
     await runCommand(command, [], ['--scope', 'all']);
 
     expect(installDocs).toHaveBeenCalledWith(
-      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
     );
   });
 

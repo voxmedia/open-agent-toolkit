@@ -144,7 +144,8 @@ describe('help output snapshots', () => {
         pjm               Manage project-management repo reference docs
         project           Manage OAT project workflows
         state             OAT repo state commands
-        tools             Manage OAT tool packs (install, update, remove, list)
+        tools             Manage OAT tool packs (install, update, migrate, remove,
+                          list)
         internal          Internal OAT maintenance commands
         help [command]    display help for command
       "
@@ -766,7 +767,8 @@ describe('help output snapshots', () => {
       Options:
         --scope <scope>  Limit execution scope (choices: "project", "user", "all",
                          default: "all")
-        --pack <pack>    Skill pack to remove (ideas|docs|workflows|utility|research)
+        --pack <pack>    Skill pack to remove
+                         (core|ideas|docs|workflows|utility|project-management|research|brainstorm)
         --dry-run        Preview removal without applying
         -h, --help       display help for command
 
@@ -1272,7 +1274,7 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat tools [options] [command]
 
-      Manage OAT tool packs (install, update, remove, list)
+      Manage OAT tool packs (install, update, migrate, remove, list)
 
       Options:
         -h, --help               display help for command
@@ -1289,6 +1291,7 @@ describe('help output snapshots', () => {
         info [options] <name>    Show details for an installed tool
         has [options] <pack>     Check whether a bundled tool pack is available
         update [options] [name]  Update installed tools to bundled versions
+        migrate [options]        Move an installed tool pack between scopes safely
         remove [options] [name]  Remove installed tools
         install [options]        Install OAT tool packs (core, ideas, docs,
                                  workflows, utility, project-management, research,

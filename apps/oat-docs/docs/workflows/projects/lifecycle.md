@@ -18,7 +18,7 @@ OAT lifecycle order:
 7. Summary (`oat-project-summary`) — generates `summary.md` as institutional memory; `oat-project-pr-final` and `oat-project-complete` auto-refresh it when missing or stale
 8. PR (`oat-project-pr-progress` / `oat-project-pr-final`) — sets `pr_open` status
 9. Revision loop (`oat-project-revise`) — optional; accepts post-PR feedback
-10. Documentation sync (`oat-project-document`) — optional; reads project artifacts and code evidence to identify docs needing updates, checks for missing coverage of newly shipped capability areas, checks effective project-management availability with `oat tools has project-management`, and auto-runs `oat-pjm-update-repo-reference` before scanning docs when the pack is available
+10. Documentation sync (`oat-project-document`) — optional; reads project artifacts and code evidence to identify docs needing updates, checks for missing coverage of newly shipped capability areas, and auto-runs `oat-pjm-update-repo-reference` before scanning docs only when the PJM capability is available **and** this repository has adopted PJM
 11. Complete (`oat-project-complete`)
 
 **Shortcut:** `oat-project-next` reads project state and invokes the correct next skill automatically — use it instead of remembering which skill comes next. Complements `oat-project-progress` (which is read-only diagnostic).
@@ -63,7 +63,7 @@ from missing state.
 After implementation closeout finishes:
 
 1. **Summary** (`oat-project-summary`) — generates `summary.md` as institutional memory from project artifacts; PR-final and completion will auto-refresh it if you have not already run it or if it is stale
-2. **Documentation** (`oat-project-document`) — optional sync of project docs; checks effective project-management availability with `oat tools has project-management` to decide whether repo-reference refresh should run before docs analysis, and should recommend new docs pages/directories when the shipped work introduces a capability area that the docs app does not already cover
+2. **Documentation** (`oat-project-document`) — optional sync of project docs; decides whether repo-reference refresh should run before docs analysis using two independent checks, and should recommend new docs pages/directories when the shipped work introduces a capability area that the docs app does not already cover
 3. **PR** (`oat-project-pr-final`) — creates PR description (auto-refreshes `summary.md` first when needed, then uses it as source), sets `oat_phase_status: pr_open`, and tracks actual PR existence with `oat_pr_status` / `oat_pr_url`
 4. **Revision loop** (`oat-project-revise`) — accepts post-PR feedback:
    - Inline feedback creates `p-revN` revision phases with `prevN-tNN` task IDs
@@ -307,6 +307,25 @@ See the [Workflow preferences section in the Configuration guide](../../cli-util
 - Active project state is stored in `.oat/config.local.json` (`activeProject`, repo-relative path).
 - Projects root is stored in `.oat/config.json` (`projects.root`) and can be read via `oat config get projects.root`.
 - Workflow skills prefer `oat config get activeProject` / `oat config get projects.root` rather than reading pointer files directly.
+
+## Capability availability versus repository adoption
+
+Lifecycle skills that touch repository project-management state make two
+separate checks, and both must hold before any PJM write:
+
+1. **Capability availability** — `oat tools has project-management` answers
+   whether the PJM skills and templates are installed and complete at project or
+   user scope. Since packs default to user scope, this is usually satisfied by a
+   user-scope install with no repository footprint.
+2. **Repository adoption** — `oat pjm doctor --json` answers whether _this_
+   repository adopted PJM. Branch on its `adoption.state` field: `declared` and
+   `inferred-legacy` allow repository PJM writes; `partial-initialization` and
+   `none` stop with `oat pjm init` as the recovery.
+
+Pack presence is never treated as evidence of repository adoption. A skill that
+finds the capability available but the repository unadopted reports the
+actionable `oat pjm init` stop instead of scaffolding implicitly. See
+[Install vs. initialize](../../cli-utilities/tool-packs.md#install-vs-initialize).
 
 ## Brainstorming integration with the project lifecycle
 

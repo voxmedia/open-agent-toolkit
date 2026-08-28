@@ -274,6 +274,20 @@ describe('oat-config', () => {
     });
   });
 
+  it('reads and writes PJM adoption config round-trip', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await writeOatConfig(repoRoot, {
+      version: 1,
+      pjm: { initialized: true, schemaVersion: 1 },
+    });
+
+    await expect(readOatConfig(repoRoot)).resolves.toEqual({
+      version: 1,
+      pjm: { initialized: true, schemaVersion: 1 },
+    });
+  });
+
   it('preserves tools.brainstorm through readOatConfig round-trip', async () => {
     const repoRoot = await createRepoRoot();
 
@@ -632,6 +646,21 @@ describe('oat-config', () => {
       );
       await expect(readUserConfig(userConfigDir)).resolves.toEqual({
         version: 1,
+      });
+    });
+
+    it('normalizes and round-trips user-scoped tool intent', async () => {
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-tools-'));
+      tempDirs.push(userConfigDir);
+
+      await writeUserConfig(userConfigDir, {
+        version: 1,
+        tools: { workflows: true, research: false },
+      });
+
+      await expect(readUserConfig(userConfigDir)).resolves.toEqual({
+        version: 1,
+        tools: { workflows: true, research: false },
       });
     });
 

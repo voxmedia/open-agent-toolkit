@@ -1,6 +1,6 @@
 ---
 name: oat-docs-apply
-version: 1.2.0
+version: 1.3.0
 description: Run when you have a docs analysis artifact and want to generate or update documentation structure and content. Creates a branch, applies approved changes, and optionally opens a PR.
 disable-model-invocation: true
 user-invocable: true
@@ -301,7 +301,9 @@ PR creation failed. To create manually:
 Update shared tracking:
 
 ```bash
-TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"
+# Set SKILL_DIR to the absolute directory containing this loaded SKILL.md.
+SCOPE_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
+TRACKING_SCRIPT="$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh"
 ROOT_TARGET=$(bash "$TRACKING_SCRIPT" root)
 ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
 ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
@@ -336,4 +338,5 @@ Next step: Re-run oat-docs-analyze if you want a post-apply verification artifac
 ## References
 
 - Apply plan template: `references/apply-plan-template.md`
-- Shared tracking helper: `.oat/scripts/resolve-tracking.sh`
+- Shared tracking helper: `$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh`, where
+  `SCOPE_ROOT` is derived from this loaded skill's directory.

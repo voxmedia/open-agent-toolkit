@@ -1,6 +1,6 @@
 ---
 name: oat-docs-analyze
-version: 1.4.0
+version: 1.5.0
 description: Run when you need to evaluate documentation structure, navigation, and coverage against the OAT docs app contract. Produces a severity-rated analysis artifact for oat-docs-apply.
 disable-model-invocation: true
 user-invocable: true
@@ -111,7 +111,9 @@ the app declared in `.oat/config.json` when multiple app candidates exist.
 Resolve tracking and analysis mode using the shared helper:
 
 ```bash
-TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"
+# Set SKILL_DIR to the absolute directory containing this loaded SKILL.md.
+SCOPE_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
+TRACKING_SCRIPT="$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh"
 TRACKING=$(bash "$TRACKING_SCRIPT" read docs 2>/dev/null || true)
 ```
 
@@ -459,7 +461,9 @@ If the loop is disabled, note `Auto artifact review: skipped (workflow.autoArtif
 Update docs tracking using the shared helper:
 
 ```bash
-TRACKING_SCRIPT=".oat/scripts/resolve-tracking.sh"
+# Set SKILL_DIR to the absolute directory containing this loaded SKILL.md.
+SCOPE_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
+TRACKING_SCRIPT="$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh"
 ROOT_TARGET=$(bash "$TRACKING_SCRIPT" root)
 ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
 ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
@@ -507,4 +511,5 @@ Next step: Run oat-docs-apply to act on these findings.
 - Analysis artifact template: `references/analysis-artifact-template.md`
 - Quality checklist: `references/quality-checklist.md`
 - Directory criteria: `references/directory-assessment-criteria.md`
-- Shared tracking helper: `.oat/scripts/resolve-tracking.sh`
+- Shared tracking helper: `$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh`, where
+  `SCOPE_ROOT` is derived from this loaded skill's directory.

@@ -7,8 +7,21 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import type { PjmAdoption } from '@commands/pjm/adoption';
 import { AdoptionSourceUnavailableError } from '@commands/shared/adopt-stray';
 import type { CodexRoleStray } from '@commands/shared/codex-strays';
+import type {
+  PackAssetInventory,
+  PackInventory,
+  ScopedPackInventory,
+} from '@commands/tools/shared/pack-inventory';
+import { PACK_NAMES } from '@commands/tools/shared/pack-manifest';
+import type {
+  PackAssetDefinition,
+  PackAssetStatus,
+  PackCompleteness,
+  PackName,
+} from '@commands/tools/shared/types';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
 import type { DriftReport } from '@drift/index';
 import {
@@ -54,6 +67,9 @@ interface TestHarnessOptions {
   interactive?: boolean;
   selectManyResponses?: Array<string[] | null>;
   singleSelectResponses?: Array<string | null>;
+  packInventories?: PackInventory[];
+  pjmAdoption?: PjmAdoption;
+  projectScopeUnavailable?: boolean;
 }
 
 const REMEDIATION_TEXT = 'Run "oat init" to adopt stray entries.';
@@ -205,6 +221,70 @@ function formatReports(reports: DriftReport[]): string {
     .join('\n');
 }
 
+function packAsset(
+  destination: string,
+  status: PackAssetStatus,
+  scope: 'project' | 'user',
+  ownership: 'managed' | 'seed-if-missing' = 'managed',
+): PackAssetInventory {
+  const definition: PackAssetDefinition = {
+    id: `skill:${destination}`,
+    kind: 'skill',
+    source: destination,
+    destination,
+    scopes: [scope],
+    ownership: { [scope]: ownership },
+  };
+  return {
+    definition,
+    path: `${scope === 'project' ? '/tmp/workspace' : '/tmp/home'}/${destination}`,
+    status,
+    installedVersion: null,
+    bundledVersion: null,
+  };
+}
+
+function scopedInventory(
+  pack: PackName,
+  scope: 'project' | 'user',
+  completeness: PackCompleteness,
+  assets: PackAssetInventory[],
+  overrides: Partial<ScopedPackInventory> = {},
+): ScopedPackInventory {
+  return {
+    pack,
+    scope,
+    intent: {
+      pack,
+      scope,
+      enabled: true,
+      source: 'declared',
+      configPath: `${scope === 'project' ? '/tmp/workspace' : '/tmp/home'}/.oat/config.json`,
+      diagnostics: [],
+    },
+    completeness,
+    assets,
+    diagnostics: [],
+    ...overrides,
+  };
+}
+
+function packInventory(
+  pack: PackName,
+  scopes: ScopedPackInventory[],
+  overrides: Partial<PackInventory> = {},
+): PackInventory {
+  const placement =
+    scopes.length === 2 ? 'both' : (scopes[0]?.scope ?? 'unavailable');
+  return {
+    pack,
+    placement: placement as PackInventory['placement'],
+    scopes,
+    diagnostics: [],
+    ...overrides,
+  };
+}
+
 function createHarness(options: TestHarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
@@ -218,6 +298,8 @@ function createHarness(options: TestHarnessOptions = {}): {
   scanBundledManagedCodexAgents: ReturnType<typeof vi.fn>;
   computeCodexProjectExtensionPlan: ReturnType<typeof vi.fn>;
   detectStrays: ReturnType<typeof vi.fn>;
+  inventoryPack: ReturnType<typeof vi.fn>;
+  resolvePjmAdoption: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const adapters = options.adapters ?? [createAdapter()];
@@ -293,6 +375,33 @@ function createHarness(options: TestHarnessOptions = {}): {
     skipped: 0,
   }));
   const detectStrays = vi.fn(async () => strayReports);
+  const inventoriesByPack = new Map<PackName, PackInventory>(
+    (options.packInventories ?? []).map((inventory) => [
+      inventory.pack,
+      inventory,
+    ]),
+  );
+  const inventoryPack = vi.fn(async ({ pack }: { pack: PackName }) => {
+    return (
+      inventoriesByPack.get(pack) ?? {
+        pack,
+        placement: 'unavailable' as const,
+        scopes: [],
+        diagnostics: [],
+      }
+    );
+  });
+  const resolvePjmAdoption = vi.fn(
+    async ({ repoRoot }: { repoRoot: string }): Promise<PjmAdoption> => {
+      return (
+        options.pjmAdoption ?? {
+          state: 'none',
+          repoRoot,
+          recovery: 'oat pjm init',
+        }
+      );
+    },
+  );
   const computeCursorProjectExtensionPlan = vi.fn(async () => {
     return (
       options.cursorExtensionPlan ?? {
@@ -322,11 +431,14 @@ function createHarness(options: TestHarnessOptions = {}): {
       interactive: interactive && !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
-    resolveScopeRoot: vi.fn(async (scope) =>
-      scope === 'user'
+    resolveScopeRoot: vi.fn(async (scope) => {
+      if (scope === 'project' && options.projectScopeUnavailable) {
+        throw new CliError('Not inside a Git repository', 1);
+      }
+      return scope === 'user'
         ? (options.home ?? '/tmp/home')
-        : (options.cwd ?? '/tmp/workspace'),
-    ),
+        : (options.cwd ?? '/tmp/workspace');
+    }),
     loadManifest: vi.fn(async () => createManifest(manifestEntries)),
     loadSyncConfig: vi.fn(async () => syncConfig),
     resolveUserSyncConfig: vi.fn(async () => userSyncConfig),
@@ -356,6 +468,9 @@ function createHarness(options: TestHarnessOptions = {}): {
     adoptStray,
     applyNativeSkillDisposition,
     formatStatusTable: formatReports,
+    resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
+    inventoryPack,
+    resolvePjmAdoption,
   });
 
   return {
@@ -371,6 +486,8 @@ function createHarness(options: TestHarnessOptions = {}): {
     scanBundledManagedCodexAgents,
     computeCodexProjectExtensionPlan,
     detectStrays,
+    inventoryPack,
+    resolvePjmAdoption,
   };
 }
 
@@ -1578,6 +1695,323 @@ describe('createStatusCommand', () => {
       // the stray info line — no table, no remediation prompt.
       expect(capture.info).toEqual([STRAY_INFO]);
       expect(selectManyWithAbort).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('managed pack state', () => {
+    it('reports partial pack completeness with a scoped recovery command', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        packInventories: [
+          packInventory('docs', [
+            scopedInventory('docs', 'project', 'partial', [
+              packAsset(
+                '.agents/skills/oat-docs-analyze',
+                'current',
+                'project',
+              ),
+              packAsset('.agents/skills/oat-docs-apply', 'missing', 'project'),
+            ]),
+          ]),
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      const packSection = capture.info.join('\n');
+      expect(packSection).toContain('Pack state:');
+      expect(packSection).toContain('docs');
+      expect(packSection).toContain('partial');
+      expect(packSection).toContain('.agents/skills/oat-docs-apply');
+      expect(packSection).toContain(
+        'oat tools update --pack docs --scope project',
+      );
+    });
+
+    it('emits structured pack state in JSON mode', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        packInventories: [
+          packInventory('utility', [
+            scopedInventory('utility', 'project', 'complete', [
+              packAsset('.agents/skills/oat-utility', 'outdated', 'project'),
+              packAsset('.agents/skills/oat-utility-two', 'newer', 'project'),
+              packAsset(
+                '.oat/templates/state.md',
+                'present',
+                'project',
+                'seed-if-missing',
+              ),
+            ]),
+          ]),
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project', '--json']);
+
+      const payload = capture.jsonPayloads[0] as {
+        packs: {
+          states: Array<{
+            pack: string;
+            placement: string;
+            scopes: Array<{
+              scope: string;
+              completeness: string;
+              stale: number;
+              newer: number;
+              retainedOverrides: number;
+              missing: string[];
+              recovery: string | null;
+            }>;
+            diagnostics: Array<{ code: string; recovery: string | null }>;
+          }>;
+          unavailableScopes: string[];
+          pjm: { state: string; recovery: string | null } | null;
+        };
+      };
+
+      const utility = payload.packs.states.find(
+        (state) => state.pack === 'utility',
+      );
+      expect(utility?.placement).toBe('project');
+      expect(utility?.scopes[0]).toMatchObject({
+        scope: 'project',
+        completeness: 'complete',
+        stale: 1,
+        newer: 1,
+        retainedOverrides: 1,
+        missing: [],
+        recovery: 'oat tools update --pack utility --scope project',
+      });
+      expect(payload.packs.unavailableScopes).toEqual([]);
+    });
+
+    it('reports duplicate cross-scope packs with a migration recovery command', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        packInventories: [
+          packInventory(
+            'ideas',
+            [
+              scopedInventory('ideas', 'project', 'complete', [
+                packAsset('.agents/skills/oat-idea', 'current', 'project'),
+              ]),
+              scopedInventory('ideas', 'user', 'complete', [
+                packAsset('.agents/skills/oat-idea', 'current', 'user'),
+              ]),
+            ],
+            {
+              diagnostics: [
+                {
+                  code: 'duplicate-scope',
+                  message:
+                    'Pack ideas has canonical assets at project and user scope; provider precedence is not inferred',
+                  paths: [
+                    '/tmp/workspace/.agents/skills/oat-idea',
+                    '/tmp/home/.agents/skills/oat-idea',
+                  ],
+                  versions: [null, null],
+                },
+              ],
+            },
+          ),
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'all']);
+
+      const output = capture.info.join('\n');
+      expect(output).toContain('duplicate-scope');
+      expect(output).toContain('provider precedence is not inferred');
+      expect(output).toContain(
+        'oat tools migrate --pack ideas --from project --to user',
+      );
+    });
+
+    it('reports legacy false pack intent with a scoped recovery command', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        packInventories: [
+          packInventory('research', [
+            scopedInventory(
+              'research',
+              'project',
+              'complete',
+              [packAsset('.agents/skills/oat-research', 'current', 'project')],
+              {
+                intent: {
+                  pack: 'research',
+                  scope: 'project',
+                  enabled: true,
+                  source: 'inferred-legacy',
+                  configPath: '/tmp/workspace/.oat/config.json',
+                  diagnostics: [],
+                },
+                diagnostics: [
+                  {
+                    code: 'legacy-false-conflict',
+                    message:
+                      'Pack research has legacy false intent but managed assets exist at project scope',
+                    paths: ['/tmp/workspace/.agents/skills/oat-research'],
+                  },
+                ],
+              },
+            ),
+          ]),
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      const output = capture.info.join('\n');
+      expect(output).toContain('legacy-false-conflict');
+      expect(output).toContain(
+        'oat tools update --pack research --scope project',
+      );
+    });
+
+    it('renders user-scope pack paths as home-relative', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        packInventories: [
+          packInventory('brainstorm', [
+            scopedInventory('brainstorm', 'user', 'partial', [
+              packAsset('.agents/skills/oat-brainstorm', 'missing', 'user'),
+            ]),
+          ]),
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'user']);
+
+      const output = capture.info.join('\n');
+      expect(output).toContain('~/.agents/skills/oat-brainstorm');
+      expect(output).not.toContain('/tmp/home/.agents');
+    });
+
+    it('inventories every manifest pack once for the resolved scopes', async () => {
+      const { command, inventoryPack } = createHarness({ driftReports: [] });
+
+      await runStatusCommand(command, ['--scope', 'all']);
+
+      expect(inventoryPack).toHaveBeenCalledTimes(PACK_NAMES.length);
+      expect(inventoryPack).toHaveBeenCalledWith({
+        pack: 'core',
+        assetsRoot: '/tmp/assets',
+        projectRoot: '/tmp/workspace',
+        userRoot: '/tmp/home',
+      });
+    });
+
+    it('reports project scope as unavailable for --scope all and still reports user scope', async () => {
+      const { capture, command, inventoryPack } = createHarness({
+        driftReports: [],
+        projectScopeUnavailable: true,
+      });
+
+      await runStatusCommand(command, ['--scope', 'all', '--json']);
+
+      const payload = capture.jsonPayloads[0] as {
+        packs: { unavailableScopes: string[]; pjm: unknown };
+      };
+      expect(payload.packs.unavailableScopes).toEqual(['project']);
+      expect(payload.packs.pjm).toBeNull();
+      expect(inventoryPack).toHaveBeenCalledWith({
+        pack: 'core',
+        assetsRoot: '/tmp/assets',
+        userRoot: '/tmp/home',
+      });
+    });
+
+    it('fails when an explicitly requested project scope is unavailable', async () => {
+      const { command } = createHarness({
+        driftReports: [],
+        projectScopeUnavailable: true,
+      });
+
+      await expect(
+        runStatusCommand(command, ['--scope', 'project']),
+      ).rejects.toThrow('Not inside a Git repository');
+    });
+
+    it('reports an uninitialized repository when project PJM assets exist', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        pjmAdoption: {
+          state: 'none',
+          repoRoot: '/tmp/workspace/.oat/repo',
+          recovery: 'oat pjm init',
+        },
+        packInventories: [
+          packInventory('project-management', [
+            scopedInventory('project-management', 'project', 'complete', [
+              packAsset(
+                '.agents/skills/oat-pjm-decision',
+                'current',
+                'project',
+              ),
+            ]),
+          ]),
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      const output = capture.info.join('\n');
+      expect(output).toContain('has not adopted PJM');
+      expect(output).toContain('oat pjm init');
+    });
+
+    it('stays quiet about PJM adoption when only user-scope PJM capability exists', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        pjmAdoption: {
+          state: 'none',
+          repoRoot: '/tmp/workspace/.oat/repo',
+          recovery: 'oat pjm init',
+        },
+        packInventories: [
+          packInventory('project-management', [
+            scopedInventory('project-management', 'user', 'complete', [
+              packAsset('.agents/skills/oat-pjm-decision', 'current', 'user'),
+            ]),
+          ]),
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'all']);
+
+      const output = capture.info.join('\n');
+      expect(output).not.toContain('oat pjm init');
+    });
+
+    it('redacts the PJM repo root in JSON output like every other pack path', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        pjmAdoption: {
+          state: 'declared',
+          repoRoot: '/tmp/workspace/.oat/repo',
+          recovery: null,
+        },
+      });
+
+      await runStatusCommand(command, ['--scope', 'project', '--json']);
+
+      const payload = capture.jsonPayloads[0] as {
+        packs: { pjm: { repoRoot: string } | null };
+      };
+      expect(payload.packs.pjm?.repoRoot).toBe('.oat/repo');
+    });
+
+    it('skips managed pack inventory in hook mode', async () => {
+      const { command, inventoryPack, resolvePjmAdoption } = createHarness({
+        driftReports: [],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project', '--hook']);
+
+      expect(inventoryPack).not.toHaveBeenCalled();
+      expect(resolvePjmAdoption).not.toHaveBeenCalled();
     });
   });
 });

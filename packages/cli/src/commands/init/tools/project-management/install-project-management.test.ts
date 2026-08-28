@@ -70,6 +70,16 @@ async function seedAssets(assetsRoot: string): Promise<void> {
     '# reference agents\n',
     'utf8',
   );
+  await writeFile(
+    join(assetsRoot, 'templates', 'repo-readme.md'),
+    '# repo readme\n',
+    'utf8',
+  );
+  await writeFile(
+    join(assetsRoot, 'templates', 'pjm-handoffs-readme.md'),
+    '# handoffs readme\n',
+    'utf8',
+  );
 }
 
 describe('installProjectManagement', () => {
@@ -102,6 +112,8 @@ describe('installProjectManagement', () => {
       'repo-agents.md',
       'pjm-agents.md',
       'reference-agents.md',
+      'repo-readme.md',
+      'pjm-handoffs-readme.md',
     ]);
     expect(result.outdatedSkills).toEqual([]);
     await expect(
@@ -151,6 +163,8 @@ describe('installProjectManagement', () => {
       'repo-agents.md',
       'pjm-agents.md',
       'reference-agents.md',
+      'repo-readme.md',
+      'pjm-handoffs-readme.md',
     ]);
   });
 
@@ -184,21 +198,10 @@ describe('installProjectManagement', () => {
       force: true,
     });
 
-    expect(result.updatedSkills).toEqual([
-      'oat-pjm-add-backlog-item',
-      'oat-pjm-decision',
-      'oat-pjm-update-repo-reference',
-      'oat-pjm-review-backlog',
-    ]);
-    expect(result.updatedTemplates).toEqual([
-      'backlog-item.md',
-      'roadmap.md',
-      'current-state.md',
-      'decision.md',
-      'repo-agents.md',
-      'pjm-agents.md',
-      'reference-agents.md',
-    ]);
+    expect(result.updatedSkills).toEqual(['oat-pjm-add-backlog-item']);
+    expect(result.skippedSkills).toHaveLength(3);
+    expect(result.updatedTemplates).toEqual(['roadmap.md']);
+    expect(result.skippedTemplates).toHaveLength(8);
     await expect(
       readFile(
         join(
@@ -214,6 +217,33 @@ describe('installProjectManagement', () => {
     await expect(
       readFile(join(targetRoot, '.oat', 'templates', 'roadmap.md'), 'utf8'),
     ).resolves.toContain('roadmap');
+  });
+
+  it('keeps project template overrides as seed-if-missing even with force', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'target');
+    await seedAssets(assetsRoot);
+    await mkdir(join(targetRoot, '.oat', 'templates'), { recursive: true });
+    await writeFile(
+      join(targetRoot, '.oat', 'templates', 'roadmap.md'),
+      '# curated project roadmap\n',
+      'utf8',
+    );
+
+    const result = await installProjectManagement({
+      assetsRoot,
+      targetRoot,
+      scope: 'project',
+      force: true,
+    });
+
+    expect(result.scope).toBe('project');
+    expect(result.targetRoot).toBe(targetRoot);
+    expect(result.skippedTemplates).toContain('roadmap.md');
+    await expect(
+      readFile(join(targetRoot, '.oat', 'templates', 'roadmap.md'), 'utf8'),
+    ).resolves.toBe('# curated project roadmap\n');
   });
 
   it('tracks outdated skills when bundled versions are newer', async () => {

@@ -1,15 +1,29 @@
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { access, mkdir, writeFile } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
 
 import { initializeBacklog } from '@commands/backlog/init';
-import { initializeScopedDecisionAgentsGuidance } from '@commands/decision/agents-guidance';
+import {
+  buildDecisionAgentsSectionBody,
+  DECISION_AGENTS_SECTION_KEY,
+  initializeScopedDecisionAgentsGuidance,
+} from '@commands/decision/agents-guidance';
 import { initializeDecisionRecords } from '@commands/decision/init';
+import {
+  buildProjectManagementAgentsSectionBody,
+  PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+} from '@commands/init/tools/project-management/agents-guidance';
+import { upsertAgentsMdSection } from '@commands/shared/agents-md';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
+import { readOatConfig, writeOatConfig } from '@config/oat-config';
+
+import { resolvePjmTemplate } from './template-source';
 
 export interface InitializeRepoReferenceOptions {
   repoRoot: string;
   assetsRoot: string;
   templatesRoot?: string;
+  projectRoot?: string;
+  home?: string;
 }
 
 export interface RepoReferenceInitResult {
@@ -59,6 +73,8 @@ export const CANONICAL_REPO_REFERENCE_PATHS = [
   ...DECISION_PATHS,
 ] as const;
 
+export const PJM_ADOPTION_SCHEMA_VERSION = 1;
+
 async function pathExists(path: string): Promise<boolean> {
   try {
     await access(path);
@@ -75,46 +91,6 @@ async function pathExists(path: string): Promise<boolean> {
 
     return false;
   }
-}
-
-async function readIfExists(path: string): Promise<string | null> {
-  try {
-    return await readFile(path, 'utf8');
-  } catch (error) {
-    const code =
-      error && typeof error === 'object' && 'code' in error
-        ? String(error.code)
-        : null;
-
-    if (code !== 'ENOENT') {
-      throw error;
-    }
-
-    return null;
-  }
-}
-
-async function resolveTemplateContent(
-  name: string,
-  options: InitializeRepoReferenceOptions,
-): Promise<string> {
-  if (options.templatesRoot) {
-    const localTemplate = await readIfExists(join(options.templatesRoot, name));
-    if (localTemplate !== null) {
-      return localTemplate;
-    }
-  }
-
-  const bundledTemplate = await readIfExists(
-    join(options.assetsRoot, 'templates', name),
-  );
-  if (bundledTemplate !== null) {
-    return bundledTemplate;
-  }
-
-  throw new Error(
-    `Template ${name} was not found in repo-local templates or bundled assets.`,
-  );
 }
 
 async function writeFileIfMissing(
@@ -143,10 +119,15 @@ export async function initializeRepoReference(
       continue;
     }
 
-    const template = await resolveTemplateContent(target.template, options);
+    const template = await resolvePjmTemplate({
+      name: target.template,
+      assetsRoot: options.assetsRoot,
+      templatesRoot: options.templatesRoot,
+      home: options.home,
+    });
     const status = await writeFileIfMissing(
       targetPath,
-      stripTemplateFrontmatter(template),
+      stripTemplateFrontmatter(template.content),
     );
     if (status === 'created') {
       created.push(target.target);
@@ -195,6 +176,42 @@ export async function initializeRepoReference(
       created.push(relativePath);
     }
   }
+
+  for (const relativePath of CANONICAL_REPO_REFERENCE_PATHS) {
+    if (!(await pathExists(join(options.repoRoot, relativePath)))) {
+      throw new Error(
+        `PJM scaffold verification failed: missing ${relativePath}.`,
+      );
+    }
+  }
+
+  const repoParent = dirname(options.repoRoot);
+  const projectRoot =
+    options.projectRoot ??
+    (basename(repoParent) === '.oat' ? dirname(repoParent) : repoParent);
+  const config = await readOatConfig(projectRoot);
+  await writeOatConfig(projectRoot, {
+    ...config,
+    pjm: {
+      initialized: true,
+      schemaVersion: PJM_ADOPTION_SCHEMA_VERSION,
+    },
+  });
+
+  // Repository AGENTS guidance belongs to adoption, not to pack placement:
+  // it is written here — after scaffold verification and alongside the
+  // `pjm.initialized` marker — so installing the capability at any scope never
+  // implies that this repository adopted PJM.
+  await upsertAgentsMdSection(
+    projectRoot,
+    PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+    buildProjectManagementAgentsSectionBody(),
+  );
+  await upsertAgentsMdSection(
+    projectRoot,
+    DECISION_AGENTS_SECTION_KEY,
+    buildDecisionAgentsSectionBody(),
+  );
 
   return {
     repoRoot: options.repoRoot,

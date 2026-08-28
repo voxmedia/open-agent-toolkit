@@ -64,20 +64,18 @@ describe('runPjmDoctorChecks', () => {
     expect(checks.every((check) => check.status === 'pass')).toBe(true);
   });
 
-  it('skips drift checks when project-management is disabled', async () => {
+  it('reports repository adoption independently of pack availability', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
     tempDirs.push(root);
     const repoRoot = join(root, '.oat', 'repo');
 
-    const checks = await runPjmDoctorChecks(repoRoot, {
-      projectManagementEnabled: false,
-    });
+    const checks = await runPjmDoctorChecks(repoRoot);
 
     expect(checks).toEqual([
       expect.objectContaining({
-        name: 'pjm:disabled',
-        status: 'pass',
-        message: expect.stringContaining('disabled'),
+        name: 'pjm:adoption',
+        status: 'warn',
+        message: expect.stringContaining('not adopted'),
       }),
     ]);
     expect(checks.some((check) => check.name === 'pjm:canonical_files')).toBe(

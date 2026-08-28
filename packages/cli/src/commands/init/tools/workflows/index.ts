@@ -13,6 +13,7 @@ import {
   canonicalPathsForPack,
   setInstalledCanonicalPaths,
 } from '@commands/tools/shared/install-sync-context';
+import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -98,7 +99,9 @@ async function runInitToolsWorkflows(
 ): Promise<boolean> {
   try {
     const scope: InstallWorkflowsScope =
-      context.scope === 'user' ? 'user' : 'project';
+      context.scope === 'project' || context.scope === 'user'
+        ? context.scope
+        : getPackDefinition('workflows').defaultScope;
     const targetRoot =
       scope === 'user'
         ? dependencies.resolveScopeRoot('user', context.cwd, context.home)

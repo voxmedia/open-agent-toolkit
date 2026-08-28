@@ -1,5 +1,5 @@
 import { createLoggerCapture } from '@commands/__tests__/helpers';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { type AutoSyncDependencies, autoSync } from './auto-sync';
 
@@ -109,5 +109,44 @@ describe('autoSync', () => {
         installedCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
       },
     ]);
+  });
+
+  it('keeps one canonical install input for every affected scope', async () => {
+    const calls: string[][] = [];
+    await autoSync(
+      ['project', 'user'],
+      '/cwd',
+      '/home',
+      createLoggerCapture().logger,
+      {
+        runSync: async ({ installedCanonicalPaths }) => {
+          calls.push(installedCanonicalPaths ?? []);
+        },
+      },
+      { installedCanonicalPaths: ['.agents/skills/oat-brainstorm'] },
+    );
+    expect(calls).toEqual([
+      ['.agents/skills/oat-brainstorm'],
+      ['.agents/skills/oat-brainstorm'],
+    ]);
+  });
+
+  it('forwards exact removed canonical paths without changing install filters', async () => {
+    const runSync = vi.fn(async () => {});
+    await autoSync(
+      ['user'],
+      '/cwd',
+      '/home',
+      createLoggerCapture().logger,
+      { runSync },
+      { removedCanonicalPaths: ['.agents/agents/oat-reviewer.md'] },
+    );
+    expect(runSync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scope: 'user',
+        installedCanonicalPaths: undefined,
+        removedCanonicalPaths: ['.agents/agents/oat-reviewer.md'],
+      }),
+    );
   });
 });

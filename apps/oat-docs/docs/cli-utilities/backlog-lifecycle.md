@@ -9,6 +9,18 @@ The file-backed backlog under `.oat/repo/pjm/backlog/` tracks work as one Markdo
 
 For the flag-by-flag command reference, see [`oat backlog archive`](config-and-local-state.md#oat-backlog-archive). For the two-layer PJM surface that hosts the backlog, see [Tool Packs](tool-packs.md#install-vs-initialize).
 
+## Adoption comes first
+
+`oat backlog` mutations require this repository to have adopted PJM. Installing
+the `project-management` pack makes the capability available — including at user
+scope, which is the default — but it does not adopt PJM for a repository, and
+`oat backlog init` is not an alternate adoption path.
+
+Run `oat pjm init` once per repository. Until adoption is recorded, backlog
+mutations write nothing and return an error naming the repository path and
+`oat pjm init` as the recovery. Check the current state with
+`oat pjm doctor --json` and read its `adoption.state` field.
+
 ## Where a backlog item lives
 
 - **`items/<id>.md`** - active, file-backed records. Each carries frontmatter with a `status` and an `updated` timestamp.
@@ -57,5 +69,11 @@ The manual close-out this command replaces is exactly where the two motivating r
 - **`pjm:backlog_archived_open`** (warn) - an `open` or `in_progress` item is in `archived/`, which usually means it was archived prematurely.
 - **`pjm:backlog_completed_unarchived`** (warn) - `completed.md` references an item whose file still lives in `items/`.
 - **`pjm:backlog_duplicate_id`** (fail) - the same `<id>.md` exists in both `items/` and `archived/`. `oat backlog archive` refuses to auto-resolve this (it would clobber the archived record), so the duplicate must be reconciled by hand.
+
+These backlog checks run once the repository is adopted. `oat doctor` keys the
+`pjm:*` family on repository adoption state rather than on
+`tools.project-management`, so a repository whose PJM capability lives at user
+scope still gets full backlog diagnostics. An unadopted repository reports
+`pjm:adoption` with the `oat pjm init` recovery instead of backlog drift.
 
 Doctor reports drift; it never auto-fixes. A human or agent runs `oat backlog archive` (or corrects the status) and re-runs doctor to confirm the backlog is clean again.

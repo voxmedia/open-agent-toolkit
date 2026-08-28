@@ -893,6 +893,55 @@ export type OatToolsConfig = Partial<
   >
 >;
 
+export interface OatPjmConfig {
+  initialized?: boolean;
+  schemaVersion?: number;
+}
+
+const VALID_TOOL_PACKS = [
+  'core',
+  'ideas',
+  'docs',
+  'workflows',
+  'utility',
+  'project-management',
+  'research',
+  'brainstorm',
+] as const satisfies readonly (keyof OatToolsConfig)[];
+
+function normalizeToolsConfig(value: unknown): OatToolsConfig | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const tools: OatToolsConfig = {};
+  for (const pack of VALID_TOOL_PACKS) {
+    if (typeof value[pack] === 'boolean') {
+      tools[pack] = value[pack];
+    }
+  }
+  return Object.keys(tools).length > 0 ? tools : undefined;
+}
+
+function normalizePjmConfig(value: unknown): OatPjmConfig | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const pjm: OatPjmConfig = {};
+  if (typeof value.initialized === 'boolean') {
+    pjm.initialized = value.initialized;
+  }
+  if (
+    typeof value.schemaVersion === 'number' &&
+    Number.isInteger(value.schemaVersion) &&
+    value.schemaVersion > 0
+  ) {
+    pjm.schemaVersion = value.schemaVersion;
+  }
+  return Object.keys(pjm).length > 0 ? pjm : undefined;
+}
+
 export interface OatConfig {
   version: number;
   worktrees?: { root: string };
@@ -901,6 +950,7 @@ export interface OatConfig {
   archive?: OatArchiveConfig;
   explainers?: OatExplainersConfig;
   tools?: OatToolsConfig;
+  pjm?: OatPjmConfig;
   documentation?: OatDocumentationConfig;
   localPaths?: string[];
   autoReviewAtCheckpoints?: boolean;
@@ -920,6 +970,7 @@ export interface UserConfig {
   version: number;
   activeIdea?: string | null;
   updateNotifications?: boolean;
+  tools?: OatToolsConfig;
   explainers?: OatExplainersConfig;
   workflow?: OatWorkflowConfig;
 }
@@ -1104,28 +1155,14 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     next.explainers = explainers;
   }
 
-  if (isRecord(parsed.tools)) {
-    const validPacks = [
-      'core',
-      'ideas',
-      'docs',
-      'workflows',
-      'utility',
-      'project-management',
-      'research',
-      'brainstorm',
-    ] as const;
-    const tools: OatToolsConfig = {};
+  const tools = normalizeToolsConfig(parsed.tools);
+  if (tools) {
+    next.tools = tools;
+  }
 
-    for (const pack of validPacks) {
-      if (typeof parsed.tools[pack] === 'boolean') {
-        tools[pack] = parsed.tools[pack];
-      }
-    }
-
-    if (Object.keys(tools).length > 0) {
-      next.tools = tools;
-    }
+  const pjm = normalizePjmConfig(parsed.pjm);
+  if (pjm) {
+    next.pjm = pjm;
   }
 
   if (isRecord(parsed.documentation)) {
@@ -1401,6 +1438,7 @@ const USER_CONFIG_OWNED_KEYS = new Set([
   'version',
   'activeIdea',
   'updateNotifications',
+  'tools',
   'workflow',
   'knownStrays',
 ]);
@@ -1420,6 +1458,11 @@ function normalizeUserConfig(parsed: unknown): UserConfig {
 
   if (typeof parsed.updateNotifications === 'boolean') {
     next.updateNotifications = parsed.updateNotifications;
+  }
+
+  const tools = normalizeToolsConfig(parsed.tools);
+  if (tools) {
+    next.tools = tools;
   }
 
   const explainers = normalizeExplainersConfig(parsed.explainers, 'user');

@@ -1,6 +1,6 @@
 ---
 name: oat-brainstorm
-version: 1.1.2
+version: 1.3.0
 description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
@@ -217,7 +217,11 @@ Run pack-detection and active-project resolution **once** per session, before th
 
 ```bash
 IDEAS_INSTALLED=$(oat tools has ideas 2>/dev/null || echo "false")
-PJM_INSTALLED=$(oat tools has project-management 2>/dev/null || echo "false")
+PJM_CAPABILITY=$(oat tools has project-management 2>/dev/null || echo "false")
+PJM_ADOPTION_STATE=""
+if [ "$PJM_CAPABILITY" = "true" ]; then
+  PJM_ADOPTION_STATE=$(oat pjm doctor --json 2>/dev/null | jq -r '.adoption.state // ""')
+fi
 WORKFLOWS_INSTALLED=$(oat tools has workflows 2>/dev/null || echo "false")
 ACTIVE_PROJECT=$(oat config get activeProject 2>/dev/null || echo "")
 
@@ -290,7 +294,10 @@ If "keep going", return to step 5. If "wrap up", surface the **pack-filtered ter
 2. Filter by pack:
    - Always-available: `Inline only`, `Doc-to-path`.
    - Gated by `IDEAS_INSTALLED == "true"`: `Capture as new idea`, `Extend existing idea`, `Summarize idea directly`.
-   - Gated by `PJM_INSTALLED == "true"`: `Scoped backlog item`.
+   - Gated by `PJM_CAPABILITY == "true"` **and** `PJM_ADOPTION_STATE` equal to
+     `declared` or `inferred-legacy`: `Scoped backlog item`. Capability without
+     repository adoption never enables this write destination; for `none` or
+     `partial-initialization`, explain that `oat pjm init` is required.
    - Gated by `WORKFLOWS_INSTALLED == "true"` AND `ACTIVE_PROJECT_VALID != "true"`: `Promote to new OAT project`.
    - Gated by `WORKFLOWS_INSTALLED == "true"` AND `ACTIVE_PROJECT_VALID == "true"`: `Active project: fold-back` and `Active project: brainstorming reference file`. When this branch fires, present the **3-way active-project router first** (see step 9 active-project branches) — its outcome controls whether the rest of the picker is even surfaced.
 3. Evaluate whether the accumulated brainstorm scope is large enough to offer a split destination. Track the same four split signals used by discovery and evaluate them through the installed CLI:
@@ -387,6 +394,25 @@ After confirmation succeeds, proceed to step 9 (handoff).
 
 Branch on the destination. Each branch executes its handoff inline using the confirmed payload. The non-fold-back destinations are listed first; the active-project router and fold-back commit safety contract are detailed at the end of this step.
 
+**Resolving `${SKILLS_ROOT}` for chained skills.** The `ideas` and
+`project-management` packs default to user scope just as `brainstorm` does, so a
+chained sibling skill normally lives at `~/.agents/skills/<name>/SKILL.md` and
+**not** in the current repository. Never read a bare repo-relative
+`.agents/skills/<name>/SKILL.md`. Resolve the skills root before every chained
+read, in order:
+
+1. Derive it from the loaded skill directory: `${SKILL_DIR}/..` (with
+   `${SKILL_DIR}` resolved per the rule in step 3). This is
+   `<scope-root>/.agents/skills`.
+2. Otherwise try the user-scope root first: `${HOME}/.agents/skills` (matches
+   the pack default).
+3. Fall back to the project-scope root: `<repo-root>/.agents/skills` (set when
+   the pack is explicitly installed at project scope).
+
+Probe each candidate for `<name>/SKILL.md` and treat the first match as
+`${SKILLS_ROOT}`. If no candidate resolves, tell the user the chained skill is
+not installed and stop that branch instead of improvising its process.
+
 #### 9a — Inline only
 
 Print a one-paragraph closing summary capturing chosen direction (or "no direction selected"), key decisions, and any open questions. End mode assertion. No artifact is written.
@@ -404,7 +430,7 @@ When validation passes, render `${SKILL_DIR}/templates/brainstorm-doc.md` (resol
 
 #### 9c — Capture as new idea
 
-Read `.agents/skills/oat-idea-new/SKILL.md` and execute its **Steps 3 through 7** inline using the confirmed slug as the idea name:
+Read `${SKILLS_ROOT}/oat-idea-new/SKILL.md` (resolve `${SKILLS_ROOT}` per the rule at the top of step 9) and execute its **Steps 3 through 7** inline using the confirmed slug as the idea name:
 
 - Step 3: initialize ideas directory (`mkdir -p` for the idea root, copy `ideas-backlog.md` and `ideas-scratchpad.md` from templates if missing).
 - Step 4: scaffold `discovery.md` from the `idea-discovery.md` template.
@@ -421,14 +447,14 @@ Then **seed the scaffolded `discovery.md`** with the synthesized payload — fil
 
 After the seed write, offer the user two options:
 
-- **Chain into ideation** → read `.agents/skills/oat-idea-ideate/SKILL.md` and continue from its Step 4 (Start New Session).
+- **Chain into ideation** → read `${SKILLS_ROOT}/oat-idea-ideate/SKILL.md` and continue from its Step 4 (Start New Session).
 - **Stop here** → end mode assertion; report the idea path.
 
 Do not invoke `oat-idea-ideate` automatically. The handoff is offered, not forced.
 
 #### 9d — Extend existing idea
 
-The "which idea" was confirmed at step 8. Read `.agents/skills/oat-idea-ideate/SKILL.md` and **jump directly to its Step 4 (Start New Session)** with the resolved idea path. Append `transcriptSessionNote` from the payload as the new session's body. Include `chosenDirection`, `openQuestions`, and `nextSteps` in the session entry if they surfaced during convergence (they often do when the user wants the new session to record decisions, not just notes).
+The "which idea" was confirmed at step 8. Read `${SKILLS_ROOT}/oat-idea-ideate/SKILL.md` and **jump directly to its Step 4 (Start New Session)** with the resolved idea path. Append `transcriptSessionNote` from the payload as the new session's body. Include `chosenDirection`, `openQuestions`, and `nextSteps` in the session entry if they surfaced during convergence (they often do when the user wants the new session to record decisions, not just notes).
 
 End mode assertion when ideation hands control back.
 
@@ -437,13 +463,13 @@ End mode assertion when ideation hands control back.
 Two-step inline execution, run silently from the user's point of view:
 
 1. **Capture as new idea silently** — execute branch 9c above (Steps 3-7 of `oat-idea-new` plus seed). Do not surface progress detail; this is plumbing for the summary that's coming next.
-2. **Summarize end-to-end** — read `.agents/skills/oat-idea-summarize/SKILL.md` and run its full process. The downstream skill surfaces its own summary for accept/refine review — that is the user's gate.
+2. **Summarize end-to-end** — read `${SKILLS_ROOT}/oat-idea-summarize/SKILL.md` and run its full process. The downstream skill surfaces its own summary for accept/refine review — that is the user's gate.
 
 End mode assertion when `oat-idea-summarize` hands control back.
 
 #### 9f — Scoped backlog item
 
-Read `.agents/skills/oat-pjm-add-backlog-item/SKILL.md` and execute its process **from Step 1**. Pre-fill its early-prompt answers from the confirmed payload:
+Read `${SKILLS_ROOT}/oat-pjm-add-backlog-item/SKILL.md` (resolve `${SKILLS_ROOT}` per the rule at the top of step 9) and execute its process **from Step 1**. Pre-fill its early-prompt answers from the confirmed payload:
 
 - `Title` → payload field-by-field title (already user-confirmed at step 8).
 - `Description / context` → user-confirmed description.

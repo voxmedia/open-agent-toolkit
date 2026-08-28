@@ -1,12 +1,52 @@
+import { lstat, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import {
+  DOCS_SKILLS,
   UTILITY_SKILLS,
   WORKFLOW_AGENTS,
   WORKFLOW_SCRIPTS,
   WORKFLOW_TEMPLATES,
 } from '@commands/init/tools/shared/skill-manifest';
+import type { AutoSyncDependencies } from '@commands/tools/shared/auto-sync';
+import { inventoryPack } from '@commands/tools/shared/pack-inventory';
+import {
+  hasScopedPackOwnershipEvidence,
+  readScopedPackIntent,
+  writeScopedPackIntent,
+} from '@commands/tools/shared/scoped-pack-intent';
 import type { ToolInfo } from '@commands/tools/shared/types';
-import { describe, expect, it } from 'vitest';
+import { resolveAssetsRoot } from '@fs/assets';
+import { Command } from 'commander';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('@fs/paths', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@fs/paths')>();
+  return {
+    ...actual,
+    resolveManagedScopeRoots: async (scopeRoot: string) => ({
+      '.agents': {
+        name: '.agents',
+        logicalRoot: join(scopeRoot, '.agents'),
+        realRoot: join(scopeRoot, '.agents'),
+        exists: true,
+      },
+      '.oat': {
+        name: '.oat',
+        logicalRoot: join(scopeRoot, '.oat'),
+        realRoot: join(scopeRoot, '.oat'),
+        exists: true,
+      },
+    }),
+    validateManagedPath: async (candidatePath: string) => ({
+      realManagedRoot: join(candidatePath, '..'),
+      realPath: candidatePath,
+    }),
+  };
+});
+
+import { createToolsRemoveCommand } from './index';
 import {
   type RemoveTarget,
   type RemoveToolsDependencies,
@@ -47,10 +87,91 @@ function createDeps(
     removeFile: async (path) => {
       removedFiles.push(path);
     },
+    pathExists: async () => false,
+    hasPackOwnershipEvidence: async () => false,
   };
 }
 
+const tempDirs: string[] = [];
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await lstat(path);
+    return true;
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function makeScopeRoot(): Promise<string> {
+  const root = await mkdtemp(join(tmpdir(), 'oat-remove-tools-'));
+  tempDirs.push(root);
+  return root;
+}
+
+async function materialize(path: string, directory = false): Promise<void> {
+  if (directory) {
+    await mkdir(path, { recursive: true });
+    return;
+  }
+  await mkdir(join(path, '..'), { recursive: true });
+  await writeFile(path, 'managed\n');
+}
+
+function filesystemDeps(scopeRoot: string): RemoveToolsDependencies {
+  return {
+    scanTools: async () => [],
+    resolveScopeRoot: async () => scopeRoot,
+    resolveAssetsRoot: async () => '/assets',
+    removeDirectory: async (path) => rm(path, { recursive: true, force: true }),
+    removeFile: async (path) => rm(path, { force: true }),
+    pathExists,
+    hasPackOwnershipEvidence: async (pack, scope, root) =>
+      hasScopedPackOwnershipEvidence({ pack, scope, scopeRoot: root }),
+  };
+}
+
+async function runRemoveCommand(
+  scopeRoot: string,
+  args: string[],
+  runSync: AutoSyncDependencies['runSync'] = async () => {},
+): Promise<void> {
+  const program = new Command()
+    .name('oat')
+    .option('--json')
+    .option('--verbose')
+    .option('--scope <scope>')
+    .option('--cwd <path>')
+    .exitOverride();
+  const tools = new Command('tools');
+  tools.addCommand(
+    createToolsRemoveCommand(filesystemDeps(scopeRoot), {
+      runSync,
+    }),
+  );
+  program.addCommand(tools);
+
+  await program.parseAsync(
+    ['--scope', 'user', '--cwd', scopeRoot, 'tools', 'remove', ...args],
+    { from: 'user' },
+  );
+}
+
 describe('removeTools', () => {
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
   it('removes a single skill by name', async () => {
     const tool = createTool();
     const deps = createDeps({ project: [tool] });
@@ -115,7 +236,10 @@ describe('removeTools', () => {
     );
 
     expect(result.removed).toHaveLength(2);
-    expect(deps.removedDirs).toHaveLength(2);
+    expect(deps.removedDirs).toContain('/project/.agents/skills/oat-idea-new');
+    expect(deps.removedDirs).toContain(
+      '/project/.agents/skills/oat-idea-ideate',
+    );
   });
 
   it('removes the brainstorm pack and its skill directory', async () => {
@@ -200,6 +324,87 @@ describe('removeTools', () => {
     }
   });
 
+  it('retains the shared tracking script while docs remains intended', async () => {
+    const deps = createDeps({
+      user: [
+        createTool({
+          name: 'oat-project-new',
+          scope: 'user',
+          pack: 'workflows',
+        }),
+      ],
+    });
+    deps.hasPackOwnershipEvidence = async (pack) => pack === 'docs';
+
+    await removeTools(
+      { kind: 'pack', pack: 'workflows' },
+      ['user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(deps.removedFiles).not.toContain(
+      '/home/user/.oat/scripts/resolve-tracking.sh',
+    );
+    expect(deps.removedFiles).toContain(
+      '/home/user/.oat/scripts/generate-oat-state.sh',
+    );
+  });
+
+  it('retains the shared tracking script while workflows remains intended', async () => {
+    const deps = createDeps({
+      user: [
+        createTool({
+          name: 'oat-docs-analyze',
+          scope: 'user',
+          pack: 'docs',
+        }),
+      ],
+    });
+    deps.hasPackOwnershipEvidence = async (pack) => pack === 'workflows';
+
+    await removeTools(
+      { kind: 'pack', pack: 'docs' },
+      ['user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(deps.removedFiles).not.toContain(
+      '/home/user/.oat/scripts/resolve-tracking.sh',
+    );
+  });
+
+  it('removes the shared tracking script when the other owner is not intended', async () => {
+    const deps = createDeps({
+      user: [
+        createTool({
+          name: 'oat-docs-analyze',
+          scope: 'user',
+          pack: 'docs',
+        }),
+      ],
+    });
+    deps.hasPackOwnershipEvidence = async () => false;
+
+    await removeTools(
+      { kind: 'pack', pack: 'docs' },
+      ['user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(deps.removedFiles).toContain(
+      '/home/user/.oat/scripts/resolve-tracking.sh',
+    );
+  });
+
   it('removes all tools with --all', async () => {
     const tools = [
       createTool({ name: 'oat-idea-new', pack: 'ideas' }),
@@ -222,8 +427,18 @@ describe('removeTools', () => {
     );
 
     expect(result.removed).toHaveLength(3);
-    expect(deps.removedDirs).toHaveLength(2); // two skills
-    expect(deps.removedFiles).toHaveLength(1); // one agent
+    expect(deps.removedDirs).toContain('/project/.agents/skills/oat-idea-new');
+    expect(deps.removedDirs).toContain(
+      '/project/.agents/skills/oat-docs-analyze',
+    );
+    expect(deps.removedFiles).toContain(
+      '/project/.agents/agents/oat-reviewer.md',
+    );
+    expect(
+      deps.removedFiles.filter(
+        (path) => path === '/project/.oat/scripts/resolve-tracking.sh',
+      ),
+    ).toHaveLength(1);
   });
 
   it('dry-run previews removal without deleting', async () => {
@@ -303,6 +518,196 @@ describe('removeTools', () => {
     expect(result.removed).toHaveLength(1);
     expect(deps.removedDirs).toEqual([
       '/project/.agents/skills/my-custom-skill',
+    ]);
+  });
+
+  it.each([
+    {
+      pack: 'docs' as const,
+      ownAsset: '.agents/skills/oat-docs-analyze',
+    },
+    {
+      pack: 'workflows' as const,
+      ownAsset: '.agents/skills/oat-project-implement',
+    },
+  ])(
+    'does not let the shared script manufacture a legacy $pack owner',
+    async ({ pack, ownAsset }) => {
+      const scopeRoot = await makeScopeRoot();
+      const shared = join(scopeRoot, '.oat', 'scripts', 'resolve-tracking.sh');
+      await materialize(join(scopeRoot, ownAsset), true);
+      await materialize(shared);
+
+      await runRemoveCommand(scopeRoot, ['--pack', pack, '--no-sync']);
+
+      await expect(pathExists(shared)).resolves.toBe(false);
+      await expect(
+        readScopedPackIntent({ pack, scope: 'user', scopeRoot }),
+      ).resolves.toMatchObject({ enabled: false, source: 'none' });
+    },
+  );
+
+  it('retains a shared script for the other declared owner', async () => {
+    const scopeRoot = await makeScopeRoot();
+    const shared = join(scopeRoot, '.oat', 'scripts', 'resolve-tracking.sh');
+    await writeScopedPackIntent({
+      pack: 'docs',
+      scope: 'user',
+      scopeRoot,
+      enabled: true,
+    });
+    await writeScopedPackIntent({
+      pack: 'workflows',
+      scope: 'user',
+      scopeRoot,
+      enabled: true,
+    });
+    await materialize(shared);
+
+    await runRemoveCommand(scopeRoot, ['--pack', 'docs', '--no-sync']);
+
+    await expect(pathExists(shared)).resolves.toBe(true);
+    await expect(
+      readScopedPackIntent({ pack: 'docs', scope: 'user', scopeRoot }),
+    ).resolves.toMatchObject({ enabled: false, source: 'none' });
+    await expect(
+      readScopedPackIntent({ pack: 'workflows', scope: 'user', scopeRoot }),
+    ).resolves.toMatchObject({ enabled: true, source: 'declared' });
+  });
+
+  it.each([
+    { removed: 'docs' as const, retained: 'workflows' as const },
+    { removed: 'workflows' as const, retained: 'docs' as const },
+  ])(
+    'reports $removed unavailable after removal retains shared data for $retained',
+    async ({ removed, retained }) => {
+      const scopeRoot = await makeScopeRoot();
+      const shared = join(scopeRoot, '.oat', 'scripts', 'resolve-tracking.sh');
+      await writeScopedPackIntent({
+        pack: removed,
+        scope: 'user',
+        scopeRoot,
+        enabled: true,
+      });
+      await writeScopedPackIntent({
+        pack: retained,
+        scope: 'user',
+        scopeRoot,
+        enabled: true,
+      });
+      await materialize(shared);
+
+      await runRemoveCommand(scopeRoot, ['--pack', removed, '--no-sync']);
+
+      await expect(pathExists(shared)).resolves.toBe(true);
+      await expect(
+        inventoryPack({
+          pack: removed,
+          assetsRoot: await resolveAssetsRoot(),
+          userRoot: scopeRoot,
+        }),
+      ).resolves.toMatchObject({
+        placement: 'unavailable',
+        diagnostics: [
+          expect.objectContaining({ code: 'shared-owner-observation' }),
+        ],
+      });
+    },
+  );
+
+  it('retains a shared script for a legacy owner and removes it with the last owner', async () => {
+    const scopeRoot = await makeScopeRoot();
+    const docsAsset = join(scopeRoot, '.agents', 'skills', 'oat-docs-analyze');
+    const workflowsAsset = join(
+      scopeRoot,
+      '.agents',
+      'skills',
+      'oat-project-implement',
+    );
+    const shared = join(scopeRoot, '.oat', 'scripts', 'resolve-tracking.sh');
+    await materialize(docsAsset, true);
+    await materialize(workflowsAsset, true);
+    await materialize(shared);
+
+    await runRemoveCommand(scopeRoot, ['--pack', 'docs', '--no-sync']);
+    await expect(pathExists(docsAsset)).resolves.toBe(false);
+    await expect(pathExists(workflowsAsset)).resolves.toBe(true);
+    await expect(pathExists(shared)).resolves.toBe(true);
+
+    await runRemoveCommand(scopeRoot, ['--pack', 'workflows', '--no-sync']);
+    await expect(pathExists(workflowsAsset)).resolves.toBe(false);
+    await expect(pathExists(shared)).resolves.toBe(false);
+  });
+
+  it('removes every managed asset kind with --all while preserving seeded data', async () => {
+    const scopeRoot = await makeScopeRoot();
+    const managedPaths = [
+      ['.agents/skills/oat-docs', true],
+      ['.agents/agents/oat-reviewer.md', false],
+      ['.oat/docs', true],
+      ['.oat/templates/docs-app-fuma', true],
+      ['.oat/templates/ideas/idea-discovery.md', false],
+      ['.oat/templates/backlog-item.md', false],
+      ['.oat/templates/state.md', false],
+      ['.oat/scripts/resolve-tracking.sh', false],
+    ] as const;
+    const seed = join(scopeRoot, '.oat', 'ideas', 'backlog.md');
+    for (const pack of [
+      'core',
+      'ideas',
+      'docs',
+      'workflows',
+      'project-management',
+    ] as const) {
+      await writeScopedPackIntent({
+        pack,
+        scope: 'user',
+        scopeRoot,
+        enabled: true,
+      });
+    }
+    for (const [relativePath, directory] of managedPaths) {
+      await materialize(join(scopeRoot, relativePath), directory);
+    }
+    await materialize(seed);
+
+    await runRemoveCommand(scopeRoot, ['--all', '--no-sync']);
+
+    for (const [relativePath] of managedPaths) {
+      await expect(pathExists(join(scopeRoot, relativePath))).resolves.toBe(
+        false,
+      );
+    }
+    await expect(pathExists(seed)).resolves.toBe(true);
+    for (const pack of [
+      'core',
+      'ideas',
+      'docs',
+      'workflows',
+      'project-management',
+    ] as const) {
+      await expect(
+        readScopedPackIntent({ pack, scope: 'user', scopeRoot }),
+      ).resolves.toMatchObject({ enabled: false, source: 'none' });
+    }
+  });
+
+  it('syncs exact removed canonical paths once per affected scope', async () => {
+    const scopeRoot = await makeScopeRoot();
+    const calls: Parameters<AutoSyncDependencies['runSync']>[0][] = [];
+
+    await runRemoveCommand(scopeRoot, ['--pack', 'docs'], async (options) => {
+      calls.push(options);
+    });
+
+    expect(calls).toEqual([
+      expect.objectContaining({
+        scope: 'user',
+        installedCanonicalPaths: undefined,
+        removedCanonicalPaths: DOCS_SKILLS.map(
+          (skill) => `.agents/skills/${skill}`,
+        ),
+      }),
     ]);
   });
 });

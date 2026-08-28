@@ -100,6 +100,27 @@ describe('copy-helpers', () => {
     );
   });
 
+  it('skips byte-identical forced file and directory copies', async () => {
+    const root = await makeTempDir();
+    const sourceFile = join(root, 'source.txt');
+    const destinationFile = join(root, 'destination.txt');
+    const sourceDir = join(root, 'source-dir');
+    const destinationDir = join(root, 'destination-dir');
+    await writeFile(sourceFile, 'same\n');
+    await writeFile(destinationFile, 'same\n');
+    await mkdir(sourceDir);
+    await mkdir(destinationDir);
+    await writeFile(join(sourceDir, 'same.txt'), 'same\n');
+    await writeFile(join(destinationDir, 'same.txt'), 'same\n');
+
+    await expect(
+      copyFileWithStatus(sourceFile, destinationFile, true),
+    ).resolves.toBe('skipped');
+    await expect(
+      copyDirWithStatus(sourceDir, destinationDir, true),
+    ).resolves.toBe('skipped');
+  });
+
   it('copyDirWithVersionCheck returns copied for new installs', async () => {
     const root = await makeTempDir();
     const sourceDir = join(root, 'source-skill');
@@ -140,6 +161,21 @@ describe('copy-helpers', () => {
     await expect(pathExists(join(destinationDir, 'payload.txt'))).resolves.toBe(
       false,
     );
+  });
+
+  it('copyDirWithVersionCheck skips identical forced updates', async () => {
+    const root = await makeTempDir();
+    const sourceDir = join(root, 'source-skill');
+    const destinationDir = join(root, 'destination-skill');
+    await mkdir(sourceDir);
+    await mkdir(destinationDir);
+    const skill = '---\nname: oat-demo\nversion: 1.0.0\n---\n';
+    await writeFile(join(sourceDir, 'SKILL.md'), skill);
+    await writeFile(join(destinationDir, 'SKILL.md'), skill);
+
+    await expect(
+      copyDirWithVersionCheck(sourceDir, destinationDir, true),
+    ).resolves.toEqual({ status: 'skipped' });
   });
 
   it('copyDirWithVersionCheck returns outdated when bundled is newer', async () => {

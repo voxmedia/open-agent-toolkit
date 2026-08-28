@@ -3,6 +3,19 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import type { PjmAdoption } from '@commands/pjm/adoption';
+import type {
+  PackAssetInventory,
+  PackInventory,
+  ScopedPackInventory,
+} from '@commands/tools/shared/pack-inventory';
+import { PACK_NAMES } from '@commands/tools/shared/pack-manifest';
+import type {
+  PackAssetDefinition,
+  PackAssetStatus,
+  PackCompleteness,
+  PackName,
+} from '@commands/tools/shared/types';
 import type { OatConfig, OatLocalConfig, UserConfig } from '@config/oat-config';
 import type { Manifest } from '@manifest/index';
 import type {
@@ -70,6 +83,9 @@ interface HarnessOptions {
   ) => Promise<MatrixCellAvailability | MatrixCellAvailabilityResult>;
   availabilityDependencies?: Partial<AvailabilityOracleDependencies>;
   cursorMaterializedDiagnostics?: CursorMaterializedModelDiagnostic[];
+  packInventories?: PackInventory[];
+  pjmAdoption?: PjmAdoption;
+  projectScopeUnavailable?: boolean;
 }
 
 interface RunDoctorArgs {
@@ -86,6 +102,74 @@ function defaultManifest(): Manifest {
   };
 }
 
+function packAsset(
+  destination: string,
+  status: PackAssetStatus,
+  scope: 'project' | 'user',
+  ownership: 'managed' | 'seed-if-missing' = 'managed',
+): PackAssetInventory {
+  const definition: PackAssetDefinition = {
+    id: `skill:${destination}`,
+    kind: 'skill',
+    source: destination,
+    destination,
+    scopes: [scope],
+    ownership: { [scope]: ownership },
+  };
+  return {
+    definition,
+    path: `${scope === 'project' ? '/tmp/workspace' : '/tmp/home'}/${destination}`,
+    status,
+    installedVersion: null,
+    bundledVersion: null,
+  };
+}
+
+function scopedInventory(
+  pack: PackName,
+  scope: 'project' | 'user',
+  completeness: PackCompleteness,
+  assets: PackAssetInventory[],
+  overrides: Partial<ScopedPackInventory> = {},
+): ScopedPackInventory {
+  return {
+    pack,
+    scope,
+    intent: {
+      pack,
+      scope,
+      enabled: true,
+      source: 'declared',
+      configPath: `${scope === 'project' ? '/tmp/workspace' : '/tmp/home'}/.oat/config.json`,
+      diagnostics: [],
+    },
+    completeness,
+    assets,
+    diagnostics: [],
+    ...overrides,
+  };
+}
+
+function packInventory(
+  pack: PackName,
+  scopes: ScopedPackInventory[],
+  overrides: Partial<PackInventory> = {},
+): PackInventory {
+  const placement =
+    scopes.length === 2 ? 'both' : (scopes[0]?.scope ?? 'unavailable');
+  return {
+    pack,
+    placement: placement as PackInventory['placement'],
+    scopes,
+    diagnostics: [],
+    ...overrides,
+  };
+}
+
+function emptyInventory(pack: PackName): PackInventory {
+  return packInventory(pack, []);
+}
+
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
@@ -93,6 +177,8 @@ function createHarness(options: HarnessOptions = {}): {
   checkStaleInvocations: ReturnType<typeof vi.fn>;
   runPjmDoctorChecks: ReturnType<typeof vi.fn>;
   validateMatrixCell: ReturnType<typeof vi.fn>;
+  inventoryPack: ReturnType<typeof vi.fn>;
+  resolvePjmAdoption: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const scope = options.scope ?? 'project';
@@ -131,6 +217,26 @@ function createHarness(options: HarnessOptions = {}): {
     },
   );
   const runPjmDoctorChecks = vi.fn(async () => options.pjmChecks ?? []);
+  const inventoriesByPack = new Map<PackName, PackInventory>(
+    (options.packInventories ?? []).map((inventory) => [
+      inventory.pack,
+      inventory,
+    ]),
+  );
+  const inventoryPack = vi.fn(async ({ pack }: { pack: PackName }) => {
+    return inventoriesByPack.get(pack) ?? emptyInventory(pack);
+  });
+  const resolvePjmAdoption = vi.fn(
+    async ({ repoRoot }: { repoRoot: string }): Promise<PjmAdoption> => {
+      return (
+        options.pjmAdoption ?? {
+          state: 'none',
+          repoRoot,
+          recovery: 'oat pjm init',
+        }
+      );
+    },
+  );
   const checkStaleInvocations = vi.fn(async () => {
     return (
       options.staleInvocationCheck ?? {
@@ -192,6 +298,9 @@ function createHarness(options: HarnessOptions = {}): {
       logger: capture.logger,
     }),
     resolveScopeRoot: vi.fn(async (resolvedScope: 'project' | 'user') => {
+      if (resolvedScope === 'project' && options.projectScopeUnavailable) {
+        throw new Error('Not inside a Git repository');
+      }
       return resolvedScope === 'project' ? '/tmp/workspace' : '/tmp/home';
     }),
     pathExists: vi.fn(async (path: string) => pathExists[path] ?? false),
@@ -236,6 +345,8 @@ function createHarness(options: HarnessOptions = {}): {
     checkSkillVersions,
     runPjmDoctorChecks,
     checkStaleInvocations,
+    inventoryPack,
+    resolvePjmAdoption,
     validateMatrixCell,
     diagnoseCursorMaterializedModels: vi.fn(async (ladderModelIds) => {
       return (
@@ -260,6 +371,8 @@ function createHarness(options: HarnessOptions = {}): {
     checkStaleInvocations,
     runPjmDoctorChecks,
     validateMatrixCell,
+    inventoryPack,
+    resolvePjmAdoption,
   };
 }
 
@@ -488,9 +601,62 @@ describe('createDoctorCommand', () => {
     expect(capture.info[0]).toContain('canonical_directories');
   });
 
-  it('includes PJM doctor checks for project scope when repo reference root exists', async () => {
-    const { command, capture } = createHarness({
-      oatConfig: { version: 1, tools: { 'project-management': true } },
+  it('includes PJM doctor checks for a declared repository without project pack intent', async () => {
+    const { command, capture, runPjmDoctorChecks, resolvePjmAdoption } =
+      createHarness({
+        // User-scope PJM is the default, so no `tools.project-management`
+        // key exists in repository config. Adoption is authoritative.
+        oatConfig: { version: 1 },
+        pjmAdoption: {
+          state: 'declared',
+          repoRoot: '/tmp/workspace/.oat/repo',
+          recovery: null,
+        },
+        pathExists: {
+          '/tmp/workspace/.agents/skills': true,
+          '/tmp/workspace/.agents/agents': true,
+          '/tmp/workspace/.oat/sync/manifest.json': true,
+          '/tmp/workspace/.oat/repo': true,
+        },
+        pjmChecks: [
+          {
+            name: 'pjm:canonical_files',
+            description: 'PJM canonical files',
+            status: 'pass',
+            message: 'Canonical PJM files are present.',
+          },
+        ],
+      });
+
+    await runDoctor(command);
+
+    expect(resolvePjmAdoption).toHaveBeenCalledWith({
+      projectRoot: '/tmp/workspace',
+      repoRoot: '/tmp/workspace/.oat/repo',
+    });
+    expect(runPjmDoctorChecks).toHaveBeenCalledWith(
+      '/tmp/workspace/.oat/repo',
+      {
+        projectRoot: '/tmp/workspace',
+        adoption: {
+          state: 'declared',
+          repoRoot: '/tmp/workspace/.oat/repo',
+          recovery: null,
+        },
+      },
+    );
+    expect(capture.info[0]).toContain('pjm:canonical_files');
+    expect(capture.info[0]).not.toContain('pjm:disabled');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('runs PJM adoption checks when a partial scaffold exists without an explicit marker', async () => {
+    const { command, capture, runPjmDoctorChecks } = createHarness({
+      pjmAdoption: {
+        state: 'partial-initialization',
+        repoRoot: '/tmp/workspace/.oat/repo',
+        recovery: 'oat pjm init',
+      },
       pathExists: {
         '/tmp/workspace/.agents/skills': true,
         '/tmp/workspace/.agents/agents': true,
@@ -499,43 +665,67 @@ describe('createDoctorCommand', () => {
       },
       pjmChecks: [
         {
-          name: 'pjm:canonical_files',
-          description: 'PJM canonical files',
-          status: 'pass',
-          message: 'Canonical PJM files are present.',
+          name: 'pjm:adoption',
+          description: 'Repository PJM adoption',
+          status: 'fail',
+          message: 'Repository has a partial PJM scaffold and is not adopted.',
+          fix: 'Run `oat pjm init` to initialize this repository.',
         },
       ],
     });
 
     await runDoctor(command);
 
-    expect(capture.info[0]).toContain('pjm:canonical_files');
-    expect(process.exitCode).toBe(0);
+    expect(runPjmDoctorChecks).toHaveBeenCalled();
+    expect(capture.info[0]).toContain('pjm:adoption');
+    expect(capture.info[0]).toContain('oat pjm init');
+    expect(capture.info[0]).not.toContain('pjm:disabled');
+    expect(process.exitCode).toBe(2);
   });
 
-  it('reports PJM disabled without drift when repo reference root exists but pack is not enabled', async () => {
+  it('skips PJM checks entirely when the repository has no adoption and no repo reference root', async () => {
     const { command, capture, runPjmDoctorChecks } = createHarness({
+      pjmAdoption: {
+        state: 'none',
+        repoRoot: '/tmp/workspace/.oat/repo',
+        recovery: 'oat pjm init',
+      },
       pathExists: {
         '/tmp/workspace/.agents/skills': true,
         '/tmp/workspace/.agents/agents': true,
         '/tmp/workspace/.oat/sync/manifest.json': true,
-        '/tmp/workspace/.oat/repo': true,
+        '/tmp/workspace/.oat/repo': false,
       },
-      pjmChecks: [
-        {
-          name: 'pjm:canonical_files',
-          description: 'PJM canonical files',
-          status: 'fail',
-          message: 'Missing canonical PJM files.',
-        },
-      ],
     });
 
     await runDoctor(command);
 
     expect(runPjmDoctorChecks).not.toHaveBeenCalled();
-    expect(capture.info[0]).toContain('pjm:disabled');
-    expect(capture.info[0]).not.toContain('pjm:canonical_files');
+    expect(capture.info[0]).not.toContain('pjm:');
+  });
+
+  it('skips PJM checks for an unadopted repository that uses .oat/repo for non-PJM content', async () => {
+    const { command, capture, runPjmDoctorChecks } = createHarness({
+      pjmAdoption: {
+        state: 'none',
+        repoRoot: '/tmp/workspace/.oat/repo',
+        recovery: 'oat pjm init',
+      },
+      pathExists: {
+        '/tmp/workspace/.agents/skills': true,
+        '/tmp/workspace/.agents/agents': true,
+        '/tmp/workspace/.oat/sync/manifest.json': true,
+        // Written by `oat index`, not by PJM. Adoption is still `none`, so the
+        // repository declined PJM and must not be warned about it.
+        '/tmp/workspace/.oat/repo': true,
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(runPjmDoctorChecks).not.toHaveBeenCalled();
+    expect(capture.info[0]).not.toContain('pjm:');
+    expect(process.exitCode).toBe(0);
   });
 
   it('passes dispatch matrix availability when all configured cells validate', async () => {
@@ -1367,5 +1557,312 @@ config_file = "agents/${roleName}.toml"
       'oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope project',
     );
     expect(process.exitCode).toBe(1);
+  });
+
+  it('warns about partial and stale packs with scoped recovery commands', async () => {
+    const { command, capture } = createHarness({
+      packInventories: [
+        packInventory('docs', [
+          scopedInventory('docs', 'project', 'partial', [
+            packAsset('.agents/skills/oat-docs-analyze', 'current', 'project'),
+            packAsset('.agents/skills/oat-docs-apply', 'missing', 'project'),
+          ]),
+        ]),
+        packInventory('utility', [
+          scopedInventory('utility', 'project', 'complete', [
+            packAsset('.agents/skills/oat-brainstorm', 'outdated', 'project'),
+          ]),
+        ]),
+      ],
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('project:pack_state');
+    expect(capture.info[0]).toContain('docs [partial]');
+    expect(capture.info[0]).toContain('.agents/skills/oat-docs-apply');
+    expect(capture.info[0]).toContain('utility [stale]');
+    expect(capture.info[0]).toContain(
+      'oat tools update --pack docs --scope project',
+    );
+    expect(capture.info[0]).toContain(
+      'oat tools update --pack utility --scope project',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('reports newer and retained override pack assets without an actionable fix', async () => {
+    const { command, capture } = createHarness({
+      packInventories: [
+        packInventory('workflows', [
+          scopedInventory('workflows', 'project', 'complete', [
+            packAsset('.agents/skills/oat-project-new', 'newer', 'project'),
+            packAsset(
+              '.oat/templates/state.md',
+              'present',
+              'project',
+              'seed-if-missing',
+            ),
+          ]),
+        ]),
+      ],
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('workflows [newer]');
+    expect(capture.info[0]).toContain('workflows [retained-override]');
+    expect(capture.info[0]).not.toContain(
+      'oat tools update --pack workflows --scope project',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns about legacy false pack intent that still has managed assets', async () => {
+    const { command, capture } = createHarness({
+      packInventories: [
+        packInventory('research', [
+          scopedInventory(
+            'research',
+            'project',
+            'complete',
+            [packAsset('.agents/skills/oat-research', 'current', 'project')],
+            {
+              intent: {
+                pack: 'research',
+                scope: 'project',
+                enabled: true,
+                source: 'inferred-legacy',
+                configPath: '/tmp/workspace/.oat/config.json',
+                diagnostics: [],
+              },
+              diagnostics: [
+                {
+                  code: 'legacy-false-conflict',
+                  message:
+                    'Pack research has legacy false intent but managed assets exist at project scope',
+                  paths: ['/tmp/workspace/.agents/skills/oat-research'],
+                },
+              ],
+            },
+          ),
+        ]),
+      ],
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('research [legacy-false-conflict]');
+    expect(capture.info[0]).toContain(
+      'oat tools update --pack research --scope project',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('names user-scope agents that reach no provider without demanding a repair', async () => {
+    const { command, capture } = createHarness({
+      scope: 'user',
+      packInventories: [
+        packInventory('research', [
+          scopedInventory(
+            'research',
+            'user',
+            'complete',
+            [packAsset('.agents/skills/analyze', 'current', 'user')],
+            {
+              diagnostics: [
+                {
+                  code: 'user-agent-unmaterialized',
+                  message:
+                    'Pack research installs user-scope canonical agents that no provider view materializes',
+                  paths: ['/tmp/home/.agents/agents/skeptical-evaluator.md'],
+                },
+              ],
+            },
+          ),
+        ]),
+      ],
+    });
+
+    await runDoctor(command, { scope: 'user', globalArgs: ['--json'] });
+
+    const payload = capture.jsonPayloads[0] as { checks: DoctorCheck[] };
+    const packCheck = payload.checks.find(
+      (check) => check.name === 'user:pack_state',
+    );
+    expect(packCheck?.message).toContain(
+      'research [user-agent-unmaterialized]',
+    );
+    // The affected agent is named, and the user-scope root is redacted.
+    expect(packCheck?.message).toContain(
+      '~/.agents/agents/skeptical-evaluator.md',
+    );
+    expect(packCheck?.message).not.toContain('/tmp/home/.agents');
+    expect(packCheck?.message).toContain(
+      'limited to the bundled managed role files',
+    );
+    // `oat tools update` cannot repair a scope limitation, so no recovery
+    // command is offered and the check itself does not warn.
+    expect(packCheck?.fix).toBeUndefined();
+    expect(packCheck?.status).toBe('pass');
+  });
+
+  it('warns about duplicate cross-scope packs and offers migration', async () => {
+    const { command, capture } = createHarness({
+      scope: 'all',
+      packInventories: [
+        packInventory(
+          'ideas',
+          [
+            scopedInventory('ideas', 'project', 'complete', [
+              packAsset('.agents/skills/oat-idea', 'current', 'project'),
+            ]),
+            scopedInventory('ideas', 'user', 'complete', [
+              packAsset('.agents/skills/oat-idea', 'current', 'user'),
+            ]),
+          ],
+          {
+            diagnostics: [
+              {
+                code: 'duplicate-scope',
+                message:
+                  'Pack ideas has canonical assets at project and user scope; provider precedence is not inferred',
+                paths: [
+                  '/tmp/workspace/.agents/skills/oat-idea',
+                  '/tmp/home/.agents/skills/oat-idea',
+                ],
+                versions: [null, null],
+              },
+            ],
+          },
+        ),
+      ],
+    });
+
+    await runDoctor(command, { scope: 'all' });
+
+    expect(capture.info[0]).toContain('packs:scope_duplication');
+    expect(capture.info[0]).toContain('ideas');
+    expect(capture.info[0]).toContain(
+      'oat tools migrate --pack ideas --from project --to user',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('renders user-scope pack paths as home-relative without exposing home content', async () => {
+    const { command, capture } = createHarness({
+      scope: 'user',
+      packInventories: [
+        packInventory('brainstorm', [
+          scopedInventory('brainstorm', 'user', 'partial', [
+            packAsset('.agents/skills/oat-brainstorm', 'missing', 'user'),
+          ]),
+        ]),
+      ],
+    });
+
+    await runDoctor(command, { scope: 'user' });
+
+    expect(capture.info[0]).toContain('user:pack_state');
+    expect(capture.info[0]).toContain('~/.agents/skills/oat-brainstorm');
+    expect(capture.info[0]).not.toContain('/tmp/home/.agents');
+  });
+
+  it('passes pack state when every installed pack is complete and current', async () => {
+    const { command, capture } = createHarness({
+      packInventories: [
+        packInventory('core', [
+          scopedInventory('core', 'project', 'complete', [
+            packAsset('.agents/skills/oat-sync', 'current', 'project'),
+          ]),
+        ]),
+      ],
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('project:pack_state');
+    expect(capture.info[0]).toContain(
+      'All installed managed packs are complete and current.',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('inventories every manifest pack for the resolved scopes', async () => {
+    const { command, inventoryPack } = createHarness({ scope: 'all' });
+
+    await runDoctor(command, { scope: 'all' });
+
+    expect(inventoryPack).toHaveBeenCalledTimes(PACK_NAMES.length);
+    for (const pack of PACK_NAMES) {
+      expect(inventoryPack).toHaveBeenCalledWith({
+        pack,
+        assetsRoot: '/tmp/assets',
+        projectRoot: '/tmp/workspace',
+        userRoot: '/tmp/home',
+      });
+    }
+  });
+
+  it('reports project scope as unavailable and still runs user checks for --scope all', async () => {
+    const { command, capture, inventoryPack } = createHarness({
+      scope: 'all',
+      projectScopeUnavailable: true,
+    });
+
+    await runDoctor(command, { scope: 'all' });
+
+    expect(capture.info[0]).toContain('project:scope_availability');
+    expect(capture.info[0]).toContain('Project scope is unavailable');
+    expect(capture.info[0]).toContain('user:canonical_directories');
+    expect(inventoryPack).toHaveBeenCalledWith({
+      pack: 'core',
+      assetsRoot: '/tmp/assets',
+      userRoot: '/tmp/home',
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('fails when an explicitly requested project scope is unavailable', async () => {
+    const { command } = createHarness({ projectScopeUnavailable: true });
+
+    await expect(runDoctor(command)).rejects.toThrow(
+      'Not inside a Git repository',
+    );
+  });
+
+  it('emits pack state checks in JSON mode', async () => {
+    const { command, capture } = createHarness({
+      packInventories: [
+        packInventory('docs', [
+          scopedInventory('docs', 'project', 'partial', [
+            packAsset('.agents/skills/oat-docs-apply', 'missing', 'project'),
+          ]),
+        ]),
+      ],
+    });
+
+    await runDoctor(command, { globalArgs: ['--json'] });
+
+    const payload = capture.jsonPayloads[0] as { checks: DoctorCheck[] };
+    const packCheck = payload.checks.find(
+      (check) => check.name === 'project:pack_state',
+    );
+    expect(packCheck?.status).toBe('warn');
+    expect(packCheck?.message).toContain('docs [partial]');
+    expect(packCheck?.fix).toContain(
+      'oat tools update --pack docs --scope project',
+    );
+  });
+
+  it('warns when managed pack inventory cannot be computed', async () => {
+    const { command, capture } = createHarness({
+      resolveAssetsRootThrows: true,
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('packs:inventory');
+    expect(capture.info[0]).toContain('assets unavailable');
   });
 });

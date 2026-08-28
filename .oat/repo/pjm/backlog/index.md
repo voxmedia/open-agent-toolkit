@@ -4,6 +4,19 @@
 
 ## Curated Overview
 
+- User-scope tool-pack closeout follow-ups are split into three bounded features:
+  `BL-260827-make-packaged-skill-references` owns portable cross-skill links and
+  their ratchet; `BL-260827-correct-scope-and-adoption` owns PJM adoption and
+  diagnostic correctness edges; and `BL-260827-clean-up-tool-pack-lifecycle`
+  owns the remaining lifecycle/config consistency findings. They are
+  intentionally separate so packaging, diagnostics, and lifecycle cleanup do
+  not share implementation or review boundaries.
+- User-scope tool distribution is now a high-priority cross-pack initiative:
+  `BL-260818-make-the-project-management` covers every tool pack, including
+  `project-management`, while keeping PJM operational data repo-owned. The
+  immediate path uses the regular OAT CLI and direct-install lifecycle to reduce
+  repeated installation and checked-in tool-copy update churn; native plugin
+  packaging is deferred.
 - Provider transcript corroboration (2026-08-26) is tracked in
   `BL-260826-populate-native-subagent`, linked to GitHub issue #211. Codex and
   Claude can populate the existing optional runtime-observation layer from
@@ -155,6 +168,8 @@
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                    | open   | medium   | feature | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                | open   | medium   | feature | M        |
+| BL-260827-clean-up-tool-pack-lifecycle   | Clean up tool-pack lifecycle and config contracts                                                     | open   | medium   | feature | S        |
+| BL-260827-correct-scope-and-adoption     | Correct scope and adoption diagnostics                                                                | open   | medium   | feature | M        |
 | BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path            | open   | medium   | task    | S        |
 | BL-260826-deterministic-smoke-tier-leaks | Deterministic smoke tier leaks worktrees on interrupted runs                                          | open   | medium   | task    | S        |
 | BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap            | open   | medium   | task    | M        |
@@ -165,6 +180,7 @@
 | BL-260827-fail-closed-on-partial-or      | Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles                                        | open   | medium   | task    | S        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                                        | open   | medium   | task    |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature | L        |
+| BL-260827-make-packaged-skill-references | Make packaged skill references scope-portable                                                         | open   | medium   | feature | M        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                             | open   | medium   | feature | M        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags | open   | medium   | task    | S        |
 | BL-260819-repair-verified-bundled-skill  | Repair verified bundled skill contract drift                                                          | open   | medium   | task    | M        |

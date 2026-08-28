@@ -215,6 +215,11 @@ describe('oat pjm', () => {
     expect(payload).toMatchObject({
       status: 'ok',
       repoRoot: join(root, '.oat', 'repo'),
+      adoption: {
+        state: 'declared',
+        repoRoot: join(root, '.oat', 'repo'),
+        recovery: null,
+      },
       checks: expect.arrayContaining([
         expect.objectContaining({
           name: 'pjm:canonical_files',
@@ -224,30 +229,30 @@ describe('oat pjm', () => {
     });
   });
 
-  it('reports PJM disabled without missing-file drift when the pack is not enabled', async () => {
+  it('reports absent repository adoption independently of pack availability', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
 
     const result = await runCli(root, ['--json', 'pjm', 'doctor']);
 
-    expect(result.exitCode).toBe(0);
+    expect(result.exitCode).toBe(1);
     expect(result.stderr).toBe('');
     const payload = JSON.parse(result.stdout);
     expect(payload).toMatchObject({
-      status: 'ok',
+      status: 'warn',
       repoRoot: join(root, '.oat', 'repo'),
-      checks: [
+      adoption: {
+        state: 'none',
+        repoRoot: join(root, '.oat', 'repo'),
+        recovery: 'oat pjm init',
+      },
+      checks: expect.arrayContaining([
         expect.objectContaining({
-          name: 'pjm:disabled',
-          status: 'pass',
+          name: 'pjm:adoption',
+          status: 'warn',
         }),
-      ],
+      ]),
     });
-    expect(
-      payload.checks.some(
-        (check: { name: string }) => check.name === 'pjm:canonical_files',
-      ),
-    ).toBe(false);
   });
 
   it('prints the bundled migration prompt without running migration', async () => {

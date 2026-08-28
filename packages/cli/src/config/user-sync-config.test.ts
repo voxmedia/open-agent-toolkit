@@ -68,6 +68,7 @@ describe('resolveUserSyncConfig', () => {
       JSON.stringify({
         version: 1,
         activeIdea: '.oat/ideas/example',
+        tools: { workflows: true },
         knownStrays: [
           ' .cursor\\skills\\legacy-only ',
           './.cursor/skills/canonical-only',
@@ -95,6 +96,7 @@ describe('resolveUserSyncConfig', () => {
     ).toEqual({
       version: 1,
       activeIdea: '.oat/ideas/example',
+      tools: { workflows: true },
       futureField: { preserved: true },
     });
   });

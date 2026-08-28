@@ -11,9 +11,9 @@ For detailed `.oat/` tree semantics, see:
 
 ## Canonical agent assets
 
-- Skills: `.agents/skills/`
-- Agents/subagents: `.agents/agents/`
-- Rules: `.agents/rules/`
+- Skills: `.agents/skills/` (project) and `~/.agents/skills/` (user)
+- Agents/subagents: `.agents/agents/` (project) and `~/.agents/agents/` (user)
+- Rules: `.agents/rules/` (project only)
 - Cursor reads project skills directly from `.agents/skills/` and user skills
   directly from `~/.agents/skills/`. `.cursor/skills/` remains a Cursor-only
   extension and adoption surface, not generated output.
@@ -22,6 +22,29 @@ For detailed `.oat/` tree semantics, see:
   `~/.copilot/skills/` as adoption sources, not generated output. Copilot agents
   still sync to `.github/agents/` and `~/.copilot/agents/`, and project rules
   still sync to `.github/instructions/`.
+
+## Managed tool-pack assets by scope
+
+Every reusable tool pack defaults to user scope on a fresh install, so both
+columns are ordinary states.
+
+| Asset kind        | Project scope              | User scope                   |
+| ----------------- | -------------------------- | ---------------------------- |
+| Pack skills       | `.agents/skills/<name>/`   | `~/.agents/skills/<name>/`   |
+| Pack agents       | `.agents/agents/<name>.md` | `~/.agents/agents/<name>.md` |
+| Pack templates    | `.oat/templates/<name>`    | `~/.oat/templates/<name>`    |
+| Pack scripts      | `.oat/scripts/<name>`      | `~/.oat/scripts/<name>`      |
+| Bundled docs tree | not applicable             | `~/.oat/docs/`               |
+
+Project-scope templates under `.oat/templates/` are owner overrides that OAT
+seeds once and never rewrites; the managed default lives at user scope and in
+the bundle. PJM templates resolve repository → user → bundle.
+
+Pack intent is stored per scope:
+
+- Project intent: `tools.<pack>: true` in `.oat/config.json`
+- User intent: `tools.<pack>: true` in `~/.oat/config.json`
+- Repository PJM adoption: `pjm.initialized` and `pjm.schemaVersion` in `.oat/config.json`
 
 ## OAT runtime/state
 
@@ -52,7 +75,8 @@ Config ownership note:
 
 ## OAT workflow
 
-- Templates: `.oat/templates/`
+- Templates: `.oat/templates/` (repo overrides) and `~/.oat/templates/` (managed defaults)
+- Shared scripts: `.oat/scripts/` and `~/.oat/scripts/`
 - Runtime sync state: `.oat/sync/`
 - Repo knowledge: `.oat/repo/knowledge/`
 - Active PJM operational layer: `.oat/repo/pjm/` (`current-state.md`, `roadmap.md`, `backlog/`)

@@ -11,6 +11,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { createProgram } from '@app/create-program';
+import { reconcilePackLifecycle } from '@commands/tools/shared/pack-lifecycle';
+import { resolveAssetsRoot } from '@fs/assets';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { registerCommands } from './index';
@@ -90,7 +92,11 @@ async function runCli(
     const topLevelCommand = args[0];
     const isConsumer =
       topLevelCommand !== undefined &&
-      SCOPE_CONSUMER_COMMANDS.has(topLevelCommand);
+      SCOPE_CONSUMER_COMMANDS.has(topLevelCommand) &&
+      !(topLevelCommand === 'tools' && args[1] === 'migrate') &&
+      // An explicit caller-supplied scope always wins; injecting a second
+      // `--scope` would make the effective scope depend on argument order.
+      !args.includes('--scope');
 
     let finalArgs: string[];
     if (isConsumer) {
@@ -732,6 +738,62 @@ describe('CLI command integration', () => {
     expect(after).toBe(before);
   });
 
+  it('tools migrate is registered and previews project to user without mutation', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(join(tmpdir(), 'oat-cli-migrate-home-'));
+    tempDirs.push(root, userRoot);
+    const assetsRoot = await resolveAssetsRoot();
+    await reconcilePackLifecycle({
+      pack: 'ideas',
+      scope: 'project',
+      scopeRoot: root,
+      assetsRoot,
+      action: 'install',
+    });
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+
+    try {
+      const result = await runCli(
+        root,
+        [
+          'tools',
+          'migrate',
+          '--pack',
+          'ideas',
+          '--from',
+          'project',
+          '--to',
+          'user',
+          '--dry-run',
+        ],
+        ['--json'],
+      );
+
+      expect(result.exitCode).toBe(0);
+      expect(JSON.parse(result.stdout)).toMatchObject({
+        status: 'previewed',
+        operation: 'migrate',
+        dryRun: true,
+        preview: {
+          pack: 'ideas',
+          from: 'project',
+          to: 'user',
+          status: 'ready',
+        },
+      });
+      await expect(
+        lstat(join(userRoot, '.agents', 'skills', 'oat-idea-new')),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+      await expect(
+        lstat(join(root, '.agents', 'skills', 'oat-idea-new')),
+      ).resolves.toBeDefined();
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
   it('internal validate-oat-skills succeeds for valid oat-* skills', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
@@ -956,5 +1018,138 @@ describe('CLI command integration', () => {
         actions: expect.any(Array),
       }),
     );
+  });
+
+  it('sync --scope user materializes user skills through mappings and user agents through the codex extension', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(join(tmpdir(), 'oat-cli-user-scope-'));
+    tempDirs.push(root, userRoot);
+    await mkdir(join(userRoot, '.claude'), { recursive: true });
+    await mkdir(join(userRoot, '.codex'), { recursive: true });
+    await seedCanonical(userRoot);
+
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      await runCli(root, ['init', '--scope', 'user']);
+      const sync = await runCli(root, ['sync', '--scope', 'user']);
+      expect(sync.exitCode).toBe(0);
+
+      // Skills materialize through user path mappings.
+      await expect(
+        lstat(join(userRoot, '.claude', 'skills', 'skill-one')),
+      ).resolves.toBeDefined();
+
+      // User-scope path mappings are skill-only by contract
+      // (`SCOPE_CONTENT_TYPES.user`). Arbitrary user canonical agents are not
+      // mirrored into provider agent directories.
+      await expect(
+        lstat(join(userRoot, '.claude', 'agents', 'agent-one')),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+
+      // Managed user agents reach Codex through the materialization
+      // extension, which sources bundled managed agent definitions.
+      await expect(
+        lstat(join(userRoot, '.codex', 'agents', 'oat-reviewer.toml')),
+      ).resolves.toBeDefined();
+      await expect(
+        lstat(join(userRoot, '.codex', 'agents', 'oat-phase-implementer.toml')),
+      ).resolves.toBeDefined();
+
+      // User-scope sync must not create project provider views.
+      await expect(
+        lstat(join(root, '.claude', 'skills', 'skill-one')),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it('sync --scope all materializes duplicate cross-scope sources into both provider views', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(join(tmpdir(), 'oat-cli-dup-scope-'));
+    tempDirs.push(root, userRoot);
+    await mkdir(join(userRoot, '.claude'), { recursive: true });
+
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      await runCli(root, ['init', '--scope', 'project']);
+      await runCli(root, ['init', '--scope', 'user']);
+      // The same canonical skill name exists at both scopes.
+      await seedCanonical(root);
+      await seedCanonical(userRoot);
+
+      const sync = await runCli(root, ['sync', '--scope', 'all']);
+      expect(sync.exitCode).toBe(0);
+
+      // Both scopes materialize independently; neither prunes the other and
+      // no execution precedence is implied between them.
+      await expect(
+        lstat(join(root, '.claude', 'skills', 'skill-one')),
+      ).resolves.toBeDefined();
+      await expect(
+        lstat(join(userRoot, '.claude', 'skills', 'skill-one')),
+      ).resolves.toBeDefined();
+
+      const projectManifest = JSON.parse(
+        await readFile(join(root, '.oat', 'sync', 'manifest.json'), 'utf8'),
+      );
+      const userManifest = JSON.parse(
+        await readFile(join(userRoot, '.oat', 'sync', 'manifest.json'), 'utf8'),
+      );
+      expect(
+        projectManifest.entries.some(
+          (entry: { canonicalPath: string }) =>
+            entry.canonicalPath === '.agents/skills/skill-one',
+        ),
+      ).toBe(true);
+      expect(
+        userManifest.entries.some(
+          (entry: { canonicalPath: string }) =>
+            entry.canonicalPath === '.agents/skills/skill-one',
+        ),
+      ).toBe(true);
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it('sync --scope user materializes a user-installed pack into provider views', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(join(tmpdir(), 'oat-cli-user-pack-'));
+    tempDirs.push(root, userRoot);
+    await mkdir(join(userRoot, '.claude'), { recursive: true });
+    const assetsRoot = await resolveAssetsRoot();
+    await reconcilePackLifecycle({
+      pack: 'ideas',
+      scope: 'user',
+      scopeRoot: userRoot,
+      assetsRoot,
+      action: 'install',
+    });
+
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      await runCli(root, ['init', '--scope', 'user']);
+      const sync = await runCli(root, ['sync', '--scope', 'user']);
+      expect(sync.exitCode).toBe(0);
+
+      await expect(
+        lstat(join(userRoot, '.agents', 'skills', 'oat-idea-new')),
+      ).resolves.toBeDefined();
+      await expect(
+        lstat(join(userRoot, '.claude', 'skills', 'oat-idea-new')),
+      ).resolves.toBeDefined();
+      await expect(
+        lstat(join(root, '.agents', 'skills', 'oat-idea-new')),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
   });
 });

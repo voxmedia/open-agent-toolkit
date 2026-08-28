@@ -110,9 +110,11 @@ fi
 while IFS= read -r script; do
   [ -n "${script}" ] || continue
   SOURCE_SCRIPT="${REPO_ROOT}/.oat/scripts/${script}"
-  if [ -f "${SOURCE_SCRIPT}" ]; then
-    cp "${SOURCE_SCRIPT}" "${STAGING}/scripts/"
+  if [ ! -f "${SOURCE_SCRIPT}" ]; then
+    echo "Required bundle script source is missing: ${SOURCE_SCRIPT}" >&2
+    exit 1
   fi
+  cp "${SOURCE_SCRIPT}" "${STAGING}/scripts/"
 done < <(node "${INVENTORY}" --list oatScripts)
 
 if [ -f "${MIGRATION_PROMPT_SOURCE}" ]; then

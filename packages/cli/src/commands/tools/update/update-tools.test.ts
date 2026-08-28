@@ -1,4 +1,12 @@
-import { chmod, mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
+import {
+  chmod,
+  lstat,
+  mkdir,
+  mkdtemp,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -13,13 +21,25 @@ import {
 import {
   BRAINSTORM_SKILLS,
   DOCS_SCRIPTS,
+  RESEARCH_AGENTS,
+  RESEARCH_SKILLS,
   UTILITY_SKILLS,
   WORKFLOW_AGENTS,
   WORKFLOW_SKILLS,
   WORKFLOW_SCRIPTS,
   WORKFLOW_TEMPLATES,
 } from '@commands/init/tools/shared/skill-manifest';
+import { removeTools } from '@commands/tools/remove/remove-tools';
+import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
+import { reconcilePackLifecycles } from '@commands/tools/shared/pack-lifecycle';
+import { serializePackReconcilePlan } from '@commands/tools/shared/pack-reconcile';
+import {
+  hasScopedPackOwnershipEvidence,
+  readScopedPackIntent,
+  writeScopedPackIntent,
+} from '@commands/tools/shared/scoped-pack-intent';
 import type { ToolInfo } from '@commands/tools/shared/types';
+import { resolveAssetsRoot } from '@fs/assets';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -27,6 +47,18 @@ import {
   type UpdateToolsDependencies,
   updateTools,
 } from './update-tools';
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await lstat(path);
+    return true;
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return false;
+    }
+    throw error;
+  }
+}
 
 function createTool(overrides: Partial<ToolInfo> = {}): ToolInfo {
   return {
@@ -345,7 +377,7 @@ describe('updateTools', () => {
     expect(result.current).toHaveLength(1);
     expect(
       deps.copies.some((copy) => copy.source === `/assets/templates/plan.md`),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       deps.copies.some(
         (copy) => copy.source === '/assets/scripts/resolve-tracking.sh',
@@ -400,6 +432,164 @@ describe('updateTools', () => {
     expect(result.updated).toHaveLength(1);
     expect(deps.copies).toHaveLength(0);
   });
+
+  it('repairs a fully missing intended docs pack through the exact dry-run plan', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-update-pack-lifecycle-'));
+    try {
+      const assetsRoot = await resolveAssetsRoot();
+      await writeScopedPackIntent({
+        pack: 'docs',
+        scope: 'user',
+        scopeRoot: root,
+        enabled: true,
+      });
+      const deps = createDeps();
+      deps.resolveAssetsRoot = async () => assetsRoot;
+      deps.resolveScopeRoot = async () => root;
+      deps.inventoryScopedPack = inventoryScopedPack;
+      deps.reconcilePacks = reconcilePackLifecycles;
+
+      const dryRun = await updateTools(
+        { kind: 'pack', pack: 'docs' },
+        ['user'],
+        '/cwd',
+        '/home',
+        true,
+        deps,
+      );
+      expect(dryRun.plans).toHaveLength(1);
+      expect(dryRun.plans[0]!.operations).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: 'copy-dir',
+            assetId: 'template:docs-app-mkdocs',
+          }),
+          expect.objectContaining({
+            kind: 'copy-dir',
+            assetId: 'template:docs-app-fuma',
+          }),
+        ]),
+      );
+
+      const applied = await updateTools(
+        { kind: 'pack', pack: 'docs' },
+        ['user'],
+        '/cwd',
+        '/home',
+        false,
+        deps,
+      );
+      expect(serializePackReconcilePlan(applied.plans[0]!)).toBe(
+        serializePackReconcilePlan(dryRun.plans[0]!),
+      );
+      await expect(
+        inventoryScopedPack({
+          pack: 'docs',
+          scope: 'user',
+          scopeRoot: root,
+          assetsRoot,
+        }),
+      ).resolves.toMatchObject({ completeness: 'complete' });
+      await expect(
+        readScopedPackIntent({ pack: 'docs', scope: 'user', scopeRoot: root }),
+      ).resolves.toMatchObject({ enabled: true, source: 'declared' });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it.each([
+    { removed: 'docs' as const, retained: 'workflows' as const },
+    { removed: 'workflows' as const, retained: 'docs' as const },
+  ])(
+    'does not recreate removed $removed from shared data retained by $retained during update-all',
+    async ({ removed, retained }) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-update-shared-owner-'));
+      try {
+        const assetsRoot = await resolveAssetsRoot();
+        await reconcilePackLifecycles(
+          [removed, retained].map((pack) => ({
+            pack,
+            scope: 'user' as const,
+            scopeRoot: root,
+            assetsRoot,
+            action: 'install' as const,
+          })),
+        );
+        await removeTools(
+          { kind: 'pack', pack: removed },
+          ['user'],
+          root,
+          root,
+          false,
+          {
+            scanTools: async () => [],
+            resolveScopeRoot: async () => root,
+            resolveAssetsRoot: async () => assetsRoot,
+            removeDirectory: async (path) =>
+              rm(path, { recursive: true, force: true }),
+            removeFile: async (path) => rm(path, { force: true }),
+            pathExists,
+            hasPackOwnershipEvidence: async (pack, scope, scopeRoot) =>
+              hasScopedPackOwnershipEvidence({ pack, scope, scopeRoot }),
+          },
+        );
+        await writeScopedPackIntent({
+          pack: removed,
+          scope: 'user',
+          scopeRoot: root,
+          enabled: false,
+        });
+
+        const deps = createDeps();
+        deps.resolveAssetsRoot = async () => assetsRoot;
+        deps.resolveScopeRoot = async () => root;
+        deps.inventoryScopedPack = inventoryScopedPack;
+        deps.reconcilePacks = reconcilePackLifecycles;
+
+        const dryRun = await updateTools(
+          { kind: 'all' },
+          ['user'],
+          root,
+          root,
+          true,
+          deps,
+        );
+        expect(dryRun.plans.map(({ pack }) => pack)).not.toContain(removed);
+        expect(dryRun.plans.map(({ pack }) => pack)).toContain(retained);
+        await expect(
+          readScopedPackIntent({
+            pack: removed,
+            scope: 'user',
+            scopeRoot: root,
+          }),
+        ).resolves.toMatchObject({ enabled: false, source: 'none' });
+
+        const applied = await updateTools(
+          { kind: 'all' },
+          ['user'],
+          root,
+          root,
+          false,
+          deps,
+        );
+        expect(applied.plans.map(({ pack }) => pack)).not.toContain(removed);
+        await expect(
+          inventoryScopedPack({
+            pack: removed,
+            scope: 'user',
+            scopeRoot: root,
+            assetsRoot,
+          }),
+        ).resolves.toMatchObject({
+          completeness: 'partial',
+          intent: { enabled: false, source: 'none' },
+        });
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+  );
 
   it('handles not-bundled tools', async () => {
     const tool = createTool({
@@ -506,7 +696,7 @@ describe('updateTools', () => {
     });
   });
 
-  it('reconciles workflow templates and scripts during pack updates', async () => {
+  it('retains project workflow template overrides while refreshing scripts', async () => {
     const tool = createTool({
       name: 'oat-project-new',
       pack: 'workflows',
@@ -529,12 +719,80 @@ describe('updateTools', () => {
       deps.copies.some(
         (copy) => copy.source === `/assets/templates/${WORKFLOW_TEMPLATES[0]}`,
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       deps.copies.some(
         (copy) => copy.source === `/assets/scripts/${WORKFLOW_SCRIPTS[0]}`,
       ),
     ).toBe(true);
+  });
+
+  it('repairs a fully missing intended pack from scoped inventory', async () => {
+    const deps = createDeps({ user: [] });
+    deps.inventoryScopedPack = async ({ pack, scope, scopeRoot }) => ({
+      pack,
+      scope,
+      intent: {
+        pack,
+        scope,
+        enabled: pack === 'research',
+        source: pack === 'research' ? 'declared' : 'none',
+        configPath: `${scopeRoot}/.oat/config.json`,
+        diagnostics: [],
+      },
+      completeness: 'absent',
+      assets:
+        pack === 'research'
+          ? [
+              ...RESEARCH_SKILLS.map((name) => ({
+                definition: {
+                  id: `skill:${name}`,
+                  kind: 'skill' as const,
+                  source: `skills/${name}`,
+                  destination: `.agents/skills/${name}`,
+                  scopes: ['project', 'user'] as const,
+                  ownership: {
+                    project: 'managed' as const,
+                    user: 'managed' as const,
+                  },
+                },
+                path: `${scopeRoot}/.agents/skills/${name}`,
+                status: 'missing' as const,
+                installedVersion: null,
+                bundledVersion: null,
+              })),
+              ...RESEARCH_AGENTS.map((name) => ({
+                definition: {
+                  id: `agent:${name}`,
+                  kind: 'agent' as const,
+                  source: `agents/${name}`,
+                  destination: `.agents/agents/${name}`,
+                  scopes: ['project', 'user'] as const,
+                  ownership: {
+                    project: 'managed' as const,
+                    user: 'managed' as const,
+                  },
+                },
+                path: `${scopeRoot}/.agents/agents/${name}`,
+                status: 'missing' as const,
+                installedVersion: null,
+                bundledVersion: null,
+              })),
+            ]
+          : [],
+      diagnostics: [],
+    });
+    const result = await updateTools(
+      { kind: 'pack', pack: 'research' },
+      ['user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+    expect(result.updated).toHaveLength(
+      RESEARCH_SKILLS.length + RESEARCH_AGENTS.length,
+    );
   });
 
   it('refreshes all four workflows asset classes at user scope', async () => {

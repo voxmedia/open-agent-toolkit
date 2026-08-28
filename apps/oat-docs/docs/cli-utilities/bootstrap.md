@@ -29,6 +29,7 @@ Key behavior:
 - Interactive adoption in TTY mode
 - JSON/non-TTY contract support
 - Establishes the base structure used by `oat status`, `oat sync`, `oat init tools`, and `oat doctor`
+- Pack intent recorded during guided setup is scoped: a project-scope install writes `tools.<pack>: true` to `.oat/config.json`, a user-scope install writes it to `~/.oat/config.json`, and neither writes the other
 - For project scope, creates canonical `.agents/skills/`, `.agents/agents/`, and `.agents/rules/` directories
 
 ### Guided setup
@@ -43,9 +44,10 @@ After core initialization completes, `oat init` can enter an interactive guided 
 **Steps (each independently skippable):**
 
 1. **Tool packs** — install OAT tool packs. The core pack (diagnostics, passive docs access) is checked by default and always installs at user scope. Guided setup asks whether to customize per-pack scope:
-   - choose **Yes** to run the per-pack scope selector for user-eligible packs (`ideas`, `docs`, `utility`, `research`, `brainstorm`)
+   - choose **Yes** to run the per-pack scope selector for every pack that allows both scopes (`ideas`, `docs`, `workflows`, `utility`, `project-management`, `research`, `brainstorm`)
    - choose **No** to apply additive per-pack defaults without extra scope prompts
-   - project-only packs such as `workflows` and `project-management` remain project-scoped
+   - on a fresh install every pack defaults to **user** scope, so capabilities follow you across repositories; an existing install keeps its current placement
+   - installing `project-management` installs the capability only. Adopting it for this repository is a separate, explicit `oat pjm init` step — see [Install vs. initialize](tool-packs.md#install-vs-initialize)
 2. **Local paths** — multi-select from default gitignored artifact paths (analysis, PR, reviews, ideas). Pre-existing paths are pre-checked; only new paths are added.
 3. **Documentation** — detect or enter docs metadata for the repo when documentation exists.
 4. **Provider sync** — sync provider project views via `oat sync --scope project`.
@@ -68,6 +70,7 @@ oat init --scope project
 
 Related commands:
 
-- `oat tools ...` (tool-pack install, update, remove, list, info): `tool-packs.md`
+- `oat tools ...` (tool-pack install, update, remove, migrate, list, info): `tool-packs.md`
+- `oat pjm init` (adopt project management for this repository): `tool-packs.md#install-vs-initialize`
 - `oat local ...`, `oat doctor`, and other utility commands: `config-and-local-state.md`
 - `oat status` / `oat sync` (provider sync): `../provider-sync/index.md`

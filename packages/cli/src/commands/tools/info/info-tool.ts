@@ -1,5 +1,12 @@
 import type { CommandContext } from '@app/command-context';
 import { resolveConcreteScopes } from '@commands/shared/shared.utils';
+import { formatPackInventoryDetails } from '@commands/tools/shared/format-pack-inventory';
+import {
+  inventoryPack,
+  type InventoryPackInput,
+  type PackInventory,
+} from '@commands/tools/shared/pack-inventory';
+import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { ToolInfo } from '@commands/tools/shared/types';
 
@@ -22,11 +29,13 @@ export interface InfoToolDependencies {
     tool: ToolInfo,
     scopeRoot: string,
   ) => Promise<Omit<ToolDetail, keyof ToolInfo>>;
+  inventoryPack?: (input: InventoryPackInput) => Promise<PackInventory>;
 }
 
 export interface InfoToolResult {
   found: boolean;
   tool: ToolDetail | null;
+  pack: PackInventory | null;
 }
 
 export async function runInfoTool(
@@ -37,13 +46,35 @@ export async function runInfoTool(
   const { logger } = context;
   const scopes = resolveConcreteScopes(context.scope);
   const assetsRoot = await dependencies.resolveAssetsRoot();
-
+  const roots: Partial<Record<'project' | 'user', string>> = {};
   for (const scope of scopes) {
-    const scopeRoot = await dependencies.resolveScopeRoot(
+    roots[scope] = await dependencies.resolveScopeRoot(
       scope,
       context.cwd,
       context.home,
     );
+  }
+  const packName = PACK_MANIFEST.find(
+    ({ name: candidate }) => candidate === name,
+  )?.name;
+  if (packName) {
+    const pack = await (dependencies.inventoryPack ?? inventoryPack)({
+      pack: packName,
+      assetsRoot,
+      projectRoot: roots.project,
+      userRoot: roots.user,
+    });
+    if (context.json) logger.json({ tool: null, pack });
+    else {
+      logger.info(`${pack.pack}`);
+      logger.info(`  Placement:   ${pack.placement}`);
+      for (const line of formatPackInventoryDetails(pack)) logger.info(line);
+    }
+    return { found: true, tool: null, pack };
+  }
+
+  for (const scope of scopes) {
+    const scopeRoot = roots[scope]!;
     const tools = await dependencies.scanTools({
       scope,
       scopeRoot,
@@ -57,7 +88,7 @@ export async function runInfoTool(
 
     if (context.json) {
       logger.json({ tool: toolDetail });
-      return { found: true, tool: toolDetail };
+      return { found: true, tool: toolDetail, pack: null };
     }
 
     logger.info(`${toolDetail.name}`);
@@ -84,7 +115,7 @@ export async function runInfoTool(
       );
     }
 
-    return { found: true, tool: toolDetail };
+    return { found: true, tool: toolDetail, pack: null };
   }
 
   if (context.json) {
@@ -93,5 +124,5 @@ export async function runInfoTool(
     logger.error(`Tool '${name}' not found.`);
   }
 
-  return { found: false, tool: null };
+  return { found: false, tool: null, pack: null };
 }
