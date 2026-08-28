@@ -402,13 +402,47 @@ merge path.
    git commit -m "docs(p03-t02): reconcile final closeout artifacts"
    ```
 
+---
+
+### Task p03-t03: (review) Narrow the materialized docs exclusion
+
+**Files:**
+
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+
+**Steps:**
+
+1. Restrict the materialized-doc exclusion to normalized authored paths whose
+   first two segments are exactly `references` and `docs`.
+2. Add a nested authored `examples/references/docs/*.md` fixture containing a
+   bare cross-skill reference. Prove the scanner returns it with exact
+   file-and-target evidence.
+3. Preserve the skill-root `references/docs/` exclusion and every
+   ordering/relative-path case from `p03-t01`.
+4. Format and verify:
+
+   ```bash
+   pnpm exec oxfmt --write packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/validation/skills.test.ts
+   pnpm check
+   git diff --check
+   ```
+
+5. Commit:
+
+   ```bash
+   git add packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+   git commit -m "fix(p03-t03): narrow materialized docs exclusion"
+   ```
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                              | Reviewed Head                            | Invocation | Gate Target |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01    | code     | passed          | 2026-08-28 | `reviews/p01-review-2026-08-28T015302Z.md`            | dba46295a0d02c1bd1bca179a954bf902a2ae1c6 | auto       | -           |
 | p02    | code     | passed          | 2026-08-28 | `reviews/p02-review-2026-08-28T021707Z.md`            | 9d5be6432d30bb31b6bf3fed01ed152c936640c0 | auto       | -           |
-| p03    | code     | received        | 2026-08-28 | `reviews/p03-review-2026-08-28T024853Z.md`            | 00c641d332a82bd1ccfc4268f90965d517e7ec52 | auto       | -           |
+| p03    | code     | fixes_added     | 2026-08-28 | `reviews/archived/p03-review-2026-08-28T024853Z.md`   | 00c641d332a82bd1ccfc4268f90965d517e7ec52 | auto       | -           |
 | final  | code     | fixes_added     | 2026-08-28 | `reviews/archived/final-review-2026-08-28T022049Z.md` | d3c76770f9bb75860486e678bf5281fa8a84b6f4 | auto       | -           |
 | spec   | artifact | pending         | -          | -                                                     | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                     | -                                        | -          | -           |
@@ -425,14 +459,12 @@ merge path.
 
 - Phase 1: 4 tasks - portable resolution contracts and robust ratchet coverage
 - Phase 2: 1 task - provider views, lockstep release metadata, and full gates
-- Phase 3: 2 tasks - final ratchet hardening and lifecycle reconciliation
+- Phase 3: 3 tasks - final ratchet hardening and lifecycle reconciliation
 
-**Total: 7 tasks**
+**Total: 8 tasks**
 
-All seven planned task scopes have implementation output. Root validation must
-still reconcile the Phase 3 task statuses and commit hashes, and project
-completion requires a passing final re-review. Until then, the final review
-remains `fixes_added` and the project remains in progress.
+Seven of eight task scopes have implementation output. Completion requires
+`p03-t03`, root validation, and a passing final re-review.
 
 ## References
 

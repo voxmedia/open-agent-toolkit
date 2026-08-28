@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: p03-t02
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
@@ -12,19 +12,19 @@ oat_generated: false
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
-> Phase 3 implementation output is present. Root validation will reconcile the
-> two task statuses and immutable commit hashes before final re-review.
+> The first two Phase 3 tasks are validated. One review-generated ratchet fix
+> remains before final re-review.
 
 ## Progress Overview
 
-| Phase                                        | Status                   | Tasks | Completed      |
-| -------------------------------------------- | ------------------------ | ----- | -------------- |
-| Phase 1: Portable resolution and enforcement | passed                   | 4     | 4/4            |
-| Phase 2: Release metadata and validation     | passed                   | 1     | 1/1            |
-| Phase 3: Final review fixes                  | awaiting root validation | 2     | output present |
+| Phase                                        | Status             | Tasks | Completed |
+| -------------------------------------------- | ------------------ | ----- | --------- |
+| Phase 1: Portable resolution and enforcement | passed             | 4     | 4/4       |
+| Phase 2: Release metadata and validation     | passed             | 1     | 1/1       |
+| Phase 3: Final review fixes                  | review fix pending | 3     | 2/3       |
 
-**Total:** All seven task scopes have implementation output; Phase 3 root
-validation and final re-review remain.
+**Total:** 7/8 task scopes have implementation output; `p03-t03` and final
+re-review remain.
 
 ## Phase 1: Portable sibling resolution and enforcement
 
@@ -63,18 +63,23 @@ validation and final re-review remain.
 
 ## Phase 3: Final review fixes
 
-**Status:** implementation output present; root validation pending
+**Status:** review fix pending
 **Started:** 2026-08-28
 
 ### Task p03-t01: Harden the portable-reference ratchet
 
-**Implementation:** applied and verified; root status reconciliation pending
-**Commit:** root will record the immutable task commit after validation
+**Status:** completed
+**Commit:** `f1f9b4184ca9d33a266c048275fc3c2e71b3a065`
 
 ### Task p03-t02: Reconcile the final lifecycle baseline
 
-**Implementation:** applied and verified; root status reconciliation pending
-**Commit:** root will record the immutable task commit after validation
+**Status:** completed
+**Commit:** `00c641d332a82bd1ccfc4268f90965d517e7ec52`
+
+### Task p03-t03: Narrow the materialized docs exclusion
+
+**Status:** pending
+**Commit:** -
 
 ## Orchestration Runs
 
@@ -254,6 +259,27 @@ receive the final review.
 - **Fallback/replacement:** none
 - **Dispatch stamp:**
   `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
+### Review Received: p03
+
+**Date:** 2026-08-28
+**Review artifact:** `reviews/archived/p03-review-2026-08-28T024853Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 0
+
+**Finding disposition:**
+
+- `M1` -> `p03-t03` (`code_fix_required`): restrict the docs exclusion to the
+  skill-root materialized subtree and prove nested authored surfaces remain
+  scanned.
+
+**Next:** Resume the original p03 implementer handle for `p03-t03`, then
+re-review p03 and final.
 
 <!-- orchestration-runs-end -->
 
