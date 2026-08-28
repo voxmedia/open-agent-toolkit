@@ -68,6 +68,38 @@ describe('checkSyncedProjects', () => {
     );
   });
 
+  it('uses a directory probe for an absent synced checkout', async () => {
+    const repoRoot = await createRoot();
+    execFileSync('git', ['init', '-q', '--initial-branch=main'], {
+      cwd: repoRoot,
+    });
+    await writeFile(
+      join(repoRoot, '.gitignore'),
+      '.oat/projects/synced/*/\n',
+      'utf8',
+    );
+    const syncedRoot = join(repoRoot, '.oat/projects/synced');
+    await writeSyncedRecord(
+      join(syncedRoot, 'demo.json'),
+      buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
+    );
+
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: defaultGitRunner,
+      resolveProjectsRoot: async () => '.oat/projects/shared',
+    });
+
+    expect(checks).not.toContainEqual(
+      expect.objectContaining({ name: 'project:synced_gitignore' }),
+    );
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        status: 'warn',
+        message: expect.stringContaining('checkout is absent'),
+      }),
+    );
+  });
+
   it('fails unknown record schemas and branch-tracked synced artifacts', async () => {
     const repoRoot = await createRoot();
     const syncedRoot = join(repoRoot, '.oat/projects/synced');

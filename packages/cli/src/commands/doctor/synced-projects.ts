@@ -230,8 +230,14 @@ export async function checkSyncedProjects(
     }
   }
 
+  const ignoreProbeSlug = records[0]?.slug ?? '__probe__';
   const ignored = await dependencies.git.run(
-    ['check-ignore', '-q', join(syncedRoot, records[0]?.slug ?? '__probe__')],
+    [
+      'check-ignore',
+      '--quiet',
+      '--no-index',
+      `${syncedRelative}/${ignoreProbeSlug}/`,
+    ],
     { cwd: repoRoot, allowFailure: true },
   );
   if (ignored.code === 1) {
