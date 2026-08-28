@@ -971,6 +971,7 @@ export async function pruneSynced(
     );
   }
 
+  await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
   const registeredPaths = await registeredWorktreePaths(target, git);
   const canonicalRegisteredPaths = [
     ...new Set(

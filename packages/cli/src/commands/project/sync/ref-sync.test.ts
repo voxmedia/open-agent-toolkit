@@ -25,6 +25,7 @@ import {
   preflightSyncedCheckout,
   pullChildren,
   pullSynced,
+  pruneSynced,
   pushSynced,
   removeSyncedCheckout,
   rollbackCreatedSyncedProject,
@@ -1858,6 +1859,61 @@ describe('synced checkout removal', () => {
       expect(
         git(fixture.cloneA, ['worktree', 'list', '--porcelain']),
       ).not.toContain(target.projectPath);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('prunes a missing parent worktree registration before enumerating nested checkouts', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const linkedRoot = await addLinkedWorktree(
+        fixture.cloneA,
+        'stale-parent',
+      );
+      const linkedTarget = buildSyncTarget(
+        linkedRoot,
+        '.oat/projects/shared',
+        'nested-stale',
+      );
+      await createSyncedProject(linkedTarget, defaultGitRunner);
+      await pushSynced(linkedTarget, defaultGitRunner, {});
+
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        linkedTarget.slug,
+      );
+      await writeSyncedRecord(
+        join(target.syncedRoot, `${target.slug}.json`),
+        buildSyncedRecord(target.slug, new Date('2026-08-28T00:00:00Z')),
+      );
+      await rm(linkedRoot, { recursive: true, force: true });
+      const staleRegistrations = git(fixture.cloneA, [
+        'worktree',
+        'list',
+        '--porcelain',
+      ]);
+      expect(staleRegistrations).toContain(linkedRoot);
+      expect(staleRegistrations).toContain(linkedTarget.projectPath);
+
+      await expect(
+        pruneSynced(target, defaultGitRunner, {
+          force: true,
+          commit: false,
+        }),
+      ).resolves.toEqual({ status: 'pruned', lifecycleCommit: null });
+
+      const registrations = git(fixture.cloneA, [
+        'worktree',
+        'list',
+        '--porcelain',
+      ]);
+      expect(registrations).not.toContain(linkedRoot);
+      expect(registrations).not.toContain(linkedTarget.projectPath);
+      expect(
+        git(fixture.cloneA, ['ls-remote', '--refs', 'origin', target.ref]),
+      ).toBe('');
     } finally {
       await fixture.cleanup();
     }
