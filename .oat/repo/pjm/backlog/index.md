@@ -4,13 +4,12 @@
 
 ## Curated Overview
 
-- User-scope tool-pack closeout follow-ups are split into three bounded features:
-  `BL-260827-make-packaged-skill-references` owns portable cross-skill links and
-  their ratchet; `BL-260827-correct-scope-and-adoption` owns PJM adoption and
-  diagnostic correctness edges; and `BL-260827-clean-up-tool-pack-lifecycle`
-  owns the remaining lifecycle/config consistency findings. They are
-  intentionally separate so packaging, diagnostics, and lifecycle cleanup do
-  not share implementation or review boundaries.
+- The first of three user-scope tool-pack closeout follow-ups is closed:
+  `BL-260827-make-packaged-skill-references` delivered portable cross-skill
+  links and their ratchet in PR #226. The two remaining bounded features stay
+  separate: `BL-260827-correct-scope-and-adoption` owns PJM adoption and
+  diagnostic correctness edges, while `BL-260827-clean-up-tool-pack-lifecycle`
+  owns lifecycle/config consistency findings.
 - User-scope tool distribution is now a high-priority cross-pack initiative:
   `BL-260818-make-the-project-management` covers every tool pack, including
   `project-management`, while keeping PJM operational data repo-owned. The
