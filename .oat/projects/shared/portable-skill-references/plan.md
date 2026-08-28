@@ -610,8 +610,8 @@ Source: inline feedback (2026-08-28)
 | plan          | artifact | fixes_completed | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T220505Z.md` | -                                        | -          | -                    |
 | final         | code     | passed          | 2026-08-28 | `reviews/archived/final-review-2026-08-28T032516Z.md`         | 9586af443af098ee37b7094e00d5b4d69961ccc5 | gate       | cursor-fable-5-xhigh |
 | p-rev1        | code     | passed          | 2026-08-28 | `reviews/archived/p-rev1-review-2026-08-28T120245Z.md`        | cca0bb5187adfdffd475017e1009a6e643502927 | auto       | -                    |
-| final         | code     | fixes_added     | 2026-08-28 | `reviews/archived/final-review-2026-08-28T121224Z.md`         | 263bac768e181bfdc2ad85945ed248e3f5bc8066 | auto       | -                    |
-| remote-pr-226 | code     | fixes_added     | 2026-08-28 | `reviews/archived/remote-pr-226-review-2026-08-28T143457Z.md` | -                                        | -          | -                    |
+| final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T121224Z.md`         | 263bac768e181bfdc2ad85945ed248e3f5bc8066 | auto       | -                    |
+| remote-pr-226 | code     | fixes_completed | 2026-08-28 | `reviews/archived/remote-pr-226-review-2026-08-28T143457Z.md` | -                                        | -          | -                    |
 | final         | code     | fixes_added     | 2026-08-28 | `reviews/archived/final-review-2026-08-28T151136Z.md`         | 34a4b8268bd85ded4c7c37def94e240bd4734674 | auto       | -                    |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
@@ -628,9 +628,9 @@ Source: inline feedback (2026-08-28)
 
 **Total: 16 tasks**
 
-Fourteen task scopes are implemented. Two terminal artifact-alignment tasks
-remain before the final re-review and exit-gate refresh can complete and PR
-#226 can be pushed.
+Fifteen task scopes are implemented. The terminal summary refresh remains
+before the final re-review and exit-gate refresh can complete and PR #226 can
+be pushed.
 
 ## References
 

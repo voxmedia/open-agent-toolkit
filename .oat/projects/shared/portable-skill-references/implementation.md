@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: prev1-t07
+oat_current_task_id: prev1-t08
 oat_generated: false
 ---
 
@@ -12,8 +12,8 @@ oat_generated: false
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
-> Revision 1 behavior and the first five bounded review fixes are complete.
-> Two terminal artifact-alignment fixes are queued before final re-review.
+> Revision 1 behavior and six bounded review fixes are complete. The terminal
+> summary refresh remains before final re-review.
 
 ## Progress Overview
 
@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 1: Portable resolution and enforcement | passed | 4     | 4/4       |
 | Phase 2: Release metadata and validation     | passed | 1     | 1/1       |
 | Phase 3: Final review fixes                  | passed | 3     | 3/3       |
-| Revision 1: Merge current main and fixes     | active | 8     | 6/8       |
+| Revision 1: Merge current main and fixes     | active | 8     | 7/8       |
 
-**Total:** 14/16 tasks completed; `prev1-t07` is next.
+**Total:** 15/16 tasks completed; `prev1-t08` is next.
 
 ### Revision Received: Inline Feedback
 
@@ -76,7 +76,7 @@ skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 
 ### Task prev1-t07: Reconcile terminal lifecycle evidence
 
-**Status:** pending
+**Status:** completed
 
 ### Task prev1-t08: Refresh the terminal project summary
 
@@ -97,15 +97,15 @@ skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 
 **Finding dispositions:**
 
-- `I1` -> `prev1-t07`: reconcile terminal plan, implementation, and state
-  evidence after the completed fix commits.
-- `M1` -> `prev1-t08`: refresh the summary through the terminal task.
+- `I1` -> `prev1-t07`: completed; terminal plan, implementation, and state
+  evidence now agree through the completed behavior fixes.
+- `M1` -> `prev1-t08`: queued; refresh the summary through the terminal task.
 
 **Review-cycle authorization:** consumed the remaining bounded additional
 iteration previously authorized by the user.
 
-**Next:** Execute `prev1-t07` and `prev1-t08`, then run the final re-review and
-configured exit gate.
+**Next:** Execute `prev1-t08`, then run the final re-review and configured exit
+gate.
 
 ### Review Received: final post-merge
 
@@ -690,9 +690,9 @@ closeout passed.
 
 ## Completion Report
 
-- **Implementation:** complete; 9/9 tasks across four phases
-- **Reviews:** all phase reviews passed; final lifecycle re-review is being
-  refreshed for the integrated tree
+- **Implementation:** in progress; 15/16 tasks across four phases
+- **Reviews:** prior final and remote findings are fixed; the current final
+  artifact-alignment review has one completed and one queued finding
 - **Exit gate:** the earlier `cursor-fable-5-xhigh` pass is stale after the
   authorized merge and must be refreshed before implementation success
 - **Verification:** repository gates 01-11 passed with exit-zero evidence
