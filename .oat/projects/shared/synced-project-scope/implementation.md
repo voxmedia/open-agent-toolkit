@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: p13-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,9 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> Ninety implementation and revision tasks are complete. A fresh final review
-> of the PR #226-integrated branch added 11 post-merge fix tasks; execution
-> resumes at `p13-t01` before PR #227 is updated.
+> All 101 implementation and revision tasks are complete. Phase 13 closed the
+> 11 findings from the fresh PR #226-integrated final review; final phase
+> verification is pending before an independent review refreshes PR #227.
 >
 > Conventions:
 >
@@ -43,9 +43,9 @@ oat_generated: false
 | Phase 11     | complete    | 3     | 3/3       |
 | Phase 12     | complete    | 1     | 1/1       |
 | Phase p-rev1 | complete    | 1     | 1/1       |
-| Phase 13     | in progress | 11    | 0/11      |
+| Phase 13     | in progress | 11    | 11/11     |
 
-**Total:** 90/101 tasks completed
+**Total:** 101/101 tasks completed
 
 ---
 
@@ -2843,3 +2843,106 @@ and the primary reviewer's reconciliation.
 
 **Next:** Execute Phase 13 via `oat-project-implement`, then mark this event
 `fixes_completed` and run a fresh independent final review.
+
+## Phase 13: Post-merge final review fixes
+
+**Status:** implementation complete - 11 of 11 tasks complete; final phase
+verification in progress
+
+### Phase Summary
+
+Phase 13 closes the fresh post-merge review findings across destructive Git
+rollback ownership, archive and completion receipt recovery, post-rebase pull
+work, scope isolation, local-sync worktree safety, stable export identity,
+warning-only S3 parity, stale worktree pruning, doctor diagnostics, and release
+metadata. All planned task commits are append-only and remain in task order.
+
+### Task Outcomes
+
+| Task    | Status | Commit      | Verification                                                                  |
+| ------- | ------ | ----------- | ----------------------------------------------------------------------------- |
+| p13-t01 | done   | `fea7ac535` | Bare-origin migration rollback ownership and concurrent-ref race passed       |
+| p13-t02 | done   | `b34cd99c9` | Repository-backed archived-receipt retry and completion transaction passed    |
+| p13-t03 | done   | `553ca77fc` | Conflict continuation, adoption record, and child pull coverage passed        |
+| p13-t04 | done   | `8aab67828` | Shared/local same-slug isolation coverage passed                              |
+| p13-t05 | done   | `0234b9204` | Source and destination `.git` marker matrix passed                            |
+| p13-t06 | done   | `bacd1f528` | Recovered state/log/seal validation and skill checks passed (215/215 focused) |
+| p13-t07 | done   | `e4250e546` | Stable dated identity and later-date retry passed (87/87 focused)             |
+| p13-t08 | done   | `0b0061099` | Shared/synced warning-only S3 parity passed (92/92 focused)                   |
+| p13-t09 | done   | `c2d986a92` | Real-Git removed-parent nested registration fixture passed (56/56 focused)    |
+| p13-t10 | done   | `4baacec0f` | One-sided, unequal, equal, and offline doctor matrix passed (14/14 focused)   |
+| p13-t11 | done   | `9027fd6a7` | Fresh-origin version gate and five-package release validation passed          |
+
+The canonical `oat-project-complete` skill is now `1.7.1`. Receipt recovery
+accepts only the pin-source commit's canonical completed state and final sealed
+completion-log entries: exactly one completion transition, matching valid UTC
+completion/state timestamps, and the canonical `oat-project-complete · seal`
+entry. Active, incomplete, missing-log, and unsealed repository-backed cases
+fail closed.
+
+The five lockstep public packages and generated CLI version asset are `0.2.41`,
+the smallest fresh version above the branch's prior `0.2.40` and current
+`origin/main`'s `0.2.39`. `pnpm install --lockfile-only` found the lockfile
+already canonical because workspace package versions are not represented in
+it, so no synthetic lockfile delta was created.
+
+### Generic Dispatch Record
+
+```yaml
+request_id: 3a81c356-acf5-41ef-9244-56fa59f45196
+caller: oat-project-implement
+scope: synced-project-scope/p13
+objective: Implement Phase 13 post-merge final review fixes in task order.
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+authority: p13-t01 through p13-t11 declared files, tightly necessary adjacent tests, and Phase 13 bookkeeping
+role_selector: oat-phase-implementer-gpt-5-6-sol-high
+model_selector: gpt-5.6-sol
+model_selector_granularity: materialized-role
+effort_selector: high
+selection_source: native-default
+launch_status: accepted
+child_outcome: completed
+configured_invocation_evidence:
+  - exact registered implementer type accepted with materialized model and effort controls
+runtime_confirmation: not-reported
+diagnostics:
+  - ambient HOME selected installed user templates; clean isolated HOME is the authoritative full-suite boundary
+continuation_events:
+  - p13-recovery-01-migration-rollback-mock
+task_class: consequential
+model_class_floor: consequential
+classification_source: caller
+classification_reason: Destructive Git rollback safety and lifecycle recovery correctness are load-bearing.
+floor_satisfaction: satisfied
+dispatch_stamp: 'Dispatch: scope=p13 action=implementation role=worker producer=oat-project-implement provenance=native model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high'
+```
+
+### Recovery Event p13-recovery-01-migration-rollback-mock
+
+- Phase/task: p13 / p13-t01
+- Original request: 3a81c356-acf5-41ef-9244-56fa59f45196
+- Original commit: fea7ac535dd0d549992e3dfe182167abfe8dce9e
+- Defect class: test
+- Discovered by: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/push/completion-transaction.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: e0567b550eeca86043d176d0d86f706ec58679bc
+- Verification: focused migration index 12/12 and clean-HOME CLI 4,303/4,303 passed before and after the candidate commit
+- Reason: one adjacent migration mock still expected the pre-lease rollback argv; the bounded fixture-only correction now recognizes SHA-leased deletion while production behavior remains unchanged
+
+Root settlement commit `646b6e2f6053d15779e27100eae62885ec53b6e1`
+cleared the terminal marker while preserving monotonic usage at 1/10 and
+`pending_attempt: null`.
+
+**Review disposition:** The received post-merge final review event is
+`fixes_completed`, never passed. A fresh independent final review is required
+after final phase verification; no PR mutation, merge, completion, archive,
+migration, deployment, or repository deletion is authorized by this phase.
