@@ -21,18 +21,18 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #     pNN:
 #       used_attempts: 0
 #       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
-# oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
-#   mode: managed # managed | inherit
-#   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
-#   providers: # present for capped managed policies; omitted for uncapped/inherit
-#     codex: high # low|medium|high|xhigh
-#     claude: sonnet # haiku|sonnet|opus|fable
-#   matrix: # optional sparse project override; full dispatch matrix lives in layered config
-#     cursor:
-#       high:
-#         - composer-2.5
-#         - { harness: cursor, model: gpt-5.5-xhigh }
-#   source: project-state
+oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
+  mode: managed # managed | inherit
+  policy: high # economy | balanced | high | frontier | uncapped; omit when mode: inherit
+  #   providers: # present for capped managed policies; omitted for uncapped/inherit
+  #     codex: high # low|medium|high|xhigh
+  #     claude: sonnet # haiku|sonnet|opus|fable
+  #   matrix: # optional sparse project override; full dispatch matrix lives in layered config
+  #     cursor:
+  #       high:
+  #         - composer-2.5
+  #         - { harness: cursor, model: gpt-5.5-xhigh }
+  source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -76,20 +76,21 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-28T21:36:51.245Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T22:02:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T22:22:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: portable-agent-references
 
-**Status:** Plan drafted; dispatch and review gates pending
+**Status:** Plan revised after structured review; Fable gate pending
 **Started:** 2026-08-28
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Discovery and lightweight design are complete. The implementation plan is
-drafted and awaits dispatch-policy and review-gate resolution.
+Discovery and lightweight design are complete. The High dispatch policy is
+configured, and the implementation plan has completed structured review and
+awaits the requested Claude Fable gate.
 
 ## Artifacts
 
@@ -107,7 +108,9 @@ drafted and awaits dispatch-policy and review-gate resolution.
 - ✓ Expanded global-ratchet requirements confirmed
 - ✓ Lightweight draft design selected
 - ✓ Eight-task sequential plan drafted
-- ⧗ Dispatch policy and artifact review pending
+- ✓ High managed dispatch policy configured
+- ✓ Structured plan review completed; three Important findings fixed
+- ⧗ Claude Fable artifact gate pending
 
 ## Blockers
 
@@ -115,4 +118,4 @@ None
 
 ## Next Milestone
 
-Resolve dispatch policy, review the artifact bundle, and mark the plan ready
+Run the Claude Fable artifact gate and mark the plan ready

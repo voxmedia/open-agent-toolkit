@@ -240,6 +240,7 @@ git commit -m "fix(p01-t04): port workflow review references"
 - Modify: `.agents/agents/oat-codebase-mapper.md`
 - Modify:
   `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- Modify: `packages/cli/src/commands/sync/index.test.ts`
 - Modify: `packages/cli/src/validation/skills.test.ts`
 
 **Step 1: Add agent portable-contract assertions**
@@ -270,10 +271,16 @@ Expected: assertions fail while the three agents retain bare paths.
 
 **Step 3: Verify generated roles and format**
 
+Extend the sync integration contract to derive the affected Claude, Cursor,
+and Codex role paths from the materialization plan/manifest, read every
+generated role, require the portable resolver markers in each copy, and reject
+executable bare sibling-skill paths. Cover the phase implementer, reviewer, and
+codebase mapper wherever each provider materializes that role.
+
 ```bash
-pnpm exec oxfmt --write .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/agents/oat-codebase-mapper.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/validation/skills.test.ts
-pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/validation/skills.test.ts
-oat sync --scope all --dry-run
+pnpm exec oxfmt --write .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/agents/oat-codebase-mapper.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/commands/sync/index.test.ts packages/cli/src/validation/skills.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/commands/sync/index.test.ts src/validation/skills.test.ts
+pnpm run cli -- sync --scope all --dry-run
 pnpm lint
 pnpm format
 git diff --check
@@ -285,7 +292,7 @@ the phase-implementer exemption no longer exists.
 **Step 4: Commit**
 
 ```bash
-git add .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/agents/oat-codebase-mapper.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/validation/skills.test.ts
+git add .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/agents/oat-codebase-mapper.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/commands/sync/index.test.ts packages/cli/src/validation/skills.test.ts
 git commit -m "fix(p01-t05): port user-default agent references"
 ```
 
@@ -386,7 +393,7 @@ version inventory, and refresh provider views.
 
 ```bash
 git fetch origin
-oat sync --scope all
+pnpm run cli -- sync --scope all
 ```
 
 **Step 2: Run the ordered repository gates with explicit exit capture**
@@ -405,17 +412,17 @@ run_portable_agent_gate() {
   fi
 }
 
-run_portable_agent_gate 01-check pnpm check
-run_portable_agent_gate 02-type-check pnpm type-check
-run_portable_agent_gate 03-test pnpm test
-run_portable_agent_gate 04-build pnpm build
-run_portable_agent_gate 05-skill-bumps pnpm run check:skill-bumps
-run_portable_agent_gate 06-release-versions pnpm release:check-versions
-run_portable_agent_gate 07-release-validate pnpm release:validate
-run_portable_agent_gate 08-build-docs pnpm build:docs
-run_portable_agent_gate 09-lint pnpm lint
-run_portable_agent_gate 10-format pnpm format
-run_portable_agent_gate 11-diff-check git diff --check
+run_portable_agent_gate 01-check pnpm check || exit $?
+run_portable_agent_gate 02-type-check pnpm type-check || exit $?
+run_portable_agent_gate 03-test pnpm test || exit $?
+run_portable_agent_gate 04-build pnpm build || exit $?
+run_portable_agent_gate 05-skill-bumps pnpm run check:skill-bumps || exit $?
+run_portable_agent_gate 06-release-versions pnpm release:check-versions || exit $?
+run_portable_agent_gate 07-release-validate pnpm release:validate || exit $?
+run_portable_agent_gate 08-build-docs pnpm build:docs || exit $?
+run_portable_agent_gate 09-lint pnpm lint || exit $?
+run_portable_agent_gate 10-format pnpm format || exit $?
+run_portable_agent_gate 11-diff-check git diff --check || exit $?
 ```
 
 Expected: every gate reports exit `0` in the documented order.
@@ -431,14 +438,14 @@ git commit -m "chore(p02-t02): release portable agent references"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
-| plan   | artifact | pending | -    | -        | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                    | Reviewed Head | Invocation                           | Gate Target |
+| ------ | -------- | --------------- | ---------- | --------------------------- | ------------- | ------------------------------------ | ----------- |
+| p01    | code     | pending         | -          | -                           | -             | -                                    | -           |
+| p02    | code     | pending         | -          | -                           | -             | -                                    | -           |
+| final  | code     | pending         | -          | -                           | -             | -                                    | -           |
+| spec   | artifact | pending         | -          | -                           | -             | -                                    | -           |
+| design | artifact | pending         | -          | -                           | -             | -                                    | -           |
+| plan   | artifact | fixes_completed | 2026-08-28 | structured in-memory review | c47586ce      | native:oat-reviewer-gpt-5-6-sol-high | -           |
 
 ## Implementation Complete
 
