@@ -12,6 +12,7 @@ import {
   pullSynced as defaultPullSynced,
   type PullChildResult,
   type PullResult,
+  type AdoptionRecordState,
   type SyncTarget,
 } from '@commands/project/sync/ref-sync';
 import {
@@ -37,7 +38,11 @@ interface ProjectPullDependencies {
   pullSynced: (
     target: SyncTarget,
     git: GitRunner,
-    options?: { adopt?: boolean; now?: Date },
+    options?: {
+      adopt?: boolean;
+      adoptionRecord?: AdoptionRecordState;
+      now?: Date;
+    },
   ) => Promise<PullResult>;
   pullChildren: (
     target: SyncTarget,
@@ -183,6 +188,7 @@ async function runPull(
       ? await dependencies.continueSynced(target, dependencies.gitRunner)
       : await dependencies.pullSynced(target, dependencies.gitRunner, {
           adopt: target.adopt,
+          adoptionRecord: target.adoptionRecord,
         });
     const successful =
       result.status === 'created' ||

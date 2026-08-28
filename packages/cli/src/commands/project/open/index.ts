@@ -13,6 +13,7 @@ import {
   pushSynced as defaultPushSynced,
   type PullResult,
   type PushResult,
+  type AdoptionRecordState,
   type SyncTarget,
 } from '@commands/project/sync/ref-sync';
 import {
@@ -84,7 +85,11 @@ interface ProjectOpenDependencies {
   pullSynced: (
     target: SyncTarget,
     git: GitRunner,
-    options?: { adopt?: boolean; now?: Date },
+    options?: {
+      adopt?: boolean;
+      adoptionRecord?: AdoptionRecordState;
+      now?: Date;
+    },
   ) => Promise<PullResult>;
   pushSynced: (
     target: SyncTarget,
@@ -151,6 +156,7 @@ async function materializeSyncedProject(
 ): Promise<void> {
   const result = await dependencies.pullSynced(target, dependencies.gitRunner, {
     adopt: target.adopt,
+    adoptionRecord: target.adoptionRecord,
   });
   if (!successfulPull(result)) {
     throw new CliError(
@@ -196,7 +202,10 @@ async function resolveProject(
         {},
         { allowMissingCheckout: true },
       );
-      if (!(await dependencies.dirExists(fullProjectPath))) {
+      if (
+        !(await dependencies.dirExists(fullProjectPath)) ||
+        syncTarget.adopt
+      ) {
         await materializeSyncedProject(repoRoot, syncTarget, dependencies);
       }
     } else if (!(await dependencies.dirExists(fullProjectPath))) {
@@ -268,7 +277,7 @@ async function resolveProject(
       {},
       { allowMissingCheckout: true },
     );
-    if (!candidate.present) {
+    if (!candidate.present || syncTarget.adopt) {
       await materializeSyncedProject(repoRoot, syncTarget, dependencies);
     }
   }

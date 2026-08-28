@@ -11,6 +11,7 @@ import {
 import { describe, expect, it } from 'vitest';
 
 import { defaultGitRunner, type GitRunner } from './git';
+import { buildSyncedRecord, writeSyncedRecord } from './record';
 import {
   assertAllowlistedPathspecs,
   assertNestedWorktree,
@@ -1733,6 +1734,45 @@ describe('synced checkout removal', () => {
       expect(
         git(fixture.cloneA, ['worktree', 'list', '--porcelain']),
       ).not.toContain(target.projectPath);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('returns an existing pending adoption record without rewriting its ownership metadata', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'pending-adoption',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(
+        join(target.projectPath, 'state.md'),
+        '# state\n',
+        'utf8',
+      );
+      await pushSynced(target, defaultGitRunner, {});
+      const recordPath = join(target.syncedRoot, 'pending-adoption.json');
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(target.slug, new Date('2026-08-27T00:00:00.000Z')),
+      );
+      const before = await readFile(recordPath, 'utf8');
+
+      await expect(
+        pullSynced(target, defaultGitRunner, {
+          adopt: true,
+          adoptionRecord: 'pending',
+          now: new Date('2026-08-28T00:00:00.000Z'),
+        }),
+      ).resolves.toMatchObject({
+        adopted: true,
+        adoptionRecordOwnership: 'existing',
+        pendingRecordPaths: [recordPath],
+      });
+      await expect(readFile(recordPath, 'utf8')).resolves.toBe(before);
     } finally {
       await fixture.cleanup();
     }

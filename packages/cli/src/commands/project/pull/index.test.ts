@@ -512,4 +512,152 @@ describe('createProjectPullCommand', () => {
       await fixture.cleanup();
     }
   });
+
+  it('retries a failed adoption record commit and preserves unrelated staged work', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const slug = 'pull-retry';
+      await scaffoldProject({
+        repoRoot: fixture.cloneA,
+        projectName: slug,
+        scope: 'synced',
+        commit: false,
+        refreshDashboard: false,
+        setActive: false,
+      });
+      await writeFile(join(fixture.cloneB, 'unrelated.txt'), 'user work\n');
+      execFileSync('git', ['add', 'unrelated.txt'], { cwd: fixture.cloneB });
+      const firstCapture = createLoggerCapture();
+      const first = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB,
+          home: '/home',
+          interactive: false,
+          logger: firstCapture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB,
+        commitRecordChange: async () => {
+          throw new Error('injected first pull record commit failure');
+        },
+      });
+      await run(first, [slug]);
+      expect(process.exitCode).toBe(2);
+
+      process.exitCode = undefined;
+      const secondCapture = createLoggerCapture();
+      const second = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB,
+          home: '/home',
+          interactive: false,
+          logger: secondCapture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB,
+      });
+      await run(second, [slug], ['--json']);
+
+      expect(process.exitCode).toBe(0);
+      expect(secondCapture.jsonPayloads[0]).toMatchObject({ adopted: true });
+      expect(
+        execFileSync('git', ['show', '--format=', '--name-only', 'HEAD'], {
+          cwd: fixture.cloneB,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe(`.oat/projects/synced/${slug}.json`);
+      expect(
+        execFileSync(
+          'git',
+          ['status', '--porcelain=v1', '--untracked-files=all'],
+          {
+            cwd: fixture.cloneB,
+            encoding: 'utf8',
+          },
+        ),
+      ).toContain('A  unrelated.txt');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('leaves an adopted record pending under --no-commit and commits it on a normal retry', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const slug = 'pull-no-commit';
+      await scaffoldProject({
+        repoRoot: fixture.cloneA,
+        projectName: slug,
+        scope: 'synced',
+        commit: false,
+        refreshDashboard: false,
+        setActive: false,
+      });
+      const first = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB,
+          home: '/home',
+          interactive: false,
+          logger: createLoggerCapture().logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB,
+      });
+      await run(first, [slug, '--no-commit']);
+      expect(process.exitCode).toBe(0);
+      expect(
+        execFileSync(
+          'git',
+          ['status', '--porcelain=v1', '--untracked-files=all'],
+          {
+            cwd: fixture.cloneB,
+            encoding: 'utf8',
+          },
+        ),
+      ).toContain(`?? .oat/projects/synced/${slug}.json`);
+
+      process.exitCode = undefined;
+      const second = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB,
+          home: '/home',
+          interactive: false,
+          logger: createLoggerCapture().logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB,
+      });
+      await run(second, [slug]);
+      expect(process.exitCode).toBe(0);
+      expect(
+        execFileSync(
+          'git',
+          [
+            'ls-tree',
+            '--name-only',
+            'HEAD',
+            `.oat/projects/synced/${slug}.json`,
+          ],
+          {
+            cwd: fixture.cloneB,
+            encoding: 'utf8',
+          },
+        ).trim(),
+      ).toBe(`.oat/projects/synced/${slug}.json`);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
 });

@@ -2,13 +2,11 @@ import { realpath, stat } from 'node:fs/promises';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
-import { readSyncedRecord } from '@commands/project/sync/record';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   resolveProjectScope,
   resolveScopeRoot,
   syncedRefName,
-  syncedRecordPath,
 } from '@commands/shared/project-scope';
 import { readOatLocalConfig, type OatLocalConfig } from '@config/oat-config';
 import { CliError } from '@errors/cli-error';
@@ -16,6 +14,8 @@ import { CliError } from '@errors/cli-error';
 import {
   assertCanonicalSyncTargetIdentity,
   buildSyncTarget,
+  classifyAdoptionRecord,
+  type AdoptionRecordState,
   type SyncTarget,
 } from './ref-sync';
 
@@ -32,8 +32,8 @@ export interface ResolveSyncedTargetOptions {
 
 export interface ResolveSyncedTargetDependencies {
   resolveProjectsRoot: typeof resolveProjectsRoot;
+  classifyAdoptionRecord: typeof classifyAdoptionRecord;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
-  readSyncedRecord: typeof readSyncedRecord;
   pathExists: (path: string) => Promise<boolean>;
   realpath: typeof realpath;
   gitRunner: GitRunner;
@@ -41,6 +41,7 @@ export interface ResolveSyncedTargetDependencies {
 
 export interface ResolvedSyncTarget extends SyncTarget {
   adopt: boolean;
+  adoptionRecord: AdoptionRecordState;
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -57,8 +58,8 @@ async function pathExists(path: string): Promise<boolean> {
 
 const DEFAULT_DEPENDENCIES: ResolveSyncedTargetDependencies = {
   resolveProjectsRoot,
+  classifyAdoptionRecord,
   readOatLocalConfig,
-  readSyncedRecord,
   pathExists,
   realpath,
   gitRunner: defaultGitRunner,
@@ -140,12 +141,13 @@ export async function resolveSyncedTarget(
     realpath: dependencies.realpath,
     exitCode: 1,
   });
-  const record = await dependencies.readSyncedRecord(
-    syncedRecordPath(syncedRoot, slug),
+  const adoptionRecord = await dependencies.classifyAdoptionRecord(
+    target,
+    dependencies.gitRunner,
   );
 
-  let adopt = false;
-  if (!checkoutExists && !record) {
+  let adopt = adoptionRecord === 'pending';
+  if (!checkoutExists && adoptionRecord === 'create') {
     if (options.allowMissingCheckout) {
       const remote = await dependencies.gitRunner.run(
         ['ls-remote', '--exit-code', 'origin', `refs/oat/projects/${slug}`],
@@ -174,9 +176,13 @@ export async function resolveSyncedTarget(
     }
   } else if (!checkoutExists && !options.allowMissingCheckout) {
     throw new CliError(`No synced project named ${slug}.`, 1);
-  } else if (checkoutExists && !record && options.allowMissingCheckout) {
+  } else if (
+    checkoutExists &&
+    adoptionRecord === 'create' &&
+    options.allowMissingCheckout
+  ) {
     adopt = true;
   }
 
-  return { ...target, adopt };
+  return { ...target, adopt, adoptionRecord };
 }

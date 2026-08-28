@@ -14,6 +14,7 @@ function deps(
     activeProject?: string;
     existing?: string[];
     record?: boolean;
+    recordPending?: boolean;
   } = {},
 ) {
   return {
@@ -25,21 +26,23 @@ function deps(
     pathExists: async (path: string) =>
       (options.existing ?? []).some((suffix) => path.endsWith(suffix)),
     realpath: async (path: string) => path,
-    readSyncedRecord: async () =>
+    classifyAdoptionRecord: async () =>
       options.record
-        ? {
-            schemaVersion: 1 as const,
-            slug: 'demo',
-            scope: 'synced' as const,
-            ref: 'refs/oat/projects/demo',
-            remote: 'origin' as const,
-            status: 'active' as const,
-            createdAt: '2026-08-27T00:00:00.000Z',
-            completedAt: null,
-          }
-        : null,
+        ? options.recordPending
+          ? ('pending' as const)
+          : ('durable' as const)
+        : ('create' as const),
     gitRunner: {
-      run: async () => ({ code: 2, stdout: '', stderr: '' }),
+      run: async (args: string[]) =>
+        args[0] === 'status'
+          ? {
+              code: 0,
+              stdout: options.recordPending
+                ? '?? .oat/projects/synced/demo.json'
+                : '',
+              stderr: '',
+            }
+          : { code: 2, stdout: '', stderr: '' },
     },
   };
 }
@@ -93,16 +96,7 @@ describe('resolveSyncedTarget', () => {
       await mkdir(join(syncedRoot, 'demo', 'reviews'), { recursive: true });
       await mkdir(join(syncedRoot, 'reviews'), { recursive: true });
       const pathExists = vi.fn(async () => true);
-      const readSyncedRecord = vi.fn(async () => ({
-        schemaVersion: 1 as const,
-        slug: 'reviews',
-        scope: 'synced' as const,
-        ref: 'refs/oat/projects/reviews',
-        remote: 'origin' as const,
-        status: 'active' as const,
-        createdAt: '2026-08-27T00:00:00.000Z',
-        completedAt: null,
-      }));
+      const classifyAdoptionRecord = vi.fn(async () => 'durable' as const);
       const requested =
         kind === 'absolute'
           ? join(syncedRoot, 'demo', 'reviews')
@@ -112,14 +106,14 @@ describe('resolveSyncedTarget', () => {
         resolveSyncedTarget({ repoRoot, env: {} }, requested, {
           ...deps(),
           pathExists,
-          readSyncedRecord,
+          classifyAdoptionRecord,
         }),
       ).rejects.toMatchObject({
         message: expect.stringContaining('exactly one direct child'),
         exitCode: 1,
       });
       expect(pathExists).not.toHaveBeenCalled();
-      expect(readSyncedRecord).not.toHaveBeenCalled();
+      expect(classifyAdoptionRecord).not.toHaveBeenCalled();
     },
   );
 
@@ -235,5 +229,39 @@ describe('resolveSyncedTarget', () => {
         { allowMissingCheckout: true },
       ),
     ).resolves.toMatchObject({ slug: 'demo', adopt: true });
+  });
+
+  it('classifies an existing uncommitted record as pending adoption durability', async () => {
+    await expect(
+      resolveSyncedTarget(
+        { repoRoot: '/repo', env: {} },
+        'demo',
+        deps({
+          existing: ['/synced/demo'],
+          record: true,
+          recordPending: true,
+        }),
+        { allowMissingCheckout: true },
+      ),
+    ).resolves.toMatchObject({
+      slug: 'demo',
+      adopt: true,
+      adoptionRecord: 'pending',
+    });
+  });
+
+  it('classifies a clean committed record as durable', async () => {
+    await expect(
+      resolveSyncedTarget(
+        { repoRoot: '/repo', env: {} },
+        'demo',
+        deps({ existing: ['/synced/demo'], record: true }),
+        { allowMissingCheckout: true },
+      ),
+    ).resolves.toMatchObject({
+      slug: 'demo',
+      adopt: false,
+      adoptionRecord: 'durable',
+    });
   });
 });

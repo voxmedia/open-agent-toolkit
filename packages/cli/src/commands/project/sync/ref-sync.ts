@@ -62,8 +62,11 @@ export type PullResult = {
   sha: string;
   conflicts?: string[];
   adopted?: boolean;
+  adoptionRecordOwnership?: 'created' | 'existing';
   pendingRecordPaths?: string[];
 };
+
+export type AdoptionRecordState = 'create' | 'pending' | 'durable';
 
 export interface PullChildResult {
   slug: string;
@@ -105,6 +108,26 @@ export interface MigrateSharedToSyncedOptions {
   readOatLocalConfig?: typeof readOatLocalConfig;
   writeOatLocalConfig?: typeof writeOatLocalConfig;
   afterBranchCommit?: () => Promise<void>;
+}
+
+export async function classifyAdoptionRecord(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<AdoptionRecordState> {
+  const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+  if ((await readSyncedRecord(recordPath)) === null) return 'create';
+
+  const status = await git.run(
+    [
+      'status',
+      '--porcelain=v1',
+      '--untracked-files=all',
+      '--',
+      repoRelativePath(target.repoRoot, recordPath),
+    ],
+    { cwd: target.repoRoot },
+  );
+  return status.stdout === '' ? 'durable' : 'pending';
 }
 
 async function assertNoMigrationSourceLinks(
@@ -597,8 +620,15 @@ async function reconcilePulledRef(
 export async function pullSynced(
   target: SyncTarget,
   git: GitRunner,
-  options: { adopt?: boolean; now?: Date } = {},
+  options: {
+    adopt?: boolean;
+    adoptionRecord?: AdoptionRecordState;
+    now?: Date;
+  } = {},
 ): Promise<PullResult> {
+  const adoptionRecord =
+    options.adoptionRecord ?? (options.adopt ? 'create' : 'durable');
+  const shouldAdopt = adoptionRecord !== 'durable';
   const checkoutExists = await assertCanonicalSyncTargetIdentity(target);
   await git.run(['fetch', target.remote, `+${target.ref}:${target.ref}`], {
     cwd: target.repoRoot,
@@ -622,28 +652,43 @@ export async function pullSynced(
       status: 'created',
       sha: await headSha(target, git),
     };
-    return options.adopt
-      ? await writeAdoptionRecord(target, result, options.now ?? new Date())
+    return shouldAdopt
+      ? await prepareAdoptionRecord(
+          target,
+          result,
+          adoptionRecord,
+          options.now ?? new Date(),
+        )
       : result;
   }
 
   const result = await reconcilePulledRef(target, git);
-  return options.adopt &&
+  return shouldAdopt &&
     (result.status === 'updated' || result.status === 'up-to-date')
-    ? await writeAdoptionRecord(target, result, options.now ?? new Date())
+    ? await prepareAdoptionRecord(
+        target,
+        result,
+        adoptionRecord,
+        options.now ?? new Date(),
+      )
     : result;
 }
 
-async function writeAdoptionRecord(
+async function prepareAdoptionRecord(
   target: SyncTarget,
   result: PullResult,
+  adoptionRecord: Exclude<AdoptionRecordState, 'durable'>,
   now: Date,
 ): Promise<PullResult> {
   const recordPath = syncedRecordPath(dirname(target.projectPath), target.slug);
-  await writeSyncedRecord(recordPath, buildSyncedRecord(target.slug, now));
+  if (adoptionRecord === 'create') {
+    await writeSyncedRecord(recordPath, buildSyncedRecord(target.slug, now));
+  }
   return {
     ...result,
     adopted: true,
+    adoptionRecordOwnership:
+      adoptionRecord === 'create' ? 'created' : 'existing',
     pendingRecordPaths: [recordPath],
   };
 }
@@ -692,8 +737,7 @@ export async function pullChildren(
     };
     try {
       await assertCanonicalSyncTargetIdentity(childTarget);
-      const recordPath = syncedRecordPath(syncedRoot, slug);
-      const adopt = (await readSyncedRecord(recordPath)) === null;
+      const adoptionRecord = await classifyAdoptionRecord(childTarget, git);
       const remote = await git.run(
         ['ls-remote', '--exit-code', childTarget.remote, childTarget.ref],
         { cwd: parentTarget.repoRoot, allowFailure: true },
@@ -720,7 +764,10 @@ export async function pullChildren(
         });
         continue;
       }
-      const result = await pullSynced(childTarget, git, { adopt });
+      const result = await pullSynced(childTarget, git, {
+        adopt: adoptionRecord !== 'durable',
+        adoptionRecord,
+      });
       results.push({
         slug,
         ...result,
