@@ -2482,3 +2482,19 @@ corroborate the persisted intent. Configured gate attempt 2 is durably complete.
 
 The sequence snapshot is authoritative and immutable for this closeout. Each
 child step must merge its state update without replacing the snapshot.
+
+#### Pre-approval Summary Completed - 2026-08-28T20:05:13Z
+
+- **Commit:** `48e8464851bf353f2001b21e2f4245ba25cc0040`
+- **Artifact:** `summary.md` (197 lines; current through `p12-t01`)
+- **Project-log rollup:** 34 entries synthesized with a deduplicated ledger
+  outcome; a repeat rollup left the summary unchanged.
+- **Decision promotion:** seven canonical decision records created through the
+  OAT CLI and indexed under `.oat/repo/reference/decisions/`.
+- **Verification:** OAT formatting, diff checks, rollup idempotence, sequence
+  preservation, exact-path commit containment, and final worktree cleanliness
+  passed.
+
+The root orchestrator verified the child commit contains only the summary and
+its CLI-owned decision records. The authoritative sequence snapshot remained
+unchanged and now records `summary` as completed.
