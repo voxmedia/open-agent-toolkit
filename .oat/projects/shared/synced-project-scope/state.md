@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev1-t01
-oat_last_commit: a8f2e678c
+oat_current_task: null
+oat_last_commit: 17c3b80db
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: review_pending # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -134,7 +134,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T21:35:17.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T22:05:42.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -144,14 +144,14 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Revision 1 in progress; integrating merged PR #226 into PR #227
+**Status:** Revision 1 passed; final lifecycle freshness pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Revision 1 — integrate current `origin/main` into PR #227 and verify the
-combined branch.
+Revision 1 complete — refresh final verification, review, and exit-gate
+freshness before updating PR #227.
 
 ## Artifacts
 
@@ -159,7 +159,7 @@ combined branch.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (89/90 tasks complete)
+- **Implementation:** `implementation.md` (90/90 tasks complete)
 
 ## Progress
 
@@ -281,7 +281,8 @@ combined branch.
 - ✓ Implementation-tail project recap skipped by explicit user choice
 - ✓ Final Phase 12 HiLL approval received
 - ✓ Implementation closeout complete
-- ⧗ Revision task prev1-t01 in progress: integrate merged PR #226
+- ✓ Revision task prev1-t01 complete: merged PR #226 at `17c3b80db`
+- ✓ Revision p-rev1 independent review passed with 1 non-blocking Minor finding
 - ⧗ Awaiting human review
 - ✓ Cycle-5 findings converted into consolidated task p09-t01 with no deferrals
 - ✓ Phase 9 task p09-t01 completed and verified in `e193c8ffb`
@@ -298,5 +299,5 @@ None.
 
 ## Next Milestone
 
-Execute `prev1-t01`: merge current `origin/main`, reconcile overlap from merged
-PR #226, run required verification, review the integration, and update PR #227.
+Refresh final lifecycle verification, review, and configured exit-gate
+freshness for the post-merge effective delta, then update PR #227.

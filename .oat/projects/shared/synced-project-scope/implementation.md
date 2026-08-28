@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,8 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> The original 89 implementation tasks and closeout are complete. Revision 1
-> is in progress to integrate merged PR #226 from `origin/main` into PR #227.
+> All 90 implementation and revision tasks are complete. Revision 1 integrated
+> merged PR #226 and passed its independent phase review; final lifecycle
+> freshness is being re-established before PR #227 is updated.
 >
 > Conventions:
 >
@@ -27,23 +28,23 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 10    | 10/10     |
-| Phase 2      | complete    | 13    | 13/13     |
-| Phase 3      | complete    | 19    | 19/19     |
-| Phase 4      | complete    | 16    | 16/16     |
-| Phase 5      | complete    | 7     | 7/7       |
-| Phase 6      | complete    | 3     | 3/3       |
-| Phase 7      | complete    | 1     | 1/1       |
-| Phase 8      | complete    | 1     | 1/1       |
-| Phase 9      | complete    | 1     | 1/1       |
-| Phase 10     | complete    | 14    | 14/14     |
-| Phase 11     | complete    | 3     | 3/3       |
-| Phase 12     | complete    | 1     | 1/1       |
-| Phase p-rev1 | in_progress | 1     | 0/1       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 10    | 10/10     |
+| Phase 2      | complete | 13    | 13/13     |
+| Phase 3      | complete | 19    | 19/19     |
+| Phase 4      | complete | 16    | 16/16     |
+| Phase 5      | complete | 7     | 7/7       |
+| Phase 6      | complete | 3     | 3/3       |
+| Phase 7      | complete | 1     | 1/1       |
+| Phase 8      | complete | 1     | 1/1       |
+| Phase 9      | complete | 1     | 1/1       |
+| Phase 10     | complete | 14    | 14/14     |
+| Phase 11     | complete | 3     | 3/3       |
+| Phase 12     | complete | 1     | 1/1       |
+| Phase p-rev1 | complete | 1     | 1/1       |
 
-**Total:** 89/90 tasks completed
+**Total:** 90/90 tasks completed
 
 ---
 
@@ -2608,3 +2609,168 @@ the project was not archived, migrated, deployed, or deleted.
 
 **Next:** Execute revision task `prev1-t01` via the `oat-project-implement`
 skill.
+
+### Run 14 - 2026-08-28T22:05:42Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Codex pinned variants)
+**Status:** p-rev1 passed; final lifecycle freshness pending
+
+#### Generic Dispatch Record
+
+```yaml
+request_id: 12d1298f-1f56-45ce-b93a-4d0f400e34b6
+caller: oat-project-implement
+scope: synced-project-scope/p-rev1
+objective: Integrate merged PR #226 into PR #227 and verify the combined branch.
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-medium
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+catalog_snapshot:
+  id: codex-native-agent-schema-20260828T2135Z
+  source: tool-schema
+  observed_at: 2026-08-28T21:35:17Z
+authority: merge-derived p-rev1 paths; one merge commit; recovery ledger only if activated
+role_selector: oat-phase-implementer-gpt-5-6-sol-medium
+model_selector: gpt-5.6-sol
+model_selector_granularity: materialized-role
+effort_selector: medium
+reasoning_mode_selector: null
+service_tier_selector: null
+guidance_reference: .agents/skills/subagent-orchestration/references/provider-codex.md
+guidance_version: 2026-07-25
+guidance_verified_at: 2026-07-25
+guidance_status: fresh
+selection_source: native-default
+candidates_considered:
+  - gpt-5.6-sol/medium
+  - gpt-5.6-sol/high
+selection_reason: native-catalog
+selected_route: native
+deadline_seconds: 7200
+retry_limit: 1
+payload:
+  agent_type: oat-phase-implementer-gpt-5-6-sol-medium
+  fork_turns: none
+  task_name: rev1_phase_implement
+launch_status: accepted
+child_outcome: done-with-concerns
+configured_invocation_evidence:
+  - exact registered agent type accepted with materialized model and effort controls
+runtime_confirmation: not-reported
+diagnostics:
+  - ambient-home tests selected installed user templates; the isolated-home full suite passed
+continuation_events: []
+task_class: default-implementation
+model_class_floor: default-implementation
+classification_source: caller
+classification_reason: The bounded upstream merge reconciled dispersed skill, validation, docs, sync, PJM, and release-version changes.
+floor_satisfaction: satisfied
+project_dispatch:
+  project_path: .oat/projects/shared/synced-project-scope
+  workflow_mode: spec-driven
+  phase: implement
+  phase_id: p-rev1
+  task_id: prev1-t01
+  worktree: root
+  commit_policy: one merge commit for the task
+lifecycle_outcome:
+  task_status: complete
+  verification_status: passed-with-environment-caveat
+  commit_range: afa520baf703e78478385c8debb39f439738e7b8..17c3b80db3768261471fc7d8faf403bb31366561
+```
+
+#### Phase Outcomes
+
+| Phase  | Verdict | Tasks | Root review | Fix loops |
+| ------ | ------- | ----- | ----------- | --------- |
+| p-rev1 | passed  | 1/1   | passed      | 0         |
+
+**Task commit:** merge commit `17c3b80db3768261471fc7d8faf403bb31366561`
+with exact parents `afa520baf703e78478385c8debb39f439738e7b8` and
+`8cc1b3827f9c051d5d2bb078ae986aef3e9fbd80`.
+
+**Conflict resolution:** preserved portable packaged sibling-skill references,
+synced-project arrival/bookkeeping behavior, both PJM capability entries, and
+both validation-contract families. Lockstep public packages and generated
+version assets are `0.2.40`; `oat-brainstorm` is `1.3.2`;
+`oat-project-implement` remains `2.3.0`; `oat-project-plan-writing` is `1.2.19`.
+
+**Verification:** focused 169 tests and 63-skill validation passed. The exact
+CI-order Definition of Done passed with explicit exit `0` for `pnpm check`,
+`pnpm type-check`, isolated-home `pnpm test`, `pnpm build`, skill-bump and
+release-version checks, release validation, and docs build; repository lint,
+format, and diff checks also passed. Ambient-home tests reproduced three
+pre-existing user-template precedence failures outside the reviewed range.
+
+**Recovery:** 0/10 attempts used; no recovery event.
+
+#### Review Outcome
+
+```yaml
+request_id: 8fd29747-1a48-43f2-91be-a6e6ab735182
+caller: oat-project-implement
+scope: synced-project-scope/p-rev1
+objective: Independently review the semantic integration of merged PR #226 into PR #227.
+action: review
+role_name: oat-reviewer-gpt-5-6-sol-high
+role_class: reviewer
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+catalog_snapshot:
+  id: codex-native-agent-schema-20260828T2203Z
+  source: tool-schema
+  observed_at: 2026-08-28T22:03:27Z
+authority: read-only merge review plus one project review artifact
+role_selector: oat-reviewer-gpt-5-6-sol-high
+model_selector: gpt-5.6-sol
+model_selector_granularity: materialized-role
+effort_selector: high
+reasoning_mode_selector: null
+service_tier_selector: null
+guidance_reference: .agents/skills/subagent-orchestration/references/provider-codex.md
+guidance_version: 2026-07-25
+guidance_verified_at: 2026-07-25
+guidance_status: fresh
+selection_source: native-default
+candidates_considered:
+  - gpt-5.6-sol/high
+selection_reason: native-catalog
+selected_route: native
+deadline_seconds: 7200
+retry_limit: 1
+payload:
+  agent_type: oat-reviewer-gpt-5-6-sol-high
+  fork_turns: none
+  task_name: rev1_phase_review
+launch_status: accepted
+child_outcome: completed
+configured_invocation_evidence:
+  - exact registered reviewer type accepted with materialized model and effort controls
+runtime_confirmation: not-reported
+diagnostics: []
+continuation_events: []
+```
+
+- **Request:** `8fd29747-1a48-43f2-91be-a6e6ab735182`
+- **Target:** `oat-reviewer-gpt-5-6-sol-high`
+- **Dispatch stamp:** `Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- **Artifact:** `reviews/archived/p-rev1-review-2026-08-28T220327Z.md`
+- **Reconnaissance:** attempted; the artifact contains complete review
+  orchestration evidence for its two read-only lanes.
+- **Verdict:** passed at 0 Critical / 0 Important / 0 Medium / 1 Minor.
+- **Non-blocking finding:** PJM current-state wording still calls merged PR #226
+  pending and references the pre-integration `0.2.39` release.
+
+**Parallel groups:** none. **Outstanding blocking items:** none.
+
+**Next:** refresh final lifecycle verification, review, and exit-gate freshness
+before updating PR #227. Project completion/archive, migration, deployment,
+merge, and repository deletion remain outside this revision.
