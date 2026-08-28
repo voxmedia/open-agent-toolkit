@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev1-t08
-oat_last_commit: 34a4b8268bd85ded4c7c37def94e240bd4734674
+oat_current_task: null
+oat_last_commit: c7f1b721f28cfe5714530198075ad3b016ce8bee
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260827-make-packaged-skill-references' }
@@ -133,7 +133,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/226 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T21:30:45.407Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T15:16:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T15:18:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -143,14 +143,14 @@ oat_project_recap:
 
 # Project State: portable-skill-references
 
-**Status:** Terminal summary refresh queued
+**Status:** Task implementation complete; final re-review pending
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Revision 1 behavior and six bounded review fixes are complete. The terminal
-summary refresh is queued before final re-review and gate refresh.
+All 16 planned tasks are complete. Final re-review and the configured exit-gate
+refresh remain before implementation closeout.
 
 ## Artifacts
 
@@ -158,7 +158,7 @@ summary refresh is queued before final re-review and gate refresh.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan quick workflow)
 - **Plan:** `plan.md` (complete; ready for implementation)
-- **Implementation:** `implementation.md` (15/16 tasks complete; summary queued)
+- **Implementation:** `implementation.md` (16/16 tasks complete; re-review pending)
 
 ## Progress
 
@@ -188,7 +188,8 @@ summary refresh is queued before final re-review and gate refresh.
 - ✓ Review-fix task `prev1-t06` completed; dispatch dependencies resolve independently
 - ✓ Final behavior re-review confirmed all five intended fixes
 - ✓ Terminal artifact-alignment task `prev1-t07` completed
-- ▶ Terminal summary task `prev1-t08` queued
+- ✓ Terminal summary task `prev1-t08` completed
+- ▶ Final re-review and configured exit-gate refresh pending
 
 ## Blockers
 
@@ -196,5 +197,4 @@ None
 
 ## Next Milestone
 
-Execute `prev1-t08`, re-review final, refresh the configured exit gate, and push
-PR #226.
+Re-review final, refresh the configured exit gate, and push PR #226.

@@ -581,6 +581,7 @@ Source: inline feedback (2026-08-28)
 
 **Files:**
 
+- Modify: `.oat/projects/shared/portable-skill-references/plan.md`
 - Modify: `.oat/projects/shared/portable-skill-references/summary.md`
 - Modify: `.oat/projects/shared/portable-skill-references/implementation.md`
 - Modify: `.oat/projects/shared/portable-skill-references/state.md`
@@ -612,7 +613,7 @@ Source: inline feedback (2026-08-28)
 | p-rev1        | code     | passed          | 2026-08-28 | `reviews/archived/p-rev1-review-2026-08-28T120245Z.md`        | cca0bb5187adfdffd475017e1009a6e643502927 | auto       | -                    |
 | final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T121224Z.md`         | 263bac768e181bfdc2ad85945ed248e3f5bc8066 | auto       | -                    |
 | remote-pr-226 | code     | fixes_completed | 2026-08-28 | `reviews/archived/remote-pr-226-review-2026-08-28T143457Z.md` | -                                        | -          | -                    |
-| final         | code     | fixes_added     | 2026-08-28 | `reviews/archived/final-review-2026-08-28T151136Z.md`         | 34a4b8268bd85ded4c7c37def94e240bd4734674 | auto       | -                    |
+| final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T151136Z.md`         | 34a4b8268bd85ded4c7c37def94e240bd4734674 | auto       | -                    |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -628,9 +629,9 @@ Source: inline feedback (2026-08-28)
 
 **Total: 16 tasks**
 
-Fifteen task scopes are implemented. The terminal summary refresh remains
-before the final re-review and exit-gate refresh can complete and PR #226 can
-be pushed.
+All sixteen task scopes are implemented. The root-owned final re-review and
+exit-gate refresh remain before implementation closeout and PR #226 can be
+pushed.
 
 ## References
 

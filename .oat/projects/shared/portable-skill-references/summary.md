@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
 oat_generated: true
-oat_summary_last_task: prev1-t03
+oat_summary_last_task: prev1-t08
 oat_summary_revision_count: 1
 oat_summary_includes_revisions: [p-rev1]
 ---
@@ -26,6 +26,13 @@ from returning.
   handoff surfaces to resolve sibling skills from the loaded pack first, then
   user scope, then project scope, with an actionable fail-closed outcome when
   no candidate exists.
+- Added pack-specific, scope-aware install and update recovery commands for
+  missing `ideas`, `workflows`, and `utility` siblings at user or project scope.
+- Restored structured implementation, fix, and reviewer launch notices, named
+  provider-selection routing, and effective-target disclosure safeguards so a
+  bundled recommendation cannot be presented as the selected runtime target.
+- Resolved the three implementation dispatch dependencies from independent
+  sibling roots, preserving mixed-scope `workflows` and `utility` installs.
 - Reworked the bundled-docs ratchet to scan authored Markdown recursively,
   detect quoted, unquoted, linked, `./`, and `../` repository-relative sibling
   reads, and report exact source-file and target evidence.
@@ -107,6 +114,9 @@ from returning.
 - Revision 1 repeated the full repository gate sequence before and after the
   merge commit. Its root-owned review passed with no findings at
   `cca0bb5187adfdffd475017e1009a6e643502927`.
+- The bounded post-merge fixes retained loaded/user/project fallback order and
+  fail-closed behavior while making recovery commands, launch notices, and
+  mixed-scope dispatch binding explicit and regression-tested.
 
 ## Revision History
 

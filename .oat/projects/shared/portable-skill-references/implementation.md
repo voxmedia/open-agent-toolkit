@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: prev1-t08
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -12,8 +12,8 @@ oat_generated: false
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
-> Revision 1 behavior and six bounded review fixes are complete. The terminal
-> summary refresh remains before final re-review.
+> All Revision 1 tasks and seven bounded review fixes are complete. Final
+> re-review and the configured exit-gate refresh remain root-owned.
 
 ## Progress Overview
 
@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 1: Portable resolution and enforcement | passed | 4     | 4/4       |
 | Phase 2: Release metadata and validation     | passed | 1     | 1/1       |
 | Phase 3: Final review fixes                  | passed | 3     | 3/3       |
-| Revision 1: Merge current main and fixes     | active | 8     | 7/8       |
+| Revision 1: Merge current main and fixes     | passed | 8     | 8/8       |
 
-**Total:** 15/16 tasks completed; `prev1-t08` is next.
+**Total:** 16/16 tasks completed; no task is active.
 
 ### Revision Received: Inline Feedback
 
@@ -80,11 +80,12 @@ skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 
 ### Task prev1-t08: Refresh the terminal project summary
 
-**Status:** pending
+**Status:** completed
 
 ### Review Received: final artifact alignment
 
 **Date:** 2026-08-28
+**Status:** fixes_completed
 **Review artifact:**
 `reviews/archived/final-review-2026-08-28T151136Z.md`
 
@@ -99,13 +100,13 @@ skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 
 - `I1` -> `prev1-t07`: completed; terminal plan, implementation, and state
   evidence now agree through the completed behavior fixes.
-- `M1` -> `prev1-t08`: queued; refresh the summary through the terminal task.
+- `M1` -> `prev1-t08`: completed; the summary now covers every Revision 1 task
+  and its terminal recovery, launch, and mixed-scope safeguards.
 
 **Review-cycle authorization:** consumed the remaining bounded additional
 iteration previously authorized by the user.
 
-**Next:** Execute `prev1-t08`, then run the final re-review and configured exit
-gate.
+**Next:** Run the root-owned final re-review and configured exit gate.
 
 ### Review Received: final post-merge
 
@@ -684,15 +685,15 @@ commit `dba46295a0d02c1bd1bca179a954bf902a2ae1c6`; Phase 2 and Phase 3 used no
 recovery attempts or nested dispatches.
 
 Outstanding non-blocking observations are the pre-existing PJM doctor layout
-warnings and confirmed cleanup-timeout test flakes. All phases, the final
-lifecycle re-review, the configured independent exit gate, and implementation
-closeout passed.
+warnings and confirmed cleanup-timeout test flakes. All 16 planned tasks are
+complete; the current final re-review and configured independent exit-gate
+refresh remain before implementation closeout.
 
 ## Completion Report
 
-- **Implementation:** in progress; 15/16 tasks across four phases
-- **Reviews:** prior final and remote findings are fixed; the current final
-  artifact-alignment review has one completed and one queued finding
+- **Implementation:** task-complete; 16/16 tasks across four phases
+- **Reviews:** prior final and remote findings are fixed; both current final
+  artifact-alignment findings are complete and await root-owned re-review
 - **Exit gate:** the earlier `cursor-fable-5-xhigh` pass is stale after the
   authorized merge and must be refreshed before implementation success
 - **Verification:** repository gates 01-11 passed with exit-zero evidence
