@@ -6,7 +6,7 @@ oat_last_updated: 2026-08-27
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_hill_phases: ['p05'] # implementation pauses only after the final review-fix phase
+oat_plan_hill_phases: ['p06'] # implementation pauses only after the final review-fix phase
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null
@@ -2733,6 +2733,124 @@ git commit -m "refactor(p05-t07): add synced test fixture alias"
 
 ---
 
+## Phase 6: Final re-review fixes
+
+Close every finding from final review cycle 2 before completion, migration,
+archive, or PR publication. Preserve the existing final-PR skill and public
+package version bumps; no finding is deferred.
+
+### Task p06-t01: (review) Publish every late completion artifact
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Sync managed provider views with `oat sync --scope all`
+
+**Step 1: Understand the issue**
+
+Review finding C1: non-archive synced completion captures its final project-ref
+receipt before Step 7 can create the PR-description artifact. With no recap the
+artifact remains local-only; with a recap an extra artifact commit can violate
+the required evidence-commit parent and receipt identity.
+
+**Step 2: Implement fix**
+
+Move or repeat the final project-ref publication after every pre-recap project
+artifact write, then use that exact receipt as `PROJECT_REF_COMMIT`. Preserve
+the exact parent-branch record commit, retained ref, retry semantics, and recap
+evidence commit as the immediate child of the final artifact receipt.
+
+**Step 3: Verify**
+
+Add executable contract coverage for an initially absent PR artifact with recap
+selected and declined, including configured and interactive archive-decline
+paths. Prove the retained ref contains every artifact and receipt/parent order
+is exact. Run the focused skill contracts, validation/bump checks, provider
+drift checks, lint, format, and diff-check.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p06-t01): publish late completion artifacts"
+```
+
+---
+
+### Task p06-t02: (review) Reject ignored untracked adoption records
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts`
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.test.ts`
+- Modify: `packages/cli/src/commands/project/pull/index.test.ts`
+- Modify: `packages/cli/src/commands/project/open/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding I2: an ignored untracked discovery record is readable but absent
+from ordinary status output, so retry can misclassify it as durable after the
+first exact-path add/commit fails.
+
+**Step 2: Implement fix**
+
+Require exact tracked/index or HEAD proof plus clean state before classifying an
+adoption record as durable. Treat ignored untracked records as pending or fail
+with an explicit exact-path recovery diagnostic; preserve `--no-commit`,
+ownership, unrelated staged state, and already-durable behavior.
+
+**Step 3: Verify**
+
+Add real-Git pull and open retries with an ignored untracked record and prove no
+success is reported until the exact record becomes durable. Run the focused
+pull/open/ref-sync suites, CLI type-check, scoped lint/format, and diff-check.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts packages/cli/src/commands/project/pull/index.test.ts packages/cli/src/commands/project/open/index.test.ts
+git commit -m "fix(p06-t02): verify adoption record durability"
+```
+
+---
+
+### Task p06-t03: (review) Repair managed workflow files for current packs
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/update/index.ts`
+- Modify: `packages/cli/src/commands/tools/update/config-write.test.ts`
+- Modify: `packages/cli/src/commands/tools/update/update-tools.test.ts` or the closest default-dependency integration suite
+
+**Step 1: Understand the issue**
+
+Review finding M1: after the upstream pack-reconciliation merge, an already
+current workflows pack can yield an empty reconcile plan and bypass the
+existing managed `.gitignore` and `.gitattributes` repair predicate.
+
+**Step 2: Implement fix**
+
+Drive managed Git-file repair from the requested project-scoped workflows
+target or its reconcile plan, not only the updated/current/newer tool arrays.
+Preserve dry-run, scope isolation, and legacy dependency behavior.
+
+**Step 3: Verify**
+
+Add a default-dependency current-pack integration case proving both managed
+file apply functions run when reconciliation has no content operations. Run
+the focused update/reconciliation suites, CLI type-check, scoped lint/format,
+and diff-check.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/tools/update/index.ts packages/cli/src/commands/tools/update/config-write.test.ts packages/cli/src/commands/tools/update/update-tools.test.ts
+git commit -m "fix(p06-t03): repair current workflow pack files"
+```
+
+---
+
 ## Reviews
 
 | Scope   | Type     | Status          | Date       | Artifact                                                          | Reviewed Head                            | Invocation | Gate Target              |
@@ -2754,7 +2872,7 @@ git commit -m "refactor(p05-t07): add synced test fixture alias"
 | p04     | code     | fixes_completed | 2026-08-27 | reviews/archived/p04-review-2026-08-27T223316Z.md                 | 1caa8e9989c11c3ebb1355785fc1f7f502837563 | manual     | -                        |
 | p04     | code     | passed          | 2026-08-27 | reviews/p04-review-2026-08-27T232826Z.md                          | 743c9cbe952cf6f4ad3eeba24eabebebec9884c7 | manual     | -                        |
 | final   | code     | fixes_completed | 2026-08-27 | reviews/archived/final-review-2026-08-27T234119Z.md               | c5ceac6b06ea29dba92c65834d5aa4c593813f6e | manual     | -                        |
-| final   | code     | received        | 2026-08-28 | reviews/final-review-2026-08-28T013142Z.md                        | 30ea3ce3a561e0ce74920976884f021dc637487c | auto       | -                        |
+| final   | code     | fixes_added     | 2026-08-28 | reviews/archived/final-review-2026-08-28T013142Z.md               | 30ea3ce3a561e0ce74920976884f021dc637487c | auto       | -                        |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                        |
 | plan    | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -                                        | auto       | -                        |
@@ -2780,8 +2898,9 @@ git commit -m "refactor(p05-t07): add synced test fixture alias"
 - Phase 3: 19 tasks - Reviewer and lifecycle surface plus eight received review fixes (archive safety/retry identity, migration index safety, doctor working-tree/index leak detection, PR refresh isolation, reproducible merge evidence, local-sync text reason)
 - Phase 4: 16 tasks - Skills sweep (A/B/C/D/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood, and five received-review durability/routing fixes
 - Phase 5: 7 tasks - Final-review fixes for non-archive completion, migration/prune confinement, rollback/adoption recovery, semantic guard validation, and test imports
+- Phase 6: 3 tasks - Final re-review fixes for late completion publication, ignored adoption-record durability, and current-pack managed-file repair
 
-**Total: 65 tasks**
+**Total: 68 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

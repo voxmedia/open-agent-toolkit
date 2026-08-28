@@ -1,9 +1,9 @@
 ---
-oat_status: review_pending
-oat_ready_for: oat-project-review-provide
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 10    | 10/10     |
-| Phase 2 | complete | 13    | 13/13     |
-| Phase 3 | complete | 19    | 19/19     |
-| Phase 4 | complete | 16    | 16/16     |
-| Phase 5 | complete | 7     | 7/7       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 10    | 10/10     |
+| Phase 2 | complete    | 13    | 13/13     |
+| Phase 3 | complete    | 19    | 19/19     |
+| Phase 4 | complete    | 16    | 16/16     |
+| Phase 5 | complete    | 7     | 7/7       |
+| Phase 6 | in_progress | 3     | 0/3       |
 
-**Total:** 65/65 tasks completed
+**Total:** 65/68 tasks completed
 
 ---
 
@@ -566,6 +567,41 @@ findings are deferred or dismissed.
 the complete Definition of Done sequence, and run a fresh final fix-delta
 review. Migration, archive, completion, PR publication, and spike-repository
 deletion remain blocked.
+
+---
+
+## Phase 6: Final re-review fixes
+
+**Status:** in progress - 0 of 3 tasks complete
+**Started:** 2026-08-28
+
+### Task Outcomes
+
+| Task    | Status  | Commit | Outcome |
+| ------- | ------- | ------ | ------- |
+| p06-t01 | pending | -      | -       |
+| p06-t02 | pending | -      | -       |
+| p06-t03 | pending | -      | -       |
+
+### Review Received: final - 2026-08-28T01:31:42Z
+
+**Review artifact:** `reviews/archived/final-review-2026-08-28T013142Z.md`
+
+**Reviewed head:** `30ea3ce3a561e0ce74920976884f021dc637487c`
+
+**Findings:** 1 Critical, 1 Important, 1 Medium, 0 Minor.
+
+**New tasks added:** p06-t01 through p06-t03.
+
+**Finding disposition map:** C1 → p06-t01; I2 → p06-t02; M1 → p06-t03.
+Because this was an automatic implementation review, all blocking findings were
+converted to fix tasks. No findings are deferred or dismissed.
+
+**Deferred ledger:** 0 Medium, 0 Minor. Final review cycle 2 of 3.
+
+**Next:** Execute p06-t01 through p06-t03, rerun the complete Definition of Done
+sequence, and run one fresh final fix-delta review. Migration, archive,
+completion, PR publication, and spike-repository deletion remain blocked.
 
 ---
 
