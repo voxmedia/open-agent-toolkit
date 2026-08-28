@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
@@ -12,6 +19,13 @@ const REPO_ROOT = execFileSync('git', ['rev-parse', '--show-toplevel'], {
 
 const SKILLS_DIR = join(REPO_ROOT, '.agents', 'skills');
 const SHARED_DOCS_DIR = join(REPO_ROOT, '.agents', 'docs');
+const BUNDLE_ASSETS_SCRIPT = join(
+  REPO_ROOT,
+  'packages',
+  'cli',
+  'scripts',
+  'bundle-assets.sh',
+);
 
 // Matches a Markdown reference to a real shared doc, e.g. `.agents/docs/skills-guide.md`.
 const SHARED_DOC_REF = /\.agents\/docs\/([a-zA-Z0-9_-]+)\.md/g;
@@ -156,20 +170,10 @@ describe('skills bundled docs contract', () => {
     // The chained read must resolve the skills root from the loaded skill's
     // scope (user-scope candidate probed first) instead.
     //
-    // This exact inventory is a ratchet, not an endorsement. Executable legacy
-    // references are removed by the migration tasks below; historical evidence
-    // remains pinned by its exact source file and target so it cannot become a
-    // wildcard allowance for new authored Markdown.
-    const PINNED_LEGACY_BARE_READS: readonly BareCrossSkillReference[] = [
-      // Executable legacy references scheduled for migration.
-      {
-        file: '.agents/skills/oat-brainstorm/references/destinations.md',
-        target: 'oat-idea-new',
-      },
-      {
-        file: '.agents/skills/oat-brainstorm/references/destinations.md',
-        target: 'oat-idea-summarize',
-      },
+    // Every executable legacy reference has been removed. This exact inventory
+    // retains only historical evidence, pinned by source file and target so it
+    // cannot become a wildcard allowance for new authored Markdown.
+    const PINNED_HISTORICAL_BARE_READS: readonly BareCrossSkillReference[] = [
       // Historical dogfood evidence records the paths exercised at that time.
       ...[
         'oat-idea-ideate',
@@ -196,7 +200,7 @@ describe('skills bundled docs contract', () => {
     expect(
       found,
       `Bare repo-relative cross-skill reads changed; resolve executable reads from the loaded skill scope and baseline only exact historical evidence:\n${detail}`,
-    ).toEqual(PINNED_LEGACY_BARE_READS);
+    ).toEqual(PINNED_HISTORICAL_BARE_READS);
   });
 
   it.each([
@@ -237,6 +241,39 @@ describe('skills bundled docs contract', () => {
       expect(collectBareCrossSkillTargets(content, skill)).toEqual([]);
     },
   );
+
+  it('ships the portable brainstorm summarize handoff in the bundled copy', () => {
+    const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-portable-assets-'));
+
+    try {
+      execFileSync('bash', [BUNDLE_ASSETS_SCRIPT], {
+        env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+        stdio: 'pipe',
+      });
+      const bundledDestination = readFileSync(
+        join(
+          assetsRoot,
+          'skills',
+          'oat-brainstorm',
+          'references',
+          'destinations.md',
+        ),
+        'utf8',
+      );
+
+      expect(bundledDestination).toContain(
+        '`${SKILLS_ROOT}/oat-idea-new/SKILL.md`',
+      );
+      expect(bundledDestination).toContain(
+        '`${SKILLS_ROOT}/oat-idea-summarize/SKILL.md`',
+      );
+      expect(
+        collectBareCrossSkillTargets(bundledDestination, 'oat-brainstorm'),
+      ).toEqual([]);
+    } finally {
+      rmSync(assetsRoot, { recursive: true, force: true });
+    }
+  }, 15_000);
 
   it.each([
     ['oat-project-implement', 'stop before any implementation, fix, or'],
