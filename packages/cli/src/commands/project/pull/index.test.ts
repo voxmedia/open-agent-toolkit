@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { symlink, writeFile } from 'node:fs/promises';
+import { readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
@@ -582,6 +582,110 @@ describe('createProjectPullCommand', () => {
           },
         ),
       ).toContain('A  unrelated.txt');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('rejects an ignored untracked adoption record until the exact record is durable', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const slug = 'pull-ignored-retry';
+      const recordRelativePath = `.oat/projects/synced/${slug}.json`;
+      await scaffoldProject({
+        repoRoot: fixture.cloneA,
+        projectName: slug,
+        scope: 'synced',
+        commit: false,
+        refreshDashboard: false,
+        setActive: false,
+      });
+      const excludePath = execFileSync(
+        'git',
+        ['rev-parse', '--path-format=absolute', '--git-path', 'info/exclude'],
+        { cwd: fixture.cloneB, encoding: 'utf8' },
+      ).trim();
+      const originalExclude = await readFile(excludePath, 'utf8');
+      await writeFile(
+        excludePath,
+        `${originalExclude}\n${recordRelativePath}\n`,
+      );
+
+      const first = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB,
+          home: '/home',
+          interactive: false,
+          logger: createLoggerCapture().logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB,
+        commitRecordChange: async () => {
+          throw new Error('injected ignored pull record commit failure');
+        },
+      });
+      await run(first, [slug]);
+      expect(process.exitCode).toBe(2);
+
+      process.exitCode = undefined;
+      const secondCapture = createLoggerCapture();
+      const second = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB,
+          home: '/home',
+          interactive: false,
+          logger: secondCapture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB,
+      });
+      await run(second, [slug]);
+      expect(process.exitCode).toBe(2);
+      expect(secondCapture.error.join('\n')).toContain(recordRelativePath);
+      expect(
+        execFileSync(
+          'git',
+          ['ls-tree', '--name-only', 'HEAD', recordRelativePath],
+          {
+            cwd: fixture.cloneB,
+            encoding: 'utf8',
+          },
+        ).trim(),
+      ).toBe('');
+
+      await writeFile(excludePath, originalExclude);
+      process.exitCode = undefined;
+      const third = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB,
+          home: '/home',
+          interactive: false,
+          logger: createLoggerCapture().logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB,
+      });
+      await run(third, [slug]);
+      expect(process.exitCode).toBe(0);
+      expect(
+        execFileSync(
+          'git',
+          ['ls-tree', '--name-only', 'HEAD', recordRelativePath],
+          {
+            cwd: fixture.cloneB,
+            encoding: 'utf8',
+          },
+        ).trim(),
+      ).toBe(recordRelativePath);
     } finally {
       await fixture.cleanup();
     }

@@ -17,6 +17,7 @@ import {
   assertNestedWorktree,
   abortSynced,
   buildSyncTarget,
+  classifyAdoptionRecord,
   commitRecordChange,
   continueSynced,
   createSyncedProject,
@@ -1773,6 +1774,48 @@ describe('synced checkout removal', () => {
         pendingRecordPaths: [recordPath],
       });
       await expect(readFile(recordPath, 'utf8')).resolves.toBe(before);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('does not classify an ignored untracked adoption record as durable', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'ignored-adoption',
+      );
+      const recordPath = join(target.syncedRoot, 'ignored-adoption.json');
+      const excludePath = git(fixture.cloneA, [
+        'rev-parse',
+        '--path-format=absolute',
+        '--git-path',
+        'info/exclude',
+      ]);
+      const originalExclude = await readFile(excludePath, 'utf8');
+      await writeFile(
+        excludePath,
+        `${originalExclude}\n.oat/projects/synced/ignored-adoption.json\n`,
+      );
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(target.slug, new Date('2026-08-28T00:00:00.000Z')),
+      );
+
+      expect(
+        git(fixture.cloneA, [
+          'status',
+          '--porcelain=v1',
+          '--untracked-files=all',
+          '--',
+          '.oat/projects/synced/ignored-adoption.json',
+        ]),
+      ).toBe('');
+      await expect(
+        classifyAdoptionRecord(target, defaultGitRunner),
+      ).resolves.toBe('pending');
     } finally {
       await fixture.cleanup();
     }

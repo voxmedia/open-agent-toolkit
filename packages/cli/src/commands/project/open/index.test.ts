@@ -417,6 +417,110 @@ describe('oat project open', () => {
     ).toContain('A  unrelated.txt');
   });
 
+  it('rejects an ignored untracked adoption record until the exact record is durable', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    tempDirs.push(fixture.rootDir);
+    const slug = 'open-ignored-retry';
+    const recordRelativePath = `.oat/projects/synced/${slug}.json`;
+    const source = buildSyncTarget(
+      fixture.cloneA,
+      '.oat/projects/shared',
+      slug,
+    );
+    await createSyncedProject(source, defaultGitRunner);
+    await writeFile(
+      join(source.projectPath, 'state.md'),
+      '---\noat_phase: plan\noat_phase_status: complete\noat_lifecycle: active\n---\n\n# State\n',
+      'utf8',
+    );
+    await pushSyncedReal(source, defaultGitRunner, {
+      message: 'seed ignored open retry',
+    });
+    const excludePath = execFileSync(
+      'git',
+      ['rev-parse', '--path-format=absolute', '--git-path', 'info/exclude'],
+      { cwd: fixture.cloneB, encoding: 'utf8' },
+    ).trim();
+    const originalExclude = await readFile(excludePath, 'utf8');
+    await writeFile(excludePath, `${originalExclude}\n${recordRelativePath}\n`);
+
+    const first = createProjectOpenCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneB,
+        home: '/home',
+        interactive: false,
+        logger: createLoggerCapture().logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneB,
+      commitRecordChange: async () => {
+        throw new Error('injected ignored open record commit failure');
+      },
+    });
+    await runCommand(first, [slug]);
+    expect(process.exitCode).toBe(2);
+
+    process.exitCode = undefined;
+    const secondCapture = createLoggerCapture();
+    const second = createProjectOpenCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneB,
+        home: '/home',
+        interactive: false,
+        logger: secondCapture.logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneB,
+    });
+    await runCommand(second, [slug]);
+    expect(process.exitCode).toBe(2);
+    expect(secondCapture.error.join('\n')).toContain(recordRelativePath);
+    expect(
+      execFileSync(
+        'git',
+        ['ls-tree', '--name-only', 'HEAD', recordRelativePath],
+        {
+          cwd: fixture.cloneB,
+          encoding: 'utf8',
+        },
+      ).trim(),
+    ).toBe('');
+
+    await writeFile(excludePath, originalExclude);
+    process.exitCode = undefined;
+    const third = createProjectOpenCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneB,
+        home: '/home',
+        interactive: false,
+        logger: createLoggerCapture().logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneB,
+    });
+    await runCommand(third, [slug]);
+    expect(process.exitCode).toBe(0);
+    expect(
+      execFileSync(
+        'git',
+        ['ls-tree', '--name-only', 'HEAD', recordRelativePath],
+        {
+          cwd: fixture.cloneB,
+          encoding: 'utf8',
+        },
+      ).trim(),
+    ).toBe(recordRelativePath);
+  });
+
   it('publishes a synced resume before changing the active pointer', async () => {
     const root = await createRepoRoot();
     await writeProjectState(root, 'alpha');

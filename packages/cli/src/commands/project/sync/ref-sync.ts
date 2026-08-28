@@ -117,13 +117,21 @@ export async function classifyAdoptionRecord(
   const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
   if ((await readSyncedRecord(recordPath)) === null) return 'create';
 
+  const relativeRecordPath = repoRelativePath(target.repoRoot, recordPath);
+  const tracked = await git.run(
+    ['ls-files', '--error-unmatch', '--', relativeRecordPath],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  assertExpectedGitResult('git ls-files --error-unmatch', tracked, [0, 1]);
+  if (tracked.code === 1) return 'pending';
+
   const status = await git.run(
     [
       'status',
       '--porcelain=v1',
       '--untracked-files=all',
       '--',
-      repoRelativePath(target.repoRoot, recordPath),
+      relativeRecordPath,
     ],
     { cwd: target.repoRoot },
   );
