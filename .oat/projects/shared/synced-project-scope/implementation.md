@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: review_pending
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: p09-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -34,9 +34,9 @@ oat_generated: false
 | Phase 6 | complete | 3     | 3/3       |
 | Phase 7 | complete | 1     | 1/1       |
 | Phase 8 | complete | 1     | 1/1       |
-| Phase 9 | pending  | 1     | 0/1       |
+| Phase 9 | complete | 1     | 1/1       |
 
-**Total:** 70/71 tasks completed
+**Total:** 71/71 tasks completed
 
 ---
 
@@ -778,8 +778,9 @@ deletion remain blocked.
 
 ## Phase 9: Third operator-extended exact-link and decision-entrypoint fix
 
-**Status:** pending - 0 of 1 task complete
+**Status:** complete - 1 of 1 task complete
 **Started:** 2026-08-28
+**Completed:** 2026-08-28
 
 ### Review Received: final - 2026-08-28T15:17:32Z
 
@@ -806,9 +807,58 @@ publication, or spike-repository deletion.
 
 **Deferred ledger:** 0 Medium, 0 Minor. No finding is deferred.
 
-**Next:** Execute p09-t01 through `oat-project-implement`, then run exactly one
-fresh independent final fix-delta review. The cycle-5 event is
-`fixes_added`, never passed.
+### Task Outcomes
+
+| Task    | Status    | Commit      | Outcome                                                       |
+| ------- | --------- | ----------- | ------------------------------------------------------------- |
+| p09-t01 | completed | `e193c8ffb` | Exact final links and production decision CLI are fail-closed |
+
+### Phase 9 Completion
+
+Completion receipt recovery now requires exactly one canonical final-links
+header naming the requested retained ref and the seven-character pin-source
+label. Every commit-pinned blob URL must use the full pin-source SHA; malformed,
+mismatched, and mixed link states fail closed without restoring receipts. The
+real-Git transaction matrix executes the production Node decision entrypoint
+with the skill's `--archive-preference false` and
+`--interactive-archive false` flag shapes for all four interruption points,
+then drives and asserts the returned `shouldArchive` and `source` values.
+
+Against implementation head `e193c8ffb`, all required checks passed. The
+focused completion transaction, skill-contract, archive-command, and
+archive-utility run passed 163 tests. Both direct decision CLI probes returned
+the expected JSON. Skill tests passed 586 tests, `pnpm oat:validate-skills`
+validated 63 skills, and `pnpm run check:skill-bumps` passed without another
+skill or public-package bump. `pnpm lint`, `pnpm format`, and
+`git diff --check` each exited `0`.
+
+Every Definition of Done gate passed against committed HEAD in exact CI order
+with explicit exit `0`: `pnpm check`, `pnpm type-check`, `pnpm test`,
+`pnpm build`, `pnpm run check:skill-bumps`, a fresh `git fetch origin main`
+followed by `pnpm release:check-versions`, `pnpm release:validate`, and
+`pnpm build:docs`.
+
+The project-scoped provider sync dry-run exited `0` without filesystem changes.
+Provider status reported all 88 managed entries `in_sync`; its exit `1`
+continues to reflect 74 unrelated pre-existing unmanaged Cursor strays. The
+pre-existing docs/workflows pack override diagnostics were not mutated.
+
+**Recovery:** 0/10 attempts used; `pending_attempt: null`.
+
+**Dispatch evidence:** Request `p09-implementation-20260828-cycle5-fix`;
+target `oat-phase-implementer-gpt-5-6-sol-high`; model axis
+`selected:gpt-5.6-sol`; effort axis `selected:high`.
+
+**Dispatch stamp:** `Dispatch: scope=p09 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+**Review disposition:** The archived final review cycle-5 event is
+`fixes_completed`, never passed. Exactly one explicitly authorized fresh
+independent final fix-delta review remains; no further fix/review cycle is
+authorized.
+
+**Next:** Run that one fresh independent final fix-delta review. Migration,
+archive, completion, PR publication, and spike-repository deletion remain
+blocked.
 
 ---
 

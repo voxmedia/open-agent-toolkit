@@ -1,6 +1,6 @@
 ---
-oat_current_task: p09-t01
-oat_last_commit: a1f0c8941
+oat_current_task: null
+oat_last_commit: e193c8ffb
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: review_pending # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -108,19 +108,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T16:38:33.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T16:53:34.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Phase 9 exact-link and decision-entrypoint fix in progress
+**Status:** Phase 9 exact-link and decision-entrypoint fix complete; final review pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Implementation - Phase 9 review fix
+Review - final fix-delta cycle 5
 
 ## Artifacts
 
@@ -128,7 +128,7 @@ Implementation - Phase 9 review fix
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (70/71 tasks complete; p09-t01 pending)
+- **Implementation:** `implementation.md` (71/71 tasks complete)
 
 ## Progress
 
@@ -219,11 +219,17 @@ Implementation - Phase 9 review fix
 - ⨯ Final review cycle 5 found 1 Critical and 1 Important finding
 - ✓ User explicitly authorized a third additional bounded receive/fix/re-review cycle
 - ✓ Cycle-5 findings converted into consolidated task p09-t01 with no deferrals
+- ✓ Phase 9 task p09-t01 completed and verified in `e193c8ffb`
+- ✓ Phase 9 recovery ledger settled at 0/10 with no pending attempt
+- ✓ Phase 9 final-head Definition of Done gates pass in exact CI order
+- ✓ Project provider dry-run has no filesystem changes; all 88 managed entries are `in_sync`
+- ✓ Final review cycle-5 event updated to `fixes_completed` (never passed)
+- ◌ Exactly one explicitly authorized fresh final fix-delta review remains
 
 ## Blockers
 
-- Phase 9 implementation and one fresh final fix-delta review block migration, archive, completion, PR publication, and spike-repository deletion.
+- One fresh final fix-delta review blocks migration, archive, completion, PR publication, and spike-repository deletion.
 
 ## Next Milestone
 
-Execute p09-t01, then run exactly one explicitly authorized fresh final fix-delta review.
+Run exactly one explicitly authorized fresh final fix-delta review. No further fix/review cycle is authorized.
