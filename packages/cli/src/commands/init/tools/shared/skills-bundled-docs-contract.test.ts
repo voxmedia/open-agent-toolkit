@@ -365,30 +365,10 @@ const PINNED_MIGRATION_CROSS_SKILL_READS: readonly CrossSkillReference[] = [
     targetPath: 'references/schema-comparative.md',
   },
   {
-    file: '.agents/skills/oat-dispatch-subagents/SKILL.md',
-    targetSkill: 'subagent-orchestration',
-    targetPath: 'references/model-selection-principles.md',
-  },
-  ...[
-    '.agents/skills/oat-project-review-provide/SKILL.md',
-    '.agents/skills/oat-review-provide-remote/SKILL.md',
-  ].map((file) => ({
-    file,
+    file: '.agents/skills/oat-project-review-provide/SKILL.md',
     targetSkill: 'oat-review-provide',
     targetPath: 'references/review-artifact-template.md',
-  })),
-  ...(
-    [
-      ['oat-dispatch-subagents', 'SKILL.md'],
-      ['oat-dispatch-subagents', 'references/'],
-      ['subagent-orchestration', 'references/'],
-      ['subagent-orchestration', 'references/model-selection-principles.md'],
-    ] as const
-  ).map(([targetSkill, targetPath]) => ({
-    file: '.agents/skills/oat-repo-improve/SKILL.md',
-    targetSkill,
-    targetPath,
-  })),
+  },
 ];
 
 describe('skills bundled docs contract', () => {
@@ -827,6 +807,110 @@ describe('skills bundled docs contract', () => {
     expect(content).not.toMatch(
       /\$\{SKILLS_ROOT\}\/(?:oat-project-dispatch-subagents|oat-dispatch-subagents|subagent-orchestration)/,
     );
+  });
+
+  it.each([
+    [
+      'oat-dispatch-subagents',
+      [
+        [
+          'ORCHESTRATION_SKILLS_ROOT',
+          'subagent-orchestration/references/model-selection-principles.md',
+        ],
+      ],
+      'stop class-constrained dispatch',
+    ],
+    [
+      'oat-repo-improve',
+      [
+        ['DISPATCH_SKILLS_ROOT', 'oat-dispatch-subagents/SKILL.md'],
+        [
+          'ORCHESTRATION_SKILLS_ROOT',
+          'subagent-orchestration/references/model-selection-principles.md',
+        ],
+      ],
+      'stop delegated reconnaissance',
+    ],
+    [
+      'oat-review-provide-remote',
+      [
+        [
+          'REVIEW_PROVIDE_SKILLS_ROOT',
+          'oat-review-provide/references/review-artifact-template.md',
+        ],
+      ],
+      'stop the review instead of improvising a checklist',
+    ],
+  ] as const)(
+    '%s resolves its utility siblings from the installed skill scope',
+    (skill, bindings, stopText) => {
+      const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
+
+      // Loaded-skill candidate order: loaded scope, then user, then project.
+      expectPortableSkillsRootCandidateOrder(content, skill);
+      expect(content).toContain('`<name>/SKILL.md`');
+      expect(content).toContain('never ambient discovery');
+      expect(content).toContain(stopText);
+      // Every dependency binds its own root, so mixed-scope installs work.
+      expect(content).toMatch(/[Ii]ndependently probe\s+each required/);
+      for (const [root, path] of bindings) {
+        expect(content, `${skill} binds \${${root}}`).toContain(`\${${root}}`);
+        // The exact target is validated, not merely the root.
+        expect(content, `${skill} reads \${${root}}/${path}`).toContain(
+          `\${${root}}/${path}`,
+        );
+      }
+      // Fail closed with owning-pack recovery for the intended scope.
+      expect(content).toContain(
+        'oat tools install utility --scope <user|project>',
+      );
+      expect(content).toContain(
+        'oat tools update --pack utility --scope <user|project>',
+      );
+      expect(collectCrossSkillTargets(content, skill)).toEqual([]);
+    },
+  );
+
+  it('binds repo-improve dispatch and orchestration references independently', () => {
+    const content = readFileSync(
+      join(SKILLS_DIR, 'oat-repo-improve', 'SKILL.md'),
+      'utf8',
+    );
+
+    expect(content).toContain(
+      '${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/',
+    );
+    expect(content).toContain(
+      '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/references/',
+    );
+    // A single shared root would silently break a mixed-scope install.
+    expect(content).not.toMatch(
+      /\$\{SKILLS_ROOT\}\/(?:oat-dispatch-subagents|subagent-orchestration)/,
+    );
+  });
+
+  it('anchors dispatch short-form provider reads to an already bound root', () => {
+    const content = readFileSync(
+      join(SKILLS_DIR, 'oat-dispatch-subagents', 'SKILL.md'),
+      'utf8',
+    );
+    const anchor = content.indexOf(
+      '${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md',
+    );
+
+    expect(anchor).toBeGreaterThan(-1);
+    expect(content).toMatch(
+      /short-form paths below are relative to those two already-bound\s+roots/,
+    );
+    // Short-form follow-on reads must come after the anchoring bound read.
+    for (const shortForm of [
+      'subagent-orchestration/references/provider-claude.md',
+      'subagent-orchestration/references/provider-codex.md',
+      'subagent-orchestration/references/provider-cursor.md',
+      'subagent-orchestration/references/evidence-and-refresh.md',
+    ]) {
+      expect(content.indexOf(shortForm), shortForm).toBeGreaterThan(anchor);
+    }
   });
 
   it('resolves shared tracking scripts from each loaded skill scope', () => {

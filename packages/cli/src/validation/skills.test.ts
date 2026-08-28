@@ -4606,7 +4606,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(engine).toMatch(/^version:\s*1\.2\.2$/m);
+    expect(engine).toMatch(/^version:\s*1\.2\.3$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(adapter).toMatch(/^version:\s*1\.1\.3$/m);
@@ -4666,6 +4666,62 @@ describe('validateOatSkills', () => {
         expect(content, path).not.toContain(enginePath);
       }
     }
+  });
+
+  it('pins portable utility-pack callers to installed-root sibling reads', async () => {
+    const callers = [
+      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.3'],
+      ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.2'],
+      ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.1'],
+    ] as const;
+
+    for (const [path, expectedVersion] of callers) {
+      const content = await readRepoFile(path);
+
+      expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), path).toBe(
+        expectedVersion,
+      );
+      // Loaded-skill candidate order: loaded scope, then user, then project.
+      expect(content, `${path} candidate order`).toMatch(
+        /\$\{SKILL_DIR\}\/\.\.`[\s\S]{0,160}\$\{HOME\}\/\.agents\/skills`[\s\S]{0,160}<repo-root>\/\.agents\/skills`/,
+      );
+      expect(content, `${path} forbids ambient discovery`).toContain(
+        'never ambient discovery',
+      );
+      expect(content, `${path} names owning-pack recovery`).toContain(
+        'oat tools install utility --scope <user|project>',
+      );
+      expect(content, `${path} names owning-pack update recovery`).toContain(
+        'oat tools update --pack utility --scope <user|project>',
+      );
+      expect(
+        content,
+        `${path} has no repo-relative cross-skill read`,
+      ).not.toMatch(
+        /(?:\.\.?\/)?\.agents\/skills\/[a-zA-Z0-9_-]+\/(?:SKILL\.md|references)/,
+      );
+      expect(content, `${path} has no parent-relative sibling hop`).not.toMatch(
+        /(?<![/a-zA-Z0-9_.-])\.\.\/[a-zA-Z0-9_-]+\/(?:SKILL\.md|references)/,
+      );
+    }
+
+    const remote = await readRepoFile(
+      '.agents/skills/oat-review-provide-remote/SKILL.md',
+    );
+    expect(remote).toContain(
+      '${REVIEW_PROVIDE_SKILLS_ROOT}/oat-review-provide/references/review-artifact-template.md',
+    );
+
+    const repoImprove = await readRepoFile(
+      '.agents/skills/oat-repo-improve/SKILL.md',
+    );
+    // Independent roots keep mixed-scope installs resolvable.
+    expect(repoImprove).toContain(
+      '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+    );
+    expect(repoImprove).toContain(
+      '${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md',
+    );
   });
 
   it('separates accepted-launch fallback from caller-authorized recovery', async () => {
