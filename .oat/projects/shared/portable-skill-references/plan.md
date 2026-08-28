@@ -332,16 +332,16 @@ merge path.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                             | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                                    | -             | -          | -           |
-| p02    | code     | pending         | -          | -                                                    | -             | -          | -           |
-| final  | code     | pending         | -          | -                                                    | -             | -          | -           |
-| spec   | artifact | pending         | -          | -                                                    | -             | -          | -           |
-| design | artifact | pending         | -          | -                                                    | -             | -          | -           |
-| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md` | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220007Z.md` | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220505Z.md` | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                             | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | passed          | 2026-08-28 | `reviews/p01-review-2026-08-28T015302Z.md`           | dba46295a0d02c1bd1bca179a954bf902a2ae1c6 | auto       | -           |
+| p02    | code     | pending         | -          | -                                                    | -                                        | -          | -           |
+| final  | code     | pending         | -          | -                                                    | -                                        | -          | -           |
+| spec   | artifact | pending         | -          | -                                                    | -                                        | -          | -           |
+| design | artifact | pending         | -          | -                                                    | -                                        | -          | -           |
+| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md` | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220007Z.md` | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T220505Z.md` | -                                        | -          | -           |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`

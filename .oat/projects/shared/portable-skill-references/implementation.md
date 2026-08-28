@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -19,35 +19,35 @@ oat_generated: false
 
 | Phase                                        | Status  | Tasks | Completed |
 | -------------------------------------------- | ------- | ----- | --------- |
-| Phase 1: Portable resolution and enforcement | pending | 4     | 0/4       |
+| Phase 1: Portable resolution and enforcement | passed  | 4     | 4/4       |
 | Phase 2: Release metadata and validation     | pending | 1     | 0/1       |
 
-**Total:** 0/5 tasks completed
+**Total:** 4/5 tasks completed
 
 ## Phase 1: Portable sibling resolution and enforcement
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-08-27
 
 ### Task p01-t01: Make the cross-skill ratchet recursive and syntax-robust
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `7483ab5c227a3f12e0a64aff8522cb1c5e6f8954`
 
 ### Task p01-t02: Make idea-workflow sibling reads scope-portable
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `18678e1348193d60407b5dd333f8ce3cc4e36900`
 
 ### Task p01-t03: Make workflow-dispatch sibling reads scope-portable
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `45512d5f404aee999162a518f3fe4faf916e0b06`
 
 ### Task p01-t04: Make brainstorm handoff references portable
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `42ff227f2e9e87be6d0840131bacd6593914006d`
 
 ## Phase 2: Release metadata and full validation
 
@@ -111,6 +111,33 @@ oat_generated: false
   assertions, and line-budget composition were corrected within the bounded
   in-phase expansion
 
+#### Dispatch Record: p01 review
+
+- **Request:** `004977cd-836b-43eb-9910-cdadbc444c9b`
+- **Launch state/outcome:** accepted / passed with non-blocking findings
+- **Route:** Codex native materialized role `oat-reviewer-gpt-5-6-sol-high`
+- **Selection:** managed High review target; `gpt-5.6-sol/high`
+- **Model axis:** `selected:gpt-5.6-sol`
+- **Effort axis:** `selected:high`
+- **Reviewed range:**
+  `5b62cfd520d70d814caf5839789bc86716f46f62..dba46295a0d02c1bd1bca179a954bf902a2ae1c6`
+- **Artifact:** `reviews/p01-review-2026-08-28T015302Z.md`
+- **Verdict:** 0 Critical, 0 Important, 1 Medium, 0 Minor
+- **Reconnaissance:** not-attempted
+- **Fallback/replacement:** none
+- **Dispatch stamp:**
+  `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
+#### Phase p01 outcome
+
+- **Result:** passed root-owned review
+- **Task commits:** 4/4 verified in plan order
+- **Recovery commits:** `dba46295a0d02c1bd1bca179a954bf902a2ae1c6`
+- **Review iterations:** 1; no blocking fix loop
+- **Outstanding item:** Medium test-hardening gap: candidate presence is
+  asserted, but relative fallback order is not yet regression-tested
+- **Next:** `p02-t01`
+
 <!-- orchestration-runs-end -->
 
 ## Deviations from Plan / Design
@@ -121,10 +148,10 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Notes       |
-| ----- | --------- | ------ | ------ | ----------- |
-| p01   | -         | -      | -      | Not started |
-| p02   | -         | -      | -      | Not started |
+| Phase | Tests Run                     | Passed | Failed | Notes                                      |
+| ----- | ----------------------------- | ------ | ------ | ------------------------------------------ |
+| p01   | Focused plus phase-wide gates | Yes    | 0      | Review passed with one non-blocking Medium |
+| p02   | -                             | -      | -      | Not started                                |
 
 ## Final Summary (for PR/docs)
 
