@@ -6,7 +6,7 @@ oat_last_updated: 2026-08-28
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_hill_phases: ['p08'] # implementation pauses only after the second operator-extended final review-fix phase
+oat_plan_hill_phases: ['p09'] # implementation pauses only after the third operator-extended final review-fix phase
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null
@@ -2966,6 +2966,61 @@ git commit -m "fix(p08-t01): recover recap completion receipts"
 
 ---
 
+## Phase 9: Third operator-extended exact-link and decision-entrypoint fix
+
+Close the Critical and Important findings from final review cycle 5 under the
+user's third explicit additional one-cycle override. Keep this phase bounded to
+exact final-links validation and executable archive-decision CLI coverage.
+Preserve the existing PR-scoped skill and public-package version bumps; do not
+bump either again.
+
+### Task p09-t01: (review) Enforce exact recovered links and CLI decision coverage
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/scripts/recover-completion-receipts.mjs`
+- Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts`
+- Modify: `.agents/skills/oat-project-complete/SKILL.md` only if the executable contract needs clarification
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` only if the textual contract changes
+
+**Step 1: Add failing executable coverage**
+
+Add real-Git negative cases that preserve the expected seven-character label
+while contaminating the final links block with (a) another retained project ref
+and (b) a different full blob-link SHA. Prove recovery fails closed before
+restoring receipts. Update every configured and interactive interruption row to
+execute the same Node CLI decision entrypoint and flag shape used by the skill,
+parse its JSON result, and drive/assert the returned `shouldArchive` and
+`source`. Preserve both decision sources and all four interruption points.
+
+**Step 2: Implement the bounded repair**
+
+Pass the requested retained ref into final-links validation. Require exactly
+one canonical links header naming that ref and the short pin-source SHA, and
+require every commit-pinned blob link in the block to use the full
+`PROJECT_LINKS_PIN_COMMIT` SHA. Reject missing, mismatched, malformed, or mixed
+ref/SHA state. Keep all existing clean-checkout, path, subject, parent,
+local/remote, unpublished-evidence, and post-push revalidation guarantees.
+Do not rerender or rewrite a valid receipt chain.
+
+**Step 3: Verify**
+
+Run the focused completion transaction, skill-contract, archive-command, and
+archive-utility suites; direct configured/interactive CLI probes; skill tests
+and validation; skill-bump checks; project provider-sync dry-run/status; scoped
+lint/format; and `git diff --check`. Then run the complete Definition of Done
+sequence in CI order, including a fresh `git fetch origin main` before
+`pnpm release:check-versions`.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/scripts/recover-completion-receipts.mjs packages/cli/src/commands/project/push/completion-transaction.test.ts .agents/skills/oat-project-complete/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p09-t01): harden completion receipt link validation"
+```
+
+---
+
 ## Reviews
 
 | Scope   | Type     | Status          | Date       | Artifact                                                          | Reviewed Head                            | Invocation | Gate Target              |
@@ -2990,7 +3045,7 @@ git commit -m "fix(p08-t01): recover recap completion receipts"
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T013142Z.md               | 30ea3ce3a561e0ce74920976884f021dc637487c | auto       | -                        |
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T022122Z.md               | 9537f6dd5872cae9101c3e10a8ead997940a2cb9 | auto       | -                        |
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T114926Z.md               | e22a9b1ecaafc1cb177c8ca34133e73103c30d74 | auto       | -                        |
-| final   | code     | received        | 2026-08-28 | reviews/final-review-2026-08-28T151732Z.md                        | 10bbd92cee2291aebf027e5c6e7ac69da2bc4f2b | auto       | -                        |
+| final   | code     | fixes_added     | 2026-08-28 | reviews/archived/final-review-2026-08-28T151732Z.md               | 10bbd92cee2291aebf027e5c6e7ac69da2bc4f2b | auto       | -                        |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                        |
 | plan    | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -                                        | auto       | -                        |
@@ -3019,8 +3074,9 @@ git commit -m "fix(p08-t01): recover recap completion receipts"
 - Phase 6: 3 tasks - Final re-review fixes for late completion publication, ignored adoption-record durability, and current-pack managed-file repair
 - Phase 7: 1 task - Operator-extended final receipt fix with repository-backed completion coverage
 - Phase 8: 1 task - Second operator-extended recap-stage receipt recovery and interruption coverage
+- Phase 9: 1 task - Third operator-extended exact final-links validation and decision-entrypoint coverage
 
-**Total: 70 tasks**
+**Total: 71 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

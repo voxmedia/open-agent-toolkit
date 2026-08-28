@@ -1,9 +1,9 @@
 ---
-oat_status: review_pending
-oat_ready_for: oat-project-review-provide
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: p09-t01
 oat_generated: false
 ---
 
@@ -34,8 +34,9 @@ oat_generated: false
 | Phase 6 | complete | 3     | 3/3       |
 | Phase 7 | complete | 1     | 1/1       |
 | Phase 8 | complete | 1     | 1/1       |
+| Phase 9 | pending  | 1     | 0/1       |
 
-**Total:** 70/70 tasks completed
+**Total:** 70/71 tasks completed
 
 ---
 
@@ -772,6 +773,42 @@ spike-repository deletion.
 **Next:** Run the explicitly authorized fresh independent final fix-delta
 review. Migration, archive, completion, PR publication, and spike-repository
 deletion remain blocked.
+
+---
+
+## Phase 9: Third operator-extended exact-link and decision-entrypoint fix
+
+**Status:** pending - 0 of 1 task complete
+**Started:** 2026-08-28
+
+### Review Received: final - 2026-08-28T15:17:32Z
+
+**Review artifact:** `reviews/archived/final-review-2026-08-28T151732Z.md`
+
+**Reviewed head:** `10bbd92cee2291aebf027e5c6e7ac69da2bc4f2b`
+
+**Findings:** 1 Critical, 1 Important, 0 Medium, 0 Minor.
+
+**New task added:** p09-t01.
+
+**Finding disposition map:** C1 -> p09-t01 (`code_fix_required`); I1 ->
+p09-t01 (`code_fix_required`). C1 requires the recovery surface to validate
+the exact retained ref and full pinned SHA in the final links block, including
+negative wrong-ref and wrong-full-SHA cases. I1 requires the configured and
+interactive real-Git matrix rows to exercise the same Node CLI decision
+entrypoint and flags used by the completion skill.
+
+**Review-cycle override:** The standard cap and two prior additional cycles
+were exhausted. On 2026-08-28 the user explicitly authorized one further
+bounded receive/fix/re-review cycle for these two findings. This authorization
+does not extend to another cycle, migration, archive, completion, PR
+publication, or spike-repository deletion.
+
+**Deferred ledger:** 0 Medium, 0 Minor. No finding is deferred.
+
+**Next:** Execute p09-t01 through `oat-project-implement`, then run exactly one
+fresh independent final fix-delta review. The cycle-5 event is
+`fixes_added`, never passed.
 
 ---
 
