@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-review-provide
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-27
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -30,8 +30,9 @@ oat_generated: false
 | Phase 2 | complete | 13    | 13/13     |
 | Phase 3 | complete | 19    | 19/19     |
 | Phase 4 | complete | 16    | 16/16     |
+| Phase 5 | pending  | 7     | 0/7       |
 
-**Total:** 58/58 tasks completed
+**Total:** 58/65 tasks completed
 
 ---
 
@@ -501,6 +502,47 @@ gate passed in exact CI order with explicit exit `0`: `pnpm check`,
 - Verdict: passed; all five findings from the prior Phase 4 review are closed
 - Verification: 228 focused tests plus full test, build, docs, lint, format, type-check, skill validation/bump, release, and provider-drift checks passed
 - Phase outcome: Phase 4 complete; proceed to final project code review
+
+---
+
+## Phase 5: Final review fixes
+
+**Status:** pending - 0 of 7 tasks complete
+**Started:** -
+
+### Task Outcomes
+
+| Task    | Status  | Commit | Outcome |
+| ------- | ------- | ------ | ------- |
+| p05-t01 | pending | -      | -       |
+| p05-t02 | pending | -      | -       |
+| p05-t03 | pending | -      | -       |
+| p05-t04 | pending | -      | -       |
+| p05-t05 | pending | -      | -       |
+| p05-t06 | pending | -      | -       |
+| p05-t07 | pending | -      | -       |
+
+### Review Received: final - 2026-08-27T23:41:19Z
+
+**Review artifact:** `reviews/archived/final-review-2026-08-27T234119Z.md`
+
+**Reviewed head:** `c5ceac6b06ea29dba92c65834d5aa4c593813f6e`
+
+**Findings:** 3 Critical, 2 Important, 1 Medium, 1 Minor.
+
+**New tasks added:** p05-t01 through p05-t07.
+
+**Finding disposition map:** C1 → p05-t01; C2 → p05-t02; C3 →
+p05-t03; I1 → p05-t04; I2 → p05-t05; M1 → p05-t06; m1 →
+p05-t07. The user explicitly converted the final-scope Minor finding; no
+findings are deferred or dismissed.
+
+**Deferred Medium ledger:** None before or after this review.
+
+**Next:** Execute p05-t01 through p05-t07 via `oat-project-implement`, rerun
+the complete Definition of Done sequence, and run a fresh final fix-delta
+review. Migration, archive, completion, PR publication, and spike-repository
+deletion remain blocked.
 
 ---
 

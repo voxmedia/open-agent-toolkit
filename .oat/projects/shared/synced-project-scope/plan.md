@@ -6,7 +6,7 @@ oat_last_updated: 2026-08-27
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_hill_phases: ['p04'] # implementation pauses only after the final phase
+oat_plan_hill_phases: ['p05'] # implementation pauses only after the final review-fix phase
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null
@@ -2506,6 +2506,233 @@ git commit -m "fix(p04-t16): commit synced retro targets before writeback"
 
 ---
 
+## Phase 5: Final review fixes
+
+Close every finding from the final project review before completion, migration,
+archive, or PR publication. Keep all existing PR-scoped skill and package
+version bumps unchanged; changed canonical skills were already bumped once in
+this PR.
+
+### Task p05-t01: (review) Support non-archive synced completion
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `apps/oat-docs/docs/reference/oat-directory-structure.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/picking-up-projects.md`
+- Modify: `.cursor/skills/oat-project-complete/SKILL.md` and `.oat/sync/manifest.json` through `oat sync --scope all`
+
+**Step 1: Understand the issue**
+
+Review finding C1: valid synced completion with `workflow.archiveOnComplete=false` or an interactive archive decline skips the only archive-owned `LIFECYCLE_COMMIT`, later requires it, and leaves the discovery record active. Trace no-recap and selected-recap variants without assuming archive exports or parentage.
+
+**Step 2: Implement fix**
+
+Define an explicit non-archive synced transaction that finalizes and pushes the project ref, marks and exact-path commits the discovery record, and finalizes an optional recap against the correct ref/parent receipts. Preserve archive behavior, ref retention, retry safety, and unrelated staged state. Align docs that currently claim completion always archives. Do not bump the skill version again.
+
+**Step 3: Verify**
+
+Add executable contract cases for configured and interactive archive decline, each with and without a selected recap, proving completion, record status, exact commit containment, ref retention, and recovery. Run the focused contract suite, packaged completion integration tests, skill validation/bump checks, docs checks/build, provider drift check, lint, format, and diff-check.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/SKILL.md .cursor/skills/oat-project-complete/SKILL.md .oat/sync/manifest.json packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/picking-up-projects.md
+git commit -m "fix(p05-t01): support non-archive synced completion"
+```
+
+---
+
+### Task p05-t02: (review) Confine migration sources and reject symlinks
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/migrate/index.ts`
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts`
+- Modify: `packages/cli/src/commands/project/migrate/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding C2: lexical direct-child validation accepts a tracked project-root symlink, and recursive copy can publish external files while silently omitting nested symlinks.
+
+**Step 2: Implement fix**
+
+Before any ref, worktree, record, push, or source mutation, require an actual directory root via `lstat`, canonicalize the source and configured shared root, and require the canonical source to remain the expected direct child. Fail closed on root and nested symlinks with a clear recovery-safe error; do not silently omit entries.
+
+**Step 3: Verify**
+
+Add real-filesystem tests for an external root symlink and nested symlinks. Assert no ref, worktree, record, push, configuration change, or source mutation occurs. Run the focused migration/ref-sync suites, CLI type-check, scoped lint/format, and diff-check.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/migrate/index.ts packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/migrate/index.test.ts
+git commit -m "fix(p05-t02): confine migration sources"
+```
+
+---
+
+### Task p05-t03: (review) Restrict prune to canonical OAT checkouts
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts`
+- Modify: `packages/cli/src/commands/project/prune/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding C3: forced prune trusts any registered worktree whose suffix is `/synced/<slug>` and derives the trust root from the candidate itself.
+
+**Step 2: Implement fix**
+
+Derive allowed synced checkout paths only from registered parent worktree roots plus the configured scope-relative synced root, canonicalize them, and match exact paths. Never derive the trusted root from a removal candidate.
+
+**Step 3: Verify**
+
+Add real-Git tests with an unrelated registered worktree ending in `/synced/<slug>` and prove normal and forced prune leave it registered and intact while canonical OAT checkouts still prune correctly. Run focused prune/ref-sync suites, CLI type-check, scoped lint/format, and diff-check.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/prune/index.test.ts
+git commit -m "fix(p05-t03): restrict prune to canonical checkouts"
+```
+
+---
+
+### Task p05-t04: (review) Complete migration rollback after cleanup failures
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts`
+- Modify: `packages/cli/src/commands/project/migrate/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding I1: a failed remote-ref deletion exits migration rollback before local worktree/ref cleanup and configuration restoration.
+
+**Step 2: Implement fix**
+
+Run independent compensation steps with best-effort aggregation so local checkout/ref and config restoration always execute. Preserve the original failure and report every retained resource with exact recovery commands, including a remote ref that could not be deleted.
+
+**Step 3: Verify**
+
+Inject remote-delete failure and prove local compensation completes, retained resources are reported precisely, and retry behavior is deterministic. Run focused migration/ref-sync suites, CLI type-check, scoped lint/format, and diff-check.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/migrate/index.test.ts
+git commit -m "fix(p05-t04): finish migration rollback compensation"
+```
+
+---
+
+### Task p05-t05: (review) Recover adoption record commits idempotently
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/resolve-target.ts`
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts`
+- Modify: `packages/cli/src/commands/project/pull/index.ts`
+- Modify: `packages/cli/src/commands/project/open/index.ts`
+- Modify: `packages/cli/src/commands/project/pull/index.test.ts`
+- Modify: `packages/cli/src/commands/project/open/index.test.ts`
+- Modify: `packages/cli/src/commands/project/sync/resolve-target.test.ts`
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding I2: after the first adoption record commit fails, retry sees the record, disables adoption, and can report pull/open success without making the record durable.
+
+**Step 2: Implement fix**
+
+Make the adoption transaction classify record ownership and durability. Roll back only records created by the failed invocation or return an existing uncommitted/untracked record as pending until its exact-path commit succeeds. Preserve explicit `--no-commit`, unrelated staged state, and already-durable records.
+
+**Step 3: Verify**
+
+Add real-Git retry tests for both `project pull` and `project open` with a first commit failure, plus `--no-commit` and unrelated-state coverage. Run focused pull/open/resolve-target/ref-sync suites, CLI type-check, scoped lint/format, and diff-check.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/resolve-target.ts packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/pull packages/cli/src/commands/project/open
+git commit -m "fix(p05-t05): recover adoption record commits"
+```
+
+---
+
+### Task p05-t06: (review) Validate bookkeeping guard semantics per site
+
+**Files:**
+
+- Modify: `packages/cli/src/validation/skills.ts`
+- Modify: `packages/cli/src/validation/synced-bookkeeping-sites.json`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding M1: inventory validation proves only anchor presence and exempts an entire file after one listed write, so guards can disappear or new writers can bypass completeness undetected.
+
+**Step 2: Implement fix**
+
+Represent and validate kind-specific companion guard evidence in the same function or fenced block as each inventoried site. Make completeness site-based rather than file-based while preserving deterministic diagnostics and the current canonical inventory.
+
+**Step 3: Verify**
+
+Add mutations that keep a listed anchor while removing its fail-closed guard and that add a second unlisted writer to an already inventoried file. Run `skills.test.ts`, `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, CLI type-check, scoped lint/format, and diff-check.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/validation/skills.ts packages/cli/src/validation/synced-bookkeeping-sites.json packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p05-t06): validate bookkeeping guards per site"
+```
+
+---
+
+### Task p05-t07: (review) Add a test-support import alias
+
+**Files:**
+
+- Modify: `packages/cli/tsconfig.json`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `packages/cli/src/commands/project/links/index.test.ts`
+- Modify: `packages/cli/src/commands/project/list.integration.test.ts`
+- Modify: `packages/cli/src/commands/project/migrate/index.test.ts`
+- Modify: `packages/cli/src/commands/project/new/scaffold.test.ts`
+- Modify: `packages/cli/src/commands/project/open/index.test.ts`
+- Modify: `packages/cli/src/commands/project/prune/index.test.ts`
+- Modify: `packages/cli/src/commands/project/pull/index.test.ts`
+- Modify: `packages/cli/src/commands/project/push/index.test.ts`
+- Modify: `packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts`
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.test.ts`
+- Modify: `packages/cli/src/commands/project/sync/resolve-target.test.ts`
+- Modify: `packages/cli/src/e2e/workflow.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding m1: changed tests use `@shared/../__tests__/synced-fixture`, violating the explicit no-alias-traversal import convention.
+
+**Step 2: Implement fix**
+
+Add a dedicated TypeScript test-support alias for `src/__tests__` and mechanically replace every synced fixture traversal import. Do not change test behavior or broaden production aliases.
+
+**Step 3: Verify**
+
+Use `rg` to prove no `@shared/../__tests__/synced-fixture` imports remain. Run the affected synced fixture suites, CLI type-check, scoped lint/format, and diff-check.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/tsconfig.json packages/cli/src
+git commit -m "refactor(p05-t07): add synced test fixture alias"
+```
+
+---
+
 ## Reviews
 
 | Scope   | Type     | Status          | Date       | Artifact                                                          | Reviewed Head                            | Invocation | Gate Target              |
@@ -2526,7 +2753,7 @@ git commit -m "fix(p04-t16): commit synced retro targets before writeback"
 | p03-t19 | code     | passed          | 2026-08-27 | reviews/code-p03-t19-review-2026-08-27T203907Z.md                 | 4cf94b72b99cb1110f33720b80ce65fc9b715f98 | manual     | -                        |
 | p04     | code     | fixes_completed | 2026-08-27 | reviews/archived/p04-review-2026-08-27T223316Z.md                 | 1caa8e9989c11c3ebb1355785fc1f7f502837563 | manual     | -                        |
 | p04     | code     | passed          | 2026-08-27 | reviews/p04-review-2026-08-27T232826Z.md                          | 743c9cbe952cf6f4ad3eeba24eabebebec9884c7 | manual     | -                        |
-| final   | code     | received        | 2026-08-27 | reviews/final-review-2026-08-27T234119Z.md                        | c5ceac6b06ea29dba92c65834d5aa4c593813f6e | manual     | -                        |
+| final   | code     | fixes_added     | 2026-08-27 | reviews/archived/final-review-2026-08-27T234119Z.md               | c5ceac6b06ea29dba92c65834d5aa4c593813f6e | manual     | -                        |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                        |
 | plan    | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -                                        | auto       | -                        |
@@ -2551,8 +2778,9 @@ git commit -m "fix(p04-t16): commit synced retro targets before writeback"
 - Phase 2: 13 tasks - CLI surface (`projects.defaultScope`, scope-aware scaffold, `new --scope`, `scope`, `push`, `pull`, `list`, e2e, `list --remote`, adopting pull + children, synced-aware `open`/`pause`, shared canonical mutation preflight, isolated child failures + stable split coverage)
 - Phase 3: 19 tasks - Reviewer and lifecycle surface plus eight received review fixes (archive safety/retry identity, migration index safety, doctor working-tree/index leak detection, PR refresh isolation, reproducible merge evidence, local-sync text reason)
 - Phase 4: 16 tasks - Skills sweep (A/B/C/D/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood, and five received-review durability/routing fixes
+- Phase 5: 7 tasks - Final-review fixes for non-archive completion, migration/prune confinement, rollback/adoption recovery, semantic guard validation, and test imports
 
-**Total: 58 tasks**
+**Total: 65 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p05-t01
 oat_last_commit: f41fc6b77
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -33,6 +33,9 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p04:
       used_attempts: 4
+      pending_attempt: null
+    p05:
+      used_attempts: 0
       pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -93,19 +96,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-27T23:41:19.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T00:06:39.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Final project review received; review processing pending
+**Status:** Final review fixes ready - p05-t01 through p05-t07
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-27
 
 ## Current Phase
 
-Final project review received - review processing pending
+Implementation - Phase 5 final review fixes
 
 ## Artifacts
 
@@ -113,7 +116,7 @@ Final project review received - review processing pending
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (58/58 tasks complete; all phase reviews passed; final project review received)
+- **Implementation:** `implementation.md` (58/65 tasks complete; Phase 5 final-review fixes ready)
 
 ## Progress
 
@@ -170,11 +173,12 @@ Final project review received - review processing pending
 - ✓ Phase 4 independent re-review passed at 0 Critical / 0 Important / 0 Medium / 0 Minor
 - ✓ Phase 4 complete; all 58 implementation tasks are complete
 - ⨯ Final independent project review received with 3 Critical, 2 Important, 1 Medium, and 1 Minor findings
+- ✓ Final review findings converted into p05-t01 through p05-t07 with no deferrals
 
 ## Blockers
 
-- Final review findings await `oat-project-review-receive`; merge, migration, archive, completion, and PR publication remain blocked.
+- Final review findings block merge, migration, archive, completion, and PR publication until Phase 5 and a fresh final re-review pass.
 
 ## Next Milestone
 
-Run `oat-project-review-receive` to process the final review findings.
+Execute Phase 5 starting at p05-t01.
