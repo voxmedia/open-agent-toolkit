@@ -445,6 +445,7 @@ merge path.
 | p03    | code     | fixes_completed | 2026-08-28 | `reviews/archived/p03-review-2026-08-28T024853Z.md`   | 00c641d332a82bd1ccfc4268f90965d517e7ec52 | auto       | -           |
 | p03    | code     | passed          | 2026-08-28 | `reviews/p03-review-2026-08-28T025628Z.md`            | 63b1c7e4076e14369390e7bea9192ecc674f9719 | auto       | -           |
 | final  | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T022049Z.md` | d3c76770f9bb75860486e678bf5281fa8a84b6f4 | auto       | -           |
+| final  | code     | received        | 2026-08-28 | `reviews/final-review-2026-08-28T030247Z.md`          | 637a6289f6e6ea627a536006cc11a36791eedc9a | auto       | -           |
 | spec   | artifact | pending         | -          | -                                                     | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                     | -                                        | -          | -           |
 | plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md`  | -                                        | -          | -           |
