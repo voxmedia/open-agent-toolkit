@@ -61,11 +61,12 @@ review its warnings before using `--force`.
 
 ## Archive contents
 
-Completion copies a synced project into `.oat/projects/archived/<project>/`
-without the nested checkout's `.git` pointer or `reviews/`. S3 snapshots also
-omit `pr/`, following the existing archive policy. The ref remains available
-after completion, while the tracked record changes to `complete` and identifies
-the archive snapshot.
+When archive is selected, completion copies a synced project into
+`.oat/projects/archived/<project>/` without the nested checkout's `.git`
+pointer or `reviews/`. S3 snapshots also omit `pr/`, following the existing
+archive policy. When archive is disabled or declined, the active synced
+checkout remains in place. Both paths retain the project ref and commit the
+tracked record as `complete`; only the archive path records an archive snapshot.
 
 ## Related
 

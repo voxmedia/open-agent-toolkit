@@ -1056,6 +1056,69 @@ describe('review skill contracts', () => {
     );
   });
 
+  it.each([
+    ['configured archive decline', 'workflow.archiveOnComplete=false'],
+    [
+      'interactive archive decline',
+      'the interactive archive answer is `false`',
+    ],
+  ])(
+    'completes synced projects without archiving after %s',
+    (_scenario, archiveDecision) => {
+      const content = readRepoFile(
+        '.agents/skills/oat-project-complete/SKILL.md',
+      );
+      const normalizedContent = content.replace(/\s+/g, ' ');
+
+      expect(normalizedContent).toContain(archiveDecision);
+      expect(normalizedContent).toContain(
+        '### Step 8.7: Non-Archive Synced Completion Transaction',
+      );
+      expect(normalizedContent).toContain(
+        'Mark the discovery record `complete` with `completedAt` using a structured JSON write',
+      );
+      expect(normalizedContent).toMatch(
+        /commit only `SYNCED_RECORD_PATH` on the parent branch/i,
+      );
+      expect(normalizedContent).toContain(
+        'The retained project ref remains the artifact authority after non-archive completion.',
+      );
+      expect(normalizedContent).toMatch(
+        /On retry,[\s\S]*?already-complete record[\s\S]*?final project-ref push receipt/,
+      );
+    },
+  );
+
+  it.each([
+    ['without a selected recap', 'SELECTED_PROJECT_RECAP_RUN is empty'],
+    ['with a selected recap', 'SELECTED_PROJECT_RECAP_RUN is non-empty'],
+  ])(
+    'uses the correct non-archive synced receipts %s',
+    (_scenario, recapState) => {
+      const content = readRepoFile(
+        '.agents/skills/oat-project-complete/SKILL.md',
+      );
+      const normalizedContent = content.replace(/\s+/g, ' ');
+
+      expect(normalizedContent).toContain(recapState);
+      expect(normalizedContent).toContain(
+        'Capture the final successful project push SHA as `PROJECT_REF_COMMIT`.',
+      );
+      expect(normalizedContent).toContain(
+        'Use `PROJECT_REF_COMMIT`, not the parent-branch `LIFECYCLE_COMMIT`, as the active recap artifact commit.',
+      );
+      expect(normalizedContent).toContain(
+        'The non-archive recap evidence commit must be the immediate child of `PROJECT_REF_COMMIT` in the project checkout.',
+      );
+      expect(normalizedContent).toMatch(
+        /publish the evidence commit with `oat project push`, retaining the custom ref and checkout\./i,
+      );
+      expect(normalizedContent).toMatch(
+        /Snapshot unrelated staged state[\s\S]*?verify[\s\S]*?byte-for-byte unchanged/,
+      );
+    },
+  );
+
   it('defines runtime-safe summary handling during pr-final and completion', () => {
     const prFinalPath = repoFilePath(
       '.agents/skills/oat-project-pr-final/SKILL.md',

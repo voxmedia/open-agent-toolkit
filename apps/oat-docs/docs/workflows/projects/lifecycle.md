@@ -70,13 +70,17 @@ After implementation closeout finishes:
    - GitHub PR feedback delegates to `oat-project-review-receive-remote`
    - Review artifacts delegate to `oat-project-review-receive`
    - After revision tasks complete, state returns to `pr_open`
-5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and always archives the project locally
+5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and archives when selected by the workflow preference or completion prompt
 
 ### Completion archive behavior
 
-On completion, OAT now treats archive handling as part of the closeout lifecycle:
+On completion, OAT treats archive handling as an explicit closeout choice:
 
-- Local archive is always written to `.oat/projects/archived/<project>/`.
+- When archiving is selected, the local archive is written to `.oat/projects/archived/<project>/`.
+- When archiving is disabled or declined, durable projects remain at their
+  active path. Synced completion still finalizes and pushes the project ref,
+  commits the discovery record as `complete`, retains the checkout and ref, and
+  attests a selected recap against the project-ref history.
 - For a synced project, closeout first finalizes the project artifacts and
   pushes them to `refs/oat/projects/<project>`. Archive then requires a clean,
   fully pushed checkout; copies it without the `.git` pointer or `reviews/`;
@@ -136,7 +140,7 @@ summary, documentation, PR, or project completion.
 
 ### Retrospective completion safety net
 
-Before an interactive completion archives the project,
+Before an interactive completion closes the project,
 `oat-project-complete` checks for
 `{PROJECT_PATH}/references/project-retro.md`. If the artifact is missing, it
 offers to generate one before completion. If the artifact exists, completion
