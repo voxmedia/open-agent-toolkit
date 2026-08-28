@@ -78,9 +78,9 @@ oat_dispatch_policy: # project dispatch policy (named maximum tier; set during p
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
@@ -101,23 +101,23 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T194740Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=3). Run oat-project-review-receive for .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T194740Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=3241d71c-b67e-4a04-88f2-4a9965de3395; handoff=receive; source=reviews/final-review-2026-08-28T194740Z.md; scope=final; type=code'
   receive_source_artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T194740Z.md
   receive_archived_artifact: .oat/projects/shared/synced-project-scope/reviews/archived/final-review-2026-08-28T194740Z.md
   receive_event_identity: 'final | code | final-review-2026-08-28T194740Z.md'
   receive_pre_head: cdd1c3556e27a1d6fe01c479df29a2316bb120dd
-  receive_commit: null
+  receive_commit: e095995d4fe03dbdc15501b7742449b72d30d9e1
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-28T19:51:14Z'
+  updated_at: '2026-08-28T19:53:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T19:51:14.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T19:53:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 

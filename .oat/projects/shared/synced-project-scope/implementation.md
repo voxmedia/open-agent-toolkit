@@ -2453,3 +2453,17 @@ deferred; no blocking task or post-gate implementation change was added:
 
 These dispositions are the durable follow-up triggers for the sub-threshold
 findings. They do not reopen the passing Important-threshold gate.
+
+#### Attempt 2 Receive Completed
+
+- **Receive bookkeeping commit:**
+  `e095995d4fe03dbdc15501b7742449b72d30d9e1`
+- **Artifact:**
+  `reviews/archived/final-review-2026-08-28T194740Z.md`
+- **Review row:** `final | code | passed | gate | claude-fable-skip-permissions`
+- **Gate disposition:** `allowed/passed`
+- **Attempt ledger:** 1 consumed remediation attempt of maximum 2; no further
+  attempt launched or needed
+
+The archived artifact, bound review event, and bounded receive commit
+corroborate the persisted intent. Configured gate attempt 2 is durably complete.

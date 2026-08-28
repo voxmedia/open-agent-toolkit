@@ -180,6 +180,8 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 
 Passing-gate judgment sweep archived final-review-2026-08-28T194740Z.md, marked the gate review passed, and explicitly deferred all 3 Minor cleanup findings with concrete follow-up triggers; no fix task or implementation change was added.
 
+Reconciled receive commit e095995d4 against gate run 3241d71c-b67e-4a04-88f2-4a9965de3395; configured exit gate is allowed/passed and no further attempt is required.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
