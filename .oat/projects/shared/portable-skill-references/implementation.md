@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: prev1-t01
+oat_current_task_id: prev1-t02
 oat_generated: false
 ---
 
@@ -12,8 +12,8 @@ oat_generated: false
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
-> The original implementation and closeout are complete. Revision 1 is active
-> to merge `origin/main` and resolve PR #226's conflicts.
+> Revision 1 merged `origin/main` and passed its phase review. Five final and
+> remote review fixes are queued before closeout can resume.
 
 ## Progress Overview
 
@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 1: Portable resolution and enforcement | passed | 4     | 4/4       |
 | Phase 2: Release metadata and validation     | passed | 1     | 1/1       |
 | Phase 3: Final review fixes                  | passed | 3     | 3/3       |
-| Revision 1: Merge current main               | passed | 1     | 1/1       |
+| Revision 1: Merge current main and fixes     | active | 6     | 1/6       |
 
-**Total:** 9/9 tasks completed; revision phase review passed.
+**Total:** 9/14 tasks completed; `prev1-t02` is next.
 
 ### Revision Received: Inline Feedback
 
@@ -53,6 +53,81 @@ The two-parent merge preserves upstream commit
 `3ca99ba070f09e395818756c54d9037cf10116ea`, adds its repository-only triage
 skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 `0.2.39`, and keeps all five public packages at lockstep `0.2.39`.
+
+### Task prev1-t02: Clear the completed revision task pointer
+
+**Status:** pending
+
+### Task prev1-t03: Refresh the project summary for Revision 1
+
+**Status:** pending
+
+### Task prev1-t04: Add actionable sibling-pack recovery commands
+
+**Status:** pending
+
+### Task prev1-t05: Restore dispatch launch safeguards
+
+**Status:** pending
+
+### Task prev1-t06: Resolve dispatch dependencies independently
+
+**Status:** pending
+
+### Review Received: final post-merge
+
+**Date:** 2026-08-28
+**Review artifact:**
+`reviews/archived/final-review-2026-08-28T121224Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 3
+- Minor: 0
+
+**Finding dispositions:**
+
+- `M1` -> `prev1-t02`: clear the completed revision task pointer.
+- `M2` -> `prev1-t03`: refresh the stale project summary.
+- `M3` -> `prev1-t04`: align fail-closed recovery messages with the shipped
+  contributor contract.
+
+**Review-cycle override:** the user explicitly selected the fix-and-re-review
+path after the third standard final review cycle.
+
+**Next:** Execute `prev1-t02` through `prev1-t04`, then re-review final.
+
+### Remote Review Received: PR #226
+
+**Date:** 2026-08-28
+**Artifact:**
+`reviews/archived/remote-pr-226-review-2026-08-28T143457Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 3
+- Minor: 0
+
+**Finding dispositions:**
+
+- `M1` -> `prev1-t05`: restore fix/reviewer launch notices and runtime
+  disclosure safeguards.
+- `M2` -> `prev1-t06`: resolve utility-pack dependencies independently across
+  installed scopes.
+- `M3` -> dismissed: the current receive contract explicitly re-points the
+  bound event artifact during archival while preserving its provenance; the
+  reported path change is required lifecycle bookkeeping, not identity loss.
+
+**New tasks added:** `prev1-t05`, `prev1-t06`
+
+**GitHub replies:** not posted; no authorization was requested or inferred.
+
+**Next:** Execute all five queued review-fix tasks through
+`oat-project-implement`.
 
 ## Phase 1: Portable sibling resolution and enforcement
 

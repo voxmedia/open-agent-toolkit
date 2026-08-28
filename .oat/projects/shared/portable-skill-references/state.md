@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t02
 oat_last_commit: cca0bb5187adfdffd475017e1009a6e643502927
 oat_blockers: []
 associated_issues:
@@ -133,7 +133,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/226 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T21:30:45.407Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T12:04:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T14:34:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -143,14 +143,14 @@ oat_project_recap:
 
 # Project State: portable-skill-references
 
-**Status:** Revision implemented and reviewed; final validation in progress
+**Status:** Final and remote review fixes queued
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Revision 1 merged `origin/main` and passed its root-owned review. Final review
-and exit-gate freshness are being refreshed before the PR branch is pushed.
+Revision 1 merged `origin/main` and passed its phase review. Five final and
+remote review fixes are queued before re-review and exit-gate refresh.
 
 ## Artifacts
 
@@ -158,7 +158,7 @@ and exit-gate freshness are being refreshed before the PR branch is pushed.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan quick workflow)
 - **Plan:** `plan.md` (complete; ready for implementation)
-- **Implementation:** `implementation.md` (9/9 tasks complete; revision review passed)
+- **Implementation:** `implementation.md` (9/14 tasks complete; fixes queued)
 
 ## Progress
 
@@ -179,7 +179,9 @@ and exit-gate freshness are being refreshed before the PR branch is pushed.
 - ✓ Implementation bookkeeping completed
 - ✓ Revision task `prev1-t01` completed
 - ✓ Revision 1 passed root-owned review with no findings
-- ▶ Final review and exit-gate freshness refresh in progress
+- ✓ Final post-merge review findings received
+- ✓ Bugbot feedback triaged: two converted, one dismissed with rationale
+- ▶ Review-fix task `prev1-t02` queued
 
 ## Blockers
 
@@ -187,5 +189,5 @@ None
 
 ## Next Milestone
 
-Refresh the final review and configured exit gate, then push the integrated
-branch and return PR #226 to human review.
+Execute `prev1-t02` through `prev1-t06`, re-review final, refresh the configured
+exit gate, and push PR #226.

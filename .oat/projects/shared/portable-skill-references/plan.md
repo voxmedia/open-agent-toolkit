@@ -465,23 +465,119 @@ Source: inline feedback (2026-08-28)
    order, plus `pnpm lint`, `pnpm format`, and `git diff --check`.
 5. Commit the merge resolution and push the branch to update PR #226.
 
+### Task prev1-t02: (review) Clear the completed revision task pointer
+
+**Files:**
+
+- Modify: `.oat/projects/shared/portable-skill-references/implementation.md`
+- Modify: `.oat/projects/shared/portable-skill-references/state.md`
+
+**Steps:**
+
+1. Clear the completed `prev1-t01` pointer from implementation frontmatter and
+   align the introductory lifecycle prose with Revision 1's passed state.
+2. Preserve implementation `in_progress` while final fixes and review remain.
+3. Verify with `pnpm run cli -- project status --project-path
+.oat/projects/shared/portable-skill-references --json` and `git diff --check`.
+4. Commit with `fix(prev1-t02): clear completed revision pointer`.
+
+### Task prev1-t03: (review) Refresh the project summary for Revision 1
+
+**Files:**
+
+- Modify: `.oat/projects/shared/portable-skill-references/summary.md`
+
+**Steps:**
+
+1. Refresh summary tracking fields, revision history, task totals, and prose
+   for `p-rev1` / `prev1-t01` and the semantic `origin/main` integration.
+2. Preserve the original portability outcome and previously recorded review
+   evidence.
+3. Verify summary freshness and `git diff --check`.
+4. Commit with `docs(prev1-t03): refresh revision summary`.
+
+### Task prev1-t04: (review) Add actionable sibling-pack recovery commands
+
+**Files:**
+
+- Modify: `.agents/skills/oat-idea-new/SKILL.md`
+- Modify: `.agents/skills/oat-idea-ideate/SKILL.md`
+- Modify: `.agents/skills/oat-idea-summarize/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+
+**Steps:**
+
+1. Add concrete, scope-aware install/update recovery commands to every changed
+   missing-sibling branch: `ideas` for idea skills, `workflows` for workflow
+   adapters, and `utility` for generic dispatch dependencies.
+2. Preserve fail-closed behavior and loaded/user/project resolution order.
+3. Add contract assertions that pin pack names and actionable command syntax.
+4. Refresh provider views and run focused skill/ratchet tests, `pnpm lint`,
+   `pnpm format`, and `git diff --check`.
+5. Commit with `fix(prev1-t04): add sibling recovery commands`.
+
+### Task prev1-t05: (review) Restore dispatch launch safeguards
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+
+**Steps:**
+
+1. Require structured resolver notices for implementation, fix, and reviewer
+   launches after the portable rewrite.
+2. Restore named provider-selection routing and the prohibition on presenting
+   the bundled recommendation version as the effective runtime target.
+3. Add contract assertions for all launch kinds and disclosure safeguards.
+4. Refresh provider views and run focused validation, lint, format, and diff
+   checks.
+5. Commit with `fix(prev1-t05): restore dispatch launch safeguards`.
+
+### Task prev1-t06: (review) Resolve dispatch dependencies independently
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+
+**Steps:**
+
+1. Resolve each required sibling (`oat-project-dispatch-subagents`,
+   `oat-dispatch-subagents`, and `subagent-orchestration`) independently so
+   mixed-scope `workflows` and `utility` installs remain valid.
+2. Preserve candidate order, fail-closed behavior, and actionable `utility`
+   recovery commands per missing dependency.
+3. Add mixed-scope and independent-resolution contract assertions.
+4. Refresh provider views and run focused validation, lint, format, and diff
+   checks.
+5. Commit with `fix(prev1-t06): resolve dispatch dependencies independently`.
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target          |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
-| p01    | code     | passed          | 2026-08-28 | `reviews/archived/p01-review-2026-08-28T015302Z.md`           | dba46295a0d02c1bd1bca179a954bf902a2ae1c6 | auto       | -                    |
-| p02    | code     | passed          | 2026-08-28 | `reviews/archived/p02-review-2026-08-28T021707Z.md`           | 9d5be6432d30bb31b6bf3fed01ed152c936640c0 | auto       | -                    |
-| p03    | code     | fixes_completed | 2026-08-28 | `reviews/archived/p03-review-2026-08-28T024853Z.md`           | 00c641d332a82bd1ccfc4268f90965d517e7ec52 | auto       | -                    |
-| p03    | code     | passed          | 2026-08-28 | `reviews/archived/p03-review-2026-08-28T025628Z.md`           | 63b1c7e4076e14369390e7bea9192ecc674f9719 | auto       | -                    |
-| final  | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T022049Z.md`         | d3c76770f9bb75860486e678bf5281fa8a84b6f4 | auto       | -                    |
-| final  | code     | passed          | 2026-08-28 | `reviews/archived/final-review-2026-08-28T030247Z.md`         | 637a6289f6e6ea627a536006cc11a36791eedc9a | auto       | -                    |
-| spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                    |
-| design | artifact | pending         | -          | -                                                             | -                                        | -          | -                    |
-| plan   | artifact | passed          | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T214843Z.md` | -                                        | -          | -                    |
-| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T220007Z.md` | -                                        | -          | -                    |
-| plan   | artifact | fixes_completed | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T220505Z.md` | -                                        | -          | -                    |
-| final  | code     | passed          | 2026-08-28 | `reviews/archived/final-review-2026-08-28T032516Z.md`         | 9586af443af098ee37b7094e00d5b4d69961ccc5 | gate       | cursor-fable-5-xhigh |
-| p-rev1 | code     | passed          | 2026-08-28 | `reviews/archived/p-rev1-review-2026-08-28T120245Z.md`        | cca0bb5187adfdffd475017e1009a6e643502927 | auto       | -                    |
+| Scope         | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target          |
+| ------------- | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
+| p01           | code     | passed          | 2026-08-28 | `reviews/archived/p01-review-2026-08-28T015302Z.md`           | dba46295a0d02c1bd1bca179a954bf902a2ae1c6 | auto       | -                    |
+| p02           | code     | passed          | 2026-08-28 | `reviews/archived/p02-review-2026-08-28T021707Z.md`           | 9d5be6432d30bb31b6bf3fed01ed152c936640c0 | auto       | -                    |
+| p03           | code     | fixes_completed | 2026-08-28 | `reviews/archived/p03-review-2026-08-28T024853Z.md`           | 00c641d332a82bd1ccfc4268f90965d517e7ec52 | auto       | -                    |
+| p03           | code     | passed          | 2026-08-28 | `reviews/archived/p03-review-2026-08-28T025628Z.md`           | 63b1c7e4076e14369390e7bea9192ecc674f9719 | auto       | -                    |
+| final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T022049Z.md`         | d3c76770f9bb75860486e678bf5281fa8a84b6f4 | auto       | -                    |
+| final         | code     | passed          | 2026-08-28 | `reviews/archived/final-review-2026-08-28T030247Z.md`         | 637a6289f6e6ea627a536006cc11a36791eedc9a | auto       | -                    |
+| spec          | artifact | pending         | -          | -                                                             | -                                        | -          | -                    |
+| design        | artifact | pending         | -          | -                                                             | -                                        | -          | -                    |
+| plan          | artifact | passed          | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T214843Z.md` | -                                        | -          | -                    |
+| plan          | artifact | fixes_completed | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T220007Z.md` | -                                        | -          | -                    |
+| plan          | artifact | fixes_completed | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T220505Z.md` | -                                        | -          | -                    |
+| final         | code     | passed          | 2026-08-28 | `reviews/archived/final-review-2026-08-28T032516Z.md`         | 9586af443af098ee37b7094e00d5b4d69961ccc5 | gate       | cursor-fable-5-xhigh |
+| p-rev1        | code     | passed          | 2026-08-28 | `reviews/archived/p-rev1-review-2026-08-28T120245Z.md`        | cca0bb5187adfdffd475017e1009a6e643502927 | auto       | -                    |
+| final         | code     | fixes_added     | 2026-08-28 | `reviews/archived/final-review-2026-08-28T121224Z.md`         | 263bac768e181bfdc2ad85945ed248e3f5bc8066 | auto       | -                    |
+| remote-pr-226 | code     | fixes_added     | 2026-08-28 | `reviews/archived/remote-pr-226-review-2026-08-28T143457Z.md` | -                                        | -          | -                    |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -493,13 +589,12 @@ Source: inline feedback (2026-08-28)
 - Phase 1: 4 tasks - portable resolution contracts and robust ratchet coverage
 - Phase 2: 1 task - provider views, lockstep release metadata, and full gates
 - Phase 3: 3 tasks - final ratchet hardening and lifecycle reconciliation
-- Revision 1: 1 task - merge current main and resolve PR conflicts
+- Revision 1: 6 tasks - merge current main plus final and remote review fixes
 
-**Total: 9 tasks**
+**Total: 14 tasks**
 
-All nine task scopes are implemented, and Revision 1 passed its root-owned
-review. Final review and exit-gate freshness are being refreshed against the
-integrated tree before PR #226 is pushed.
+Nine task scopes are implemented. Five review-fix tasks remain before the final
+re-review and exit-gate refresh can complete and PR #226 can be pushed.
 
 ## References
 
