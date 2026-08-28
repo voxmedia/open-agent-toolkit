@@ -76,19 +76,20 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-28T21:36:51.245Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T21:36:51.245Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T21:42:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: portable-agent-references
 
-**Status:** Discovery
+**Status:** Discovery captured; requirements confirmation pending
 **Started:** 2026-08-28
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Discovery is captured with a straight-to-plan recommendation. The request is
+bounded and no lightweight design is needed.
 
 ## Artifacts
 
@@ -102,7 +103,9 @@ Discovery - Gathering requirements for a quick workflow before planning
 
 - ✓ Discovery started
 - ✓ Execution artifacts scaffolded
-- ⧗ Awaiting user input
+- ✓ Repository and prior-review reconnaissance completed
+- ✓ Straight-to-plan depth selected
+- ⧗ Awaiting requirements confirmation
 
 ## Blockers
 
@@ -110,4 +113,4 @@ None
 
 ## Next Milestone
 
-Complete discovery and generate a quick implementation plan
+Confirm the discovery requirements, then generate the implementation plan

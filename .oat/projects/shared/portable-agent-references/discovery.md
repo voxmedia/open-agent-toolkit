@@ -8,135 +8,146 @@ oat_generated: false
 
 # Discovery: portable-agent-references
 
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
-
 ## Initial Request
 
-{Copy of user's initial request}
+Create a quick-workflow follow-up to the merged
+`portable-skill-references` project. Port the remaining user-default workflow
+agents and utility dispatch surface away from executable repository-relative
+sibling reads, then remove the validation exemption that currently preserves
+the phase implementer's bare paths.
 
-## Clarifying Questions
+The project starts from merged `origin/main` on
+`feat/portable-agent-references`.
 
-### Question 1: {Topic}
+## Request Classification
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Well-understood.** The independent exit review for PR #226 identified the
+exact residual surfaces and the existing portable resolver supplies the
+behavioral model. Reconnaissance resolved the one uncertainty: OAT does not
+provide a reliable loaded-agent source path across Codex, Claude, and Cursor,
+so agent instructions cannot safely derive a sibling skills root from their
+materialized file location.
 
-## Solution Space
+## Chosen Direction
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+Use two related resolver contracts:
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+1. The loaded `oat-dispatch-subagents` skill keeps the established loaded-skill,
+   user-scope, then project-scope resolution order for its cross-skill
+   dependency.
+2. The materialized `oat-phase-implementer` and `oat-reviewer` agents resolve
+   each required sibling independently from user scope, then project scope.
+   They do not invent an `${AGENT_DIR}` or depend on provider-specific
+   materialization paths.
 
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+Every resolver validates the exact `SKILL.md` or reference file it needs,
+names the owning pack on failure, provides install/update recovery for the
+intended scope, and stops before dispatch instead of using ambient discovery.
+Focused tests will prove the portable reads and delete the phase implementer's
+special-case expectation for bare paths.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **No loaded-agent-root assumption:** Codex receives agent content as
+   developer instructions, while Claude and Cursor materialize provider views
+   in different directories. No common loaded-agent path contract exists.
+2. **Independent dependency roots:** `workflows` and `utility` may be installed
+   at different scopes, so each sibling is bound independently rather than
+   freezing one root for all reads.
+3. **User-first agent fallback:** agents probe `${HOME}/.agents/skills` before
+   `<repo-root>/.agents/skills`; this matches the packs' user-default behavior
+   while preserving project-scope installs.
+4. **Remove the exemption, do not merely annotate it:** once
+   `oat-phase-implementer` is portable, the validation branch that requires its
+   bare paths must disappear and normal portable assertions must cover it.
+5. **Focused ratchet scope:** add regression coverage for the changed agent and
+   utility surfaces. The separate repository-wide widening from sibling
+   `SKILL.md` targets to every cross-skill `references/*.md` read remains a
+   distinct follow-up because it exposes additional skills outside this
+   request.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve mandatory dispatch-loading order, provider selection, launch
+  safeguards, and effective-target disclosure.
+- Do not rely on a provider-specific agent path, current working directory, or
+  ambient skill discovery.
+- Preserve both user-scope and project-scope installs, including mixed-scope
+  `workflows` and `utility` packs.
+- Fail closed with `oat tools install` and `oat tools update --pack` recovery
+  commands that name the owning pack and intended scope.
+- Verify canonical and bundled/materialized copies so source-only portability
+  cannot pass.
+- Bump every changed canonical skill or agent version once in the final PR and
+  advance the five public packages in lockstep because agents and skills are
+  shipped CLI assets.
+- Run `pnpm lint` and `pnpm format` in addition to the complete repository
+  Definition of Done gate sequence.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- `oat-phase-implementer` and `oat-reviewer` contain no executable bare
+  `.agents/skills/...` sibling reads in their dispatch-loading contracts.
+- `oat-dispatch-subagents` resolves its `subagent-orchestration` dependency and
+  provider references through an installed-scope root rather than a
+  repository-relative path.
+- Every required dependency is resolved independently, exact target existence
+  is checked, and a missing dependency stops before dispatch with correct
+  `workflows` or `utility` recovery commands.
+- Tests cover user-first/project fallback order for agents, loaded/user/project
+  order for the utility skill, mixed-scope independent bindings, missing-pack
+  recovery, and absence of executable bare reads.
+- The `oat-phase-implementer` special branch in the dispatch-consumer test is
+  removed; phase implementer and reviewer use positive portable-contract
+  assertions.
+- Provider/bundled views contain the updated agent and utility instructions.
+- Focused contract tests, agent/skill version assertions, public-package
+  release checks, and every repository gate pass.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
-
-## Deferred Ideas
-
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
-
-## Open Questions
-
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
-
-## Assumptions
-
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Adding provider-specific loaded-agent-path metadata or changing agent
+  materialization architecture.
+- Changing pack membership, default scopes, install/update semantics, or
+  dispatch policy.
+- Porting unrelated bare cross-skill reads in other skills such as
+  `oat-project-review-provide`, `oat-review-provide-remote`, `codex-skill`, or
+  `oat-repo-improve`.
+- Generalizing the global ratchet to every cross-skill `references/*.md` target;
+  retain exact baselines or focused assertions rather than silently expanding
+  this project's remediation scope.
+- Publishing packages, opening a PR, or merging the implementation PR.
 
 ## Risks
 
-{Potential risks identified during discovery}
+- **Materialized-agent ambiguity:** generated provider roles do not share a
+  stable source-path API.
+  - **Mitigation:** use only user and project candidates in agent instructions
+    and verify generated provider views.
+- **Transitive portability regression:** the entry skill may resolve while its
+  selected mechanics or provider reference still uses a bare path.
+  - **Mitigation:** validate every concrete required target and assert the full
+    chained read contract.
+- **Scope creep from a generalized matcher:** broadening the regex will reveal
+  unrelated historical and executable reads.
+  - **Mitigation:** keep this project focused and make any retained baseline
+    exact by file and target.
 
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+## Open Questions
 
-## Next Steps
+None block planning. The implementation may choose the smallest reusable test
+helper that expresses the distinct skill and agent candidate orders without
+claiming a loaded-agent-root contract.
 
-Use this discovery artifact to drive the next workflow step:
+## References
 
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+- Prior project record:
+  `.oat/repo/reference/project-summaries/20260828-portable-skill-references.md`
+- Prior exit review:
+  `.oat/projects/archived/portable-skill-references/reviews/archived/final-review-2026-08-28T175129Z.md`
+- User-default pack definitions:
+  `packages/cli/src/commands/tools/shared/pack-manifest.ts`
+- Existing portability ratchet:
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- Existing dispatch-consumer exemption:
+  `packages/cli/src/validation/skills.test.ts`
