@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.18
+version: 1.2.19
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -25,20 +25,35 @@ This is a sub-phase indicator; the calling skill owns the top-level banner.
 
 ## Shared Subagent Dispatch Contract
 
-Before every artifact self-review dispatch, read and follow
-`.agents/skills/oat-project-dispatch-subagents/SKILL.md`, which then requires
-`.agents/skills/oat-dispatch-subagents/SKILL.md`. This explicit two-skill load
-is mandatory; do not rely on ambient skill discovery. Planning self-review
+Before every artifact self-review dispatch, resolve `${SKILLS_ROOT}` for each
+required sibling skill in this order:
+
+1. Derive it from the directory containing this loaded `SKILL.md`:
+   `${SKILL_DIR}/..`. If the provider exposes the loaded skill path, treat its
+   directory as `${SKILL_DIR}`.
+2. Otherwise try the user-scope root first: `${HOME}/.agents/skills`.
+3. Fall back to the project-scope root: `<repo-root>/.agents/skills`.
+
+Probe each candidate for `<name>/SKILL.md` and treat the first match as
+`${SKILLS_ROOT}`. If no candidate resolves, tell the user which required
+dispatch skill is not installed and stop before the artifact self-review
+dispatch. Do not fall back to ambient skill discovery.
+
+Resolve, read, and follow
+`${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`, then resolve and read
+`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`. Both reads are mandatory and
+must remain in this order. Planning self-review
 inherits the planning parent by default. The shared contracts own any
 catalog-aware exception, launch acceptance boundary, and dispatch record; this
 skill continues to own plan readiness and review disposition.
 
 Read
-`.agents/skills/subagent-orchestration/references/model-selection-principles.md`.
+`${SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md`
+(resolve `${SKILLS_ROOT}` for `subagent-orchestration` first).
 After resolving the review provider, read exactly one active-provider selection
-reference from `.agents/skills/subagent-orchestration/references/` and the
+reference from `${SKILLS_ROOT}/subagent-orchestration/references/` and the
 matching mechanics reference from
-`.agents/skills/oat-dispatch-subagents/references/` (`provider-cursor.md`,
+`${SKILLS_ROOT}/oat-dispatch-subagents/references/` (`provider-cursor.md`,
 `provider-codex.md`, or `provider-claude.md`). Do not merge provider guidance
 or mechanics.
 

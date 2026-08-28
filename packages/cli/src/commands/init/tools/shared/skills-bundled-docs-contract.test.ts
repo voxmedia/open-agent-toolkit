@@ -181,22 +181,6 @@ describe('skills bundled docs contract', () => {
         file: '.agents/skills/oat-brainstorm/references/dogfood-results.md',
         target,
       })),
-      {
-        file: '.agents/skills/oat-project-implement/SKILL.md',
-        target: 'oat-dispatch-subagents',
-      },
-      {
-        file: '.agents/skills/oat-project-implement/SKILL.md',
-        target: 'oat-project-dispatch-subagents',
-      },
-      {
-        file: '.agents/skills/oat-project-plan-writing/SKILL.md',
-        target: 'oat-dispatch-subagents',
-      },
-      {
-        file: '.agents/skills/oat-project-plan-writing/SKILL.md',
-        target: 'oat-project-dispatch-subagents',
-      },
       // The mini-wave fixture documents the canonical path promoted by its test.
       {
         file: '.agents/skills/oat-wave-execute/tests/mini-wave-fixture/README.md',
@@ -249,6 +233,36 @@ describe('skills bundled docs contract', () => {
       );
       expect(content).toContain(
         'stop the current branch instead of improvising its process',
+      );
+      expect(collectBareCrossSkillTargets(content, skill)).toEqual([]);
+    },
+  );
+
+  it.each([
+    ['oat-project-implement', 'stop before any implementation, fix, or'],
+    [
+      'oat-project-plan-writing',
+      'stop before the artifact self-review\ndispatch',
+    ],
+  ])(
+    '%s resolves both dispatch contracts before dispatch',
+    (skill, stopText) => {
+      const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
+      const projectDispatchRead =
+        '`${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`';
+      const sharedDispatchRead =
+        '`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`';
+
+      expect(content).toContain('`${SKILL_DIR}/..`');
+      expect(content).toContain('`${HOME}/.agents/skills`');
+      expect(content).toContain('`<repo-root>/.agents/skills`');
+      expect(content).toContain(
+        'Probe each candidate for `<name>/SKILL.md` and treat the first match as',
+      );
+      expect(content).toContain(stopText);
+      expect(content).toContain('Do not fall back to ambient skill discovery');
+      expect(content.indexOf(projectDispatchRead)).toBeLessThan(
+        content.indexOf(sharedDispatchRead),
       );
       expect(collectBareCrossSkillTargets(content, skill)).toEqual([]);
     },

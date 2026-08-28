@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.2.5
+version: 2.2.6
 description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -20,20 +20,37 @@ Execute the implementation plan task-by-task with full state tracking.
 ## Shared Subagent Dispatch Contract
 
 Before resolving or launching a phase implementer, optional child, fix, or
-reviewer, read `.agents/skills/oat-project-dispatch-subagents/SKILL.md`, then
-`.agents/skills/oat-dispatch-subagents/SKILL.md`. The former resolves lifecycle
-scope; the latter owns provider-neutral selection, recovery, and evidence.
+reviewer, resolve `${SKILLS_ROOT}` for each required sibling skill in this
+order:
+
+1. Derive it from the directory containing this loaded `SKILL.md`:
+   `${SKILL_DIR}/..`. If the provider exposes the loaded skill path, treat its
+   directory as `${SKILL_DIR}`.
+2. Otherwise try the user-scope root first: `${HOME}/.agents/skills`.
+3. Fall back to the project-scope root: `<repo-root>/.agents/skills`.
+
+Probe each candidate for `<name>/SKILL.md` and treat the first match as
+`${SKILLS_ROOT}`. If no candidate resolves, tell the user which required
+dispatch skill is not installed and stop before any implementation, fix, or
+reviewer dispatch. Do not fall back to ambient skill discovery.
+
+Resolve and read
+`${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`, then resolve and read
+`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`. Both reads are mandatory and
+must remain in this order. The former resolves lifecycle scope; the latter owns
+provider-neutral selection, recovery, and evidence.
 Display structured resolver notices before every implementation, fix, or
 reviewer launch. Runtime disclosure uses the effective resolved target, never
 the bundled recommendation version. This explicit load is mandatory, and
 correctness must not require a provider restart or hot reload.
 
 Read
-`.agents/skills/subagent-orchestration/references/model-selection-principles.md`.
+`${SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md`
+(resolve `${SKILLS_ROOT}` for `subagent-orchestration` first).
 After resolving `ACTIVE_PROVIDER`, read exactly one active-provider selection
-reference from `.agents/skills/subagent-orchestration/references/` and the
+reference from `${SKILLS_ROOT}/subagent-orchestration/references/` and the
 matching mechanics reference from
-`.agents/skills/oat-dispatch-subagents/references/` (`provider-cursor.md`,
+`${SKILLS_ROOT}/oat-dispatch-subagents/references/` (`provider-cursor.md`,
 `provider-codex.md`, or `provider-claude.md`). Do not merge provider guidance
 or mechanics.
 
