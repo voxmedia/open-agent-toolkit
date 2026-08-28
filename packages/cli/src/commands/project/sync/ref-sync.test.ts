@@ -21,6 +21,7 @@ import {
   commitRecordChange,
   continueSynced,
   createSyncedProject,
+  migrateSharedToSynced,
   preflightSyncedCheckout,
   pullChildren,
   pullSynced,
@@ -44,6 +45,18 @@ async function materializeRemoteTarget(target: SyncTarget): Promise<void> {
     ['worktree', 'add', '--detach', target.projectPath, target.ref],
     { cwd: target.repoRoot },
   );
+}
+
+async function addTrackedMigrationSource(
+  repoRoot: string,
+  slug: string,
+): Promise<string> {
+  const source = join(repoRoot, '.oat', 'projects', 'shared', slug);
+  await mkdir(source, { recursive: true });
+  await writeFile(join(source, 'state.md'), `# ${slug}\n`, 'utf8');
+  git(repoRoot, ['add', `.oat/projects/shared/${slug}`]);
+  git(repoRoot, ['commit', '-m', `add ${slug} source`]);
+  return source;
 }
 
 async function installRejectingHook(
@@ -322,6 +335,116 @@ describe('createSyncedProject', () => {
       expect(
         git(fixture.cloneA, ['worktree', 'list', '--porcelain']),
       ).not.toContain(target.projectPath);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
+
+describe('migration rollback ownership', () => {
+  it('preserves a remote ref published by a competitor before the migration push', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const slug = 'migration-push-race';
+      const source = await addTrackedMigrationSource(fixture.cloneA, slug);
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      let competitorSha = '';
+      let injected = false;
+      const racingRunner: GitRunner = {
+        async run(args, options) {
+          if (
+            !injected &&
+            args[0] === '-c' &&
+            args[1] === 'core.hooksPath=/dev/null' &&
+            args[2] === '-C' &&
+            args[4] === 'push' &&
+            args[6] === `HEAD:${target.ref}`
+          ) {
+            injected = true;
+            await writeFile(
+              join(fixture.cloneB!, 'competitor.md'),
+              'competitor-owned\n',
+              'utf8',
+            );
+            git(fixture.cloneB!, ['add', 'competitor.md']);
+            git(fixture.cloneB!, ['commit', '-m', 'competitor project']);
+            competitorSha = git(fixture.cloneB!, ['rev-parse', 'HEAD']);
+            git(fixture.cloneB!, ['push', 'origin', `HEAD:${target.ref}`]);
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await expect(
+        migrateSharedToSynced(target, racingRunner, {
+          sourcePath: source,
+          commit: true,
+        }),
+      ).rejects.toThrow(/unable to publish migrated project/i);
+
+      expect(injected).toBe(true);
+      expect(
+        git(fixture.cloneA, ['ls-remote', 'origin', target.ref]).split(
+          /\s+/,
+        )[0],
+      ).toBe(competitorSha);
+      await expect(readFile(join(source, 'state.md'), 'utf8')).resolves.toBe(
+        `# ${slug}\n`,
+      );
+      expect(existsSync(target.projectPath)).toBe(false);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('uses the published SHA as a deletion lease and preserves a later competing update', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const slug = 'migration-rollback-lease';
+      const source = await addTrackedMigrationSource(fixture.cloneA, slug);
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      let competitorSha = '';
+
+      const failure = await migrateSharedToSynced(target, defaultGitRunner, {
+        sourcePath: source,
+        commit: true,
+        afterBranchCommit: async () => {
+          git(fixture.cloneB!, ['fetch', 'origin', target.ref]);
+          git(fixture.cloneB!, ['checkout', '--detach', 'FETCH_HEAD']);
+          await writeFile(
+            join(fixture.cloneB!, 'competitor.md'),
+            'competitor-update\n',
+            'utf8',
+          );
+          git(fixture.cloneB!, ['add', 'competitor.md']);
+          git(fixture.cloneB!, ['commit', '-m', 'advance project ref']);
+          competitorSha = git(fixture.cloneB!, ['rev-parse', 'HEAD']);
+          git(fixture.cloneB!, ['push', 'origin', `HEAD:${target.ref}`]);
+          throw new Error('injected post-publish failure');
+        },
+      }).catch((error: unknown) => error);
+
+      expect(failure).toBeInstanceOf(Error);
+      expect((failure as Error).message).toContain(
+        `--force-with-lease=${target.ref}:`,
+      );
+      expect(
+        git(fixture.cloneA, ['ls-remote', 'origin', target.ref]).split(
+          /\s+/,
+        )[0],
+      ).toBe(competitorSha);
+      await expect(readFile(join(source, 'state.md'), 'utf8')).resolves.toBe(
+        `# ${slug}\n`,
+      );
+      expect(existsSync(target.projectPath)).toBe(false);
     } finally {
       await fixture.cleanup();
     }

@@ -1104,6 +1104,7 @@ export async function migrateSharedToSynced(
   }
 
   let created = false;
+  let publishedRemoteSha: string | null = null;
   let activeProjectUpdated = false;
   let gitignoreSelfHealStarted = false;
   try {
@@ -1128,6 +1129,9 @@ export async function migrateSharedToSynced(
         `Unable to publish migrated project ${target.slug}: ${pushed.status}.`,
         1,
       );
+    }
+    if (pushed.status === 'pushed') {
+      publishedRemoteSha = pushed.sha;
     }
 
     await writeSyncedRecord(
@@ -1246,22 +1250,25 @@ export async function migrateSharedToSynced(
         },
       );
     }
-    if (created) {
+    if (publishedRemoteSha !== null) {
       await compensate(
         `remote ref ${target.remote}/${target.ref}`,
-        `git push ${target.remote} :${target.ref}`,
-        async () => {
-          const remoteRef = await git.run(
-            ['ls-remote', '--exit-code', target.remote, target.ref],
-            { cwd: target.repoRoot, allowFailure: true },
-          );
-          if (remoteRef.code === 0) {
-            await git.run(['push', target.remote, `:${target.ref}`], {
-              cwd: target.repoRoot,
-            });
-          }
-        },
+        `git push --force-with-lease=${target.ref}:${publishedRemoteSha} ${target.remote} :${target.ref}`,
+        async () =>
+          git
+            .run(
+              [
+                'push',
+                `--force-with-lease=${target.ref}:${publishedRemoteSha}`,
+                target.remote,
+                `:${target.ref}`,
+              ],
+              { cwd: target.repoRoot },
+            )
+            .then(() => undefined),
       );
+    }
+    if (created) {
       await compensate(
         `local checkout ${target.projectPath} and ref ${target.ref}`,
         `git worktree remove --force ${shellQuote(target.projectPath)} && git update-ref -d ${target.ref}`,
