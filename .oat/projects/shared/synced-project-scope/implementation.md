@@ -2386,3 +2386,11 @@ The resolved gate declaration exactly reproduces the prior immutable
 configuration. Launch, marker, result, artifact, and receive provenance were
 reset for the new generation; the prior attempt remains preserved in Git
 history.
+
+#### Attempt 2 Launch Intent
+
+- **Attempt ID:** `bf9e75b6-65e5-4edd-a289-5e7b8ab485fd`
+- **Started at:** `2026-08-28T19:42:51Z`
+- **Result receipt:**
+  `reviews/implement-exit-gate-result-bf9e75b6-65e5-4edd-a289-5e7b8ab485fd.json`
+- **Launch state:** `intent_persisted`; no gate run accepted yet
