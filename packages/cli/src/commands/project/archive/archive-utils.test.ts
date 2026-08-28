@@ -841,7 +841,6 @@ describe('archive utils', () => {
 
   it.each([
     'after-copy',
-    'after-summary',
     'after-s3',
     'after-lifecycle',
     'after-checkout-removal',
@@ -929,13 +928,6 @@ describe('archive utils', () => {
                   },
                 }
               : {}),
-            ...(failureBoundary === 'after-summary'
-              ? {
-                  execFile: vi.fn(async () => {
-                    throw new Error('injected after-summary failure');
-                  }),
-                }
-              : {}),
             ...(failureBoundary === 'after-s3'
               ? {
                   commitRecordChange: vi.fn(async () => {
@@ -1018,8 +1010,7 @@ describe('archive utils', () => {
           expect(await readSyncedRecord(recordPath)).toMatchObject({
             archiveSnapshot: snapshotId,
             completedAt:
-              failureBoundary === 'after-copy' ||
-              failureBoundary === 'after-summary'
+              failureBoundary === 'after-copy'
                 ? '2026-08-28T12:00:00Z'
                 : '2026-08-27T12:00:00Z',
             status: 'complete',
@@ -2637,6 +2628,97 @@ describe('archive utils', () => {
       'Skipping S3 archive sync because AWS CLI is unavailable.',
     ]);
   });
+
+  it.each(
+    (['shared', 'synced'] as const).flatMap((scope) =>
+      (['missing-cli', 'invalid-credentials', 'sync-failure'] as const).map(
+        (failure) => ({ scope, failure }),
+      ),
+    ),
+  )(
+    'keeps $scope completion nonblocking on S3 $failure',
+    async ({ scope, failure }) => {
+      const fixture = scope === 'synced' ? await createSyncedFixture() : null;
+      try {
+        const slug = `s3-${failure}`;
+        const repoRoot = fixture?.cloneA ?? (await createRepoRoot());
+        const target = fixture
+          ? buildSyncTarget(repoRoot, '.oat/projects/shared', slug)
+          : null;
+        const projectPath =
+          target?.projectPath ??
+          join(repoRoot, '.oat', 'projects', 'shared', slug);
+        if (target) {
+          await createSyncedProject(target, defaultGitRunner);
+        } else {
+          await mkdir(projectPath, { recursive: true });
+        }
+        await writeFile(join(projectPath, 'summary.md'), '# summary\n', 'utf8');
+        let recordPath: string | null = null;
+        if (target) {
+          await pushSynced(target, defaultGitRunner, {});
+          recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+          await writeSyncedRecord(
+            recordPath,
+            buildSyncedRecord(slug, new Date('2026-08-27T00:00:00Z')),
+          );
+        }
+
+        const accessWarning =
+          failure === 'missing-cli'
+            ? 'Archive S3 sync skipped because AWS CLI is unavailable.'
+            : 'Archive S3 sync skipped because AWS credentials are unusable.';
+        const ensureAccess = vi.fn(async () =>
+          failure === 'sync-failure'
+            ? { ok: true, warnings: [] }
+            : { ok: false, warnings: [accessWarning] },
+        );
+        const execFile = vi.fn(async () => {
+          throw new Error('injected aws s3 sync failure');
+        });
+        const result = await archiveProjectOnCompletion(
+          {
+            repoRoot,
+            projectPath,
+            projectName: slug,
+            projectsRoot: '.oat/projects/shared',
+            summaryExportPath: '.oat/repo/reference/project-summaries',
+            s3Uri: 's3://archive-bucket/projects',
+            s3SyncOnComplete: true,
+          },
+          {
+            ensureS3ArchiveAccess: ensureAccess,
+            execFile,
+            timestamp: () => '2026-08-27T12:00:00Z',
+          },
+        );
+
+        expect(result.s3Path).toBeNull();
+        expect(result.summaryExportFile).not.toBeNull();
+        await expect(readFile(result.summaryExportFile!, 'utf8')).resolves.toBe(
+          '# summary\n',
+        );
+        expect(result.warnings).toEqual([
+          failure === 'sync-failure'
+            ? expect.stringContaining('injected aws s3 sync failure')
+            : accessWarning,
+        ]);
+        await expect(access(projectPath)).rejects.toThrow();
+        if (recordPath) {
+          expect(result.lifecycleCommit).toMatch(/^[a-f0-9]{40}$/);
+          expect(await readSyncedRecord(recordPath)).toMatchObject({
+            status: 'complete',
+            archiveSnapshot: `20260827-${slug}`,
+          });
+        } else {
+          expect(result.lifecycleCommit).toBeNull();
+        }
+      } finally {
+        await fixture?.cleanup();
+      }
+    },
+    20_000,
+  );
 
   it('warns during completion when archive sync is enabled but aws is missing', async () => {
     const execFile = vi.fn(async () => {

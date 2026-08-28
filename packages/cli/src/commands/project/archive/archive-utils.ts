@@ -1674,13 +1674,6 @@ export async function archiveProjectOnCompletion(
     );
     warnings.push(...access.warnings);
 
-    if (syncTarget && !access.ok) {
-      throw new CliError(
-        access.warnings.join(' ') || 'Archive S3 access preflight failed.',
-        1,
-      );
-    }
-
     if (access.ok) {
       const remoteRepoRoot = await resolvePrimaryRepoRoot(
         options.repoRoot,
@@ -1706,12 +1699,6 @@ export async function archiveProjectOnCompletion(
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        if (syncTarget) {
-          throw new CliError(
-            `Archive S3 sync to \`${s3Path}\` failed: ${message}`,
-            1,
-          );
-        }
         warnings.push(`Archive S3 sync to \`${s3Path}\` failed: ${message}`);
         s3Path = null;
       }
