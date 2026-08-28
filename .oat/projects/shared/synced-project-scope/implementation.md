@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: review_pending
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: p11-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,9 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> 85 of 88 implementation tasks are complete. Phase 11 is closing the Medium
-> verification gap and two Minor remnants from the fresh lifecycle review
-> after configured exit-gate attempt 1 remediation.
+> All 88 implementation tasks are complete. Phase 11 closed the Medium
+> verification gap and two Minor remnants from the fresh lifecycle review;
+> narrowed re-review and configured exit-gate attempt 2 remain pending.
 >
 > Conventions:
 >
@@ -28,21 +28,21 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase    | Status      | Tasks | Completed |
-| -------- | ----------- | ----- | --------- |
-| Phase 1  | complete    | 10    | 10/10     |
-| Phase 2  | complete    | 13    | 13/13     |
-| Phase 3  | complete    | 19    | 19/19     |
-| Phase 4  | complete    | 16    | 16/16     |
-| Phase 5  | complete    | 7     | 7/7       |
-| Phase 6  | complete    | 3     | 3/3       |
-| Phase 7  | complete    | 1     | 1/1       |
-| Phase 8  | complete    | 1     | 1/1       |
-| Phase 9  | complete    | 1     | 1/1       |
-| Phase 10 | complete    | 14    | 14/14     |
-| Phase 11 | in_progress | 3     | 0/3       |
+| Phase    | Status   | Tasks | Completed |
+| -------- | -------- | ----- | --------- |
+| Phase 1  | complete | 10    | 10/10     |
+| Phase 2  | complete | 13    | 13/13     |
+| Phase 3  | complete | 19    | 19/19     |
+| Phase 4  | complete | 16    | 16/16     |
+| Phase 5  | complete | 7     | 7/7       |
+| Phase 6  | complete | 3     | 3/3       |
+| Phase 7  | complete | 1     | 1/1       |
+| Phase 8  | complete | 1     | 1/1       |
+| Phase 9  | complete | 1     | 1/1       |
+| Phase 10 | complete | 14    | 14/14     |
+| Phase 11 | complete | 3     | 3/3       |
 
-**Total:** 85/88 tasks completed
+**Total:** 88/88 tasks completed
 
 ---
 
@@ -2173,8 +2173,9 @@ were not mutated.
 
 ## Phase 11: Exit-gate remediation verification fixes
 
-**Status:** in progress - 0 of 3 tasks complete
+**Status:** complete - 3 of 3 tasks complete; narrowed final re-review pending
 **Started:** 2026-08-28
+**Completed:** 2026-08-28
 
 ### Review Received: final auto review - 2026-08-28T18:28:36Z
 
@@ -2204,12 +2205,56 @@ this bounded continuation is owned by the user's authorized configured exit-
 gate closeout (attempt 1 remediation, with only attempt 2 remaining); it does
 not authorize any further configured gate attempt.
 
-**Next:** execute Phase 11, run a narrowed final re-review, then start configured exit-gate attempt 2 only if that lifecycle review passes.
+### Task Outcomes
 
-**Review disposition:** The configured attempt-1 final/code review event is
-`fixes_completed`, never passed. A fresh current final lifecycle review and the
-configured exit gate's second and final attempt remain required.
+| Task    | Status    | Commit      | Outcome                                                   |
+| ------- | --------- | ----------- | --------------------------------------------------------- |
+| p11-t01 | completed | `0acfc0e66` | Completion retry routing executes before lifecycle writes |
+| p11-t02 | completed | `7a056f691` | Pull `--no-commit` behavior is documented                 |
+| p11-t03 | completed | `1a8e36fe2` | Pre-validation push SHA extraction is rejected            |
 
-**Next:** Run the fresh final lifecycle review, then the configured exit gate's
-second and final attempt. Migration, archive, completion, PR publication,
-deployment, and spike-repository deletion remain outside Phase 10.
+### Phase 11 Completion
+
+The skill now owns one executable pre-mutation retry router. All eight
+configured/interactive interruption rows invoke it and prove recognized
+candidates restore receipts before project-log, review-move, lifecycle,
+active-pointer, or PR-artifact mutation. Dirty and contradictory candidates
+fail closed, while noncandidates continue the normal lane. Pull adoption's
+`--no-commit` control is documented, and the skill validator now rejects `.sha`
+extraction before fail-closed receipt parsing.
+
+The combined focused suite passed 209 tests and `pnpm oat:validate-skills`
+validated all 63 OAT skills. `pnpm lint`, `pnpm format`, and
+`git diff --check` each exited `0`.
+
+Every Definition of Done gate passed against committed implementation HEAD in
+exact CI order with explicit exit `0`: `pnpm check`, `pnpm type-check`,
+`pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`, a fresh
+`git fetch origin main` followed by `pnpm release:check-versions`,
+`pnpm release:validate`, and `pnpm build:docs`.
+
+The project-scoped provider sync dry-run exited `0` without filesystem changes.
+Provider status continues to exit `1` only for unrelated pre-existing unmanaged
+Cursor strays and retained pack overrides; managed entries remain in sync.
+
+**Recovery:** 0/10 attempts used; `pending_attempt: null`.
+
+**Scope amendment:** Root verified the mechanically required inventory
+dependency and committed the p11-t03 boundary amendment as `d470d101a`; only
+the two changed brainstorm anchors were refreshed.
+
+**Dispatch evidence:** Request
+`p11-implementation-20260828-exit-gate-verification-fixes`; target
+`oat-phase-implementer-gpt-5-6-sol-high`; model axis
+`selected:gpt-5.6-sol`; effort axis `selected:high`.
+
+**Dispatch stamp:** `Dispatch: scope=p11 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+**Review disposition:** The residual final lifecycle review event is
+`fixes_completed`, never passed. A narrowed final lifecycle re-review must pass
+before configured exit-gate attempt 2 may start.
+
+**Next:** Run the narrowed final lifecycle re-review, then start the configured
+exit gate's second and final attempt only if that review passes. Migration,
+archive, completion, PR publication, deployment, and spike-repository deletion
+remain outside Phase 11.
