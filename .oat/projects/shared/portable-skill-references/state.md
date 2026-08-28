@@ -71,17 +71,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T175129Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=2, minor=1). Run oat-project-review-receive for .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T175129Z.md to disposition them before marking the final review row passed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=2e1675d2-e87a-48c9-a0f7-f0fb6a526887; handoff=receive; source=reviews/final-review-2026-08-28T175129Z.md; scope=final; type=code'
+  receive_source_artifact: .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T175129Z.md
+  receive_archived_artifact: .oat/projects/shared/portable-skill-references/reviews/archived/final-review-2026-08-28T175129Z.md
+  receive_event_identity: 'final | code | final-review-2026-08-28T175129Z.md'
+  receive_pre_head: 3f219540895c3fba5e168595211b7943ad2e0ba9
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-28T17:52:30Z'
+  updated_at: '2026-08-28T17:54:30Z'
 oat_post_implement_sequence:
   status: complete
   source: configured

@@ -785,7 +785,7 @@ implementation closeout.
 **Target:** `claude-fable-skip-permissions`
 **Status:** result persisted; gate passed at the Important threshold
 **Findings:** 0 Critical, 0 Important, 2 Medium, 1 Minor
-**Receive:** eligible; judgment-sweep dispositions remain
+**Receive:** eligible; intent persisted for the passing-gate judgment sweep
 
 ## References
 
