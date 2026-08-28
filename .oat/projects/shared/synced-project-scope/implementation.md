@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: review_pending
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: p12-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,9 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> 88 of 89 implementation tasks are complete. Phase 12 is correcting the
-> Critical normal-route publication regression found by the narrowed final
-> lifecycle re-review; configured exit-gate attempt 2 remains unlaunched.
+> All 89 implementation tasks are complete. Phase 12 corrected the Critical
+> normal-route publication regression found by the narrowed final lifecycle
+> re-review; configured exit-gate attempt 2 remains unlaunched.
 >
 > Conventions:
 >
@@ -28,22 +28,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase    | Status      | Tasks | Completed |
-| -------- | ----------- | ----- | --------- |
-| Phase 1  | complete    | 10    | 10/10     |
-| Phase 2  | complete    | 13    | 13/13     |
-| Phase 3  | complete    | 19    | 19/19     |
-| Phase 4  | complete    | 16    | 16/16     |
-| Phase 5  | complete    | 7     | 7/7       |
-| Phase 6  | complete    | 3     | 3/3       |
-| Phase 7  | complete    | 1     | 1/1       |
-| Phase 8  | complete    | 1     | 1/1       |
-| Phase 9  | complete    | 1     | 1/1       |
-| Phase 10 | complete    | 14    | 14/14     |
-| Phase 11 | complete    | 3     | 3/3       |
-| Phase 12 | in_progress | 1     | 0/1       |
+| Phase    | Status   | Tasks | Completed |
+| -------- | -------- | ----- | --------- |
+| Phase 1  | complete | 10    | 10/10     |
+| Phase 2  | complete | 13    | 13/13     |
+| Phase 3  | complete | 19    | 19/19     |
+| Phase 4  | complete | 16    | 16/16     |
+| Phase 5  | complete | 7     | 7/7       |
+| Phase 6  | complete | 3     | 3/3       |
+| Phase 7  | complete | 1     | 1/1       |
+| Phase 8  | complete | 1     | 1/1       |
+| Phase 9  | complete | 1     | 1/1       |
+| Phase 10 | complete | 14    | 14/14     |
+| Phase 11 | complete | 3     | 3/3       |
+| Phase 12 | complete | 1     | 1/1       |
 
-**Total:** 88/89 tasks completed
+**Total:** 89/89 tasks completed
 
 ---
 
@@ -2262,8 +2262,9 @@ remain outside Phase 11.
 
 ## Phase 12: Preserve normal-route publication guards
 
-**Status:** in progress - 0 of 1 task complete
+**Status:** complete - 1 of 1 task complete; narrowed final re-review pending
 **Started:** 2026-08-28
+**Completed:** 2026-08-28
 
 ### Review Received: final auto review - 2026-08-28T19:03:06Z
 
@@ -2288,5 +2289,58 @@ Critical finding. This bounded continuation is owned by the user's authorized
 configured exit-gate closeout; it does not launch or add another configured
 gate attempt.
 
-**Next:** execute Phase 12, run a narrowed final re-review, then start
-configured exit-gate attempt 2 only if that lifecycle review passes.
+### Task Outcomes
+
+| Task    | Status    | Commit      | Outcome                                              |
+| ------- | --------- | ----------- | ---------------------------------------------------- |
+| p12-t01 | completed | `a8f2e678c` | Normal retry routing preserves publication variables |
+
+### Phase 12 Completion
+
+The completion skill now invokes a skill-owned retry-field decoder. A normal
+router result emits only `normal`, so the exact Bash `IFS`/`read` consumer
+preserves empty receipt, evidence, and PR variables until both publication
+guards run and capture full SHAs. Recovery results validate the complete
+receipt field set before assigning shell variables and continue to fail closed
+for dirty, malformed, mixed, or contradictory candidates.
+
+The focused completion transaction and skill-contract suites passed 63/63,
+including the eight configured/interactive recovery rows, the executable
+normal-route consumer, both real-Git publication receipts, and the negative
+cases. `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm lint`,
+`pnpm format`, and `git diff --check` each exited `0`.
+
+The first Definition of Done `pnpm test` run exited `1` after 4,269 tests
+passed because `src/commands/gate/index.test.ts` exceeded its five-second
+timeout. The authorized no-edit rerun passed that layer but exited `1` when the
+smoke SIGTERM-during-drive child required SIGKILL after 60 seconds. Root
+resolved the stop read-only at unchanged head `a8f2e678c`: the exact Vitest
+target exited `0`, the exact smoke cleanup target exited `0` with 19/19, and a
+fresh full `pnpm test` exited `0`.
+
+Every Definition of Done gate therefore passed against the unchanged committed
+implementation head in exact CI order with explicit final exit `0`: `pnpm
+check`, `pnpm type-check`, the root-resolved `pnpm test`, `pnpm build`, `pnpm
+run check:skill-bumps`, a fresh `git fetch origin main` followed by `pnpm
+release:check-versions`, `pnpm release:validate`, and `pnpm build:docs`.
+
+The project-scoped provider sync dry-run exited `0` without filesystem changes.
+Provider status continues to exit `1` only for unrelated pre-existing unmanaged
+Cursor strays and retained pack overrides; managed entries remain in sync.
+
+**Recovery:** 0/10 attempts used; `pending_attempt: null`. The transient test
+diagnosis and root verification were read-only and consumed no attempt.
+
+**Dispatch evidence:** Target `oat-phase-implementer-gpt-5-6-sol-high`; model
+axis `selected:gpt-5.6-sol`; effort axis `selected:high`. No request ID was
+supplied in the Phase 12 dispatch payload.
+
+**Dispatch stamp:** `Dispatch: scope=p12 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+**Review disposition:** The narrowed final lifecycle review event is
+`fixes_completed`, never passed. A fresh narrowed re-review must pass before
+configured exit-gate attempt 2 may start.
+
+**Next:** Run the narrowed final lifecycle re-review, then start configured
+exit-gate attempt 2 only if that review passes. Migration, archive, completion,
+PR publication, deployment, and spike-repository deletion remain outside Phase 12.
