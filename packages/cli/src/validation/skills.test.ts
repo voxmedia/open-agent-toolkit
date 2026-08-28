@@ -72,7 +72,12 @@ function validGateableSkillContent(skillName: string): string {
 
 async function createSyncedBookkeepingInventory(
   root: string,
-  entries: Array<{ file: string; anchor: string; kind: string }>,
+  entries: Array<{
+    file: string;
+    anchor: string;
+    guard?: string;
+    kind: string;
+  }>,
 ): Promise<string> {
   const inventoryPath = join(
     root,
@@ -461,6 +466,7 @@ describe('validateOatSkills', () => {
       {
         file: '.agents/skills/oat-project-inventory/SKILL.md',
         anchor: 'oat project push "$PROJECT_PATH" --message "missing"',
+        guard: 'project-scope',
         kind: 'write',
       },
     ]);
@@ -488,6 +494,66 @@ describe('validateOatSkills', () => {
     expect(result.findings).toContainEqual({
       file: inventoryPath,
       message: `Lifecycle project-artifact writer is missing from synced-bookkeeping inventory: ${skillPath}`,
+    });
+  });
+
+  it('reports an inventoried writer whose companion guard is outside its fenced block', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const writer =
+      'oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts"';
+    const guard =
+      'PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1';
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-separated-guard',
+      `${validSkillContent('oat-project-separated-guard')}\n\n\`\`\`bash\n${guard}\n\`\`\`\n\n\`\`\`bash\n${writer}\n\`\`\`\n`,
+    );
+    const inventoryPath = await createSyncedBookkeepingInventory(root, [
+      {
+        file: '.agents/skills/oat-project-separated-guard/SKILL.md',
+        anchor: writer,
+        guard: 'project-scope',
+        kind: 'write',
+      },
+    ]);
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: inventoryPath,
+      message: `Synced-bookkeeping write site lacks its companion guard in the same function or fenced block: ${skillPath}: ${writer}`,
+    });
+  });
+
+  it('reports a second writer site in an already inventoried lifecycle file', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const guard =
+      'PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1';
+    const firstWriter =
+      'oat project push "$PROJECT_PATH" --message "chore(oat): persist first"';
+    const secondWriter =
+      'oat project push "$PROJECT_PATH" --message "chore(oat): persist second"';
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-second-writer',
+      `${validSkillContent('oat-project-second-writer')}\n\n\`\`\`bash\n${guard}\n${firstWriter}\n\`\`\`\n\n\`\`\`bash\n${guard}\n${secondWriter}\n\`\`\`\n`,
+    );
+    const inventoryPath = await createSyncedBookkeepingInventory(root, [
+      {
+        file: '.agents/skills/oat-project-second-writer/SKILL.md',
+        anchor: firstWriter,
+        guard: 'project-scope',
+        kind: 'write',
+      },
+    ]);
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: inventoryPath,
+      message: `Lifecycle project-artifact writer site is missing from synced-bookkeeping inventory: ${skillPath}: ${secondWriter}`,
     });
   });
 

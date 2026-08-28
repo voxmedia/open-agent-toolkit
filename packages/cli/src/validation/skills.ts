@@ -51,7 +51,14 @@ type SyncedBookkeepingKind = 'resolve' | 'arrival' | 'write';
 interface SyncedBookkeepingSite {
   file: string;
   anchor: string;
+  guard: string;
   kind: SyncedBookkeepingKind;
+}
+
+interface ContentSite {
+  start: number;
+  end: number;
+  content: string;
 }
 
 const execFileAsync = promisify(execFileCallback);
@@ -119,22 +126,100 @@ function referencesProjectArtifactVariable(line: string): boolean {
   );
 }
 
-function containsProjectArtifactWriter(content: string): boolean {
-  return content.split('\n').some((line) => {
-    const writesProjectArtifact =
-      /\bgit\s+(?:add|commit)\b|\boat\s+project\s+push\b/.test(line) &&
-      referencesProjectArtifactVariable(line);
-    const writesActiveProject = /\boat\s+config\s+set\s+activeProject\b/.test(
-      line,
+function isProjectArtifactWriterLine(line: string): boolean {
+  const trimmed = line.trim();
+  const executesGitOrOat =
+    /^(?:[A-Z][A-Z0-9_]*=\$\()?(?:git|oat)\b/.test(trimmed) ||
+    /(?:&&|\|\||;|then|else)\s+(?:git|oat)\b/.test(trimmed);
+  const writesProjectArtifact =
+    executesGitOrOat &&
+    /\bgit\s+(?:add|commit)\b|\boat\s+project\s+push\b/.test(trimmed) &&
+    referencesProjectArtifactVariable(line);
+  const writesActiveProject =
+    executesGitOrOat && /\boat\s+config\s+set\s+activeProject\b/.test(trimmed);
+  return writesProjectArtifact || writesActiveProject;
+}
+
+function fencedContentSites(content: string): ContentSite[] {
+  const lines = content.split('\n');
+  const sites: ContentSite[] = [];
+  let offset = 0;
+  let opening: { marker: string; start: number } | null = null;
+
+  for (const line of lines) {
+    const lineEnd = offset + line.length;
+    const fenceMatch = line.match(/^\s*(`{3,}|~{3,})(?:[^`~]*)$/);
+    if (fenceMatch) {
+      const marker = fenceMatch[1] ?? '';
+      if (opening === null) {
+        opening = { marker, start: offset };
+      } else if (
+        marker[0] === opening.marker[0] &&
+        marker.length >= opening.marker.length &&
+        /^\s*[`~]+\s*$/.test(line)
+      ) {
+        const end = lineEnd;
+        sites.push({
+          start: opening.start,
+          end,
+          content: content.slice(opening.start, end),
+        });
+        opening = null;
+      }
+    }
+    offset = lineEnd + 1;
+  }
+  return sites;
+}
+
+function contentSiteAt(
+  content: string,
+  offset: number,
+  fencedSites: readonly ContentSite[],
+): ContentSite {
+  const fenced = fencedSites.find(
+    (site) => offset >= site.start && offset < site.end,
+  );
+  if (fenced) return fenced;
+
+  const preceding = content.slice(0, offset);
+  const headings = [...preceding.matchAll(/^([#]{1,6})\s+.+$/gm)];
+  const heading = headings.at(-1);
+  if (heading?.index !== undefined) {
+    const level = heading[1]?.length ?? 6;
+    const following = content.slice(offset);
+    const nextHeading = [...following.matchAll(/^([#]{1,6})\s+.+$/gm)].find(
+      (candidate) => (candidate[1]?.length ?? 7) <= level,
     );
-    const describesProjectArtifactWrite =
-      /\bwrite(?:s|ing)?(?:\s+[^\n]{0,40})?\{PROJECT_PATH\}/i.test(line);
-    return (
-      writesProjectArtifact ||
-      writesActiveProject ||
-      describesProjectArtifactWrite
-    );
-  });
+    const end =
+      nextHeading?.index === undefined
+        ? content.length
+        : offset + nextHeading.index;
+    return {
+      start: heading.index,
+      end,
+      content: content.slice(heading.index, end),
+    };
+  }
+
+  const start = content.lastIndexOf('\n', Math.max(0, offset - 1)) + 1;
+  const nextNewline = content.indexOf('\n', offset);
+  const end = nextNewline === -1 ? content.length : nextNewline;
+  return { start, end, content: content.slice(start, end) };
+}
+
+function projectArtifactWriterSites(content: string): ContentSite[] {
+  const fencedSites = fencedContentSites(content);
+  const sites = new Map<string, ContentSite>();
+  let offset = 0;
+  for (const line of content.split('\n')) {
+    if (isProjectArtifactWriterLine(line)) {
+      const site = contentSiteAt(content, offset, fencedSites);
+      sites.set(`${site.start}:${site.end}`, site);
+    }
+    offset += line.length + 1;
+  }
+  return [...sites.values()];
 }
 
 function collectSyncedContentFindings(
@@ -249,17 +334,18 @@ async function collectSyncedBookkeepingInventoryFindings(
     return;
   }
 
-  const inventoriedWriterFiles = new Set<string>();
+  const inventoriedWriterSites = new Map<string, ContentSite[]>();
   for (const site of sites) {
     if (
       typeof site?.file !== 'string' ||
       typeof site?.anchor !== 'string' ||
+      typeof site?.guard !== 'string' ||
       !['resolve', 'arrival', 'write'].includes(site?.kind)
     ) {
       findings.push({
         file: inventoryPath,
         message:
-          'Each synced-bookkeeping inventory entry requires file, unique anchor, and kind (resolve | arrival | write)',
+          'Each synced-bookkeeping inventory entry requires file, unique anchor, companion guard, and kind (resolve | arrival | write)',
       });
       continue;
     }
@@ -289,21 +375,68 @@ async function collectSyncedBookkeepingInventoryFindings(
       });
     }
 
-    if (site.kind === 'write') {
-      inventoriedWriterFiles.add(sitePath);
+    if (occurrences === 1) {
+      const fencedSites = fencedContentSites(content);
+      const anchorOffset = content.indexOf(site.anchor);
+      const anchorSite = contentSiteAt(content, anchorOffset, fencedSites);
+      const companionGuardPresent =
+        site.kind === 'write' && site.guard === 'project-scope'
+          ? /\boat\s+project\s+scope\b[^\n]*--format\s+value\b|\bPROJECT_SCOPE\b[^\n]*\bsynced\b/.test(
+              anchorSite.content,
+            )
+          : site.kind === 'arrival' && site.guard === 'materialized-arrival'
+            ? /\boat\s+project\s+pull\b|pulled and materialized/i.test(
+                anchorSite.content,
+              )
+            : site.kind === 'resolve' && site.guard === 'canonical-resolution'
+              ? /\bresolve(?:Project|NamedProject|SyncedTarget|ProjectScope|ActiveProject)\b|options\.remote[^\n]*synced|\boat\s+project\s+new\b[^\n]*--scope\b|project:synced_tracked_artifacts|\boat\s+config\s+get\s+activeProject\b/.test(
+                  anchorSite.content,
+                )
+              : anchorSite.content.includes(site.guard);
+      if (!companionGuardPresent) {
+        findings.push({
+          file: inventoryPath,
+          message: `Synced-bookkeeping ${site.kind} site lacks its companion guard in the same function or fenced block: ${sitePath}: ${site.anchor}`,
+        });
+      }
+
+      if (site.kind === 'write') {
+        const fileSites = inventoriedWriterSites.get(sitePath) ?? [];
+        fileSites.push(anchorSite);
+        inventoriedWriterSites.set(sitePath, fileSites);
+      }
     }
   }
 
   for (const file of safetyFiles) {
     const content = await readFile(file, 'utf8');
-    if (
-      isLifecycleSafetyFile(file) &&
-      containsProjectArtifactWriter(content) &&
-      !inventoriedWriterFiles.has(file)
-    ) {
+    if (!isLifecycleSafetyFile(file)) continue;
+
+    const inventoriedSites = inventoriedWriterSites.get(file) ?? [];
+    const writerSites = projectArtifactWriterSites(content);
+    if (writerSites.length > 0 && inventoriedSites.length === 0) {
       findings.push({
         file: inventoryPath,
         message: `Lifecycle project-artifact writer is missing from synced-bookkeeping inventory: ${file}`,
+      });
+      continue;
+    }
+    for (const writerSite of writerSites) {
+      if (
+        inventoriedSites.some(
+          (site) =>
+            site.start === writerSite.start && site.end === writerSite.end,
+        )
+      ) {
+        continue;
+      }
+      const writer = writerSite.content
+        .split('\n')
+        .find(isProjectArtifactWriterLine)
+        ?.trim();
+      findings.push({
+        file: inventoryPath,
+        message: `Lifecycle project-artifact writer site is missing from synced-bookkeeping inventory: ${file}: ${writer ?? '(unknown writer)'}`,
       });
     }
   }
