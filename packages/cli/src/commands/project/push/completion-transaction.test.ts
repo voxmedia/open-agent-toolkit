@@ -398,6 +398,14 @@ describe('non-archive synced completion transaction', () => {
         expect(git(target.projectPath, ['rev-parse', 'HEAD'])).toBe(
           headBeforeDetection,
         );
+        expect(
+          await readFile(`${target.projectPath}/${PR_ARTIFACT}`, 'utf8'),
+        ).toBe(
+          `${git(target.projectPath, [
+            'show',
+            `${publishedReceipts.finalArtifactCommit}:${PR_ARTIFACT}`,
+          ])}\n`,
+        );
         const recovered = await recover(target.projectPath, target.ref);
         expect(recovered.projectLinksPinCommit).toBe(
           publishedReceipts.pinSourceCommit,

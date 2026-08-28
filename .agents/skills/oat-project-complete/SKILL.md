@@ -1171,19 +1171,32 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 
 ### Step 11.5: Sync Open-PR Description on GitHub (Conditional)
 
-**Run only when `WAS_PR_OPEN_AT_START="true"` AND `SHOULD_ARCHIVE="true"`.**
+**Run only when `WAS_PR_OPEN_AT_START="true"` and either
+`SHOULD_ARCHIVE="true"` or `PROJECT_SCOPE="synced"`.**
 
-When the PR was already open at the start of this skill (typically because `oat-project-pr-final` ran earlier in the lifecycle) AND we just archived, the GitHub PR description authored by `oat-project-pr-final` still points to the active artifact paths. Step 8 moved those artifacts to a gitignored archive location and Step 10.6 pushed the move, so any blob link in the open PR body now 404s. Push the regenerated archive-aware body to the existing PR.
+When the PR was already open at the start, push the final validated completion
+body to the existing PR. Archive completion uses the regenerated archive-aware
+body. Non-archive synced completion uses the exact PR artifact from
+`PROJECT_REF_COMMIT`, whose canonical links block is owned by
+`PROJECT_LINKS_PIN_COMMIT`; do not substitute the parent discovery-record
+commit or the optional evidence child.
 
 Skip this step when:
 
 - The PR was not yet open at the start (`WAS_PR_OPEN_AT_START="false"`) — Step 11 already created the PR with the archive-aware body.
-- No archive happened (`SHOULD_ARCHIVE="false"`) — the original blob links still resolve.
+- No archive happened and the project is not synced — no final retained-ref
+  body was published.
 - `IS_DURABLE_PROJECT="false"` — local projects are not archived in this skill, so no link breakage.
 
 Steps:
 
-1. Locate the PR description artifact at `{PROJECT_PATH}/pr/project-pr-*.md`. After Step 8, `PROJECT_PATH` points at the archived location, so the artifact lives at `{ARCHIVE_PATH}/pr/project-pr-*.md`.
+1. Locate the exact PR description artifact. After archive, use
+   `{ARCHIVE_PATH}/pr/project-pr-*.md`. For non-archive synced completion, use
+   `PR_DESCRIPTION_PATH`, require the retained remote ref to contain
+   `PROJECT_REF_COMMIT`, and require
+   `git show "$PROJECT_REF_COMMIT:$PR_DESCRIPTION_RELATIVE_PATH"` to equal the
+   body on disk with exactly one links block pinned to
+   `PROJECT_LINKS_PIN_COMMIT`.
 2. Strip YAML frontmatter (everything from the opening `---` through and including the closing `---`) and write the result to a temporary file. Verify the temp file does not start with YAML frontmatter keys.
 3. Resolve the open PR. Prefer the tracked URL captured in Step 2:
 

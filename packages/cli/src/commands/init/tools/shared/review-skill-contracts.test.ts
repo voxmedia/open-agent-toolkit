@@ -1355,7 +1355,13 @@ describe('review skill contracts', () => {
       '### Step 11.5: Sync Open-PR Description on GitHub (Conditional)',
     );
     expect(content).toContain(
-      '**Run only when `WAS_PR_OPEN_AT_START="true"` AND `SHOULD_ARCHIVE="true"`.**',
+      '`SHOULD_ARCHIVE="true"` or `PROJECT_SCOPE="synced"`',
+    );
+    expect(content).toContain(
+      '`git show "$PROJECT_REF_COMMIT:$PR_DESCRIPTION_RELATIVE_PATH"` to equal the',
+    );
+    expect(content).toContain(
+      'canonical links block is owned by\n`PROJECT_LINKS_PIN_COMMIT`',
     );
     expect(content).toContain('gh pr edit "$PR_REF" --body-file "$TMP_BODY"');
     expect(content).toContain(
@@ -1437,11 +1443,11 @@ describe('review skill contracts', () => {
     expect(currentPushIndex).toBeGreaterThanOrEqual(0);
     expect(secondPushIndex).toBeGreaterThan(currentPushIndex);
     expect(dirtySection).toContain(
-      "CURRENT_ARTIFACT_COMMIT_SHA=$(printf '%s\\n' \"$CURRENT_ARTIFACT_PUSH\" | jq -er '.sha') || exit 1",
+      'CURRENT_ARTIFACT_COMMIT_SHA=$(parse_synced_push_receipt "$CURRENT_ARTIFACT_PUSH")',
     );
     expect(dirtySection).toContain('MIXED_FOLD_BACK_PUSH=$(oat project push');
     expect(dirtySection).toContain(
-      "FOLD_BACK_COMMIT_SHA=$(printf '%s\\n' \"$MIXED_FOLD_BACK_PUSH\" | jq -er '.sha') || exit 1",
+      'FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt "$MIXED_FOLD_BACK_PUSH")',
     );
     expect(dirtySection.match(/git commit --only/g)).toHaveLength(3);
     expect(dirtySection).toContain(
