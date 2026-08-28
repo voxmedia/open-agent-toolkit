@@ -1,9 +1,9 @@
 ---
-oat_status: review_pending
-oat_ready_for: oat-project-review-provide
+oat_status: in_progress
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: p11-t01
 oat_generated: false
 ---
 
@@ -14,9 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All 85 implementation tasks are complete. Phase 10 remediated every finding
-> from configured exit-gate attempt 1; a fresh final lifecycle review and the
-> configured gate's second and final attempt remain pending.
+> 85 of 88 implementation tasks are complete. Phase 11 is closing the Medium
+> verification gap and two Minor remnants from the fresh lifecycle review
+> after configured exit-gate attempt 1 remediation.
 >
 > Conventions:
 >
@@ -28,20 +28,21 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase    | Status   | Tasks | Completed |
-| -------- | -------- | ----- | --------- |
-| Phase 1  | complete | 10    | 10/10     |
-| Phase 2  | complete | 13    | 13/13     |
-| Phase 3  | complete | 19    | 19/19     |
-| Phase 4  | complete | 16    | 16/16     |
-| Phase 5  | complete | 7     | 7/7       |
-| Phase 6  | complete | 3     | 3/3       |
-| Phase 7  | complete | 1     | 1/1       |
-| Phase 8  | complete | 1     | 1/1       |
-| Phase 9  | complete | 1     | 1/1       |
-| Phase 10 | complete | 14    | 14/14     |
+| Phase    | Status      | Tasks | Completed |
+| -------- | ----------- | ----- | --------- |
+| Phase 1  | complete    | 10    | 10/10     |
+| Phase 2  | complete    | 13    | 13/13     |
+| Phase 3  | complete    | 19    | 19/19     |
+| Phase 4  | complete    | 16    | 16/16     |
+| Phase 5  | complete    | 7     | 7/7       |
+| Phase 6  | complete    | 3     | 3/3       |
+| Phase 7  | complete    | 1     | 1/1       |
+| Phase 8  | complete    | 1     | 1/1       |
+| Phase 9  | complete    | 1     | 1/1       |
+| Phase 10 | complete    | 14    | 14/14     |
+| Phase 11 | in_progress | 3     | 0/3       |
 
-**Total:** 85/85 tasks completed
+**Total:** 85/88 tasks completed
 
 ---
 
@@ -2169,6 +2170,41 @@ were not mutated.
 - Phase 10 changed the substantive effective delta after configured gate attempt 1.
 - The prior gate basis is now `stale`; its run, artifact, receive, and consumed-attempt provenance remain intact.
 - A fresh final lifecycle review must pass before the same persisted gate configuration can start attempt 2.
+
+## Phase 11: Exit-gate remediation verification fixes
+
+**Status:** in progress - 0 of 3 tasks complete
+**Started:** 2026-08-28
+
+### Review Received: final auto review - 2026-08-28T18:28:36Z
+
+**Review artifact:** `reviews/archived/final-review-2026-08-28T182836Z.md`
+
+**Reviewed head:** `300504071dd9cfbdcc0f91d6a292fc025293c6a1`
+
+**Range:** `f8bce994d2e542d7ae14bfa35a4847074e280b3c..300504071dd9cfbdcc0f91d6a292fc025293c6a1`
+
+**Findings:** 0 Critical, 0 Important, 1 Medium, 2 Minor.
+
+**New tasks added:** p11-t01 through p11-t03.
+
+**Finding disposition map:**
+
+- M1 -> p11-t01 (`code_fix_required`, Moderate): runtime order is corrected,
+  but the promised executable ordered-skill-flow coverage is still absent.
+- m1 -> p11-t02 (`artifact_alignment_required`, Negligible): the pull reference
+  omits the shipped `--no-commit` adoption control.
+- m2 -> p11-t03 (`code_fix_required`, Minor): two redundant direct `.sha`
+  parses precede the fail-closed parser and the validator does not reject that
+  ordering.
+
+**Deferred findings:** none. Auto-review disposition converted the Medium and
+both Minor findings. The standard review-cycle cap was already exceeded, but
+this bounded continuation is owned by the user's authorized configured exit-
+gate closeout (attempt 1 remediation, with only attempt 2 remaining); it does
+not authorize any further configured gate attempt.
+
+**Next:** execute Phase 11, run a narrowed final re-review, then start configured exit-gate attempt 2 only if that lifecycle review passes.
 
 **Review disposition:** The configured attempt-1 final/code review event is
 `fixes_completed`, never passed. A fresh current final lifecycle review and the

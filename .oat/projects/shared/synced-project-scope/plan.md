@@ -6,7 +6,7 @@ oat_last_updated: 2026-08-28
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_hill_phases: ['p10'] # implementation pauses after the configured exit-gate remediation phase
+oat_plan_hill_phases: ['p11'] # implementation pauses after the configured exit-gate verification fixes
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null
@@ -3488,6 +3488,117 @@ git commit -m "fix(p10-t14): soften arrival scope failures"
 
 ---
 
+## Phase 11: Exit-gate remediation verification fixes
+
+Close the one Medium and two Minor findings from the fresh final lifecycle
+review after Phase 10. This bounded phase remains part of configured exit-gate
+attempt 1 remediation; attempt 2 is still unlaunched and is the final allowed
+configured attempt. Convert all findings with no deferrals and preserve the
+existing PR-scoped skill and lockstep package version bumps.
+
+### Task p11-t01: (review) Execute completion retry routing before lifecycle mutation
+
+**Files:**
+
+- Create: `.agents/skills/oat-project-complete/scripts/resolve-completion-retry.mjs`
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Understand the issue**
+
+Final review finding M1: Phase 10 corrected the skill's textual order, but the
+transaction matrix still invokes the recovery helper directly and manually
+recreates later transitions. It does not execute the pre-mutation candidate
+routing that must skip Steps 3.7-7 for recognized receipts.
+
+**Step 2: Implement fix**
+
+Extract the pre-mutation retry decision into a small executable, skill-owned
+surface and make the skill consume it. Drive all eight configured/interactive
+interruption rows through that exact surface. Prove recognized candidates run
+recovery before any project-log, review-move, `complete-state`, active-pointer,
+or PR-artifact mutation, while dirty, contradictory, and noncandidate states
+remain fail-closed or continue through the normal lane as appropriate.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/push/completion-transaction.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+Expected: executable coverage proves the real ordered retry branch at every interruption point.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/scripts/resolve-completion-retry.mjs .agents/skills/oat-project-complete/SKILL.md packages/cli/src/commands/project/push/completion-transaction.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "test(p11-t01): execute completion retry routing"
+```
+
+### Task p11-t02: (review) Document pull no-commit behavior
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Step 1: Understand the issue**
+
+Final review finding m1: the pull reference still omits the shipped
+`--no-commit` option, leaving adopted-record persistence control undiscoverable.
+
+**Step 2: Implement fix**
+
+Add `[--no-commit]` to the pull synopsis and explain that it leaves an adopted
+discovery record uncommitted for the caller to persist.
+
+**Step 3: Verify**
+
+Run: `pnpm check && pnpm build:docs`
+
+Expected: markdown lint and the docs build pass with the pull reference aligned to CLI help.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/reference/cli-reference.md
+git commit -m "docs(p11-t02): document pull no-commit behavior"
+```
+
+### Task p11-t03: (review) Reject pre-validation push SHA extraction
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Understand the issue**
+
+Final review finding m2: two brainstorm branches parse `.sha` with `jq` before
+immediately overwriting the value through the fail-closed receipt validator.
+Behavior is safe today, but the stale pattern is misleading and the validator
+permits status-blind extraction before validation.
+
+**Step 2: Implement fix**
+
+Remove both redundant assignments and strengthen validation so extracting or
+using `.sha` before the required receipt parser is rejected. Add negative and
+positive validator fixtures.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills`
+
+Expected: the skill contains no status-blind pre-parse and the validator prevents recurrence.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/SKILL.md packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p11-t03): reject pre-validation push SHA parsing"
+```
+
+---
+
 ## Reviews
 
 | Scope   | Type     | Status          | Date       | Artifact                                                          | Reviewed Head                            | Invocation | Gate Target                   |
@@ -3515,7 +3626,7 @@ git commit -m "fix(p10-t14): soften arrival scope failures"
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T151732Z.md               | 10bbd92cee2291aebf027e5c6e7ac69da2bc4f2b | auto       | -                             |
 | final   | code     | passed          | 2026-08-28 | reviews/archived/final-review-2026-08-28T165719Z.md               | f8bce994d2e542d7ae14bfa35a4847074e280b3c | auto       | -                             |
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T174039Z.md               | 0a85a08c8bc0f7527935b7141f22856e89271f8e | gate       | claude-fable-skip-permissions |
-| final   | code     | received        | 2026-08-28 | reviews/final-review-2026-08-28T182836Z.md                        | 300504071dd9cfbdcc0f91d6a292fc025293c6a1 | auto       | -                             |
+| final   | code     | fixes_added     | 2026-08-28 | reviews/archived/final-review-2026-08-28T182836Z.md               | 300504071dd9cfbdcc0f91d6a292fc025293c6a1 | auto       | -                             |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                             |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                             |
 | plan    | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -                                        | auto       | -                             |
@@ -3546,16 +3657,17 @@ git commit -m "fix(p10-t14): soften arrival scope failures"
 - Phase 8: 1 task - Second operator-extended recap-stage receipt recovery and interruption coverage
 - Phase 9: 1 task - Third operator-extended exact final-links validation and decision-entrypoint coverage
 - Phase 10: 14 tasks - Configured exit-gate remediation across doctor, completion, skill receipt handling, documentation, and project-bound recovery
+- Phase 11: 3 tasks - Executable completion-retry routing, pull reference closure, and status-blind receipt hygiene
 
-**Total: 85 tasks**
+**Total: 88 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
 **Operator step after implementation:** delete the disposable spike repository `https://github.com/tkstang/disposable-test-repo-for-oat` (used by p01-t10); the implementing agent never deletes repositories.
 
-Final lifecycle review passed, but the configured implementation exit gate
-reported blocking findings. Phase 10 is the first of at most two configured
-gate-remediation attempts.
+The Phase 10 follow-up lifecycle review found one Medium verification gap and
+two Minor remnants. Phase 11 closes those findings before the configured exit
+gate's second and final attempt.
 
 ---
 
