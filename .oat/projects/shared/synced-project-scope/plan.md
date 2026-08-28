@@ -1,10 +1,10 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-28
 oat_phase: plan
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_hill_phases: ['p12'] # implementation pauses after the configured exit-gate normal-route repair
 oat_auto_review_at_hill_checkpoints: true
@@ -3703,6 +3703,52 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 
 ---
 
+## Phase p-rev1: Revision 1
+
+Source: inline feedback (2026-08-28)
+
+### Task prev1-t01: (revision) Integrate merged PR #226 from origin/main
+
+**Files:**
+
+- Merge: all paths introduced by `origin/main` merge commit
+  `8cc1b3827f9c051d5d2bb078ae986aef3e9fbd80`
+- Reconcile if conflicted: `.agents/skills/oat-project-implement/SKILL.md`
+- Reconcile if conflicted: `.oat/sync/manifest.json`
+- Reconcile if conflicted: `packages/cli/assets/public-package-versions.json`
+- Reconcile if conflicted: lockstep public package `package.json` files
+- Reconcile if conflicted: overlapping CLI validation tests, docs, and PJM state
+
+**Step 1: Merge current upstream**
+
+Fetch `origin` and merge `origin/main` into `feat/synced-project-scope` without
+rewriting the published PR history. Preserve both PR #226's portable packaged
+skill-reference changes and this branch's synced-project-scope behavior.
+
+**Step 2: Resolve and verify**
+
+Resolve every conflict semantically, then verify both parent commits remain
+ancestors. Run focused skill-validation and bundled-docs contract tests for the
+overlap, followed by the repository Definition of Done gates in CI order and
+`pnpm lint`, `pnpm format`, and `git diff --check` where required by repository
+instructions.
+
+Expected: the merge is conflict-free or all conflicts are explicitly resolved;
+the synced scope and portable packaged-reference contracts both pass; lockstep
+versions remain strictly greater than current `origin/main`; all required gates
+exit `0`.
+
+**Step 3: Commit**
+
+```bash
+git merge --no-edit origin/main
+```
+
+If manual conflict resolution is required, stage only the resolved merge paths
+and complete the merge commit without changing the published branch history.
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -3719,8 +3765,9 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 - Phase 10: 14 tasks - Configured exit-gate remediation across doctor, completion, skill receipt handling, documentation, and project-bound recovery
 - Phase 11: 3 tasks - Executable completion-retry routing, pull reference closure, and status-blind receipt hygiene
 - Phase 12: 1 task - Normal-route retry decoding and publication-guard regression coverage
+- Phase p-rev1: 1 task - Integrate merged PR #226 and reconcile overlapping skill, validation, docs, sync, and release surfaces
 
-**Total: 89 tasks**
+**Total: 90 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

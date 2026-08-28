@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -14,9 +14,8 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All 89 implementation tasks are complete, the Phase 12 narrowed final
-> lifecycle re-review and configured exit gate passed, and the configured
-> closeout sequence completed with explicit user approval.
+> The original 89 implementation tasks and closeout are complete. Revision 1
+> is in progress to integrate merged PR #226 from `origin/main` into PR #227.
 >
 > Conventions:
 >
@@ -28,22 +27,23 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase    | Status   | Tasks | Completed |
-| -------- | -------- | ----- | --------- |
-| Phase 1  | complete | 10    | 10/10     |
-| Phase 2  | complete | 13    | 13/13     |
-| Phase 3  | complete | 19    | 19/19     |
-| Phase 4  | complete | 16    | 16/16     |
-| Phase 5  | complete | 7     | 7/7       |
-| Phase 6  | complete | 3     | 3/3       |
-| Phase 7  | complete | 1     | 1/1       |
-| Phase 8  | complete | 1     | 1/1       |
-| Phase 9  | complete | 1     | 1/1       |
-| Phase 10 | complete | 14    | 14/14     |
-| Phase 11 | complete | 3     | 3/3       |
-| Phase 12 | complete | 1     | 1/1       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 10    | 10/10     |
+| Phase 2      | complete    | 13    | 13/13     |
+| Phase 3      | complete    | 19    | 19/19     |
+| Phase 4      | complete    | 16    | 16/16     |
+| Phase 5      | complete    | 7     | 7/7       |
+| Phase 6      | complete    | 3     | 3/3       |
+| Phase 7      | complete    | 1     | 1/1       |
+| Phase 8      | complete    | 1     | 1/1       |
+| Phase 9      | complete    | 1     | 1/1       |
+| Phase 10     | complete    | 14    | 14/14     |
+| Phase 11     | complete    | 3     | 3/3       |
+| Phase 12     | complete    | 1     | 1/1       |
+| Phase p-rev1 | in_progress | 1     | 0/1       |
 
-**Total:** 89/89 tasks completed
+**Total:** 89/90 tasks completed
 
 ---
 
@@ -2591,3 +2591,20 @@ operator-controlled actions.
 
 This transition marks implementation complete only. The PR was not merged, and
 the project was not archived, migrated, deployed, or deleted.
+
+### Revision Received: Inline Feedback
+
+**Date:** 2026-08-28
+**Source:** inline conversation
+
+**Changes requested:**
+
+- Integrate merged PR #226 from `origin/main` into open PR #227.
+- Evaluate and resolve conflicts across overlapping skill, validation, docs,
+  sync metadata, PJM, and lockstep release-version surfaces.
+- Revalidate the combined branch and review the integration as needed.
+
+**New tasks added:** `prev1-t01`
+
+**Next:** Execute revision task `prev1-t01` via the `oat-project-implement`
+skill.
