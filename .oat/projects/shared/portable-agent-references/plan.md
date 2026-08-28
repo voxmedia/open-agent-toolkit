@@ -457,6 +457,7 @@ git commit -m "chore(p02-t02): release portable agent references"
 | design | artifact | pending         | -          | -                                                                                   | -             | -          | -                             |
 | plan   | artifact | fixes_completed | 2026-08-28 | structured in-memory review (head c47586ce; reviewer oat-reviewer-gpt-5-6-sol-high) | -             | -          | -                             |
 | plan   | artifact | fixes_completed | 2026-08-28 | reviews/archived/artifact-plan-review-2026-08-28T223052Z.md                         | -             | gate       | claude-fable-skip-permissions |
+| plan   | artifact | received        | 2026-08-28 | reviews/artifact-plan-review-2026-08-28T224908Z.md                                  | -             | -          | -                             |
 
 ## Implementation Complete
 
