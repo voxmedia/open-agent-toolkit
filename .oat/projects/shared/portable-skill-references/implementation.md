@@ -370,6 +370,17 @@ re-review p03 and final.
 - **Command:** exact persisted configured argv; no target injected or rewritten
 - **Launch state:** `intent_persisted`
 
+### Implementation Exit Gate Acceptance
+
+- **Gate run ID:** `f5f3ba50-bf74-4bdd-bc02-6ac2f2ec5153`
+- **Marker:**
+  `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/f5f3ba50-bf74-4bdd-bc02-6ac2f2ec5153.json`
+- **Selected target:** `cursor-fable-5-xhigh`
+- **Runtime:** Cursor
+- **Review scope/type:** `final` / `code`
+- **Budget:** 2,400,000 ms from configuration
+- **Launch state:** `accepted`; no replacement launch is eligible
+
 <!-- orchestration-runs-end -->
 
 ## Deviations from Plan / Design
