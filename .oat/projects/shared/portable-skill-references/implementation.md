@@ -778,7 +778,10 @@ implementation closeout.
 **Fingerprint:**
 `sha256:effective-delta-v1:532c7888c7e9a33a95375692fb7bc3091d09db833038f5938c377012faf926e9`
 **Policy:** block, maximum 2 attempts
-**Status:** pending; launch not started
+**Launch attempt:** `09bb3b6a-6ef4-4334-b0b7-247279858b3b`
+**Result receipt:**
+`reviews/implement-exit-gate-result-09bb3b6a-6ef4-4334-b0b7-247279858b3b.json`
+**Status:** launch intent persisted at 2026-08-28T17:44:30Z
 
 ## References
 
