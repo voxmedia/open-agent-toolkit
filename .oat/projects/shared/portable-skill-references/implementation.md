@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: prev1-t10
 oat_generated: false
 ---
 
@@ -12,8 +12,8 @@ oat_generated: false
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
-> Revision 1 behavior and all eight bounded review fixes are complete. Final
-> re-review and the stale configured exit-gate refresh remain.
+> Revision 1 behavior and eight bounded review fixes are complete. One
+> terminal artifact refresh is queued before the configured exit gate.
 
 ## Progress Overview
 
@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 1: Portable resolution and enforcement | passed | 4     | 4/4       |
 | Phase 2: Release metadata and validation     | passed | 1     | 1/1       |
 | Phase 3: Final review fixes                  | passed | 3     | 3/3       |
-| Revision 1: Merge current main and fixes     | passed | 9     | 9/9       |
+| Revision 1: Merge current main and fixes     | active | 10    | 9/10      |
 
-**Total:** 17/17 tasks completed; final re-review is next.
+**Total:** 17/18 tasks completed; `prev1-t10` is next.
 
 ### Revision Received: Inline Feedback
 
@@ -85,6 +85,35 @@ skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 ### Task prev1-t09: Correct review invocation provenance
 
 **Status:** completed
+
+### Task prev1-t10: Refresh terminal closeout artifacts
+
+**Status:** pending
+
+### Review Received: terminal closeout freshness
+
+**Date:** 2026-08-28
+**Status:** fixes_added
+**Review artifact:**
+`reviews/archived/final-review-2026-08-28T173122Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**Finding disposition:**
+
+- `I1` -> `prev1-t10`: refresh terminal implementation and summary evidence
+  through the new final task ID.
+
+**Artifact-only review policy:** the user clarified that artifact-only fixes
+do not require another standard re-review cycle. After `prev1-t10`, proceed to
+the independently configured exit gate.
+
+**Next:** Execute `prev1-t10`, then refresh the configured exit gate.
 
 ### Review Received: final provenance alignment
 

@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t10
 oat_last_commit: 75224a468ac5d05148338c3c637683ed032b4db6
 oat_blockers: []
 associated_issues:
@@ -143,14 +143,14 @@ oat_project_recap:
 
 # Project State: portable-skill-references
 
-**Status:** Final re-review pending
+**Status:** Terminal artifact refresh queued
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-All 17 planned tasks are complete. Final re-review and the configured exit-gate
-refresh remain.
+Seventeen of 18 planned tasks are complete. One terminal artifact refresh is
+queued before the configured exit gate.
 
 ## Artifacts
 
@@ -158,7 +158,7 @@ refresh remain.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan quick workflow)
 - **Plan:** `plan.md` (complete; ready for implementation)
-- **Implementation:** `implementation.md` (17/17 tasks complete; re-review pending)
+- **Implementation:** `implementation.md` (17/18 tasks complete; artifact refresh queued)
 
 ## Progress
 
@@ -191,6 +191,8 @@ refresh remain.
 - ✓ Terminal summary task `prev1-t08` completed
 - ✓ Narrowed final re-review reduced remaining findings to one provenance cell
 - ✓ Provenance-alignment task `prev1-t09` completed
+- ✓ User confirmed artifact-only fixes do not require another standard re-review
+- ▶ Terminal artifact refresh task `prev1-t10` queued
 
 ## Blockers
 
@@ -198,4 +200,4 @@ None
 
 ## Next Milestone
 
-Re-review final, refresh the configured exit gate, and push PR #226.
+Execute `prev1-t10`, refresh the configured exit gate, and push PR #226.

@@ -613,6 +613,27 @@ Source: inline feedback (2026-08-28)
    `git diff --check`.
 4. Commit with `chore(prev1-t09): correct review invocation provenance`.
 
+### Task prev1-t10: (review) Refresh terminal closeout artifacts
+
+**Files:**
+
+- Modify: `.oat/projects/shared/portable-skill-references/plan.md`
+- Modify: `.oat/projects/shared/portable-skill-references/implementation.md`
+- Modify: `.oat/projects/shared/portable-skill-references/state.md`
+- Modify: `.oat/projects/shared/portable-skill-references/summary.md`
+
+**Steps:**
+
+1. Refresh the implementation final narrative and Completion Report to the
+   terminal 18/18 state, including the invocation-provenance repair.
+2. Set `oat_summary_last_task: prev1-t10` and include the terminal provenance
+   alignment while preserving the project outcome and revision metadata.
+3. Keep implementation `in_progress` only for the required configured exit
+   gate; artifact-only completion does not require another standard re-review.
+4. Verify project status, plan validation, summary freshness, formatting, and
+   `git diff --check`.
+5. Commit with `docs(prev1-t10): refresh terminal closeout artifacts`.
+
 ## Reviews
 
 | Scope         | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target          |
@@ -634,6 +655,7 @@ Source: inline feedback (2026-08-28)
 | remote-pr-226 | code     | fixes_completed | 2026-08-28 | `reviews/archived/remote-pr-226-review-2026-08-28T143457Z.md` | -                                        | -          | -                    |
 | final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T151136Z.md`         | 34a4b8268bd85ded4c7c37def94e240bd4734674 | manual     | -                    |
 | final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T152436Z.md`         | b15f7c81f11c2a2cad8427eb9eeff8f99f922ee9 | manual     | -                    |
+| final         | code     | fixes_added     | 2026-08-28 | `reviews/archived/final-review-2026-08-28T173122Z.md`         | 44786aa5a32a32cc74ef945498e0fd288a4e04e9 | manual     | -                    |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -645,12 +667,12 @@ Source: inline feedback (2026-08-28)
 - Phase 1: 4 tasks - portable resolution contracts and robust ratchet coverage
 - Phase 2: 1 task - provider views, lockstep release metadata, and full gates
 - Phase 3: 3 tasks - final ratchet hardening and lifecycle reconciliation
-- Revision 1: 9 tasks - merge current main plus final and remote review fixes
+- Revision 1: 10 tasks - merge current main plus final and remote review fixes
 
-**Total: 17 tasks**
+**Total: 18 tasks**
 
-All seventeen task scopes are implemented. The root-owned final re-review and
-stale exit-gate refresh remain before PR #226 can be pushed.
+Seventeen task scopes are implemented. One terminal artifact refresh remains
+before the stale configured exit gate can run and PR #226 can be pushed.
 
 ## References
 
