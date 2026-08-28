@@ -1,5 +1,5 @@
 ---
-oat_current_task: prev1-t02
+oat_current_task: prev1-t03
 oat_last_commit: cca0bb5187adfdffd475017e1009a6e643502927
 oat_blockers: []
 associated_issues:
@@ -143,14 +143,14 @@ oat_project_recap:
 
 # Project State: portable-skill-references
 
-**Status:** Final and remote review fixes queued
+**Status:** Final and remote review fixes in progress
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Revision 1 merged `origin/main` and passed its phase review. Five final and
-remote review fixes are queued before re-review and exit-gate refresh.
+Revision 1 merged `origin/main` and passed its phase review. The stale completed
+revision pointer is cleared, and four review fixes remain before re-review.
 
 ## Artifacts
 
@@ -158,7 +158,7 @@ remote review fixes are queued before re-review and exit-gate refresh.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan quick workflow)
 - **Plan:** `plan.md` (complete; ready for implementation)
-- **Implementation:** `implementation.md` (9/14 tasks complete; fixes queued)
+- **Implementation:** `implementation.md` (10/14 tasks complete; fixes in progress)
 
 ## Progress
 
@@ -181,7 +181,8 @@ remote review fixes are queued before re-review and exit-gate refresh.
 - ✓ Revision 1 passed root-owned review with no findings
 - ✓ Final post-merge review findings received
 - ✓ Bugbot feedback triaged: two converted, one dismissed with rationale
-- ▶ Review-fix task `prev1-t02` queued
+- ✓ Review-fix task `prev1-t02` completed; completed revision pointer cleared
+- ▶ Review-fix task `prev1-t03` queued
 
 ## Blockers
 
@@ -189,5 +190,5 @@ None
 
 ## Next Milestone
 
-Execute `prev1-t02` through `prev1-t06`, re-review final, refresh the configured
+Execute `prev1-t03` through `prev1-t06`, re-review final, refresh the configured
 exit gate, and push PR #226.
