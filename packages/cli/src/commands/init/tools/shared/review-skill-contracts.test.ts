@@ -1094,8 +1094,8 @@ describe('review skill contracts', () => {
       '.agents/skills/oat-project-complete/SKILL.md',
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
-    const recoveryIndex = content.indexOf(
-      'scripts/recover-completion-receipts.mjs#recoverCompletionReceipts',
+    const retryRouterIndex = content.indexOf(
+      'COMPLETION_RETRY_JSON=$(node "$COMPLETION_RETRY_SCRIPT"',
     );
     const finalLinksIndex = content.indexOf(
       '#### Step 8.6: Render Final Synced Project Links',
@@ -1108,24 +1108,28 @@ describe('review skill contracts', () => {
       'COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"',
     );
     expect(content).toContain(
+      'COMPLETION_RETRY_SCRIPT="$SKILL_DIR/scripts/resolve-completion-retry.mjs"',
+    );
+    expect(content).toContain(
       'ARCHIVE_DECISION_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"',
     );
-    expect(content).toContain('--detect-candidate true');
-    expect(content.indexOf('--detect-candidate true')).toBeLessThan(
-      content.indexOf('PROJECT_LOG_CHECK=$(oat project log check'),
-    );
-    expect(
-      content.indexOf('RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"'),
-    ).toBeLessThan(
+    expect(content).not.toContain('--detect-candidate true');
+    expect(retryRouterIndex).toBeGreaterThan(-1);
+    expect(retryRouterIndex).toBeLessThan(
       content.indexOf('PROJECT_LOG_CHECK=$(oat project log check'),
     );
     expect(normalizedContent).toContain(
-      'The executable completion transaction tests must use this same resolver',
+      'This is the one executable routing surface; do not recreate candidate detection and recovery as separate shell branches',
     );
-    expect(recoveryIndex).toBeGreaterThan(
+    expect(normalizedContent).toContain(
+      'The executable transaction matrix must use this same router for all configured and interactive interruption rows.',
+    );
+    expect(normalizedContent).toContain(
+      'Jump directly to Step 7.5 and skip every mutation in Steps 3.7 through 7.',
+    );
+    expect(finalLinksIndex).toBeGreaterThan(
       content.indexOf('#### Step 7.5: Publish Synced Project Pin Source'),
     );
-    expect(finalLinksIndex).toBeGreaterThan(recoveryIndex);
     expect(normalizedContent).toContain(
       'single-parent pin-source → final-artifact → optional evidence ordering',
     );
@@ -1142,10 +1146,7 @@ describe('review skill contracts', () => {
       'receipt SHA exactly equal to `EVIDENCE_COMMIT`',
     );
     expect(content).toContain(
-      'RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"',
-    );
-    expect(content).toContain(
-      "IFS=$'\\t' read -r PROJECT_LINKS_PIN_COMMIT PROJECT_REF_COMMIT",
+      "IFS=$'\\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT",
     );
     expect(content).toContain(
       'PUBLISHED_RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"',

@@ -33,6 +33,12 @@ const RECOVERY_SCRIPT = fileURLToPath(
     import.meta.url,
   ),
 );
+const RETRY_SCRIPT = fileURLToPath(
+  new URL(
+    '../../../../../../.agents/skills/oat-project-complete/scripts/resolve-completion-retry.mjs',
+    import.meta.url,
+  ),
+);
 
 interface CompletionReceipts {
   projectLinksPinCommit: string;
@@ -45,6 +51,25 @@ interface CompletionArchiveDecision {
   shouldArchive: boolean;
   source: 'configured' | 'interactive';
 }
+
+type CompletionRetryResolution =
+  | {
+      status: 'continue';
+      route: 'normal';
+      candidate: false;
+      nextStep: '3.7';
+      skipMutations: false;
+      skippedMutations: [];
+    }
+  | (CompletionReceipts & {
+      status: 'recovered';
+      route: 'recovery';
+      candidate: true;
+      nextStep: '7.5';
+      skipMutations: true;
+      skippedMutations: string[];
+      prArtifactPath: string;
+    });
 
 function git(cwd: string, args: string[]): string {
   return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
@@ -235,20 +260,18 @@ async function commitRecapEvidenceLocally(
   return evidenceCommit;
 }
 
-async function recover(
+function resolveCompletionRetry(
   projectPath: string,
   ref: string,
-): Promise<CompletionReceipts> {
+): CompletionRetryResolution {
   const output = execFileSync(
     process.execPath,
     [
-      RECOVERY_SCRIPT,
+      RETRY_SCRIPT,
       '--project-path',
       projectPath,
       '--retained-ref',
       ref,
-      '--pr-artifact',
-      PR_ARTIFACT,
       '--evidence-path',
       RECAP_MANIFEST,
       '--evidence-path',
@@ -256,24 +279,7 @@ async function recover(
     ],
     { encoding: 'utf8' },
   );
-  return JSON.parse(output) as CompletionReceipts;
-}
-
-function detectReceiptCandidate(projectPath: string, ref: string): boolean {
-  const output = execFileSync(
-    process.execPath,
-    [
-      RECOVERY_SCRIPT,
-      '--project-path',
-      projectPath,
-      '--retained-ref',
-      ref,
-      '--detect-candidate',
-      'true',
-    ],
-    { encoding: 'utf8' },
-  );
-  return (JSON.parse(output) as { candidate: boolean }).candidate;
+  return JSON.parse(output) as CompletionRetryResolution;
 }
 
 const interruptionStages = [
@@ -316,6 +322,19 @@ describe('non-archive synced completion transaction', () => {
         await createSyncedProject(target, defaultGitRunner);
 
         await writeFile(`${target.projectPath}/state.md`, 'complete\n', 'utf8');
+        await writeFile(
+          `${target.projectPath}/project-log.md`,
+          '# Completion log\n\nAlready sealed.\n',
+          'utf8',
+        );
+        await mkdir(`${target.projectPath}/reviews/archived`, {
+          recursive: true,
+        });
+        await writeFile(
+          `${target.projectPath}/reviews/archived/final-review.md`,
+          '# Archived review\n',
+          'utf8',
+        );
         await writeFile(
           `${target.projectPath}/summary.md`,
           '# Durable summary\n',
@@ -364,6 +383,11 @@ describe('non-archive synced completion transaction', () => {
           'staged user change\n',
           'utf8',
         );
+        await writeFile(
+          `${fixture.cloneA}/.oat/config.json`,
+          `${JSON.stringify({ activeProject: target.projectPath }, null, 2)}\n`,
+          'utf8',
+        );
         git(fixture.cloneA, ['add', 'unrelated.txt']);
         const unrelatedStage = git(fixture.cloneA, [
           'diff',
@@ -405,29 +429,72 @@ describe('non-archive synced completion transaction', () => {
 
         await writeFile(`${target.projectPath}/dirty-retry.txt`, 'dirty\n');
         expect(() =>
-          detectReceiptCandidate(target.projectPath, target.ref),
+          resolveCompletionRetry(target.projectPath, target.ref),
         ).toThrow(/clean synced checkout/i);
         await rm(`${target.projectPath}/dirty-retry.txt`);
 
-        const headBeforeDetection = git(target.projectPath, [
-          'rev-parse',
-          'HEAD',
-        ]);
-        expect(detectReceiptCandidate(target.projectPath, target.ref)).toBe(
-          true,
+        const preMutationSnapshot = {
+          head: git(target.projectPath, ['rev-parse', 'HEAD']),
+          projectLog: await readFile(
+            `${target.projectPath}/project-log.md`,
+            'utf8',
+          ),
+          review: await readFile(
+            `${target.projectPath}/reviews/archived/final-review.md`,
+            'utf8',
+          ),
+          state: await readFile(`${target.projectPath}/state.md`, 'utf8'),
+          activePointer: await readFile(
+            `${fixture.cloneA}/.oat/config.json`,
+            'utf8',
+          ),
+          prArtifact: await readFile(
+            `${target.projectPath}/${PR_ARTIFACT}`,
+            'utf8',
+          ),
+        };
+        const recovered = resolveCompletionRetry(
+          target.projectPath,
+          target.ref,
         );
-        expect(git(target.projectPath, ['rev-parse', 'HEAD'])).toBe(
-          headBeforeDetection,
-        );
-        expect(
-          await readFile(`${target.projectPath}/${PR_ARTIFACT}`, 'utf8'),
-        ).toBe(
-          `${git(target.projectPath, [
-            'show',
-            `${publishedReceipts.finalArtifactCommit}:${PR_ARTIFACT}`,
-          ])}\n`,
-        );
-        const recovered = await recover(target.projectPath, target.ref);
+        expect(recovered).toMatchObject({
+          status: 'recovered',
+          route: 'recovery',
+          candidate: true,
+          nextStep: '7.5',
+          skipMutations: true,
+          skippedMutations: [
+            'project-log',
+            'review-move',
+            'complete-state',
+            'active-pointer',
+            'pr-artifact',
+          ],
+          prArtifactPath: PR_ARTIFACT,
+        });
+        expect({
+          head: git(target.projectPath, ['rev-parse', 'HEAD']),
+          projectLog: await readFile(
+            `${target.projectPath}/project-log.md`,
+            'utf8',
+          ),
+          review: await readFile(
+            `${target.projectPath}/reviews/archived/final-review.md`,
+            'utf8',
+          ),
+          state: await readFile(`${target.projectPath}/state.md`, 'utf8'),
+          activePointer: await readFile(
+            `${fixture.cloneA}/.oat/config.json`,
+            'utf8',
+          ),
+          prArtifact: await readFile(
+            `${target.projectPath}/${PR_ARTIFACT}`,
+            'utf8',
+          ),
+        }).toEqual(preMutationSnapshot);
+        if (recovered.status !== 'recovered') {
+          throw new Error('Expected completion receipt recovery route.');
+        }
         expect(recovered.projectLinksPinCommit).toBe(
           publishedReceipts.pinSourceCommit,
         );
@@ -457,7 +524,13 @@ describe('non-archive synced completion transaction', () => {
           });
         }
 
-        const retryReceipts = await recover(target.projectPath, target.ref);
+        const retryReceipts = resolveCompletionRetry(
+          target.projectPath,
+          target.ref,
+        );
+        if (retryReceipts.status !== 'recovered') {
+          throw new Error('Expected completion receipt recovery route.');
+        }
         const retryRecordCommit = await commitCompletionRecord(
           fixture.cloneA,
           recordPath,
@@ -571,9 +644,9 @@ describe('non-archive synced completion transaction', () => {
         EVIDENCE_MESSAGE,
       ]);
 
-      await expect(recover(target.projectPath, target.ref)).rejects.toThrow(
-        /changed.*expected exactly/i,
-      );
+      expect(() =>
+        resolveCompletionRetry(target.projectPath, target.ref),
+      ).toThrow(/changed.*expected exactly/i);
       expect(git(fixture.originDir, ['rev-parse', target.ref])).toBe(
         receipts.finalArtifactCommit,
       );
@@ -667,9 +740,9 @@ describe('non-archive synced completion transaction', () => {
           `@ \`${receipts.pinSourceCommit.slice(0, 7)}\``,
         );
 
-        await expect(recover(target.projectPath, target.ref)).rejects.toThrow(
-          error,
-        );
+        expect(() =>
+          resolveCompletionRetry(target.projectPath, target.ref),
+        ).toThrow(error);
         expect(git(target.projectPath, ['rev-parse', 'HEAD'])).toBe(
           receipts.finalArtifactCommit,
         );
@@ -686,4 +759,30 @@ describe('non-archive synced completion transaction', () => {
     },
     20_000,
   );
+
+  it('continues the normal lane without mutation for a noncandidate', async () => {
+    const fixture = await createCompletionFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects',
+        PROJECT_SLUG,
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      const head = git(target.projectPath, ['rev-parse', 'HEAD']);
+
+      expect(resolveCompletionRetry(target.projectPath, target.ref)).toEqual({
+        status: 'continue',
+        route: 'normal',
+        candidate: false,
+        nextStep: '3.7',
+        skipMutations: false,
+        skippedMutations: [],
+      });
+      expect(git(target.projectPath, ['rev-parse', 'HEAD'])).toBe(head);
+      expect(git(target.projectPath, ['status', '--porcelain'])).toBe('');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
 });

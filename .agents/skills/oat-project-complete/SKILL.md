@@ -46,8 +46,13 @@ ACTIVE_PROJECT_PATH="$PROJECT_PATH"
 
 # Set SKILL_DIR to the absolute directory containing this loaded SKILL.md.
 COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"
+COMPLETION_RETRY_SCRIPT="$SKILL_DIR/scripts/resolve-completion-retry.mjs"
 test -f "$COMPLETION_RECEIPT_SCRIPT" || {
   echo "oat: completion receipt recovery script is missing" >&2
+  exit 1
+}
+test -f "$COMPLETION_RETRY_SCRIPT" || {
+  echo "oat: completion retry routing script is missing" >&2
   exit 1
 }
 
@@ -412,77 +417,62 @@ For `IS_DURABLE_PROJECT="false"`, never export a tracked project recap and never
 
 Initialize `PROJECT_LINKS_PIN_COMMIT=""`, `PROJECT_REF_COMMIT=""`,
 `EVIDENCE_COMMIT=""`, and `COMPLETION_RECEIPTS_RECOVERED="false"`. For a
-synced non-archive run, use the skill-owned detector before the project-log
-probe, seal append, review moves, or `complete-state` mutation:
+synced non-archive run, invoke the skill-owned retry router before the
+project-log probe, seal append, review moves, `complete-state`, active-pointer,
+or PR-artifact mutation. This is the one executable routing surface; do not
+recreate candidate detection and recovery as separate shell branches:
 
 ```bash
 if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "false" ]]; then
-  RECEIPT_CANDIDATE_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT" \
-    --project-path "$ACTIVE_PROJECT_PATH" \
-    --retained-ref "$PROJECT_RETAINED_REF" \
-    --detect-candidate true) || exit 1
-  RECEIPT_CANDIDATE=$(node -e '
-const value = JSON.parse(process.argv[1]);
-if (typeof value.candidate !== "boolean") process.exit(1);
-process.stdout.write(String(value.candidate));
-' "$RECEIPT_CANDIDATE_JSON") || exit 1
-fi
-```
-
-When `RECEIPT_CANDIDATE="true"`, resolve exactly one regular, non-symlinked
-`pr/project-pr-*.md` below `ACTIVE_PROJECT_PATH`, store its normalized
-project-relative path as `PR_DESCRIPTION_RELATIVE_PATH`, and immediately run
-the Step 7.5 recovery invocation and structured restoration. Supply the exact
-selected recap paths when a recap is selected. A recognized candidate must be
-clean and must validate completely; any dirty, malformed, mixed, or
-contradictory candidate fails closed. After successful restoration set
-`COMPLETION_RECEIPTS_RECOVERED="true"` and skip every mutation in Steps 3.7
-through 7, including project-log checks/appends, review moves, `complete-state`,
-active-pointer clearing, and PR-artifact generation. Continue at Step 7.5 with
-the restored receipts. When the detector returns `candidate: false`, follow
-the ordinary flow without changing its existing dirty-worktree guarantees.
-
-Use this exact early restoration before entering Step 3.7:
-
-```bash
-if [[ "${RECEIPT_CANDIDATE:-false}" == "true" ]]; then
-  PR_DESCRIPTION_CANDIDATES=("$ACTIVE_PROJECT_PATH"/pr/project-pr-*.md)
-  test "${#PR_DESCRIPTION_CANDIDATES[@]}" -eq 1 || exit 1
-  PR_DESCRIPTION_PATH="${PR_DESCRIPTION_CANDIDATES[0]}"
-  test -f "$PR_DESCRIPTION_PATH" || exit 1
-  test ! -L "$PR_DESCRIPTION_PATH" || exit 1
-  PR_DESCRIPTION_RELATIVE_PATH="${PR_DESCRIPTION_PATH#"$ACTIVE_PROJECT_PATH"/}"
-  test "$PR_DESCRIPTION_RELATIVE_PATH" != "$PR_DESCRIPTION_PATH" || exit 1
-
-  RECOVERY_ARGS=(
+  COMPLETION_RETRY_ARGS=(
     --project-path "$ACTIVE_PROJECT_PATH"
     --retained-ref "$PROJECT_RETAINED_REF"
-    --pr-artifact "$PR_DESCRIPTION_RELATIVE_PATH"
   )
   if [[ -n "$SELECTED_PROJECT_RECAP_RUN" ]]; then
-    RECOVERY_ARGS+=(
+    COMPLETION_RETRY_ARGS+=(
       --evidence-path "$SELECTED_PROJECT_RECAP_RUN/manifest.json"
       --evidence-path "$SELECTED_PROJECT_RECAP_RUN/build-record.json"
     )
   fi
-  RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT" \
-    "${RECOVERY_ARGS[@]}") || exit 1
-  RECOVERY_FIELDS=$(node -e '
+  COMPLETION_RETRY_JSON=$(node "$COMPLETION_RETRY_SCRIPT" \
+    "${COMPLETION_RETRY_ARGS[@]}") || exit 1
+  COMPLETION_RETRY_FIELDS=$(node -e '
 const value = JSON.parse(process.argv[1]);
 const sha = /^[0-9a-f]{40}$/;
-if (value.status !== "recovered" || !sha.test(value.projectLinksPinCommit) || !sha.test(value.projectRefCommit)) process.exit(1);
-if (value.evidenceCommit !== null && !sha.test(value.evidenceCommit)) process.exit(1);
-if (typeof value.evidencePushRequired !== "boolean") process.exit(1);
-process.stdout.write([value.projectLinksPinCommit, value.projectRefCommit, value.evidenceCommit ?? "-", String(value.evidencePushRequired)].join("\t"));
-' "$RECOVERY_JSON") || exit 1
-  IFS=$'\t' read -r PROJECT_LINKS_PIN_COMMIT PROJECT_REF_COMMIT \
-    RECOVERED_EVIDENCE_COMMIT EVIDENCE_PUSH_REQUIRED <<< "$RECOVERY_FIELDS"
-  if [[ "$RECOVERED_EVIDENCE_COMMIT" != "-" ]]; then
-    EVIDENCE_COMMIT="$RECOVERED_EVIDENCE_COMMIT"
+const mutations = ["project-log", "review-move", "complete-state", "active-pointer", "pr-artifact"];
+if (value.status === "continue") {
+  if (value.route !== "normal" || value.candidate !== false || value.nextStep !== "3.7" || value.skipMutations !== false || !Array.isArray(value.skippedMutations) || value.skippedMutations.length !== 0) process.exit(1);
+  process.stdout.write(["normal", "-", "-", "-", "false", "-"].join("\t"));
+} else {
+  if (value.status !== "recovered" || value.route !== "recovery" || value.candidate !== true || value.nextStep !== "7.5" || value.skipMutations !== true) process.exit(1);
+  if (JSON.stringify(value.skippedMutations) !== JSON.stringify(mutations)) process.exit(1);
+  if (!sha.test(value.projectLinksPinCommit) || !sha.test(value.projectRefCommit)) process.exit(1);
+  if (value.evidenceCommit !== null && !sha.test(value.evidenceCommit)) process.exit(1);
+  if (typeof value.evidencePushRequired !== "boolean" || !/^pr\/project-pr-.*\.md$/.test(value.prArtifactPath)) process.exit(1);
+  process.stdout.write(["recovery", value.projectLinksPinCommit, value.projectRefCommit, value.evidenceCommit ?? "-", String(value.evidencePushRequired), value.prArtifactPath].join("\t"));
+}
+' "$COMPLETION_RETRY_JSON") || exit 1
+  IFS=$'\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT \
+    PROJECT_REF_COMMIT RECOVERED_EVIDENCE_COMMIT EVIDENCE_PUSH_REQUIRED \
+    PR_DESCRIPTION_RELATIVE_PATH <<< "$COMPLETION_RETRY_FIELDS"
+  if [[ "$COMPLETION_RETRY_ROUTE" == "recovery" ]]; then
+    if [[ "$RECOVERED_EVIDENCE_COMMIT" != "-" ]]; then
+      EVIDENCE_COMMIT="$RECOVERED_EVIDENCE_COMMIT"
+    fi
+    PR_DESCRIPTION_PATH="$ACTIVE_PROJECT_PATH/$PR_DESCRIPTION_RELATIVE_PATH"
+    COMPLETION_RECEIPTS_RECOVERED="true"
   fi
-  COMPLETION_RECEIPTS_RECOVERED="true"
 fi
 ```
+
+A recognized candidate must be clean and validate completely; dirty,
+malformed, mixed, or contradictory candidates exit before the router returns.
+When the result is `route: "normal"`, follow the ordinary flow without
+changing its existing dirty-worktree guarantees. When it is
+`route: "recovery"`, the executable has already restored the receipts. Jump
+directly to Step 7.5 and skip every mutation in Steps 3.7 through 7. The
+executable transaction matrix must use this same router for all configured and
+interactive interruption rows.
 
 ### Step 3.7: Project Log Completion Gate
 
@@ -668,16 +658,12 @@ artifact write. This receipt is the immutable pin source used when Step 8.6
 renders the final links. Keep it separate from the final non-archive artifact
 receipt:
 
-Initialize `PROJECT_LINKS_PIN_COMMIT=""`, `PROJECT_REF_COMMIT=""`, and
-`EVIDENCE_COMMIT=""`. For a non-archive retry, inspect the checkout HEAD and
-retained local ref before publishing. When either names a candidate whose
-subject is `chore(oat): publish final project links` or
-`chore(oat): attest final project recap`, invoke the skill-owned executable
-`scripts/recover-completion-receipts.mjs#recoverCompletionReceipts`. Supply the
-canonical retained ref, the exact PR-description path, and, when a recap was
-selected, its exact active `manifest.json` and `build-record.json` paths. The
-surface is read-only and must validate all of the following before returning a
-receipt:
+Preserve `PROJECT_LINKS_PIN_COMMIT`, `PROJECT_REF_COMMIT`, `EVIDENCE_COMMIT`,
+and `EVIDENCE_PUSH_REQUIRED` when the Step 3.65 router restored them. Do not
+initialize over a recovered value or run a second candidate-routing branch at
+this step. The pre-mutation router owns candidate detection, exact PR-artifact
+selection, and `recoverCompletionReceipts`; its read-only recovery must have
+validated all of the following before returning a receipt:
 
 - a clean synced checkout and the retained local ref;
 - the exact final-artifact and optional evidence subjects;
@@ -699,7 +685,8 @@ fails closed. Do not fall through to a new pin-source publication after a
 partial or contradictory candidate. This retry recognition is valid whether
 the parent discovery record is still active or already complete.
 
-Use this concrete invocation and structured restoration for the candidate:
+Build the recovery arguments only for post-push revalidation of an unpublished
+evidence receipt:
 
 ```bash
 RECOVERY_ARGS=(
@@ -730,19 +717,9 @@ process.stdout.write([
 ' "$1"
 }
 
-RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT" \
-  "${RECOVERY_ARGS[@]}") || exit 1
-RECOVERY_FIELDS=$(parse_completion_receipts "$RECOVERY_JSON") || exit 1
-IFS=$'\t' read -r PROJECT_LINKS_PIN_COMMIT PROJECT_REF_COMMIT \
-  RECOVERED_EVIDENCE_COMMIT EVIDENCE_PUSH_REQUIRED <<< "$RECOVERY_FIELDS"
-if [[ "$RECOVERED_EVIDENCE_COMMIT" == "-" ]]; then
-  EVIDENCE_COMMIT=""
-else
-  EVIDENCE_COMMIT="$RECOVERED_EVIDENCE_COMMIT"
-fi
 ```
 
-Invoke this block only after exact candidate detection described above. Require
+Use this block only after the Step 3.65 router restored a candidate. Require
 `EVIDENCE_PUSH_REQUIRED` to be `true` or `false`; no other output is accepted.
 
 When the recovery result reports `evidencePushRequired: true`, publish the
