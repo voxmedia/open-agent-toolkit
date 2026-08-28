@@ -2017,6 +2017,33 @@ describe('archive utils', () => {
     );
   });
 
+  it('directs an active record with an absent checkout to project pull', async () => {
+    const repoRoot = await createRepoRoot();
+    const syncedRoot = join(repoRoot, '.oat', 'projects', 'synced');
+    const projectPath = join(syncedRoot, 'absent-demo');
+    await writeSyncedRecord(
+      syncedRecordPath(syncedRoot, 'absent-demo'),
+      buildSyncedRecord('absent-demo', new Date('2026-08-27T00:00:00Z')),
+    );
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'absent-demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        },
+        {
+          preflightSyncedCheckout: vi.fn(async () => ({ status: 'absent' })),
+        },
+      ),
+    ).rejects.toThrow(
+      /is absent; run oat project pull absent-demo before archiving/,
+    );
+  });
+
   it('archives to the primary checkout when completion runs from a git worktree', async () => {
     const tempRoot = await createRepoRoot();
     const mainRepoRoot = join(tempRoot, 'main-repo');

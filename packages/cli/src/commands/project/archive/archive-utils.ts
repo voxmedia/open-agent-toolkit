@@ -1473,8 +1473,12 @@ export async function archiveProjectOnCompletion(
       preflight.status !== 'clean' &&
       !(preflight.status === 'absent' && activeRecord.status === 'complete')
     ) {
+      const recoveryCommand =
+        preflight.status === 'absent'
+          ? `oat project pull ${options.projectName}`
+          : `oat project push ${options.projectName}`;
       throw new CliError(
-        `Synced project ${options.projectName} is ${preflight.status}; run oat project push ${options.projectName} before archiving.`,
+        `Synced project ${options.projectName} is ${preflight.status}; run ${recoveryCommand} before archiving.`,
         1,
       );
     }
