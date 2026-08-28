@@ -559,6 +559,14 @@ Uniform across spec-driven and quick modes. Differs only in which plan-authoring
 
 Confirm the chosen artifact with the user (minimal confirmation per `references/destinations.md`). Set `ARTIFACT_PATH` to the absolute path.
 
+**Persistence invariant:** shared and local project artifacts remain ordinary
+parent-checkout files and use exact-path branch commits. Synced project
+artifacts live only in the nested project checkout and become durable only
+through a validated `oat project push --json` receipt on
+`refs/oat/projects/<slug>`; never stage a synced artifact on the parent branch.
+This invariant applies equally to clean fold-back, both dirty fold-back choices,
+and the brainstorming reference-file route.
+
 **Step 2 — Preflight `git status` check.** Run **before** any artifact mutation, scoped to the chosen artifact only:
 
 ```bash

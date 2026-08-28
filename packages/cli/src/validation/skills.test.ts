@@ -6058,6 +6058,22 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('pins the brainstorm persistence invariant by project scope', async () => {
+    const brainstorm = await readRepoFile(
+      '.agents/skills/oat-brainstorm/SKILL.md',
+    );
+
+    expect(brainstorm).toMatch(
+      /Persistence invariant:[\s\S]*?shared and local project artifacts[\s\S]*?exact-path branch commits/,
+    );
+    expect(brainstorm).toMatch(
+      /Synced project[\s\S]*?validated `oat project push --json` receipt[\s\S]*?never stage a synced artifact on the parent branch/,
+    );
+    expect(brainstorm).toContain(
+      'clean fold-back, both dirty fold-back choices,\nand the brainstorming reference-file route',
+    );
+  });
+
   it('requires project-summary decision promotion to pass every record section', async () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-summary/SKILL.md',
