@@ -93,7 +93,7 @@ skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 ### Review Received: terminal closeout freshness
 
 **Date:** 2026-08-28
-**Status:** fixes_completed
+**Status:** passed
 **Review artifact:**
 `reviews/archived/final-review-2026-08-28T173122Z.md`
 
@@ -112,6 +112,9 @@ skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 **Artifact-only review policy:** the user clarified that artifact-only fixes
 do not require another standard re-review cycle. After `prev1-t10`, proceed to
 the independently configured exit gate.
+
+**Disposition:** passed after the artifact-only correction, by explicit user
+policy; no additional standard reviewer was launched.
 
 **Next:** Refresh the configured exit gate.
 
