@@ -67,13 +67,12 @@ function listAuthoredMarkdown(skillDir: string): string[] {
   // shared docs (symlinks materialized at build time), not authored pointers.
   return readdirSync(skillDir, { recursive: true, encoding: 'utf8' })
     .filter((rel) => {
-      const segments = rel.split(/[\\/]/);
-      const materializedDocsIndex = segments.findIndex(
-        (segment, index) =>
-          segment === 'references' && segments[index + 1] === 'docs',
-      );
+      const normalizedSegments = rel.replaceAll('\\', '/').split('/');
+      const isMaterializedDocsCopy =
+        normalizedSegments[0] === 'references' &&
+        normalizedSegments[1] === 'docs';
 
-      return rel.endsWith('.md') && materializedDocsIndex === -1;
+      return rel.endsWith('.md') && !isMaterializedDocsCopy;
     })
     .map((rel) => join(skillDir, rel));
 }
@@ -148,6 +147,26 @@ function collectBareCrossSkillTargets(
   ].sort();
 }
 
+function collectBareCrossSkillReferencesForSkill(
+  skillDir: string,
+  sourceSkill: string,
+  relativeRoot: string,
+): BareCrossSkillReference[] {
+  const references: BareCrossSkillReference[] = [];
+
+  for (const file of listAuthoredMarkdown(skillDir)) {
+    const relFile = file.slice(relativeRoot.length + 1);
+    for (const target of collectBareCrossSkillTargets(
+      readFileSync(file, 'utf8'),
+      sourceSkill,
+    )) {
+      references.push({ file: relFile, target });
+    }
+  }
+
+  return references;
+}
+
 function collectBareCrossSkillReferences(): BareCrossSkillReference[] {
   const userScopeSkills = new Set(
     PACK_MANIFEST.filter((pack) => pack.defaultScope === 'user').flatMap(
@@ -163,15 +182,9 @@ function collectBareCrossSkillReferences(): BareCrossSkillReference[] {
     const skillDir = join(SKILLS_DIR, skill);
     if (!existsSync(skillDir)) continue;
 
-    for (const file of listAuthoredMarkdown(skillDir)) {
-      const relFile = file.slice(REPO_ROOT.length + 1);
-      for (const target of collectBareCrossSkillTargets(
-        readFileSync(file, 'utf8'),
-        skill,
-      )) {
-        references.push({ file: relFile, target });
-      }
-    }
+    references.push(
+      ...collectBareCrossSkillReferencesForSkill(skillDir, skill, REPO_ROOT),
+    );
   }
 
   return references.sort(
@@ -280,13 +293,40 @@ describe('skills bundled docs contract', () => {
       'references',
       'docs-root-resolution.md',
     );
+    const nestedAuthoredDir = join(
+      fixtureRoot,
+      'examples',
+      'references',
+      'docs',
+    );
+    const nestedAuthoredReference = join(nestedAuthoredDir, 'authored.md');
 
     try {
       mkdirSync(materializedDocsDir, { recursive: true });
+      mkdirSync(nestedAuthoredDir, { recursive: true });
       writeFileSync(join(materializedDocsDir, 'shared.md'), '# Shared copy\n');
       writeFileSync(authoredReference, '# Authored reference\n');
+      writeFileSync(
+        nestedAuthoredReference,
+        'Read `.agents/skills/sibling/SKILL.md`.\n',
+      );
 
-      expect(listAuthoredMarkdown(fixtureRoot)).toEqual([authoredReference]);
+      expect(listAuthoredMarkdown(fixtureRoot)).toHaveLength(2);
+      expect(listAuthoredMarkdown(fixtureRoot)).toEqual(
+        expect.arrayContaining([authoredReference, nestedAuthoredReference]),
+      );
+      expect(
+        collectBareCrossSkillReferencesForSkill(
+          fixtureRoot,
+          'source',
+          fixtureRoot,
+        ),
+      ).toEqual([
+        {
+          file: 'examples/references/docs/authored.md',
+          target: 'sibling',
+        },
+      ]);
     } finally {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
