@@ -1,6 +1,8 @@
 import {
+  lstat,
   mkdir,
   readFile,
+  readdir,
   realpath,
   rm,
   stat,
@@ -103,6 +105,86 @@ export interface MigrateSharedToSyncedOptions {
   readOatLocalConfig?: typeof readOatLocalConfig;
   writeOatLocalConfig?: typeof writeOatLocalConfig;
   afterBranchCommit?: () => Promise<void>;
+}
+
+async function assertNoMigrationSourceLinks(
+  directory: string,
+  sourceRoot: string,
+): Promise<void> {
+  const entries = await readdir(directory, { withFileTypes: true });
+  for (const entry of entries) {
+    const entryPath = join(directory, entry.name);
+    if (entry.isSymbolicLink()) {
+      const displayPath = relative(sourceRoot, entryPath);
+      throw new CliError(
+        `Shared project migration refuses symbolic link ${displayPath}; replace it with repository-owned files before retrying.`,
+        1,
+      );
+    }
+    if (entry.isDirectory()) {
+      await assertNoMigrationSourceLinks(entryPath, sourceRoot);
+      continue;
+    }
+    if (!entry.isFile()) {
+      const displayPath = relative(sourceRoot, entryPath);
+      throw new CliError(
+        `Shared project migration refuses unsupported filesystem entry ${displayPath}.`,
+        1,
+      );
+    }
+  }
+}
+
+export async function assertConfinedMigrationSource(
+  target: SyncTarget,
+  sourcePath: string,
+): Promise<void> {
+  const lexicalSource = resolve(sourcePath);
+  const sharedRoot = resolve(dirname(target.syncedRoot), 'shared');
+  if (
+    dirname(lexicalSource) !== sharedRoot ||
+    lexicalSource !== resolve(sharedRoot, target.slug)
+  ) {
+    throw new CliError(
+      `Shared project ${sourcePath} must be the configured direct child for ${target.slug}.`,
+      1,
+    );
+  }
+
+  let sourceStat;
+  try {
+    sourceStat = await lstat(lexicalSource);
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      throw new CliError(
+        `Shared project ${sourcePath} does not exist as a directory.`,
+        1,
+      );
+    }
+    throw error;
+  }
+  if (sourceStat.isSymbolicLink()) {
+    throw new CliError(
+      `Shared project ${sourcePath} is a symbolic link; migration requires a repository-owned directory.`,
+      1,
+    );
+  }
+  if (!sourceStat.isDirectory()) {
+    throw new CliError(`Shared project ${sourcePath} must be a directory.`, 1);
+  }
+
+  const [canonicalSource, canonicalSharedRoot] = await Promise.all([
+    realpath(lexicalSource),
+    realpath(sharedRoot),
+  ]);
+  if (canonicalSource !== resolve(canonicalSharedRoot, target.slug)) {
+    throw new CliError(
+      `Shared project ${sourcePath} resolves outside its configured direct-child boundary.`,
+      1,
+    );
+  }
+
+  await assertNoMigrationSourceLinks(lexicalSource, lexicalSource);
 }
 
 const ZERO_OBJECT_ID = '0000000000000000000000000000000000000000';
@@ -856,6 +938,7 @@ export async function migrateSharedToSynced(
   options: MigrateSharedToSyncedOptions,
 ): Promise<MigrateResult> {
   const sourcePath = resolve(options.sourcePath);
+  await assertConfinedMigrationSource(target, sourcePath);
   const sourceRelative = repoRelativePath(target.repoRoot, sourcePath);
   const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
   const destinationRelative = repoRelativePath(

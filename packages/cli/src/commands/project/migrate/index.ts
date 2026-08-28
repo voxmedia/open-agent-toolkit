@@ -7,6 +7,7 @@ import {
 } from '@app/command-context';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
+  assertConfinedMigrationSource,
   buildSyncTarget,
   migrateSharedToSynced,
   type MigrateResult,
@@ -31,6 +32,7 @@ interface ProjectMigrateDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
   resolveProjectsRoot: typeof resolveProjectsRoot;
+  assertConfinedMigrationSource: typeof assertConfinedMigrationSource;
   migrateSharedToSynced: (
     target: SyncTarget,
     git: GitRunner,
@@ -45,6 +47,7 @@ const DEFAULT_DEPENDENCIES: ProjectMigrateDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   resolveProjectsRoot,
+  assertConfinedMigrationSource,
   migrateSharedToSynced,
   gitRunner: defaultGitRunner,
   processEnv: process.env,
@@ -84,6 +87,7 @@ async function runMigrate(
     }
     const slug = basename(sourcePath);
     const target = buildSyncTarget(repoRoot, projectsRoot, slug);
+    await dependencies.assertConfinedMigrationSource(target, sourcePath);
     const result = await dependencies.migrateSharedToSynced(
       target,
       dependencies.gitRunner,

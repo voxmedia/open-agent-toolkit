@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
@@ -82,6 +82,43 @@ async function addTrackedMigrationSource(
     cwd: repoRoot,
   });
   return source;
+}
+
+function registeredWorktrees(repoRoot: string): string {
+  return execFileSync('git', ['worktree', 'list', '--porcelain'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+}
+
+async function expectMigrationBoundaryUnchanged(
+  repoRoot: string,
+  target: ReturnType<typeof buildSyncTarget>,
+  sourcePath: string,
+  expectedSourceContent: string,
+  before: { head: string; worktrees: string; localConfig: unknown },
+): Promise<void> {
+  expect(
+    execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }).trim(),
+  ).toBe(before.head);
+  expect(registeredWorktrees(repoRoot)).toBe(before.worktrees);
+  expect(await readOatLocalConfig(repoRoot)).toEqual(before.localConfig);
+  await expect(readFile(sourcePath, 'utf8')).resolves.toBe(
+    expectedSourceContent,
+  );
+  await expect(access(target.projectPath)).rejects.toThrow();
+  await expect(
+    access(join(target.syncedRoot, `${target.slug}.json`)),
+  ).rejects.toThrow();
+  expect(
+    execFileSync('git', ['ls-remote', 'origin', target.ref], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }).trim(),
+  ).toBe('');
 }
 
 describe('createProjectMigrateCommand', () => {
@@ -181,6 +218,146 @@ describe('createProjectMigrateCommand', () => {
           { cwd: fixture.cloneA, encoding: 'utf8' },
         ),
       ).toContain('refs/oat/projects/legacy');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('rejects a tracked shared-project root symlink before any migration mutation', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const slug = 'external-root-link';
+      const external = join(fixture.rootDir, 'external-project');
+      const source = join(fixture.cloneA, '.oat/projects/shared', slug);
+      await mkdir(external, { recursive: true });
+      await writeFile(
+        join(external, 'state.md'),
+        '# external secret\n',
+        'utf8',
+      );
+      await mkdir(join(fixture.cloneA, '.oat/projects/shared'), {
+        recursive: true,
+      });
+      await symlink(external, source, 'dir');
+      execFileSync('git', ['add', `.oat/projects/shared/${slug}`], {
+        cwd: fixture.cloneA,
+      });
+      execFileSync('git', ['commit', '-m', 'add external root symlink'], {
+        cwd: fixture.cloneA,
+      });
+      await writeOatLocalConfig(fixture.cloneA, {
+        version: 1,
+        activeProject: `.oat/projects/shared/${slug}`,
+      });
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      const before = {
+        head: execFileSync('git', ['rev-parse', 'HEAD'], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }).trim(),
+        worktrees: registeredWorktrees(fixture.cloneA),
+        localConfig: await readOatLocalConfig(fixture.cloneA),
+      };
+      const capture = createLoggerCapture();
+      const command = createProjectMigrateCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneA,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneA,
+        resolveProjectsRoot: async () => '.oat/projects/shared',
+        processEnv: {},
+      });
+
+      await run(command, [`.oat/projects/shared/${slug}`, '--to', 'synced']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error.join('\n')).toMatch(/symbolic link/i);
+      await expectMigrationBoundaryUnchanged(
+        fixture.cloneA,
+        target,
+        join(external, 'state.md'),
+        '# external secret\n',
+        before,
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('rejects a nested source symlink before any migration mutation', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const slug = 'nested-link';
+      const source = await addTrackedMigrationSource(fixture.cloneA, slug);
+      const external = join(fixture.rootDir, 'external.txt');
+      const nestedLink = join(source, 'external.txt');
+      await writeFile(external, 'external secret\n', 'utf8');
+      await symlink(external, nestedLink, 'file');
+      execFileSync('git', ['add', `.oat/projects/shared/${slug}`], {
+        cwd: fixture.cloneA,
+      });
+      execFileSync('git', ['commit', '-m', 'add nested source symlink'], {
+        cwd: fixture.cloneA,
+      });
+      await writeOatLocalConfig(fixture.cloneA, {
+        version: 1,
+        activeProject: `.oat/projects/shared/${slug}`,
+      });
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      const before = {
+        head: execFileSync('git', ['rev-parse', 'HEAD'], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }).trim(),
+        worktrees: registeredWorktrees(fixture.cloneA),
+        localConfig: await readOatLocalConfig(fixture.cloneA),
+      };
+      const capture = createLoggerCapture();
+      const command = createProjectMigrateCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneA,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneA,
+        resolveProjectsRoot: async () => '.oat/projects/shared',
+        processEnv: {},
+      });
+
+      await run(command, [`.oat/projects/shared/${slug}`, '--to', 'synced']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error.join('\n')).toMatch(/symbolic link/i);
+      await expectMigrationBoundaryUnchanged(
+        fixture.cloneA,
+        target,
+        join(source, 'state.md'),
+        `# ${slug}\n`,
+        before,
+      );
+      await expect(readFile(nestedLink, 'utf8')).resolves.toBe(
+        'external secret\n',
+      );
     } finally {
       await fixture.cleanup();
     }
