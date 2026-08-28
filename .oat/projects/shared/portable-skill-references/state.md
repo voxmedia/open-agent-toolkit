@@ -48,9 +48,9 @@ oat_phase_recovery_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
@@ -60,8 +60,8 @@ oat_implement_exit_gate:
   reviewed_head: bd4c8904badae38bab52b4e4e161702af9e7d72c
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v1:532c7888c7e9a33a95375692fb7bc3091d09db833038f5938c377012faf926e9
-  freshness_head: bd4c8904badae38bab52b4e4e161702af9e7d72c
-  freshness_fingerprint: sha256:effective-delta-v1:532c7888c7e9a33a95375692fb7bc3091d09db833038f5938c377012faf926e9
+  freshness_head: 2f47b8f77a5d872234cb1c31451685df1dab4555
+  freshness_fingerprint: sha256:effective-delta-v1:15c01c740e3e12bf292506b3b7575d4e7b706e7f0c07610661ffce0d5716af64
   launch_state: result_persisted
   launch_attempt_id: 09bb3b6a-6ef4-4334-b0b7-247279858b3b
   launch_started_at: '2026-08-28T17:44:30Z'
@@ -71,17 +71,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T175129Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=2, minor=1). Run oat-project-review-receive for .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T175129Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=2e1675d2-e87a-48c9-a0f7-f0fb6a526887; handoff=receive; source=reviews/final-review-2026-08-28T175129Z.md; scope=final; type=code'
   receive_source_artifact: .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T175129Z.md
   receive_archived_artifact: .oat/projects/shared/portable-skill-references/reviews/archived/final-review-2026-08-28T175129Z.md
   receive_event_identity: 'final | code | final-review-2026-08-28T175129Z.md'
   receive_pre_head: 3f219540895c3fba5e168595211b7943ad2e0ba9
-  receive_commit: null
+  receive_commit: 2f47b8f77a5d872234cb1c31451685df1dab4555
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-28T17:54:30Z'
+  updated_at: '2026-08-28T17:56:29Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -143,13 +143,14 @@ oat_project_recap:
 
 # Project State: portable-skill-references
 
-**Status:** Configured exit gate pending
+**Status:** Configured exit gate passed
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-All 18 planned tasks are complete. Only the configured exit gate remains.
+All 18 planned tasks are complete. The configured exit gate passed with no
+blocking findings; implementation closeout is ready.
 
 ## Artifacts
 
@@ -157,7 +158,7 @@ All 18 planned tasks are complete. Only the configured exit gate remains.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan quick workflow)
 - **Plan:** `plan.md` (complete; ready for implementation)
-- **Implementation:** `implementation.md` (18/18 tasks complete; exit gate pending)
+- **Implementation:** `implementation.md` (18/18 tasks complete; exit gate passed)
 
 ## Progress
 
@@ -200,4 +201,4 @@ None
 
 ## Next Milestone
 
-Refresh the configured exit gate, then push PR #226.
+Finish implementation closeout, then push PR #226.
