@@ -4668,6 +4668,46 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('pins portable research-pack callers to installed-root schema reads', async () => {
+    const callers = [
+      ['.agents/skills/analyze/SKILL.md', '0.1.1'],
+      ['.agents/skills/compare/SKILL.md', '0.1.1'],
+    ] as const;
+
+    for (const [path, expectedVersion] of callers) {
+      const content = await readRepoFile(path);
+
+      expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), path).toBe(
+        expectedVersion,
+      );
+      // Loaded-skill candidate order: loaded scope, then user, then project.
+      expect(content, `${path} candidate order`).toMatch(
+        /\$\{SKILL_DIR\}\/\.\.`[\s\S]{0,160}\$\{HOME\}\/\.agents\/skills`[\s\S]{0,160}<repo-root>\/\.agents\/skills`/,
+      );
+      expect(content, `${path} forbids ambient discovery`).toContain(
+        'never ambient discovery',
+      );
+      expect(content, `${path} names owning-pack recovery`).toContain(
+        'oat tools install research --scope <user|project>',
+      );
+      expect(content, `${path} names owning-pack update recovery`).toContain(
+        'oat tools update --pack research --scope <user|project>',
+      );
+      expect(
+        content,
+        `${path} has no repo-relative cross-skill read`,
+      ).not.toMatch(
+        /(?:\.\.?\/)?\.agents\/skills\/[a-zA-Z0-9_-]+\/(?:SKILL\.md|references)/,
+      );
+      expect(content, `${path} has no parent-relative sibling hop`).not.toMatch(
+        /(?<![/a-zA-Z0-9_.-])\.\.\/[a-zA-Z0-9_-]+\/(?:SKILL\.md|references)/,
+      );
+      expect(content, `${path} binds the research root`).toContain(
+        '${RESEARCH_SKILLS_ROOT}/deep-research/references/',
+      );
+    }
+  });
+
   it('pins portable utility-pack callers to installed-root sibling reads', async () => {
     const callers = [
       ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.3'],

@@ -354,16 +354,6 @@ const PINNED_MIGRATION_CROSS_SKILL_READS: readonly CrossSkillReference[] = [
       targetPath,
     })),
   ),
-  ...['schema-analysis.md', 'schema-base.md'].map((schema) => ({
-    file: '.agents/skills/analyze/SKILL.md',
-    targetSkill: 'deep-research',
-    targetPath: `references/${schema}`,
-  })),
-  {
-    file: '.agents/skills/compare/SKILL.md',
-    targetSkill: 'deep-research',
-    targetPath: 'references/schema-comparative.md',
-  },
   {
     file: '.agents/skills/oat-project-review-provide/SKILL.md',
     targetSkill: 'oat-review-provide',
@@ -866,6 +856,38 @@ describe('skills bundled docs contract', () => {
       );
       expect(content).toContain(
         'oat tools update --pack utility --scope <user|project>',
+      );
+      expect(collectCrossSkillTargets(content, skill)).toEqual([]);
+    },
+  );
+
+  it.each([
+    ['analyze', ['references/schema-base.md', 'references/schema-analysis.md']],
+    ['compare', ['references/schema-comparative.md']],
+  ] as const)(
+    '%s resolves deep-research schemas from the installed skill scope',
+    (skill, schemas) => {
+      const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
+
+      expectPortableSkillsRootCandidateOrder(content, skill);
+      expect(content).toContain('`<name>/SKILL.md`');
+      expect(content).toMatch(/[Ii]ndependently probe\s+each required/);
+      expect(content).toContain('never ambient discovery');
+      // Fail closed rather than inventing a report schema.
+      expect(content).toContain(
+        'stop before writing the artifact instead of inventing a schema',
+      );
+      for (const schema of schemas) {
+        // The exact target is validated, not merely the resolved root.
+        expect(content, `${skill} reads ${schema}`).toContain(
+          `\${RESEARCH_SKILLS_ROOT}/deep-research/${schema}`,
+        );
+      }
+      expect(content).toContain(
+        'oat tools install research --scope <user|project>',
+      );
+      expect(content).toContain(
+        'oat tools update --pack research --scope <user|project>',
       );
       expect(collectCrossSkillTargets(content, skill)).toEqual([]);
     },

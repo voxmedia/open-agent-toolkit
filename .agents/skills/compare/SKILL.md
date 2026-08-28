@@ -1,6 +1,6 @@
 ---
 name: compare
-version: 0.1.0
+version: 0.1.1
 description: Domain-aware comparative analysis with clear recommendations. Compares options across auto-detected or user-specified dimensions and produces a qualitative assessment with a clear winner.
 argument-hint: 'item1 item2 [item3...] [--save] [--context path] [--dimensions "dim1, dim2, ..."]'
 user-invocable: true
@@ -167,7 +167,16 @@ Condensed comparison with:
 
 **Artifact output (`--save` flag):**
 
-Write artifact using the `comparative` extended schema from `.agents/skills/deep-research/references/schema-comparative.md`:
+Write artifact using the `comparative` extended schema owned by the
+`deep-research` skill. Independently probe each required `<name>/SKILL.md` in order:
+`${SKILL_DIR}/..` from this loaded skill, `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Bind the first match for `deep-research` to its
+own `${RESEARCH_SKILLS_ROOT}`; never ambient discovery. On a miss, name the
+skill, stop before writing the artifact instead of inventing a schema, and give
+its intended-scope recovery command:
+`oat tools install research --scope <user|project>` or
+`oat tools update --pack research --scope <user|project>`. Then read
+`${RESEARCH_SKILLS_ROOT}/deep-research/references/schema-comparative.md`:
 
 - Include artifact frontmatter contract:
 
