@@ -71,17 +71,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T032516Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=1). Run oat-project-review-receive for .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T032516Z.md to disposition them before marking the final review row passed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=f5f3ba50-bf74-4bdd-bc02-6ac2f2ec5153; handoff=receive; source=reviews/final-review-2026-08-28T032516Z.md; scope=final; type=code'
+  receive_source_artifact: .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T032516Z.md
+  receive_archived_artifact: .oat/projects/shared/portable-skill-references/reviews/archived/final-review-2026-08-28T032516Z.md
+  receive_event_identity: 'final | code | final-review-2026-08-28T032516Z.md'
+  receive_pre_head: da762b52de7303f6bf87dbe011fe8f6db8a6af46
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-28T03:27:53Z'
+  updated_at: '2026-08-28T03:28:47Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -122,7 +122,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T21:30:45.407Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T03:27:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T03:28:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 

@@ -394,6 +394,16 @@ re-review p03 and final.
   and non-null handoff
 - **Launch state:** `result_persisted`; receive required before disposition
 
+### Implementation Exit Gate Receive Intent
+
+- **Run/source:** `f5f3ba50-bf74-4bdd-bc02-6ac2f2ec5153` /
+  `reviews/final-review-2026-08-28T032516Z.md`
+- **Expected archive:**
+  `reviews/archived/final-review-2026-08-28T032516Z.md`
+- **Bound event:** `final | code | final-review-2026-08-28T032516Z.md`
+- **Pre-receive head:** `da762b52de7303f6bf87dbe011fe8f6db8a6af46`
+- **Receive state:** `intent_persisted`
+
 <!-- orchestration-runs-end -->
 
 ## Deviations from Plan / Design
