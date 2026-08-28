@@ -1671,10 +1671,13 @@ Track test execution during implementation.
 - Lifecycle skills that pull before reading and push after writing synced
   project artifacts, enforced by a checked-in bookkeeping inventory.
 - Reviewer-facing pinned artifact links, end-to-end documentation, and the
-  lockstep 0.2.39 public-package release surface.
+  lockstep 0.2.40 public-package release surface.
 - Fail-closed completion receipt recovery that validates exact retained refs,
   canonical pin labels, full blob-link SHAs, and configured/interactive
   archive decisions through the production CLI entrypoint.
+- A conflict-resolved integration of merged PR #226 that preserves portable
+  packaged sibling-skill references alongside synced-project lifecycle
+  behavior and their combined validation coverage.
 
 **Behavioral changes (user-facing):**
 
@@ -1701,11 +1704,15 @@ Track test execution during implementation.
 
 - Full CI-order Definition of Done sequence, repository lint/format, skill
   validator and version-bump gates, and diff checks all passed.
+- The post-PR revision repeated the complete gate sequence after merging
+  `origin/main`; the isolated-home full test suite passed, and independent
+  phase review reported no blocking findings.
 - Real source-built CLI dogfood covered synced creation, push, cross-worktree
   pull, immutable links, archive/prune cleanup, and shipped skill workflows.
 - The final completion transaction matrix passed all eight decision/interruption
-  rows and both wrong-ref/wrong-full-SHA fail-closed cases; final review passed
-  with no findings.
+  rows and both wrong-ref/wrong-full-SHA fail-closed cases. The original final
+  review passed with no findings; the post-merge final lifecycle review is the
+  remaining closeout boundary.
 
 **Design deltas (if any):**
 
