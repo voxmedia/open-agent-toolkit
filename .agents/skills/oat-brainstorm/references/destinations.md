@@ -76,7 +76,7 @@ Always honor an explicit user-supplied path over the suggestion. Brainstorm docs
 **Required template fields:** same set as "Capture as new idea" (capture-as-new-idea path runs silently first), then summary input is whatever was synthesized. Template: `.oat/templates/ideas/idea-summary.md` (consumed via `oat-idea-summarize`).
 **Optional template fields:** none — the summary is rendered from the synthesized payload.
 **Confirmation pattern:** `none` at this layer (the downstream `oat-idea-summarize` surfaces the summary for accept/refine review).
-**Handoff target:** capture-as-new-idea path silently (skill reads `.agents/skills/oat-idea-new/SKILL.md` and runs Steps 3-7), then immediately reads `.agents/skills/oat-idea-summarize/SKILL.md` and runs it end-to-end. The `oat-idea-summarize` skill's own accept/refine review serves as the user gate.
+**Handoff target:** capture-as-new-idea path silently (skill reads `${SKILLS_ROOT}/oat-idea-new/SKILL.md`, resolving `${SKILLS_ROOT}` through the owning `oat-brainstorm` contract, and runs Steps 3-7), then immediately resolves `${SKILLS_ROOT}` again, reads `${SKILLS_ROOT}/oat-idea-summarize/SKILL.md`, and runs it end-to-end. The `oat-idea-summarize` skill's own accept/refine review serves as the user gate.
 **If user wants to keep brainstorming after this is offered:** return to flow with destination = summarize-idea-directly. Skill may probe for chosen direction since the summary will read better with one.
 
 ---

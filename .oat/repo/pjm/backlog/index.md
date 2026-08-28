@@ -4,13 +4,12 @@
 
 ## Curated Overview
 
-- User-scope tool-pack closeout follow-ups are split into three bounded features:
-  `BL-260827-make-packaged-skill-references` owns portable cross-skill links and
-  their ratchet; `BL-260827-correct-scope-and-adoption` owns PJM adoption and
-  diagnostic correctness edges; and `BL-260827-clean-up-tool-pack-lifecycle`
-  owns the remaining lifecycle/config consistency findings. They are
-  intentionally separate so packaging, diagnostics, and lifecycle cleanup do
-  not share implementation or review boundaries.
+- The first of three user-scope tool-pack closeout follow-ups is closed:
+  `BL-260827-make-packaged-skill-references` delivered portable cross-skill
+  links and their ratchet in PR #226. The two remaining bounded features stay
+  separate: `BL-260827-correct-scope-and-adoption` owns PJM adoption and
+  diagnostic correctness edges, while `BL-260827-clean-up-tool-pack-lifecycle`
+  owns lifecycle/config consistency findings.
 - User-scope tool distribution is now a high-priority cross-pack initiative:
   `BL-260818-make-the-project-management` covers every tool pack, including
   `project-management`, while keeping PJM operational data repo-owned. The
@@ -180,7 +179,6 @@
 | BL-260827-fail-closed-on-partial-or      | Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles                                        | open   | medium   | task    | S        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                                        | open   | medium   | task    |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature | L        |
-| BL-260827-make-packaged-skill-references | Make packaged skill references scope-portable                                                         | open   | medium   | feature | M        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                             | open   | medium   | feature | M        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags | open   | medium   | task    | S        |
 | BL-260819-repair-verified-bundled-skill  | Repair verified bundled skill contract drift                                                          | open   | medium   | task    | M        |

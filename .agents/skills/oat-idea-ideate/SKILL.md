@@ -1,6 +1,6 @@
 ---
 name: oat-idea-ideate
-version: 1.2.1
+version: 1.2.2
 description: Use when continuing an existing tracked idea or expanding an explicit scratchpad seed from {IDEAS_ROOT}/scratchpad.md. Do NOT use to start a brand-new, destinationless brainstorm; use oat-brainstorm for that.
 argument-hint: '[--global]'
 disable-model-invocation: true
@@ -67,6 +67,23 @@ If you catch yourself:
 
 ## Process
 
+### Resolve `${SKILLS_ROOT}` for chained idea skills
+
+Before reading a sibling skill, resolve the skills root in this order:
+
+1. Derive it from the directory containing this loaded `SKILL.md`:
+   `${SKILL_DIR}/..`. If the provider exposes the loaded skill path, treat its
+   directory as `${SKILL_DIR}`.
+2. Otherwise try the user-scope root first: `${HOME}/.agents/skills`.
+3. Fall back to the project-scope root: `<repo-root>/.agents/skills`.
+
+Probe each candidate for `<name>/SKILL.md` and treat the first match as
+`${SKILLS_ROOT}`. If no candidate resolves, tell the user that the required
+sibling skill `<name>` is not installed. At the scope containing this loaded
+skill, run `oat tools install ideas --scope <user|project>` or, when the pack is
+already installed there, `oat tools update --pack ideas --scope <user|project>`.
+Then stop the current branch instead of improvising its process.
+
 ### Step 0: Resolve Ideas Level
 
 Determine whether to operate at project level or user (global) level.
@@ -117,7 +134,7 @@ IDEA_PATH=$(oat config get activeIdea 2>/dev/null || true)
   - Existing ideas (with state: brainstorming/summarized)
   - Scratchpad entries marked as "not yet started"
 - If user picks an existing idea → run `oat config set activeIdea "{idea-path}"` and proceed to Step 2
-- If user picks a scratchpad entry → scaffold the idea inline by reading the **`oat-idea-new`** skill (`.agents/skills/oat-idea-new/SKILL.md`) and executing its Steps 3-7 (Initialize Ideas Directory, Scaffold Discovery Document, Update Backlog, Check Scratchpad, Set Active Idea Pointer). Then proceed to Step 2 with the new idea.
+- If user picks a scratchpad entry → scaffold the idea inline by reading the **`oat-idea-new`** skill at `${SKILLS_ROOT}/oat-idea-new/SKILL.md` (resolve `${SKILLS_ROOT}` as above) and executing its Steps 3-7 (Initialize Ideas Directory, Scaffold Discovery Document, Update Backlog, Check Scratchpad, Set Active Idea Pointer). Then proceed to Step 2 with the new idea.
 - If no ideas and no scratchpad entries exist → tell the user: "No ideas found. Run the `oat-idea-new` skill to create one, or run the `oat-idea-scratchpad` skill to capture a quick idea seed." Then stop.
 
 ### Step 2: Load Discovery Document

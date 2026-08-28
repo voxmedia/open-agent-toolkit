@@ -1,5 +1,14 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
@@ -12,6 +21,13 @@ const REPO_ROOT = execFileSync('git', ['rev-parse', '--show-toplevel'], {
 
 const SKILLS_DIR = join(REPO_ROOT, '.agents', 'skills');
 const SHARED_DOCS_DIR = join(REPO_ROOT, '.agents', 'docs');
+const BUNDLE_ASSETS_SCRIPT = join(
+  REPO_ROOT,
+  'packages',
+  'cli',
+  'scripts',
+  'bundle-assets.sh',
+);
 
 // Matches a Markdown reference to a real shared doc, e.g. `.agents/docs/skills-guide.md`.
 const SHARED_DOC_REF = /\.agents\/docs\/([a-zA-Z0-9_-]+)\.md/g;
@@ -26,6 +42,20 @@ interface Violation {
   line: string;
 }
 
+interface BareCrossSkillReference {
+  file: string;
+  target: string;
+}
+
+const BARE_CROSS_SKILL_READ =
+  /(?<![/a-zA-Z0-9_-])(?:\.\.?\/)?\.agents\/skills\/([a-zA-Z0-9_-]+)\/SKILL\.md/g;
+
+const PORTABLE_SKILLS_ROOT_CANDIDATES = [
+  '`${SKILL_DIR}/..`',
+  '`${HOME}/.agents/skills`',
+  '`<repo-root>/.agents/skills`',
+] as const;
+
 function listSkillDirs(): string[] {
   return readdirSync(SKILLS_DIR, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -36,8 +66,37 @@ function listAuthoredMarkdown(skillDir: string): string[] {
   // Recurse the skill, but skip references/docs/ — those are vendored copies of
   // shared docs (symlinks materialized at build time), not authored pointers.
   return readdirSync(skillDir, { recursive: true, encoding: 'utf8' })
-    .filter((rel) => rel.endsWith('.md') && !rel.includes('references/docs'))
+    .filter((rel) => {
+      const normalizedSegments = rel.replaceAll('\\', '/').split('/');
+      const isMaterializedDocsCopy =
+        normalizedSegments[0] === 'references' &&
+        normalizedSegments[1] === 'docs';
+
+      return rel.endsWith('.md') && !isMaterializedDocsCopy;
+    })
     .map((rel) => join(skillDir, rel));
+}
+
+function expectPortableSkillsRootCandidateOrder(
+  content: string,
+  source: string,
+): void {
+  const positions = PORTABLE_SKILLS_ROOT_CANDIDATES.map((candidate) =>
+    content.indexOf(candidate),
+  );
+
+  for (const [index, candidate] of PORTABLE_SKILLS_ROOT_CANDIDATES.entries()) {
+    expect(
+      positions[index],
+      `${source} is missing ${candidate}`,
+    ).toBeGreaterThan(-1);
+  }
+  for (let index = 1; index < positions.length; index += 1) {
+    expect(
+      positions[index - 1],
+      `${source} must list ${PORTABLE_SKILLS_ROOT_CANDIDATES[index - 1]} before ${PORTABLE_SKILLS_ROOT_CANDIDATES[index]}`,
+    ).toBeLessThan(positions[index]!);
+  }
 }
 
 function collectViolations(): Violation[] {
@@ -75,6 +134,66 @@ function collectViolations(): Violation[] {
   return violations;
 }
 
+function collectBareCrossSkillTargets(
+  content: string,
+  sourceSkill: string,
+): string[] {
+  return [
+    ...new Set(
+      [...content.matchAll(BARE_CROSS_SKILL_READ)]
+        .map((match) => match[1]!)
+        .filter((target) => target !== sourceSkill),
+    ),
+  ].sort();
+}
+
+function collectBareCrossSkillReferencesForSkill(
+  skillDir: string,
+  sourceSkill: string,
+  relativeRoot: string,
+): BareCrossSkillReference[] {
+  const references: BareCrossSkillReference[] = [];
+
+  for (const file of listAuthoredMarkdown(skillDir)) {
+    const relFile = file.slice(relativeRoot.length + 1);
+    for (const target of collectBareCrossSkillTargets(
+      readFileSync(file, 'utf8'),
+      sourceSkill,
+    )) {
+      references.push({ file: relFile, target });
+    }
+  }
+
+  return references;
+}
+
+function collectBareCrossSkillReferences(): BareCrossSkillReference[] {
+  const userScopeSkills = new Set(
+    PACK_MANIFEST.filter((pack) => pack.defaultScope === 'user').flatMap(
+      (pack) =>
+        pack.assets
+          .filter((asset) => asset.kind === 'skill')
+          .map((asset) => asset.id.slice('skill:'.length)),
+    ),
+  );
+  const references: BareCrossSkillReference[] = [];
+
+  for (const skill of [...userScopeSkills].sort()) {
+    const skillDir = join(SKILLS_DIR, skill);
+    if (!existsSync(skillDir)) continue;
+
+    references.push(
+      ...collectBareCrossSkillReferencesForSkill(skillDir, skill, REPO_ROOT),
+    );
+  }
+
+  return references.sort(
+    (left, right) =>
+      left.file.localeCompare(right.file) ||
+      left.target.localeCompare(right.target),
+  );
+}
+
 describe('skills bundled docs contract', () => {
   it('no shipped skill references a shared .agents/docs/ doc that does not travel with it', () => {
     const violations = collectViolations();
@@ -102,61 +221,281 @@ describe('skills bundled docs contract', () => {
     // The chained read must resolve the skills root from the loaded skill's
     // scope (user-scope candidate probed first) instead.
     //
-    // This inventory is a ratchet, not an endorsement. It pins the reads that
-    // predate the fix so any *new* one fails, while the listed skills are
-    // remediated on their own schedule. Only remove entries here; never add.
-    const PINNED_LEGACY_BARE_READS: Readonly<
-      Record<string, readonly string[]>
-    > = {
-      'oat-idea-ideate': ['oat-idea-new'],
-      'oat-idea-new': ['oat-idea-ideate'],
-      'oat-idea-summarize': ['oat-idea-ideate'],
-      'oat-project-implement': [
-        'oat-dispatch-subagents',
-        'oat-project-dispatch-subagents',
-      ],
-      'oat-project-plan-writing': [
-        'oat-dispatch-subagents',
-        'oat-project-dispatch-subagents',
-      ],
-    };
+    // Every executable legacy reference has been removed. This exact inventory
+    // retains only historical evidence, pinned by source file and target so it
+    // cannot become a wildcard allowance for new authored Markdown.
+    const PINNED_HISTORICAL_BARE_READS: readonly BareCrossSkillReference[] = [
+      // Historical dogfood evidence records the paths exercised at that time.
+      ...[
+        'oat-idea-ideate',
+        'oat-idea-new',
+        'oat-idea-summarize',
+        'oat-pjm-add-backlog-item',
+        'oat-project-new',
+      ].map((target) => ({
+        file: '.agents/skills/oat-brainstorm/references/dogfood-results.md',
+        target,
+      })),
+      // The mini-wave fixture documents the canonical path promoted by its test.
+      {
+        file: '.agents/skills/oat-wave-execute/tests/mini-wave-fixture/README.md',
+        target: 'oat-wave-program',
+      },
+    ];
 
-    const userScopeSkills = new Set(
-      PACK_MANIFEST.filter((pack) => pack.defaultScope === 'user').flatMap(
-        (pack) =>
-          pack.assets
-            .filter((asset) => asset.kind === 'skill')
-            .map((asset) => asset.id.slice('skill:'.length)),
-      ),
+    const found = collectBareCrossSkillReferences();
+    const detail = found
+      .map(({ file, target }) => `  ${file} -> ${target}`)
+      .join('\n');
+
+    expect(
+      found,
+      `Bare repo-relative cross-skill reads changed; resolve executable reads from the loaded skill scope and baseline only exact historical evidence:\n${detail}`,
+    ).toEqual(PINNED_HISTORICAL_BARE_READS);
+  });
+
+  it.each([
+    ['backticked', 'Read `.agents/skills/sibling/SKILL.md`.', ['sibling']],
+    ['plain text', 'Read .agents/skills/sibling/SKILL.md next.', ['sibling']],
+    [
+      'dot-relative path',
+      'Read ./.agents/skills/sibling/SKILL.md next.',
+      ['sibling'],
+    ],
+    [
+      'parent-relative path',
+      'Read ../.agents/skills/sibling/SKILL.md next.',
+      ['sibling'],
+    ],
+    [
+      'Markdown link',
+      'Read [the sibling contract](.agents/skills/sibling/SKILL.md).',
+      ['sibling'],
+    ],
+    ['portable skills root', 'Read `${SKILLS_ROOT}/sibling/SKILL.md`.', []],
+    [
+      'user-scope absolute path',
+      'Read `${HOME}/.agents/skills/sibling/SKILL.md`.',
+      [],
+    ],
+    ['self-reference', 'Read `.agents/skills/source/SKILL.md`.', []],
+  ])('matches %s cross-skill syntax', (_name, content, expected) => {
+    expect(collectBareCrossSkillTargets(content as string, 'source')).toEqual(
+      expected,
     );
-    expect(userScopeSkills.has('oat-brainstorm')).toBe(true);
+  });
 
-    const BARE_CROSS_SKILL_READ =
-      /`\.agents\/skills\/([a-zA-Z0-9_-]+)\/SKILL\.md`/g;
-    const found: Record<string, string[]> = {};
+  it('skips only the materialized references/docs subtree', () => {
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'oat-authored-markdown-'));
+    const materializedDocsDir = join(fixtureRoot, 'references', 'docs');
+    const authoredReference = join(
+      fixtureRoot,
+      'references',
+      'docs-root-resolution.md',
+    );
+    const nestedAuthoredDir = join(
+      fixtureRoot,
+      'examples',
+      'references',
+      'docs',
+    );
+    const nestedAuthoredReference = join(nestedAuthoredDir, 'authored.md');
 
-    for (const skill of listSkillDirs()) {
-      if (!userScopeSkills.has(skill)) continue;
-      const skillFile = join(SKILLS_DIR, skill, 'SKILL.md');
-      if (!existsSync(skillFile)) continue;
-      const referenced = new Set<string>();
-      for (const match of readFileSync(skillFile, 'utf8').matchAll(
-        BARE_CROSS_SKILL_READ,
-      )) {
-        if (match[1] !== skill) referenced.add(match[1]!);
-      }
-      if (referenced.size > 0) found[skill] = [...referenced].sort();
-    }
+    try {
+      mkdirSync(materializedDocsDir, { recursive: true });
+      mkdirSync(nestedAuthoredDir, { recursive: true });
+      writeFileSync(join(materializedDocsDir, 'shared.md'), '# Shared copy\n');
+      writeFileSync(authoredReference, '# Authored reference\n');
+      writeFileSync(
+        nestedAuthoredReference,
+        'Read `.agents/skills/sibling/SKILL.md`.\n',
+      );
 
-    for (const [skill, referenced] of Object.entries(found)) {
+      expect(listAuthoredMarkdown(fixtureRoot)).toHaveLength(2);
+      expect(listAuthoredMarkdown(fixtureRoot)).toEqual(
+        expect.arrayContaining([authoredReference, nestedAuthoredReference]),
+      );
       expect(
-        PINNED_LEGACY_BARE_READS[skill] ?? [],
-        `${skill} adds a bare repo-relative cross-skill read; resolve the skills root from the loaded skill scope instead`,
-      ).toEqual(expect.arrayContaining(referenced));
+        collectBareCrossSkillReferencesForSkill(
+          fixtureRoot,
+          'source',
+          fixtureRoot,
+        ),
+      ).toEqual([
+        {
+          file: 'examples/references/docs/authored.md',
+          target: 'sibling',
+        },
+      ]);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
     }
+  });
 
-    // The remediated skill must stay clean.
-    expect(found['oat-brainstorm']).toBeUndefined();
+  it.each(['oat-idea-ideate', 'oat-idea-new', 'oat-idea-summarize'])(
+    '%s resolves chained idea skills from its installed scope',
+    (skill) => {
+      const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
+
+      expectPortableSkillsRootCandidateOrder(content, skill);
+      expect(content).toContain('Probe each candidate for `<name>/SKILL.md`');
+      expect(content).toContain(
+        'stop the current branch instead of improvising its process',
+      );
+      expect(content).toContain(
+        'oat tools install ideas --scope <user|project>',
+      );
+      expect(content).toContain(
+        'oat tools update --pack ideas --scope <user|project>',
+      );
+      expect(collectBareCrossSkillTargets(content, skill)).toEqual([]);
+    },
+  );
+
+  it('maps brainstorm sibling recovery to the owning pack', () => {
+    const content = readFileSync(
+      join(SKILLS_DIR, 'oat-brainstorm', 'SKILL.md'),
+      'utf8',
+    );
+
+    expect(content).toContain('`ideas` for `oat-idea-*`');
+    expect(content).toContain('`project-management` for `oat-pjm-*`');
+    expect(content).toContain('`workflows` for `oat-project-*`');
+    expect(content).toContain(
+      'oat tools install <pack> --scope <user|project>',
+    );
+    expect(content).toContain(
+      'oat tools update --pack <pack> --scope <user|project>',
+    );
+  });
+
+  it('ships the portable brainstorm summarize handoff in the bundled copy', () => {
+    const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-portable-assets-'));
+
+    try {
+      execFileSync('bash', [BUNDLE_ASSETS_SCRIPT], {
+        env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+        stdio: 'pipe',
+      });
+      const bundledDestination = readFileSync(
+        join(
+          assetsRoot,
+          'skills',
+          'oat-brainstorm',
+          'references',
+          'destinations.md',
+        ),
+        'utf8',
+      );
+
+      expect(bundledDestination).toContain(
+        '`${SKILLS_ROOT}/oat-idea-new/SKILL.md`',
+      );
+      expect(bundledDestination).toContain(
+        '`${SKILLS_ROOT}/oat-idea-summarize/SKILL.md`',
+      );
+      expect(
+        collectBareCrossSkillTargets(bundledDestination, 'oat-brainstorm'),
+      ).toEqual([]);
+    } finally {
+      rmSync(assetsRoot, { recursive: true, force: true });
+    }
+  }, 15_000);
+
+  it.each([
+    [
+      'oat-project-implement',
+      'stop every implementation, fix, or reviewer\ndispatch',
+    ],
+    [
+      'oat-project-plan-writing',
+      'Stop before the artifact self-review dispatch',
+    ],
+  ])(
+    '%s resolves both dispatch contracts before dispatch',
+    (skill, stopText) => {
+      const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
+      const projectDispatchRead =
+        skill === 'oat-project-implement'
+          ? '`${PROJECT_DISPATCH_SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`'
+          : '`${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`';
+      const sharedDispatchRead =
+        skill === 'oat-project-implement'
+          ? '`${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`'
+          : '`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`';
+
+      expectPortableSkillsRootCandidateOrder(content, skill);
+      expect(content).toContain('`<name>/SKILL.md`');
+      expect(content).toContain(stopText);
+      expect(content).toMatch(
+        /never ambient\s+discovery|Do not fall back to ambient skill\s+discovery/,
+      );
+      expect(content).toContain(
+        'oat tools install workflows --scope <user|project>',
+      );
+      expect(content).toContain(
+        'oat tools update --pack workflows --scope <user|project>',
+      );
+      expect(content).toContain(
+        'oat tools install utility --scope <user|project>',
+      );
+      expect(content).toContain(
+        'oat tools update --pack utility --scope <user|project>',
+      );
+      expect(content.indexOf(projectDispatchRead)).toBeLessThan(
+        content.indexOf(sharedDispatchRead),
+      );
+      expect(collectBareCrossSkillTargets(content, skill)).toEqual([]);
+    },
+  );
+
+  it('preserves launch notices and effective-target disclosure', () => {
+    const content = readFileSync(
+      join(SKILLS_DIR, 'oat-project-implement', 'SKILL.md'),
+      'utf8',
+    );
+
+    expect(content).toContain(
+      'Display structured resolver notices before every implementation, fix, or reviewer launch',
+    );
+    expect(content).toContain('uses the effective resolved target');
+    expect(content).toContain('never the bundled recommendation version');
+    expect(content).toContain(
+      'the named `provider-cursor.md`, `provider-codex.md`, or',
+    );
+    expect(content.indexOf('active-provider selection')).toBeLessThan(
+      content.indexOf('matching mechanics reference'),
+    );
+  });
+
+  it('resolves implementation dispatch dependencies independently', () => {
+    const content = readFileSync(
+      join(SKILLS_DIR, 'oat-project-implement', 'SKILL.md'),
+      'utf8',
+    );
+    const bindings = [
+      [
+        'PROJECT_DISPATCH_SKILLS_ROOT',
+        'oat-project-dispatch-subagents/SKILL.md',
+      ],
+      ['DISPATCH_SKILLS_ROOT', 'oat-dispatch-subagents/SKILL.md'],
+      [
+        'ORCHESTRATION_SKILLS_ROOT',
+        'subagent-orchestration/references/model-selection-principles.md',
+      ],
+    ] as const;
+
+    expect(content).toContain('independently probe each required');
+    for (const [root, path] of bindings) {
+      expect(content).toContain(`\${${root}}`);
+      expect(content).toContain(`\${${root}}/${path}`);
+    }
+    expect(content).toContain(
+      '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/references/',
+    );
+    expect(content).not.toMatch(
+      /\$\{SKILLS_ROOT\}\/(?:oat-project-dispatch-subagents|oat-dispatch-subagents|subagent-orchestration)/,
+    );
   });
 
   it('resolves shared tracking scripts from each loaded skill scope', () => {

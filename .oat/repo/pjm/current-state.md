@@ -45,6 +45,18 @@ copying their content here. -->
   reviewer access without exposing machine-only artifacts, with canonical
   identity checks, exact parent-path allowlists, non-forced publication, and
   resumable completion receipts protecting every cross-repository mutation.
+- CLI `0.2.39` (portable-skill-references, PR #226 pending merge) makes the
+  identified packaged sibling-skill reads portable across loaded, user, and
+  project scopes. Idea, implementation, plan-writing, and brainstorm handoff
+  surfaces now fail closed with pack-specific install/update recovery; the
+  implementation dispatcher resolves workflow and utility dependencies
+  independently so mixed-scope installs remain valid. A recursive authored-
+  Markdown ratchet rejects new bare sibling `SKILL.md` reads while retaining
+  only exact historical evidence. The complete repository gate sequence and
+  refreshed Fable exit gate passed. Closed
+  `BL-260827-make-packaged-skill-references`; residual agent surfaces and
+  cross-skill `references/*.md` coverage remain deferred to a later portability
+  follow-up.
 - CLI `0.2.37` makes every OAT tool pack user-scope eligible through one
   intent-aware install/update/remove/migrate lifecycle while keeping curated
   PJM state and adoption repository-owned. Inventory, status, and doctor now
@@ -53,9 +65,9 @@ copying their content here. -->
   and preserves shared assets and repository customizations. Provider sync
   keeps user scope skills-only where required and reports unmaterialized agents
   explicitly. All eleven repository gates and a zero-finding final closeout
-  review passed. Closed `BL-260818-make-the-project-management`; portable skill
-  references, scope/adoption diagnostics, and lifecycle/config polish remain as
-  three implementation-ready follow-up projects.
+  review passed. Closed `BL-260818-make-the-project-management`; scope/adoption
+  diagnostics and lifecycle/config polish remain as implementation-ready
+  follow-up projects.
 - CLI `0.2.31` (explainer-improvements-v2, branch pending merge) hardens the
   Explainer Kit publication boundary end to end: publication-root and receipt
   screening is version-agnostic (a future contract version cannot silently

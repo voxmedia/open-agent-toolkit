@@ -8,6 +8,7 @@
 
 ## Completed Items
 
+- 2026-08-28 — BL-260827-make-packaged-skill-references — Make packaged skill references scope-portable — Made packaged sibling-skill references scope-portable and added a recursive syntax-robust regression ratchet.
 - 2026-08-27 — BL-260818-make-the-project-management — Make every OAT tool pack user-scope eligible — Shipped user-scope eligibility, unified lifecycle, safe migration, PJM ownership boundaries, diagnostics, documentation, and release verification for every OAT tool pack; three bounded follow-up projects retain explicitly deferred polish.
 - 2026-08-27 — BL-260819-refresh-codex-skill-model — Refresh codex-skill model routing and repository-check policy — Closed by wave-4-execution: codex-skill routes model/effort through the provider reference by task class, the repository-check bypass is conditional and authorized, examples validated against codex-cli 0.149.1, eight-case contract test; skill 1.3.0, lockstep 0.2.36.
 - 2026-08-27 — BL-260817-let-resolveassetsroot-honor — Let resolveAssetsRoot honor OAT_ASSETS_DIR and make smoke asset reads hermetic — Closed by wave-3-execution: resolveAssetsRoot honors a validated OAT_ASSETS_DIR (fail-closed), the package-coverage smoke consumer reads a private per-file bundle, lockstep 0.2.35.

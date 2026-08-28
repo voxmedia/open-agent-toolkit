@@ -2119,7 +2119,7 @@ describe('validateOatSkills', () => {
     // never loads the dispatch reference. Raised again from 234 for the
     // synced-arrival materialization guard. The structural assertions below
     // still enforce that step bodies stay out of the entry.
-    expect(entry.split('\n').length).toBeLessThanOrEqual(244);
+    expect(entry.split('\n').length).toBeLessThanOrEqual(245);
     for (const path of implementReferencePaths) {
       expect(entry).toContain(`references/${path}`);
     }
@@ -2474,7 +2474,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.18');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.19');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -2618,7 +2618,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.18');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.19');
   });
 
   it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
@@ -3725,7 +3725,7 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.18'],
+      ['oat-project-plan-writing', '1.2.19'],
       ['oat-project-review-provide', '1.5.0'],
       ['oat-project-review-receive', '1.6.1'],
       ['oat-project-review-receive-remote', '1.5.1'],
@@ -4799,7 +4799,7 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.18'],
+      ['oat-project-plan-writing', '1.2.19'],
       ['oat-project-plan', '1.4.5'],
       ['oat-project-quick-start', '2.3.6'],
       ['oat-project-import-plan', '1.4.10'],
@@ -4879,6 +4879,14 @@ describe('validateOatSkills', () => {
     const adapterPath =
       '.agents/skills/oat-project-dispatch-subagents/SKILL.md';
     const enginePath = '.agents/skills/oat-dispatch-subagents/SKILL.md';
+    const portableAdapterPath =
+      '`${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`';
+    const portableEnginePath =
+      '`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`';
+    const independentAdapterPath =
+      '`${PROJECT_DISPATCH_SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`';
+    const independentEnginePath =
+      '`${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`';
     const adapter = await readRepoFile(adapterPath);
     const engine = await readRepoFile(enginePath);
     const consumers = [
@@ -4931,8 +4939,22 @@ describe('validateOatSkills', () => {
 
     for (const path of consumers) {
       const content = await readRepoFile(path);
-      expect(content, path).toContain(adapterPath);
-      expect(content, path).toContain(enginePath);
+      if (path === '.agents/agents/oat-phase-implementer.md') {
+        expect(content, path).toContain(adapterPath);
+        expect(content, path).toContain(enginePath);
+      } else if (path === '.agents/skills/oat-project-implement/SKILL.md') {
+        expect(content, path).toContain(independentAdapterPath);
+        expect(content, path).toContain(independentEnginePath);
+        expect(content, path).not.toContain(portableAdapterPath);
+        expect(content, path).not.toContain(portableEnginePath);
+        expect(content, path).not.toContain(adapterPath);
+        expect(content, path).not.toContain(enginePath);
+      } else {
+        expect(content, path).toContain(portableAdapterPath);
+        expect(content, path).toContain(portableEnginePath);
+        expect(content, path).not.toContain(adapterPath);
+        expect(content, path).not.toContain(enginePath);
+      }
     }
   });
 
