@@ -655,7 +655,7 @@ Source: inline feedback (2026-08-28)
 | remote-pr-226 | code     | fixes_completed | 2026-08-28 | `reviews/archived/remote-pr-226-review-2026-08-28T143457Z.md` | -                                        | -          | -                    |
 | final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T151136Z.md`         | 34a4b8268bd85ded4c7c37def94e240bd4734674 | manual     | -                    |
 | final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T152436Z.md`         | b15f7c81f11c2a2cad8427eb9eeff8f99f922ee9 | manual     | -                    |
-| final         | code     | fixes_added     | 2026-08-28 | `reviews/archived/final-review-2026-08-28T173122Z.md`         | 44786aa5a32a32cc74ef945498e0fd288a4e04e9 | manual     | -                    |
+| final         | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T173122Z.md`         | 44786aa5a32a32cc74ef945498e0fd288a4e04e9 | manual     | -                    |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -671,8 +671,8 @@ Source: inline feedback (2026-08-28)
 
 **Total: 18 tasks**
 
-Seventeen task scopes are implemented. One terminal artifact refresh remains
-before the stale configured exit gate can run and PR #226 can be pushed.
+All eighteen task scopes are implemented. Only the stale configured exit-gate
+refresh remains before PR #226 can be pushed.
 
 ## References
 

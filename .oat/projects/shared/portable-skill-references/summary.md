@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
 oat_generated: true
-oat_summary_last_task: prev1-t08
+oat_summary_last_task: prev1-t10
 oat_summary_revision_count: 1
 oat_summary_includes_revisions: [p-rev1]
 ---
@@ -48,6 +48,11 @@ from returning.
 - Preserved upstream's repository-only `triage-oat-issues` skill and Claude
   provider link, produced the 88-entry sync-manifest union, and retained all
   five public packages at lockstep `0.2.39`.
+- Corrected archived final-review invocation provenance to the authoritative
+  `manual` value while preserving each event's status, path, reviewed head,
+  and gate target.
+- Refreshed terminal closeout artifacts through `prev1-t10` at 18/18 tasks;
+  per the artifact-only fix policy, only the configured exit gate remains.
 
 ## Key Decisions
 
@@ -109,8 +114,9 @@ from returning.
   nested authored directories with those names remain in scope.
 - The closeout verification passed `pnpm check`, type checking, full tests,
   build, skill-version validation, release-version validation, package release
-  validation, docs build, lint, format, and diff checks. A separate Fable exit
-  review also passed at the Important threshold with no blocking finding.
+  validation, docs build, lint, format, and diff checks. The earlier Fable exit
+  review passed at the Important threshold but is stale after Revision 1; its
+  configured independent refresh remains.
 - Revision 1 repeated the full repository gate sequence before and after the
   merge commit. Its root-owned review passed with no findings at
   `cca0bb5187adfdffd475017e1009a6e643502927`.
