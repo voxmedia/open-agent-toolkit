@@ -2873,6 +2873,7 @@ git commit -m "fix(p06-t03): repair current workflow pack files"
 | p04     | code     | passed          | 2026-08-27 | reviews/p04-review-2026-08-27T232826Z.md                          | 743c9cbe952cf6f4ad3eeba24eabebebec9884c7 | manual     | -                        |
 | final   | code     | fixes_completed | 2026-08-27 | reviews/archived/final-review-2026-08-27T234119Z.md               | c5ceac6b06ea29dba92c65834d5aa4c593813f6e | manual     | -                        |
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T013142Z.md               | 30ea3ce3a561e0ce74920976884f021dc637487c | auto       | -                        |
+| final   | code     | received        | 2026-08-28 | reviews/final-review-2026-08-28T022122Z.md                        | 9537f6dd5872cae9101c3e10a8ead997940a2cb9 | auto       | -                        |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                        |
 | plan    | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -                                        | auto       | -                        |
