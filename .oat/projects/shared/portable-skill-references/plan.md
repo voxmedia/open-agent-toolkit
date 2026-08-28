@@ -442,8 +442,9 @@ merge path.
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01    | code     | passed          | 2026-08-28 | `reviews/p01-review-2026-08-28T015302Z.md`            | dba46295a0d02c1bd1bca179a954bf902a2ae1c6 | auto       | -           |
 | p02    | code     | passed          | 2026-08-28 | `reviews/p02-review-2026-08-28T021707Z.md`            | 9d5be6432d30bb31b6bf3fed01ed152c936640c0 | auto       | -           |
-| p03    | code     | fixes_added     | 2026-08-28 | `reviews/archived/p03-review-2026-08-28T024853Z.md`   | 00c641d332a82bd1ccfc4268f90965d517e7ec52 | auto       | -           |
-| final  | code     | fixes_added     | 2026-08-28 | `reviews/archived/final-review-2026-08-28T022049Z.md` | d3c76770f9bb75860486e678bf5281fa8a84b6f4 | auto       | -           |
+| p03    | code     | fixes_completed | 2026-08-28 | `reviews/archived/p03-review-2026-08-28T024853Z.md`   | 00c641d332a82bd1ccfc4268f90965d517e7ec52 | auto       | -           |
+| p03    | code     | passed          | 2026-08-28 | `reviews/p03-review-2026-08-28T025628Z.md`            | 63b1c7e4076e14369390e7bea9192ecc674f9719 | auto       | -           |
+| final  | code     | fixes_completed | 2026-08-28 | `reviews/archived/final-review-2026-08-28T022049Z.md` | d3c76770f9bb75860486e678bf5281fa8a84b6f4 | auto       | -           |
 | spec   | artifact | pending         | -          | -                                                     | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                     | -                                        | -          | -           |
 | plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T214843Z.md`  | -                                        | -          | -           |
@@ -463,8 +464,8 @@ merge path.
 
 **Total: 8 tasks**
 
-Seven of eight task scopes have implementation output. Completion requires
-`p03-t03`, root validation, and a passing final re-review.
+All eight task scopes are implemented and Phase 3 passed re-review. Completion
+requires a passing final re-review.
 
 ## References
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: p03-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -12,19 +12,18 @@ oat_generated: false
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
-> The first two Phase 3 tasks are validated. One review-generated ratchet fix
-> remains before final re-review.
+> All implementation tasks and phase reviews are complete. Final lifecycle
+> re-review remains before project closeout.
 
 ## Progress Overview
 
-| Phase                                        | Status             | Tasks | Completed |
-| -------------------------------------------- | ------------------ | ----- | --------- |
-| Phase 1: Portable resolution and enforcement | passed             | 4     | 4/4       |
-| Phase 2: Release metadata and validation     | passed             | 1     | 1/1       |
-| Phase 3: Final review fixes                  | review fix pending | 3     | 2/3       |
+| Phase                                        | Status | Tasks | Completed |
+| -------------------------------------------- | ------ | ----- | --------- |
+| Phase 1: Portable resolution and enforcement | passed | 4     | 4/4       |
+| Phase 2: Release metadata and validation     | passed | 1     | 1/1       |
+| Phase 3: Final review fixes                  | passed | 3     | 3/3       |
 
-**Total:** 7/8 task scopes have implementation output; `p03-t03` and final
-re-review remain.
+**Total:** 8/8 tasks completed; final re-review remains.
 
 ## Phase 1: Portable sibling resolution and enforcement
 
@@ -63,7 +62,7 @@ re-review remain.
 
 ## Phase 3: Final review fixes
 
-**Status:** review fix pending
+**Status:** passed
 **Started:** 2026-08-28
 
 ### Task p03-t01: Harden the portable-reference ratchet
@@ -78,8 +77,8 @@ re-review remain.
 
 ### Task p03-t03: Narrow the materialized docs exclusion
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `63b1c7e4076e14369390e7bea9192ecc674f9719`
 
 ## Orchestration Runs
 
@@ -281,6 +280,42 @@ receive the final review.
 **Next:** Resume the original p03 implementer handle for `p03-t03`, then
 re-review p03 and final.
 
+#### Continuation Record: p03 review fix
+
+- **Original request:** `b67fa401-dde1-4131-8190-b78de687db33`
+- **Continuation event:** `p03-review1-fix1`
+- **Mode/outcome:** fix / `DONE`
+- **Target/axes:** `oat-phase-implementer-gpt-5-6-sol-medium` /
+  `selected:gpt-5.6-sol` / `selected:medium`
+- **Base/head:**
+  `bbacfca0558e03e2eeb276ca5884721818f2c759..63b1c7e4076e14369390e7bea9192ecc674f9719`
+- **Task/commit:** `p03-t03` /
+  `63b1c7e4076e14369390e7bea9192ecc674f9719`
+- **Verification:** focused suite, check, CLI lint/type-check, and diff checks
+  passed before and after commit
+- **Recovery:** none
+
+#### Dispatch Record: p03 re-review
+
+- **Request:** `45c56d54-cb0d-4bc3-b864-948db3ce857d`
+- **Launch state/outcome:** accepted / passed
+- **Route:** Codex native materialized role `oat-reviewer-gpt-5-6-sol-high`
+- **Narrowed range:**
+  `00c641d332a82bd1ccfc4268f90965d517e7ec52..63b1c7e4076e14369390e7bea9192ecc674f9719`
+- **Prior artifact:** `reviews/archived/p03-review-2026-08-28T024853Z.md`
+- **Artifact:** `reviews/p03-review-2026-08-28T025628Z.md`
+- **Verdict:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+- **Reconnaissance:** not-attempted
+- **Dispatch stamp:**
+  `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
+#### Phase p03 outcome
+
+- **Result:** passed narrowed root-owned re-review
+- **Task commits:** 3/3 verified
+- **Review iterations:** 2; one Medium converted and fixed
+- **Next:** final lifecycle re-review
+
 <!-- orchestration-runs-end -->
 
 ## Deviations from Plan / Design
@@ -296,7 +331,7 @@ re-review p03 and final.
 | ----- | ------------------------------------ | ------ | ------ | ---------------------------------------------- |
 | p01   | Focused plus phase-wide gates        | Yes    | 0      | Review passed with one non-blocking Medium     |
 | p02   | Gates 01-11 in documented order      | Yes    | 0      | Clean review; one permitted no-edit test rerun |
-| p03   | Focused ratchet and lifecycle checks | Yes    | 0      | Final re-review remains pending                |
+| p03   | Focused ratchet and lifecycle checks | Yes    | 0      | P03 re-review clean; final re-review pending   |
 
 ## Repository Gate Evidence
 
@@ -342,9 +377,8 @@ commit `dba46295a0d02c1bd1bca179a954bf902a2ae1c6`; Phase 2 and Phase 3 used no
 recovery attempts or nested dispatches.
 
 Outstanding non-blocking observations are the pre-existing PJM doctor layout
-warnings and the confirmed cleanup-timeout test flake. Root validation of the
-two Phase 3 task commits and a passing final re-review remain required; this
-project is not yet complete and the final review remains `fixes_added`.
+warnings and confirmed cleanup-timeout test flakes. All phases passed review;
+the project remains in progress only for the final lifecycle re-review.
 
 ## References
 
