@@ -127,7 +127,9 @@ asset set and deterministic reference identity, not a particular internal API.
 - Treat short-form follow-on reads such as
   `subagent-orchestration/references/provider-codex.md` as local to an already
   validated, explicitly bound sibling root. They are outside the bare-read
-  ratchet only when their anchoring read establishes that root first.
+  ratchet only when their anchoring read establishes that root first. The
+  scanner does not match short forms; caller-contract assertions enforce this
+  anchoring requirement.
 
 ### Loaded-Skill Resolver
 
@@ -223,9 +225,10 @@ normal sync tooling rather than editing generated views as independent source.
 - Run the bundle script into a temporary assets root and inspect all changed
   skills and agents.
 - Materialize the current canonical agents through the sync harness into a
-  temporary root, then assert no canonical bare reads reappear in the derived
-  Claude, Cursor, or Codex role content. Keep the repository sync dry-run as a
-  separate drift check.
+  temporary root by first copying canonical `.agents/agents/*.md` into that
+  root. Never read `packages/cli/assets/agents` directly in this contract. Then
+  assert no canonical bare reads reappear in the derived provider role content;
+  keep the repository sync dry-run as a separate drift check.
 
 ### Repository Verification
 

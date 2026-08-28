@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -76,28 +76,29 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-28T21:36:51.245Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T22:41:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T22:57:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: portable-agent-references
 
-**Status:** Fable findings resolved in artifacts; one re-review pending
+**Status:** Plan complete and ready for implementation
 **Started:** 2026-08-28
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Discovery and lightweight design are complete. The High dispatch policy is
-configured, and all findings from the first Claude Fable artifact gate have
-been resolved directly in the design, plan, and state artifacts.
+Discovery, lightweight design, and the implementation plan are complete. The
+High dispatch policy is configured. The single authorized Claude Fable
+re-review passed at the Important threshold; its remaining Medium and Minor
+findings were resolved without starting another review cycle.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete lightweight design)
-- **Plan:** `plan.md` (draft complete; Fable fixes applied)
+- **Plan:** `plan.md` (complete; ready for `oat-project-implement`)
 - **Implementation:** `implementation.md` (initialized for eight planned tasks)
 
 ## Progress
@@ -113,7 +114,8 @@ been resolved directly in the design, plan, and state artifacts.
 - ✓ First Claude Fable review received; all seven findings resolved in artifacts
 - Phase gate review: disabled (user preference; built-in root reviews and final
   gate remain)
-- ⧗ One Claude Fable re-review pending
+- ✓ Single Claude Fable re-review passed at the Important threshold
+- ✓ Remaining Medium and Minor findings resolved without another review cycle
 
 ## Blockers
 
@@ -121,4 +123,4 @@ None
 
 ## Next Milestone
 
-Run the single authorized Claude Fable re-review and mark the plan ready
+Begin `oat-project-implement` at `p01-t01`

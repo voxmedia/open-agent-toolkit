@@ -156,6 +156,27 @@ artifacts with user confirmation. No implementation tasks were added.
 
 **Next:** Run the single authorized Claude Fable artifact re-review.
 
+### Artifact Re-review Received: plan
+
+**Date:** 2026-08-28
+**Review artifact:**
+`reviews/archived/artifact-plan-review-2026-08-28T224908Z.md`
+
+**Gate result:** Passed at the Important threshold with 0 Critical,
+0 Important, 1 Medium, and 2 Minor findings.
+
+**Disposition:** With user confirmation, all three non-blocking findings were
+resolved in the design and plan without another review cycle.
+
+- M1: temporary materialization now copies canonical agent sources into the
+  temporary project/assets root and forbids direct reads from the gitignored
+  bundled-agent directory.
+- m1: artifact-review ledger cells use `-` for code-only invocation fields.
+- m2: the artifacts now state that caller-contract assertions, not the scanner,
+  enforce short-form anchoring.
+
+**Next:** Execute `p01-t01` through `oat-project-implement`.
+
 ---
 
 ## Deviations from Plan / Design

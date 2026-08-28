@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-28
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: []
 oat_plan_parallel_groups: []
 oat_plan_source: quick
@@ -12,7 +12,7 @@ oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: portable-agent-references
@@ -127,7 +127,9 @@ Expected: the new caller assertions fail against repository-relative reads.
   `oat-review-provide` reference targets through independently bound installed
   roots as applicable.
 - Treat short-form follow-on reads as local only after their anchoring read has
-  established and validated the corresponding installed sibling root.
+  established and validated the corresponding installed sibling root. The
+  scanner does not match short forms; caller-contract assertions enforce this
+  anchoring requirement.
 - Preserve selection, launch, recovery, and review semantics.
 - Fail closed with owning-pack install/update guidance.
 - Remove the remediated exact entries from the migration inventory.
@@ -278,14 +280,16 @@ Expected: assertions fail while the three agents retain bare paths.
 **Step 3: Verify generated roles and format**
 
 Extend the sync integration contract to materialize the current canonical
-agents through the existing sync harness into a temporary root. Derive the
-affected Claude, Cursor, and Codex role paths from that temporary
-materialization plan/manifest, read every generated role there, require the
-portable resolver markers in each copy, and reject executable bare
-sibling-skill paths. Cover the phase implementer, reviewer, and codebase mapper
-wherever each provider materializes that role. Do not inspect the stale tracked
-provider views for this contract; p02-t02 remains responsible for refreshing
-those tracked views.
+agents through the existing sync harness into a temporary root. Before sync,
+copy canonical `.agents/agents/*.md` into that root for project-scope
+`scanCanonical`, or copy them into a temporary assets root selected with
+`OAT_ASSETS_DIR`; never read `packages/cli/assets/agents` directly. Derive the
+affected provider role paths from that temporary materialization plan/manifest,
+read every generated role there, require the portable resolver markers in each
+copy, and reject executable bare sibling-skill paths. Cover the phase
+implementer, reviewer, and codebase mapper wherever each provider materializes
+that role. Do not inspect the stale tracked provider views for this contract;
+p02-t02 remains responsible for refreshing those tracked views.
 
 ```bash
 pnpm exec oxfmt --write .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/agents/oat-codebase-mapper.md packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/commands/sync/index.test.ts packages/cli/src/validation/skills.test.ts
@@ -448,16 +452,16 @@ git commit -m "chore(p02-t02): release portable agent references"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                            | Reviewed Head | Invocation | Gate Target                   |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------------------------------- | ------------- | ---------- | ----------------------------- |
-| p01    | code     | pending         | -          | -                                                                                   | -             | -          | -                             |
-| p02    | code     | pending         | -          | -                                                                                   | -             | -          | -                             |
-| final  | code     | pending         | -          | -                                                                                   | -             | -          | -                             |
-| spec   | artifact | pending         | -          | -                                                                                   | -             | -          | -                             |
-| design | artifact | pending         | -          | -                                                                                   | -             | -          | -                             |
-| plan   | artifact | fixes_completed | 2026-08-28 | structured in-memory review (head c47586ce; reviewer oat-reviewer-gpt-5-6-sol-high) | -             | -          | -                             |
-| plan   | artifact | fixes_completed | 2026-08-28 | reviews/archived/artifact-plan-review-2026-08-28T223052Z.md                         | -             | gate       | claude-fable-skip-permissions |
-| plan   | artifact | received        | 2026-08-28 | reviews/artifact-plan-review-2026-08-28T224908Z.md                                  | -             | -          | -                             |
+| Scope  | Type     | Status          | Date       | Artifact                                                                            | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                                                                   | -             | -          | -           |
+| p02    | code     | pending         | -          | -                                                                                   | -             | -          | -           |
+| final  | code     | pending         | -          | -                                                                                   | -             | -          | -           |
+| spec   | artifact | pending         | -          | -                                                                                   | -             | -          | -           |
+| design | artifact | pending         | -          | -                                                                                   | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-28 | structured in-memory review (head c47586ce; reviewer oat-reviewer-gpt-5-6-sol-high) | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-28 | reviews/archived/artifact-plan-review-2026-08-28T223052Z.md                         | -             | -          | -           |
+| plan   | artifact | passed          | 2026-08-28 | reviews/archived/artifact-plan-review-2026-08-28T224908Z.md                         | -             | -          | -           |
 
 ## Implementation Complete
 
@@ -470,8 +474,9 @@ git commit -m "chore(p02-t02): release portable agent references"
 
 **Total: 8 tasks**
 
-Ready for `oat-project-implement` after artifact review, dispatch policy
-selection, and the configured quick-start gate.
+Ready for `oat-project-implement`. The configured High dispatch policy is
+recorded in project state, and the single authorized Claude Fable re-review
+passed at the Important threshold.
 
 ## References
 
