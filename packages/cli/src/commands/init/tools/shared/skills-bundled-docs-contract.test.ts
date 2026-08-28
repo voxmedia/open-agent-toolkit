@@ -2,9 +2,11 @@ import { execFileSync } from 'node:child_process';
 import {
   existsSync,
   mkdtempSync,
+  mkdirSync,
   readdirSync,
   readFileSync,
   rmSync,
+  writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -46,7 +48,13 @@ interface BareCrossSkillReference {
 }
 
 const BARE_CROSS_SKILL_READ =
-  /(?<![/a-zA-Z0-9_-])\.agents\/skills\/([a-zA-Z0-9_-]+)\/SKILL\.md/g;
+  /(?<![/a-zA-Z0-9_-])(?:\.\.?\/)?\.agents\/skills\/([a-zA-Z0-9_-]+)\/SKILL\.md/g;
+
+const PORTABLE_SKILLS_ROOT_CANDIDATES = [
+  '`${SKILL_DIR}/..`',
+  '`${HOME}/.agents/skills`',
+  '`<repo-root>/.agents/skills`',
+] as const;
 
 function listSkillDirs(): string[] {
   return readdirSync(SKILLS_DIR, { withFileTypes: true })
@@ -58,8 +66,38 @@ function listAuthoredMarkdown(skillDir: string): string[] {
   // Recurse the skill, but skip references/docs/ — those are vendored copies of
   // shared docs (symlinks materialized at build time), not authored pointers.
   return readdirSync(skillDir, { recursive: true, encoding: 'utf8' })
-    .filter((rel) => rel.endsWith('.md') && !rel.includes('references/docs'))
+    .filter((rel) => {
+      const segments = rel.split(/[\\/]/);
+      const materializedDocsIndex = segments.findIndex(
+        (segment, index) =>
+          segment === 'references' && segments[index + 1] === 'docs',
+      );
+
+      return rel.endsWith('.md') && materializedDocsIndex === -1;
+    })
     .map((rel) => join(skillDir, rel));
+}
+
+function expectPortableSkillsRootCandidateOrder(
+  content: string,
+  source: string,
+): void {
+  const positions = PORTABLE_SKILLS_ROOT_CANDIDATES.map((candidate) =>
+    content.indexOf(candidate),
+  );
+
+  for (const [index, candidate] of PORTABLE_SKILLS_ROOT_CANDIDATES.entries()) {
+    expect(
+      positions[index],
+      `${source} is missing ${candidate}`,
+    ).toBeGreaterThan(-1);
+  }
+  for (let index = 1; index < positions.length; index += 1) {
+    expect(
+      positions[index - 1],
+      `${source} must list ${PORTABLE_SKILLS_ROOT_CANDIDATES[index - 1]} before ${PORTABLE_SKILLS_ROOT_CANDIDATES[index]}`,
+    ).toBeLessThan(positions[index]!);
+  }
 }
 
 function collectViolations(): Violation[] {
@@ -207,6 +245,16 @@ describe('skills bundled docs contract', () => {
     ['backticked', 'Read `.agents/skills/sibling/SKILL.md`.', ['sibling']],
     ['plain text', 'Read .agents/skills/sibling/SKILL.md next.', ['sibling']],
     [
+      'dot-relative path',
+      'Read ./.agents/skills/sibling/SKILL.md next.',
+      ['sibling'],
+    ],
+    [
+      'parent-relative path',
+      'Read ../.agents/skills/sibling/SKILL.md next.',
+      ['sibling'],
+    ],
+    [
       'Markdown link',
       'Read [the sibling contract](.agents/skills/sibling/SKILL.md).',
       ['sibling'],
@@ -224,14 +272,32 @@ describe('skills bundled docs contract', () => {
     );
   });
 
+  it('skips only the materialized references/docs subtree', () => {
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'oat-authored-markdown-'));
+    const materializedDocsDir = join(fixtureRoot, 'references', 'docs');
+    const authoredReference = join(
+      fixtureRoot,
+      'references',
+      'docs-root-resolution.md',
+    );
+
+    try {
+      mkdirSync(materializedDocsDir, { recursive: true });
+      writeFileSync(join(materializedDocsDir, 'shared.md'), '# Shared copy\n');
+      writeFileSync(authoredReference, '# Authored reference\n');
+
+      expect(listAuthoredMarkdown(fixtureRoot)).toEqual([authoredReference]);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
   it.each(['oat-idea-ideate', 'oat-idea-new', 'oat-idea-summarize'])(
     '%s resolves chained idea skills from its installed scope',
     (skill) => {
       const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
 
-      expect(content).toContain('`${SKILL_DIR}/..`');
-      expect(content).toContain('`${HOME}/.agents/skills`');
-      expect(content).toContain('`<repo-root>/.agents/skills`');
+      expectPortableSkillsRootCandidateOrder(content, skill);
       expect(content).toContain(
         'Probe each candidate for `<name>/SKILL.md` and treat the first match as',
       );
@@ -290,9 +356,7 @@ describe('skills bundled docs contract', () => {
       const sharedDispatchRead =
         '`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`';
 
-      expect(content).toContain('`${SKILL_DIR}/..`');
-      expect(content).toContain('`${HOME}/.agents/skills`');
-      expect(content).toContain('`<repo-root>/.agents/skills`');
+      expectPortableSkillsRootCandidateOrder(content, skill);
       expect(content).toContain(
         'Probe each candidate for `<name>/SKILL.md` and treat the first match as',
       );
