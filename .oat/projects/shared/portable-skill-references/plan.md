@@ -444,6 +444,8 @@ Source: inline feedback (2026-08-28)
 
 **Files:**
 
+- Integrate from `origin/main`: `.agents/skills/triage-oat-issues/SKILL.md`
+- Integrate from `origin/main`: `.claude/skills/triage-oat-issues`
 - Modify: `.oat/sync/manifest.json`
 - Modify: `packages/cli/assets/public-package-versions.json`
 - Modify: `packages/cli/package.json`
