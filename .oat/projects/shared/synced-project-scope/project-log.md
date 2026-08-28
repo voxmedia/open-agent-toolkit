@@ -170,6 +170,8 @@ Initialized a fresh pending configured-gate generation from reviewed head a521db
 
 Persisted configured-gate attempt-2 launch intent bf9e75b6-65e5-4edd-a289-5e7b8ab485fd before external execution; receipt=reviews/implement-exit-gate-result-bf9e75b6-65e5-4edd-a289-5e7b8ab485fd.json.
 
+Accepted gate run 3241d71c-b67e-4a04-88f2-4a9965de3395 on target claude-fable-skip-permissions; unique marker matched project=shared/synced-project-scope scope=final type=code.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

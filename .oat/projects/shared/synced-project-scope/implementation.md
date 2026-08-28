@@ -2394,3 +2394,14 @@ history.
 - **Result receipt:**
   `reviews/implement-exit-gate-result-bf9e75b6-65e5-4edd-a289-5e7b8ab485fd.json`
 - **Launch state:** `intent_persisted`; no gate run accepted yet
+
+#### Attempt 2 Accepted
+
+- **Gate run:** `3241d71c-b67e-4a04-88f2-4a9965de3395`
+- **Target:** `claude-fable-skip-permissions`
+- **Marker:**
+  `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/3241d71c-b67e-4a04-88f2-4a9965de3395.json`
+- **Accepted at marker timestamp:** `2026-08-28T19:43:53.797Z`
+
+The unique marker matches the normalized project, code/final scope, and the
+persisted launch interval. The accepted run will not be relaunched.
