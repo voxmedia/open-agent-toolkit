@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-08-27
+oat_last_updated: 2026-08-28
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: []
@@ -418,7 +418,7 @@ merge path.
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
 
-## Implementation Complete
+## Implementation Closeout
 
 **Summary:**
 
@@ -428,8 +428,10 @@ merge path.
 
 **Total: 7 tasks**
 
-Five of seven tasks are complete. Completion requires both Phase 3 review-fix
-tasks and a passing final re-review.
+All seven planned task scopes have implementation output. Root validation must
+still reconcile the Phase 3 task statuses and commit hashes, and project
+completion requires a passing final re-review. Until then, the final review
+remains `fixes_added` and the project remains in progress.
 
 ## References
 

@@ -2,28 +2,29 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-27
-oat_current_task_id: p03-t01
+oat_last_updated: 2026-08-28
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
 # Implementation: portable-skill-references
 
 **Started:** 2026-08-27
-**Last Updated:** 2026-08-27
+**Last Updated:** 2026-08-28
 
-> `oat_current_task_id` points to the next plan task. No implementation work is
-> recorded until a task commit and its verification evidence exist.
+> Phase 3 implementation output is present. Root validation will reconcile the
+> two task statuses and immutable commit hashes before final re-review.
 
 ## Progress Overview
 
-| Phase                                        | Status  | Tasks | Completed |
-| -------------------------------------------- | ------- | ----- | --------- |
-| Phase 1: Portable resolution and enforcement | passed  | 4     | 4/4       |
-| Phase 2: Release metadata and validation     | passed  | 1     | 1/1       |
-| Phase 3: Final review fixes                  | pending | 2     | 0/2       |
+| Phase                                        | Status                   | Tasks | Completed      |
+| -------------------------------------------- | ------------------------ | ----- | -------------- |
+| Phase 1: Portable resolution and enforcement | passed                   | 4     | 4/4            |
+| Phase 2: Release metadata and validation     | passed                   | 1     | 1/1            |
+| Phase 3: Final review fixes                  | awaiting root validation | 2     | output present |
 
-**Total:** 5/7 tasks completed
+**Total:** All seven task scopes have implementation output; Phase 3 root
+validation and final re-review remain.
 
 ## Phase 1: Portable sibling resolution and enforcement
 
@@ -62,18 +63,18 @@ oat_generated: false
 
 ## Phase 3: Final review fixes
 
-**Status:** pending
-**Started:** -
+**Status:** implementation output present; root validation pending
+**Started:** 2026-08-28
 
 ### Task p03-t01: Harden the portable-reference ratchet
 
-**Status:** pending
-**Commit:** -
+**Implementation:** applied and verified; root status reconciliation pending
+**Commit:** root will record the immutable task commit after validation
 
 ### Task p03-t02: Reconcile the final lifecycle baseline
 
-**Status:** pending
-**Commit:** -
+**Implementation:** applied and verified; root status reconciliation pending
+**Commit:** root will record the immutable task commit after validation
 
 ## Orchestration Runs
 
@@ -235,21 +236,66 @@ receive the final review.
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact                                       | Planned / Documented                                     | Actual / Accepted                                 | Reason                                      | Source of Truth                    | Follow-up       |
-| ------------- | ----------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------- | ---------------------------------- | --------------- |
-| I1            | `reviews/archived/final-review-2026-08-28T022049Z.md` | Final closeout artifacts reflect verified implementation | `p03-t02` will align lifecycle prose and evidence | Final review found stale interim markers    | Git/task evidence is authoritative | Re-review final |
-| M1            | `reviews/archived/final-review-2026-08-28T022049Z.md` | Ratchet enforces all portable reference forms and order  | `p03-t01` adds missing regression coverage        | Final review reproduced silent matcher gaps | Reviewed final artifact            | Re-review final |
+| Task / Review | Source Artifact                                       | Planned / Documented                                     | Actual / Accepted                                   | Reason                                      | Source of Truth                    | Follow-up       |
+| ------------- | ----------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------- | ---------------------------------- | --------------- |
+| I1            | `reviews/archived/final-review-2026-08-28T022049Z.md` | Final closeout artifacts reflect verified implementation | `p03-t02` aligned lifecycle prose and gate evidence | Final review found stale interim markers    | Git/task evidence is authoritative | Re-review final |
+| M1            | `reviews/archived/final-review-2026-08-28T022049Z.md` | Ratchet enforces all portable reference forms and order  | `p03-t01` added the missing regression coverage     | Final review reproduced silent matcher gaps | Reviewed final artifact            | Re-review final |
 
 ## Test Results
 
-| Phase | Tests Run                       | Passed | Failed | Notes                                          |
-| ----- | ------------------------------- | ------ | ------ | ---------------------------------------------- |
-| p01   | Focused plus phase-wide gates   | Yes    | 0      | Review passed with one non-blocking Medium     |
-| p02   | Gates 01-11 in documented order | Yes    | 0      | Clean review; one permitted no-edit test rerun |
+| Phase | Tests Run                            | Passed | Failed | Notes                                          |
+| ----- | ------------------------------------ | ------ | ------ | ---------------------------------------------- |
+| p01   | Focused plus phase-wide gates        | Yes    | 0      | Review passed with one non-blocking Medium     |
+| p02   | Gates 01-11 in documented order      | Yes    | 0      | Clean review; one permitted no-edit test rerun |
+| p03   | Focused ratchet and lifecycle checks | Yes    | 0      | Final re-review remains pending                |
+
+## Repository Gate Evidence
+
+Phase 2 ran the repository gates in the documented order. Gate 03's first run
+ended during cleanup after a SIGTERM; the permitted no-edit rerun passed, and
+the final reviewer independently reran the complete gate sequence successfully.
+
+| Gate | Command                       | Result                            |
+| ---- | ----------------------------- | --------------------------------- |
+| 01   | `pnpm check`                  | exit 0                            |
+| 02   | `pnpm type-check`             | exit 0                            |
+| 03   | `pnpm test`                   | exit 0 on permitted no-edit rerun |
+| 04   | `pnpm build`                  | exit 0                            |
+| 05   | `pnpm run check:skill-bumps`  | exit 0                            |
+| 06   | `pnpm release:check-versions` | exit 0                            |
+| 07   | `pnpm release:validate`       | exit 0                            |
+| 08   | `pnpm build:docs`             | exit 0                            |
+| 09   | `pnpm lint`                   | exit 0                            |
+| 10   | `pnpm format`                 | exit 0                            |
+| 11   | `git diff --check`            | exit 0                            |
 
 ## Final Summary (for PR/docs)
 
-To be completed from verified implementation evidence.
+The shipped skill contracts now resolve executable sibling-skill reads from the
+loaded scope first, then user scope, then project scope, and fail closed when a
+required sibling is absent. This covers the idea workflow, implementation and
+plan-writing dispatch contracts, and the brainstorm handoff while preserving
+their original lifecycle and dispatch sequencing.
+
+The recursive bundled-docs ratchet scans authored Markdown shipped by
+user-default packs, recognizes bare, linked, `./`, and `../` repo-relative
+spellings, enforces strict resolver candidate order, and excludes only the exact
+materialized `references/docs/` subtree. Historical evidence remains pinned by
+exact source and target. The six canonical skills and bundled provider views
+ship with the five public packages advanced in lockstep to `0.2.39`; the PJM
+backlog item is archived and its generated lifecycle indexes are coherent.
+
+Focused contract suites and repository gates 01-11 passed with explicit
+exit-zero evidence. Gate 03 required one permitted no-edit rerun after a
+SIGTERM cleanup timeout. The only implementation recovery was p01 attempt 1/10,
+which corrected mechanically derived stale validation pins in append-only
+commit `dba46295a0d02c1bd1bca179a954bf902a2ae1c6`; Phase 2 and Phase 3 used no
+recovery attempts or nested dispatches.
+
+Outstanding non-blocking observations are the pre-existing PJM doctor layout
+warnings and the confirmed cleanup-timeout test flake. Root validation of the
+two Phase 3 task commits and a passing final re-review remain required; this
+project is not yet complete and the final review remains `fixes_added`.
 
 ## References
 

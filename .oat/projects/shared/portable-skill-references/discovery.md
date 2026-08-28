@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-quick-start
 oat_blockers: []
-oat_last_updated: 2026-08-27
+oat_last_updated: 2026-08-28
 oat_generated: false
 ---
 
@@ -85,8 +85,11 @@ remediated.
 - User-scope and project-scope candidates are both represented in the written
   contract, with a fail-closed missing-sibling outcome.
 - The ratchet recursively scans authored Markdown under user-default packaged
-  skills, catches quoted and unquoted bare cross-skill paths, and reports exact
-  file/target evidence.
+  skills, catches quoted, unquoted, `./`, and `../` repo-relative cross-skill
+  paths, and reports exact file/target evidence.
+- Loaded-scope, user-scope, and project-scope candidates are asserted in strict
+  fallback order, and only the exact materialized `references/docs/` subtree is
+  excluded from authored-reference scanning.
 - Any deliberately retained historical references have an explicit baseline;
   all executable-reference baseline entries are removed.
 - Focused portability and bundle tests pass, skill and public-package version
