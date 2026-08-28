@@ -1608,6 +1608,7 @@ export async function archiveProjectOnCompletion(
   );
   if (shouldPersistArchiveSnapshot && activeRecord) {
     activeRecord = { ...activeRecord, archiveSnapshot: exportIdentity };
+    await writeRecord(recordPath, activeRecord);
   }
 
   const archiveExists = await (dependencies.dirExists ?? dirExists)(
@@ -1647,9 +1648,6 @@ export async function archiveProjectOnCompletion(
     }
     if (!syncTarget) {
       await removePath(options.projectPath, { recursive: true, force: true });
-    }
-    if (shouldPersistArchiveSnapshot && activeRecord) {
-      await writeRecord(recordPath, activeRecord);
     }
   } catch (error) {
     if (projectRecapExport) {

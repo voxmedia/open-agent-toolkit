@@ -802,6 +802,71 @@ describe('archive utils', () => {
     }
   });
 
+  it('leaves no orphan archive when retry identity persistence fails', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const slug = 'record-write-failure';
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(
+        join(target.projectPath, 'state.md'),
+        '# state\n',
+        'utf8',
+      );
+      await writeFile(
+        join(target.projectPath, 'summary.md'),
+        '# summary\n',
+        'utf8',
+      );
+      await pushSynced(target, defaultGitRunner, {});
+      const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(slug, new Date('2026-08-27T00:00:00Z')),
+      );
+      const options = {
+        repoRoot: fixture.cloneA,
+        projectPath: target.projectPath,
+        projectName: slug,
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      };
+      const archiveRoot = join(fixture.cloneA, '.oat', 'projects', 'archived');
+
+      await expect(
+        archiveProjectOnCompletion(options, {
+          timestamp: () => '2026-08-27T12:00:00Z',
+          writeSyncedRecord: vi.fn(async () => {
+            throw new Error('injected record write failure');
+          }),
+        }),
+      ).rejects.toThrow(/injected record write failure/);
+      await expect(access(archiveRoot)).rejects.toThrow();
+      expect(await readSyncedRecord(recordPath)).not.toHaveProperty(
+        'archiveSnapshot',
+      );
+
+      const retried = await archiveProjectOnCompletion(options, {
+        timestamp: () => '2026-08-28T12:00:00Z',
+      });
+      expect(retried.snapshotId).toBe('20260828-record-write-failure');
+      expect(await readdir(archiveRoot)).toEqual([slug]);
+      await expect(
+        readFile(join(retried.archivePath, 'summary.md'), 'utf8'),
+      ).resolves.toBe('# summary\n');
+      expect(await readSyncedRecord(recordPath)).toMatchObject({
+        archiveSnapshot: retried.snapshotId,
+        status: 'complete',
+      });
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('refuses to archive a dirty synced checkout before creating a snapshot', async () => {
     const fixture = await createSyncedFixture();
     try {
