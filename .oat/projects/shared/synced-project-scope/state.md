@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: f41fc6b77
+oat_current_task: null
+oat_last_commit: 90fe3ba59
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: review_pending # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -96,19 +96,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T00:06:39.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T01:28:27.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** Final review fixes ready - p05-t01 through p05-t07
+**Status:** Phase 5 fixes complete - fresh final re-review pending
 **Started:** 2026-08-26
-**Last Updated:** 2026-08-27
+**Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Implementation - Phase 5 final review fixes
+Implementation - Phase 5 review pending
 
 ## Artifacts
 
@@ -116,7 +116,7 @@ Implementation - Phase 5 final review fixes
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (58/65 tasks complete; Phase 5 final-review fixes ready)
+- **Implementation:** `implementation.md` (65/65 tasks complete; Phase 5 final-review fixes completed)
 
 ## Progress
 
@@ -174,11 +174,17 @@ Implementation - Phase 5 final review fixes
 - ✓ Phase 4 complete; all 58 implementation tasks are complete
 - ⨯ Final independent project review received with 3 Critical, 2 Important, 1 Medium, and 1 Minor findings
 - ✓ Final review findings converted into p05-t01 through p05-t07 with no deferrals
+- ✓ Phase 5 tasks p05-t01 through p05-t07 completed in seven bounded commits
+- ⨯ Phase 5 recovery attempt 1/10 failed closed; code restored and ledger settled
+- ✓ Phase 5 recovery attempt 2/10 validated and settled
+- ✓ Current `origin/main` integrated; skill and lockstep package versions reconciled
+- ✓ Phase 5 final-head Definition of Done gates pass in CI order, plus lint, format, diff, and zero-managed-drift checks
+- ✓ Final review event updated to `fixes_completed` (not passed)
 
 ## Blockers
 
-- Final review findings block merge, migration, archive, completion, and PR publication until Phase 5 and a fresh final re-review pass.
+- Fresh final fix-delta review blocks migration, archive, completion, PR publication, and spike-repository deletion.
 
 ## Next Milestone
 
-Execute Phase 5 starting at p05-t01.
+Run a fresh independent final fix-delta review over the completed Phase 5 and integration delta.

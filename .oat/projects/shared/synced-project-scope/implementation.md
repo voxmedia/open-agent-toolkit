@@ -1,16 +1,16 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: review_pending
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
-oat_last_updated: 2026-08-27
-oat_current_task_id: p05-t01
+oat_last_updated: 2026-08-28
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: synced-project-scope
 
 **Started:** 2026-08-26
-**Last Updated:** 2026-08-27
+**Last Updated:** 2026-08-28
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete | 13    | 13/13     |
 | Phase 3 | complete | 19    | 19/19     |
 | Phase 4 | complete | 16    | 16/16     |
-| Phase 5 | pending  | 7     | 0/7       |
+| Phase 5 | complete | 7     | 7/7       |
 
-**Total:** 58/65 tasks completed
+**Total:** 65/65 tasks completed
 
 ---
 
@@ -507,20 +507,43 @@ gate passed in exact CI order with explicit exit `0`: `pnpm check`,
 
 ## Phase 5: Final review fixes
 
-**Status:** pending - 0 of 7 tasks complete
-**Started:** -
+**Status:** complete - 7 of 7 tasks complete; fresh final re-review pending
+**Started:** 2026-08-27
 
 ### Task Outcomes
 
-| Task    | Status  | Commit | Outcome |
-| ------- | ------- | ------ | ------- |
-| p05-t01 | pending | -      | -       |
-| p05-t02 | pending | -      | -       |
-| p05-t03 | pending | -      | -       |
-| p05-t04 | pending | -      | -       |
-| p05-t05 | pending | -      | -       |
-| p05-t06 | pending | -      | -       |
-| p05-t07 | pending | -      | -       |
+| Task    | Status    | Commit      | Outcome                                                          |
+| ------- | --------- | ----------- | ---------------------------------------------------------------- |
+| p05-t01 | completed | `c2c97614a` | Synced completion supports durable non-archive handoff           |
+| p05-t02 | completed | `73eece5e0` | Migration sources are confined and symlinks fail closed          |
+| p05-t03 | completed | `635aca9b7` | Prune deletes only exact canonical registered checkouts          |
+| p05-t04 | completed | `b31744ddb` | Migration rollback compensates independently and reports residue |
+| p05-t05 | completed | `a46dd03ad` | Pending adoption records recover without ownership rewrites      |
+| p05-t06 | completed | `19a9b2d16` | Bookkeeping guards are validated at every executable writer site |
+| p05-t07 | completed | `0c01efc04` | Synced fixture imports use an explicit runtime/type alias        |
+
+### Phase 5 Completion
+
+All seven final-review findings were corrected in one verified task commit each.
+Recovery attempt 1/10 failed closed after an adjacent timeout surfaced; the
+bounded test edit was restored and the ledger was settled. Recovery attempt
+2/10 completed in `ba3b22c4e`, adding the file-local 15-second convention to
+the three Git-heavy synced-fixture cases that lacked it. The p05 ledger is
+settled at 2/10 with no pending attempt.
+
+The branch then integrated current `origin/main` at merge `9c221fe0e`, resolved
+overlapping skill versions above upstream, reconciled all five public packages
+to `0.2.38`, and committed the matching bundled manifest. Against clean code
+head `90fe3ba59`, every Definition of Done gate passed in exact CI order with
+explicit exit `0`: `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`,
+`pnpm run check:skill-bumps`, `pnpm release:check-versions`,
+`pnpm release:validate`, and `pnpm build:docs`. Supplemental `pnpm lint`,
+`pnpm format`, `git diff --check`, and provider sync dry-run also exited `0`;
+provider status reported zero managed drift and zero missing managed entries.
+
+**Review disposition:** The archived final review event is `fixes_completed`,
+not passed. A fresh independent final fix-delta review is required before
+migration, archive, completion, PR publication, or spike-repository deletion.
 
 ### Review Received: final - 2026-08-27T23:41:19Z
 
