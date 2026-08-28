@@ -12,7 +12,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 
 import { defaultGitRunner } from '@commands/project/sync/git';
 import {
@@ -2011,6 +2011,7 @@ describe('archive utils', () => {
         '20260401-demo.md',
       ),
     );
+    expect(isAbsolute(result.summaryExportFile!)).toBe(true);
     await expect(readFile(result.summaryExportFile!, 'utf8')).resolves.toBe(
       '# summary\n',
     );

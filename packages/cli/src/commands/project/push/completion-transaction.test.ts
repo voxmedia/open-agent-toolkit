@@ -80,6 +80,8 @@ async function publishFinalArtifact(
     ref: target.ref,
     originUrl: 'https://github.com/example/oat-fixture.git',
     present: ['summary.md'],
+    durableSummaryPath:
+      '.oat/repo/reference/project-summaries/completion-receipt.md',
     pinnedAt: '2026-08-28T12:00:00Z',
   });
   const rendered = replaceLinksBlock(
@@ -87,6 +89,7 @@ async function publishFinalArtifact(
     mutateLinks(finalLinks, pinReceipt.sha),
   );
   expect(rendered.malformed).toBe(false);
+  expect(rendered.body).not.toContain(`${projectPath}/`);
   await writeFile(artifactPath, `${rendered.body.trimEnd()}\n`, 'utf8');
 
   const finalReceipt = await pushSynced(target, defaultGitRunner, {

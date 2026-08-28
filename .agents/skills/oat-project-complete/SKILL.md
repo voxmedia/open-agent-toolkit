@@ -827,7 +827,9 @@ if [[ -n "${SUMMARY_EXPORT_FILE:-}" ]]; then
   test -f "$SUMMARY_EXPORT_FILE" || exit 1
   git ls-files --error-unmatch -- "$SUMMARY_EXPORT_FILE" >/dev/null || exit 1
   git check-ignore --quiet -- "$SUMMARY_EXPORT_FILE" && exit 1
-  FINAL_LINK_ARGS+=(--durable-summary "$SUMMARY_EXPORT_FILE")
+  SUMMARY_EXPORT_RELATIVE=$(git ls-files --full-name -- "$SUMMARY_EXPORT_FILE") || exit 1
+  [[ -n "$SUMMARY_EXPORT_RELATIVE" ]] || exit 1
+  FINAL_LINK_ARGS+=(--durable-summary "$SUMMARY_EXPORT_RELATIVE")
 fi
 FINAL_PROJECT_LINKS=$(oat project links "${FINAL_LINK_ARGS[@]}") || exit 1
 ```

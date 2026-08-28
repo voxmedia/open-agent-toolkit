@@ -184,6 +184,7 @@ export interface ArchiveProjectRecapExportV1 {
 export interface ArchiveProjectOnCompletionResult {
   archivePath: string;
   s3Path: string | null;
+  /** Absolute filesystem path; normalize only when rendering repository links. */
   summaryExportFile: string | null;
   projectRecapExport: ArchiveProjectRecapExportV1 | null;
   warnings: string[];

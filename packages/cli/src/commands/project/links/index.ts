@@ -1,3 +1,5 @@
+import { isAbsolute, relative, resolve, sep } from 'node:path';
+
 import {
   buildCommandContext,
   type CommandContext,
@@ -38,6 +40,27 @@ const DEFAULT_DEPENDENCIES: ProjectLinksDependencies = {
   now: () => new Date(),
 };
 
+function normalizeDurableSummaryPath(
+  repoRoot: string,
+  durableSummaryPath: string | undefined,
+): string | undefined {
+  if (!durableSummaryPath) return undefined;
+  const absolutePath = resolve(repoRoot, durableSummaryPath);
+  const repositoryRelative = relative(repoRoot, absolutePath);
+  if (
+    repositoryRelative === '' ||
+    repositoryRelative === '..' ||
+    repositoryRelative.startsWith(`..${sep}`) ||
+    isAbsolute(repositoryRelative)
+  ) {
+    throw new CliError(
+      `Durable summary path must be a file contained in the repository: ${durableSummaryPath}`,
+      1,
+    );
+  }
+  return repositoryRelative.split(sep).join('/');
+}
+
 async function runLinks(
   context: CommandContext,
   pathOrSlug: string | undefined,
@@ -56,7 +79,10 @@ async function runLinks(
       target,
       dependencies.gitRunner,
       {
-        durableSummaryPath: options.durableSummary,
+        durableSummaryPath: normalizeDurableSummaryPath(
+          repoRoot,
+          options.durableSummary,
+        ),
         now: dependencies.now(),
       },
     );

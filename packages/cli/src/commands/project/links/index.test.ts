@@ -1,3 +1,6 @@
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
@@ -182,6 +185,35 @@ describe('createProjectLinksCommand', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('normalizes an absolute contained durable summary to a repository-relative path', async () => {
+    const setup = harness();
+    await run(setup.command, [
+      'demo',
+      '--durable-summary',
+      '/repo/docs/project-summaries/demo.md',
+    ]);
+    expect(setup.compute).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({
+        durableSummaryPath: 'docs/project-summaries/demo.md',
+      }),
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects a durable summary path outside the repository', async () => {
+    const setup = harness();
+    await run(setup.command, [
+      'demo',
+      '--durable-summary',
+      '/outside/project-summary.md',
+    ]);
+    expect(setup.compute).not.toHaveBeenCalled();
+    expect(setup.capture.error[0]).toContain('contained in the repository');
+    expect(process.exitCode).toBe(1);
+  });
+
   it('returns the input and markdown as json', async () => {
     const setup = harness();
     await run(setup.command, ['demo', '--format', 'json']);
@@ -192,5 +224,3 @@ describe('createProjectLinksCommand', () => {
     });
   });
 });
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
