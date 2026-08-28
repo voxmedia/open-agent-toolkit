@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { access, writeFile } from 'node:fs/promises';
+import { access, mkdir, realpath, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
@@ -225,4 +225,69 @@ describe('prune command integration', () => {
       await fixture.cleanup();
     }
   });
+
+  it.each([false, true])(
+    'leaves an unrelated suffix-matching worktree intact when force=%s',
+    async (force) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const slug = `suffix-${force ? 'forced' : 'normal'}`;
+        const target = buildSyncTarget(
+          fixture.cloneA,
+          '.oat/projects/shared',
+          slug,
+        );
+        await createSyncedProject(target, defaultGitRunner);
+        await writeFile(
+          join(target.projectPath, 'state.md'),
+          '# canonical state\n',
+          'utf8',
+        );
+        await pushSynced(target, defaultGitRunner, {});
+
+        const unrelatedPath = join(
+          fixture.rootDir,
+          'unrelated',
+          'synced',
+          slug,
+        );
+        await mkdir(join(fixture.rootDir, 'unrelated', 'synced'), {
+          recursive: true,
+        });
+        execFileSync(
+          'git',
+          [
+            'worktree',
+            'add',
+            '-q',
+            '-b',
+            `unrelated-${force ? 'forced' : 'normal'}`,
+            unrelatedPath,
+          ],
+          { cwd: fixture.cloneA },
+        );
+        const sentinel = join(unrelatedPath, 'do-not-delete.txt');
+        await writeFile(sentinel, 'unrelated worktree\n', 'utf8');
+
+        await expect(
+          pruneSynced(target, defaultGitRunner, {
+            force,
+            commit: false,
+          }),
+        ).resolves.toMatchObject({ status: 'pruned' });
+
+        await expect(access(target.projectPath)).rejects.toThrow();
+        await expect(access(sentinel)).resolves.toBeUndefined();
+        const canonicalUnrelatedPath = await realpath(unrelatedPath);
+        expect(
+          execFileSync('git', ['worktree', 'list', '--porcelain'], {
+            cwd: fixture.cloneA,
+            encoding: 'utf8',
+          }),
+        ).toContain(`worktree ${canonicalUnrelatedPath}`);
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+  );
 });

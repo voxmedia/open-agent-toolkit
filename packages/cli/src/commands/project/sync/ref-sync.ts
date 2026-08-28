@@ -868,17 +868,42 @@ export async function pruneSynced(
   options: { force: boolean; commit: boolean },
 ): Promise<PruneResult> {
   await assertCanonicalSyncTargetIdentity(target);
-  const checkoutSuffix = ['synced', target.slug].join('/');
-  const checkoutPaths = (await registeredWorktreePaths(target, git)).filter(
-    (worktreePath) =>
-      worktreePath.split(sep).join('/').endsWith(`/${checkoutSuffix}`),
+  const scopeRelativeSyncedRoot = relative(
+    resolve(target.repoRoot),
+    resolve(target.syncedRoot),
   );
+  if (
+    scopeRelativeSyncedRoot === '' ||
+    isAbsolute(scopeRelativeSyncedRoot) ||
+    scopeRelativeSyncedRoot === '..' ||
+    scopeRelativeSyncedRoot.startsWith(`..${sep}`)
+  ) {
+    throw new CliError(
+      `Refusing to prune ${target.slug}: configured synced root is outside the repository worktree.`,
+      2,
+    );
+  }
 
-  const checkouts = checkoutPaths.map((projectPath) => ({
-    ...target,
-    syncedRoot: dirname(projectPath),
-    projectPath,
-  }));
+  const registeredPaths = await registeredWorktreePaths(target, git);
+  const canonicalRegisteredPaths = [
+    ...new Set(
+      await Promise.all(registeredPaths.map((path) => realpath(path))),
+    ),
+  ];
+  const registeredSet = new Set(canonicalRegisteredPaths);
+  const checkoutsByPath = new Map<string, SyncTarget>();
+  for (const parentWorktreeRoot of canonicalRegisteredPaths) {
+    const syncedRoot = resolve(parentWorktreeRoot, scopeRelativeSyncedRoot);
+    const projectPath = resolve(syncedRoot, target.slug);
+    if (registeredSet.has(projectPath)) {
+      checkoutsByPath.set(projectPath, {
+        ...target,
+        syncedRoot,
+        projectPath,
+      });
+    }
+  }
+  const checkouts = [...checkoutsByPath.values()];
   for (const checkout of checkouts) {
     const preflight = await preflightSyncedCheckout(checkout, git);
     if (
