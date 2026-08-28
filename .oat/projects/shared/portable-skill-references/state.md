@@ -17,7 +17,7 @@ oat_hill_checkpoints: [p02] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_usage:
@@ -60,8 +60,8 @@ oat_implement_exit_gate:
   reviewed_head: bd4c8904badae38bab52b4e4e161702af9e7d72c
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v1:532c7888c7e9a33a95375692fb7bc3091d09db833038f5938c377012faf926e9
-  freshness_head: 2f47b8f77a5d872234cb1c31451685df1dab4555
-  freshness_fingerprint: sha256:effective-delta-v1:15c01c740e3e12bf292506b3b7575d4e7b706e7f0c07610661ffce0d5716af64
+  freshness_head: ae83b515a8ebd8713fb2d7385e05349aa126acff
+  freshness_fingerprint: sha256:effective-delta-v1:50a0ab1f8213227b47e4aac2a5b76414b8b16eb74790d1f2cd330624716f0df9
   launch_state: result_persisted
   launch_attempt_id: 09bb3b6a-6ef4-4334-b0b7-247279858b3b
   launch_started_at: '2026-08-28T17:44:30Z'
@@ -81,7 +81,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-08-28T17:56:29Z'
+  updated_at: '2026-08-28T17:58:03Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -133,7 +133,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/226 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T21:30:45.407Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T17:39:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T17:58:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -143,14 +143,14 @@ oat_project_recap:
 
 # Project State: portable-skill-references
 
-**Status:** Configured exit gate passed
+**Status:** Implementation complete; PR open
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-All 18 planned tasks are complete. The configured exit gate passed with no
-blocking findings; implementation closeout is ready.
+All 18 planned tasks and implementation closeout are complete. The configured
+exit gate passed with no blocking findings, and PR #226 is open.
 
 ## Artifacts
 
@@ -194,6 +194,9 @@ blocking findings; implementation closeout is ready.
 - ✓ User confirmed artifact-only fixes do not require another standard re-review
 - ✓ Terminal artifact refresh task `prev1-t10` completed
 - ✓ Artifact-only final review disposition accepted without another standard cycle
+- ✓ Refreshed Fable exit gate passed at the Important threshold
+- ✓ Exit-gate review received; two Medium and one Minor findings deferred
+- ✓ Implementation closeout completed
 
 ## Blockers
 
@@ -201,4 +204,4 @@ None
 
 ## Next Milestone
 
-Finish implementation closeout, then push PR #226.
+Push the authorized branch update to PR #226.
