@@ -72,7 +72,7 @@ oat_dispatch_policy: # project dispatch policy (named maximum tier; set during p
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: blocked
   resolution: configured
   disposition: null
   config_fingerprint: sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20
@@ -80,12 +80,12 @@ oat_implement_exit_gate:
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0
+  attempts_completed: 1
   reviewed_head: f8bce994d2e542d7ae14bfa35a4847074e280b3c
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v1:40b697c0d01668b7e757d151438f4f6bedd1cb207478227348a5146ff00499c7
-  freshness_head: 2fa655b1da2b741a350fd86b41453e5094371651
-  freshness_fingerprint: sha256:effective-delta-v1:0ffbfa9c67e41af4e94442ac42a536a5a506861b788cbbdca68aa1acc772a8aa
+  freshness_head: a6e1439818dc8f675a7c05cdb8a77b88b2141bd5
+  freshness_fingerprint: sha256:effective-delta-v1:ea4638154041577307ce0380fbff4e2f71dd474e5b91f0c47d12179c21c1a02c
   launch_state: result_persisted
   launch_attempt_id: 480d9467-e461-459a-8f13-d10afc888de9
   launch_started_at: '2026-08-28T17:29:31Z'
@@ -95,23 +95,23 @@ oat_implement_exit_gate:
   envelope_status: blocked
   artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T174039Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T174039Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=c0eed430-e033-45d7-9195-35fcacd8cb9f; handoff=receive; source=reviews/final-review-2026-08-28T174039Z.md; scope=final; type=code'
   receive_source_artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T174039Z.md
   receive_archived_artifact: .oat/projects/shared/synced-project-scope/reviews/archived/final-review-2026-08-28T174039Z.md
   receive_event_identity: 'final | code | final-review-2026-08-28T174039Z.md'
   receive_pre_head: 2fa655b1da2b741a350fd86b41453e5094371651
-  receive_commit: null
+  receive_commit: a6e1439818dc8f675a7c05cdb8a77b88b2141bd5
   receive_eligible: true
-  receive_completed: false
-  failure: Gate review reported 3 Important findings at the blocking threshold.
-  updated_at: '2026-08-28T17:45:55Z'
+  receive_completed: true
+  failure: Gate attempt 1 reported blocking findings; Phase 10 remediation is pending.
+  updated_at: '2026-08-28T17:52:49Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T17:45:55.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T17:52:49.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
