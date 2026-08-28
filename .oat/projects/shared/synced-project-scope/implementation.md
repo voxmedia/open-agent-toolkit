@@ -2498,3 +2498,21 @@ child step must merge its state update without replacing the snapshot.
 The root orchestrator verified the child commit contains only the summary and
 its CLI-owned decision records. The authoritative sequence snapshot remained
 unchanged and now records `summary` as completed.
+
+#### Pre-approval Documentation Completed - 2026-08-28T20:10:43Z
+
+- **Documentation commit:** `f5eea1732ff438f99ba847825e28f470e5958565`
+- **State commit:** `5781f971b0c86bfe532ef1b0cae0ee6002f11f42`
+- **Coverage:** the existing ten project/reference pages adequately cover scope
+  and config, synchronization and recovery, remote adoption, reviewer links,
+  completion, migration, and diagnostics.
+- **Applied delta:** the PJM current-state page now records synced project scope
+  as shipped in CLI `0.2.39`; no roadmap, backlog, instruction, or additional
+  docs-page changes were justified.
+- **Verification:** file-scoped formatting, Markdown lint, diff checks, and
+  sequence preservation passed. PJM doctor retained only its pre-existing
+  inferred-legacy warnings.
+
+The root orchestrator verified the documentation and state commits are confined
+to their declared paths. The authoritative sequence snapshot remained intact
+and now records `document` as completed.

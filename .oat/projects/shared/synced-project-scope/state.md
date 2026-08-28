@@ -122,6 +122,7 @@ oat_post_implement_sequence:
     - pr
   pre_approval_completed:
     - summary
+    - document
   approval: pending
   approval_source: null
   post_approval: []
@@ -132,7 +133,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T20:09:35.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T20:10:43.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -269,7 +270,8 @@ Implementation closeout - configured pre-approval sequence in progress
 - ✓ Configured exit-gate attempt 2 passed at the Important threshold
 - ✓ Final closeout verification passed: test, lint, type-check, and build
 - ✓ Project summary generated with canonical decision records
-- ◌ Configured pre-approval sequence continuing: document → PR
+- ✓ Documentation coverage synchronized and marked complete
+- ◌ Configured pre-approval sequence continuing: PR
 - ✓ Cycle-5 findings converted into consolidated task p09-t01 with no deferrals
 - ✓ Phase 9 task p09-t01 completed and verified in `e193c8ffb`
 - ✓ Phase 9 recovery ledger settled at 0/10 with no pending attempt
