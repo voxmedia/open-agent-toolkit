@@ -457,11 +457,12 @@ not push here: Step 7 may still create or replace the PR-description artifact,
 and the retained project ref must include that late artifact.
 
 When archive is selected, the synced completion order is: finalize → generate
-the PR artifact → final project push → project archive → render
+the PR artifact → project-ref pin-source push → project archive → render
 `oat project links --durable-summary <path>` → update the open PR body. When
-archive is declined, it is: finalize → generate the PR artifact → final project
-push → exact discovery-record commit → optional active-recap evidence commit
-and project push.
+archive is declined, it is: finalize → generate the PR artifact →
+project-ref pin-source push → render the final links → final artifact push →
+exact discovery-record commit → optional active-recap evidence commit and
+project push.
 
 The CLI command owns both the frontmatter completion fields and the canonical markdown body updates for `state.md`.
 It must set `oat_lifecycle: complete`, completion timestamps, `**Status:** Complete`, `**Last Updated:**`, the canonical `## Current Phase` body, normalized `## Progress`, and `## Next Milestone`.
@@ -529,14 +530,29 @@ When archiving, the project artifacts at `{PROJECT_PATH}/{plan,implementation,di
 
 Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path under `.oat/projects/archived/<name>/...`. That path is gitignored on every checkout and never reaches the remote.
 
-#### Step 7.5: Publish Final Synced Project Artifacts
+#### Step 7.5: Publish Synced Project Pin Source
 
 For `synced`, publish only after Step 7 has finished every pre-archive project
-artifact write. This is the final artifact publication before the parent-branch
-record transaction and before any non-archive recap evidence update:
+artifact write. This receipt is the immutable pin source used when Step 8.6
+renders the final links. Keep it separate from the final non-archive artifact
+receipt:
+
+Initialize `PROJECT_LINKS_PIN_COMMIT=""` and `PROJECT_REF_COMMIT=""`. For a
+non-archive retry, first recognize an already-finalized artifact receipt only
+when the checkout and retained remote ref are clean and equal, the HEAD subject
+is `chore(oat): publish final project links`, HEAD changes exactly the single
+PR-description artifact, and that artifact contains one valid links block
+pinned to HEAD's immediate parent. In that exact state, reuse HEAD as
+`PROJECT_REF_COMMIT` and HEAD's parent as `PROJECT_LINKS_PIN_COMMIT`; do not run
+the preliminary push or rewrite the block. Any partial or contradictory match
+fails closed. This retry recognition is valid whether the parent discovery
+record is still active or already complete.
+
+When retry recognition did not set `PROJECT_REF_COMMIT`, publish the pin
+source:
 
 ```bash
-if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+if [[ "$PROJECT_SCOPE" == "synced" && -z "$PROJECT_REF_COMMIT" ]]; then
   PROJECT_PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" \
     --message "chore(oat): finalize project lifecycle" --json) || exit 1
   printf '%s\n' "$PROJECT_PUSH_OUTPUT"
@@ -544,18 +560,19 @@ fi
 ```
 
 Require the structured push result to report `status: "pushed"` or
-`status: "up-to-date"`, the retained project ref, and a full `sha`. The exact
-structured receipt SHA becomes `PROJECT_REF_COMMIT`. Never infer this receipt
-from the parent branch, a stale local ref, or an earlier push. Verify the
-receipt commit contains the newly created PR-description artifact when Step 7
-started without one, as well as every other pre-archive project artifact write.
-Capture the final successful project push SHA as `PROJECT_REF_COMMIT`.
+`status: "up-to-date"`, the retained project ref, and a full `sha`. Capture the
+exact structured receipt SHA as `PROJECT_LINKS_PIN_COMMIT`. Never infer this
+receipt from the parent branch, a stale local ref, or an earlier push. Verify
+the receipt commit contains the newly created PR-description artifact when
+Step 7 started without one, as well as every other pre-archive project artifact
+write.
 
 Both configured and interactive archive-decline paths continue from this exact
-receipt into Step 8.7. With no selected recap, the receipt and exact
-parent-branch record commit finish the non-archive transaction. With a selected
-recap, the evidence commit in Step 10.6 must remain the immediate child of this
-exact receipt.
+pin-source receipt into Step 8.6. The later final artifact receipt and exact
+parent-branch record commit finish the non-archive transaction when no recap is
+selected. With a selected recap, the evidence commit in Step 10.6 must remain
+the immediate child of the final artifact receipt, never the preliminary pin
+source.
 
 ### Step 8: Archive Project (Conditional)
 
@@ -664,6 +681,30 @@ markers. The base invocation remains
 `oat project links "$PROJECT_NAME" --format markdown`; add
 `--durable-summary` only for the verified tracked export above.
 
+For `PROJECT_SCOPE="synced"` with `SHOULD_ARCHIVE="false"`, render this block
+in the active PR-description artifact before the push whose receipt becomes
+`PROJECT_REF_COMMIT`. Skip the rewrite only when Step 7.5 recognized and
+validated an already-finalized retry receipt. Otherwise publish the rendered
+artifact with a distinct final push:
+
+```bash
+if [[ -z "$PROJECT_REF_COMMIT" ]]; then
+  FINAL_PROJECT_PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" \
+    --message "chore(oat): publish final project links" --json) || exit 1
+  printf '%s\n' "$FINAL_PROJECT_PUSH_OUTPUT"
+fi
+```
+
+Require the structured result to report `status: "pushed"` or
+`status: "up-to-date"`, the same retained project ref, and a full `sha`. Capture
+that exact SHA as `PROJECT_REF_COMMIT`. Verify the checkout is clean, the
+retained remote ref equals the receipt, and the receipt contains the final
+PR-description artifact with exactly one links block pinned to
+`PROJECT_LINKS_PIN_COMMIT`. When the final render produced a commit, require
+its immediate parent to equal `PROJECT_LINKS_PIN_COMMIT` and require the commit
+to contain exactly the PR-description artifact. Never substitute the
+preliminary receipt for `PROJECT_REF_COMMIT` after the artifact changed.
+
 Both PR paths consume this final body: when
 `WAS_PR_OPEN_AT_START="false"`, Step 11 creates the new PR with it; when
 `WAS_PR_OPEN_AT_START="true"`, Step 11.5 updates the already-open PR with it.
@@ -692,17 +733,19 @@ byte-for-byte unchanged. The retained project ref remains the artifact
 authority after non-archive completion. Do not remove the checkout, delete the
 ref, create archive exports, or set `PROJECT_PATH` to an archive location.
 
-When `SELECTED_PROJECT_RECAP_RUN is empty`, the project-ref push plus exact
+When `SELECTED_PROJECT_RECAP_RUN is empty`, the final artifact push plus exact
 record commit completes this transaction. When
 `SELECTED_PROJECT_RECAP_RUN is non-empty`, Steps 10.5 and 10.6 additionally
 attest the active recap within the project-ref history.
 
 On retry, accept an already-complete record only after its exact-path commit is
-verified and the final project-ref push receipt still names the retained ref
-SHA. If the project push succeeded but the record commit did not, retry only
-the record write/commit. If the record commit succeeded but recap evidence did
-not, reuse both receipts and retry only recap finalization. Never create a
-second lifecycle record commit or rewrite either history.
+verified and the final artifact push receipt still names the retained ref SHA.
+If the final artifact push succeeded but the record commit did not, reuse the
+validated `PROJECT_LINKS_PIN_COMMIT` and `PROJECT_REF_COMMIT` receipts and retry
+only the record write/commit. If the record commit succeeded but recap evidence
+did not, reuse both receipts and retry only recap finalization. Never create a
+second lifecycle record commit, rerender the links against the final receipt,
+or rewrite either history.
 
 ### Step 9: Regenerate Dashboard
 

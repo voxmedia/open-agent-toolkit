@@ -1084,7 +1084,7 @@ describe('review skill contracts', () => {
         'The retained project ref remains the artifact authority after non-archive completion.',
       );
       expect(normalizedContent).toMatch(
-        /On retry,[\s\S]*?already-complete record[\s\S]*?final project-ref push receipt/,
+        /On retry,[\s\S]*?already-complete record[\s\S]*?final artifact push receipt/,
       );
     },
   );
@@ -1102,7 +1102,10 @@ describe('review skill contracts', () => {
 
       expect(normalizedContent).toContain(recapState);
       expect(normalizedContent).toContain(
-        'Capture the final successful project push SHA as `PROJECT_REF_COMMIT`.',
+        'Capture the exact structured receipt SHA as `PROJECT_LINKS_PIN_COMMIT`.',
+      );
+      expect(normalizedContent).toContain(
+        'Capture that exact SHA as `PROJECT_REF_COMMIT`.',
       );
       expect(normalizedContent).toContain(
         'Use `PROJECT_REF_COMMIT`, not the parent-branch `LIFECYCLE_COMMIT`, as the active recap artifact commit.',
@@ -1158,10 +1161,16 @@ describe('review skill contracts', () => {
         stepSevenIndex,
       );
       const finalPublicationIndex = content.indexOf(
-        '#### Step 7.5: Publish Final Synced Project Artifacts',
+        '#### Step 7.5: Publish Synced Project Pin Source',
       );
-      const finalPushIndex = content.indexOf(
+      const pinSourcePushIndex = content.indexOf(
         'PROJECT_PUSH_OUTPUT=$(oat project push "$PROJECT_PATH"',
+      );
+      const finalLinksIndex = content.indexOf(
+        '#### Step 8.6: Render Final Synced Project Links',
+      );
+      const finalArtifactPushIndex = content.indexOf(
+        'FINAL_PROJECT_PUSH_OUTPUT=$(oat project push "$PROJECT_PATH"',
       );
       const nonArchiveTransactionIndex = content.indexOf(
         '### Step 8.7: Non-Archive Synced Completion Transaction',
@@ -1173,11 +1182,18 @@ describe('review skill contracts', () => {
         'When no PR description artifact exists, write it before the final synced project-ref publication, regardless of archive or recap selection.',
       );
       expect(normalizedContent).toContain(
-        'The exact structured receipt SHA becomes `PROJECT_REF_COMMIT`.',
+        'Keep it separate from the final non-archive artifact receipt',
+      );
+      expect(normalizedContent).toContain(
+        'render this block in the active PR-description artifact before the push whose receipt becomes `PROJECT_REF_COMMIT`.',
       );
       expect(finalPublicationIndex).toBeGreaterThan(writeArtifactIndex);
-      expect(finalPushIndex).toBeGreaterThan(finalPublicationIndex);
-      expect(nonArchiveTransactionIndex).toBeGreaterThan(finalPushIndex);
+      expect(pinSourcePushIndex).toBeGreaterThan(finalPublicationIndex);
+      expect(finalLinksIndex).toBeGreaterThan(pinSourcePushIndex);
+      expect(finalArtifactPushIndex).toBeGreaterThan(finalLinksIndex);
+      expect(nonArchiveTransactionIndex).toBeGreaterThan(
+        finalArtifactPushIndex,
+      );
       expect(content.slice(stepFiveIndex, stepSevenIndex)).not.toContain(
         'PROJECT_PUSH_OUTPUT=$(oat project push',
       );
