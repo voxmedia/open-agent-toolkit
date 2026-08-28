@@ -6,7 +6,7 @@ oat_last_updated: 2026-08-28
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_hill_phases: ['p09'] # implementation pauses only after the third operator-extended final review-fix phase
+oat_plan_hill_phases: ['p10'] # implementation pauses after the configured exit-gate remediation phase
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null
@@ -3021,6 +3021,473 @@ git commit -m "fix(p09-t01): harden completion receipt link validation"
 
 ---
 
+## Phase 10: Configured exit-gate remediation
+
+Resolve every finding from configured implementation exit-gate run
+`c0eed430-e033-45d7-9195-35fcacd8cb9f`. The blocking gate receive path is
+autonomous, so all three Important, five Medium, and five in-scope Minor
+findings are converted into 14 ordered tasks with no deferrals; the final
+compound Minor is split across unrelated persistence and arrival concerns. Preserve the
+existing PR-scoped skill and lockstep package version bumps; do not bump either
+again merely because these same shipped surfaces are edited during remediation.
+
+### Task p10-t01: (review) Exclude synced discovery records from doctor leak failures
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/doctor/synced-projects.ts`
+- Modify: `packages/cli/src/commands/doctor/synced-projects.test.ts`
+
+**Step 1: Understand the issue**
+
+Gate finding I1: the tracked-artifact probe treats the required top-level
+`.oat/projects/synced/<slug>.json` discovery record as leaked checkout content,
+causing `oat doctor --scope project` to fail and suggesting a destructive
+untracking repair.
+
+**Step 2: Implement fix**
+
+Restrict leak detection to paths below synced checkout directories while
+preserving top-level discovery records. Add a real-Git positive-control test
+with a committed record plus existing leak-negative cases.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/synced-projects.test.ts`
+
+Expected: a committed discovery record passes; tracked checkout artifacts still fail.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/doctor/synced-projects.ts packages/cli/src/commands/doctor/synced-projects.test.ts
+git commit -m "fix(p10-t01): preserve synced discovery records in doctor"
+```
+
+### Task p10-t02: (review) Render durable summary paths repository-relative
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `packages/cli/src/commands/project/links/index.ts`
+- Modify: `packages/cli/src/commands/project/links/index.test.ts`
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts`
+
+**Step 1: Understand the issue**
+
+Gate finding I2: completion forwards the archive report's absolute
+`summaryExportFile` into the PR links renderer, exposing a machine-local home
+path instead of the FR7 repository-relative durable summary path.
+
+**Step 2: Implement fix**
+
+Normalize at the `oat project links` boundary: accept an absolute durable
+summary only when it is contained under the repository, render its
+repository-relative path, and reject escapes. Preserve the archive report's
+absolute filesystem contract. Cover absolute input and a configured summary
+export path; assert the rendered PR block contains no absolute prefix.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/links/index.test.ts src/commands/project/archive/archive-utils.test.ts src/commands/project/push/completion-transaction.test.ts`
+
+Expected: durable-summary output is repository-relative in every lane.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts packages/cli/src/commands/project/links/index.ts packages/cli/src/commands/project/links/index.test.ts .agents/skills/oat-project-complete/SKILL.md packages/cli/src/commands/project/push/completion-transaction.test.ts
+git commit -m "fix(p10-t02): normalize durable summary paths"
+```
+
+### Task p10-t03: (review) Make non-archive completion retry reach receipt recovery
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `.agents/skills/oat-project-complete/scripts/recover-completion-receipts.mjs`
+- Modify: `packages/cli/src/commands/project/complete-state/index.ts`
+- Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Understand the issue**
+
+Gate finding I3: a retry performs project-log and `complete-state` mutations
+before receipt recovery, so the recovery script always sees a dirty checkout
+and the tested p07-p09 interruption surface is unreachable from the real skill.
+
+**Step 2: Implement fix**
+
+Detect and enter recognizable receipt recovery before the project-log and
+`complete-state` lifecycle mutations, then exercise the real ordered skill flow
+after every interruption point. Preserve clean-checkout, exact-receipt, and
+fail-closed reconciliation guarantees.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/push/completion-transaction.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+Expected: real non-archive retries reach and validate receipt recovery without bypassing dirty-worktree protection.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-project-complete/scripts/recover-completion-receipts.mjs packages/cli/src/commands/project/complete-state/index.ts packages/cli/src/commands/project/push/completion-transaction.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p10-t03): make completion retries idempotent"
+```
+
+### Task p10-t04: (review) Probe absent synced checkouts with directory semantics
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/doctor/synced-projects.ts`
+- Modify: `packages/cli/src/commands/doctor/synced-projects.test.ts`
+
+**Step 1: Understand the issue**
+
+Gate finding M1: doctor probes a nonexistent checkout path without a trailing
+slash or `--no-index`, so the correct directory-only ignore rule is reported as
+missing whenever the checkout has not been pulled.
+
+**Step 2: Implement fix**
+
+Reuse the canonical directory probe semantics from `isSyncedRuleApplied` and
+add a real-Git absent-checkout regression test.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/synced-projects.test.ts`
+
+Expected: an absent checkout with the managed ignore block produces no false gitignore warning.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/doctor/synced-projects.ts packages/cli/src/commands/doctor/synced-projects.test.ts
+git commit -m "fix(p10-t04): use directory probes in synced doctor"
+```
+
+### Task p10-t05: (review) Prevent duplicate synced gitignore rules
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/new/scaffold.ts`
+- Modify: `packages/cli/src/commands/project/new/scaffold.test.ts`
+- Modify: `.gitignore`
+
+**Step 1: Understand the issue**
+
+Gate finding M2: scaffold self-heal compares two different rule spellings and
+appends an unmanaged duplicate after applying the managed core block.
+
+**Step 2: Implement fix**
+
+Re-probe ignore behavior after applying the core block and append a
+root-specific rule only when still required. Remove this repository's stray
+duplicate and add an exact-one-rule regression test.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts`
+
+Expected: the default synced rule appears exactly once inside the managed block.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/new/scaffold.ts packages/cli/src/commands/project/new/scaffold.test.ts .gitignore
+git commit -m "fix(p10-t05): deduplicate synced gitignore setup"
+```
+
+### Task p10-t06: (review) Validate every synced push receipt before publication bookkeeping
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Modify: `.agents/skills/oat-project-summary/SKILL.md`
+- Modify: `.agents/skills/oat-project-retro/references/apply-procedure.md`
+- Modify: `.agents/skills/oat-project-retro-file/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Understand the issue**
+
+Gate finding M3: ten command substitutions consume `.sha` without requiring a
+successful `pushed` or `up-to-date` status, so conflicted or rejected pushes can
+be recorded as published.
+
+**Step 2: Implement fix**
+
+Apply one fail-closed receipt parser shape at every identified site, surface the
+CLI recovery instruction for non-success status, and add a validator rule that
+prevents status-blind push receipts from returning.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills`
+
+Expected: only `pushed` and `up-to-date` receipts supply a publication SHA.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/SKILL.md .agents/skills/oat-project-summary/SKILL.md .agents/skills/oat-project-retro/references/apply-procedure.md .agents/skills/oat-project-retro-file/SKILL.md packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p10-t06): validate synced push receipts"
+```
+
+### Task p10-t07: (review) Align non-archive completion PR synchronization
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts`
+
+**Step 1: Understand the issue**
+
+Gate finding M4: Step 8.6 promises a final artifact-body PR sync that Step 11.5
+explicitly skips in the non-archive lane, leaving artifact and PR pin semantics
+inconsistent.
+
+**Step 2: Implement fix**
+
+Extend Step 11.5 to synchronize the validated final artifact body for the
+non-archive/open-PR lane so the artifact and GitHub body share the chosen pin.
+Make skill prose and executable tests assert that same behavior.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/project/push/completion-transaction.test.ts`
+
+Expected: non-archive PR-body synchronization has one consistent owner and pin.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/commands/project/push/completion-transaction.test.ts
+git commit -m "fix(p10-t07): align non-archive PR synchronization"
+```
+
+### Task p10-t08: (review) Confine completion evidence commits and align ownership design
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `.oat/projects/shared/synced-project-scope/design.md`
+
+**Step 1: Understand the issue**
+
+Gate finding M5: the recap-evidence commit can sweep unrelated pre-staged
+content, while the skill-owned evidence and record commits diverge from the
+design's CLI-only parent-index ownership statement.
+
+**Step 2: Implement fix**
+
+Constrain the evidence commit to its exact two paths (or route it through an
+equivalent CLI surface), prove unrelated staged content cannot leak, and align
+the design with the accepted, path-confined skill-owned completion transitions.
+This task is the explicit artifact-alignment disposition for the design drift.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts && git diff --check`
+
+Expected: completion commits cannot capture unrelated index state and the design names their bounded ownership.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts .oat/projects/shared/synced-project-scope/design.md
+git commit -m "fix(p10-t08): confine completion evidence commits"
+```
+
+### Task p10-t09: (review) Align CLI reference with shipped project commands
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+- Modify: `apps/oat-docs/docs/reference/file-locations.md`
+
+**Step 1: Understand the issue**
+
+Gate finding m1: the CLI reference omits new `--no-commit` flags, misstates
+prune argument and durable-summary behavior, and does not document non-GitHub
+degradation or the managed `.gitattributes` block.
+
+**Step 2: Implement fix**
+
+Align the reference with command definitions and add concise behavior notes for
+non-GitHub origins and managed attributes.
+
+**Step 3: Verify**
+
+Run: `pnpm check && pnpm build:docs`
+
+Expected: markdown lint and docs build pass with the reference matching CLI help.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/reference/cli-reference.md apps/oat-docs/docs/reference/file-locations.md
+git commit -m "docs(p10-t09): align project CLI reference"
+```
+
+### Task p10-t10: (review) Restore conventional import placement in push
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/push/index.ts`
+
+**Step 1: Understand the issue**
+
+Gate finding m2: two imports appear after the exported function, which is legal
+ESM but inconsistent and easy to miss during maintenance.
+
+**Step 2: Implement fix**
+
+Move the imports into the module's top import block without behavior changes.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/push/index.test.ts && pnpm --filter @open-agent-toolkit/cli check`
+
+Expected: lint and type-check pass with imports grouped conventionally.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/push/index.ts
+git commit -m "refactor(p10-t10): normalize push imports"
+```
+
+### Task p10-t11: (review) Correct absent-checkout archive recovery guidance
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+
+**Step 1: Understand the issue**
+
+Gate finding m3: archive preflight tells an operator with an absent active
+checkout to run `push`, although the correct recovery is `pull`.
+
+**Step 2: Implement fix**
+
+Branch the recovery message on absent status and add an exact-message test.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts`
+
+Expected: absent active checkouts direct the operator to `oat project pull`.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts
+git commit -m "fix(p10-t11): correct archive recovery guidance"
+```
+
+### Task p10-t12: (review) Bind completion receipts to project slug and repository
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/scripts/recover-completion-receipts.mjs`
+- Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts`
+
+**Step 1: Understand the issue**
+
+Gate finding m4: recovery captures but does not compare the links header slug,
+and blob validation does not bind GitHub owner/repository, so another project's
+or repository's block can satisfy the receipt.
+
+**Step 2: Implement fix**
+
+Require the canonical header slug and every blob repository identity to match
+the target project/repository. Add wrong-slug, wrong-repository, and duplicate
+block negative cases while preserving exact ref/SHA checks.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/push/completion-transaction.test.ts`
+
+Expected: cross-project and cross-repository receipts fail closed.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/scripts/recover-completion-receipts.mjs packages/cli/src/commands/project/push/completion-transaction.test.ts
+git commit -m "fix(p10-t12): bind completion receipts to project identity"
+```
+
+### Task p10-t13: (review) Refresh brainstorm invariants for synced persistence
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Understand the issue**
+
+The persistence half of gate finding m5: brainstorm still describes git-only
+fold-back after synced push support.
+
+**Step 2: Implement fix**
+
+Update brainstorm invariants for shared/local versus synced bookkeeping and add
+validator coverage for both persistence branches.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills`
+
+Expected: brainstorm's documented invariants cover both scope branches.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/SKILL.md packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p10-t13): align brainstorm synced persistence"
+```
+
+### Task p10-t14: (review) Make arrival scope failures non-blocking
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-progress/SKILL.md`
+- Modify: `.agents/skills/oat-project-next/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Understand the issue**
+
+The arrival-control-flow half of gate finding m5: progress and next hard-exit
+when `activeProject` names a stale archived path, contrary to the non-blocking
+arrival guidance.
+
+**Step 2: Implement fix**
+
+Turn scope-resolution failure on arrival into a warning that skips synced pull
+without aborting the skill, and cover both arrival sites in validator tests.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills`
+
+Expected: a stale archived active-project path remains a warning and routing continues.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-progress/SKILL.md .agents/skills/oat-project-next/SKILL.md packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p10-t14): soften arrival scope failures"
+```
+
+---
+
 ## Reviews
 
 | Scope   | Type     | Status          | Date       | Artifact                                                          | Reviewed Head                            | Invocation | Gate Target                   |
@@ -3047,7 +3514,7 @@ git commit -m "fix(p09-t01): harden completion receipt link validation"
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T114926Z.md               | e22a9b1ecaafc1cb177c8ca34133e73103c30d74 | auto       | -                             |
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T151732Z.md               | 10bbd92cee2291aebf027e5c6e7ac69da2bc4f2b | auto       | -                             |
 | final   | code     | passed          | 2026-08-28 | reviews/archived/final-review-2026-08-28T165719Z.md               | f8bce994d2e542d7ae14bfa35a4847074e280b3c | auto       | -                             |
-| final   | code     | received        | 2026-08-28 | reviews/final-review-2026-08-28T174039Z.md                        | 0a85a08c8bc0f7527935b7141f22856e89271f8e | gate       | claude-fable-skip-permissions |
+| final   | code     | fixes_added     | 2026-08-28 | reviews/archived/final-review-2026-08-28T174039Z.md               | 0a85a08c8bc0f7527935b7141f22856e89271f8e | gate       | claude-fable-skip-permissions |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                             |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                             |
 | plan    | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -                                        | auto       | -                             |
@@ -3077,14 +3544,17 @@ git commit -m "fix(p09-t01): harden completion receipt link validation"
 - Phase 7: 1 task - Operator-extended final receipt fix with repository-backed completion coverage
 - Phase 8: 1 task - Second operator-extended recap-stage receipt recovery and interruption coverage
 - Phase 9: 1 task - Third operator-extended exact final-links validation and decision-entrypoint coverage
+- Phase 10: 14 tasks - Configured exit-gate remediation across doctor, completion, skill receipt handling, documentation, and project-bound recovery
 
-**Total: 71 tasks**
+**Total: 85 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
 **Operator step after implementation:** delete the disposable spike repository `https://github.com/tkstang/disposable-test-repo-for-oat` (used by p01-t10); the implementing agent never deletes repositories.
 
-Final lifecycle review passed with no findings. Implementation closeout remains.
+Final lifecycle review passed, but the configured implementation exit gate
+reported blocking findings. Phase 10 is the first of at most two configured
+gate-remediation attempts.
 
 ---
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: p10-t01
 oat_generated: false
 ---
 
@@ -14,8 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All 71 implementation tasks are complete and the final lifecycle re-review
-> passed. Implementation closeout remains.
+> 71 of 85 implementation tasks are complete. The final lifecycle re-review
+> passed, but the configured implementation exit gate reported blocking
+> findings now planned as Phase 10 remediation.
 >
 > Conventions:
 >
@@ -27,19 +28,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 10    | 10/10     |
-| Phase 2 | complete | 13    | 13/13     |
-| Phase 3 | complete | 19    | 19/19     |
-| Phase 4 | complete | 16    | 16/16     |
-| Phase 5 | complete | 7     | 7/7       |
-| Phase 6 | complete | 3     | 3/3       |
-| Phase 7 | complete | 1     | 1/1       |
-| Phase 8 | complete | 1     | 1/1       |
-| Phase 9 | complete | 1     | 1/1       |
+| Phase    | Status      | Tasks | Completed |
+| -------- | ----------- | ----- | --------- |
+| Phase 1  | complete    | 10    | 10/10     |
+| Phase 2  | complete    | 13    | 13/13     |
+| Phase 3  | complete    | 19    | 19/19     |
+| Phase 4  | complete    | 16    | 16/16     |
+| Phase 5  | complete    | 7     | 7/7       |
+| Phase 6  | complete    | 3     | 3/3       |
+| Phase 7  | complete    | 1     | 1/1       |
+| Phase 8  | complete    | 1     | 1/1       |
+| Phase 9  | complete    | 1     | 1/1       |
+| Phase 10 | in_progress | 14    | 0/14      |
 
-**Total:** 71/71 tasks completed
+**Total:** 71/85 tasks completed
 
 ---
 
@@ -2042,3 +2044,68 @@ agent file and required no additional skill-surface gate rerun.
 - Preselected archive: `reviews/archived/final-review-2026-08-28T174039Z.md`.
 - Pre-receive head: `2fa655b1da2b741a350fd86b41453e5094371651`.
 - Receive state: `intent_persisted`; archive collision check passed.
+
+## Phase 10: Configured exit-gate remediation
+
+**Status:** in progress - 0 of 14 tasks complete
+**Started:** 2026-08-28
+
+### Review Received: final configured gate - 2026-08-28T17:40:39Z
+
+**Review artifact:** `reviews/archived/final-review-2026-08-28T174039Z.md`
+
+**Reviewed head:** `0a85a08c8bc0f7527935b7141f22856e89271f8e`
+
+**Gate run:** `c0eed430-e033-45d7-9195-35fcacd8cb9f`
+(`claude-fable-skip-permissions`, invocation `gate`)
+
+**Findings:** 0 Critical, 3 Important, 5 Medium, 5 Minor.
+
+**New tasks added:** p10-t01 through p10-t14.
+
+**Finding analysis and disposition map:**
+
+- I1 -> p10-t01 (`code_fix_required`, Moderate): the doctor leak probe
+  contradicts the tracked-record contract and its suggested repair would
+  remove required discovery state.
+- I2 -> p10-t02 (`code_fix_required`, Moderate): a machine-local path in the
+  durable PR summary violates FR7 portability and can expose operator-specific
+  directory information.
+- I3 -> p10-t03 (`code_fix_required`, Moderate): the real non-archive retry
+  order makes the already-tested receipt recovery unreachable and breaks NFR5.
+- M1 -> p10-t04 (`code_fix_required`, Minor): directory-only ignore semantics
+  are probed incorrectly for absent checkouts, producing a reproducible false
+  warning.
+- M2 -> p10-t05 (`code_fix_required`, Minor): scaffold self-heal leaves
+  unmanaged duplicate ignore state and this repository contains the resulting
+  stray line.
+- M3 -> p10-t06 (`code_fix_required`, Moderate): status-blind JSON receipt
+  parsing can record a local conflict/rejection SHA as published across ten
+  skill call sites.
+- M4 -> p10-t07 (`artifact_alignment_required`, Moderate): non-archive PR sync
+  prose and execution disagree; one owner and pin contract must be selected and
+  tested.
+- M5 -> p10-t08 (`artifact_alignment_required`, Moderate): the evidence commit
+  must be path-confined, and `design.md` must explicitly record the accepted
+  bounded skill-owned completion transitions.
+- m1 -> p10-t09 (`code_fix_required`, Minor): CLI reference drift obscures
+  shipped flags, optional prune targeting, non-GitHub behavior, and managed
+  attributes.
+- m2 -> p10-t10 (`code_fix_required`, Negligible): trailing imports are legal
+  but violate the repository's consistent module layout.
+- m3 -> p10-t11 (`code_fix_required`, Negligible): the absent-checkout error
+  gives the inverse recovery command.
+- m4 -> p10-t12 (`code_fix_required`, Minor): receipt validation binds SHA/ref
+  but not project slug or GitHub repository, allowing cross-project evidence.
+- m5 -> p10-t13 and p10-t14 (`artifact_alignment_required`, Minor): the
+  unrelated persistence-prose and arrival-control-flow halves are split so
+  brainstorm can document synced pushes while progress/next stop aborting on
+  stale archived active-project paths.
+
+**Deferred findings:** none. The blocking-gate auto-disposition converted all
+13 findings; no Medium or Minor was rejected or deferred. The compound m5
+finding is represented by two independently verifiable tasks.
+
+**Next:** execute Phase 10 through `oat-project-implement`, then run a current
+final lifecycle review and the configured exit gate's second and final
+remediation attempt.
