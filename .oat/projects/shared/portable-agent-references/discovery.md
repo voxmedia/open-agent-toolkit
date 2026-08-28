@@ -31,6 +31,11 @@ provide a reliable loaded-agent source path across Codex, Claude, and Cursor,
 so agent instructions cannot safely derive a sibling skills root from their
 materialized file location.
 
+**Design depth:** lightweight draft design, selected by the user after the
+global ratchet scope was accepted. The design records the distinct skill and
+agent resolver contracts plus the manifest-driven ratchet boundary before task
+planning.
+
 ## Chosen Direction
 
 Use two related resolver contracts:

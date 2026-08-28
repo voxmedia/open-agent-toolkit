@@ -11,8 +11,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -76,20 +76,20 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-28T21:36:51.245Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T21:42:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T22:00:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: portable-agent-references
 
-**Status:** Discovery captured; requirements confirmation pending
+**Status:** Lightweight design drafted; plan pending
 **Started:** 2026-08-28
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Discovery is captured with a straight-to-plan recommendation. The request is
-bounded and no lightweight design is needed.
+Discovery is complete and the user selected a lightweight draft design before
+plan generation.
 
 ## Artifacts
 
@@ -104,8 +104,9 @@ bounded and no lightweight design is needed.
 - ✓ Discovery started
 - ✓ Execution artifacts scaffolded
 - ✓ Repository and prior-review reconnaissance completed
-- ✓ Straight-to-plan depth selected
-- ⧗ Awaiting requirements confirmation
+- ✓ Expanded global-ratchet requirements confirmed
+- ✓ Lightweight draft design selected
+- ⧗ Plan generation pending
 
 ## Blockers
 
@@ -113,4 +114,4 @@ None
 
 ## Next Milestone
 
-Confirm the discovery requirements, then generate the implementation plan
+Generate and review the implementation plan
