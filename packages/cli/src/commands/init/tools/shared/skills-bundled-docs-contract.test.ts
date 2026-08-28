@@ -182,18 +182,6 @@ describe('skills bundled docs contract', () => {
         target,
       })),
       {
-        file: '.agents/skills/oat-idea-ideate/SKILL.md',
-        target: 'oat-idea-new',
-      },
-      {
-        file: '.agents/skills/oat-idea-new/SKILL.md',
-        target: 'oat-idea-ideate',
-      },
-      {
-        file: '.agents/skills/oat-idea-summarize/SKILL.md',
-        target: 'oat-idea-ideate',
-      },
-      {
         file: '.agents/skills/oat-project-implement/SKILL.md',
         target: 'oat-dispatch-subagents',
       },
@@ -247,6 +235,24 @@ describe('skills bundled docs contract', () => {
       expected,
     );
   });
+
+  it.each(['oat-idea-ideate', 'oat-idea-new', 'oat-idea-summarize'])(
+    '%s resolves chained idea skills from its installed scope',
+    (skill) => {
+      const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
+
+      expect(content).toContain('`${SKILL_DIR}/..`');
+      expect(content).toContain('`${HOME}/.agents/skills`');
+      expect(content).toContain('`<repo-root>/.agents/skills`');
+      expect(content).toContain(
+        'Probe each candidate for `<name>/SKILL.md` and treat the first match as',
+      );
+      expect(content).toContain(
+        'stop the current branch instead of improvising its process',
+      );
+      expect(collectBareCrossSkillTargets(content, skill)).toEqual([]);
+    },
+  );
 
   it('resolves shared tracking scripts from each loaded skill scope', () => {
     const consumers: string[] = [];

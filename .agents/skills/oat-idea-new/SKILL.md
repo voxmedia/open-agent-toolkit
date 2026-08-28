@@ -1,6 +1,6 @@
 ---
 name: oat-idea-new
-version: 1.2.0
+version: 1.2.1
 description: Use when starting ideation for a new concept or problem. Creates an idea directory for lightweight capture and handoff to ongoing ideation.
 argument-hint: '<idea-name> [--global]'
 disable-model-invocation: true
@@ -29,6 +29,21 @@ Create a new idea directory, scaffold a discovery document, verify setup, and ha
   - `[4/4] Handing off to ideation…`
 
 ## Process
+
+### Resolve `${SKILLS_ROOT}` for chained idea skills
+
+Before reading a sibling skill, resolve the skills root in this order:
+
+1. Derive it from the directory containing this loaded `SKILL.md`:
+   `${SKILL_DIR}/..`. If the provider exposes the loaded skill path, treat its
+   directory as `${SKILL_DIR}`.
+2. Otherwise try the user-scope root first: `${HOME}/.agents/skills`.
+3. Fall back to the project-scope root: `<repo-root>/.agents/skills`.
+
+Probe each candidate for `<name>/SKILL.md` and treat the first match as
+`${SKILLS_ROOT}`. If no candidate resolves, tell the user that the required
+sibling skill `<name>` is not installed, suggest installing or updating the
+`ideas` pack, and stop the current branch instead of improvising its process.
 
 ### Step 0: Resolve Ideas Level
 
@@ -140,7 +155,7 @@ Active:    config activeIdea (set)
 Starting brainstorming...
 ```
 
-Then immediately invoke the **`oat-idea-ideate`** skill (located at `.agents/skills/oat-idea-ideate/SKILL.md`) to begin the first brainstorming session. Read that skill file and follow its process from Step 1. The ideate skill owns all conversational brainstorming behavior — do not duplicate it here.
+Then immediately invoke the **`oat-idea-ideate`** skill by reading `${SKILLS_ROOT}/oat-idea-ideate/SKILL.md` (resolve `${SKILLS_ROOT}` as above) to begin the first brainstorming session. Follow its process from Step 1. The ideate skill owns all conversational brainstorming behavior — do not duplicate it here.
 
 ## Success Criteria
 

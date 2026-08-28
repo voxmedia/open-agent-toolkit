@@ -1,6 +1,6 @@
 ---
 name: oat-idea-summarize
-version: 1.2.0
+version: 1.2.1
 description: Use when an idea is mature enough to move from brainstorming into the backlog. Generates a summary document and adds the idea to the backlog.
 argument-hint: '[--global]'
 disable-model-invocation: true
@@ -33,6 +33,21 @@ Read the brainstorming discovery document, synthesize a clean summary, and updat
   - `[4/4] Updating backlog…`
 
 ## Process
+
+### Resolve `${SKILLS_ROOT}` for chained idea skills
+
+Before reading a sibling skill, resolve the skills root in this order:
+
+1. Derive it from the directory containing this loaded `SKILL.md`:
+   `${SKILL_DIR}/..`. If the provider exposes the loaded skill path, treat its
+   directory as `${SKILL_DIR}`.
+2. Otherwise try the user-scope root first: `${HOME}/.agents/skills`.
+3. Fall back to the project-scope root: `<repo-root>/.agents/skills`.
+
+Probe each candidate for `<name>/SKILL.md` and treat the first match as
+`${SKILLS_ROOT}`. If no candidate resolves, tell the user that the required
+sibling skill `<name>` is not installed, suggest installing or updating the
+`ideas` pack, and stop the current branch instead of improvising its process.
 
 ### Step 0: Resolve Ideas Level
 
@@ -81,7 +96,7 @@ Read `{IDEAS_ROOT}/$IDEA_NAME/discovery.md`.
 **If mostly empty:**
 
 - Warn: "This idea hasn't been explored much yet. Consider running the `oat-idea-ideate` skill first to flesh it out."
-- Ask: continue with summarization anyway, or brainstorm more? If user chooses to brainstorm, read the **`oat-idea-ideate`** skill (`.agents/skills/oat-idea-ideate/SKILL.md`) and follow its process from Step 4.
+- Ask: continue with summarization anyway, or brainstorm more? If user chooses to brainstorm, read the **`oat-idea-ideate`** skill at `${SKILLS_ROOT}/oat-idea-ideate/SKILL.md` (resolve `${SKILLS_ROOT}` as above) and follow its process from Step 4.
 
 ### Step 3: Generate Summary
 
@@ -114,7 +129,7 @@ Display the generated summary to the user. Ask:
 - **Refine** — edit the summary (make changes, then re-confirm)
 - **Continue brainstorming** — discard summary and resume brainstorming
 
-If user chooses to continue brainstorming, do not update state or backlog. Read the **`oat-idea-ideate`** skill (`.agents/skills/oat-idea-ideate/SKILL.md`) and follow its process from Step 4 (Start New Session) to resume the conversation.
+If user chooses to continue brainstorming, do not update state or backlog. Read the **`oat-idea-ideate`** skill at `${SKILLS_ROOT}/oat-idea-ideate/SKILL.md` (resolve `${SKILLS_ROOT}` as above) and follow its process from Step 4 (Start New Session) to resume the conversation.
 
 ### Step 5: Update Discovery State
 
