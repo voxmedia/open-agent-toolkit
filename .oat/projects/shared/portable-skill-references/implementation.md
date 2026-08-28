@@ -783,7 +783,9 @@ implementation closeout.
 `reviews/implement-exit-gate-result-09bb3b6a-6ef4-4334-b0b7-247279858b3b.json`
 **Gate run:** `2e1675d2-e87a-48c9-a0f7-f0fb6a526887`
 **Target:** `claude-fable-skip-permissions`
-**Status:** accepted by the configured Claude/Fable route
+**Status:** result persisted; gate passed at the Important threshold
+**Findings:** 0 Critical, 0 Important, 2 Medium, 1 Minor
+**Receive:** eligible; judgment-sweep dispositions remain
 
 ## References
 

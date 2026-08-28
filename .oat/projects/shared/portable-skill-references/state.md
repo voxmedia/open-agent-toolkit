@@ -62,15 +62,15 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v1:532c7888c7e9a33a95375692fb7bc3091d09db833038f5938c377012faf926e9
   freshness_head: bd4c8904badae38bab52b4e4e161702af9e7d72c
   freshness_fingerprint: sha256:effective-delta-v1:532c7888c7e9a33a95375692fb7bc3091d09db833038f5938c377012faf926e9
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 09bb3b6a-6ef4-4334-b0b7-247279858b3b
   launch_started_at: '2026-08-28T17:44:30Z'
   launch_result_receipt: reviews/implement-exit-gate-result-09bb3b6a-6ef4-4334-b0b7-247279858b3b.json
   gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/2e1675d2-e87a-48c9-a0f7-f0fb6a526887.json
   gate_run_id: 2e1675d2-e87a-48c9-a0f7-f0fb6a526887
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T175129Z.md
+  handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=2, minor=1). Run oat-project-review-receive for .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T175129Z.md to disposition them before marking the final review row passed.'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -78,10 +78,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-28T17:45:10Z'
+  updated_at: '2026-08-28T17:52:30Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
