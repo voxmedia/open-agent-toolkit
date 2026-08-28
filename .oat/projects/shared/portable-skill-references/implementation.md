@@ -142,7 +142,7 @@ oat_generated: false
 - **Effort axis:** `selected:high`
 - **Reviewed range:**
   `5b62cfd520d70d814caf5839789bc86716f46f62..dba46295a0d02c1bd1bca179a954bf902a2ae1c6`
-- **Artifact:** `reviews/p01-review-2026-08-28T015302Z.md`
+- **Artifact:** `reviews/archived/p01-review-2026-08-28T015302Z.md`
 - **Verdict:** 0 Critical, 0 Important, 1 Medium, 0 Minor
 - **Reconnaissance:** not-attempted
 - **Fallback/replacement:** none
@@ -193,7 +193,7 @@ oat_generated: false
 - **Effort axis:** `selected:high`
 - **Reviewed range:**
   `ca7d10e3b5a3201b6c70415b4dcf4a28fda95225..9d5be6432d30bb31b6bf3fed01ed152c936640c0`
-- **Artifact:** `reviews/p02-review-2026-08-28T021707Z.md`
+- **Artifact:** `reviews/archived/p02-review-2026-08-28T021707Z.md`
 - **Verdict:** 0 Critical, 0 Important, 0 Medium, 0 Minor
 - **Reconnaissance:** not-attempted
 - **Fallback/replacement:** none
@@ -303,7 +303,7 @@ re-review p03 and final.
 - **Narrowed range:**
   `00c641d332a82bd1ccfc4268f90965d517e7ec52..63b1c7e4076e14369390e7bea9192ecc674f9719`
 - **Prior artifact:** `reviews/archived/p03-review-2026-08-28T024853Z.md`
-- **Artifact:** `reviews/p03-review-2026-08-28T025628Z.md`
+- **Artifact:** `reviews/archived/p03-review-2026-08-28T025628Z.md`
 - **Verdict:** 0 Critical, 0 Important, 0 Medium, 0 Minor
 - **Reconnaissance:** not-attempted
 - **Dispatch stamp:**
