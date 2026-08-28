@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: review_pending
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 10    | 10/10     |
-| Phase 2 | complete    | 13    | 13/13     |
-| Phase 3 | complete    | 19    | 19/19     |
-| Phase 4 | complete    | 16    | 16/16     |
-| Phase 5 | complete    | 7     | 7/7       |
-| Phase 6 | in_progress | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 10    | 10/10     |
+| Phase 2 | complete | 13    | 13/13     |
+| Phase 3 | complete | 19    | 19/19     |
+| Phase 4 | complete | 16    | 16/16     |
+| Phase 5 | complete | 7     | 7/7       |
+| Phase 6 | complete | 3     | 3/3       |
 
-**Total:** 65/68 tasks completed
+**Total:** 68/68 tasks completed
 
 ---
 
@@ -572,16 +572,44 @@ deletion remain blocked.
 
 ## Phase 6: Final re-review fixes
 
-**Status:** in progress - 0 of 3 tasks complete
+**Status:** complete - 3 of 3 tasks complete; fresh final fix-delta review pending
 **Started:** 2026-08-28
 
 ### Task Outcomes
 
-| Task    | Status  | Commit | Outcome |
-| ------- | ------- | ------ | ------- |
-| p06-t01 | pending | -      | -       |
-| p06-t02 | pending | -      | -       |
-| p06-t03 | pending | -      | -       |
+| Task    | Status    | Commit      | Outcome                                                    |
+| ------- | --------- | ----------- | ---------------------------------------------------------- |
+| p06-t01 | completed | `e49dced90` | Late completion artifacts publish before the final receipt |
+| p06-t02 | completed | `560e2ecb3` | Adoption requires durable tracked-record proof             |
+| p06-t03 | completed | `de50c48ca` | Current workflow packs repair managed project Git files    |
+
+### Phase 6 Completion
+
+All three final re-review findings were corrected in one verified task commit
+each. Phase 6 used 0/10 recovery attempts and its ledger remains settled with
+`pending_attempt: null`.
+
+The branch then integrated current `origin/main` at merge `ca26722b4`,
+reconciled all five lockstep public packages to `0.2.39` in `70da4f7af`, and
+refreshed the bundled public-package manifest in `7fc78d953`. Against clean
+code head `7fc78d953`, every Definition of Done gate passed in exact CI order
+with explicit exit `0`: `pnpm check`, `pnpm type-check`, `pnpm test`,
+`pnpm build`, `pnpm run check:skill-bumps`,
+`pnpm release:check-versions`, `pnpm release:validate`, and
+`pnpm build:docs`. Supplemental `pnpm lint`, `pnpm format`, and
+`git diff --check` also exited `0`.
+
+The project-scoped provider sync dry-run reported no filesystem changes.
+`pnpm run cli -- status --scope project` reported every managed project entry
+`in_sync`; its exit `1` was adjudicated as caused only by pre-existing
+unmanaged Cursor strays and stale packs. The 15 drifted views previously
+reported by `--scope all` are user-scope/global and outside this project's
+scope, so none were mutated.
+
+**Review disposition:** The archived final review cycle-2 event is
+`fixes_completed`, never passed. A fresh independent final fix-delta review is
+required before migration, archive, completion, PR publication, or
+spike-repository deletion.
 
 ### Review Received: final - 2026-08-28T01:31:42Z
 
