@@ -2012,3 +2012,13 @@ agent file and required no additional skill-surface gate rerun.
   `reviews/implement-exit-gate-result-480d9467-e461-459a-8f13-d10afc888de9.json`.
 - Command: exact persisted configured argv; no target injected or rewritten.
 - Launch state: `intent_persisted`.
+
+### Implementation Exit Gate Acceptance
+
+- Gate run ID: `c0eed430-e033-45d7-9195-35fcacd8cb9f`.
+- Marker:
+  `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/c0eed430-e033-45d7-9195-35fcacd8cb9f.json`.
+- Selected target: `claude-fable-skip-permissions`; runtime: Claude.
+- Review scope/type: `final` / `code`; configured budget: 2,400,000 ms.
+- The marker's declared project and start time match the persisted launch intent.
+- Launch state: `accepted`; no replacement launch is eligible.
