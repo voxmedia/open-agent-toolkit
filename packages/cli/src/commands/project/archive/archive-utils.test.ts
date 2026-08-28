@@ -614,6 +614,7 @@ describe('archive utils', () => {
         '# review\n',
         'utf8',
       );
+      const recap = await createRecapPackage(target.projectPath);
       await pushSynced(target, defaultGitRunner, {});
       const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
       await writeSyncedRecord(
@@ -621,19 +622,37 @@ describe('archive utils', () => {
         buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
       );
 
-      const result = await archiveProjectOnCompletion(
-        {
-          repoRoot: fixture.cloneA,
-          projectPath: target.projectPath,
-          projectName: 'demo',
-          projectsRoot: '.oat/projects/shared',
-          summaryExportPath: '.oat/repo/reference/project-summaries',
-          s3SyncOnComplete: false,
-        },
-        { timestamp: () => '2026-08-27T12:00:00Z' },
-      );
+      const options = {
+        repoRoot: fixture.cloneA,
+        projectPath: target.projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+        s3Uri: 's3://archive-bucket/projects',
+        s3SyncOnComplete: true,
+        projectRecapRun: recap.relativeRunPath,
+      };
+      const s3Calls: string[][] = [];
+      const commonDependencies = {
+        ensureS3ArchiveAccess: vi.fn(async () => ({
+          ok: true,
+          warnings: [],
+        })),
+        execFile: vi.fn(async (_file: string, args: readonly string[]) => {
+          s3Calls.push([...args]);
+          return { stdout: '', stderr: '' };
+        }),
+      };
+      const result = await archiveProjectOnCompletion(options, {
+        ...commonDependencies,
+        timestamp: () => '2026-08-27T12:00:00Z',
+      });
+      const snapshotId = '20260827-demo';
 
       await expect(access(target.projectPath)).rejects.toThrow();
+      expect(result.archivePath).toBe(
+        join(fixture.cloneA, '.oat', 'projects', 'archived', 'demo'),
+      );
       await expect(access(join(result.archivePath, '.git'))).rejects.toThrow();
       await expect(
         access(join(result.archivePath, 'reviews')),
@@ -642,30 +661,55 @@ describe('archive utils', () => {
         readFile(join(result.archivePath, 'summary.md'), 'utf8'),
       ).resolves.toBe('# summary\n');
       expect(result.lifecycleCommit).toMatch(/^[a-f0-9]{40}$/);
-      expect(result.snapshotId).toBe('demo');
+      expect(result.snapshotId).toBe(snapshotId);
+      expect(result.summaryExportFile).toBe(
+        join(
+          fixture.cloneA,
+          '.oat',
+          'repo',
+          'reference',
+          'project-summaries',
+          `${snapshotId}.md`,
+        ),
+      );
+      expect(result.projectRecapExport?.exportRoot).toBe(
+        join(
+          fixture.cloneA,
+          '.oat',
+          'repo',
+          'reference',
+          'project-recaps',
+          snapshotId,
+        ),
+      );
+      expect(result.s3Path).toBe(
+        `s3://archive-bucket/projects/clone-a/projects/${snapshotId}`,
+      );
       expect(await readSyncedRecord(recordPath)).toMatchObject({
         status: 'complete',
         completedAt: '2026-08-27T12:00:00Z',
-        archiveSnapshot: 'demo',
+        archiveSnapshot: snapshotId,
       });
 
-      await expect(
-        archiveProjectOnCompletion(
-          {
-            repoRoot: fixture.cloneA,
-            projectPath: target.projectPath,
-            projectName: 'demo',
-            projectsRoot: '.oat/projects/shared',
-            summaryExportPath: '.oat/repo/reference/project-summaries',
-            s3SyncOnComplete: false,
-          },
-          { timestamp: () => '2026-08-28T12:00:00Z' },
-        ),
-      ).resolves.toMatchObject({
+      const retried = await archiveProjectOnCompletion(options, {
+        ...commonDependencies,
+        timestamp: () => '2026-08-28T12:00:00Z',
+      });
+      expect(retried).toMatchObject({
         archivePath: result.archivePath,
         lifecycleCommit: result.lifecycleCommit,
-        snapshotId: 'demo',
+        snapshotId,
       });
+      expect(retried.summaryExportFile).toBe(result.summaryExportFile);
+      expect(retried.projectRecapExport?.exportRoot).toBe(
+        result.projectRecapExport?.exportRoot,
+      );
+      expect(retried.s3Path).toBe(result.s3Path);
+      expect(
+        s3Calls
+          .filter((args) => args[0] === 's3' && args[1] === 'sync')
+          .map((args) => args[3]),
+      ).toEqual([result.s3Path, result.s3Path]);
     } finally {
       await fixture.cleanup();
     }
@@ -929,10 +973,17 @@ describe('archive utils', () => {
             ...commonDependencies,
             timestamp: () => '2026-08-28T12:00:00Z',
           });
-          const snapshotId = `${slug}-20260827120000`;
+          const snapshotId = `20260827-${slug}`;
+          const localArchiveId = `${slug}-20260827120000`;
           expect(retried.snapshotId).toBe(snapshotId);
           expect(retried.archivePath).toBe(
-            join(fixture.cloneA, '.oat', 'projects', 'archived', snapshotId),
+            join(
+              fixture.cloneA,
+              '.oat',
+              'projects',
+              'archived',
+              localArchiveId,
+            ),
           );
           expect(retried.summaryExportFile).toBe(
             join(

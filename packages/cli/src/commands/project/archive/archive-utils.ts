@@ -513,6 +513,74 @@ async function resolveUniqueArchivePath(
   return `${archivePath}-${suffix}`;
 }
 
+async function archiveMatchesSnapshot(
+  archivePath: string,
+  projectName: string,
+  snapshotName: string,
+  dependencies: ResolveArchiveProjectTargetDependencies,
+): Promise<boolean> {
+  const directoryExists = dependencies.dirExists ?? dirExists;
+  if (!(await directoryExists(archivePath))) {
+    return false;
+  }
+  try {
+    const metadata = JSON.parse(
+      await readFile(
+        join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+        'utf8',
+      ),
+    ) as unknown;
+    return (
+      isRecord(metadata) &&
+      metadata.projectName === projectName &&
+      metadata.snapshotName === snapshotName
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function resolvePersistedArchivePath(
+  archiveBasePath: string,
+  projectName: string,
+  snapshotName: string,
+  dependencies: ResolveArchiveProjectTargetDependencies,
+): Promise<string> {
+  const archiveRoot = dirname(archiveBasePath);
+  const candidates = [archiveBasePath];
+  try {
+    const entries = await readdir(archiveRoot, { withFileTypes: true });
+    candidates.push(
+      ...entries
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => join(archiveRoot, entry.name))
+        .filter((candidate) => candidate !== archiveBasePath)
+        .sort(),
+    );
+  } catch {
+    // The archive root can be absent before the first successful copy.
+  }
+  const matches: string[] = [];
+  for (const candidate of candidates) {
+    if (
+      await archiveMatchesSnapshot(
+        candidate,
+        projectName,
+        snapshotName,
+        dependencies,
+      )
+    ) {
+      matches.push(candidate);
+    }
+  }
+  if (matches.length > 1) {
+    throw new CliError(
+      `Persisted archive snapshot \`${snapshotName}\` resolves to multiple local archives; refusing an ambiguous retry.`,
+    );
+  }
+  return matches[0] ?? join(archiveRoot, snapshotName);
+}
+
 function buildLocalOnlyArchiveWarning(
   projectName: string,
   archiveProjectPath: string,
@@ -573,7 +641,12 @@ export async function resolveArchiveProjectTarget(
     archiveProjectPath,
   );
   const archivePath = options.archiveSnapshot
-    ? join(dirname(archiveBasePath), options.archiveSnapshot)
+    ? await resolvePersistedArchivePath(
+        archiveBasePath,
+        options.projectName,
+        options.archiveSnapshot,
+        dependencies,
+      )
     : await resolveUniqueArchivePath(archiveBasePath, {
         dirExists: dependencies.dirExists,
         timestamp: dependencies.timestamp,
@@ -1497,12 +1570,16 @@ export async function archiveProjectOnCompletion(
   );
   assertDurableArchiveProjectTarget(archiveTarget);
   const archivePath = archiveTarget.archivePath;
-  const snapshotId = basename(archivePath);
-  const exportIdentity = syncTarget ? snapshotId : snapshotName;
+  const exportIdentity = syncTarget
+    ? (activeRecord?.archiveSnapshot ?? snapshotName)
+    : snapshotName;
+  const snapshotId = syncTarget ? exportIdentity : basename(archivePath);
 
-  if (syncTarget && activeRecord && !activeRecord.archiveSnapshot) {
-    activeRecord = { ...activeRecord, archiveSnapshot: snapshotId };
-    await writeRecord(recordPath, activeRecord);
+  const shouldPersistArchiveSnapshot = Boolean(
+    syncTarget && activeRecord && !activeRecord.archiveSnapshot,
+  );
+  if (shouldPersistArchiveSnapshot && activeRecord) {
+    activeRecord = { ...activeRecord, archiveSnapshot: exportIdentity };
   }
 
   const archiveExists = await (dependencies.dirExists ?? dirExists)(
@@ -1540,6 +1617,9 @@ export async function archiveProjectOnCompletion(
     }
     if (!syncTarget) {
       await removePath(options.projectPath, { recursive: true, force: true });
+    }
+    if (shouldPersistArchiveSnapshot && activeRecord) {
+      await writeRecord(recordPath, activeRecord);
     }
   } catch (error) {
     if (projectRecapExport) {
