@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-08-28
 oat_generated: false
@@ -14,7 +14,10 @@ Create a quick-workflow follow-up to the merged
 `portable-skill-references` project. Port the remaining user-default workflow
 agents and utility dispatch surface away from executable repository-relative
 sibling reads, then remove the validation exemption that currently preserves
-the phase implementer's bare paths.
+the phase implementer's bare paths. Broaden the regression ratchet in the same
+project so every user-default skill and agent is checked for executable
+cross-skill `SKILL.md` and `references/*.md` reads, and port every live
+violation the stronger rule exposes.
 
 The project starts from merged `origin/main` on
 `feat/portable-agent-references`.
@@ -43,8 +46,14 @@ Use two related resolver contracts:
 Every resolver validates the exact `SKILL.md` or reference file it needs,
 names the owning pack on failure, provides install/update recovery for the
 intended scope, and stops before dispatch instead of using ambient discovery.
-Focused tests will prove the portable reads and delete the phase implementer's
-special-case expectation for bare paths.
+
+Generalize the shipped portability ratchet across Markdown owned by every
+user-default pack, including agent assets. Match executable cross-skill
+`SKILL.md` and `references/**/*.md` targets across repository-relative spelling
+variants. Port all live executable violations surfaced by that rule; retain
+only exact file-and-target entries for self-references or historical evidence.
+Positive contract tests will prove the portable reads and delete the phase
+implementer's special-case expectation for bare paths.
 
 ## Key Decisions
 
@@ -60,11 +69,12 @@ special-case expectation for bare paths.
 4. **Remove the exemption, do not merely annotate it:** once
    `oat-phase-implementer` is portable, the validation branch that requires its
    bare paths must disappear and normal portable assertions must cover it.
-5. **Focused ratchet scope:** add regression coverage for the changed agent and
-   utility surfaces. The separate repository-wide widening from sibling
-   `SKILL.md` targets to every cross-skill `references/*.md` read remains a
-   distinct follow-up because it exposes additional skills outside this
-   request.
+5. **Global user-default ratchet:** scan both skill and agent Markdown for
+   cross-skill `SKILL.md` and `references/*.md` reads. Remediate every
+   executable hit in user-default packs rather than weakening the rule with a
+   broad baseline.
+6. **Exact non-executable baselines:** self-references and historical evidence
+   may remain only when pinned by exact source and target with a rationale.
 
 ## Constraints
 
@@ -78,6 +88,8 @@ special-case expectation for bare paths.
   commands that name the owning pack and intended scope.
 - Verify canonical and bundled/materialized copies so source-only portability
   cannot pass.
+- Treat all executable violations surfaced in user-default packs as remediation
+  scope, including workflow, utility, and research callers and workflow agents.
 - Bump every changed canonical skill or agent version once in the final PR and
   advance the five public packages in lockstep because agents and skills are
   shipped CLI assets.
@@ -100,6 +112,13 @@ special-case expectation for bare paths.
 - The `oat-phase-implementer` special branch in the dispatch-consumer test is
   removed; phase implementer and reviewer use positive portable-contract
   assertions.
+- The portability ratchet enumerates user-default skill and agent Markdown,
+  detects cross-skill `SKILL.md` plus `references/**/*.md` targets across
+  quoted, linked, `./`, and `../` forms, and reports exact source/target
+  evidence.
+- All executable violations found by the generalized ratchet are ported,
+  including current workflow, utility, research, and codebase-mapper surfaces;
+  only exact self-reference or historical baselines remain.
 - Provider/bundled views contain the updated agent and utility instructions.
 - Focused contract tests, agent/skill version assertions, public-package
   release checks, and every repository gate pass.
@@ -110,12 +129,11 @@ special-case expectation for bare paths.
   materialization architecture.
 - Changing pack membership, default scopes, install/update semantics, or
   dispatch policy.
-- Porting unrelated bare cross-skill reads in other skills such as
-  `oat-project-review-provide`, `oat-review-provide-remote`, `codex-skill`, or
-  `oat-repo-improve`.
-- Generalizing the global ratchet to every cross-skill `references/*.md` target;
-  retain exact baselines or focused assertions rather than silently expanding
-  this project's remediation scope.
+- Porting repository-only or non-user-default surfaces that the manifest-driven
+  ratchet does not ship through a user-default pack.
+- Rewriting self-references that already travel with their owning skill, or
+  historical reports solely to eliminate evidence paths; those may use exact
+  reviewed baselines.
 - Publishing packages, opening a PR, or merging the implementation PR.
 
 ## Risks
@@ -128,10 +146,10 @@ special-case expectation for bare paths.
   selected mechanics or provider reference still uses a bare path.
   - **Mitigation:** validate every concrete required target and assert the full
     chained read contract.
-- **Scope creep from a generalized matcher:** broadening the regex will reveal
-  unrelated historical and executable reads.
-  - **Mitigation:** keep this project focused and make any retained baseline
-    exact by file and target.
+- **Matcher noise:** broadening the regex will reveal self-references and
+  historical evidence alongside executable defects.
+  - **Mitigation:** classify every hit, remediate executable cross-skill reads,
+    and keep any non-executable allowance exact by file and target.
 
 ## Open Questions
 
