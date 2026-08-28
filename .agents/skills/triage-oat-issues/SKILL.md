@@ -157,15 +157,20 @@ record them for a separate triage run.
 
 Read the repository instructions. Confirm the checkout, branch, worktree state,
 GitHub authentication, and remote repository. Fetch `origin/main` and record its
-SHA before judging claims.
+SHA before judging claims. That SHA is the evidence baseline and the only allowed
+starting commit for the triage branch.
 
 Use `gh` as the primary GitHub interface. Inspect both open and closed issues and
 pull requests when checking history. Search active and archived backlog items,
 not just the generated backlog index.
 
-Use a dedicated branch and pull request for each initial triage run. Preserve
-unrelated work. If the current worktree contains active work, create or request a
-separate visible worktree using the repository's worktree workflow.
+Create a dedicated branch from the recorded `origin/main` SHA for each initial
+triage run. Do not start that branch from the current `HEAD`, another feature
+branch, or any commit other than the recorded baseline. Verify `HEAD` equals the
+recorded baseline SHA before writing the triage record or backlog changes.
+Preserve unrelated work. If the current worktree contains active work, create or
+request a separate visible worktree from `origin/main` using the repository's
+worktree workflow.
 
 ### Step 3: Create the Record and Snapshot the Scope
 
@@ -297,20 +302,22 @@ will eventually merge:
 
 1. Commit only the approved triage record and backlog changes, with the record
    still in `approved` state and `triage_pr: null`.
-2. Push the dedicated branch and open a pull request that summarizes:
+2. Push the dedicated branch and open a pull request against `main` that
+   summarizes:
    - Scope and evidence baseline
    - Verified dispositions
    - Backlog changes
    - Deferred post-merge GitHub actions
    - Open concerns or questions
    - Exact resume instruction
-
-3. Capture the opened pull request's number and URL.
-4. Set the record status to `pr_open`, replace `triage_pr: null` with the pull
+3. Confirm the pull request's merge base is the recorded `origin/main` SHA and
+   that the diff contains only this run's triage commits.
+4. Capture the opened pull request's number and URL.
+5. Set the record status to `pr_open`, replace `triage_pr: null` with the pull
    request reference, and add the copyable resume instruction.
-5. Format and check the updated record, commit that binding as a second commit,
+6. Format and check the updated record, commit that binding as a second commit,
    and push it to the open pull request.
-6. Re-read the record from the remote pull request head and verify that it
+7. Re-read the record from the remote pull request head and verify that it
    contains the exact pull request reference. Verify that the worktree is clean.
 
 Avoid `Closes #NNN` and similar auto-close keywords. GitHub issue state must not
@@ -404,6 +411,12 @@ The triage PR merged. Resume the approved issue actions from PR #223.
 
 - Treat the changed row as drift. Do not blindly execute the old action.
 
+**The current checkout is not the recorded `origin/main` SHA:**
+
+- Do not commit triage changes there. Create or switch to a dedicated branch at
+  that SHA, using a separate worktree when the current worktree has unrelated
+  work.
+
 **The triage PR is not merged:**
 
 - Stop post-merge execution and give the user the PR's current state.
@@ -415,6 +428,7 @@ The triage PR merged. Resume the approved issue actions from PR #223.
 - Priority and size recommendations have explicit rationales
 - The user approved one exact disposition ledger before mutations
 - The triage record and approved backlog changes are reviewable in a dedicated PR
+  whose merge base is the recorded `origin/main` SHA
 - No GitHub issue mutation occurs before that PR merges
 - Resume execution is idempotent and drift-aware
 - Fixed issues close only with links to their merged fixing PRs
