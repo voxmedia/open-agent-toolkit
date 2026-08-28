@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: portable-skill-references
 
-**Started:** Not started
+**Started:** 2026-08-27
 **Last Updated:** 2026-08-27
 
 > `oat_current_task_id` points to the next plan task. No implementation work is
@@ -63,7 +63,14 @@ oat_generated: false
 
 <!-- orchestration-runs-start -->
 
-_No implementation runs recorded._
+### Run 1 - 2026-08-27
+
+- **Mode:** single-thread
+- **Schedule:** `[p01] -> [p02]`
+- **Dispatch policy:** managed High
+- **HiLL checkpoints:** final phase only (`p02`)
+- **Auto-review at HiLL checkpoints:** enabled
+- **Status:** starting at `p01-t01`
 
 <!-- orchestration-runs-end -->
 
