@@ -2420,3 +2420,14 @@ persisted launch interval. The accepted run will not be relaunched.
 The durable envelope, gate artifact, plan row, target, project, invocation,
 and run ID corroborate. Policy disposition remains unavailable until receive
 is durably completed.
+
+#### Attempt 2 Receive Intent
+
+- **Correlation:** gate run `3241d71c-b67e-4a04-88f2-4a9965de3395`, final/code,
+  source `final-review-2026-08-28T194740Z.md`
+- **Source:**
+  `reviews/final-review-2026-08-28T194740Z.md`
+- **Expected archive:**
+  `reviews/archived/final-review-2026-08-28T194740Z.md`
+- **Pre-receive head:** `cdd1c3556e27a1d6fe01c479df29a2316bb120dd`
+- **Receive state:** `intent_persisted`

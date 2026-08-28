@@ -101,23 +101,23 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T194740Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=3). Run oat-project-review-receive for .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T194740Z.md to disposition them before marking the final review row passed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=3241d71c-b67e-4a04-88f2-4a9965de3395; handoff=receive; source=reviews/final-review-2026-08-28T194740Z.md; scope=final; type=code'
+  receive_source_artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T194740Z.md
+  receive_archived_artifact: .oat/projects/shared/synced-project-scope/reviews/archived/final-review-2026-08-28T194740Z.md
+  receive_event_identity: 'final | code | final-review-2026-08-28T194740Z.md'
+  receive_pre_head: cdd1c3556e27a1d6fe01c479df29a2316bb120dd
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-28T19:50:03Z'
+  updated_at: '2026-08-28T19:50:42Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T19:50:03.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T19:50:42.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
