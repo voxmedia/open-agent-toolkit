@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: prev1-t07
 oat_generated: false
 ---
 
@@ -12,8 +12,8 @@ oat_generated: false
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
-> Revision 1 and all five bounded review fixes are complete. Final re-review
-> and configured exit-gate refresh remain root-owned before closeout.
+> Revision 1 behavior and the first five bounded review fixes are complete.
+> Two terminal artifact-alignment fixes are queued before final re-review.
 
 ## Progress Overview
 
@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 1: Portable resolution and enforcement | passed | 4     | 4/4       |
 | Phase 2: Release metadata and validation     | passed | 1     | 1/1       |
 | Phase 3: Final review fixes                  | passed | 3     | 3/3       |
-| Revision 1: Merge current main and fixes     | active | 6     | 6/6       |
+| Revision 1: Merge current main and fixes     | active | 8     | 6/8       |
 
-**Total:** 14/14 tasks completed; final re-review is next.
+**Total:** 14/16 tasks completed; `prev1-t07` is next.
 
 ### Revision Received: Inline Feedback
 
@@ -73,6 +73,39 @@ skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 ### Task prev1-t06: Resolve dispatch dependencies independently
 
 **Status:** completed
+
+### Task prev1-t07: Reconcile terminal lifecycle evidence
+
+**Status:** pending
+
+### Task prev1-t08: Refresh the terminal project summary
+
+**Status:** pending
+
+### Review Received: final artifact alignment
+
+**Date:** 2026-08-28
+**Review artifact:**
+`reviews/archived/final-review-2026-08-28T151136Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Finding dispositions:**
+
+- `I1` -> `prev1-t07`: reconcile terminal plan, implementation, and state
+  evidence after the completed fix commits.
+- `M1` -> `prev1-t08`: refresh the summary through the terminal task.
+
+**Review-cycle authorization:** consumed the remaining bounded additional
+iteration previously authorized by the user.
+
+**Next:** Execute `prev1-t07` and `prev1-t08`, then run the final re-review and
+configured exit gate.
 
 ### Review Received: final post-merge
 

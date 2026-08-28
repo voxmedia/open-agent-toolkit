@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t07
 oat_last_commit: cca0bb5187adfdffd475017e1009a6e643502927
 oat_blockers: []
 associated_issues:
@@ -143,14 +143,14 @@ oat_project_recap:
 
 # Project State: portable-skill-references
 
-**Status:** Final and remote review fixes completed; re-review pending
+**Status:** Terminal artifact-alignment fixes queued
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Revision 1 and all five bounded review fixes are complete. Final re-review and
-configured exit-gate refresh remain before closeout.
+Revision 1 behavior and five bounded review fixes are complete. Two terminal
+artifact-alignment fixes are queued before final re-review and gate refresh.
 
 ## Artifacts
 
@@ -158,7 +158,7 @@ configured exit-gate refresh remain before closeout.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan quick workflow)
 - **Plan:** `plan.md` (complete; ready for implementation)
-- **Implementation:** `implementation.md` (14/14 tasks complete; re-review pending)
+- **Implementation:** `implementation.md` (14/16 tasks complete; fixes queued)
 
 ## Progress
 
@@ -186,7 +186,8 @@ configured exit-gate refresh remain before closeout.
 - ✓ Review-fix task `prev1-t04` completed; sibling recovery commands added
 - ✓ Review-fix task `prev1-t05` completed; launch safeguards restored
 - ✓ Review-fix task `prev1-t06` completed; dispatch dependencies resolve independently
-- ▶ Final re-review and configured exit-gate refresh pending
+- ✓ Final behavior re-review confirmed all five intended fixes
+- ▶ Terminal artifact-alignment task `prev1-t07` queued
 
 ## Blockers
 
@@ -194,4 +195,5 @@ None
 
 ## Next Milestone
 
-Re-review final, refresh the configured exit gate, and push PR #226.
+Execute `prev1-t07` and `prev1-t08`, re-review final, refresh the configured
+exit gate, and push PR #226.
