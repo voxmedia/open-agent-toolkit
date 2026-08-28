@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
@@ -12,8 +12,8 @@ oat_generated: false
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
-> All 18 planned tasks are complete. Only the stale configured exit-gate
-> refresh remains.
+> All 18 planned tasks are complete. The refreshed configured exit gate passed
+> with no blocking findings, and its review is received.
 
 ## Progress Overview
 
@@ -24,7 +24,7 @@ oat_generated: false
 | Phase 3: Final review fixes                  | passed | 3     | 3/3       |
 | Revision 1: Merge current main and fixes     | passed | 10    | 10/10     |
 
-**Total:** 18/18 tasks completed; the configured exit gate is next.
+**Total:** 18/18 tasks completed; implementation closeout is complete.
 
 ### Revision Received: Inline Feedback
 
@@ -756,7 +756,7 @@ standard review cycle under the explicit artifact-only fix policy.
 
 ## Completion Report
 
-- **Implementation:** task-complete; 18/18 tasks across four phases
+- **Implementation:** complete; 18/18 tasks across four phases
 - **Reviews:** prior final and remote findings are fixed; the `prev1-t09`
   invocation-provenance repair and `prev1-t10` terminal artifact refresh are
   complete, with no additional standard re-review required
@@ -767,8 +767,9 @@ standard review cycle under the explicit artifact-only fix policy.
 - **Project recap:** skipped by explicit user choice; no recap run or manifest
 - **Publication:** PR #226 is open at
   https://github.com/voxmedia/open-agent-toolkit/pull/226
-- **Remaining operator actions:** human review, merge, and project completion /
-  archival; none were performed by this implementation run
+- **Remaining operator actions:** push the authorized branch update, then human
+  review, merge, and project completion / archival; no merge was performed by
+  this implementation run
 
 ### Configured Exit Gate Refresh
 
