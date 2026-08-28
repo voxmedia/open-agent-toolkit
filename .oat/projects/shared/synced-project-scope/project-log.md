@@ -128,6 +128,10 @@ Phase 9 completed p09-t01 at e193c8ffb; tasks=1/1 total=71/71 recovery=0/10 gate
 
 Gate final code review with one bounded reconnaissance wave (3 intelligent-recon lanes, target opus, floor satisfied); artifact reviews/final-review-2026-08-28T174039Z.md
 
+### 2026-08-28 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:3,medium:5,minor:5 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T174039Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
