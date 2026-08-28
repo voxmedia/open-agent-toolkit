@@ -128,6 +128,42 @@ describe('checkSyncedProjects', () => {
     );
   });
 
+  it('allows a real branch-tracked discovery record at the synced root', async () => {
+    const repoRoot = await createRoot();
+    execFileSync('git', ['init', '-q', '--initial-branch=main'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.email', 'doctor@example.com'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.name', 'Doctor Fixture'], {
+      cwd: repoRoot,
+    });
+    const syncedRoot = join(repoRoot, '.oat/projects/synced');
+    await writeSyncedRecord(
+      join(syncedRoot, 'demo.json'),
+      buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
+    );
+    execFileSync('git', ['add', '-f', '.oat/projects/synced/demo.json'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['commit', '-q', '-m', 'test: add discovery record'], {
+      cwd: repoRoot,
+    });
+
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: defaultGitRunner,
+      resolveProjectsRoot: async () => '.oat/projects/shared',
+    });
+
+    expect(checks).not.toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_tracked_artifacts',
+        status: 'fail',
+      }),
+    );
+  });
+
   it('detects an index-retained synced artifact when the working-tree root is absent', async () => {
     const repoRoot = await createRoot();
     execFileSync('git', ['init', '-q', '--initial-branch=main'], {

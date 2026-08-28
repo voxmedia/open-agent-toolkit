@@ -105,6 +105,13 @@ export async function checkSyncedProjects(
   const missingRepository =
     tracked.code !== 0 &&
     /not a git repository/i.test(`${tracked.stderr}\n${tracked.stdout}`);
+  const trackedCheckoutArtifacts = tracked.stdout
+    .split('\n')
+    .map((path) => path.trim())
+    .filter((path) => {
+      const nestedPath = path.slice(`${syncedRelative}/`.length);
+      return path.startsWith(`${syncedRelative}/`) && nestedPath.includes('/');
+    });
   if (tracked.code !== 0 && !missingRepository) {
     checks.push({
       name: 'project:synced_tracked_artifacts',
@@ -113,12 +120,12 @@ export async function checkSyncedProjects(
       message: `Unable to inspect tracked synced artifacts: ${tracked.stderr || tracked.stdout || `git ls-files exited ${tracked.code}`}.`,
       fix: 'Resolve the Git error, then rerun `oat doctor --scope project`.',
     });
-  } else if (tracked.code === 0 && tracked.stdout.trim()) {
+  } else if (tracked.code === 0 && trackedCheckoutArtifacts.length > 0) {
     checks.push({
       name: 'project:synced_tracked_artifacts',
       description: 'Synced artifacts excluded from the parent branch',
       status: 'fail',
-      message: `Tracked synced artifact files: ${tracked.stdout.split('\n').join(', ')}`,
+      message: `Tracked synced artifact files: ${trackedCheckoutArtifacts.join(', ')}`,
       fix: 'Run `oat project migrate` or remove them with `git rm --cached`.',
     });
   }
