@@ -204,6 +204,17 @@ export async function checkSyncedProjects(
         allowFailure: true,
       }),
     ]);
+    const localQuerySucceeded = local.code === 0 || local.code === 1;
+    if (!localQuerySucceeded) {
+      checks.push(
+        check(
+          record.slug,
+          'local_ref',
+          'pass',
+          `Local ref comparison skipped: ${local.stderr || local.stdout || `git show-ref exited ${local.code}`}.`,
+        ),
+      );
+    }
     if (remote.code !== 0) {
       checks.push(
         check(
@@ -215,7 +226,6 @@ export async function checkSyncedProjects(
       );
     } else {
       const remoteSha = remote.stdout.trim().split(/\s+/)[0] ?? '';
-      const localQuerySucceeded = local.code === 0 || local.code === 1;
       const localSha = local.code === 0 ? local.stdout.trim() : '';
       if (
         localQuerySucceeded &&

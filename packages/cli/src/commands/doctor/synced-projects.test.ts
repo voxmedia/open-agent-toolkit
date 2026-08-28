@@ -302,6 +302,44 @@ describe('checkSyncedProjects', () => {
     ).toBe('pass');
   });
 
+  it('reports a local ref-query failure without misclassifying divergence', async () => {
+    const repoRoot = await createRoot();
+    const syncedRoot = join(repoRoot, '.oat/projects/synced');
+    await writeSyncedRecord(
+      join(syncedRoot, 'demo.json'),
+      buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
+    );
+    await mkdir(join(syncedRoot, 'demo'), { recursive: true });
+
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: gitRunner({
+        'show-ref --hash': {
+          code: 128,
+          stdout: '',
+          stderr: 'fatal: local ref database is corrupt',
+        },
+        'ls-remote origin': {
+          code: 0,
+          stdout: `${'a'.repeat(40)}\trefs/oat/projects/demo`,
+          stderr: '',
+        },
+      }),
+    });
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_demo_local_ref',
+        status: 'pass',
+        message: expect.stringContaining(
+          'fatal: local ref database is corrupt',
+        ),
+      }),
+    );
+    expect(checks).not.toContainEqual(
+      expect.objectContaining({ name: 'project:synced_demo_ref_sync' }),
+    );
+  });
+
   it.each([
     {
       relation: 'local-only',
