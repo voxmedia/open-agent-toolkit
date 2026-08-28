@@ -770,6 +770,16 @@ implementation closeout.
 - **Remaining operator actions:** human review, merge, and project completion /
   archival; none were performed by this implementation run
 
+### Configured Exit Gate Refresh
+
+**Generation started:** 2026-08-28T17:43:42Z
+**Reviewed basis:** `bd4c8904badae38bab52b4e4e161702af9e7d72c`
+**Logical base:** `origin/main`
+**Fingerprint:**
+`sha256:effective-delta-v1:532c7888c7e9a33a95375692fb7bc3091d09db833038f5938c377012faf926e9`
+**Policy:** block, maximum 2 attempts
+**Status:** pending; launch not started
+
 ## References
 
 - Plan: `plan.md`

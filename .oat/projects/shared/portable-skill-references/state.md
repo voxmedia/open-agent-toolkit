@@ -48,40 +48,40 @@ oat_phase_recovery_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
-  disposition: passed
+  disposition: null
   config_fingerprint: sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: 637a6289f6e6ea627a536006cc11a36791eedc9a
+  reviewed_head: bd4c8904badae38bab52b4e4e161702af9e7d72c
   implementation_base_ref: origin/main
-  implementation_fingerprint: sha256:effective-delta-v1:edd486e37fc9dec0b514abb44c4a111c18d4d15f51ebc82b60e29f651af9bfca
-  freshness_head: a092dcc1c494dd84d7acb5f09123da08d0d37fb6
-  freshness_fingerprint: sha256:effective-delta-v1:ee80dc3fd4013910b14f36141da20fd57e7a0684a6f9c5293c8a564d2385e891
-  launch_state: result_persisted
-  launch_attempt_id: b9e27737-c78f-4081-87f7-02fb95f19601
-  launch_started_at: '2026-08-28T03:17:46Z'
-  launch_result_receipt: reviews/implement-exit-gate-result-b9e27737-c78f-4081-87f7-02fb95f19601.json
-  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/f5f3ba50-bf74-4bdd-bc02-6ac2f2ec5153.json
-  gate_run_id: f5f3ba50-bf74-4bdd-bc02-6ac2f2ec5153
-  envelope_status: ok
-  artifact: .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T032516Z.md
-  handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=1). Run oat-project-review-receive for .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T032516Z.md to disposition them before marking the final review row passed.'
-  receive_state: completed
-  receive_correlation: 'run=f5f3ba50-bf74-4bdd-bc02-6ac2f2ec5153; handoff=receive; source=reviews/final-review-2026-08-28T032516Z.md; scope=final; type=code'
-  receive_source_artifact: .oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T032516Z.md
-  receive_archived_artifact: .oat/projects/shared/portable-skill-references/reviews/archived/final-review-2026-08-28T032516Z.md
-  receive_event_identity: 'final | code | final-review-2026-08-28T032516Z.md'
-  receive_pre_head: da762b52de7303f6bf87dbe011fe8f6db8a6af46
-  receive_commit: 599c9cee5da1bb3281ebc9b9aa0a9d39b43ddeb0
-  receive_eligible: true
-  receive_completed: true
-  failure: authorized revision changed the effective implementation delta after the accepted gate basis
-  updated_at: '2026-08-28T12:04:26Z'
+  implementation_fingerprint: sha256:effective-delta-v1:532c7888c7e9a33a95375692fb7bc3091d09db833038f5938c377012faf926e9
+  freshness_head: bd4c8904badae38bab52b4e4e161702af9e7d72c
+  freshness_fingerprint: sha256:effective-delta-v1:532c7888c7e9a33a95375692fb7bc3091d09db833038f5938c377012faf926e9
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-08-28T17:43:42Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
