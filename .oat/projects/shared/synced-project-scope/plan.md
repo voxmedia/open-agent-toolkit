@@ -2,11 +2,11 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-08-27
+oat_last_updated: 2026-08-28
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_hill_phases: ['p06'] # implementation pauses only after the final review-fix phase
+oat_plan_hill_phases: ['p07'] # implementation pauses only after the operator-extended final review-fix phase
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null
@@ -2851,6 +2851,60 @@ git commit -m "fix(p06-t03): repair current workflow pack files"
 
 ---
 
+## Phase 7: Operator-extended final receipt fix
+
+Close the one Critical finding from final review cycle 3 under the user's
+explicit one-cycle override. Do not expand this phase beyond the non-archive
+completion receipt transaction. Preserve the existing PR-scoped skill and
+public-package version bumps; do not bump either again.
+
+### Task p07-t01: (review) Publish the final non-archive PR artifact before its receipt
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Create or modify: the closest repository-backed completion transaction test harness
+- Modify: `.oat/sync/manifest.json` only as required by canonical skill synchronization
+
+**Step 1: Understand the issue**
+
+Review finding C1: Step 7.5 captures `PROJECT_REF_COMMIT`, but Step 8.6 then
+rewrites the non-archive PR-description artifact. With no selected recap the
+final body remains unpublished; with a recap, publishing it can create an
+extra artifact commit that breaks the required evidence-commit parent and
+receipt identity.
+
+**Step 2: Implement fix**
+
+For non-archive synced completion, separate any preliminary pin-source receipt
+from the final artifact receipt. Render the final links block before the push
+whose exact SHA becomes `PROJECT_REF_COMMIT`, then require recap evidence to be
+its immediate child. Preserve the exact parent-branch record commit, retained
+custom ref, unrelated staged state, retry idempotence, and archive behavior.
+Do not add a second `oat-project-complete` skill-version bump or a second
+lockstep public-package version bump; both PR-scoped bumps already exist.
+
+**Step 3: Verify**
+
+Add executable repository-backed coverage for configured and interactive
+archive decline, each with recap selected and declined. Prove the retained ref
+is clean and contains the final PR artifact; in recap cases prove the pushed
+receipt equals the exact evidence commit and that its immediate parent is the
+final artifact receipt. Keep the textual contract test as a supplemental
+ordering guard that explicitly includes Step 8.6. Run the focused transaction
+and contract suites, skill validation and bump checks, project provider-sync
+dry-run/status, scoped lint/format, and `git diff --check`.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/SKILL.md .oat/sync/manifest.json packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts <repository-backed-test-files>
+git commit -m "fix(p07-t01): finalize non-archive artifact receipt"
+```
+
+---
+
 ## Reviews
 
 | Scope   | Type     | Status          | Date       | Artifact                                                          | Reviewed Head                            | Invocation | Gate Target              |
@@ -2873,7 +2927,7 @@ git commit -m "fix(p06-t03): repair current workflow pack files"
 | p04     | code     | passed          | 2026-08-27 | reviews/p04-review-2026-08-27T232826Z.md                          | 743c9cbe952cf6f4ad3eeba24eabebebec9884c7 | manual     | -                        |
 | final   | code     | fixes_completed | 2026-08-27 | reviews/archived/final-review-2026-08-27T234119Z.md               | c5ceac6b06ea29dba92c65834d5aa4c593813f6e | manual     | -                        |
 | final   | code     | fixes_completed | 2026-08-28 | reviews/archived/final-review-2026-08-28T013142Z.md               | 30ea3ce3a561e0ce74920976884f021dc637487c | auto       | -                        |
-| final   | code     | received        | 2026-08-28 | reviews/final-review-2026-08-28T022122Z.md                        | 9537f6dd5872cae9101c3e10a8ead997940a2cb9 | auto       | -                        |
+| final   | code     | fixes_added     | 2026-08-28 | reviews/archived/final-review-2026-08-28T022122Z.md               | 9537f6dd5872cae9101c3e10a8ead997940a2cb9 | auto       | -                        |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                        |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                        |
 | plan    | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -                                        | auto       | -                        |
@@ -2900,8 +2954,9 @@ git commit -m "fix(p06-t03): repair current workflow pack files"
 - Phase 4: 16 tasks - Skills sweep (A/B/C/D/arrival/PR), validator rules, docs, lockstep bump, DoD gates, skill-sweep dogfood, and five received-review durability/routing fixes
 - Phase 5: 7 tasks - Final-review fixes for non-archive completion, migration/prune confinement, rollback/adoption recovery, semantic guard validation, and test imports
 - Phase 6: 3 tasks - Final re-review fixes for late completion publication, ignored adoption-record durability, and current-pack managed-file repair
+- Phase 7: 1 task - Operator-extended final receipt fix with repository-backed completion coverage
 
-**Total: 68 tasks**
+**Total: 69 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

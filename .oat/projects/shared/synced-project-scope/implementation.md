@@ -1,9 +1,9 @@
 ---
-oat_status: review_pending
-oat_ready_for: oat-project-review-provide
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_current_task_id: p07-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 10    | 10/10     |
-| Phase 2 | complete | 13    | 13/13     |
-| Phase 3 | complete | 19    | 19/19     |
-| Phase 4 | complete | 16    | 16/16     |
-| Phase 5 | complete | 7     | 7/7       |
-| Phase 6 | complete | 3     | 3/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 10    | 10/10     |
+| Phase 2 | complete    | 13    | 13/13     |
+| Phase 3 | complete    | 19    | 19/19     |
+| Phase 4 | complete    | 16    | 16/16     |
+| Phase 5 | complete    | 7     | 7/7       |
+| Phase 6 | complete    | 3     | 3/3       |
+| Phase 7 | in_progress | 1     | 0/1       |
 
-**Total:** 68/68 tasks completed
+**Total:** 68/69 tasks completed
 
 ---
 
@@ -629,6 +630,36 @@ converted to fix tasks. No findings are deferred or dismissed.
 
 **Next:** Execute p06-t01 through p06-t03, rerun the complete Definition of Done
 sequence, and run one fresh final fix-delta review. Migration, archive,
+completion, PR publication, and spike-repository deletion remain blocked.
+
+---
+
+## Phase 7: Operator-extended final receipt fix
+
+**Status:** in progress - 0 of 1 task complete
+**Started:** 2026-08-28
+
+### Review Received: final - 2026-08-28T02:21:22Z
+
+**Review artifact:** `reviews/archived/final-review-2026-08-28T022122Z.md`
+
+**Reviewed head:** `9537f6dd5872cae9101c3e10a8ead997940a2cb9`
+
+**Findings:** 1 Critical, 0 Important, 0 Medium, 0 Minor.
+
+**New task added:** p07-t01.
+
+**Finding disposition map:** C1 -> p07-t01 (`code_fix_required`). The reviewer
+confirmed that Step 8.6 still rewrites the non-archive PR artifact after the
+receipt captured by Step 7.5, leaving the final body unpublished without a
+recap or violating exact recap evidence commit/parent guarantees.
+
+**Review-cycle override:** The standard three-cycle cap was reached. On
+2026-08-28 the user explicitly authorized one additional bounded fix-and-review
+cycle for this Critical only. No Medium or Minor findings are deferred.
+
+**Next:** Execute p07-t01, run the complete Definition of Done sequence, and
+run one fresh independent final fix-delta review. Migration, archive,
 completion, PR publication, and spike-repository deletion remain blocked.
 
 ---
