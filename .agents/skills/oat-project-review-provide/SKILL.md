@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.4.0
+version: 1.4.1
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -891,9 +891,18 @@ If running inline (Tier 3), execute the review and write artifact.
 
 **Review artifact template:** (see `.agents/agents/oat-reviewer.md` for full format)
 
-Shared ad-hoc companion reference (non-project mode):
+Shared ad-hoc companion reference (non-project mode): the `oat-review-provide`
+review artifact template. Independently probe each required `<name>/SKILL.md`
+in order: `${SKILL_DIR}/..` from this loaded skill, `${HOME}/.agents/skills`,
+then `<repo-root>/.agents/skills`. Bind the first match for
+`oat-review-provide` to its own `${REVIEW_PROVIDE_SKILLS_ROOT}`; never ambient
+discovery. On a miss, name the skill, continue with the project template below
+without substituting an improvised companion format, and report its
+intended-scope recovery command:
+`oat tools install utility --scope <user|project>` or
+`oat tools update --pack utility --scope <user|project>`.
 
-- `.agents/skills/oat-review-provide/references/review-artifact-template.md`
+- `${REVIEW_PROVIDE_SKILLS_ROOT}/oat-review-provide/references/review-artifact-template.md`
 
 ```markdown
 ---

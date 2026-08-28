@@ -354,11 +354,6 @@ const PINNED_MIGRATION_CROSS_SKILL_READS: readonly CrossSkillReference[] = [
       targetPath,
     })),
   ),
-  {
-    file: '.agents/skills/oat-project-review-provide/SKILL.md',
-    targetSkill: 'oat-review-provide',
-    targetPath: 'references/review-artifact-template.md',
-  },
 ];
 
 describe('skills bundled docs contract', () => {
@@ -892,6 +887,32 @@ describe('skills bundled docs contract', () => {
       expect(collectCrossSkillTargets(content, skill)).toEqual([]);
     },
   );
+
+  it('oat-project-review-provide resolves the utility review template portably', () => {
+    const skill = 'oat-project-review-provide';
+    const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
+
+    expectPortableSkillsRootCandidateOrder(content, skill);
+    expect(content).toContain('`<name>/SKILL.md`');
+    expect(content).toMatch(/[Ii]ndependently probe\s+each required/);
+    expect(content).toMatch(/never ambient\s+discovery/);
+    // The exact companion template is bound, not just its owning root.
+    expect(content).toContain(
+      '${REVIEW_PROVIDE_SKILLS_ROOT}/oat-review-provide/references/review-artifact-template.md',
+    );
+    // The companion is optional context, so a miss must not silently swap in an
+    // improvised format for the project review output.
+    expect(content).toMatch(
+      /without substituting an improvised companion\s+format/,
+    );
+    expect(content).toContain(
+      'oat tools install utility --scope <user|project>',
+    );
+    expect(content).toContain(
+      'oat tools update --pack utility --scope <user|project>',
+    );
+    expect(collectCrossSkillTargets(content, skill)).toEqual([]);
+  });
 
   it('binds repo-improve dispatch and orchestration references independently', () => {
     const content = readFileSync(
