@@ -481,6 +481,7 @@ Source: inline feedback (2026-08-28)
 | plan   | artifact | fixes_completed | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T220007Z.md` | -                                        | -          | -                    |
 | plan   | artifact | fixes_completed | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T220505Z.md` | -                                        | -          | -                    |
 | final  | code     | passed          | 2026-08-28 | `reviews/archived/final-review-2026-08-28T032516Z.md`         | 9586af443af098ee37b7094e00d5b4d69961ccc5 | gate       | cursor-fable-5-xhigh |
+| p-rev1 | code     | passed          | 2026-08-28 | `reviews/archived/p-rev1-review-2026-08-28T120245Z.md`        | cca0bb5187adfdffd475017e1009a6e643502927 | auto       | -                    |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -496,8 +497,9 @@ Source: inline feedback (2026-08-28)
 
 **Total: 9 tasks**
 
-The original eight task scopes are implemented and reviewed. Revision 1 is
-pending to reconcile PR #226 with the current `origin/main`.
+All nine task scopes are implemented, and Revision 1 passed its root-owned
+review. Final review and exit-gate freshness are being refreshed against the
+integrated tree before PR #226 is pushed.
 
 ## References
 

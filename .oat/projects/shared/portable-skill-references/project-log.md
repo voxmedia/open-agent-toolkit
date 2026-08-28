@@ -76,6 +76,10 @@ target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,
 
 Interactive project-recap preference resolved to ask; user selected skip. No recap was attempted or reused, and the terminal-outcome guard accepted the durable skip intent.
 
+### 2026-08-28 · structural · oat-project-implement · p-rev1
+
+Revision p-rev1 integrated origin/main at cca0bb5187adfdffd475017e1009a6e643502927 and passed root-owned review with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. Artifact: reviews/archived/p-rev1-review-2026-08-28T120245Z.md
+
 ## End-of-run synthesis
 
 Overall verdict: implementation passed all three phase reviews, the final

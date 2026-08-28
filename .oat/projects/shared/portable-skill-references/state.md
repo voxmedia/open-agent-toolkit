@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev1-t01
-oat_last_commit: 63b1c7e4076e14369390e7bea9192ecc674f9719
+oat_current_task: null
+oat_last_commit: cca0bb5187adfdffd475017e1009a6e643502927
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260827-make-packaged-skill-references' }
@@ -48,7 +48,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20
@@ -80,8 +80,8 @@ oat_implement_exit_gate:
   receive_commit: 599c9cee5da1bb3281ebc9b9aa0a9d39b43ddeb0
   receive_eligible: true
   receive_completed: true
-  failure: null
-  updated_at: '2026-08-28T11:37:36Z'
+  failure: authorized revision changed the effective implementation delta after the accepted gate basis
+  updated_at: '2026-08-28T12:04:26Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -133,7 +133,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/226 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-27T21:30:45.407Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T11:44:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T12:04:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -143,14 +143,14 @@ oat_project_recap:
 
 # Project State: portable-skill-references
 
-**Status:** Revision in progress; PR open
+**Status:** Revision implemented and reviewed; final validation in progress
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Revision 1 is active to merge `origin/main`, resolve PR #226's conflicts, and
-revalidate the integrated branch.
+Revision 1 merged `origin/main` and passed its root-owned review. Final review
+and exit-gate freshness are being refreshed before the PR branch is pushed.
 
 ## Artifacts
 
@@ -158,7 +158,7 @@ revalidate the integrated branch.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan quick workflow)
 - **Plan:** `plan.md` (complete; ready for implementation)
-- **Implementation:** `implementation.md` (8/8 tasks complete; final review passed)
+- **Implementation:** `implementation.md` (9/9 tasks complete; revision review passed)
 
 ## Progress
 
@@ -177,7 +177,9 @@ revalidate the integrated branch.
 - ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/226
 - ✓ Configured post-implementation sequence completed
 - ✓ Implementation bookkeeping completed
-- ▶ Revision task `prev1-t01` active
+- ✓ Revision task `prev1-t01` completed
+- ✓ Revision 1 passed root-owned review with no findings
+- ▶ Final review and exit-gate freshness refresh in progress
 
 ## Blockers
 
@@ -185,5 +187,5 @@ None
 
 ## Next Milestone
 
-Execute `prev1-t01`, push the integrated branch, and return PR #226 to human
-review.
+Refresh the final review and configured exit gate, then push the integrated
+branch and return PR #226 to human review.

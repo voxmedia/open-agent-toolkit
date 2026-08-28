@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 1: Portable resolution and enforcement | passed | 4     | 4/4       |
 | Phase 2: Release metadata and validation     | passed | 1     | 1/1       |
 | Phase 3: Final review fixes                  | passed | 3     | 3/3       |
-| Revision 1: Merge current main               | active | 1     | 0/1       |
+| Revision 1: Merge current main               | passed | 1     | 1/1       |
 
-**Total:** 8/9 tasks completed; revision task `prev1-t01` is active.
+**Total:** 9/9 tasks completed; revision phase review passed.
 
 ### Revision Received: Inline Feedback
 
@@ -37,7 +37,22 @@ oat_generated: false
 
 **New tasks added:** `prev1-t01`
 
-**Next:** Execute Revision 1 through `oat-project-implement`.
+**Next:** Refresh final review and exit-gate freshness against the merged tree.
+
+## Revision 1: Merge current main
+
+**Status:** passed
+**Started:** 2026-08-28
+
+### Task prev1-t01: Merge origin/main and resolve PR conflicts
+
+**Status:** completed
+**Commit:** `cca0bb5187adfdffd475017e1009a6e643502927`
+
+The two-parent merge preserves upstream commit
+`3ca99ba070f09e395818756c54d9037cf10116ea`, adds its repository-only triage
+skill and Claude link, materializes the 88-entry sync-manifest union at OAT
+`0.2.39`, and keeps all five public packages at lockstep `0.2.39`.
 
 ## Phase 1: Portable sibling resolution and enforcement
 
@@ -449,6 +464,56 @@ re-review p03 and final.
 - **Outcome:** skipped by explicit user choice; no run path or manifest
 - **Terminal guard:** passed for `skip`; summary remains unchanged
 
+### Run 2 - 2026-08-28
+
+- **Mode:** single-thread revision
+- **Schedule:** `[p-rev1]`
+- **Dispatch policy:** managed High
+- **HiLL checkpoints:** none for Revision 1
+- **Status:** Revision 1 implementation and root-owned review passed
+
+#### Dispatch Record: p-rev1 implementation
+
+- **Request:** `bb116003-b4cc-4613-8b8a-ad033a24643d`
+- **Launch state/outcome:** accepted / `DONE_WITH_CONCERNS`
+- **Route:** Codex native materialized role
+  `oat-phase-implementer-gpt-5-6-sol-high`
+- **Selection:** consequential release integration; `gpt-5.6-sol/high`
+- **Model axis:** `selected:gpt-5.6-sol`
+- **Effort axis:** `selected:high`
+- **Base/head:**
+  `a85180d41c2fff759be0f1c1511e172bd7c15346..cca0bb5187adfdffd475017e1009a6e643502927`
+- **Task commit:** `cca0bb5187adfdffd475017e1009a6e643502927`
+- **Verification:** repository gates 01-11 passed before and after the merge
+  commit; semantic-union, version, and symlink checks passed
+- **Recovery/children:** no recovery attempts; no nested dispatches
+- **Concern:** repository commitlint required the valid `chore(...)` type;
+  existing unmanaged-provider status warnings were unchanged and non-blocking
+- **Dispatch stamp:**
+  `Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+#### Dispatch Record: p-rev1 review
+
+- **Launch state/outcome:** accepted / passed
+- **Route:** Codex native materialized role `oat-reviewer-gpt-5-6-sol-high`
+- **Selection:** managed High review target; `gpt-5.6-sol/high`
+- **Model axis:** `selected:gpt-5.6-sol`
+- **Effort axis:** `selected:high`
+- **Reviewed range:**
+  `a85180d41c2fff759be0f1c1511e172bd7c15346..cca0bb5187adfdffd475017e1009a6e643502927`
+- **Artifact:** `reviews/archived/p-rev1-review-2026-08-28T120245Z.md`
+- **Verdict:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+- **Reconnaissance:** not-attempted
+- **Dispatch stamp:**
+  `Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
+#### Phase p-rev1 outcome
+
+- **Result:** passed root-owned review
+- **Task commits:** 1/1 verified
+- **Review iterations:** 1; no fix loop
+- **Next:** refresh final lifecycle review and configured exit gate
+
 <!-- orchestration-runs-end -->
 
 ## Deviations from Plan / Design
@@ -460,11 +525,12 @@ re-review p03 and final.
 
 ## Test Results
 
-| Phase | Tests Run                            | Passed | Failed | Notes                                          |
-| ----- | ------------------------------------ | ------ | ------ | ---------------------------------------------- |
-| p01   | Focused plus phase-wide gates        | Yes    | 0      | Review passed with one non-blocking Medium     |
-| p02   | Gates 01-11 in documented order      | Yes    | 0      | Clean review; one permitted no-edit test rerun |
-| p03   | Focused ratchet and lifecycle checks | Yes    | 0      | P03 and final lifecycle re-reviews clean       |
+| Phase  | Tests Run                            | Passed | Failed | Notes                                          |
+| ------ | ------------------------------------ | ------ | ------ | ---------------------------------------------- |
+| p01    | Focused plus phase-wide gates        | Yes    | 0      | Review passed with one non-blocking Medium     |
+| p02    | Gates 01-11 in documented order      | Yes    | 0      | Clean review; one permitted no-edit test rerun |
+| p03    | Focused ratchet and lifecycle checks | Yes    | 0      | P03 and final lifecycle re-reviews clean       |
+| p-rev1 | Gates 01-11 before and after merge   | Yes    | 0      | Clean root review; no recovery attempts        |
 
 ## Repository Gate Evidence
 
@@ -516,10 +582,11 @@ closeout passed.
 
 ## Completion Report
 
-- **Implementation:** complete; 8/8 tasks across three phases
-- **Reviews:** all phase reviews and the final lifecycle re-review passed
-- **Exit gate:** passed through `cursor-fable-5-xhigh` at the Important
-  threshold; its one Minor was dispositioned as duplicate coverage
+- **Implementation:** complete; 9/9 tasks across four phases
+- **Reviews:** all phase reviews passed; final lifecycle re-review is being
+  refreshed for the integrated tree
+- **Exit gate:** the earlier `cursor-fable-5-xhigh` pass is stale after the
+  authorized merge and must be refreshed before implementation success
 - **Verification:** repository gates 01-11 passed with exit-zero evidence
 - **Documentation:** contributor guidance updated and validated
 - **Project recap:** skipped by explicit user choice; no recap run or manifest
