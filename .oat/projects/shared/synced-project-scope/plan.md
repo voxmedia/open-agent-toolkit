@@ -3688,6 +3688,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | final   | code     | passed          | 2026-08-28 | reviews/archived/final-review-2026-08-28T192913Z.md               | a521db33c832f92208abaa95ebc12052a0b39237 | auto       | -                             |
 | final   | code     | passed          | 2026-08-28 | reviews/archived/final-review-2026-08-28T194740Z.md               | badbca662babbc995eaea50a6cf50456b0f9bd88 | gate       | claude-fable-skip-permissions |
 | p-rev1  | code     | passed          | 2026-08-28 | reviews/archived/p-rev1-review-2026-08-28T220327Z.md              | 17c3b80db3768261471fc7d8faf403bb31366561 | auto       | -                             |
+| final   | code     | received        | 2026-08-28 | reviews/final-review-2026-08-28T222140Z.md                        | 1379413fb3d8bbb5b5ac9fe9fc4e00fd144ff6e9 | auto       | -                             |
 | spec    | artifact | pending         | -          | -                                                                 | -                                        | -          | -                             |
 | design  | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-design-review-2026-08-27T004918Z.md     | -                                        | manual     | -                             |
 | plan    | artifact | fixes_completed | 2026-08-27 | (structured auto-review x2, in-memory; findings applied in place) | -                                        | auto       | -                             |
