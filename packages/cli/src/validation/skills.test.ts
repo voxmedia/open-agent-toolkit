@@ -416,6 +416,25 @@ describe('validateOatSkills', () => {
     expect(result.findings).toEqual([]);
   });
 
+  it('rejects a status-blind synced push JSON receipt', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-status-blind-push',
+      `${validSkillContent('oat-project-status-blind-push')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts" --json)\n  PUSH_SHA=$(printf '%s\\n' "$PUSH_OUTPUT" | jq -r .sha)\nfi\n\`\`\`\n`,
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: expect.stringMatching(
+        /^Line \d+: Synced push JSON receipt must validate status as pushed or up-to-date and require a full SHA before use$/,
+      ),
+    });
+  });
+
   it('rejects an unguarded project-artifact commit in a lifecycle skill', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
     tempDirs.push(root);

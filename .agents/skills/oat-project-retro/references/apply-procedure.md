@@ -76,7 +76,18 @@ continues immediately, this can be written back together with the final
    - Only when recovery finds zero matches, run the complete judgment append
      invocation exactly once:
 
+     Define `parse_synced_push_receipt` once before applying records:
+
      ```bash
+     parse_synced_push_receipt() {
+       node -e '
+     let value;
+     try { value = JSON.parse(process.argv[1]); } catch { process.exit(1); }
+     if (!["pushed", "up-to-date"].includes(value.status) || !/^[0-9a-f]{40}$/.test(value.sha)) process.exit(1);
+     process.stdout.write(value.sha);
+     ' "$1"
+     }
+
      oat project log append --project "$PROJECT_PATH" \
        --type feedback \
        --scope project \
@@ -94,7 +105,7 @@ continues immediately, this can be written back together with the final
      # fail closed: never fall back to branch bookkeeping when scope resolution fails
      if [ "$PROJECT_SCOPE" = "synced" ]; then
        CORRECTION_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): apply retro correction $RP_ID" --json)
-       CORRECTION_COMMIT=$(printf '%s\n' "$CORRECTION_PUSH" | jq -r '.sha')
+       CORRECTION_COMMIT=$(parse_synced_push_receipt "$CORRECTION_PUSH") || { printf '%s\n' "$CORRECTION_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
      else
        git add "$PROJECT_PATH/project-log.md"
        git commit -m "chore(oat): apply retro correction $RP_ID"
@@ -249,7 +260,7 @@ Compute `oat_retro_promotions` exactly:
     # Only now write Status: applied, Applied-ref: $APPLIED_REF, the cleared
     # disposition note, promotions, and Current State into project-retro.md.
     RETRO_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): record retro application $RP_ID" --json) || exit 1
-    RETRO_WRITEBACK_COMMIT=$(printf '%s\n' "$RETRO_PUSH" | jq -er '.sha') || exit 1
+    RETRO_WRITEBACK_COMMIT=$(parse_synced_push_receipt "$RETRO_PUSH") || { printf '%s\n' "$RETRO_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
   else
     # Write back the artifact before this commit, then preserve the single-commit
     # shared/local route with only the exact target and retro paths.

@@ -372,9 +372,27 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
   echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2
   exit 1
 }
+```
+
+Define this fail-closed parser before the writeback push. If it rejects the
+receipt, print the full CLI JSON, run `oat project pull "$PROJECT_PATH"`,
+resolve the reported conflict, and retry the original push.
+
+```bash
+parse_synced_push_receipt() {
+  node -e '
+let value;
+try { value = JSON.parse(process.argv[1]); } catch { process.exit(1); }
+if (!["pushed", "up-to-date"].includes(value.status) || !/^[0-9a-f]{40}$/.test(value.sha)) process.exit(1);
+process.stdout.write(value.sha);
+' "$1"
+}
+```
+
+```bash
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   RETRO_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): record project retro filing writeback" --json)
-  WRITEBACK_COMMIT=$(printf '%s\n' "$RETRO_PUSH" | jq -er '.sha') || exit 1
+  WRITEBACK_COMMIT=$(parse_synced_push_receipt "$RETRO_PUSH") || { printf '%s\n' "$RETRO_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
 else
   git add "$RETRO_PATH"
   git diff --cached --quiet || git commit -m "chore(oat): record project retro filing writeback"

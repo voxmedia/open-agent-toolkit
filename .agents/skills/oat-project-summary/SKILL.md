@@ -494,10 +494,27 @@ if [ "$PROJECT_SCOPE" = "synced" ] && [ "${#PARENT_OUTPUT_PATHS[@]}" -gt 0 ]; th
   # Inspect the complete output and require exact set equality with the
   # de-duplicated PARENT_OUTPUT_PATHS array before continuing.
 fi
+```
 
+Define this fail-closed parser before either synced summary push. On rejection,
+print the full CLI JSON, run `oat project pull "$PROJECT_PATH"`, resolve its
+reported conflict, and retry the original push.
+
+```bash
+parse_synced_push_receipt() {
+  node -e '
+let value;
+try { value = JSON.parse(process.argv[1]); } catch { process.exit(1); }
+if (!["pushed", "up-to-date"].includes(value.status) || !/^[0-9a-f]{40}$/.test(value.sha)) process.exit(1);
+process.stdout.write(value.sha);
+' "$1"
+}
+```
+
+```bash
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   SUMMARY_PUSH=$(oat project push "$PROJECT_PATH" --message "docs: generate summary for {project-name}" --json)
-  SUMMARY_COMMIT_SHA=$(printf '%s\n' "$SUMMARY_PUSH" | jq -er '.sha') || exit 1
+  SUMMARY_COMMIT_SHA=$(parse_synced_push_receipt "$SUMMARY_PUSH") || { printf '%s\n' "$SUMMARY_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
 else
   PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/summary.md")
   if [ "$PROJECT_LOG_PROMOTION_APPENDED" = "true" ]; then
@@ -534,7 +551,7 @@ If this is a re-run (incremental update):
 ```bash
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   SUMMARY_PUSH=$(oat project push "$PROJECT_PATH" --message "docs: update summary for {project-name}" --json)
-  SUMMARY_COMMIT_SHA=$(printf '%s\n' "$SUMMARY_PUSH" | jq -er '.sha') || exit 1
+  SUMMARY_COMMIT_SHA=$(parse_synced_push_receipt "$SUMMARY_PUSH") || { printf '%s\n' "$SUMMARY_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
 else
   git add -- "${PROJECT_OUTPUT_PATHS[@]}"
   git commit --only -m "docs: update summary for {project-name}" -- "${PROJECT_OUTPUT_PATHS[@]}"

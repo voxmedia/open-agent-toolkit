@@ -302,7 +302,21 @@ If "keep going", return to step 5. If "wrap up", surface the **pack-filtered ter
    - Gated by `WORKFLOWS_INSTALLED == "true"` AND `ACTIVE_PROJECT_VALID == "true"`: `Active project: fold-back` and `Active project: brainstorming reference file`. When this branch fires, present the **3-way active-project router first** (see step 9 active-project branches) — its outcome controls whether the rest of the picker is even surfaced.
 3. Evaluate whether the accumulated brainstorm scope is large enough to offer a split destination. Track the same four split signals used by discovery and evaluate them through the installed CLI:
 
+   Define this fail-closed parser once before any synced persistence below. If
+   it rejects a receipt, print the complete CLI JSON, run
+   `oat project pull "$ACTIVE_PROJECT"`, resolve any reported conflict, and
+   retry the original push; never infer a commit from local Git state.
+
    ```bash
+   parse_synced_push_receipt() {
+     node -e '
+   let value;
+   try { value = JSON.parse(process.argv[1]); } catch { process.exit(1); }
+   if (!["pushed", "up-to-date"].includes(value.status) || !/^[0-9a-f]{40}$/.test(value.sha)) process.exit(1);
+   process.stdout.write(value.sha);
+   ' "$1"
+   }
+
    oat project split evaluate-signals --fired "<comma-list>"
    ```
 
@@ -577,6 +591,7 @@ The check happens before any append, so the skill can route around the dirty cas
    if [ "$PROJECT_SCOPE" = "synced" ]; then
      FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" --json)
      FOLD_BACK_COMMIT_SHA=$(printf '%s\n' "$FOLD_BACK_PUSH" | jq -r '.sha')
+     FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt "$FOLD_BACK_PUSH") || { printf '%s\n' "$FOLD_BACK_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
    else
      git add -- "$ARTIFACT_PATH"
      git commit -m "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>"
@@ -598,7 +613,7 @@ The check happens before any append, so the skill can route around the dirty cas
   PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
   if [ "$PROJECT_SCOPE" = "synced" ]; then
     CURRENT_ARTIFACT_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "$CURRENT_ARTIFACT_SUBJECT" --json)
-    CURRENT_ARTIFACT_COMMIT_SHA=$(printf '%s\n' "$CURRENT_ARTIFACT_PUSH" | jq -er '.sha') || exit 1
+    CURRENT_ARTIFACT_COMMIT_SHA=$(parse_synced_push_receipt "$CURRENT_ARTIFACT_PUSH") || { printf '%s\n' "$CURRENT_ARTIFACT_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
   else
     git add -- "$ARTIFACT_PATH"
     git commit --only -m "$CURRENT_ARTIFACT_SUBJECT" -- "$ARTIFACT_PATH"
@@ -613,7 +628,8 @@ The check happens before any append, so the skill can route around the dirty cas
   PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
   if [ "$PROJECT_SCOPE" = "synced" ]; then
     FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" --json)
-    FOLD_BACK_COMMIT_SHA=$(printf '%s\n' "$FOLD_BACK_PUSH" | jq -er '.sha') || exit 1
+    FOLD_BACK_COMMIT_SHA=$(printf '%s\n' "$FOLD_BACK_PUSH" | jq -er '.sha')
+    FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt "$FOLD_BACK_PUSH") || { printf '%s\n' "$FOLD_BACK_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
   else
     git add -- "$ARTIFACT_PATH"
     git commit --only -m "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" -- "$ARTIFACT_PATH"
@@ -630,7 +646,7 @@ The check happens before any append, so the skill can route around the dirty cas
   PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
   if [ "$PROJECT_SCOPE" = "synced" ]; then
     MIXED_FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm + prior edits into <artifact-basename> for <project-name>" --json)
-    FOLD_BACK_COMMIT_SHA=$(printf '%s\n' "$MIXED_FOLD_BACK_PUSH" | jq -er '.sha') || exit 1
+    FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt "$MIXED_FOLD_BACK_PUSH") || { printf '%s\n' "$MIXED_FOLD_BACK_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
   else
     git add -- "$ARTIFACT_PATH"
     git commit --only -m "chore(oat): integrate brainstorm + prior edits into <artifact-basename> for <project-name>" -- "$ARTIFACT_PATH"
@@ -691,7 +707,7 @@ PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "o
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   REFERENCE_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): capture brainstorming reference for <project-name>" --json)
-  REFERENCE_COMMIT_SHA=$(printf '%s\n' "$REFERENCE_PUSH" | jq -r '.sha')
+  REFERENCE_COMMIT_SHA=$(parse_synced_push_receipt "$REFERENCE_PUSH") || { printf '%s\n' "$REFERENCE_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
 else
   git add -- "<active-project-relative-path>"
   git commit -m "chore(oat): capture brainstorming reference for <project-name>"

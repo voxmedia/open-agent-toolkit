@@ -268,6 +268,23 @@ function collectSyncedContentFindings(
       });
     }
 
+    const pushReceipt =
+      /^\s*([A-Z][A-Z0-9_]*)=\$\(oat project push\b[^\n]*--json\b/.exec(line);
+    if (pushReceipt) {
+      const outputVariable = pushReceipt[1] ?? '';
+      const validationWindow = lines.slice(index + 1, index + 5).join('\n');
+      if (
+        !validationWindow.includes(
+          `parse_synced_push_receipt "$${outputVariable}"`,
+        )
+      ) {
+        findings.push({
+          file,
+          message: `Line ${lineNumber}: Synced push JSON receipt must validate status as pushed or up-to-date and require a full SHA before use`,
+        });
+      }
+    }
+
     if (
       /\boat\s+project\s+scope\b/.test(line) &&
       /\|\|\s*echo\s+["']?shared\b/.test(line)
