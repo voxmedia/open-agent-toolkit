@@ -172,6 +172,10 @@ Persisted configured-gate attempt-2 launch intent bf9e75b6-65e5-4edd-a289-5e7b8a
 
 Accepted gate run 3241d71c-b67e-4a04-88f2-4a9965de3395 on target claude-fable-skip-permissions; unique marker matched project=shared/synced-project-scope scope=final type=code.
 
+### 2026-08-28 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:3 exit=0 status=ok artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T194740Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
