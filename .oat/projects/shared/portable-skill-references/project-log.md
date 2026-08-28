@@ -76,6 +76,19 @@ target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,
 
 Interactive project-recap preference resolved to ask; user selected skip. No recap was attempted or reused, and the terminal-outcome guard accepted the durable skip intent.
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Overall verdict: implementation passed all three phase reviews, the final
+lifecycle re-review, the configured independent exit gate, and repository gates
+01-11. The adopted final-review adjustments added strict resolver-order and
+relative-path coverage, narrowed the materialized-doc exclusion, and reconciled
+lifecycle evidence before publication.
+
+The PJM backlog item was completed and archived. No project-log observation
+required promotion to the repository ledger or a new backlog item: the remaining
+PJM doctor warnings and cleanup-timeout test flakes were pre-existing,
+non-blocking observations already preserved in the implementation record. The
+user explicitly skipped the optional durable project recap.
+
+PR #226 is open for human review; merge and project archival remain separate
+operator actions.
