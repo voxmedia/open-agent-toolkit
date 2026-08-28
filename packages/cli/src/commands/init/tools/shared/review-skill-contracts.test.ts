@@ -1119,6 +1119,71 @@ describe('review skill contracts', () => {
     },
   );
 
+  it.each([
+    [
+      'configured decline without a recap',
+      'workflow.archiveOnComplete=false',
+      'SELECTED_PROJECT_RECAP_RUN is empty',
+    ],
+    [
+      'configured decline with a recap',
+      'workflow.archiveOnComplete=false',
+      'SELECTED_PROJECT_RECAP_RUN is non-empty',
+    ],
+    [
+      'interactive decline without a recap',
+      'the interactive archive answer is `false`',
+      'SELECTED_PROJECT_RECAP_RUN is empty',
+    ],
+    [
+      'interactive decline with a recap',
+      'the interactive archive answer is `false`',
+      'SELECTED_PROJECT_RECAP_RUN is non-empty',
+    ],
+  ])(
+    'publishes an initially absent late PR artifact after %s',
+    (_scenario, archiveDecision, recapState) => {
+      const content = readRepoFile(
+        '.agents/skills/oat-project-complete/SKILL.md',
+      );
+      const normalizedContent = content.replace(/\s+/g, ' ');
+      const stepFiveIndex = content.indexOf(
+        '### Step 5: Set Lifecycle Complete',
+      );
+      const stepSevenIndex = content.indexOf(
+        '### Step 7: Generate PR Description',
+      );
+      const writeArtifactIndex = content.indexOf(
+        '**Write PR description artifact**',
+        stepSevenIndex,
+      );
+      const finalPublicationIndex = content.indexOf(
+        '#### Step 7.5: Publish Final Synced Project Artifacts',
+      );
+      const finalPushIndex = content.indexOf(
+        'PROJECT_PUSH_OUTPUT=$(oat project push "$PROJECT_PATH"',
+      );
+      const nonArchiveTransactionIndex = content.indexOf(
+        '### Step 8.7: Non-Archive Synced Completion Transaction',
+      );
+
+      expect(normalizedContent).toContain(archiveDecision);
+      expect(normalizedContent).toContain(recapState);
+      expect(normalizedContent).toContain(
+        'When no PR description artifact exists, write it before the final synced project-ref publication, regardless of archive or recap selection.',
+      );
+      expect(normalizedContent).toContain(
+        'The exact structured receipt SHA becomes `PROJECT_REF_COMMIT`.',
+      );
+      expect(finalPublicationIndex).toBeGreaterThan(writeArtifactIndex);
+      expect(finalPushIndex).toBeGreaterThan(finalPublicationIndex);
+      expect(nonArchiveTransactionIndex).toBeGreaterThan(finalPushIndex);
+      expect(content.slice(stepFiveIndex, stepSevenIndex)).not.toContain(
+        'PROJECT_PUSH_OUTPUT=$(oat project push',
+      );
+    },
+  );
+
   it('defines runtime-safe summary handling during pr-final and completion', () => {
     const prFinalPath = repoFilePath(
       '.agents/skills/oat-project-pr-final/SKILL.md',

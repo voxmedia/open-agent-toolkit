@@ -451,27 +451,17 @@ fi
 oat project complete-state "${COMPLETE_STATE_ARGS[@]}"
 ```
 
-For `synced`, immediately persist this finalized lifecycle state before archive
-or non-archive record finalization:
+For `synced`, keep this finalized lifecycle state in the project checkout until
+Step 7.5 publishes it together with every later pre-archive artifact write. Do
+not push here: Step 7 may still create or replace the PR-description artifact,
+and the retained project ref must include that late artifact.
 
-```bash
-if [[ "$PROJECT_SCOPE" == "synced" ]]; then
-  PROJECT_PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" \
-    --message "chore(oat): finalize project lifecycle" --json) || exit 1
-  printf '%s\n' "$PROJECT_PUSH_OUTPUT"
-fi
-```
-
-Require the structured push result to report `status: "pushed"` or
-`status: "up-to-date"` and a full `sha`. Capture the final successful project
-push SHA as `PROJECT_REF_COMMIT`. Never infer this receipt from the parent
-branch or from a stale local ref.
-
-When archive is selected, the synced completion order is: finalize → project
-push → project archive → render
+When archive is selected, the synced completion order is: finalize → generate
+the PR artifact → final project push → project archive → render
 `oat project links --durable-summary <path>` → update the open PR body. When
-archive is declined, it is: finalize → project push → exact discovery-record
-commit → optional active-recap evidence commit and project push.
+archive is declined, it is: finalize → generate the PR artifact → final project
+push → exact discovery-record commit → optional active-recap evidence commit
+and project push.
 
 The CLI command owns both the frontmatter completion fields and the canonical markdown body updates for `state.md`.
 It must set `oat_lifecycle: complete`, completion timestamps, `**Status:** Complete`, `**Last Updated:**`, the canonical `## Current Phase` body, normalized `## Progress`, and `## Next Milestone`.
@@ -508,6 +498,9 @@ fi
 
 5. **Write PR description artifact** — write to `{PROJECT_PATH}/pr/project-pr-YYYY-MM-DD.md` following the template and policies from `oat-project-pr-final` Step 4 (frontmatter policy, reference links policy, local path exclusion).
 
+When no PR description artifact exists, write it before the final synced
+project-ref publication, regardless of archive or recap selection.
+
 If a PR description artifact already exists at `{PROJECT_PATH}/pr/project-pr-*.md`:
 
 - When `SHOULD_ARCHIVE` is `true`, regenerate it (overwrite). The existing artifact was authored by `oat-project-pr-final` before any archive intent existed and links to artifact paths that will be local-only after Step 8. Regenerating ensures Step 11 / Step 11.5 push a body whose links still resolve on the remote.
@@ -535,6 +528,34 @@ When archiving, the project artifacts at `{PROJECT_PATH}/{plan,implementation,di
   the date or project name.
 
 Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path under `.oat/projects/archived/<name>/...`. That path is gitignored on every checkout and never reaches the remote.
+
+#### Step 7.5: Publish Final Synced Project Artifacts
+
+For `synced`, publish only after Step 7 has finished every pre-archive project
+artifact write. This is the final artifact publication before the parent-branch
+record transaction and before any non-archive recap evidence update:
+
+```bash
+if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+  PROJECT_PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" \
+    --message "chore(oat): finalize project lifecycle" --json) || exit 1
+  printf '%s\n' "$PROJECT_PUSH_OUTPUT"
+fi
+```
+
+Require the structured push result to report `status: "pushed"` or
+`status: "up-to-date"`, the retained project ref, and a full `sha`. The exact
+structured receipt SHA becomes `PROJECT_REF_COMMIT`. Never infer this receipt
+from the parent branch, a stale local ref, or an earlier push. Verify the
+receipt commit contains the newly created PR-description artifact when Step 7
+started without one, as well as every other pre-archive project artifact write.
+Capture the final successful project push SHA as `PROJECT_REF_COMMIT`.
+
+Both configured and interactive archive-decline paths continue from this exact
+receipt into Step 8.7. With no selected recap, the receipt and exact
+parent-branch record commit finish the non-archive transaction. With a selected
+recap, the evidence commit in Step 10.6 must remain the immediate child of this
+exact receipt.
 
 ### Step 8: Archive Project (Conditional)
 
