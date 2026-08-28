@@ -84,6 +84,10 @@ Revision p-rev1 integrated origin/main at cca0bb5187adfdffd475017e1009a6e6435029
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:2,minor:1 exit=0 status=ok artifact=.oat/projects/shared/portable-skill-references/reviews/final-review-2026-08-28T175129Z.md
 
+### 2026-08-28 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/portable-skill-references/references/project-retro.md evidence_used=archived-review-markdown,gate-receipts,github-pr,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings promotions=0 upstream=0 apply=skipped filing=skipped
+
 ## End-of-run synthesis
 
 Overall verdict: implementation passed all three phase reviews, the final
