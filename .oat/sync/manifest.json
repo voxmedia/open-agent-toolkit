@@ -871,7 +871,17 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-08-06T02:04:21.260Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/triage-oat-issues",
+      "providerPath": ".claude/skills/triage-oat-issues",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-08-27T01:35:23.287Z"
     }
   ],
-  "lastUpdated": "2026-08-06T02:04:21.260Z"
+  "lastUpdated": "2026-08-27T01:35:23.288Z"
 }
