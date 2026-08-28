@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 99cbb59d9479f3c2d6aeb91c3151e703a423c684
+oat_last_commit: 75224a468ac5d05148338c3c637683ed032b4db6
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260827-make-packaged-skill-references' }
