@@ -2431,3 +2431,25 @@ is durably completed.
   `reviews/archived/final-review-2026-08-28T194740Z.md`
 - **Pre-receive head:** `cdd1c3556e27a1d6fe01c479df29a2316bb120dd`
 - **Receive state:** `intent_persisted`
+
+#### Attempt 2 Passing-gate Judgment Sweep
+
+The passing gate reported 3 Minor cleanup findings. Each is explicitly
+deferred; no blocking task or post-gate implementation change was added:
+
+- **m1 - redundant inner synced-scope tests:** deferred because the duplicate
+  checks are behaviorally inert cosmetic cleanup. Removing them after the gate
+  would churn two canonical skills without changing the already verified
+  non-blocking arrival contract. Revisit with the next functional edit to
+  `oat-project-next` or `oat-project-progress`.
+- **m2 - duplicated `SKIPPED_MUTATIONS` constant:** deferred because sharing
+  the list requires a cross-module refactor of the router/decoder boundary,
+  while executable consumer coverage already detects drift. Revisit if the
+  mutation list changes or either completion script is reorganized.
+- **m3 - unused `--detect-candidate` recovery CLI flag:** deferred because
+  removing an exposed diagnostic CLI branch deserves an explicit compatibility
+  and deprecation check even though the shipped skill no longer calls it.
+  Revisit during a deliberate completion-recovery CLI cleanup.
+
+These dispositions are the durable follow-up triggers for the sub-threshold
+findings. They do not reopen the passing Important-threshold gate.
