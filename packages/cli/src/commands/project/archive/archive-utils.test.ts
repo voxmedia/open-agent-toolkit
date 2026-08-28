@@ -532,6 +532,63 @@ describe('archive utils', () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it.each([
+    ['shared', 'valid'],
+    ['shared', 'malformed'],
+    ['local', 'valid'],
+    ['local', 'malformed'],
+  ] as const)(
+    'archives a %s project without reading an unrelated %s same-slug synced record',
+    async (scope, recordState) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(
+        repoRoot,
+        '.oat',
+        'projects',
+        scope,
+        'same-slug',
+      );
+      await mkdir(projectPath, { recursive: true });
+      await writeFile(join(projectPath, 'state.md'), `# ${scope}\n`, 'utf8');
+      const recordPath = join(
+        repoRoot,
+        '.oat',
+        'projects',
+        'synced',
+        'same-slug.json',
+      );
+      if (recordState === 'valid') {
+        await writeSyncedRecord(recordPath, {
+          ...buildSyncedRecord('same-slug', new Date('2026-08-27T00:00:00Z')),
+          archiveSnapshot: 'unrelated-synced-snapshot',
+        });
+      } else {
+        await mkdir(join(repoRoot, '.oat', 'projects', 'synced'), {
+          recursive: true,
+        });
+        await writeFile(recordPath, '{ malformed\n', 'utf8');
+      }
+
+      const result = await archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'same-slug',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      });
+
+      expect(result.archivePath).toBe(
+        join(repoRoot, '.oat', 'projects', 'archived', 'same-slug'),
+      );
+      await expect(
+        readFile(join(result.archivePath, 'state.md'), 'utf8'),
+      ).resolves.toBe(`# ${scope}\n`);
+      await expect(readFile(recordPath, 'utf8')).resolves.toContain(
+        recordState === 'valid' ? 'unrelated-synced-snapshot' : '{ malformed',
+      );
+    },
+  );
+
   it('archives a clean pushed synced project and removes only its checkout', async () => {
     const fixture = await createSyncedFixture();
     try {

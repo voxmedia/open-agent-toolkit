@@ -1446,9 +1446,9 @@ export async function archiveProjectOnCompletion(
   const recordPath = syncedRecordPath(syncedRoot, options.projectName);
   const readRecord = dependencies.readSyncedRecord ?? readSyncedRecord;
   const writeRecord = dependencies.writeSyncedRecord ?? writeSyncedRecord;
-  const record = await readRecord(recordPath);
   const isSynced =
     resolveProjectScope(options.projectPath, options.projectsRoot) === 'synced';
+  const record = isSynced ? await readRecord(recordPath) : null;
   const syncTarget = isSynced
     ? buildSyncTarget(
         options.repoRoot,
