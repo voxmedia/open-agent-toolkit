@@ -21,8 +21,6 @@ import {
 import { createSyncedFixture } from '@test-support/synced-fixture';
 import { describe, expect, it } from 'vitest';
 
-import { resolveCompletionArchiveDecision } from '../../../../../../.agents/skills/oat-project-complete/scripts/recover-completion-receipts.mjs';
-
 const PROJECT_SLUG = 'completion-receipt';
 const PR_ARTIFACT = 'pr/project-pr-2026-08-28.md';
 const RECAP_MANIFEST = 'explainers/project-recap/manifest.json';
@@ -43,6 +41,11 @@ interface CompletionReceipts {
   evidencePushRequired: boolean;
 }
 
+interface CompletionArchiveDecision {
+  shouldArchive: boolean;
+  source: 'configured' | 'interactive';
+}
+
 function git(cwd: string, args: string[]): string {
   return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 }
@@ -61,6 +64,8 @@ function changedPaths(cwd: string, commit: string): string[] {
 async function publishFinalArtifact(
   projectPath: string,
   target: ReturnType<typeof buildSyncTarget>,
+  mutateLinks: (links: string, pinSourceCommit: string) => string = (links) =>
+    links,
 ): Promise<{ finalArtifactCommit: string; pinSourceCommit: string }> {
   const pinReceipt = await pushSynced(target, defaultGitRunner, {
     message: 'chore(oat): finalize project lifecycle',
@@ -77,7 +82,10 @@ async function publishFinalArtifact(
     present: ['summary.md'],
     pinnedAt: '2026-08-28T12:00:00Z',
   });
-  const rendered = replaceLinksBlock(initialBody, finalLinks);
+  const rendered = replaceLinksBlock(
+    initialBody,
+    mutateLinks(finalLinks, pinReceipt.sha),
+  );
   expect(rendered.malformed).toBe(false);
   await writeFile(artifactPath, `${rendered.body.trimEnd()}\n`, 'utf8');
 
@@ -94,6 +102,23 @@ async function publishFinalArtifact(
     finalArtifactCommit: finalReceipt.sha,
     pinSourceCommit: pinReceipt.sha,
   };
+}
+
+function resolveArchiveDecision(
+  decision: 'configured decline' | 'interactive decline',
+): CompletionArchiveDecision {
+  const output = execFileSync(
+    process.execPath,
+    [
+      RECOVERY_SCRIPT,
+      decision === 'configured decline'
+        ? '--archive-preference'
+        : '--interactive-archive',
+      'false',
+    ],
+    { encoding: 'utf8' },
+  );
+  return JSON.parse(output) as CompletionArchiveDecision;
 }
 
 async function commitCompletionRecord(
@@ -232,16 +257,15 @@ describe('non-archive synced completion transaction', () => {
     async ({ decision, interruption }) => {
       const fixture = await createSyncedFixture();
       try {
-        const archiveDecision = resolveCompletionArchiveDecision(
-          decision === 'configured decline'
-            ? { configuredPreference: false }
-            : { interactiveAnswer: false },
-        );
+        const archiveDecision = resolveArchiveDecision(decision);
         expect(archiveDecision).toEqual({
           shouldArchive: false,
           source:
             decision === 'configured decline' ? 'configured' : 'interactive',
         });
+        if (archiveDecision.shouldArchive) {
+          throw new Error('Non-archive transaction selected archive behavior.');
+        }
 
         const target = buildSyncTarget(
           fixture.cloneA,
@@ -495,4 +519,83 @@ describe('non-archive synced completion transaction', () => {
       await fixture.cleanup();
     }
   });
+
+  it.each([
+    {
+      contamination: 'wrong retained project ref',
+      mutateLinks: (links: string) =>
+        links.replace(
+          `refs/oat/projects/${PROJECT_SLUG}`,
+          'refs/oat/projects/another-project',
+        ),
+      error: /must name retained ref/i,
+    },
+    {
+      contamination: 'wrong full blob-link SHA',
+      mutateLinks: (links: string, pinSourceCommit: string) => {
+        const replacement = `${pinSourceCommit.slice(0, 39)}${pinSourceCommit.endsWith('0') ? '1' : '0'}`;
+        return links.replaceAll(
+          `/blob/${pinSourceCommit}/`,
+          `/blob/${replacement}/`,
+        );
+      },
+      error: /blob links must use pin-source commit/i,
+    },
+  ])(
+    'fails closed before restoring receipts for a $contamination',
+    async ({ mutateLinks, error }) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const target = buildSyncTarget(
+          fixture.cloneA,
+          '.oat/projects',
+          PROJECT_SLUG,
+        );
+        await createSyncedProject(target, defaultGitRunner);
+
+        await writeFile(`${target.projectPath}/state.md`, 'complete\n', 'utf8');
+        await writeFile(
+          `${target.projectPath}/summary.md`,
+          '# Durable summary\n',
+          'utf8',
+        );
+        await mkdir(`${target.projectPath}/pr`, { recursive: true });
+        await writeFile(
+          `${target.projectPath}/${PR_ARTIFACT}`,
+          '# Pull request\n\nCompletion body.\n',
+          'utf8',
+        );
+
+        const receipts = await publishFinalArtifact(
+          target.projectPath,
+          target,
+          mutateLinks,
+        );
+        const finalArtifact = git(target.projectPath, [
+          'show',
+          `${receipts.finalArtifactCommit}:${PR_ARTIFACT}`,
+        ]);
+        expect(finalArtifact).toContain(
+          `@ \`${receipts.pinSourceCommit.slice(0, 7)}\``,
+        );
+
+        await expect(recover(target.projectPath, target.ref)).rejects.toThrow(
+          error,
+        );
+        expect(git(target.projectPath, ['rev-parse', 'HEAD'])).toBe(
+          receipts.finalArtifactCommit,
+        );
+        expect(git(target.projectPath, ['rev-parse', target.ref])).toBe(
+          receipts.finalArtifactCommit,
+        );
+        expect(git(fixture.originDir, ['rev-parse', target.ref])).toBe(
+          receipts.finalArtifactCommit,
+        );
+        expect(git(target.projectPath, ['status', '--porcelain'])).toBe('');
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+    20_000,
+  );
 });

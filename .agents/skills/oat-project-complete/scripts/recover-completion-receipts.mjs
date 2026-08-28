@@ -125,7 +125,7 @@ async function retainedRemoteCommit(projectPath, remote, retainedRef) {
   return sha;
 }
 
-function requireSingleLinksBlock(content, pinSourceCommit) {
+function requireSingleLinksBlock(content, retainedRef, pinSourceCommit) {
   const starts = content.split(LINKS_START).length - 1;
   const ends = content.split(LINKS_END).length - 1;
   const start = content.indexOf(LINKS_START);
@@ -136,10 +136,46 @@ function requireSingleLinksBlock(content, pinSourceCommit) {
     );
   }
   const block = content.slice(start, end + LINKS_END.length);
-  const expectedPin = `@ \`${pinSourceCommit.slice(0, 7)}\``;
-  if (!block.includes(expectedPin)) {
+  const headerMarkers = block.split('**OAT project**').length - 1;
+  const header = block
+    .split('\n')
+    .find((line) => line.includes('**OAT project**'));
+  const headerMatch =
+    /^\*\*OAT project\*\* `([A-Za-z0-9._-]+)` \(synced\) — pinned to `([^`]+)` @ `([0-9a-f]{7})` \(([^)\r\n]+)\)$/.exec(
+      header ?? '',
+    );
+  if (headerMarkers !== 1 || !headerMatch) {
+    throw completionReceiptError(
+      'Final PR artifact must contain exactly one canonical project links header.',
+    );
+  }
+  if (headerMatch[2] !== retainedRef) {
+    throw completionReceiptError(
+      `Final PR artifact links header must name retained ref ${retainedRef}.`,
+    );
+  }
+  if (headerMatch[3] !== pinSourceCommit.slice(0, 7)) {
     throw completionReceiptError(
       `Final PR artifact links block must be pinned to ${pinSourceCommit}.`,
+    );
+  }
+
+  const blobMarkers = block.split('/blob/').length - 1;
+  const blobPins = [...block.matchAll(/\/blob\/([^/\s)]+)\//g)].map(
+    (match) => match[1],
+  );
+  if (blobPins.length !== blobMarkers) {
+    throw completionReceiptError(
+      'Final PR artifact links block contains a malformed blob URL.',
+    );
+  }
+  if (
+    blobPins.some(
+      (commit) => !FULL_SHA.test(commit ?? '') || commit !== pinSourceCommit,
+    )
+  ) {
+    throw completionReceiptError(
+      `Final PR artifact blob links must use pin-source commit ${pinSourceCommit}.`,
     );
   }
 }
@@ -307,7 +343,7 @@ export async function recoverCompletionReceipts({
     'show',
     `${finalArtifactCommit}:${finalArtifactPath}`,
   ]);
-  requireSingleLinksBlock(finalArtifact, projectLinksPinCommit);
+  requireSingleLinksBlock(finalArtifact, retainedRef, projectLinksPinCommit);
 
   return {
     status: 'recovered',
