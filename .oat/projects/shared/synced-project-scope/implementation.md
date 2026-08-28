@@ -2405,3 +2405,18 @@ history.
 
 The unique marker matches the normalized project, code/final scope, and the
 persisted launch interval. The accepted run will not be relaunched.
+
+#### Attempt 2 Result Persisted
+
+- **Envelope:** `status: ok`; `outcome: review_completed_gate_passed`
+- **Findings:** 0 Critical, 0 Important, 0 Medium, 3 Minor
+- **Threshold:** Important; `blocking: false`
+- **Artifact:**
+  `reviews/final-review-2026-08-28T194740Z.md`
+- **Receive:** eligible with a run-correlated non-null handoff; not yet started
+- **Receipt:**
+  `reviews/implement-exit-gate-result-bf9e75b6-65e5-4edd-a289-5e7b8ab485fd.json`
+
+The durable envelope, gate artifact, plan row, target, project, invocation,
+and run ID corroborate. Policy disposition remains unavailable until receive
+is durably completed.

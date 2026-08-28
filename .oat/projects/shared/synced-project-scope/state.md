@@ -92,15 +92,15 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v1:a8edabb345337ec150205b1a8aedc0f111470d476ecd58582d5845ef3008269f
   freshness_head: badbca662babbc995eaea50a6cf50456b0f9bd88
   freshness_fingerprint: sha256:effective-delta-v1:bc0ab9d9cd5df6893d256db9100c391e86afaeede28f1da96eea170269920dfa
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: bf9e75b6-65e5-4edd-a289-5e7b8ab485fd
   launch_started_at: '2026-08-28T19:42:51Z'
   launch_result_receipt: reviews/implement-exit-gate-result-bf9e75b6-65e5-4edd-a289-5e7b8ab485fd.json
   gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/3241d71c-b67e-4a04-88f2-4a9965de3395.json
   gate_run_id: 3241d71c-b67e-4a04-88f2-4a9965de3395
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T194740Z.md
+  handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=3). Run oat-project-review-receive for .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-28T194740Z.md to disposition them before marking the final review row passed.'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -108,16 +108,16 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-28T19:44:47Z'
+  updated_at: '2026-08-28T19:50:03Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T19:44:47.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T19:50:03.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
