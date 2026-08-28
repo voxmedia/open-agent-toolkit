@@ -70,7 +70,46 @@ oat_generated: false
 - **Dispatch policy:** managed High
 - **HiLL checkpoints:** final phase only (`p02`)
 - **Auto-review at HiLL checkpoints:** enabled
-- **Status:** starting at `p01-t01`
+- **Status:** p01 implementation complete; root review pending
+
+#### Dispatch Record: p01 implementation
+
+- **Request:** `4b549ebf-9ea6-49eb-a688-9e9ee96ae122`
+- **Launch state/outcome:** accepted / `DONE`
+- **Route:** Codex native materialized role
+  `oat-phase-implementer-gpt-5-6-sol-medium`
+- **Selection:** managed High; candidate `gpt-5.6-sol/medium`; task class
+  `default-implementation`
+- **Model axis:** `selected:gpt-5.6-sol`
+- **Effort axis:** `selected:medium`
+- **Base/head:**
+  `5b62cfd520d70d814caf5839789bc86716f46f62..dba46295a0d02c1bd1bca179a954bf902a2ae1c6`
+- **Task commits:** `7483ab5c2`, `18678e134`, `45512d5f4`, `42ff227f2`
+- **Verification:** focused suite plus check, type-check, test, build,
+  skill-bump, format, lint, and diff checks passed
+- **Recovery:** attempt 1/10 completed in `dba46295a`; no child dispatches
+- **Runtime identity:** not reported; configured invocation evidence retained
+- **Fallback/replacement:** none
+- **Dispatch stamp:**
+  `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
+#### Recovery Event p01-recovery-001
+
+- Phase/task: p01 / p01-t03
+- Original request: `4b549ebf-9ea6-49eb-a688-9e9ee96ae122`
+- Original commit: `45512d5f404aee999162a518f3fe4faf916e0b06`
+- Defect class: test
+- Discovered by: `pnpm test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-medium`
+- Recovery commit: `dba46295a0d02c1bd1bca179a954bf902a2ae1c6`
+- Verification: focused validation and all relevant phase-wide gates passed
+  before and after commit
+- Reason: mechanically derived stale validation pins, portable-path
+  assertions, and line-budget composition were corrected within the bounded
+  in-phase expansion
 
 <!-- orchestration-runs-end -->
 
