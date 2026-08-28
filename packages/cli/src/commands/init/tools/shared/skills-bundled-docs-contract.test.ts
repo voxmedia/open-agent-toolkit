@@ -445,6 +445,25 @@ describe('skills bundled docs contract', () => {
     },
   );
 
+  it('preserves launch notices and effective-target disclosure', () => {
+    const content = readFileSync(
+      join(SKILLS_DIR, 'oat-project-implement', 'SKILL.md'),
+      'utf8',
+    );
+
+    expect(content).toContain(
+      'Display structured resolver notices before every implementation, fix, or reviewer launch',
+    );
+    expect(content).toContain('uses the effective resolved target');
+    expect(content).toContain('never the bundled recommendation version');
+    expect(content).toContain(
+      'the named `provider-cursor.md`, `provider-codex.md`, or',
+    );
+    expect(content.indexOf('active-provider selection')).toBeLessThan(
+      content.indexOf('matching mechanics reference'),
+    );
+  });
+
   it('resolves shared tracking scripts from each loaded skill scope', () => {
     const consumers: string[] = [];
     const bareReferences: string[] = [];

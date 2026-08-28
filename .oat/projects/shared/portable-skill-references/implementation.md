@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-28
-oat_current_task_id: prev1-t05
+oat_current_task_id: prev1-t06
 oat_generated: false
 ---
 
@@ -12,8 +12,8 @@ oat_generated: false
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-28
 
-> Revision 1 merged `origin/main` and passed its phase review. Lifecycle,
-> summary, and recovery-command fixes are current; two dispatch fixes remain.
+> Revision 1 merged `origin/main` and passed its phase review. Launch safeguards
+> are restored, and one mixed-scope dispatch resolution fix remains.
 
 ## Progress Overview
 
@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 1: Portable resolution and enforcement | passed | 4     | 4/4       |
 | Phase 2: Release metadata and validation     | passed | 1     | 1/1       |
 | Phase 3: Final review fixes                  | passed | 3     | 3/3       |
-| Revision 1: Merge current main and fixes     | active | 6     | 4/6       |
+| Revision 1: Merge current main and fixes     | active | 6     | 5/6       |
 
-**Total:** 12/14 tasks completed; `prev1-t05` is next.
+**Total:** 13/14 tasks completed; `prev1-t06` is next.
 
 ### Revision Received: Inline Feedback
 
@@ -68,7 +68,7 @@ skill and Claude link, materializes the 88-entry sync-manifest union at OAT
 
 ### Task prev1-t05: Restore dispatch launch safeguards
 
-**Status:** pending
+**Status:** completed
 
 ### Task prev1-t06: Resolve dispatch dependencies independently
 
