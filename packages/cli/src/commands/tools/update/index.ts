@@ -302,8 +302,13 @@ export function createToolsUpdateCommand(
  * core .gitignore section even when their workflow pack is already current.
  */
 export function shouldBackfillWorkflowGitignore(result: UpdateResult): boolean {
-  return [...result.updated, ...result.current, ...result.newer].some(
-    (tool) => tool.scope === 'project' && tool.pack === 'workflows',
+  return (
+    [...result.updated, ...result.current, ...result.newer].some(
+      (tool) => tool.scope === 'project' && tool.pack === 'workflows',
+    ) ||
+    result.plans?.some(
+      (plan) => plan.scope === 'project' && plan.pack === 'workflows',
+    ) === true
   );
 }
 

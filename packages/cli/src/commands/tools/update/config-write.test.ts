@@ -247,6 +247,77 @@ describe('createToolsUpdateCommand config writes', () => {
     expect(process.exitCode).toBeUndefined();
   });
 
+  it('repairs managed Git files for a current project workflows reconcile plan with no content operations', async () => {
+    const applyOatCoreGitignore = vi.fn(async () => ({
+      action: 'updated' as const,
+      entries: ['.oat/projects/synced/*/'],
+      stateDashboardIndexAction: 'not-tracked' as const,
+    }));
+    const applyOatCoreGitattributes = vi.fn(async () => ({
+      action: 'updated' as const,
+      entries: ['.oat/projects/shared/** linguist-generated=true'],
+    }));
+    const inventory = {
+      pack: 'workflows' as const,
+      scope: 'project' as const,
+      intent: {
+        pack: 'workflows' as const,
+        scope: 'project' as const,
+        enabled: true,
+        source: 'declared' as const,
+        configPath: '/tmp/workspace/.oat/config.json',
+        diagnostics: [],
+      },
+      completeness: 'complete' as const,
+      assets: [],
+      diagnostics: [],
+    };
+    const dependencies: UpdateToolsDependencies = {
+      scanTools: vi.fn(async () => []),
+      resolveScopeRoot: vi.fn(async () => '/tmp/workspace'),
+      resolveAssetsRoot: vi.fn(async () => '/assets'),
+      copyDirWithStatus: vi.fn(async () => 'no-change' as const),
+      copyFileWithStatus: vi.fn(async () => 'no-change' as const),
+      fileExists: vi.fn(async () => true),
+      chmod: vi.fn(async () => {}),
+      applyOatCoreGitignore,
+      applyOatCoreGitattributes,
+      inventoryScopedPack: vi.fn(async () => inventory),
+      reconcilePacks: vi.fn(async (requests) =>
+        requests.map((request) => ({
+          request,
+          before: inventory,
+          plan: {
+            pack: 'workflows' as const,
+            scope: 'project' as const,
+            action: 'update' as const,
+            operations: [],
+            expectedCompleteness: 'complete' as const,
+            changedCanonicalPaths: [],
+            retainedAssets: [],
+          },
+          apply: {
+            applied: [],
+            skipped: [],
+          },
+        })),
+      ),
+    };
+    const command = createToolsUpdateCommand(dependencies, {
+      runSync: vi.fn(async () => {}),
+    });
+
+    await runCommand(
+      command,
+      ['--pack', 'workflows', '--no-sync'],
+      ['--scope', 'project', '--cwd', '/tmp/workspace'],
+    );
+
+    expect(applyOatCoreGitignore).toHaveBeenCalledWith('/tmp/workspace');
+    expect(applyOatCoreGitattributes).toHaveBeenCalledWith('/tmp/workspace');
+    expect(process.exitCode).toBeUndefined();
+  });
+
   it('still checks tracking when the OAT core section is already current', async () => {
     const applyOatCoreGitignore = vi.fn(async () => ({
       action: 'no-change' as const,
