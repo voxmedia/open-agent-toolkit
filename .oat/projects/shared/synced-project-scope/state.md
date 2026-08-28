@@ -112,24 +112,38 @@ oat_implement_exit_gate:
   receive_completed: true
   failure: null
   updated_at: '2026-08-28T19:53:34Z'
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p12
+  pre_approval:
+    - summary
+    - document
+    - pr
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-28T19:53:34.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-28T19:59:03.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: synced-project-scope
 
-**Status:** All 89 tasks and final lifecycle review complete; exit-gate attempt 2 pending
+**Status:** All 89 tasks, final lifecycle review, and exit gate complete; closeout sequence in progress
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-28
 
 ## Current Phase
 
-Implementation closeout - configured exit-gate attempt 2 pending
+Implementation closeout - configured pre-approval sequence in progress
 
 ## Artifacts
 
@@ -251,7 +265,9 @@ Implementation closeout - configured exit-gate attempt 2 pending
 - ✓ Project provider sync dry-run made no filesystem changes; managed entries remain in sync
 - ✓ Narrowed final lifecycle review event updated to `fixes_completed` (never passed)
 - ✓ Phase 12 narrowed final lifecycle re-review passed at 0 Critical / 0 Important / 0 Medium / 0 Minor
-- ◌ Configured exit-gate attempt 2 remains unlaunched
+- ✓ Configured exit-gate attempt 2 passed at the Important threshold
+- ✓ Final closeout verification passed: test, lint, type-check, and build
+- ◌ Configured pre-approval sequence started: summary → document → PR
 - ✓ Cycle-5 findings converted into consolidated task p09-t01 with no deferrals
 - ✓ Phase 9 task p09-t01 completed and verified in `e193c8ffb`
 - ✓ Phase 9 recovery ledger settled at 0/10 with no pending attempt
@@ -267,6 +283,6 @@ None.
 
 ## Next Milestone
 
-Start the configured exit gate's second and final attempt from the fresh passed
-review basis. Migration, archive, completion, PR publication, and
-spike-repository deletion remain unperformed.
+Run the configured pre-approval sequence in its stored order, then pause at the
+final Phase 12 HiLL approval checkpoint. Migration, archive, implementation
+completion, deployment, and spike-repository deletion remain unperformed.
