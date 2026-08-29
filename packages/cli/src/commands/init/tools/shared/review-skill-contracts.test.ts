@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -29,6 +30,41 @@ function readRepoFile(relativePath: string): string {
     ...references,
     content.slice(successIndex),
   ].join('\n\n');
+}
+
+function executeFinalProjectPushGuard(
+  content: string,
+  projectScope: string,
+  shouldArchive: string,
+  projectRefCommit: string,
+): string {
+  const step = content.slice(
+    content.indexOf('#### Step 8.6: Render Final Synced Project Links'),
+    content.indexOf('#### Step 8.7: Non-Archive Synced Completion Transaction'),
+  );
+  const guard = [...step.matchAll(/if \[\[ ([\s\S]*?) \]\]; then/g)]
+    .map((match) => match[1])
+    .find(
+      (candidate) =>
+        candidate.includes('PROJECT_SCOPE') &&
+        candidate.includes('PROJECT_REF_COMMIT'),
+    );
+  if (!guard) {
+    throw new Error('Missing final project push guard in Step 8.6.');
+  }
+
+  return execFileSync(
+    '/bin/bash',
+    [
+      '-c',
+      `PROJECT_SCOPE="$1"\nSHOULD_ARCHIVE="$2"\nPROJECT_REF_COMMIT="$3"\nif [[ ${guard} ]]; then\n  printf push\nelse\n  printf skip\nfi`,
+      'completion-final-project-push-guard',
+      projectScope,
+      shouldArchive,
+      projectRefCommit,
+    ],
+    { encoding: 'utf8' },
+  );
 }
 
 function actionableResolverInvocations(content: string): string[] {
@@ -850,7 +886,7 @@ describe('review skill contracts', () => {
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.3');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.4');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );
@@ -1086,6 +1122,29 @@ describe('review skill contracts', () => {
       expect(normalizedContent).toMatch(
         /On retry,[\s\S]*?already-complete record[\s\S]*?final artifact push receipt/,
       );
+    },
+  );
+
+  it.each([
+    ['archive enabled', 'true', '', 'skip'],
+    ['configured archive decline', 'false', '', 'push'],
+    ['interactive archive decline', 'false', '', 'push'],
+    ['final receipt already captured', 'false', 'a'.repeat(40), 'skip'],
+  ])(
+    'executes the final synced project push guard for %s',
+    (_scenario, shouldArchive, projectRefCommit, expected) => {
+      const content = readRepoFile(
+        '.agents/skills/oat-project-complete/SKILL.md',
+      );
+
+      expect(
+        executeFinalProjectPushGuard(
+          content,
+          'synced',
+          shouldArchive,
+          projectRefCommit,
+        ),
+      ).toBe(expected);
     },
   );
 

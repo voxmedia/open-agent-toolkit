@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.7.3
+version: 1.7.4
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -920,7 +920,8 @@ validated an already-finalized retry receipt. Otherwise publish the rendered
 artifact with a distinct final push:
 
 ```bash
-if [[ "$PROJECT_SCOPE" == "synced" && -z "$PROJECT_REF_COMMIT" ]]; then
+if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "false" && \
+  -z "$PROJECT_REF_COMMIT" ]]; then
   FINAL_PROJECT_PUSH_ARGS=("$PROJECT_PATH" \
     --message "chore(oat): publish final project links" --json)
   FINAL_PROJECT_PUSH_OUTPUT=$(oat project push \
