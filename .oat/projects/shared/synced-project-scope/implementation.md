@@ -1678,13 +1678,18 @@ Track test execution during implementation.
 - Lifecycle skills that pull before reading and push after writing synced
   project artifacts, enforced by a checked-in bookkeeping inventory.
 - Reviewer-facing pinned artifact links, end-to-end documentation, and the
-  lockstep 0.2.40 public-package release surface.
+  lockstep 0.2.45 public-package release surface.
 - Fail-closed completion receipt recovery that validates exact retained refs,
   canonical pin labels, full blob-link SHAs, and configured/interactive
   archive decisions through the production CLI entrypoint.
 - A conflict-resolved integration of merged PR #226 that preserves portable
   packaged sibling-skill references alongside synced-project lifecycle
   behavior and their combined validation coverage.
+- Phase 20 Bugbot and review-fix corrections for local completion archive
+  prompting, synced completion/autonomous pull, dirty fold-back publication,
+  pin-source retry recognition, and autonomy prompt-site inventory.
+- A conflict-resolved integration of merged PR #231 that keeps lockstep at
+  `0.2.45` and the overlapping skill versions at `1.1.1` / `1.5.1`.
 
 **Behavioral changes (user-facing):**
 
@@ -1717,9 +1722,12 @@ Track test execution during implementation.
 - Real source-built CLI dogfood covered synced creation, push, cross-worktree
   pull, immutable links, archive/prune cleanup, and shipped skill workflows.
 - The final completion transaction matrix passed all eight decision/interruption
-  rows and both wrong-ref/wrong-full-SHA fail-closed cases. The original final
-  review passed with no findings; the post-merge final lifecycle review is the
-  remaining closeout boundary.
+  rows and both wrong-ref/wrong-full-SHA fail-closed cases. Phase 20 review
+  passed after two fix tasks. Closeout CI-order gates passed after remapping
+  completion prompt-site inventory: `pnpm check`, `pnpm type-check`,
+  `pnpm test`, `pnpm lint`, `pnpm build`, `pnpm run check:skill-bumps`,
+  `pnpm release:check-versions`, `pnpm release:validate`, and `pnpm build:docs`.
+  Remaining closeout is a fresh configured exit gate and PR #227 refresh.
 
 **Design deltas (if any):**
 
