@@ -13,7 +13,7 @@ labels:
   - contract
 assignee: null
 created: 2026-08-29T14:36:26.565Z
-updated: 2026-08-29T14:36:26.565Z
+updated: 2026-08-29T18:20:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -40,6 +40,13 @@ Skills that read canonical agent definitions still use bare repo-relative paths 
   read into a canonical skill must fail the suite with exact
   `source -> target` evidence.
 - Independent per-dependency root binding is preserved (see Design Questions).
+- The duplicate matcher at `packages/cli/src/validation/skills.test.ts:4695` is
+  reconciled with the canonical matcher, or deleted in favour of it. It
+  currently carries a copy of the pre-fix pattern with the single-`../` blind
+  spot that `7f7dd6cfc` closed canonically. Harmless today only because the
+  canonical ratchet already scans the same four agent files with the stronger
+  pattern — but a knowingly divergent duplicate of a matcher will drift.
+  (Added at retro filing 2026-08-29; scope broadening approved by the operator.)
 - Existing portable cross-skill reads and both current candidate orders keep
   working; no regression in `PORTABLE_SKILLS_ROOT_CANDIDATES` or
   `PORTABLE_AGENT_SKILLS_ROOT_CANDIDATES` behavior.

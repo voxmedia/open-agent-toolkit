@@ -174,6 +174,7 @@
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature | L        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                                          | open   | high     | task    | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                                      | open   | high     | task    | S        |
+| BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task    | M        |
 | BL-260826-populate-native-subagent       | Populate native subagent runtime identity from provider transcript metadata                           | open   | high     | feature | M        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                                   | open   | high     | feature | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature | L        |
