@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: null
+oat_current_task_id: p20-t06
 oat_generated: false
 ---
 
@@ -14,8 +14,8 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> Phases 1–20 are implemented (197/197). Phase 20 review is pending after the
-> `#231` merge into this branch.
+> Phases 1–19 are complete. Phase 20 is 5/7 complete; resume at `p20-t06` for
+> the 2026-08-29T200603Z review follow-ups.
 >
 > Conventions:
 >
@@ -27,31 +27,31 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 10    | 10/10     |
-| Phase 2      | complete | 13    | 13/13     |
-| Phase 3      | complete | 19    | 19/19     |
-| Phase 4      | complete | 16    | 16/16     |
-| Phase 5      | complete | 7     | 7/7       |
-| Phase 6      | complete | 3     | 3/3       |
-| Phase 7      | complete | 1     | 1/1       |
-| Phase 8      | complete | 1     | 1/1       |
-| Phase 9      | complete | 1     | 1/1       |
-| Phase 10     | complete | 14    | 14/14     |
-| Phase 11     | complete | 3     | 3/3       |
-| Phase 12     | complete | 1     | 1/1       |
-| Phase p-rev1 | complete | 1     | 1/1       |
-| Phase 13     | complete | 16    | 16/16     |
-| Phase 14     | complete | 19    | 19/19     |
-| Phase 15     | complete | 19    | 19/19     |
-| Phase 16     | complete | 20    | 20/20     |
-| Phase 17     | complete | 14    | 14/14     |
-| Phase 18     | complete | 1     | 1/1       |
-| Phase 19     | complete | 13    | 13/13     |
-| Phase 20     | complete | 5     | 5/5       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 10    | 10/10     |
+| Phase 2      | complete    | 13    | 13/13     |
+| Phase 3      | complete    | 19    | 19/19     |
+| Phase 4      | complete    | 16    | 16/16     |
+| Phase 5      | complete    | 7     | 7/7       |
+| Phase 6      | complete    | 3     | 3/3       |
+| Phase 7      | complete    | 1     | 1/1       |
+| Phase 8      | complete    | 1     | 1/1       |
+| Phase 9      | complete    | 1     | 1/1       |
+| Phase 10     | complete    | 14    | 14/14     |
+| Phase 11     | complete    | 3     | 3/3       |
+| Phase 12     | complete    | 1     | 1/1       |
+| Phase p-rev1 | complete    | 1     | 1/1       |
+| Phase 13     | complete    | 16    | 16/16     |
+| Phase 14     | complete    | 19    | 19/19     |
+| Phase 15     | complete    | 19    | 19/19     |
+| Phase 16     | complete    | 20    | 20/20     |
+| Phase 17     | complete    | 14    | 14/14     |
+| Phase 18     | complete    | 1     | 1/1       |
+| Phase 19     | complete    | 13    | 13/13     |
+| Phase 20     | in_progress | 7     | 5/7       |
 
-**Total:** 197/197 tasks completed
+**Total:** 197/199 tasks completed
 
 ---
 
@@ -3997,3 +3997,36 @@ Phase 20 is implemented in five append-only commits. No recovery attempt.
 - Commit range: `9dac02d655904f3564dcbe8b37a76100deb09565..8ce831a8d42013380f147b7a9e4aefc0abf91504`
 - Verification: focused completion/skill-contract suites passed during each task; p20-t05 closed at 240/240 plus format, lint, and skill-bump checks
 - Next: merge `origin/main` (PR #231) using `references/merge-conflict-analysis-pr231.md`, then independent Phase 20 review
+
+### Review Received: p20
+
+**Date:** 2026-08-29
+**Review artifact:** reviews/archived/p20-review-2026-08-29T200603Z.md
+**Reviewed head:** `b7dc3b06e93e61ef2ecfda489c1c800a3b6927a9`
+**Invocation:** auto
+**Gate target:** -
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** `p20-t06`, `p20-t07`
+
+**Finding disposition map:**
+
+- `I1`: converted → `p20-t06` (`code_fix_required`) — local completion still asks the archive question when the preference is unset
+- `M1`: converted → `p20-t07` (`code_fix_required`) — dirty fold-back test does not prove publication is withheld
+
+**Design drift / artifact alignment notes:**
+
+- None
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+After the fix tasks are complete:
+
+- Update this same artifact-identified review event to `fixes_completed`
+- Re-run `oat-project-review-provide code p20` then `oat-project-review-receive` to reach `passed`

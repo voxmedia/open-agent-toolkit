@@ -3718,6 +3718,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | final   | code     | passed          | 2026-08-29 | reviews/archived/final-review-2026-08-29T155750Z.md               | f5b537847a64eea45978b4be4bfdf681b2cdf674 | manual     | -                             |
 | final   | code     | passed          | 2026-08-29 | reviews/archived/final-review-2026-08-29T160525Z.md               | 4881a5284a50976116d13aff5e7937ec6bde915c | gate       | claude-fable-skip-permissions |
 | remote  | code     | fixes_added     | 2026-08-29 | reviews/archived/remote-pr-227-review-2026-08-29T192256Z.md       | -                                        | -          | -                             |
+| p20     | code     | fixes_added     | 2026-08-29 | reviews/archived/p20-review-2026-08-29T200603Z.md                 | b7dc3b06e93e61ef2ecfda489c1c800a3b6927a9 | auto       | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -5774,6 +5775,91 @@ gates. Commit as `fix(p20-t05): recognize pin-source completion retries`.
 
 ---
 
+### Task p20-t06: (review) Branch local completion archive prompt on durable scope
+
+**Finding:** Important `I1` from `reviews/archived/p20-review-2026-08-29T200603Z.md`.
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `packages/cli/src/commands/project/push/completion-transaction.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: generic preference rules still assign `SHOULD_ARCHIVE` for
+configured values and include the archive question whenever `ARCHIVE_PREF` is
+unset, before the local-default resolver. That contradicts the requirement that
+local completion never ask the archive question.
+Location: `.agents/skills/oat-project-complete/SKILL.md:124`
+
+**Step 2: Implement fix**
+
+Branch preference and question-selection rules on `IS_DURABLE_PROJECT` before
+assembling the batched prompt. Local scope must select `local-default` and omit
+the archive question regardless of configuration. Shared/synced scope must use
+configured or interactive input. Remove earlier direct `SHOULD_ARCHIVE`
+assignments.
+
+**Step 3: Verify**
+
+Add executable coverage for local unset preference through closeout, configured
+true/false, and interactive decline. Prove local completion reaches lifecycle
+closeout without asking the archive question.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/push/completion-transaction.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation/skills.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts`
+
+Expected: focused suites pass and local completion no longer contradicts the
+resolver.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/SKILL.md packages/cli/src/commands/project/push/completion-transaction.test.ts
+git commit -m "fix(p20-t06): branch local completion archive prompt on durable scope"
+```
+
+---
+
+### Task p20-t07: (review) Prove dirty fold-back withholds push until handler
+
+**Finding:** Medium `M1` from `reviews/archived/p20-review-2026-08-29T200603Z.md`.
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: the dirty fold-back test only runs status preflight and asserts
+an unrelated dirty filename on stdout. It never proves the dirty route is taken
+or that `oat project push` is withheld until the handler runs.
+Location: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts:1678`
+
+**Step 2: Implement fix**
+
+Add an executable routing harness with a clean selected artifact and another
+dirty project file. Record mocked handler and push calls.
+
+**Step 3: Verify**
+
+Assert the dirty handler is selected and no push occurs before the handler's
+explicit choice.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+Expected: the harness proves the dirty path and withheld publication.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p20-t07): prove dirty fold-back withholds push until handler"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -5798,16 +5884,16 @@ gates. Commit as `fix(p20-t05): recognize pin-source completion retries`.
 - Phase 17: 14 tasks - Final lifecycle durability and provider parity fixes for release contracts, declined pause publication, generated views, custom roots, diagnostics, validators, docs, and Git isolation
 - Phase 18: 1 task - Remote-review correction preventing final project-ref publication from running against an archived synced project tree
 - Phase 19: 13 tasks - Final destructive-path, worktree-overlap, external-root, prune/archive retry, local-sync compatibility, and closeout-artifact corrections
-- Phase 20: 5 tasks - Remote Bugbot corrections for local archive decision, completion pull, fold-back dirty detection, autonomous pull halt, and pin-source retry
+- Phase 20: 7 tasks - Remote Bugbot corrections for local archive decision, completion pull, fold-back dirty detection, autonomous pull halt, and pin-source retry, plus p20 review follow-ups for archive-prompt branching and dirty fold-back publication proof
 
-**Total: 197 tasks**
+**Total: 199 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
 **Operator step after implementation:** delete the disposable spike repository `https://github.com/tkstang/disposable-test-repo-for-oat` (used by p01-t10); the implementing agent never deletes repositories.
 
-Phases 1–19 remain complete (192 tasks). Phase 20 adds five remote-review fix
-tasks from the 2026-08-29T192256Z Bugbot receive. Resume at `p20-t01`.
+Phases 1–19 remain complete (192 tasks). Phase 20 now has seven tasks; resume
+at `p20-t06` for the 2026-08-29T200603Z review follow-ups.
 
 ---
 
