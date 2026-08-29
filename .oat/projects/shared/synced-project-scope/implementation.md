@@ -14,9 +14,11 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> One hundred seventy-nine of one hundred eighty-six implementation and
-> revision tasks are complete. Phase 19 contains seven final-review fixes,
-> starting at `p19-t01`.
+> Phase 18 implementation and its independent review are complete. Phase 19
+> contains seven final-review fixes, and all seven now have implementation
+> commits through the `p19-t07` resume-state alignment. No plan task remains;
+> the root workflow must accept the Phase 19 report, update the authoritative
+> lifecycle tables/frontmatter, and dispatch the independent Phase 19 review.
 >
 > Conventions:
 >
