@@ -481,9 +481,9 @@ Project-wide: acts on every registered checkout of the slug in every worktree of
 
 `shared` → `synced` only in v1, using the six-step algorithm in Ref sync engine. Refuses on a dirty or untracked source, missing `origin`, or an existing ref/record/destination. Updates `activeProject` if it pointed at the migrated path. Produces exactly one branch commit.
 
-### `oat project archive [project-path]` (existing)
+### `oat project archive [project-path] [--no-commit]` (existing)
 
-For `synced` projects: refuses unless the checkout is clean and pushed; runs steps 3–6 of the completion state machine; commits the record update (and summary export) on the branch. `shared` behavior unchanged.
+For `synced` projects: refuses unless the checkout is clean and pushed; runs steps 3–6 of the completion state machine; commits the record update (and summary export) on the branch. `--no-commit` is reserved for manual/library callers: it still removes the checkout but intentionally returns no lifecycle commit receipt, so `oat-project-complete` must never pass it. Shared projects retain their existing publication behavior subject to the explicit archive deltas documented above.
 
 ### `oat project pull` — adoption and children (FR16/FR17)
 

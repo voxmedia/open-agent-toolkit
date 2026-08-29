@@ -42,7 +42,10 @@ export function createProjectArchiveCommand(
     .description('Manage archived project data')
     .argument('[project-path]', 'Project path to archive')
     .option('--dry-run', 'Preview archive without moving files or syncing S3')
-    .option('--no-commit', 'Do not commit synced project record changes')
+    .option(
+      '--no-commit',
+      'Manual/library use only: omit the synced lifecycle commit receipt',
+    )
     .option(
       '--project-recap-run <path>',
       'Export the selected project-relative recap run before archiving',
