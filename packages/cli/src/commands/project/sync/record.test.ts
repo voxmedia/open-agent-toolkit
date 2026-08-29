@@ -93,6 +93,28 @@ describe('record persistence', () => {
     );
   });
 
+  it.each([
+    ['invalid JSON', '{'],
+    [
+      'invalid schema',
+      JSON.stringify({ schemaVersion: 2, slug: 'demo', scope: 'synced' }),
+    ],
+  ])(
+    'gives malformed records an actionable %s recovery path',
+    async (_, content) => {
+      const root = await createScopeRoot();
+      const path = join(root, 'demo.json');
+      await writeFile(path, content, 'utf8');
+
+      await expect(readSyncedRecord(path)).rejects.toMatchObject({
+        exitCode: 1,
+        message: expect.stringMatching(
+          /Restore the record from Git.*oat project pull demo --no-commit.*clean checkout/s,
+        ),
+      });
+    },
+  );
+
   it('lists JSON record files by slug and ignores other entries', async () => {
     const root = await createScopeRoot();
     await writeSyncedRecord(
