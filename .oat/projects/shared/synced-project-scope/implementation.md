@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: null
+oat_current_task_id: p19-t08
 oat_generated: false
 ---
 
@@ -14,8 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All one hundred eighty-six implementation and revision tasks are complete.
-> Phase 19 independent review is pending.
+> One hundred eighty-six of one hundred eighty-nine implementation and revision
+> tasks are complete. Phase 19 review cycle 1 added `p19-t08` through
+> `p19-t10` with no deferrals.
 >
 > Conventions:
 >
@@ -27,36 +28,36 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 10    | 10/10     |
-| Phase 2      | complete | 13    | 13/13     |
-| Phase 3      | complete | 19    | 19/19     |
-| Phase 4      | complete | 16    | 16/16     |
-| Phase 5      | complete | 7     | 7/7       |
-| Phase 6      | complete | 3     | 3/3       |
-| Phase 7      | complete | 1     | 1/1       |
-| Phase 8      | complete | 1     | 1/1       |
-| Phase 9      | complete | 1     | 1/1       |
-| Phase 10     | complete | 14    | 14/14     |
-| Phase 11     | complete | 3     | 3/3       |
-| Phase 12     | complete | 1     | 1/1       |
-| Phase p-rev1 | complete | 1     | 1/1       |
-| Phase 13     | complete | 16    | 16/16     |
-| Phase 14     | complete | 19    | 19/19     |
-| Phase 15     | complete | 19    | 19/19     |
-| Phase 16     | complete | 20    | 20/20     |
-| Phase 17     | complete | 14    | 14/14     |
-| Phase 18     | complete | 1     | 1/1       |
-| Phase 19     | complete | 7     | 7/7       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 10    | 10/10     |
+| Phase 2      | complete    | 13    | 13/13     |
+| Phase 3      | complete    | 19    | 19/19     |
+| Phase 4      | complete    | 16    | 16/16     |
+| Phase 5      | complete    | 7     | 7/7       |
+| Phase 6      | complete    | 3     | 3/3       |
+| Phase 7      | complete    | 1     | 1/1       |
+| Phase 8      | complete    | 1     | 1/1       |
+| Phase 9      | complete    | 1     | 1/1       |
+| Phase 10     | complete    | 14    | 14/14     |
+| Phase 11     | complete    | 3     | 3/3       |
+| Phase 12     | complete    | 1     | 1/1       |
+| Phase p-rev1 | complete    | 1     | 1/1       |
+| Phase 13     | complete    | 16    | 16/16     |
+| Phase 14     | complete    | 19    | 19/19     |
+| Phase 15     | complete    | 19    | 19/19     |
+| Phase 16     | complete    | 20    | 20/20     |
+| Phase 17     | complete    | 14    | 14/14     |
+| Phase 18     | complete    | 1     | 1/1       |
+| Phase 19     | in_progress | 10    | 7/10      |
 
-**Total:** 186/186 tasks completed
+**Total:** 186/189 tasks completed
 
 ---
 
 ## Phase 1: Sync foundations
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-08-27
 
 ### Phase Summary
@@ -3715,15 +3716,18 @@ re-reviewed.
 
 ### Task Status
 
-| Task    | Status | Commit      |
-| ------- | ------ | ----------- |
-| p19-t01 | done   | `7b1bb113a` |
-| p19-t02 | done   | `4b6450e4a` |
-| p19-t03 | done   | `ea6bacfc6` |
-| p19-t04 | done   | `93d66c221` |
-| p19-t05 | done   | `bb8468047` |
-| p19-t06 | done   | `9b8e5c148` |
-| p19-t07 | done   | `81da1093a` |
+| Task    | Status  | Commit      |
+| ------- | ------- | ----------- |
+| p19-t01 | done    | `7b1bb113a` |
+| p19-t02 | done    | `4b6450e4a` |
+| p19-t03 | done    | `ea6bacfc6` |
+| p19-t04 | done    | `93d66c221` |
+| p19-t05 | done    | `bb8468047` |
+| p19-t06 | done    | `9b8e5c148` |
+| p19-t07 | done    | `81da1093a` |
+| p19-t08 | pending | -           |
+| p19-t09 | pending | -           |
+| p19-t10 | pending | -           |
 
 ### Implementation Outcome
 
@@ -3738,3 +3742,22 @@ re-reviewed.
 - **Review concern:** the local-sync guard scans nested `.git` markers but does
   not separately query registered worktrees; independent review must evaluate
   stale-registration behavior explicitly.
+
+### Review Received: p19 cycle 1
+
+**Date:** 2026-08-29
+**Review artifact:** `reviews/archived/p19-review-2026-08-29T143242Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 2
+- Minor: 0
+
+**New tasks added:** `p19-t08`, `p19-t09`, `p19-t10`
+
+The review reproduced the implementer's stale-registration concern and found
+two narrower parity/fail-closed gaps in archive dry-run and prune remote lookup.
+All three are converted for the original Phase 19 implementer; no finding is
+deferred or dismissed.

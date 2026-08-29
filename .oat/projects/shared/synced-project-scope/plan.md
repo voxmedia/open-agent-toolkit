@@ -3711,7 +3711,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | remote  | code     | fixes_completed | 2026-08-29 | reviews/archived/remote-pr-227-review-2026-08-29T131316Z.md       | d1a84e7dfcf9e2487bebde9368d3d2c8bb91fe37 | -          | -                             |
 | p18     | code     | passed          | 2026-08-29 | reviews/archived/p18-review-2026-08-29T133009Z.md                 | 9e73c3750357fea997d0927e8b991109c5095930 | auto       | -                             |
 | final   | code     | fixes_completed | 2026-08-29 | reviews/archived/final-review-2026-08-29T134331Z.md               | 9ca20b411b07c792d169e46e812f1aef4910ea0f | auto       | -                             |
-| p19     | code     | received        | 2026-08-29 | reviews/p19-review-2026-08-29T143242Z.md                          | 5d5684ebe41e3f5c41e40fd864f9108d7b1e2aa4 | auto       | -                             |
+| p19     | code     | fixes_added     | 2026-08-29 | reviews/archived/p19-review-2026-08-29T143242Z.md                 | 5d5684ebe41e3f5c41e40fd864f9108d7b1e2aa4 | auto       | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -5459,6 +5459,89 @@ Run plan validation and formatting, then confirm `state.md`, `plan.md`, and
 
 Commit as `docs(p19-t07): align implementation resume state`.
 
+### Task p19-t08: (review) Protect registered worktrees with damaged markers
+
+**Finding:** Important `I1` from Phase 19 review
+`p19-review-2026-08-29T143242Z.md`.
+
+**Step 1: Understand the issue**
+
+Recursive `.git` marker scanning does not detect a still-registered nested
+worktree after its checkout marker is missing or corrupted. Forced ancestor
+sync can then delete unsaved files while leaving a stale Git registration.
+
+**Step 2: Implement the fix**
+
+Give local sync repository context and query `git worktree list --porcelain`
+before any copy or removal. Canonicalize every registered path and refuse an
+entry when either source or destination overlaps it in either direction. Fail
+closed on malformed registrations or a failed registry query while preserving
+ordinary non-repository local-sync behavior where explicitly supported.
+
+**Step 3: Verify**
+
+Add real-Git missing/corrupted-marker tests in both sync directions, including
+an existing forced destination. Prove the sentinel, checkout tree, and
+registration remain unchanged and cover registry-query failure.
+
+**Step 4: Commit**
+
+Commit as `fix(p19-t08): protect registered worktree overlap`.
+
+### Task p19-t09: (review) Align archive dry-run identity validation
+
+**Finding:** Medium `M1` from Phase 19 review
+`p19-review-2026-08-29T143242Z.md`.
+
+**Step 1: Understand the issue**
+
+Archive apply now rejects descendant paths, but dry-run constructs and reports
+an archive target before invoking the exact-root validator. Preview and action
+therefore disagree.
+
+**Step 2: Implement the fix**
+
+Expose one canonical exact-project-root validator and call it before target
+resolution for both dry-run and apply. Keep the independent mutation-boundary
+recheck so filesystem changes between preview and apply still fail closed.
+
+**Step 3: Verify**
+
+Add command-level dry-run refusals for shared/local descendants and the synced
+basename collision, plus positive confined absolute and symlinked custom-root
+cases.
+
+**Step 4: Commit**
+
+Commit as `fix(p19-t09): align archive dry-run validation`.
+
+### Task p19-t10: (review) Fail closed on prune remote lookup errors
+
+**Finding:** Medium `M2` from Phase 19 review
+`p19-review-2026-08-29T143242Z.md`.
+
+**Step 1: Understand the issue**
+
+Prune recovery treats every nonzero `ls-remote` result as proof the remote ref
+is absent. Transport, authentication, or configuration failures can therefore
+allow a false successful prune while the remote ref may still exist.
+
+**Step 2: Implement the fix**
+
+In both target resolution and prune execution, accept only Git's verified
+no-match result as ref absence. Propagate transport/auth/configuration failures
+without committing the staged record deletion or changing unrelated state.
+
+**Step 3: Verify**
+
+Add resolver and public-command retry coverage for remote lookup failure and
+verified absence. Prove failure leaves the exact record deletion staged and
+preserves unrelated index/worktree state.
+
+**Step 4: Commit**
+
+Commit as `fix(p19-t10): fail closed on prune remote lookup`.
+
 ---
 
 ## Implementation Complete
@@ -5484,9 +5567,9 @@ Commit as `docs(p19-t07): align implementation resume state`.
 - Phase 16: 20 tasks - Final full-range safety fixes for custom-root archive completion, locale-stable Git, repository confinement, symlink canonicalization, lifecycle bookkeeping, and residual contract coverage
 - Phase 17: 14 tasks - Final lifecycle durability and provider parity fixes for release contracts, declined pause publication, generated views, custom roots, diagnostics, validators, docs, and Git isolation
 - Phase 18: 1 task - Remote-review correction preventing final project-ref publication from running against an archived synced project tree
-- Phase 19: 7 tasks - Final destructive-path, worktree-overlap, external-root, prune/archive retry, and closeout-artifact corrections
+- Phase 19: 10 tasks - Final destructive-path, worktree-overlap, external-root, prune/archive retry, and closeout-artifact corrections
 
-**Total: 186 tasks**
+**Total: 189 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
