@@ -13,7 +13,7 @@ oat_retro_evidence_sources:
   - source: oat-execution-learnings
     status: unavailable
 oat_retro_promotions: complete
-oat_retro_filing: proposed
+oat_retro_filing: complete
 oat_generated: true
 oat_template: false
 ---
@@ -62,12 +62,20 @@ rather than asserted.
 ## Current State
 
 PR #231 is open against `main` with CI green and `mergeStateStatus: CLEAN`.
-Retro register: 5 RP items and 2 UP items. The three apply-items are settled —
-RP-01 and RP-02 applied to `AGENTS.md` in `38e011b36`, RP-05 written to the
-`synced-project-scope` project directory in the main checkout (untracked there
-by choice). `oat_retro_promotions: complete`. The four file-items (RP-03, RP-04,
-UP-01, UP-02) remain unsettled pending `oat-project-retro-file`, so
-`oat_retro_filing: proposed`.
+Retro register: 5 RP items and 2 UP items, all settled.
+
+Apply lane (`oat_retro_promotions: complete`): RP-01 and RP-02 applied to
+`AGENTS.md` in `38e011b36`; RP-05 written to the `synced-project-scope` project
+directory in the main checkout, deliberately untracked on that branch.
+
+Filing lane (`oat_retro_filing: complete`): UP-01 filed as new backlog item
+`BL-260829-order-phase-bookkeeping-before`; UP-02 and RP-03 strengthened the
+existing `BL-260718-fix-oat-docs-generate-index` and
+`BL-260829-unified-agent-provider-root` with operator-approved scope broadening;
+RP-04 rejected as transient PR-specific material already delivered via the
+handoff document. All three local destinations share destination commit
+`00976e850` and are **unpushed** — durable locally, not yet visible on the
+remote.
 
 ## What Went Well
 
@@ -278,12 +286,12 @@ being diagnosed from scratch, as it was here.
 
 - **Type:** code-follow-up
 - **Disposition:** file
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** .oat/repo/pjm/backlog/items/BL-260829-unified-agent-provider-root.md
+- **Destination-receipt:** 00976e85085b2c056e429e30e62ae6c05c6e17ce
+- **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Strengthened the existing BL-260829 rather than filing new; operator approved the acceptance-scope broadening at filing time. Note the proposal body's claim that this was already folded into BL-260829 was aspirational — the item did not mention it until this filing.
 
 `packages/cli/src/validation/skills.test.ts:4695` carries a copy of the
 pre-fix matcher and still has the single-`../` blind spot that `7f7dd6cfc`
@@ -297,12 +305,12 @@ place to fix it.
 
 - **Type:** code-follow-up
 - **Disposition:** file
-- **Status:** proposed
+- **Status:** rejected
 - **Destination:** —
 - **Destination-receipt:** —
 - **Remote-visibility:** —
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Rejected as backlog material by operator decision at filing time. Transient and PR-specific: it resolves or becomes moot when #227 merges. Already delivered where the person resolving the merge will see it, in the handoff document written to the synced-project-scope project directory. Not lost, just not tracked.
 
 PR #227's `.oat/repo/pjm/current-state.md` narrative says `CLI 0.2.43` while
 its five `package.json` files and `public-package-versions.json` say `0.2.44`.
@@ -332,12 +340,12 @@ in a session transcript.
 
 ### UP-01: Per-phase review evaluates a stale ledger by construction
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** .oat/repo/pjm/backlog/items/BL-260829-order-phase-bookkeeping-before.md
+- **Destination-receipt:** 00976e85085b2c056e429e30e62ae6c05c6e17ce
+- **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Filed as a new item rather than strengthening BL-260711-skip-re-review-for-bookkeeping: that item skips the re-review after bookkeeping-only findings, while this one prevents the finding being generated. Related mechanism, different fix; cross-referenced in both directions.
 
 `oat-project-implement` dispatches the per-phase reviewer before Step 7
 bookkeeping, so the reviewer inspects a head where `implementation.md` and
@@ -357,12 +365,12 @@ time; it is recorded here rather than duplicated into the RP lane.
 
 ### UP-02: `oat docs generate-index` can rewrite `documentation.index` and emit a stray index
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** .oat/repo/pjm/backlog/items/BL-260718-fix-oat-docs-generate-index.md
+- **Destination-receipt:** 00976e85085b2c056e429e30e62ae6c05c6e17ce
+- **Remote-visibility:** unpushed
 - **Sanitized:** no
-- **Disposition-note:** —
+- **Disposition-note:** Strengthened the existing BL-260718, which recorded the same command and root cause from 2026-07-18 but only the stray-file symptom. Operator approved broadening its acceptance scope to cover the config rewrite, and its placeholder acceptance criteria were filled in at the same time.
 
 Invoked from the repository root without arguments, `oat docs generate-index`
 rewrote `documentation.index` in `.oat/config.json` from
