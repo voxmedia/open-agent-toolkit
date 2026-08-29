@@ -99,9 +99,9 @@ oat_dispatch_policy: # project dispatch policy (named maximum tier; set during p
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
@@ -111,8 +111,8 @@ oat_implement_exit_gate:
   reviewed_head: f5b537847a64eea45978b4be4bfdf681b2cdf674
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v1:c2335c80c9fda34143de71735f77e3912741761daf6bfe67b1ed681d9bd54ee9
-  freshness_head: 4cbb16b896fd7849c9a803df243a2ce3f0bfc6e9
-  freshness_fingerprint: sha256:effective-delta-v1:5922ebab8700130b8fcbbf9b9d40b3de659ddff3adec5371e71d70684f85f68e
+  freshness_head: 41e612fd4ec33f6faf4951921397f9b8d6235f3e
+  freshness_fingerprint: sha256:effective-delta-v1:ebe81ae7ab56aba186344488c5ea0f2290d87ca4309af65886e94d20e2702df5
   launch_state: result_persisted
   launch_attempt_id: 25ef30de-eb27-4731-83d8-045c5e7f46cf
   launch_started_at: '2026-08-29T16:00:43Z'
@@ -122,17 +122,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T160525Z.md
   handoff: Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=1). Run oat-project-review-receive for .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T160525Z.md to disposition them before marking the final review row passed.
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=ae05dc65-5d38-4e55-b862-27c48d08ab14; handoff=receive; source=reviews/final-review-2026-08-29T160525Z.md; scope=final; type=code'
   receive_source_artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T160525Z.md
   receive_archived_artifact: .oat/projects/shared/synced-project-scope/reviews/archived/final-review-2026-08-29T160525Z.md
   receive_event_identity: 'final | code | final-review-2026-08-29T160525Z.md'
   receive_pre_head: f7966816a88ada7f92c4849585e5fa7b30d1de49
-  receive_commit: null
+  receive_commit: 41e612fd4ec33f6faf4951921397f9b8d6235f3e
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-29T16:06:43Z'
+  updated_at: '2026-08-29T16:07:44Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -155,7 +155,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T16:06:43.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T16:07:44.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -165,15 +165,15 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Implementation tasks complete; exit-gate recheck pending
+**Status:** Closeout gates passed; PR refresh pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-All 192 implementation and revision tasks are complete. The configured exit
-gate's Important linked-worktree regression is fixed in `p19-t13`; the two
-non-safety Minor cleanup findings remain deferred without implementation tasks.
+All 192 implementation and revision tasks are complete. The narrowed p19-t13
+review and the configured implementation exit gate both passed. Closeout may
+proceed to the already-approved PR refresh.
 
 ## Artifacts
 
@@ -387,5 +387,5 @@ None.
 
 ## Next Milestone
 
-Resume the same configured exit-gate generation for its second and final
-attempt. No plan task or independent re-review precedes that root-owned gate.
+Refresh PR #227 from the passing closeout basis, then persist final lifecycle
+completion without merging the PR.
