@@ -15,6 +15,10 @@ associated_issues:
     ref: BL-260828-add-project-level-oat-guidance
   - type: backlog
     ref: BL-260827-clean-up-tool-pack-lifecycle
+  - type: backlog
+    ref: BL-260829-unified-agent-provider-root
+  - type: project
+    ref: agent-provider-root
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs

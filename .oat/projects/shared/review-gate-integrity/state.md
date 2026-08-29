@@ -6,6 +6,8 @@ associated_issues:
   - type: backlog
     ref: BL-260711-skip-re-review-for-bookkeeping
   - type: backlog
+    ref: BL-260829-order-phase-bookkeeping-before
+  - type: backlog
     ref: BL-260820-bind-each-gate-review
   - type: backlog
     ref: BL-260820-emit-source-qualified

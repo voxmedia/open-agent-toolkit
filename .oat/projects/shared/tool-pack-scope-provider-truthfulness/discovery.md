@@ -13,6 +13,12 @@ oat_generated: false
 > and worktree against the post-PR-#227 baseline before approving design,
 > changing workflow mode, or generating a plan.
 
+> Boundary update after PR #231: the sibling `agent-provider-root` project is
+> now spec-driven and owns portable skill-to-canonical-agent references. This
+> project owns canonical installation, provider materialization, catalog
+> visibility, restart notices, picker truth, and dispatch-state reporting. The
+> relationship and affected files must be revalidated before implementation.
+
 ## Phase Guardrails (Discovery)
 
 Discovery records requirements, evidence, decisions, boundaries, and questions.
@@ -43,6 +49,10 @@ guidance, and tool-pack lifecycle/configuration edges:
   prompt during init and workflow installation](../../../repo/pjm/backlog/items/BL-260828-add-project-level-oat-guidance.md)
 - [`BL-260827-clean-up-tool-pack-lifecycle` — Clean up tool-pack lifecycle and
   config contracts](../../../repo/pjm/backlog/items/BL-260827-clean-up-tool-pack-lifecycle.md)
+- [`BL-260829-unified-agent-provider-root` — Unified AGENT_PROVIDER_ROOT binding
+  for portable skill and agent references](../../../repo/pjm/backlog/items/BL-260829-unified-agent-provider-root.md)
+- [`agent-provider-root`](../agent-provider-root/) — Spec-driven sibling project
+  owning canonical skill-to-agent reference resolution.
 
 The user supplied a future PR #227 baseline at
 `/Users/tstang/Code/open-agent-toolkit/.oat/projects/shared/synced-project-scope`.

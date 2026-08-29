@@ -31,6 +31,8 @@ The linked backlog items are:
 
 - [`BL-260711-skip-re-review-for-bookkeeping` — Skip re-review for
   bookkeeping-only review findings](../../../repo/pjm/backlog/items/BL-260711-skip-re-review-for-bookkeeping.md)
+- [`BL-260829-order-phase-bookkeeping-before` — Order phase bookkeeping before
+  per-phase review dispatch](../../../repo/pjm/backlog/items/BL-260829-order-phase-bookkeeping-before.md)
 - [`BL-260820-bind-each-gate-review` — Bind each gate review disposition to its
   exact received ledger event](../../../repo/pjm/backlog/items/BL-260820-bind-each-gate-review.md)
 - [`BL-260820-emit-source-qualified` — Emit source-qualified provenance
