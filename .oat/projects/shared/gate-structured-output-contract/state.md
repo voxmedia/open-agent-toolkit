@@ -4,9 +4,11 @@ oat_last_commit: null
 oat_blockers: []
 associated_issues:
   - type: backlog
-    ref: BL-260829-unified-agent-provider-root
+    ref: BL-260726-validate-structured-output
   - type: project
-    ref: tool-pack-scope-provider-truthfulness
+    ref: review-gate-integrity
+  - type: project
+    ref: review-plan-workflow
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
@@ -15,7 +17,7 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
@@ -38,7 +40,7 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #         - { harness: cursor, model: gpt-5.5-xhigh }
 #   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
-oat_workflow_mode: spec-driven # spec-driven | quick | import
+oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
@@ -78,36 +80,38 @@ oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
-oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
+oat_project_created: '2026-08-29T15:29:35.739Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T20:06:53.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T15:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
-# Project State: agent-provider-root
+# Project State: gate-structured-output-contract
 
-**Status:** Design
+**Status:** Discovery — initial dossier; fresh revalidation required
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Design - Resolving the portable agent-reference contract before planning
+Discovery - Gathering requirements for a quick workflow before planning. This
+artifact is a non-exhaustive starting point and must be revalidated in a fresh
+thread/worktree before plan generation.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (in_progress)
-- **Spec:** `spec.md` (draft)
-- **Design:** `design.md` (draft)
+- **Spec:** N/A (quick mode)
+- **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
 
 - ✓ Discovery started
-- ✓ Missing specification and design artifacts backfilled
-- ⧗ Design decisions require review before planning
-- ⧗ Awaiting user input
+- ✓ Execution artifacts scaffolded
+- ✓ Backlog and related-project links added
+- ⧗ Fresh-thread discovery revalidation required
 
 ## Blockers
 
@@ -115,4 +119,5 @@ None
 
 ## Next Milestone
 
-Resolve design questions, then generate the implementation plan
+Revalidate the residual contract after PR #190 is dogfooded; if its structured
+output work subsumes this item, close or narrow this project before planning.

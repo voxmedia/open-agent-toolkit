@@ -8,6 +8,12 @@ oat_generated: false
 
 # Discovery: agent-provider-root
 
+> Revalidation notice: this discovery is a starting point, not an exhaustive
+> inventory. Revalidate the affected asset surface, provider formats, candidate
+> roots, and current merged-PR state before design approval and again before
+> implementation. New canonical skills, agents, providers, or sync contracts
+> may change these conclusions.
+
 ## Phase Guardrails (Discovery)
 
 Discovery is for requirements and decisions, not implementation details.

@@ -25,6 +25,11 @@ This discovery is intentionally **not marked complete**. It records the current
 best understanding and decisions already supported by evidence, while leaving
 the architecture and policy seams that require fresh-thread validation open.
 
+> Revalidation contract: this is a non-exhaustive starting point, not a final
+> requirements record. Revalidate it in a fresh thread and worktree against the
+> current PR/main baseline before design-depth selection, plan approval, or
+> implementation. Do not treat the existing detail as exhaustive.
+
 **Backlog:** `BL-260729-implement-reviewplan-first`
 
 ## Problem Statement
