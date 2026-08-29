@@ -55,7 +55,7 @@ describe('GitRunner', () => {
     expect(result.stderr).toContain('fatal:');
   });
 
-  it('passes arguments without a shell and stabilizes the Git environment', async () => {
+  it('passes arguments without a shell and forces the C locale over translated caller overrides', async () => {
     const execFile = vi.fn(
       (
         _file: string,

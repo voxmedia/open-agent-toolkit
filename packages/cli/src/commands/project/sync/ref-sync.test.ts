@@ -152,41 +152,6 @@ describe('createSyncedProject', () => {
     }
   });
 
-  it('creates and publishes a first ref under a translated ambient locale', async () => {
-    const fixture = await createSyncedFixture();
-    try {
-      const translatedLocaleRunner: GitRunner = {
-        run(args, options) {
-          return defaultGitRunner.run(args, {
-            ...options,
-            env: {
-              ...options.env,
-              LANG: 'de_DE.UTF-8',
-              LANGUAGE: 'de',
-              LC_ALL: 'de_DE.UTF-8',
-            },
-          });
-        },
-      };
-      const target = buildSyncTarget(
-        fixture.cloneA,
-        '.oat/projects/shared',
-        'localized',
-      );
-
-      await createSyncedProject(target, translatedLocaleRunner);
-      await writeFile(join(target.projectPath, 'state.md'), '# localized\n');
-      const pushed = await pushSynced(target, translatedLocaleRunner, {});
-
-      expect(pushed.status).toBe('pushed');
-      expect(git(fixture.originDir, ['rev-parse', target.ref])).toBe(
-        pushed.sha,
-      );
-    } finally {
-      await fixture.cleanup();
-    }
-  });
-
   it('does not run the common post-checkout hook for empty-tree creation', async () => {
     const fixture = await createSyncedFixture();
     try {
