@@ -55,6 +55,24 @@ Capture each gate's exit code explicitly (for example
 pipeline whose final stage is a pager or filter — `pnpm <gate> | tail && echo OK`
 reports `tail`'s exit status and prints OK even when the gate fails.
 
+A passing gate is not proof the gate ran. Turborepo replays cached results by
+default, so a green `pnpm check` or `pnpm test` frequently executes nothing —
+look for `cache hit, replaying logs` or `>>> FULL TURBO` in the output. Note
+that `pnpm test --force` does **not** force a re-run: pnpm appends the flag to
+the last command of the chained root script, where it lands harmlessly or
+errors. For evidence-grade verification run
+`HOME=$(mktemp -d) pnpm exec turbo run test --force` from the repository root,
+and run `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, and
+`pnpm oat:validate-skills` separately when they matter. Two independent agent
+sessions reported cache replays as genuine passing runs on 2026-08-29.
+
+The isolated `HOME` above is not incidental. A maintainer who has run
+`oat tools install --scope user` has `~/.oat/templates/`, which participates in
+the repository → user → bundle template resolution order. Tests that exercise
+the bundle tier without injecting `home` will resolve against the maintainer's
+real templates and fail locally while passing in CI. PR #229 fixed the three
+known instances; the class recurs whenever a new test exercises that tier.
+
 CI runs neither `pnpm lint` nor `pnpm format`. Run both whenever a change
 touches `tools/smoke` or `.agents/skills`, since nothing else covers them.
 
