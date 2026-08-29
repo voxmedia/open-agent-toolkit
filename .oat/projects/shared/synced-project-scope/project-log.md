@@ -194,6 +194,10 @@ Fresh final code review completed with reconnaissance attempted; see the review 
 
 target=claude-fable-skip-permissions threshold=medium findings=critical:0,important:1,medium:1,minor:3 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/p13-review-2026-08-28T233340Z.md
 
+### 2026-08-29 · structural · oat gate review · p13
+
+target=claude-fable-skip-permissions threshold=medium findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/synced-project-scope/reviews/p13-review-2026-08-29T000209Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
