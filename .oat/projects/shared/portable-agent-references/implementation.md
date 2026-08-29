@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: portable-agent-references
 
 **Started:** 2026-08-28
-**Last Updated:** 2026-08-29
+**Last Updated:** 2026-08-29 (p01 passed round 3)
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -63,7 +63,10 @@ oat_generated: false
 **Verification:**
 
 - Run: `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm run check:skill-bumps`, `pnpm lint`, `pnpm format`
-- Result: all exit 0 at `f8a89ce9e`, independently re-run by the root orchestrator.
+- Result: all exit 0 at the phase head `52745ef93`, independently re-run by the
+  root orchestrator. Authoritative test evidence is uncached and HOME-isolated;
+  see the Test Results footnote below for the exact command and the recorded
+  host-HOME caveat.
 
 **Notes / Decisions:**
 
