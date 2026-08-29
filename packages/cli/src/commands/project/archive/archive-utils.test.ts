@@ -13,7 +13,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, isAbsolute, join } from 'node:path';
+import { dirname, isAbsolute, join, relative } from 'node:path';
 
 import { defaultGitRunner } from '@commands/project/sync/git';
 import {
@@ -26,7 +26,10 @@ import {
   createSyncedProject,
   pushSynced,
 } from '@commands/project/sync/ref-sync';
-import { syncedRecordPath } from '@commands/shared/project-scope';
+import {
+  canonicalizePath,
+  syncedRecordPath,
+} from '@commands/shared/project-scope';
 import { CliError } from '@errors/cli-error';
 import { createSyncedFixture } from '@test-support/synced-fixture';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -844,12 +847,17 @@ describe('archive utils', () => {
         const archiveRoot = join(dirname(target.sharedRoot), 'archived');
         const gitignorePath = join(fixture.cloneA, '.gitignore');
         const gitignore = await readFile(gitignorePath, 'utf8');
-        const repoRelativeSyncedRoot = target.syncedRoot
-          .slice(fixture.cloneA.length + 1)
+        const canonicalRepoRoot = canonicalizePath(fixture.cloneA);
+        const repoRelativeSyncedRoot = relative(
+          canonicalRepoRoot,
+          canonicalizePath(target.syncedRoot),
+        )
           .split('\\')
           .join('/');
-        const repoRelativeArchiveRoot = archiveRoot
-          .slice(fixture.cloneA.length + 1)
+        const repoRelativeArchiveRoot = relative(
+          canonicalRepoRoot,
+          canonicalizePath(archiveRoot),
+        )
           .split('\\')
           .join('/');
         await writeFile(
