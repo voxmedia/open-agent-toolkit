@@ -202,6 +202,10 @@ target=claude-fable-skip-permissions threshold=medium findings=critical:0,import
 
 Fresh gate-originated final code review completed with reconnaissance attempted (two waves, four read-only lanes); see the review artifact for 0 Critical, 2 Important, 4 Medium, and 13 Minor findings.
 
+### 2026-08-29 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=medium findings=critical:0,important:2,medium:4,minor:13 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T002706Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
