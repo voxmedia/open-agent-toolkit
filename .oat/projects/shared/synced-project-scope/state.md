@@ -162,13 +162,14 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Phase 18 review pending
+**Status:** Final gate refresh pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Phase 18 implementation is complete; independent review is pending.
+Phase 18 implementation and independent review are complete. The final
+implementation gate must be refreshed against the new substantive head.
 
 ## Artifacts
 
@@ -348,6 +349,7 @@ Phase 18 implementation is complete; independent review is pending.
 - ✓ Remote finding converted into Phase 18 task p18-t01 with no deferral
 - ✓ Phase 18 task p18-t01 completed in `d1a84e7df`
 - ✓ Phase 18 focused verification passed (210 root-run contract and skill tests)
+- ✓ Phase 18 independent review passed at 0 Critical / 0 Important / 0 Medium / 0 Minor
 
 ## Blockers
 
@@ -355,4 +357,4 @@ None.
 
 ## Next Milestone
 
-Complete independent Phase 18 review, then refresh the final gate and PR #227.
+Refresh the configured final implementation gate, then update PR #227.

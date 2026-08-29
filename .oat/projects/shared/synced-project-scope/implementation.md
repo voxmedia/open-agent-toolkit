@@ -3669,3 +3669,25 @@ coverage.
 | Task    | Status | Commit     |
 | ------- | ------ | ---------- |
 | p18-t01 | done   | `d1a84e7d` |
+
+### Review Received: p18
+
+**Date:** 2026-08-29
+**Review artifact:** `reviews/archived/p18-review-2026-08-29T133009Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** none
+
+The independent review passed the archive/non-archive control-flow correction,
+its executable guard coverage, skill-version bookkeeping, and project artifact
+alignment. The three full-suite failures remain unrelated machine-local
+template-precedence fixture failures outside the Phase 18 range.
+
+**Next:** Refresh the configured final implementation gate against the new
+substantive head before updating PR #227.
