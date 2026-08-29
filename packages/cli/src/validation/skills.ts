@@ -127,14 +127,55 @@ function isLifecycleSafetyFile(file: string): boolean {
   );
 }
 
-function referencesProjectArtifactVariable(line: string): boolean {
-  return /\$PROJECT_PATH|\$\{PROJECT_PATH\}|\{PROJECT_PATH\}|\$ARTIFACT_PATH|\$\{ARTIFACT_PATH\}|\$ACTIVE_PROJECT(?!_PATH)|\$\{ACTIVE_PROJECT\}|\$REVIEW_PATH|\$\{REVIEW_PATH\}|\$\{(?:PROJECT|RETRO)_[A-Z0-9_]*(?:PATHS|FILES)\[@\]\}/.test(
-    line,
-  );
+function referencesProjectArtifactVariable(
+  line: string,
+  artifactArrays: ReadonlySet<string> = new Set(),
+): boolean {
+  if (
+    /\$PROJECT_PATH|\$\{PROJECT_PATH\}|\{PROJECT_PATH\}|\$ARTIFACT_PATH|\$\{ARTIFACT_PATH\}|\$ACTIVE_PROJECT(?!_PATH)|\$\{ACTIVE_PROJECT\}|\$REVIEW_PATH|\$\{REVIEW_PATH\}|\$\{(?:PROJECT|RETRO)_[A-Z0-9_]*(?:PATHS|FILES)\[@\]\}/.test(
+      line,
+    )
+  ) {
+    return true;
+  }
+  return [...artifactArrays].some((name) => line.includes(`\${${name}[@]}`));
+}
+
+function projectArtifactArrays(content: string): Set<string> {
+  const arrays = new Set<string>();
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const { content: line } of logicalLines(content)) {
+      const assignment = /^\s*([A-Z][A-Z0-9_]*)(?:\+)?=\((.*)\)\s*$/.exec(line);
+      const name = assignment?.[1];
+      const value = assignment?.[2];
+      if (
+        name &&
+        value &&
+        !arrays.has(name) &&
+        referencesProjectArtifactVariable(value, arrays)
+      ) {
+        arrays.add(name);
+        changed = true;
+      }
+    }
+  }
+  return arrays;
+}
+
+function executesCommand(line: string, command: 'git' | 'oat'): boolean {
+  const prefix =
+    '(?:(?:&&|\\|\\||;|\\bthen\\b|\\belse\\b|\\bdo\\b|\\bif\\b)\\s+)';
+  const modifiers =
+    '(?:!\\s+)?(?:command\\s+)?(?:env\\s+)?(?:[A-Z][A-Z0-9_]*=\\S+\\s+)*';
+  return new RegExp(
+    `^\\s*(?:(?:[A-Z][A-Z0-9_]*)=\\$\\()?${command}\\b|${prefix}${modifiers}${command}\\b`,
+  ).test(line);
 }
 
 function executesGitCommand(line: string): boolean {
-  return /^\s*(?:(?:[A-Z][A-Z0-9_]*)=\$\()?git\b/.test(line);
+  return executesCommand(line, 'git');
 }
 
 function logicalLines(content: string): LogicalLine[] {
@@ -163,15 +204,17 @@ function logicalLines(content: string): LogicalLine[] {
   return logical;
 }
 
-function isProjectArtifactWriterLine(line: string): boolean {
+function isProjectArtifactWriterLine(
+  line: string,
+  artifactArrays: ReadonlySet<string> = new Set(),
+): boolean {
   const trimmed = line.trim();
   const executesGitOrOat =
-    /^(?:[A-Z][A-Z0-9_]*=\$\()?(?:git|oat)\b/.test(trimmed) ||
-    /(?:&&|\|\||;|then|else)\s+(?:git|oat)\b/.test(trimmed);
+    executesGitCommand(trimmed) || executesCommand(trimmed, 'oat');
   const writesProjectArtifact =
     executesGitOrOat &&
     /\bgit\s+(?:add|commit)\b|\boat\s+project\s+push\b/.test(trimmed) &&
-    referencesProjectArtifactVariable(line);
+    referencesProjectArtifactVariable(line, artifactArrays);
   const writesActiveProject =
     executesGitOrOat && /\boat\s+config\s+set\s+activeProject\b/.test(trimmed);
   return writesProjectArtifact || writesActiveProject;
@@ -248,8 +291,9 @@ function contentSiteAt(
 function projectArtifactWriterSites(content: string): ContentSite[] {
   const fencedSites = fencedContentSites(content);
   const sites = new Map<string, ContentSite>();
+  const artifactArrays = projectArtifactArrays(content);
   for (const line of logicalLines(content)) {
-    if (isProjectArtifactWriterLine(line.content)) {
+    if (isProjectArtifactWriterLine(line.content, artifactArrays)) {
       const site = contentSiteAt(content, line.offset, fencedSites);
       sites.set(`${site.start}:${site.end}`, site);
     }
@@ -273,6 +317,7 @@ function collectSyncedContentFindings(
   }
 
   const logical = logicalLines(content);
+  const artifactArrays = projectArtifactArrays(content);
   for (const [logicalIndex, site] of logical.entries()) {
     const line = site.content;
     const lineNumber = site.startLine + 1;
@@ -365,7 +410,7 @@ function collectSyncedContentFindings(
     }
 
     const isPushCommand =
-      /^\s*(?:[A-Z][A-Z0-9_]*=\$\()?oat\s+project\s+push\b/.test(line);
+      executesCommand(line, 'oat') && /\boat\s+project\s+push\b/.test(line);
     const pushFailureHandled =
       /\|\|\s*(?:\{|exit\b)/.test(line) ||
       ((line.match(/"/g)?.length ?? 0) % 2 === 1 &&
@@ -439,7 +484,7 @@ function collectSyncedContentFindings(
 
     if (
       /\bgit\s+(?:add|commit)\b/.test(inspectedLine) &&
-      referencesProjectArtifactVariable(inspectedLine) &&
+      referencesProjectArtifactVariable(inspectedLine, artifactArrays) &&
       !scopeGuardSeen
     ) {
       findings.push({
@@ -562,6 +607,7 @@ async function collectSyncedBookkeepingInventoryFindings(
 
     const inventoriedSites = inventoriedWriterSites.get(file) ?? [];
     const writerSites = projectArtifactWriterSites(content);
+    const artifactArrays = projectArtifactArrays(content);
     if (writerSites.length > 0 && inventoriedSites.length === 0) {
       findings.push({
         file: inventoryPath,
@@ -580,7 +626,7 @@ async function collectSyncedBookkeepingInventoryFindings(
       }
       const writer = writerSite.content
         .split('\n')
-        .find(isProjectArtifactWriterLine)
+        .find((line) => isProjectArtifactWriterLine(line, artifactArrays))
         ?.trim();
       findings.push({
         file: inventoryPath,

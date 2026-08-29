@@ -270,6 +270,12 @@
     "guard": "project-scope"
   },
   {
+    "file": ".agents/skills/oat-project-complete/SKILL.md",
+    "anchor": "FINAL_PROJECT_PUSH_OUTPUT=$(oat project push \\",
+    "kind": "write",
+    "guard": "project-scope"
+  },
+  {
     "file": ".agents/skills/oat-project-capture/SKILL.md",
     "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): capture existing work for {name}\"",
     "kind": "write",

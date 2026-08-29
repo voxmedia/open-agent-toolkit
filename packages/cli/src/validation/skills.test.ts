@@ -606,8 +606,49 @@ describe('validateOatSkills', () => {
     });
   });
 
+  it('recognizes nonstandard array pathspec names as project-artifact writes', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-generic-array-writer',
+      `${validSkillContent('oat-project-generic-array-writer')}\n\n\`\`\`bash\nARTIFACTS_TO_COMMIT=("$PROJECT_PATH/state.md")\ncommand git add -- "\${ARTIFACTS_TO_COMMIT[@]}"\n\`\`\`\n`,
+    );
+    await createSyncedBookkeepingInventory(root, []);
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: expect.stringMatching(
+        /^Line \d+: Project-artifact git writes require an oat project scope --format value guard earlier in the same fenced block$/,
+      ),
+    });
+  });
+
+  it('validates project push commands behind shell guards', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-compound-push',
+      `${validSkillContent('oat-project-compound-push')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\n[[ "$PROJECT_SCOPE" == "synced" ]] && oat project push "$PROJECT_PATH" --message "persist"\n\`\`\`\n`,
+    );
+    await createSyncedBookkeepingInventory(root, []);
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: expect.stringMatching(
+        /^Line \d+: Project push must handle a nonzero exit explicitly and stop bookkeeping$/,
+      ),
+    });
+  });
+
   it.each([
     ['git add -A', 'broad git add -A is forbidden'],
+    ['if command git add -A; then :; fi', 'broad git add -A is forbidden'],
     ['git add -- "$PROJECT_PATH"', 'not the project directory or a glob'],
     ['git add -- "$PROJECT_PATH/**"', 'not the project directory or a glob'],
   ])('rejects broad project staging: %s', async (writer, message) => {
