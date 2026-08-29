@@ -138,9 +138,12 @@ Skill proposes `quick` vs `spec-driven` mode based on `chosenDirection` and scop
 
 The fold-back commit safety contract is non-negotiable:
 
-1. Resolve scope fail-closed, then preflight `git -C "$ACTIVE_PROJECT" status --porcelain -- <basename>` for synced or `git status --porcelain -- "$ARTIFACT_PATH"` otherwise, _before_ any artifact mutation.
-2. If clean: append the synthesis section, then use `oat project push --json` for synced (capture its `sha`) or `git add -- "$ARTIFACT_PATH"` followed by the existing scoped commit otherwise.
-3. If dirty: present the user with three options before any mutation — (a) commit current artifact changes first then fold-back as new scoped commit, (b) include current changes in the fold-back commit (warn that prior edits are mixed in; user explicitly accepts), or (c) abort fold-back and switch destination to "active project: brainstorming reference file" instead.
+1. Resolve scope fail-closed, then preflight `git -C "$ACTIVE_PROJECT" status --porcelain -- <basename>` for synced or `git status --porcelain -- "$ARTIFACT_PATH"` for shared/local, _before_ any artifact mutation.
+2. If clean: append the synthesis section, then use a validated `oat project push --json` receipt for synced (capture its project-ref `sha`) or `git add -- "$ARTIFACT_PATH"` followed by an exact-path branch commit for shared/local.
+3. If dirty: present the user with three options before any mutation. Every persistence step remains scope-aware:
+   - (a) persist the current artifact changes first, then fold back in a second persistence step. Each step uses a validated `oat project push --json` receipt for synced or an exact-path branch commit for shared/local.
+   - (b) include current changes in the fold-back persistence step (warn that prior edits are mixed in; user explicitly accepts), using a validated project-ref push for synced or an exact-path branch commit for shared/local.
+   - (c) abort fold-back and switch destination to "active project: brainstorming reference file" instead; that route independently resolves scope and uses the same synced-push versus shared/local-commit split.
 4. Handoff prompt prints only after the scoped commit or synced push succeeds. On persistence failure, surface the error and do NOT print the handoff prompt.
 
 **Handoff target:** Append synthesis to the chosen upstream artifact, commit immediately (per safety contract above), then print the handoff prompt template:
@@ -175,7 +178,6 @@ After printing the prompt, the skill stops. The user runs the plan-authoring ski
 **Trigger phrases:** "this is supplementary for the active project", "save this with the project but don't change the design", "park this as a reference for the project", "stash this in the project's brainstorming folder". Also offered as the third option when the active-project 3-way router fires (related but supplementary → reference file).
 **Required template fields:** `title` (slug-friendly), filename (defaults to `YYYY-MM-DD-<topic>.md`), the synthesized payload (rendered using the same shape as `templates/brainstorm-doc.md`).
 **Optional template fields:** `motivation`, `vision`, `openQuestions`, `nextSteps` — same as doc-to-path destination.
-**Confirmation pattern:** `minimal` (filename + commit hash). After the file is written, the skill commits it on the active branch and reports the short commit hash alongside the absolute path (for example: "Wrote `<absolute-path>` and committed as `<hash>`.").
-The active-branch wording above applies only to non-synced scopes; synced returns the detached artifact-ref commit SHA from push JSON.
+**Confirmation pattern:** `minimal` (filename + persistence SHA). After the file is written, the skill reports the absolute path and scope-appropriate SHA: the exact-path branch commit for shared/local or the detached project-ref commit from the validated synced push receipt.
 **Handoff target:** no downstream skill invocation. Write the synthesized payload to `<active-project>/brainstorming/YYYY-MM-DD-<topic>.md` using the doc-to-path template shape. The `brainstorming/` subdirectory is created if it doesn't exist (parallel to `pr/` and `reviews/`). The reference file is a **durable project artifact**: persist it with the fail-closed scope guard so synced projects use `oat project push --json` and capture its `sha`, while other scopes retain scoped staging and the existing branch commit.
 **If user wants to keep brainstorming after this is offered:** return to flow with destination = active-project-reference-file. Available regardless of active project's phase or PR status; no special probing.

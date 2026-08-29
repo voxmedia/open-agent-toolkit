@@ -6159,6 +6159,9 @@ describe('validateOatSkills', () => {
     const brainstorm = await readRepoFile(
       '.agents/skills/oat-brainstorm/SKILL.md',
     );
+    const destinations = await readRepoFile(
+      '.agents/skills/oat-brainstorm/references/destinations.md',
+    );
 
     expect(brainstorm).toMatch(
       /Persistence invariant:[\s\S]*?shared and local project artifacts[\s\S]*?exact-path branch commits/,
@@ -6174,6 +6177,18 @@ describe('validateOatSkills', () => {
     );
     expect(brainstorm).not.toContain(
       'No fold-back commit on a dirty working tree',
+    );
+    expect(destinations).toMatch(
+      /If clean:[\s\S]*?validated `oat project push --json` receipt for synced[\s\S]*?exact-path branch commit for shared\/local/,
+    );
+    expect(destinations).toMatch(
+      /\(a\)[\s\S]*?validated `oat project push --json` receipt for synced[\s\S]*?exact-path branch commit for shared\/local/,
+    );
+    expect(destinations).toMatch(
+      /\(b\)[\s\S]*?validated project-ref push for synced[\s\S]*?exact-path branch commit for shared\/local/,
+    );
+    expect(destinations).toMatch(
+      /\(c\)[\s\S]*?independently resolves scope[\s\S]*?synced-push versus shared\/local-commit split/,
     );
   });
 
