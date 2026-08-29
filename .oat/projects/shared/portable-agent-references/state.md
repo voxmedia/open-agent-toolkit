@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: ['p02'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -81,11 +81,11 @@ oat_workflow_origin: native # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/231' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-28T21:36:51.245Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T11:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T11:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -96,6 +96,8 @@ oat_generated: false
 **Last Updated:** 2026-08-29
 
 ## Current Phase
+
+Implementation — PR open; completion may run before or after merge.
 
 Implementation closeout. All eight planned tasks are complete, both phases
 passed root-owned code review at the Critical/Important threshold (Phase 1 at
@@ -135,6 +137,9 @@ dispositions. No configured implementation exit gate exists for this repo.
 - ✓ Final verification passed (full CI gate list, uncached, HOME-isolated)
 - ✓ Final review passed (0 Critical, 0 Important); findings dispositioned
 - ✓ HiLL checkpoint approved by user
+- ✓ Documentation synced and repo reference refreshed
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -142,5 +147,8 @@ None
 
 ## Next Milestone
 
-Closeout follow-ons: `oat-project-summary`, `oat-project-document`, then
-`oat-project-pr-final`
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
