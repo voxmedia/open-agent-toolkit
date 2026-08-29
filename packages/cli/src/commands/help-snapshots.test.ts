@@ -1208,7 +1208,8 @@ describe('help output snapshots', () => {
         --mode <mode>       Scaffold mode (choices: "spec-driven", "quick", "import",
                             default: "spec-driven")
         --scope <scope>     Project scope (choices: "shared", "local", "synced")
-        --force             Non-destructive scaffold; create missing files only
+        --force             Allow a duplicate slug in another scope; scaffold remains
+                            non-destructive
         --no-set-active     Do not update active project in local config
         --no-dashboard      Do not refresh .oat/state.md after scaffold
         --no-commit         Do not git-commit the scaffolded project directory

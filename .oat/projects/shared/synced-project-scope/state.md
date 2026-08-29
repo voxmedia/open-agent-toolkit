@@ -62,8 +62,17 @@ oat_phase_recovery_policy:
       used_attempts: 2
       pending_attempt: null
     p14:
-      used_attempts: 0
-      pending_attempt: null
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p14-recovery-01-phase-test-contracts
+        original_request_id: 9ed2e738-8271-4915-ab31-c01f7b1f04e5
+        original_task_id: p14-t19
+        original_commit: 82b7620139118c63bb4f15045512b0dafbc905bd
+        discovered_by: HOME="$phase_test_home" pnpm test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: 82b7620139118c63bb4f15045512b0dafbc905bd
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
