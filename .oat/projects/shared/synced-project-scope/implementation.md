@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: p20-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,8 +14,8 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> Phases 1–19 are complete. Phase 20 is 5/7 complete; resume at `p20-t06` for
-> the 2026-08-29T200603Z review follow-ups.
+> Phases 1–20 are implemented (199/199). Phase 20 re-review is pending for
+> `p20-t06` and `p20-t07`.
 >
 > Conventions:
 >
@@ -27,31 +27,31 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 10    | 10/10     |
-| Phase 2      | complete    | 13    | 13/13     |
-| Phase 3      | complete    | 19    | 19/19     |
-| Phase 4      | complete    | 16    | 16/16     |
-| Phase 5      | complete    | 7     | 7/7       |
-| Phase 6      | complete    | 3     | 3/3       |
-| Phase 7      | complete    | 1     | 1/1       |
-| Phase 8      | complete    | 1     | 1/1       |
-| Phase 9      | complete    | 1     | 1/1       |
-| Phase 10     | complete    | 14    | 14/14     |
-| Phase 11     | complete    | 3     | 3/3       |
-| Phase 12     | complete    | 1     | 1/1       |
-| Phase p-rev1 | complete    | 1     | 1/1       |
-| Phase 13     | complete    | 16    | 16/16     |
-| Phase 14     | complete    | 19    | 19/19     |
-| Phase 15     | complete    | 19    | 19/19     |
-| Phase 16     | complete    | 20    | 20/20     |
-| Phase 17     | complete    | 14    | 14/14     |
-| Phase 18     | complete    | 1     | 1/1       |
-| Phase 19     | complete    | 13    | 13/13     |
-| Phase 20     | in_progress | 7     | 5/7       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 10    | 10/10     |
+| Phase 2      | complete | 13    | 13/13     |
+| Phase 3      | complete | 19    | 19/19     |
+| Phase 4      | complete | 16    | 16/16     |
+| Phase 5      | complete | 7     | 7/7       |
+| Phase 6      | complete | 3     | 3/3       |
+| Phase 7      | complete | 1     | 1/1       |
+| Phase 8      | complete | 1     | 1/1       |
+| Phase 9      | complete | 1     | 1/1       |
+| Phase 10     | complete | 14    | 14/14     |
+| Phase 11     | complete | 3     | 3/3       |
+| Phase 12     | complete | 1     | 1/1       |
+| Phase p-rev1 | complete | 1     | 1/1       |
+| Phase 13     | complete | 16    | 16/16     |
+| Phase 14     | complete | 19    | 19/19     |
+| Phase 15     | complete | 19    | 19/19     |
+| Phase 16     | complete | 20    | 20/20     |
+| Phase 17     | complete | 14    | 14/14     |
+| Phase 18     | complete | 1     | 1/1       |
+| Phase 19     | complete | 13    | 13/13     |
+| Phase 20     | complete | 7     | 7/7       |
 
-**Total:** 197/199 tasks completed
+**Total:** 199/199 tasks completed
 
 ---
 
@@ -4026,7 +4026,68 @@ Phase 20 is implemented in five append-only commits. No recovery attempt.
 
 **Next:** Execute fix tasks via the `oat-project-implement` skill.
 
-After the fix tasks are complete:
+Fix tasks `p20-t06` and `p20-t07` are implemented. The matching review event is
+`fixes_completed`. Next: independent Phase 20 re-review of
+`b5af2777a5d3ee4862979677c445e05b0027a3d9..39b296b86e013572d05f279798243defd71cc49a`.
 
-- Update this same artifact-identified review event to `fixes_completed`
-- Re-run `oat-project-review-provide code p20` then `oat-project-review-receive` to reach `passed`
+### Run 16 - 2026-08-29T201600Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Cursor pinned variant)
+**Status:** Phase 20 review-fix implementation complete — re-review pending
+
+#### Dispatch Record
+
+```yaml
+request_id: dispatch-synced-project-scope-p20-fix-20260829T201600Z
+original_request_id: dispatch-synced-project-scope-p20-20260829T192716Z
+caller: oat-project-implement
+scope: p20
+objective: Implement p20-t06 and p20-t07 from the 2026-08-29T200603Z review.
+action: implementation
+role_name: oat-phase-implementer
+role_class: worker
+provider: cursor
+dispatch_policy: high
+dispatch_ceiling: high
+role_selector: oat-phase-implementer-gpt-5-6-sol-medium
+model_selector: gpt-5.6-sol-medium
+model_selector_granularity: exact-materialized-role
+effort_selector: not-applicable
+selection_source: policy-resolved
+selection_reason: native-catalog
+candidates_considered:
+  - gpt-5.6-sol-medium
+  - gpt-5.6-sol-high
+selected_route: native Task resume
+task_class: default-implementation
+classification_source: caller
+launch_status: accepted
+child_outcome: completed
+runtime_confirmation: declared:oat-phase-implementer-gpt-5-6-sol-medium
+continuation_event: p20-review-2026-08-29T200603Z
+```
+
+#### Project Dispatch
+
+- Project: `.oat/projects/shared/synced-project-scope`
+- Workflow / phase: spec-driven / p20 fix
+- Phase base HEAD: `b5af2777a5d3ee4862979677c445e05b0027a3d9`
+- File boundary: oat-project-complete skill, completion-transaction tests, review-skill-contracts tests
+- Commit policy: one commit per planned task
+- Recovery: 0/10; `pending_attempt: null`
+- Dispatch stamp: `Dispatch: scope=p20 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
+#### Implementation Outcome
+
+Phase 20 review fixes are implemented in two append-only commits. No recovery attempt.
+
+| Task    | Status | Commit     |
+| ------- | ------ | ---------- |
+| p20-t06 | done   | `3ad5d1a0` |
+| p20-t07 | done   | `39b296b8` |
+
+- Commit range: `b5af2777a5d3ee4862979677c445e05b0027a3d9..39b296b86e013572d05f279798243defd71cc49a`
+- Verification: implementer reported 277/277 phase suite; worktree clean
+- Next: independent Phase 20 re-review of the fix range
