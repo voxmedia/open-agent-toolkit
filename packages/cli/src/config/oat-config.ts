@@ -1081,7 +1081,10 @@ async function normalizeReadableProjectPath(
   }
 }
 
-function normalizeOatConfig(parsed: unknown): OatConfig {
+function normalizeOatConfig(
+  parsed: unknown,
+  configPath = '.oat/config.json',
+): OatConfig {
   const next: OatConfig = { ...DEFAULT_OAT_CONFIG };
   if (!isRecord(parsed)) {
     return next;
@@ -1109,7 +1112,7 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
         : undefined;
     if (rawDefaultScope !== undefined && defaultScope === undefined) {
       throw new CliError(
-        `Invalid projects.defaultScope: "${String(rawDefaultScope)}". Expected one of: shared, local, synced.`,
+        `Invalid projects.defaultScope in ${configPath}: "${String(rawDefaultScope)}". Expected one of: shared, local, synced. Repair it with oat config set projects.defaultScope <shared|local|synced>.`,
         2,
       );
     }
@@ -1300,7 +1303,30 @@ export async function readOatConfig(repoRoot: string): Promise<OatConfig> {
 
   try {
     const raw = await readFile(configPath, 'utf8');
-    return normalizeOatConfig(parseJsonConfig(raw, configPath));
+    return normalizeOatConfig(parseJsonConfig(raw, configPath), configPath);
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return { ...DEFAULT_OAT_CONFIG };
+    }
+
+    throw error;
+  }
+}
+
+export async function readOatConfigForDefaultScopeRepair(
+  repoRoot: string,
+): Promise<OatConfig> {
+  const configPath = getConfigPath(repoRoot);
+
+  try {
+    const raw = await readFile(configPath, 'utf8');
+    const parsed = parseJsonConfig(raw, configPath);
+    if (isRecord(parsed) && isRecord(parsed.projects)) {
+      const { defaultScope: _invalidDefaultScope, ...projects } =
+        parsed.projects;
+      return normalizeOatConfig({ ...parsed, projects }, configPath);
+    }
+    return normalizeOatConfig(parsed, configPath);
   } catch (error) {
     if (isMissingFileError(error)) {
       return { ...DEFAULT_OAT_CONFIG };
@@ -1342,7 +1368,7 @@ export async function writeOatConfig(
   config: OatConfig,
 ): Promise<void> {
   const configPath = getConfigPath(repoRoot);
-  const normalized = normalizeOatConfig(config);
+  const normalized = normalizeOatConfig(config, configPath);
   await atomicWriteJson(configPath, normalized);
 }
 

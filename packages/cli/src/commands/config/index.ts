@@ -46,6 +46,7 @@ import {
   type WorkflowPostImplementSequence,
   normalizeWorkflowPostImplementSequence,
   readOatConfig,
+  readOatConfigForDefaultScopeRepair,
   readOatLocalConfig,
   readUserConfig,
   writeOatConfig,
@@ -182,6 +183,7 @@ interface ConfigCommandDependencies {
   ) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
+  readOatConfigForDefaultScopeRepair: (repoRoot: string) => Promise<OatConfig>;
   writeOatConfig: (repoRoot: string, config: OatConfig) => Promise<void>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
   writeOatLocalConfig: (
@@ -1115,6 +1117,7 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   readOatConfig,
+  readOatConfigForDefaultScopeRepair,
   writeOatConfig,
   readOatLocalConfig,
   writeOatLocalConfig,
@@ -2164,13 +2167,13 @@ async function setConfigValue(
     return { key, value: nextValue, source: 'shared' };
   }
 
-  const config = await dependencies.readOatConfig(repoRoot);
-
   if (key === 'projects.defaultScope') {
     const defaultScope = parseWorkflowValue(key, rawValue) as
       | 'shared'
       | 'local'
       | 'synced';
+    const config =
+      await dependencies.readOatConfigForDefaultScopeRepair(repoRoot);
     await dependencies.writeOatConfig(repoRoot, {
       ...config,
       projects: {
@@ -2181,6 +2184,8 @@ async function setConfigValue(
     });
     return { key, value: defaultScope, source: 'shared' };
   }
+
+  const config = await dependencies.readOatConfig(repoRoot);
 
   if (key.startsWith('documentation.')) {
     const doc = { ...config.documentation };

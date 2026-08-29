@@ -111,8 +111,7 @@ describe('oat-config', () => {
     );
 
     await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
-      message:
-        'Invalid projects.defaultScope: "remote". Expected one of: shared, local, synced.',
+      message: `Invalid projects.defaultScope in ${join(repoRoot, '.oat', 'config.json')}: "remote". Expected one of: shared, local, synced. Repair it with oat config set projects.defaultScope <shared|local|synced>.`,
       exitCode: 2,
     });
   });

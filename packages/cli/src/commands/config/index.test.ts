@@ -255,6 +255,46 @@ describe('oat config', () => {
     );
   });
 
+  it('repairs an invalid on-disk projects.defaultScope value', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, projects: { root: '.oat/projects/team', defaultScope: 'remote' } })}\n`,
+      'utf8',
+    );
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'projects.defaultScope', 'local']);
+
+    expect(process.exitCode).toBe(0);
+    expect(
+      JSON.parse(await readFile(join(root, '.oat', 'config.json'), 'utf8')),
+    ).toEqual({
+      version: 1,
+      projects: { root: '.oat/projects/team', defaultScope: 'local' },
+    });
+  });
+
+  it('reports the file, key, and repair command for an invalid default scope', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, projects: { defaultScope: 'remote' } })}\n`,
+      'utf8',
+    );
+    const { capture, command } = createHarness({ cwd: root });
+
+    await runCommand(command, ['get', 'projects.defaultScope']);
+
+    expect(process.exitCode).toBe(1);
+    expect(capture.error[0]).toContain(
+      `Invalid projects.defaultScope in ${join(root, '.oat', 'config.json')}`,
+    );
+    expect(capture.error[0]).toContain(
+      'oat config set projects.defaultScope <shared|local|synced>',
+    );
+  });
+
   it('sets local config keys in config.local.json', async () => {
     const root = await createRepoRoot();
     const { command } = createHarness({ cwd: root });
