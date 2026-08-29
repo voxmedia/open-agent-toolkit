@@ -252,6 +252,10 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 
 Independent final review used two consequential reconnaissance lanes; see reviews/final-review-2026-08-29T134331Z.md.
 
+### 2026-08-29 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:1,medium:0,minor:2 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T154355Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
