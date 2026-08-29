@@ -3576,3 +3576,19 @@ does not require another standard review.
 `8cc1b3827f9c051d5d2bb078ae986aef3e9fbd80..d40bbe3238e1653edc92e6e763ef16c76c2ba57a`.
 The final review event is `passed`; publication remains blocked on the fresh
 configured implementation exit gate and closeout refresh.
+
+### Configured Exit Gate - Refreshed Generation Initialized
+
+- **Status:** pending; launch not started
+- **Accepted implementation head:** `b51385c2ff6f9de7465d12973512dd90e90ac008`
+- **Implementation base:** `origin/main` at unique merge base
+  `8cc1b3827f9c051d5d2bb078ae986aef3e9fbd80`
+- **Implementation fingerprint:**
+  `sha256:effective-delta-v1:125d960fa2ea6c27c51867161395619247335dc5e508bbad0db453a7ea750f72`
+- **Configuration fingerprint:**
+  `sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`
+- **Attempt ledger:** 0 consumed of maximum 2
+
+The refreshed gate declaration was resolved from current configuration. The
+accepted implementation head includes the passing-gate judgment sweep; launch,
+marker, result, artifact, and receive provenance are reset for this generation.
