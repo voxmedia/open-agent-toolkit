@@ -167,11 +167,17 @@ describe('createBacklogItem', () => {
   it('falls back to the actual bundled template when the repo template is absent', async () => {
     const { root, backlogRoot } = await createTempRoot();
     const missingTemplatesRoot = join(root, 'missing-templates');
+    // Inject an empty home so the user tier (`<home>/.oat/templates`) cannot
+    // answer first; without it, a machine with `oat tools install --scope user`
+    // resolves from the real `~/.oat/templates` and never reaches the bundle.
+    const home = join(root, 'home');
+    await mkdir(home, { recursive: true });
 
     const result = await createBacklogItem({
       backlogRoot,
       assetsRoot: BUNDLED_ASSETS_ROOT,
       templatesRoot: missingTemplatesRoot,
+      home,
       title: 'Bundled Fallback',
       createdAt: CREATED_AT,
     });
