@@ -1,6 +1,6 @@
 ---
-oat_current_task: p18-t01
-oat_last_commit: 99b1fab4
+oat_current_task: null
+oat_last_commit: d1a84e7d
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: review_pending # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -162,13 +162,13 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** PR #227 remote review fix pending
+**Status:** Phase 18 review pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Implementation resumed for Phase 18 remote-review task `p18-t01`.
+Phase 18 implementation is complete; independent review is pending.
 
 ## Artifacts
 
@@ -176,7 +176,7 @@ Implementation resumed for Phase 18 remote-review task `p18-t01`.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (178/179 tasks complete)
+- **Implementation:** `implementation.md` (179/179 tasks complete)
 
 ## Progress
 
@@ -346,6 +346,8 @@ Implementation resumed for Phase 18 remote-review task `p18-t01`.
 - ✓ Cycle-5 Critical and Important findings independently verified closed
 - ⨯ PR #227 remote review found 1 Important completion archive finding
 - ✓ Remote finding converted into Phase 18 task p18-t01 with no deferral
+- ✓ Phase 18 task p18-t01 completed in `d1a84e7df`
+- ✓ Phase 18 focused verification passed (210 root-run contract and skill tests)
 
 ## Blockers
 
@@ -353,4 +355,4 @@ None.
 
 ## Next Milestone
 
-Implement and verify `p18-t01`, then refresh final review and PR #227.
+Complete independent Phase 18 review, then refresh the final gate and PR #227.

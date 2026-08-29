@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: p18-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,8 +14,8 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> One hundred seventy-eight implementation and revision tasks are complete.
-> Phase 18 contains one pending remote-review correction for PR #227.
+> All one hundred seventy-nine implementation and revision tasks are complete.
+> Phase 18 independent review is pending.
 >
 > Conventions:
 >
@@ -47,9 +47,9 @@ oat_generated: false
 | Phase 15     | complete | 19    | 19/19     |
 | Phase 16     | complete | 20    | 20/20     |
 | Phase 17     | complete | 14    | 14/14     |
-| Phase 18     | pending  | 1     | 0/1       |
+| Phase 18     | complete | 1     | 1/1       |
 
-**Total:** 178/179 tasks completed
+**Total:** 179/179 tasks completed
 
 ---
 
@@ -3633,8 +3633,9 @@ only after the archived artifact, ledger row, and commit are reconciled.
 
 ## Phase 18: Remote completion archive correction
 
-**Status:** pending
+**Status:** complete
 **Started:** 2026-08-29
+**Completed:** 2026-08-29
 
 ### Remote Review Received: PR #227
 
@@ -3647,12 +3648,24 @@ only after the archived artifact, ledger row, and commit are reconciled.
 
 The Important finding is valid: archive completion moves `PROJECT_PATH` while
 leaving `PROJECT_REF_COMMIT` empty, and the final synced push guard can then
-target the gitignored archive. Task `p18-t01` will confine publication to the
-non-archive transaction and add executable archive/non-archive control-flow
+target the gitignored archive. Task `p18-t01` now confines publication to the
+non-archive transaction and adds executable archive/non-archive control-flow
 coverage.
+
+### Implementation Outcome
+
+- **Commit:** `d1a84e7dfcf9e2487bebde9368d3d2c8bb91fe37`
+- **Dispatch:** `oat-phase-implementer-gpt-5-6-sol-medium`
+- **Recovery:** 0/10 attempts used; no pending attempt
+- **Result:** Step 8.6 now requires `SHOULD_ARCHIVE="false"` before its final
+  synced-project push. Archive-aware body rendering remains outside that guard.
+- **Verification:** 210 root-run focused contract and skill tests passed. The
+  implementer also passed check, type-check, build, lint, format, skill-bump,
+  release, and docs gates. A no-edit full-test rerun retained three unrelated
+  local-template precedence fixture failures from the machine environment.
 
 ### Task Status
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p18-t01 | pending | -      |
+| Task    | Status | Commit     |
+| ------- | ------ | ---------- |
+| p18-t01 | done   | `d1a84e7d` |
