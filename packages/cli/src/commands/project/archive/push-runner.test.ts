@@ -1,3 +1,5 @@
+import { mkdir, mkdtemp, rm, symlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
@@ -11,6 +13,7 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  assertExactArchiveProjectRoot,
   resolveArchiveProjectTarget,
   type ArchiveProjectTarget,
 } from './archive-utils';
@@ -130,6 +133,7 @@ function createHarness(options: HarnessOptions = {}): {
     resolveProjectsRoot: vi.fn(async () => projectsRoot),
     resolvePrimaryRepoRoot: vi.fn(async () => cwd),
     resolveArchiveProjectTarget: vi.fn(async () => archiveTarget),
+    assertExactArchiveProjectRoot,
     readSyncedRecord: vi.fn(async () => options.syncedRecord ?? null),
     verifySelectedProjectRecapForArchive,
     archiveProjectOnCompletion,
@@ -177,14 +181,19 @@ async function runProjectArchiveCommand(
 
 describe('oat project archive push', () => {
   let originalExitCode: number | undefined;
+  const tempDirs: string[] = [];
 
   beforeEach(() => {
     originalExitCode = process.exitCode;
     process.exitCode = undefined;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     process.exitCode = originalExitCode;
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
   });
 
   it('archives the explicit project path with archive config fields', async () => {
@@ -193,7 +202,7 @@ describe('oat project archive push', () => {
 
     await runArchivePushCommand(
       dependencies,
-      '.oat/projects/custom/demo-project',
+      '.oat/projects/shared/demo-project',
       {},
       context,
     );
@@ -204,7 +213,7 @@ describe('oat project archive push', () => {
         '/tmp/workspace/open-agent-toolkit',
         '.oat',
         'projects',
-        'custom',
+        'shared',
         'demo-project',
       ),
       projectName: 'demo-project',
@@ -357,6 +366,62 @@ describe('oat project archive push', () => {
       'S3 archive: s3://example-bucket/oat-archive/open-agent-toolkit/projects/20260401-demo-project',
       'Summary export path: .oat/repo/reference/project-summaries',
     ]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    '.oat/projects/shared/parent/demo-project',
+    '.oat/projects/local/parent/demo-project',
+    '.oat/projects/synced/container/demo-project',
+  ])(
+    'rejects descendant dry-run target %s before target resolution',
+    async (projectPath) => {
+      const { archiveProjectOnCompletion, capture, context, dependencies } =
+        createHarness();
+
+      await runArchivePushCommand(
+        dependencies,
+        projectPath,
+        { dryRun: true },
+        context,
+      );
+
+      expect(capture.error[0]).toContain('exact direct child');
+      expect(dependencies.resolveArchiveProjectTarget).not.toHaveBeenCalled();
+      expect(archiveProjectOnCompletion).not.toHaveBeenCalled();
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it('accepts a direct child through a confined symlinked absolute custom root', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-archive-symlink-root-'));
+    tempDirs.push(root);
+    const repoRoot = join(root, 'repo');
+    const repoAlias = join(root, 'repo-alias');
+    const sharedRoot = join(repoRoot, '.oat', 'custom', 'shared');
+    await mkdir(join(sharedRoot, 'demo-project'), { recursive: true });
+    await symlink(repoRoot, repoAlias, 'dir');
+    const projectsRoot = join(repoAlias, '.oat', 'custom', 'shared');
+    const { archiveProjectOnCompletion, capture, context, dependencies } =
+      createHarness({
+        cwd: repoRoot,
+        projectsRoot,
+        localConfig: {
+          version: 1,
+          activeProject: join(projectsRoot, 'demo-project'),
+        },
+      });
+
+    await runArchivePushCommand(
+      dependencies,
+      undefined,
+      { dryRun: true },
+      context,
+    );
+
+    expect(capture.error).toEqual([]);
+    expect(dependencies.resolveArchiveProjectTarget).toHaveBeenCalledOnce();
+    expect(archiveProjectOnCompletion).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(0);
   });
 

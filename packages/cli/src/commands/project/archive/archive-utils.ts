@@ -216,13 +216,28 @@ export interface ArchiveSnapshotMetadata {
   sourceRefSha?: string;
 }
 
-function assertExactArchiveProjectRoot(
+export interface ExactArchiveProjectRoot {
+  canonicalProjectPath: string;
+  projectScope: ProjectScope;
+}
+
+export function assertExactArchiveProjectRoot(
   options: Pick<
     ArchiveProjectOnCompletionOptions,
     'repoRoot' | 'projectsRoot' | 'projectPath' | 'projectName'
   >,
-  projectScope: ProjectScope,
-): string {
+): ExactArchiveProjectRoot {
+  const projectScope = resolveProjectScope(
+    options.projectPath,
+    resolveScopeRoot(options.repoRoot, options.projectsRoot, 'shared'),
+    options.repoRoot,
+  );
+  if (!projectScope) {
+    throw new CliError(
+      `Project path \`${options.projectPath}\` is outside the configured shared, local, and synced scope roots; refusing to archive without an originating scope.`,
+      1,
+    );
+  }
   const scopeRoot = canonicalizePath(
     resolveScopeRoot(options.repoRoot, options.projectsRoot, projectScope),
   );
@@ -236,7 +251,7 @@ function assertExactArchiveProjectRoot(
       1,
     );
   }
-  return projectPath;
+  return { canonicalProjectPath: projectPath, projectScope };
 }
 
 function normalizeS3Uri(s3Uri: string): string {
@@ -1573,21 +1588,8 @@ export async function archiveProjectOnCompletion(
   const recordPath = syncedRecordPath(syncedRoot, options.projectName);
   const readRecord = dependencies.readSyncedRecord ?? readSyncedRecord;
   const writeRecord = dependencies.writeSyncedRecord ?? writeSyncedRecord;
-  const projectScope = resolveProjectScope(
-    options.projectPath,
-    resolveScopeRoot(options.repoRoot, options.projectsRoot, 'shared'),
-    options.repoRoot,
-  );
-  if (!projectScope) {
-    throw new CliError(
-      `Project path \`${options.projectPath}\` is outside the configured shared, local, and synced scope roots; refusing to archive without an originating scope.`,
-      1,
-    );
-  }
-  const canonicalProjectPath = assertExactArchiveProjectRoot(
-    options,
-    projectScope,
-  );
+  const { canonicalProjectPath, projectScope } =
+    assertExactArchiveProjectRoot(options);
   const isSynced = projectScope === 'synced';
   const record = isSynced ? await readRecord(recordPath) : null;
   const syncTarget = isSynced
@@ -1664,7 +1666,7 @@ export async function archiveProjectOnCompletion(
   // archive transaction must never bind a descendant source to a sibling
   // record/ref that merely shares its basename.
   if (
-    assertExactArchiveProjectRoot(options, projectScope) !==
+    assertExactArchiveProjectRoot(options).canonicalProjectPath !==
     canonicalProjectPath
   ) {
     throw new CliError(

@@ -4,7 +4,6 @@ import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { readSyncedRecord } from '@commands/project/sync/record';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
-  resolveProjectScope,
   resolveScopeRoot,
   syncedRecordPath,
   type ProjectScope,
@@ -20,6 +19,7 @@ import { resolveProjectRoot } from '@fs/paths';
 
 import {
   archiveProjectOnCompletion,
+  assertExactArchiveProjectRoot,
   assertDurableArchiveProjectTarget,
   buildArchiveSnapshotName,
   buildProjectArchiveS3Uri,
@@ -56,6 +56,7 @@ export interface ProjectArchivePushCommandDependencies {
   archiveProjectOnCompletion: (
     options: ArchiveProjectOnCompletionOptions,
   ) => Promise<ArchiveProjectOnCompletionResult>;
+  assertExactArchiveProjectRoot: typeof assertExactArchiveProjectRoot;
   processEnv: NodeJS.ProcessEnv;
   timestamp: () => string;
 }
@@ -92,6 +93,7 @@ export function defaultProjectArchivePushCommandDependencies(): ProjectArchivePu
     readSyncedRecord,
     verifySelectedProjectRecapForArchive,
     archiveProjectOnCompletion,
+    assertExactArchiveProjectRoot,
     processEnv: process.env,
     timestamp: () => new Date().toISOString(),
   };
@@ -264,11 +266,12 @@ export async function runArchivePushCommand(
       repoRoot,
       projectPathArg,
     );
-    const projectScope = resolveProjectScope(
-      target.projectPath,
-      resolveScopeRoot(repoRoot, projectsRoot, 'shared'),
+    const { projectScope } = dependencies.assertExactArchiveProjectRoot({
       repoRoot,
-    );
+      projectPath: target.projectPath,
+      projectName: target.projectName,
+      projectsRoot,
+    });
     const defaultSnapshotName = buildArchiveSnapshotName(
       target.projectName,
       dependencies.timestamp(),
