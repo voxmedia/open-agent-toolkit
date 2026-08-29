@@ -56,6 +56,14 @@ Phase p02 passed root-owned review round 2 at fa9d6e37d (0C/0I); see reviews/p02
 
 Phase p01 passed root-owned review round 3 at 52745ef93 (0C/0I) after one implementer fix round; rounds 2-3 findings were root-owned bookkeeping. See reviews/p01-review-2026-08-29T074543Z.md.
 
+### 2026-08-29 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/portable-agent-references/references/project-retro.md evidence_used=lifecycle-artifacts,project-log,review-artifacts,session-transcript evidence_unavailable=oat-execution-learnings promotions=5 upstream=2 apply=declined filing=declined
+
+### 2026-08-29 · structural · oat-project-retro · project-retro
+
+correction of prior retro receipt: apply and filing outcomes were recorded as declined before the interactive consent step ran; no apply or filing decision had been made. Accurate outcome at that point was deferred for both. Prior entry preserved above; this entry supersedes its apply= and filing= values.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
