@@ -21,6 +21,7 @@ import {
 } from '@commands/project/sync/ref-sync';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
+  PROJECT_SCOPES,
   resolveDefaultScope,
   resolveScopeRoot,
   syncedRecordPath,
@@ -31,7 +32,7 @@ import { setActiveProject } from '@config/oat-config';
 import { resolveEffectiveConfig } from '@config/resolve';
 import { CliError } from '@errors/cli-error';
 import { resolveAssetsRoot } from '@fs/assets';
-import { fileExists } from '@fs/io';
+import { dirExists, fileExists } from '@fs/io';
 import { assertValidProjectStateContent } from '@validation/project-state';
 
 export type ProjectScaffoldMode = 'spec-driven' | 'quick' | 'import';
@@ -528,6 +529,72 @@ async function ensureScopedProjectIgnored(
   };
 }
 
+async function assertCrossScopeSlugAvailable(
+  repoRoot: string,
+  projectsRoot: string,
+  projectName: string,
+  targetScope: ProjectScope,
+  dependencies: ScaffoldProjectDependencies,
+): Promise<void> {
+  const collisions: ProjectScope[] = [];
+  for (const scope of PROJECT_SCOPES) {
+    if (scope === targetScope) continue;
+    const scopeRoot = resolveScopeRoot(repoRoot, projectsRoot, scope);
+    if (await dirExists(join(scopeRoot, projectName))) {
+      collisions.push(scope);
+      continue;
+    }
+    if (
+      scope === 'synced' &&
+      (await fileExists(syncedRecordPath(scopeRoot, projectName)))
+    ) {
+      collisions.push(scope);
+    }
+  }
+
+  if (targetScope !== 'synced' && !collisions.includes('synced')) {
+    const remote = await dependencies.gitRunner.run(
+      ['remote', 'get-url', 'origin'],
+      { cwd: repoRoot, allowFailure: true },
+    );
+    if (remote.code === 0) {
+      const syncedTarget = buildSyncTarget(repoRoot, projectsRoot, projectName);
+      const localRef = await dependencies.gitRunner.run(
+        ['show-ref', '--verify', '--quiet', syncedTarget.ref],
+        { cwd: repoRoot, allowFailure: true },
+      );
+      if (localRef.code !== 0 && localRef.code !== 1) {
+        throw new CliError(
+          `Unable to check synced project collision for ${projectName}: ${localRef.stderr || localRef.stdout || 'git show-ref failed'}`,
+          2,
+        );
+      }
+      if (localRef.code === 0) {
+        collisions.push('synced');
+      } else {
+        const remoteRef = await dependencies.gitRunner.run(
+          ['ls-remote', '--exit-code', syncedTarget.remote, syncedTarget.ref],
+          { cwd: repoRoot, allowFailure: true },
+        );
+        if (remoteRef.code !== 0 && remoteRef.code !== 2) {
+          throw new CliError(
+            `Unable to check remote synced project collision for ${projectName}: ${remoteRef.stderr || remoteRef.stdout || 'git ls-remote failed'}`,
+            2,
+          );
+        }
+        if (remoteRef.code === 0) collisions.push('synced');
+      }
+    }
+  }
+
+  if (collisions.length > 0) {
+    throw new CliError(
+      `Project name "${projectName}" already exists in ${collisions.join(', ')} scope. Choose a unique name, or pass --force and use an explicit project path when opening the duplicate.`,
+      1,
+    );
+  }
+}
+
 export async function scaffoldProject(
   options: ScaffoldProjectOptions,
   overrides: Partial<ScaffoldProjectDependencies> = {},
@@ -569,9 +636,15 @@ export async function scaffoldProject(
     isAbsolute(relativeProjectPath)
       ? absoluteProjectPath
       : relativeProjectPath.split('\\').join('/');
-  // `--force` is currently accepted for compatibility with the legacy script.
-  // Scaffold behavior is always non-destructive (create missing files only).
-  void options.force;
+  if (!options.force) {
+    await assertCrossScopeSlugAvailable(
+      options.repoRoot,
+      projectsRoot,
+      options.projectName,
+      scope,
+      dependencies,
+    );
+  }
 
   let gitignoreChanged = false;
   let gitignoreBefore: string | null | undefined;

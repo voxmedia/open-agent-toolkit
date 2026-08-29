@@ -241,6 +241,86 @@ describe('scaffoldProject', () => {
     expect(result.projectPath).toBe('.oat/projects/shared/my_project');
   });
 
+  it.each([
+    ['shared', 'local'],
+    ['shared', 'synced'],
+    ['local', 'shared'],
+    ['local', 'synced'],
+    ['synced', 'shared'],
+    ['synced', 'local'],
+  ] as const)(
+    'rejects creating a %s project when the slug exists in %s scope',
+    async (targetScope, existingScope) => {
+      const repoRoot = await createRepoRoot();
+      tempDirs.push(repoRoot);
+      const slug = `${targetScope}-${existingScope}-collision`;
+      await mkdir(join(repoRoot, '.oat', 'projects', existingScope, slug), {
+        recursive: true,
+      });
+
+      await expect(
+        scaffoldProject({
+          repoRoot,
+          projectName: slug,
+          scope: targetScope,
+          refreshDashboard: false,
+          setActive: false,
+        }),
+      ).rejects.toThrow(new RegExp(`already exists in ${existingScope} scope`));
+      await expect(
+        stat(join(repoRoot, '.oat', 'projects', targetScope, slug)),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+    },
+  );
+
+  it('uses configured custom roots when checking cross-scope collisions', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    const env = { OAT_PROJECTS_ROOT: '.oat/projects/team' };
+    await mkdir(join(repoRoot, '.oat/projects/team/custom-collision'), {
+      recursive: true,
+    });
+
+    await expect(
+      scaffoldProject({
+        repoRoot,
+        projectName: 'custom-collision',
+        scope: 'local',
+        env,
+        refreshDashboard: false,
+        setActive: false,
+      }),
+    ).rejects.toThrow(/already exists in shared scope/);
+  });
+
+  it.each(['shared', 'local'] as const)(
+    'rejects a %s project when only the synced remote ref exists',
+    async (targetScope) => {
+      const fixture = await createSyncedFixture();
+      tempDirs.push(fixture.rootDir);
+      const slug = `remote-only-${targetScope}`;
+      const remoteCommit = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim();
+      execFileSync(
+        'git',
+        ['update-ref', `refs/oat/projects/${slug}`, remoteCommit],
+        { cwd: fixture.originDir, stdio: 'ignore' },
+      );
+
+      await expect(
+        scaffoldProjectImpl({
+          repoRoot: fixture.cloneA,
+          projectName: slug,
+          scope: targetScope,
+          refreshDashboard: false,
+          setActive: false,
+        }),
+      ).rejects.toThrow(/already exists in synced scope/);
+    },
+  );
+
   it('scaffolds local projects without creating a branch commit', async () => {
     const repoRoot = await createRepoRoot();
     tempDirs.push(repoRoot);
@@ -659,6 +739,7 @@ describe('scaffoldProject', () => {
           repoRoot: fixture.cloneA,
           projectName: 'pointer-failure',
           scope: 'synced',
+          force: true,
           refreshDashboard: false,
           setActive: true,
         },

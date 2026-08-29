@@ -165,7 +165,10 @@ export function createProjectNewCommand(
     .addOption(
       new Option('--scope <scope>', 'Project scope').choices(PROJECT_SCOPES),
     )
-    .option('--force', 'Non-destructive scaffold; create missing files only')
+    .option(
+      '--force',
+      'Allow a duplicate slug in another scope; scaffold remains non-destructive',
+    )
     .option('--no-set-active', 'Do not update active project in local config')
     .option('--no-dashboard', 'Do not refresh .oat/state.md after scaffold')
     .option('--no-commit', 'Do not git-commit the scaffolded project directory')
