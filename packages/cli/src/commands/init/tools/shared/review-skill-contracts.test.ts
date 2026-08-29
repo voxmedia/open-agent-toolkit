@@ -1184,6 +1184,26 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('chains and validates fresh non-archive lifecycle receipts', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const step10 = content.slice(
+      content.indexOf('### Step 10: Commit + Push Bookkeeping (Required)'),
+      content.indexOf('### Step 10.5: Re-attest Final Project Recap'),
+    );
+
+    expect(step10).toMatch(
+      /git commit --only "\$SYNCED_RECORD_PATH"[\s\S]*?&&\s+LIFECYCLE_COMMIT=\$\(git rev-parse HEAD\) &&\s+node "\$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT"[\s\S]*?\|\| exit 1/,
+    );
+    expect(step10).toMatch(
+      /ancestor[\s\S]*?changes exactly `SYNCED_RECORD_PATH`[\s\S]*?byte-identical complete record/,
+    );
+    expect(step10).toMatch(
+      /a\s+failed commit or hook must not reuse the prior `HEAD` as a receipt/i,
+    );
+  });
+
   it.each([
     ['without a selected recap', 'SELECTED_PROJECT_RECAP_RUN is empty'],
     ['with a selected recap', 'SELECTED_PROJECT_RECAP_RUN is non-empty'],

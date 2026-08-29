@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -258,7 +258,7 @@ async function commitCompletionRecord(
   return recordCommit;
 }
 
-it('validates recovered non-archive lifecycle commits and rejects stale or invalid records', async () => {
+it('validates exact non-archive lifecycle receipts and rejects unsafe recovery candidates', async () => {
   const fixture = await createSyncedFixture();
   try {
     const slug = 'nonarchive-lifecycle-receipt';
@@ -279,26 +279,30 @@ it('validates recovered non-archive lifecycle commits and rejects stale or inval
         [NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT, recordPath, commit, slug],
         { cwd: fixture.cloneA, encoding: 'utf8' },
       ).trim();
-    const commitRecord = (subject: string, allowEmpty = false) => {
+    const commitRecord = (subject: string, additionalPaths: string[] = []) => {
       git(fixture.cloneA, ['add', '--', recordRelative]);
-      git(fixture.cloneA, [
-        'commit',
-        ...(allowEmpty ? ['--allow-empty'] : []),
-        '-m',
-        subject,
-      ]);
+      if (additionalPaths.length > 0) {
+        git(fixture.cloneA, ['add', '--', ...additionalPaths]);
+      }
+      git(fixture.cloneA, ['commit', '-m', subject]);
       return git(fixture.cloneA, ['rev-parse', 'HEAD']);
     };
+
+    const initialHead = git(fixture.cloneA, ['rev-parse', 'HEAD']);
+    expect(() => validate(initialHead)).toThrow(/record path does not exist/i);
 
     await writeSyncedRecord(recordPath, activeRecord);
     const staleCommit = commitRecord(`chore(oat): scaffold ${slug}`);
     expect(() => validate(staleCommit)).toThrow(/commit subject must be/i);
 
+    await writeSyncedRecord(recordPath, {
+      ...activeRecord,
+      archiveSnapshot: 'incomplete-snapshot',
+    });
     const incompleteCommit = commitRecord(
       `chore(oat): complete synced project ${slug}`,
-      true,
     );
-    expect(() => validate(incompleteCommit)).toThrow(/status: complete/i);
+    expect(() => validate(incompleteCommit)).toThrow(/complete synced record/i);
 
     await writeFile(recordPath, '{malformed\n', 'utf8');
     const malformedCommit = commitRecord(
@@ -306,15 +310,114 @@ it('validates recovered non-archive lifecycle commits and rejects stale or inval
     );
     expect(() => validate(malformedCommit)).toThrow(/not valid JSON/i);
 
-    await writeSyncedRecord(recordPath, {
+    const completeRecord = {
       ...activeRecord,
       status: 'complete',
       completedAt: '2026-08-28T12:01:00.000Z',
+    } as const;
+    await writeFile(
+      recordPath,
+      `${JSON.stringify(
+        {
+          ...completeRecord,
+          slug: 'another-project',
+          ref: 'refs/oat/projects/another-project',
+        },
+        null,
+        2,
+      )}\n`,
+      'utf8',
+    );
+    const wrongSlugCommit = commitRecord(
+      `chore(oat): complete synced project ${slug}`,
+    );
+    expect(() => validate(wrongSlugCommit)).toThrow(/exact project identity/i);
+
+    await writeSyncedRecord(recordPath, completeRecord);
+    const unrelatedPath = 'unrelated.txt';
+    await writeFile(join(fixture.cloneA, unrelatedPath), 'unrelated\n', 'utf8');
+    const unrelatedCommit = commitRecord(
+      `chore(oat): complete synced project ${slug}`,
+      [unrelatedPath],
+    );
+    expect(() => validate(unrelatedCommit)).toThrow(/exactly the synced/i);
+
+    await writeSyncedRecord(recordPath, {
+      ...completeRecord,
+      completedAt: '2026-08-28T12:02:00.000Z',
     });
     const validCommit = commitRecord(
       `chore(oat): complete synced project ${slug}`,
     );
     expect(validate(validCommit)).toBe(validCommit);
+
+    await writeSyncedRecord(recordPath, {
+      ...completeRecord,
+      completedAt: '2026-08-28T12:03:00.000Z',
+    });
+    expect(() => validate(validCommit)).toThrow(/content must exactly match/i);
+
+    await writeSyncedRecord(recordPath, {
+      ...completeRecord,
+      completedAt: '2026-08-28T12:02:00.000Z',
+    });
+    git(fixture.cloneA, ['checkout', '--detach', staleCommit]);
+    await writeSyncedRecord(recordPath, {
+      ...completeRecord,
+      completedAt: '2026-08-28T12:02:00.000Z',
+    });
+    expect(() => validate(validCommit)).toThrow(/must be an ancestor/i);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+it('does not accept the prior HEAD when a fresh lifecycle commit hook fails', async () => {
+  const fixture = await createSyncedFixture();
+  try {
+    const slug = 'hook-failure-lifecycle-receipt';
+    const target = buildSyncTarget(
+      fixture.cloneA,
+      '.oat/projects/shared',
+      slug,
+    );
+    const recordPath = join(target.syncedRoot, `${slug}.json`);
+    const recordRelative = relative(fixture.cloneA, recordPath);
+    await writeSyncedRecord(recordPath, {
+      ...buildSyncedRecord(slug, new Date('2026-08-28T12:00:00Z')),
+      status: 'complete',
+      completedAt: '2026-08-28T12:01:00.000Z',
+    });
+    git(fixture.cloneA, ['add', '--', recordRelative]);
+
+    const hooksPath = join(fixture.cloneA, 'test-hooks');
+    const hookPath = join(hooksPath, 'pre-commit');
+    await mkdir(hooksPath, { recursive: true });
+    await writeFile(
+      hookPath,
+      '#!/bin/sh\necho injected hook failure >&2\nexit 1\n',
+    );
+    await chmod(hookPath, 0o755);
+    git(fixture.cloneA, ['config', 'core.hooksPath', hooksPath]);
+    const priorHead = git(fixture.cloneA, ['rev-parse', 'HEAD']);
+
+    expect(() =>
+      git(fixture.cloneA, [
+        'commit',
+        '--only',
+        recordRelative,
+        '-m',
+        `chore(oat): complete synced project ${slug}`,
+      ]),
+    ).toThrow(/injected hook failure/i);
+    expect(git(fixture.cloneA, ['rev-parse', 'HEAD'])).toBe(priorHead);
+    expect(() =>
+      execFileSync(
+        process.execPath,
+        [NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT, recordPath, priorHead, slug],
+        { cwd: fixture.cloneA, encoding: 'utf8' },
+      ),
+    ).toThrow();
   } finally {
     await fixture.cleanup();
   }

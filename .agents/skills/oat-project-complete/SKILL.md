@@ -1010,8 +1010,10 @@ if [[ "$PROJECT_SCOPE" == "synced" ]]; then
         "$SYNCED_RECORD_PATH" "$LIFECYCLE_COMMIT" "$PROJECT_NAME" || exit 1
     else
       git commit --only "$SYNCED_RECORD_PATH" \
-        -m "chore(oat): complete synced project ${PROJECT_NAME}"
-      LIFECYCLE_COMMIT=$(git rev-parse HEAD)
+        -m "chore(oat): complete synced project ${PROJECT_NAME}" &&
+        LIFECYCLE_COMMIT=$(git rev-parse HEAD) &&
+        node "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" \
+          "$SYNCED_RECORD_PATH" "$LIFECYCLE_COMMIT" "$PROJECT_NAME" || exit 1
     fi
   fi
 else
@@ -1028,6 +1030,13 @@ Rules:
   completion/bookkeeping files. Never use a repository-wide `git add -A` when
   unrelated changes exist.
 - If there is nothing to commit, state that explicitly and verify whether the completion bookkeeping was already committed in a prior commit.
+- A non-archive synced lifecycle receipt is valid only when it is an ancestor
+  of current parent-branch `HEAD`, changes exactly `SYNCED_RECORD_PATH`, and
+  contains the current byte-identical complete record for `PROJECT_NAME` with
+  the canonical synced ref. Missing records, unrelated paths, stale content,
+  cross-project receipts, and non-ancestor commits fail closed. Validate both
+  recovered and freshly created lifecycle commit SHAs before continuing; a
+  failed commit or hook must not reuse the prior `HEAD` as a receipt.
 - The lifecycle bookkeeping commit is the artifact commit for final recap
   durability. It must contain the final run's immutable paths.
 - Snapshot unrelated working-tree changes before finalization so the shared
