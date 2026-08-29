@@ -152,6 +152,7 @@ describe('getPublicPackageContracts', () => {
         forbiddenPathPatterns: expect.arrayContaining([
           'src/**',
           '**/*.test.*',
+          '**/__tests__/**',
           'tsconfig.tsbuildinfo',
         ]),
       }),
@@ -240,12 +241,14 @@ describe('getPublicPackageContracts', () => {
       'assets/NOTICES.md',
       'README.md',
       'src/index.ts',
+      'dist/commands/__tests__/helpers.js',
       'tsconfig.tsbuildinfo',
     ];
 
     expect(findMissingPackedPaths(packedPaths, cliContract)).toEqual([]);
     expect(findForbiddenPackedPaths(packedPaths, cliContract)).toEqual([
       'src/index.ts',
+      'dist/commands/__tests__/helpers.js',
       'tsconfig.tsbuildinfo',
     ]);
   });
@@ -294,7 +297,7 @@ describe('getPublicPackageContracts', () => {
     }
   }, 20_000);
 
-  it('excludes root test support without mutating built package output', async () => {
+  it('excludes nested test support without mutating built package output', async () => {
     const cliContract = getPublicPackageContracts()[0];
     const cliPackageRoot = dirname(cliPackageJsonPath);
     const cliTsconfig = await readJson(cliTsconfigPath);
@@ -310,9 +313,9 @@ describe('getPublicPackageContracts', () => {
       readFile(assetsMetadataPath),
     ]);
 
-    expect(cliTsconfig.exclude).toContain('src/__tests__/**');
+    expect(cliTsconfig.exclude).toContain('src/**/__tests__/**');
     expect((packageJson.scripts as Record<string, string>).build).toContain(
-      'rm -rf dist/__tests__',
+      'find dist -type d -name __tests__',
     );
 
     await expect(
@@ -321,7 +324,7 @@ describe('getPublicPackageContracts', () => {
     const packedArtifact = await packPublicPackage(cliContract);
     const packedPaths = packedArtifact.files.map((file) => file.path);
     expect(
-      packedPaths.filter((path) => path.startsWith('dist/__tests__/')),
+      packedPaths.filter((path) => path.split('/').includes('__tests__')),
     ).toEqual([]);
     await expect(readFile(distIndexPath)).resolves.toEqual(outputBeforePack[0]);
     await expect(readFile(assetsMetadataPath)).resolves.toEqual(
