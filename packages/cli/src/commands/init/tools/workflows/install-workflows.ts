@@ -169,7 +169,7 @@ export async function installWorkflows(
   if (!config.projects?.root?.trim()) {
     await writeOatConfig(options.targetRoot, {
       ...config,
-      projects: { root: '.oat/projects/shared' },
+      projects: { ...config.projects, root: '.oat/projects/shared' },
     });
     result.projectsRootConfigInitialized = true;
   }

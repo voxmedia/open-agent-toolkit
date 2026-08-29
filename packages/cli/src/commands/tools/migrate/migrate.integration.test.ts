@@ -89,7 +89,7 @@ async function writeGenerated(
       if (config.projects?.root?.trim()) return;
       await writeOatConfig(scopeRoot, {
         ...config,
-        projects: { root: '.oat/projects/shared' },
+        projects: { ...config.projects, root: '.oat/projects/shared' },
       });
       return;
     }
@@ -376,6 +376,37 @@ describe('pack migration integration', () => {
     expect(syncCalls.flatMap(({ paths }) => paths)).not.toEqual(
       expect.arrayContaining([expect.stringMatching(/^\.oat\/templates/)]),
     );
+  });
+
+  it('preserves defaultScope while migration backfills the destination projects root', async () => {
+    const roots = await createRoots();
+    const syncCalls: SyncCall[] = [];
+    await installSource('workflows', 'user', roots);
+    await writeOatConfig(roots.project, {
+      version: 1,
+      projects: { defaultScope: 'local' },
+    });
+
+    const preview = await previewMigration(
+      'workflows',
+      'user',
+      'project',
+      roots,
+    );
+    expect(preview.destinationPlan.operations).toContainEqual(
+      expect.objectContaining({
+        kind: 'write-generated',
+        generation: 'projects-config-default',
+      }),
+    );
+    await installDestination(preview, roots, syncCalls);
+
+    await expect(readOatConfig(roots.project)).resolves.toMatchObject({
+      projects: {
+        root: '.oat/projects/shared',
+        defaultScope: 'local',
+      },
+    });
   });
 
   it('moves user to project and a declined removal retains a valid combined install', async () => {
