@@ -1,6 +1,6 @@
 ---
 name: oat-wave-execute
-version: 1.8.1
+version: 1.8.2
 description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout.
 argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 disable-model-invocation: false
@@ -237,6 +237,20 @@ terminal state. Every gate row MUST flip to `passed` once all fix dispositions
 carry the stored verification records required by the fix-disposition contract below;
 `passed` is the only
 terminal state for gate rows (Orc operator-audit S8).
+
+Persist the gate artifact and its dispositions through the wrapper project's
+scope-aware bookkeeping route:
+
+```bash
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing wave gate bookkeeping" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): record wave plan gate"
+else
+  git add "$PROJECT_PATH"
+  git diff --cached --quiet || git commit -m "chore(oat): record wave plan gate"
+fi
+```
 
 ### Step 5: Execute via `oat-project-implement`
 

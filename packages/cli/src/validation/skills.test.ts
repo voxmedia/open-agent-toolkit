@@ -609,6 +609,48 @@ describe('validateOatSkills', () => {
     });
   });
 
+  it('anchors wave gate bookkeeping to an executable guarded push', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillPath = join(
+      repoRoot,
+      '.agents',
+      'skills',
+      'oat-wave-execute',
+      'SKILL.md',
+    );
+    const inventoryPath = join(
+      repoRoot,
+      'packages',
+      'cli',
+      'src',
+      'validation',
+      'synced-bookkeeping-sites.json',
+    );
+    const skill = await readFile(skillPath, 'utf8');
+    const inventory = JSON.parse(
+      await readFile(inventoryPath, 'utf8'),
+    ) as Array<{
+      file: string;
+      anchor: string;
+      guard: string;
+      kind: string;
+    }>;
+    const site = inventory.find(
+      (entry) => entry.file === '.agents/skills/oat-wave-execute/SKILL.md',
+    );
+
+    expect(site).toEqual({
+      file: '.agents/skills/oat-wave-execute/SKILL.md',
+      anchor:
+        'oat project push "$PROJECT_PATH" --message "chore(oat): record wave plan gate"',
+      kind: 'write',
+      guard: 'project-scope',
+    });
+    expect(skill).toMatch(
+      /```bash\nPROJECT_SCOPE=\$\(oat project scope "\$PROJECT_PATH" --format value\)[\s\S]*?if \[ "\$PROJECT_SCOPE" = "synced" \]; then\n  oat project push "\$PROJECT_PATH" --message "chore\(oat\): record wave plan gate"[\s\S]*?\nfi\n```/,
+    );
+  });
+
   it('does not warn when a configured gate targets a gateable skill', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
     tempDirs.push(root);
@@ -3732,7 +3774,7 @@ describe('validateOatSkills', () => {
       ['oat-project-implement', '2.3.0'],
       ['oat-project-pr-final', '1.6.0'],
       ['oat-project-pr-progress', '1.3.0'],
-      ['oat-project-complete', '1.7.2'],
+      ['oat-project-complete', '1.7.3'],
       ['oat-project-next', '1.0.12'],
     ] as const;
 

@@ -199,7 +199,7 @@
   },
   {
     "file": ".agents/skills/oat-wave-execute/SKILL.md",
-    "anchor": "`oat project scope \"$PROJECT_PATH\" --format value` and fail closed",
+    "anchor": "oat project push \"$PROJECT_PATH\" --message \"chore(oat): record wave plan gate\"",
     "kind": "write",
     "guard": "project-scope"
   },
