@@ -2,21 +2,21 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-28
-oat_current_task_id: null
+oat_last_updated: 2026-08-29
+oat_current_task_id: p14-t01
 oat_generated: false
 ---
 
 # Implementation: synced-project-scope
 
 **Started:** 2026-08-26
-**Last Updated:** 2026-08-28
+**Last Updated:** 2026-08-29
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All one hundred six implementation and revision tasks are complete. The Phase
-> 13 gate-review fixes are verified and await fresh independent review before
-> PR #227 is updated.
+> One hundred six of one hundred twenty-five implementation and revision tasks
+> are complete. A fresh full-project review added nineteen Phase 14 fixes that
+> must be implemented and independently re-reviewed before PR #227 is updated.
 >
 > Conventions:
 >
@@ -28,24 +28,25 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 10    | 10/10     |
-| Phase 2      | complete | 13    | 13/13     |
-| Phase 3      | complete | 19    | 19/19     |
-| Phase 4      | complete | 16    | 16/16     |
-| Phase 5      | complete | 7     | 7/7       |
-| Phase 6      | complete | 3     | 3/3       |
-| Phase 7      | complete | 1     | 1/1       |
-| Phase 8      | complete | 1     | 1/1       |
-| Phase 9      | complete | 1     | 1/1       |
-| Phase 10     | complete | 14    | 14/14     |
-| Phase 11     | complete | 3     | 3/3       |
-| Phase 12     | complete | 1     | 1/1       |
-| Phase p-rev1 | complete | 1     | 1/1       |
-| Phase 13     | complete | 16    | 16/16     |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 10    | 10/10     |
+| Phase 2      | complete    | 13    | 13/13     |
+| Phase 3      | complete    | 19    | 19/19     |
+| Phase 4      | complete    | 16    | 16/16     |
+| Phase 5      | complete    | 7     | 7/7       |
+| Phase 6      | complete    | 3     | 3/3       |
+| Phase 7      | complete    | 1     | 1/1       |
+| Phase 8      | complete    | 1     | 1/1       |
+| Phase 9      | complete    | 1     | 1/1       |
+| Phase 10     | complete    | 14    | 14/14     |
+| Phase 11     | complete    | 3     | 3/3       |
+| Phase 12     | complete    | 1     | 1/1       |
+| Phase p-rev1 | complete    | 1     | 1/1       |
+| Phase 13     | complete    | 16    | 16/16     |
+| Phase 14     | in progress | 19    | 0/19      |
 
-**Total:** 106/106 tasks completed
+**Total:** 106/125 tasks completed
 
 ---
 
@@ -3100,3 +3101,93 @@ lint/format, and `git diff --check` all passed. No findings were deferred.
 **Review outcome:** passed at the configured threshold after all Minor
 dispositions were recorded. Phase 13 is complete; fresh final-project review
 and configured implementation exit-gate freshness remain.
+
+---
+
+## Phase 14: Final integration review fixes
+
+**Status:** in progress
+**Started:** 2026-08-29
+
+### Task Status
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p14-t01 | pending | -      |
+| p14-t02 | pending | -      |
+| p14-t03 | pending | -      |
+| p14-t04 | pending | -      |
+| p14-t05 | pending | -      |
+| p14-t06 | pending | -      |
+| p14-t07 | pending | -      |
+| p14-t08 | pending | -      |
+| p14-t09 | pending | -      |
+| p14-t10 | pending | -      |
+| p14-t11 | pending | -      |
+| p14-t12 | pending | -      |
+| p14-t13 | pending | -      |
+| p14-t14 | pending | -      |
+| p14-t15 | pending | -      |
+| p14-t16 | pending | -      |
+| p14-t17 | pending | -      |
+| p14-t18 | pending | -      |
+| p14-t19 | pending | -      |
+
+### Review Received: final integration review - 2026-08-29T00:27:06Z
+
+**Date:** 2026-08-29
+**Review artifact:** `reviews/archived/final-review-2026-08-29T002706Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 4
+- Minor: 13
+
+**Disposition:** blocking final review; all nineteen findings converted with no
+deferrals. `I1`→`p14-t01`, `I2`→`p14-t02`, `M1`→`p14-t03`,
+`M2`→`p14-t04`, `M3`→`p14-t05`, `M4`→`p14-t06`, and the thirteen
+Minor findings map in review order to `p14-t07` through `p14-t19`.
+
+**New tasks added:** `p14-t01` through `p14-t19`
+
+#### Generic Dispatch Record
+
+```yaml
+request_id: 9882668f-ff17-40b7-a782-adbcefc1d2c4
+caller: oat-project-implement
+scope: synced-project-scope/final
+objective: Independent full-range final review after Phase 13 passed.
+action: review
+role_name: claude-fable-skip-permissions
+role_class: reviewer
+provider: claude
+dispatch_context: oat-gate-review
+dispatch_policy: high
+dispatch_ceiling: opus
+authority: read-only full-project review plus one active artifact and review bookkeeping
+role_selector: claude-fable-skip-permissions
+model_selector: fable
+model_selector_granularity: exec-target
+effort_selector: provider-default
+selection_source: configured-gate-target
+launch_status: accepted
+child_outcome: completed-with-blocking-findings
+configured_invocation_evidence:
+  - gate run 9882668f-ff17-40b7-a782-adbcefc1d2c4 reviewed the full origin/main-to-Phase-13 effective delta
+runtime_confirmation: observed-claude
+diagnostics: []
+continuation_events: []
+task_class: consequential
+model_class_floor: consequential
+classification_source: caller
+classification_reason: Git rollback, lifecycle recovery, archive safety, and cross-scope correctness make subtle misses expensive.
+floor_satisfaction: satisfied
+```
+
+**Reconnaissance:** not separately dispatched; the reviewer directly inspected
+the full effective delta, prior review closures, and repository gates.
+
+**Review outcome:** fixes added. This review event is not passed. Phase 14 must
+complete and receive a fresh independent final review before publication.

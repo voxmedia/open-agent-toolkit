@@ -3702,7 +3702,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | plan    | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T033204Z.md       | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
 | p13     | code     | fixes_completed | 2026-08-28 | reviews/archived/p13-review-2026-08-28T233340Z.md                 | 95cf11abb3f74fe3a63342cf8bc58bb926e1407a | gate       | claude-fable-skip-permissions |
 | p13     | code     | passed          | 2026-08-29 | reviews/archived/p13-review-2026-08-29T000209Z.md                 | 85e0b7b65403a8db9be5e18f353c5cfa66592b46 | gate       | claude-fable-skip-permissions |
-| final   | code     | received        | 2026-08-29 | reviews/final-review-2026-08-29T002706Z.md                        | ab2a05ca4a3663acc752bb186c9c3e2393f30546 | gate       | claude-fable-skip-permissions |
+| final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T002706Z.md               | ab2a05ca4a3663acc752bb186c9c3e2393f30546 | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -4248,6 +4248,559 @@ git commit -m "fix(p13-t16): report local ref query failures"
 
 ---
 
+## Phase 14: Final integration review fixes
+
+Goal: close the fresh full-range final-review findings across custom-root
+compatibility, validator enforcement, configuration semantics, skill arrival,
+doctor readiness, safety verification, lifecycle recovery, and residual
+operator-facing correctness before PR #227 is published.
+
+### Task p14-t01: (review) Restore custom `projects.root` compatibility
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/shared/project-scope.ts`
+- Modify: its focused tests and affected `open`, `archive`, `pause`, `prune`, and `migrate` integration tests
+
+**Step 1: Understand the issue**
+
+The configured `projects.root` is the shared root, but scope resolution only
+recognizes literal `shared`, breaking scope/open/archive and arrival guards.
+
+**Step 2: Implement fix**
+
+Treat normalized `projectsRoot` as authoritative for shared projects before
+deriving sibling local/synced roots; preserve synced `.git` confirmation and
+audit every affected call site.
+
+**Step 3: Verify**
+
+Add config and `OAT_PROJECTS_ROOT` custom-root fixtures covering scope, open,
+archive, pause, prune, migrate, and the arrival guard's successful shared path.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands
+git commit -m "fix(p14-t01): restore custom project roots"
+```
+
+### Task p14-t02: (review) Repair and continuously enforce the skill inventory
+
+**Files:**
+
+- Modify: `packages/cli/src/validation/synced-bookkeeping-sites.json`
+- Modify: root package scripts and validation tests as needed
+
+**Step 1: Understand the issue**
+
+The archive scope-resolution inventory anchor is stale, so
+`pnpm oat:validate-skills` fails despite the CI-order gates passing.
+
+**Step 2: Implement fix**
+
+Anchor the inventory to the stable `isSynced` line and make the repository
+skill validator part of a CI-covered check surface so future drift is visible.
+
+**Step 3: Verify**
+
+Run `pnpm oat:validate-skills`, the validator suites, `pnpm check`, and prove a
+stale anchor fails the contract fixture.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/validation package.json
+git commit -m "fix(p14-t02): enforce synced bookkeeping inventory"
+```
+
+### Task p14-t03: (review) Preserve root-less `projects.defaultScope`
+
+**Files:**
+
+- Modify: `packages/cli/src/config/oat-config.ts`
+- Modify: config resolution tests
+
+**Step 1: Understand the issue**
+
+The normalizer drops `defaultScope` unless `projects.root` is also present.
+
+**Step 2: Implement fix**
+
+Retain either projects field independently and route invalid enum values
+through the existing configuration-validation error path.
+
+**Step 3: Verify**
+
+Test root-less valid/invalid config files and effective default-scope behavior.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/config
+git commit -m "fix(p14-t03): preserve rootless default scope"
+```
+
+### Task p14-t04: (review) Make shared/local arrival guards exit successfully
+
+**Files:**
+
+- Modify: `.agents/skills/oat-worktree-bootstrap/SKILL.md`
+- Modify: `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+- Modify: `.agents/skills/oat-cursor-cloud-projects/SKILL.md`
+- Modify: `.agents/skills/oat-project-autonomous/SKILL.md`
+- Modify: validator/contract tests
+
+**Step 1: Understand the issue**
+
+Four guards end with `[ synced ] && pull`, returning exit 1 for ordinary
+shared/local projects despite their non-blocking contract.
+
+**Step 2: Implement fix**
+
+Use the safe `if` form at all sites, bump each changed skill once, and teach
+the validator to reject the unsafe `&&` companion shape.
+
+**Step 3: Verify**
+
+Run shared/local/synced snippet cases, skill validation, version-bump checks,
+and managed-provider drift checks.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-worktree-bootstrap .agents/skills/oat-worktree-bootstrap-auto .agents/skills/oat-cursor-cloud-projects .agents/skills/oat-project-autonomous packages/cli/src/validation packages/cli/src/commands/init/tools/shared
+git commit -m "fix(p14-t04): make arrival guards nonblocking"
+```
+
+### Task p14-t05: (review) Align spec and design safety contracts
+
+**Files:**
+
+- Modify: `.oat/projects/shared/synced-project-scope/spec.md`
+- Modify: `.oat/projects/shared/synced-project-scope/design.md`
+
+**Step 1: Understand the issue**
+
+Artifacts prohibit every leased push and promise byte-identical shared archive
+behavior, while approved implementation uses owned-SHA leased rollback and
+documented shared-path metadata/idempotency changes.
+
+**Step 2: Implement fix**
+
+Carve out only the owned-SHA rollback lease and enumerate the actual shared
+archive deltas without weakening normal push or destructive safety invariants.
+
+**Step 3: Verify**
+
+Cross-check NFR1/NFR4/FR12/FR18 wording against code and run markdown checks.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/synced-project-scope/spec.md .oat/projects/shared/synced-project-scope/design.md
+git commit -m "docs(p14-t05): align safety contracts"
+```
+
+### Task p14-t06: (review) Run doctor readiness checks without synced records
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/doctor/synced-projects.ts`
+- Modify: `packages/cli/src/commands/doctor/synced-projects.test.ts`
+
+**Step 1: Understand the issue**
+
+The no-records early return hides gitignore and editor readiness diagnostics a
+repository needs before creating its first synced project.
+
+**Step 2: Implement fix**
+
+Run scope-independent readiness checks before the no-records result while
+keeping per-record checks conditional.
+
+**Step 3: Verify**
+
+Cover record-less repositories with and without the ignore rule and editor
+hint, plus existing record-aware diagnostics.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/doctor/synced-projects.ts packages/cli/src/commands/doctor/synced-projects.test.ts
+git commit -m "fix(p14-t06): run prerecord doctor checks"
+```
+
+### Task p14-t07: (review) Keep PJM and lockstep release metadata current
+
+**Files:**
+
+- Modify: `.oat/repo/pjm/current-state.md`
+- Modify: all five public package manifests
+- Modify: `packages/cli/assets/public-package-versions.json`
+
+**Step 1: Understand the issue**
+
+PJM version labels drifted again, and this final shipped fix phase requires a
+fresh lockstep release increment.
+
+**Step 2: Implement fix**
+
+Record synced scope at the new branch release, PR #226 at its actual `0.2.39`
+release, and bump all public packages/assets to the smallest version above
+fresh `origin/main` (expected `0.2.43`).
+
+**Step 3: Verify**
+
+Fetch `origin/main`, run version and release validation, and assert PJM labels
+match the final package state.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/repo/pjm/current-state.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
+git commit -m "chore(p14-t07): align final release metadata"
+```
+
+### Task p14-t08: (review) Restore a competitor ref during migration rollback
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts`
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.test.ts`
+
+**Step 1: Understand the issue**
+
+If migration fast-forwards over a concurrently published ref, later rollback
+deletes the combined history instead of restoring the competitor's prior SHA.
+
+**Step 2: Implement fix**
+
+Capture the pre-publish remote SHA; restore it under a lease when it existed,
+and delete only when the ref was absent before this invocation's publish.
+
+**Step 3: Verify**
+
+Add real bare-origin races for clean rebase + later failure, conflicting push,
+later competitor update, restoration, and deletion-only ownership.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts
+git commit -m "fix(p14-t08): restore prior remote on rollback"
+```
+
+### Task p14-t09: (review) Clean partial archives after copy failure
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+
+**Step 1: Understand the issue**
+
+First-run copy failure can leave an invocation-owned partial directory that a
+retry never reuses.
+
+**Step 2: Implement fix**
+
+Remove only the fresh archive directory owned by this attempt when copy or
+metadata write fails; never remove a pre-existing verified archive.
+
+**Step 3: Verify**
+
+Inject during-copy failure and prove retry creates one dated complete archive.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts
+git commit -m "fix(p14-t09): clean partial archive copies"
+```
+
+### Task p14-t10: (review) Complete NFR4, FR12, and receipt test assertions
+
+**Files:**
+
+- Modify: migration, ref-sync, push/pull, and completion transaction tests
+
+**Step 1: Understand the issue**
+
+Several designed end-state, parent-cleanliness, runner-mutation, and receipt
+timestamp invariants are not directly asserted.
+
+**Step 2: Implement fix**
+
+Add the missing index/worktree/record/status assertions, runner-spy guardrails,
+and timestamp-mismatch/malformed-frontmatter negatives without changing code.
+
+**Step 3: Verify**
+
+Run the focused real-Git migration/sync/completion matrices and ensure every
+design verification row has executable evidence.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project packages/cli/src/commands/init/tools/shared
+git commit -m "test(p14-t10): complete safety assertions"
+```
+
+### Task p14-t11: (review) Document archive `--no-commit` semantics
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+- Modify: lifecycle/design documentation and CLI help tests as needed
+
+**Step 1: Understand the issue**
+
+The shipped flag is absent from docs and cannot be used inside completion
+because it intentionally returns no lifecycle receipt.
+
+**Step 2: Implement fix**
+
+Document manual-only semantics and the completion caveat; keep the completion
+skill from passing the flag.
+
+**Step 3: Verify**
+
+Run docs checks/build and help/reference parity tests.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs packages/cli/src/commands/project/archive
+git commit -m "docs(p14-t11): explain archive no-commit"
+```
+
+### Task p14-t12: (review) Make brainstorm fold-back prose scope-aware
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+- Modify: skill contract tests
+
+**Step 1: Understand the issue**
+
+Normative prose still requires a branch commit for synced fold-back despite
+the executable scope guard using `oat project push`.
+
+**Step 2: Implement fix**
+
+Align every BLOCKED/self-correction/checklist/handoff sentence with the scope
+guard and bump the skill once.
+
+**Step 3: Verify**
+
+Run skill validation, bump checks, and fold-back contract tests.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm packages/cli/src/validation packages/cli/src/commands/init/tools/shared
+git commit -m "docs(p14-t12): align brainstorm foldback scope"
+```
+
+### Task p14-t13: (review) Give malformed synced records a recovery path
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/record.ts`
+- Modify: record/target/list command tests
+
+**Step 1: Understand the issue**
+
+Malformed records hard-stop every sync command with no actionable remediation.
+
+**Step 2: Implement fix**
+
+Return an operator-state error that names safe restore/pull recovery and uses
+exit 1 while keeping schema violations fail-closed.
+
+**Step 3: Verify**
+
+Cover malformed records through push, pull, prune, and list with exact guidance.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync packages/cli/src/commands/project/list
+git commit -m "fix(p14-t13): guide malformed record recovery"
+```
+
+### Task p14-t14: (review) Validate non-archive lifecycle receipts
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: completion transaction scripts/tests
+
+**Step 1: Understand the issue**
+
+The non-archive route trusts the latest record commit without checking its
+subject or completed record contents.
+
+**Step 2: Implement fix**
+
+Fail closed unless the recovered commit has the expected lifecycle subject and
+a committed `status: complete` record; bump the completion skill.
+
+**Step 3: Verify**
+
+Add valid recovery plus stale scaffold/adoption and malformed/incomplete record
+negatives in the repository-backed matrix.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete packages/cli/src/commands/project/push packages/cli/src/commands/init/tools/shared
+git commit -m "fix(p14-t14): validate nonarchive lifecycle receipts"
+```
+
+### Task p14-t15: (review) Restore local state after rejected pause publication
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/pause/index.ts`
+- Modify: pause tests
+
+**Step 1: Understand the issue**
+
+A rejected/conflicted synced pause leaves `state.md` locally paused and dirty.
+
+**Step 2: Implement fix**
+
+Restore the exact pre-pause state on non-success publication while preserving
+the active pointer and actionable error.
+
+**Step 3: Verify**
+
+Test rejected, conflicted, successful, and retry paths with byte-equal rollback.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/pause
+git commit -m "fix(p14-t15): rollback rejected pauses"
+```
+
+### Task p14-t16: (review) Prevent cross-scope slug ambiguity at creation
+
+**Files:**
+
+- Modify: project scaffold and synced-create preflight
+- Modify: new/open integration tests
+
+**Step 1: Understand the issue**
+
+Creation allows a slug that already exists in another scope, making
+`open <slug>` permanently ambiguous.
+
+**Step 2: Implement fix**
+
+Reject cross-scope collisions by default with explicit-path/approved force
+escape semantics consistent across shared/local/synced and custom roots.
+
+**Step 3: Verify**
+
+Cover every scope pair, custom root, remote-only synced ref, and valid explicit
+path opening.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/new packages/cli/src/commands/project/open packages/cli/src/commands/project/sync
+git commit -m "fix(p14-t16): prevent cross-scope slug collisions"
+```
+
+### Task p14-t17: (review) Remove `/dev/null` from empty-tree creation
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts`
+- Modify: focused tests
+
+**Step 1: Understand the issue**
+
+The empty-tree hash command depends on a Unix-only filesystem path.
+
+**Step 2: Implement fix**
+
+Use the canonical empty-tree object ID or stdin-safe Git plumbing without
+platform-specific paths.
+
+**Step 3: Verify**
+
+Assert the canonical object ID and no `/dev/null` argv dependency.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts
+git commit -m "fix(p14-t17): create empty tree portably"
+```
+
+### Task p14-t18: (review) Enforce the wave gate-commit scope guard
+
+**Files:**
+
+- Modify: `.agents/skills/oat-wave-execute/SKILL.md`
+- Modify: synced bookkeeping inventory and validator tests
+
+**Step 1: Understand the issue**
+
+The wave gate-commit site has only prose, so the inventory's companion guard
+cannot enforce executable synced/shared behavior.
+
+**Step 2: Implement fix**
+
+Add the standard executable scope guard, anchor inventory to it, and bump the
+skill once.
+
+**Step 3: Verify**
+
+Run repository skill validation, contract tests, bump checks, and provider
+drift checks.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-wave-execute packages/cli/src/validation packages/cli/src/commands/init/tools/shared
+git commit -m "fix(p14-t18): enforce wave gate bookkeeping"
+```
+
+### Task p14-t19: (review) Refresh final closeout guidance
+
+**Files:**
+
+- Modify: `.oat/projects/shared/synced-project-scope/plan.md`
+- Modify: final implementation/state summaries as needed
+
+**Step 1: Understand the issue**
+
+Closeout text claims the old gate attempt remains unlaunched and references a
+stale freshness basis.
+
+**Step 2: Implement fix**
+
+Describe the passed historical attempt and the required post-merge refreshed
+gate generation without claiming it has run before it does.
+
+**Step 3: Verify**
+
+Cross-check plan/state gate fields and keep task/review totals runnable.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/synced-project-scope
+git commit -m "docs(p14-t19): refresh closeout guidance"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -4266,8 +4819,9 @@ git commit -m "fix(p13-t16): report local ref query failures"
 - Phase 12: 1 task - Normal-route retry decoding and publication-guard regression coverage
 - Phase p-rev1: 1 task - Integrate merged PR #226 and reconcile overlapping skill, validation, docs, sync, and release surfaces
 - Phase 13: 16 tasks - Post-merge final review fixes plus gate-review corrections for optional logs, scoped archive retries, failure-safe archive identity, locked stale registrations, local diagnostics, and release metadata
+- Phase 14: 19 tasks - Final integration review fixes across custom roots, validators/config, arrival, doctor, safety/recovery residuals, skills/docs, and closeout alignment
 
-**Total: 106 tasks**
+**Total: 125 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
