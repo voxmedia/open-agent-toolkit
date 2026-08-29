@@ -2,55 +2,56 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-28
+oat_last_updated: 2026-08-29
 oat_generated: true
-oat_summary_last_task: p12-t01
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
+oat_summary_last_task: p17-t14
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: [p-rev1]
 ---
 
 # Summary: synced-project-scope
 
 ## Overview
 
-OAT project artifacts need to travel across sessions, worktrees, and machines, but storing them on a feature branch made human and automated reviews consume large volumes of agent-facing lifecycle prose and left that prose on `main`. This project introduced a Git-native `synced` scope that versions artifacts outside the branch namespace while keeping selected reviewer-facing artifacts available through immutable links.
+OAT project artifacts must travel across sessions, worktrees, and machines without placing agent-facing lifecycle prose on feature branches or `main`. This project delivered a Git-native `synced` scope: artifacts live on retained custom refs, each worktree receives an isolated detached checkout, and selected reviewer-facing files remain accessible through immutable links.
 
 ## What Was Implemented
 
-- Added the `synced` project scope using retained custom refs, ignored detached checkouts, and small tracked discovery records; delivered scope-aware creation, push/pull, remote adoption, coordination pulls, listing, migration, prune, archive, links, doctor, open, and pause behavior.
-- Added fail-closed Git plumbing around canonical identity, exact path boundaries, non-forced publication, isolated child failures, retryable lifecycle transitions, index leak detection, pinned reviewer links, and exact completion-receipt recovery.
-- Updated lifecycle skills and agents to pull before reading and push after writes, backed by a checked-in bookkeeping inventory; documented the three-scope cross-machine, worktree, reviewer, migration, and completion workflows.
-- Verified the result through source-built Git and lifecycle-skill dogfood, cross-worktree round trips, GitHub custom-ref testing, archive/prune cleanup, completion transaction matrices, repeated independent reviews, and the CI-order Definition of Done gates.
+- Phases 1–12 established the synced ref/check-out/record model; scope-aware CLI lifecycle; reviewer links; completion, archive, migration, and prune recovery; skill bookkeeping contracts; documentation; and publication-receipt validation.
+- Phase 13 hardened post-PR-merge rollback ownership, archive/completion identity and receipts, pull conflict continuation, cross-scope isolation, stale registrations, doctor diagnostics, and optional-log sealing.
+- Phase 14 closed full-integration safety gaps across canonical paths, migration/prune leases, review evidence, configuration, provider assets, packaging, and release contracts.
+- Phase 15 strengthened cross-scope Git behavior, deterministic recovery and validation inventories, project listing, pause/pull flows, and full-range compatibility discovered by independent review.
+- Phases 16–17 completed archive/config/autonomy safety, lifecycle durability, provider-view parity, invalid-record diagnostics, custom-root ignores, locale and environment isolation, command parsing, scaffold guards, and decoupled release tests through `p17-t14`.
 
 ## Key Decisions
 
-- **Custom project refs.** Branch commits could not satisfy the requirement to keep artifact prose out of PRs and `main`, while S3 would add credentials and weaken history and conflict handling. Each synced project therefore publishes a linear history to `refs/oat/projects/<slug>`, preserving Git as the sole in-flight transport without creating a branch-list or CI footprint.
-- **Configurable synced default.** Cross-machine continuity was the main reason projects used `shared`, but `shared` necessarily exposes artifacts on the work branch. New projects default to `synced` through `projects.defaultScope`, while explicit `shared` and `local` choices preserve their established storage contracts.
-- **Per-worktree detached checkouts.** A single shared artifact checkout would let concurrent agents overwrite live files without Git conflict boundaries. Each parent worktree instead materializes its own detached project checkout and reconciles through the remote ref, trading extra pull/push discipline for isolation and ordinary rebase conflicts.
-- **Per-project discovery records.** Custom refs are not fetched by ordinary clones and may exist before their originating branch merges. A small validated JSON record provides branch-local discovery without artifact prose or a shared index merge hotspot, while remote ref enumeration and adoption cover recordless projects.
-- **Fail-closed sync mutations.** Ref sync, migration, archive, prune, and completion touch both nested project history and limited parent-branch state. The implementation validates canonical slug/path/ref identity, confines parent commits to explicit paths, never force-pushes, preserves unrelated staged state, and treats invalid or ambiguous receipts as non-published.
-- **Published-state reviewer links.** Reviewers need access to discovery, design, and summary without exposing machine-only artifacts. PR links are generated from the published ref SHA and a fixed allowlist, refreshed inside a delimited block, and retain the ref copy as canonical even when a durable summary export is added.
-- **Retained refs and receipts.** Deleting a project ref at completion would break pinned review links, while retrying multi-step completion without durable identity could duplicate or misattribute output. Refs are retained by default, and completion recovery validates the exact project, repository, ref, pin SHA, final artifact receipt, and recap evidence chain before resuming.
+- **Retained custom refs and per-worktree checkouts.** `refs/oat/projects/<slug>` keeps project history outside branch/CI namespaces while detached per-worktree checkouts preserve ordinary Git conflict and isolation boundaries.
+- **Small discovery records and a configurable synced default.** Validated branch-local JSON records make custom refs discoverable without a shared index hotspot; remote enumeration/adoption handles recordless refs, and explicit `shared`/`local` remain supported.
+- **Fail-closed mutation and publication contracts.** Canonical identity, exact parent pathspecs, leased deletion/rollback, non-forced publication, pinned reviewer links, and validated receipts make ambiguous archive, migration, prune, pause, and completion states recoverable rather than silently accepted.
 
 ## Design Deltas
 
-- Self-migration of this active project was moved from the middle of implementation to after implementation closeout. The scope-aware bookkeeping skills had to ship first so the running workflow could persist later lifecycle updates safely; scratch projects provided the planned synced-scope dogfood in the interim. This was a sequencing change only, not a behavioral change to the final design.
-- Upstream integration evidence changed from an opaque merge digest to reproducible per-path Git tree equality after review showed that the original proof was not independently inspectable. The merged implementation remained unchanged; only the evidence contract became stronger.
+- Self-migration moved from mid-implementation to post-closeout so the running workflow could first ship and use safe scope-aware bookkeeping; scratch projects supplied interim synced-scope dogfood.
+- Revision `p-rev1` merged upstream PR #226 into PR #227 at `17c3b80d`, preserving both projects' skill, PJM, validation, sync, and release behavior. Review replaced opaque merge evidence with reproducible tree/path equality and passed the integration with no blocking finding.
 
 ## Notable Challenges
 
-- GitHub behavior for custom refs required a real external spike. The same commit was shown to trigger an unfiltered workflow when pushed as a branch but not when pushed only to `refs/oat/*`; authenticated blob rendering and branch-list invisibility were also verified before the scratch refs were removed.
-- Nested worktree operations exposed inherited hook and test-fixture assumptions. Bounded recovery attempts repaired empty-ref materialization, synced lifecycle hook handling, stale fixtures, and load-sensitive Git tests while restoring failed candidates before retrying.
-- Independent phase, final, and configured exit-gate reviews repeatedly found subtle safety gaps in canonical identity, archive/migration retryability, receipt publication, exact-link validation, and lifecycle routing. The project grew from four planned phases to twelve implementation phases and closed all blocking findings before closeout.
-- Two Phase 12 full-test attempts failed at different fixed-timeout targets. Both exact targets and a fresh full suite passed at the unchanged task head, distinguishing transient load failures from a product regression without consuming a recovery mutation.
+- Independent phase/full-range reviews repeatedly exposed subtle Git ownership, archive/migration retry, receipt, path, packaging, and provider-parity defects. Phases 13–17 used bounded append-only recovery with settled usage of 2/10, 1/10, 2/10, 4/10, and 1/10 respectively; no marker remains pending.
+- The final full-range review passed at the Important threshold after three contained fixes; the refreshed configured exit-gate review then passed with 0 Critical, 0 Important, and 0 Medium findings. Accepted Minors are recorded as post-release follow-ups rather than hidden as completion claims.
+
+## Integration Notes
+
+- The five lockstep public packages and shipped CLI asset finish at `0.2.43`; 31 changed canonical skills carry their required PR-scoped version bump, generated implementer variants are synchronized, packaged output excludes test support, and the synced-bookkeeping inventory validates.
+- Every final CI-order gate passed with direct exit `0`, including isolated-`HOME` full tests, builds, skill/version gates, release validation, and docs build; `pnpm oat:validate-skills`, lint, format, diff checks, and provider sync dry-run also passed. The configured exit gate is received and allowed for the accepted effective delta.
+
+## Revision History
+
+- **p-rev1 — PR #226 integration (2026-08-28).** Merged current `origin/main` into PR #227, reconciled overlapping assets and contracts, passed focused and full isolated-environment verification, and received an independent passing integration review.
 
 ## Follow-up Items
 
-- Migrate this project itself from `shared` to `synced` after closeout, when the active lifecycle no longer depends on the tracked artifact directory.
-- Remove redundant inner synced-scope tests when `oat-project-next` or `oat-project-progress` next receives a functional edit.
-- Consolidate the duplicated completion-router `SKIPPED_MUTATIONS` list if that mutation contract changes or the router/decoder modules are reorganized.
-- Evaluate compatibility and deprecation before removing the unused `--detect-candidate` completion-recovery CLI branch.
-- Delete the disposable GitHub spike repository only through the separate operator-controlled cleanup step.
+- Accepted post-release cleanup: avoid timestamp-only duplicate pause commits; enforce rather than merely advise the partial-prune no-republish rule; unify invalid-config exit-code policy; strengthen provider parity at the codec level; audit direct Git calls outside `GitRunner`; and extend custom-root archive ignores beyond synced scope.
+- Managed-block compatibility still merits fixtures for legacy two-header damage, stray/mid-line/CRLF markers, plus consolidation of duplicate restore guidance. Self-migration to `synced` and deletion of the disposable GitHub spike repository remain separately controlled closeout actions.
 
 ## Workflow Observations
 
@@ -195,3 +196,69 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 Passing-gate judgment sweep archived final-review-2026-08-28T194740Z.md, marked the gate review passed, and explicitly deferred all 3 Minor cleanup findings with concrete follow-up triggers; no fix task or implementation change was added.
 
 Reconciled receive commit e095995d4 against gate run 3241d71c-b67e-4a04-88f2-4a9965de3395; configured exit gate is allowed/passed and no further attempt is required.
+
+### 2026-08-28 · structural · oat-project-implement · p-rev1
+
+Phase p-rev1 passed after merge task prev1-t01 and independent review; review artifact reviews/archived/p-rev1-review-2026-08-28T220327Z.md reports 0 Critical, 0 Important, 0 Medium, and 1 Minor finding with reviewer reconnaissance attempted.
+
+### 2026-08-28 · structural · oat-project-review-provide · reviews/final-review-2026-08-28T222140Z.md
+
+Fresh final code review completed with reconnaissance attempted; see the review artifact for 2 Critical, 8 Important, and 1 Minor finding.
+
+### 2026-08-28 · structural · oat gate review · p13
+
+target=claude-fable-skip-permissions threshold=medium findings=critical:0,important:1,medium:1,minor:3 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/p13-review-2026-08-28T233340Z.md
+
+### 2026-08-29 · structural · oat gate review · p13
+
+target=claude-fable-skip-permissions threshold=medium findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/synced-project-scope/reviews/p13-review-2026-08-29T000209Z.md
+
+### 2026-08-29 · structural · oat-project-review-provide · reviews/final-review-2026-08-29T002706Z.md
+
+Fresh gate-originated final code review completed with reconnaissance attempted (two waves, four read-only lanes); see the review artifact for 0 Critical, 2 Important, 4 Medium, and 13 Minor findings.
+
+### 2026-08-29 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=medium findings=critical:0,important:2,medium:4,minor:13 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T002706Z.md
+
+### 2026-08-29 · structural · oat-project-review-provide · reviews/final-review-2026-08-29T051437Z.md
+
+Fresh full-range final gate review at head d1867ee31cc8b6cf01a745c2351cde6470170557 (8cc1b3827..d1867ee31, reconnaissance attempted, 4 read-only lanes): 0 critical, 3 important, 2 medium, 14 minor; artifact .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T051437Z.md
+
+### 2026-08-29 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:3,medium:2,minor:14 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T051437Z.md
+
+### 2026-08-29 · structural · oat-project-review-provide · reviews/final-review-2026-08-29T063413Z.md
+
+Fresh full-range final gate review at head 26f53309caca8e6360cdb24b8d1778e115a8b5e8 (8cc1b3827..26f53309c, reconnaissance attempted, 4 read-only lanes, 11 CLI reproductions): 0 critical, 3 important, 3 medium, 14 minor; artifact .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T063413Z.md
+
+### 2026-08-29 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:3,medium:3,minor:14 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T063413Z.md
+
+### 2026-08-29 · structural · oat-project-review-provide · reviews/final-review-2026-08-29T083908Z.md
+
+Fresh full-range final gate review at head 4b8c598623f184b75b7de9bdfa69b3b4592539da (8cc1b3827..4b8c59862, reconnaissance attempted, 2 read-only lanes, 6 CLI reproduction fixtures): 0 critical, 1 important, 2 medium, 11 minor; artifact .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T083908Z.md
+
+### 2026-08-29 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:1,medium:2,minor:11 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T083908Z.md
+
+### 2026-08-29 · structural · oat-project-review-provide · reviews/final-review-2026-08-29T092432Z.md
+
+Fresh full-range final gate review at head d40bbe3238e1653edc92e6e763ef16c76c2ba57a (8cc1b3827..d40bbe323, reconnaissance attempted, 2 read-only lanes, 7 CLI reproduction fixtures): 0 critical, 0 important, 1 medium, 9 minor; artifact .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T092432Z.md
+
+### 2026-08-29 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:1,minor:9 exit=0 status=ok artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T092432Z.md
+
+### 2026-08-29 · structural · oat-project-implement · refreshed-exit-gate
+
+Initialized a fresh pending configured-gate generation from accepted
+post-sweep head b51385c2 with qualified effective-delta fingerprint 125d960f,
+attempts_completed=0/2, and launch_state=not_started.
+
+### 2026-08-29 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:5 exit=0 status=ok artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T094230Z.md
