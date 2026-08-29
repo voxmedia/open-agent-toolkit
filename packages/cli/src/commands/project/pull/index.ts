@@ -223,7 +223,7 @@ async function runPull(
         pendingRecordPaths,
         `chore(oat): adopt synced project${slugs.length === 1 ? '' : 's'} ${slugs.join(', ')}`,
         dependencies.gitRunner,
-        { additionalAllowlistedPaths: pendingRecordPaths },
+        { projectRoots: target },
       );
     }
     reportPullResult(context, result, target, targetArg, children);

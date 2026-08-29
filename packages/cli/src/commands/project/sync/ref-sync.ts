@@ -49,7 +49,8 @@ export interface SyncTargetIdentityOptions {
 
 export interface AllowlistedPathspecOptions {
   summaryExportPath?: string | null;
-  additionalAllowlistedPaths?: string[];
+  projectRoots?: Pick<SyncTarget, 'sharedRoot' | 'syncedRoot'>;
+  recapExportRoot?: string | null;
 }
 
 export type PushResult = {
@@ -1123,7 +1124,7 @@ export async function pruneSynced(
         [recordPath],
         `chore(oat): prune synced project ${target.slug}`,
         git,
-        { additionalAllowlistedPaths: [recordPath] },
+        { projectRoots: target },
       )
     : null;
   return { status: 'pruned', lifecycleCommit: committed?.sha ?? null };
@@ -1292,7 +1293,7 @@ export async function migrateSharedToSynced(
         [sourcePath, recordPath, ...(gitignoreChanged ? [gitignorePath] : [])],
         `chore(oat): migrate ${target.slug} to synced scope`,
         git,
-        { additionalAllowlistedPaths: [sourcePath, recordPath] },
+        { projectRoots: target },
       );
       lifecycleCommit = committed?.sha ?? null;
       await options.afterBranchCommit?.();
@@ -1519,27 +1520,44 @@ export function assertAllowlistedPathspecs(
   pathspecs: string[],
   options: AllowlistedPathspecOptions = {},
 ): void {
-  const explicitPaths = new Set(
-    (options.additionalAllowlistedPaths ?? []).map((path) =>
-      repoRelativePath(repoRoot, path),
-    ),
+  const defaultSharedRoot = resolve(repoRoot, '.oat/projects/shared');
+  const defaultSyncedRoot = resolve(repoRoot, '.oat/projects/synced');
+  const sharedRoot = resolve(
+    options.projectRoots?.sharedRoot ?? defaultSharedRoot,
+  );
+  const syncedRoot = resolve(
+    options.projectRoots?.syncedRoot ?? defaultSyncedRoot,
   );
   const summaryRoot = options.summaryExportPath
     ? isAbsolute(options.summaryExportPath)
       ? resolve(options.summaryExportPath)
       : resolve(repoRoot, options.summaryExportPath)
     : null;
+  const recapRoot = options.recapExportRoot
+    ? isAbsolute(options.recapExportRoot)
+      ? resolve(options.recapExportRoot)
+      : resolve(repoRoot, options.recapExportRoot)
+    : null;
 
   for (const pathspec of pathspecs) {
     const repoRelative = repoRelativePath(repoRoot, pathspec);
     const absolute = resolve(repoRoot, repoRelative);
+    const sharedRelative = relative(sharedRoot, absolute);
+    const syncedRelative = relative(syncedRoot, absolute);
+    const isSharedProjectPath =
+      isWithin(sharedRoot, absolute) &&
+      sharedRelative !== '' &&
+      /^[a-zA-Z0-9_-]+(?:[\\/].*)?$/.test(sharedRelative);
+    const isSyncedRecordPath =
+      isWithin(syncedRoot, absolute) &&
+      /^[a-zA-Z0-9_-]+\.json$/.test(syncedRelative);
     const allowed =
       repoRelative === '.gitignore' ||
       repoRelative === '.gitattributes' ||
-      /^\.oat\/projects\/synced\/[a-zA-Z0-9_-]+\.json$/.test(repoRelative) ||
-      /^\.oat\/projects\/shared\/[a-zA-Z0-9_-]+(?:\/.*)?$/.test(repoRelative) ||
-      explicitPaths.has(repoRelative) ||
-      (summaryRoot !== null && isWithin(summaryRoot, absolute));
+      isSyncedRecordPath ||
+      isSharedProjectPath ||
+      (summaryRoot !== null && isWithin(summaryRoot, absolute)) ||
+      (recapRoot !== null && isWithin(recapRoot, absolute));
 
     if (!allowed) {
       throw new CliError(

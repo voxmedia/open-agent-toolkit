@@ -170,7 +170,7 @@ async function materializeSyncedProject(
       result.pendingRecordPaths,
       `chore(oat): adopt synced project ${target.slug}`,
       dependencies.gitRunner,
-      { additionalAllowlistedPaths: result.pendingRecordPaths },
+      { projectRoots: target },
     );
   }
 }

@@ -39,6 +39,8 @@ function harness(
   const commitRecordChange = vi.fn(async () => null);
   const resolveTarget = vi.fn(async () => ({
     repoRoot: '/repo',
+    sharedRoot: '/repo/.oat/projects/shared',
+    syncedRoot: '/repo/.oat/projects/synced',
     slug: 'demo',
     projectPath: '/repo/.oat/projects/synced/demo',
     ref: 'refs/oat/projects/demo',
@@ -132,6 +134,8 @@ describe('createProjectPullCommand', () => {
     const setup = harness('updated');
     setup.resolveTarget.mockResolvedValueOnce({
       repoRoot: '/repo',
+      sharedRoot: '/repo/.oat/projects/shared',
+      syncedRoot: '/repo/.oat/projects/synced',
       slug: 'parent',
       projectPath: '/repo/.oat/projects/synced/parent',
       ref: 'refs/oat/projects/parent',
@@ -172,10 +176,10 @@ describe('createProjectPullCommand', () => {
       'chore(oat): adopt synced projects parent, child',
       expect.anything(),
       {
-        additionalAllowlistedPaths: [
-          '/repo/.oat/projects/synced/parent.json',
-          '/repo/.oat/projects/synced/child.json',
-        ],
+        projectRoots: expect.objectContaining({
+          sharedRoot: '/repo/.oat/projects/shared',
+          syncedRoot: '/repo/.oat/projects/synced',
+        }),
       },
     );
     expect(process.exitCode).toBe(0);
@@ -333,6 +337,8 @@ describe('createProjectPullCommand', () => {
     const setup = harness('created');
     setup.resolveTarget.mockResolvedValueOnce({
       repoRoot: '/repo',
+      sharedRoot: '/repo/.oat/projects/shared',
+      syncedRoot: '/repo/.oat/projects/synced',
       slug: 'parent',
       projectPath: '/repo/.oat/projects/synced/parent',
       ref: 'refs/oat/projects/parent',
@@ -368,10 +374,10 @@ describe('createProjectPullCommand', () => {
       'chore(oat): adopt synced projects parent, a',
       expect.anything(),
       {
-        additionalAllowlistedPaths: [
-          '/repo/.oat/projects/synced/parent.json',
-          '/repo/.oat/projects/synced/a.json',
-        ],
+        projectRoots: expect.objectContaining({
+          sharedRoot: '/repo/.oat/projects/shared',
+          syncedRoot: '/repo/.oat/projects/synced',
+        }),
       },
     );
     expect(setup.capture.jsonPayloads[0]).toMatchObject({

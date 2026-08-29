@@ -802,6 +802,102 @@ describe('archive utils', () => {
     }
   });
 
+  it.each(['alternate', 'absolute'] as const)(
+    'commits and removes a synced checkout under an %s configured root',
+    async (rootKind) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const projectsRoot =
+          rootKind === 'absolute'
+            ? join(fixture.cloneA, '.oat', 'absolute', 'team')
+            : '.oat/team-projects';
+        const target = buildSyncTarget(fixture.cloneA, projectsRoot, 'demo');
+        const archiveRoot = join(dirname(target.sharedRoot), 'archived');
+        const gitignorePath = join(fixture.cloneA, '.gitignore');
+        const gitignore = await readFile(gitignorePath, 'utf8');
+        const repoRelativeSyncedRoot = target.syncedRoot
+          .slice(fixture.cloneA.length + 1)
+          .split('\\')
+          .join('/');
+        const repoRelativeArchiveRoot = archiveRoot
+          .slice(fixture.cloneA.length + 1)
+          .split('\\')
+          .join('/');
+        await writeFile(
+          gitignorePath,
+          `${gitignore}\n/${repoRelativeSyncedRoot}/*/\n/${repoRelativeArchiveRoot}/**\n`,
+          'utf8',
+        );
+        await defaultGitRunner.run(['add', '.gitignore'], {
+          cwd: fixture.cloneA,
+        });
+        await defaultGitRunner.run(
+          ['commit', '-m', 'test: configure custom project roots'],
+          { cwd: fixture.cloneA },
+        );
+
+        await createSyncedProject(target, defaultGitRunner);
+        await writeFile(
+          join(target.projectPath, 'state.md'),
+          '# state\n',
+          'utf8',
+        );
+        await pushSynced(target, defaultGitRunner, {});
+        const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+        await writeSyncedRecord(
+          recordPath,
+          buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
+        );
+        const beforeHead = (
+          await defaultGitRunner.run(['rev-parse', 'HEAD'], {
+            cwd: fixture.cloneA,
+          })
+        ).stdout;
+
+        const result = await archiveProjectOnCompletion(
+          {
+            repoRoot: fixture.cloneA,
+            projectPath: target.projectPath,
+            projectName: target.slug,
+            projectsRoot,
+            s3SyncOnComplete: false,
+          },
+          { timestamp: () => '2026-08-27T12:00:00Z' },
+        );
+
+        expect(result.lifecycleCommit).toMatch(/^[a-f0-9]{40}$/);
+        expect(
+          (
+            await defaultGitRunner.run(
+              ['rev-list', '--count', `${beforeHead}..HEAD`],
+              { cwd: fixture.cloneA },
+            )
+          ).stdout,
+        ).toBe('1');
+        expect(
+          (
+            await defaultGitRunner.run(['status', '--porcelain'], {
+              cwd: fixture.cloneA,
+            })
+          ).stdout,
+        ).toBe('');
+        expect(
+          (
+            await defaultGitRunner.run(['worktree', 'list', '--porcelain'], {
+              cwd: fixture.cloneA,
+            })
+          ).stdout,
+        ).not.toContain(target.projectPath);
+        await expect(access(target.projectPath)).rejects.toThrow();
+        await expect(readSyncedRecord(recordPath)).resolves.toMatchObject({
+          status: 'complete',
+        });
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+  );
+
   it('resolves a same-day synced retry only to its same-scope archive', async () => {
     const fixture = await createSyncedFixture();
     try {

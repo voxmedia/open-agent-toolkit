@@ -1,6 +1,6 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 
 import {
   applyOatCoreGitignore,
@@ -338,7 +338,12 @@ async function commitScaffold(
       pathspecs,
       `chore(oat): scaffold ${projectName}`,
       dependencies.gitRunner,
-      { additionalAllowlistedPaths: pathspecs },
+      {
+        projectRoots: {
+          sharedRoot: dirname(absoluteProjectPath),
+          syncedRoot: join(dirname(dirname(absoluteProjectPath)), 'synced'),
+        },
+      },
     );
     if (!commit) {
       return { status: 'skipped_nothing', committed: false };
@@ -777,7 +782,7 @@ export async function scaffoldProject(
           [recordPath, ...(gitignoreChanged ? ['.gitignore'] : [])],
           `chore(oat): scaffold ${options.projectName}`,
           dependencies.gitRunner,
-          { additionalAllowlistedPaths: [recordPath] },
+          { projectRoots: syncTarget },
         );
         committed = recordCommit !== null;
         commitSha = recordCommit?.sha;

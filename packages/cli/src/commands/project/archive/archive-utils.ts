@@ -1797,7 +1797,8 @@ export async function archiveProjectOnCompletion(
         git,
         {
           summaryExportPath: options.summaryExportPath,
-          additionalAllowlistedPaths: recapExportPaths,
+          projectRoots: syncTarget,
+          recapExportRoot: projectRecapExport?.exportRoot,
         },
       );
       lifecycleCommit =
