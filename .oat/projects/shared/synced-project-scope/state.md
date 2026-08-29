@@ -65,8 +65,17 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p15:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: p15-recovery-02-migration-inventory-anchor
+        original_request_id: 6d1ce698-69af-4ef4-b125-aa15593df76f
+        original_task_id: p15-t01
+        original_commit: 64340600c5cf643d27e241868480962cf15eeb77
+        discovered_by: pnpm oat:validate-skills
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: ec704a63742102996f2d97ac86aaa4439223a33f
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
