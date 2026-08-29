@@ -101,13 +101,20 @@ describe('createSyncedProject', () => {
   it('creates an empty-tree ref in a nested detached worktree', async () => {
     const fixture = await createSyncedFixture();
     try {
+      const calls: string[][] = [];
+      const recordingRunner: GitRunner = {
+        async run(args, options) {
+          calls.push(args);
+          return defaultGitRunner.run(args, options);
+        },
+      };
       const target = buildSyncTarget(
         fixture.cloneA,
         '.oat/projects/shared',
         'example',
       );
 
-      await createSyncedProject(target, defaultGitRunner);
+      await createSyncedProject(target, recordingRunner);
 
       expect(git(fixture.cloneA, ['rev-parse', target.ref])).toMatch(
         /^[0-9a-f]{40}$/,
@@ -124,6 +131,14 @@ describe('createSyncedProject', () => {
           .then((result) => result.stdout),
       );
       expect(git(fixture.cloneA, ['status', '--porcelain'])).toBe('');
+      expect(calls).toContainEqual([
+        'commit-tree',
+        '4b825dc642cb6eb9a060e54bf8d69288fbee4904',
+        '-m',
+        'chore(oat): init synced project example',
+      ]);
+      expect(calls.flat()).not.toContain('/dev/null');
+      expect(calls.some((args) => args.includes('hash-object'))).toBe(false);
     } finally {
       await fixture.cleanup();
     }

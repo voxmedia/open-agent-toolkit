@@ -220,6 +220,7 @@ export async function assertConfinedMigrationSource(
 }
 
 const ZERO_OBJECT_ID = '0000000000000000000000000000000000000000';
+const EMPTY_TREE_OBJECT_ID = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
 const DISABLE_HOOKS_CONFIG = ['-c', 'core.hooksPath=/dev/null'] as const;
 
 interface MigrationCompensationFailure {
@@ -384,13 +385,10 @@ export async function createSyncedProject(
 ): Promise<void> {
   await assertCanonicalSyncTargetIdentity(target);
   await assertCreateTargetAvailable(target, git);
-  const tree = await git.run(['hash-object', '-t', 'tree', '/dev/null'], {
-    cwd: target.repoRoot,
-  });
   const commit = await git.run(
     [
       'commit-tree',
-      tree.stdout,
+      EMPTY_TREE_OBJECT_ID,
       '-m',
       `chore(oat): init synced project ${target.slug}`,
     ],
