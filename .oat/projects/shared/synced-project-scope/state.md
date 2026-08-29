@@ -65,8 +65,17 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p15:
-      used_attempts: 0
-      pending_attempt: null
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p15-recovery-01-pause-test-lint
+        original_request_id: 6d1ce698-69af-4ef4-b125-aa15593df76f
+        original_task_id: p15-t02
+        original_commit: 20dcde76e1b9ebe765bea051fcd39578bc2a1d29
+        discovered_by: 'commit hook: oxlint --fix'
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: 20dcde76e1b9ebe765bea051fcd39578bc2a1d29
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit

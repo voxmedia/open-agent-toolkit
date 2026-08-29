@@ -14,7 +14,7 @@ import {
   continueSynced,
   createSyncedProject,
   pullSynced,
-  pushSynced,
+  pushSynced as pushSyncedReal,
 } from '@commands/project/sync/ref-sync';
 import { CliError } from '@errors/cli-error';
 import { createSyncedFixture } from '@test-support/synced-fixture';
@@ -314,7 +314,7 @@ describe('oat project pause', () => {
       join(targetA.projectPath, 'state.md'),
       '---\noat_phase: implement\noat_phase_status: in_progress\noat_lifecycle: active\n---\n\n# State\n',
     );
-    await pushSynced(targetA, defaultGitRunner, {
+    await pushSyncedReal(targetA, defaultGitRunner, {
       message: 'seed pause state',
     });
     const targetB = buildSyncTarget(
@@ -327,7 +327,7 @@ describe('oat project pause', () => {
       join(targetA.projectPath, 'state.md'),
       '---\noat_phase: implement\noat_phase_status: in_progress\noat_lifecycle: active\nremote_note: survives\n---\n\n# State\n',
     );
-    const remoteAdvance = await pushSynced(targetA, defaultGitRunner, {
+    const remoteAdvance = await pushSyncedReal(targetA, defaultGitRunner, {
       message: 'advance remote pause state',
     });
     await writeFile(
@@ -382,7 +382,7 @@ describe('oat project pause', () => {
       continueSynced(targetB, defaultGitRunner),
     ).resolves.toMatchObject({ status: 'updated' });
     await expect(
-      pushSynced(targetB, defaultGitRunner, {
+      pushSyncedReal(targetB, defaultGitRunner, {
         message: 'publish recovered pause',
       }),
     ).resolves.toMatchObject({ status: 'pushed' });
