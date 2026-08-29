@@ -40,7 +40,7 @@ OAT project artifacts must travel across sessions, worktrees, and machines witho
 ## Notable Challenges
 
 - Independent phase/full-range reviews repeatedly exposed subtle Git ownership, archive/migration retry, receipt, path, packaging, and provider-parity defects. Phases 13–17 used bounded append-only recovery with settled usage of 2/10, 1/10, 2/10, 4/10, and 1/10 respectively; no marker remains pending.
-- Earlier full-range and configured exit-gate reviews passed for their then-current effective deltas. Before the PR update, closeout requires a current passing final review and a fresh configured exit gate. The maintainer waived an additional documentation-only re-review for `p19-t11` and `p19-t12`; transient review and resume routing remains in `state.md`.
+- Earlier full-range reviews exposed the path, recovery, and linked-worktree defects corrected through `p19-t13`. The final p19-t13 review passed at 0/0/0/0, and the refreshed configured exit gate passed on its second attempt with no Critical, Important, or Medium findings. The maintainer waived only the additional documentation-only re-review for `p19-t11` and `p19-t12`; the later code correction still received its own narrow review.
 
 ## Integration Notes
 
@@ -55,7 +55,7 @@ OAT project artifacts must travel across sessions, worktrees, and machines witho
 
 - Accepted post-release cleanup: avoid timestamp-only duplicate pause commits; enforce rather than merely advise the partial-prune no-republish rule; unify invalid-config exit-code policy; strengthen provider parity at the codec level; audit direct Git calls outside `GitRunner`; and extend custom-root archive ignores beyond synced scope.
 - Managed-block compatibility still merits fixtures for legacy two-header damage, stray/mid-line/CRLF markers, plus consolidation of duplicate restore guidance. Self-migration to `synced` and deletion of the disposable GitHub spike repository remain separately controlled closeout actions.
-- Before updating PR #227, require a current passing final review and refresh the configured exit gate. The maintainer waived another documentation-only re-review of the final two artifact-alignment tasks; `state.md` carries the current closeout route.
+- PR #227 is ready to refresh from the passing closeout basis. Deferred nonblocking cleanup includes consolidating remote-ref absence checks, reordering the staged-prune network lookup, and rejecting absolute or parent-traversing values in self-authored `localPaths`; none is required for the current gate threshold.
 
 ## Workflow Observations
 
