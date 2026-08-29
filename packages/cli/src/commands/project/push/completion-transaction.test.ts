@@ -46,6 +46,12 @@ const RETRY_FIELDS_SCRIPT = fileURLToPath(
     import.meta.url,
   ),
 );
+const NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT = fileURLToPath(
+  new URL(
+    '../../../../../../.agents/skills/oat-project-complete/scripts/validate-nonarchive-lifecycle-receipt.mjs',
+    import.meta.url,
+  ),
+);
 
 interface CompletionReceipts {
   projectLinksPinCommit: string;
@@ -251,6 +257,68 @@ async function commitCompletionRecord(
   });
   return recordCommit;
 }
+
+it('validates recovered non-archive lifecycle commits and rejects stale or invalid records', async () => {
+  const fixture = await createSyncedFixture();
+  try {
+    const slug = 'nonarchive-lifecycle-receipt';
+    const target = buildSyncTarget(
+      fixture.cloneA,
+      '.oat/projects/shared',
+      slug,
+    );
+    const recordPath = join(target.syncedRoot, `${slug}.json`);
+    const recordRelative = relative(fixture.cloneA, recordPath);
+    const activeRecord = buildSyncedRecord(
+      slug,
+      new Date('2026-08-28T12:00:00Z'),
+    );
+    const validate = (commit: string) =>
+      execFileSync(
+        process.execPath,
+        [NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT, recordPath, commit, slug],
+        { cwd: fixture.cloneA, encoding: 'utf8' },
+      ).trim();
+    const commitRecord = (subject: string, allowEmpty = false) => {
+      git(fixture.cloneA, ['add', '--', recordRelative]);
+      git(fixture.cloneA, [
+        'commit',
+        ...(allowEmpty ? ['--allow-empty'] : []),
+        '-m',
+        subject,
+      ]);
+      return git(fixture.cloneA, ['rev-parse', 'HEAD']);
+    };
+
+    await writeSyncedRecord(recordPath, activeRecord);
+    const staleCommit = commitRecord(`chore(oat): scaffold ${slug}`);
+    expect(() => validate(staleCommit)).toThrow(/commit subject must be/i);
+
+    const incompleteCommit = commitRecord(
+      `chore(oat): complete synced project ${slug}`,
+      true,
+    );
+    expect(() => validate(incompleteCommit)).toThrow(/status: complete/i);
+
+    await writeFile(recordPath, '{malformed\n', 'utf8');
+    const malformedCommit = commitRecord(
+      `chore(oat): complete synced project ${slug}`,
+    );
+    expect(() => validate(malformedCommit)).toThrow(/not valid JSON/i);
+
+    await writeSyncedRecord(recordPath, {
+      ...activeRecord,
+      status: 'complete',
+      completedAt: '2026-08-28T12:01:00.000Z',
+    });
+    const validCommit = commitRecord(
+      `chore(oat): complete synced project ${slug}`,
+    );
+    expect(validate(validCommit)).toBe(validCommit);
+  } finally {
+    await fixture.cleanup();
+  }
+});
 
 async function commitRecapEvidenceLocally(
   projectPath: string,

@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.7.2
+version: 1.7.3
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -48,6 +48,7 @@ ACTIVE_PROJECT_PATH="$PROJECT_PATH"
 COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"
 COMPLETION_RETRY_SCRIPT="$SKILL_DIR/scripts/resolve-completion-retry.mjs"
 COMPLETION_RETRY_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-completion-retry-fields.mjs"
+NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT="$SKILL_DIR/scripts/validate-nonarchive-lifecycle-receipt.mjs"
 test -f "$COMPLETION_RECEIPT_SCRIPT" || {
   echo "oat: completion receipt recovery script is missing" >&2
   exit 1
@@ -58,6 +59,10 @@ test -f "$COMPLETION_RETRY_SCRIPT" || {
 }
 test -f "$COMPLETION_RETRY_FIELDS_SCRIPT" || {
   echo "oat: completion retry field decoder is missing" >&2
+  exit 1
+}
+test -f "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" || {
+  echo "Missing non-archive lifecycle receipt validator: $NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" >&2
   exit 1
 }
 
@@ -1001,6 +1006,8 @@ if [[ "$PROJECT_SCOPE" == "synced" ]]; then
     git add -- "$SYNCED_RECORD_PATH"
     if git diff --cached --quiet -- "$SYNCED_RECORD_PATH"; then
       LIFECYCLE_COMMIT=$(git log -1 --format=%H -- "$SYNCED_RECORD_PATH")
+      node "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" \
+        "$SYNCED_RECORD_PATH" "$LIFECYCLE_COMMIT" "$PROJECT_NAME" || exit 1
     else
       git commit --only "$SYNCED_RECORD_PATH" \
         -m "chore(oat): complete synced project ${PROJECT_NAME}"
