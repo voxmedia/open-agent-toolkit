@@ -1283,6 +1283,7 @@ async function runChecksForScope(
     const adoption = await dependencies.resolvePjmAdoption({
       projectRoot: scopeRoot,
       repoRoot: repoReferenceRoot,
+      config,
     });
     if (adoption.state !== 'none') {
       checks.push(

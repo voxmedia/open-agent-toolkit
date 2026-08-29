@@ -8,6 +8,7 @@ import {
 } from '@commands/project/sync/record';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { resolveScopeRoot } from '@commands/shared/project-scope';
+import { readOatConfigForDefaultScopeRepair } from '@config/oat-config';
 import type { DoctorCheck } from '@ui/output';
 
 interface SyncedDoctorDependencies {
@@ -18,7 +19,8 @@ interface SyncedDoctorDependencies {
 
 const DEFAULT_DEPENDENCIES: SyncedDoctorDependencies = {
   git: defaultGitRunner,
-  resolveProjectsRoot,
+  resolveProjectsRoot: (repoRoot, env) =>
+    resolveProjectsRoot(repoRoot, env, readOatConfigForDefaultScopeRepair),
   env: process.env,
 };
 

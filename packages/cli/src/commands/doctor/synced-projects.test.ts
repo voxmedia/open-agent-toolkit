@@ -58,6 +58,27 @@ describe('checkSyncedProjects', () => {
     ]);
   });
 
+  it('diagnoses synced projects when defaultScope is invalid', async () => {
+    const repoRoot = await createRoot();
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        projects: { root: '.oat/team-projects', defaultScope: 'remote' },
+      })}\n`,
+    );
+
+    await expect(
+      checkSyncedProjects(repoRoot, { git: gitRunner() }),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        status: 'pass',
+        name: 'project:synced_projects',
+      }),
+    ]);
+  });
+
   it('warns about a missing ignore rule before the first synced record', async () => {
     const repoRoot = await createRoot();
     const checks = await checkSyncedProjects(repoRoot, {

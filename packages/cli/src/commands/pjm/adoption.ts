@@ -1,7 +1,7 @@
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { readOatConfig } from '@config/oat-config';
+import { readOatConfig, type OatConfig } from '@config/oat-config';
 
 import { CANONICAL_REPO_REFERENCE_PATHS } from './init';
 
@@ -20,6 +20,7 @@ export interface PjmAdoption {
 export interface ResolvePjmAdoptionOptions {
   projectRoot: string;
   repoRoot: string;
+  config?: OatConfig;
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -42,7 +43,7 @@ async function pathExists(path: string): Promise<boolean> {
 export async function resolvePjmAdoption(
   options: ResolvePjmAdoptionOptions,
 ): Promise<PjmAdoption> {
-  const config = await readOatConfig(options.projectRoot);
+  const config = options.config ?? (await readOatConfig(options.projectRoot));
   if (config.pjm?.initialized === true) {
     return {
       state: 'declared',

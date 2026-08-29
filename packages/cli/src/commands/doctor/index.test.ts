@@ -662,6 +662,7 @@ describe('createDoctorCommand', () => {
     expect(resolvePjmAdoption).toHaveBeenCalledWith({
       projectRoot: '/tmp/workspace',
       repoRoot: '/tmp/workspace/.oat/repo',
+      config: { version: 1 },
     });
     expect(runPjmDoctorChecks).toHaveBeenCalledWith(
       '/tmp/workspace/.oat/repo',
