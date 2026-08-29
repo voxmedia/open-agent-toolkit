@@ -72,16 +72,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p17:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: p17-recovery-01-command-boundary-coverage
-        original_request_id: b1755bfe-6d2b-4bea-84c4-0201a5294e60
-        original_task_id: p17-t10
-        original_commit: b6d9bfa23d43c0192294b9a8e2af1b4e55ed142c
-        discovered_by: phase implementer self-review against the p17-t10 command-boundary verification contract
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: b24076b5f21dab4a77288a9295237c32bac7dd98
-        status: reserved
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -158,7 +149,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T09:10:28.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T09:12:18.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
