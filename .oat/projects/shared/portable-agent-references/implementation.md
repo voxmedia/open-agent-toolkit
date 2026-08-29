@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,10 +26,10 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 0/6       |
+| Phase 1 | in_progress | 6     | 6/6       |
 | Phase 2 | pending     | 2     | 0/2       |
 
-**Total:** 0/8 tasks completed
+**Total:** 6/8 tasks completed
 
 ---
 
@@ -42,52 +42,68 @@ oat_generated: false
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- The user-default portability ratchet is now manifest-driven: it derives skill
+  and agent assets from `PACK_MANIFEST` and classifies cross-skill `SKILL.md`
+  reads plus file- and directory-form targets at or below `references/`.
+- All nine canonical callers (6 skills, 3 agents) resolve dependencies through
+  installed roots: loaded → user → project for skills, user → project for agents.
+- The `oat-phase-implementer` bare-path exemption in `skills.test.ts` is gone,
+  replaced by the same positive portable assertions the skill consumers use.
+- The temporary migration inventory was introduced with 21 exact entries and
+  drained to zero; only the 6 pre-existing non-executable historical entries remain.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts` - the ratchet itself
+- `packages/cli/src/validation/skills.test.ts` - caller contract assertions, exemption removal
+- `packages/cli/src/commands/sync/index.test.ts` - provider materialization contract
+- `.agents/skills/{oat-dispatch-subagents,oat-repo-improve,oat-review-provide-remote,analyze,compare,oat-project-review-provide}/SKILL.md` - ported callers
+- `.agents/agents/{oat-phase-implementer,oat-reviewer,oat-codebase-mapper}.md` - ported agent references
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm run check:skill-bumps`, `pnpm lint`, `pnpm format`
+- Result: all exit 0 at `f8a89ce9e`, independently re-run by the root orchestrator.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- One in-phase recovery (`rec-p01-01`): a stale `oat-reviewer` version pin at
+  `review-skill-contracts.test.ts:65` outside p01-t05's declared boundary,
+  corrected `1.2.0` → `1.2.1` in append-only commit `f8a89ce9e`.
+- Release gates (`release:check-versions`, `release:validate`, `build:docs`) and
+  `oat sync` provider-view refresh are deliberately deferred to p02-t02.
 
 ### Task p01-t01: Generalize the user-default portability ratchet
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `7ff15e66c`
 
 ---
 
 ### Task p01-t02: Port utility-pack cross-skill reads
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `3c6d7ea57`
 
 ### Task p01-t03: Port research-pack cross-skill reads
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `d545bcf51`
 
 ### Task p01-t04: Port workflow review-provider references
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `032970a98`
 
 ### Task p01-t05: Port user-default agent references and remove the exemption
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `97431c4ff` (+ recovery `f8a89ce9e`)
 
 ### Task p01-t06: Finalize the zero-debt portability invariant
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `7025a7855`
 
 ---
 
@@ -195,9 +211,9 @@ continuation_events: []
 
 #### Phase Outcomes
 
-| Phase | Implementer | Tasks | Review | Fix rounds | Result      |
-| ----- | ----------- | ----- | ------ | ---------- | ----------- |
-| p01   | opus        | 0/6   | -      | 0          | in_progress |
+| Phase | Implementer | Tasks | Review      | Fix rounds      | Result             |
+| ----- | ----------- | ----- | ----------- | --------------- | ------------------ |
+| p01   | opus        | 6/6   | 0C/2I/3M/4m | 0 (in progress) | review fix pending |
 
 #### Parallel Groups
 
@@ -280,7 +296,7 @@ Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
+| 1     | 290 files | 290    | 0      | n/a      |
 | 2     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)

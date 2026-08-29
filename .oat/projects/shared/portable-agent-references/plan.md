@@ -453,16 +453,16 @@ git commit -m "chore(p02-t02): release portable agent references"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                            | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                                                                   | -             | -          | -           |
-| p02    | code     | pending         | -          | -                                                                                   | -             | -          | -           |
-| final  | code     | pending         | -          | -                                                                                   | -             | -          | -           |
-| spec   | artifact | pending         | -          | -                                                                                   | -             | -          | -           |
-| design | artifact | pending         | -          | -                                                                                   | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-08-28 | structured in-memory review (head c47586ce; reviewer oat-reviewer-gpt-5-6-sol-high) | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-08-28 | reviews/archived/artifact-plan-review-2026-08-28T223052Z.md                         | -             | -          | -           |
-| plan   | artifact | passed          | 2026-08-28 | reviews/archived/artifact-plan-review-2026-08-28T224908Z.md                         | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                                            | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | fixes_added     | 2026-08-29 | reviews/p01-review-2026-08-29T000007Z.md                                            | f8a89ce9ec9b5b8c6d982e20bcd06e55ba7d6bb2 | manual     | -           |
+| p02    | code     | pending         | -          | -                                                                                   | -                                        | -          | -           |
+| final  | code     | pending         | -          | -                                                                                   | -                                        | -          | -           |
+| spec   | artifact | pending         | -          | -                                                                                   | -                                        | -          | -           |
+| design | artifact | pending         | -          | -                                                                                   | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-28 | structured in-memory review (head c47586ce; reviewer oat-reviewer-gpt-5-6-sol-high) | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-28 | reviews/archived/artifact-plan-review-2026-08-28T223052Z.md                         | -                                        | -          | -           |
+| plan   | artifact | passed          | 2026-08-28 | reviews/archived/artifact-plan-review-2026-08-28T224908Z.md                         | -                                        | -          | -           |
 
 ## Implementation Complete
 
