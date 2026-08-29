@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: p20-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,8 +14,8 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> Phases 1–19 are complete. Remote Bugbot receive on PR #227 added Phase 20
-> (`p20-t01`–`p20-t05`). Resume at `p20-t01`.
+> Phases 1–20 are implemented (197/197). Phase 20 review is pending after the
+> `#231` merge into this branch.
 >
 > Conventions:
 >
@@ -27,31 +27,31 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 10    | 10/10     |
-| Phase 2      | complete    | 13    | 13/13     |
-| Phase 3      | complete    | 19    | 19/19     |
-| Phase 4      | complete    | 16    | 16/16     |
-| Phase 5      | complete    | 7     | 7/7       |
-| Phase 6      | complete    | 3     | 3/3       |
-| Phase 7      | complete    | 1     | 1/1       |
-| Phase 8      | complete    | 1     | 1/1       |
-| Phase 9      | complete    | 1     | 1/1       |
-| Phase 10     | complete    | 14    | 14/14     |
-| Phase 11     | complete    | 3     | 3/3       |
-| Phase 12     | complete    | 1     | 1/1       |
-| Phase p-rev1 | complete    | 1     | 1/1       |
-| Phase 13     | complete    | 16    | 16/16     |
-| Phase 14     | complete    | 19    | 19/19     |
-| Phase 15     | complete    | 19    | 19/19     |
-| Phase 16     | complete    | 20    | 20/20     |
-| Phase 17     | complete    | 14    | 14/14     |
-| Phase 18     | complete    | 1     | 1/1       |
-| Phase 19     | complete    | 13    | 13/13     |
-| Phase 20     | in_progress | 5     | 0/5       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 10    | 10/10     |
+| Phase 2      | complete | 13    | 13/13     |
+| Phase 3      | complete | 19    | 19/19     |
+| Phase 4      | complete | 16    | 16/16     |
+| Phase 5      | complete | 7     | 7/7       |
+| Phase 6      | complete | 3     | 3/3       |
+| Phase 7      | complete | 1     | 1/1       |
+| Phase 8      | complete | 1     | 1/1       |
+| Phase 9      | complete | 1     | 1/1       |
+| Phase 10     | complete | 14    | 14/14     |
+| Phase 11     | complete | 3     | 3/3       |
+| Phase 12     | complete | 1     | 1/1       |
+| Phase p-rev1 | complete | 1     | 1/1       |
+| Phase 13     | complete | 16    | 16/16     |
+| Phase 14     | complete | 19    | 19/19     |
+| Phase 15     | complete | 19    | 19/19     |
+| Phase 16     | complete | 20    | 20/20     |
+| Phase 17     | complete | 14    | 14/14     |
+| Phase 18     | complete | 1     | 1/1       |
+| Phase 19     | complete | 13    | 13/13     |
+| Phase 20     | complete | 5     | 5/5       |
 
-**Total:** 192/197 tasks completed
+**Total:** 197/197 tasks completed
 
 ---
 
@@ -3934,3 +3934,66 @@ not merged by this workflow.
   **Receive cycle:** 2 of 3
 
 Resume implementation at `p20-t01`.
+
+### Run 15 - 2026-08-29T192716Z
+
+**Branch:** `feat/synced-project-scope`
+**Tier:** 1 - subagents
+**Dispatch policy:** managed `high` (Cursor pinned variant)
+**Status:** Phase 20 implementation complete — review pending after `#231` merge
+
+#### Dispatch Record
+
+```yaml
+request_id: dispatch-synced-project-scope-p20-20260829T192716Z
+caller: oat-project-implement
+scope: p20
+objective: Implement the five remote Bugbot review-fix tasks.
+action: implementation
+role_name: oat-phase-implementer
+role_class: worker
+provider: cursor
+dispatch_policy: high
+dispatch_ceiling: high
+role_selector: oat-phase-implementer-gpt-5-6-sol-medium
+model_selector: gpt-5.6-sol-medium
+model_selector_granularity: exact-materialized-role
+effort_selector: not-applicable
+selection_source: policy-resolved
+selection_reason: native-catalog
+candidates_considered:
+  - gpt-5.6-sol-medium
+  - gpt-5.6-sol-high
+selected_route: native Task variant
+task_class: default-implementation
+classification_source: caller
+launch_status: accepted
+child_outcome: completed
+runtime_confirmation: declared:oat-phase-implementer-gpt-5-6-sol-medium
+```
+
+#### Project Dispatch
+
+- Project: `.oat/projects/shared/synced-project-scope`
+- Workflow / phase: spec-driven / p20
+- Phase base HEAD: `9dac02d655904f3564dcbe8b37a76100deb09565`
+- File boundary: completion, brainstorm, and autonomous skills plus their executable contract tests
+- Commit policy: one commit per planned task
+- Recovery: 0/10; `pending_attempt: null`
+- Dispatch stamp: `Dispatch: scope=p20 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
+#### Implementation Outcome
+
+Phase 20 is implemented in five append-only commits. No recovery attempt.
+
+| Task    | Status | Commit     |
+| ------- | ------ | ---------- |
+| p20-t01 | done   | `85c27b06` |
+| p20-t02 | done   | `ee9ee3d4` |
+| p20-t03 | done   | `20070cb6` |
+| p20-t04 | done   | `64c5d8ea` |
+| p20-t05 | done   | `8ce831a8` |
+
+- Commit range: `9dac02d655904f3564dcbe8b37a76100deb09565..8ce831a8d42013380f147b7a9e4aefc0abf91504`
+- Verification: focused completion/skill-contract suites passed during each task; p20-t05 closed at 240/240 plus format, lint, and skill-bump checks
+- Next: merge `origin/main` (PR #231) using `references/merge-conflict-analysis-pr231.md`, then independent Phase 20 review
