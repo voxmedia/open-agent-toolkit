@@ -183,6 +183,11 @@ export interface ArchiveProjectRecapExportV1 {
   };
 }
 
+interface AttemptProjectRecapExport {
+  export: ArchiveProjectRecapExportV1;
+  createdByAttempt: boolean;
+}
+
 export interface ArchiveProjectOnCompletionResult {
   archivePath: string;
   s3Path: string | null;
@@ -1368,7 +1373,7 @@ async function exportSelectedProjectRecap(
   options: ArchiveProjectOnCompletionOptions,
   snapshotName: string,
   dependencies: ArchiveProjectOnCompletionDependencies,
-): Promise<ArchiveProjectRecapExportV1 | null> {
+): Promise<AttemptProjectRecapExport | null> {
   const selectedRun = options.projectRecapRun?.trim();
   if (!selectedRun) {
     return null;
@@ -1438,12 +1443,15 @@ async function exportSelectedProjectRecap(
       );
     }
     return {
-      sourceRunRoot,
-      exportRoot,
-      manifest: {
-        relativePath: 'manifest.json',
-        verifiedArtifactCount,
+      export: {
+        sourceRunRoot,
+        exportRoot,
+        manifest: {
+          relativePath: 'manifest.json',
+          verifiedArtifactCount,
+        },
       },
+      createdByAttempt: false,
     };
   }
 
@@ -1501,12 +1509,15 @@ async function exportSelectedProjectRecap(
     await renamePath(temporaryRoot, exportRoot);
 
     return {
-      sourceRunRoot,
-      exportRoot,
-      manifest: {
-        relativePath: 'manifest.json',
-        verifiedArtifactCount,
+      export: {
+        sourceRunRoot,
+        exportRoot,
+        manifest: {
+          relativePath: 'manifest.json',
+          verifiedArtifactCount,
+        },
       },
+      createdByAttempt: true,
     };
   } catch (error) {
     await removePath(temporaryRoot, { recursive: true, force: true });
@@ -1625,11 +1636,12 @@ export async function archiveProjectOnCompletion(
   const projectSourcePath = (await pathExists(options.projectPath))
     ? options.projectPath
     : archivePath;
-  const projectRecapExport = await exportSelectedProjectRecap(
+  const attemptedProjectRecapExport = await exportSelectedProjectRecap(
     { ...options, projectPath: projectSourcePath },
     exportIdentity,
     dependencies,
   );
+  const projectRecapExport = attemptedProjectRecapExport?.export ?? null;
 
   if (!archiveExists) {
     try {
@@ -1648,8 +1660,8 @@ export async function archiveProjectOnCompletion(
       });
     } catch (error) {
       await removePath(archivePath, { recursive: true, force: true });
-      if (projectRecapExport) {
-        await removePath(projectRecapExport.exportRoot, {
+      if (attemptedProjectRecapExport?.createdByAttempt) {
+        await removePath(attemptedProjectRecapExport.export.exportRoot, {
           recursive: true,
           force: true,
         });
@@ -1663,8 +1675,8 @@ export async function archiveProjectOnCompletion(
       await removePath(options.projectPath, { recursive: true, force: true });
     }
   } catch (error) {
-    if (projectRecapExport) {
-      await removePath(projectRecapExport.exportRoot, {
+    if (attemptedProjectRecapExport?.createdByAttempt) {
+      await removePath(attemptedProjectRecapExport.export.exportRoot, {
         recursive: true,
         force: true,
       });

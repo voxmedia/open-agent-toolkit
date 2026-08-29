@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   access,
+  cp,
   copyFile,
   mkdir,
   mkdtemp,
@@ -1970,6 +1971,21 @@ describe('archive utils', () => {
       'project-recaps',
     );
     expect(await readdir(exportParent)).toEqual([]);
+
+    const retried = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    await expect(
+      access(join(retried.projectRecapExport!.exportRoot, 'manifest.json')),
+    ).resolves.toBeUndefined();
   });
 
   it('accepts canonical immutable GitHub source backlinks', async () => {
@@ -2217,6 +2233,69 @@ describe('archive utils', () => {
     await expect(access(projectPath)).resolves.toBeUndefined();
     await expect(access(exportRoot)).rejects.toThrow();
   });
+
+  it.each(['tracked', 'untracked'] as const)(
+    'preserves an adopted %s recap export when later cleanup fails',
+    async (trackingState) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+      await mkdir(projectPath, { recursive: true });
+      const recap = await createRecapPackage(projectPath);
+      const options = {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      };
+      const timestamp = () => '2026-04-01T12:34:56Z';
+      const archived = await archiveProjectOnCompletion(options, { timestamp });
+      const exportRoot = archived.projectRecapExport!.exportRoot;
+      await cp(archived.archivePath, projectPath, { recursive: true });
+
+      await defaultGitRunner.run(['init'], { cwd: repoRoot });
+      await defaultGitRunner.run(['config', 'user.name', 'OAT Tests'], {
+        cwd: repoRoot,
+      });
+      await defaultGitRunner.run(
+        ['config', 'user.email', 'oat-tests@example.com'],
+        { cwd: repoRoot },
+      );
+      const exportPathspec = '.oat/repo/reference/project-recaps';
+      if (trackingState === 'tracked') {
+        await defaultGitRunner.run(['add', exportPathspec], { cwd: repoRoot });
+        await defaultGitRunner.run(['commit', '-m', 'track recap export'], {
+          cwd: repoRoot,
+        });
+      }
+
+      await expect(
+        archiveProjectOnCompletion(options, {
+          removePath: async (target, removeOptions) => {
+            if (target === projectPath) {
+              throw new Error('injected project cleanup failure');
+            }
+            await rm(target, removeOptions);
+          },
+          timestamp,
+        }),
+      ).rejects.toThrow('injected project cleanup failure');
+
+      await expect(
+        access(join(exportRoot, 'manifest.json')),
+      ).resolves.toBeUndefined();
+      const tracked = await defaultGitRunner.run(
+        [
+          'ls-files',
+          '--error-unmatch',
+          `${exportPathspec}/20260401-demo/manifest.json`,
+        ],
+        { allowFailure: true, cwd: repoRoot },
+      );
+      expect(tracked.code === 0).toBe(trackingState === 'tracked');
+    },
+  );
 
   it('removes an attempt-owned partial archive so retry uses one complete target', async () => {
     const repoRoot = await createRepoRoot();
