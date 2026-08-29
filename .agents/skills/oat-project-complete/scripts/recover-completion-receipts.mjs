@@ -388,9 +388,13 @@ export async function detectCompletionReceiptCandidate({
   const retainedSubject = FULL_SHA.test(retained ?? '')
     ? await commitSubject(projectPath, retained)
     : null;
-  const candidate =
+  const receiptCandidate =
     receiptSubjects.has(headSubject) ||
     (retainedSubject !== null && receiptSubjects.has(retainedSubject));
+  const pinSourceCandidate =
+    headSubject === PIN_SOURCE_MESSAGE ||
+    retainedSubject === PIN_SOURCE_MESSAGE;
+  const candidate = receiptCandidate || pinSourceCandidate;
   if (candidate) {
     const status = await git(projectPath, [
       'status',
@@ -403,7 +407,104 @@ export async function detectCompletionReceiptCandidate({
       );
     }
   }
-  return { status: candidate ? 'candidate' : 'none', candidate };
+  return {
+    status: candidate ? 'candidate' : 'none',
+    candidate,
+    candidateType: receiptCandidate
+      ? 'receipt'
+      : pinSourceCandidate
+        ? 'pin-source'
+        : null,
+  };
+}
+
+export async function recoverCompletionPinSource({
+  projectPath,
+  retainedRef,
+  prArtifactPath,
+  remote = 'origin',
+}) {
+  if (typeof projectPath !== 'string' || projectPath.length === 0) {
+    throw completionReceiptError('Project path is required.');
+  }
+  if (
+    typeof retainedRef !== 'string' ||
+    !/^refs\/oat\/projects\/[A-Za-z0-9._-]+$/.test(retainedRef)
+  ) {
+    throw completionReceiptError(
+      'Retained ref must be a canonical OAT project ref.',
+    );
+  }
+  const finalArtifactPath = requireRelativeGitPath(
+    prArtifactPath,
+    'PR artifact path',
+  );
+  const expectedSlug = retainedRef.slice('refs/oat/projects/'.length);
+  if (basename(projectPath) !== expectedSlug) {
+    throw completionReceiptError(
+      `Project checkout basename must match retained project ${expectedSlug}.`,
+    );
+  }
+  const status = await git(projectPath, [
+    'status',
+    '--porcelain=v1',
+    '--untracked-files=all',
+  ]);
+  if (status !== '') {
+    throw completionReceiptError(
+      'Recognized pin-source candidate requires a clean synced checkout.',
+    );
+  }
+  const localCommit = await git(projectPath, ['rev-parse', 'HEAD']);
+  const localRetainedRefCommit = await git(
+    projectPath,
+    ['rev-parse', '--verify', retainedRef],
+    { allowFailure: true },
+  );
+  const remoteCommit = await retainedRemoteCommit(
+    projectPath,
+    remote,
+    retainedRef,
+  );
+  if (
+    localCommit !== localRetainedRefCommit ||
+    localCommit !== remoteCommit ||
+    (await commitSubject(projectPath, localCommit)) !== PIN_SOURCE_MESSAGE
+  ) {
+    throw completionReceiptError(
+      'Pin-source retry requires equal checkout, local retained ref, and remote retained ref commits with the exact pin-source subject.',
+    );
+  }
+  requireCompletedLifecycleState(
+    await committedFile(
+      projectPath,
+      localCommit,
+      'state.md',
+      'lifecycle state',
+    ),
+  );
+  const pinSourceLog = await committedFileIfPresent(
+    projectPath,
+    localCommit,
+    'project-log.md',
+    'completion log',
+  );
+  if (pinSourceLog !== null) {
+    requireCompletionSeal(pinSourceLog);
+  }
+  await committedFile(
+    projectPath,
+    localCommit,
+    finalArtifactPath,
+    'PR artifact',
+  );
+  return {
+    status: 'recovered',
+    retainedRef,
+    localCommit,
+    remoteCommit,
+    projectLinksPinCommit: localCommit,
+  };
 }
 
 export async function recoverCompletionReceipts({

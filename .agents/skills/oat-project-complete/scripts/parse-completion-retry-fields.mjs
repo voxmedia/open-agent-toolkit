@@ -82,6 +82,63 @@ export function parseCompletionRetryFields(input) {
     return 'normal';
   }
 
+  if (value.route === 'pin-source') {
+    requireExactKeys(value, [
+      'candidate',
+      'localCommit',
+      'nextStep',
+      'prArtifactPath',
+      'projectLinksPinCommit',
+      'remoteCommit',
+      'retainedRef',
+      'route',
+      'skipMutations',
+      'skippedMutations',
+      'status',
+    ]);
+    if (
+      value.status !== 'recovered' ||
+      value.candidate !== true ||
+      value.nextStep !== '8.6' ||
+      value.skipMutations !== true
+    ) {
+      throw completionRetryFieldsError(
+        'Recovered pin-source retry result is contradictory or malformed.',
+      );
+    }
+    requireSkippedMutations(value.skippedMutations);
+    if (
+      !FULL_SHA.test(value.localCommit) ||
+      value.remoteCommit !== value.localCommit ||
+      value.projectLinksPinCommit !== value.localCommit
+    ) {
+      throw completionRetryFieldsError(
+        'Recovered pin-source retry receipts must be equal full commit SHAs.',
+      );
+    }
+    if (
+      typeof value.retainedRef !== 'string' ||
+      !RETAINED_REF.test(value.retainedRef)
+    ) {
+      throw completionRetryFieldsError(
+        'Recovered pin-source retry retained ref is malformed.',
+      );
+    }
+    if (
+      typeof value.prArtifactPath !== 'string' ||
+      !PR_ARTIFACT.test(value.prArtifactPath)
+    ) {
+      throw completionRetryFieldsError(
+        'Recovered pin-source retry PR artifact path is malformed.',
+      );
+    }
+    return [
+      'pin-source',
+      value.projectLinksPinCommit,
+      value.prArtifactPath,
+    ].join('\t');
+  }
+
   requireExactKeys(value, [
     'candidate',
     'evidenceCommit',

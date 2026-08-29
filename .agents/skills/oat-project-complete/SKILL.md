@@ -479,6 +479,11 @@ if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "false" ]]; then
     fi
     PR_DESCRIPTION_PATH="$ACTIVE_PROJECT_PATH/$PR_DESCRIPTION_RELATIVE_PATH"
     COMPLETION_RECEIPTS_RECOVERED="true"
+  elif [[ "$COMPLETION_RETRY_ROUTE" == "pin-source" ]]; then
+    IFS=$'\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT \
+      PR_DESCRIPTION_RELATIVE_PATH <<< "$COMPLETION_RETRY_FIELDS"
+    PR_DESCRIPTION_PATH="$ACTIVE_PROJECT_PATH/$PR_DESCRIPTION_RELATIVE_PATH"
+    COMPLETION_RECEIPTS_RECOVERED="true"
   elif [[ "$COMPLETION_RETRY_ROUTE" != "normal" || \
     "$COMPLETION_RETRY_FIELDS" != "normal" ]]; then
     exit 1
@@ -490,10 +495,13 @@ A recognized candidate must be clean and validate completely; dirty,
 malformed, mixed, or contradictory candidates exit before the router returns.
 When the result is `route: "normal"`, follow the ordinary flow without
 changing its existing dirty-worktree guarantees. When it is
-`route: "recovery"`, the executable has already restored the receipts. Jump
-directly to Step 7.5 and skip every mutation in Steps 3.7 through 7. The
-executable transaction matrix must use this same router for all configured and
-interactive interruption rows.
+`route: "recovery"`, the executable has already restored the final receipts.
+Jump directly to Step 7.5 and skip every mutation in Steps 3.7 through 7. When
+it is `route: "pin-source"`, the executable has validated the already-published
+pin-source tree and PR artifact; preserve `PROJECT_LINKS_PIN_COMMIT`, jump
+directly to Step 8.6, and skip Steps 3.7 through 7, including a duplicate
+pin-source push. The executable transaction matrix must use this same router
+for all configured and interactive interruption rows.
 
 ### Step 3.7: Project Log Completion Gate
 
@@ -680,11 +688,13 @@ renders the final links. Keep it separate from the final non-archive artifact
 receipt:
 
 Preserve `PROJECT_LINKS_PIN_COMMIT`, `PROJECT_REF_COMMIT`, `EVIDENCE_COMMIT`,
-and `EVIDENCE_PUSH_REQUIRED` when the Step 3.65 router restored them. Do not
+and `EVIDENCE_PUSH_REQUIRED` when the Step 3.65 router restored them. A
+`pin-source` route skips this step entirely and resumes at Step 8.6. Do not
 initialize over a recovered value or run a second candidate-routing branch at
 this step. The pre-mutation router owns candidate detection, exact PR-artifact
-selection, and `recoverCompletionReceipts`; its read-only recovery must have
-validated all of the following before returning a receipt:
+selection, pin-source retry validation, and `recoverCompletionReceipts`; its
+read-only recovery must have validated the applicable receipt chain before
+returning a receipt:
 
 - a clean synced checkout and the retained local ref;
 - the exact final-artifact and optional evidence subjects;

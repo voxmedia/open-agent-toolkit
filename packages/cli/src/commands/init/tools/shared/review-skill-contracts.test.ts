@@ -1314,6 +1314,12 @@ printf 'artifact-read\\n'`,
     expect(normalizedContent).toContain(
       'Jump directly to Step 7.5 and skip every mutation in Steps 3.7 through 7.',
     );
+    expect(normalizedContent).toContain(
+      'When it is `route: "pin-source"`, the executable has validated the already-published pin-source tree and PR artifact',
+    );
+    expect(normalizedContent).toContain(
+      'jump directly to Step 8.6, and skip Steps 3.7 through 7, including a duplicate pin-source push.',
+    );
     expect(finalLinksIndex).toBeGreaterThan(
       content.indexOf('#### Step 7.5: Publish Synced Project Pin Source'),
     );

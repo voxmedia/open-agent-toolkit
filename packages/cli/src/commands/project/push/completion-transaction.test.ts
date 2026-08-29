@@ -74,6 +74,19 @@ type CompletionRetryResolution =
       skipMutations: false;
       skippedMutations: [];
     }
+  | {
+      status: 'recovered';
+      route: 'pin-source';
+      candidate: true;
+      nextStep: '8.6';
+      skipMutations: true;
+      skippedMutations: string[];
+      retainedRef: string;
+      localCommit: string;
+      remoteCommit: string;
+      projectLinksPinCommit: string;
+      prArtifactPath: string;
+    }
   | (CompletionReceipts & {
       status: 'recovered';
       route: 'recovery';
@@ -547,6 +560,9 @@ if [[ "$COMPLETION_RETRY_ROUTE" == "recovery" ]]; then
   if [[ "$RECOVERED_EVIDENCE_COMMIT" != "-" ]]; then
     EVIDENCE_COMMIT="$RECOVERED_EVIDENCE_COMMIT"
   fi
+elif [[ "$COMPLETION_RETRY_ROUTE" == "pin-source" ]]; then
+  IFS=$'\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT \
+    PR_DESCRIPTION_RELATIVE_PATH <<< "$COMPLETION_RETRY_FIELDS"
 elif [[ "$COMPLETION_RETRY_ROUTE" != "normal" || \
   "$COMPLETION_RETRY_FIELDS" != "normal" ]]; then
   exit 1
@@ -683,6 +699,80 @@ describe('archived synced completion transaction', () => {
 });
 
 describe('non-archive synced completion transaction', () => {
+  it('resumes after the pin-source push without replaying lifecycle mutations', async () => {
+    const fixture = await createCompletionFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects',
+        PROJECT_SLUG,
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeCompletedLifecycle(target.projectPath);
+      await writeFile(
+        `${target.projectPath}/summary.md`,
+        '# Durable summary\n',
+        'utf8',
+      );
+      await mkdir(`${target.projectPath}/pr`, { recursive: true });
+      await writeFile(
+        `${target.projectPath}/${PR_ARTIFACT}`,
+        '# Pull request\n\nCompletion body.\n',
+        'utf8',
+      );
+      const pinReceipt = await pushSynced(target, defaultGitRunner, {
+        message: 'chore(oat): finalize project lifecycle',
+      });
+      expect(pinReceipt.status).toBe('pushed');
+
+      const preRetryState = {
+        head: git(target.projectPath, ['rev-parse', 'HEAD']),
+        state: await readFile(`${target.projectPath}/state.md`, 'utf8'),
+        projectLog: await readFile(
+          `${target.projectPath}/project-log.md`,
+          'utf8',
+        ),
+        prArtifact: await readFile(
+          `${target.projectPath}/${PR_ARTIFACT}`,
+          'utf8',
+        ),
+      };
+      const retry = resolveCompletionRetry(target.projectPath, target.ref);
+
+      expect(retry).toMatchObject({
+        status: 'recovered',
+        route: 'pin-source',
+        candidate: true,
+        nextStep: '8.6',
+        skipMutations: true,
+        projectLinksPinCommit: pinReceipt.sha,
+        prArtifactPath: PR_ARTIFACT,
+      });
+      expect(consumeCompletionRetryFields(JSON.stringify(retry))).toEqual({
+        route: 'pin-source',
+        pin: pinReceipt.sha,
+        ref: '',
+        evidence: '',
+        push: '',
+        pr: PR_ARTIFACT,
+      });
+      expect({
+        head: git(target.projectPath, ['rev-parse', 'HEAD']),
+        state: await readFile(`${target.projectPath}/state.md`, 'utf8'),
+        projectLog: await readFile(
+          `${target.projectPath}/project-log.md`,
+          'utf8',
+        ),
+        prArtifact: await readFile(
+          `${target.projectPath}/${PR_ARTIFACT}`,
+          'utf8',
+        ),
+      }).toEqual(preRetryState);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('recovers receipts when the pin-source project log is absent', async () => {
     const fixture = await createCompletionFixture();
     try {

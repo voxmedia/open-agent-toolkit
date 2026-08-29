@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 
 import {
   detectCompletionReceiptCandidate,
+  recoverCompletionPinSource,
   recoverCompletionReceipts,
 } from './recover-completion-receipts.mjs';
 
@@ -81,6 +82,21 @@ export async function resolveCompletionRetry(options) {
 
   const prArtifactPath =
     options.prArtifactPath ?? (await resolvePrArtifact(options.projectPath));
+  if (candidateResult.candidateType === 'pin-source') {
+    const pinSource = await recoverCompletionPinSource({
+      ...options,
+      prArtifactPath,
+    });
+    return {
+      ...pinSource,
+      route: 'pin-source',
+      candidate: true,
+      nextStep: '8.6',
+      skipMutations: true,
+      skippedMutations: SKIPPED_MUTATIONS,
+      prArtifactPath,
+    };
+  }
   const receipts = await recoverCompletionReceipts({
     ...options,
     prArtifactPath,
