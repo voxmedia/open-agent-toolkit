@@ -24,10 +24,10 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 6/6       |
-| Phase 2 | pending     | 2     | 0/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 6     | 6/6       |
+| Phase 2 | pending  | 2     | 0/2       |
 
 **Total:** 6/8 tasks completed
 
@@ -35,7 +35,7 @@ oat_generated: false
 
 ## Phase 1: Global Ratchet and Portable Callers
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-08-29
 
 ### Phase Summary (fill when phase is complete)
@@ -214,9 +214,9 @@ continuation_events: []
 
 #### Phase Outcomes
 
-| Phase | Implementer | Tasks | Review                         | Fix rounds      | Result                          |
-| ----- | ----------- | ----- | ------------------------------ | --------------- | ------------------------------- |
-| p01   | opus        | 6/6   | r1 0C/2I/3M/4m; r2 0C/1I/2M/3m | 1 (`7f7dd6cfc`) | fixes complete; round 3 pending |
+| Phase | Implementer | Tasks | Review                                         | Fix rounds      | Result     |
+| ----- | ----------- | ----- | ---------------------------------------------- | --------------- | ---------- |
+| p01   | opus        | 6/6   | r1 0C/2I/3M/4m; r2 0C/1I/2M/3m; r3 0C/0I/2M/1m | 1 (`7f7dd6cfc`) | **passed** |
 
 #### Parallel Groups
 
@@ -227,7 +227,8 @@ None (sequential plan).
 | Round | Artifact                                   | Head        | Findings          | Disposition                                                             |
 | ----- | ------------------------------------------ | ----------- | ----------------- | ----------------------------------------------------------------------- |
 | 1     | `reviews/p01-review-2026-08-29T000007Z.md` | `f8a89ce9e` | 0C / 2I / 3M / 4m | I2 fixed in `7f7dd6cfc`; I1 resolved by root bookkeeping in `de611286a` |
-| 2     | `reviews/p01-review-2026-08-29T040642Z.md` | `7f7dd6cfc` | 0C / 1I / 2M / 3m | all root-owned bookkeeping; resolved in this commit                     |
+| 2     | `reviews/p01-review-2026-08-29T040642Z.md` | `7f7dd6cfc` | 0C / 1I / 2M / 3m | all root-owned bookkeeping; resolved in `52745ef93`                     |
+| 3     | `reviews/p01-review-2026-08-29T074543Z.md` | `52745ef93` | 0C / 0I / 2M / 1m | **PASSED** at the Critical/Important threshold                          |
 
 Round 2's Important and both Mediums were defects in root-owned project
 artifacts, not in phase code:
@@ -243,8 +244,12 @@ artifacts, not in phase code:
 
 #### Outstanding Items
 
-- Round 3 review pending to confirm the phase passes at the
-  Critical/Important threshold.
+- None blocking. Phase 1 passed code review at the Critical/Important
+  threshold on round 3 (`reviews/p01-review-2026-08-29T074543Z.md`).
+- Round 3's remaining 2 Medium / 1 Minor were root-owned artifact alignment
+  (stale `state.md` prose, a gate attribution naming `f8a89ce9e` instead of the
+  phase head, and a stale `Last Updated`); all closed in the bookkeeping commit
+  that follows round 3.
 - Deferred to p02 (recorded, non-blocking): Medium — provider materialization
   proven for Codex only; Medium — bare `.agents/agents/*.md` reads surviving in
   `oat-project-review-provide/SKILL.md:892`; Medium — sibling paths outside
