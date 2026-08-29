@@ -88,6 +88,35 @@ describe('oat-config', () => {
     });
   });
 
+  it('preserves projects.defaultScope without projects.root', async () => {
+    const repoRoot = await createRepoRoot();
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      JSON.stringify({ version: 1, projects: { defaultScope: 'local' } }),
+      'utf8',
+    );
+
+    await expect(readOatConfig(repoRoot)).resolves.toEqual({
+      version: 1,
+      projects: { defaultScope: 'local' },
+    });
+  });
+
+  it('rejects an invalid projects.defaultScope', async () => {
+    const repoRoot = await createRepoRoot();
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      JSON.stringify({ version: 1, projects: { defaultScope: 'remote' } }),
+      'utf8',
+    );
+
+    await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
+      message:
+        'Invalid projects.defaultScope: "remote". Expected one of: shared, local, synced.',
+      exitCode: 2,
+    });
+  });
+
   it('accepts trailing commas in shared, local, and user config files', async () => {
     const repoRoot = await createRepoRoot();
     const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-config-'));

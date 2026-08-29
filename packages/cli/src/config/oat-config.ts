@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import { lstat, readFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
+import { CliError } from '@errors/cli-error';
 import { atomicWriteJson, dirExists, fileExists } from '@fs/io';
 import { normalizeToPosixPath, validateRealPathWithinScope } from '@fs/paths';
 
@@ -45,7 +46,7 @@ export interface OatGitConfig {
 }
 
 export interface OatProjectsConfig {
-  root: string;
+  root?: string;
   defaultScope?: 'shared' | 'local' | 'synced';
 }
 
@@ -1099,14 +1100,24 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
       typeof parsed.projects.root === 'string' && parsed.projects.root.trim()
         ? parsed.projects.root.trim()
         : undefined;
+    const rawDefaultScope = parsed.projects.defaultScope;
     const defaultScope =
-      parsed.projects.defaultScope === 'shared' ||
-      parsed.projects.defaultScope === 'local' ||
-      parsed.projects.defaultScope === 'synced'
-        ? parsed.projects.defaultScope
+      rawDefaultScope === 'shared' ||
+      rawDefaultScope === 'local' ||
+      rawDefaultScope === 'synced'
+        ? rawDefaultScope
         : undefined;
-    if (root) {
-      next.projects = { root, ...(defaultScope ? { defaultScope } : {}) };
+    if (rawDefaultScope !== undefined && defaultScope === undefined) {
+      throw new CliError(
+        `Invalid projects.defaultScope: "${String(rawDefaultScope)}". Expected one of: shared, local, synced.`,
+        2,
+      );
+    }
+    if (root || defaultScope) {
+      next.projects = {
+        ...(root ? { root } : {}),
+        ...(defaultScope ? { defaultScope } : {}),
+      };
     }
   }
 
