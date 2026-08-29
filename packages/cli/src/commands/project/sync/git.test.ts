@@ -76,6 +76,11 @@ describe('GitRunner', () => {
           GIT_DIR: '/redirected/git-dir',
           GIT_INDEX_FILE: '/redirected/index',
           GIT_WORK_TREE: '/redirected/worktree',
+          GIT_COMMON_DIR: '/redirected/common-dir',
+          GIT_OBJECT_DIRECTORY: '/redirected/objects',
+          GIT_ALTERNATE_OBJECT_DIRECTORIES: '/redirected/alternates',
+          GIT_NAMESPACE: 'redirected-namespace',
+          GIT_CEILING_DIRECTORIES: '/redirected/ceiling',
           LANG: 'de_DE.UTF-8',
           LANGUAGE: 'de',
           LC_ALL: 'de_DE.UTF-8',
@@ -105,6 +110,11 @@ describe('GitRunner', () => {
     expect(env).not.toHaveProperty('GIT_DIR');
     expect(env).not.toHaveProperty('GIT_INDEX_FILE');
     expect(env).not.toHaveProperty('GIT_WORK_TREE');
+    expect(env).not.toHaveProperty('GIT_COMMON_DIR');
+    expect(env).not.toHaveProperty('GIT_OBJECT_DIRECTORY');
+    expect(env).not.toHaveProperty('GIT_ALTERNATE_OBJECT_DIRECTORIES');
+    expect(env).not.toHaveProperty('GIT_NAMESPACE');
+    expect(env).not.toHaveProperty('GIT_CEILING_DIRECTORIES');
   });
 
   it('preserves a numeric exit code from an injected implementation', async () => {

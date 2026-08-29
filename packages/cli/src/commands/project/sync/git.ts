@@ -53,7 +53,16 @@ function gitEnvironment(overrides?: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
     LANGUAGE: 'C',
     LC_ALL: 'C',
   };
-  for (const variable of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE']) {
+  for (const variable of [
+    'GIT_DIR',
+    'GIT_WORK_TREE',
+    'GIT_INDEX_FILE',
+    'GIT_COMMON_DIR',
+    'GIT_OBJECT_DIRECTORY',
+    'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+    'GIT_NAMESPACE',
+    'GIT_CEILING_DIRECTORIES',
+  ]) {
     delete env[variable];
   }
   return env;
