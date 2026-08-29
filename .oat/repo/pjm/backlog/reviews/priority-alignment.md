@@ -53,6 +53,26 @@ project grouping tree, and quadrant tables, see
 | [**BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow**](../items/BL-260729-implement-reviewplan-first.md)                                  | L     | Reconcile PR #190 against current `origin/main`, refresh QA/dogfood evidence, and determine residual scope before treating the item as complete. This is the current review-lane bottleneck.              |
 | [**BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**](../items/BL-260829-unified-agent-provider-root.md) | L     | PR #231 supplied the starting contract. Complete the promoted spec/design pass before implementation; resolve canonical-root representation, loaded-tier eligibility, and dependency-isolation questions. |
 
+### Dependency interpretation
+
+The three items above are **not one serial queue**. They are three lanes that
+can start or continue concurrently, subject to normal shared-file coordination:
+
+- **Lane A — ReviewPlan:** [**BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow**](../items/BL-260729-implement-reviewplan-first.md) finishes PR #190 and establishes the current review artifact/event baseline.
+- **Lane B — Agent root:** [**BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**](../items/BL-260829-unified-agent-provider-root.md) completes its spec/design contract.
+- **Lane C — Phase bookkeeping:** [**BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch**](../items/BL-260829-order-phase-bookkeeping-before.md) prevents stale state from being written before a review dispatch.
+
+The hard dependencies are downstream, not between these three kickoff lanes:
+
+- [**BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**](../items/BL-260829-unified-agent-provider-root.md) must be accepted before implementation of [**BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider reachability, and dispatch state truthful**](../items/BL-260829-make-tool-pack-scope-selection.md).
+- [**BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow**](../items/BL-260729-implement-reviewplan-first.md) must be reconciled before [**BL-260820-bind-each-gate-review — Bind each gate review disposition to its exact received ledger event**](../items/BL-260820-bind-each-gate-review.md) and the later receipt work.
+- [**BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch**](../items/BL-260829-order-phase-bookkeeping-before.md) should land before [**BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings**](../items/BL-260711-skip-re-review-for-bookkeeping.md).
+
+There is no hard dependency requiring ReviewPlan to finish before agent-root
+design, or requiring either of those to finish before phase-bookkeeping work.
+The only reason to serialize any of the three is an actual file-ownership
+collision discovered when their implementation plans are opened.
+
 ---
 
 ## Phase 1 — Truthful distribution and adoption
@@ -60,7 +80,8 @@ project grouping tree, and quadrant tables, see
 This phase closes the scope/provider failure cluster. Discovery and design may
 run in parallel, but the `agent-provider-root` implementation should establish
 the portable reference contract before the scope/provider umbrella implements
-canonical fallback provenance. The two existing quick projects can provide
+canonical fallback provenance. This does not wait for ReviewPlan or phase
+bookkeeping; those are separate lanes. The two existing quick projects can provide
 bounded evidence without taking ownership of the umbrella.
 
 | Item                                                                                                                                                                               | Scope | Parallel with                                      | Notes                                                                                                                                                                          |
@@ -77,10 +98,11 @@ bounded evidence without taking ownership of the umbrella.
 
 ## Phase 2 — Review and gate integrity
 
-This phase uses one shared lifecycle model. Prevent stale phase bookkeeping
-before dispatch, establish exact received-event identity, and then classify
-receipts so the highest-priority no-re-review rule is safe rather than merely
-fast.
+This phase uses one shared lifecycle model. Phase bookkeeping can start as a
+parallel prevention lane while ReviewPlan is being reconciled. ReviewPlan is a
+prerequisite for exact received-event identity; bookkeeping prevention is a
+prerequisite for the no-re-review safety net. Establish both before classifying
+receipts so the highest-priority rule is safe rather than merely fast.
 
 | Item                                                                                                                                                                        | Scope | Keep sequential                                          | Notes                                                                                                           |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -111,24 +133,32 @@ not reasons to reopen the larger review/gate design.
 
 ## Parallelism cheat sheet
 
-| Can run together                                                             | Keep sequential                                                                                                                                                                                                                                                                         |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PR #190 reconciliation ∥ `agent-provider-root` discovery/design              | **BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references** before scope/provider implementation of **BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider reachability, and dispatch state truthful** |
-| Scope/adoption diagnostics ∥ tool-pack lifecycle cleanup ∥ root design       | **BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch** before **BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings**                                                                       |
-| Headless no-yield ∥ structured-output validation ∥ non-overlapping discovery | **BL-260820-bind-each-gate-review — Bind each gate review disposition to its exact received ledger event** before **BL-260820-emit-source-qualified — Emit source-qualified provenance envelopes for review and gate receipts**                                                         |
-| Symlink and project-guidance discovery after the provider matrix is defined  | **BL-260820-emit-source-qualified — Emit source-qualified provenance envelopes for review and gate receipts** before **BL-260820-track-pr-closeout-evidence — Track PR-closeout evidence freshness against the current head** and closeout enforcement                                  |
+| Can run together                                                                               | Keep sequential                                                                                                                                                                                                                                                                         |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PR #190 reconciliation ∥ `agent-provider-root` discovery/design ∥ phase-bookkeeping prevention | **BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references** before scope/provider implementation of **BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider reachability, and dispatch state truthful** |
+| Scope/adoption diagnostics ∥ tool-pack lifecycle cleanup ∥ root design                         | **BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch** before **BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings**                                                                       |
+| Headless no-yield ∥ structured-output validation ∥ non-overlapping discovery                   | **BL-260820-bind-each-gate-review — Bind each gate review disposition to its exact received ledger event** before **BL-260820-emit-source-qualified — Emit source-qualified provenance envelopes for review and gate receipts**                                                         |
+| Symlink and project-guidance discovery after the provider matrix is defined                    | **BL-260820-emit-source-qualified — Emit source-qualified provenance envelopes for review and gate receipts** before **BL-260820-track-pr-closeout-evidence — Track PR-closeout evidence freshness against the current head** and closeout enforcement                                  |
 
 ---
 
-## Suggested next kickoff stack
+## Suggested next kickoff lanes (concurrent)
 
-This is a proposed stack, not an authorization to start implementation or to
-create handoff files. It reflects the current decisions and should be confirmed
-against capacity and calendar constraints before kickoff.
+This is a proposed set of concurrent lanes, not an authorization to start
+implementation or to create handoff files. The three entries are peers; the
+order shown is for readability, not a sequence. Confirm capacity and calendar
+constraints before kickoff.
 
-1. **Finish** [**BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow**](../items/BL-260729-implement-reviewplan-first.md) — reconcile PR #190 and establish the current review artifact/event baseline.
-2. **Complete design** [**BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**](../items/BL-260829-unified-agent-provider-root.md) — settle the contract that the urgent scope/provider implementation must consume.
-3. **Start the prevention lane** [**BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch**](../items/BL-260829-order-phase-bookkeeping-before.md) — reduce avoidable ledger-only review cycles while the larger distribution design proceeds.
+- **Lane A — Finish:** [**BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow**](../items/BL-260729-implement-reviewplan-first.md) — reconcile PR #190 and establish the current review artifact/event baseline.
+- **Lane B — Complete design:** [**BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**](../items/BL-260829-unified-agent-provider-root.md) — settle the contract that the urgent scope/provider implementation must consume.
+- **Lane C — Start prevention:** [**BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch**](../items/BL-260829-order-phase-bookkeeping-before.md) — reduce avoidable ledger-only review cycles while the larger distribution design proceeds.
+
+After these lanes progress, the dependent work branches rather than forming one
+long chain:
+
+- Lane B unlocks [**BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider reachability, and dispatch state truthful**](../items/BL-260829-make-tool-pack-scope-selection.md).
+- Lane A unlocks [**BL-260820-bind-each-gate-review — Bind each gate review disposition to its exact received ledger event**](../items/BL-260820-bind-each-gate-review.md), then provenance and closeout work.
+- Lane C unlocks [**BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings**](../items/BL-260711-skip-re-review-for-bookkeeping.md), subject to the event classification supplied by Lane A.
 
 The next scope/provider implementation candidate is
 [**BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider
