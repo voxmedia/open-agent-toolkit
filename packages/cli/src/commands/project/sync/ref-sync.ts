@@ -10,7 +10,7 @@ import {
 } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
-import { applyOatCoreGitignore } from '@commands/init/gitignore';
+import { ensureScopedRootGitignore } from '@commands/init/gitignore';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import {
   canonicalizePath,
@@ -108,7 +108,7 @@ export interface MigrateSharedToSyncedOptions {
   commit: boolean;
   now?: Date;
   copyDirectory?: typeof copyDirectory;
-  applyOatCoreGitignore?: typeof applyOatCoreGitignore;
+  ensureScopedRootGitignore?: typeof ensureScopedRootGitignore;
   readOatLocalConfig?: typeof readOatLocalConfig;
   writeOatLocalConfig?: typeof writeOatLocalConfig;
   afterBranchCommit?: () => Promise<void>;
@@ -670,57 +670,14 @@ async function ensureSyncedRootIgnored(
   target: SyncTarget,
   git: GitRunner,
 ): Promise<boolean> {
-  const probe = `${repoRelativePath(
+  const repair = await ensureScopedRootGitignore(
     target.repoRoot,
-    join(target.syncedRoot, '__probe__'),
-  )}/`;
-  const ignored = await git.run(
-    ['check-ignore', '--quiet', '--no-index', probe],
-    { cwd: target.repoRoot, allowFailure: true },
+    target.syncedRoot,
+    'synced',
+    git,
+    'Cannot add the configured synced-project rule because .gitignore has staged or unstaged changes; commit or stash those changes, then retry.',
   );
-  assertExpectedGitResult('git check-ignore synced project', ignored, [0, 1]);
-  if (ignored.code === 0) return false;
-
-  const gitignoreStatus = await git.run(
-    ['status', '--porcelain=v1', '--', '.gitignore'],
-    { cwd: target.repoRoot },
-  );
-  if (gitignoreStatus.stdout !== '') {
-    throw new CliError(
-      'Cannot add the configured synced-project rule because .gitignore has staged or unstaged changes; commit or stash those changes, then retry.',
-      1,
-    );
-  }
-  const gitignorePath = join(target.repoRoot, '.gitignore');
-  const before = await readOptionalFile(gitignorePath);
-  await applyOatCoreGitignore(target.repoRoot);
-  const repaired = await git.run(
-    ['check-ignore', '--quiet', '--no-index', probe],
-    { cwd: target.repoRoot, allowFailure: true },
-  );
-  assertExpectedGitResult('git check-ignore synced project', repaired, [0, 1]);
-  if (repaired.code === 1) {
-    const syncedRootRelative = repoRelativePath(
-      target.repoRoot,
-      target.syncedRoot,
-    );
-    const customRule = `/${syncedRootRelative}/*/`;
-    const current = (await readOptionalFile(gitignorePath)) ?? '';
-    if (!current.split('\n').includes(customRule)) {
-      const separator = current === '' || current.endsWith('\n') ? '' : '\n';
-      await writeFile(
-        gitignorePath,
-        `${current}${separator}${customRule}\n`,
-        'utf8',
-      );
-    }
-  }
-  const verified = await git.run(
-    ['check-ignore', '--quiet', '--no-index', probe],
-    { cwd: target.repoRoot, allowFailure: true },
-  );
-  assertExpectedGitResult('git check-ignore synced project', verified, [0]);
-  return (await readOptionalFile(gitignorePath)) !== before;
+  return repair.changed;
 }
 
 export async function pullSynced(
@@ -1207,18 +1164,6 @@ export async function migrateSharedToSynced(
   );
   assertExpectedGitResult('git check-ignore synced project', ignored, [0, 1]);
   const needsGitignoreHeal = ignored.code === 1;
-  if (needsGitignoreHeal) {
-    const gitignoreStatus = await git.run(
-      ['status', '--porcelain=v1', '--', '.gitignore'],
-      { cwd: target.repoRoot },
-    );
-    if (gitignoreStatus.stdout !== '') {
-      throw new CliError(
-        'Cannot add the synced-project rule because .gitignore has staged or unstaged changes; commit or stash those changes, or add the managed rule manually, then retry migration.',
-        1,
-      );
-    }
-  }
 
   let created = false;
   let publishedRemoteSha: string | null = null;
@@ -1227,38 +1172,16 @@ export async function migrateSharedToSynced(
   let gitignoreSelfHealStarted = false;
   try {
     if (needsGitignoreHeal) {
-      gitignoreSelfHealStarted = true;
-      await (options.applyOatCoreGitignore ?? applyOatCoreGitignore)(
+      const repair = await (
+        options.ensureScopedRootGitignore ?? ensureScopedRootGitignore
+      )(
         target.repoRoot,
+        target.syncedRoot,
+        'synced',
+        git,
+        'Cannot add the synced-project rule because .gitignore has staged or unstaged changes; commit or stash those changes, or add the managed rule manually, then retry migration.',
       );
-      const repaired = await git.run(
-        ['check-ignore', '--quiet', '--no-index', syncedProbe],
-        { cwd: target.repoRoot, allowFailure: true },
-      );
-      assertExpectedGitResult(
-        'git check-ignore synced project',
-        repaired,
-        [0, 1],
-      );
-      if (repaired.code === 1) {
-        const syncedRootRelative = repoRelativePath(
-          target.repoRoot,
-          target.syncedRoot,
-        );
-        const customRule = `/${syncedRootRelative}/*/`;
-        const currentGitignore = (await readOptionalFile(gitignorePath)) ?? '';
-        if (!currentGitignore.split('\n').includes(customRule)) {
-          const separator =
-            currentGitignore === '' || currentGitignore.endsWith('\n')
-              ? ''
-              : '\n';
-          await writeFile(
-            gitignorePath,
-            `${currentGitignore}${separator}${customRule}\n`,
-            'utf8',
-          );
-        }
-      }
+      gitignoreSelfHealStarted = repair.changed;
     }
 
     await createSyncedProject(target, git);

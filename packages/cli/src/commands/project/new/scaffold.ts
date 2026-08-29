@@ -2,10 +2,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 
-import {
-  applyOatCoreGitignore,
-  isSyncedRuleApplied,
-} from '@commands/init/gitignore';
+import { ensureScopedRootGitignore } from '@commands/init/gitignore';
 import { instantiateProjectLogTemplate } from '@commands/project/log/append';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
@@ -98,8 +95,7 @@ export interface ScaffoldProjectDependencies {
   commitRecordChange: typeof commitRecordChange;
   rollbackCreatedSyncedProject: typeof rollbackCreatedSyncedProject;
   writeSyncedRecord: typeof writeSyncedRecord;
-  applyOatCoreGitignore: typeof applyOatCoreGitignore;
-  isSyncedRuleApplied: typeof isSyncedRuleApplied;
+  ensureScopedRootGitignore: typeof ensureScopedRootGitignore;
   setActiveProject: typeof setActiveProject;
 }
 
@@ -111,8 +107,7 @@ const DEFAULT_DEPENDENCIES: ScaffoldProjectDependencies = {
   commitRecordChange,
   rollbackCreatedSyncedProject,
   writeSyncedRecord,
-  applyOatCoreGitignore,
-  isSyncedRuleApplied,
+  ensureScopedRootGitignore,
   setActiveProject,
 };
 
@@ -460,79 +455,19 @@ async function ensureStructure(
   }
 }
 
-interface GitignoreRepair {
-  changed: boolean;
-  before: string | null | undefined;
-}
-
 async function ensureScopedProjectIgnored(
   repoRoot: string,
   absoluteScopeRoot: string,
   scope: 'local' | 'synced',
   dependencies: ScaffoldProjectDependencies,
-): Promise<GitignoreRepair> {
-  const scopeRelative = relative(canonicalizePath(repoRoot), absoluteScopeRoot);
-  if (
-    scopeRelative === '..' ||
-    scopeRelative.startsWith('../') ||
-    scopeRelative.startsWith('..\\') ||
-    isAbsolute(scopeRelative)
-  ) {
-    return { changed: false, before: undefined };
-  }
-
-  const probe = join(absoluteScopeRoot, '__probe__', 'artifact.md');
-  const ignored = await dependencies.gitRunner.run(
-    ['check-ignore', '--quiet', '--no-index', probe],
-    { cwd: repoRoot, allowFailure: true },
+): ReturnType<typeof ensureScopedRootGitignore> {
+  return dependencies.ensureScopedRootGitignore(
+    repoRoot,
+    absoluteScopeRoot,
+    scope,
+    dependencies.gitRunner,
+    null,
   );
-  if (ignored.code === 0) return { changed: false, before: undefined };
-  if (ignored.code !== 1) {
-    throw new CliError(
-      `git check-ignore failed (exit ${ignored.code}): ${ignored.stderr || ignored.stdout || 'unknown Git error'}`,
-      2,
-    );
-  }
-
-  const gitignorePath = join(repoRoot, '.gitignore');
-  const before = (await fileExists(gitignorePath))
-    ? await readFile(gitignorePath, 'utf8')
-    : null;
-  if (!(await dependencies.isSyncedRuleApplied(repoRoot))) {
-    await dependencies.applyOatCoreGitignore(repoRoot);
-  }
-  const repaired = await dependencies.gitRunner.run(
-    ['check-ignore', '--quiet', '--no-index', probe],
-    { cwd: repoRoot, allowFailure: true },
-  );
-  if (repaired.code === 0) {
-    return {
-      changed:
-        before === null || (await readFile(gitignorePath, 'utf8')) !== before,
-      before,
-    };
-  }
-  if (repaired.code !== 1) {
-    throw new CliError(
-      `git check-ignore failed after applying the managed block (exit ${repaired.code}): ${repaired.stderr || repaired.stdout || 'unknown Git error'}`,
-      2,
-    );
-  }
-  const normalizedRoot = scopeRelative.split('\\').join('/');
-  const rule =
-    scope === 'local' ? `/${normalizedRoot}/**` : `/${normalizedRoot}/*/`;
-  const current = (await fileExists(gitignorePath))
-    ? await readFile(gitignorePath, 'utf8')
-    : '';
-  if (!current.split('\n').includes(rule)) {
-    const separator = current === '' || current.endsWith('\n') ? '' : '\n';
-    await writeFile(gitignorePath, `${current}${separator}${rule}\n`, 'utf8');
-  }
-  return {
-    changed:
-      before === null || (await readFile(gitignorePath, 'utf8')) !== before,
-    before,
-  };
 }
 
 async function assertCrossScopeSlugAvailable(

@@ -606,8 +606,21 @@ describe('scaffoldProject', () => {
         'git',
         ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'],
         { cwd: fixture.cloneA, encoding: 'utf8' },
-      ).trim(),
-    ).toBe('.oat/absolute-projects/synced/absolute-synced.json');
+      )
+        .trim()
+        .split('\n')
+        .sort(),
+    ).toEqual([
+      '.gitignore',
+      '.oat/absolute-projects/synced/absolute-synced.json',
+    ]);
+    const managedGitignore = await readFile(gitignorePath, 'utf8');
+    expect(
+      managedGitignore.split('/.oat/absolute-projects/synced/*/'),
+    ).toHaveLength(2);
+    expect(
+      managedGitignore.indexOf('/.oat/absolute-projects/synced/*/'),
+    ).toBeGreaterThan(managedGitignore.indexOf('# OAT core'));
     expect(
       execFileSync('git', ['status', '--porcelain'], {
         cwd: fixture.cloneA,

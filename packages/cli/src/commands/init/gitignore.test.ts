@@ -4,9 +4,14 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { defaultGitRunner } from '@commands/project/sync/git';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { applyOatCoreGitignore, isSyncedRuleApplied } from './gitignore';
+import {
+  applyOatCoreGitignore,
+  ensureScopedRootGitignore,
+  isSyncedRuleApplied,
+} from './gitignore';
 
 const tempDirs: string[] = [];
 
@@ -173,5 +178,79 @@ describe('applyOatCoreGitignore', () => {
     expect(content).toContain('# OAT core');
     expect(content).toContain('# OAT local paths');
     expect(content).toContain('.oat/ideas/');
+  });
+
+  it.each([
+    ['local', '/.oat/custom/local/**'],
+    ['synced', '/.oat/custom/synced/*/'],
+  ] as const)(
+    'manages a custom %s root rule idempotently inside the core block',
+    async (scope, expectedRule) => {
+      const root = await makeTempDir();
+      execFileSync('git', ['init', '-q'], { cwd: root });
+      const scopeRoot = join(root, '.oat', 'custom', scope);
+
+      const first = await ensureScopedRootGitignore(
+        root,
+        scopeRoot,
+        scope,
+        defaultGitRunner,
+      );
+      const repeated = await ensureScopedRootGitignore(
+        root,
+        scopeRoot,
+        scope,
+        defaultGitRunner,
+      );
+
+      expect(first.changed).toBe(true);
+      expect(repeated.changed).toBe(false);
+      const content = await readFile(join(root, '.gitignore'), 'utf8');
+      expect(content.split(expectedRule)).toHaveLength(2);
+      expect(content.indexOf(expectedRule)).toBeGreaterThan(
+        content.indexOf('# OAT core'),
+      );
+      expect(content.indexOf(expectedRule)).toBeLessThan(
+        content.indexOf('# END OAT core'),
+      );
+    },
+  );
+
+  it('moves a legacy custom rule into the managed core block', async () => {
+    const root = await makeTempDir();
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    const legacyRule = '/.oat/custom/synced/*/';
+    await writeFile(join(root, '.gitignore'), `${legacyRule}\n`, 'utf8');
+    execFileSync('git', ['add', '.gitignore'], { cwd: root });
+    execFileSync(
+      'git',
+      [
+        '-c',
+        'user.name=OAT Test',
+        '-c',
+        'user.email=oat@example.com',
+        'commit',
+        '-q',
+        '-m',
+        'seed legacy gitignore',
+      ],
+      { cwd: root },
+    );
+
+    await ensureScopedRootGitignore(
+      root,
+      join(root, '.oat', 'custom', 'synced'),
+      'synced',
+      defaultGitRunner,
+    );
+
+    const content = await readFile(join(root, '.gitignore'), 'utf8');
+    expect(content.split(legacyRule)).toHaveLength(2);
+    expect(content.indexOf(legacyRule)).toBeGreaterThan(
+      content.indexOf('# OAT core'),
+    );
+    expect(content.indexOf(legacyRule)).toBeLessThan(
+      content.indexOf('# END OAT core'),
+    );
   });
 });
