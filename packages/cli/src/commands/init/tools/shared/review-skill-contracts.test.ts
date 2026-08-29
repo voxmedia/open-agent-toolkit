@@ -214,6 +214,54 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('halts autonomous project work when the synced arrival pull fails', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+    );
+    const arrivalStart = content.indexOf(
+      'if [ -n "$PROJECT_PATH" ]; then',
+      content.indexOf('Before reading artifacts for an existing project'),
+    );
+    const arrivalEnd = content.indexOf('\n```', arrivalStart);
+    const arrivalBlock = content.slice(arrivalStart, arrivalEnd);
+    const pullGuard =
+      'oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before autonomous work continues" >&2; exit 1; }';
+
+    expect(arrivalBlock).toContain(pullGuard);
+    expect(content.indexOf(pullGuard)).toBeLessThan(
+      content.indexOf('### Step 1: Detect the Persisted Entry State'),
+    );
+
+    const runArrival = (pullStatus: string) =>
+      execFileSync(
+        '/bin/bash',
+        [
+          '-c',
+          `oat() {
+  if [[ "$1 $2" == "project scope" ]]; then
+    printf synced
+  elif [[ "$1 $2" == "project pull" ]]; then
+    [[ "$pullStatus" == "success" ]]
+  fi
+}
+${arrivalBlock}
+printf 'artifact-read\\n'`,
+          'autonomous-arrival',
+        ],
+        {
+          encoding: 'utf8',
+          env: {
+            ...process.env,
+            PROJECT_PATH: '/tmp/synced-project',
+            pullStatus,
+          },
+        },
+      );
+
+    expect(runArrival('success')).toContain('artifact-read');
+    expect(() => runArrival('conflict')).toThrow();
+  });
+
   it('runs one non-blocking implementation-tail recap before final HiLL approval', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-implement/references/completion-and-closeout.md',

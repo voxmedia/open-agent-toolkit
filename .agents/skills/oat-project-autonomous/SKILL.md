@@ -1,6 +1,6 @@
 ---
 name: oat-project-autonomous
-version: 1.0.8
+version: 1.0.9
 description: Use when a user explicitly asks to run an OAT project autonomously end-to-end. Activates session-only autonomy, resumes the correct lifecycle phase, and drives the existing OAT skills through final PR or a reported boundary.
 argument-hint: '<goal | project-slug | ticket-ref>'
 disable-model-invocation: true
@@ -159,7 +159,7 @@ synced checkout. Scope resolution fails closed:
 if [ -n "$PROJECT_PATH" ]; then
   PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1
   if [ "$PROJECT_SCOPE" = "synced" ]; then
-    oat project pull "$PROJECT_PATH"
+    oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before autonomous work continues" >&2; exit 1; }
   fi
 fi
 ```
