@@ -76,7 +76,7 @@ oat_generated: false
 ### Task p01-t01: Generalize the user-default portability ratchet
 
 **Status:** complete
-**Commit:** `7ff15e66c`
+**Commit:** `7ff15e66c` (+ review fix `7f7dd6cfc`)
 
 ---
 
@@ -211,17 +211,46 @@ continuation_events: []
 
 #### Phase Outcomes
 
-| Phase | Implementer | Tasks | Review      | Fix rounds      | Result             |
-| ----- | ----------- | ----- | ----------- | --------------- | ------------------ |
-| p01   | opus        | 6/6   | 0C/2I/3M/4m | 0 (in progress) | review fix pending |
+| Phase | Implementer | Tasks | Review                         | Fix rounds      | Result                          |
+| ----- | ----------- | ----- | ------------------------------ | --------------- | ------------------------------- |
+| p01   | opus        | 6/6   | r1 0C/2I/3M/4m; r2 0C/1I/2M/3m | 1 (`7f7dd6cfc`) | fixes complete; round 3 pending |
 
 #### Parallel Groups
 
 None (sequential plan).
 
+#### Review Rounds
+
+| Round | Artifact                                   | Head        | Findings          | Disposition                                                             |
+| ----- | ------------------------------------------ | ----------- | ----------------- | ----------------------------------------------------------------------- |
+| 1     | `reviews/p01-review-2026-08-29T000007Z.md` | `f8a89ce9e` | 0C / 2I / 3M / 4m | I2 fixed in `7f7dd6cfc`; I1 resolved by root bookkeeping in `de611286a` |
+| 2     | `reviews/p01-review-2026-08-29T040642Z.md` | `7f7dd6cfc` | 0C / 1I / 2M / 3m | all root-owned bookkeeping; resolved in this commit                     |
+
+Round 2's Important and both Mediums were defects in root-owned project
+artifacts, not in phase code:
+
+- `state.md` still read `oat_current_task: p01-t01` / `oat_last_commit: null`
+  while `implementation.md` read `p02-t01`. Two authoritative resume pointers
+  disagreed and the stale one aimed at a completed task. Corrected.
+- The review fix commit `7f7dd6cfc` appeared in no ledger. Now recorded on the
+  p01-t01 row and in the Review Rounds table above.
+- The Phase 1 Test Results row asserted a clean `pnpm test` that had in fact
+  been read off a Turborepo cache replay. Corrected with authoritative uncached
+  evidence and an explicit caveat.
+
 #### Outstanding Items
 
-- Phase 1 in progress.
+- Round 3 review pending to confirm the phase passes at the
+  Critical/Important threshold.
+- Deferred to p02 (recorded, non-blocking): Medium — provider materialization
+  proven for Codex only; Medium — bare `.agents/agents/*.md` reads surviving in
+  `oat-project-review-provide/SKILL.md:892`; Medium — sibling paths outside
+  `references/` unenforced.
+- Follow-up candidate (Minor, round 2): `packages/cli/src/validation/skills.test.ts:4695`
+  carries a duplicate of the pre-fix matcher and still has the single-`../`
+  blind spot closed in `7f7dd6cfc`. Harmless today because all four canonical
+  agents sit in `defaultScope: 'user'` packs and are covered by the widened
+  canonical matcher, but the duplicate will drift.
 
 <!-- orchestration-runs-end -->
 
@@ -296,8 +325,22 @@ Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | 290 files | 290    | 0      | n/a      |
+| 1     | 290 files | 290    | 0\*    | n/a      |
 | 2     | -         | -      | -      | -        |
+
+\* Authoritative uncached, HOME-isolated run at `7f7dd6cfc`:
+`HOME=$(mktemp -d) pnpm exec turbo run test --force` → exit 0,
+`Cached: 0 cached, 10 total`, 290/290 CLI test files passed.
+
+Caveat, recorded deliberately: on a host whose real `$HOME` contains
+`~/.oat/templates/` (any maintainer with a user-scope OAT install), `pnpm test`
+additionally fails 3 tests across `src/commands/backlog/new.test.ts` and
+`src/commands/pjm/init.test.ts`. Those are pre-existing and unrelated to p01 —
+this phase's commit range touches nothing under `backlog/`, `pjm/`, or
+`assets/` — and they are fixed separately on PR #229 against `main`. An earlier
+revision of this row claimed a clean `pnpm test` with no caveat; that reading
+came from a Turborepo cache replay (`>>> FULL TURBO`) rather than an executed
+run, and is corrected here.
 
 ## Final Summary (for PR/docs)
 

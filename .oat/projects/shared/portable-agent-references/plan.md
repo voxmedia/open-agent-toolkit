@@ -455,7 +455,8 @@ git commit -m "chore(p02-t02): release portable agent references"
 
 | Scope  | Type     | Status          | Date       | Artifact                                                                            | Reviewed Head                            | Invocation | Gate Target |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | fixes_added     | 2026-08-29 | reviews/p01-review-2026-08-29T000007Z.md                                            | f8a89ce9ec9b5b8c6d982e20bcd06e55ba7d6bb2 | manual     | -           |
+| p01    | code     | fixes_completed | 2026-08-29 | reviews/p01-review-2026-08-29T000007Z.md                                            | f8a89ce9ec9b5b8c6d982e20bcd06e55ba7d6bb2 | manual     | -           |
+| p01    | code     | fixes_completed | 2026-08-29 | reviews/p01-review-2026-08-29T040642Z.md                                            | 7f7dd6cfc2e5d443a4f44c8d54579e4304309a90 | manual     | -           |
 | p02    | code     | pending         | -          | -                                                                                   | -                                        | -          | -           |
 | final  | code     | pending         | -          | -                                                                                   | -                                        | -          | -           |
 | spec   | artifact | pending         | -          | -                                                                                   | -                                        | -          | -           |
