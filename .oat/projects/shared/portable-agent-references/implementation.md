@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: portable-agent-references
 
 **Started:** 2026-08-28
-**Last Updated:** 2026-08-29 (p01 passed round 3)
+**Last Updated:** 2026-08-29 (both phases passed; final review passed)
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -392,7 +392,13 @@ Track test execution during implementation.
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | 290 files | 290    | 0\*    | n/a      |
-| 2     | 290 files | 290    | 0      | n/a      |
+| 2     | 290 files | 290    | 0\*\*  | n/a      |
+
+\*\* Phase 2 row measured at the p02 head `fa9d6e37d` under the same
+authoritative method, and again at `b4c71f790` for final verification:
+`HOME=$(mktemp -d) pnpm exec turbo run test --force` → exit 0,
+`Cached: 0 cached, 10 total`, 0 replay markers. The same host-HOME caveat
+below applies unchanged.
 
 \* Authoritative uncached, HOME-isolated run at `7f7dd6cfc`:
 `HOME=$(mktemp -d) pnpm exec turbo run test --force` → exit 0,

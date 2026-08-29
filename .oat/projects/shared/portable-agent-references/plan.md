@@ -460,7 +460,7 @@ git commit -m "chore(p02-t02): release portable agent references"
 | p01    | code     | passed          | 2026-08-29 | reviews/p01-review-2026-08-29T074543Z.md                                            | 52745ef93674fe0098e54208bf84d98132bc87ca | manual     | -           |
 | p02    | code     | fixes_completed | 2026-08-29 | reviews/p02-review-2026-08-29T080559Z.md                                            | 69d011bbc3ca19bac8848e3694706dd29835023e | manual     | -           |
 | p02    | code     | passed          | 2026-08-29 | reviews/p02-review-2026-08-29T081859Z.md                                            | fa9d6e37d98dfbc7e69d6c7d98b25a60c8d55885 | manual     | -           |
-| final  | code     | pending         | -          | -                                                                                   | -                                        | -          | -           |
+| final  | code     | received        | 2026-08-29 | reviews/final-review-2026-08-29T082359Z.md                                          | b4c71f790b1960554598fff1b1ab1a40c3127e5a | auto       | -           |
 | spec   | artifact | pending         | -          | -                                                                                   | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                                                   | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-08-28 | structured in-memory review (head c47586ce; reviewer oat-reviewer-gpt-5-6-sol-high) | -                                        | -          | -           |
