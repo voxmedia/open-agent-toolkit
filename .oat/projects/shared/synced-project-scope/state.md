@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 62e4ade8
+oat_last_commit: 50239050
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -373,6 +373,7 @@ configured exit gate before the PR update.
 - ✓ Maintainer waived a documentation-only re-review after p19-t11 and p19-t12
 - ✓ Phase 19 task p19-t11 documented the archive snapshot/source-ref retry identity
 - ✓ Phase 19 task p19-t12 stabilized durable closeout prose at 191/191 tasks
+- ✓ Root verification closed both artifact findings; final review marked passed under the maintainer's no-re-review waiver
 
 ## Blockers
 
@@ -380,6 +381,6 @@ None.
 
 ## Next Milestone
 
-No plan task remains. Require a current passing final review and refresh the
+No plan task remains and the final review is terminally passed. Refresh the
 configured implementation exit gate before updating PR #227; do not insert an
 additional documentation-only re-review for p19-t11 or p19-t12.

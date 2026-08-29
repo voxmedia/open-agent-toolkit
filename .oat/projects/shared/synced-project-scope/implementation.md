@@ -1,5 +1,5 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-29
@@ -3834,6 +3834,11 @@ The maintainer explicitly waived another documentation-only re-review after
 these corrections. Durable closeout still requires a current passing final
 review and a fresh configured exit gate before the PR update; `state.md` alone
 owns the current route through those lifecycle checks.
+
+Root verification confirmed that `p19-t11` and `p19-t12` satisfy the review's
+two artifact-only findings, and the maintainer waived a separate independent
+re-review. The existing final review event is therefore terminally passed;
+this waiver does not satisfy or skip the configured implementation exit gate.
 
 ### Durable Closeout State
 
