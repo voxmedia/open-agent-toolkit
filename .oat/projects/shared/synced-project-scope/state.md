@@ -68,8 +68,17 @@ oat_phase_recovery_policy:
       used_attempts: 2
       pending_attempt: null
     p16:
-      used_attempts: 0
-      pending_attempt: null
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p16-recovery-01-absolute-archive-ignore
+        original_request_id: f5a1e1b3-2913-43d2-a329-99d2dd06e3a3
+        original_task_id: p16-t10
+        original_commit: 1e00f76eac9cceaa305867135684a60863a1c0d5
+        discovered_by: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: eb6df45d3e1f9551f0a152fbfcaf165b4dc27a63
+        status: reserved
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -146,7 +155,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T06:42:31.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T07:42:12.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
