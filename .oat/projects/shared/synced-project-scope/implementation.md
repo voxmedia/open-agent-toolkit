@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: review
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: p16-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,9 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> One hundred forty-four of one hundred sixty-four implementation and revision
-> tasks are complete. A fresh full-range review added twenty Phase 16 fixes
-> before another independent review or PR #227 update.
+> All one hundred sixty-four implementation and revision tasks are complete.
+> Phase 16 passed its final-head gates and now requires another independent
+> full-range review before the refreshed exit gate or PR #227 update.
 >
 > Conventions:
 >
@@ -28,27 +28,27 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 10    | 10/10     |
-| Phase 2      | complete    | 13    | 13/13     |
-| Phase 3      | complete    | 19    | 19/19     |
-| Phase 4      | complete    | 16    | 16/16     |
-| Phase 5      | complete    | 7     | 7/7       |
-| Phase 6      | complete    | 3     | 3/3       |
-| Phase 7      | complete    | 1     | 1/1       |
-| Phase 8      | complete    | 1     | 1/1       |
-| Phase 9      | complete    | 1     | 1/1       |
-| Phase 10     | complete    | 14    | 14/14     |
-| Phase 11     | complete    | 3     | 3/3       |
-| Phase 12     | complete    | 1     | 1/1       |
-| Phase p-rev1 | complete    | 1     | 1/1       |
-| Phase 13     | complete    | 16    | 16/16     |
-| Phase 14     | complete    | 19    | 19/19     |
-| Phase 15     | complete    | 19    | 19/19     |
-| Phase 16     | in progress | 20    | 0/20      |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 10    | 10/10     |
+| Phase 2      | complete | 13    | 13/13     |
+| Phase 3      | complete | 19    | 19/19     |
+| Phase 4      | complete | 16    | 16/16     |
+| Phase 5      | complete | 7     | 7/7       |
+| Phase 6      | complete | 3     | 3/3       |
+| Phase 7      | complete | 1     | 1/1       |
+| Phase 8      | complete | 1     | 1/1       |
+| Phase 9      | complete | 1     | 1/1       |
+| Phase 10     | complete | 14    | 14/14     |
+| Phase 11     | complete | 3     | 3/3       |
+| Phase 12     | complete | 1     | 1/1       |
+| Phase p-rev1 | complete | 1     | 1/1       |
+| Phase 13     | complete | 16    | 16/16     |
+| Phase 14     | complete | 19    | 19/19     |
+| Phase 15     | complete | 19    | 19/19     |
+| Phase 16     | complete | 20    | 20/20     |
 
-**Total:** 144/164 tasks completed
+**Total:** 164/164 tasks completed
 
 ---
 
@@ -3367,33 +3367,33 @@ step is a fresh independent full-range review; publication remains blocked.
 
 ## Phase 16: Final full-range safety and contract fixes
 
-**Status:** in progress
+**Status:** complete - 20 of 20 tasks complete; independent review pending
 **Started:** 2026-08-29
 
 ### Task Status
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p16-t01 | pending | -      |
-| p16-t02 | pending | -      |
-| p16-t03 | pending | -      |
-| p16-t04 | pending | -      |
-| p16-t05 | pending | -      |
-| p16-t06 | pending | -      |
-| p16-t07 | pending | -      |
-| p16-t08 | pending | -      |
-| p16-t09 | pending | -      |
-| p16-t10 | pending | -      |
-| p16-t11 | pending | -      |
-| p16-t12 | pending | -      |
-| p16-t13 | pending | -      |
-| p16-t14 | pending | -      |
-| p16-t15 | pending | -      |
-| p16-t16 | pending | -      |
-| p16-t17 | pending | -      |
-| p16-t18 | pending | -      |
-| p16-t19 | pending | -      |
-| p16-t20 | pending | -      |
+| Task    | Status | Commit     |
+| ------- | ------ | ---------- |
+| p16-t01 | done   | `dd96b71e` |
+| p16-t02 | done   | `ac1f92f2` |
+| p16-t03 | done   | `77fe166f` |
+| p16-t04 | done   | `3d0f8bc7` |
+| p16-t05 | done   | `8841e4c4` |
+| p16-t06 | done   | `66f5b1a3` |
+| p16-t07 | done   | `3e432f42` |
+| p16-t08 | done   | `9c7eaad3` |
+| p16-t09 | done   | `2045e108` |
+| p16-t10 | done   | `1e00f76e` |
+| p16-t11 | done   | `89815f74` |
+| p16-t12 | done   | `6bd2871a` |
+| p16-t13 | done   | `ea074392` |
+| p16-t14 | done   | `9625dc13` |
+| p16-t15 | done   | `4601eb6b` |
+| p16-t16 | done   | `eb6df45d` |
+| p16-t17 | done   | `bf0907df` |
+| p16-t18 | done   | `f42e91a4` |
+| p16-t19 | done   | `d53a88bc` |
+| p16-t20 | done   | `ccab2eba` |
 
 ### Review Received: final full-range review - 2026-08-29T06:34:13Z
 
@@ -3410,3 +3410,56 @@ through `p16-t06`, and Minor findings in review order to `p16-t07` through
 `claude-fable-skip-permissions`, full explicit range
 `8cc1b3827f9c051d5d2bb078ae986aef3e9fbd80..26f53309caca8e6360cdb24b8d1778e115a8b5e8`.
 This event is `fixes_added`, never passed.
+
+### Generic Implementation Dispatch Record
+
+```yaml
+request_id: f5a1e1b3-2913-43d2-a329-99d2dd06e3a3
+caller: oat-project-implement
+scope: synced-project-scope/p16
+objective: Implement Phase 16 final full-range safety and contract fixes.
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native-followup
+dispatch_policy: high
+dispatch_ceiling: high
+authority: p16-t01 through p16-t20 declared files, tightly necessary adjacent tests, and implementation evidence
+role_selector: oat-phase-implementer-gpt-5-6-sol-high
+model_selector: gpt-5.6-sol
+effort_selector: high
+launch_status: accepted
+child_outcome: completed-with-recovery-volume-warning
+continuation_events:
+  - p16-recovery-01-absolute-archive-ignore
+  - p16-recovery-02-canonical-archive-fixture
+  - p16-recovery-03-autonomy-site-key
+  - p16-recovery-04-config-write-mock
+task_class: consequential
+model_class_floor: consequential
+floor_satisfaction: satisfied
+```
+
+### Recovery Events
+
+- Attempt 1 was reserved against `p16-t10`, then settled failed/misattributed
+  with no code change when diagnosis identified `p16-t04` as the source.
+- Attempt 2 recovered canonical archive fixture roots in `280d02fb`; focused
+  2/2 and full archive 104/104 passed; root settlement `8d112b26`.
+- Attempt 3 refreshed the autonomy prompt-site mapping in `22db05f1`; focused
+  4/4, check, skill validation, and diff checks passed; full suite was deferred
+  only until the independent attempt-4 mock fix; root settlement `6931a9b1`.
+- Attempt 4 repaired config-write mock exports in `867da54c`; focused 10/10 and
+  isolated-HOME full tests passed before/after; root settlement `d87e445b`.
+
+Recovery usage is 4/10 with `pending_attempt: null`.
+
+### Phase 16 Closeout
+
+All twenty planned tasks are complete. The eight CI gates passed in exact order
+against settled final HEAD, including isolated-HOME CLI 4,416 tests, skills 586,
+and release 39 pass/1 skip. Skill validation, lint, format, and diff checks also
+passed. Four recovery events trigger a volume warning but no pending recovery or
+known failing gate remains. Independent full-range review is next; publication
+remains blocked.
