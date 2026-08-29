@@ -78,7 +78,7 @@ oat_phase_recovery_policy:
         discovered_by: HOME=<isolated> pnpm test; pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/update/config-write.test.ts
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
         reservation_head: 6931a9b14e0c382ef0b844e1a0dc1cfa990c5172
-        status: reserved
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit

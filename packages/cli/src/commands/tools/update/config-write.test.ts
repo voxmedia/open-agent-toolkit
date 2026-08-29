@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
   readOatConfig,
+  readOatLocalConfig,
+  readUserConfig,
   writeOatConfig,
   resolveProjectRoot,
   resolveScopeRoot,
@@ -21,6 +23,8 @@ const {
 
   return {
     readOatConfig: vi.fn(async () => ({ version: 1 as const })),
+    readOatLocalConfig: vi.fn(async () => ({ version: 1 as const })),
+    readUserConfig: vi.fn(async () => ({ version: 1 as const })),
     writeOatConfig: vi.fn(async () => {}),
     resolveProjectRoot: vi.fn(async (cwd: string) => cwd),
     resolveScopeRoot: vi.fn(
@@ -66,6 +70,8 @@ vi.mock('@app/command-context', () => ({
 
 vi.mock('@config/oat-config', () => ({
   readOatConfig,
+  readOatLocalConfig,
+  readUserConfig,
   writeOatConfig,
 }));
 
