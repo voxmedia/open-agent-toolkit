@@ -718,7 +718,8 @@ async function verifyArchiveSnapshotMetadata(
   if (
     !isRecord(actual) ||
     actual.projectName !== expected.projectName ||
-    actual.snapshotName !== expected.snapshotName
+    actual.snapshotName !== expected.snapshotName ||
+    actual.scope !== expected.scope
   ) {
     throw new CliError(
       `Existing archive \`${archivePath}\` does not match persisted snapshot \`${expected.snapshotName}\`; refusing to overwrite it.`,

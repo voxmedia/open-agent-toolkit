@@ -501,6 +501,50 @@ describe('archive utils', () => {
     );
   });
 
+  it('refuses a persisted archive snapshot without its originating scope', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await expect(
+      resolveArchiveProjectTarget({
+        repoRoot,
+        projectsRoot: '.oat/projects/shared',
+        projectName: 'demo',
+        archiveSnapshot: '20260827-demo',
+      }),
+    ).rejects.toEqual(
+      new CliError(
+        'Persisted archive snapshot `20260827-demo` is missing its originating project scope; refusing an unscoped retry.',
+      ),
+    );
+  });
+
+  it('refuses to archive a project outside every configured scope root', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, 'outside', 'demo');
+    const statePath = join(projectPath, 'state.md');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(statePath, '# state\n', 'utf8');
+
+    await expect(
+      archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      }),
+    ).rejects.toEqual(
+      new CliError(
+        `Project path \`${projectPath}\` is outside the configured shared, local, and synced scope roots; refusing to archive without an originating scope.`,
+        2,
+      ),
+    );
+    await expect(readFile(statePath, 'utf8')).resolves.toBe('# state\n');
+    await expect(
+      access(join(repoRoot, '.oat', 'projects', 'archived')),
+    ).rejects.toThrow();
+  });
+
   it('archives the project locally during completion', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
@@ -530,6 +574,48 @@ describe('archive utils', () => {
     expect(result.s3Path).toBeNull();
     expect(result.summaryExportFile).toBeNull();
     expect(result.warnings).toEqual([]);
+  });
+
+  it('rejects an existing archive whose snapshot metadata has the wrong scope', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    const archivePath = join(repoRoot, '.oat', 'projects', 'archived', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await mkdir(archivePath, { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+    await writeFile(
+      join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+      `${JSON.stringify({
+        projectName: 'demo',
+        snapshotName: '20260827-demo',
+        scope: 'local',
+      })}\n`,
+      'utf8',
+    );
+    const targetExists = vi
+      .fn<() => Promise<boolean>>()
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        },
+        {
+          dirExists: targetExists,
+          timestamp: () => '2026-08-27T12:00:00Z',
+        },
+      ),
+    ).rejects.toEqual(
+      new CliError(
+        `Existing archive \`${archivePath}\` does not match persisted snapshot \`20260827-demo\`; refusing to overwrite it.`,
+      ),
+    );
   });
 
   it.each([
