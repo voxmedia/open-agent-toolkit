@@ -111,7 +111,10 @@ async function runPrune(
       { repoRoot, env: dependencies.processEnv },
       pathOrSlug,
       {},
-      { allowMissingCheckout: true },
+      {
+        allowMissingCheckout: true,
+        allowStagedPruneDeletion: true,
+      },
     );
     const state = await dependencies.readProjectState(
       target,

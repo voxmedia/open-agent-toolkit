@@ -1027,6 +1027,52 @@ export async function pruneSynced(
     );
   }
 
+  const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+  const relativeRecordPath = repoRelativePath(target.repoRoot, recordPath);
+  const stagedDeletion = await git.run(
+    [
+      'diff',
+      '--cached',
+      '--diff-filter=D',
+      '--name-only',
+      '--',
+      relativeRecordPath,
+    ],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  if (
+    stagedDeletion.code === 0 &&
+    stagedDeletion.stdout === relativeRecordPath
+  ) {
+    const localRef = await git.run(
+      ['show-ref', '--verify', '--quiet', target.ref],
+      { cwd: target.repoRoot, allowFailure: true },
+    );
+    const remoteRef = await git.run(
+      ['ls-remote', '--exit-code', target.remote, target.ref],
+      { cwd: target.repoRoot, allowFailure: true },
+    );
+    if (localRef.code !== 0 && remoteRef.code !== 0) {
+      if (!options.commit) {
+        return { status: 'pruned', lifecycleCommit: null };
+      }
+      await git.run(
+        [
+          'commit',
+          '-m',
+          `chore(oat): prune synced project ${target.slug}`,
+          '--',
+          relativeRecordPath,
+        ],
+        { cwd: target.repoRoot },
+      );
+      const lifecycleCommit = (
+        await git.run(['rev-parse', 'HEAD'], { cwd: target.repoRoot })
+      ).stdout;
+      return { status: 'pruned', lifecycleCommit };
+    }
+  }
+
   await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
   const registeredPaths = await registeredWorktreePaths(target, git);
   const canonicalRegisteredPaths = [
@@ -1100,7 +1146,6 @@ export async function pruneSynced(
   }
 
   await git.run(['update-ref', '-d', target.ref], { cwd: target.repoRoot });
-  const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
   await rm(recordPath, { force: true });
   const committed = options.commit
     ? await commitRecordChange(

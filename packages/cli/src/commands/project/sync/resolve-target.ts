@@ -7,6 +7,7 @@ import {
   assertValidProjectSlug,
   resolveProjectScope,
   resolveScopeRoot,
+  syncedRecordPath,
 } from '@commands/shared/project-scope';
 import { readOatLocalConfig, type OatLocalConfig } from '@config/oat-config';
 import { CliError } from '@errors/cli-error';
@@ -26,6 +27,7 @@ export interface ResolveSyncedTargetContext {
 
 export interface ResolveSyncedTargetOptions {
   allowMissingCheckout?: boolean;
+  allowStagedPruneDeletion?: boolean;
 }
 
 export interface ResolveSyncedTargetDependencies {
@@ -51,6 +53,64 @@ async function pathExists(path: string): Promise<boolean> {
       return false;
     }
     throw error;
+  }
+}
+
+async function isStagedPruneDeletion(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<boolean> {
+  const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+  const relativeRecord = relative(target.repoRoot, recordPath)
+    .split('\\')
+    .join('/');
+  const [localRef, remoteRef, stagedDeletion, priorRecord] = await Promise.all([
+    git.run(['show-ref', '--verify', '--quiet', target.ref], {
+      cwd: target.repoRoot,
+      allowFailure: true,
+    }),
+    git.run(['ls-remote', '--exit-code', target.remote, target.ref], {
+      cwd: target.repoRoot,
+      allowFailure: true,
+    }),
+    git.run(
+      [
+        'diff',
+        '--cached',
+        '--diff-filter=D',
+        '--name-only',
+        '--',
+        relativeRecord,
+      ],
+      { cwd: target.repoRoot, allowFailure: true },
+    ),
+    git.run(['show', `HEAD:${relativeRecord}`], {
+      cwd: target.repoRoot,
+      allowFailure: true,
+    }),
+  ]);
+  if (
+    localRef.code === 0 ||
+    remoteRef.code === 0 ||
+    stagedDeletion.code !== 0 ||
+    stagedDeletion.stdout !== relativeRecord ||
+    priorRecord.code !== 0
+  ) {
+    return false;
+  }
+  try {
+    const record = JSON.parse(priorRecord.stdout) as {
+      slug?: unknown;
+      ref?: unknown;
+      scope?: unknown;
+    };
+    return (
+      record.slug === target.slug &&
+      record.ref === target.ref &&
+      record.scope === 'synced'
+    );
+  } catch {
+    return false;
   }
 }
 
@@ -139,6 +199,18 @@ export async function resolveSyncedTarget(
     realpath: dependencies.realpath,
     exitCode: 1,
   });
+  if (
+    !bareSlug &&
+    !checkoutExists &&
+    options.allowStagedPruneDeletion &&
+    (await isStagedPruneDeletion(target, dependencies.gitRunner))
+  ) {
+    return {
+      ...target,
+      adopt: false,
+      adoptionRecord: 'durable',
+    };
+  }
   const adoptionRecord = await dependencies.classifyAdoptionRecord(
     target,
     dependencies.gitRunner,

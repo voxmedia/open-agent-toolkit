@@ -219,6 +219,105 @@ describe('prune command integration', () => {
     }
   });
 
+  it('retries an exact-path prune after the final record commit fails', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'retry-prune-commit',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(join(target.projectPath, 'state.md'), '# state\n');
+      await pushSynced(target, defaultGitRunner, {});
+      const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(target.slug, new Date('2026-08-29T00:00:00Z')),
+      );
+      await writeFile(join(fixture.cloneA, 'unrelated.txt'), 'base\n');
+      execFileSync('git', ['add', recordPath, 'unrelated.txt'], {
+        cwd: fixture.cloneA,
+      });
+      execFileSync('git', ['commit', '-m', 'seed prune retry'], {
+        cwd: fixture.cloneA,
+      });
+      await writeFile(join(fixture.cloneA, 'unrelated.txt'), 'staged\n');
+      execFileSync('git', ['add', 'unrelated.txt'], { cwd: fixture.cloneA });
+      await writeFile(join(fixture.cloneA, 'unrelated.txt'), 'working\n');
+
+      const failingGit = {
+        run: vi.fn(async (...args: Parameters<typeof defaultGitRunner.run>) => {
+          if (args[0][0] === 'commit') {
+            throw new Error('injected final prune commit failure');
+          }
+          return defaultGitRunner.run(...args);
+        }),
+      };
+      await expect(
+        pruneSynced(target, failingGit, { force: true, commit: true }),
+      ).rejects.toThrow('injected final prune commit failure');
+      expect(
+        execFileSync(
+          'git',
+          [
+            'diff',
+            '--cached',
+            '--diff-filter=D',
+            '--name-only',
+            '--',
+            recordPath,
+          ],
+          { cwd: fixture.cloneA, encoding: 'utf8' },
+        ).trim(),
+      ).toBe('.oat/projects/synced/retry-prune-commit.json');
+
+      const capture = createLoggerCapture();
+      const command = createProjectPruneCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneA,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneA,
+        processEnv: {},
+      });
+      await run(command, [target.projectPath, '--force']);
+
+      expect(capture.error).toEqual([]);
+      expect(process.exitCode).toBe(0);
+      expect(
+        execFileSync(
+          'git',
+          ['status', '--porcelain=v1', '--', 'unrelated.txt'],
+          {
+            cwd: fixture.cloneA,
+            encoding: 'utf8',
+          },
+        ).trim(),
+      ).toBe('MM unrelated.txt');
+      expect(
+        execFileSync('git', ['show', '-1', '--format=%s', '--name-only'], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }),
+      ).toContain('chore(oat): prune synced project retry-prune-commit');
+      expect(
+        execFileSync('git', ['show', '-1', '--format=', '--name-only'], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe('.oat/projects/synced/retry-prune-commit.json');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('prunes an environment-root project without leaving a half-pruned parent', async () => {
     const fixture = await createSyncedFixture();
     try {
