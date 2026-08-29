@@ -13,8 +13,9 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, dirname, isAbsolute, join, relative } from 'node:path';
+import { basename, dirname, isAbsolute, join } from 'node:path';
 
+import { ensureScopedRootGitignore } from '@commands/init/gitignore';
 import { defaultGitRunner } from '@commands/project/sync/git';
 import {
   buildSyncedRecord,
@@ -26,10 +27,7 @@ import {
   createSyncedProject,
   pushSynced,
 } from '@commands/project/sync/ref-sync';
-import {
-  canonicalizePath,
-  syncedRecordPath,
-} from '@commands/shared/project-scope';
+import { syncedRecordPath } from '@commands/shared/project-scope';
 import { CliError } from '@errors/cli-error';
 import { createSyncedFixture } from '@test-support/synced-fixture';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -844,26 +842,11 @@ describe('archive utils', () => {
             ? join(fixture.cloneA, '.oat', 'absolute', 'team')
             : '.oat/team-projects';
         const target = buildSyncTarget(fixture.cloneA, projectsRoot, 'demo');
-        const archiveRoot = join(dirname(target.sharedRoot), 'archived');
-        const gitignorePath = join(fixture.cloneA, '.gitignore');
-        const gitignore = await readFile(gitignorePath, 'utf8');
-        const canonicalRepoRoot = canonicalizePath(fixture.cloneA);
-        const repoRelativeSyncedRoot = relative(
-          canonicalRepoRoot,
-          canonicalizePath(target.syncedRoot),
-        )
-          .split('\\')
-          .join('/');
-        const repoRelativeArchiveRoot = relative(
-          canonicalRepoRoot,
-          canonicalizePath(archiveRoot),
-        )
-          .split('\\')
-          .join('/');
-        await writeFile(
-          gitignorePath,
-          `${gitignore}\n/${repoRelativeSyncedRoot}/*/\n/${repoRelativeArchiveRoot}/**\n`,
-          'utf8',
+        await ensureScopedRootGitignore(
+          fixture.cloneA,
+          target.syncedRoot,
+          'synced',
+          defaultGitRunner,
         );
         await defaultGitRunner.run(['add', '.gitignore'], {
           cwd: fixture.cloneA,
@@ -872,7 +855,6 @@ describe('archive utils', () => {
           ['commit', '-m', 'test: configure custom project roots'],
           { cwd: fixture.cloneA },
         );
-
         await createSyncedProject(target, defaultGitRunner);
         await writeFile(
           join(target.projectPath, 'state.md'),

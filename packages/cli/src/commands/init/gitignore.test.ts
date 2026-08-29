@@ -213,6 +213,9 @@ describe('applyOatCoreGitignore', () => {
       expect(content.indexOf(expectedRule)).toBeLessThan(
         content.indexOf('# END OAT core'),
       );
+      if (scope === 'synced') {
+        expect(content).toContain('/.oat/custom/archived/**');
+      }
     },
   );
 
