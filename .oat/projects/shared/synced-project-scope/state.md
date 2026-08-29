@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p19-t13
 oat_last_commit: 50239050
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -165,16 +165,15 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Implementation tasks complete; closeout evidence pending
+**Status:** Exit-gate remediation in progress
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-All 191 implementation and revision tasks are complete. The maintainer waived
-another documentation-only re-review of `p19-t11` and `p19-t12`. The current
-closeout route is to require a current passing final review and refresh the
-configured exit gate before the PR update.
+The configured exit gate reproduced one Important linked-worktree local-sync
+regression. Resume at `p19-t13`; the two non-safety Minor cleanup findings are
+deferred without implementation tasks.
 
 ## Artifacts
 
@@ -182,7 +181,7 @@ configured exit gate before the PR update.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (191/191 tasks complete)
+- **Implementation:** `implementation.md` (191/192 tasks complete)
 
 ## Progress
 
@@ -374,6 +373,8 @@ configured exit gate before the PR update.
 - ✓ Phase 19 task p19-t11 documented the archive snapshot/source-ref retry identity
 - ✓ Phase 19 task p19-t12 stabilized durable closeout prose at 191/191 tasks
 - ✓ Root verification closed both artifact findings; final review marked passed under the maintainer's no-re-review waiver
+- ✗ Refreshed configured exit gate blocked with 1 Important / 2 Minor findings
+- ✓ Important regression converted into p19-t13; both non-safety Minors explicitly deferred
 
 ## Blockers
 
@@ -381,6 +382,5 @@ None.
 
 ## Next Milestone
 
-No plan task remains and the final review is terminally passed. Refresh the
-configured implementation exit gate before updating PR #227; do not insert an
-additional documentation-only re-review for p19-t11 or p19-t12.
+Implement p19-t13, run focused and full verification, then resume the same
+configured exit-gate generation for its second and final attempt.

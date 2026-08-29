@@ -3714,7 +3714,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | p19     | code     | fixes_completed | 2026-08-29 | reviews/archived/p19-review-2026-08-29T143242Z.md                 | 5d5684ebe41e3f5c41e40fd864f9108d7b1e2aa4 | auto       | -                             |
 | p19     | code     | passed          | 2026-08-29 | reviews/archived/p19-review-2026-08-29T150514Z.md                 | 225f75c41ca39a023f958bdef28a742eb0923f7b | auto       | -                             |
 | final   | code     | passed          | 2026-08-29 | reviews/archived/final-review-2026-08-29T151510Z.md               | d351cff957af7ef2cad76680108d8bdce4348cad | auto       | -                             |
-| final   | code     | received        | 2026-08-29 | reviews/final-review-2026-08-29T154355Z.md                        | 37d539c286c1c3e1ebef2d6c274de8dd4ef9bd62 | gate       | claude-fable-skip-permissions |
+| final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T154355Z.md               | 37d539c286c1c3e1ebef2d6c274de8dd4ef9bd62 | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -5591,6 +5591,37 @@ Keep transient review and resume routing only in `state.md`.
 Run formatting and project artifact validation. Commit as
 `docs(p19-t12): stabilize closeout resume prose`.
 
+### Task p19-t13: (gate review) Preserve linked-worktree local sync
+
+**Finding:** Important `I1` from configured exit-gate review
+`final-review-2026-08-29T154355Z.md`.
+
+**Step 1: Understand the issue**
+
+The registered-worktree guard excludes only worktrees exactly equal to the
+sync roots. When local sync runs between linked worktrees nested beneath the
+main checkout, the main worktree remains protected and contains every source
+path, so every configured local path is silently skipped.
+
+**Step 2: Implement the fix**
+
+Exclude a registered worktree from the protected nested set when it is an
+ancestor-or-equal owner of the canonical source or target root. Preserve the
+bidirectional overlap guard for all remaining registrations, including damaged
+or missing checkout markers.
+
+**Step 3: Verify**
+
+Add a real-Git regression with two linked worktrees beneath `.worktrees`, sync
+a configured local path from one linked worktree to the other, and require a
+successful copy. Keep the existing damaged-marker, overlap, malformed-output,
+and registry-failure cases green; run the focused local-sync suite, exact CLI
+type-check, and repository Definition-of-Done gates.
+
+**Step 4: Commit**
+
+Commit as `fix(p19-t13): preserve linked-worktree local sync`.
+
 ---
 
 ## Implementation Complete
@@ -5616,9 +5647,9 @@ Run formatting and project artifact validation. Commit as
 - Phase 16: 20 tasks - Final full-range safety fixes for custom-root archive completion, locale-stable Git, repository confinement, symlink canonicalization, lifecycle bookkeeping, and residual contract coverage
 - Phase 17: 14 tasks - Final lifecycle durability and provider parity fixes for release contracts, declined pause publication, generated views, custom roots, diagnostics, validators, docs, and Git isolation
 - Phase 18: 1 task - Remote-review correction preventing final project-ref publication from running against an archived synced project tree
-- Phase 19: 12 tasks - Final destructive-path, worktree-overlap, external-root, prune/archive retry, and closeout-artifact corrections
+- Phase 19: 13 tasks - Final destructive-path, worktree-overlap, external-root, prune/archive retry, local-sync compatibility, and closeout-artifact corrections
 
-**Total: 191 tasks**
+**Total: 192 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
