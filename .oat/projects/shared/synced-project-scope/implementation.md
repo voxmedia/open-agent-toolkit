@@ -4122,3 +4122,12 @@ Phase 20 review fixes are implemented in two append-only commits. No recovery at
 The fix-delta review closed `p20-t06` and `p20-t07`. Phase 20 is `passed`.
 Next: final closeout, including a fresh configured exit gate after the p20
 delta.
+
+### Configured Exit Gate Refresh (post-p20)
+
+The prior allowed gate generation predates Phase 20, the `#231` merge, and the
+autonomy inventory remap, so it is stale. Start a new blocking configured-gate
+generation against `origin/main` at `c0101f8c2b824755644dd4233f888ed31dac973d`
+with fingerprint
+`sha256:effective-delta-v1:1e40cf3b21c3b190bd8290f88debc42d462aeef492cd71d1df1cf0808b3d1079`.
+Launch attempt `abc00df8-f38c-412e-a642-4f3b1ad14b3b`.
