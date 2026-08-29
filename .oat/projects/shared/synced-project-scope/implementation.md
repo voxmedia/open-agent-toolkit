@@ -3840,6 +3840,15 @@ two artifact-only findings, and the maintainer waived a separate independent
 re-review. The existing final review event is therefore terminally passed;
 this waiver does not satisfy or skip the configured implementation exit gate.
 
+### Configured Exit Gate Refresh
+
+The prior allowed gate generation predates the Phase 19 substantive delta and
+is stale for closeout. Start a new blocking configured-gate generation against
+`origin/main`, using the current terminal artifact-review basis and the
+qualified `effective-delta-v1` fingerprint. The documentation-only re-review
+waiver does not alter the configured gate command, Important threshold, or
+two-attempt policy.
+
 ### Durable Closeout State
 
 All 191 plan tasks are complete. Closeout requires a current passing final
