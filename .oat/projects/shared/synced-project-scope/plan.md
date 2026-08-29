@@ -3717,6 +3717,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T154355Z.md               | 37d539c286c1c3e1ebef2d6c274de8dd4ef9bd62 | gate       | claude-fable-skip-permissions |
 | final   | code     | passed          | 2026-08-29 | reviews/archived/final-review-2026-08-29T155750Z.md               | f5b537847a64eea45978b4be4bfdf681b2cdf674 | manual     | -                             |
 | final   | code     | passed          | 2026-08-29 | reviews/archived/final-review-2026-08-29T160525Z.md               | 4881a5284a50976116d13aff5e7937ec6bde915c | gate       | claude-fable-skip-permissions |
+| remote  | code     | fixes_added     | 2026-08-29 | reviews/archived/remote-pr-227-review-2026-08-29T192256Z.md       | -                                        | -          | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -5626,6 +5627,153 @@ Commit as `fix(p19-t13): preserve linked-worktree local sync`.
 
 ---
 
+## Phase 20: Remote Bugbot completion and fold-back corrections
+
+Goal: close the unresolved Bugbot findings that still affect local completion,
+synced arrival, fold-back dirty-tree handling, and pin-source retry recognition.
+
+### Task p20-t01: (review) Default local completion archive decision
+
+**Finding:** Important `I1` from PR #227 comment `3887067629`.
+
+**Step 1: Analyze the failure context**
+
+Trace local-scope completion when `workflow.archiveOnComplete` is unset. Confirm
+the archive question is gated on `IS_DURABLE_PROJECT` while the resolver still
+requires a configured preference or interactive answer.
+
+**Step 2: Implement the fix**
+
+Give local (non-durable) completion an explicit non-archive decision without
+asking the archive question, while still requiring configured or interactive
+input for shared and synced projects. Keep fail-closed validation for malformed
+answers.
+
+**Step 3: Verify targeted behavior**
+
+Add executable coverage for local unset-preference completion, configured
+true/false, and interactive decline. Prove local completion no longer exits
+before lifecycle closeout.
+
+**Step 4: Verify project commands and commit**
+
+Run the focused completion-transaction and skill-contract suites plus the
+changed skill/test CI-order gates. Commit as
+`fix(p20-t01): default local completion archive decision`.
+
+---
+
+### Task p20-t02: (review) Pull synced projects before completion
+
+**Finding:** Important `I2` from PR #227 comment `3883811883`.
+
+**Step 1: Analyze the failure context**
+
+Compare completion's arrival path with other lifecycle skills. Confirm it
+resolves `synced` scope and then reads artifacts without `oat project pull`.
+
+**Step 2: Implement the fix**
+
+After fail-closed scope resolution, pull a synced checkout before any
+`state.md` or artifact read. Halt on pull failure so completion cannot act on
+a stale or absent tree.
+
+**Step 3: Verify targeted behavior**
+
+Add executable coverage proving synced completion pulls before reads and fails
+closed when pull is conflicted, dirty, or otherwise unsuccessful.
+
+**Step 4: Verify project commands and commit**
+
+Run the focused completion and skill-contract suites plus the changed
+skill/test CI-order gates. Commit as
+`fix(p20-t02): pull synced projects before completion`.
+
+---
+
+### Task p20-t03: (review) Detect dirty synced fold-back checkouts
+
+**Finding:** Medium `M1` from PR #227 comment `3887067631`.
+
+**Step 1: Analyze the failure context**
+
+Trace brainstorm fold-back preflight for synced projects. Confirm porcelain is
+limited to the artifact basename while `oat project push` stages the entire
+nested checkout.
+
+**Step 2: Implement the fix**
+
+Inspect the full synced checkout before choosing the clean path. Route extra
+dirty project files through the dirty-handler warning instead of silently
+publishing them with the fold-back.
+
+**Step 3: Verify targeted behavior**
+
+Add executable coverage for a clean artifact beside other dirty checkout files,
+proving the dirty path is taken and the extra files are not committed without
+the handler.
+
+**Step 4: Verify project commands and commit**
+
+Run the focused brainstorm/skill-contract suites plus the changed skill/test
+CI-order gates. Commit as
+`fix(p20-t03): detect dirty synced fold-back checkouts`.
+
+---
+
+### Task p20-t04: (review) Halt autonomous work on failed pull
+
+**Finding:** Medium `M2` from PR #227 comment `3887067633`.
+
+**Step 1: Analyze the failure context**
+
+Confirm `oat-project-autonomous` fails closed on scope resolution but continues
+after a failed `oat project pull`.
+
+**Step 2: Implement the fix**
+
+Require the pre-read synced pull to succeed before artifact reads or later
+writes. Surface the reported pull state and stop on conflict, dirty checkout,
+or command failure.
+
+**Step 3: Verify targeted behavior**
+
+Add executable coverage proving a failed or conflicted pull aborts before
+artifact access.
+
+**Step 4: Verify project commands and commit**
+
+Run the focused skill-contract suites plus the changed skill/test CI-order
+gates. Commit as `fix(p20-t04): halt autonomous work on failed pull`.
+
+---
+
+### Task p20-t05: (review) Recognize pin-source completion retries
+
+**Finding:** Medium `M3` from PR #227 comment `3883811890`.
+
+**Step 1: Analyze the failure context**
+
+Trace `detectCompletionReceiptCandidate` subjects. Confirm a HEAD or retained
+ref at `chore(oat): finalize project lifecycle` is treated as a fresh run.
+
+**Step 2: Implement the fix**
+
+Recognize the pin-source subject as a retry candidate and resume from the
+already-finalized pin-source tree instead of replaying Steps 3.7 through 7.
+
+**Step 3: Verify targeted behavior**
+
+Add executable coverage for a stop after the pin-source push, proving retry
+routing rather than a fresh completion transaction.
+
+**Step 4: Verify project commands and commit**
+
+Run the focused completion-receipt suites plus the changed skill/test CI-order
+gates. Commit as `fix(p20-t05): recognize pin-source completion retries`.
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -5650,18 +5798,16 @@ Commit as `fix(p19-t13): preserve linked-worktree local sync`.
 - Phase 17: 14 tasks - Final lifecycle durability and provider parity fixes for release contracts, declined pause publication, generated views, custom roots, diagnostics, validators, docs, and Git isolation
 - Phase 18: 1 task - Remote-review correction preventing final project-ref publication from running against an archived synced project tree
 - Phase 19: 13 tasks - Final destructive-path, worktree-overlap, external-root, prune/archive retry, local-sync compatibility, and closeout-artifact corrections
+- Phase 20: 5 tasks - Remote Bugbot corrections for local archive decision, completion pull, fold-back dirty detection, autonomous pull halt, and pin-source retry
 
-**Total: 192 tasks**
+**Total: 197 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
 **Operator step after implementation:** delete the disposable spike repository `https://github.com/tkstang/disposable-test-repo-for-oat` (used by p01-t10); the implementing agent never deletes repositories.
 
-All 192 implementation and revision tasks are complete. Before the PR update,
-closeout requires a current passing final review and a fresh configured exit
-gate. The maintainer explicitly waived another documentation-only re-review of
-`p19-t11` and `p19-t12`; transient review and resume routing remains
-authoritative only in `state.md`.
+Phases 1–19 remain complete (192 tasks). Phase 20 adds five remote-review fix
+tasks from the 2026-08-29T192256Z Bugbot receive. Resume at `p20-t01`.
 
 ---
 
