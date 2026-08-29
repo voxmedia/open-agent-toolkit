@@ -122,13 +122,38 @@ PR_ON_COMPLETE=$(oat config get workflow.createPrOnComplete 2>/dev/null || true)
 PROJECT_RECAP_CONFIG=$(oat config get workflow.explainers.projectRecap --json 2>/dev/null || true)
 ```
 
-- **If `ARCHIVE_PREF` is `true`:** Set `SHOULD_ARCHIVE="true"`. Skip the archive question. Print `Archive on complete: enabled (from workflow.archiveOnComplete).`
-- **If `ARCHIVE_PREF` is `false`:** Set `SHOULD_ARCHIVE="false"`. Skip the archive question. Print `Archive on complete: disabled (from workflow.archiveOnComplete).`
-- **If unset:** Include the archive question in the batched prompt as normal (backward compatible).
+- **If `IS_DURABLE_PROJECT` is `false`:** Omit the archive question regardless of
+  `ARCHIVE_PREF`. The resolver below selects `local-default`; do not assign
+  `SHOULD_ARCHIVE` directly.
+- **If `IS_DURABLE_PROJECT` is `true` and `ARCHIVE_PREF` is `true`:** Skip the
+  archive question. Print
+  `Archive on complete: enabled (from workflow.archiveOnComplete).`
+- **If `IS_DURABLE_PROJECT` is `true` and `ARCHIVE_PREF` is `false`:** Skip the
+  archive question. Print
+  `Archive on complete: disabled (from workflow.archiveOnComplete).`
+- **If `IS_DURABLE_PROJECT` is `true` and `ARCHIVE_PREF` is unset:** Include
+  the archive question in the batched prompt as normal (backward compatible).
 - **If `PR_ON_COMPLETE` is `true` AND no tracked open PR exists:** Set `SHOULD_OPEN_PR="true"`. Skip the Open PR question. Print `PR on complete: enabled (from workflow.createPrOnComplete).`
 - **If `PR_ON_COMPLETE` is `false`:** Set `SHOULD_OPEN_PR="false"`. Skip the Open PR question. Print `PR on complete: disabled (from workflow.createPrOnComplete).`
 - **If `PR_ON_COMPLETE` is unset:** Include the Open PR question in the batched prompt as normal (backward compatible).
 - The existing tracked-PR skip still applies: if `oat_pr_status` is `open`, do not ask the Open PR question and do not honor `PR_ON_COMPLETE=true` — the PR already exists.
+
+Select archive prompt participation before assembling the batched prompt:
+
+```bash
+# archive-prompt-selection:start
+ARCHIVE_QUESTION_REQUIRED="false"
+if [[ "$IS_DURABLE_PROJECT" == "true" ]]; then
+  if [[ "$ARCHIVE_PREF" == "true" ]]; then
+    echo "Archive on complete: enabled (from workflow.archiveOnComplete)."
+  elif [[ "$ARCHIVE_PREF" == "false" ]]; then
+    echo "Archive on complete: disabled (from workflow.archiveOnComplete)."
+  else
+    ARCHIVE_QUESTION_REQUIRED="true"
+  fi
+fi
+# archive-prompt-selection:end
+```
 
 The "Ready to mark complete?" confirmation is always asked — it is a meaningful "are you sure" moment, not a preference.
 
@@ -155,6 +180,7 @@ After the configured preference or accepted interactive answer is available,
 invoke the resolver rather than assigning `SHOULD_ARCHIVE` directly:
 
 ```bash
+# archive-decision-resolution:start
 ARCHIVE_DECISION_ARGS=()
 EXPECTED_ARCHIVE_DECISION_SOURCE=""
 if [[ "$IS_DURABLE_PROJECT" == "false" ]]; then
@@ -183,6 +209,7 @@ test "$ARCHIVE_DECISION_SOURCE" = "$EXPECTED_ARCHIVE_DECISION_SOURCE" || exit 1
 if [[ "$ARCHIVE_DECISION_SOURCE" == "local-default" ]]; then
   test "$SHOULD_ARCHIVE" = "false" || exit 1
 fi
+# archive-decision-resolution:end
 ```
 
 Require `ARCHIVE_DECISION_SOURCE` to match the source selected above. Local
@@ -229,7 +256,8 @@ implementation ran:
 **Questions to ask (in a single prompt):**
 
 1. **Confirm completion:** "Ready to mark **{PROJECT_NAME}** as complete?"
-2. **Archive** (only if `IS_DURABLE_PROJECT` is `true`): "Archive the project after completion?"
+2. **Archive** (only if `ARCHIVE_QUESTION_REQUIRED` is `true`):
+   "Archive the project after completion?"
 3. **Generate or refresh summary** (only if summary status is `missing` or `stale`): present the status explicitly:
    - Missing example: "A summary has not been generated yet. Would you like me to generate it now as part of completion?"
    - Stale example: "The project summary is out of date. Would you like me to refresh it now as part of completion?"
@@ -253,9 +281,11 @@ Ready to complete project **{PROJECT_NAME}**?
 
 If the user declines the completion confirmation, exit gracefully.
 
-After the user accepts the completion confirmation, store the answers as
-`SHOULD_ARCHIVE`, `SHOULD_GENERATE_SUMMARY`, `SHOULD_GENERATE_RETRO`,
-`SHOULD_GENERATE_RECAP`, and `SHOULD_OPEN_PR` for use in later steps. Set
+After the user accepts the completion confirmation, store a prompted archive
+answer as `ARCHIVE_INTERACTIVE_ANSWER`; assign `SHOULD_ARCHIVE` only through
+the decision resolver above. Store the remaining answers as
+`SHOULD_GENERATE_SUMMARY`, `SHOULD_GENERATE_RETRO`, `SHOULD_GENERATE_RECAP`,
+and `SHOULD_OPEN_PR` for use in later steps. Set
 `SHOULD_GENERATE_RETRO="false"` when the retro already exists or this completion
 run is non-interactive. Persist a prompted recap answer only after that
 confirmation is accepted.

@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { chmod, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,6 +32,12 @@ const EVIDENCE_MESSAGE = 'chore(oat): attest final project recap';
 const RECOVERY_SCRIPT = fileURLToPath(
   new URL(
     '../../../../../../.agents/skills/oat-project-complete/scripts/recover-completion-receipts.mjs',
+    import.meta.url,
+  ),
+);
+const COMPLETE_SKILL = fileURLToPath(
+  new URL(
+    '../../../../../../.agents/skills/oat-project-complete/SKILL.md',
     import.meta.url,
   ),
 );
@@ -256,6 +263,81 @@ it('defaults local completion to an explicit non-archive decision', () => {
     ),
   ).toThrow();
 });
+
+it.each([
+  {
+    label: 'local unset preference',
+    scope: 'local',
+    preference: '',
+    interactiveAnswer: '',
+    expected: 'prompt=false decision=false source=local-default closeout=ran',
+  },
+  {
+    label: 'durable configured true',
+    scope: 'shared',
+    preference: 'true',
+    interactiveAnswer: '',
+    expected: 'prompt=false decision=true source=configured closeout=ran',
+  },
+  {
+    label: 'durable configured false',
+    scope: 'synced',
+    preference: 'false',
+    interactiveAnswer: '',
+    expected: 'prompt=false decision=false source=configured closeout=ran',
+  },
+  {
+    label: 'durable interactive decline',
+    scope: 'shared',
+    preference: '',
+    interactiveAnswer: 'false',
+    expected: 'prompt=true decision=false source=interactive closeout=ran',
+  },
+])(
+  'routes $label through archive prompt selection into lifecycle closeout',
+  ({ scope, preference, interactiveAnswer, expected }) => {
+    const skill = readFileSync(COMPLETE_SKILL, 'utf8');
+    const extract = (startMarker: string, endMarker: string) => {
+      const start = skill.indexOf(startMarker);
+      const end = skill.indexOf(endMarker, start + startMarker.length);
+      expect(start).toBeGreaterThanOrEqual(0);
+      expect(end).toBeGreaterThan(start);
+      return skill.slice(start + startMarker.length, end).trim();
+    };
+    const promptSelection = extract(
+      '# archive-prompt-selection:start',
+      '# archive-prompt-selection:end',
+    );
+    const decisionResolution = extract(
+      '# archive-decision-resolution:start',
+      '# archive-decision-resolution:end',
+    );
+    const output = execFileSync(
+      '/bin/bash',
+      [
+        '-c',
+        `${promptSelection}
+${decisionResolution}
+printf 'prompt=%s decision=%s source=%s closeout=ran\\n' \
+  "$ARCHIVE_QUESTION_REQUIRED" "$SHOULD_ARCHIVE" "$ARCHIVE_DECISION_SOURCE"`,
+        'completion-archive-closeout',
+      ],
+      {
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          PROJECT_SCOPE: scope,
+          IS_DURABLE_PROJECT:
+            scope === 'shared' || scope === 'synced' ? 'true' : 'false',
+          ARCHIVE_PREF: preference,
+          ARCHIVE_INTERACTIVE_ANSWER: interactiveAnswer,
+          COMPLETION_RECEIPT_SCRIPT: RECOVERY_SCRIPT,
+        },
+      },
+    );
+    expect(output.trimEnd().split('\n').at(-1)).toBe(expected);
+  },
+);
 
 async function commitCompletionRecord(
   repoRoot: string,
