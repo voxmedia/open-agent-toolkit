@@ -1,0 +1,165 @@
+
+> open-agent-toolkit@0.0.5 cli /Users/tstang/Code/open-agent-toolkit
+> bash packages/cli/scripts/bundle-assets.sh && tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts -- --json gate review --target cursor-fable-5-high --project .oat/projects/shared/synced-project-scope --review-type code --review-scope final --exit-nonzero-on important 'Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings.'
+
+{
+  "outcome": "review_completed_gate_passed",
+  "status": "ok",
+  "runId": "df26a0ea-1578-4dde-bebb-365ae5afeeb2",
+  "target": "cursor-fable-5-high",
+  "project": ".oat/projects/shared/synced-project-scope",
+  "projectResolutionSource": "declared",
+  "artifactPath": ".oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T212108Z.md",
+  "generatedAt": "2026-08-29T21:21:08Z",
+  "threshold": "important",
+  "blocking": false,
+  "counts": {
+    "critical": 0,
+    "important": 0,
+    "medium": 0,
+    "minor": 2
+  },
+  "reviewType": "code",
+  "scope": "final",
+  "invocation": "gate",
+  "handoff": "Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=2). Run oat-project-review-receive for .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T212108Z.md to disposition them before marking the final review row passed.",
+  "diversity": {
+    "avoid": "none",
+    "achieved": "different-family",
+    "producer": {
+      "value": "unknown",
+      "provenance": "unknown",
+      "confidence": "unknown",
+      "family": "unknown",
+      "source": "aggregated-stamps",
+      "avoidFamilies": [
+        "openai"
+      ],
+      "contributingScopes": [
+        "p08",
+        "p09",
+        "p02",
+        "p03",
+        "p10",
+        "p11",
+        "p12",
+        "p20"
+      ],
+      "contributingStampCount": 10
+    },
+    "reviewer": {
+      "target": "cursor-fable-5-high",
+      "runtime": "cursor",
+      "family": "claude",
+      "model": "claude-fable-5-high"
+    }
+  },
+  "gateInvocation": {
+    "runId": "df26a0ea-1578-4dde-bebb-365ae5afeeb2",
+    "targetId": "cursor-fable-5-high",
+    "runtime": "cursor",
+    "model": "claude-fable-5-high",
+    "reasoningEffort": "unknown",
+    "source": "exec-target-config"
+  },
+  "dispatchReport": {
+    "schemaVersion": 1,
+    "route": {
+      "scope": "final",
+      "action": "review",
+      "role": "reviewer",
+      "target": "cursor-fable-5-high"
+    },
+    "policy": {
+      "status": "resolved",
+      "mode": null,
+      "name": null,
+      "source": null
+    },
+    "selection": {
+      "requestedCandidate": null,
+      "preferredValue": null,
+      "candidateTier": null,
+      "candidateIndex": null,
+      "ceilingTier": null,
+      "ceilingTarget": null,
+      "selectedValue": null,
+      "exactSelectedTarget": null,
+      "selectionMode": "gate-invocation",
+      "selectionBranch": "gate-configured-invocation",
+      "cellSource": null
+    },
+    "classification": {
+      "taskClass": null,
+      "preferredEffort": null,
+      "source": "not-reported"
+    },
+    "notices": [],
+    "requestedControls": {
+      "model": {
+        "value": null,
+        "mechanism": "base-role",
+        "reason": "Configured gate invocation is reported separately from runtime identity."
+      },
+      "effort": {
+        "value": null,
+        "mechanism": "base-role",
+        "reason": "Configured gate invocation is reported separately from runtime identity."
+      }
+    },
+    "configuredDefaults": {
+      "model": null,
+      "modelSource": null,
+      "effort": null,
+      "effortSource": null
+    },
+    "gateInvocation": {
+      "runId": "df26a0ea-1578-4dde-bebb-365ae5afeeb2",
+      "targetId": "cursor-fable-5-high",
+      "runtime": "cursor",
+      "model": "claude-fable-5-high",
+      "reasoningEffort": "unknown",
+      "source": "exec-target-config"
+    },
+    "runtimeIdentity": {
+      "producer": null,
+      "model": null,
+      "effort": null,
+      "provenance": "unknown",
+      "confidence": "not-reported"
+    }
+  },
+  "corroboration": {
+    "run": "matched",
+    "project": "matched",
+    "invocation": "matched",
+    "expected": {
+      "project": ".oat/projects/shared/synced-project-scope",
+      "invocation": {
+        "runId": "df26a0ea-1578-4dde-bebb-365ae5afeeb2",
+        "targetId": "cursor-fable-5-high",
+        "runtime": "cursor",
+        "model": "claude-fable-5-high",
+        "reasoningEffort": "unknown",
+        "source": "exec-target-config"
+      }
+    },
+    "actual": {
+      "containingProject": ".oat/projects/shared/synced-project-scope",
+      "artifactProject": ".oat/projects/shared/synced-project-scope",
+      "normalizedArtifactProject": ".oat/projects/shared/synced-project-scope",
+      "matchingArtifactPaths": [
+        ".oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T212108Z.md"
+      ],
+      "invocation": {
+        "runId": "df26a0ea-1578-4dde-bebb-365ae5afeeb2",
+        "targetId": "cursor-fable-5-high",
+        "runtime": "cursor",
+        "model": "claude-fable-5-high",
+        "reasoningEffort": "unknown",
+        "source": "exec-target-config"
+      }
+    }
+  },
+  "receiveEligible": true
+}

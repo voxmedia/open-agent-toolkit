@@ -4130,4 +4130,8 @@ autonomy inventory remap, so it is stale. Start a new blocking configured-gate
 generation against `origin/main` at `c0101f8c2b824755644dd4233f888ed31dac973d`
 with fingerprint
 `sha256:effective-delta-v1:1e40cf3b21c3b190bd8290f88debc42d462aeef492cd71d1df1cf0808b3d1079`.
-Launch attempt `abc00df8-f38c-412e-a642-4f3b1ad14b3b`.
+Launch attempt `abc00df8-f38c-412e-a642-4f3b1ad14b3b` was replaced by authorized
+retarget `473cbd54-4f5d-49e4-b64c-d1157c2b3760` on `cursor-fable-5-high`. The
+gate completed `ok` / `review_completed_gate_passed` as run
+`df26a0ea-1578-4dde-bebb-365ae5afeeb2` (0/0/0/2). Envelope persisted; receive
+is eligible.
