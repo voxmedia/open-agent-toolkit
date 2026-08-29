@@ -1689,29 +1689,49 @@ printf 'artifact-read\\n'`,
     expect(preflight).not.toContain(
       'git -C "$ACTIVE_PROJECT" status --porcelain -- "$(basename "$ARTIFACT_PATH")"',
     );
-    const output = execFileSync(
-      '/bin/bash',
-      [
-        '-c',
-        `oat() { printf synced; }
+    const routingHarness = `EVENTS=""
+oat() {
+  if [[ "$1 $2 $3 $4" == "project scope $ACTIVE_PROJECT --format" ]]; then
+    printf synced
+  elif [[ "$1 $2" == "project push" ]]; then
+    EVENTS="\${EVENTS}push,"
+  fi
+}
 git() {
   if [[ "$#" -eq 4 ]]; then
     printf ' M unrelated-project-file.md\\n'
   fi
 }
-${preflight}`,
-        'brainstorm-fold-back-preflight',
-      ],
-      {
-        encoding: 'utf8',
-        env: {
-          ...process.env,
-          ACTIVE_PROJECT: '/tmp/synced-project',
-          ARTIFACT_PATH: '/tmp/synced-project/design.md',
+handle_dirty_checkout() {
+  EVENTS="\${EVENTS}dirty-handler,"
+}
+STATUS_OUTPUT=$(${preflight})
+if [[ -n "$STATUS_OUTPUT" ]]; then
+  handle_dirty_checkout
+  if [[ "$DIRTY_HANDLER_CHOICE" == "include" ]]; then
+    oat project push "$ACTIVE_PROJECT"
+  fi
+else
+  oat project push "$ACTIVE_PROJECT"
+fi
+printf '%s\\n' "$EVENTS"`;
+    const executeRoutingHarness = (dirtyHandlerChoice: string) =>
+      execFileSync(
+        '/bin/bash',
+        ['-c', routingHarness, 'brainstorm-fold-back-routing'],
+        {
+          encoding: 'utf8',
+          env: {
+            ...process.env,
+            ACTIVE_PROJECT: '/tmp/synced-project',
+            ARTIFACT_PATH: '/tmp/synced-project/design.md',
+            DIRTY_HANDLER_CHOICE: dirtyHandlerChoice,
+          },
         },
-      },
-    );
-    expect(output).toContain('unrelated-project-file.md');
+      ).trim();
+
+    expect(executeRoutingHarness('')).toBe('dirty-handler,');
+    expect(executeRoutingHarness('include')).toBe('dirty-handler,push,');
   });
 
   it('commits new synced summary decisions durably without consuming unrelated staged state', () => {
