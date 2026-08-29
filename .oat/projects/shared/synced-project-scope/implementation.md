@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: review
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: null
+oat_current_task_id: p18-t01
 oat_generated: false
 ---
 
@@ -14,9 +14,8 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All one hundred seventy-eight implementation and revision tasks are complete.
-> Phase 17 passed its final-head gates and requires another independent
-> full-range review before the refreshed exit gate or PR #227 update.
+> One hundred seventy-eight implementation and revision tasks are complete.
+> Phase 18 contains one pending remote-review correction for PR #227.
 >
 > Conventions:
 >
@@ -48,8 +47,9 @@ oat_generated: false
 | Phase 15     | complete | 19    | 19/19     |
 | Phase 16     | complete | 20    | 20/20     |
 | Phase 17     | complete | 14    | 14/14     |
+| Phase 18     | pending  | 1     | 0/1       |
 
-**Total:** 178/178 tasks completed
+**Total:** 178/179 tasks completed
 
 ---
 
@@ -3630,3 +3630,29 @@ findings dispositioned before the exit gate can become allowed.
 The configured review passes with no blocking findings and no deferred Medium.
 Receive bookkeeping is durable; final allowance is recorded in project state
 only after the archived artifact, ledger row, and commit are reconciled.
+
+## Phase 18: Remote completion archive correction
+
+**Status:** pending
+**Started:** 2026-08-29
+
+### Remote Review Received: PR #227
+
+- **Source:** `https://github.com/voxmedia/open-agent-toolkit/pull/227#discussion_r3886229171`
+- **Reviewed head:** `a2bedf12b9312468e1fef15439577c1d54d6f194`
+- **Findings:** 0 Critical / 1 Important / 0 Medium / 0 Minor
+- **Converted task:** `p18-t01`
+- **Deferred:** none
+- **Dismissed:** none
+
+The Important finding is valid: archive completion moves `PROJECT_PATH` while
+leaving `PROJECT_REF_COMMIT` empty, and the final synced push guard can then
+target the gitignored archive. Task `p18-t01` will confine publication to the
+non-archive transaction and add executable archive/non-archive control-flow
+coverage.
+
+### Task Status
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p18-t01 | pending | -      |

@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-08-28
+oat_last_updated: 2026-08-29
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
@@ -3708,6 +3708,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | final   | code     | fixes_completed | 2026-08-29 | reviews/archived/final-review-2026-08-29T083908Z.md               | 4b8c598623f184b75b7de9bdfa69b3b4592539da | gate       | claude-fable-skip-permissions |
 | final   | code     | passed          | 2026-08-29 | reviews/archived/final-review-2026-08-29T092432Z.md               | d40bbe3238e1653edc92e6e763ef16c76c2ba57a | gate       | claude-fable-skip-permissions |
 | final   | code     | passed          | 2026-08-29 | reviews/archived/final-review-2026-08-29T094230Z.md               | ebe32dc59d134130df64c0d76a7443fd0b1464b2 | gate       | claude-fable-skip-permissions |
+| remote  | code     | fixes_added     | 2026-08-29 | reviews/archived/remote-pr-227-review-2026-08-29T131316Z.md       | a2bedf12b9312468e1fef15439577c1d54d6f194 | -          | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -5217,6 +5218,45 @@ Commit as `fix(p17-t14): isolate nested git environment`.
 
 ---
 
+## Phase 18: Remote completion archive correction
+
+Goal: prevent the final synced-links publication step from pushing an archived
+project tree after archive side effects have already succeeded.
+
+### Task p18-t01: (review) Prevent post-archive project push
+
+**Finding:** Important `I1` from PR #227 comment `3886229171`.
+
+**Step 1: Analyze the failure context**
+
+Trace archive-enabled and archive-declined synced completion through the
+pin-source push, `PROJECT_PATH` reassignment, final links rendering, final
+project-ref receipt, and PR body update. Preserve the valid distinction between
+the active project-ref authority and the archived PR artifact.
+
+**Step 2: Implement the fix**
+
+Confine `oat project push` for the final links artifact to
+`PROJECT_SCOPE="synced"` with `SHOULD_ARCHIVE="false"`. Keep archive-aware link
+rendering and PR-body consumption functional without requiring a
+`PROJECT_REF_COMMIT` from the gitignored archive.
+
+**Step 3: Verify targeted behavior**
+
+Add executable contract coverage proving archive-enabled synced completion
+never reaches the final project push after `PROJECT_PATH` moves, while both
+configured and interactive non-archive paths still publish and validate their
+full-SHA receipt. Run the focused completion transaction and skill-contract
+suites plus skill validation.
+
+**Step 4: Verify project commands and commit**
+
+Run the relevant CI-order gates required by the changed skill/test surface,
+including skill-version, formatting, lint, type, test, release, and docs
+validation. Commit as `fix(p18-t01): prevent post-archive project push`.
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -5239,8 +5279,9 @@ Commit as `fix(p17-t14): isolate nested git environment`.
 - Phase 15: 19 tasks - Full-range final-review fixes for custom-root Git plumbing, conflict-safe pause recovery, offline creation, config durability, and residual portability/contract gaps
 - Phase 16: 20 tasks - Final full-range safety fixes for custom-root archive completion, locale-stable Git, repository confinement, symlink canonicalization, lifecycle bookkeeping, and residual contract coverage
 - Phase 17: 14 tasks - Final lifecycle durability and provider parity fixes for release contracts, declined pause publication, generated views, custom roots, diagnostics, validators, docs, and Git isolation
+- Phase 18: 1 task - Remote-review correction preventing final project-ref publication from running against an archived synced project tree
 
-**Total: 178 tasks**
+**Total: 179 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

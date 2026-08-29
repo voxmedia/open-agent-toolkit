@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p18-t01
 oat_last_commit: 99b1fab4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -72,6 +72,9 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p17:
       used_attempts: 1
+      pending_attempt: null
+    p18:
+      used_attempts: 0
       pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -149,7 +152,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T10:00:34.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T13:13:16.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -159,13 +162,13 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** PR #227 open; implementation closeout complete
+**Status:** PR #227 remote review fix pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Implementation closeout complete; PR #227 is open with refreshed artifacts.
+Implementation resumed for Phase 18 remote-review task `p18-t01`.
 
 ## Artifacts
 
@@ -173,7 +176,7 @@ Implementation closeout complete; PR #227 is open with refreshed artifacts.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (178/178 tasks complete)
+- **Implementation:** `implementation.md` (178/179 tasks complete)
 
 ## Progress
 
@@ -341,6 +344,8 @@ Implementation closeout complete; PR #227 is open with refreshed artifacts.
 - ✓ Final review cycle-5 event updated to `fixes_completed` (never passed)
 - ✓ Final review cycle 6 passed at 0 Critical / 0 Important / 0 Medium / 0 Minor
 - ✓ Cycle-5 Critical and Important findings independently verified closed
+- ⨯ PR #227 remote review found 1 Important completion archive finding
+- ✓ Remote finding converted into Phase 18 task p18-t01 with no deferral
 
 ## Blockers
 
@@ -348,4 +353,4 @@ None.
 
 ## Next Milestone
 
-Monitor PR #227 checks and review. No implementation or review blocker remains.
+Implement and verify `p18-t01`, then refresh final review and PR #227.
