@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: p02-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -27,9 +27,9 @@ oat_generated: false
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 6     | 6/6       |
-| Phase 2 | pending  | 2     | 0/2       |
+| Phase 2 | complete | 2     | 2/2       |
 
-**Total:** 6/8 tasks completed
+**Total:** 8/8 tasks completed
 
 ---
 
@@ -112,18 +112,18 @@ oat_generated: false
 
 ## Phase 2: Documentation, Packaging, and Release Validation
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-08-29
 
 ### Task p02-t01: Document the global skill-and-agent portability contract
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `ac4612ae5`
 
 ### Task p02-t02: Refresh shipped assets and validate the lockstep release
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `69d011bbc`
 
 ---
 
@@ -242,6 +242,44 @@ artifacts, not in phase code:
   been read off a Turborepo cache replay. Corrected with authoritative uncached
   evidence and an explicit caveat.
 
+#### Phase 2 Summary
+
+**Outcome (what changed):**
+
+- The portability contract is documented for contributors: the two distinct
+  candidate orders, independent dependency roots, exact historical baselines,
+  and pack-specific fail-closed recovery.
+- Shipped provider assets were regenerated through `oat sync --scope all`,
+  so 29 Codex and 36 Cursor materialized role views now carry the portable
+  two-step resolver instead of bare `.agents/skills/...` reads.
+- The five lockstep public packages were released together, `0.2.39` → `0.2.40`.
+
+**Key files touched:**
+
+- `apps/oat-docs/docs/contributing/skills.md`, `apps/oat-docs/docs/cli-utilities/tool-packs.md` - contributor documentation
+- `.codex/agents/*.toml`, `.cursor/agents/*.md` - regenerated materialized role views
+- `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json` - lockstep release
+
+**Verification:**
+
+- Run: the plan's ordered 11-gate sequence, plus root re-verification under an
+  isolated `HOME` with `pnpm exec turbo run test --force`.
+- Result: all gates exit 0. The test run was genuinely uncached
+  (`replay markers: 0`, `Cached: 0 cached, 10 total`). Independently, all 66
+  generated agent view files scanned with the ratchet's own matcher yielded
+  0 non-portable cross-skill reads.
+
+**Notes / Decisions:**
+
+- `tool-packs.md` was modified under the plan's explicit conditional. The
+  reviewer independently judged the condition met: the pre-existing mixed-scope
+  paragraph states one three-step order, and `workflows` ships agents through
+  that same install path which cannot use the loaded-scope step.
+- Release version `0.2.40` follows PR #226's precedent for the same class of
+  change. The bump was mandatory, not discretionary: AGENTS.md counts
+  `.agents/skills` and `.agents/agents` changes as shipped CLI functionality.
+- The lockfile was correctly left untouched; internal deps use `workspace:*`.
+
 #### Outstanding Items
 
 - None blocking. Phase 1 passed code review at the Critical/Important
@@ -334,7 +372,7 @@ Track test execution during implementation.
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | 290 files | 290    | 0\*    | n/a      |
-| 2     | -         | -      | -      | -        |
+| 2     | 290 files | 290    | 0      | n/a      |
 
 \* Authoritative uncached, HOME-isolated run at `7f7dd6cfc`:
 `HOME=$(mktemp -d) pnpm exec turbo run test --force` → exit 0,

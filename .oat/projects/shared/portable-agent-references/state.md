@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: 7f7dd6cfc2e5d443a4f44c8d54579e4304309a90
+oat_current_task: null
+oat_last_commit: 69d011bbc3ca19bac8848e3694706dd29835023e
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -85,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-28T21:36:51.245Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T07:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T08:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -97,11 +97,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation is underway. Phase 1 (`p01-t01`..`p01-t06`) is complete at
-`52745ef93` and passed root-owned code review at the Critical/Important
-threshold on round 3 (rounds 1-2 findings were fixed; the round-2 set was
-entirely root-owned bookkeeping). Phase 2 (`p02-t01`, `p02-t02`) is next and
-is the configured HiLL checkpoint.
+All eight planned tasks are implemented. Phase 1 (`p01-t01`..`p01-t06`) passed
+root-owned code review at the Critical/Important threshold at `52745ef93`.
+Phase 2 (`p02-t01`, `p02-t02`) is implemented at `69d011bbc` and shipped the
+lockstep `0.2.40` release; its first review round returned one Important
+bookkeeping finding plus one Medium and one Minor docs-accuracy finding, now
+being resolved. Phase 2 is the configured HiLL checkpoint.
 
 ## Artifacts
 
@@ -109,7 +110,7 @@ is the configured HiLL checkpoint.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete lightweight design)
 - **Plan:** `plan.md` (complete; ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (6/8 tasks complete; Phase 1 passed)
+- **Implementation:** `implementation.md` (8/8 tasks complete)
 
 ## Progress
 
@@ -128,6 +129,7 @@ is the configured HiLL checkpoint.
 - ✓ Remaining Medium and Minor findings resolved without another review cycle
 - ✓ Phase 1 implemented: 6/6 tasks, one verified commit each, one in-phase recovery
 - ✓ Phase 1 passed code review at the Critical/Important threshold (round 3)
+- ✓ Phase 2 implemented: docs contract + provider-view refresh + `0.2.40` lockstep release
 
 ## Blockers
 
