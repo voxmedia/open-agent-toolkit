@@ -3720,7 +3720,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | remote  | code     | fixes_added     | 2026-08-29 | reviews/archived/remote-pr-227-review-2026-08-29T192256Z.md       | -                                        | -          | -                             |
 | p20     | code     | fixes_completed | 2026-08-29 | reviews/archived/p20-review-2026-08-29T200603Z.md                 | b7dc3b06e93e61ef2ecfda489c1c800a3b6927a9 | auto       | -                             |
 | p20     | code     | passed          | 2026-08-29 | reviews/archived/p20-review-2026-08-29T203038Z.md                 | 39b296b86e013572d05f279798243defd71cc49a | auto       | -                             |
-| final   | code     | received        | 2026-08-29 | reviews/final-review-2026-08-29T212108Z.md                        | 98e50ff83c2fe0837724887f70dfb190457634c4 | gate       | cursor-fable-5-high           |
+| final   | code     | passed          | 2026-08-29 | reviews/archived/final-review-2026-08-29T212108Z.md               | 98e50ff83c2fe0837724887f70dfb190457634c4 | gate       | cursor-fable-5-high           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

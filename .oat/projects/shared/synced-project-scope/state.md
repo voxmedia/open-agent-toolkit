@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 0e4a242b
+oat_last_commit: a74590d2
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -127,7 +127,7 @@ oat_implement_exit_gate:
   receive_source_artifact: reviews/final-review-2026-08-29T212108Z.md
   receive_archived_artifact: reviews/archived/final-review-2026-08-29T212108Z.md
   receive_event_identity: final/code/final-review-2026-08-29T212108Z.md
-  receive_pre_head: 0e4a242bed064e263e3fb532d033ba94c151e048
+  receive_pre_head: a74590d228d486596e68c4e7cd54b0ff51bc1fbd
   receive_commit: null
   receive_eligible: true
   receive_completed: false
@@ -155,7 +155,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T22:23:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T22:24:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -393,5 +393,5 @@ None.
 
 ## Next Milestone
 
-Merge `origin/main` (PR #231) using `references/merge-conflict-analysis-pr231.md`,
-then dispatch the independent Phase 20 review.
+Refresh PR #227 via `oat-project-pr-final` after this passing exit-gate receive.
+Do not merge unless the maintainer explicitly asks.

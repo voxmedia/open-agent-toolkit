@@ -1656,6 +1656,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | ------------- | -------------------------------------------------------- | --------------------------------- | --------------------------------------------------- | ---------------------------------------- | -------------------------------- | ----------------------------------------------------- |
 | p03 review M1 | `reviews/archived/code-p03-review-2026-08-27T194810Z.md` | State routed to completed p03-t10 | State routes to first received fix task p03-t12     | Full-phase review blocked before Phase 4 | Received review and current plan | Re-review p03 fix delta after p03-t12 through p03-t18 |
 | p03 review M2 | `reviews/archived/code-p03-review-2026-08-27T194810Z.md` | Opaque merge-delta digest         | Reproducible per-path tree-object equality evidence | Preserve truthful integration evidence   | Git parent trees                 | p03-t17                                               |
+| final gate m2 | `reviews/archived/final-review-2026-08-29T212108Z.md`    | Prune removes checkouts, then remote ref | Remote ref deleted first; staged record-deletion resume when both refs are already gone | Safer partial-failure messaging; covered by prune tests | `packages/cli/src/commands/project/sync/ref-sync.ts` | Design bullet aligned in this receive |
 
 ## Test Results
 
@@ -1727,7 +1728,7 @@ Track test execution during implementation.
   completion prompt-site inventory: `pnpm check`, `pnpm type-check`,
   `pnpm test`, `pnpm lint`, `pnpm build`, `pnpm run check:skill-bumps`,
   `pnpm release:check-versions`, `pnpm release:validate`, and `pnpm build:docs`.
-  Remaining closeout is a fresh configured exit gate and PR #227 refresh.
+  Remaining closeout is PR #227 refresh after this passing exit-gate receive.
 
 **Design deltas (if any):**
 
@@ -4135,3 +4136,34 @@ retarget `473cbd54-4f5d-49e4-b64c-d1157c2b3760` on `cursor-fable-5-high`. The
 gate completed `ok` / `review_completed_gate_passed` as run
 `df26a0ea-1578-4dde-bebb-365ae5afeeb2` (0/0/0/2). Envelope persisted; receive
 is eligible.
+
+### Review Received: final configured gate - 2026-08-29T21:21:08Z
+
+**Date:** 2026-08-29
+**Review artifact:** reviews/archived/final-review-2026-08-29T212108Z.md
+**Reviewed head:** `98e50ff83c2fe0837724887f70dfb190457634c4`
+**Invocation:** gate
+**Gate target:** `cursor-fable-5-high`
+**Run:** `df26a0ea-1578-4dde-bebb-365ae5afeeb2`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** none (passing-gate judgment sweep)
+
+**Finding disposition map:**
+
+- `m1`: address now (`artifact_alignment_required`) — stale `Next Milestone` in `state.md` updated to PR #227 refresh
+- `m2`: address now (`artifact_alignment_required`) — `design.md` prune sequence aligned to remote-ref-first order plus the staged-record-deletion resume path
+
+**Deferred Medium ledger:** 0 undecided. Prior deferred Minors (6) remain deferred with the gate's re-evaluation; none converted.
+
+**Design drift / artifact alignment notes:**
+
+- `m2`: review found `design.md` still documented checkout removal before remote-ref deletion. Shipped `ref-sync.ts` deletes the remote ref first and keeps an already-staged record-deletion resume path; both failure modes are tested. Implementation remains source of truth; the design bullet is aligned in this receive commit.
+
+**Next:** Persist `allowed/passed`, then refresh PR #227. A GitHub `ci` failure in `guided-setup.test.ts` is out of this artifact and will be fixed separately.
