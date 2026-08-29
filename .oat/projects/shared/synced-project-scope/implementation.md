@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: review
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: null
+oat_current_task_id: p15-t01
 oat_generated: false
 ---
 
@@ -14,10 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All one hundred twenty-five implementation and revision tasks are complete.
-> Phase 14 now requires phase-wide verification, a fresh independent
-> final-project review, and a refreshed configured exit gate before PR #227 is
-> updated.
+> One hundred twenty-five of one hundred forty-four implementation and revision
+> tasks are complete. A fresh full-range review added nineteen Phase 15 fixes
+> that must complete before another independent review or PR #227 update.
 >
 > Conventions:
 >
@@ -29,25 +28,26 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 10    | 10/10     |
-| Phase 2      | complete | 13    | 13/13     |
-| Phase 3      | complete | 19    | 19/19     |
-| Phase 4      | complete | 16    | 16/16     |
-| Phase 5      | complete | 7     | 7/7       |
-| Phase 6      | complete | 3     | 3/3       |
-| Phase 7      | complete | 1     | 1/1       |
-| Phase 8      | complete | 1     | 1/1       |
-| Phase 9      | complete | 1     | 1/1       |
-| Phase 10     | complete | 14    | 14/14     |
-| Phase 11     | complete | 3     | 3/3       |
-| Phase 12     | complete | 1     | 1/1       |
-| Phase p-rev1 | complete | 1     | 1/1       |
-| Phase 13     | complete | 16    | 16/16     |
-| Phase 14     | complete | 19    | 19/19     |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 10    | 10/10     |
+| Phase 2      | complete    | 13    | 13/13     |
+| Phase 3      | complete    | 19    | 19/19     |
+| Phase 4      | complete    | 16    | 16/16     |
+| Phase 5      | complete    | 7     | 7/7       |
+| Phase 6      | complete    | 3     | 3/3       |
+| Phase 7      | complete    | 1     | 1/1       |
+| Phase 8      | complete    | 1     | 1/1       |
+| Phase 9      | complete    | 1     | 1/1       |
+| Phase 10     | complete    | 14    | 14/14     |
+| Phase 11     | complete    | 3     | 3/3       |
+| Phase 12     | complete    | 1     | 1/1       |
+| Phase p-rev1 | complete    | 1     | 1/1       |
+| Phase 13     | complete    | 16    | 16/16     |
+| Phase 14     | complete    | 19    | 19/19     |
+| Phase 15     | in progress | 19    | 0/19      |
 
-**Total:** 125/125 tasks completed
+**Total:** 125/144 tasks completed
 
 ---
 
@@ -3261,3 +3261,51 @@ lifecycle steps are a fresh independent final-project review and then generation
 and launch of a refreshed configured exit gate against the current effective
 delta. The refreshed gate has not run; this closeout records the required next
 step without claiming a result.
+
+---
+
+## Phase 15: Full-range final review fixes
+
+**Status:** in progress
+**Started:** 2026-08-29
+
+### Task Status
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p15-t01 | pending | -      |
+| p15-t02 | pending | -      |
+| p15-t03 | pending | -      |
+| p15-t04 | pending | -      |
+| p15-t05 | pending | -      |
+| p15-t06 | pending | -      |
+| p15-t07 | pending | -      |
+| p15-t08 | pending | -      |
+| p15-t09 | pending | -      |
+| p15-t10 | pending | -      |
+| p15-t11 | pending | -      |
+| p15-t12 | pending | -      |
+| p15-t13 | pending | -      |
+| p15-t14 | pending | -      |
+| p15-t15 | pending | -      |
+| p15-t16 | pending | -      |
+| p15-t17 | pending | -      |
+| p15-t18 | pending | -      |
+| p15-t19 | pending | -      |
+
+### Review Received: final full-range review - 2026-08-29T05:14:37Z
+
+**Review artifact:** `reviews/archived/final-review-2026-08-29T051437Z.md`
+
+**Findings:** 0 Critical / 3 Important / 2 Medium / 14 Minor.
+
+**Disposition:** all nineteen findings converted with no deferrals. `I1` through
+`I3` map to `p15-t01` through `p15-t03`; `M1` and `M2` map to `p15-t04`
+and `p15-t05`; the fourteen Minor findings map in review order to `p15-t06`
+through `p15-t19`.
+
+**Review run:** `58a0ce38-42a5-41b2-9f70-a0a25e8953f9`, target
+`claude-fable-skip-permissions`, full explicit range
+`8cc1b3827f9c051d5d2bb078ae986aef3e9fbd80..d1867ee31cc8b6cf01a745c2351cde6470170557`.
+The reviewer attempted reconnaissance and reproduced every Important/Medium
+finding end-to-end. This event is `fixes_added`, never passed.

@@ -3703,7 +3703,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | p13     | code     | fixes_completed | 2026-08-28 | reviews/archived/p13-review-2026-08-28T233340Z.md                 | 95cf11abb3f74fe3a63342cf8bc58bb926e1407a | gate       | claude-fable-skip-permissions |
 | p13     | code     | passed          | 2026-08-29 | reviews/archived/p13-review-2026-08-29T000209Z.md                 | 85e0b7b65403a8db9be5e18f353c5cfa66592b46 | gate       | claude-fable-skip-permissions |
 | final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T002706Z.md               | ab2a05ca4a3663acc752bb186c9c3e2393f30546 | gate       | claude-fable-skip-permissions |
-| final   | code     | received        | 2026-08-29 | reviews/final-review-2026-08-29T051437Z.md                        | d1867ee31cc8b6cf01a745c2351cde6470170557 | gate       | claude-fable-skip-permissions |
+| final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T051437Z.md               | d1867ee31cc8b6cf01a745c2351cde6470170557 | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -4802,6 +4802,182 @@ git commit -m "docs(p14-t19): refresh closeout guidance"
 
 ---
 
+## Phase 15: Full-range final review fixes
+
+Goal: close every finding from the fresh full-range review at `d1867ee3`,
+including three reproduced P0/P1 regressions and all residual Medium/Minor
+contract gaps, before another independent final review or PR publication.
+
+### Task p15-t01: (review) Complete custom-root Git plumbing
+
+**Files:** sync ref plumbing, migrate/open/pull/prune callers, and real-Git integration tests.
+
+1. Derive migration confinement, record/source allowlists, and gitignore probes from configured roots instead of literal `.oat/projects/*` paths.
+2. Cover relative, alternate, environment, and absolute custom roots across migrate, adopting pull/open, and prune; assert clean parent trees and no half-pruned state.
+3. Run the focused real-Git suites and CLI type-check.
+4. Commit as `fix(p15-t01): complete custom root git plumbing`.
+
+### Task p15-t02: (review) Preserve conflict state during pause publication
+
+**Files:** pause publication, sync recovery integration, and pause tests.
+
+1. Never overwrite a conflicted mid-rebase file. Either preserve the conflict with targeted continue/abort guidance or abort before restoring exact pre-pause bytes.
+2. Add a real two-clone conflict test proving the remote edit survives documented recovery and no false pause commit is published.
+3. Run pause/ref-sync focused suites and type-check.
+4. Commit as `fix(p15-t02): preserve pause conflict recovery`.
+
+### Task p15-t03: (review) Keep shared and local creation offline
+
+**Files:** scaffold collision preflight, split seeding tests, and runner fixtures.
+
+1. Treat remote transport failure as an unverifiable warning for shared/local creation while preserving local-ref collision checks and synced fail-closed behavior.
+2. Test shared/local creation and split with an unreachable origin, plus real collision and synced transport cases.
+3. Run new/split/scaffold suites and type-check.
+4. Commit as `fix(p15-t03): preserve offline project creation`.
+
+### Task p15-t04: (review) Make invalid default scope repairable
+
+**Files:** config normalization/commands and config tests.
+
+1. Align invalid `projects.defaultScope` with repository config conventions while ensuring `oat config set projects.defaultScope <valid>` can repair an invalid on-disk value.
+2. Include actionable file/key context without making unrelated commands inconsistent.
+3. Run config command/normalizer suites and type-check.
+4. Commit as `fix(p15-t04): make default scope repairable`.
+
+### Task p15-t05: (review) Preserve default scope in root backfills
+
+**Files:** workflow install, pack lifecycle, tools migrate, and their tests.
+
+1. Preserve the existing `projects` object when adding a missing root at all three sites.
+2. Test root-less `defaultScope` through init, tools update, and tools migrate.
+3. Run focused tool lifecycle suites and type-check.
+4. Commit as `fix(p15-t05): preserve project config backfills`.
+
+### Task p15-t06: (review) Document skill validation in `pnpm check`
+
+**Files:** `AGENTS.md`.
+
+1. State that `pnpm check` also runs `oat:validate-skills` and clarify its distinction from lint/format.
+2. Verify the command description against root scripts and run markdown/format checks.
+3. Commit as `docs(p15-t06): document check skill validation`.
+
+### Task p15-t07: (review) Align brainstorm destination reference
+
+**Files:** `.agents/skills/oat-brainstorm/references/destinations.md` and contract tests if needed.
+
+1. Make every fold-back option scope-aware: synced pushes; shared/local commit exact project paths.
+2. Preserve the existing PR-scoped brainstorm version bump.
+3. Run skill validation, brainstorm contracts, and bump checks.
+4. Commit as `docs(p15-t07): align brainstorm destination scope`.
+
+### Task p15-t08: (review) Make doctor slug extraction portable
+
+**Files:** synced-project doctor implementation/tests.
+
+1. Use platform-aware basename extraction for ignore probes and malformed-record diagnostics.
+2. Add Windows-separator-focused unit coverage without weakening POSIX behavior.
+3. Run doctor tests and type-check.
+4. Commit as `fix(p15-t08): make doctor slugs portable`.
+
+### Task p15-t09: (review) Preserve completed-record recovery state
+
+**Files:** adoption/record recovery code, messages, and tests.
+
+1. Ensure completed projects do not silently regenerate as active; either recover lifecycle fields from trusted state or require lossless Git restoration with explicit guidance.
+2. Test completed, archived, and active malformed-record recovery paths.
+3. Run record/adoption suites and type-check.
+4. Commit as `fix(p15-t09): preserve recovered lifecycle state`.
+
+### Task p15-t10: (review) Resolve single-segment custom roots correctly
+
+**Files:** project scope resolver/tests.
+
+1. Prevent vacuous sibling matching when `projects.root` has one relative segment; resolve against repo context or require the shared-root match first.
+2. Cover absolute and relative paths containing incidental `local`/`synced` segments.
+3. Run scope tests and type-check.
+4. Commit as `fix(p15-t10): resolve single segment roots`.
+
+### Task p15-t11: (review) Align the Git minimum contract
+
+**Files:** design/docs and, if preferable, ref-sync compatibility code/tests.
+
+1. Either document Git 2.31+ consistently or replace `--path-format=absolute` with portable plumbing matching the declared minimum.
+2. Add executable coverage for the chosen contract and run docs checks.
+3. Commit as `docs(p15-t11): align git compatibility`.
+
+### Task p15-t12: (review) Classify Git spawn failures as system errors
+
+**Files:** sync Git runner/tests.
+
+1. Map non-numeric spawn failures such as `ENOENT` to actionable exit 2 rather than an `allowFailure` semantic result.
+2. Test missing executable behavior for allow-failure and normal calls.
+3. Run Git runner/ref-sync suites and type-check.
+4. Commit as `fix(p15-t12): classify git spawn failures`.
+
+### Task p15-t13: (review) Protect adopted recap exports
+
+**Files:** archive utilities/tests.
+
+1. Track whether the current attempt created or adopted the recap export and clean only attempt-owned output on failure.
+2. Test adopted tracked/untracked exports and newly-created partial exports across retries.
+3. Run archive suites and type-check.
+4. Commit as `fix(p15-t13): preserve adopted recap exports`.
+
+### Task p15-t14: (review) Harden non-archive lifecycle receipts
+
+**Files:** completion skill/script and repository-backed contract tests.
+
+1. Document and enforce ancestry, exact path set, slug/status/content, missing-record handling, and fresh-commit success before accepting a receipt.
+2. Chain the fresh lifecycle commit and validate its SHA; add slug, non-ancestor, hook-failure, and unrelated-path negatives.
+3. Preserve the existing PR-scoped completion-skill version bump and run skill/recovery matrices.
+4. Commit as `fix(p15-t14): harden nonarchive receipts`.
+
+### Task p15-t15: (review) Bind the wave project path
+
+**Files:** wave-execute skill, inventory anchors, and contract tests.
+
+1. Resolve and bind the active wrapper project path before the scope guard and stage only that exact path for shared/local.
+2. Preserve the existing PR-scoped wave skill bump.
+3. Run skill validation, contracts, and bump checks.
+4. Commit as `fix(p15-t15): bind wave project bookkeeping`.
+
+### Task p15-t16: (review) Exclude test fixtures from the package build
+
+**Files:** CLI TypeScript/build/package configuration and packaging tests.
+
+1. Exclude `src/__tests__/**` support fixtures from published `dist` without excluding production code or runtime test assets intentionally shipped.
+2. Build/pack and assert the synced fixture is absent.
+3. Run CLI build/type-check and release validation.
+4. Commit as `fix(p15-t16): exclude test fixtures from cli dist`.
+
+### Task p15-t17: (review) Restore import ordering in workflow tests
+
+**Files:** `packages/cli/src/e2e/workflow.test.ts`.
+
+1. Move the trailing import into the header block with no semantic test change.
+2. Run the workflow suite, lint, format, and type-check.
+3. Commit as `test(p15-t17): restore workflow import order`.
+
+### Task p15-t18: (review) Complete design verification coverage
+
+**Files:** design requirement table and e2e/archive tests.
+
+1. Add FR16-FR18 rows and reconcile NFR3 with executable scenarios.
+2. Test GitHub CLI absence during sync and shared-scope `reviews/` exclusion where promised.
+3. Run focused tests plus markdown/docs checks.
+4. Commit as `test(p15-t18): complete design verification matrix`.
+
+### Task p15-t19: (review) Cover malformed records at command boundaries
+
+**Files:** list/push/pull/prune command tests and record listing behavior as needed.
+
+1. Add the promised command-level malformed-record cases; prefer per-record degraded listing when safe while keeping mutation commands fail-closed with recovery guidance.
+2. Test mixed valid/invalid lists and exact push/pull/prune exits/messages.
+3. Run affected command suites and type-check.
+4. Commit as `test(p15-t19): cover malformed record commands`.
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -4821,8 +4997,9 @@ git commit -m "docs(p14-t19): refresh closeout guidance"
 - Phase p-rev1: 1 task - Integrate merged PR #226 and reconcile overlapping skill, validation, docs, sync, and release surfaces
 - Phase 13: 16 tasks - Post-merge final review fixes plus gate-review corrections for optional logs, scoped archive retries, failure-safe archive identity, locked stale registrations, local diagnostics, and release metadata
 - Phase 14: 19 tasks - Final integration review fixes across custom roots, validators/config, arrival, doctor, safety/recovery residuals, skills/docs, and closeout alignment
+- Phase 15: 19 tasks - Full-range final-review fixes for custom-root Git plumbing, conflict-safe pause recovery, offline creation, config durability, and residual portability/contract gaps
 
-**Total: 125 tasks**
+**Total: 144 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
