@@ -257,7 +257,7 @@ describe('applyOatCoreGitignore', () => {
     );
   });
 
-  it('repairs an unterminated managed block without treating its rules as managed', async () => {
+  it('repairs an unterminated managed block once and preserves user rules on reapplication', async () => {
     const root = await makeTempDir();
     execFileSync('git', ['init', '-q'], { cwd: root });
     const userRule = 'keep-user-rule';
@@ -296,8 +296,18 @@ describe('applyOatCoreGitignore', () => {
     );
 
     expect(result.changed).toBe(true);
-    const content = await readFile(join(root, '.gitignore'), 'utf8');
-    expect(content.startsWith(`# OAT core\n${userRule}\n`)).toBe(true);
-    expect(content).toContain('# END OAT core');
+    const repaired = await readFile(join(root, '.gitignore'), 'utf8');
+    expect(repaired.split('# OAT core')).toHaveLength(2);
+    expect(repaired).toContain('# END OAT core');
+    expect(repaired.indexOf(userRule)).toBeGreaterThan(
+      repaired.indexOf('# END OAT core'),
+    );
+
+    const repeated = await applyOatCoreGitignore(root);
+    const reapplied = await readFile(join(root, '.gitignore'), 'utf8');
+    expect(repeated.action).toBe('no-change');
+    expect(reapplied).toBe(repaired);
+    expect(reapplied).toContain(userRule);
+    expect(reapplied.split('# OAT core')).toHaveLength(2);
   });
 });

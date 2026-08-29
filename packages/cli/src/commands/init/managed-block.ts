@@ -7,6 +7,17 @@ export interface ApplyManagedBlockResult {
   entries: string[];
 }
 
+function preserveUnmanagedTail(
+  tail: string,
+  entries: readonly string[],
+): string {
+  const managedEntries = new Set(entries);
+  const lines = tail.startsWith('\n')
+    ? tail.slice(1).split('\n')
+    : tail.split('\n');
+  return lines.filter((line) => !managedEntries.has(line)).join('\n');
+}
+
 export async function applyManagedBlock(
   filePath: string,
   options: { start: string; end: string; entries: string[] },
@@ -28,6 +39,26 @@ export async function applyManagedBlock(
     await writeFile(
       filePath,
       `${content.slice(0, startIndex)}${section}${content.slice(endIndex + options.end.length)}`,
+      'utf8',
+    );
+    return { action: 'updated', entries: options.entries };
+  }
+
+  if (startIndex !== -1) {
+    const prefix = content.slice(0, startIndex);
+    const preservedTail = preserveUnmanagedTail(
+      content.slice(startIndex + options.start.length),
+      options.entries,
+    );
+    const prefixSeparator =
+      prefix.length === 0 || prefix.endsWith('\n') ? '' : '\n';
+    const preservedSuffix =
+      preservedTail.length === 0
+        ? '\n'
+        : `\n${preservedTail.replace(/^\n+/, '')}`;
+    await writeFile(
+      filePath,
+      `${prefix}${prefixSeparator}${section}${preservedSuffix}`,
       'utf8',
     );
     return { action: 'updated', entries: options.entries };
