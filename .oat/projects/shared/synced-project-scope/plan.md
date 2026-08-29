@@ -4827,8 +4827,13 @@ git commit -m "docs(p14-t19): refresh closeout guidance"
 
 **Operator step after implementation:** delete the disposable spike repository `https://github.com/tkstang/disposable-test-repo-for-oat` (used by p01-t10); the implementing agent never deletes repositories.
 
-The Phase 12 narrowed final lifecycle re-review passed with no findings. The
-configured exit gate's second and final attempt remains unlaunched.
+The Phase 12 narrowed final lifecycle re-review passed with no findings, and
+the historical configured exit-gate attempt subsequently passed at the
+Important threshold. That stored result predates the PR #226 integration and
+the Phase 13-14 effective delta, so it is not fresh closeout evidence for the
+current branch. After Phase 14 receives a fresh independent final-project
+review, generate and launch a refreshed configured exit gate against the
+current effective delta. That refreshed gate has not run yet.
 
 ---
 

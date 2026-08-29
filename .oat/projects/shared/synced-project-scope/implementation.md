@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: review
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: p14-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,9 +14,10 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> One hundred six of one hundred twenty-five implementation and revision tasks
-> are complete. A fresh full-project review added nineteen Phase 14 fixes that
-> must be implemented and independently re-reviewed before PR #227 is updated.
+> All one hundred twenty-five implementation and revision tasks are complete.
+> Phase 14 now requires phase-wide verification, a fresh independent
+> final-project review, and a refreshed configured exit gate before PR #227 is
+> updated.
 >
 > Conventions:
 >
@@ -28,25 +29,25 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 10    | 10/10     |
-| Phase 2      | complete    | 13    | 13/13     |
-| Phase 3      | complete    | 19    | 19/19     |
-| Phase 4      | complete    | 16    | 16/16     |
-| Phase 5      | complete    | 7     | 7/7       |
-| Phase 6      | complete    | 3     | 3/3       |
-| Phase 7      | complete    | 1     | 1/1       |
-| Phase 8      | complete    | 1     | 1/1       |
-| Phase 9      | complete    | 1     | 1/1       |
-| Phase 10     | complete    | 14    | 14/14     |
-| Phase 11     | complete    | 3     | 3/3       |
-| Phase 12     | complete    | 1     | 1/1       |
-| Phase p-rev1 | complete    | 1     | 1/1       |
-| Phase 13     | complete    | 16    | 16/16     |
-| Phase 14     | in progress | 19    | 0/19      |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 10    | 10/10     |
+| Phase 2      | complete | 13    | 13/13     |
+| Phase 3      | complete | 19    | 19/19     |
+| Phase 4      | complete | 16    | 16/16     |
+| Phase 5      | complete | 7     | 7/7       |
+| Phase 6      | complete | 3     | 3/3       |
+| Phase 7      | complete | 1     | 1/1       |
+| Phase 8      | complete | 1     | 1/1       |
+| Phase 9      | complete | 1     | 1/1       |
+| Phase 10     | complete | 14    | 14/14     |
+| Phase 11     | complete | 3     | 3/3       |
+| Phase 12     | complete | 1     | 1/1       |
+| Phase p-rev1 | complete | 1     | 1/1       |
+| Phase 13     | complete | 16    | 16/16     |
+| Phase 14     | complete | 19    | 19/19     |
 
-**Total:** 106/125 tasks completed
+**Total:** 125/125 tasks completed
 
 ---
 
@@ -3106,32 +3107,32 @@ and configured implementation exit-gate freshness remain.
 
 ## Phase 14: Final integration review fixes
 
-**Status:** in progress
+**Status:** complete - 19 of 19 tasks complete; independent review pending
 **Started:** 2026-08-29
 
 ### Task Status
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p14-t01 | pending | -      |
-| p14-t02 | pending | -      |
-| p14-t03 | pending | -      |
-| p14-t04 | pending | -      |
-| p14-t05 | pending | -      |
-| p14-t06 | pending | -      |
-| p14-t07 | pending | -      |
-| p14-t08 | pending | -      |
-| p14-t09 | pending | -      |
-| p14-t10 | pending | -      |
-| p14-t11 | pending | -      |
-| p14-t12 | pending | -      |
-| p14-t13 | pending | -      |
-| p14-t14 | pending | -      |
-| p14-t15 | pending | -      |
-| p14-t16 | pending | -      |
-| p14-t17 | pending | -      |
-| p14-t18 | pending | -      |
-| p14-t19 | pending | -      |
+| Task    | Status | Commit      |
+| ------- | ------ | ----------- |
+| p14-t01 | done   | `e8bcf3730` |
+| p14-t02 | done   | `cbefa3519` |
+| p14-t03 | done   | `0ac604b90` |
+| p14-t04 | done   | `e0ecc1fa7` |
+| p14-t05 | done   | `63b39ac26` |
+| p14-t06 | done   | `54a80cd35` |
+| p14-t07 | done   | `09c1e571b` |
+| p14-t08 | done   | `0a97a5052` |
+| p14-t09 | done   | `3b67fdd9f` |
+| p14-t10 | done   | `f7a6e6672` |
+| p14-t11 | done   | `662649d83` |
+| p14-t12 | done   | `a33cd9b3d` |
+| p14-t13 | done   | `af79e5b2a` |
+| p14-t14 | done   | `dcd234228` |
+| p14-t15 | done   | `9713803f8` |
+| p14-t16 | done   | `cb7647781` |
+| p14-t17 | done   | `1d5f044f1` |
+| p14-t18 | done   | `7c861f85d` |
+| p14-t19 | done   | this commit |
 
 ### Review Received: final integration review - 2026-08-29T00:27:06Z
 
@@ -3191,3 +3192,15 @@ the full effective delta, prior review closures, and repository gates.
 
 **Review outcome:** fixes added. This review event is not passed. Phase 14 must
 complete and receive a fresh independent final review before publication.
+
+### Phase 14 Closeout
+
+All nineteen final-integration findings are implemented in task order. The
+historical configured exit-gate pass remains recorded in `state.md`, but its
+reviewed/freshness basis predates the PR #226 integration and the Phase 13-14
+delta. It must not be treated as current closeout evidence.
+
+The next lifecycle steps are phase-wide verification, a fresh independent
+final-project review, and then generation and launch of a refreshed configured
+exit gate against the current effective delta. The refreshed gate has not run;
+this closeout records the required next step without claiming a result.
