@@ -1,6 +1,6 @@
 ---
 oat_current_task: p19-t08
-oat_last_commit: 5d5684eb
+oat_last_commit: 84c32d7f
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -78,16 +78,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p19:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: recovery-p19-01-sync-reporoot-narrowing
-        original_request_id: impl-p19-20260829T141500Z
-        original_task_id: p19-t08
-        original_commit: 6d39614b44950f1597ef87b848cc396d07a63a93
-        discovered_by: pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit --pretty false
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: efdb4cdc393f005ad25defe3f7650ac638fe5bd7
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -369,6 +360,7 @@ Phase 19 review cycle 1 added three recovery tasks, starting at `p19-t08`.
 - ✓ Phase 19 Definition-of-Done and release gates passed at lockstep `0.2.44`
 - ✗ Phase 19 review found 1 Important / 2 Medium residual gaps
 - ✓ Residuals converted into p19-t08 through p19-t10 with no deferral
+- ✓ Phase 19 recovery attempt 1/10 settled after restoring worktree parser type safety
 
 ## Blockers
 

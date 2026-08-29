@@ -3761,3 +3761,18 @@ The review reproduced the implementer's stale-registration concern and found
 two narrower parity/fail-closed gaps in archive dry-run and prune remote lookup.
 All three are converted for the original Phase 19 implementer; no finding is
 deferred or dismissed.
+
+### Recovery Event recovery-p19-01-sync-reporoot-narrowing
+
+- Phase/task: p19 / p19-t08
+- Original request: impl-p19-20260829T141500Z
+- Original commit: 6d39614b44950f1597ef87b848cc396d07a63a93
+- Defect class: type
+- Discovered by: `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit --pretty false`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 84c32d7fbca7adf0e5b2dbb052fce1421d9dc987
+- Verification: post-commit local-sync suite 20/20 and exact CLI TypeScript check exit 0; root rerun confirmed both
+- Reason: TypeScript could not prove the first parsed worktree line existed after array filtering; the bounded fix validates one local before use without changing behavior.
