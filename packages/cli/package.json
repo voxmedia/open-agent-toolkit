@@ -26,7 +26,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "bash scripts/bundle-assets.sh && tsc && tsc-alias && chmod +x dist/index.js && touch dist/index.js",
+    "build": "bash scripts/bundle-assets.sh && rm -rf dist/__tests__ && tsc && tsc-alias && chmod +x dist/index.js && touch dist/index.js",
     "clean": "rm -rf dist tsconfig.tsbuildinfo",
     "dev": "tsx watch src/index.ts",
     "check": "oxlint . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' . && oxfmt --check .",

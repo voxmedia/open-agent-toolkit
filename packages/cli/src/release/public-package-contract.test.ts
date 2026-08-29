@@ -1,7 +1,14 @@
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
@@ -283,6 +290,25 @@ describe('getPublicPackageContracts', () => {
       await rm(packageDir, { recursive: true, force: true });
     }
   }, 20_000);
+
+  it('excludes root test-support fixtures from the real CLI build and package', async () => {
+    const cliContract = getPublicPackageContracts()[0];
+    const workspaceRoot = dirname(workspaceRootPackageJsonPath);
+    const cliPackageRoot = dirname(cliPackageJsonPath);
+
+    await execFileAsync('pnpm', ['--filter', cliContract.publicName, 'build'], {
+      cwd: workspaceRoot,
+    });
+
+    await expect(
+      access(join(cliPackageRoot, 'dist', '__tests__', 'synced-fixture.js')),
+    ).rejects.toThrow();
+    const packedArtifact = await packPublicPackage(cliContract);
+    const packedPaths = packedArtifact.files.map((file) => file.path);
+    expect(
+      packedPaths.filter((path) => path.startsWith('dist/__tests__/')),
+    ).toEqual([]);
+  }, 30_000);
 
   it('rejects notice payloads reduced to attribution summaries', () => {
     const cliContract = getPublicPackageContracts()[0];
