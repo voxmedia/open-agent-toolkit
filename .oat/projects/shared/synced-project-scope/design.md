@@ -564,7 +564,7 @@ Not applicable — no database.
 ### Error Categories
 
 - **User Errors (exit 1, `CliError`):** not a synced project; no `origin` remote; checkout dirty on pull; rebase conflict; push rejected after one reconcile cycle; record missing or malformed; prune refused (open PR). Each message names the state and the exact next command.
-- **System Errors (exit 2):** git not on PATH; git older than the minimum (worktree add on a ref requires ≥ 2.5; detected once via `git --version`); filesystem failures. Synced rebase inspection uses portable `git rev-parse --git-path` output resolved against the checkout and does not require the Git 2.31+ `--path-format` option. Surfaced verbatim.
+- **System Errors (exit 2):** git not on PATH; a Git invocation unavailable in the installed version; filesystem failures. OAT has no startup Git-version probe: compatibility is checked best-effort by the commands themselves, and unsupported Git behavior is surfaced verbatim. The documented CLI floor is Git 2.31 because hook-path resolution uses `git rev-parse --path-format=absolute`; synced rebase inspection remains portable and resolves plain `git rev-parse --git-path` output against the checkout.
 - **External Service Errors:** `gh` missing/unauthenticated or PR edit failing → `prRefresh: 'skipped' | 'failed'` with a warning; push still succeeds. Network failure during fetch/push → user error with the git message.
 
 ### Conflict flow (push or pull)
@@ -735,7 +735,7 @@ Reverse migration is manual and documented: copy the checkout's files into `.oat
 
 ### External Dependencies
 
-- **git ≥ 2.5** (worktree add on arbitrary commit-ish); realistically any git from the last several years.
+- **Git ≥ 2.31** is the documented compatibility floor because the CLI uses `git rev-parse --path-format=absolute`. OAT does not run an up-front version gate; each command fails with exit 2 when its required Git behavior is unavailable.
 - **gh CLI** (optional) for PR body refresh.
 - No other runtime tools for lifecycle scope detection: shell skills use `oat project scope --format value`; `jq` is not a dependency of any lifecycle snippet (unrelated skills that already use `jq`/`--jq` for GitHub API work are unaffected).
 
