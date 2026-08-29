@@ -83,11 +83,14 @@ async function registeredNestedWorktrees(
   for (const record of records) {
     const lines = record.split('\n').filter(Boolean);
     const worktreeLines = lines.filter((line) => line.startsWith('worktree '));
+    const worktreeLine = worktreeLines[0];
     if (
       lines.length === 0 ||
       worktreeLines.length !== 1 ||
-      lines[0] !== worktreeLines[0] ||
-      worktreeLines[0].slice('worktree '.length).trim() === ''
+      typeof worktreeLine !== 'string' ||
+      !worktreeLine.startsWith('worktree ') ||
+      lines[0] !== worktreeLine ||
+      worktreeLine.slice('worktree '.length).trim() === ''
     ) {
       throw new CliError(
         'Malformed `git worktree list --porcelain` output; refusing local sync.',
@@ -95,9 +98,7 @@ async function registeredNestedWorktrees(
       );
     }
     registered.push(
-      await canonicalizeLocalSyncPath(
-        worktreeLines[0].slice('worktree '.length),
-      ),
+      await canonicalizeLocalSyncPath(worktreeLine.slice('worktree '.length)),
     );
   }
   if (registered.length === 0) {

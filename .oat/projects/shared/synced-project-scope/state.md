@@ -87,7 +87,7 @@ oat_phase_recovery_policy:
         discovered_by: pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit --pretty false
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
         reservation_head: efdb4cdc393f005ad25defe3f7650ac638fe5bd7
-        status: active
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
