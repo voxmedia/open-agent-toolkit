@@ -62,6 +62,16 @@ function pathsOverlap(left: string, right: string): boolean {
   return isWithin(leftToRight) || isWithin(rightToLeft);
 }
 
+function worktreeOwnsRoot(worktreePath: string, rootPath: string): boolean {
+  const relativeRoot = relative(worktreePath, rootPath);
+  return (
+    relativeRoot === '' ||
+    (relativeRoot !== '..' &&
+      !relativeRoot.startsWith(`..${sep}`) &&
+      !isAbsolute(relativeRoot))
+  );
+}
+
 async function registeredNestedWorktrees(
   repoRoot: string,
   sourceRoot: string,
@@ -107,13 +117,16 @@ async function registeredNestedWorktrees(
       2,
     );
   }
-  const supportedRoots = new Set(
-    await Promise.all([
-      canonicalizeLocalSyncPath(sourceRoot),
-      canonicalizeLocalSyncPath(targetRoot),
-    ]),
+  const supportedRoots = await Promise.all([
+    canonicalizeLocalSyncPath(sourceRoot),
+    canonicalizeLocalSyncPath(targetRoot),
+  ]);
+  return [...new Set(registered)].filter(
+    (worktreePath) =>
+      !supportedRoots.some((rootPath) =>
+        worktreeOwnsRoot(worktreePath, rootPath),
+      ),
   );
-  return [...new Set(registered)].filter((path) => !supportedRoots.has(path));
 }
 
 async function containsNestedGitMarker(root: string): Promise<boolean> {

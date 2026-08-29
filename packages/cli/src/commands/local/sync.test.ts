@@ -488,6 +488,53 @@ describe('oat local sync', () => {
     },
   );
 
+  it('copies a configured local path between linked worktrees nested under the main checkout', async () => {
+    const repoRoot = await createDir();
+    execFileSync('git', ['init', '-q'], { cwd: repoRoot });
+    execFileSync('git', ['config', 'user.email', 'test@example.com'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.name', 'Test User'], {
+      cwd: repoRoot,
+    });
+    await writeFile(join(repoRoot, 'seed.txt'), 'seed\n');
+    execFileSync('git', ['add', 'seed.txt'], { cwd: repoRoot });
+    execFileSync('git', ['commit', '-q', '-m', 'seed'], { cwd: repoRoot });
+
+    const sourceRoot = join(repoRoot, '.worktrees', 'source');
+    const targetRoot = join(repoRoot, '.worktrees', 'target');
+    execFileSync(
+      'git',
+      ['worktree', 'add', '-q', '-b', 'local-sync-source', sourceRoot],
+      { cwd: repoRoot },
+    );
+    execFileSync(
+      'git',
+      ['worktree', 'add', '-q', '-b', 'local-sync-target', targetRoot],
+      { cwd: repoRoot },
+    );
+    const localPath = '.local-state';
+    await mkdir(join(sourceRoot, localPath), { recursive: true });
+    await writeFile(
+      join(sourceRoot, localPath, 'settings.json'),
+      '{"source":true}\n',
+    );
+
+    const result = await syncLocalPaths({
+      repoRoot: sourceRoot,
+      sourceRoot,
+      targetRoot,
+      localPaths: [localPath],
+      direction: 'to',
+      force: false,
+    });
+
+    expect(result.entries).toEqual([{ path: localPath, status: 'copied' }]);
+    await expect(
+      readFile(join(targetRoot, localPath, 'settings.json'), 'utf8'),
+    ).resolves.toBe('{"source":true}\n');
+  });
+
   it.each([
     {
       label: 'query failure',
