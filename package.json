@@ -9,7 +9,7 @@
     "oat:validate-skills": "pnpm run cli -- internal validate-oat-skills",
     "build": "turbo run build --filter='!oat-docs'",
     "build:docs": "turbo run build --filter=oat-docs...",
-    "check": "turbo run check",
+    "check": "turbo run check && pnpm oat:validate-skills",
     "check:fix": "turbo run check:fix",
     "clean": "turbo run clean",
     "cli": "bash packages/cli/scripts/bundle-assets.sh && tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts",

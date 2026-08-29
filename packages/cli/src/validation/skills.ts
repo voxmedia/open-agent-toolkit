@@ -420,7 +420,7 @@ async function collectSyncedBookkeepingInventoryFindings(
                 anchorSite.content,
               )
             : site.kind === 'resolve' && site.guard === 'canonical-resolution'
-              ? /\bresolve(?:Project|NamedProject|SyncedTarget|ProjectScope|ActiveProject)\b|options\.remote[^\n]*synced|\boat\s+project\s+new\b[^\n]*--scope\b|project:synced_tracked_artifacts|\boat\s+config\s+get\s+activeProject\b/.test(
+              ? /\bresolve(?:Project|NamedProject|SyncedTarget|ProjectScope|ActiveProject)\b|\bprojectScope\s*===\s*['"]synced['"]|options\.remote[^\n]*synced|\boat\s+project\s+new\b[^\n]*--scope\b|project:synced_tracked_artifacts|\boat\s+config\s+get\s+activeProject\b/.test(
                   anchorSite.content,
                 )
               : anchorSite.content.includes(site.guard);

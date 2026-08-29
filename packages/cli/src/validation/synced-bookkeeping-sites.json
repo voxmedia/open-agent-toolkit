@@ -55,7 +55,7 @@
   },
   {
     "file": "packages/cli/src/commands/project/archive/archive-utils.ts",
-    "anchor": "resolveProjectScope(options.projectPath, options.projectsRoot) === 'synced';",
+    "anchor": "const isSynced = projectScope === 'synced';",
     "kind": "resolve",
     "guard": "canonical-resolution"
   },
