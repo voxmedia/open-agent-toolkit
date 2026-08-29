@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 
@@ -27,6 +27,32 @@ afterEach(async () => {
 });
 
 describe('project scope paths', () => {
+  it('normalizes non-missing canonical path failures into path-specific CLI errors', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-project-scope-'));
+    tempDirs.push(root);
+    const file = join(root, 'file');
+    await writeFile(file, 'not a directory\n', 'utf8');
+    const nonDirectoryPath = join(file, 'child');
+
+    expect(() => canonicalizePath(nonDirectoryPath)).toThrowError(
+      expect.objectContaining({
+        name: 'CliError',
+        exitCode: 2,
+        message: expect.stringContaining(nonDirectoryPath),
+      }),
+    );
+
+    const loop = join(root, 'loop');
+    await symlink(loop, loop);
+    expect(() => canonicalizePath(loop)).toThrowError(
+      expect.objectContaining({
+        name: 'CliError',
+        exitCode: 2,
+        message: expect.stringContaining(loop),
+      }),
+    );
+  });
+
   it('resolves sibling scope roots from relative and absolute projects roots', () => {
     const repoRoot = '/repo';
 

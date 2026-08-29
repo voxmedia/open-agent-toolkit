@@ -34,7 +34,11 @@ export function canonicalizePath(path: string): string {
     if (
       !(error instanceof Error && 'code' in error && error.code === 'ENOENT')
     ) {
-      throw error;
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new CliError(
+        `Unable to resolve canonical path \`${absolute}\`: ${detail}`,
+        2,
+      );
     }
     const parent = dirname(absolute);
     if (parent === absolute) {
