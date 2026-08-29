@@ -271,6 +271,10 @@ async function collectProjectRows(
           );
           if (materializedRow) {
             materializedRow.recordError = message;
+            materializedRow.recommendation = {
+              skill: 'none',
+              reason: 'restore invalid record from a trusted Git revision',
+            };
           } else {
             rows.push({
               kind: 'recorded-invalid',

@@ -218,6 +218,10 @@ describe('oat project list coordination integration', () => {
           recordError: expect.stringContaining(
             'Restore this exact record from a trusted Git revision',
           ),
+          recommendation: {
+            skill: 'none',
+            reason: 'restore invalid record from a trusted Git revision',
+          },
         }),
         expect.objectContaining({
           name: 'synced-absent',
@@ -250,6 +254,11 @@ describe('oat project list coordination integration', () => {
     expect(humanResult.stdout).toContain('malformed');
     expect(humanResult.stdout).toContain('restore record from Git');
     expect(humanResult.stdout.match(/synced-present/g)).toHaveLength(1);
+    expect(
+      humanResult.stdout
+        .split('\n')
+        .find((line) => line.includes('synced-present')),
+    ).toMatch(/none\s+restore record from Git/);
     expect(humanResult.stderr).toContain(
       'Skipping invalid synced project record .oat/projects/synced/malformed.json:',
     );
