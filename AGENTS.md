@@ -17,7 +17,7 @@
 
 ### Essential Commands
 
-- `pnpm check` - Lint and format checks per package, plus markdownlint over `apps/oat-docs/docs`
+- `pnpm check` - Lint and format checks per package, markdownlint over `apps/oat-docs/docs`, and `oat:validate-skills`
 - `pnpm build` - Build all packages and applications (excludes docs for speed)
 - `pnpm build:docs` - Build the docs site and its dependencies
 - `pnpm lint` - Lint code using oxlint, plus `tools/smoke`
@@ -27,9 +27,11 @@
 
 `pnpm check` and the `pnpm lint`/`pnpm format` pair overlap, but neither
 contains the other, so passing one does not predict the other. Only `pnpm check`
-runs markdownlint over the docs app, which is what catches docs violations such
-as a fenced code block with no language or a skipped heading level. Only
-`pnpm lint` and `pnpm format` reach `tools/smoke` and `.agents/skills/**/*.md`.
+runs markdownlint over the docs app and validates canonical OAT skill structure
+through `oat:validate-skills`. Markdownlint catches docs violations such as a
+fenced code block with no language or a skipped heading level. Only `pnpm lint`
+and `pnpm format` apply their respective lint/format coverage to `tools/smoke`
+and `.agents/skills/**/*.md`; skill validation does not replace either check.
 
 ### Definition of Done
 
