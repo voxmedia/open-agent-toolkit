@@ -210,7 +210,9 @@ async function publishPausedState(
 class PausePublicationError extends CliError {
   constructor(
     message: string,
-    readonly status: Exclude<PushResult['status'], 'pushed' | 'up-to-date'>,
+    readonly status:
+      | Exclude<PushResult['status'], 'pushed' | 'up-to-date'>
+      | 'failed',
   ) {
     super(message, 1);
   }
@@ -262,6 +264,13 @@ async function runProjectPause(
     }
 
     const content = await dependencies.readFile(statePath, 'utf8');
+    const prePauseHead = resolved.syncTarget
+      ? (
+          await dependencies.gitRunner.run(['rev-parse', 'HEAD'], {
+            cwd: resolved.syncTarget.projectPath,
+          })
+        ).stdout
+      : null;
     const frontmatter = getFrontmatterBlock(content);
     if (!frontmatter) {
       throw new CliError(`state.md is missing frontmatter: ${statePath}`, 1);
@@ -322,6 +331,22 @@ async function runProjectPause(
           nextBlock !== frontmatter &&
           !(error instanceof PausePublicationError)
         ) {
+          const pauseCommitRetained =
+            resolved.syncTarget && prePauseHead
+              ? (
+                  await dependencies.gitRunner.run(['rev-parse', 'HEAD'], {
+                    cwd: resolved.syncTarget.projectPath,
+                  })
+                ).stdout !== prePauseHead
+              : false;
+          if (pauseCommitRetained && resolved.syncTarget) {
+            const detail =
+              error instanceof Error ? error.message : String(error);
+            throw new PausePublicationError(
+              `Unable to pause synced project ${resolved.syncTarget.slug}: publication failed: ${detail}. Active project pointer was not changed. The committed local pause was retained with a clean checkout; re-run oat project pause ${resolved.syncTarget.slug} to retry publication.`,
+              'failed',
+            );
+          }
           await dependencies.writeFile(statePath, content, 'utf8');
         }
         throw error;

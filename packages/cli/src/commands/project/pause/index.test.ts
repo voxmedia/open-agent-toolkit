@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  chmod,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -65,6 +72,13 @@ function createHarness(options: HarnessOptions): {
     resolveProjectRoot: vi.fn(async () => options.cwd),
     now: () => new Date('2026-02-21T12:00:00.000Z'),
     pushSynced,
+    gitRunner: {
+      run: vi.fn(async () => ({
+        stdout: 'pre-pause-head',
+        stderr: '',
+        code: 0,
+      })),
+    } satisfies GitRunner,
     ...(options.resolveError
       ? {
           resolveSyncedTarget: vi.fn(async () => {
@@ -500,27 +514,18 @@ describe('oat project pause', () => {
       `${JSON.stringify({ version: 1, activeProject: `.oat/projects/synced/${slug}` })}\n`,
     );
 
-    let remoteAdvanceSha = '';
-    const decliningGitRunner: GitRunner = {
-      run: async (args, options) => {
-        if (
-          remoteAdvanceSha === '' &&
-          args.includes('push') &&
-          args.includes(targetB.projectPath)
-        ) {
-          await writeFile(
-            join(targetA.projectPath, 'remote-note.md'),
-            'advanced during pause publication\n',
-          );
-          remoteAdvanceSha = (
-            await pushSyncedReal(targetA, defaultGitRunner, {
-              message: 'advance during pause publication',
-            })
-          ).sha;
-        }
-        return defaultGitRunner.run(args, options);
-      },
-    };
+    const hookPath = join(fixture.originDir, 'hooks', 'pre-receive');
+    const allowPath = join(fixture.originDir, 'allow-pause');
+    await writeFile(
+      hookPath,
+      `#!/bin/sh
+if [ ! -f "${allowPath}" ]; then
+  echo "declined by policy" >&2
+  exit 1
+fi
+`,
+    );
+    await chmod(hookPath, 0o755);
     const capture = createLoggerCapture();
     const command = createProjectPauseCommand({
       buildCommandContext: (options: GlobalOptions): CommandContext => ({
@@ -535,7 +540,7 @@ describe('oat project pause', () => {
       }),
       resolveProjectRoot: async () => fixture.cloneB!,
       now: () => new Date('2026-08-29T01:30:00Z'),
-      gitRunner: decliningGitRunner,
+      gitRunner: defaultGitRunner,
     });
 
     await runCommand(command, []);
@@ -553,16 +558,43 @@ describe('oat project pause', () => {
         encoding: 'utf8',
       }),
     ).toBe('');
+    const localConfig = JSON.parse(
+      await readFile(join(fixture.cloneB!, '.oat/config.local.json'), 'utf8'),
+    );
+    expect(localConfig.activeProject).toBe(`.oat/projects/synced/${slug}`);
+
+    await writeFile(allowPath, 'allow\n');
+    process.exitCode = undefined;
+    await runCommand(command, []);
+
+    expect(process.exitCode).toBe(0);
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: targetB.projectPath,
+        encoding: 'utf8',
+      }),
+    ).toBe('');
+    const pauseSubjects = execFileSync('git', ['log', '--format=%s', '--all'], {
+      cwd: targetB.projectPath,
+      encoding: 'utf8',
+    })
+      .trim()
+      .split('\n')
+      .filter(
+        (subject) => subject === `chore(oat): pause synced project ${slug}`,
+      );
+    expect(pauseSubjects).toHaveLength(1);
     expect(
       execFileSync('git', ['rev-parse', targetA.ref], {
         cwd: fixture.originDir,
         encoding: 'utf8',
       }).trim(),
-    ).toBe(remoteAdvanceSha);
-    const localConfig = JSON.parse(
-      await readFile(join(fixture.cloneB!, '.oat/config.local.json'), 'utf8'),
+    ).toBe(
+      execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: targetB.projectPath,
+        encoding: 'utf8',
+      }).trim(),
     );
-    expect(localConfig.activeProject).toBe(`.oat/projects/synced/${slug}`);
   });
 
   it('persists pause reason when provided', async () => {
