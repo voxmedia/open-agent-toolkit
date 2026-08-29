@@ -107,12 +107,12 @@ Checklist + severity model source of truth: the `oat-review-provide` review
 artifact template. Independently probe each required `<name>/SKILL.md` in
 order: `${SKILL_DIR}/..` from this loaded skill, `${HOME}/.agents/skills`, then
 `<repo-root>/.agents/skills`. Bind the first match for `oat-review-provide` to
-its own `${REVIEW_PROVIDE_SKILLS_ROOT}`; never ambient discovery. Read
-`${REVIEW_PROVIDE_SKILLS_ROOT}/oat-review-provide/references/review-artifact-template.md`.
-On a miss, name the skill, stop the review instead of improvising a checklist,
-and give its intended-scope recovery command:
+its own `${REVIEW_PROVIDE_SKILLS_ROOT}`; never ambient discovery. On a miss,
+name the skill, stop the review instead of improvising a checklist, and give
+its intended-scope recovery command:
 `oat tools install utility --scope <user|project>` or
-`oat tools update --pack utility --scope <user|project>`.
+`oat tools update --pack utility --scope <user|project>`. Then read
+`${REVIEW_PROVIDE_SKILLS_ROOT}/oat-review-provide/references/review-artifact-template.md`.
 
 ## Process
 
