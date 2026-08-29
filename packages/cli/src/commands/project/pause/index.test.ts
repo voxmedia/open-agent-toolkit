@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -7,7 +8,16 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { defaultGitRunner } from '@commands/project/sync/git';
+import {
+  buildSyncTarget,
+  continueSynced,
+  createSyncedProject,
+  pullSynced,
+  pushSynced,
+} from '@commands/project/sync/ref-sync';
 import { CliError } from '@errors/cli-error';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -231,7 +241,7 @@ describe('oat project pause', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it.each(['rejected', 'conflict'] as const)(
+  it.each(['rejected'] as const)(
     'restores synced state byte-for-byte after a %s pause publication',
     async (pushStatus) => {
       const root = await createRepoRoot();
@@ -260,6 +270,129 @@ describe('oat project pause', () => {
       expect(process.exitCode).toBe(1);
     },
   );
+
+  it('preserves a conflicted synced state and prints targeted recovery guidance', async () => {
+    const root = await createRepoRoot();
+    const statePath = await writeProjectState(root, 'synced-demo', 'synced');
+    const originalState = await readFile(statePath, 'utf8');
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/synced/synced-demo' })}\n`,
+      'utf8',
+    );
+    const { command, capture } = createHarness({
+      cwd: root,
+      pushStatus: 'conflict',
+    });
+
+    await runCommand(command, []);
+
+    expect(await readFile(statePath, 'utf8')).not.toBe(originalState);
+    expect(await readFile(statePath, 'utf8')).toContain(
+      'oat_lifecycle: paused',
+    );
+    expect(capture.error.join('\n')).toContain(
+      'oat project pull synced-demo --continue',
+    );
+    expect(capture.error.join('\n')).toContain(
+      'oat project pull synced-demo --abort',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('preserves the remote edit through real two-clone pause conflict recovery', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    tempDirs.push(fixture.rootDir);
+    const slug = 'pause-conflict';
+    const targetA = buildSyncTarget(
+      fixture.cloneA,
+      '.oat/projects/shared',
+      slug,
+    );
+    await createSyncedProject(targetA, defaultGitRunner);
+    await writeFile(
+      join(targetA.projectPath, 'state.md'),
+      '---\noat_phase: implement\noat_phase_status: in_progress\noat_lifecycle: active\n---\n\n# State\n',
+    );
+    await pushSynced(targetA, defaultGitRunner, {
+      message: 'seed pause state',
+    });
+    const targetB = buildSyncTarget(
+      fixture.cloneB!,
+      '.oat/projects/shared',
+      slug,
+    );
+    await pullSynced(targetB, defaultGitRunner);
+    await writeFile(
+      join(targetA.projectPath, 'state.md'),
+      '---\noat_phase: implement\noat_phase_status: in_progress\noat_lifecycle: active\nremote_note: survives\n---\n\n# State\n',
+    );
+    const remoteAdvance = await pushSynced(targetA, defaultGitRunner, {
+      message: 'advance remote pause state',
+    });
+    await writeFile(
+      join(fixture.cloneB!, '.oat/config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: `.oat/projects/synced/${slug}` })}\n`,
+    );
+    const capture = createLoggerCapture();
+    const command = createProjectPauseCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneB!,
+        home: '/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneB!,
+      now: () => new Date('2026-08-29T01:00:00Z'),
+    });
+
+    await runCommand(command, []);
+
+    expect(process.exitCode).toBe(1);
+    const conflicted = await readFile(
+      join(targetB.projectPath, 'state.md'),
+      'utf8',
+    );
+    expect(conflicted).toContain('<<<<<<<');
+    expect(conflicted).toContain('remote_note: survives');
+    expect(capture.error.join('\n')).toContain(`pull ${slug} --continue`);
+    expect(
+      execFileSync('git', ['show', `${targetA.ref}:state.md`], {
+        cwd: fixture.originDir,
+        encoding: 'utf8',
+      }),
+    ).not.toContain('oat_lifecycle: paused');
+    expect(
+      execFileSync('git', ['rev-parse', targetA.ref], {
+        cwd: fixture.originDir,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe(remoteAdvance.sha);
+
+    await writeFile(
+      join(targetB.projectPath, 'state.md'),
+      '---\noat_phase: implement\noat_phase_status: in_progress\noat_lifecycle: paused\nremote_note: survives\noat_pause_timestamp: 2026-08-29T01:00:00.000Z\noat_project_state_updated: 2026-08-29T01:00:00.000Z\n---\n\n# State\n',
+    );
+    execFileSync('git', ['add', 'state.md'], { cwd: targetB.projectPath });
+    await expect(
+      continueSynced(targetB, defaultGitRunner),
+    ).resolves.toMatchObject({ status: 'updated' });
+    await expect(
+      pushSynced(targetB, defaultGitRunner, {
+        message: 'publish recovered pause',
+      }),
+    ).resolves.toMatchObject({ status: 'pushed' });
+    const published = execFileSync('git', ['show', `${targetA.ref}:state.md`], {
+      cwd: fixture.originDir,
+      encoding: 'utf8',
+    });
+    expect(published).toContain('remote_note: survives');
+    expect(published).toContain('oat_lifecycle: paused');
+  });
 
   it('publishes a synced pause before clearing the active pointer', async () => {
     const root = await createRepoRoot();

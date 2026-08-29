@@ -190,15 +190,29 @@ async function resolveNamedProject(
 async function publishPausedState(
   target: SyncTarget,
   dependencies: ProjectPauseDependencies,
-): Promise<void> {
+): Promise<PushResult> {
   const result = await dependencies.pushSynced(target, dependencies.gitRunner, {
     message: `chore(oat): pause synced project ${target.slug}`,
   });
   if (result.status !== 'pushed' && result.status !== 'up-to-date') {
-    throw new CliError(
-      `Unable to pause synced project ${target.slug}: push ${result.status}; active project pointer was not changed.`,
-      1,
+    const recovery =
+      result.status === 'conflict'
+        ? ` Resolve the conflicted files without discarding either side, then run oat project pull ${target.slug} --continue followed by oat project push ${target.slug}; or run oat project pull ${target.slug} --abort to leave the committed local pause unpublished.`
+        : '';
+    throw new PausePublicationError(
+      `Unable to pause synced project ${target.slug}: push ${result.status}; active project pointer was not changed.${recovery}`,
+      result.status,
     );
+  }
+  return result;
+}
+
+class PausePublicationError extends CliError {
+  constructor(
+    message: string,
+    readonly status: Exclude<PushResult['status'], 'pushed' | 'up-to-date'>,
+  ) {
+    super(message, 1);
   }
 }
 
@@ -304,7 +318,13 @@ async function runProjectPause(
       try {
         await publishPausedState(resolved.syncTarget, dependencies);
       } catch (error) {
-        if (nextBlock !== frontmatter) {
+        if (
+          nextBlock !== frontmatter &&
+          !(
+            error instanceof PausePublicationError &&
+            error.status === 'conflict'
+          )
+        ) {
           await dependencies.writeFile(statePath, content, 'utf8');
         }
         throw error;
