@@ -112,9 +112,11 @@ export function resolveProjectScope(
       return 'shared';
     }
 
-    const parentMatches = parentParts.every(
-      (part, offset) => projectParts[index + offset] === part,
-    );
+    const parentMatches =
+      parentParts.length > 0 &&
+      parentParts.every(
+        (part, offset) => projectParts[index + offset] === part,
+      );
     if (!parentMatches) {
       continue;
     }

@@ -116,6 +116,49 @@ describe('project scope paths', () => {
     ).toBeNull();
   });
 
+  it('does not vacuously match sibling scopes for a single-segment relative root', () => {
+    const configuredRoot = 'projects';
+
+    expect(resolveProjectScope('/repo/projects/example', configuredRoot)).toBe(
+      'shared',
+    );
+    expect(
+      resolveProjectScope('/repo/local/example', configuredRoot),
+    ).toBeNull();
+    expect(
+      resolveProjectScope('/repo/synced/example', configuredRoot),
+    ).toBeNull();
+    expect(resolveProjectScope('local/example', configuredRoot)).toBeNull();
+    expect(resolveProjectScope('synced/example', configuredRoot)).toBeNull();
+  });
+
+  it('ignores incidental local and synced segments outside configured roots', () => {
+    expect(
+      resolveProjectScope(
+        '/var/local/repo/team-projects/example',
+        '/var/local/repo/team-projects',
+      ),
+    ).toBe('shared');
+    expect(
+      resolveProjectScope(
+        '/var/synced/unrelated/example',
+        '/var/local/repo/team-projects',
+      ),
+    ).toBeNull();
+    expect(
+      resolveProjectScope(
+        'workspace/local/incidental/example',
+        '.oat/team-projects',
+      ),
+    ).toBeNull();
+    expect(
+      resolveProjectScope(
+        'workspace/synced/incidental/example',
+        '.oat/team-projects',
+      ),
+    ).toBeNull();
+  });
+
   it('builds validated ref and record paths', () => {
     expect(syncedRefName('my-slug')).toBe('refs/oat/projects/my-slug');
     expect(syncedRecordPath('/repo/.oat/projects/synced', 'my-slug')).toBe(
