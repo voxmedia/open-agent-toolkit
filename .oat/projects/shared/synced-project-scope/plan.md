@@ -3712,6 +3712,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | p18     | code     | passed          | 2026-08-29 | reviews/archived/p18-review-2026-08-29T133009Z.md                 | 9e73c3750357fea997d0927e8b991109c5095930 | auto       | -                             |
 | final   | code     | fixes_completed | 2026-08-29 | reviews/archived/final-review-2026-08-29T134331Z.md               | 9ca20b411b07c792d169e46e812f1aef4910ea0f | auto       | -                             |
 | p19     | code     | fixes_completed | 2026-08-29 | reviews/archived/p19-review-2026-08-29T143242Z.md                 | 5d5684ebe41e3f5c41e40fd864f9108d7b1e2aa4 | auto       | -                             |
+| p19     | code     | received        | 2026-08-29 | reviews/p19-review-2026-08-29T150514Z.md                          | 225f75c41ca39a023f958bdef28a742eb0923f7b | auto       | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
