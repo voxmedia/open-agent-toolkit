@@ -34,7 +34,26 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.39` (portable-skill-references, PR #226 pending merge) makes the
+- CLI `0.2.41` (portable-agent-references, branch pending merge) generalizes
+  portable references from the identified cross-skill reads to the entire
+  user-default asset surface. A manifest-driven ratchet derives skill _and_
+  agent assets from `PACK_MANIFEST` and classifies cross-skill `SKILL.md` reads
+  plus file- and directory-form targets at or below `references/`, across
+  backticked, plain, Markdown-link, `./`, `../`, and repeated-parent spellings.
+  All nine canonical callers now resolve through installed roots: six skills use
+  loaded → user → project, and three agents use user → project, because no
+  provider exposes a stable loaded-agent source directory. The
+  `oat-phase-implementer` bare-path exemption is replaced by the same positive
+  assertions its consumers use, and a temporary migration inventory of 21 exact
+  entries was drained to zero, leaving only the six pre-existing non-executable
+  historical entries. This closes the residual agent-surface and
+  cross-skill `references/*.md` deferral recorded against `0.2.39`. Mutation
+  testing twice confirmed the ratchet is live; the full CI gate list passed
+  uncached and HOME-isolated. One direction remains unenforced and is tracked as
+  `BL-260829-unified-agent-provider-root`: skills reading canonical _agent_
+  definitions still use bare `.agents/agents/<name>.md` paths, a path shape the
+  matcher structurally cannot see.
+- CLI `0.2.39` (portable-skill-references, merged as PR #226) makes the
   identified packaged sibling-skill reads portable across loaded, user, and
   project scopes. Idea, implementation, plan-writing, and brainstorm handoff
   surfaces now fail closed with pack-specific install/update recovery; the
@@ -353,3 +372,13 @@ judgment logging for project observations, and avoiding redundant
 bookkeeping-only re-reviews. `BL-260719-add-pinned-recon-agents` tracks a
 reusable pinned recon-role contract for review and non-review orchestration if
 observed value justifies the additional provider role matrix.
+
+Portable references have one remaining unenforced direction:
+`BL-260829-unified-agent-provider-root` proposes a single
+`${AGENT_PROVIDER_ROOT}` binding with `/skills` and `/agents` leaves, replacing
+the two parallel candidate lists that already share their user and project
+tiers. It carries real design questions (loaded-tier eligibility given that
+provider agent views are not format-identical to canonical, and whether a
+shared root regresses independent per-dependency binding), so it is scaffolded
+as project `agent-provider-root` with seeded discovery rather than queued as a
+mechanical port.

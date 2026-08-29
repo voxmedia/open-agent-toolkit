@@ -4,6 +4,19 @@
 
 ## Curated Overview
 
+- Portable references now have a second chapter. The
+  `portable-agent-references` project (successor to
+  `BL-260827-make-packaged-skill-references`) generalized the ratchet across the
+  whole user-default skill _and_ agent surface and drained live debt to zero,
+  but its final review surfaced one direction it does not cover:
+  `BL-260829-unified-agent-provider-root`. Skills reading canonical agent
+  definitions still use bare `.agents/agents/<name>.md` paths, which the ratchet
+  cannot see at all. Deferral was judged acceptable — nothing breaks while
+  `.agents/agents/` exists at project scope — but the failure is silent, fires
+  only after a dispatch rejection, and nothing prevents new instances. It
+  carries real design questions (loaded-tier eligibility, and whether a shared
+  root regresses independent per-dependency binding), so it is sized L and
+  wants a design pass rather than a patch.
 - The first of three user-scope tool-pack closeout follow-ups is closed:
   `BL-260827-make-packaged-skill-references` delivered portable cross-skill
   links and their ratchet in PR #226. The two remaining bounded features stay
@@ -161,9 +174,11 @@
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature | L        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                                          | open   | high     | task    | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                                      | open   | high     | task    | S        |
+| BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task    | M        |
 | BL-260826-populate-native-subagent       | Populate native subagent runtime identity from provider transcript metadata                           | open   | high     | feature | M        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                                   | open   | high     | feature | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature | L        |
+| BL-260829-unified-agent-provider-root    | Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references                           | open   | high     | task    | L        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                    | open   | medium   | feature | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                | open   | medium   | feature | M        |

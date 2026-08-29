@@ -21,6 +21,7 @@ bullet lines over rewriting whole sections, and reference backlog records by ID
 - **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
+- **BL-260829-unified-agent-provider-root: Unified `${AGENT_PROVIDER_ROOT}` binding for portable skill and agent references** — Close the one direction the portability ratchet cannot see: skills reading canonical agent definitions by bare `.agents/agents/<name>.md` path. Needs a design pass on loaded-tier eligibility and independent per-dependency binding before implementation. Project: agent-provider-root.
 - **BL-260827-correct-scope-and-adoption: Correct scope and adoption diagnostics** — Align PJM migration eligibility, provider-aware user-agent materialization, shared-owner attribution, and failure rendering. Project: scope-adoption-diagnostics.
 - **BL-260827-clean-up-tool-pack-lifecycle: Clean up tool-pack lifecycle and config contracts** — Add content-accurate inventory, explicit adoption reporting, supported config state, and corrected per-pack CLI help. Project: tool-pack-lifecycle-config-cleanup.
 - **BL-260806-fail-closed-when-configured: Fail closed when configured closeout snapshot is absent** — Persist the normalized closeout sequence before child dispatch and prevent terminal completion until every configured child is durably recorded.

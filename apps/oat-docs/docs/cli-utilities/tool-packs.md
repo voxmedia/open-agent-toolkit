@@ -84,6 +84,14 @@ Lifecycle skills resolve each required sibling independently from the loaded
 scope, then user scope, then project scope. This makes mixed-scope placement a
 supported execution path rather than relying on one frozen skills root.
 
+Materialized **agents** from any pack that ships them (`workflows` here,
+`research` elsewhere) use a two-step order instead — user scope, then project
+scope — because no provider exposes a stable loaded-agent source directory to
+derive a loaded scope from. They still bind each dependency independently and
+still fail closed with the owning pack's install or update command. See
+[Writing Skills → Portable sibling reads](../contributing/skills.md#portable-sibling-reads-skills-and-agents)
+for the full contract.
+
 The packs remain independently installable. If the workflows adapter is
 present without the utility contracts, it fails closed and reports the missing
 dependency instead of inventing a fallback route. Non-project analytical

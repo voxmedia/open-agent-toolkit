@@ -852,7 +852,7 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.1');
     expect(tools).toContain('Task');
     for (const broadReview of [
       'final code reviews',
@@ -878,9 +878,11 @@ describe('validateOatSkills', () => {
       expect(content, `lane report ${laneField}`).toContain(laneField);
     }
 
-    expect(content).toContain('.agents/skills/oat-dispatch-subagents/SKILL.md');
     expect(content).toContain(
-      '.agents/skills/subagent-orchestration/references/model-selection-principles.md',
+      '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+    );
+    expect(content).toContain(
+      '${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md',
     );
     expect(content).toMatch(
       /read exactly one[\s\S]{0,220}selection reference[\s\S]{0,220}one matching mechanics reference[\s\S]{0,220}oat-dispatch-subagents\/references/i,
@@ -896,7 +898,7 @@ describe('validateOatSkills', () => {
       /never silently inherit[\s\S]{0,120}primary reviewer's model/i,
     );
     expect(content).toMatch(
-      /must not (?:read|load)[\s\S]{0,160}\.agents\/skills\/oat-project-dispatch-subagents\/SKILL\.md[\s\S]{0,200}project lifecycle phase\/task policy/i,
+      /must not (?:read|load)[\s\S]{0,160}`oat-project-dispatch-subagents`[\s\S]{0,200}project lifecycle phase\/task policy/i,
     );
 
     expect(content).toMatch(
@@ -2059,7 +2061,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.1');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -2212,9 +2214,9 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.0.11'],
-      ['.agents/agents/oat-reviewer.md', '1.2.0'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.4.0'],
+      ['.agents/agents/oat-phase-implementer.md', '1.0.12'],
+      ['.agents/agents/oat-reviewer.md', '1.2.1'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.4.1'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.0'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.0'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.0'],
@@ -2522,7 +2524,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.11');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.12');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
@@ -2542,9 +2544,11 @@ describe('validateOatSkills', () => {
     expect(agent).toMatch(/Ordinary phase tasks are implemented directly/i);
     expect(agent).toMatch(/Nested dispatch is optional/i);
     expect(agent).toContain(
-      '.agents/skills/oat-project-dispatch-subagents/SKILL.md',
+      '${PROJECT_DISPATCH_SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md',
     );
-    expect(agent).toContain('.agents/skills/oat-dispatch-subagents/SKILL.md');
+    expect(agent).toContain(
+      '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+    );
     expect(agent).toMatch(
       /root[\s\S]{0,180}dispatches the independent phase reviewer/i,
     );
@@ -3436,7 +3440,7 @@ describe('validateOatSkills', () => {
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.19'],
-      ['oat-project-review-provide', '1.4.0'],
+      ['oat-project-review-provide', '1.4.1'],
       ['oat-project-review-receive', '1.6.0'],
       ['oat-project-review-receive-remote', '1.5.0'],
       ['oat-project-implement', '2.2.6'],
@@ -4513,7 +4517,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.4.4'],
       ['oat-project-quick-start', '2.3.5'],
       ['oat-project-import-plan', '1.4.9'],
-      ['oat-project-review-provide', '1.4.0'],
+      ['oat-project-review-provide', '1.4.1'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -4529,7 +4533,7 @@ describe('validateOatSkills', () => {
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
       ['oat-project-implement', '2.2.6'],
-      ['oat-project-review-provide', '1.4.0'],
+      ['oat-project-review-provide', '1.4.1'],
       ['oat-project-review-provide-remote', '1.1.0'],
     ] as const;
 
@@ -4606,7 +4610,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(engine).toMatch(/^version:\s*1\.2\.2$/m);
+    expect(engine).toMatch(/^version:\s*1\.2\.3$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(adapter).toMatch(/^version:\s*1\.1\.3$/m);
@@ -4650,8 +4654,14 @@ describe('validateOatSkills', () => {
     for (const path of consumers) {
       const content = await readRepoFile(path);
       if (path === '.agents/agents/oat-phase-implementer.md') {
-        expect(content, path).toContain(adapterPath);
-        expect(content, path).toContain(enginePath);
+        // The materialized agent binds installed roots like every other
+        // consumer; there is no bare-path exemption to inherit.
+        expect(content, path).toContain(independentAdapterPath);
+        expect(content, path).toContain(independentEnginePath);
+        expect(content, path).not.toContain(portableAdapterPath);
+        expect(content, path).not.toContain(portableEnginePath);
+        expect(content, path).not.toContain(adapterPath);
+        expect(content, path).not.toContain(enginePath);
       } else if (path === '.agents/skills/oat-project-implement/SKILL.md') {
         expect(content, path).toContain(independentAdapterPath);
         expect(content, path).toContain(independentEnginePath);
@@ -4666,6 +4676,186 @@ describe('validateOatSkills', () => {
         expect(content, path).not.toContain(enginePath);
       }
     }
+  });
+
+  it('keeps every canonical agent free of executable bare sibling reads', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const agentsRoot = join(repoRoot, '.agents', 'agents');
+    const agentFiles = (await readdir(agentsRoot, { withFileTypes: true }))
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+      .map((entry) => entry.name)
+      .sort();
+
+    expect(agentFiles.length).toBeGreaterThan(0);
+
+    const offenders: string[] = [];
+    for (const name of agentFiles) {
+      const content = await readRepoFile(`.agents/agents/${name}`);
+      const bare = [
+        ...content.matchAll(
+          /(?:(?:\.\.?\/)?\.agents\/skills\/|(?<![/a-zA-Z0-9_.-])\.\.\/)([a-zA-Z0-9_-]+)\/(SKILL\.md|references(?:\/[a-zA-Z0-9_.-]+)*\/?)/g,
+        ),
+      ];
+      for (const match of bare) {
+        offenders.push(`.agents/agents/${name} -> ${match[1]}/${match[2]}`);
+      }
+    }
+
+    // There is no per-agent exemption: the phase implementer is held to the
+    // same portable contract as every other user-default agent.
+    expect(
+      offenders,
+      `Canonical agents must bind installed roots:\n${offenders.join('\n')}`,
+    ).toEqual([]);
+  });
+
+  it('pins portable user-default agents to installed-root sibling reads', async () => {
+    const agents = [
+      ['.agents/agents/oat-phase-implementer.md', '1.0.12'],
+      ['.agents/agents/oat-reviewer.md', '1.2.1'],
+      ['.agents/agents/oat-codebase-mapper.md', '1.0.1'],
+    ] as const;
+
+    for (const [path, expectedVersion] of agents) {
+      const content = await readRepoFile(path);
+
+      expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), path).toBe(
+        expectedVersion,
+      );
+      // Materialized agents have no portable loaded-agent root, so the order is
+      // user scope then project scope with no invented loaded candidate.
+      expect(content, `${path} candidate order`).toMatch(
+        /\$\{HOME\}\/\.agents\/skills`[\s\S]{0,160}<repo-root>\/\.agents\/skills`/,
+      );
+      expect(content, `${path} invents no loaded-agent root`).not.toMatch(
+        /\$\{(?:SKILL_DIR|AGENT_DIR)\}/,
+      );
+      expect(content, `${path} forbids ambient discovery`).toContain(
+        'never ambient discovery',
+      );
+      expect(content, `${path} has no bare cross-skill read`).not.toMatch(
+        /(?:\.\.?\/)?\.agents\/skills\/[a-zA-Z0-9_-]+\/(?:SKILL\.md|references)/,
+      );
+      expect(content, `${path} has no parent-relative sibling hop`).not.toMatch(
+        /(?<![/a-zA-Z0-9_.-])\.\.\/[a-zA-Z0-9_-]+\/(?:SKILL\.md|references)/,
+      );
+    }
+
+    const reviewer = await readRepoFile('.agents/agents/oat-reviewer.md');
+    expect(reviewer).toContain(
+      '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+    );
+    expect(reviewer).toContain(
+      '${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md',
+    );
+    // The reviewer stays out of the project lifecycle adapter.
+    expect(reviewer).not.toContain(
+      '${PROJECT_DISPATCH_SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md',
+    );
+
+    const mapper = await readRepoFile('.agents/agents/oat-codebase-mapper.md');
+    expect(mapper).toContain(
+      '${KNOWLEDGE_INDEX_SKILLS_ROOT}/oat-repo-knowledge-index/references/templates/',
+    );
+    expect(mapper).toContain(
+      'oat tools install workflows --scope <user|project>',
+    );
+  });
+
+  it('pins portable research-pack callers to installed-root schema reads', async () => {
+    const callers = [
+      ['.agents/skills/analyze/SKILL.md', '0.1.1'],
+      ['.agents/skills/compare/SKILL.md', '0.1.1'],
+    ] as const;
+
+    for (const [path, expectedVersion] of callers) {
+      const content = await readRepoFile(path);
+
+      expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), path).toBe(
+        expectedVersion,
+      );
+      // Loaded-skill candidate order: loaded scope, then user, then project.
+      expect(content, `${path} candidate order`).toMatch(
+        /\$\{SKILL_DIR\}\/\.\.`[\s\S]{0,160}\$\{HOME\}\/\.agents\/skills`[\s\S]{0,160}<repo-root>\/\.agents\/skills`/,
+      );
+      expect(content, `${path} forbids ambient discovery`).toContain(
+        'never ambient discovery',
+      );
+      expect(content, `${path} names owning-pack recovery`).toContain(
+        'oat tools install research --scope <user|project>',
+      );
+      expect(content, `${path} names owning-pack update recovery`).toContain(
+        'oat tools update --pack research --scope <user|project>',
+      );
+      expect(
+        content,
+        `${path} has no repo-relative cross-skill read`,
+      ).not.toMatch(
+        /(?:\.\.?\/)?\.agents\/skills\/[a-zA-Z0-9_-]+\/(?:SKILL\.md|references)/,
+      );
+      expect(content, `${path} has no parent-relative sibling hop`).not.toMatch(
+        /(?<![/a-zA-Z0-9_.-])\.\.\/[a-zA-Z0-9_-]+\/(?:SKILL\.md|references)/,
+      );
+      expect(content, `${path} binds the research root`).toContain(
+        '${RESEARCH_SKILLS_ROOT}/deep-research/references/',
+      );
+    }
+  });
+
+  it('pins portable utility-pack callers to installed-root sibling reads', async () => {
+    const callers = [
+      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.3'],
+      ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.2'],
+      ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.1'],
+    ] as const;
+
+    for (const [path, expectedVersion] of callers) {
+      const content = await readRepoFile(path);
+
+      expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), path).toBe(
+        expectedVersion,
+      );
+      // Loaded-skill candidate order: loaded scope, then user, then project.
+      expect(content, `${path} candidate order`).toMatch(
+        /\$\{SKILL_DIR\}\/\.\.`[\s\S]{0,160}\$\{HOME\}\/\.agents\/skills`[\s\S]{0,160}<repo-root>\/\.agents\/skills`/,
+      );
+      expect(content, `${path} forbids ambient discovery`).toContain(
+        'never ambient discovery',
+      );
+      expect(content, `${path} names owning-pack recovery`).toContain(
+        'oat tools install utility --scope <user|project>',
+      );
+      expect(content, `${path} names owning-pack update recovery`).toContain(
+        'oat tools update --pack utility --scope <user|project>',
+      );
+      expect(
+        content,
+        `${path} has no repo-relative cross-skill read`,
+      ).not.toMatch(
+        /(?:\.\.?\/)?\.agents\/skills\/[a-zA-Z0-9_-]+\/(?:SKILL\.md|references)/,
+      );
+      expect(content, `${path} has no parent-relative sibling hop`).not.toMatch(
+        /(?<![/a-zA-Z0-9_.-])\.\.\/[a-zA-Z0-9_-]+\/(?:SKILL\.md|references)/,
+      );
+    }
+
+    const remote = await readRepoFile(
+      '.agents/skills/oat-review-provide-remote/SKILL.md',
+    );
+    expect(remote).toContain(
+      '${REVIEW_PROVIDE_SKILLS_ROOT}/oat-review-provide/references/review-artifact-template.md',
+    );
+
+    const repoImprove = await readRepoFile(
+      '.agents/skills/oat-repo-improve/SKILL.md',
+    );
+    // Independent roots keep mixed-scope installs resolvable.
+    expect(repoImprove).toContain(
+      '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+    );
+    expect(repoImprove).toContain(
+      '${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md',
+    );
   });
 
   it('separates accepted-launch fallback from caller-authorized recovery', async () => {
