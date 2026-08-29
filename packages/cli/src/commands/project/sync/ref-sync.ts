@@ -50,7 +50,7 @@ export interface SyncTargetIdentityOptions {
 
 export interface AllowlistedPathspecOptions {
   summaryExportPath?: string | null;
-  projectRoots?: Pick<SyncTarget, 'sharedRoot' | 'syncedRoot'>;
+  projectRoots: Pick<SyncTarget, 'sharedRoot' | 'syncedRoot'>;
   recapExportRoot?: string | null;
 }
 
@@ -916,7 +916,7 @@ export async function commitRecordChange(
   pathspecs: string[],
   message: string,
   git: GitRunner,
-  options: AllowlistedPathspecOptions = {},
+  options: AllowlistedPathspecOptions,
 ): Promise<{ sha: string } | null> {
   assertAllowlistedPathspecs(repoRoot, pathspecs, options);
   const normalized = normalizedPathspecs(repoRoot, pathspecs);
@@ -1469,16 +1469,10 @@ function repoRelativePath(repoRoot: string, pathspec: string): string {
 export function assertAllowlistedPathspecs(
   repoRoot: string,
   pathspecs: string[],
-  options: AllowlistedPathspecOptions = {},
+  options: AllowlistedPathspecOptions,
 ): void {
-  const defaultSharedRoot = resolve(repoRoot, '.oat/projects/shared');
-  const defaultSyncedRoot = resolve(repoRoot, '.oat/projects/synced');
-  const sharedRoot = canonicalizePath(
-    options.projectRoots?.sharedRoot ?? defaultSharedRoot,
-  );
-  const syncedRoot = canonicalizePath(
-    options.projectRoots?.syncedRoot ?? defaultSyncedRoot,
-  );
+  const sharedRoot = canonicalizePath(options.projectRoots.sharedRoot);
+  const syncedRoot = canonicalizePath(options.projectRoots.syncedRoot);
   const summaryRoot = options.summaryExportPath
     ? isAbsolute(options.summaryExportPath)
       ? canonicalizePath(options.summaryExportPath)

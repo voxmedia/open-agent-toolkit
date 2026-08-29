@@ -656,6 +656,10 @@ describe('mutation invariants', () => {
         ],
         {
           summaryExportPath: '.oat/repo/reference/project-summaries',
+          projectRoots: {
+            sharedRoot: '/repo/.oat/projects/shared',
+            syncedRoot: '/repo/.oat/projects/synced',
+          },
         },
       ),
     ).not.toThrow();
@@ -665,9 +669,14 @@ describe('mutation invariants', () => {
       '.oat/projects/synced/example/state.md',
       '../outside.txt',
     ]) {
-      expect(() => assertAllowlistedPathspecs(repoRoot, [pathspec])).toThrow(
-        CliError,
-      );
+      expect(() =>
+        assertAllowlistedPathspecs(repoRoot, [pathspec], {
+          projectRoots: {
+            sharedRoot: '/repo/.oat/projects/shared',
+            syncedRoot: '/repo/.oat/projects/synced',
+          },
+        }),
+      ).toThrow(CliError);
     }
   });
 
@@ -1500,6 +1509,7 @@ describe('pullChildren', () => {
         pendingRecordPaths,
         'chore(oat): adopt healthy coordination children',
         defaultGitRunner,
+        { projectRoots: parent },
       );
       expect(recordCommit?.sha).toMatch(/^[0-9a-f]{40}$/);
       expect(
@@ -1723,6 +1733,15 @@ describe('pullChildren', () => {
 });
 
 describe('commitRecordChange', () => {
+  function defaultProjectRoots(repoRoot: string) {
+    const target = buildSyncTarget(
+      repoRoot,
+      '.oat/projects/shared',
+      '__allowlist__',
+    );
+    return { sharedRoot: target.sharedRoot, syncedRoot: target.syncedRoot };
+  }
+
   it('stages and commits exactly the allowlisted record path', async () => {
     const fixture = await createSyncedFixture();
     try {
@@ -1746,6 +1765,7 @@ describe('commitRecordChange', () => {
         [recordPath],
         'chore: add record',
         recordingRunner,
+        { projectRoots: defaultProjectRoots(fixture.cloneA) },
       );
 
       expect(result?.sha).toBe(git(fixture.cloneA, ['rev-parse', 'HEAD']));
@@ -1772,6 +1792,7 @@ describe('commitRecordChange', () => {
           [recordPath],
           'chore: no change',
           defaultGitRunner,
+          { projectRoots: defaultProjectRoots(fixture.cloneA) },
         ),
       ).resolves.toBeNull();
     } finally {
@@ -1798,6 +1819,7 @@ describe('commitRecordChange', () => {
         [recordPath],
         'chore: add record only',
         defaultGitRunner,
+        { projectRoots: defaultProjectRoots(fixture.cloneA) },
       );
 
       expect(
@@ -1827,7 +1849,9 @@ describe('commitRecordChange', () => {
     };
 
     await expect(
-      commitRecordChange('/repo', ['src/index.ts'], 'bad', runner),
+      commitRecordChange('/repo', ['src/index.ts'], 'bad', runner, {
+        projectRoots: defaultProjectRoots('/repo'),
+      }),
     ).rejects.toBeInstanceOf(CliError);
     expect(calls.some((args) => args[0] === 'add')).toBe(false);
   });
@@ -1848,12 +1872,14 @@ describe('commitRecordChange', () => {
         [recordA],
         'add alpha',
         defaultGitRunner,
+        { projectRoots: defaultProjectRoots(fixture.cloneA) },
       );
       await commitRecordChange(
         fixture.cloneB!,
         [recordB],
         'add beta',
         defaultGitRunner,
+        { projectRoots: defaultProjectRoots(fixture.cloneB!) },
       );
       git(fixture.cloneB!, ['push', '-q', 'origin', 'feat-b']);
       git(fixture.cloneA, ['checkout', '-q', 'main']);
