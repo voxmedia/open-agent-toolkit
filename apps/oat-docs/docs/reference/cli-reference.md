@@ -96,7 +96,9 @@ Notable commands introduced in the current CLI surface:
 - `oat project list --scope shared|local|synced` - filter tracked projects by
   scope. Add `--remote` to discover project refs that do not yet have a local
   record or checkout, and `--include-coordination` to include coordination
-  parents.
+  parents. A malformed discovery record appears as one `recorded-invalid` row;
+  the table output identifies the record to restore, while `--json` includes
+  the parse diagnostic in that row's `recordError` field.
 - `oat tools migrate --pack <pack> --from <scope> --to <scope>` - move one installed pack between project and user scope. Always previews first, installs and re-inventories the destination before touching the source, and offers source removal only after the destination is verified complete. Declining or running non-interactively leaves the pack installed at both scopes rather than failing. `--dry-run` stops after the preview; there is no force flag. See [Tool Packs](../cli-utilities/tool-packs.md#oat-tools-migrate).
 - `oat pjm doctor --json` - read-only repository PJM diagnostics whose result carries an additive `adoption` object (`state` of `declared` | `inferred-legacy` | `partial-initialization` | `none`, `repoRoot`, and `recovery`). This, not `oat tools has project-management`, is the check that answers whether _this repository_ adopted PJM.
 - `oat config dump --json` - merged config with source attribution
