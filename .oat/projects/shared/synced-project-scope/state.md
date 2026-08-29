@@ -375,6 +375,7 @@ non-safety Minor cleanup findings remain deferred without implementation tasks.
 - ✓ Root verification closed both artifact findings; final review marked passed under the maintainer's no-re-review waiver
 - ✗ Refreshed configured exit gate blocked with 1 Important / 2 Minor findings
 - ✓ Important regression converted into p19-t13; both non-safety Minors explicitly deferred
+- ✓ p19-t13 narrowed final review passed at 0 Critical / 0 Important / 0 Medium / 0 Minor
 - ✓ Phase 19 task p19-t13 completed in `c17d1665d`
 - ✓ Focused local-sync suite passed 21/21 and exact CLI type-check passed
 - ✓ Phase 19 p19-t13 Definition-of-Done gates passed in exact CI order at lockstep `0.2.44`
