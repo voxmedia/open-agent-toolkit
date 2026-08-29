@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: null
+oat_current_task_id: p19-t11
 oat_generated: false
 ---
 
@@ -14,8 +14,8 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All one hundred eighty-nine implementation and revision tasks are complete.
-> Phase 19 cycle-1 fix-delta re-review is pending.
+> One hundred eighty-nine of one hundred ninety-one implementation and revision
+> tasks are complete. Resume at `p19-t11`.
 >
 > Conventions:
 >
@@ -27,30 +27,30 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 10    | 10/10     |
-| Phase 2      | complete | 13    | 13/13     |
-| Phase 3      | complete | 19    | 19/19     |
-| Phase 4      | complete | 16    | 16/16     |
-| Phase 5      | complete | 7     | 7/7       |
-| Phase 6      | complete | 3     | 3/3       |
-| Phase 7      | complete | 1     | 1/1       |
-| Phase 8      | complete | 1     | 1/1       |
-| Phase 9      | complete | 1     | 1/1       |
-| Phase 10     | complete | 14    | 14/14     |
-| Phase 11     | complete | 3     | 3/3       |
-| Phase 12     | complete | 1     | 1/1       |
-| Phase p-rev1 | complete | 1     | 1/1       |
-| Phase 13     | complete | 16    | 16/16     |
-| Phase 14     | complete | 19    | 19/19     |
-| Phase 15     | complete | 19    | 19/19     |
-| Phase 16     | complete | 20    | 20/20     |
-| Phase 17     | complete | 14    | 14/14     |
-| Phase 18     | complete | 1     | 1/1       |
-| Phase 19     | complete | 10    | 10/10     |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 10    | 10/10     |
+| Phase 2      | complete    | 13    | 13/13     |
+| Phase 3      | complete    | 19    | 19/19     |
+| Phase 4      | complete    | 16    | 16/16     |
+| Phase 5      | complete    | 7     | 7/7       |
+| Phase 6      | complete    | 3     | 3/3       |
+| Phase 7      | complete    | 1     | 1/1       |
+| Phase 8      | complete    | 1     | 1/1       |
+| Phase 9      | complete    | 1     | 1/1       |
+| Phase 10     | complete    | 14    | 14/14     |
+| Phase 11     | complete    | 3     | 3/3       |
+| Phase 12     | complete    | 1     | 1/1       |
+| Phase p-rev1 | complete    | 1     | 1/1       |
+| Phase 13     | complete    | 16    | 16/16     |
+| Phase 14     | complete    | 19    | 19/19     |
+| Phase 15     | complete    | 19    | 19/19     |
+| Phase 16     | complete    | 20    | 20/20     |
+| Phase 17     | complete    | 14    | 14/14     |
+| Phase 18     | complete    | 1     | 1/1       |
+| Phase 19     | in_progress | 12    | 10/12     |
 
-**Total:** 189/189 tasks completed
+**Total:** 189/191 tasks completed
 
 ---
 
@@ -3695,9 +3695,8 @@ substantive head before updating PR #227.
 
 ## Phase 19: Final destructive-path and recovery hardening
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-08-29
-**Completed:** 2026-08-29
 
 ### Final Review Received
 
@@ -3715,18 +3714,20 @@ re-reviewed.
 
 ### Task Status
 
-| Task    | Status | Commit      |
-| ------- | ------ | ----------- |
-| p19-t01 | done   | `7b1bb113a` |
-| p19-t02 | done   | `4b6450e4a` |
-| p19-t03 | done   | `ea6bacfc6` |
-| p19-t04 | done   | `93d66c221` |
-| p19-t05 | done   | `bb8468047` |
-| p19-t06 | done   | `9b8e5c148` |
-| p19-t07 | done   | `81da1093a` |
-| p19-t08 | done   | `6d39614b4` |
-| p19-t09 | done   | `8148e1e16` |
-| p19-t10 | done   | `efdb4cdc3` |
+| Task    | Status  | Commit      |
+| ------- | ------- | ----------- |
+| p19-t01 | done    | `7b1bb113a` |
+| p19-t02 | done    | `4b6450e4a` |
+| p19-t03 | done    | `ea6bacfc6` |
+| p19-t04 | done    | `93d66c221` |
+| p19-t05 | done    | `bb8468047` |
+| p19-t06 | done    | `9b8e5c148` |
+| p19-t07 | done    | `81da1093a` |
+| p19-t08 | done    | `6d39614b4` |
+| p19-t09 | done    | `8148e1e16` |
+| p19-t10 | done    | `efdb4cdc3` |
+| p19-t11 | pending | -           |
+| p19-t12 | pending | -           |
 
 ### Implementation Outcome
 
@@ -3809,5 +3810,23 @@ The narrowed fix-delta review passed all three cycle-1 findings and both
 mechanical recovery commits. Phase 19 is complete at 189/189 tasks with recovery
 usage settled at 2/10 and no pending marker.
 
-**Next:** Run the narrowed final-project review against the remediation delta,
-then refresh the configured implementation exit gate.
+### Final Review Received: artifact alignment
+
+**Date:** 2026-08-29
+**Review artifact:** `reviews/archived/final-review-2026-08-29T151510Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 1
+
+**New tasks added:** `p19-t11`, `p19-t12`
+
+The final remediation review closed every behavioral finding and identified
+only two project-artifact alignment gaps. Both are converted into bounded
+documentation tasks; no runtime code or package version changes are required.
+The maintainer explicitly waived another re-review after these documentation
+corrections. Closeout proceeds to the fresh configured exit gate once they are
+complete.

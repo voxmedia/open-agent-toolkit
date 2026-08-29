@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p19-t11
 oat_last_commit: 7f734bde
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: review_pending # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -165,14 +165,15 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Final project review pending
+**Status:** Final artifact alignment in progress
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Phase 19 passed its narrowed fix-delta review. The final project review must be
-refreshed against the remediation delta.
+The narrowed final project review closed all behavioral findings and added two
+documentation-only alignment tasks. Resume at `p19-t11`; the maintainer waived
+another re-review after these corrections.
 
 ## Artifacts
 
@@ -180,7 +181,7 @@ refreshed against the remediation delta.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (189/189 tasks complete)
+- **Implementation:** `implementation.md` (189/191 tasks complete)
 
 ## Progress
 
@@ -366,6 +367,9 @@ refreshed against the remediation delta.
 - ✓ Phase 19 recovery attempt 2/10 settled after smoke dependency parity fix
 - ✓ Phase 19 focused suite passed 257/257 and all final gates passed
 - ✓ Phase 19 review cycle 2 passed at 0 Critical / 0 Important / 0 Medium / 0 Minor
+- ✗ Narrowed final review found 1 Important / 1 Minor artifact-only alignment gaps
+- ✓ Both artifact findings converted into p19-t11 and p19-t12 with no deferral
+- ✓ Maintainer waived a documentation-only re-review after p19-t11 and p19-t12
 
 ## Blockers
 
@@ -373,4 +377,5 @@ None.
 
 ## Next Milestone
 
-Run the narrowed final-project review against the Phase 19 remediation delta.
+Complete p19-t11 and p19-t12, then refresh the configured implementation exit
+gate without an intervening documentation-only re-review.

@@ -3713,7 +3713,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | final   | code     | fixes_completed | 2026-08-29 | reviews/archived/final-review-2026-08-29T134331Z.md               | 9ca20b411b07c792d169e46e812f1aef4910ea0f | auto       | -                             |
 | p19     | code     | fixes_completed | 2026-08-29 | reviews/archived/p19-review-2026-08-29T143242Z.md                 | 5d5684ebe41e3f5c41e40fd864f9108d7b1e2aa4 | auto       | -                             |
 | p19     | code     | passed          | 2026-08-29 | reviews/archived/p19-review-2026-08-29T150514Z.md                 | 225f75c41ca39a023f958bdef28a742eb0923f7b | auto       | -                             |
-| final   | code     | received        | 2026-08-29 | reviews/final-review-2026-08-29T151510Z.md                        | d351cff957af7ef2cad76680108d8bdce4348cad | auto       | -                             |
+| final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T151510Z.md               | d351cff957af7ef2cad76680108d8bdce4348cad | auto       | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -5544,6 +5544,52 @@ preserves unrelated index/worktree state.
 
 Commit as `fix(p19-t10): fail closed on prune remote lookup`.
 
+### Task p19-t11: (review) Document archive retry identity
+
+**Finding:** Important `I1` from final review
+`final-review-2026-08-29T151510Z.md`.
+
+**Step 1: Understand the issue**
+
+The implemented archive transaction persists both the destination snapshot and
+the authoritative source-ref SHA, but the design still describes only the
+snapshot and omits both archive lifecycle fields from `SyncedProjectRecord`.
+
+**Step 2: Align the design**
+
+Update the archive state machine, retry-safety contract, and canonical record
+interface to document optional `archiveSnapshot` and 40-character
+`archiveSourceRefSha` fields. State that an archive retry may reuse prior
+content only when the current retained source ref exactly matches the persisted
+source SHA.
+
+**Step 3: Verify and commit**
+
+Run formatting and project artifact validation. Commit as
+`docs(p19-t11): document archive retry identity`.
+
+### Task p19-t12: (review) Stabilize closeout resume prose
+
+**Finding:** Minor `m1` from final review
+`final-review-2026-08-29T151510Z.md`.
+
+**Step 1: Understand the issue**
+
+The implementation header and durable summary name a specific pending review
+cycle, so subsequent lifecycle bookkeeping makes them stale even when the
+implementation and verification state is otherwise correct.
+
+**Step 2: Align durable closeout prose**
+
+Record that all 191 tasks are complete and that closeout requires a current
+passing final review plus a fresh configured exit gate before the PR update.
+Keep transient review and resume routing only in `state.md`.
+
+**Step 3: Verify and commit**
+
+Run formatting and project artifact validation. Commit as
+`docs(p19-t12): stabilize closeout resume prose`.
+
 ---
 
 ## Implementation Complete
@@ -5569,9 +5615,9 @@ Commit as `fix(p19-t10): fail closed on prune remote lookup`.
 - Phase 16: 20 tasks - Final full-range safety fixes for custom-root archive completion, locale-stable Git, repository confinement, symlink canonicalization, lifecycle bookkeeping, and residual contract coverage
 - Phase 17: 14 tasks - Final lifecycle durability and provider parity fixes for release contracts, declined pause publication, generated views, custom roots, diagnostics, validators, docs, and Git isolation
 - Phase 18: 1 task - Remote-review correction preventing final project-ref publication from running against an archived synced project tree
-- Phase 19: 10 tasks - Final destructive-path, worktree-overlap, external-root, prune/archive retry, and closeout-artifact corrections
+- Phase 19: 12 tasks - Final destructive-path, worktree-overlap, external-root, prune/archive retry, and closeout-artifact corrections
 
-**Total: 189 tasks**
+**Total: 191 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
