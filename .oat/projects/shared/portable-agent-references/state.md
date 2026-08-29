@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 69d011bbc3ca19bac8848e3694706dd29835023e
+oat_last_commit: fa9d6e37d98dfbc7e69d6c7d98b25a60c8d55885
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -85,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-28T21:36:51.245Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T08:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T08:35:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -97,12 +97,11 @@ oat_generated: false
 
 ## Current Phase
 
-All eight planned tasks are implemented. Phase 1 (`p01-t01`..`p01-t06`) passed
-root-owned code review at the Critical/Important threshold at `52745ef93`.
-Phase 2 (`p02-t01`, `p02-t02`) is implemented at `69d011bbc` and shipped the
-lockstep `0.2.40` release; its first review round returned one Important
-bookkeeping finding plus one Medium and one Minor docs-accuracy finding, now
-being resolved. Phase 2 is the configured HiLL checkpoint.
+All eight planned tasks are implemented and both phases have passed root-owned
+code review at the Critical/Important threshold: Phase 1 at `52745ef93`
+(round 3) and Phase 2 at `fa9d6e37d` (round 2). Phase 2 shipped the lockstep
+`0.2.40` release. Remaining work is final verification, the final lifecycle
+review, and the Phase 2 HiLL checkpoint approval.
 
 ## Artifacts
 
@@ -130,6 +129,7 @@ being resolved. Phase 2 is the configured HiLL checkpoint.
 - ✓ Phase 1 implemented: 6/6 tasks, one verified commit each, one in-phase recovery
 - ✓ Phase 1 passed code review at the Critical/Important threshold (round 3)
 - ✓ Phase 2 implemented: docs contract + provider-view refresh + `0.2.40` lockstep release
+- ✓ Phase 2 passed code review at the Critical/Important threshold (round 2)
 
 ## Blockers
 
@@ -137,5 +137,5 @@ None
 
 ## Next Milestone
 
-Execute Phase 2 (`p02-t01`, `p02-t02`), then final verification, final review,
-and the Phase 2 HiLL checkpoint approval
+Final verification and final lifecycle review, then the Phase 2 HiLL checkpoint
+approval

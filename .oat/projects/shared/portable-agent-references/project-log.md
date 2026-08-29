@@ -48,6 +48,14 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:1,minor:2 exit=0 status=ok artifact=.oat/projects/shared/portable-agent-references/reviews/artifact-plan-review-2026-08-28T224908Z.md
 
+### 2026-08-29 · structural · oat-project-implement · p02
+
+Phase p02 passed root-owned review round 2 at fa9d6e37d (0C/0I); see reviews/p02-review-2026-08-29T081859Z.md, which carries delegated-reconnaissance orchestration evidence.
+
+### 2026-08-29 · structural · oat-project-implement · p01
+
+Phase p01 passed root-owned review round 3 at 52745ef93 (0C/0I) after one implementer fix round; rounds 2-3 findings were root-owned bookkeeping. See reviews/p01-review-2026-08-29T074543Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

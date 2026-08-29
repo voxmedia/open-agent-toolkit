@@ -118,7 +118,7 @@ oat_generated: false
 ### Task p02-t01: Document the global skill-and-agent portability contract
 
 **Status:** complete
-**Commit:** `ac4612ae5`
+**Commit:** `ac4612ae5` (+ review fixes `223b22159`, `fa9d6e37d`)
 
 ### Task p02-t02: Refresh shipped assets and validate the lockstep release
 
@@ -221,6 +221,26 @@ continuation_events: []
 #### Parallel Groups
 
 None (sequential plan).
+
+#### Review Rounds — p02
+
+| Round | Artifact                                   | Head        | Findings          | Disposition                                                                                                |
+| ----- | ------------------------------------------ | ----------- | ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| 1     | `reviews/p02-review-2026-08-29T080559Z.md` | `69d011bbc` | 0C / 1I / 1M / 1m | I root-owned bookkeeping, fixed in `03db89f00`; M1+m1 docs accuracy, fixed in `223b22159` then `fa9d6e37d` |
+| 2     | `reviews/p02-review-2026-08-29T081859Z.md` | `fa9d6e37d` | 0C / 0I / 1M / 1m | **PASSED** at the Critical/Important threshold; residual bookkeeping closed in the following commit        |
+
+The p02 minor finding `m1` took two attempts and is worth recording as
+evidence. Round 1 asserted that only the `workflows` pack ships agents, citing
+`pack-manifest.ts:225-229`. The first fix (`223b22159`) verified the cited half
+of that claim — that `utility` is skills-only — and wrote "shipped by
+`workflows`" into the docs. That replaced a vague claim with a precise false
+one: the `research` pack also ships `agent('skeptical-evaluator.md')` at
+`pack-manifest.ts:320`. The root caught it during fix validation by sweeping
+every `agent(` call site rather than reading the cited range, and `fa9d6e37d`
+corrected it to cover any agent-shipping pack. Exhaustiveness is now
+established structurally: `kind: 'agent'` occurs exactly once in non-test
+source, inside the `agent()` helper, so its two call sites are the only
+construction path.
 
 #### Review Rounds
 

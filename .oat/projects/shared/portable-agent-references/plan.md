@@ -458,7 +458,8 @@ git commit -m "chore(p02-t02): release portable agent references"
 | p01    | code     | fixes_completed | 2026-08-29 | reviews/p01-review-2026-08-29T000007Z.md                                            | f8a89ce9ec9b5b8c6d982e20bcd06e55ba7d6bb2 | manual     | -           |
 | p01    | code     | fixes_completed | 2026-08-29 | reviews/p01-review-2026-08-29T040642Z.md                                            | 7f7dd6cfc2e5d443a4f44c8d54579e4304309a90 | manual     | -           |
 | p01    | code     | passed          | 2026-08-29 | reviews/p01-review-2026-08-29T074543Z.md                                            | 52745ef93674fe0098e54208bf84d98132bc87ca | manual     | -           |
-| p02    | code     | fixes_added     | 2026-08-29 | reviews/p02-review-2026-08-29T080559Z.md                                            | 69d011bbc3ca19bac8848e3694706dd29835023e | manual     | -           |
+| p02    | code     | fixes_completed | 2026-08-29 | reviews/p02-review-2026-08-29T080559Z.md                                            | 69d011bbc3ca19bac8848e3694706dd29835023e | manual     | -           |
+| p02    | code     | passed          | 2026-08-29 | reviews/p02-review-2026-08-29T081859Z.md                                            | fa9d6e37d98dfbc7e69d6c7d98b25a60c8d55885 | manual     | -           |
 | final  | code     | pending         | -          | -                                                                                   | -                                        | -          | -           |
 | spec   | artifact | pending         | -          | -                                                                                   | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                                                   | -                                        | -          | -           |
