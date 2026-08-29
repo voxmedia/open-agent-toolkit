@@ -110,7 +110,7 @@ async function runPrune(
     const target = await dependencies.resolveSyncedTarget(
       { repoRoot, env: dependencies.processEnv },
       pathOrSlug,
-      {},
+      { gitRunner: dependencies.gitRunner },
       {
         allowMissingCheckout: true,
         allowStagedPruneDeletion: true,

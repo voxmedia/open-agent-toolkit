@@ -318,6 +318,124 @@ describe('prune command integration', () => {
     }
   });
 
+  it('preserves staged deletion and unrelated state when retry remote lookup fails', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'retry-prune-lookup',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(join(target.projectPath, 'state.md'), '# state\n');
+      await pushSynced(target, defaultGitRunner, {});
+      const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(target.slug, new Date('2026-08-29T00:00:00Z')),
+      );
+      await writeFile(join(fixture.cloneA, 'unrelated.txt'), 'base\n');
+      execFileSync('git', ['add', recordPath, 'unrelated.txt'], {
+        cwd: fixture.cloneA,
+      });
+      execFileSync('git', ['commit', '-m', 'seed prune lookup retry'], {
+        cwd: fixture.cloneA,
+      });
+      await writeFile(join(fixture.cloneA, 'unrelated.txt'), 'staged\n');
+      execFileSync('git', ['add', 'unrelated.txt'], { cwd: fixture.cloneA });
+      await writeFile(join(fixture.cloneA, 'unrelated.txt'), 'working\n');
+
+      const failingCommitGit = {
+        run: vi.fn(async (...args: Parameters<typeof defaultGitRunner.run>) => {
+          if (args[0][0] === 'commit') {
+            throw new Error('injected final prune commit failure');
+          }
+          return defaultGitRunner.run(...args);
+        }),
+      };
+      await expect(
+        pruneSynced(target, failingCommitGit, { force: true, commit: true }),
+      ).rejects.toThrow('injected final prune commit failure');
+      const headBeforeRetry = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim();
+
+      let remoteLookups = 0;
+      const retryGit = {
+        run: vi.fn(async (...args: Parameters<typeof defaultGitRunner.run>) => {
+          if (args[0][0] === 'ls-remote') {
+            remoteLookups += 1;
+            if (remoteLookups === 2) {
+              return {
+                code: 128,
+                stdout: '',
+                stderr: 'fatal: injected retry remote lookup failure',
+              };
+            }
+          }
+          return defaultGitRunner.run(...args);
+        }),
+      };
+      const capture = createLoggerCapture();
+      const command = createProjectPruneCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneA,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneA,
+        gitRunner: retryGit,
+        processEnv: {},
+      });
+
+      await run(command, [target.projectPath, '--force']);
+
+      expect(remoteLookups).toBe(2);
+      expect(capture.error[0]).toContain(
+        'injected retry remote lookup failure',
+      );
+      expect(process.exitCode).toBe(2);
+      expect(
+        execFileSync(
+          'git',
+          [
+            'diff',
+            '--cached',
+            '--diff-filter=D',
+            '--name-only',
+            '--',
+            recordPath,
+          ],
+          { cwd: fixture.cloneA, encoding: 'utf8' },
+        ).trim(),
+      ).toBe('.oat/projects/synced/retry-prune-lookup.json');
+      expect(
+        execFileSync(
+          'git',
+          ['status', '--porcelain=v1', '--', 'unrelated.txt'],
+          {
+            cwd: fixture.cloneA,
+            encoding: 'utf8',
+          },
+        ).trim(),
+      ).toBe('MM unrelated.txt');
+      expect(
+        execFileSync('git', ['rev-parse', 'HEAD'], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe(headBeforeRetry);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('prunes an environment-root project without leaving a half-pruned parent', async () => {
     const fixture = await createSyncedFixture();
     try {

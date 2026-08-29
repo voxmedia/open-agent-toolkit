@@ -15,6 +15,7 @@ import { CliError } from '@errors/cli-error';
 import {
   assertCanonicalSyncTargetIdentity,
   buildSyncTarget,
+  classifyRemoteRefLookup,
   classifyAdoptionRecord,
   type AdoptionRecordState,
   type SyncTarget,
@@ -89,9 +90,14 @@ async function isStagedPruneDeletion(
       allowFailure: true,
     }),
   ]);
+  const remoteState = classifyRemoteRefLookup(
+    remoteRef,
+    target.remote,
+    target.ref,
+  );
   if (
     localRef.code === 0 ||
-    remoteRef.code === 0 ||
+    remoteState === 'present' ||
     stagedDeletion.code !== 0 ||
     stagedDeletion.stdout !== relativeRecord ||
     priorRecord.code !== 0

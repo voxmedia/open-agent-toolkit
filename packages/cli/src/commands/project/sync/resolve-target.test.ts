@@ -254,6 +254,101 @@ describe('resolveSyncedTarget', () => {
     });
   });
 
+  it('fails closed when staged-prune recovery cannot verify remote absence', async () => {
+    const injected = deps();
+    injected.gitRunner = {
+      run: async (args: string[]) => {
+        if (args[0] === 'show-ref') {
+          return { code: 1, stdout: '', stderr: '' };
+        }
+        if (args[0] === 'ls-remote') {
+          return {
+            code: 128,
+            stdout: '',
+            stderr: 'fatal: injected remote lookup failure',
+          };
+        }
+        if (args[0] === 'diff') {
+          return {
+            code: 0,
+            stdout: '.oat/projects/synced/demo.json',
+            stderr: '',
+          };
+        }
+        return {
+          code: 0,
+          stdout: JSON.stringify({
+            slug: 'demo',
+            ref: 'refs/oat/projects/demo',
+            scope: 'synced',
+          }),
+          stderr: '',
+        };
+      },
+    };
+
+    await expect(
+      resolveSyncedTarget(
+        { repoRoot: '/repo', env: {} },
+        '.oat/projects/synced/demo',
+        injected,
+        {
+          allowMissingCheckout: true,
+          allowStagedPruneDeletion: true,
+        },
+      ),
+    ).rejects.toMatchObject({
+      message: expect.stringContaining('injected remote lookup failure'),
+      exitCode: 2,
+    });
+  });
+
+  it('recognizes a staged prune only after verified remote absence', async () => {
+    const injected = deps();
+    injected.gitRunner = {
+      run: async (args: string[]) => {
+        if (args[0] === 'show-ref') {
+          return { code: 1, stdout: '', stderr: '' };
+        }
+        if (args[0] === 'ls-remote') {
+          return { code: 2, stdout: '', stderr: '' };
+        }
+        if (args[0] === 'diff') {
+          return {
+            code: 0,
+            stdout: '.oat/projects/synced/demo.json',
+            stderr: '',
+          };
+        }
+        return {
+          code: 0,
+          stdout: JSON.stringify({
+            slug: 'demo',
+            ref: 'refs/oat/projects/demo',
+            scope: 'synced',
+          }),
+          stderr: '',
+        };
+      },
+    };
+
+    await expect(
+      resolveSyncedTarget(
+        { repoRoot: '/repo', env: {} },
+        '.oat/projects/synced/demo',
+        injected,
+        {
+          allowMissingCheckout: true,
+          allowStagedPruneDeletion: true,
+        },
+      ),
+    ).resolves.toMatchObject({
+      slug: 'demo',
+      adopt: false,
+      adoptionRecord: 'durable',
+    });
+  });
+
   it('marks an existing checkout without a record for repair adoption', async () => {
     await expect(
       resolveSyncedTarget(

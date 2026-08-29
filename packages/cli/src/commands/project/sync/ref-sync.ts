@@ -103,6 +103,21 @@ export type MigrateResult = {
   sha: string;
 };
 
+export function classifyRemoteRefLookup(
+  result: { code: number; stdout: string; stderr: string },
+  remote: string,
+  ref: string,
+): 'present' | 'absent' {
+  if (result.code === 0) return 'present';
+  if (result.code === 2 && result.stdout === '' && result.stderr === '') {
+    return 'absent';
+  }
+  throw new CliError(
+    `Unable to verify whether ${remote}/${ref} exists (exit ${result.code}): ${result.stderr || result.stdout || 'unexpected ls-remote result'}`,
+    2,
+  );
+}
+
 export interface MigrateSharedToSyncedOptions {
   sourcePath: string;
   commit: boolean;
@@ -1052,7 +1067,12 @@ export async function pruneSynced(
       ['ls-remote', '--exit-code', target.remote, target.ref],
       { cwd: target.repoRoot, allowFailure: true },
     );
-    if (localRef.code !== 0 && remoteRef.code !== 0) {
+    const remoteState = classifyRemoteRefLookup(
+      remoteRef,
+      target.remote,
+      target.ref,
+    );
+    if (localRef.code !== 0 && remoteState === 'absent') {
       if (!options.commit) {
         return { status: 'pruned', lifecycleCommit: null };
       }
