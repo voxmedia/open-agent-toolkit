@@ -913,6 +913,36 @@ describe('non-archive synced completion transaction', () => {
       error: /must have oat_lifecycle: complete/i,
     },
     {
+      state: 'mismatched lifecycle timestamps',
+      mutateLifecycle: async (projectPath: string) => {
+        const state = await readFile(`${projectPath}/state.md`, 'utf8');
+        await writeFile(
+          `${projectPath}/state.md`,
+          state.replace(
+            'oat_project_state_updated: "2026-08-28T12:00:00Z"',
+            'oat_project_state_updated: "2026-08-28T12:00:01Z"',
+          ),
+          'utf8',
+        );
+      },
+      error: /must identify the same lifecycle mutation/i,
+    },
+    {
+      state: 'malformed duplicate lifecycle frontmatter',
+      mutateLifecycle: async (projectPath: string) => {
+        const state = await readFile(`${projectPath}/state.md`, 'utf8');
+        await writeFile(
+          `${projectPath}/state.md`,
+          state.replace(
+            'oat_lifecycle: complete',
+            'oat_lifecycle: complete\noat_lifecycle: complete',
+          ),
+          'utf8',
+        );
+      },
+      error: /must contain exactly one oat_lifecycle field/i,
+    },
+    {
       state: 'unsealed completion log',
       mutateLifecycle: async (projectPath: string) => {
         await writeFile(

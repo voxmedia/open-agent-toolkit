@@ -202,12 +202,45 @@ describe('createProjectMigrateCommand', () => {
         }).trim(),
       ).toBe('1');
       await expect(access(source)).rejects.toThrow();
+      expect(
+        execFileSync('git', ['ls-files', '--', '.oat/projects/shared/legacy'], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe('');
       await expect(
         readFile(
           join(fixture.cloneA, '.oat/projects/synced/legacy/state.md'),
           'utf8',
         ),
       ).resolves.toBe('# legacy\n');
+      expect(registeredWorktrees(fixture.cloneA)).toContain(
+        join(fixture.cloneA, '.oat/projects/synced/legacy'),
+      );
+      expect(
+        execFileSync('git', ['status', '--porcelain'], {
+          cwd: join(fixture.cloneA, '.oat/projects/synced/legacy'),
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe('');
+      expect(
+        execFileSync(
+          'git',
+          [
+            'ls-tree',
+            '--name-only',
+            'HEAD',
+            '.oat/projects/synced/legacy.json',
+          ],
+          { cwd: fixture.cloneA, encoding: 'utf8' },
+        ).trim(),
+      ).toBe('.oat/projects/synced/legacy.json');
+      expect(
+        execFileSync('git', ['status', '--porcelain'], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe('');
       expect(await readOatLocalConfig(fixture.cloneA)).toMatchObject({
         activeProject: '.oat/projects/synced/legacy',
       });

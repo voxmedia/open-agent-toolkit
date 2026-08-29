@@ -644,6 +644,47 @@ describe('mutation invariants', () => {
       );
     }
   });
+
+  it('keeps add -A nested and normal worktree removal unforced', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'runner-guardrails',
+      );
+      const calls: Array<{ args: string[]; cwd: string }> = [];
+      const recordingRunner: GitRunner = {
+        async run(args, options) {
+          calls.push({ args: [...args], cwd: options.cwd });
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await createSyncedProject(target, recordingRunner);
+      await writeFile(join(target.projectPath, 'state.md'), '# state\n');
+      await pushSynced(target, recordingRunner, {});
+      await removeSyncedCheckout(target, recordingRunner);
+
+      const addAllCalls = calls.filter(
+        ({ args }) => args[0] === 'add' && args[1] === '-A',
+      );
+      expect(addAllCalls.length).toBeGreaterThan(0);
+      expect(addAllCalls.every(({ cwd }) => cwd === target.projectPath)).toBe(
+        true,
+      );
+      expect(
+        calls.filter(
+          ({ args }) =>
+            args[0] === 'worktree' &&
+            args[1] === 'remove' &&
+            args.includes('--force'),
+        ),
+      ).toEqual([]);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
 });
 
 describe('pushSynced', () => {
@@ -656,6 +697,7 @@ describe('pushSynced', () => {
         'example',
       );
       await createSyncedProject(target, defaultGitRunner);
+      const parentStatusBefore = git(fixture.cloneA, ['status', '--porcelain']);
 
       const first = await pushSynced(target, defaultGitRunner, {});
       const countBefore = git(target.projectPath, [
@@ -673,6 +715,9 @@ describe('pushSynced', () => {
       expect(second.status).toBe('up-to-date');
       expect(git(target.projectPath, ['rev-list', '--count', 'HEAD'])).toBe(
         countBefore,
+      );
+      expect(git(fixture.cloneA, ['status', '--porcelain'])).toBe(
+        parentStatusBefore,
       );
     } finally {
       await fixture.cleanup();
@@ -997,6 +1042,10 @@ describe('pullSynced', () => {
         'utf8',
       );
       await pushSynced(targetA, defaultGitRunner, {});
+      const parentStatusBefore = git(fixture.cloneB!, [
+        'status',
+        '--porcelain',
+      ]);
 
       const created = await pullSynced(targetB, defaultGitRunner);
       const repeated = await pullSynced(targetB, defaultGitRunner);
@@ -1009,6 +1058,9 @@ describe('pullSynced', () => {
         git(fixture.cloneB!, ['worktree', 'list', '--porcelain']),
       ).toContain(targetB.projectPath);
       expect(repeated.status).toBe('up-to-date');
+      expect(git(fixture.cloneB!, ['status', '--porcelain'])).toBe(
+        parentStatusBefore,
+      );
     } finally {
       await fixture.cleanup();
     }
