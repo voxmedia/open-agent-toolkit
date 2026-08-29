@@ -3895,3 +3895,18 @@ The narrowed independent review passed the ancestor-owner correction and its
 real-Git regression without reopening inherited scope or the two deferred
 Minors. No additional implementation task was added. Resume the same configured
 exit-gate generation for its second and final attempt.
+
+### Configured Exit Gate Passed
+
+**Date:** 2026-08-29
+**Gate run:** `ae05dc65-5d38-4e55-b862-27c48d08ab14`
+**Review artifact:** `reviews/archived/final-review-2026-08-29T160525Z.md`
+**Findings:** 0 Critical / 0 Important / 0 Medium / 1 Minor
+
+The second configured attempt passed at the Important threshold and verified
+that `p19-t13` closes the linked-worktree regression. Its one pre-existing
+Minor concerns rejecting absolute or parent-traversing entries in a
+self-authored `localPaths` configuration. It is explicitly deferred as
+out-of-range hardening; revisit when the `localPaths` configuration contract is
+next changed or if invalid-path usage is observed. No implementation task is
+added, and the two-attempt gate generation is complete.
