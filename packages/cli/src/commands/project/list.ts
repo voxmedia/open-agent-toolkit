@@ -198,6 +198,7 @@ async function collectProjectRows(
   repoRoot: string,
   projectsRoot: string,
   options: ProjectListOptions,
+  context: CommandContext,
   dependencies: ProjectListDependencies,
 ): Promise<ProjectListRow[]> {
   const configuredSharedRoot = isAbsolute(projectsRoot)
@@ -245,7 +246,16 @@ async function collectProjectRows(
           )
           .map((row) => row.name),
       );
-      for (const record of await dependencies.listSyncedRecords(root.path)) {
+      const records = await dependencies.listSyncedRecords(root.path, {
+        onInvalid: (path, error) => {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          context.logger.warn(
+            `Skipping invalid synced project record ${displayPath(repoRoot, path)}: ${message}`,
+          );
+        },
+      });
+      for (const record of records) {
         if (!materialized.has(record.slug)) {
           rows.push({
             kind: 'recorded-absent',
@@ -338,6 +348,7 @@ async function runProjectList(
       repoRoot,
       projectsRoot,
       options,
+      context,
       dependencies,
     );
     if (options.remote && (!options.scope || options.scope === 'synced')) {

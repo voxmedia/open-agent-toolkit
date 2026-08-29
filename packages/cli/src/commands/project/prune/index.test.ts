@@ -17,6 +17,7 @@ import {
   pushSynced,
 } from '@commands/project/sync/ref-sync';
 import { syncedRecordPath } from '@commands/shared/project-scope';
+import { CliError } from '@errors/cli-error';
 import {
   addLinkedWorktree,
   createSyncedFixture,
@@ -42,9 +43,11 @@ function harness(state: string) {
     status: 'pruned' as const,
     lifecycleCommit: 'a'.repeat(40),
   }));
+  const resolveSyncedTarget = vi.fn(async () => target);
   return {
     capture,
     pruneSynced: pruneSyncedMock,
+    resolveSyncedTarget,
     command: createProjectPruneCommand({
       buildCommandContext: (options: GlobalOptions): CommandContext => ({
         scope: 'project',
@@ -57,7 +60,7 @@ function harness(state: string) {
         logger: capture.logger,
       }),
       resolveProjectRoot: async () => '/repo',
-      resolveSyncedTarget: async () => target,
+      resolveSyncedTarget,
       pruneSynced: pruneSyncedMock,
       readProjectState: async () => state,
       gitRunner: { run: vi.fn() },
@@ -105,6 +108,24 @@ describe('createProjectPruneCommand', () => {
     );
     expect(setup.capture.warn[0]).toContain('pinned links');
     expect(process.exitCode).toBe(0);
+  });
+
+  it('fails closed with recovery guidance for a malformed discovery record', async () => {
+    const setup = harness('---\noat_pr_status: closed\n---\n');
+    setup.resolveSyncedTarget.mockRejectedValueOnce(
+      new CliError(
+        'Invalid synced project record .oat/projects/synced/demo.json: malformed JSON. Restore this exact record from a trusted Git revision before retrying.',
+        1,
+      ),
+    );
+
+    await run(setup.command, ['demo']);
+
+    expect(setup.capture.error).toEqual([
+      'Invalid synced project record .oat/projects/synced/demo.json: malformed JSON. Restore this exact record from a trusted Git revision before retrying.',
+    ]);
+    expect(setup.pruneSynced).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
   });
 });
 

@@ -137,6 +137,9 @@ export async function writeSyncedRecord(
 
 export async function listSyncedRecords(
   scopeRoot: string,
+  options: {
+    onInvalid?: (path: string, error: unknown) => void;
+  } = {},
 ): Promise<SyncedProjectRecord[]> {
   let entries;
   try {
@@ -151,7 +154,16 @@ export async function listSyncedRecords(
   const records = await Promise.all(
     entries
       .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
-      .map((entry) => readSyncedRecord(join(scopeRoot, entry.name))),
+      .map(async (entry) => {
+        const path = join(scopeRoot, entry.name);
+        try {
+          return await readSyncedRecord(path);
+        } catch (error) {
+          if (!options.onInvalid) throw error;
+          options.onInvalid(path, error);
+          return null;
+        }
+      }),
   );
   return records
     .filter((record): record is SyncedProjectRecord => record !== null)

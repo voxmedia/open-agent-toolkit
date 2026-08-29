@@ -188,6 +188,24 @@ describe('createProjectPullCommand', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('fails closed with recovery guidance for a malformed discovery record', async () => {
+    const { command, capture, pullSynced, resolveTarget } = harness('created');
+    resolveTarget.mockRejectedValueOnce(
+      new CliError(
+        'Invalid synced project record .oat/projects/synced/demo.json: malformed JSON. Restore this exact record from a trusted Git revision before retrying.',
+        1,
+      ),
+    );
+
+    await run(command, ['demo']);
+
+    expect(capture.error).toEqual([
+      'Invalid synced project record .oat/projects/synced/demo.json: malformed JSON. Restore this exact record from a trusted Git revision before retrying.',
+    ]);
+    expect(pullSynced).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
+
   it('prints continue and abort recovery commands for a conflict', async () => {
     const { command, capture } = harness('conflict');
     await run(command, ['other-project']);

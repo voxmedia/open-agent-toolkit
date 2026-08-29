@@ -191,6 +191,11 @@ describe('oat project list coordination integration', () => {
       })}\n`,
       'utf8',
     );
+    await writeFile(
+      join(root, '.oat', 'projects', 'synced', 'malformed.json'),
+      '{ malformed\n',
+      'utf8',
+    );
 
     const result = await runCli(root, ['project', 'list', '--json']);
     expect(result.exitCode).toBe(0);
@@ -209,6 +214,19 @@ describe('oat project list coordination integration', () => {
           phase: null,
         }),
       ]),
+    );
+    expect(payload.projects).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ name: 'malformed' })]),
+    );
+
+    const humanResult = await runCli(root, ['project', 'list']);
+    expect(humanResult.exitCode).toBe(0);
+    expect(humanResult.stdout).toContain('synced-absent');
+    expect(humanResult.stderr).toContain(
+      'Skipping invalid synced project record .oat/projects/synced/malformed.json:',
+    );
+    expect(humanResult.stderr).toContain(
+      'Restore this exact record from a trusted Git revision before retrying.',
     );
 
     const filtered = await runCli(root, [

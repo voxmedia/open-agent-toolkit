@@ -142,6 +142,24 @@ describe('createProjectPushCommand', () => {
     expect(process.exitCode).toBe(2);
   });
 
+  it('fails closed with recovery guidance for a malformed discovery record', async () => {
+    const { command, capture, pushSynced, resolveTarget } = harness('pushed');
+    resolveTarget.mockRejectedValueOnce(
+      new CliError(
+        'Invalid synced project record .oat/projects/synced/demo.json: malformed JSON. Restore this exact record from a trusted Git revision before retrying.',
+        1,
+      ),
+    );
+
+    await run(command, ['demo']);
+
+    expect(capture.error).toEqual([
+      'Invalid synced project record .oat/projects/synced/demo.json: malformed JSON. Restore this exact record from a trusted Git revision before retrying.',
+    ]);
+    expect(pushSynced).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
+
   it('does not push when an explicit descendant target is rejected', async () => {
     const { command, pushSynced, resolveTarget } = harness('pushed');
     resolveTarget.mockRejectedValueOnce(
