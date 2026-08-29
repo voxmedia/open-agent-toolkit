@@ -34,6 +34,7 @@ import {
   removeSyncedCheckout,
 } from '@commands/project/sync/ref-sync';
 import {
+  canonicalizePath,
   type ProjectScope,
   resolveProjectScope,
   resolveScopeRoot,
@@ -212,6 +213,29 @@ export interface ArchiveSnapshotMetadata {
   projectName: string;
   snapshotName: string;
   scope: ProjectScope;
+}
+
+function assertExactArchiveProjectRoot(
+  options: Pick<
+    ArchiveProjectOnCompletionOptions,
+    'repoRoot' | 'projectsRoot' | 'projectPath' | 'projectName'
+  >,
+  projectScope: ProjectScope,
+): string {
+  const scopeRoot = canonicalizePath(
+    resolveScopeRoot(options.repoRoot, options.projectsRoot, projectScope),
+  );
+  const projectPath = canonicalizePath(options.projectPath);
+  if (
+    dirname(projectPath) !== scopeRoot ||
+    basename(projectPath) !== options.projectName
+  ) {
+    throw new CliError(
+      `Project path \`${options.projectPath}\` must identify the exact direct child \`${options.projectName}\` of the configured ${projectScope} project root; refusing to archive a descendant or mismatched project.`,
+      1,
+    );
+  }
+  return projectPath;
 }
 
 function normalizeS3Uri(s3Uri: string): string {
@@ -1558,6 +1582,10 @@ export async function archiveProjectOnCompletion(
       1,
     );
   }
+  const canonicalProjectPath = assertExactArchiveProjectRoot(
+    options,
+    projectScope,
+  );
   const isSynced = projectScope === 'synced';
   const record = isSynced ? await readRecord(recordPath) : null;
   const syncTarget = isSynced
@@ -1610,6 +1638,27 @@ export async function archiveProjectOnCompletion(
     dependencies,
   );
   assertDurableArchiveProjectTarget(archiveTarget);
+  // Reassert the identity immediately before the first durable mutation. The
+  // archive transaction must never bind a descendant source to a sibling
+  // record/ref that merely shares its basename.
+  if (
+    assertExactArchiveProjectRoot(options, projectScope) !==
+    canonicalProjectPath
+  ) {
+    throw new CliError(
+      `Project path \`${options.projectPath}\` changed identity during archive preflight; refusing to mutate archive state.`,
+      1,
+    );
+  }
+  if (
+    syncTarget &&
+    canonicalProjectPath !== canonicalizePath(syncTarget.projectPath)
+  ) {
+    throw new CliError(
+      `Synced archive identity for ${options.projectName} does not match its canonical checkout, record, and ref.`,
+      1,
+    );
+  }
   const archivePath = archiveTarget.archivePath;
   const exportIdentity = syncTarget
     ? (activeRecord?.archiveSnapshot ?? snapshotName)

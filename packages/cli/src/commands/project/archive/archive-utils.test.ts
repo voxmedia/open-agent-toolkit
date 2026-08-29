@@ -3588,6 +3588,86 @@ describe('archive utils', () => {
       expect('AWS_REGION' in env).toBe(false);
     });
   });
+
+  it.each(['shared', 'local'] as const)(
+    'refuses a %s descendant before copying or removing it',
+    async (scope) => {
+      const repoRoot = await createRepoRoot();
+      const scopeRoot = join(repoRoot, '.oat', 'projects', scope);
+      const projectPath = join(scopeRoot, 'parent', 'demo');
+      await mkdir(projectPath, { recursive: true });
+      await writeFile(join(projectPath, 'sentinel.md'), 'preserve\n', 'utf8');
+
+      await expect(
+        archiveProjectOnCompletion({
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        }),
+      ).rejects.toThrow('exact direct child');
+
+      await expect(
+        readFile(join(projectPath, 'sentinel.md'), 'utf8'),
+      ).resolves.toBe('preserve\n');
+      await expect(
+        access(join(repoRoot, '.oat', 'projects', 'archived')),
+      ).rejects.toThrow();
+    },
+  );
+
+  it('refuses a nested synced basename collision without touching either project', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const canonical = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'demo',
+      );
+      const container = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'container',
+      );
+      await createSyncedProject(canonical, defaultGitRunner);
+      await createSyncedProject(container, defaultGitRunner);
+      await writeFile(join(canonical.projectPath, 'canonical.md'), 'keep\n');
+      await writeFile(join(container.projectPath, 'container.md'), 'keep\n');
+      await pushSynced(canonical, defaultGitRunner, {});
+      await pushSynced(container, defaultGitRunner, {});
+      for (const target of [canonical, container]) {
+        await writeSyncedRecord(
+          syncedRecordPath(target.syncedRoot, target.slug),
+          buildSyncedRecord(target.slug, new Date('2026-08-29T00:00:00Z')),
+        );
+      }
+      const collidingDescendant = join(container.projectPath, 'nested', 'demo');
+      await mkdir(collidingDescendant, { recursive: true });
+      await writeFile(join(collidingDescendant, 'sentinel.md'), 'nested\n');
+
+      await expect(
+        archiveProjectOnCompletion({
+          repoRoot: fixture.cloneA,
+          projectPath: collidingDescendant,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        }),
+      ).rejects.toThrow('exact direct child');
+
+      await expect(access(canonical.projectPath)).resolves.toBeUndefined();
+      await expect(access(container.projectPath)).resolves.toBeUndefined();
+      await expect(
+        readFile(join(collidingDescendant, 'sentinel.md'), 'utf8'),
+      ).resolves.toBe('nested\n');
+      await expect(
+        readSyncedRecord(syncedRecordPath(canonical.syncedRoot, 'demo')),
+      ).resolves.toMatchObject({ status: 'active' });
+    } finally {
+      await fixture.cleanup();
+    }
+  }, 20_000);
 });
 
 function hashContent(value: string | Buffer): string {
