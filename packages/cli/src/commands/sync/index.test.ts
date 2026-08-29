@@ -1986,6 +1986,104 @@ describe('createSyncCommand', () => {
     }
   });
 
+  it('materializes portable agent sibling reads into generated provider roles', async () => {
+    // Materialize the *current* canonical agents through the sync harness into
+    // a temporary root. Reading the tracked provider views instead would test
+    // stale generated content; p02-t02 owns refreshing those.
+    const repoRoot = join(import.meta.dirname, '../../../../..');
+    const project = await mkdtemp(join(tmpdir(), 'oat-sync-portable-agents-'));
+    const agentNames = [
+      'oat-phase-implementer',
+      'oat-reviewer',
+      'oat-codebase-mapper',
+    ];
+
+    try {
+      await mkdir(join(project, '.agents', 'agents'), { recursive: true });
+      for (const name of agentNames) {
+        await writeFile(
+          join(project, '.agents', 'agents', `${name}.md`),
+          await readFile(
+            join(repoRoot, '.agents', 'agents', `${name}.md`),
+            'utf8',
+          ),
+          'utf8',
+        );
+      }
+
+      const harness = createHarness({
+        adapters: [createCodexAdapter()],
+        plans: [createEmptyPlan('project')],
+        configAwareResults: [
+          {
+            activeAdapters: [createCodexAdapter()],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+        cwd: project,
+        useDiskCodexExtension: true,
+        useDiskScanner: true,
+      });
+
+      await runSyncCommand(harness.command, {
+        globalArgs: ['--scope', 'project'],
+      });
+
+      const plan = (await harness.computeCodexProjectExtensionPlan.mock
+        .results[0]!.value) as CodexExtensionPlan;
+      const managedRoles = plan.managedRoles ?? [];
+
+      expect(managedRoles.length).toBeGreaterThan(0);
+
+      const portableMarkers: Record<string, string[]> = {
+        'oat-phase-implementer': [
+          '${PROJECT_DISPATCH_SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md',
+          '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+          '${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md',
+        ],
+        'oat-reviewer': [
+          '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+          '${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md',
+        ],
+        'oat-codebase-mapper': [
+          '${KNOWLEDGE_INDEX_SKILLS_ROOT}/oat-repo-knowledge-index/references/templates/',
+        ],
+      };
+      const covered = new Set<string>();
+
+      for (const role of managedRoles) {
+        const agentName = agentNames.find((name) => role.startsWith(name));
+        if (!agentName) continue;
+        covered.add(agentName);
+
+        const generated = await readFile(
+          join(project, '.codex', 'agents', `${role}.toml`),
+          'utf8',
+        );
+
+        for (const marker of portableMarkers[agentName]!) {
+          expect(generated, `${role} keeps ${marker}`).toContain(marker);
+        }
+        // User scope is probed before project scope in every generated copy.
+        expect(generated, `${role} candidate order`).toMatch(
+          /\$\{HOME\}\/\.agents\/skills[\s\S]{0,400}<repo-root>\/\.agents\/skills/,
+        );
+        expect(generated, `${role} fails closed`).toContain(
+          'never ambient discovery',
+        );
+        // Executable bare sibling-skill paths must not survive materialization.
+        expect(generated, `${role} has no bare sibling read`).not.toMatch(
+          /(?:\.\.?\/)?\.agents\/skills\/[a-zA-Z0-9_-]+\/(?:SKILL\.md|references)/,
+        );
+      }
+
+      expect([...covered].sort()).toEqual([...agentNames].sort());
+    } finally {
+      await rm(project, { recursive: true, force: true });
+    }
+  });
+
   it('preserves bounded phase recovery semantics across generated provider agents', async () => {
     const repoRoot = join(import.meta.dirname, '../../../../..');
     const generatedAgentPaths = [

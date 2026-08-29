@@ -1,6 +1,6 @@
 ---
 name: oat-review-provide-remote
-version: 1.1.0
+version: 1.1.1
 description: Use when reviewing a GitHub PR opened on another machine and posting findings back as a single PR review, outside any OAT project context. Fetches the PR via gh, reviews it, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
@@ -103,7 +103,16 @@ Severity conventions:
 - `medium`: Meaningful but non-blocking quality/maintainability issue.
 - `minor`: Cosmetic/style/documentation issue.
 
-Checklist + severity model source of truth: `.agents/skills/oat-review-provide/references/review-artifact-template.md`.
+Checklist + severity model source of truth: the `oat-review-provide` review
+artifact template. Independently probe each required `<name>/SKILL.md` in
+order: `${SKILL_DIR}/..` from this loaded skill, `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Bind the first match for `oat-review-provide` to
+its own `${REVIEW_PROVIDE_SKILLS_ROOT}`; never ambient discovery. On a miss,
+name the skill, stop the review instead of improvising a checklist, and give
+its intended-scope recovery command:
+`oat tools install utility --scope <user|project>` or
+`oat tools update --pack utility --scope <user|project>`. Then read
+`${REVIEW_PROVIDE_SKILLS_ROOT}/oat-review-provide/references/review-artifact-template.md`.
 
 ## Process
 

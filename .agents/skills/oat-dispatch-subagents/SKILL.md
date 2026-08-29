@@ -1,6 +1,6 @@
 ---
 name: oat-dispatch-subagents
-version: 1.2.2
+version: 1.2.3
 description: Use when an OAT skill or workflow needs provider-neutral selection, launch, recovery, or evidence for bounded subagent work without project lifecycle policy.
 disable-model-invocation: true
 user-invocable: false
@@ -51,10 +51,22 @@ contract.
 
 Model-selection policy lives in the `subagent-orchestration` skill (same
 pack); this skill owns launch mechanics. Read this file before every
-OAT-managed subagent dispatch, then read
-`.agents/skills/subagent-orchestration/references/model-selection-principles.md`.
+OAT-managed subagent dispatch.
+
+Independently probe each required `<name>/SKILL.md` in order: `${SKILL_DIR}/..`
+from this loaded skill, `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Bind the first match for `subagent-orchestration`
+to its own `${ORCHESTRATION_SKILLS_ROOT}`; never ambient discovery. On a miss,
+name the skill, stop class-constrained dispatch, and give its intended-scope
+recovery command: `oat tools install utility --scope <user|project>` or
+`oat tools update --pack utility --scope <user|project>`.
+
+Then read
+`${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md`.
 Resolve the active provider and read exactly one selection reference from
-that skill plus the matching mechanics reference from this one:
+`${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/` plus the
+matching mechanics reference from this skill's own `references/`. The
+short-form paths below are relative to those two already-bound roots:
 
 - Claude: `subagent-orchestration/references/provider-claude.md`, then
   `references/provider-claude.md`
@@ -69,8 +81,9 @@ mappings; the mechanics reference contains surface-specific launch controls.
 For an unsupported provider, apply the provider-neutral contract and fail
 closed when exact launch controls cannot be established.
 
-If the `subagent-orchestration` skill is not installed, treat model guidance
-as unresolved: fail closed for class-constrained dispatch, and for
+If no candidate root resolves `subagent-orchestration/SKILL.md`, treat model
+guidance as unresolved: fail closed for class-constrained dispatch, name the
+missing skill with its `utility` recovery commands above, and for
 unconstrained dispatch select only through active user and repository
 instructions intersected with the live catalog.
 

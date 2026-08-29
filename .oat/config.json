@@ -21,6 +21,10 @@
     "research": true,
     "brainstorm": true
   },
+  "pjm": {
+    "initialized": true,
+    "schemaVersion": 1
+  },
   "documentation": {
     "root": "apps/oat-docs",
     "tooling": "fumadocs",
