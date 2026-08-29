@@ -149,11 +149,12 @@ export async function ensureScopedRootGitignore(
   }
   const gitignorePath = join(repoRoot, '.gitignore');
   const current = await readOptionalFile(gitignorePath);
+  const sectionStart = current?.indexOf(SECTION_START) ?? -1;
+  const sectionEnd = current?.indexOf(SECTION_END) ?? -1;
   const managedSection =
-    current?.slice(
-      current.indexOf(SECTION_START),
-      current.indexOf(SECTION_END),
-    ) ?? '';
+    current && sectionStart !== -1 && sectionEnd >= sectionStart
+      ? current.slice(sectionStart, sectionEnd)
+      : '';
   const managedLines = managedSection.split('\n');
   const customRulesManaged = customRules.every((rule) =>
     managedLines.includes(rule),

@@ -521,6 +521,38 @@ describe('scaffoldProject', () => {
     expect(gitignore).not.toContain('/.oat/projects/synced/*/');
   });
 
+  it.each(['staged', 'unstaged'] as const)(
+    'refuses to repair a custom synced-root rule over %s .gitignore edits',
+    async (dirtyState) => {
+      const fixture = await createSyncedFixture();
+      tempDirs.push(fixture.rootDir);
+      const gitignorePath = join(fixture.cloneA, '.gitignore');
+      const dirtyContent = `${await readFile(gitignorePath, 'utf8')}# user edit\n`;
+      await writeFile(gitignorePath, dirtyContent, 'utf8');
+      if (dirtyState === 'staged') {
+        execFileSync('git', ['add', '.gitignore'], { cwd: fixture.cloneA });
+      }
+
+      await expect(
+        scaffoldProjectImpl({
+          repoRoot: fixture.cloneA,
+          projectName: `dirty-${dirtyState}`,
+          scope: 'synced',
+          env: { OAT_PROJECTS_ROOT: '.oat/custom/shared' },
+          refreshDashboard: false,
+          setActive: false,
+        }),
+      ).rejects.toThrow(/\.gitignore has staged or unstaged changes/);
+      await expect(readFile(gitignorePath, 'utf8')).resolves.toBe(dirtyContent);
+      expect(
+        execFileSync('git', ['show-ref'], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }),
+      ).not.toContain(`refs/oat/projects/dirty-${dirtyState}`);
+    },
+  );
+
   it('uses canonical filesystem paths with an absolute in-repo projects root in every scope', async () => {
     const fixture = await createSyncedFixture();
     tempDirs.push(fixture.rootDir);
@@ -532,9 +564,18 @@ describe('scaffoldProject', () => {
     );
     const env = { OAT_PROJECTS_ROOT: absoluteSharedRoot };
     const gitignorePath = join(fixture.cloneA, '.gitignore');
+    const existingGitignore = await readFile(gitignorePath, 'utf8');
     await writeFile(
       gitignorePath,
-      `${await readFile(gitignorePath, 'utf8')}/.oat/absolute-projects/local/**\n/.oat/absolute-projects/synced/*/\n`,
+      existingGitignore.replace(
+        '# END OAT core',
+        [
+          '/.oat/absolute-projects/local/**',
+          '/.oat/absolute-projects/synced/*/',
+          '/.oat/absolute-projects/archived/**',
+          '# END OAT core',
+        ].join('\n'),
+      ),
       'utf8',
     );
     execFileSync('git', ['add', '.gitignore'], { cwd: fixture.cloneA });
@@ -610,10 +651,7 @@ describe('scaffoldProject', () => {
         .trim()
         .split('\n')
         .sort(),
-    ).toEqual([
-      '.gitignore',
-      '.oat/absolute-projects/synced/absolute-synced.json',
-    ]);
+    ).toEqual(['.oat/absolute-projects/synced/absolute-synced.json']);
     const managedGitignore = await readFile(gitignorePath, 'utf8');
     expect(
       managedGitignore.split('/.oat/absolute-projects/synced/*/'),

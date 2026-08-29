@@ -256,4 +256,48 @@ describe('applyOatCoreGitignore', () => {
       content.indexOf('# END OAT core'),
     );
   });
+
+  it('repairs an unterminated managed block without treating its rules as managed', async () => {
+    const root = await makeTempDir();
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    const userRule = 'keep-user-rule';
+    await writeFile(
+      join(root, '.gitignore'),
+      [
+        '# OAT core',
+        userRule,
+        '/.oat/custom/synced/*/',
+        '/.oat/custom/archived/**',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    execFileSync('git', ['add', '.gitignore'], { cwd: root });
+    execFileSync(
+      'git',
+      [
+        '-c',
+        'user.name=OAT Test',
+        '-c',
+        'user.email=oat@example.com',
+        'commit',
+        '-q',
+        '-m',
+        'seed malformed gitignore',
+      ],
+      { cwd: root },
+    );
+
+    const result = await ensureScopedRootGitignore(
+      root,
+      join(root, '.oat', 'custom', 'synced'),
+      'synced',
+      defaultGitRunner,
+    );
+
+    expect(result.changed).toBe(true);
+    const content = await readFile(join(root, '.gitignore'), 'utf8');
+    expect(content.startsWith(`# OAT core\n${userRule}\n`)).toBe(true);
+    expect(content).toContain('# END OAT core');
+  });
 });

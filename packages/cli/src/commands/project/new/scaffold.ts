@@ -466,7 +466,7 @@ async function ensureScopedProjectIgnored(
     absoluteScopeRoot,
     scope,
     dependencies.gitRunner,
-    null,
+    'Cannot add the configured project-root rule because .gitignore has staged or unstaged changes; commit or stash those changes, then retry.',
   );
 }
 
