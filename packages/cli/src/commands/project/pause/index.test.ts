@@ -15,7 +15,12 @@ import { createProjectPauseCommand } from './index';
 
 interface HarnessOptions {
   cwd: string;
-  pushStatus?: 'pushed' | 'up-to-date' | 'rejected' | 'conflict';
+  pushStatus?:
+    | 'pushed'
+    | 'up-to-date'
+    | 'rejected'
+    | 'conflict'
+    | ('pushed' | 'up-to-date' | 'rejected' | 'conflict')[];
   resolveError?: Error;
 }
 
@@ -25,8 +30,14 @@ function createHarness(options: HarnessOptions): {
   pushSynced: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
+  const pushStatuses = Array.isArray(options.pushStatus)
+    ? options.pushStatus
+    : [options.pushStatus ?? 'pushed'];
+  let pushAttempt = 0;
   const pushSynced = vi.fn(async () => ({
-    status: options.pushStatus ?? ('pushed' as const),
+    status:
+      pushStatuses[Math.min(pushAttempt++, pushStatuses.length - 1)] ??
+      'pushed',
     sha: 'a'.repeat(40),
   }));
 
@@ -220,9 +231,39 @@ describe('oat project pause', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it.each(['rejected', 'conflict'] as const)(
+    'restores synced state byte-for-byte after a %s pause publication',
+    async (pushStatus) => {
+      const root = await createRepoRoot();
+      const statePath = await writeProjectState(root, 'synced-demo', 'synced');
+      const originalState = await readFile(statePath, 'utf8');
+      await writeFile(
+        join(root, '.oat', 'config.local.json'),
+        `${JSON.stringify({ version: 1, activeProject: '.oat/projects/synced/synced-demo' })}\n`,
+        'utf8',
+      );
+      const { command, pushSynced } = createHarness({
+        cwd: root,
+        pushStatus,
+      });
+
+      await runCommand(command, []);
+
+      expect(pushSynced).toHaveBeenCalledOnce();
+      expect(await readFile(statePath, 'utf8')).toBe(originalState);
+      const localConfig = JSON.parse(
+        await readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+      );
+      expect(localConfig.activeProject).toBe(
+        '.oat/projects/synced/synced-demo',
+      );
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
   it('publishes a synced pause before clearing the active pointer', async () => {
     const root = await createRepoRoot();
-    await writeProjectState(root, 'synced-demo', 'synced');
+    const statePath = await writeProjectState(root, 'synced-demo', 'synced');
     await writeFile(
       join(root, '.oat', 'config.local.json'),
       `${JSON.stringify({ version: 1, activeProject: '.oat/projects/synced/synced-demo' })}\n`,
@@ -230,17 +271,52 @@ describe('oat project pause', () => {
     );
     const { command, pushSynced } = createHarness({
       cwd: root,
-      pushStatus: 'rejected',
+      pushStatus: 'pushed',
     });
 
     await runCommand(command, []);
 
     expect(pushSynced).toHaveBeenCalledOnce();
+    expect(await readFile(statePath, 'utf8')).toContain(
+      'oat_lifecycle: paused',
+    );
     const localConfig = JSON.parse(
       await readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
     );
-    expect(localConfig.activeProject).toBe('.oat/projects/synced/synced-demo');
+    expect(localConfig.activeProject).toBeNull();
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('retries a rejected synced pause from the exact pre-pause state', async () => {
+    const root = await createRepoRoot();
+    const statePath = await writeProjectState(root, 'synced-demo', 'synced');
+    const originalState = await readFile(statePath, 'utf8');
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/synced/synced-demo' })}\n`,
+      'utf8',
+    );
+    const { command, pushSynced } = createHarness({
+      cwd: root,
+      pushStatus: ['rejected', 'pushed'],
+    });
+
+    await runCommand(command, []);
+    expect(await readFile(statePath, 'utf8')).toBe(originalState);
     expect(process.exitCode).toBe(1);
+
+    process.exitCode = undefined;
+    await runCommand(command, []);
+
+    expect(pushSynced).toHaveBeenCalledTimes(2);
+    expect(await readFile(statePath, 'utf8')).toContain(
+      'oat_lifecycle: paused',
+    );
+    const localConfig = JSON.parse(
+      await readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+    );
+    expect(localConfig.activeProject).toBeNull();
+    expect(process.exitCode).toBe(0);
   });
 
   it('persists pause reason when provided', async () => {

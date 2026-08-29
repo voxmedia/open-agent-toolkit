@@ -301,7 +301,14 @@ async function runProjectPause(
     }
 
     if (resolved.syncTarget) {
-      await publishPausedState(resolved.syncTarget, dependencies);
+      try {
+        await publishPausedState(resolved.syncTarget, dependencies);
+      } catch (error) {
+        if (nextBlock !== frontmatter) {
+          await dependencies.writeFile(statePath, content, 'utf8');
+        }
+        throw error;
+      }
     }
 
     const pointerCleared = activeProject === projectPath;
