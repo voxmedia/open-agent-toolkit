@@ -989,13 +989,16 @@ export async function removeSyncedCheckout(
     return { status: preflight.status };
   }
 
+  return removePreflightedSyncedCheckout(target, git, options.force ?? false);
+}
+
+async function removePreflightedSyncedCheckout(
+  target: SyncTarget,
+  git: GitRunner,
+  force: boolean,
+): Promise<RemoveResult> {
   await git.run(
-    [
-      'worktree',
-      'remove',
-      ...(options.force ? ['--force'] : []),
-      target.projectPath,
-    ],
+    ['worktree', 'remove', ...(force ? ['--force'] : []), target.projectPath],
     { cwd: target.repoRoot },
   );
   await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
@@ -1060,10 +1063,25 @@ export async function pruneSynced(
     }
   }
 
-  for (const checkout of checkouts) {
-    const removed = await removeSyncedCheckout(checkout, git, {
-      force: options.force,
+  try {
+    await git.run(['push', target.remote, `:${target.ref}`], {
+      cwd: target.repoRoot,
     });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    const forceFlag = options.force ? ' --force' : '';
+    throw new CliError(
+      `Unable to delete remote ref ${target.ref}; no local checkouts were removed. Restore access to ${target.remote}, then retry oat project prune ${shellQuote(target.slug)}${forceFlag}. ${detail}`,
+      2,
+    );
+  }
+
+  for (const checkout of checkouts) {
+    const removed = await removePreflightedSyncedCheckout(
+      checkout,
+      git,
+      options.force,
+    );
     if (removed.status !== 'removed' && removed.status !== 'absent') {
       throw new CliError(
         `Refusing to prune ${target.slug}: checkout ${checkout.projectPath} is ${removed.status}.`,
@@ -1072,9 +1090,6 @@ export async function pruneSynced(
     }
   }
 
-  await git.run(['push', target.remote, `:${target.ref}`], {
-    cwd: target.repoRoot,
-  });
   await git.run(['update-ref', '-d', target.ref], { cwd: target.repoRoot });
   const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
   await rm(recordPath, { force: true });

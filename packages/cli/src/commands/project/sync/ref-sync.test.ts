@@ -1,6 +1,13 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { CliError } from '@errors/cli-error';
@@ -2234,6 +2241,57 @@ describe('synced checkout removal', () => {
       await expect(
         classifyAdoptionRecord(target, defaultGitRunner),
       ).resolves.toBe('pending');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('preserves every local checkout when remote ref deletion fails', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'remote-delete-failure',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(join(target.projectPath, 'state.md'), '# state\n');
+      await pushSynced(target, defaultGitRunner, {});
+      const recordPath = join(target.syncedRoot, `${target.slug}.json`);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(target.slug, new Date('2026-08-29T00:00:00Z')),
+      );
+      const linkedRoot = await addLinkedWorktree(
+        fixture.cloneA,
+        'remote-delete-linked',
+      );
+      const linkedTarget = buildSyncTarget(
+        linkedRoot,
+        '.oat/projects/shared',
+        target.slug,
+      );
+      await pullSynced(linkedTarget, defaultGitRunner, {});
+      await installRejectingHook(fixture.cloneA, 'pre-push');
+
+      await expect(
+        pruneSynced(target, defaultGitRunner, {
+          force: true,
+          commit: false,
+        }),
+      ).rejects.toThrow(
+        /no local checkouts were removed[\s\S]*retry oat project prune 'remote-delete-failure' --force/,
+      );
+
+      await expect(access(target.projectPath)).resolves.toBeUndefined();
+      await expect(access(linkedTarget.projectPath)).resolves.toBeUndefined();
+      await expect(access(recordPath)).resolves.toBeUndefined();
+      expect(
+        git(fixture.cloneA, ['show-ref', '--verify', target.ref]),
+      ).not.toBe('');
+      expect(
+        git(fixture.cloneA, ['ls-remote', '--refs', target.remote, target.ref]),
+      ).not.toBe('');
     } finally {
       await fixture.cleanup();
     }

@@ -12,6 +12,7 @@ import {
 import {
   buildSyncTarget,
   createSyncedProject,
+  preflightSyncedCheckout,
   pruneSynced,
   pullSynced,
   pushSynced,
@@ -351,7 +352,9 @@ describe('prune command integration', () => {
           '# canonical state\n',
           'utf8',
         );
-        await pushSynced(target, defaultGitRunner, {});
+        await expect(
+          pushSynced(target, defaultGitRunner, {}),
+        ).resolves.toMatchObject({ status: 'pushed' });
 
         const unrelatedPath = join(
           fixture.rootDir,
@@ -376,6 +379,10 @@ describe('prune command integration', () => {
         );
         const sentinel = join(unrelatedPath, 'do-not-delete.txt');
         await writeFile(sentinel, 'unrelated worktree\n', 'utf8');
+
+        await expect(
+          preflightSyncedCheckout(target, defaultGitRunner),
+        ).resolves.toMatchObject({ status: 'clean' });
 
         await expect(
           pruneSynced(target, defaultGitRunner, {
