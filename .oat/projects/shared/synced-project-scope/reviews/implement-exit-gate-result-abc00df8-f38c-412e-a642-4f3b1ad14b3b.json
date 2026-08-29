@@ -1,4 +1,0 @@
-
-> open-agent-toolkit@0.0.5 cli /Users/tstang/Code/open-agent-toolkit
-> bash packages/cli/scripts/bundle-assets.sh && tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts -- --json gate review --project .oat/projects/shared/synced-project-scope --review-type code --review-scope final --exit-nonzero-on important 'Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings.'
-
