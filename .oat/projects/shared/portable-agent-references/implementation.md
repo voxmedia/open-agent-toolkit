@@ -224,10 +224,10 @@ None (sequential plan).
 
 #### Review Rounds — p02
 
-| Round | Artifact                                   | Head        | Findings          | Disposition                                                                                                |
-| ----- | ------------------------------------------ | ----------- | ----------------- | ---------------------------------------------------------------------------------------------------------- |
-| 1     | `reviews/p02-review-2026-08-29T080559Z.md` | `69d011bbc` | 0C / 1I / 1M / 1m | I root-owned bookkeeping, fixed in `03db89f00`; M1+m1 docs accuracy, fixed in `223b22159` then `fa9d6e37d` |
-| 2     | `reviews/p02-review-2026-08-29T081859Z.md` | `fa9d6e37d` | 0C / 0I / 1M / 1m | **PASSED** at the Critical/Important threshold; residual bookkeeping closed in the following commit        |
+| Round | Artifact                                            | Head        | Findings          | Disposition                                                                                                |
+| ----- | --------------------------------------------------- | ----------- | ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| 1     | `reviews/archived/p02-review-2026-08-29T080559Z.md` | `69d011bbc` | 0C / 1I / 1M / 1m | I root-owned bookkeeping, fixed in `03db89f00`; M1+m1 docs accuracy, fixed in `223b22159` then `fa9d6e37d` |
+| 2     | `reviews/archived/p02-review-2026-08-29T081859Z.md` | `fa9d6e37d` | 0C / 0I / 1M / 1m | **PASSED** at the Critical/Important threshold; residual bookkeeping closed in the following commit        |
 
 The p02 minor finding `m1` took two attempts and is worth recording as
 evidence. Round 1 asserted that only the `workflows` pack ships agents, citing
@@ -244,11 +244,11 @@ construction path.
 
 #### Review Rounds
 
-| Round | Artifact                                   | Head        | Findings          | Disposition                                                             |
-| ----- | ------------------------------------------ | ----------- | ----------------- | ----------------------------------------------------------------------- |
-| 1     | `reviews/p01-review-2026-08-29T000007Z.md` | `f8a89ce9e` | 0C / 2I / 3M / 4m | I2 fixed in `7f7dd6cfc`; I1 resolved by root bookkeeping in `de611286a` |
-| 2     | `reviews/p01-review-2026-08-29T040642Z.md` | `7f7dd6cfc` | 0C / 1I / 2M / 3m | all root-owned bookkeeping; resolved in `52745ef93`                     |
-| 3     | `reviews/p01-review-2026-08-29T074543Z.md` | `52745ef93` | 0C / 0I / 2M / 1m | **PASSED** at the Critical/Important threshold                          |
+| Round | Artifact                                            | Head        | Findings          | Disposition                                                             |
+| ----- | --------------------------------------------------- | ----------- | ----------------- | ----------------------------------------------------------------------- |
+| 1     | `reviews/archived/p01-review-2026-08-29T000007Z.md` | `f8a89ce9e` | 0C / 2I / 3M / 4m | I2 fixed in `7f7dd6cfc`; I1 resolved by root bookkeeping in `de611286a` |
+| 2     | `reviews/archived/p01-review-2026-08-29T040642Z.md` | `7f7dd6cfc` | 0C / 1I / 2M / 3m | all root-owned bookkeeping; resolved in `52745ef93`                     |
+| 3     | `reviews/archived/p01-review-2026-08-29T074543Z.md` | `52745ef93` | 0C / 0I / 2M / 1m | **PASSED** at the Critical/Important threshold                          |
 
 Round 2's Important and both Mediums were defects in root-owned project
 artifacts, not in phase code:
@@ -317,7 +317,7 @@ packages to 0.2.40`, so `0.2.40` was no longer strictly greater than main
 #### Outstanding Items
 
 - None blocking. Phase 1 passed code review at the Critical/Important
-  threshold on round 3 (`reviews/p01-review-2026-08-29T074543Z.md`).
+  threshold on round 3 (`reviews/archived/p01-review-2026-08-29T074543Z.md`).
 - Round 3's remaining 2 Medium / 1 Minor were root-owned artifact alignment
   (stale `state.md` prose, a gate attribution naming `f8a89ce9e` instead of the
   phase head, and a stale `Last Updated`); all closed in the bookkeeping commit
