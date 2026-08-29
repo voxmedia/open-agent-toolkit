@@ -182,6 +182,7 @@ describe('scaffoldProject', () => {
   const tempDirs: string[] = [];
 
   afterEach(async () => {
+    vi.restoreAllMocks();
     await Promise.all(
       tempDirs.map(async (dir) => {
         await rm(dir, { recursive: true, force: true });
@@ -320,6 +321,89 @@ describe('scaffoldProject', () => {
       ).rejects.toThrow(/already exists in synced scope/);
     },
   );
+
+  it.each(['shared', 'local'] as const)(
+    'creates a %s project with a warning when origin is unreachable',
+    async (targetScope) => {
+      const fixture = await createSyncedFixture();
+      tempDirs.push(fixture.rootDir);
+      await seedTemplates(fixture.cloneA);
+      execFileSync(
+        'git',
+        ['remote', 'set-url', 'origin', join(fixture.rootDir, 'missing.git')],
+        { cwd: fixture.cloneA },
+      );
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const result = await scaffoldProjectImpl({
+        repoRoot: fixture.cloneA,
+        projectName: `offline-${targetScope}`,
+        scope: targetScope,
+        refreshDashboard: false,
+        setActive: false,
+      });
+
+      expect(result.scope).toBe(targetScope);
+      expect(error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `unable to verify remote synced project collision for offline-${targetScope}`,
+        ),
+      );
+      error.mockRestore();
+    },
+  );
+
+  it('still rejects a local synced ref while origin is unreachable', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const slug = 'offline-local-ref-collision';
+    const head = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: fixture.cloneA,
+      encoding: 'utf8',
+    }).trim();
+    execFileSync('git', ['update-ref', `refs/oat/projects/${slug}`, head], {
+      cwd: fixture.cloneA,
+    });
+    execFileSync(
+      'git',
+      ['remote', 'set-url', 'origin', join(fixture.rootDir, 'missing.git')],
+      { cwd: fixture.cloneA },
+    );
+
+    await expect(
+      scaffoldProjectImpl({
+        repoRoot: fixture.cloneA,
+        projectName: slug,
+        scope: 'shared',
+        refreshDashboard: false,
+        setActive: false,
+      }),
+    ).rejects.toThrow(/already exists in synced scope/);
+  });
+
+  it('keeps synced project creation fail-closed when origin is unreachable', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    await seedTemplates(fixture.cloneA);
+    execFileSync(
+      'git',
+      ['remote', 'set-url', 'origin', join(fixture.rootDir, 'missing.git')],
+      { cwd: fixture.cloneA },
+    );
+
+    await expect(
+      scaffoldProjectImpl({
+        repoRoot: fixture.cloneA,
+        projectName: 'offline-synced',
+        scope: 'synced',
+        refreshDashboard: false,
+        setActive: false,
+      }),
+    ).rejects.toThrow(/git ls-remote synced ref failed/);
+    await expect(
+      stat(join(fixture.cloneA, '.oat/projects/synced/offline-synced')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
 
   it('scaffolds local projects without creating a branch commit', async () => {
     const repoRoot = await createRepoRoot();

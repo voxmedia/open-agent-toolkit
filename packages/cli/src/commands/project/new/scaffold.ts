@@ -553,11 +553,11 @@ async function assertCrossScopeSlugAvailable(
   }
 
   if (targetScope !== 'synced' && !collisions.includes('synced')) {
-    const remote = await dependencies.gitRunner.run(
-      ['remote', 'get-url', 'origin'],
+    const workTree = await dependencies.gitRunner.run(
+      ['rev-parse', '--is-inside-work-tree'],
       { cwd: repoRoot, allowFailure: true },
     );
-    if (remote.code === 0) {
+    if (workTree.code === 0) {
       const syncedTarget = buildSyncTarget(repoRoot, projectsRoot, projectName);
       const localRef = await dependencies.gitRunner.run(
         ['show-ref', '--verify', '--quiet', syncedTarget.ref],
@@ -571,18 +571,24 @@ async function assertCrossScopeSlugAvailable(
       }
       if (localRef.code === 0) {
         collisions.push('synced');
-      } else {
+      }
+
+      const remote = await dependencies.gitRunner.run(
+        ['remote', 'get-url', 'origin'],
+        { cwd: repoRoot, allowFailure: true },
+      );
+      if (remote.code === 0 && localRef.code === 1) {
         const remoteRef = await dependencies.gitRunner.run(
           ['ls-remote', '--exit-code', syncedTarget.remote, syncedTarget.ref],
           { cwd: repoRoot, allowFailure: true },
         );
-        if (remoteRef.code !== 0 && remoteRef.code !== 2) {
-          throw new CliError(
-            `Unable to check remote synced project collision for ${projectName}: ${remoteRef.stderr || remoteRef.stdout || 'git ls-remote failed'}`,
-            2,
+        if (remoteRef.code === 0) {
+          collisions.push('synced');
+        } else if (remoteRef.code !== 2) {
+          console.error(
+            `Warning: unable to verify remote synced project collision for ${projectName}; continuing ${targetScope} project creation: ${remoteRef.stderr || remoteRef.stdout || 'git ls-remote failed'}`,
           );
         }
-        if (remoteRef.code === 0) collisions.push('synced');
       }
     }
   }
