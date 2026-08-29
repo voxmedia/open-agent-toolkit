@@ -68,17 +68,34 @@ interface MarkdownAsset {
 
 // Executable repository-relative cross-skill reads take two spellings, and both
 // dangle once the owning pack is installed at user scope:
-//   - `.agents/skills/<name>/…`, optionally `./`- or `../`-prefixed; and
-//   - `../<name>/…`, a parent-relative hop out of the authoring skill directory.
+//   - `.agents/skills/<name>/…`, optionally prefixed by any number of `./` or
+//     `../` segments; and
+//   - `../<name>/…`, a parent-relative hop out of the authoring skill, with any
+//     number of `../` segments.
 // Either spelling can target the sibling's `SKILL.md` or a file or directory at
 // or below the sibling's `references/`.
+//
+// The parent-segment repetition is load-bearing, not defensive: authored
+// Markdown is collected from the whole skill tree, so a file at
+// `.agents/skills/<owner>/references/<doc>.md` reaches a sibling skill through
+// exactly `../../<name>/…`. Matching only a single `../` would let that
+// spelling — the natural one from every scanned `references/` file — slip past
+// the ratchet.
+//
+// Portable reads stay unmatched once repetition is allowed, by two separate
+// guards. The leading lookbehind rejects any candidate start preceded by `/` or
+// an identifier character, which covers every rooted spelling:
+// `${SKILL_DIR}/../<name>/…`, `${SKILL_DIR}/../../<name>/…`, and
+// `${HOME}/.agents/skills/…`. The required prefix alternation independently
+// rejects `${SKILLS_ROOT}/<name>/…`, which carries neither an `.agents/skills/`
+// segment nor a leading `../`.
 //
 // Short forms such as `subagent-orchestration/references/provider-codex.md` are
 // deliberately not matched: they are follow-on reads local to a sibling root
 // that an earlier read already bound and validated. The caller-contract
 // assertions below enforce that anchoring requirement instead.
 const CROSS_SKILL_READ =
-  /(?<![/a-zA-Z0-9_.-])(?:(?:\.\.?\/)?\.agents\/skills\/|\.\.\/)([a-zA-Z0-9_-]+)\/(SKILL\.md|references(?:\/[a-zA-Z0-9_.-]+)*\/?)/g;
+  /(?<![/a-zA-Z0-9_.-])(?:(?:\.\.?\/)*\.agents\/skills\/|(?:\.\.\/)+)([a-zA-Z0-9_-]+)\/(SKILL\.md|references(?:\/[a-zA-Z0-9_.-]+)*\/?)/g;
 
 const PORTABLE_SKILLS_ROOT_CANDIDATES = [
   '`${SKILL_DIR}/..`',
@@ -467,6 +484,27 @@ describe('skills bundled docs contract', () => {
       [{ targetSkill: 'sibling', targetPath: 'SKILL.md' }],
     ],
     [
+      // The spelling a scanned `references/<doc>.md` file would actually use.
+      'two-level parent-relative sibling hop',
+      'Read `../../sibling/SKILL.md` before dispatch.',
+      [{ targetSkill: 'sibling', targetPath: 'SKILL.md' }],
+    ],
+    [
+      'two-level parent-relative reference file',
+      'Read `../../sibling/references/schema-base.md`.',
+      [{ targetSkill: 'sibling', targetPath: 'references/schema-base.md' }],
+    ],
+    [
+      'two-level parent-relative reference directory',
+      'Pick one file from `../../sibling/references/`.',
+      [{ targetSkill: 'sibling', targetPath: 'references/' }],
+    ],
+    [
+      'two-level dot-relative path',
+      'Read `../../.agents/skills/sibling/SKILL.md`.',
+      [{ targetSkill: 'sibling', targetPath: 'SKILL.md' }],
+    ],
+    [
       'reference file',
       'Read `.agents/skills/sibling/references/schema-base.md`.',
       [{ targetSkill: 'sibling', targetPath: 'references/schema-base.md' }],
@@ -502,6 +540,22 @@ describe('skills bundled docs contract', () => {
       [{ targetSkill: 'sibling', targetPath: 'references/' }],
     ],
     ['portable skills root', 'Read `${SKILLS_ROOT}/sibling/SKILL.md`.', []],
+    [
+      // The lookbehind must keep holding once repeated segments are allowed.
+      'portable loaded-skill root hop',
+      'Read `${SKILL_DIR}/../sibling/SKILL.md`.',
+      [],
+    ],
+    [
+      'portable loaded-skill root two-level hop',
+      'Read `${SKILL_DIR}/../../sibling/SKILL.md`.',
+      [],
+    ],
+    [
+      'unrelated repeated parent path',
+      'See `../../roadmap.md` and `../../../../docs/skills-guide.md`.',
+      [],
+    ],
     [
       'portable reference read',
       'Read `${DISPATCH_SKILLS_ROOT}/sibling/references/schema-base.md`.',
