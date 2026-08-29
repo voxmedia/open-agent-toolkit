@@ -1621,6 +1621,45 @@ printf 'artifact-read\\n'`,
     );
   });
 
+  it('checks the full synced checkout before choosing clean brainstorm fold-back', () => {
+    const content = readRepoFile('.agents/skills/oat-brainstorm/SKILL.md');
+    const preflight = content.slice(
+      content.indexOf(
+        'PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value)',
+        content.indexOf('**Step 2 — Preflight `git status` check.**'),
+      ),
+      content.indexOf('```', content.indexOf('else\n  git status --porcelain')),
+    );
+
+    expect(preflight).toContain('git -C "$ACTIVE_PROJECT" status --porcelain');
+    expect(preflight).not.toContain(
+      'git -C "$ACTIVE_PROJECT" status --porcelain -- "$(basename "$ARTIFACT_PATH")"',
+    );
+    const output = execFileSync(
+      '/bin/bash',
+      [
+        '-c',
+        `oat() { printf synced; }
+git() {
+  if [[ "$#" -eq 4 ]]; then
+    printf ' M unrelated-project-file.md\\n'
+  fi
+}
+${preflight}`,
+        'brainstorm-fold-back-preflight',
+      ],
+      {
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          ACTIVE_PROJECT: '/tmp/synced-project',
+          ARTIFACT_PATH: '/tmp/synced-project/design.md',
+        },
+      },
+    );
+    expect(output).toContain('unrelated-project-file.md');
+  });
+
   it('commits new synced summary decisions durably without consuming unrelated staged state', () => {
     const content = readFileSync(
       repoFilePath('.agents/skills/oat-project-summary/SKILL.md'),

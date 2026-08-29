@@ -1,6 +1,6 @@
 ---
 name: oat-brainstorm
-version: 1.3.3
+version: 1.3.4
 description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
@@ -89,7 +89,7 @@ These messages get a direct response, not a workflow takeover. If the model has 
 - No formal requirements / specs / architectural designs (the design phase belongs to `oat-project-design`, not here).
 - No auto-routing to a destination before convergence — the destination is identified at the end of the conversation, not the beginning. Opportunistic surfacing on a clear trigger phrase is allowed; pre-emptively forcing a destination is not.
 - Visual-companion offer must run only when the topic is visual-likely OR the user has explicitly asked for it. Never offer when the topic is text-likely; never skip when the topic is visual-likely.
-- No fold-back persistence on a dirty artifact without running the preflight `git status` check first (see Process step 9 active-project branches).
+- No fold-back persistence on a dirty artifact, or from a synced checkout with any dirty project file, without running the preflight `git status` check first (see Process step 9 active-project branches).
 - For shared/local fold-back, no `git add -A` or directory globs: stage only `git add -- "$ARTIFACT_PATH"`. For synced fold-back, never stage on the parent branch; use the validated `oat project push --json` receipt.
 - No printing the fold-back handoff prompt before the scope-appropriate branch commit or synced push succeeds. The prompt references a hash; a missing persistence receipt makes it misleading.
 
@@ -574,13 +574,16 @@ through a validated `oat project push --json` receipt on
 This invariant applies equally to clean fold-back, both dirty fold-back choices,
 and the brainstorming reference-file route.
 
-**Step 2 — Preflight `git status` check.** Run **before** any artifact mutation, scoped to the chosen artifact only:
+**Step 2 — Preflight `git status` check.** Run **before** any artifact mutation.
+For shared/local projects, scope the check to the chosen artifact. For synced
+projects, inspect the full nested checkout because `oat project push` persists
+every pending project file:
 
 ```bash
 PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  git -C "$ACTIVE_PROJECT" status --porcelain -- "$(basename "$ARTIFACT_PATH")"
+  git -C "$ACTIVE_PROJECT" status --porcelain
 else
   git status --porcelain -- "$ARTIFACT_PATH"
 fi
@@ -588,7 +591,10 @@ fi
 
 The check happens before any append, so the skill can route around the dirty case without having half-written the synthesis.
 
-**Step 3 — If the artifact is clean** (no entry in the porcelain output): this is the happy path.
+**Step 3 — If the artifact is clean** (no entry in the porcelain output): this
+is the happy path. For synced projects, "artifact is clean" additionally
+requires the entire project checkout to be clean; a clean chosen artifact
+beside another dirty project file must take Step 4.
 
 1. Append the synthesis as a clearly-marked section to `ARTIFACT_PATH`:
 
@@ -619,7 +625,13 @@ The check happens before any append, so the skill can route around the dirty cas
 
 4. If the guarded persistence succeeded → proceed to step 5 (handoff prompt).
 
-**Step 4 — If the artifact is dirty** (any entry in the porcelain output): pause the fold-back, present the user with three options before any artifact mutation occurs. Carry the scope resolved by the preflight into the selected branch and resolve it again inside every persistence block so failures remain fail-closed.
+**Step 4 — If the artifact is dirty** (any entry in the porcelain output):
+pause the fold-back, present the user with three options before any artifact
+mutation occurs. For synced projects, any dirty project file makes this branch
+apply; name other dirty project files in the warning so the user knows
+`oat project push` would include them. Carry the scope resolved by the preflight
+into the selected branch and resolve it again inside every persistence block so
+failures remain fail-closed.
 
 - **Option A — Commit current artifact changes first** (recommended when prior changes are unrelated to the brainstorm). Ask the user for a one-line subject and persist the existing artifact state before appending the synthesis:
 

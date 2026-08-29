@@ -138,7 +138,7 @@ Skill proposes `quick` vs `spec-driven` mode based on `chosenDirection` and scop
 
 The fold-back commit safety contract is non-negotiable:
 
-1. Resolve scope fail-closed, then preflight `git -C "$ACTIVE_PROJECT" status --porcelain -- <basename>` for synced or `git status --porcelain -- "$ARTIFACT_PATH"` for shared/local, _before_ any artifact mutation.
+1. Resolve scope fail-closed, then preflight the full nested checkout with `git -C "$ACTIVE_PROJECT" status --porcelain` for synced or the exact artifact with `git status --porcelain -- "$ARTIFACT_PATH"` for shared/local, _before_ any artifact mutation. Synced checks must include every project file because the later push persists the whole checkout.
 2. If clean: append the synthesis section, then use a validated `oat project push --json` receipt for synced (capture its project-ref `sha`) or `git add -- "$ARTIFACT_PATH"` followed by an exact-path branch commit for shared/local.
 3. If dirty: present the user with three options before any mutation. Every persistence step remains scope-aware:
    - (a) persist the current artifact changes first, then fold back in a second persistence step. Each step uses a validated `oat project push --json` receipt for synced or an exact-path branch commit for shared/local.
