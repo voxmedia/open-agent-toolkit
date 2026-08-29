@@ -1,6 +1,6 @@
 ---
 name: oat-project-retro
-version: 1.0.2
+version: 1.0.3
 description: Use when the user requests or confirms a project retrospective — e.g. "run the project retro", "write project-retro.md", "retrospective this project", or confirms a previously offered retro. Do NOT auto-invoke merely because implementation or summary completed. Produces references/project-retro.md from project logs, execution learnings, and session/transcript evidence, with repo improvements and OAT upstream feedback.
 disable-model-invocation: false
 user-invocable: true
@@ -42,7 +42,7 @@ identity, correction-commit, and later retro-writeback transitions. Perform
 semantic post-side-effect recovery before appending again. Record `Applied-ref`
 only after the correction and retro writeback are durably committed.
 
-## Progress Indicators
+## Progress Indicators (User-Facing)
 
 Print one banner and concise step indicators:
 
