@@ -889,6 +889,34 @@ describe('archive utils', () => {
     }
   });
 
+  it('omits reviews from shared archive snapshots', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(join(projectPath, 'reviews'), { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+    await writeFile(
+      join(projectPath, 'reviews', 'review.md'),
+      '# review\n',
+      'utf8',
+    );
+
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-08-27T12:00:00Z' },
+    );
+
+    await expect(
+      readFile(join(result.archivePath, 'state.md'), 'utf8'),
+    ).resolves.toBe('# state\n');
+    await expect(access(join(result.archivePath, 'reviews'))).rejects.toThrow();
+  });
+
   it('leaves no orphan archive when retry identity persistence fails', async () => {
     const fixture = await createSyncedFixture();
     try {

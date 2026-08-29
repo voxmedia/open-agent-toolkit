@@ -499,6 +499,8 @@ describe('synced project lifecycle', () => {
         key.startsWith('AWS_'),
       );
       const savedAws = new Map(awsKeys.map((key) => [key, process.env[key]]));
+      const savedPath = process.env.PATH;
+      const isolatedToolPath = await mkdtemp(join(tmpdir(), 'oat-gh-missing-'));
       for (const key of awsKeys) delete process.env[key];
 
       try {
@@ -531,16 +533,34 @@ describe('synced project lifecycle', () => {
             'demo',
             'state.md',
           ),
-          '---\noat_phase: plan\noat_phase_status: in_progress\noat_workflow_mode: quick\n---\n\n# Updated remotely\n',
+          '---\noat_phase: plan\noat_phase_status: in_progress\noat_workflow_mode: quick\noat_pr_status: open\noat_pr_url: "https://github.com/example/oat-fixture/pull/1"\n---\n\n# Updated remotely\n',
           'utf8',
         );
+        await symlink(
+          execFileSync('which', ['git'], { encoding: 'utf8' }).trim(),
+          join(isolatedToolPath, 'git'),
+        );
+        process.env.PATH = isolatedToolPath;
         const pushed = await runCli(
           fixture.cloneA,
           ['project', 'push', 'demo'],
           ['--json'],
         );
         expect(pushed.exitCode).toBe(0);
-        expect(JSON.parse(pushed.stdout)).toMatchObject({ status: 'pushed' });
+        expect(JSON.parse(pushed.stdout)).toMatchObject({
+          status: 'pushed',
+          prRefresh: 'skipped',
+        });
+        expect(pushed.stderr).toBe('');
+        const warnedPush = await runCli(fixture.cloneA, [
+          'project',
+          'push',
+          'demo',
+        ]);
+        expect(warnedPush.exitCode).toBe(0);
+        expect(warnedPush.stderr).toContain(
+          'Skipping PR link refresh because the GitHub CLI is unavailable.',
+        );
 
         execFileSync('git', ['push', '-q', 'origin', 'main'], {
           cwd: fixture.cloneA,
@@ -559,6 +579,7 @@ describe('synced project lifecycle', () => {
             'utf8',
           ),
         ).resolves.toContain('# Updated remotely');
+        process.env.PATH = savedPath;
 
         const archived = await runCli(
           fixture.cloneA,
@@ -619,6 +640,8 @@ describe('synced project lifecycle', () => {
           ).trim(),
         ).toBe('.oat/projects/shared/legacy/state.md');
       } finally {
+        process.env.PATH = savedPath;
+        await rm(isolatedToolPath, { recursive: true, force: true });
         for (const [key, value] of savedAws) {
           if (value === undefined) delete process.env[key];
           else process.env[key] = value;
