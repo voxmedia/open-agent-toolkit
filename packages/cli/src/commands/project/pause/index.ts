@@ -127,7 +127,7 @@ async function resolveNamedProject(
     const fullProjectPath = isAbsolute(input)
       ? resolve(input)
       : resolve(repoRoot, input);
-    const scope = resolveProjectScope(fullProjectPath, sharedRoot);
+    const scope = resolveProjectScope(fullProjectPath, sharedRoot, repoRoot);
     if (!scope) {
       throw new CliError(
         `Project path is outside configured scope roots: ${input}`,

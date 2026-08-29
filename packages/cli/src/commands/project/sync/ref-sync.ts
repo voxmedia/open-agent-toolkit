@@ -176,16 +176,6 @@ export async function assertConfinedMigrationSource(
 ): Promise<void> {
   const lexicalSource = resolve(sourcePath);
   const sharedRoot = resolve(target.sharedRoot);
-  if (
-    dirname(lexicalSource) !== sharedRoot ||
-    lexicalSource !== resolve(sharedRoot, target.slug)
-  ) {
-    throw new CliError(
-      `Shared project ${sourcePath} must be the configured direct child for ${target.slug}.`,
-      1,
-    );
-  }
-
   let sourceStat;
   try {
     sourceStat = await lstat(lexicalSource);
@@ -208,11 +198,23 @@ export async function assertConfinedMigrationSource(
     throw new CliError(`Shared project ${sourcePath} must be a directory.`, 1);
   }
 
-  const [canonicalSource, canonicalSharedRoot] = await Promise.all([
+  const canonicalLexicalSource = canonicalizePath(lexicalSource);
+  const canonicalSharedRoot = canonicalizePath(sharedRoot);
+  if (
+    dirname(canonicalLexicalSource) !== canonicalSharedRoot ||
+    canonicalLexicalSource !== resolve(canonicalSharedRoot, target.slug)
+  ) {
+    throw new CliError(
+      `Shared project ${sourcePath} must be the configured direct child for ${target.slug}.`,
+      1,
+    );
+  }
+
+  const [canonicalSource, realSharedRoot] = await Promise.all([
     realpath(lexicalSource),
     realpath(sharedRoot),
   ]);
-  if (canonicalSource !== resolve(canonicalSharedRoot, target.slug)) {
+  if (canonicalSource !== resolve(realSharedRoot, target.slug)) {
     throw new CliError(
       `Shared project ${sourcePath} resolves outside its configured direct-child boundary.`,
       1,

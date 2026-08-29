@@ -49,7 +49,7 @@
   },
   {
     "file": "packages/cli/src/commands/project/migrate/index.ts",
-    "anchor": "resolveProjectScope(sourcePath, sharedRoot) !== 'shared'",
+    "anchor": "resolveProjectScope(sourcePath, sharedRoot, repoRoot) !== 'shared'",
     "kind": "resolve",
     "guard": "canonical-resolution"
   },

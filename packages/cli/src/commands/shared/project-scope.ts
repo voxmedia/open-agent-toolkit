@@ -6,7 +6,6 @@ import {
   dirname,
   isAbsolute,
   join,
-  normalize,
   relative,
   resolve,
   sep,
@@ -87,68 +86,25 @@ export function resolveScopeRoot(
 export function resolveProjectScope(
   projectPath: string,
   projectsRoot: string,
+  repoRoot: string,
 ): ProjectScope | null {
-  if (isAbsolute(projectsRoot)) {
-    const sharedRoot = canonicalizePath(projectsRoot);
-    const canonicalProjectPath = canonicalizePath(projectPath);
-    const sharedRelative = relative(sharedRoot, canonicalProjectPath);
-    if (
-      sharedRelative !== '' &&
-      sharedRelative !== '..' &&
-      !sharedRelative.startsWith(`..${sep}`) &&
-      !isAbsolute(sharedRelative)
-    ) {
-      return 'shared';
-    }
-
-    const projectsParent = dirname(sharedRoot);
-    for (const scope of ['local', 'synced'] as const) {
-      const scopeRoot = join(projectsParent, scope);
-      const projectRelative = relative(scopeRoot, canonicalProjectPath);
-      if (
-        projectRelative !== '' &&
-        projectRelative !== '..' &&
-        !projectRelative.startsWith(`..${sep}`) &&
-        !isAbsolute(projectRelative)
-      ) {
-        return scope;
-      }
-    }
-    return null;
-  }
-
-  const sharedParts = normalize(projectsRoot)
-    .split(sep)
-    .filter((part) => part !== '' && part !== '.');
-  const parentParts = sharedParts.slice(0, -1);
-  const projectParts = normalize(projectPath)
-    .split(sep)
-    .filter((part) => part !== '' && part !== '.');
-
-  for (let index = 0; index < projectParts.length; index += 1) {
-    const sharedMatches = sharedParts.every(
-      (part, offset) => projectParts[index + offset] === part,
+  const canonicalProjectPath = canonicalizePath(
+    isAbsolute(projectPath) ? projectPath : resolve(repoRoot, projectPath),
+  );
+  for (const scope of PROJECT_SCOPES) {
+    const scopeRoot = canonicalizePath(
+      resolveScopeRoot(repoRoot, projectsRoot, scope),
     );
-    if (sharedMatches && projectParts.length > index + sharedParts.length) {
-      return 'shared';
-    }
-
-    const parentMatches =
-      parentParts.length > 0 &&
-      parentParts.every(
-        (part, offset) => projectParts[index + offset] === part,
-      );
-    if (!parentMatches) {
-      continue;
-    }
-
-    const scope = projectParts[index + parentParts.length];
-    const hasProjectName = projectParts.length > index + parentParts.length + 1;
-    if (hasProjectName && (scope === 'local' || scope === 'synced')) {
-      return scope as ProjectScope;
+    const projectRelative = relative(scopeRoot, canonicalProjectPath);
+    if (
+      projectRelative !== '' &&
+      projectRelative !== '..' &&
+      !projectRelative.startsWith(`..${sep}`) &&
+      !isAbsolute(projectRelative)
+    ) {
+      return scope;
     }
   }
-
   return null;
 }
 

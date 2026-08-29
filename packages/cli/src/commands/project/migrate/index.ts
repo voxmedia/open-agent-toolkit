@@ -15,6 +15,7 @@ import {
 } from '@commands/project/sync/ref-sync';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
+  canonicalizePath,
   resolveProjectScope,
   resolveScopeRoot,
 } from '@commands/shared/project-scope';
@@ -77,8 +78,7 @@ async function runMigrate(
       : resolve(repoRoot, projectPath);
     const sharedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'shared');
     if (
-      resolveProjectScope(sourcePath, sharedRoot) !== 'shared' ||
-      dirname(sourcePath) !== sharedRoot
+      canonicalizePath(dirname(sourcePath)) !== canonicalizePath(sharedRoot)
     ) {
       throw new CliError(
         `Project ${projectPath} must be a direct child in shared scope.`,
@@ -88,6 +88,12 @@ async function runMigrate(
     const slug = basename(sourcePath);
     const target = buildSyncTarget(repoRoot, projectsRoot, slug);
     await dependencies.assertConfinedMigrationSource(target, sourcePath);
+    if (resolveProjectScope(sourcePath, sharedRoot, repoRoot) !== 'shared') {
+      throw new CliError(
+        `Project ${projectPath} must be a direct child in shared scope.`,
+        1,
+      );
+    }
     const result = await dependencies.migrateSharedToSynced(
       target,
       dependencies.gitRunner,

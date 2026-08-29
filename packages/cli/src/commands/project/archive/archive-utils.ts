@@ -1550,6 +1550,7 @@ export async function archiveProjectOnCompletion(
   const projectScope = resolveProjectScope(
     options.projectPath,
     resolveScopeRoot(options.repoRoot, options.projectsRoot, 'shared'),
+    options.repoRoot,
   );
   if (!projectScope) {
     throw new CliError(

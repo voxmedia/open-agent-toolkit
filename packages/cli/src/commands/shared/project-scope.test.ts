@@ -65,25 +65,33 @@ describe('project scope paths', () => {
     const configuredRoot = '.oat/team-projects';
 
     expect(
-      resolveProjectScope('/repo/.oat/team-projects/example', configuredRoot),
+      resolveProjectScope(
+        '/repo/.oat/team-projects/example',
+        configuredRoot,
+        '/repo',
+      ),
     ).toBe('shared');
     expect(
-      resolveProjectScope('/repo/.oat/local/example', configuredRoot),
+      resolveProjectScope('/repo/.oat/local/example', configuredRoot, '/repo'),
     ).toBe('local');
     expect(
-      resolveProjectScope('/repo/.oat/synced/example', configuredRoot),
+      resolveProjectScope('/repo/.oat/synced/example', configuredRoot, '/repo'),
     ).toBe('synced');
 
     const absoluteRoot = '/var/oat/team-projects';
     expect(
-      resolveProjectScope('/var/oat/team-projects/example', absoluteRoot),
+      resolveProjectScope(
+        '/var/oat/team-projects/example',
+        absoluteRoot,
+        '/repo',
+      ),
     ).toBe('shared');
-    expect(resolveProjectScope('/var/oat/local/example', absoluteRoot)).toBe(
-      'local',
-    );
-    expect(resolveProjectScope('/var/oat/synced/example', absoluteRoot)).toBe(
-      'synced',
-    );
+    expect(
+      resolveProjectScope('/var/oat/local/example', absoluteRoot, '/repo'),
+    ).toBe('local');
+    expect(
+      resolveProjectScope('/var/oat/synced/example', absoluteRoot, '/repo'),
+    ).toBe('synced');
   });
 
   it('derives known scopes from project paths only', () => {
@@ -94,45 +102,53 @@ describe('project scope paths', () => {
       resolveProjectScope(
         join(repoRoot, '.oat/projects/synced/example'),
         configuredRoot,
+        repoRoot,
       ),
     ).toBe('synced');
     expect(
       resolveProjectScope(
         join(repoRoot, '.oat/projects/shared/example'),
         configuredRoot,
+        repoRoot,
       ),
     ).toBe('shared');
     expect(
       resolveProjectScope(
         join(repoRoot, '.oat/projects/local/example'),
         configuredRoot,
+        repoRoot,
       ),
     ).toBe('local');
     expect(
       resolveProjectScope(
         join(repoRoot, '.oat/projects/archived/example'),
         configuredRoot,
+        repoRoot,
       ),
     ).toBeNull();
     expect(
-      resolveProjectScope('/unrelated/example', configuredRoot),
+      resolveProjectScope('/unrelated/example', configuredRoot, repoRoot),
     ).toBeNull();
   });
 
-  it('does not vacuously match sibling scopes for a single-segment relative root', () => {
+  it('resolves sibling scopes for a single-segment relative root from repo context', () => {
     const configuredRoot = 'projects';
 
-    expect(resolveProjectScope('/repo/projects/example', configuredRoot)).toBe(
-      'shared',
+    expect(
+      resolveProjectScope('/repo/projects/example', configuredRoot, '/repo'),
+    ).toBe('shared');
+    expect(
+      resolveProjectScope('/repo/local/example', configuredRoot, '/repo'),
+    ).toBe('local');
+    expect(
+      resolveProjectScope('/repo/synced/example', configuredRoot, '/repo'),
+    ).toBe('synced');
+    expect(resolveProjectScope('local/example', configuredRoot, '/repo')).toBe(
+      'local',
     );
-    expect(
-      resolveProjectScope('/repo/local/example', configuredRoot),
-    ).toBeNull();
-    expect(
-      resolveProjectScope('/repo/synced/example', configuredRoot),
-    ).toBeNull();
-    expect(resolveProjectScope('local/example', configuredRoot)).toBeNull();
-    expect(resolveProjectScope('synced/example', configuredRoot)).toBeNull();
+    expect(resolveProjectScope('synced/example', configuredRoot, '/repo')).toBe(
+      'synced',
+    );
   });
 
   it('ignores incidental local and synced segments outside configured roots', () => {
@@ -140,24 +156,28 @@ describe('project scope paths', () => {
       resolveProjectScope(
         '/var/local/repo/team-projects/example',
         '/var/local/repo/team-projects',
+        '/repo',
       ),
     ).toBe('shared');
     expect(
       resolveProjectScope(
         '/var/synced/unrelated/example',
         '/var/local/repo/team-projects',
+        '/repo',
       ),
     ).toBeNull();
     expect(
       resolveProjectScope(
         'workspace/local/incidental/example',
         '.oat/team-projects',
+        '/repo',
       ),
     ).toBeNull();
     expect(
       resolveProjectScope(
         'workspace/synced/incidental/example',
         '.oat/team-projects',
+        '/repo',
       ),
     ).toBeNull();
   });

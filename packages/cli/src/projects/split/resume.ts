@@ -83,7 +83,11 @@ function resolveParentPaths(
   const absoluteProjectsRoot = isAbsolute(projectsRoot)
     ? projectsRoot
     : join(context.repoRoot, projectsRoot);
-  const scope = resolveProjectScope(absoluteParentPath, absoluteProjectsRoot);
+  const scope = resolveProjectScope(
+    absoluteParentPath,
+    absoluteProjectsRoot,
+    context.repoRoot,
+  );
   if (!scope) {
     throw new SplitResumeError(
       `Cannot derive project scope from persisted parent path: ${parentProjectPath}`,

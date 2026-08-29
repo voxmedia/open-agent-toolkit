@@ -104,6 +104,7 @@ export async function resolveSyncedTarget(
     const scope = resolveProjectScope(
       projectPath,
       resolve(context.repoRoot, projectsRoot),
+      context.repoRoot,
     );
     if (scope && scope !== 'synced') {
       throw new CliError(

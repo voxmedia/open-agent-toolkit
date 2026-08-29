@@ -96,7 +96,11 @@ async function runProjectScope(
       );
     }
 
-    const scope = resolveProjectScope(absoluteProjectPath, configuredRoot);
+    const scope = resolveProjectScope(
+      absoluteProjectPath,
+      configuredRoot,
+      repoRoot,
+    );
     if (!scope) {
       throw new CliError(
         `Project path is outside the shared, local, and synced scope roots: ${target}`,

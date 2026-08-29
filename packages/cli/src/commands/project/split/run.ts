@@ -219,7 +219,7 @@ async function runFreshSplit(
   projectsRoot: string,
   dependencies: Pick<
     RunSplitDependencies,
-    'readdir' | 'gitRunner' | 'pushSynced'
+    'readdir' | 'gitRunner' | 'pushSynced' | 'processEnv'
   >,
   options: { allowExistingParent?: boolean } = {},
 ): Promise<void> {
@@ -242,7 +242,7 @@ async function runFreshSplit(
   }
   const localConfig = await readOatLocalConfig(repoRoot);
   const scope = localConfig.activeProject
-    ? resolveProjectScope(localConfig.activeProject, projectsRoot)
+    ? resolveProjectScope(localConfig.activeProject, projectsRoot, repoRoot)
     : null;
   const inheritedScope: ProjectScope = scope ?? 'shared';
   const absoluteScopeRoot =
@@ -257,6 +257,7 @@ async function runFreshSplit(
     projectsRoot,
     scope: inheritedScope,
     scopeRoot,
+    env: dependencies.processEnv,
     gitRunner: dependencies.gitRunner,
     pushSynced: dependencies.pushSynced,
   };
@@ -324,7 +325,11 @@ export function createProjectSplitRunCommand(
 
         const localConfig = await readOatLocalConfig(repoRoot);
         const activeScope = localConfig.activeProject
-          ? resolveProjectScope(localConfig.activeProject, projectsRoot)
+          ? resolveProjectScope(
+              localConfig.activeProject,
+              projectsRoot,
+              repoRoot,
+            )
           : null;
         const parentRoot =
           activeScope && activeScope !== 'shared'

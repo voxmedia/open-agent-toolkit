@@ -138,7 +138,11 @@ export async function seedChildren(
   const projectsRoot = context.projectsRoot ?? '.oat/projects/shared';
   const scope =
     context.scope ??
-    resolveProjectScope(join(projectsRoot, plan.parentSlug), projectsRoot) ??
+    resolveProjectScope(
+      join(projectsRoot, plan.parentSlug),
+      projectsRoot,
+      context.repoRoot,
+    ) ??
     'shared';
   const childProjectPaths: string[] = [];
   const orderedChildren = plan.children

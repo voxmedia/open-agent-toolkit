@@ -198,6 +198,7 @@ export async function writeCoordinationParent(
     resolveProjectScope(
       join(projectsRoot, document.plan.parentSlug),
       projectsRoot,
+      context.repoRoot,
     ) ??
     'shared';
   const scaffold = await scaffoldProject({
