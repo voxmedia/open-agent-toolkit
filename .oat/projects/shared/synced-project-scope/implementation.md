@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: null
+oat_current_task_id: p19-t01
 oat_generated: false
 ---
 
@@ -14,8 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All one hundred seventy-nine implementation and revision tasks are complete.
-> Phase 18 independent review is pending.
+> One hundred seventy-nine of one hundred eighty-six implementation and
+> revision tasks are complete. Phase 19 contains seven final-review fixes,
+> starting at `p19-t01`.
 >
 > Conventions:
 >
@@ -48,8 +49,9 @@ oat_generated: false
 | Phase 16     | complete | 20    | 20/20     |
 | Phase 17     | complete | 14    | 14/14     |
 | Phase 18     | complete | 1     | 1/1       |
+| Phase 19     | pending  | 7     | 0/7       |
 
-**Total:** 179/179 tasks completed
+**Total:** 179/186 tasks completed
 
 ---
 
@@ -3691,3 +3693,34 @@ template-precedence fixture failures outside the Phase 18 range.
 
 **Next:** Refresh the configured final implementation gate against the new
 substantive head before updating PR #227.
+
+## Phase 19: Final destructive-path and recovery hardening
+
+**Status:** pending
+**Started:** 2026-08-29
+
+### Final Review Received
+
+- **Review artifact:** `reviews/archived/final-review-2026-08-29T134331Z.md`
+- **Reviewed head:** `9ca20b411b07c792d169e46e812f1aef4910ea0f`
+- **Findings:** 0 Critical / 3 Important / 2 Medium / 2 Minor
+- **Invocation:** auto
+- **Converted:** all seven findings; no deferrals or dismissals
+
+The final review reproduced three path-safety defects and two recovery gaps
+despite a green full gate suite. It also found two closeout-artifact alignment
+items. All findings are converted into Phase 19 so destructive archive, prune,
+and local-sync paths remain blocked from closeout until independently
+re-reviewed.
+
+### Task Status
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p19-t01 | pending | -      |
+| p19-t02 | pending | -      |
+| p19-t03 | pending | -      |
+| p19-t04 | pending | -      |
+| p19-t05 | pending | -      |
+| p19-t06 | pending | -      |
+| p19-t07 | pending | -      |

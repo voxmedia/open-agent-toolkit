@@ -3710,7 +3710,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | final   | code     | passed          | 2026-08-29 | reviews/archived/final-review-2026-08-29T094230Z.md               | ebe32dc59d134130df64c0d76a7443fd0b1464b2 | gate       | claude-fable-skip-permissions |
 | remote  | code     | fixes_completed | 2026-08-29 | reviews/archived/remote-pr-227-review-2026-08-29T131316Z.md       | d1a84e7dfcf9e2487bebde9368d3d2c8bb91fe37 | -          | -                             |
 | p18     | code     | passed          | 2026-08-29 | reviews/archived/p18-review-2026-08-29T133009Z.md                 | 9e73c3750357fea997d0927e8b991109c5095930 | auto       | -                             |
-| final   | code     | received        | 2026-08-29 | reviews/final-review-2026-08-29T134331Z.md                        | 9ca20b411b07c792d169e46e812f1aef4910ea0f | auto       | -                             |
+| final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T134331Z.md               | 9ca20b411b07c792d169e46e812f1aef4910ea0f | auto       | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -5259,6 +5259,207 @@ validation. Commit as `fix(p18-t01): prevent post-archive project push`.
 
 ---
 
+## Phase 19: Final destructive-path and recovery hardening
+
+Goal: close the final full-range review's reproduced path-identity, worktree,
+and retry gaps, then align the closeout artifacts with the final implementation
+state.
+
+### Task p19-t01: (review) Require an exact project root for archive
+
+**Finding:** Important `I1` from final review
+`final-review-2026-08-29T134331Z.md`.
+
+**Step 1: Understand the issue**
+
+Archive currently accepts any descendant beneath a scope root and derives the
+project identity from its basename. A descendant can therefore be copied as
+one project while the record and checkout of another same-named project are
+completed and removed.
+
+**Step 2: Implement the fix**
+
+Canonicalize the archive input before dry-run or mutation and require its
+parent to equal the canonical shared, local, or synced scope root. Reassert the
+same exact-root identity at the mutation boundary and bind the basename,
+record, ref, source, and checkout to that direct child.
+
+**Step 3: Verify**
+
+Add shared/local descendant refusal coverage and a real-Git two-synced-project
+basename-collision case proving neither project is copied, completed, or
+removed. Run the focused archive/scope suites.
+
+**Step 4: Commit**
+
+Commit as `fix(p19-t01): require exact archive project root`.
+
+### Task p19-t02: (review) Protect nested worktrees during local sync
+
+**Finding:** Important `I2` from final review
+`final-review-2026-08-29T134331Z.md`.
+
+**Step 1: Understand the issue**
+
+The local-sync guard checks only the selected root's `.git` marker. An ancestor
+entry can therefore copy a nested worktree, or recursively remove it under
+`--force` before copying.
+
+**Step 2: Implement the fix**
+
+Before any removal or copy, detect registered-worktree overlap and nested
+`.git` file/directory markers beneath both source and destination trees. Refuse
+the entire entry when either side overlaps a worktree; do not partially copy or
+delete around it.
+
+**Step 3: Verify**
+
+Add ancestor-path tests in both sync directions, with absent and existing
+destinations and with and without `--force`. Prove the nested checkout and its
+unsaved sentinel remain untouched.
+
+**Step 4: Commit**
+
+Commit as `fix(p19-t02): protect nested worktrees in local sync`.
+
+### Task p19-t03: (review) Reject external synced project roots before mutation
+
+**Finding:** Important `I3` from final review
+`final-review-2026-08-29T134331Z.md`.
+
+**Step 1: Understand the issue**
+
+The documented external absolute `projects.root` configuration can scaffold
+and publish a synced checkout before parent-record confinement rejects it.
+Rollback and the suggested prune route then also reject the outside path,
+leaving local resources stranded.
+
+**Step 2: Implement the fix**
+
+Fail before gitignore repair, worktree creation, ref publication, or record
+mutation when the resolved synced scope root is outside the canonical
+repository. Preserve supported in-repository absolute and symlinked custom
+roots. Align configuration documentation with the enforced constraint.
+
+**Step 3: Verify**
+
+Add a zero-side-effect external-root creation test covering checkout, worktree
+registration, local/remote ref, record, active pointer, and parent index. Retain
+positive coverage for confined custom roots and run docs checks.
+
+**Step 4: Commit**
+
+Commit as `fix(p19-t03): reject external synced project roots`.
+
+### Task p19-t04: (review) Make final prune commit failure recoverable
+
+**Finding:** Medium `M1` from final review
+`final-review-2026-08-29T134331Z.md`.
+
+**Step 1: Understand the issue**
+
+Prune removes refs, checkouts, and the record before its final parent commit. If
+that commit fails, only the staged deletion remains and target resolution no
+longer finds a project for a CLI retry.
+
+**Step 2: Implement the fix**
+
+Provide a durable, exact-path completion route for the post-deletion boundary:
+either recognize the staged record deletion as the same prune transaction or
+persist a bounded receipt/tombstone. The retry must not recreate or re-delete
+resources and must preserve unrelated parent changes.
+
+**Step 3: Verify**
+
+Inject the final record-commit failure in a real-Git test, retry through the
+public CLI, and prove the exact deletion commit completes while unrelated
+index/worktree state is unchanged.
+
+**Step 4: Commit**
+
+Commit as `fix(p19-t04): recover final prune commit failure`.
+
+### Task p19-t05: (review) Bind archive retries to the source ref
+
+**Finding:** Medium `M2` from final review
+`final-review-2026-08-29T134331Z.md`.
+
+**Step 1: Understand the issue**
+
+Existing archive metadata omits the source ref/tree identity. A retry after a
+post-copy failure can reuse the old archive even after a newer project commit
+is pushed, then complete the record and export stale content.
+
+**Step 2: Implement the fix**
+
+Persist the authoritative source project-ref SHA or equivalent tree identity
+before copying, include it in archive validation, and require an exact match on
+retry. If the current source differs, fail with explicit recovery guidance or
+start a new transactionally bound snapshot without overwriting unrelated data.
+
+**Step 3: Verify**
+
+Add an intervening-push retry regression proving stale archive/export content
+cannot be accepted as the receipt for a newer retained ref. Preserve identical
+retry idempotence.
+
+**Step 4: Commit**
+
+Commit as `fix(p19-t05): bind archive retry source identity`.
+
+### Task p19-t06: (review) Refresh the durable project summary
+
+**Finding:** Minor `m1` from final review
+`final-review-2026-08-29T134331Z.md`.
+
+**Step 1: Understand the issue**
+
+`summary.md` still ends at `p17-t14` and omits the Phase 18 remote-review fix,
+the passing Phase 18 review, the upstream PR #229 merge, and the current final
+review remediation phase.
+
+**Step 2: Implement the fix**
+
+Regenerate or update the durable summary through the project-summary contract
+so its last-task marker, phase overview, verification state, and next action
+match the implemented project.
+
+**Step 3: Verify**
+
+Run formatting and the summary/project artifact checks; verify no stale Phase
+17-only closeout claims remain.
+
+**Step 4: Commit**
+
+Commit as `docs(p19-t06): refresh final project summary`.
+
+### Task p19-t07: (review) Correct the implementation resume header
+
+**Finding:** Minor `m2` from final review
+`final-review-2026-08-29T134331Z.md`.
+
+**Step 1: Understand the issue**
+
+The implementation header says Phase 18 review is pending even though the same
+artifact records its passing result and project state has advanced.
+
+**Step 2: Implement the fix**
+
+Align the resume header with the completed Phase 18 review, the seven Phase 19
+review tasks, and the next incomplete task without disturbing authoritative
+lifecycle bookkeeping.
+
+**Step 3: Verify**
+
+Run plan validation and formatting, then confirm `state.md`, `plan.md`, and
+`implementation.md` agree on Phase 19 progress and resume routing.
+
+**Step 4: Commit**
+
+Commit as `docs(p19-t07): align implementation resume state`.
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -5282,8 +5483,9 @@ validation. Commit as `fix(p18-t01): prevent post-archive project push`.
 - Phase 16: 20 tasks - Final full-range safety fixes for custom-root archive completion, locale-stable Git, repository confinement, symlink canonicalization, lifecycle bookkeeping, and residual contract coverage
 - Phase 17: 14 tasks - Final lifecycle durability and provider parity fixes for release contracts, declined pause publication, generated views, custom roots, diagnostics, validators, docs, and Git isolation
 - Phase 18: 1 task - Remote-review correction preventing final project-ref publication from running against an archived synced project tree
+- Phase 19: 7 tasks - Final destructive-path, worktree-overlap, external-root, prune/archive retry, and closeout-artifact corrections
 
-**Total: 179 tasks**
+**Total: 186 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 

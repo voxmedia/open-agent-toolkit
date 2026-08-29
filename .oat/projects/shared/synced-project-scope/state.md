@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: d1a84e7d
+oat_current_task: p19-t01
+oat_last_commit: 2c7aed51
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: review_pending # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -74,6 +74,9 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p18:
+      used_attempts: 0
+      pending_attempt: null
+    p19:
       used_attempts: 0
       pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
@@ -162,14 +165,13 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Final gate refresh pending
+**Status:** Phase 19 final-review fixes pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Phase 18 implementation and independent review are complete. The final
-implementation gate must be refreshed against the new substantive head.
+Phase 19 is ready to execute seven final-review fixes, starting at `p19-t01`.
 
 ## Artifacts
 
@@ -177,7 +179,7 @@ implementation gate must be refreshed against the new substantive head.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (179/179 tasks complete)
+- **Implementation:** `implementation.md` (179/186 tasks complete)
 
 ## Progress
 
@@ -350,6 +352,9 @@ implementation gate must be refreshed against the new substantive head.
 - ✓ Phase 18 task p18-t01 completed in `d1a84e7df`
 - ✓ Phase 18 focused verification passed (210 root-run contract and skill tests)
 - ✓ Phase 18 independent review passed at 0 Critical / 0 Important / 0 Medium / 0 Minor
+- ✓ Upstream PR #229 merged; full workspace test suite passes
+- ✗ Fresh final review found 3 Important / 2 Medium / 2 Minor findings
+- ✓ All seven findings converted into Phase 19 with no deferral
 
 ## Blockers
 
@@ -357,4 +362,4 @@ None.
 
 ## Next Milestone
 
-Refresh the configured final implementation gate, then update PR #227.
+Implement `p19-t01` through `p19-t07`, then run a fresh independent review.
