@@ -56,7 +56,12 @@ export function resolveScopeRoot(
   projectsRoot: string,
   scope: ProjectScope,
 ): string {
-  return join(resolveProjectsParent(repoRoot, projectsRoot), scope);
+  const resolvedSharedRoot = isAbsolute(projectsRoot)
+    ? normalize(projectsRoot)
+    : resolve(repoRoot, projectsRoot);
+  return scope === 'shared'
+    ? resolvedSharedRoot
+    : join(dirname(resolvedSharedRoot), scope);
 }
 
 export function resolveProjectScope(
@@ -64,8 +69,19 @@ export function resolveProjectScope(
   projectsRoot: string,
 ): ProjectScope | null {
   if (isAbsolute(projectsRoot)) {
-    const projectsParent = dirname(normalize(projectsRoot));
-    for (const scope of PROJECT_SCOPES) {
+    const sharedRoot = normalize(projectsRoot);
+    const sharedRelative = relative(sharedRoot, normalize(projectPath));
+    if (
+      sharedRelative !== '' &&
+      sharedRelative !== '..' &&
+      !sharedRelative.startsWith(`..${sep}`) &&
+      !isAbsolute(sharedRelative)
+    ) {
+      return 'shared';
+    }
+
+    const projectsParent = dirname(sharedRoot);
+    for (const scope of ['local', 'synced'] as const) {
       const scopeRoot = join(projectsParent, scope);
       const projectRelative = relative(scopeRoot, normalize(projectPath));
       if (
@@ -80,14 +96,22 @@ export function resolveProjectScope(
     return null;
   }
 
-  const parentParts = dirname(normalize(projectsRoot))
+  const sharedParts = normalize(projectsRoot)
     .split(sep)
     .filter((part) => part !== '' && part !== '.');
+  const parentParts = sharedParts.slice(0, -1);
   const projectParts = normalize(projectPath)
     .split(sep)
     .filter((part) => part !== '' && part !== '.');
 
   for (let index = 0; index < projectParts.length; index += 1) {
+    const sharedMatches = sharedParts.every(
+      (part, offset) => projectParts[index + offset] === part,
+    );
+    if (sharedMatches && projectParts.length > index + sharedParts.length) {
+      return 'shared';
+    }
+
     const parentMatches = parentParts.every(
       (part, offset) => projectParts[index + offset] === part,
     );
@@ -97,7 +121,7 @@ export function resolveProjectScope(
 
     const scope = projectParts[index + parentParts.length];
     const hasProjectName = projectParts.length > index + parentParts.length + 1;
-    if (hasProjectName && PROJECT_SCOPES.includes(scope as ProjectScope)) {
+    if (hasProjectName && (scope === 'local' || scope === 'synced')) {
       return scope as ProjectScope;
     }
   }

@@ -47,6 +47,40 @@ describe('project scope paths', () => {
     expect(resolveScopeRoot(repoRoot, absoluteRoot, 'synced')).toBe(
       '/var/oat/projects/synced',
     );
+
+    const customRoot = '/var/oat/team-projects';
+    expect(resolveScopeRoot(repoRoot, customRoot, 'shared')).toBe(customRoot);
+    expect(resolveScopeRoot(repoRoot, customRoot, 'local')).toBe(
+      '/var/oat/local',
+    );
+    expect(resolveScopeRoot(repoRoot, customRoot, 'synced')).toBe(
+      '/var/oat/synced',
+    );
+  });
+
+  it('treats a custom configured root as the authoritative shared root', () => {
+    const configuredRoot = '.oat/team-projects';
+
+    expect(
+      resolveProjectScope('/repo/.oat/team-projects/example', configuredRoot),
+    ).toBe('shared');
+    expect(
+      resolveProjectScope('/repo/.oat/local/example', configuredRoot),
+    ).toBe('local');
+    expect(
+      resolveProjectScope('/repo/.oat/synced/example', configuredRoot),
+    ).toBe('synced');
+
+    const absoluteRoot = '/var/oat/team-projects';
+    expect(
+      resolveProjectScope('/var/oat/team-projects/example', absoluteRoot),
+    ).toBe('shared');
+    expect(resolveProjectScope('/var/oat/local/example', absoluteRoot)).toBe(
+      'local',
+    );
+    expect(resolveProjectScope('/var/oat/synced/example', absoluteRoot)).toBe(
+      'synced',
+    );
   });
 
   it('derives known scopes from project paths only', () => {
