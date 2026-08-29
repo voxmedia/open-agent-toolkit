@@ -20,6 +20,7 @@ import { createProjectLinksCommand } from './index';
 
 const target: SyncTarget = {
   repoRoot: '/repo',
+  sharedRoot: '/repo/.oat/projects/shared',
   syncedRoot: '/repo/.oat/projects/synced',
   projectPath: '/repo/.oat/projects/synced/demo',
   slug: 'demo',

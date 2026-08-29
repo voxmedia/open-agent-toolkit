@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { access, mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
@@ -255,6 +255,95 @@ describe('createProjectMigrateCommand', () => {
       await fixture.cleanup();
     }
   });
+
+  it.each(['relative', 'environment', 'absolute'] as const)(
+    'migrates and confines a project under a %s custom root',
+    async (rootKind) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const slug = `custom-${rootKind}`;
+        const relativeSharedRoot = `.oat/custom-${rootKind}/team`;
+        const projectsRoot =
+          rootKind === 'absolute'
+            ? join(fixture.cloneA, relativeSharedRoot)
+            : relativeSharedRoot;
+        const source = join(fixture.cloneA, relativeSharedRoot, slug);
+        const syncedRoot = join(
+          fixture.cloneA,
+          `.oat/custom-${rootKind}/synced`,
+        );
+        await mkdir(source, { recursive: true });
+        await writeFile(join(source, 'state.md'), `# ${slug}\n`, 'utf8');
+        const sourceRelative = relative(fixture.cloneA, source);
+        execFileSync('git', ['add', sourceRelative], { cwd: fixture.cloneA });
+        execFileSync('git', ['commit', '-m', `add ${slug}`], {
+          cwd: fixture.cloneA,
+        });
+        const capture = createLoggerCapture();
+        const command = createProjectMigrateCommand({
+          buildCommandContext: (options: GlobalOptions): CommandContext => ({
+            scope: 'project',
+            dryRun: false,
+            verbose: false,
+            json: options.json ?? false,
+            cwd: fixture.cloneA,
+            home: '/home',
+            interactive: false,
+            logger: capture.logger,
+          }),
+          resolveProjectRoot: async () => fixture.cloneA,
+          ...(rootKind === 'environment'
+            ? {}
+            : { resolveProjectsRoot: async () => projectsRoot }),
+          processEnv:
+            rootKind === 'environment'
+              ? { OAT_PROJECTS_ROOT: projectsRoot }
+              : {},
+          now: () => new Date('2026-08-29T00:00:00Z'),
+        });
+
+        await run(command, [source, '--to', 'synced']);
+
+        expect(capture.error).toEqual([]);
+        expect(process.exitCode).toBe(0);
+        await expect(access(source)).rejects.toThrow();
+        await expect(
+          readFile(join(syncedRoot, slug, 'state.md'), 'utf8'),
+        ).resolves.toBe(`# ${slug}\n`);
+        expect(
+          execFileSync('git', ['status', '--porcelain=v1'], {
+            cwd: fixture.cloneA,
+            encoding: 'utf8',
+          }).trim(),
+        ).toBe('');
+        expect(
+          execFileSync(
+            'git',
+            [
+              'ls-tree',
+              '--name-only',
+              'HEAD',
+              `.oat/custom-${rootKind}/synced/${slug}.json`,
+            ],
+            { cwd: fixture.cloneA, encoding: 'utf8' },
+          ).trim(),
+        ).toBe(`.oat/custom-${rootKind}/synced/${slug}.json`);
+        expect(
+          execFileSync(
+            'git',
+            [
+              'check-ignore',
+              '--no-index',
+              `.oat/custom-${rootKind}/synced/${slug}/state.md`,
+            ],
+            { cwd: fixture.cloneA, encoding: 'utf8' },
+          ).trim(),
+        ).toBe(`.oat/custom-${rootKind}/synced/${slug}/state.md`);
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+  );
 
   it('rejects a tracked shared-project root symlink before any migration mutation', async () => {
     const fixture = await createSyncedFixture();

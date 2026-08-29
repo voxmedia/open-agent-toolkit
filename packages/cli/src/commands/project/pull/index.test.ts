@@ -171,6 +171,12 @@ describe('createProjectPullCommand', () => {
       ],
       'chore(oat): adopt synced projects parent, child',
       expect.anything(),
+      {
+        additionalAllowlistedPaths: [
+          '/repo/.oat/projects/synced/parent.json',
+          '/repo/.oat/projects/synced/child.json',
+        ],
+      },
     );
     expect(process.exitCode).toBe(0);
   });
@@ -343,6 +349,12 @@ describe('createProjectPullCommand', () => {
       ],
       'chore(oat): adopt synced projects parent, a',
       expect.anything(),
+      {
+        additionalAllowlistedPaths: [
+          '/repo/.oat/projects/synced/parent.json',
+          '/repo/.oat/projects/synced/a.json',
+        ],
+      },
     );
     expect(setup.capture.jsonPayloads[0]).toMatchObject({
       adopted: true,
@@ -722,6 +734,60 @@ describe('createProjectPullCommand', () => {
         status: 'up-to-date',
         adopted: false,
       });
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('adopts an origin-only ref under a relative custom root and keeps the parent clean', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const projectsRoot = '.oat/custom-pull/team';
+      const slug = 'custom-pull-adoption';
+      const source = buildSyncTarget(fixture.cloneA, projectsRoot, slug);
+      await createSyncedProject(source, defaultGitRunner);
+      await writeFile(join(source.projectPath, 'state.md'), '# custom pull\n');
+      await pushSynced(source, defaultGitRunner, {
+        message: 'seed custom pull project',
+      });
+      const capture = createLoggerCapture();
+      const command = createProjectPullCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneB!,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneB!,
+        processEnv: { OAT_PROJECTS_ROOT: projectsRoot },
+      });
+
+      await run(command, [slug], ['--json']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'created',
+        adopted: true,
+      });
+      const recordRelative = `.oat/custom-pull/synced/${slug}.json`;
+      expect(
+        execFileSync('git', ['show', '--format=', '--name-only', 'HEAD'], {
+          cwd: fixture.cloneB!,
+          encoding: 'utf8',
+        })
+          .trim()
+          .split('\n')
+          .sort(),
+      ).toEqual(['.gitignore', recordRelative]);
+      expect(
+        execFileSync('git', ['status', '--porcelain=v1'], {
+          cwd: fixture.cloneB!,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe('');
     } finally {
       await fixture.cleanup();
     }

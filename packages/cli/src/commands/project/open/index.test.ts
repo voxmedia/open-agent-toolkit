@@ -359,7 +359,7 @@ describe('oat project open', () => {
         dryRun: false,
         verbose: false,
         json: options.json ?? false,
-        cwd: fixture.cloneB,
+        cwd: fixture.cloneB!,
         home: '/home',
         interactive: false,
         logger: firstCapture.logger,
@@ -393,7 +393,7 @@ describe('oat project open', () => {
         dryRun: false,
         verbose: false,
         json: options.json ?? false,
-        cwd: fixture.cloneB,
+        cwd: fixture.cloneB!,
         home: '/home',
         interactive: false,
         logger: secondCapture.logger,
@@ -415,6 +415,58 @@ describe('oat project open', () => {
         encoding: 'utf8',
       }),
     ).toContain('A  unrelated.txt');
+  });
+
+  it('adopts and opens an origin-only project under an environment custom root', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    tempDirs.push(fixture.rootDir);
+    const projectsRoot = '.oat/custom-open/team';
+    const slug = 'custom-open-adoption';
+    const source = buildSyncTarget(fixture.cloneA, projectsRoot, slug);
+    await createSyncedProject(source, defaultGitRunner);
+    await writeFile(
+      join(source.projectPath, 'state.md'),
+      '---\noat_phase: plan\noat_phase_status: complete\noat_lifecycle: active\n---\n\n# State\n',
+    );
+    await pushSyncedReal(source, defaultGitRunner, {
+      message: 'seed custom open project',
+    });
+    const capture = createLoggerCapture();
+    const command = createProjectOpenCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneB!,
+        home: '/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneB!,
+      processEnv: { OAT_PROJECTS_ROOT: projectsRoot },
+    });
+
+    await runCommand(command, [slug]);
+
+    expect(capture.error).toEqual([]);
+    expect(process.exitCode).toBe(0);
+    const recordRelative = `.oat/custom-open/synced/${slug}.json`;
+    expect(
+      execFileSync('git', ['show', '--format=', '--name-only', 'HEAD'], {
+        cwd: fixture.cloneB!,
+        encoding: 'utf8',
+      })
+        .trim()
+        .split('\n')
+        .sort(),
+    ).toEqual(['.gitignore', recordRelative]);
+    expect(
+      execFileSync('git', ['status', '--porcelain=v1'], {
+        cwd: fixture.cloneB!,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe('');
   });
 
   it('rejects an ignored untracked adoption record until the exact record is durable', async () => {

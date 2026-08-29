@@ -33,6 +33,7 @@ import {
 
 export interface SyncTarget {
   repoRoot: string;
+  sharedRoot: string;
   syncedRoot: string;
   slug: string;
   projectPath: string;
@@ -172,7 +173,7 @@ export async function assertConfinedMigrationSource(
   sourcePath: string,
 ): Promise<void> {
   const lexicalSource = resolve(sourcePath);
-  const sharedRoot = resolve(dirname(target.syncedRoot), 'shared');
+  const sharedRoot = resolve(target.sharedRoot);
   if (
     dirname(lexicalSource) !== sharedRoot ||
     lexicalSource !== resolve(sharedRoot, target.slug)
@@ -249,6 +250,7 @@ export function buildSyncTarget(
   const syncedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'synced');
   return {
     repoRoot: resolve(repoRoot),
+    sharedRoot: resolveScopeRoot(repoRoot, projectsRoot, 'shared'),
     syncedRoot,
     slug,
     projectPath: resolve(syncedRoot, slug),
@@ -650,6 +652,63 @@ async function reconcilePulledRef(
   };
 }
 
+async function ensureSyncedRootIgnored(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<boolean> {
+  const probe = `${repoRelativePath(
+    target.repoRoot,
+    join(target.syncedRoot, '__probe__'),
+  )}/`;
+  const ignored = await git.run(
+    ['check-ignore', '--quiet', '--no-index', probe],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  assertExpectedGitResult('git check-ignore synced project', ignored, [0, 1]);
+  if (ignored.code === 0) return false;
+
+  const gitignoreStatus = await git.run(
+    ['status', '--porcelain=v1', '--', '.gitignore'],
+    { cwd: target.repoRoot },
+  );
+  if (gitignoreStatus.stdout !== '') {
+    throw new CliError(
+      'Cannot add the configured synced-project rule because .gitignore has staged or unstaged changes; commit or stash those changes, then retry.',
+      1,
+    );
+  }
+  const gitignorePath = join(target.repoRoot, '.gitignore');
+  const before = await readOptionalFile(gitignorePath);
+  await applyOatCoreGitignore(target.repoRoot);
+  const repaired = await git.run(
+    ['check-ignore', '--quiet', '--no-index', probe],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  assertExpectedGitResult('git check-ignore synced project', repaired, [0, 1]);
+  if (repaired.code === 1) {
+    const syncedRootRelative = repoRelativePath(
+      target.repoRoot,
+      target.syncedRoot,
+    );
+    const customRule = `/${syncedRootRelative}/*/`;
+    const current = (await readOptionalFile(gitignorePath)) ?? '';
+    if (!current.split('\n').includes(customRule)) {
+      const separator = current === '' || current.endsWith('\n') ? '' : '\n';
+      await writeFile(
+        gitignorePath,
+        `${current}${separator}${customRule}\n`,
+        'utf8',
+      );
+    }
+  }
+  const verified = await git.run(
+    ['check-ignore', '--quiet', '--no-index', probe],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  assertExpectedGitResult('git check-ignore synced project', verified, [0]);
+  return (await readOptionalFile(gitignorePath)) !== before;
+}
+
 export async function pullSynced(
   target: SyncTarget,
   git: GitRunner,
@@ -669,6 +728,9 @@ export async function pullSynced(
   await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
 
   if (!checkoutExists) {
+    const gitignoreChanged = shouldAdopt
+      ? await ensureSyncedRootIgnored(target, git)
+      : false;
     await mkdir(dirname(target.projectPath), { recursive: true });
     await git.run(
       withHooksDisabled([
@@ -691,6 +753,7 @@ export async function pullSynced(
           result,
           adoptionRecord,
           options.now ?? new Date(),
+          gitignoreChanged ? [join(target.repoRoot, '.gitignore')] : [],
         )
       : result;
   }
@@ -712,6 +775,7 @@ async function prepareAdoptionRecord(
   result: PullResult,
   adoptionRecord: Exclude<AdoptionRecordState, 'durable'>,
   now: Date,
+  additionalPendingPaths: string[] = [],
 ): Promise<PullResult> {
   const recordPath = syncedRecordPath(dirname(target.projectPath), target.slug);
   if (adoptionRecord === 'create') {
@@ -722,7 +786,7 @@ async function prepareAdoptionRecord(
     adopted: true,
     adoptionRecordOwnership:
       adoptionRecord === 'create' ? 'created' : 'existing',
-    pendingRecordPaths: [recordPath],
+    pendingRecordPaths: [recordPath, ...additionalPendingPaths],
   };
 }
 
@@ -1056,6 +1120,7 @@ export async function pruneSynced(
         [recordPath],
         `chore(oat): prune synced project ${target.slug}`,
         git,
+        { additionalAllowlistedPaths: [recordPath] },
       )
     : null;
   return { status: 'pruned', lifecycleCommit: committed?.sha ?? null };
@@ -1122,13 +1187,12 @@ export async function migrateSharedToSynced(
     );
   }
 
+  const syncedProbe = `${repoRelativePath(
+    target.repoRoot,
+    join(target.syncedRoot, '__probe__'),
+  )}/`;
   const ignored = await git.run(
-    [
-      'check-ignore',
-      '--quiet',
-      '--no-index',
-      '.oat/projects/synced/__probe__/',
-    ],
+    ['check-ignore', '--quiet', '--no-index', syncedProbe],
     {
       cwd: target.repoRoot,
       allowFailure: true,
@@ -1160,6 +1224,34 @@ export async function migrateSharedToSynced(
       await (options.applyOatCoreGitignore ?? applyOatCoreGitignore)(
         target.repoRoot,
       );
+      const repaired = await git.run(
+        ['check-ignore', '--quiet', '--no-index', syncedProbe],
+        { cwd: target.repoRoot, allowFailure: true },
+      );
+      assertExpectedGitResult(
+        'git check-ignore synced project',
+        repaired,
+        [0, 1],
+      );
+      if (repaired.code === 1) {
+        const syncedRootRelative = repoRelativePath(
+          target.repoRoot,
+          target.syncedRoot,
+        );
+        const customRule = `/${syncedRootRelative}/*/`;
+        const currentGitignore = (await readOptionalFile(gitignorePath)) ?? '';
+        if (!currentGitignore.split('\n').includes(customRule)) {
+          const separator =
+            currentGitignore === '' || currentGitignore.endsWith('\n')
+              ? ''
+              : '\n';
+          await writeFile(
+            gitignorePath,
+            `${currentGitignore}${separator}${customRule}\n`,
+            'utf8',
+          );
+        }
+      }
     }
 
     await createSyncedProject(target, git);
@@ -1197,6 +1289,7 @@ export async function migrateSharedToSynced(
         [sourcePath, recordPath, ...(gitignoreChanged ? [gitignorePath] : [])],
         `chore(oat): migrate ${target.slug} to synced scope`,
         git,
+        { additionalAllowlistedPaths: [sourcePath, recordPath] },
       );
       lifecycleCommit = committed?.sha ?? null;
       await options.afterBranchCommit?.();

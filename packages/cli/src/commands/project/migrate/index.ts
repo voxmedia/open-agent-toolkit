@@ -77,7 +77,7 @@ async function runMigrate(
       : resolve(repoRoot, projectPath);
     const sharedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'shared');
     if (
-      resolveProjectScope(sourcePath, projectsRoot) !== 'shared' ||
+      resolveProjectScope(sourcePath, sharedRoot) !== 'shared' ||
       dirname(sourcePath) !== sharedRoot
     ) {
       throw new CliError(

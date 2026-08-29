@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { access, mkdir, realpath, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
@@ -30,6 +30,7 @@ function harness(state: string) {
   const capture = createLoggerCapture();
   const target = {
     repoRoot: '/repo',
+    sharedRoot: '/repo/.oat/projects/shared',
     syncedRoot: '/repo/.oat/projects/synced',
     projectPath: '/repo/.oat/projects/synced/demo',
     slug: 'demo',
@@ -171,6 +172,72 @@ describe('prune command integration', () => {
           encoding: 'utf8',
         }),
       ).toContain('chore(oat): prune synced project prune-me');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('prunes an environment-root project without leaving a half-pruned parent', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const projectsRoot = '.oat/custom-prune/team';
+      const slug = 'custom-prune';
+      await writeFile(
+        join(fixture.cloneA, '.gitignore'),
+        `${await readFile(join(fixture.cloneA, '.gitignore'), 'utf8')}/.oat/custom-prune/synced/*/\n`,
+        'utf8',
+      );
+      execFileSync('git', ['add', '.gitignore'], { cwd: fixture.cloneA });
+      execFileSync('git', ['commit', '-m', 'ignore custom prune root'], {
+        cwd: fixture.cloneA,
+      });
+      const target = buildSyncTarget(fixture.cloneA, projectsRoot, slug);
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(join(target.projectPath, 'state.md'), '# state\n');
+      await pushSynced(target, defaultGitRunner, {});
+      const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(slug, new Date('2026-08-29T00:00:00Z')),
+      );
+      execFileSync('git', ['add', recordPath], { cwd: fixture.cloneA });
+      execFileSync('git', ['commit', '-m', 'add custom prune record'], {
+        cwd: fixture.cloneA,
+      });
+      const capture = createLoggerCapture();
+      const command = createProjectPruneCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneA,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneA,
+        processEnv: { OAT_PROJECTS_ROOT: projectsRoot },
+      });
+
+      await run(command, [slug, '--force']);
+
+      expect(capture.error).toEqual([]);
+      expect(process.exitCode).toBe(0);
+      await expect(access(target.projectPath)).rejects.toThrow();
+      await expect(access(recordPath)).rejects.toThrow();
+      expect(
+        execFileSync('git', ['status', '--porcelain=v1'], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe('');
+      expect(
+        execFileSync('git', ['ls-remote', 'origin', target.ref], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe('');
     } finally {
       await fixture.cleanup();
     }
