@@ -165,13 +165,14 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Phase 19 re-review pending
+**Status:** Final project review pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Phase 19 cycle-1 review fixes are complete; fix-delta re-review is pending.
+Phase 19 passed its narrowed fix-delta review. The final project review must be
+refreshed against the remediation delta.
 
 ## Artifacts
 
@@ -364,6 +365,7 @@ Phase 19 cycle-1 review fixes are complete; fix-delta re-review is pending.
 - ✓ Phase 19 tasks p19-t08 through p19-t10 completed in bounded commits
 - ✓ Phase 19 recovery attempt 2/10 settled after smoke dependency parity fix
 - ✓ Phase 19 focused suite passed 257/257 and all final gates passed
+- ✓ Phase 19 review cycle 2 passed at 0 Critical / 0 Important / 0 Medium / 0 Minor
 
 ## Blockers
 
@@ -371,4 +373,4 @@ None.
 
 ## Next Milestone
 
-Run the narrowed Phase 19 fix-delta re-review.
+Run the narrowed final-project review against the Phase 19 remediation delta.
