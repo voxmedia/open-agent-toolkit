@@ -537,10 +537,39 @@ describe('archive utils', () => {
     ).rejects.toEqual(
       new CliError(
         `Project path \`${projectPath}\` is outside the configured shared, local, and synced scope roots; refusing to archive without an originating scope.`,
-        2,
+        1,
       ),
     );
     await expect(readFile(statePath, 'utf8')).resolves.toBe('# state\n');
+    await expect(
+      access(join(repoRoot, '.oat', 'projects', 'archived')),
+    ).rejects.toThrow();
+  });
+
+  it('refuses a foreign project path with matching scope segments before mutation', async () => {
+    const repoRoot = await createRepoRoot();
+    const foreignRoot = await createRepoRoot();
+    const projectPath = join(foreignRoot, '.oat', 'projects', 'shared', 'demo');
+    const statePath = join(projectPath, 'state.md');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(statePath, '# foreign state\n', 'utf8');
+
+    await expect(
+      archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      }),
+    ).rejects.toMatchObject({
+      name: 'CliError',
+      exitCode: 1,
+      message: expect.stringContaining('outside the configured'),
+    });
+    await expect(readFile(statePath, 'utf8')).resolves.toBe(
+      '# foreign state\n',
+    );
     await expect(
       access(join(repoRoot, '.oat', 'projects', 'archived')),
     ).rejects.toThrow();

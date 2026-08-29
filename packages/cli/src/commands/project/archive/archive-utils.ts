@@ -1549,12 +1549,12 @@ export async function archiveProjectOnCompletion(
   const writeRecord = dependencies.writeSyncedRecord ?? writeSyncedRecord;
   const projectScope = resolveProjectScope(
     options.projectPath,
-    options.projectsRoot,
+    resolveScopeRoot(options.repoRoot, options.projectsRoot, 'shared'),
   );
   if (!projectScope) {
     throw new CliError(
       `Project path \`${options.projectPath}\` is outside the configured shared, local, and synced scope roots; refusing to archive without an originating scope.`,
-      2,
+      1,
     );
   }
   const isSynced = projectScope === 'synced';
