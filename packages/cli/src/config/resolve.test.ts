@@ -94,6 +94,10 @@ describe('resolveEffectiveConfig', () => {
       value: '.oat/projects/custom',
       source: 'shared',
     });
+    expect(result.resolved['projects.defaultScope']).toEqual({
+      value: 'synced',
+      source: 'default',
+    });
     expect(result.resolved['activeProject']).toEqual({
       value: '.oat/projects/custom/demo',
       source: 'local',
@@ -187,6 +191,7 @@ describe('resolveEffectiveConfig', () => {
       '/tmp/user',
       {
         OAT_PROJECTS_ROOT: '/env/projects/',
+        OAT_PROJECTS_DEFAULT_SCOPE: 'local',
         OAT_WORKTREES_ROOT: '/env/worktrees/',
       },
       {
@@ -206,6 +211,10 @@ describe('resolveEffectiveConfig', () => {
       value: '/env/projects',
       source: 'env',
     });
+    expect(result.resolved['projects.defaultScope']).toEqual({
+      value: 'local',
+      source: 'env',
+    });
     expect(result.resolved['worktrees.root']).toEqual({
       value: '/env/worktrees',
       source: 'env',
@@ -220,6 +229,10 @@ describe('resolveEffectiveConfig', () => {
 
     expect(result.resolved['projects.root']).toEqual({
       value: '.oat/projects/shared',
+      source: 'default',
+    });
+    expect(result.resolved['projects.defaultScope']).toEqual({
+      value: 'synced',
       source: 'default',
     });
     expect(result.resolved['worktrees.root']).toEqual({

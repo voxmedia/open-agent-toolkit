@@ -1,6 +1,6 @@
 ---
 name: oat-project-autonomous
-version: 1.0.6
+version: 1.0.9
 description: Use when a user explicitly asks to run an OAT project autonomously end-to-end. Activates session-only autonomy, resumes the correct lifecycle phase, and drives the existing OAT skills through final PR or a reported boundary.
 argument-hint: '<goal | project-slug | ticket-ref>'
 disable-model-invocation: true
@@ -152,6 +152,18 @@ Resolution order:
 2. A valid `activeProject` in `.oat/config.local.json`.
 3. A new project derived from a substantive goal or ticket reference.
 
+Before reading artifacts for an existing project, resolve its scope and pull a
+synced checkout. Scope resolution fails closed:
+
+```bash
+if [ -n "$PROJECT_PATH" ]; then
+  PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1
+  if [ "$PROJECT_SCOPE" = "synced" ]; then
+    oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before autonomous work continues" >&2; exit 1; }
+  fi
+fi
+```
+
 For a new goal, derive a safe project slug but do not hand-create the project.
 Mode selection in Step 2 chooses `oat-project-new` or
 `oat-project-quick-start`, which owns scaffolding and pointer persistence. If
@@ -258,6 +270,22 @@ Use the state content hash expected by the adapter persistence contract. On a
 stale-write conflict, re-read `state.md`, rerun autonomous resolution, and
 persist only the newly returned record; never retry a stale record blindly.
 
+Immediately persist the completed state write. Resolve scope again so a
+failure cannot fall through to the shared/local Git path:
+
+```bash
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
+  echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2
+  exit 1
+}
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): persist autonomous explainer intent" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+else
+  git add "$PROJECT_PATH/state.md"
+  git diff --cached --quiet || git commit -m "chore(oat): persist autonomous explainer intent"
+fi
+```
+
 ### Step 3: Perform External-Integration Research
 
 Before planning, extensively research every integrated system, service,
@@ -293,6 +321,22 @@ Use only these categories: `gotcha`, `efficiency`, `documentation-gap`,
 degraded routes, inventory gaps, unavailable verification, and reusable
 improvements. Never record secrets, token values, signed URLs, or active
 autonomy signals.
+
+After creating the log and after every later append, persist that write before
+continuing:
+
+```bash
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
+  echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2
+  exit 1
+}
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): update autonomous execution learnings" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+else
+  git add "$PROJECT_PATH/oat-execution-learnings.md"
+  git diff --cached --quiet || git commit -m "chore(oat): update autonomous execution learnings"
+fi
+```
 
 ### Step 5: Invoke Lifecycle Skills and Reviews
 

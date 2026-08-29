@@ -1,4 +1,11 @@
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdtemp,
+  mkdir,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -2162,6 +2169,37 @@ describe('createSyncCommand', () => {
       );
       expect(content, relativePath).toContain(
         'An active, mismatched, prematurely cleared, unreconciled, or contradictory attempted-recovery marker must fail closed before root bookkeeping.',
+      );
+    }
+  });
+
+  it('keeps every materialized phase implementer aligned with fail-closed project push handling', async () => {
+    const repoRoot = join(import.meta.dirname, '../../../../..');
+    const providerDirectories = [
+      ['.codex/agents', '.toml'],
+      ['.cursor/agents', '.md'],
+    ] as const;
+    const generatedAgentPaths = (
+      await Promise.all(
+        providerDirectories.map(async ([directory, extension]) =>
+          (await readdir(join(repoRoot, directory)))
+            .filter(
+              (name) =>
+                name.startsWith('oat-phase-implementer') &&
+                name.endsWith(extension),
+            )
+            .map((name) => join(directory, name)),
+        ),
+      )
+    ).flat();
+
+    expect(generatedAgentPaths.length).toBeGreaterThan(30);
+    for (const relativePath of generatedAgentPaths) {
+      await expect(
+        readFile(join(repoRoot, relativePath), 'utf8'),
+        relativePath,
+      ).resolves.toContain(
+        'A nonzero project-push exit stops bookkeeping until the reported',
       );
     }
   });

@@ -115,6 +115,7 @@ export interface ProjectState {
 export interface ProjectSummary {
   name: string;
   path: string;
+  scope?: ProjectScope;
   phase: Phase;
   phaseStatus: PhaseStatus;
   workflowMode: WorkflowMode;
@@ -128,3 +129,63 @@ export interface ProjectSummary {
     reason: string;
   };
 }
+
+export type ProjectScope = 'shared' | 'local' | 'synced';
+
+export type ProjectListRow =
+  | (ProjectSummary & {
+      kind: 'materialized';
+      scope: ProjectScope;
+      checkout: 'present';
+      recordError?: string;
+    })
+  | {
+      kind: 'recorded-absent';
+      name: string;
+      path: string;
+      scope: 'synced';
+      checkout: 'absent';
+      phase: null;
+      phaseStatus: null;
+      workflowMode: null;
+      lifecycle: null;
+      progress: null;
+      recommendation: {
+        skill: 'oat project pull';
+        reason: 'checkout absent';
+      };
+    }
+  | {
+      kind: 'recorded-invalid';
+      name: string;
+      path: string;
+      scope: 'synced';
+      checkout: 'invalid';
+      recordError: string;
+      phase: null;
+      phaseStatus: null;
+      workflowMode: null;
+      lifecycle: null;
+      progress: null;
+      recommendation: {
+        skill: 'none';
+        reason: 'restore invalid record from a trusted Git revision';
+      };
+    }
+  | {
+      kind: 'remote';
+      name: string;
+      scope: 'synced';
+      origin: 'remote';
+      checkout: 'absent';
+      ref: string;
+      phase: null;
+      phaseStatus: null;
+      workflowMode: null;
+      lifecycle: null;
+      progress: null;
+      recommendation: {
+        skill: 'oat project pull';
+        reason: 'not adopted on this branch';
+      };
+    };

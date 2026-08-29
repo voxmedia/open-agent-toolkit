@@ -1,6 +1,6 @@
 ---
 name: oat-doctor
-version: 1.0.2
+version: 1.1.0
 description: Use when you need to diagnose your OAT setup, check for outdated skills, identify misconfigurations, or get a summary of installed tools and config. Runs health checks and recommends corrective actions.
 argument-hint: '[--summary]'
 disable-model-invocation: true
@@ -107,6 +107,11 @@ Check for issues:
 - **Stale `activeProject` pointer:** If `activeProject` is set, verify the directory exists. If not, warn.
 - **Stale `activeIdea` pointer:** If `activeIdea` is set, verify the directory exists. If not, warn.
 - **Missing `projects.root`:** If not configured and no default exists, warn.
+- **Synced project health:** Report `project:synced_tracked_artifacts`,
+  `project:synced_gitignore`, `project:synced_projects`,
+  `project:synced_editor_hint`, and per-project
+  `project:synced_<slug>_<kind>` checks without treating an absent checkout as
+  proof that no synced project exists.
 
 For config key explanations, read from the bundled docs at `~/.oat/docs/`. Check `reference/file-locations.md` and `guide/cli-reference.md` for authoritative descriptions.
 
@@ -248,6 +253,7 @@ OAT ▸ DOCTOR SUMMARY
 | activeProject        | .oat/projects/shared/foo  | local   |
 | activeIdea           | (not set)                 | -       |
 | projects.root        | .oat/projects/shared      | default |
+| projects.defaultScope | synced                    | default |
 | documentation.root   | (not set)                 | -       |
 | worktrees.root       | (not set)                 | -       |
 
@@ -259,6 +265,7 @@ Read config key descriptions from `~/.oat/docs/reference/file-locations.md` and 
 - **activeIdea:** Path to the currently active idea. Set by oat-idea-new.
 - **lastPausedProject:** Path to the last paused project for quick resume.
 - **projects.root:** Base directory for all OAT projects. Default: `.oat/projects/shared`.
+- **projects.defaultScope:** Scope used by project creation when `--scope` is omitted. Default: `synced`; supported values are `shared`, `local`, and `synced`.
 - **documentation.root:** Root directory for documentation. Used by docs skills.
 - **documentation.config:** Path to docs config file (e.g., mkdocs.yml).
 - **documentation.tooling:** Docs tooling in use (e.g., mkdocs, fumadocs).

@@ -1,6 +1,6 @@
 ---
 name: oat-project-discover
-version: 2.2.0
+version: 2.2.1
 description: Use when the user explicitly asks to continue discovery for an active spec-driven OAT project — e.g. "continue discovery", "run discovery", or confirms a previously offered discovery step. Do NOT auto-invoke for new ideas or quick-mode projects. Gathers requirements and context before spec/design.
 disable-model-invocation: false
 user-invocable: true
@@ -549,14 +549,27 @@ according to its `onFailure` policy.
 During implementation of OAT itself, use standard commit format.
 
 ```bash
-git add "$PROJECT_PATH/"
-git commit -m "docs: complete discovery for {project-name}
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "docs: complete discovery for {project-name}
+
+Key decisions:
+- {Decision 1}
+- {Decision 2}
+
+Ready for design phase" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+else
+  PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md")
+  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
+  git commit -m "docs: complete discovery for {project-name}
 
 Key decisions:
 - {Decision 1}
 - {Decision 2}
 
 Ready for design phase"
+fi
 ```
 
 ### Step 16: Output Summary

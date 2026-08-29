@@ -1,8 +1,8 @@
 ---
 name: oat-project-new
-version: 1.3.2
+version: 1.4.0
 description: Use when starting a spec-driven OAT project from scratch. Scaffolds a new project under PROJECTS_ROOT and sets it active.
-argument-hint: '<project-name> [--force]'
+argument-hint: '<project-name> [--scope shared|local|synced] [--force]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -10,7 +10,7 @@ allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 
 # New OAT Project
 
-Create a new OAT project directory, scaffold standard artifacts from `.oat/templates/`, and set `activeProject` in local config.
+Create a new OAT project directory, scaffold standard artifacts from `.oat/templates/`, and set `activeProject` in local config. New projects default to `synced`; pass `--scope shared|local|synced` to override the resolved `projects.defaultScope` setting.
 
 ## Progress Indicators (User-Facing)
 
@@ -65,11 +65,12 @@ If not provided in `$ARGUMENTS`, ask the user for `{project-name}` (slug format:
 Use the CLI scaffolder:
 
 ```bash
-oat project new "{project-name}" --mode spec-driven
+oat project new "{project-name}" --mode spec-driven [--scope shared|local|synced]
 ```
 
 Optional flags:
 
+- `--scope shared|local|synced` (omitting it uses `projects.defaultScope`, whose default is `synced`)
 - `--force` (non-destructive; only fills missing files/dirs, does not overwrite)
 - `--no-set-active`
 - `--no-dashboard`
@@ -78,7 +79,8 @@ Optional flags:
 
 Confirm to the user:
 
-- Project path created: `{PROJECTS_ROOT}/{project-name}`
+- Project path created under the resolved scope root (`.oat/projects/synced/` by default)
+- Project scope: `{shared|local|synced}` (`projects.defaultScope` when `--scope` was omitted)
 - Active project set in local config: `.oat/config.local.json` (`activeProject`)
 - Repo State Dashboard refreshed locally: `.oat/state.md` (if enabled; generated and normally gitignored)
 

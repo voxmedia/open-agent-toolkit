@@ -659,6 +659,43 @@ describe('CLI command integration', () => {
     }
   });
 
+  it('doctor reports an invalid defaultScope as a failing check', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const previousHome = process.env.HOME;
+    process.env.HOME = root;
+
+    try {
+      await runCli(root, ['init']);
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          projects: {
+            root: '.oat/projects/shared',
+            defaultScope: 'remote',
+          },
+        })}\n`,
+      );
+
+      const result = await runCli(root, ['doctor', '--json'], ['--json']);
+      const payload = JSON.parse(result.stdout);
+      expect(payload.checks).toContainEqual(
+        expect.objectContaining({
+          name: 'project:projects_default_scope',
+          status: 'fail',
+        }),
+      );
+      expect(result.exitCode).toBe(2);
+    } finally {
+      if (previousHome === undefined) {
+        delete process.env.HOME;
+      } else {
+        process.env.HOME = previousHome;
+      }
+    }
+  }, 15_000);
+
   it('providers list shows all registered adapters', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
@@ -816,6 +853,8 @@ describe('CLI command integration', () => {
       'quick-smoke',
       '--mode',
       'quick',
+      '--scope',
+      'shared',
       '--no-dashboard',
       '--no-commit',
     ]);

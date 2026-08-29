@@ -29,6 +29,10 @@ Maintain consistent, safe CLI behavior across commands and modules.
 - Use explicit exit semantics (0 success, 1 actionable/user error, 2 system/runtime error).
 - Avoid direct `console.*` calls in commands; route output through CLI logger utilities.
 - Avoid unmanaged destructive filesystem mutations.
+- Fake-cwd unit harnesses (`cwd: '/tmp/workspace'` or similar) must mock every
+  init/doctor dependency that writes the filesystem or spawns git. Inject
+  `applyOatCoreGitattributes` and `checkSyncedProjects`; do not rely on the
+  production implementations against a path that does not exist.
 
 ## Completion checks
 

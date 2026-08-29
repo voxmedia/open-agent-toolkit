@@ -10,6 +10,13 @@
 
 | ID                                       | Date       | Status   | Title                                                                           | Legacy |
 | ---------------------------------------- | ---------- | -------- | ------------------------------------------------------------------------------- | ------ |
+| DR-260828-configurable-synced-default    | 2026-08-28 | accepted | Configurable synced default                                                     | -      |
+| DR-260828-custom-project-refs            | 2026-08-28 | accepted | Custom project refs                                                             | -      |
+| DR-260828-fail-closed-sync-mutations     | 2026-08-28 | accepted | Fail-closed sync mutations                                                      | -      |
+| DR-260828-per-project-discovery-records  | 2026-08-28 | accepted | Per-project discovery records                                                   | -      |
+| DR-260828-per-worktree-detached          | 2026-08-28 | accepted | Per-worktree detached checkouts                                                 | -      |
+| DR-260828-published-state-reviewer-links | 2026-08-28 | accepted | Published-state reviewer links                                                  | -      |
+| DR-260828-retained-refs-and-receipts     | 2026-08-28 | accepted | Retained refs and receipts                                                      | -      |
 | DR-260827-close-ambient-environment      | 2026-08-27 | accepted | Close ambient environment sensitivity at the test-runner seam                   | -      |
 | DR-260827-cycle-cap-disposition-bounded  | 2026-08-27 | accepted | Cycle-cap disposition: bounded root-verified fix with gate as independent check | -      |
 | DR-260827-destination-first-scope        | 2026-08-27 | accepted | Destination-first scope migration                                               | -      |

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { scaffoldProject as defaultScaffoldProject } from '@commands/project/new/scaffold';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import { replaceFrontmatter } from '@commands/shared/frontmatter-write';
+import { resolveProjectScope } from '@commands/shared/project-scope';
 import YAML from 'yaml';
 
 import type { ChildPlan } from './child-plan';
@@ -134,6 +135,15 @@ export async function seedChildren(
   onlySlugs?: Set<string>,
 ): Promise<SeedChildrenResult> {
   const scaffoldProject = context.scaffoldProject ?? defaultScaffoldProject;
+  const projectsRoot = context.projectsRoot ?? '.oat/projects/shared';
+  const scope =
+    context.scope ??
+    resolveProjectScope(
+      join(projectsRoot, plan.parentSlug),
+      projectsRoot,
+      context.repoRoot,
+    ) ??
+    'shared';
   const childProjectPaths: string[] = [];
   const orderedChildren = plan.children
     .slice()
@@ -144,6 +154,7 @@ export async function seedChildren(
     const scaffold = await scaffoldProject({
       repoRoot: context.repoRoot,
       projectName: child.slug,
+      scope,
       mode: 'quick',
       setActive: false,
       refreshDashboard: false,

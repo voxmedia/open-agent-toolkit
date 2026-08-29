@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import {
   mkdir,
   mkdtemp,
@@ -92,6 +93,7 @@ function createHarness(
     interactive?: boolean;
     json?: boolean;
     processEnv?: NodeJS.ProcessEnv;
+    projectsRoot?: string;
     confirmResponses?: boolean[];
   } = {},
 ): {
@@ -115,7 +117,8 @@ function createHarness(
       logger: capture.logger,
     }),
     resolveProjectRoot: async () => repoRoot,
-    resolveProjectsRoot: async () => '.oat/projects/shared',
+    resolveProjectsRoot: async () =>
+      overrides.projectsRoot ?? '.oat/projects/shared',
     refreshDashboard: async () => {},
     confirmAction,
     processEnv: overrides.processEnv ?? {},
@@ -210,6 +213,37 @@ describe('oat project split run', () => {
     await expect(
       exists(join(repoRoot, '.oat', 'projects', 'shared', 'docs')),
     ).resolves.toBe(true);
+  });
+
+  it('inherits local scope from a single-segment configured root', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
+    tempDirs.push(repoRoot);
+    execFileSync('git', ['init', '-q'], { cwd: repoRoot });
+    await seedTemplates(repoRoot);
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: 'local/source' })}\n`,
+      'utf8',
+    );
+    const planFile = await writePlanFile(repoRoot, document());
+    const { capture, command } = createHarness(repoRoot, {
+      projectsRoot: 'projects',
+      processEnv: { OAT_PROJECTS_ROOT: 'projects' },
+    });
+
+    await runCommand(command, ['--plan-file', planFile]);
+
+    expect(capture.error).toEqual([]);
+    expect(process.exitCode).toBe(0);
+    const localConfig = JSON.parse(
+      await readFile(join(repoRoot, '.oat', 'config.local.json'), 'utf8'),
+    ) as { activeProject: string };
+    expect(localConfig.activeProject).toBe('local/foundation');
+    await expect(exists(join(repoRoot, 'local', 'umbrella'))).resolves.toBe(
+      true,
+    );
+    await expect(exists(join(repoRoot, 'local', 'docs'))).resolves.toBe(true);
   });
 
   it('seeds the active child with quick routing state for project status', async () => {

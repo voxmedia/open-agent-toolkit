@@ -1,12 +1,28 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { defaultGitRunner } from '@commands/project/sync/git';
+import {
+  buildSyncTarget,
+  createSyncedProject,
+  pushSynced as pushSyncedReal,
+} from '@commands/project/sync/ref-sync';
+import { CliError } from '@errors/cli-error';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -14,13 +30,43 @@ import { createProjectOpenCommand } from './index';
 
 interface HarnessOptions {
   cwd: string;
+  pushStatus?: 'pushed' | 'up-to-date' | 'rejected' | 'conflict';
+  materializeOnPull?: boolean;
+  remoteOnly?: boolean;
+  resolveError?: Error;
 }
 
 function createHarness(options: HarnessOptions): {
   capture: LoggerCapture;
   command: Command;
+  pushSynced: ReturnType<typeof vi.fn>;
+  pullSynced: ReturnType<typeof vi.fn>;
+  commitRecordChange: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
+  const pushSynced = vi.fn(async () => ({
+    status: options.pushStatus ?? ('pushed' as const),
+    sha: 'a'.repeat(40),
+  }));
+  const pullSynced = vi.fn(async (target: { projectPath: string }) => {
+    if (options.materializeOnPull) {
+      await mkdir(target.projectPath, { recursive: true });
+      await writeFile(
+        join(target.projectPath, 'state.md'),
+        '---\noat_phase: plan\noat_phase_status: complete\noat_lifecycle: active\n---\n\n# State\n',
+        'utf8',
+      );
+    }
+    return {
+      status: 'created' as const,
+      sha: 'b'.repeat(40),
+      adopted: options.remoteOnly ?? false,
+      pendingRecordPaths: options.remoteOnly
+        ? [join(options.cwd, '.oat/projects/synced/remote.json')]
+        : [],
+    };
+  });
+  const commitRecordChange = vi.fn(async () => ({ sha: 'c'.repeat(40) }));
 
   const command = createProjectOpenCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -34,9 +80,52 @@ function createHarness(options: HarnessOptions): {
       logger: capture.logger,
     }),
     resolveProjectRoot: vi.fn(async () => options.cwd),
+    pushSynced,
+    pullSynced,
+    commitRecordChange,
+    ...(options.resolveError
+      ? {
+          resolveSyncedTarget: vi.fn(async () => {
+            throw options.resolveError;
+          }),
+        }
+      : options.remoteOnly
+        ? {
+            resolveSyncedTarget: vi.fn(async () => ({
+              repoRoot: options.cwd,
+              slug: 'remote',
+              projectPath: join(options.cwd, '.oat/projects/synced/remote'),
+              ref: 'refs/oat/projects/remote',
+              remote: 'origin' as const,
+              adopt: true,
+            })),
+          }
+        : options.materializeOnPull
+          ? {
+              resolveSyncedTarget: vi.fn(async (_context, pathOrSlug) => {
+                const slug = pathOrSlug ? basename(pathOrSlug) : 'recorded';
+                return {
+                  repoRoot: options.cwd,
+                  slug,
+                  projectPath: join(options.cwd, '.oat/projects/synced', slug),
+                  syncedRoot: join(options.cwd, '.oat/projects/synced'),
+                  ref: `refs/oat/projects/${slug}`,
+                  remote: 'origin' as const,
+                  adopt: false,
+                  adoptionRecord: 'durable' as const,
+                };
+              }),
+            }
+          : {}),
   });
 
-  return { capture, command };
+  return {
+    capture,
+    command,
+    pushSynced,
+    pullSynced,
+    commitRecordChange,
+  };
 }
 
 async function runCommand(
@@ -65,8 +154,9 @@ async function writeProjectState(
   root: string,
   name: string,
   lifecycle: 'active' | 'paused' = 'active',
+  scope: 'shared' | 'local' | 'synced' = 'shared',
 ): Promise<string> {
-  const projectPath = join(root, '.oat', 'projects', 'shared', name);
+  const projectPath = join(root, '.oat', 'projects', scope, name);
   await mkdir(projectPath, { recursive: true });
   const statePath = join(projectPath, 'state.md');
 
@@ -161,6 +251,352 @@ describe('oat project open', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('opens a uniquely named local project across scope roots', async () => {
+    const root = await createRepoRoot();
+    await writeProjectState(root, 'local-demo', 'active', 'local');
+
+    const { command } = createHarness({ cwd: root });
+    await runCommand(command, ['local-demo']);
+
+    const localConfig = JSON.parse(
+      await readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+    );
+    expect(localConfig.activeProject).toBe('.oat/projects/local/local-demo');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('requires an explicit path when a name exists in multiple scopes', async () => {
+    const root = await createRepoRoot();
+    await writeProjectState(root, 'duplicate');
+    await writeProjectState(root, 'duplicate', 'active', 'local');
+
+    const { command, capture } = createHarness({ cwd: root });
+    await runCommand(command, ['duplicate']);
+
+    expect(capture.error[0]).toContain('ambiguous across scopes');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('materializes a recorded absent synced project before opening it', async () => {
+    const root = await createRepoRoot();
+    await mkdir(join(root, '.oat/projects/synced'), { recursive: true });
+    await writeFile(
+      join(root, '.oat/projects/synced/recorded.json'),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        slug: 'recorded',
+        scope: 'synced',
+        ref: 'refs/oat/projects/recorded',
+        remote: 'origin',
+        status: 'active',
+        createdAt: '2026-08-27T00:00:00.000Z',
+        completedAt: null,
+      })}\n`,
+      'utf8',
+    );
+
+    const { command, pullSynced } = createHarness({
+      cwd: root,
+      materializeOnPull: true,
+    });
+    await runCommand(command, ['recorded']);
+
+    expect(pullSynced).toHaveBeenCalledOnce();
+    const localConfig = JSON.parse(
+      await readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+    );
+    expect(localConfig.activeProject).toBe('.oat/projects/synced/recorded');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('adopts an origin-only synced project before opening it', async () => {
+    const root = await createRepoRoot();
+    const { command, pullSynced, commitRecordChange } = createHarness({
+      cwd: root,
+      materializeOnPull: true,
+      remoteOnly: true,
+    });
+
+    await runCommand(command, ['remote']);
+
+    expect(pullSynced).toHaveBeenCalledWith(
+      expect.objectContaining({ slug: 'remote', adopt: true }),
+      expect.anything(),
+      { adopt: true },
+    );
+    expect(commitRecordChange).toHaveBeenCalledOnce();
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('retries a failed real adoption record commit without consuming unrelated staged work', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    tempDirs.push(fixture.rootDir);
+    const slug = 'open-adoption-retry';
+    const source = buildSyncTarget(
+      fixture.cloneA,
+      '.oat/projects/shared',
+      slug,
+    );
+    await createSyncedProject(source, defaultGitRunner);
+    await writeFile(
+      join(source.projectPath, 'state.md'),
+      '---\noat_phase: plan\noat_phase_status: complete\noat_lifecycle: active\n---\n\n# State\n',
+      'utf8',
+    );
+    await pushSyncedReal(source, defaultGitRunner, {
+      message: 'seed open retry',
+    });
+    await writeFile(
+      join(fixture.cloneB, 'unrelated.txt'),
+      'staged user work\n',
+    );
+    execFileSync('git', ['add', 'unrelated.txt'], { cwd: fixture.cloneB });
+
+    const firstCapture = createLoggerCapture();
+    const first = createProjectOpenCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneB!,
+        home: '/home',
+        interactive: false,
+        logger: firstCapture.logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneB,
+      commitRecordChange: async () => {
+        throw new Error('injected first open record commit failure');
+      },
+    });
+    await runCommand(first, [slug]);
+    expect(process.exitCode).toBe(2);
+    expect(firstCapture.error.join('\n')).toContain(
+      'injected first open record commit failure',
+    );
+    expect(
+      execFileSync(
+        'git',
+        ['status', '--porcelain=v1', '--untracked-files=all'],
+        {
+          cwd: fixture.cloneB,
+          encoding: 'utf8',
+        },
+      ),
+    ).toContain('?? .oat/projects/synced/open-adoption-retry.json');
+
+    process.exitCode = undefined;
+    const secondCapture = createLoggerCapture();
+    const second = createProjectOpenCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneB!,
+        home: '/home',
+        interactive: false,
+        logger: secondCapture.logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneB,
+    });
+    await runCommand(second, [slug]);
+
+    expect(process.exitCode).toBe(0);
+    expect(
+      execFileSync('git', ['show', '--format=', '--name-only', 'HEAD'], {
+        cwd: fixture.cloneB,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe(`.oat/projects/synced/${slug}.json`);
+    expect(
+      execFileSync('git', ['status', '--porcelain=v1'], {
+        cwd: fixture.cloneB,
+        encoding: 'utf8',
+      }),
+    ).toContain('A  unrelated.txt');
+  });
+
+  it('adopts and opens an origin-only project under an environment custom root', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    tempDirs.push(fixture.rootDir);
+    const projectsRoot = '.oat/custom-open/team';
+    const slug = 'custom-open-adoption';
+    const source = buildSyncTarget(fixture.cloneA, projectsRoot, slug);
+    await createSyncedProject(source, defaultGitRunner);
+    await writeFile(
+      join(source.projectPath, 'state.md'),
+      '---\noat_phase: plan\noat_phase_status: complete\noat_lifecycle: active\n---\n\n# State\n',
+    );
+    await pushSyncedReal(source, defaultGitRunner, {
+      message: 'seed custom open project',
+    });
+    const capture = createLoggerCapture();
+    const command = createProjectOpenCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneB!,
+        home: '/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneB!,
+      processEnv: { OAT_PROJECTS_ROOT: projectsRoot },
+    });
+
+    await runCommand(command, [slug]);
+
+    expect(capture.error).toEqual([]);
+    expect(process.exitCode).toBe(0);
+    const recordRelative = `.oat/custom-open/synced/${slug}.json`;
+    expect(
+      execFileSync('git', ['show', '--format=', '--name-only', 'HEAD'], {
+        cwd: fixture.cloneB!,
+        encoding: 'utf8',
+      })
+        .trim()
+        .split('\n')
+        .sort(),
+    ).toEqual(['.gitignore', recordRelative]);
+    expect(
+      execFileSync('git', ['status', '--porcelain=v1'], {
+        cwd: fixture.cloneB!,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe('');
+  });
+
+  it('rejects an ignored untracked adoption record until the exact record is durable', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    tempDirs.push(fixture.rootDir);
+    const slug = 'open-ignored-retry';
+    const recordRelativePath = `.oat/projects/synced/${slug}.json`;
+    const source = buildSyncTarget(
+      fixture.cloneA,
+      '.oat/projects/shared',
+      slug,
+    );
+    await createSyncedProject(source, defaultGitRunner);
+    await writeFile(
+      join(source.projectPath, 'state.md'),
+      '---\noat_phase: plan\noat_phase_status: complete\noat_lifecycle: active\n---\n\n# State\n',
+      'utf8',
+    );
+    await pushSyncedReal(source, defaultGitRunner, {
+      message: 'seed ignored open retry',
+    });
+    const excludePath = execFileSync(
+      'git',
+      ['rev-parse', '--path-format=absolute', '--git-path', 'info/exclude'],
+      { cwd: fixture.cloneB, encoding: 'utf8' },
+    ).trim();
+    const originalExclude = await readFile(excludePath, 'utf8');
+    await writeFile(excludePath, `${originalExclude}\n${recordRelativePath}\n`);
+
+    const first = createProjectOpenCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneB,
+        home: '/home',
+        interactive: false,
+        logger: createLoggerCapture().logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneB,
+      commitRecordChange: async () => {
+        throw new Error('injected ignored open record commit failure');
+      },
+    });
+    await runCommand(first, [slug]);
+    expect(process.exitCode).toBe(2);
+
+    process.exitCode = undefined;
+    const secondCapture = createLoggerCapture();
+    const second = createProjectOpenCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneB,
+        home: '/home',
+        interactive: false,
+        logger: secondCapture.logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneB,
+    });
+    await runCommand(second, [slug]);
+    expect(process.exitCode).toBe(2);
+    expect(secondCapture.error.join('\n')).toContain(recordRelativePath);
+    expect(
+      execFileSync(
+        'git',
+        ['ls-tree', '--name-only', 'HEAD', recordRelativePath],
+        {
+          cwd: fixture.cloneB,
+          encoding: 'utf8',
+        },
+      ).trim(),
+    ).toBe('');
+
+    await writeFile(excludePath, originalExclude);
+    process.exitCode = undefined;
+    const third = createProjectOpenCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneB,
+        home: '/home',
+        interactive: false,
+        logger: createLoggerCapture().logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneB,
+    });
+    await runCommand(third, [slug]);
+    expect(process.exitCode).toBe(0);
+    expect(
+      execFileSync(
+        'git',
+        ['ls-tree', '--name-only', 'HEAD', recordRelativePath],
+        {
+          cwd: fixture.cloneB,
+          encoding: 'utf8',
+        },
+      ).trim(),
+    ).toBe(recordRelativePath);
+  });
+
+  it('publishes a synced resume before changing the active pointer', async () => {
+    const root = await createRepoRoot();
+    await writeProjectState(root, 'alpha');
+    await writeProjectState(root, 'paused-sync', 'paused', 'synced');
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/shared/alpha' })}\n`,
+      'utf8',
+    );
+    const { command, pushSynced } = createHarness({
+      cwd: root,
+      pushStatus: 'rejected',
+    });
+
+    await runCommand(command, ['paused-sync']);
+
+    expect(pushSynced).toHaveBeenCalledOnce();
+    const localConfig = JSON.parse(
+      await readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+    );
+    expect(localConfig.activeProject).toBe('.oat/projects/shared/alpha');
+    expect(process.exitCode).toBe(1);
+  });
+
   it('rejects resume writes that would preserve invalid decomposition state', async () => {
     const root = await createRepoRoot();
     const statePath = await writeProjectState(root, 'paused-demo', 'paused');
@@ -182,12 +618,111 @@ describe('oat project open', () => {
 
   it('errors when project does not exist', async () => {
     const root = await createRepoRoot();
-    const { command, capture } = createHarness({ cwd: root });
+    const { command, capture } = createHarness({
+      cwd: root,
+      resolveError: new CliError('No synced project named missing.', 1),
+    });
 
     await runCommand(command, ['missing']);
 
     expect(process.exitCode).toBe(1);
     expect(capture.error[0]).toContain('Project not found');
+  });
+
+  it.each([
+    { globals: [], expected: 'origin authentication failed' },
+    { globals: ['--json'], expected: 'origin authentication failed' },
+  ])(
+    'preserves a synced transport failure in human and JSON output',
+    async ({ globals, expected }) => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({
+        cwd: root,
+        resolveError: new CliError(expected, 2),
+      });
+
+      await runCommand(command, ['remote'], globals);
+
+      const output = globals.includes('--json')
+        ? JSON.stringify(capture.jsonPayloads[0])
+        : capture.error.join('\n');
+      expect(output).toContain(expected);
+      expect(output).not.toContain('Project not found');
+      expect(process.exitCode).toBe(2);
+    },
+  );
+
+  it('classifies an unknown lookup exception as a system error', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({
+      cwd: root,
+      resolveError: new Error('filesystem unavailable'),
+    });
+
+    await runCommand(command, ['remote'], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: 'filesystem unavailable',
+    });
+    expect(process.exitCode).toBe(2);
+  });
+
+  it('does not mutate a sibling when an explicit synced descendant is rejected', async () => {
+    const root = await createRepoRoot();
+    await mkdir(join(root, '.oat/projects/synced/demo/reviews'), {
+      recursive: true,
+    });
+    await writeProjectState(root, 'reviews', 'active', 'synced');
+    const { command, pullSynced, pushSynced } = createHarness({
+      cwd: root,
+      resolveError: new CliError(
+        'Project path must identify exactly one direct child of the synced project root',
+        1,
+      ),
+    });
+
+    await runCommand(command, ['.oat/projects/synced/demo/reviews']);
+
+    expect(pullSynced).not.toHaveBeenCalled();
+    expect(pushSynced).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('rejects a bare-slug real-worktree alias before opening its sibling', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const sibling = buildSyncTarget(
+      fixture.cloneA,
+      '.oat/projects/shared',
+      'reviews',
+    );
+    await createSyncedProject(sibling, defaultGitRunner);
+    const siblingState =
+      '---\noat_phase: plan\noat_phase_status: complete\noat_lifecycle: active\n---\n\n# Reviews\n';
+    await writeFile(
+      join(sibling.projectPath, 'state.md'),
+      siblingState,
+      'utf8',
+    );
+    await symlink(
+      sibling.projectPath,
+      join(fixture.cloneA, '.oat/projects/synced/demo'),
+      'dir',
+    );
+    const { command, capture, pullSynced, pushSynced } = createHarness({
+      cwd: fixture.cloneA,
+    });
+
+    await runCommand(command, ['demo']);
+
+    expect(capture.error.join('\n')).toContain('canonical direct child');
+    expect(pullSynced).not.toHaveBeenCalled();
+    expect(pushSynced).not.toHaveBeenCalled();
+    expect(await readFile(join(sibling.projectPath, 'state.md'), 'utf8')).toBe(
+      siblingState,
+    );
+    expect(process.exitCode).toBe(1);
   });
 
   it('errors when project state.md is missing', async () => {

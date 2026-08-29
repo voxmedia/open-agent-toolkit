@@ -52,6 +52,8 @@ Pack intent is stored per scope:
 - Local runtime config (per-developer state): `.oat/config.local.json`
 - Active idea: `activeIdea` in `.oat/config.local.json` (repo) or `~/.oat/config.json` (user)
 - Projects root config: `projects.root` in `.oat/config.json` (read via `oat config get projects.root`)
+- Default project scope: `projects.defaultScope` in `.oat/config.json`
+  (`synced` by default; override with `OAT_PROJECTS_DEFAULT_SCOPE`)
 - Archive config: `archive.s3Uri`, `archive.s3SyncOnComplete`, `archive.summaryExportPath`, `archive.wrapUpExportPath`, `archive.awsProfile`, and `archive.awsRegion` in `.oat/config.json`
 - Workflow gate config: `workflow.gates.skills` and `workflow.gates.execTargets` in `.oat/config.json`, `.oat/config.local.json`, or `~/.oat/config.json` (manage via `oat gate`)
 - Project sync manifest/config: `.oat/sync/`
@@ -87,8 +89,18 @@ Config ownership note:
 ## Project artifact trees
 
 - Shared: `.oat/projects/shared/<project>/`
+- Synced checkout: `.oat/projects/synced/<project>/` (gitignored nested
+  worktree)
+- Synced record: `.oat/projects/synced/<project>.json` (tracked on the parent
+  branch)
+- Synced ref: `refs/oat/projects/<project>` on `origin`
 - Local: `.oat/projects/local/<project>/`
 - Archived: `.oat/projects/archived/<project>/`
+
+The OAT-managed block in the repository root `.gitattributes` marks shared
+project artifacts as generated for repository hosting UIs. `oat init` and
+`oat tools update` own that block; preserve non-OAT entries outside its markers
+and do not hand-edit the managed entry.
 
 Archive sync surfaces:
 
@@ -96,7 +108,12 @@ Archive sync surfaces:
 - Remote archive base: `archive.s3Uri` in `.oat/config.json`
 - Archive sync command: `oat repo archive sync` or `oat repo archive sync <project-name>`
 - Remote archive snapshot shape: `<archive.s3Uri>/<repo-slug>/projects/YYYYMMDD-<project-name>/`
-- Summary export target: `<repo>/<archive.summaryExportPath>/YYYYMMDD-<project-name>.md` when configured
+- Summary export target:
+  `<repo>/<archive.summaryExportPath>/YYYYMMDD-<project-name>.md` when
+  configured. The archive report returns this absolute filesystem path, while
+  `oat project links --durable-summary` normalizes a contained path to a
+  repository-relative code span. It does not invent a GitHub-style URL for
+  non-GitHub remotes.
 - Wrap-up export target: `<repo>/<archive.wrapUpExportPath>/YYYY-MM-DD-wrap-up-<label>.md` when configured; otherwise `oat-wrap-up` falls back to `<repo>/.oat/repo/reference/wrap-ups/`
 
 ## Ideas — project level (gitignored)

@@ -39,6 +39,7 @@ import {
   writeScopedPackIntent,
 } from '@commands/tools/shared/scoped-pack-intent';
 import type { ToolInfo } from '@commands/tools/shared/types';
+import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { describe, expect, it } from 'vitest';
 
@@ -493,6 +494,41 @@ describe('updateTools', () => {
       await expect(
         readScopedPackIntent({ pack: 'docs', scope: 'user', scopeRoot: root }),
       ).resolves.toMatchObject({ enabled: true, source: 'declared' });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('preserves defaultScope while update backfills the projects root', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-update-project-root-'));
+    try {
+      const assetsRoot = await resolveAssetsRoot();
+      await writeOatConfig(root, {
+        version: 1,
+        projects: { defaultScope: 'local' },
+        tools: { workflows: true },
+      });
+      const deps = createDeps();
+      deps.resolveAssetsRoot = async () => assetsRoot;
+      deps.resolveScopeRoot = async () => root;
+      deps.inventoryScopedPack = inventoryScopedPack;
+      deps.reconcilePacks = reconcilePackLifecycles;
+
+      await updateTools(
+        { kind: 'pack', pack: 'workflows' },
+        ['project'],
+        root,
+        root,
+        false,
+        deps,
+      );
+
+      await expect(readOatConfig(root)).resolves.toMatchObject({
+        projects: {
+          root: '.oat/projects/shared',
+          defaultScope: 'local',
+        },
+      });
     } finally {
       await rm(root, { recursive: true, force: true });
     }

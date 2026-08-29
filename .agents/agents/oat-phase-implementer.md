@@ -1,6 +1,6 @@
 ---
 name: oat-phase-implementer
-version: 1.0.12
+version: 1.1.1
 description: Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement.
 tools: Read, Write, Edit, Bash, Grep, Glob, Task
 color: cyan
@@ -130,6 +130,16 @@ Artifact hygiene contract: Before finishing or committing, format every file you
 After formatting, run the repository's applicable gate set over the produced
 diff, explicitly including artifact writes. This supplements rather than
 replaces every task and phase verification command below.
+
+## Synced-Scope Bookkeeping
+
+Artifact and recovery-ledger bookkeeping commits must first resolve scope with
+`oat project scope "$PROJECT_PATH" --format value`. A `synced` project uses
+`oat project push` with the original bookkeeping message; other scopes keep the
+existing scoped `git add` and `git commit` commands. Scope resolution fails
+closed. A nonzero project-push exit stops bookkeeping until the reported
+recovery is resolved and the push is retried. Planned code task commits such as
+`feat(pNN-tNN)` are unchanged.
 
 ## Prevention and Post-Commit Recovery
 

@@ -1,10 +1,10 @@
 ---
 name: oat-project-next
-version: 1.0.11
+version: 1.0.12
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Bash(git:*), Skill
+allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), Skill
 ---
 
 # Project Next
@@ -73,27 +73,49 @@ This skill is purely a reader and dispatcher — it never mutates project state.
 
 ```bash
 PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
-PROJECTS_ROOT="${PROJECTS_ROOT%/}"
+```
+
+Before reading project state, resolve the active project's scope and pull a
+synced checkout. Arrival is read-oriented: if scope resolution fails, warn,
+skip the pull, and continue into the existing missing/invalid-project routing
+instead of terminating the skill.
+
+```bash
+if [ -n "$PROJECT_PATH" ]; then
+  if ! PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value); then
+    echo "Warning: Could not resolve active project scope; skipping arrival pull and continuing with available local state." >&2
+    PROJECT_SCOPE=""
+  elif [ "$PROJECT_SCOPE" = "synced" ]; then
+    [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$PROJECT_PATH"
+  fi
+fi
 ```
 
 **If `PROJECT_PATH` is missing or invalid (directory does not exist):**
 
-Check whether any projects exist:
+Ask the CLI for its all-scope project inventory. Do not probe only the shared
+projects root:
 
 ```bash
-ls -d "$PROJECTS_ROOT"/*/ 2>/dev/null
+PROJECT_LIST_JSON=$(oat project list --json) || exit 1
 ```
 
-- **No projects exist:** Report error and suggest:
+Read the structured `projects` array. It includes shared projects, local-only
+projects, and synced records whose detached checkout is absent.
+
+- **The `projects` array is empty:** Report error and suggest:
   - `oat-project-new` — Create a spec-driven project
   - `oat-project-quick-start` — Start a quick workflow project
   - `oat-project-import-plan` — Import an external plan
   - **STOP.** Do not attempt routing.
 
-- **Projects exist but none is active:** Report error and suggest:
-  - `oat-project-open` — Select an existing project
-  - **STOP.** Do not attempt routing.
+- **The `projects` array is non-empty but the active pointer is missing or
+  invalid:** Show the available project names with their `scope` and `checkout`
+  state, then invoke `oat-project-open` so the user selects an existing
+  project. An absent-checkout synced record and a local-only project both take
+  this selection route; never suggest creating a replacement project. **STOP**
+  this router after the selection workflow returns so the next invocation can
+  pull/read the chosen project normally.
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the basename of the path.
 

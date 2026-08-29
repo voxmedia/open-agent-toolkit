@@ -1,19 +1,37 @@
-import { isAbsolute, join } from 'node:path';
+import { stat } from 'node:fs/promises';
+import {
+  basename,
+  extname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
+import { listSyncedRecords } from '@commands/project/sync/record';
 import { parseFrontmatterField } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  PROJECT_SCOPES,
+  resolveScopeRoot,
+  type ProjectScope,
+} from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
 import {
   listProjects,
+  type ProjectListRow,
   type ProjectSummary,
 } from '@open-agent-toolkit/control-plane';
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 
 interface ProjectListDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -23,8 +41,11 @@ interface ProjectListDependencies {
     env: NodeJS.ProcessEnv,
   ) => Promise<string>;
   listProjects: (projectsRoot: string) => Promise<ProjectSummary[]>;
+  listSyncedRecords: typeof listSyncedRecords;
+  directoryExists: (path: string) => Promise<boolean>;
   readProjectMetadata: (projectPath: string) => Promise<ProjectListMetadata>;
   processEnv: NodeJS.ProcessEnv;
+  gitRunner: GitRunner;
 }
 
 interface ProjectListMetadata {
@@ -35,6 +56,8 @@ interface ProjectListMetadata {
 
 interface ProjectListOptions {
   includeCoordination?: boolean;
+  scope?: ProjectScope;
+  remote?: boolean;
 }
 
 const DEFAULT_DEPENDENCIES: ProjectListDependencies = {
@@ -42,9 +65,23 @@ const DEFAULT_DEPENDENCIES: ProjectListDependencies = {
   resolveProjectRoot,
   resolveProjectsRoot,
   listProjects,
+  listSyncedRecords,
+  directoryExists,
   readProjectMetadata,
   processEnv: process.env,
+  gitRunner: defaultGitRunner,
 };
+
+async function directoryExists(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).isDirectory();
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return false;
+    }
+    throw error;
+  }
+}
 
 async function readProjectMetadata(
   projectPath: string,
@@ -91,20 +128,36 @@ async function filterProjectsForList(
   return filtered;
 }
 
-function formatProjectTable(projects: ProjectSummary[]): string[] {
+function formatProjectTable(projects: ProjectListRow[]): string[] {
   if (projects.length === 0) {
     return ['No tracked projects found.'];
   }
 
   const rows = projects.map((project) => ({
     name: project.name,
-    phase: `${project.phase} (${project.phaseStatus})`,
-    progress: `${project.progress.completed}/${project.progress.total}`,
+    scope: project.scope,
+    phase:
+      project.phase === null
+        ? '—'
+        : `${project.phase} (${project.phaseStatus})`,
+    progress:
+      project.progress === null
+        ? '—'
+        : `${project.progress.completed}/${project.progress.total}`,
     recommendation: project.recommendation.skill,
+    hint:
+      project.kind === 'materialized'
+        ? project.recordError
+          ? 'restore record from Git'
+          : '—'
+        : project.kind === 'recorded-invalid'
+          ? 'restore record from Git'
+          : `oat project pull ${project.name}`,
   }));
 
   const widths = {
     name: Math.max('NAME'.length, ...rows.map((row) => row.name.length)),
+    scope: Math.max('SCOPE'.length, ...rows.map((row) => row.scope.length)),
     phase: Math.max('PHASE'.length, ...rows.map((row) => row.phase.length)),
     progress: Math.max(
       'PROGRESS'.length,
@@ -114,32 +167,214 @@ function formatProjectTable(projects: ProjectSummary[]): string[] {
       'RECOMMENDATION'.length,
       ...rows.map((row) => row.recommendation.length),
     ),
+    hint: Math.max('HINT'.length, ...rows.map((row) => row.hint.length)),
   };
 
   const header = [
     'NAME'.padEnd(widths.name),
+    'SCOPE'.padEnd(widths.scope),
     'PHASE'.padEnd(widths.phase),
     'PROGRESS'.padEnd(widths.progress),
     'RECOMMENDATION'.padEnd(widths.recommendation),
+    'HINT'.padEnd(widths.hint),
   ].join('  ');
 
   const divider = [
     '-'.repeat(widths.name),
+    '-'.repeat(widths.scope),
     '-'.repeat(widths.phase),
     '-'.repeat(widths.progress),
     '-'.repeat(widths.recommendation),
+    '-'.repeat(widths.hint),
   ].join('  ');
 
   const lines = rows.map((row) =>
     [
       row.name.padEnd(widths.name),
+      row.scope.padEnd(widths.scope),
       row.phase.padEnd(widths.phase),
       row.progress.padEnd(widths.progress),
       row.recommendation.padEnd(widths.recommendation),
+      row.hint.padEnd(widths.hint),
     ].join('  '),
   );
 
   return [header, divider, ...lines];
+}
+
+function displayPath(repoRoot: string, absolutePath: string): string {
+  return relative(repoRoot, absolutePath).split(sep).join('/');
+}
+
+async function collectProjectRows(
+  repoRoot: string,
+  projectsRoot: string,
+  options: ProjectListOptions,
+  context: CommandContext,
+  dependencies: ProjectListDependencies,
+): Promise<ProjectListRow[]> {
+  const configuredSharedRoot = isAbsolute(projectsRoot)
+    ? resolve(projectsRoot)
+    : resolve(repoRoot, projectsRoot);
+  const roots: Array<{ scope: ProjectScope; path: string }> = [
+    { scope: 'shared', path: configuredSharedRoot },
+    {
+      scope: 'synced',
+      path: resolveScopeRoot(repoRoot, projectsRoot, 'synced'),
+    },
+    {
+      scope: 'local',
+      path: resolveScopeRoot(repoRoot, projectsRoot, 'local'),
+    },
+  ];
+  const selected = options.scope
+    ? roots.filter((entry) => entry.scope === options.scope)
+    : roots;
+  const rows: ProjectListRow[] = [];
+  for (const root of selected) {
+    if (await dependencies.directoryExists(root.path)) {
+      const projects = await filterProjectsForList(
+        await dependencies.listProjects(root.path),
+        root.path,
+        options.includeCoordination ?? false,
+        dependencies,
+      );
+      rows.push(
+        ...projects.map(
+          (project): ProjectListRow => ({
+            ...project,
+            kind: 'materialized',
+            scope: root.scope,
+            checkout: 'present',
+          }),
+        ),
+      );
+    }
+    if (root.scope === 'synced') {
+      const materialized = new Set(
+        rows
+          .filter(
+            (row) => row.scope === 'synced' && row.kind === 'materialized',
+          )
+          .map((row) => row.name),
+      );
+      const records = await dependencies.listSyncedRecords(root.path, {
+        onInvalid: (path, error) => {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          const name = basename(path, extname(path));
+          const materializedRow = rows.find(
+            (row): row is Extract<ProjectListRow, { kind: 'materialized' }> =>
+              row.scope === 'synced' &&
+              row.kind === 'materialized' &&
+              row.name === name,
+          );
+          if (materializedRow) {
+            materializedRow.recordError = message;
+            materializedRow.recommendation = {
+              skill: 'none',
+              reason: 'restore invalid record from a trusted Git revision',
+            };
+          } else {
+            rows.push({
+              kind: 'recorded-invalid',
+              name,
+              path: displayPath(repoRoot, path),
+              scope: 'synced',
+              checkout: 'invalid',
+              recordError: message,
+              phase: null,
+              phaseStatus: null,
+              workflowMode: null,
+              lifecycle: null,
+              progress: null,
+              recommendation: {
+                skill: 'none',
+                reason: 'restore invalid record from a trusted Git revision',
+              },
+            });
+          }
+          context.logger.warn(
+            `Skipping invalid synced project record ${displayPath(repoRoot, path)}: ${message}`,
+          );
+        },
+      });
+      for (const record of records) {
+        if (!materialized.has(record.slug)) {
+          rows.push({
+            kind: 'recorded-absent',
+            name: record.slug,
+            path: displayPath(repoRoot, join(root.path, record.slug)),
+            scope: 'synced',
+            checkout: 'absent',
+            phase: null,
+            phaseStatus: null,
+            workflowMode: null,
+            lifecycle: null,
+            progress: null,
+            recommendation: {
+              skill: 'oat project pull',
+              reason: 'checkout absent',
+            },
+          });
+        }
+      }
+    }
+  }
+  return rows.sort(
+    (left, right) =>
+      left.name.localeCompare(right.name) ||
+      left.scope.localeCompare(right.scope),
+  );
+}
+
+async function appendRemoteRows(
+  rows: ProjectListRow[],
+  repoRoot: string,
+  context: CommandContext,
+  dependencies: ProjectListDependencies,
+): Promise<ProjectListRow[]> {
+  const remote = await dependencies.gitRunner.run(
+    ['ls-remote', 'origin', 'refs/oat/projects/*'],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  if (remote.code !== 0) {
+    context.logger.warn(
+      `Warning: unable to list remote synced projects: ${remote.stderr || remote.stdout || 'origin is unreachable'}`,
+    );
+    return rows;
+  }
+  const localSlugs = new Set(
+    rows.filter((row) => row.scope === 'synced').map((row) => row.name),
+  );
+  for (const line of remote.stdout.split('\n')) {
+    const [, ref] = line.trim().split(/\s+/);
+    if (!ref?.startsWith('refs/oat/projects/')) continue;
+    const name = ref.slice('refs/oat/projects/'.length);
+    if (!name || localSlugs.has(name)) continue;
+    rows.push({
+      kind: 'remote',
+      name,
+      scope: 'synced',
+      origin: 'remote',
+      checkout: 'absent',
+      ref,
+      phase: null,
+      phaseStatus: null,
+      workflowMode: null,
+      lifecycle: null,
+      progress: null,
+      recommendation: {
+        skill: 'oat project pull',
+        reason: 'not adopted on this branch',
+      },
+    });
+  }
+  return rows.sort(
+    (left, right) =>
+      left.name.localeCompare(right.name) ||
+      left.scope.localeCompare(right.scope),
+  );
 }
 
 async function runProjectList(
@@ -153,15 +388,21 @@ async function runProjectList(
       repoRoot,
       dependencies.processEnv,
     );
-    const absoluteProjectsRoot = isAbsolute(projectsRoot)
-      ? projectsRoot
-      : join(repoRoot, projectsRoot);
-    const projects = await filterProjectsForList(
-      await dependencies.listProjects(absoluteProjectsRoot),
-      absoluteProjectsRoot,
-      options.includeCoordination ?? false,
+    let projects = await collectProjectRows(
+      repoRoot,
+      projectsRoot,
+      options,
+      context,
       dependencies,
     );
+    if (options.remote && (!options.scope || options.scope === 'synced')) {
+      projects = await appendRemoteRows(
+        projects,
+        repoRoot,
+        context,
+        dependencies,
+      );
+    }
 
     if (context.json) {
       context.logger.json({ status: 'ok', projects });
@@ -179,7 +420,7 @@ async function runProjectList(
     } else {
       context.logger.error(message);
     }
-    process.exitCode = 1;
+    process.exitCode = error instanceof CliError ? error.exitCode : 2;
   }
 }
 
@@ -197,6 +438,12 @@ export function createProjectListCommand(
       '--include-coordination',
       'Include completed coordination parent projects',
     )
+    .addOption(
+      new Option('--scope <scope>', 'Filter by project scope').choices(
+        PROJECT_SCOPES,
+      ),
+    )
+    .option('--remote', 'Include synced projects discovered on origin')
     .action(async (options: ProjectListOptions, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),

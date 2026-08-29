@@ -1,7 +1,14 @@
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
@@ -41,6 +48,9 @@ const docsAppPackageJsonPath = fileURLToPath(
 );
 const workspaceRootPackageJsonPath = fileURLToPath(
   new URL('../../../../package.json', import.meta.url),
+);
+const cliTsconfigPath = fileURLToPath(
+  new URL('../../tsconfig.json', import.meta.url),
 );
 const bundleAssetsScriptPath = fileURLToPath(
   new URL('../../scripts/bundle-assets.sh', import.meta.url),
@@ -142,6 +152,7 @@ describe('getPublicPackageContracts', () => {
         forbiddenPathPatterns: expect.arrayContaining([
           'src/**',
           '**/*.test.*',
+          '**/__tests__/**',
           'tsconfig.tsbuildinfo',
         ]),
       }),
@@ -230,12 +241,14 @@ describe('getPublicPackageContracts', () => {
       'assets/NOTICES.md',
       'README.md',
       'src/index.ts',
+      'dist/commands/__tests__/helpers.js',
       'tsconfig.tsbuildinfo',
     ];
 
     expect(findMissingPackedPaths(packedPaths, cliContract)).toEqual([]);
     expect(findForbiddenPackedPaths(packedPaths, cliContract)).toEqual([
       'src/index.ts',
+      'dist/commands/__tests__/helpers.js',
       'tsconfig.tsbuildinfo',
     ]);
   });
@@ -283,6 +296,41 @@ describe('getPublicPackageContracts', () => {
       await rm(packageDir, { recursive: true, force: true });
     }
   }, 20_000);
+
+  it('excludes nested test support without mutating built package output', async () => {
+    const cliContract = getPublicPackageContracts()[0];
+    const cliPackageRoot = dirname(cliPackageJsonPath);
+    const cliTsconfig = await readJson(cliTsconfigPath);
+    const packageJson = await readJson(cliPackageJsonPath);
+    const distIndexPath = join(cliPackageRoot, 'dist', 'index.js');
+    const assetsMetadataPath = join(
+      cliPackageRoot,
+      'assets',
+      'bundle-metadata.json',
+    );
+    const outputBeforePack = await Promise.all([
+      readFile(distIndexPath),
+      readFile(assetsMetadataPath),
+    ]);
+
+    expect(cliTsconfig.exclude).toContain('src/**/__tests__/**');
+    expect((packageJson.scripts as Record<string, string>).build).toContain(
+      'find dist -type d -name __tests__',
+    );
+
+    await expect(
+      access(join(cliPackageRoot, 'dist', '__tests__', 'synced-fixture.js')),
+    ).rejects.toThrow();
+    const packedArtifact = await packPublicPackage(cliContract);
+    const packedPaths = packedArtifact.files.map((file) => file.path);
+    expect(
+      packedPaths.filter((path) => path.split('/').includes('__tests__')),
+    ).toEqual([]);
+    await expect(readFile(distIndexPath)).resolves.toEqual(outputBeforePack[0]);
+    await expect(readFile(assetsMetadataPath)).resolves.toEqual(
+      outputBeforePack[1],
+    );
+  }, 30_000);
 
   it('rejects notice payloads reduced to attribution summaries', () => {
     const cliContract = getPublicPackageContracts()[0];

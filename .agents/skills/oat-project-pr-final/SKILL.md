@@ -1,10 +1,10 @@
 ---
 name: oat-project-pr-final
-version: 1.5.3
+version: 1.6.0
 description: Use when the user requests or confirms opening the final PR for an active OAT project — e.g. "open the final PR", "ship it", "run oat-project-pr-final", or confirms a previously offered final-PR step. Do NOT auto-invoke when phases are marked complete. Generates the final lifecycle PR description from artifacts and creates the PR.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 ---
 
 # Project PR (Final)
@@ -293,6 +293,10 @@ Reference links policy:
 - Prefer clickable blob links to the current branch for References.
 - Build links from `origin` + current branch when possible.
 - If remote URL cannot be resolved into a web URL, fall back to plain relative paths.
+- For `synced`, never add project artifact paths to References. The delimited
+  `oat project links` block replaces them and contains only eligible pinned
+  discovery/design/summary links; it never links plan, state, implementation,
+  or reviews.
 
 Local path exclusion:
 
@@ -365,6 +369,23 @@ Only include links to artifacts that actually exist in the project. Omit any tha
 ### Step 5: Create PR
 
 After writing the PR artifact, push and create the PR automatically.
+
+For a synced project, use this ordered flow; do not reorder it:
+
+1. Finish or refresh `summary.md` and the PR artifact.
+2. Run `oat project push "$PROJECT_PATH" --message "chore(oat): prepare final PR artifacts" --json` so the ref contains both files; a nonzero exit stops the flow until the reported pull/conflict recovery is resolved and the push is retried.
+3. Render `oat project links "$PROJECT_PATH" --format markdown` and insert or replace its delimited block in the stripped PR body. The initial body must already contain the freshly pushed summary link when `summary.md` exists.
+4. Push the code branch, then run `gh pr create`; capture the returned URL.
+5. Set `oat_pr_status: open`, `oat_pr_url`, `oat_phase_status: pr_open`, and the existing routing prose in `state.md`.
+6. Run `oat project push "$PROJECT_PATH" --message "chore(oat): record final PR metadata" --json` again. A nonzero exit stops closeout until the reported recovery is resolved and the push is retried. A successful push publishes authoritative PR metadata and refreshes the GitHub links block to the new ref SHA.
+
+Scope resolution is fail-closed:
+
+```bash
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing PR bookkeeping" >&2; exit 1; }
+```
+
+The non-synced flow below remains unchanged.
 
 **CRITICAL — Strip YAML frontmatter before submitting to GitHub.**
 The local artifact file contains YAML frontmatter (`---` delimited block at the top) for OAT metadata. This frontmatter MUST NOT appear in the GitHub PR body. Before passing the file to `gh pr create`, strip everything from the start of the file through and including the closing `---` line. Verify the resulting body starts with the markdown heading (e.g., `# feat: ...`), not YAML keys.

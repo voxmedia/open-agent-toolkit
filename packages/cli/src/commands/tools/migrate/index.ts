@@ -108,7 +108,7 @@ async function writeGenerated(
       if (config.projects?.root?.trim()) return;
       await writeOatConfig(scopeRoot, {
         ...config,
-        projects: { root: '.oat/projects/shared' },
+        projects: { ...config.projects, root: '.oat/projects/shared' },
       });
       return;
     }

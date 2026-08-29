@@ -1,10 +1,10 @@
 ---
 name: oat-project-retro
-version: 1.0.2
+version: 1.0.3
 description: Use when the user requests or confirms a project retrospective — e.g. "run the project retro", "write project-retro.md", "retrospective this project", or confirms a previously offered retro. Do NOT auto-invoke merely because implementation or summary completed. Produces references/project-retro.md from project logs, execution learnings, and session/transcript evidence, with repo improvements and OAT upstream feedback.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(pnpm:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(pnpm:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 ---
 
 # Project Retrospective
@@ -42,7 +42,7 @@ identity, correction-commit, and later retro-writeback transitions. Perform
 semantic post-side-effect recovery before appending again. Record `Applied-ref`
 only after the correction and retro writeback are durably committed.
 
-## Progress Indicators
+## Progress Indicators (User-Facing)
 
 Print one banner and concise step indicators:
 

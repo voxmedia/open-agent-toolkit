@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { compareVersions } from '@commands/init/tools/shared/version';
 import { getAgentVersion, getSkillVersion } from '@commands/shared/frontmatter';
+import { readOatConfig } from '@config/oat-config';
 import {
   type ManagedRootName,
   type ResolvedManagedRoot,
@@ -167,6 +168,16 @@ async function inventoryAsset(
   }
 
   if (definition.ownership[scope] === 'seed-if-missing') {
+    if (definition.generation === 'projects-config-default') {
+      const config = await readOatConfig(scopeRoot);
+      return {
+        definition,
+        path: installedPath,
+        status: config.projects?.root?.trim() ? 'present' : 'outdated',
+        installedVersion: null,
+        bundledVersion: null,
+      };
+    }
     return {
       definition,
       path: installedPath,

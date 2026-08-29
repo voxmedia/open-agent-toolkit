@@ -1,9 +1,13 @@
 import { execFile } from 'node:child_process';
-import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readFile, rm, writeFile } from 'node:fs/promises';
+import { dirname, isAbsolute, join, relative } from 'node:path';
 import { promisify } from 'node:util';
 
-import { fileExists } from '@fs/io';
+import type { GitRunner } from '@commands/project/sync/git';
+import { canonicalizePath } from '@commands/shared/project-scope';
+import { CliError } from '@errors/cli-error';
+
+import { applyManagedBlock } from './managed-block';
 
 const SECTION_START = '# OAT core';
 const SECTION_END = '# END OAT core';
@@ -15,9 +19,23 @@ const CORE_ENTRIES = [
   '.oat/state.md',
   '.oat/projects/local/**',
   '.oat/projects/archived/**',
+  '.oat/projects/synced/*/',
   '!.oat/projects/local/.gitkeep',
   '!.oat/projects/archived/.gitkeep',
 ];
+
+function managedScopedRules(content: string | null): string[] {
+  if (content === null) return [];
+  const startIndex = content.indexOf(SECTION_START);
+  const endIndex = content.indexOf(SECTION_END);
+  if (startIndex === -1 || endIndex < startIndex) return [];
+  return content
+    .slice(startIndex + SECTION_START.length, endIndex)
+    .split('\n')
+    .filter((line) =>
+      /^\/(?:.+\/)?(?:local\/\*\*|synced\/\*\/|archived\/\*\*)$/.test(line),
+    );
+}
 
 export interface ApplyOatCoreResult {
   action: 'created' | 'updated' | 'no-change';
@@ -25,59 +43,190 @@ export interface ApplyOatCoreResult {
   stateDashboardIndexAction: 'untracked' | 'not-tracked' | 'not-git-repo';
 }
 
-function buildSection(): string {
-  return `${SECTION_START}\n${CORE_ENTRIES.join('\n')}\n${SECTION_END}`;
+export interface EnsureScopedRootGitignoreResult {
+  before: string | null | undefined;
+  changed: boolean;
+}
+
+async function readOptionalFile(path: string): Promise<string | null> {
+  try {
+    return await readFile(path, 'utf8');
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
+}
+
+function removeUnmanagedRule(content: string, rule: string): string {
+  let inManagedBlock = false;
+  return content
+    .split('\n')
+    .filter((line) => {
+      if (line === SECTION_START) inManagedBlock = true;
+      const keep = line !== rule || inManagedBlock;
+      if (line === SECTION_END) inManagedBlock = false;
+      return keep;
+    })
+    .join('\n');
+}
+
+export async function isSyncedRuleApplied(repoRoot: string): Promise<boolean> {
+  try {
+    await execFileAsync(
+      'git',
+      [
+        'check-ignore',
+        '--quiet',
+        '--no-index',
+        '.oat/projects/synced/__probe__/',
+      ],
+      { cwd: repoRoot },
+    );
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function applyOatCoreGitignore(
   repoRoot: string,
+  additionalEntries: readonly string[] = [],
 ): Promise<ApplyOatCoreResult> {
   const gitignorePath = join(repoRoot, '.gitignore');
-  const exists = await fileExists(gitignorePath);
-  const section = buildSection();
-
-  if (!exists) {
-    await writeFile(gitignorePath, `${section}\n`, 'utf8');
-    return {
-      action: 'created',
-      entries: CORE_ENTRIES,
-      stateDashboardIndexAction: await untrackOatStateDashboard(repoRoot),
-    };
-  }
-
-  const content = await readFile(gitignorePath, 'utf8');
-  const startIdx = content.indexOf(SECTION_START);
-  const endIdx = content.indexOf(SECTION_END);
-
-  if (startIdx !== -1 && endIdx !== -1) {
-    const existingSection = content.slice(
-      startIdx,
-      endIdx + SECTION_END.length,
-    );
-    if (existingSection === section) {
-      return {
-        action: 'no-change',
-        entries: CORE_ENTRIES,
-        stateDashboardIndexAction: await untrackOatStateDashboard(repoRoot),
-      };
-    }
-
-    const before = content.slice(0, startIdx);
-    const after = content.slice(endIdx + SECTION_END.length);
-    await writeFile(gitignorePath, `${before}${section}${after}`, 'utf8');
-    return {
-      action: 'updated',
-      entries: CORE_ENTRIES,
-      stateDashboardIndexAction: await untrackOatStateDashboard(repoRoot),
-    };
-  }
-
-  const separator = content.endsWith('\n') ? '\n' : '\n\n';
-  await writeFile(gitignorePath, `${content}${separator}${section}\n`, 'utf8');
+  const existingScopedRules = managedScopedRules(
+    await readOptionalFile(gitignorePath),
+  );
+  const result = await applyManagedBlock(gitignorePath, {
+    start: SECTION_START,
+    end: SECTION_END,
+    entries: [
+      ...new Set([
+        ...CORE_ENTRIES,
+        ...existingScopedRules,
+        ...additionalEntries,
+      ]),
+    ],
+  });
   return {
-    action: 'updated',
-    entries: CORE_ENTRIES,
+    ...result,
     stateDashboardIndexAction: await untrackOatStateDashboard(repoRoot),
+  };
+}
+
+export async function ensureScopedRootGitignore(
+  repoRoot: string,
+  scopeRoot: string,
+  scope: 'local' | 'synced',
+  git: GitRunner,
+  dirtyMessage:
+    | string
+    | null = 'Cannot repair the configured project-root rule because .gitignore has staged or unstaged changes; commit or stash those changes, then retry.',
+): Promise<EnsureScopedRootGitignoreResult> {
+  const canonicalRepoRoot = canonicalizePath(repoRoot);
+  const canonicalScopeRoot = canonicalizePath(scopeRoot);
+  const scopeRelative = relative(canonicalRepoRoot, canonicalScopeRoot);
+  if (
+    scopeRelative === '..' ||
+    scopeRelative.startsWith('../') ||
+    scopeRelative.startsWith('..\\') ||
+    isAbsolute(scopeRelative)
+  ) {
+    return { changed: false, before: undefined };
+  }
+
+  const normalizedRoot = scopeRelative.split('\\').join('/');
+  const scopeRule =
+    scope === 'local' ? `/${normalizedRoot}/**` : `/${normalizedRoot}/*/`;
+  const defaultRoot = `.oat/projects/${scope}`;
+  const customRules = normalizedRoot === defaultRoot ? [] : [scopeRule];
+  if (scope === 'synced') {
+    const archiveRoot = `${normalizedRoot.slice(0, normalizedRoot.lastIndexOf('/') + 1)}archived`;
+    if (archiveRoot !== '.oat/projects/archived') {
+      customRules.push(`/${archiveRoot}/**`);
+    }
+  }
+  const gitignorePath = join(repoRoot, '.gitignore');
+  const current = await readOptionalFile(gitignorePath);
+  const sectionStart = current?.indexOf(SECTION_START) ?? -1;
+  const sectionEnd = current?.indexOf(SECTION_END) ?? -1;
+  const managedSection =
+    current && sectionStart !== -1 && sectionEnd >= sectionStart
+      ? current.slice(sectionStart, sectionEnd)
+      : '';
+  const managedLines = managedSection.split('\n');
+  const customRulesManaged = customRules.every((rule) =>
+    managedLines.includes(rule),
+  );
+  const probes = [join(canonicalScopeRoot, '__probe__', 'artifact.md')];
+  if (scope === 'synced') {
+    probes.push(
+      join(dirname(canonicalScopeRoot), 'archived', '__probe__', 'artifact.md'),
+    );
+  }
+  const ignoredResults = await Promise.all(
+    probes.map((probe) =>
+      git.run(['check-ignore', '--quiet', '--no-index', probe], {
+        cwd: repoRoot,
+        allowFailure: true,
+      }),
+    ),
+  );
+  if (
+    ignoredResults.every((result) => result.code === 0) &&
+    customRulesManaged
+  ) {
+    return { changed: false, before: undefined };
+  }
+  const failedProbe = ignoredResults.find(
+    (result) => result.code !== 0 && result.code !== 1,
+  );
+  if (failedProbe) {
+    throw new CliError(
+      `git check-ignore failed (exit ${failedProbe.code}): ${failedProbe.stderr || failedProbe.stdout || 'unknown Git error'}`,
+      2,
+    );
+  }
+
+  if (dirtyMessage !== null) {
+    const gitignoreStatus = await git.run(
+      ['status', '--porcelain=v1', '--', '.gitignore'],
+      { cwd: repoRoot },
+    );
+    if (gitignoreStatus.stdout !== '') throw new CliError(dirtyMessage, 1);
+  }
+
+  const before = await readOptionalFile(gitignorePath);
+  if (before !== null && customRules.length > 0) {
+    const cleaned = customRules.reduce(removeUnmanagedRule, before);
+    if (cleaned !== before) await writeFile(gitignorePath, cleaned, 'utf8');
+  }
+  await applyOatCoreGitignore(repoRoot, customRules);
+
+  const verifiedResults = await Promise.all(
+    probes.map((probe) =>
+      git.run(['check-ignore', '--quiet', '--no-index', probe], {
+        cwd: repoRoot,
+        allowFailure: true,
+      }),
+    ),
+  );
+  const unverified = verifiedResults.find((result) => result.code !== 0);
+  if (unverified) {
+    if (before === null) {
+      await rm(gitignorePath, { force: true });
+    } else {
+      await writeFile(gitignorePath, before, 'utf8');
+    }
+    throw new CliError(
+      `git check-ignore failed after applying the managed block (exit ${unverified.code}): ${unverified.stderr || unverified.stdout || 'configured rule did not match'}`,
+      2,
+    );
+  }
+  return {
+    before,
+    changed: (await readOptionalFile(gitignorePath)) !== before,
   };
 }
 

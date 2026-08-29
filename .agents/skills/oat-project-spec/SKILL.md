@@ -1,6 +1,6 @@
 ---
 name: oat-project-spec
-version: 2.0.1
+version: 2.0.2
 description: Use when discovery is complete but you're not ready to design yet, and you want to formalize requirements into a structured spec.md as an optional standalone step. Independent of the design workflow — oat-project-design confirms requirements automatically and does not require this skill to be run first.
 disable-model-invocation: true
 user-invocable: true
@@ -437,14 +437,27 @@ Specification - Ready for design phase
 During implementation of OAT itself, use standard commit format.
 
 ```bash
-git add "$PROJECT_PATH/"
-git commit -m "docs: complete specification for {project-name}
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "docs: complete specification for {project-name}
+
+Requirements:
+- {N} functional requirements (P0: {n}, P1: {n}, P2: {n})
+- {N} non-functional requirements (P0: {n}, P1: {n}, P2: {n})
+
+Ready for design phase" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+else
+  PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/spec.md" "$PROJECT_PATH/state.md")
+  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
+  git commit -m "docs: complete specification for {project-name}
 
 Requirements:
 - {N} functional requirements (P0: {n}, P1: {n}, P2: {n})
 - {N} non-functional requirements (P0: {n}, P1: {n}, P2: {n})
 
 Ready for design phase"
+fi
 ```
 
 ### Step 21: Output Summary

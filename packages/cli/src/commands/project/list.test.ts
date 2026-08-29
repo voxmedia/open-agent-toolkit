@@ -5,6 +5,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { CliError } from '@errors/cli-error';
 import type { ProjectSummary } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -20,16 +21,28 @@ interface HarnessOptions {
     string,
     { kind: string; phase: string; phaseStatus: string }
   >;
+  remoteOutput?: string;
+  resolveError?: Error;
 }
 
 function createHarness(options: HarnessOptions): {
   capture: LoggerCapture;
   command: Command;
   listProjects: ReturnType<typeof vi.fn>;
+  gitRunner: { run: ReturnType<typeof vi.fn> };
 } {
   const capture = createLoggerCapture();
-  const listProjects = vi.fn(async () => options.projects ?? []);
+  const listProjects = vi.fn(async (root: string) =>
+    root.endsWith('/shared') ? (options.projects ?? []) : [],
+  );
 
+  const gitRunner = {
+    run: vi.fn(async () => ({
+      code: 0,
+      stdout: options.remoteOutput ?? '',
+      stderr: '',
+    })),
+  };
   const command = createProjectListCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
@@ -41,11 +54,16 @@ function createHarness(options: HarnessOptions): {
       interactive: !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
-    resolveProjectRoot: vi.fn(async () => options.cwd),
+    resolveProjectRoot: vi.fn(async () => {
+      if (options.resolveError) throw options.resolveError;
+      return options.cwd;
+    }),
     resolveProjectsRoot: vi.fn(
       async () => options.projectsRoot ?? '.oat/projects/shared',
     ),
     listProjects,
+    listSyncedRecords: vi.fn(async () => []),
+    directoryExists: vi.fn(async (path: string) => path.endsWith('/shared')),
     readProjectMetadata: vi.fn(async (projectPath: string) => {
       const projectName = projectPath.split('/').at(-1) ?? projectPath;
       return (
@@ -56,10 +74,11 @@ function createHarness(options: HarnessOptions): {
         }
       );
     }),
+    gitRunner,
     processEnv: options.env ?? {},
   });
 
-  return { capture, command, listProjects };
+  return { capture, command, listProjects, gitRunner };
 }
 
 async function runCommand(
@@ -71,7 +90,6 @@ async function runCommand(
     .name('oat')
     .option('--json')
     .option('--verbose')
-    .option('--scope <scope>')
     .option('--cwd <path>')
     .exitOverride();
 
@@ -181,6 +199,8 @@ describe('oat project list', () => {
     await runCommand(command, []);
 
     expect(capture.info.join('\n')).toContain('NAME');
+    expect(capture.info.join('\n')).toContain('SCOPE');
+    expect(capture.info.join('\n')).toContain('shared');
     expect(capture.info.join('\n')).toContain('alpha');
     expect(capture.info.join('\n')).toContain('oat-project-implement');
     expect(process.exitCode).toBe(0);
@@ -265,6 +285,95 @@ describe('oat project list', () => {
 
     expect(capture.info.join('\n')).toContain('coordination-parent');
     expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    { scope: 'shared', queriesRemote: false },
+    { scope: 'local', queriesRemote: false },
+    { scope: 'synced', queriesRemote: true },
+  ] as const)(
+    'respects --scope $scope when combined with --remote',
+    async ({ scope, queriesRemote }) => {
+      const { command, capture, gitRunner } = createHarness({
+        cwd: '/repo',
+        remoteOutput:
+          '1234567890123456789012345678901234567890\trefs/oat/projects/remote-only',
+      });
+
+      await runCommand(command, ['--scope', scope, '--remote'], ['--json']);
+
+      expect(gitRunner.run).toHaveBeenCalledTimes(queriesRemote ? 1 : 0);
+      const projects = (
+        capture.jsonPayloads[0] as { projects: Array<{ scope: string }> }
+      ).projects;
+      expect(projects.every((row) => row.scope === scope)).toBe(true);
+      expect(projects.some((row) => row.scope === 'synced')).toBe(
+        scope === 'synced',
+      );
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('warns and preserves local rows when origin is unreachable', async () => {
+    const capture = createLoggerCapture();
+    const command = createProjectListCommand({
+      buildCommandContext: (): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: true,
+        cwd: '/repo',
+        home: '/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveProjectRoot: async () => '/repo',
+      resolveProjectsRoot: async () => '.oat/projects/shared',
+      listProjects: async () => [projectSummary('local-row')],
+      listSyncedRecords: async () => [],
+      directoryExists: async (path) => path.endsWith('/shared'),
+      readProjectMetadata: async () => ({
+        kind: 'implementation',
+        phase: 'plan',
+        phaseStatus: 'complete',
+      }),
+      gitRunner: {
+        run: async () => ({ code: 2, stdout: '', stderr: 'offline' }),
+      },
+      processEnv: {},
+    });
+    await runCommand(command, ['--remote']);
+    expect(capture.warn[0]).toContain('offline');
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      projects: [expect.objectContaining({ name: 'local-row' })],
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    {
+      name: 'preserves an actionable CliError exit code',
+      error: new CliError('invalid project scope state', 1),
+      expectedExitCode: 1,
+    },
+    {
+      name: 'classifies an unknown exception as a system error',
+      error: new Error('filesystem unavailable'),
+      expectedExitCode: 2,
+    },
+  ])('$name', async ({ error, expectedExitCode }) => {
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      resolveError: error,
+    });
+
+    await runCommand(command, [], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toEqual({
+      status: 'error',
+      message: error.message,
+    });
+    expect(process.exitCode).toBe(expectedExitCode);
   });
 });
 

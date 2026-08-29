@@ -1,6 +1,6 @@
 ---
 name: oat-project-reconcile
-version: 1.0.1
+version: 1.0.2
 description: Use when human-implemented commits need to be mapped back to planned tasks. Reconciles implementation.md and state.md after manual work outside the OAT workflow.
 disable-model-invocation: true
 user-invocable: true
@@ -675,21 +675,25 @@ Add a reconciliation session entry to the `## Implementation Log` section:
 
 Create a single bookkeeping commit for all artifact updates and present a final summary.
 
-**6a. Stage only tracking files:**
+**6a. Persist only tracking files:**
 
 ```bash
-git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
-# Only add plan.md if it was modified
-git diff --name-only "$PROJECT_PATH/plan.md" 2>/dev/null | grep -q . && git add "$PROJECT_PATH/plan.md"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): reconcile manual implementation ({first_task_id}..{last_task_id})" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+else
+  git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
+  # Only add plan.md if it was modified
+  git diff --name-only "$PROJECT_PATH/plan.md" 2>/dev/null | grep -q . && git add "$PROJECT_PATH/plan.md"
+  git diff --cached --quiet || git commit -m "chore(oat): reconcile manual implementation ({first_task_id}..{last_task_id})"
+fi
 ```
 
 **Important:** Do NOT use `git add -A` or glob patterns. Only stage the specific OAT tracking files listed above.
 
-**6b. Commit with reconciliation message:**
-
-```bash
-git diff --cached --quiet || git commit -m "chore(oat): reconcile manual implementation ({first_task_id}..{last_task_id})"
-```
+**6b. Record the reconciliation message:** use the same message in either the
+synced push or branch commit above.
 
 Example: `chore(oat): reconcile manual implementation (p01-t03..p02-t01)`
 

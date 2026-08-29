@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import { lstat, readFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
+import { CliError } from '@errors/cli-error';
 import { atomicWriteJson, dirExists, fileExists } from '@fs/io';
 import { normalizeToPosixPath, validateRealPathWithinScope } from '@fs/paths';
 
@@ -42,6 +43,11 @@ export interface OatDocumentationConfig {
 
 export interface OatGitConfig {
   defaultBranch?: string;
+}
+
+export interface OatProjectsConfig {
+  root?: string;
+  defaultScope?: 'shared' | 'local' | 'synced';
 }
 
 export interface OatArchiveConfig {
@@ -945,7 +951,7 @@ function normalizePjmConfig(value: unknown): OatPjmConfig | undefined {
 export interface OatConfig {
   version: number;
   worktrees?: { root: string };
-  projects?: { root: string };
+  projects?: OatProjectsConfig;
   git?: OatGitConfig;
   archive?: OatArchiveConfig;
   explainers?: OatExplainersConfig;
@@ -1075,7 +1081,10 @@ async function normalizeReadableProjectPath(
   }
 }
 
-function normalizeOatConfig(parsed: unknown): OatConfig {
+function normalizeOatConfig(
+  parsed: unknown,
+  configPath = '.oat/config.json',
+): OatConfig {
   const next: OatConfig = { ...DEFAULT_OAT_CONFIG };
   if (!isRecord(parsed)) {
     return next;
@@ -1089,12 +1098,30 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     next.worktrees = { root: parsed.worktrees.root.trim() };
   }
 
-  if (
-    isRecord(parsed.projects) &&
-    typeof parsed.projects.root === 'string' &&
-    parsed.projects.root.trim()
-  ) {
-    next.projects = { root: parsed.projects.root.trim() };
+  if (isRecord(parsed.projects)) {
+    const root =
+      typeof parsed.projects.root === 'string' && parsed.projects.root.trim()
+        ? parsed.projects.root.trim()
+        : undefined;
+    const rawDefaultScope = parsed.projects.defaultScope;
+    const defaultScope =
+      rawDefaultScope === 'shared' ||
+      rawDefaultScope === 'local' ||
+      rawDefaultScope === 'synced'
+        ? rawDefaultScope
+        : undefined;
+    if (rawDefaultScope !== undefined && defaultScope === undefined) {
+      throw new CliError(
+        `Invalid projects.defaultScope in ${configPath}: "${String(rawDefaultScope)}". Expected one of: shared, local, synced. Repair it with oat config set projects.defaultScope <shared|local|synced>.`,
+        2,
+      );
+    }
+    if (root || defaultScope) {
+      next.projects = {
+        ...(root ? { root } : {}),
+        ...(defaultScope ? { defaultScope } : {}),
+      };
+    }
   }
 
   if (isRecord(parsed.git)) {
@@ -1276,7 +1303,30 @@ export async function readOatConfig(repoRoot: string): Promise<OatConfig> {
 
   try {
     const raw = await readFile(configPath, 'utf8');
-    return normalizeOatConfig(parseJsonConfig(raw, configPath));
+    return normalizeOatConfig(parseJsonConfig(raw, configPath), configPath);
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return { ...DEFAULT_OAT_CONFIG };
+    }
+
+    throw error;
+  }
+}
+
+export async function readOatConfigForDefaultScopeRepair(
+  repoRoot: string,
+): Promise<OatConfig> {
+  const configPath = getConfigPath(repoRoot);
+
+  try {
+    const raw = await readFile(configPath, 'utf8');
+    const parsed = parseJsonConfig(raw, configPath);
+    if (isRecord(parsed) && isRecord(parsed.projects)) {
+      const { defaultScope: _invalidDefaultScope, ...projects } =
+        parsed.projects;
+      return normalizeOatConfig({ ...parsed, projects }, configPath);
+    }
+    return normalizeOatConfig(parsed, configPath);
   } catch (error) {
     if (isMissingFileError(error)) {
       return { ...DEFAULT_OAT_CONFIG };
@@ -1318,7 +1368,7 @@ export async function writeOatConfig(
   config: OatConfig,
 ): Promise<void> {
   const configPath = getConfigPath(repoRoot);
-  const normalized = normalizeOatConfig(config);
+  const normalized = normalizeOatConfig(config, configPath);
   await atomicWriteJson(configPath, normalized);
 }
 

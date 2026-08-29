@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.6.2
+version: 1.7.5
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -42,14 +42,42 @@ if [[ -z "$PROJECT_PATH" ]]; then
 fi
 
 PROJECT_NAME=$(basename "$PROJECT_PATH")
+ACTIVE_PROJECT_PATH="$PROJECT_PATH"
 
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
-PROJECTS_ROOT="${PROJECTS_ROOT%/}"
-IS_SHARED_PROJECT="false"
+# Set SKILL_DIR to the absolute directory containing this loaded SKILL.md.
+COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"
+COMPLETION_RETRY_SCRIPT="$SKILL_DIR/scripts/resolve-completion-retry.mjs"
+COMPLETION_RETRY_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-completion-retry-fields.mjs"
+NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT="$SKILL_DIR/scripts/validate-nonarchive-lifecycle-receipt.mjs"
+test -f "$COMPLETION_RECEIPT_SCRIPT" || {
+  echo "oat: completion receipt recovery script is missing" >&2
+  exit 1
+}
+test -f "$COMPLETION_RETRY_SCRIPT" || {
+  echo "oat: completion retry routing script is missing" >&2
+  exit 1
+}
+test -f "$COMPLETION_RETRY_FIELDS_SCRIPT" || {
+  echo "oat: completion retry field decoder is missing" >&2
+  exit 1
+}
+test -f "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" || {
+  echo "Missing non-archive lifecycle receipt validator: $NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" >&2
+  exit 1
+}
 
-case "$PROJECT_PATH" in
-  "${PROJECTS_ROOT}/"*) IS_SHARED_PROJECT="true" ;;
-esac
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing completion" >&2; exit 1; }
+if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+  oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }
+fi
+PROJECT_RETAINED_REF=""
+if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+  PROJECT_RETAINED_REF="refs/oat/projects/${PROJECT_NAME}"
+fi
+IS_DURABLE_PROJECT="false"
+if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then
+  IS_DURABLE_PROJECT="true"
+fi
 ```
 
 ### Step 2: Upfront User Questions (Batched)
@@ -94,15 +122,101 @@ PR_ON_COMPLETE=$(oat config get workflow.createPrOnComplete 2>/dev/null || true)
 PROJECT_RECAP_CONFIG=$(oat config get workflow.explainers.projectRecap --json 2>/dev/null || true)
 ```
 
-- **If `ARCHIVE_PREF` is `true`:** Set `SHOULD_ARCHIVE="true"`. Skip the archive question. Print `Archive on complete: enabled (from workflow.archiveOnComplete).`
-- **If `ARCHIVE_PREF` is `false`:** Set `SHOULD_ARCHIVE="false"`. Skip the archive question. Print `Archive on complete: disabled (from workflow.archiveOnComplete).`
-- **If unset:** Include the archive question in the batched prompt as normal (backward compatible).
+- **If `IS_DURABLE_PROJECT` is `false`:** Omit the archive question regardless of
+  `ARCHIVE_PREF`. The resolver below selects `local-default`; do not assign
+  `SHOULD_ARCHIVE` directly.
+- **If `IS_DURABLE_PROJECT` is `true` and `ARCHIVE_PREF` is `true`:** Skip the
+  archive question. Print
+  `Archive on complete: enabled (from workflow.archiveOnComplete).`
+- **If `IS_DURABLE_PROJECT` is `true` and `ARCHIVE_PREF` is `false`:** Skip the
+  archive question. Print
+  `Archive on complete: disabled (from workflow.archiveOnComplete).`
+- **If `IS_DURABLE_PROJECT` is `true` and `ARCHIVE_PREF` is unset:** Include
+  the archive question in the batched prompt as normal (backward compatible).
 - **If `PR_ON_COMPLETE` is `true` AND no tracked open PR exists:** Set `SHOULD_OPEN_PR="true"`. Skip the Open PR question. Print `PR on complete: enabled (from workflow.createPrOnComplete).`
 - **If `PR_ON_COMPLETE` is `false`:** Set `SHOULD_OPEN_PR="false"`. Skip the Open PR question. Print `PR on complete: disabled (from workflow.createPrOnComplete).`
 - **If `PR_ON_COMPLETE` is unset:** Include the Open PR question in the batched prompt as normal (backward compatible).
 - The existing tracked-PR skip still applies: if `oat_pr_status` is `open`, do not ask the Open PR question and do not honor `PR_ON_COMPLETE=true` — the PR already exists.
 
+Select archive prompt participation before assembling the batched prompt:
+
+```bash
+# archive-prompt-selection:start
+ARCHIVE_QUESTION_REQUIRED="false"
+if [[ "$IS_DURABLE_PROJECT" == "true" ]]; then
+  if [[ "$ARCHIVE_PREF" == "true" ]]; then
+    echo "Archive on complete: enabled (from workflow.archiveOnComplete)."
+  elif [[ "$ARCHIVE_PREF" == "false" ]]; then
+    echo "Archive on complete: disabled (from workflow.archiveOnComplete)."
+  else
+    ARCHIVE_QUESTION_REQUIRED="true"
+  fi
+fi
+# archive-prompt-selection:end
+```
+
 The "Ready to mark complete?" confirmation is always asked — it is a meaningful "are you sure" moment, not a preference.
+
+The configured-decline case is `workflow.archiveOnComplete=false`. When the
+preference is unset and the user declines the batched archive question, the
+interactive archive answer is `false`. Both cases select the same explicit
+non-archive transaction below; declining archive never means skipping synced
+record durability.
+
+Route every source through
+`scripts/recover-completion-receipts.mjs#resolveCompletionArchiveDecision`
+before assigning `SHOULD_ARCHIVE`. For a local project, pass the explicit
+`localNonArchive=true` decision without asking the archive question. For a
+durable project, pass `configuredPreference` only when
+`workflow.archiveOnComplete` is set; otherwise pass the accepted batched
+`interactiveAnswer`. Require the result's `source` to be `local-default`,
+`configured`, or `interactive` as appropriate and use its `shouldArchive`
+boolean. An absent, conflicting, or non-boolean decision fails closed instead
+of silently selecting a lifecycle path. The executable completion transaction
+tests must use this same resolver; scenario labels alone are not decision
+coverage.
+
+After the configured preference or accepted interactive answer is available,
+invoke the resolver rather than assigning `SHOULD_ARCHIVE` directly:
+
+```bash
+# archive-decision-resolution:start
+ARCHIVE_DECISION_ARGS=()
+EXPECTED_ARCHIVE_DECISION_SOURCE=""
+if [[ "$IS_DURABLE_PROJECT" == "false" ]]; then
+  ARCHIVE_DECISION_ARGS+=(--local-nonarchive true)
+  EXPECTED_ARCHIVE_DECISION_SOURCE="local-default"
+elif [[ "$ARCHIVE_PREF" == "true" || "$ARCHIVE_PREF" == "false" ]]; then
+  ARCHIVE_DECISION_ARGS+=(--archive-preference "$ARCHIVE_PREF")
+  EXPECTED_ARCHIVE_DECISION_SOURCE="configured"
+else
+  test "$ARCHIVE_INTERACTIVE_ANSWER" = "true" \
+    || test "$ARCHIVE_INTERACTIVE_ANSWER" = "false" \
+    || exit 1
+  ARCHIVE_DECISION_ARGS+=(--interactive-archive "$ARCHIVE_INTERACTIVE_ANSWER")
+  EXPECTED_ARCHIVE_DECISION_SOURCE="interactive"
+fi
+ARCHIVE_DECISION_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT" \
+  "${ARCHIVE_DECISION_ARGS[@]}") || exit 1
+ARCHIVE_DECISION_FIELDS=$(node -e '
+const value = JSON.parse(process.argv[1]);
+if (typeof value.shouldArchive !== "boolean" || !["local-default", "configured", "interactive"].includes(value.source)) process.exit(1);
+process.stdout.write(`${value.shouldArchive}\t${value.source}`);
+' "$ARCHIVE_DECISION_JSON") || exit 1
+IFS=$'\t' read -r SHOULD_ARCHIVE ARCHIVE_DECISION_SOURCE \
+  <<< "$ARCHIVE_DECISION_FIELDS"
+test "$ARCHIVE_DECISION_SOURCE" = "$EXPECTED_ARCHIVE_DECISION_SOURCE" || exit 1
+if [[ "$ARCHIVE_DECISION_SOURCE" == "local-default" ]]; then
+  test "$SHOULD_ARCHIVE" = "false" || exit 1
+fi
+# archive-decision-resolution:end
+```
+
+Require `ARCHIVE_DECISION_SOURCE` to match the source selected above. Local
+completion always resolves to explicit non-archive without asking the archive
+question. Store an unconfigured durable-project batched answer as
+`ARCHIVE_INTERACTIVE_ANSWER` until this resolver returns; only then assign
+`SHOULD_ARCHIVE`.
 
 Resolve `projectRecap` intent before presenting the batched completion prompt.
 Use the `oat-explainer-kit` lifecycle intent resolver in interactive mode with
@@ -142,7 +256,8 @@ implementation ran:
 **Questions to ask (in a single prompt):**
 
 1. **Confirm completion:** "Ready to mark **{PROJECT_NAME}** as complete?"
-2. **Archive** (only if `IS_SHARED_PROJECT` is `true`): "Archive the project after completion?"
+2. **Archive** (only if `ARCHIVE_QUESTION_REQUIRED` is `true`):
+   "Archive the project after completion?"
 3. **Generate or refresh summary** (only if summary status is `missing` or `stale`): present the status explicitly:
    - Missing example: "A summary has not been generated yet. Would you like me to generate it now as part of completion?"
    - Stale example: "The project summary is out of date. Would you like me to refresh it now as part of completion?"
@@ -166,9 +281,11 @@ Ready to complete project **{PROJECT_NAME}**?
 
 If the user declines the completion confirmation, exit gracefully.
 
-After the user accepts the completion confirmation, store the answers as
-`SHOULD_ARCHIVE`, `SHOULD_GENERATE_SUMMARY`, `SHOULD_GENERATE_RETRO`,
-`SHOULD_GENERATE_RECAP`, and `SHOULD_OPEN_PR` for use in later steps. Set
+After the user accepts the completion confirmation, store a prompted archive
+answer as `ARCHIVE_INTERACTIVE_ANSWER`; assign `SHOULD_ARCHIVE` only through
+the decision resolver above. Store the remaining answers as
+`SHOULD_GENERATE_SUMMARY`, `SHOULD_GENERATE_RETRO`, `SHOULD_GENERATE_RECAP`,
+and `SHOULD_OPEN_PR` for use in later steps. Set
 `SHOULD_GENERATE_RETRO="false"` when the retro already exists or this completion
 run is non-interactive. Persist a prompted recap answer only after that
 confirmation is accepted.
@@ -352,7 +469,69 @@ a warning rather than changing project completion status.
 
 `project-explainer` runs are active-project working artifacts, not durable post-completion reference products. Do not export, re-attest, or add archive-aware PR or summary reference links for a `project-explainer` run.
 
-For `IS_SHARED_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`. A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence. Do not treat local filesystem presence as durability. Completion-bookkeeping durability, relocation re-attestation, and archive-aware recap links are handled by the later durability stage, not by this selection gate.
+For `IS_DURABLE_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`. This is the local scope. A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence. Do not treat local filesystem presence as durability. Shared and synced recaps are exported and attested through the later durability stage.
+
+### Step 3.65: Recover a Recognizable Completion Receipt Before Mutation
+
+Initialize `PROJECT_LINKS_PIN_COMMIT=""`, `PROJECT_REF_COMMIT=""`,
+`EVIDENCE_COMMIT=""`, `RECOVERED_EVIDENCE_COMMIT=""`,
+`EVIDENCE_PUSH_REQUIRED=""`, `PR_DESCRIPTION_RELATIVE_PATH=""`, and
+`COMPLETION_RECEIPTS_RECOVERED="false"`. For a
+synced non-archive run, invoke the skill-owned retry router before the
+project-log probe, seal append, review moves, `complete-state`, active-pointer,
+or PR-artifact mutation. This is the one executable routing surface; do not
+recreate candidate detection and recovery as separate shell branches:
+
+```bash
+if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "false" ]]; then
+  COMPLETION_RETRY_ARGS=(
+    --project-path "$ACTIVE_PROJECT_PATH"
+    --retained-ref "$PROJECT_RETAINED_REF"
+  )
+  if [[ -n "$SELECTED_PROJECT_RECAP_RUN" ]]; then
+    COMPLETION_RETRY_ARGS+=(
+      --evidence-path "$SELECTED_PROJECT_RECAP_RUN/manifest.json"
+      --evidence-path "$SELECTED_PROJECT_RECAP_RUN/build-record.json"
+    )
+  fi
+  COMPLETION_RETRY_JSON=$(node "$COMPLETION_RETRY_SCRIPT" \
+    "${COMPLETION_RETRY_ARGS[@]}") || exit 1
+  COMPLETION_RETRY_FIELDS=$(node "$COMPLETION_RETRY_FIELDS_SCRIPT" \
+    "$COMPLETION_RETRY_JSON") || exit 1
+  IFS=$'\t' read -r COMPLETION_RETRY_ROUTE _ \
+    <<< "$COMPLETION_RETRY_FIELDS"
+  if [[ "$COMPLETION_RETRY_ROUTE" == "recovery" ]]; then
+    IFS=$'\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT \
+      PROJECT_REF_COMMIT RECOVERED_EVIDENCE_COMMIT EVIDENCE_PUSH_REQUIRED \
+      PR_DESCRIPTION_RELATIVE_PATH <<< "$COMPLETION_RETRY_FIELDS"
+    if [[ "$RECOVERED_EVIDENCE_COMMIT" != "-" ]]; then
+      EVIDENCE_COMMIT="$RECOVERED_EVIDENCE_COMMIT"
+    fi
+    PR_DESCRIPTION_PATH="$ACTIVE_PROJECT_PATH/$PR_DESCRIPTION_RELATIVE_PATH"
+    COMPLETION_RECEIPTS_RECOVERED="true"
+  elif [[ "$COMPLETION_RETRY_ROUTE" == "pin-source" ]]; then
+    IFS=$'\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT \
+      PR_DESCRIPTION_RELATIVE_PATH <<< "$COMPLETION_RETRY_FIELDS"
+    PR_DESCRIPTION_PATH="$ACTIVE_PROJECT_PATH/$PR_DESCRIPTION_RELATIVE_PATH"
+    COMPLETION_RECEIPTS_RECOVERED="true"
+  elif [[ "$COMPLETION_RETRY_ROUTE" != "normal" || \
+    "$COMPLETION_RETRY_FIELDS" != "normal" ]]; then
+    exit 1
+  fi
+fi
+```
+
+A recognized candidate must be clean and validate completely; dirty,
+malformed, mixed, or contradictory candidates exit before the router returns.
+When the result is `route: "normal"`, follow the ordinary flow without
+changing its existing dirty-worktree guarantees. When it is
+`route: "recovery"`, the executable has already restored the final receipts.
+Jump directly to Step 7.5 and skip every mutation in Steps 3.7 through 7. When
+it is `route: "pin-source"`, the executable has validated the already-published
+pin-source tree and PR artifact; preserve `PROJECT_LINKS_PIN_COMMIT`, jump
+directly to Step 8.6, and skip Steps 3.7 through 7, including a duplicate
+pin-source push. The executable transaction matrix must use this same router
+for all configured and interactive interruption rows.
 
 ### Step 3.7: Project Log Completion Gate
 
@@ -439,12 +618,25 @@ Delegate the canonical `state.md` completion mutation to the CLI:
 
 ```bash
 COMPLETE_STATE_ARGS=("$PROJECT_PATH")
-if [[ "$SHOULD_ARCHIVE" == "true" && "$IS_SHARED_PROJECT" == "true" ]]; then
+if [[ "$SHOULD_ARCHIVE" == "true" && "$IS_DURABLE_PROJECT" == "true" ]]; then
   COMPLETE_STATE_ARGS+=("--archived")
 fi
 
 oat project complete-state "${COMPLETE_STATE_ARGS[@]}"
 ```
+
+For `synced`, keep this finalized lifecycle state in the project checkout until
+Step 7.5 publishes it together with every later pre-archive artifact write. Do
+not push here: Step 7 may still create or replace the PR-description artifact,
+and the retained project ref must include that late artifact.
+
+When archive is selected, the synced completion order is: finalize → generate
+the PR artifact → project-ref pin-source push → project archive → render
+`oat project links --durable-summary <path>` → update the open PR body. When
+archive is declined, it is: finalize → generate the PR artifact →
+project-ref pin-source push → render the final links → final artifact push →
+exact discovery-record commit → optional active-recap evidence commit and
+project push.
 
 The CLI command owns both the frontmatter completion fields and the canonical markdown body updates for `state.md`.
 It must set `oat_lifecycle: complete`, completion timestamps, `**Status:** Complete`, `**Last Updated:**`, the canonical `## Current Phase` body, normalized `## Progress`, and `## Next Milestone`.
@@ -481,6 +673,15 @@ fi
 
 5. **Write PR description artifact** — write to `{PROJECT_PATH}/pr/project-pr-YYYY-MM-DD.md` following the template and policies from `oat-project-pr-final` Step 4 (frontmatter policy, reference links policy, local path exclusion).
 
+When no PR description artifact exists, write it before the final synced
+project-ref publication, regardless of archive or recap selection.
+
+Retain the one selected or written artifact as `PR_DESCRIPTION_PATH`. Resolve
+`PR_DESCRIPTION_RELATIVE_PATH` from `ACTIVE_PROJECT_PATH`, require it to be a
+normalized project-relative path, and reject zero, multiple, symlinked, or
+outside-project candidates. Step 7.5 passes that exact relative path to the
+receipt recovery surface.
+
 If a PR description artifact already exists at `{PROJECT_PATH}/pr/project-pr-*.md`:
 
 - When `SHOULD_ARCHIVE` is `true`, regenerate it (overwrite). The existing artifact was authored by `oat-project-pr-final` before any archive intent existed and links to artifact paths that will be local-only after Step 8. Regenerating ensures Step 11 / Step 11.5 push a body whose links still resolve on the remote.
@@ -509,9 +710,161 @@ When archiving, the project artifacts at `{PROJECT_PATH}/{plan,implementation,di
 
 Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path under `.oat/projects/archived/<name>/...`. That path is gitignored on every checkout and never reaches the remote.
 
+#### Step 7.5: Publish Synced Project Pin Source
+
+For `synced`, publish only after Step 7 has finished every pre-archive project
+artifact write. This receipt is the immutable pin source used when Step 8.6
+renders the final links. Keep it separate from the final non-archive artifact
+receipt:
+
+Preserve `PROJECT_LINKS_PIN_COMMIT`, `PROJECT_REF_COMMIT`, `EVIDENCE_COMMIT`,
+and `EVIDENCE_PUSH_REQUIRED` when the Step 3.65 router restored them. A
+`pin-source` route skips this step entirely and resumes at Step 8.6. Do not
+initialize over a recovered value or run a second candidate-routing branch at
+this step. The pre-mutation router owns candidate detection, exact PR-artifact
+selection, pin-source retry validation, and `recoverCompletionReceipts`; its
+read-only recovery must have validated the applicable receipt chain before
+returning a receipt:
+
+- a clean synced checkout and the retained local ref;
+- the exact final-artifact and optional evidence subjects;
+- exactly the PR-description path in the final-artifact commit and exactly the
+  two supplied recap record paths in an evidence commit;
+- single-parent pin-source → final-artifact → optional evidence ordering, with
+  the pin source subject equal to the preliminary push message below;
+- canonical `state.md` lifecycle fields in the pin-source tree, including
+  `oat_lifecycle: complete` and equal valid UTC completion/update timestamps;
+- when the pin source contains `project-log.md`, its final entry is the
+  canonical `oat-project-complete` completion seal; an absent log remains the
+  supported inert project-log configuration from Step 3.7;
+- exactly one well-ordered links block pinned to the pin-source parent; and
+- either equal local/remote final-artifact receipts, equal local/remote evidence
+  receipts, or the one allowed unpublished-evidence state where checkout HEAD
+  is the exact evidence child while both retained refs remain at its exact
+  final-artifact parent.
+
+Restore the returned `projectLinksPinCommit` as
+`PROJECT_LINKS_PIN_COMMIT`, `projectRefCommit` as `PROJECT_REF_COMMIT`, and a
+non-null `evidenceCommit` as `EVIDENCE_COMMIT`. Any candidate with a malformed
+subject, path set, parent, links block, retained ref, or local/remote relation
+fails closed. Do not fall through to a new pin-source publication after a
+partial or contradictory candidate. This retry recognition is valid whether
+the parent discovery record is still active or already complete.
+
+Build the recovery arguments only for post-push revalidation of an unpublished
+evidence receipt:
+
+```bash
+RECOVERY_ARGS=(
+  --project-path "$ACTIVE_PROJECT_PATH"
+  --retained-ref "$PROJECT_RETAINED_REF"
+  --pr-artifact "$PR_DESCRIPTION_RELATIVE_PATH"
+)
+if [[ -n "$SELECTED_PROJECT_RECAP_RUN" ]]; then
+  RECOVERY_ARGS+=(
+    --evidence-path "$SELECTED_PROJECT_RECAP_RUN/manifest.json"
+    --evidence-path "$SELECTED_PROJECT_RECAP_RUN/build-record.json"
+  )
+fi
+
+parse_completion_receipts() {
+  node -e '
+const value = JSON.parse(process.argv[1]);
+const sha = /^[0-9a-f]{40}$/;
+if (value.status !== "recovered" || !sha.test(value.projectLinksPinCommit) || !sha.test(value.projectRefCommit)) process.exit(1);
+if (value.evidenceCommit !== null && !sha.test(value.evidenceCommit)) process.exit(1);
+if (typeof value.evidencePushRequired !== "boolean") process.exit(1);
+process.stdout.write([
+  value.projectLinksPinCommit,
+  value.projectRefCommit,
+  value.evidenceCommit ?? "-",
+  String(value.evidencePushRequired),
+].join("\t"));
+' "$1"
+}
+
+```
+
+Use this block only after the Step 3.65 router restored a candidate. Require
+`EVIDENCE_PUSH_REQUIRED` to be `true` or `false`; no other output is accepted.
+
+When the recovery result reports `evidencePushRequired: true`, publish the
+existing checkout HEAD with `oat project push "$PROJECT_PATH" --json` before
+continuing. Require `status: "pushed"` or `status: "up-to-date"`, the same
+retained ref, and a receipt SHA exactly equal to `EVIDENCE_COMMIT`. This push
+must not create a commit, rerender the PR artifact, or rewrite any receipt.
+Re-run the recovery surface after the push and require the exact same pin,
+final-artifact, and evidence SHAs with `evidencePushRequired: false`.
+
+```bash
+parse_synced_push_receipt() {
+  node -e '
+const value = JSON.parse(process.argv[1]);
+if (!["pushed", "up-to-date"].includes(value.status)) process.exit(1);
+if (!/^[0-9a-f]{40}$/.test(value.sha) || typeof value.ref !== "string") process.exit(1);
+process.stdout.write(`${value.ref}\t${value.sha}`);
+' "$1"
+}
+
+if [[ "$EVIDENCE_PUSH_REQUIRED" == "true" ]]; then
+  RECOVERED_EVIDENCE_PUSH_OUTPUT=$(oat project push \
+    "$PROJECT_PATH" --json) || exit 1
+  RECOVERED_EVIDENCE_PUSH_FIELDS=$( \
+    parse_synced_push_receipt "$RECOVERED_EVIDENCE_PUSH_OUTPUT"
+  ) || exit 1
+  IFS=$'\t' read -r RECOVERED_PUSH_REF RECOVERED_PUSH_SHA \
+    <<< "$RECOVERED_EVIDENCE_PUSH_FIELDS"
+  test "$RECOVERED_PUSH_REF" = "$PROJECT_RETAINED_REF" || exit 1
+  test "$RECOVERED_PUSH_SHA" = "$EVIDENCE_COMMIT" || exit 1
+  PUBLISHED_RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT" \
+    "${RECOVERY_ARGS[@]}") || exit 1
+  PUBLISHED_RECOVERY_FIELDS=$( \
+    parse_completion_receipts "$PUBLISHED_RECOVERY_JSON"
+  ) || exit 1
+  IFS=$'\t' read -r PUBLISHED_PIN_COMMIT PUBLISHED_REF_COMMIT \
+    PUBLISHED_EVIDENCE_COMMIT PUBLISHED_EVIDENCE_PUSH_REQUIRED \
+    <<< "$PUBLISHED_RECOVERY_FIELDS"
+  test "$PUBLISHED_PIN_COMMIT" = "$PROJECT_LINKS_PIN_COMMIT" || exit 1
+  test "$PUBLISHED_REF_COMMIT" = "$PROJECT_REF_COMMIT" || exit 1
+  test "$PUBLISHED_EVIDENCE_COMMIT" = "$EVIDENCE_COMMIT" || exit 1
+  test "$PUBLISHED_EVIDENCE_PUSH_REQUIRED" = "false" || exit 1
+fi
+```
+
+When retry recognition did not set `PROJECT_REF_COMMIT`, publish the pin
+source:
+
+```bash
+if [[ "$PROJECT_SCOPE" == "synced" && -z "$PROJECT_REF_COMMIT" ]]; then
+  PROJECT_PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" \
+    --message "chore(oat): finalize project lifecycle" --json) || exit 1
+  PROJECT_PUSH_FIELDS=$( \
+    parse_synced_push_receipt "$PROJECT_PUSH_OUTPUT"
+  ) || exit 1
+  IFS=$'\t' read -r PROJECT_RETAINED_REF PROJECT_LINKS_PIN_COMMIT \
+    <<< "$PROJECT_PUSH_FIELDS"
+  printf '%s\n' "$PROJECT_PUSH_OUTPUT"
+fi
+```
+
+Require the structured push result to report `status: "pushed"` or
+`status: "up-to-date"`, the retained project ref, and a full `sha`. Capture the
+exact structured receipt SHA as `PROJECT_LINKS_PIN_COMMIT`. Never infer this
+receipt from the parent branch, a stale local ref, or an earlier push. Verify
+the receipt commit contains the newly created PR-description artifact when
+Step 7 started without one, as well as every other pre-archive project artifact
+write.
+
+Both configured and interactive archive-decline paths continue from this exact
+pin-source receipt into Step 8.6. The later final artifact receipt and exact
+parent-branch record commit finish the non-archive transaction when no recap is
+selected. With a selected recap, the evidence commit in Step 10.6 must remain
+the immediate child of the final artifact receipt, never the preliminary pin
+source.
+
 ### Step 8: Archive Project (Conditional)
 
-**Skip if `SHOULD_ARCHIVE` is false or `IS_SHARED_PROJECT` is false.**
+**Skip if `SHOULD_ARCHIVE` is false or `IS_DURABLE_PROJECT` is false.**
 
 This conditional skips archive movement only; it does not skip the Step 3.7
 seal append for an existing project log.
@@ -519,6 +872,9 @@ seal append for an existing project log.
 Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).
 
 The archive-side effects in this step are CLI-owned. Do not reimplement local archive movement, summary export, S3 sync, AWS credential handling, or worktree durability checks in the skill.
+
+Archive refuses a dirty or unpushed synced checkout. The correction is
+`oat project push "$PROJECT_PATH"`; never discard or bypass pending artifacts.
 
 ```bash
 ARCHIVE_OUTPUT=""
@@ -538,8 +894,14 @@ printf '%s\n' "$ARCHIVE_OUTPUT"
 
 Parse `ARCHIVE_OUTPUT` as the `oat project archive --json` report. Require
 `status: "ok"`, `mode: "apply"`, and a non-empty `archivePath`; use its
-`s3Path`, `summaryExportFile`, and `warnings` fields for later reporting. Set
-`ARCHIVE_PATH` from `archivePath`, then set `PROJECT_PATH="$ARCHIVE_PATH"`.
+`s3Path`, `summaryExportFile`, `lifecycleCommit`, and `warnings` fields for later reporting. Set
+`ARCHIVE_PATH` from `archivePath`, set `SUMMARY_EXPORT_FILE` from
+`summaryExportFile` (empty when null), then set `PROJECT_PATH="$ARCHIVE_PATH"`.
+
+For a synced project, require a full `lifecycleCommit` SHA in the archive
+report and set `LIFECYCLE_COMMIT` to it. This is the parent-branch record and
+summary-export commit owned by archive; do not replace it with
+`git rev-parse HEAD` and do not create another lifecycle commit.
 
 When `SELECTED_PROJECT_RECAP_RUN` is non-empty, also require the report's
 `projectRecapExport.sourceRunRoot`, `projectRecapExport.exportRoot`, and
@@ -557,7 +919,7 @@ authoritative. A missing, malformed, mismatched, outside-root, or gitignored
 export report is an archive failure; stop before lifecycle bookkeeping.
 Never use the gitignored archive as evidence or a link target.
 
-SELECTED_PROJECT_RECAP_RUN must be project-relative. Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty. The empty case remains the existing archive behavior. Because this step runs only for shared projects, local-scope projects never pass a recap archive argument.
+SELECTED_PROJECT_RECAP_RUN must be project-relative. Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty. The empty case remains the existing archive behavior. Because this step runs only for durable projects, local-scope projects never pass a recap archive argument.
 
 The no-recap invocation remains `oat project archive "$PROJECT_PATH"` with
 `--json` added only to select the machine-readable report.
@@ -577,6 +939,113 @@ Omit either link when its containing artifact does not exist.
 
 Use the current head branch for the blob URL while the PR is open. Never link to `.oat/projects/archived/`; it is gitignored and will return 404 remotely.
 
+The final synced links block is rendered independently in Step 8.6. Do not
+make pinned project links conditional on a recap export.
+
+#### Step 8.6: Render Final Synced Project Links
+
+Run this for every synced completion after the final project ref or archive SHA
+is known. It is required even when no project recap was selected and
+`summaryExportFile` is null.
+
+Locate the PR-description artifact under the current `PROJECT_PATH` (which is
+the archive path after Step 8). Render the canonical pinned block:
+
+```bash
+FINAL_LINK_ARGS=("$PROJECT_NAME" --format markdown)
+if [[ -n "${SUMMARY_EXPORT_FILE:-}" ]]; then
+  test -f "$SUMMARY_EXPORT_FILE" || exit 1
+  git ls-files --error-unmatch -- "$SUMMARY_EXPORT_FILE" >/dev/null || exit 1
+  git check-ignore --quiet -- "$SUMMARY_EXPORT_FILE" && exit 1
+  SUMMARY_EXPORT_RELATIVE=$(git ls-files --full-name -- "$SUMMARY_EXPORT_FILE") || exit 1
+  [[ -n "$SUMMARY_EXPORT_RELATIVE" ]] || exit 1
+  FINAL_LINK_ARGS+=(--durable-summary "$SUMMARY_EXPORT_RELATIVE")
+fi
+FINAL_PROJECT_LINKS=$(oat project links "${FINAL_LINK_ARGS[@]}") || exit 1
+```
+
+Insert `FINAL_PROJECT_LINKS` when the body has no
+`<!-- oat:project-links:start -->` block, or replace exactly the existing
+delimited block through `<!-- oat:project-links:end -->`. Do not duplicate the
+markers. The base invocation remains
+`oat project links "$PROJECT_NAME" --format markdown`; add
+`--durable-summary` only for the verified tracked export above.
+
+For `PROJECT_SCOPE="synced"` with `SHOULD_ARCHIVE="false"`, render this block
+in the active PR-description artifact before the push whose receipt becomes
+`PROJECT_REF_COMMIT`. Skip the rewrite only when Step 7.5 recognized and
+validated an already-finalized retry receipt. Otherwise publish the rendered
+artifact with a distinct final push:
+
+```bash
+if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "false" && \
+  -z "$PROJECT_REF_COMMIT" ]]; then
+  FINAL_PROJECT_PUSH_ARGS=("$PROJECT_PATH" \
+    --message "chore(oat): publish final project links" --json)
+  FINAL_PROJECT_PUSH_OUTPUT=$(oat project push \
+    "${FINAL_PROJECT_PUSH_ARGS[@]}") || exit 1
+  FINAL_PROJECT_PUSH_FIELDS=$( \
+    parse_synced_push_receipt "$FINAL_PROJECT_PUSH_OUTPUT"
+  ) || exit 1
+  IFS=$'\t' read -r FINAL_PROJECT_PUSH_REF PROJECT_REF_COMMIT \
+    <<< "$FINAL_PROJECT_PUSH_FIELDS"
+  test "$FINAL_PROJECT_PUSH_REF" = "$PROJECT_RETAINED_REF" || exit 1
+  printf '%s\n' "$FINAL_PROJECT_PUSH_OUTPUT"
+fi
+```
+
+Require the structured result to report `status: "pushed"` or
+`status: "up-to-date"`, the same retained project ref, and a full `sha`. Capture
+that exact SHA as `PROJECT_REF_COMMIT`. Verify the checkout is clean, the
+retained remote ref equals the receipt, and the receipt contains the final
+PR-description artifact with exactly one links block pinned to
+`PROJECT_LINKS_PIN_COMMIT`. When the final render produced a commit, require
+its immediate parent to equal `PROJECT_LINKS_PIN_COMMIT` and require the commit
+to contain exactly the PR-description artifact. Never substitute the
+preliminary receipt for `PROJECT_REF_COMMIT` after the artifact changed.
+
+Both PR paths consume this final body: when
+`WAS_PR_OPEN_AT_START="false"`, Step 11 creates the new PR with it; when
+`WAS_PR_OPEN_AT_START="true"`, Step 11.5 updates the already-open PR with it.
+Neither path depends on `projectRecapExport` or a configured
+`archive.summaryExportPath`.
+
+#### Step 8.7: Non-Archive Synced Completion Transaction
+
+Run this only when `PROJECT_SCOPE="synced"` and `SHOULD_ARCHIVE="false"`.
+The configured and interactive decline paths converge here after the finalized
+project tree has been pushed and `PROJECT_REF_COMMIT` has been captured.
+
+Set `SYNCED_RECORD_PATH="${ACTIVE_PROJECT_PATH}.json"`; require it to be the
+canonical direct-child discovery record under the configured synced root and
+require its parsed `slug` and `ref` to match `PROJECT_NAME` and the project
+target. Mark the discovery record `complete` with `completedAt` using a
+structured JSON write that preserves the schema's other fields and the
+formatter-stable trailing newline. Refuse symlinks, malformed records, and any
+path outside that exact boundary before writing.
+
+Snapshot unrelated staged state before this write. Step 10 must commit only
+`SYNCED_RECORD_PATH` on the parent branch with
+`chore(oat): complete synced project ${PROJECT_NAME}`, then verify the commit
+contains exactly that path and verify the unrelated staged snapshot is
+byte-for-byte unchanged. The retained project ref remains the artifact
+authority after non-archive completion. Do not remove the checkout, delete the
+ref, create archive exports, or set `PROJECT_PATH` to an archive location.
+
+When `SELECTED_PROJECT_RECAP_RUN is empty`, the final artifact push plus exact
+record commit completes this transaction. When
+`SELECTED_PROJECT_RECAP_RUN is non-empty`, Steps 10.5 and 10.6 additionally
+attest the active recap within the project-ref history.
+
+On retry, accept an already-complete record only after its exact-path commit is
+verified and the final artifact push receipt still names the retained ref SHA.
+If the final artifact push succeeded but the record commit did not, reuse the
+validated `PROJECT_LINKS_PIN_COMMIT` and `PROJECT_REF_COMMIT` receipts and retry
+only the record write/commit. If the record commit succeeded but recap evidence
+did not, reuse both receipts and retry only recap finalization. Never create a
+second lifecycle record commit, rerender the links against the final receipt,
+or rewrite either history.
+
 ### Step 9: Regenerate Dashboard
 
 Regenerate the repo state dashboard so the completion status is reflected before committing.
@@ -588,7 +1057,7 @@ oat state refresh
 ### Step 10: Commit + Push Bookkeeping (Required)
 
 Completion is not done until lifecycle changes are committed. This commit also
-anchors commit durability for a selected shared-project recap. Do not push yet
+anchors commit durability for a selected durable-project recap. Do not push yet
 when recap attestation is pending.
 
 Expected changes may include:
@@ -599,17 +1068,36 @@ Expected changes may include:
 - `{PROJECT_PATH}/pr/project-pr-*.md` (PR description artifact)
 - `.oat/state.md` is regenerated locally in Step 9 but should not be staged; it is generated dashboard state and normally gitignored.
 - `.oat/config.local.json` (if `activeProject` cleared)
-- Shared-project deletions under `{PROJECTS_ROOT}/{PROJECT_NAME}` (if archived)
+- Shared-project deletions or synced-project record updates (if archived)
 - The complete tracked recap export and tracked summary export reported by
   archive (if present)
 
 Run:
 
 ```bash
-git status --short
-git add -- <exact completion and lifecycle paths>
-git commit -m "chore(oat): complete project lifecycle for ${PROJECT_NAME}"
-LIFECYCLE_COMMIT=$(git rev-parse HEAD)
+if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+  if [[ "$SHOULD_ARCHIVE" == "true" ]]; then
+    test -n "$LIFECYCLE_COMMIT"
+  else
+    git add -- "$SYNCED_RECORD_PATH"
+    if git diff --cached --quiet -- "$SYNCED_RECORD_PATH"; then
+      LIFECYCLE_COMMIT=$(git log -1 --format=%H -- "$SYNCED_RECORD_PATH")
+      node "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" \
+        "$SYNCED_RECORD_PATH" "$LIFECYCLE_COMMIT" "$PROJECT_NAME" || exit 1
+    else
+      git commit --only "$SYNCED_RECORD_PATH" \
+        -m "chore(oat): complete synced project ${PROJECT_NAME}" &&
+        LIFECYCLE_COMMIT=$(git rev-parse HEAD) &&
+        node "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" \
+          "$SYNCED_RECORD_PATH" "$LIFECYCLE_COMMIT" "$PROJECT_NAME" || exit 1
+    fi
+  fi
+else
+  git status --short
+  git add -- <exact completion and lifecycle paths>
+  git commit -m "chore(oat): complete project lifecycle for ${PROJECT_NAME}"
+  LIFECYCLE_COMMIT=$(git rev-parse HEAD)
+fi
 ```
 
 Rules:
@@ -618,6 +1106,13 @@ Rules:
   completion/bookkeeping files. Never use a repository-wide `git add -A` when
   unrelated changes exist.
 - If there is nothing to commit, state that explicitly and verify whether the completion bookkeeping was already committed in a prior commit.
+- A non-archive synced lifecycle receipt is valid only when it is an ancestor
+  of current parent-branch `HEAD`, changes exactly `SYNCED_RECORD_PATH`, and
+  contains the current byte-identical complete record for `PROJECT_NAME` with
+  the canonical synced ref. Missing records, unrelated paths, stale content,
+  cross-project receipts, and non-ancestor commits fail closed. Validate both
+  recovered and freshly created lifecycle commit SHAs before continuing; a
+  failed commit or hook must not reuse the prior `HEAD` as a receipt.
 - The lifecycle bookkeeping commit is the artifact commit for final recap
   durability. It must contain the final run's immutable paths.
 - Snapshot unrelated working-tree changes before finalization so the shared
@@ -625,9 +1120,11 @@ Rules:
 
 ### Step 10.5: Re-attest Final Project Recap
 
-Skip when no final recap was selected, for local-scope projects, or when the
+Skip when no final recap was selected, for local-scope projects, when the
 selected recap is already durable solely through independently verified publish
-evidence.
+evidence, or when Step 7.5 restored an exact `EVIDENCE_COMMIT`. In the recovered
+evidence case, verify the selected run's manifest and build record are the two
+exact paths in that commit and continue without re-attesting or rewriting them.
 
 For an archived recap, consume the exact `projectRecapExport` values recorded
 in Step 8. Plan finalization through
@@ -641,8 +1138,14 @@ with:
 - relocatedFrom: `sourceRunRoot`; and
 - context `artifactCommit`: the full `LIFECYCLE_COMMIT` SHA.
 
-For a shared project that was not archived, use the selected active run and
-omit `relocatedFrom`, but keep the same `completion-bookkeeping` mode.
+For a durable project that was not archived, use the selected active run and
+omit `relocatedFrom`, but keep the same `completion-bookkeeping` mode. Resolve
+the finalizer repository root as `ACTIVE_PROJECT_PATH`, not the parent
+checkout. Use `PROJECT_REF_COMMIT`, not the parent-branch `LIFECYCLE_COMMIT`,
+as the active recap artifact commit. Its immutable paths must be present in
+that exact project-ref commit. The parent record commit is separate durability
+evidence for discovery and must never be substituted into the project-ref
+history.
 
 When the finalization plan is `complete` with `built-needs-review` or `failed`,
 preserve that exact outcome and skip both attestation and the evidence commit.
@@ -650,7 +1153,9 @@ These evidence-only plans are already complete for lifecycle retention and
 remain unpublishable. Call `verifyTrackedRunFinalization(...)` on the complete
 plan; it must not promote either outcome to `built-durable`.
 
-The lifecycle bookkeeping commit is the artifact commit. Call the compatible
+For archive completion, the lifecycle bookkeeping commit is the artifact
+commit. For non-archive synced completion, `PROJECT_REF_COMMIT` is the artifact
+commit. Call the compatible
 core's `recordDurability(...)` with the finalizer's planned request. Submit only immutable paths under `projectRecapExport.exportRoot` as commit evidence for an archived recap; `manifest.json` and `build-record.json` are mutable records and
 must not appear in that evidence path list. The successful exported-path
 attestation supersedes the prior active-path evidence. Verify the resulting
@@ -666,7 +1171,7 @@ details, and continue to the evidence commit.
 
 ### Step 10.6: Commit Evidence + Push
 
-When Step 10.5 ran, create the evidence update. Commit only the exported `manifest.json` and `build-record.json` as the evidence update, including warning-bearing records from a failed attestation. On failure, commit the warning-bearing `manifest.json` and `build-record.json`. Run
+When Step 10.5 ran and Step 7.5 did not restore `EVIDENCE_COMMIT`, create the evidence update. Commit only the exported `manifest.json` and `build-record.json` as the evidence update, including warning-bearing records from a failed attestation. On failure, commit the warning-bearing `manifest.json` and `build-record.json`. Run
 `verifyTrackedRunFinalization(...)` with the artifact commit, immediate evidence
 commit parent/order, exact evidence paths, attestation outcome, and unchanged
 unrelated-change snapshots.
@@ -680,6 +1185,60 @@ Push once after both commits exist so they travel together. If no attestation
 ran, push the lifecycle bookkeeping commit once. If verification detects
 contamination or wrong commit order, do not push. If push fails, report the
 failure and do not claim completion is fully recorded.
+
+The evidence update remains a direct, exact-path Git commit. Stage only the
+reported exported `manifest.json` and `build-record.json` under tracked
+`.oat/repo/reference/project-recaps/`:
+
+```bash
+UNRELATED_STAGED_PATCH_BEFORE=$(git diff --cached --binary)
+git add -- "$EXPORTED_MANIFEST_PATH" "$EXPORTED_BUILD_RECORD_PATH"
+git commit --only -m "chore(oat): attest final project recap" -- \
+  "$EXPORTED_MANIFEST_PATH" "$EXPORTED_BUILD_RECORD_PATH"
+EVIDENCE_COMMIT=$(git rev-parse HEAD)
+test "$(git rev-parse "$EVIDENCE_COMMIT^")" = "$LIFECYCLE_COMMIT"
+test "$(git diff --cached --binary)" = "$UNRELATED_STAGED_PATCH_BEFORE"
+```
+
+Verify the evidence commit contains exactly those two paths, the lifecycle
+commit is its immediate parent, unrelated-change snapshots remain unchanged,
+and then push once. The archive command does not own this evidence transition;
+use the direct exact-path commit above.
+
+For a non-archive synced recap, stage and commit only the active run's reported
+`manifest.json` and `build-record.json` from inside `ACTIVE_PROJECT_PATH`. The
+non-archive recap evidence commit must be the immediate child of
+`PROJECT_REF_COMMIT` in the project checkout. Verify exact commit containment
+and the unchanged unrelated-state snapshot, then publish the evidence commit
+with `oat project push`, retaining the custom ref and checkout. Require the
+push receipt SHA to equal the evidence commit. Recovery reuses the existing
+project-ref artifact commit and parent-branch record commit; it never moves
+active recap files into archive-export paths.
+
+Use the same path-confined commit inside the synced checkout:
+
+```bash
+ACTIVE_MANIFEST_RELATIVE_PATH="$SELECTED_PROJECT_RECAP_RUN/manifest.json"
+ACTIVE_BUILD_RECORD_RELATIVE_PATH="$SELECTED_PROJECT_RECAP_RUN/build-record.json"
+UNRELATED_PROJECT_STAGE_BEFORE=$(git -C "$ACTIVE_PROJECT_PATH" diff --cached --binary)
+git -C "$ACTIVE_PROJECT_PATH" add -- \
+  "$ACTIVE_MANIFEST_RELATIVE_PATH" "$ACTIVE_BUILD_RECORD_RELATIVE_PATH"
+git -C "$ACTIVE_PROJECT_PATH" commit --only \
+  -m "chore(oat): attest final project recap" -- \
+  "$ACTIVE_MANIFEST_RELATIVE_PATH" "$ACTIVE_BUILD_RECORD_RELATIVE_PATH"
+EVIDENCE_COMMIT=$(git -C "$ACTIVE_PROJECT_PATH" rev-parse HEAD)
+test "$(git -C "$ACTIVE_PROJECT_PATH" rev-parse "$EVIDENCE_COMMIT^")" = \
+  "$PROJECT_REF_COMMIT"
+test "$(git -C "$ACTIVE_PROJECT_PATH" diff --cached --binary)" = \
+  "$UNRELATED_PROJECT_STAGE_BEFORE"
+```
+
+When Step 7.5 restored `EVIDENCE_COMMIT`, do not stage or commit recap records
+again. Require the retained remote ref to equal that exact evidence SHA, keep
+its immediate parent equal to `PROJECT_REF_COMMIT`, and preserve the recovered
+`PROJECT_LINKS_PIN_COMMIT`. The parent discovery-record commit remains confined
+to its one canonical path, and all unrelated staged-state snapshots must remain
+byte-for-byte unchanged.
 
 ### Step 11: Open PR in GitHub (Conditional)
 
@@ -705,19 +1264,32 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 
 ### Step 11.5: Sync Open-PR Description on GitHub (Conditional)
 
-**Run only when `WAS_PR_OPEN_AT_START="true"` AND `SHOULD_ARCHIVE="true"`.**
+**Run only when `WAS_PR_OPEN_AT_START="true"` and either
+`SHOULD_ARCHIVE="true"` or `PROJECT_SCOPE="synced"`.**
 
-When the PR was already open at the start of this skill (typically because `oat-project-pr-final` ran earlier in the lifecycle) AND we just archived, the GitHub PR description authored by `oat-project-pr-final` still points to the active artifact paths. Step 8 moved those artifacts to a gitignored archive location and Step 10.6 pushed the move, so any blob link in the open PR body now 404s. Push the regenerated archive-aware body to the existing PR.
+When the PR was already open at the start, push the final validated completion
+body to the existing PR. Archive completion uses the regenerated archive-aware
+body. Non-archive synced completion uses the exact PR artifact from
+`PROJECT_REF_COMMIT`, whose canonical links block is owned by
+`PROJECT_LINKS_PIN_COMMIT`; do not substitute the parent discovery-record
+commit or the optional evidence child.
 
 Skip this step when:
 
 - The PR was not yet open at the start (`WAS_PR_OPEN_AT_START="false"`) — Step 11 already created the PR with the archive-aware body.
-- No archive happened (`SHOULD_ARCHIVE="false"`) — the original blob links still resolve.
-- `IS_SHARED_PROJECT="false"` — non-shared projects are not archived in this skill, so no link breakage.
+- No archive happened and the project is not synced — no final retained-ref
+  body was published.
+- `IS_DURABLE_PROJECT="false"` — local projects are not archived in this skill, so no link breakage.
 
 Steps:
 
-1. Locate the PR description artifact at `{PROJECT_PATH}/pr/project-pr-*.md`. After Step 8, `PROJECT_PATH` points at the archived location, so the artifact lives at `{ARCHIVE_PATH}/pr/project-pr-*.md`.
+1. Locate the exact PR description artifact. After archive, use
+   `{ARCHIVE_PATH}/pr/project-pr-*.md`. For non-archive synced completion, use
+   `PR_DESCRIPTION_PATH`, require the retained remote ref to contain
+   `PROJECT_REF_COMMIT`, and require
+   `git show "$PROJECT_REF_COMMIT:$PR_DESCRIPTION_RELATIVE_PATH"` to equal the
+   body on disk with exactly one links block pinned to
+   `PROJECT_LINKS_PIN_COMMIT`.
 2. Strip YAML frontmatter (everything from the opening `---` through and including the closing `---`) and write the result to a temporary file. Verify the temp file does not start with YAML frontmatter keys.
 3. Resolve the open PR. Prefer the tracked URL captured in Step 2:
 

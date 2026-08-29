@@ -1,7 +1,13 @@
 import { basename, isAbsolute, join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { readSyncedRecord } from '@commands/project/sync/record';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  resolveScopeRoot,
+  syncedRecordPath,
+  type ProjectScope,
+} from '@commands/shared/project-scope';
 import {
   readOatConfig,
   readOatLocalConfig,
@@ -13,6 +19,7 @@ import { resolveProjectRoot } from '@fs/paths';
 
 import {
   archiveProjectOnCompletion,
+  assertExactArchiveProjectRoot,
   assertDurableArchiveProjectTarget,
   buildArchiveSnapshotName,
   buildProjectArchiveS3Uri,
@@ -28,6 +35,7 @@ import {
 export interface ArchivePushOptions {
   dryRun?: boolean;
   projectRecapRun?: string;
+  commit?: boolean;
 }
 
 export interface ProjectArchivePushCommandDependencies {
@@ -43,10 +51,12 @@ export interface ProjectArchivePushCommandDependencies {
   ) => Promise<string>;
   resolvePrimaryRepoRoot: typeof resolvePrimaryRepoRoot;
   resolveArchiveProjectTarget: typeof resolveArchiveProjectTarget;
+  readSyncedRecord: typeof readSyncedRecord;
   verifySelectedProjectRecapForArchive: typeof verifySelectedProjectRecapForArchive;
   archiveProjectOnCompletion: (
     options: ArchiveProjectOnCompletionOptions,
   ) => Promise<ArchiveProjectOnCompletionResult>;
+  assertExactArchiveProjectRoot: typeof assertExactArchiveProjectRoot;
   processEnv: NodeJS.ProcessEnv;
   timestamp: () => string;
 }
@@ -66,6 +76,9 @@ interface ArchivePushReport {
   summaryExportFile: string | null;
   projectRecapExport?: ArchiveProjectRecapExportV1;
   warnings: string[];
+  lifecycleCommit: string | null;
+  recapExportPaths: string[];
+  snapshotId: string;
 }
 
 export function defaultProjectArchivePushCommandDependencies(): ProjectArchivePushCommandDependencies {
@@ -77,8 +90,10 @@ export function defaultProjectArchivePushCommandDependencies(): ProjectArchivePu
     resolveProjectsRoot,
     resolvePrimaryRepoRoot,
     resolveArchiveProjectTarget,
+    readSyncedRecord,
     verifySelectedProjectRecapForArchive,
     archiveProjectOnCompletion,
+    assertExactArchiveProjectRoot,
     processEnv: process.env,
     timestamp: () => new Date().toISOString(),
   };
@@ -138,6 +153,7 @@ function buildArchiveOptions(
     projectRecapRun: options.projectRecapRun,
     awsProfile: config.archive?.awsProfile,
     awsRegion: config.archive?.awsRegion,
+    ...(options.commit === false ? { commit: false } : {}),
   };
 }
 
@@ -147,11 +163,9 @@ async function buildDryRunReport(
   config: OatConfig,
   target: ResolvedArchiveTarget,
   archiveTarget: ArchiveProjectTarget,
+  snapshotName: string,
+  projectScope: ProjectScope | null,
 ): Promise<ArchivePushReport> {
-  const snapshotName = buildArchiveSnapshotName(
-    target.projectName,
-    dependencies.timestamp(),
-  );
   const remoteRepoRoot = await dependencies.resolvePrimaryRepoRoot(repoRoot);
   const s3Path =
     config.archive?.s3Uri && config.archive.s3SyncOnComplete === true
@@ -174,6 +188,12 @@ async function buildDryRunReport(
     s3Path,
     summaryExportFile,
     warnings: [],
+    lifecycleCommit: null,
+    recapExportPaths: [],
+    snapshotId:
+      projectScope === 'synced'
+        ? snapshotName
+        : basename(archiveTarget.archivePath),
   };
 }
 
@@ -246,11 +266,37 @@ export async function runArchivePushCommand(
       repoRoot,
       projectPathArg,
     );
+    const { projectScope } = dependencies.assertExactArchiveProjectRoot({
+      repoRoot,
+      projectPath: target.projectPath,
+      projectName: target.projectName,
+      projectsRoot,
+    });
+    const defaultSnapshotName = buildArchiveSnapshotName(
+      target.projectName,
+      dependencies.timestamp(),
+    );
+    const syncedRecord =
+      projectScope === 'synced'
+        ? await dependencies.readSyncedRecord(
+            syncedRecordPath(
+              resolveScopeRoot(repoRoot, projectsRoot, 'synced'),
+              target.projectName,
+            ),
+          )
+        : null;
+    const snapshotName = syncedRecord?.archiveSnapshot ?? defaultSnapshotName;
     const archiveTarget = await dependencies.resolveArchiveProjectTarget(
       {
         repoRoot,
         projectsRoot,
         projectName: target.projectName,
+        ...(syncedRecord?.archiveSnapshot
+          ? {
+              archiveSnapshot: syncedRecord.archiveSnapshot,
+              archiveScope: projectScope ?? undefined,
+            }
+          : {}),
       },
       {
         env: dependencies.processEnv,
@@ -273,6 +319,8 @@ export async function runArchivePushCommand(
         config,
         target,
         archiveTarget,
+        snapshotName,
+        projectScope,
       );
       emitArchivePushReport(report, config.archive?.summaryExportPath, context);
       process.exitCode = 0;
@@ -294,6 +342,9 @@ export async function runArchivePushCommand(
         ? { projectRecapExport: result.projectRecapExport }
         : {}),
       warnings: result.warnings,
+      lifecycleCommit: result.lifecycleCommit,
+      recapExportPaths: result.recapExportPaths,
+      snapshotId: result.snapshotId,
     };
 
     emitArchivePushReport(report, config.archive?.summaryExportPath, context);
