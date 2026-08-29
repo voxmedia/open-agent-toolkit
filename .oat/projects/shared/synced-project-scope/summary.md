@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-29
 oat_generated: true
-oat_summary_last_task: p19-t13
+oat_summary_last_task: p20-t07
 oat_summary_revision_count: 1
 oat_summary_includes_revisions: [p-rev1]
 ---
@@ -23,7 +23,8 @@ OAT project artifacts must travel across sessions, worktrees, and machines witho
 - Phase 15 strengthened cross-scope Git behavior, deterministic recovery and validation inventories, project listing, pause/pull flows, and full-range compatibility discovered by independent review.
 - Phases 16–17 completed archive/config/autonomy safety, lifecycle durability, provider-view parity, invalid-record diagnostics, custom-root ignores, locale and environment isolation, command parsing, scaffold guards, and decoupled release tests through `p17-t14`.
 - Phase 18 corrected the remote-review regression that could run the final synced-project publication against an already archived project path; its independent phase review passed.
-- Phase 19 final-review remediation requires exact archive-root identity in dry-run and apply, protects marker-bearing and damaged registered worktrees during local sync, rejects external synced roots before mutation, recovers a failed final prune commit through an exact-path retry that fails closed on remote lookup errors, and binds archive retries to the authoritative source ref. Its documentation tasks align the archive identity contract and keep closeout prose independent of review-cycle routing; `p19-t13` restores configured local-path sync between linked worktrees nested below their main checkout without weakening protection for other registrations. All thirteen tasks are complete, bringing the project total to 192/192.
+- Phase 19 final-review remediation requires exact archive-root identity in dry-run and apply, protects marker-bearing and damaged registered worktrees during local sync, rejects external synced roots before mutation, recovers a failed final prune commit through an exact-path retry that fails closed on remote lookup errors, and binds archive retries to the authoritative source ref. Its documentation tasks align the archive identity contract and keep closeout prose independent of review-cycle routing; `p19-t13` restores configured local-path sync between linked worktrees nested below their main checkout without weakening protection for other registrations.
+- Phase 20 converted remote Bugbot findings on PR #227 into seven tasks: default local completion archive decisions, pull-before-completion reads, full-checkout dirty preflight for brainstorm fold-back, fail-closed autonomous pull, pin-source completion retry recognition, branch-only archive prompting, and a dirty fold-back publication proof. Independent Phase 20 review passed after two fix tasks. All 199 planned tasks are complete.
 
 ## Key Decisions
 
@@ -36,6 +37,8 @@ OAT project artifacts must travel across sessions, worktrees, and machines witho
 - Self-migration moved from mid-implementation to post-closeout so the running workflow could first ship and use safe scope-aware bookkeeping; scratch projects supplied interim synced-scope dogfood.
 - Revision `p-rev1` merged upstream PR #226 into PR #227 at `17c3b80d`, preserving both projects' skill, PJM, validation, sync, and release behavior. Review replaced opaque merge evidence with reproducible tree/path equality and passed the integration with no blocking finding.
 - Upstream PR #229 was merged before the final remediation cycle and the full workspace test suite passed on the integrated branch. Phase 19 then converted the newest full-range review findings into bounded destructive-path and retry corrections.
+- Upstream PR #231 was merged during Phase 20 closeout. Public packages stayed at lockstep `0.2.45`; overlapping skill versions settled at `1.1.1` / `1.5.1` / `1.2.1`.
+- The configured exit-gate review found `design.md` still documenting checkout-first prune order. The shipped engine deletes the remote ref first and resumes staged record deletion when both refs are already gone; the design bullet was aligned and implementation remains source of truth.
 
 ## Notable Challenges
 
@@ -44,18 +47,19 @@ OAT project artifacts must travel across sessions, worktrees, and machines witho
 
 ## Integration Notes
 
-- The five lockstep public packages and shipped CLI asset remain aligned at `0.2.44`. After `p19-t13`, the complete Definition-of-Done, skill/version, release, and docs gates passed in exact CI order; lint and format also passed.
+- The five lockstep public packages and shipped CLI asset remain aligned at `0.2.45`. After Phase 20, the complete Definition-of-Done, skill/version, release, and docs gates passed in exact CI order; lint and format also passed. A later guided-setup harness mock unblocked CI `ENOENT` on a fake `/tmp/workspace` `.gitattributes` write.
 
 ## Revision History
 
 - **p-rev1 — PR #226 integration (2026-08-28).** Merged current `origin/main` into PR #227, reconciled overlapping assets and contracts, passed focused and full isolated-environment verification, and received an independent passing integration review.
 - **Phase 18 and Phase 19 closeout remediation (2026-08-29).** Phase 18 passed after correcting post-archive publication routing. After upstream PR #229 merged, a fresh full-range review produced five behavioral and two artifact findings; Phase 19 implemented those corrections, three independently reproduced fix-cycle residuals, archive-identity and closeout-prose alignment, and the configured-gate linked-worktree compatibility correction through `p19-t13`.
+- **Phase 20 and PR #231 integration (2026-08-29).** Remote Bugbot findings became seven bounded tasks; Phase 20 review passed. PR #231 merged at `b7dc3b06e`. The configured `cursor-fable-5-high` exit gate passed (0/0/0/2); both minors were addressed in receive. The maintainer waived a second gate after the test-only CI harness mock.
 
 ## Follow-up Items
 
 - Accepted post-release cleanup: avoid timestamp-only duplicate pause commits; enforce rather than merely advise the partial-prune no-republish rule; unify invalid-config exit-code policy; strengthen provider parity at the codec level; audit direct Git calls outside `GitRunner`; and extend custom-root archive ignores beyond synced scope.
 - Managed-block compatibility still merits fixtures for legacy two-header damage, stray/mid-line/CRLF markers, plus consolidation of duplicate restore guidance. Self-migration to `synced` and deletion of the disposable GitHub spike repository remain separately controlled closeout actions.
-- PR #227 is ready to refresh from the passing closeout basis. Deferred nonblocking cleanup includes consolidating remote-ref absence checks, reordering the staged-prune network lookup, and rejecting absolute or parent-traversing values in self-authored `localPaths`; none is required for the current gate threshold.
+- PR #227 remains open for review. Deferred nonblocking cleanup includes consolidating remote-ref absence checks, reordering the staged-prune network lookup, and rejecting absolute or parent-traversing values in self-authored `localPaths`; none is required for the current gate threshold. Self-migration to `synced` and deletion of the disposable spike repository remain separately controlled.
 
 ## Workflow Observations
 

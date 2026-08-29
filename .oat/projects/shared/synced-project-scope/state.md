@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -155,7 +155,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T22:51:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T22:55:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -165,15 +165,13 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Phase 20 review passed; closeout pending
+**Status:** Implementation complete; PR open
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Implementation tasks are complete (199/199). Phase 20 review passed. Awaiting
-final closeout, a fresh configured exit gate, and PR #227 refresh. PR #227
-stays open.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -386,6 +384,11 @@ stays open.
 - ✓ Five findings converted into Phase 20; leftover-push and PR-summary comments dismissed
 - ✓ Phase 20 tasks p20-t01 through p20-t05 completed in five bounded commits
 - ✓ Phase 20 focused verification passed during task execution; p20-t05 closed 240/240
+- ✓ Phase 20 review fixes p20-t06 and p20-t07 completed; Phase 20 re-review passed
+- ✓ Configured exit gate passed on `cursor-fable-5-high`; two Minor findings addressed
+- ✓ Maintainer waived a second exit gate after the test-only CI harness mock
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -393,5 +396,8 @@ None.
 
 ## Next Milestone
 
-Refresh PR #227 via `oat-project-pr-final` after this passing exit-gate receive.
-Do not merge unless the maintainer explicitly asks.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
