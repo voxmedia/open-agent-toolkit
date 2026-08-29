@@ -3719,6 +3719,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | final   | code     | passed          | 2026-08-29 | reviews/archived/final-review-2026-08-29T160525Z.md               | 4881a5284a50976116d13aff5e7937ec6bde915c | gate       | claude-fable-skip-permissions |
 | remote  | code     | fixes_added     | 2026-08-29 | reviews/archived/remote-pr-227-review-2026-08-29T192256Z.md       | -                                        | -          | -                             |
 | p20     | code     | fixes_completed | 2026-08-29 | reviews/archived/p20-review-2026-08-29T200603Z.md                 | b7dc3b06e93e61ef2ecfda489c1c800a3b6927a9 | auto       | -                             |
+| p20     | code     | passed          | 2026-08-29 | reviews/archived/p20-review-2026-08-29T203038Z.md                 | 39b296b86e013572d05f279798243defd71cc49a | auto       | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -5892,8 +5893,7 @@ git commit -m "fix(p20-t07): prove dirty fold-back withholds push until handler"
 
 **Operator step after implementation:** delete the disposable spike repository `https://github.com/tkstang/disposable-test-repo-for-oat` (used by p01-t10); the implementing agent never deletes repositories.
 
-Phases 1–20 are implemented (199 tasks). Phase 20 re-review is pending for the
-2026-08-29T200603Z follow-up tasks.
+Phases 1–20 are implemented (199 tasks). Phase 20 re-review passed.
 
 ---
 

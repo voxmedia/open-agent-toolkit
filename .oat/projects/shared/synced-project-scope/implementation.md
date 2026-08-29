@@ -14,8 +14,8 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> Phases 1–20 are implemented (199/199). Phase 20 re-review is pending for
-> `p20-t06` and `p20-t07`.
+> Phases 1–20 are implemented (199/199). Phase 20 review passed. Closeout is
+> pending after the p20 fix range.
 >
 > Conventions:
 >
@@ -4035,7 +4035,7 @@ Fix tasks `p20-t06` and `p20-t07` are implemented. The matching review event is
 **Branch:** `feat/synced-project-scope`
 **Tier:** 1 - subagents
 **Dispatch policy:** managed `high` (Cursor pinned variant)
-**Status:** Phase 20 review-fix implementation complete — re-review pending
+**Status:** Phase 20 review-fix implementation complete — re-review passed
 
 #### Dispatch Record
 
@@ -4091,3 +4091,26 @@ Phase 20 review fixes are implemented in two append-only commits. No recovery at
 - Commit range: `b5af2777a5d3ee4862979677c445e05b0027a3d9..39b296b86e013572d05f279798243defd71cc49a`
 - Verification: implementer reported 277/277 phase suite; worktree clean
 - Next: independent Phase 20 re-review of the fix range
+
+### Review Received: p20 cycle 2
+
+**Date:** 2026-08-29
+**Review artifact:** reviews/archived/p20-review-2026-08-29T203038Z.md
+**Reviewed head:** `39b296b86e013572d05f279798243defd71cc49a`
+**Invocation:** auto
+**Gate target:** -
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** none
+
+**Finding disposition map:** none (passing re-review)
+
+The fix-delta review closed `p20-t06` and `p20-t07`. Phase 20 is `passed`.
+Next: final closeout, including a fresh configured exit gate after the p20
+delta.

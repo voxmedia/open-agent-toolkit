@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: review_pending # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -155,7 +155,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T20:20:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T20:32:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -165,14 +165,14 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Phase 20 implemented; review pending after #231 merge
+**Status:** Phase 20 review passed; closeout pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Phase 20 tasks `p20-t01`–`p20-t05` are complete. Merge `origin/main` (PR #231)
-using the conflict handoff, then run the independent Phase 20 review. PR #227
+Implementation tasks are complete (199/199). Phase 20 review passed. Awaiting
+final closeout, a fresh configured exit gate, and PR #227 refresh. PR #227
 stays open.
 
 ## Artifacts
@@ -181,7 +181,7 @@ stays open.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (197/197 tasks complete; Phase 20 review pending)
+- **Implementation:** `implementation.md` (199/199 tasks complete; Phase 20 review passed)
 
 ## Progress
 
