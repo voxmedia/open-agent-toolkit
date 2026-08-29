@@ -1,6 +1,6 @@
 ---
-oat_current_task: p19-t13
-oat_last_commit: 50239050
+oat_current_task: null
+oat_last_commit: c17d1665
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -165,15 +165,15 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Exit-gate remediation in progress
+**Status:** Implementation tasks complete; exit-gate recheck pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-The configured exit gate reproduced one Important linked-worktree local-sync
-regression. Resume at `p19-t13`; the two non-safety Minor cleanup findings are
-deferred without implementation tasks.
+All 192 implementation and revision tasks are complete. The configured exit
+gate's Important linked-worktree regression is fixed in `p19-t13`; the two
+non-safety Minor cleanup findings remain deferred without implementation tasks.
 
 ## Artifacts
 
@@ -181,7 +181,7 @@ deferred without implementation tasks.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (191/192 tasks complete)
+- **Implementation:** `implementation.md` (192/192 tasks complete)
 
 ## Progress
 
@@ -375,6 +375,9 @@ deferred without implementation tasks.
 - ✓ Root verification closed both artifact findings; final review marked passed under the maintainer's no-re-review waiver
 - ✗ Refreshed configured exit gate blocked with 1 Important / 2 Minor findings
 - ✓ Important regression converted into p19-t13; both non-safety Minors explicitly deferred
+- ✓ Phase 19 task p19-t13 completed in `c17d1665d`
+- ✓ Focused local-sync suite passed 21/21 and exact CLI type-check passed
+- ✓ Phase 19 p19-t13 Definition-of-Done gates passed in exact CI order at lockstep `0.2.44`
 
 ## Blockers
 
@@ -382,5 +385,5 @@ None.
 
 ## Next Milestone
 
-Implement p19-t13, run focused and full verification, then resume the same
-configured exit-gate generation for its second and final attempt.
+Resume the same configured exit-gate generation for its second and final
+attempt. No plan task or independent re-review precedes that root-owned gate.

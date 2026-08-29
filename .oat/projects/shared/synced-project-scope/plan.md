@@ -5655,7 +5655,7 @@ Commit as `fix(p19-t13): preserve linked-worktree local sync`.
 
 **Operator step after implementation:** delete the disposable spike repository `https://github.com/tkstang/disposable-test-repo-for-oat` (used by p01-t10); the implementing agent never deletes repositories.
 
-All 191 implementation and revision tasks are complete. Before the PR update,
+All 192 implementation and revision tasks are complete. Before the PR update,
 closeout requires a current passing final review and a fresh configured exit
 gate. The maintainer explicitly waived another documentation-only re-review of
 `p19-t11` and `p19-t12`; transient review and resume routing remains

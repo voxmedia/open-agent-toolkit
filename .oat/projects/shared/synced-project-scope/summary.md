@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-29
 oat_generated: true
-oat_summary_last_task: p19-t12
+oat_summary_last_task: p19-t13
 oat_summary_revision_count: 1
 oat_summary_includes_revisions: [p-rev1]
 ---
@@ -23,7 +23,7 @@ OAT project artifacts must travel across sessions, worktrees, and machines witho
 - Phase 15 strengthened cross-scope Git behavior, deterministic recovery and validation inventories, project listing, pause/pull flows, and full-range compatibility discovered by independent review.
 - Phases 16–17 completed archive/config/autonomy safety, lifecycle durability, provider-view parity, invalid-record diagnostics, custom-root ignores, locale and environment isolation, command parsing, scaffold guards, and decoupled release tests through `p17-t14`.
 - Phase 18 corrected the remote-review regression that could run the final synced-project publication against an already archived project path; its independent phase review passed.
-- Phase 19 final-review remediation requires exact archive-root identity in dry-run and apply, protects marker-bearing and damaged registered worktrees during local sync, rejects external synced roots before mutation, recovers a failed final prune commit through an exact-path retry that fails closed on remote lookup errors, and binds archive retries to the authoritative source ref. Its final two documentation tasks align the archive identity contract and make closeout prose independent of review-cycle routing. All twelve tasks are complete through `p19-t12`, bringing the project total to 191/191.
+- Phase 19 final-review remediation requires exact archive-root identity in dry-run and apply, protects marker-bearing and damaged registered worktrees during local sync, rejects external synced roots before mutation, recovers a failed final prune commit through an exact-path retry that fails closed on remote lookup errors, and binds archive retries to the authoritative source ref. Its documentation tasks align the archive identity contract and keep closeout prose independent of review-cycle routing; `p19-t13` restores configured local-path sync between linked worktrees nested below their main checkout without weakening protection for other registrations. All thirteen tasks are complete, bringing the project total to 192/192.
 
 ## Key Decisions
 
@@ -44,12 +44,12 @@ OAT project artifacts must travel across sessions, worktrees, and machines witho
 
 ## Integration Notes
 
-- The five lockstep public packages and shipped CLI asset are aligned at `0.2.44` for the Phase 19 shipped CLI and documentation changes. The final Definition-of-Done, skill/version, release, docs, and provider gates must be refreshed after the last Phase 19 artifact task.
+- The five lockstep public packages and shipped CLI asset remain aligned at `0.2.44`. After `p19-t13`, the complete Definition-of-Done, skill/version, release, and docs gates passed in exact CI order; lint and format also passed.
 
 ## Revision History
 
 - **p-rev1 — PR #226 integration (2026-08-28).** Merged current `origin/main` into PR #227, reconciled overlapping assets and contracts, passed focused and full isolated-environment verification, and received an independent passing integration review.
-- **Phase 18 and Phase 19 closeout remediation (2026-08-29).** Phase 18 passed after correcting post-archive publication routing. After upstream PR #229 merged, a fresh full-range review produced five behavioral and two artifact findings; Phase 19 implemented those corrections, three independently reproduced fix-cycle residuals, and the final archive-identity and closeout-prose alignment through `p19-t12`.
+- **Phase 18 and Phase 19 closeout remediation (2026-08-29).** Phase 18 passed after correcting post-archive publication routing. After upstream PR #229 merged, a fresh full-range review produced five behavioral and two artifact findings; Phase 19 implemented those corrections, three independently reproduced fix-cycle residuals, archive-identity and closeout-prose alignment, and the configured-gate linked-worktree compatibility correction through `p19-t13`.
 
 ## Follow-up Items
 

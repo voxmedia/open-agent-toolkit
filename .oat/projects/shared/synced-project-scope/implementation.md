@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: p19-t13
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,9 +14,10 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> One hundred ninety-one of one hundred ninety-two implementation and revision
-> tasks are complete. Resume at `p19-t13`; the configured exit gate remains
-> blocked until that reproduced local-sync regression is fixed and rechecked.
+> All one hundred ninety-two implementation and revision tasks are complete.
+> Closeout requires a current passing final review and a fresh configured exit
+> gate before the PR update. Transient review and resume routing lives only in
+> `state.md`.
 >
 > Conventions:
 >
@@ -28,30 +29,30 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 10    | 10/10     |
-| Phase 2      | complete    | 13    | 13/13     |
-| Phase 3      | complete    | 19    | 19/19     |
-| Phase 4      | complete    | 16    | 16/16     |
-| Phase 5      | complete    | 7     | 7/7       |
-| Phase 6      | complete    | 3     | 3/3       |
-| Phase 7      | complete    | 1     | 1/1       |
-| Phase 8      | complete    | 1     | 1/1       |
-| Phase 9      | complete    | 1     | 1/1       |
-| Phase 10     | complete    | 14    | 14/14     |
-| Phase 11     | complete    | 3     | 3/3       |
-| Phase 12     | complete    | 1     | 1/1       |
-| Phase p-rev1 | complete    | 1     | 1/1       |
-| Phase 13     | complete    | 16    | 16/16     |
-| Phase 14     | complete    | 19    | 19/19     |
-| Phase 15     | complete    | 19    | 19/19     |
-| Phase 16     | complete    | 20    | 20/20     |
-| Phase 17     | complete    | 14    | 14/14     |
-| Phase 18     | complete    | 1     | 1/1       |
-| Phase 19     | in_progress | 13    | 12/13     |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 10    | 10/10     |
+| Phase 2      | complete | 13    | 13/13     |
+| Phase 3      | complete | 19    | 19/19     |
+| Phase 4      | complete | 16    | 16/16     |
+| Phase 5      | complete | 7     | 7/7       |
+| Phase 6      | complete | 3     | 3/3       |
+| Phase 7      | complete | 1     | 1/1       |
+| Phase 8      | complete | 1     | 1/1       |
+| Phase 9      | complete | 1     | 1/1       |
+| Phase 10     | complete | 14    | 14/14     |
+| Phase 11     | complete | 3     | 3/3       |
+| Phase 12     | complete | 1     | 1/1       |
+| Phase p-rev1 | complete | 1     | 1/1       |
+| Phase 13     | complete | 16    | 16/16     |
+| Phase 14     | complete | 19    | 19/19     |
+| Phase 15     | complete | 19    | 19/19     |
+| Phase 16     | complete | 20    | 20/20     |
+| Phase 17     | complete | 14    | 14/14     |
+| Phase 18     | complete | 1     | 1/1       |
+| Phase 19     | complete | 13    | 13/13     |
 
-**Total:** 191/192 tasks completed
+**Total:** 192/192 tasks completed
 
 ---
 
@@ -3696,7 +3697,7 @@ substantive head before updating PR #227.
 
 ## Phase 19: Final destructive-path and recovery hardening
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-08-29
 
 ### Final Review Received
@@ -3715,21 +3716,21 @@ re-reviewed.
 
 ### Task Status
 
-| Task    | Status  | Commit      |
-| ------- | ------- | ----------- |
-| p19-t01 | done    | `7b1bb113a` |
-| p19-t02 | done    | `4b6450e4a` |
-| p19-t03 | done    | `ea6bacfc6` |
-| p19-t04 | done    | `93d66c221` |
-| p19-t05 | done    | `bb8468047` |
-| p19-t06 | done    | `9b8e5c148` |
-| p19-t07 | done    | `81da1093a` |
-| p19-t08 | done    | `6d39614b4` |
-| p19-t09 | done    | `8148e1e16` |
-| p19-t10 | done    | `efdb4cdc3` |
-| p19-t11 | done    | `62e4ade8a` |
-| p19-t12 | done    | this commit |
-| p19-t13 | pending | -           |
+| Task    | Status | Commit      |
+| ------- | ------ | ----------- |
+| p19-t01 | done   | `7b1bb113a` |
+| p19-t02 | done   | `4b6450e4a` |
+| p19-t03 | done   | `ea6bacfc6` |
+| p19-t04 | done   | `93d66c221` |
+| p19-t05 | done   | `bb8468047` |
+| p19-t06 | done   | `9b8e5c148` |
+| p19-t07 | done   | `81da1093a` |
+| p19-t08 | done   | `6d39614b4` |
+| p19-t09 | done   | `8148e1e16` |
+| p19-t10 | done   | `efdb4cdc3` |
+| p19-t11 | done   | `62e4ade8a` |
+| p19-t12 | done   | `502390509` |
+| p19-t13 | done   | `c17d1665d` |
 
 ### Implementation Outcome
 
@@ -3741,7 +3742,7 @@ re-reviewed.
   scaffold, prune, record, and target-resolution tests. The implementer reports
   every Definition-of-Done gate, lint, format, fetch, and provider dry-run at
   exit 0.
-- **Closeout:** all 191 tasks are complete. Before the PR update, require a
+- **Closeout:** all 192 tasks are complete. Before the PR update, require a
   current passing final review and a fresh configured exit gate. Current review
   and resume routing is maintained only in `state.md`.
 
@@ -3866,8 +3867,20 @@ changed. No additional task is added for them.
 
 ### Durable Closeout State
 
-All 191 plan tasks are complete. Closeout requires a current passing final
+All 192 plan tasks are complete. Closeout requires a current passing final
 review and a fresh configured exit gate before the PR update. The maintainer's
 waiver applies to an additional documentation-only re-review of `p19-t11` and
 `p19-t12`; transient lifecycle routing remains authoritative only in
 `state.md`.
+
+### Task p19-t13 Settlement
+
+- **Commit:** `c17d1665d094981029cbeddf092c3015e59aa8da`
+- **Outcome:** registered worktrees that are ancestor-or-equal owners of the
+  canonical source or target root are excluded from the protected nested set;
+  all remaining registrations retain bidirectional overlap protection.
+- **Verification:** focused local-sync suite passed 21/21, exact CLI type-check
+  passed, and every repository Definition-of-Done gate passed in CI order at
+  lockstep `0.2.44`; lint and format also passed.
+- **Deferred scope:** the configured-gate review's two non-safety Minor
+  findings remain deferred and were not implemented.
