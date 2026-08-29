@@ -2296,4 +2296,57 @@ describe('synced checkout removal', () => {
       await fixture.cleanup();
     }
   });
+
+  it('guides a locked-worktree retry after the remote ref was deleted', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'locked-partial-prune',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(join(target.projectPath, 'state.md'), '# state\n');
+      await pushSynced(target, defaultGitRunner, {});
+      const recordPath = join(target.syncedRoot, `${target.slug}.json`);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(target.slug, new Date('2026-08-29T00:00:00Z')),
+      );
+      git(fixture.cloneA, ['worktree', 'lock', target.projectPath]);
+
+      await expect(
+        pruneSynced(target, defaultGitRunner, {
+          force: true,
+          commit: false,
+        }),
+      ).rejects.toThrow(
+        /Remote ref .* was already deleted.*Do not run oat project push 'locked-partial-prune'.*safely retry oat project prune 'locked-partial-prune' --force/,
+      );
+
+      expect(
+        git(fixture.cloneA, ['ls-remote', '--refs', target.remote, target.ref]),
+      ).toBe('');
+      expect(
+        git(fixture.cloneA, ['show-ref', '--verify', target.ref]),
+      ).not.toBe('');
+      await expect(access(target.projectPath)).resolves.toBeUndefined();
+      await expect(access(recordPath)).resolves.toBeUndefined();
+
+      git(fixture.cloneA, ['worktree', 'unlock', target.projectPath]);
+      await expect(
+        pruneSynced(target, defaultGitRunner, {
+          force: true,
+          commit: false,
+        }),
+      ).resolves.toEqual({ status: 'pruned', lifecycleCommit: null });
+      expect(
+        git(fixture.cloneA, ['ls-remote', '--refs', target.remote, target.ref]),
+      ).toBe('');
+      expect(existsSync(target.projectPath)).toBe(false);
+      expect(existsSync(recordPath)).toBe(false);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
 });

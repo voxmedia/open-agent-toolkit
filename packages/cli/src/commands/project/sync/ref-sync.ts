@@ -1076,18 +1076,27 @@ export async function pruneSynced(
     );
   }
 
-  for (const checkout of checkouts) {
-    const removed = await removePreflightedSyncedCheckout(
-      checkout,
-      git,
-      options.force,
-    );
-    if (removed.status !== 'removed' && removed.status !== 'absent') {
-      throw new CliError(
-        `Refusing to prune ${target.slug}: checkout ${checkout.projectPath} is ${removed.status}.`,
-        1,
+  try {
+    for (const checkout of checkouts) {
+      const removed = await removePreflightedSyncedCheckout(
+        checkout,
+        git,
+        options.force,
       );
+      if (removed.status !== 'removed' && removed.status !== 'absent') {
+        throw new CliError(
+          `Refusing to prune ${target.slug}: checkout ${checkout.projectPath} is ${removed.status}.`,
+          1,
+        );
+      }
     }
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    const forceFlag = options.force ? ' --force' : '';
+    throw new CliError(
+      `Remote ref ${target.ref} was already deleted from ${target.remote}, but local checkout removal failed. The local ref, record, and remaining checkouts were retained. Do not run oat project push ${shellQuote(target.slug)}, which would republish the ref; resolve the checkout error, then safely retry oat project prune ${shellQuote(target.slug)}${forceFlag}. ${detail}`,
+      2,
+    );
   }
 
   await git.run(['update-ref', '-d', target.ref], { cwd: target.repoRoot });
