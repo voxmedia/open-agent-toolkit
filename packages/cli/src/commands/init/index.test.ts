@@ -339,6 +339,14 @@ function createHarness(options: HarnessOptions = {}): {
     addLocalPaths: addLocalPathsFn,
     applyGitignore: applyGitignoreFn,
     runProviderSync: vi.fn(async () => undefined),
+    // Guided-setup tests must not shell out: production detectDefaultBranch
+    // runs `gh repo view` with a 10s timeout, which exceeds Vitest's 5s
+    // default and flakes in CI where `gh` is authenticated.
+    writeOatConfig: vi.fn(async () => undefined),
+    detectDefaultBranch: vi.fn(() => 'main'),
+    detectExistingDocs: vi.fn(async () => null),
+    fileExists: vi.fn(async () => false),
+    inputWithDefault: vi.fn(async () => null),
   };
 
   if (!options.useDefaultGuidedSetup) {
