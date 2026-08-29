@@ -3592,3 +3592,15 @@ configured implementation exit gate and closeout refresh.
 The refreshed gate declaration was resolved from current configuration. The
 accepted implementation head includes the passing-gate judgment sweep; launch,
 marker, result, artifact, and receive provenance are reset for this generation.
+
+### Configured Exit Gate - Result Persisted
+
+- **Launch attempt:** `5b4f732b-0b95-4565-97ec-d2eeb8a7f3f6`
+- **Gate run:** `ca7641ce-8c7e-48ed-86c3-7dc92bfadf85`
+- **Envelope:** `ok`, receive eligible, corroborated run/project/invocation
+- **Artifact:** `reviews/final-review-2026-08-29T094230Z.md`
+- **Findings:** 0 Critical / 0 Important / 0 Medium / 5 Minor
+
+The configured gate passed at its Important threshold. Its structured receipt
+is persisted; the correlated review must be received and its five Minor
+findings dispositioned before the exit gate can become allowed.

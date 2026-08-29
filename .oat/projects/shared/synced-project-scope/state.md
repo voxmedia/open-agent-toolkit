@@ -107,15 +107,15 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v1:125d960fa2ea6c27c51867161395619247335dc5e508bbad0db453a7ea750f72
   freshness_head: 4d44e82f7c7dd44da88af011592e308a54bb1a4f
   freshness_fingerprint: sha256:effective-delta-v1:be929c7a2800170e92dd1945990cc55c45b71d82dd9b704d61f43691acd80e5c
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 5b4f732b-0b95-4565-97ec-d2eeb8a7f3f6
   launch_started_at: '2026-08-29T09:37:39Z'
   launch_result_receipt: reviews/implement-exit-gate-result-5b4f732b-0b95-4565-97ec-d2eeb8a7f3f6.json
   gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/ca7641ce-8c7e-48ed-86c3-7dc92bfadf85.json
   gate_run_id: ca7641ce-8c7e-48ed-86c3-7dc92bfadf85
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T094230Z.md
+  handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=5). Run oat-project-review-receive for .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T094230Z.md to disposition them before marking the final review row passed.'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -123,10 +123,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-29T09:38:39Z'
+  updated_at: '2026-08-29T09:45:06Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -149,7 +149,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T09:38:39.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T09:45:06.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
