@@ -69,7 +69,22 @@
 - Provider-sync follow-up: the config-bug project now fails closed on symlinked
   provider ancestry; `BL-260724-support-provider-directory` tracks safe,
   manifest-aware adoption when a provider collection directory aliases its
-  exact canonical OAT collection.
+  exact canonical OAT collection. It is now high priority because the alias
+  should be the default low-churn mode until unmanaged divergence requires
+  per-entry fallback.
+- Project-level OAT guidance is now a high-priority companion to user-scope
+  tool-pack installation: `BL-260828-add-project-level-oat-guidance` covers the
+  init/install notice, explicit AGENTS.md prompt, and shared idempotent
+  guidance ownership.
+- The urgent follow-up from GitHub issue #228 is tracked in
+  `BL-260829-make-tool-pack-scope-selection`: picker annotations must reflect
+  verified placement rather than declared intent, explicit user-scope
+  selections must not materialize as project + user, and user-scope agent
+  materialization must be evaluated across the provider x scope x content-type
+  matrix. It also requires clear unavailable-agent/restart notices and
+  provenance-preserving native-dispatch fallbacks, while linking the adjacent
+  lifecycle, scope/adoption, provider-sync, AGENTS.md, and native-subagent
+  boundaries without absorbing their ownership.
 - Model-selection guidance and dispatch mechanics are now separate shipped
   contracts. `subagent-orchestration` owns durable task classes, dated provider
   selection references, and refresh policy; `oat-dispatch-subagents` owns
@@ -83,6 +98,11 @@
   lower-priority broader policy only if usage evidence shows CI, Bugbot, and
   lifecycle self-review leave meaningful gaps
   (`BL-260719-evaluate-broader-final-gate`).
+- Review-loop bookkeeping is now the urgent reliability priority:
+  `BL-260711-skip-re-review-for-bookkeeping` expands the existing reporting-only
+  classification into a semantic, auditable disposition for direct reviews and
+  blocking gates, without consuming another attempt or mislabeling the original
+  review as passed.
 - Workflow-integrity (high, evidence-backed 2026-07-18): lifecycle text that
   names another skill as an execution step needs a mandatory-load clause —
   the wave-skills-promotion closeout showed "dispatch X" degrading to
@@ -162,9 +182,12 @@
 
 | ID                                       | Title                                                                                                 | Status | Priority | Scope   | Estimate |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
+| BL-260829-make-tool-pack-scope-selection | Make tool-pack scope, provider reachability, and dispatch state truthful                              | open   | urgent   | feature | L        |
+| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                                   | open   | urgent   | feature | L        |
 | BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                                                      | open   | high     | feature | M        |
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                                                             | open   | high     | feature | L        |
 | BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts                                | open   | high     | task    | M        |
+| BL-260828-add-project-level-oat-guidance | Add project-level OAT guidance prompt during init and workflow installation                           | open   | high     | feature | M        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches                                        | open   | high     | feature | M        |
 | BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                                  | open   | high     | task    | M        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                               | open   | high     | feature | M        |
@@ -176,7 +199,7 @@
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                                      | open   | high     | task    | S        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task    | M        |
 | BL-260826-populate-native-subagent       | Populate native subagent runtime identity from provider transcript metadata                           | open   | high     | feature | M        |
-| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                                   | open   | high     | feature | M        |
+| BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature | L        |
 | BL-260829-unified-agent-provider-root    | Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references                           | open   | high     | task    | L        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature | M        |
@@ -203,7 +226,6 @@
 | BL-260817-run-the-rc-explainer-end       | Run the RC explainer end-to-end test in CI with a provisioned browser                                 | open   | medium   | task    | M        |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests   | open   | medium   | task    | S        |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                         | open   | medium   | task    |          |
-| BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | medium   | feature | M        |
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                         | open   | medium   | task    | S        |
 | BL-260726-validate-structured-output     | Validate structured-output contract in gate skill commands                                            | open   | medium   | task    |          |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                            | open   | medium   | task    | S        |
