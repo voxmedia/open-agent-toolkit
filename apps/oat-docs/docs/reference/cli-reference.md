@@ -56,9 +56,13 @@ The first practical expansion path is to keep improving the existing owners: [Do
 
 Notable commands introduced in the current CLI surface:
 
-- `oat project new <slug> --scope shared|local|synced` - create a project in
-  an explicit scope. Without `--scope`, creation uses
-  `projects.defaultScope`, which defaults to `synced`.
+- `oat project new <slug> --scope shared|local|synced [--force]` - create a
+  project in an explicit scope. Without `--scope`, creation uses
+  `projects.defaultScope`, which defaults to `synced`. Project slugs are
+  unique across all scopes by default, including recorded or remotely
+  published synced projects. `--force` deliberately permits a duplicate; use
+  an explicit project path with `project open` or `project pause` whenever a
+  slug is ambiguous across scopes.
 - `oat project scope [project] --format value|json` - resolve a project's
   storage scope without inspecting its path manually.
 - `oat project push [project] [--message <message>]` - commit pending synced
