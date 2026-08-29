@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import {
   lstat,
   mkdir,
@@ -628,4 +629,3 @@ describe('synced project lifecycle', () => {
     }
   });
 });
-import { execFileSync } from 'node:child_process';
