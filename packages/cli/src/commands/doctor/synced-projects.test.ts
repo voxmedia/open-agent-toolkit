@@ -10,7 +10,7 @@ import {
 } from '@commands/project/sync/record';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { checkSyncedProjects } from './synced-projects';
+import { checkSyncedProjects, syncedRecordSlug } from './synced-projects';
 
 describe('checkSyncedProjects', () => {
   const roots: string[] = [];
@@ -38,6 +38,13 @@ describe('checkSyncedProjects', () => {
       }),
     };
   }
+
+  it.each([
+    ['/repo/.oat/projects/synced/demo.json', 'demo'],
+    ['C:\\repo\\.oat\\projects\\synced\\windows-demo.json', 'windows-demo'],
+  ])('extracts a portable slug from %s', (recordPath, expected) => {
+    expect(syncedRecordSlug(recordPath)).toBe(expected);
+  });
 
   it('returns one pass when no synced projects exist', async () => {
     const repoRoot = await createRoot();

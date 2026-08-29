@@ -1,5 +1,5 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { join, relative, resolve, sep } from 'node:path';
+import { basename, join, relative, resolve, sep } from 'node:path';
 
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
@@ -33,6 +33,10 @@ async function pathExists(path: string): Promise<boolean> {
 
 function repoRelative(repoRoot: string, path: string): string {
   return relative(resolve(repoRoot), resolve(path)).split(sep).join('/');
+}
+
+export function syncedRecordSlug(recordPath: string): string {
+  return basename(recordPath.replaceAll('\\', sep), '.json');
 }
 
 function check(
@@ -134,9 +138,9 @@ export async function checkSyncedProjects(
     ? await recordEntries(syncedRoot)
     : [];
 
-  const ignoreProbeSlug =
-    entries[0]?.slice(entries[0].lastIndexOf('/') + 1, -'.json'.length) ??
-    '__probe__';
+  const ignoreProbeSlug = entries[0]
+    ? syncedRecordSlug(entries[0])
+    : '__probe__';
   const ignored = await dependencies.git.run(
     [
       'check-ignore',
@@ -173,7 +177,7 @@ export async function checkSyncedProjects(
 
   const records: SyncedProjectRecord[] = [];
   for (const entry of entries) {
-    const slug = entry.slice(entry.lastIndexOf('/') + 1, -'.json'.length);
+    const slug = syncedRecordSlug(entry);
     try {
       const record = await readSyncedRecord(entry);
       if (record) records.push(record);
