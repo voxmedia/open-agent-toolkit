@@ -80,7 +80,10 @@ Common keys in `.oat/config.json`:
   repository root; absolute values remain absolute. OAT derives the `local`
   and `synced` roots as sibling directories named `local` and `synced` under
   this root's parent, so a custom value relocates all three scope roots as one
-  layout.
+  layout. Synced project creation requires the derived `synced` root to resolve
+  inside the repository; an external absolute root remains usable for `shared`
+  and `local` projects but is rejected before any synced checkout, ref, record,
+  active pointer, or Git index mutation.
 - `projects.defaultScope` — scope used by project creation when `--scope` is
   omitted (`synced` by default). `OAT_PROJECTS_DEFAULT_SCOPE` overrides the
   configured value for the current process.

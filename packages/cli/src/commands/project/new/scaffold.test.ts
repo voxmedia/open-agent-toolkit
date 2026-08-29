@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import {
+  access,
   mkdir,
   mkdtemp,
   readFile,
@@ -15,6 +16,7 @@ import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { instantiateProjectLogTemplate } from '@commands/project/log/append';
 import { createProjectOpenCommand } from '@commands/project/open/index';
+import { defaultGitRunner } from '@commands/project/sync/git';
 import { createSyncedProject } from '@commands/project/sync/ref-sync';
 import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
@@ -709,6 +711,83 @@ describe('scaffoldProject', () => {
         'utf8',
       ),
     ).resolves.toContain('symlinked-root');
+  });
+
+  it('rejects an external synced root before any filesystem or Git mutation', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const externalRoot = await mkdtemp(join(tmpdir(), 'oat-external-root-'));
+    tempDirs.push(externalRoot);
+    const externalSharedRoot = join(externalRoot, 'shared');
+    const slug = 'external-synced';
+    const headBefore = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: fixture.cloneA,
+      encoding: 'utf8',
+    }).trim();
+    const statusBefore = execFileSync('git', ['status', '--porcelain=v1'], {
+      cwd: fixture.cloneA,
+      encoding: 'utf8',
+    });
+    const worktreesBefore = execFileSync(
+      'git',
+      ['worktree', 'list', '--porcelain'],
+      { cwd: fixture.cloneA, encoding: 'utf8' },
+    );
+
+    await expect(
+      scaffoldProjectImpl({
+        repoRoot: fixture.cloneA,
+        projectName: slug,
+        scope: 'synced',
+        env: { OAT_PROJECTS_ROOT: externalSharedRoot },
+        commit: true,
+        refreshDashboard: false,
+      }),
+    ).rejects.toThrow('outside repository');
+
+    await expect(access(join(externalRoot, 'synced', slug))).rejects.toThrow();
+    await expect(
+      access(join(externalRoot, 'synced', `${slug}.json`)),
+    ).rejects.toThrow();
+    expect(
+      (
+        await defaultGitRunner.run(
+          ['show-ref', '--verify', `refs/oat/projects/${slug}`],
+          { cwd: fixture.cloneA, allowFailure: true },
+        )
+      ).code,
+    ).not.toBe(0);
+    expect(
+      execFileSync(
+        'git',
+        ['ls-remote', 'origin', `refs/oat/projects/${slug}`],
+        {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        },
+      ).trim(),
+    ).toBe('');
+    expect(
+      execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe(headBefore);
+    expect(
+      execFileSync('git', ['status', '--porcelain=v1'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }),
+    ).toBe(statusBefore);
+    expect(
+      execFileSync('git', ['worktree', 'list', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }),
+    ).toBe(worktreesBefore);
+    await expect(
+      readFile(join(fixture.cloneA, '.oat', 'config.local.json'), 'utf8'),
+    ).rejects.toThrow();
   });
 
   it('rolls back invocation-owned worktree/ref and a self-healed gitignore on render failure', async () => {

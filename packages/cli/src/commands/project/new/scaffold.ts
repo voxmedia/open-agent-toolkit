@@ -586,6 +586,22 @@ export async function scaffoldProject(
     isAbsolute(relativeProjectPath)
       ? absoluteProjectPath
       : relativeProjectPath.split('\\').join('/');
+  if (scope === 'synced') {
+    const canonicalRepoRoot = canonicalizePath(options.repoRoot);
+    const relativeSyncedRoot = relative(canonicalRepoRoot, absoluteScopeRoot);
+    if (
+      relativeSyncedRoot === '' ||
+      relativeSyncedRoot === '..' ||
+      relativeSyncedRoot.startsWith('../') ||
+      relativeSyncedRoot.startsWith('..\\') ||
+      isAbsolute(relativeSyncedRoot)
+    ) {
+      throw new CliError(
+        `Cannot create synced project ${options.projectName}: the configured synced project root \`${absoluteScopeRoot}\` is outside repository \`${canonicalRepoRoot}\`. Use an in-repository projects.root for synced scope, or choose shared/local scope for external storage.`,
+        1,
+      );
+    }
+  }
   if (!options.force) {
     await assertCrossScopeSlugAvailable(
       options.repoRoot,
