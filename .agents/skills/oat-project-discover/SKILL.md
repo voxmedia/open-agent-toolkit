@@ -558,7 +558,7 @@ Key decisions:
 - {Decision 1}
 - {Decision 2}
 
-Ready for design phase"
+Ready for design phase" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md")
   git add -- "${PROJECT_OUTPUT_PATHS[@]}"

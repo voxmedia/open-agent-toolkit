@@ -652,7 +652,7 @@ Phases:
 
 Total: {N} tasks
 
-Ready for implementation"
+Ready for implementation" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/plan.md" "$PROJECT_PATH/state.md")
   git add -- "${PROJECT_OUTPUT_PATHS[@]}"

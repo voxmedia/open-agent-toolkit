@@ -122,7 +122,9 @@ Artifact and recovery-ledger bookkeeping commits must first resolve scope with
 `oat project scope "$PROJECT_PATH" --format value`. A `synced` project uses
 `oat project push` with the original bookkeeping message; other scopes keep the
 existing scoped `git add` and `git commit` commands. Scope resolution fails
-closed. Planned code task commits such as `feat(pNN-tNN)` are unchanged.
+closed. A nonzero project-push exit stops bookkeeping until the reported
+recovery is resolved and the push is retried. Planned code task commits such as
+`feat(pNN-tNN)` are unchanged.
 
 ## Prevention and Post-Commit Recovery
 

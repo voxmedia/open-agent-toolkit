@@ -527,7 +527,7 @@ Update `$PROJECT_PATH/state.md` frontmatter based on apply outcome:
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore({project-name}): mark docs updated"
+  oat project push "$PROJECT_PATH" --message "chore({project-name}): mark docs updated" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/state.md"
   git diff --cached --quiet || git commit -m "chore({project-name}): mark docs updated"

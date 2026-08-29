@@ -373,11 +373,11 @@ After writing the PR artifact, push and create the PR automatically.
 For a synced project, use this ordered flow; do not reorder it:
 
 1. Finish or refresh `summary.md` and the PR artifact.
-2. Run `oat project push "$PROJECT_PATH" --message "chore(oat): prepare final PR artifacts" --json` so the ref contains both files.
+2. Run `oat project push "$PROJECT_PATH" --message "chore(oat): prepare final PR artifacts" --json` so the ref contains both files; a nonzero exit stops the flow until the reported pull/conflict recovery is resolved and the push is retried.
 3. Render `oat project links "$PROJECT_PATH" --format markdown` and insert or replace its delimited block in the stripped PR body. The initial body must already contain the freshly pushed summary link when `summary.md` exists.
 4. Push the code branch, then run `gh pr create`; capture the returned URL.
 5. Set `oat_pr_status: open`, `oat_pr_url`, `oat_phase_status: pr_open`, and the existing routing prose in `state.md`.
-6. Run `oat project push "$PROJECT_PATH" --message "chore(oat): record final PR metadata" --json` again. This publishes authoritative PR metadata and refreshes the GitHub links block to the new ref SHA.
+6. Run `oat project push "$PROJECT_PATH" --message "chore(oat): record final PR metadata" --json` again. A nonzero exit stops closeout until the reported recovery is resolved and the push is retried. A successful push publishes authoritative PR metadata and refreshes the GitHub links block to the new ref SHA.
 
 Scope resolution is fail-closed:
 

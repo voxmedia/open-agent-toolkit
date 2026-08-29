@@ -279,7 +279,7 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
   exit 1
 }
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): persist autonomous explainer intent"
+  oat project push "$PROJECT_PATH" --message "chore(oat): persist autonomous explainer intent" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/state.md"
   git diff --cached --quiet || git commit -m "chore(oat): persist autonomous explainer intent"
@@ -331,7 +331,7 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
   exit 1
 }
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): update autonomous execution learnings"
+  oat project push "$PROJECT_PATH" --message "chore(oat): update autonomous execution learnings" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/oat-execution-learnings.md"
   git diff --cached --quiet || git commit -m "chore(oat): update autonomous execution learnings"

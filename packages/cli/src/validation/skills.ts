@@ -363,6 +363,23 @@ function collectSyncedContentFindings(
         message: `Line ${lineNumber}: Project scope resolution must fail closed; do not fall back to shared`,
       });
     }
+
+    const isPushCommand =
+      /^\s*(?:[A-Z][A-Z0-9_]*=\$\()?oat\s+project\s+push\b/.test(line);
+    const pushFailureHandled =
+      /\|\|\s*(?:\{|exit\b)/.test(line) ||
+      ((line.match(/"/g)?.length ?? 0) % 2 === 1 &&
+        logical
+          .slice(logicalIndex + 1, logicalIndex + 16)
+          .some((candidate) =>
+            /"\s*\|\|\s*(?:\{|exit\b)/.test(candidate.content),
+          ));
+    if (isPushCommand && !pushFailureHandled) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Project push must handle a nonzero exit explicitly and stop bookkeeping`,
+      });
+    }
   }
 
   const lines = content.split('\n');

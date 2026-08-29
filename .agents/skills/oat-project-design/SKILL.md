@@ -324,7 +324,7 @@ Commit separately (keeps history clean; lets reviewers fetch spec independently)
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "docs: confirm requirements for {project-name}"
+  oat project push "$PROJECT_PATH" --message "docs: confirm requirements for {project-name}" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/spec.md"
   git commit -m "docs: confirm requirements for {project-name}"
@@ -582,7 +582,7 @@ Even when no HiLL checkpoint is configured, the artifact is committed — consis
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "docs: draft design for {project-name} (awaiting review)"
+  oat project push "$PROJECT_PATH" --message "docs: draft design for {project-name} (awaiting review)" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
   git diff --cached --quiet || git commit -m "docs: draft design for {project-name} (awaiting review)"
@@ -625,7 +625,7 @@ Wait for user response:
     PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
     # fail closed: never fall back to branch bookkeeping when scope resolution fails
     if [ "$PROJECT_SCOPE" = "synced" ]; then
-      oat project push "$PROJECT_PATH" --message "docs: revise design after user review feedback"
+      oat project push "$PROJECT_PATH" --message "docs: revise design after user review feedback" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
     else
       git add "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md"
       git commit -m "docs: revise design after user review feedback"
@@ -780,7 +780,7 @@ according to its `onFailure` policy.
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): mark design complete for {project-name}"
+  oat project push "$PROJECT_PATH" --message "chore(oat): mark design complete for {project-name}" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
   git diff --cached --quiet || git commit -m "chore(oat): mark design complete for {project-name}"

@@ -532,7 +532,7 @@ Commit all modified OAT tracking files atomically:
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): record review findings and add fix tasks ({scope})"
+  oat project push "$PROJECT_PATH" --message "chore(oat): record review findings and add fix tasks ({scope})" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
   # Capture the Step 7.5 archive move: stages both the deletion of the original

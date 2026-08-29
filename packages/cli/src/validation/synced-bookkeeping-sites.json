@@ -97,7 +97,7 @@
   },
   {
     "file": ".agents/skills/oat-project-implement/SKILL.md",
-    "anchor": "if [ -n \"$PROJECT_PATH\" ] && [[ \"$PROJECT_PATH\" == \"$SYNCED_PROJECTS_ROOT/\"* ]]; then",
+    "anchor": "  PROJECT_SCOPE=$(oat project scope \"$PROJECT_PATH\" --format value) || { echo \"oat: cannot resolve project scope for $PROJECT_PATH; refusing project arrival\" >&2; exit 1; }",
     "kind": "arrival",
     "guard": "materialized-arrival"
   },
@@ -181,7 +181,7 @@
   },
   {
     "file": ".agents/skills/oat-project-retro/references/apply-procedure.md",
-    "anchor": "    RETRO_PUSH=$(oat project push \"$PROJECT_PATH\" --message \"chore(oat): record retro application $RP_ID\" --json) || exit 1",
+    "anchor": "    RETRO_PUSH=$(oat project push \"$PROJECT_PATH\" --message \"chore(oat): record retro application $RP_ID\" --json) || { echo \"oat: project push failed; run oat project pull, resolve the reported state, and retry\" >&2; exit 1; }",
     "kind": "write",
     "guard": "project-scope"
   },
@@ -325,7 +325,7 @@
   },
   {
     "file": ".agents/skills/oat-brainstorm/SKILL.md",
-    "anchor": "FOLD_BACK_PUSH=$(oat project push \"$ACTIVE_PROJECT\" --message \"chore(oat): integrate brainstorm into <artifact-basename> for <project-name>\" --json)\n     FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt \"$FOLD_BACK_PUSH\") || { printf '%s\\n' \"$FOLD_BACK_PUSH\" >&2; echo \"Recovery: run oat project pull \\\"$ACTIVE_PROJECT\\\", resolve conflicts, then retry this push.\" >&2; exit 1; }",
+    "anchor": "FOLD_BACK_PUSH=$(oat project push \"$ACTIVE_PROJECT\" --message \"chore(oat): integrate brainstorm into <artifact-basename> for <project-name>\" --json) || { echo \"oat: project push failed; run oat project pull, resolve the reported state, and retry\" >&2; exit 1; }\n     FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt \"$FOLD_BACK_PUSH\") || { printf '%s\\n' \"$FOLD_BACK_PUSH\" >&2; echo \"Recovery: run oat project pull \\\"$ACTIVE_PROJECT\\\", resolve conflicts, then retry this push.\" >&2; exit 1; }",
     "kind": "write",
     "guard": "project-scope"
   },
@@ -337,7 +337,7 @@
   },
   {
     "file": ".agents/skills/oat-brainstorm/SKILL.md",
-    "anchor": "FOLD_BACK_PUSH=$(oat project push \"$ACTIVE_PROJECT\" --message \"chore(oat): integrate brainstorm into <artifact-basename> for <project-name>\" --json)\n    FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt \"$FOLD_BACK_PUSH\") || { printf '%s\\n' \"$FOLD_BACK_PUSH\" >&2; echo \"Recovery: run oat project pull \\\"$ACTIVE_PROJECT\\\", resolve conflicts, then retry this push.\" >&2; exit 1; }",
+    "anchor": "FOLD_BACK_PUSH=$(oat project push \"$ACTIVE_PROJECT\" --message \"chore(oat): integrate brainstorm into <artifact-basename> for <project-name>\" --json) || { echo \"oat: project push failed; run oat project pull, resolve the reported state, and retry\" >&2; exit 1; }\n    FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt \"$FOLD_BACK_PUSH\") || { printf '%s\\n' \"$FOLD_BACK_PUSH\" >&2; echo \"Recovery: run oat project pull \\\"$ACTIVE_PROJECT\\\", resolve conflicts, then retry this push.\" >&2; exit 1; }",
     "kind": "write",
     "guard": "project-scope"
   },

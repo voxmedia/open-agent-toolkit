@@ -429,7 +429,7 @@ After the import-aware plan artifact review, project state sync, dashboard refre
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): update imported plan artifacts for {project-name}"
+  oat project push "$PROJECT_PATH" --message "chore(oat): update imported plan artifacts for {project-name}" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/references/"
   for path in \

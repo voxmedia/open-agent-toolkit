@@ -681,7 +681,7 @@ Create a single bookkeeping commit for all artifact updates and present a final 
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): reconcile manual implementation ({first_task_id}..{last_task_id})"
+  oat project push "$PROJECT_PATH" --message "chore(oat): reconcile manual implementation ({first_task_id}..{last_task_id})" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
   # Only add plan.md if it was modified

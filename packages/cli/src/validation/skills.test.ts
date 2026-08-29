@@ -408,7 +408,7 @@ describe('validateOatSkills', () => {
     await createSkillFile(
       root,
       'oat-project-guarded',
-      `${validSkillContent('oat-project-guarded')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts"\nelse\n  git add "$PROJECT_PATH/state.md"\n  git commit -m "chore(oat): persist artifacts"\nfi\n\`\`\`\n`,
+      `${validSkillContent('oat-project-guarded')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts" || exit 1\nelse\n  git add "$PROJECT_PATH/state.md"\n  git commit -m "chore(oat): persist artifacts"\nfi\n\`\`\`\n`,
     );
 
     const result = await validateOatSkills(root);
@@ -422,7 +422,7 @@ describe('validateOatSkills', () => {
     const skillPath = await createSkillFile(
       root,
       'oat-project-status-blind-push',
-      `${validSkillContent('oat-project-status-blind-push')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts" --json)\n  PUSH_SHA=$(printf '%s\\n' "$PUSH_OUTPUT" | jq -r .sha)\nfi\n\`\`\`\n`,
+      `${validSkillContent('oat-project-status-blind-push')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts" --json) || exit 1\n  PUSH_SHA=$(printf '%s\\n' "$PUSH_OUTPUT" | jq -r .sha)\nfi\n\`\`\`\n`,
     );
 
     const result = await validateOatSkills(root);
@@ -441,7 +441,7 @@ describe('validateOatSkills', () => {
     const skillPath = await createSkillFile(
       root,
       'oat-project-prevalidated-sha',
-      `${validSkillContent('oat-project-prevalidated-sha')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts" --json)\n  PUSH_SHA=$(printf '%s\\n' "$PUSH_OUTPUT" | jq -r .sha)\n  PUSH_SHA=$(parse_synced_push_receipt "$PUSH_OUTPUT") || exit 1\nfi\n\`\`\`\n`,
+      `${validSkillContent('oat-project-prevalidated-sha')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts" --json) || exit 1\n  PUSH_SHA=$(printf '%s\\n' "$PUSH_OUTPUT" | jq -r .sha)\n  PUSH_SHA=$(parse_synced_push_receipt "$PUSH_OUTPUT") || exit 1\nfi\n\`\`\`\n`,
     );
 
     const result = await validateOatSkills(root);
@@ -460,12 +460,31 @@ describe('validateOatSkills', () => {
     await createSkillFile(
       root,
       'oat-project-validated-sha',
-      `${validSkillContent('oat-project-validated-sha')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts" --json)\n  PUSH_SHA=$(parse_synced_push_receipt "$PUSH_OUTPUT") || exit 1\n  printf '%s\\n' "$PUSH_SHA"\nfi\n\`\`\`\n`,
+      `${validSkillContent('oat-project-validated-sha')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts" --json) || exit 1\n  PUSH_SHA=$(parse_synced_push_receipt "$PUSH_OUTPUT") || exit 1\n  printf '%s\\n' "$PUSH_SHA"\nfi\n\`\`\`\n`,
     );
 
     const result = await validateOatSkills(root);
 
     expect(result.findings).toEqual([]);
+  });
+
+  it('rejects a project push without explicit nonzero handling', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-unhandled-push',
+      `${validSkillContent('oat-project-unhandled-push')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts"\nfi\n\`\`\`\n`,
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: expect.stringMatching(
+        /^Line \d+: Project push must handle a nonzero exit explicitly and stop bookkeeping$/,
+      ),
+    });
   });
 
   it('rejects an unguarded project-artifact commit in a lifecycle skill', async () => {

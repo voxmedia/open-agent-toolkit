@@ -161,13 +161,13 @@ OAT stores active project context in `.oat/config.local.json` (`activeProject`, 
 
 ```bash
 PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
-PROJECTS_ROOT="${PROJECTS_ROOT%/}"
-SYNCED_PROJECTS_ROOT="$(dirname "$PROJECTS_ROOT")/synced"
-if [ -n "$PROJECT_PATH" ] && [[ "$PROJECT_PATH" == "$SYNCED_PROJECTS_ROOT/"* ]]; then
-  PROJECT_SLUG=$(basename "$PROJECT_PATH")
-  if [ -f "$PROJECT_PATH.json" ] || git ls-remote --exit-code origin "refs/oat/projects/$PROJECT_SLUG" >/dev/null 2>&1; then
-    oat project pull "$PROJECT_PATH"
+if [ -n "$PROJECT_PATH" ]; then
+  PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing project arrival" >&2; exit 1; }
+  if [ "$PROJECT_SCOPE" = "synced" ]; then
+    PROJECT_SLUG=$(basename "$PROJECT_PATH")
+    if [ -f "$PROJECT_PATH.json" ] || git ls-remote --exit-code origin "refs/oat/projects/$PROJECT_SLUG" >/dev/null 2>&1; then
+      oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }
+    fi
   fi
 fi
 ```

@@ -148,7 +148,7 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
   exit 1
 }
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): promote {project-name} to spec-driven"
+  oat project push "$PROJECT_PATH" --message "chore(oat): promote {project-name} to spec-driven" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
   git diff --cached --quiet || git commit -m "chore(oat): promote {project-name} to spec-driven"

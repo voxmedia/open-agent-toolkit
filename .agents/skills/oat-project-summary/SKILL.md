@@ -513,7 +513,7 @@ process.stdout.write(value.sha);
 
 ```bash
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  SUMMARY_PUSH=$(oat project push "$PROJECT_PATH" --message "docs: generate summary for {project-name}" --json)
+  SUMMARY_PUSH=$(oat project push "$PROJECT_PATH" --message "docs: generate summary for {project-name}" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
   SUMMARY_COMMIT_SHA=$(parse_synced_push_receipt "$SUMMARY_PUSH") || { printf '%s\n' "$SUMMARY_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
 else
   PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/summary.md")
@@ -550,7 +550,7 @@ If this is a re-run (incremental update):
 
 ```bash
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  SUMMARY_PUSH=$(oat project push "$PROJECT_PATH" --message "docs: update summary for {project-name}" --json)
+  SUMMARY_PUSH=$(oat project push "$PROJECT_PATH" --message "docs: update summary for {project-name}" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
   SUMMARY_COMMIT_SHA=$(parse_synced_push_receipt "$SUMMARY_PUSH") || { printf '%s\n' "$SUMMARY_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
 else
   git add -- "${PROJECT_OUTPUT_PATHS[@]}"

@@ -604,7 +604,7 @@ The check happens before any append, so the skill can route around the dirty cas
    PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
    # fail closed: never fall back to branch bookkeeping when scope resolution fails
    if [ "$PROJECT_SCOPE" = "synced" ]; then
-     FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" --json)
+     FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
      FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt "$FOLD_BACK_PUSH") || { printf '%s\n' "$FOLD_BACK_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
    else
      git add -- "$ARTIFACT_PATH"
@@ -626,7 +626,7 @@ The check happens before any append, so the skill can route around the dirty cas
   ```bash
   PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
   if [ "$PROJECT_SCOPE" = "synced" ]; then
-    CURRENT_ARTIFACT_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "$CURRENT_ARTIFACT_SUBJECT" --json)
+    CURRENT_ARTIFACT_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "$CURRENT_ARTIFACT_SUBJECT" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
     CURRENT_ARTIFACT_COMMIT_SHA=$(parse_synced_push_receipt "$CURRENT_ARTIFACT_PUSH") || { printf '%s\n' "$CURRENT_ARTIFACT_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
   else
     git add -- "$ARTIFACT_PATH"
@@ -641,7 +641,7 @@ The check happens before any append, so the skill can route around the dirty cas
   ```bash
   PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
   if [ "$PROJECT_SCOPE" = "synced" ]; then
-    FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" --json)
+    FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
     FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt "$FOLD_BACK_PUSH") || { printf '%s\n' "$FOLD_BACK_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
   else
     git add -- "$ARTIFACT_PATH"
@@ -658,7 +658,7 @@ The check happens before any append, so the skill can route around the dirty cas
   ```bash
   PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
   if [ "$PROJECT_SCOPE" = "synced" ]; then
-    MIXED_FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm + prior edits into <artifact-basename> for <project-name>" --json)
+    MIXED_FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm + prior edits into <artifact-basename> for <project-name>" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
     FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt "$MIXED_FOLD_BACK_PUSH") || { printf '%s\n' "$MIXED_FOLD_BACK_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
   else
     git add -- "$ARTIFACT_PATH"
@@ -719,7 +719,7 @@ After writing, persist the file with the same fail-closed scope guard:
 PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  REFERENCE_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): capture brainstorming reference for <project-name>" --json)
+  REFERENCE_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): capture brainstorming reference for <project-name>" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
   REFERENCE_COMMIT_SHA=$(parse_synced_push_receipt "$REFERENCE_PUSH") || { printf '%s\n' "$REFERENCE_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
 else
   git add -- "<active-project-relative-path>"

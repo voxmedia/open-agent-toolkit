@@ -370,7 +370,7 @@ A shared snippet replaces each inventoried bookkeeping commit:
 ```bash
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value)   # prints: shared | local | synced
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): bookkeeping after p03"
+  oat project push "$PROJECT_PATH" --message "chore(oat): bookkeeping after p03" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/state.md" … && git commit -m "…"   # unchanged
 fi

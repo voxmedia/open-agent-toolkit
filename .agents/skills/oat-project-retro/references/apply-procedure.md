@@ -104,7 +104,7 @@ continues immediately, this can be written back together with the final
      PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
      # fail closed: never fall back to branch bookkeeping when scope resolution fails
      if [ "$PROJECT_SCOPE" = "synced" ]; then
-       CORRECTION_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): apply retro correction $RP_ID" --json)
+       CORRECTION_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): apply retro correction $RP_ID" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
        CORRECTION_COMMIT=$(parse_synced_push_receipt "$CORRECTION_PUSH") || { printf '%s\n' "$CORRECTION_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
      else
        git add "$PROJECT_PATH/project-log.md"
@@ -259,7 +259,7 @@ Compute `oat_retro_promotions` exactly:
 
     # Only now write Status: applied, Applied-ref: $APPLIED_REF, the cleared
     # disposition note, promotions, and Current State into project-retro.md.
-    RETRO_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): record retro application $RP_ID" --json) || exit 1
+    RETRO_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): record retro application $RP_ID" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
     RETRO_WRITEBACK_COMMIT=$(parse_synced_push_receipt "$RETRO_PUSH") || { printf '%s\n' "$RETRO_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
   else
     # Write back the artifact before this commit, then preserve the single-commit

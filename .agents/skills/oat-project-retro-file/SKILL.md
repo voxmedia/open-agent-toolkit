@@ -391,7 +391,7 @@ process.stdout.write(value.sha);
 
 ```bash
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  RETRO_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): record project retro filing writeback" --json)
+  RETRO_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): record project retro filing writeback" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
   WRITEBACK_COMMIT=$(parse_synced_push_receipt "$RETRO_PUSH") || { printf '%s\n' "$RETRO_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
 else
   git add "$RETRO_PATH"

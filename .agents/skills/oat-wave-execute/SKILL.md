@@ -250,7 +250,7 @@ fi
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing wave gate bookkeeping" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): record wave plan gate"
+  oat project push "$PROJECT_PATH" --message "chore(oat): record wave plan gate" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   PROJECT_OUTPUT_PATHS=()
   while IFS= read -r output_path; do

@@ -446,7 +446,7 @@ Requirements:
 - {N} functional requirements (P0: {n}, P1: {n}, P2: {n})
 - {N} non-functional requirements (P0: {n}, P1: {n}, P2: {n})
 
-Ready for design phase"
+Ready for design phase" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/spec.md" "$PROJECT_PATH/state.md")
   git add -- "${PROJECT_OUTPUT_PATHS[@]}"

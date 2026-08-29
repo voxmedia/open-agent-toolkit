@@ -210,7 +210,7 @@ If discovery/state artifacts were updated and the skill is about to pause for th
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): capture quick-start discovery for {project-name}"
+  oat project push "$PROJECT_PATH" --message "chore(oat): capture quick-start discovery for {project-name}" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md"
   git diff --cached --quiet || git commit -m "chore(oat): capture quick-start discovery for {project-name}"
@@ -268,7 +268,7 @@ oat project complete-discovery "$PROJECT_PATH" --ready-for oat-project-design
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): promote quick-start discovery for {project-name}"
+  oat project push "$PROJECT_PATH" --message "chore(oat): promote quick-start discovery for {project-name}" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md"
   git diff --cached --quiet || git commit -m "chore(oat): promote quick-start discovery for {project-name}"
@@ -472,7 +472,7 @@ Before proceeding to plan generation or pausing for validation, persist the desi
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): capture quick-start design for {project-name}"
+  oat project push "$PROJECT_PATH" --message "chore(oat): capture quick-start design for {project-name}" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
   git diff --cached --quiet || git commit -m "chore(oat): capture quick-start design for {project-name}"
@@ -486,7 +486,7 @@ oat project complete-discovery "$PROJECT_PATH" --ready-for oat-project-quick-sta
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): complete quick-start discovery for {project-name}"
+  oat project push "$PROJECT_PATH" --message "chore(oat): complete quick-start discovery for {project-name}" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md"
   git diff --cached --quiet || git commit -m "chore(oat): complete quick-start discovery for {project-name}"
@@ -845,7 +845,7 @@ After dashboard refresh, stage and commit the changed quick-start artifacts befo
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): update quick-start artifacts for {project-name}"
+  oat project push "$PROJECT_PATH" --message "chore(oat): update quick-start artifacts for {project-name}" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   for path in \
     "$PROJECT_PATH/discovery.md" \
