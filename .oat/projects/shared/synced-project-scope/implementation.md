@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_ready_for: review
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: p17-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,9 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> One hundred sixty-four of one hundred seventy-eight implementation and
-> revision tasks are complete. The Phase 16 full-range review was received
-> into Phase 17; implementation resumes at `p17-t01`.
+> All one hundred seventy-eight implementation and revision tasks are complete.
+> Phase 17 passed its final-head gates and requires another independent
+> full-range review before the refreshed exit gate or PR #227 update.
 >
 > Conventions:
 >
@@ -47,9 +47,9 @@ oat_generated: false
 | Phase 14     | complete | 19    | 19/19     |
 | Phase 15     | complete | 19    | 19/19     |
 | Phase 16     | complete | 20    | 20/20     |
-| Phase 17     | pending  | 14    | 0/14      |
+| Phase 17     | complete | 14    | 14/14     |
 
-**Total:** 164/178 tasks completed
+**Total:** 178/178 tasks completed
 
 ---
 
@@ -3469,7 +3469,7 @@ remains blocked.
 
 ## Phase 17: Final lifecycle durability and provider parity
 
-**Status:** pending - 0 of 14 tasks complete
+**Status:** complete - 14 of 14 tasks complete; independent review pending
 **Started:** 2026-08-29
 
 ### Review Received: final full-range review - 2026-08-29T08:39:08Z
@@ -3497,19 +3497,38 @@ This event is `fixes_added`, never passed.
 
 ### Task Status
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p17-t01 | pending | -      |
-| p17-t02 | pending | -      |
-| p17-t03 | pending | -      |
-| p17-t04 | pending | -      |
-| p17-t05 | pending | -      |
-| p17-t06 | pending | -      |
-| p17-t07 | pending | -      |
-| p17-t08 | pending | -      |
-| p17-t09 | pending | -      |
-| p17-t10 | pending | -      |
-| p17-t11 | pending | -      |
-| p17-t12 | pending | -      |
-| p17-t13 | pending | -      |
-| p17-t14 | pending | -      |
+| Task    | Status | Commit     |
+| ------- | ------ | ---------- |
+| p17-t01 | done   | `186cbae3` |
+| p17-t02 | done   | `17923248` |
+| p17-t03 | done   | `94e87d08` |
+| p17-t04 | done   | `63108fa1` |
+| p17-t05 | done   | `e9b51fc6` |
+| p17-t06 | done   | `16e2f56a` |
+| p17-t07 | done   | `825b5f5b` |
+| p17-t08 | done   | `100c03bd` |
+| p17-t09 | done   | `78bcfbf5` |
+| p17-t10 | done   | `b6d9bfa2` |
+| p17-t11 | done   | `8a3f2df5` |
+| p17-t12 | done   | `53ff5c49` |
+| p17-t13 | done   | `026fd4f6` |
+| p17-t14 | done   | `b24076b5` |
+
+### Recovery Events
+
+- Attempt 1 closed the missing `p17-t10` spawned CLI boundary assertion in
+  `99b1fab4`. The real-process ENOTDIR case now exits 2 with a path-specific
+  JSON `CliError`; the focused canonical-path suites passed 11/11 along with
+  build, type-check, lint, format, and diff checks. Root settlement
+  `3f026ead` cleared the pending marker.
+
+Recovery usage is 1/10 with `pending_attempt: null`.
+
+### Phase 17 Closeout
+
+All fourteen planned tasks are complete. The eight CI gates passed in exact
+order at `b24076b5`, including isolated-HOME tests and a fresh
+`origin/main` fetch before version validation. Skill validation, lint, format,
+and diff checks also passed. The subsequent test-only recovery was independently
+verified and settled. Independent full-range review is next; publication
+remains blocked.
