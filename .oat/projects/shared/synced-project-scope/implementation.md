@@ -1652,11 +1652,11 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact                                          | Planned / Documented              | Actual / Accepted                                   | Reason                                   | Source of Truth                  | Follow-up                                             |
-| ------------- | -------------------------------------------------------- | --------------------------------- | --------------------------------------------------- | ---------------------------------------- | -------------------------------- | ----------------------------------------------------- |
-| p03 review M1 | `reviews/archived/code-p03-review-2026-08-27T194810Z.md` | State routed to completed p03-t10 | State routes to first received fix task p03-t12     | Full-phase review blocked before Phase 4 | Received review and current plan | Re-review p03 fix delta after p03-t12 through p03-t18 |
-| p03 review M2 | `reviews/archived/code-p03-review-2026-08-27T194810Z.md` | Opaque merge-delta digest         | Reproducible per-path tree-object equality evidence | Preserve truthful integration evidence   | Git parent trees                 | p03-t17                                               |
-| final gate m2 | `reviews/archived/final-review-2026-08-29T212108Z.md`    | Prune removes checkouts, then remote ref | Remote ref deleted first; staged record-deletion resume when both refs are already gone | Safer partial-failure messaging; covered by prune tests | `packages/cli/src/commands/project/sync/ref-sync.ts` | Design bullet aligned in this receive |
+| Task / Review | Source Artifact                                          | Planned / Documented                     | Actual / Accepted                                                                       | Reason                                                  | Source of Truth                                      | Follow-up                                             |
+| ------------- | -------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
+| p03 review M1 | `reviews/archived/code-p03-review-2026-08-27T194810Z.md` | State routed to completed p03-t10        | State routes to first received fix task p03-t12                                         | Full-phase review blocked before Phase 4                | Received review and current plan                     | Re-review p03 fix delta after p03-t12 through p03-t18 |
+| p03 review M2 | `reviews/archived/code-p03-review-2026-08-27T194810Z.md` | Opaque merge-delta digest                | Reproducible per-path tree-object equality evidence                                     | Preserve truthful integration evidence                  | Git parent trees                                     | p03-t17                                               |
+| final gate m2 | `reviews/archived/final-review-2026-08-29T212108Z.md`    | Prune removes checkouts, then remote ref | Remote ref deleted first; staged record-deletion resume when both refs are already gone | Safer partial-failure messaging; covered by prune tests | `packages/cli/src/commands/project/sync/ref-sync.ts` | Design bullet aligned in this receive                 |
 
 ## Test Results
 
@@ -4167,3 +4167,5 @@ is eligible.
 - `m2`: review found `design.md` still documented checkout removal before remote-ref deletion. Shipped `ref-sync.ts` deletes the remote ref first and keeps an already-staged record-deletion resume path; both failure modes are tested. Implementation remains source of truth; the design bullet is aligned in this receive commit.
 
 **Next:** Persist `allowed/passed`, then refresh PR #227. A GitHub `ci` failure in `guided-setup.test.ts` is out of this artifact and will be fixed separately.
+
+The `guided-setup` harness now mocks `applyOatCoreGitattributes` (`e3b01202`). That test-only change is a substantive descendant after the allowed generation, so the exit gate is `stale` and needs a new generation before `oat-project-pr-final`.
