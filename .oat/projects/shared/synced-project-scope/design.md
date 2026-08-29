@@ -245,7 +245,7 @@ export async function commitRecordChange(
 **Mutation invariants (replace any single global guard):**
 
 1. **Nested-worktree mutations** (`add`, `commit`, `rebase`, `rebase --continue/--abort`) run with `cwd = projectPath` and first assert `git rev-parse --show-toplevel == projectPath`. Invariant failure is a bug, not a user error: `CliError` exit 2 before any mutation.
-2. **Common-dir / ref mutations** (`update-ref`, `worktree add|remove|prune`, `fetch`, `push`) run with `cwd = repoRoot` and may name only `<ref>` (or `HEAD:<ref>` / `:<ref>`) and `projectPath`. `push` never carries `--force`, `--force-with-lease`, or `+` on the push refspec.
+2. **Common-dir / ref mutations** (`update-ref`, `worktree add|remove|prune`, `fetch`, `push`) run with `cwd = repoRoot` and may name only `<ref>` (or `HEAD:<ref>` / `:<ref>`) and `projectPath`. Normal publication never carries `--force`, `--force-with-lease`, or `+` on the push refspec. The sole exception is migration rollback: it may restore or delete only an invocation-owned remote state with `--force-with-lease=<ref>:<owned-sha>`, so a later competing update is never rewritten.
 3. **Parent-branch index mutations** happen only through `commitRecordChange`, whose pathspec allowlist is: the project's record file, `.gitignore`, `.gitattributes`, the migration source directory (for `git rm`), and the configured `archive.summaryExportPath` file. Any other pathspec is rejected before staging. Never `add -A`, never a directory glob, never `--force`.
 
 **Design Decisions:**
@@ -341,7 +341,7 @@ Completion of a `synced` project is an explicit ordered state machine. `oat-proj
 | 6   | archive | `removeSyncedCheckout` — `worktree remove` **without** `--force` (guaranteed safe by step 3) → `worktree prune`. The ref is retained.                                                                                                                                                                                                                                                                                                                   | Skipped when the checkout is already absent.                                        |
 | 7   | skill   | Refresh the PR block from the ref: `oat project links --durable-summary <path>` → `gh pr edit` (existing step 11.5 site). Links resolve because the ref still exists.                                                                                                                                                                                                                                                                                   | Idempotent block replacement.                                                       |
 
-Archive _target_ durability logic (`isGitignoredArchivePath` → primary checkout re-targeting) is untouched. For `shared` projects the routine is byte-for-byte unchanged.
+For `shared` projects, archive preserves its storage and publication behavior with four explicit deltas: the snapshot omits `reviews/` (FR18), `.oat-archive-source.json` records `scope: shared`, paths outside the configured scope roots are refused, and a byte-identical existing summary or recap export is accepted as an idempotent retry. Archive target selection otherwise retains the existing ignored-primary and dated-collision behavior.
 
 ### Doctor — `commands/doctor/synced-projects.ts`
 
@@ -536,7 +536,7 @@ Whoever can push branches to `origin` can push `refs/oat/*`. Repositories that r
 ### Threat Mitigation
 
 - **Shell injection:** all git/gh invocations use `execFile` with argument arrays; no shell.
-- **Parent-checkout damage:** the three mutation invariants in Ref sync engine — nested-worktree commands assert `--show-toplevel == projectPath`; common-dir commands may name only `<ref>` and `projectPath`; parent-branch staging goes only through `commitRecordChange` with its pathspec allowlist. No `-A` outside the nested worktree; no force-push anywhere; `worktree remove --force` only in `prune --force` (NFR4).
+- **Parent-checkout damage:** the three mutation invariants in Ref sync engine — nested-worktree commands assert `--show-toplevel == projectPath`; common-dir commands may name only `<ref>` and `projectPath`; parent-branch staging goes only through `commitRecordChange` with its pathspec allowlist. No `-A` outside the nested worktree; no unleased force-push anywhere; the only leased push is the owned-SHA migration rollback, and `worktree remove --force` is limited to rollback or `prune --force` (NFR4).
 - **Ref hijack / traversal:** ref names are derived from validated slugs only; `..`, `/`, and control characters are rejected upstream.
 - **PR body tampering:** `replaceLinksBlock` only replaces text between the two markers; if markers are malformed (start without end), refresh is skipped with a warning rather than guessing.
 

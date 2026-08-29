@@ -25,7 +25,7 @@ The maintainer's current workaround is to complete and archive a project before 
 
 The artifacts have two audiences with opposite needs. Agents need them versioned, pushed, and reachable from any checkout using nothing more than git access. Reviewers and bots need them absent from the diff and from `main`, while still being able to read the design, discovery, and summary on demand. This project separates the two channels: in-flight artifacts move to a per-project git ref outside the branch namespace, the work branch carries only a tiny discovery record, and PR bodies link to pinned, rendered copies of the reviewer-facing artifacts.
 
-Existing behaviors — `shared` and `local` scopes, local archive, dated S3 snapshots, and the dated tracked summary export — must be preserved unchanged.
+Existing behaviors — `shared` and `local` scopes, local archive, dated S3 snapshots, and the dated tracked summary export — remain compatible except for the explicit archive-safety and idempotency deltas in FR18 and NFR1.
 
 ## Goals
 
@@ -241,7 +241,7 @@ Existing behaviors — `shared` and `local` scopes, local archive, dated S3 snap
 
 - **Description:** `shared` and `local` projects behave exactly as today.
 - **Acceptance Criteria:**
-  - Existing `shared` projects are listed, resumed, committed, and archived without behavior change — with one deliberate exception: the local archive snapshot no longer includes `reviews/` (FR18).
+  - Existing `shared` projects are listed, resumed, and committed without behavior change. Archive deliberately omits `reviews/` (FR18), records the originating scope in snapshot metadata, refuses a path outside the configured scope roots, and accepts a byte-identical existing summary or recap export as an idempotent retry.
   - Existing `local` projects are resumed, committed, and archived without behavior change; they additionally appear in `oat project list` with `scope: local` (additive).
   - Repositories that have not upgraded their gitignore block continue to work for `shared` and `local`.
   - Existing test suites for project creation, archive, and gitignore pass unchanged except for additive cases.
@@ -268,7 +268,7 @@ Existing behaviors — `shared` and `local` scopes, local archive, dated S3 snap
 - **Acceptance Criteria:**
   - No sync command runs unscoped staging in the parent worktree.
   - No sync command modifies files outside the project's artifact directory (other than the discovery record and gitignore block at creation/migration).
-  - No sync command force-pushes.
+  - Normal sync publication never force-pushes. Migration rollback may restore or delete only the exact remote SHA it observed or published, using `--force-with-lease=<ref>:<owned-sha>`; it never uses an unleased force push and never rewrites a later competing update.
 - **Priority:** P0
 
 **NFR5: Idempotence and resumability**
