@@ -3532,3 +3532,47 @@ order at `b24076b5`, including isolated-HOME tests and a fresh
 and diff checks also passed. The subsequent test-only recovery was independently
 verified and settled. Independent full-range review is next; publication
 remains blocked.
+
+### Review Received: final passing gate - 2026-08-29T09:24:32Z
+
+**Review artifact:** `reviews/archived/final-review-2026-08-29T092432Z.md`
+
+**Findings:** 0 Critical / 0 Important / 1 Medium / 9 Minor. The gate passed
+at the Important threshold.
+
+**Judgment-sweep dispositions:**
+
+- M1 was addressed now in `a979f981`: unterminated managed blocks repair
+  idempotently, and re-application preserves user rules.
+- m4 was addressed now in `827084cd`: malformed-row semantics and pause/prune
+  recovery are documented accurately.
+- m9 was addressed now in `b51385c2`: a materialized row with `recordError`
+  recommends record restoration instead of continuing discovery.
+- m1 (timestamp-only duplicate pause commit) is accepted post-release: the
+  retained pause is clean and publication succeeds; the residual affects only
+  history compactness.
+- m2 (advisory prune republish guard) is accepted post-release: the error is
+  explicit, retry is safe, and accidental republish remains recoverable.
+- m3 (split invalid-config exit codes) is accepted post-release pending a
+  command-wide exit-code policy rather than a one-path exception.
+- m5 (full-body variant parity test) is accepted post-release: all generated
+  variants are byte-parity now; broader codec-level enforcement is future
+  hardening.
+- m6 (direct Git calls outside `GitRunner`) is accepted post-release because
+  the sites predate this branch and require a broader Git execution audit.
+- m7 (shared/local custom-root archive sibling) is accepted post-release as a
+  pre-existing non-synced limitation outside this project's compatibility
+  boundary.
+- m8 (`summary.md` drift) is assigned to the required pre-PR closeout refresh;
+  the PR update must not proceed until the summary includes Phases 13-17.
+
+**Verification:** focused gitignore/list suites passed after the address-now
+fixes; `pnpm check`, type-check, docs build, lint, format, and diff checks all
+exited 0. No Critical or Important concern emerged, so the passing-gate sweep
+does not require another standard review.
+
+**Review run:** `bca041ca-f78e-4a7e-b03e-302809768474`, target
+`claude-fable-skip-permissions`, full explicit range
+`8cc1b3827f9c051d5d2bb078ae986aef3e9fbd80..d40bbe3238e1653edc92e6e763ef16c76c2ba57a`.
+The final review event is `passed`; publication remains blocked on the fresh
+configured implementation exit gate and closeout refresh.
