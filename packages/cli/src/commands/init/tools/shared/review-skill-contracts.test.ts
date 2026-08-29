@@ -886,7 +886,7 @@ describe('review skill contracts', () => {
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.5');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );
@@ -1174,6 +1174,15 @@ describe('review skill contracts', () => {
 
     expect(normalizedContent).toContain(
       '`scripts/recover-completion-receipts.mjs#resolveCompletionArchiveDecision`',
+    );
+    expect(normalizedContent).toContain(
+      'For a local project, pass the explicit `localNonArchive=true` decision without asking the archive question.',
+    );
+    expect(content).toContain(
+      'ARCHIVE_DECISION_ARGS+=(--local-nonarchive true)',
+    );
+    expect(content).toContain(
+      'EXPECTED_ARCHIVE_DECISION_SOURCE="local-default"',
     );
     expect(content).toContain(
       'COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"',

@@ -62,7 +62,7 @@ interface CompletionReceipts {
 
 interface CompletionArchiveDecision {
   shouldArchive: boolean;
-  source: 'configured' | 'interactive';
+  source: 'configured' | 'interactive' | 'local-default';
 }
 
 type CompletionRetryResolution =
@@ -196,7 +196,10 @@ async function publishFinalArtifact(
 }
 
 function resolveArchiveDecision(
-  decision: 'configured decline' | 'interactive decline',
+  decision:
+    | 'configured decline'
+    | 'interactive decline'
+    | 'local default decline',
 ): CompletionArchiveDecision {
   const output = execFileSync(
     process.execPath,
@@ -204,13 +207,42 @@ function resolveArchiveDecision(
       RECOVERY_SCRIPT,
       decision === 'configured decline'
         ? '--archive-preference'
-        : '--interactive-archive',
-      'false',
+        : decision === 'interactive decline'
+          ? '--interactive-archive'
+          : '--local-nonarchive',
+      decision === 'local default decline' ? 'true' : 'false',
     ],
     { encoding: 'utf8' },
   );
   return JSON.parse(output) as CompletionArchiveDecision;
 }
+
+it('defaults local completion to an explicit non-archive decision', () => {
+  expect(resolveArchiveDecision('local default decline')).toEqual({
+    shouldArchive: false,
+    source: 'local-default',
+  });
+  expect(() =>
+    execFileSync(
+      process.execPath,
+      [RECOVERY_SCRIPT, '--local-nonarchive', 'false'],
+      { encoding: 'utf8' },
+    ),
+  ).toThrow();
+  expect(() =>
+    execFileSync(
+      process.execPath,
+      [
+        RECOVERY_SCRIPT,
+        '--local-nonarchive',
+        'true',
+        '--interactive-archive',
+        'false',
+      ],
+      { encoding: 'utf8' },
+    ),
+  ).toThrow();
+});
 
 async function commitCompletionRecord(
   repoRoot: string,

@@ -326,7 +326,26 @@ function requireSingleLinksBlock(
 export function resolveCompletionArchiveDecision({
   configuredPreference,
   interactiveAnswer,
+  localNonArchive,
 }) {
+  const suppliedSources = [
+    configuredPreference !== undefined && configuredPreference !== null,
+    interactiveAnswer !== undefined && interactiveAnswer !== null,
+    localNonArchive !== undefined && localNonArchive !== null,
+  ].filter(Boolean).length;
+  if (suppliedSources !== 1) {
+    throw completionReceiptError(
+      'Completion archive decision requires exactly one decision source.',
+    );
+  }
+  if (localNonArchive === true) {
+    return { shouldArchive: false, source: 'local-default' };
+  }
+  if (localNonArchive !== undefined && localNonArchive !== null) {
+    throw completionReceiptError(
+      'Local non-archive decision must be explicitly true.',
+    );
+  }
   if (typeof configuredPreference === 'boolean') {
     return { shouldArchive: configuredPreference, source: 'configured' };
   }
@@ -603,6 +622,8 @@ function parseArguments(argv) {
       result.configuredPreference = parseBoolean(value, flag);
     } else if (flag === '--interactive-archive') {
       result.interactiveAnswer = parseBoolean(value, flag);
+    } else if (flag === '--local-nonarchive') {
+      result.localNonArchive = parseBoolean(value, flag);
     } else {
       throw completionReceiptError(`Unsupported argument: ${flag}.`);
     }
@@ -614,7 +635,8 @@ async function main(argv) {
   const options = parseArguments(argv);
   if (
     options.configuredPreference !== undefined ||
-    options.interactiveAnswer !== undefined
+    options.interactiveAnswer !== undefined ||
+    options.localNonArchive !== undefined
   ) {
     return resolveCompletionArchiveDecision(options);
   }

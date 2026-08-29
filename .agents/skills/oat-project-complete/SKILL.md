@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.7.4
+version: 1.7.5
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -135,43 +135,58 @@ interactive archive answer is `false`. Both cases select the same explicit
 non-archive transaction below; declining archive never means skipping synced
 record durability.
 
-Route either source through
+Route every source through
 `scripts/recover-completion-receipts.mjs#resolveCompletionArchiveDecision`
-before assigning `SHOULD_ARCHIVE`. Pass `configuredPreference` only when
+before assigning `SHOULD_ARCHIVE`. For a local project, pass the explicit
+`localNonArchive=true` decision without asking the archive question. For a
+durable project, pass `configuredPreference` only when
 `workflow.archiveOnComplete` is set; otherwise pass the accepted batched
-`interactiveAnswer`. Require the result's `source` to be `configured` or
-`interactive` as appropriate and use its `shouldArchive` boolean. An absent or
-non-boolean decision fails closed instead of silently selecting a lifecycle
-path. The executable completion transaction tests must use this same resolver;
-scenario labels alone are not decision coverage.
+`interactiveAnswer`. Require the result's `source` to be `local-default`,
+`configured`, or `interactive` as appropriate and use its `shouldArchive`
+boolean. An absent, conflicting, or non-boolean decision fails closed instead
+of silently selecting a lifecycle path. The executable completion transaction
+tests must use this same resolver; scenario labels alone are not decision
+coverage.
 
 After the configured preference or accepted interactive answer is available,
 invoke the resolver rather than assigning `SHOULD_ARCHIVE` directly:
 
 ```bash
 ARCHIVE_DECISION_ARGS=()
-if [[ "$ARCHIVE_PREF" == "true" || "$ARCHIVE_PREF" == "false" ]]; then
+EXPECTED_ARCHIVE_DECISION_SOURCE=""
+if [[ "$IS_DURABLE_PROJECT" == "false" ]]; then
+  ARCHIVE_DECISION_ARGS+=(--local-nonarchive true)
+  EXPECTED_ARCHIVE_DECISION_SOURCE="local-default"
+elif [[ "$ARCHIVE_PREF" == "true" || "$ARCHIVE_PREF" == "false" ]]; then
   ARCHIVE_DECISION_ARGS+=(--archive-preference "$ARCHIVE_PREF")
+  EXPECTED_ARCHIVE_DECISION_SOURCE="configured"
 else
   test "$ARCHIVE_INTERACTIVE_ANSWER" = "true" \
     || test "$ARCHIVE_INTERACTIVE_ANSWER" = "false" \
     || exit 1
   ARCHIVE_DECISION_ARGS+=(--interactive-archive "$ARCHIVE_INTERACTIVE_ANSWER")
+  EXPECTED_ARCHIVE_DECISION_SOURCE="interactive"
 fi
 ARCHIVE_DECISION_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT" \
   "${ARCHIVE_DECISION_ARGS[@]}") || exit 1
 ARCHIVE_DECISION_FIELDS=$(node -e '
 const value = JSON.parse(process.argv[1]);
-if (typeof value.shouldArchive !== "boolean" || !["configured", "interactive"].includes(value.source)) process.exit(1);
+if (typeof value.shouldArchive !== "boolean" || !["local-default", "configured", "interactive"].includes(value.source)) process.exit(1);
 process.stdout.write(`${value.shouldArchive}\t${value.source}`);
 ' "$ARCHIVE_DECISION_JSON") || exit 1
 IFS=$'\t' read -r SHOULD_ARCHIVE ARCHIVE_DECISION_SOURCE \
   <<< "$ARCHIVE_DECISION_FIELDS"
+test "$ARCHIVE_DECISION_SOURCE" = "$EXPECTED_ARCHIVE_DECISION_SOURCE" || exit 1
+if [[ "$ARCHIVE_DECISION_SOURCE" == "local-default" ]]; then
+  test "$SHOULD_ARCHIVE" = "false" || exit 1
+fi
 ```
 
-Require `ARCHIVE_DECISION_SOURCE` to match the source selected above. Store an
-unconfigured batched answer as `ARCHIVE_INTERACTIVE_ANSWER` until this resolver
-returns; only then assign `SHOULD_ARCHIVE`.
+Require `ARCHIVE_DECISION_SOURCE` to match the source selected above. Local
+completion always resolves to explicit non-archive without asking the archive
+question. Store an unconfigured durable-project batched answer as
+`ARCHIVE_INTERACTIVE_ANSWER` until this resolver returns; only then assign
+`SHOULD_ARCHIVE`.
 
 Resolve `projectRecap` intent before presenting the batched completion prompt.
 Use the `oat-explainer-kit` lifecycle intent resolver in interactive mode with
