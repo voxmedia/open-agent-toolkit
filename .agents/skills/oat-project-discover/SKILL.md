@@ -560,7 +560,8 @@ Key decisions:
 
 Ready for design phase"
 else
-  git add "$PROJECT_PATH/"
+  PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md")
+  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
   git commit -m "docs: complete discovery for {project-name}
 
 Key decisions:

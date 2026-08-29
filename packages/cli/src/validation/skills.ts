@@ -61,6 +61,13 @@ interface ContentSite {
   content: string;
 }
 
+interface LogicalLine {
+  content: string;
+  endLine: number;
+  offset: number;
+  startLine: number;
+}
+
 const execFileAsync = promisify(execFileCallback);
 
 async function isDirectory(path: string): Promise<boolean> {
@@ -121,9 +128,39 @@ function isLifecycleSafetyFile(file: string): boolean {
 }
 
 function referencesProjectArtifactVariable(line: string): boolean {
-  return /\$PROJECT_PATH|\$\{PROJECT_PATH\}|\{PROJECT_PATH\}|\$ARTIFACT_PATH|\$\{ARTIFACT_PATH\}|\$ACTIVE_PROJECT(?!_PATH)|\$\{ACTIVE_PROJECT\}|\$REVIEW_PATH|\$\{REVIEW_PATH\}/.test(
+  return /\$PROJECT_PATH|\$\{PROJECT_PATH\}|\{PROJECT_PATH\}|\$ARTIFACT_PATH|\$\{ARTIFACT_PATH\}|\$ACTIVE_PROJECT(?!_PATH)|\$\{ACTIVE_PROJECT\}|\$REVIEW_PATH|\$\{REVIEW_PATH\}|\$\{(?:PROJECT|RETRO)_[A-Z0-9_]*(?:PATHS|FILES)\[@\]\}/.test(
     line,
   );
+}
+
+function executesGitCommand(line: string): boolean {
+  return /^\s*(?:(?:[A-Z][A-Z0-9_]*)=\$\()?git\b/.test(line);
+}
+
+function logicalLines(content: string): LogicalLine[] {
+  const physicalLines = content.split('\n');
+  const logical: LogicalLine[] = [];
+  let offset = 0;
+  for (let index = 0; index < physicalLines.length; index += 1) {
+    const startLine = index;
+    const startOffset = offset;
+    let combined = physicalLines[index] ?? '';
+    offset += combined.length + 1;
+    while (/\\\s*$/.test(combined) && index + 1 < physicalLines.length) {
+      combined = combined.replace(/\\\s*$/, ' ');
+      index += 1;
+      const continuation = physicalLines[index] ?? '';
+      combined += continuation.trimStart();
+      offset += continuation.length + 1;
+    }
+    logical.push({
+      content: combined,
+      endLine: index,
+      offset: startOffset,
+      startLine,
+    });
+  }
+  return logical;
 }
 
 function isProjectArtifactWriterLine(line: string): boolean {
@@ -211,13 +248,11 @@ function contentSiteAt(
 function projectArtifactWriterSites(content: string): ContentSite[] {
   const fencedSites = fencedContentSites(content);
   const sites = new Map<string, ContentSite>();
-  let offset = 0;
-  for (const line of content.split('\n')) {
-    if (isProjectArtifactWriterLine(line)) {
-      const site = contentSiteAt(content, offset, fencedSites);
+  for (const line of logicalLines(content)) {
+    if (isProjectArtifactWriterLine(line.content)) {
+      const site = contentSiteAt(content, line.offset, fencedSites);
       sites.set(`${site.start}:${site.end}`, site);
     }
-    offset += line.length + 1;
   }
   return [...sites.values()];
 }
@@ -237,29 +272,10 @@ function collectSyncedContentFindings(
     });
   }
 
-  const lines = content.split('\n');
-  let fenceMarker: string | null = null;
-  let scopeGuardSeen = false;
-
-  for (const [index, line] of lines.entries()) {
-    const lineNumber = index + 1;
-    const fenceMatch = line.match(/^\s*(`{3,}|~{3,})(?:[^`~]*)$/);
-
-    if (fenceMatch) {
-      const marker = fenceMatch[1] ?? '';
-      if (fenceMarker === null) {
-        fenceMarker = marker;
-        scopeGuardSeen = false;
-      } else if (
-        marker[0] === fenceMarker[0] &&
-        marker.length >= fenceMarker.length &&
-        /^\s*[`~]+\s*$/.test(line)
-      ) {
-        fenceMarker = null;
-        scopeGuardSeen = false;
-      }
-      continue;
-    }
+  const logical = logicalLines(content);
+  for (const [logicalIndex, site] of logical.entries()) {
+    const line = site.content;
+    const lineNumber = site.startLine + 1;
 
     if (/\bgit\s+add\b[^\n]*\.oat\/projects\/synced(?:\/|\b)/.test(line)) {
       findings.push({
@@ -278,11 +294,40 @@ function collectSyncedContentFindings(
       });
     }
 
+    if (
+      isLifecycleSafetyFile(file) &&
+      executesGitCommand(line) &&
+      /\bgit\s+add\s+-A(?:\s*$|\s*[;&|])/.test(line)
+    ) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Project-artifact staging must use exact pathspecs; broad git add -A is forbidden`,
+      });
+    }
+    if (
+      isLifecycleSafetyFile(file) &&
+      executesGitCommand(line) &&
+      /\bgit\s+add\b/.test(line) &&
+      /(?:\$PROJECT_PATH|\$\{PROJECT_PATH\})(?:\/?(?:\*|\*\*)?)?(?:["'}\s]|$)/.test(
+        line,
+      ) &&
+      !/\$PROJECT_PATH\/[A-Za-z0-9_.-]+|\$\{PROJECT_PATH\}\/[A-Za-z0-9_.-]+/.test(
+        line,
+      )
+    ) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Project-artifact staging must name exact files, not the project directory or a glob`,
+      });
+    }
+
     const pushReceipt =
       /^\s*([A-Z][A-Z0-9_]*)=\$\(oat project push\b[^\n]*--json\b/.exec(line);
     if (pushReceipt) {
       const outputVariable = pushReceipt[1] ?? '';
-      const validationLines = lines.slice(index + 1, index + 5);
+      const validationLines = logical
+        .slice(logicalIndex + 1, logicalIndex + 5)
+        .map((candidate) => candidate.content);
       const parserNeedle = `parse_synced_push_receipt "$${outputVariable}"`;
       const parserOffset = validationLines.findIndex((candidate) =>
         candidate.includes(parserNeedle),
@@ -318,21 +363,66 @@ function collectSyncedContentFindings(
         message: `Line ${lineNumber}: Project scope resolution must fail closed; do not fall back to shared`,
       });
     }
+  }
+
+  const lines = content.split('\n');
+  const logicalByStart = new Map(
+    logical.map((line) => [line.startLine, line.content] as const),
+  );
+  const continuedLines = new Set(
+    logical.flatMap((line) =>
+      Array.from(
+        { length: line.endLine - line.startLine },
+        (_, offset) => line.startLine + offset + 1,
+      ),
+    ),
+  );
+  let fenceMarker: string | null = null;
+  let scopeGuardSeen = false;
+
+  for (const [index, line] of lines.entries()) {
+    const lineNumber = index + 1;
+    const fenceMatch = line.match(/^\s*(`{3,}|~{3,})(?:[^`~]*)$/);
+
+    if (fenceMatch) {
+      const marker = fenceMatch[1] ?? '';
+      if (fenceMarker === null) {
+        fenceMarker = marker;
+        scopeGuardSeen = false;
+      } else if (
+        marker[0] === fenceMarker[0] &&
+        marker.length >= fenceMarker.length &&
+        /^\s*[`~]+\s*$/.test(line)
+      ) {
+        fenceMarker = null;
+        scopeGuardSeen = false;
+      }
+      continue;
+    }
+
+    if (continuedLines.has(index)) continue;
+    const inspectedLine = logicalByStart.get(index) ?? line;
 
     if (fenceMarker === null || !isLifecycleSafetyFile(file)) {
       continue;
     }
 
     if (
-      /\boat\s+project\s+scope\b/.test(line) &&
-      /--format\s+value\b/.test(line)
+      /\boat\s+project\s+scope\b/.test(inspectedLine) &&
+      /--format\s+value\b/.test(inspectedLine)
+    ) {
+      scopeGuardSeen = true;
+    }
+    if (
+      /\bPROJECT_SCOPE\b/.test(inspectedLine) &&
+      /\bsynced\b/.test(inspectedLine)
     ) {
       scopeGuardSeen = true;
     }
 
     if (
-      /\bgit\s+(?:add|commit)\b/.test(line) &&
-      referencesProjectArtifactVariable(line) &&
+      /\bgit\s+(?:add|commit)\b/.test(inspectedLine) &&
+      referencesProjectArtifactVariable(inspectedLine) &&
       !scopeGuardSeen
     ) {
       findings.push({

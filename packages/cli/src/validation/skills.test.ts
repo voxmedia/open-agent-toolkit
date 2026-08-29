@@ -549,6 +549,66 @@ describe('validateOatSkills', () => {
     });
   });
 
+  it('joins continued commands when inventorying project writers', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-continued-writer',
+      `${validSkillContent('oat-project-continued-writer')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  oat project push \\\n    "$PROJECT_PATH" --message "chore(oat): persist artifacts"\nfi\n\`\`\`\n`,
+    );
+    const inventoryPath = await createSyncedBookkeepingInventory(root, []);
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: inventoryPath,
+      message: `Lifecycle project-artifact writer is missing from synced-bookkeeping inventory: ${skillPath}`,
+    });
+  });
+
+  it('recognizes array pathspecs as guarded project-artifact writes', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-array-writer',
+      `${validSkillContent('oat-project-array-writer')}\n\n\`\`\`bash\nPROJECT_OUTPUT_PATHS=("$PROJECT_PATH/state.md")\ngit add -- "\${PROJECT_OUTPUT_PATHS[@]}"\n\`\`\`\n`,
+    );
+    await createSyncedBookkeepingInventory(root, []);
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: expect.stringMatching(
+        /^Line \d+: Project-artifact git writes require an oat project scope --format value guard earlier in the same fenced block$/,
+      ),
+    });
+  });
+
+  it.each([
+    ['git add -A', 'broad git add -A is forbidden'],
+    ['git add -- "$PROJECT_PATH"', 'not the project directory or a glob'],
+    ['git add -- "$PROJECT_PATH/**"', 'not the project directory or a glob'],
+  ])('rejects broad project staging: %s', async (writer, message) => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-broad-writer',
+      `${validSkillContent('oat-project-broad-writer')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\n${writer}\n\`\`\`\n`,
+    );
+    await createSyncedBookkeepingInventory(root, []);
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: expect.stringMatching(new RegExp(`^Line \\d+: .*${message}`)),
+    });
+  });
+
   it('reports an inventoried writer whose companion guard is outside its fenced block', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
     tempDirs.push(root);
@@ -656,7 +716,7 @@ describe('validateOatSkills', () => {
       },
     ]);
     expect(skill).toMatch(
-      /```bash\nPROJECT_PATH=\$\(oat config get activeProject[\s\S]*?PROJECT_SCOPE=\$\(oat project scope "\$PROJECT_PATH" --format value\)[\s\S]*?if \[ "\$PROJECT_SCOPE" = "synced" \]; then\n  oat project push "\$PROJECT_PATH" --message "chore\(oat\): record wave plan gate"[\s\S]*?else\n  git add -- "\$PROJECT_PATH"[\s\S]*?git commit --only -m "chore\(oat\): record wave plan gate" -- "\$PROJECT_PATH"\nfi\n```/,
+      /```bash\nPROJECT_PATH=\$\(oat config get activeProject[\s\S]*?PROJECT_SCOPE=\$\(oat project scope "\$PROJECT_PATH" --format value\)[\s\S]*?if \[ "\$PROJECT_SCOPE" = "synced" \]; then\n  oat project push "\$PROJECT_PATH" --message "chore\(oat\): record wave plan gate"[\s\S]*?else\n  PROJECT_OUTPUT_PATHS=\(\)[\s\S]*?git add -- "\$\{PROJECT_OUTPUT_PATHS\[@\]\}"[\s\S]*?git commit --only -m "chore\(oat\): record wave plan gate" -- "\$\{PROJECT_OUTPUT_PATHS\[@\]\}"\nfi\n```/,
     );
   });
 

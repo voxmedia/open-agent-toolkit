@@ -252,9 +252,14 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): record wave plan gate"
 else
-  git add -- "$PROJECT_PATH"
-  git diff --cached --quiet -- "$PROJECT_PATH" ||
-    git commit --only -m "chore(oat): record wave plan gate" -- "$PROJECT_PATH"
+  PROJECT_OUTPUT_PATHS=()
+  while IFS= read -r output_path; do
+    PROJECT_OUTPUT_PATHS+=("$output_path")
+  done < <(git diff --name-only -- "$PROJECT_PATH")
+  [ "${#PROJECT_OUTPUT_PATHS[@]}" -gt 0 ] || exit 1
+  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
+  git diff --cached --quiet -- "${PROJECT_OUTPUT_PATHS[@]}" ||
+    git commit --only -m "chore(oat): record wave plan gate" -- "${PROJECT_OUTPUT_PATHS[@]}"
 fi
 ```
 

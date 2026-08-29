@@ -654,7 +654,8 @@ Total: {N} tasks
 
 Ready for implementation"
 else
-  git add "$PROJECT_PATH/"
+  PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/plan.md" "$PROJECT_PATH/state.md")
+  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
   git commit -m "docs: complete implementation plan for {project-name}
 
 Phases:

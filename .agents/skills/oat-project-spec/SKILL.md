@@ -448,7 +448,8 @@ Requirements:
 
 Ready for design phase"
 else
-  git add "$PROJECT_PATH/"
+  PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/spec.md" "$PROJECT_PATH/state.md")
+  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
   git commit -m "docs: complete specification for {project-name}
 
 Requirements:

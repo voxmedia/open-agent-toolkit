@@ -259,6 +259,12 @@
   },
   {
     "file": ".agents/skills/oat-project-complete/SKILL.md",
+    "anchor": "if [[ \"$EVIDENCE_PUSH_REQUIRED\" == \"true\" ]]; then",
+    "kind": "write",
+    "guard": "EVIDENCE_PUSH_REQUIRED"
+  },
+  {
+    "file": ".agents/skills/oat-project-complete/SKILL.md",
     "anchor": "chore(oat): finalize project lifecycle",
     "kind": "write",
     "guard": "project-scope"

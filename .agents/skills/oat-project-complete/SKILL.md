@@ -739,15 +739,21 @@ Re-run the recovery surface after the push and require the exact same pin,
 final-artifact, and evidence SHAs with `evidencePushRequired: false`.
 
 ```bash
-if [[ "$EVIDENCE_PUSH_REQUIRED" == "true" ]]; then
-  RECOVERED_EVIDENCE_PUSH_OUTPUT=$(oat project push \
-    "$PROJECT_PATH" --json) || exit 1
-  RECOVERED_EVIDENCE_PUSH_FIELDS=$(node -e '
+parse_synced_push_receipt() {
+  node -e '
 const value = JSON.parse(process.argv[1]);
 if (!["pushed", "up-to-date"].includes(value.status)) process.exit(1);
 if (!/^[0-9a-f]{40}$/.test(value.sha) || typeof value.ref !== "string") process.exit(1);
 process.stdout.write(`${value.ref}\t${value.sha}`);
-' "$RECOVERED_EVIDENCE_PUSH_OUTPUT") || exit 1
+' "$1"
+}
+
+if [[ "$EVIDENCE_PUSH_REQUIRED" == "true" ]]; then
+  RECOVERED_EVIDENCE_PUSH_OUTPUT=$(oat project push \
+    "$PROJECT_PATH" --json) || exit 1
+  RECOVERED_EVIDENCE_PUSH_FIELDS=$( \
+    parse_synced_push_receipt "$RECOVERED_EVIDENCE_PUSH_OUTPUT"
+  ) || exit 1
   IFS=$'\t' read -r RECOVERED_PUSH_REF RECOVERED_PUSH_SHA \
     <<< "$RECOVERED_EVIDENCE_PUSH_FIELDS"
   test "$RECOVERED_PUSH_REF" = "$PROJECT_RETAINED_REF" || exit 1
@@ -774,6 +780,11 @@ source:
 if [[ "$PROJECT_SCOPE" == "synced" && -z "$PROJECT_REF_COMMIT" ]]; then
   PROJECT_PUSH_OUTPUT=$(oat project push "$PROJECT_PATH" \
     --message "chore(oat): finalize project lifecycle" --json) || exit 1
+  PROJECT_PUSH_FIELDS=$( \
+    parse_synced_push_receipt "$PROJECT_PUSH_OUTPUT"
+  ) || exit 1
+  IFS=$'\t' read -r PROJECT_RETAINED_REF PROJECT_LINKS_PIN_COMMIT \
+    <<< "$PROJECT_PUSH_FIELDS"
   printf '%s\n' "$PROJECT_PUSH_OUTPUT"
 fi
 ```
@@ -909,11 +920,17 @@ validated an already-finalized retry receipt. Otherwise publish the rendered
 artifact with a distinct final push:
 
 ```bash
-if [[ -z "$PROJECT_REF_COMMIT" ]]; then
+if [[ "$PROJECT_SCOPE" == "synced" && -z "$PROJECT_REF_COMMIT" ]]; then
   FINAL_PROJECT_PUSH_ARGS=("$PROJECT_PATH" \
     --message "chore(oat): publish final project links" --json)
   FINAL_PROJECT_PUSH_OUTPUT=$(oat project push \
     "${FINAL_PROJECT_PUSH_ARGS[@]}") || exit 1
+  FINAL_PROJECT_PUSH_FIELDS=$( \
+    parse_synced_push_receipt "$FINAL_PROJECT_PUSH_OUTPUT"
+  ) || exit 1
+  IFS=$'\t' read -r FINAL_PROJECT_PUSH_REF PROJECT_REF_COMMIT \
+    <<< "$FINAL_PROJECT_PUSH_FIELDS"
+  test "$FINAL_PROJECT_PUSH_REF" = "$PROJECT_RETAINED_REF" || exit 1
   printf '%s\n' "$FINAL_PROJECT_PUSH_OUTPUT"
 fi
 ```
