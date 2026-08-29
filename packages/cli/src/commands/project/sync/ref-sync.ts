@@ -13,6 +13,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { applyOatCoreGitignore } from '@commands/init/gitignore';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import {
+  canonicalizePath,
   isSyncedCheckout,
   resolveScopeRoot,
   SYNCED_REMOTE,
@@ -1503,16 +1504,17 @@ function isWithin(root: string, candidate: string): boolean {
 }
 
 function repoRelativePath(repoRoot: string, pathspec: string): string {
-  const absolute = isAbsolute(pathspec)
-    ? resolve(pathspec)
-    : resolve(repoRoot, pathspec);
-  if (!isWithin(resolve(repoRoot), absolute)) {
+  const canonicalRepoRoot = canonicalizePath(repoRoot);
+  const absolute = canonicalizePath(
+    isAbsolute(pathspec) ? resolve(pathspec) : resolve(repoRoot, pathspec),
+  );
+  if (!isWithin(canonicalRepoRoot, absolute)) {
     throw new CliError(
       `Refusing parent-branch mutation outside the repository: ${pathspec}`,
       2,
     );
   }
-  return relative(resolve(repoRoot), absolute).split(sep).join('/');
+  return relative(canonicalRepoRoot, absolute).split(sep).join('/');
 }
 
 export function assertAllowlistedPathspecs(
@@ -1522,26 +1524,26 @@ export function assertAllowlistedPathspecs(
 ): void {
   const defaultSharedRoot = resolve(repoRoot, '.oat/projects/shared');
   const defaultSyncedRoot = resolve(repoRoot, '.oat/projects/synced');
-  const sharedRoot = resolve(
+  const sharedRoot = canonicalizePath(
     options.projectRoots?.sharedRoot ?? defaultSharedRoot,
   );
-  const syncedRoot = resolve(
+  const syncedRoot = canonicalizePath(
     options.projectRoots?.syncedRoot ?? defaultSyncedRoot,
   );
   const summaryRoot = options.summaryExportPath
     ? isAbsolute(options.summaryExportPath)
-      ? resolve(options.summaryExportPath)
-      : resolve(repoRoot, options.summaryExportPath)
+      ? canonicalizePath(options.summaryExportPath)
+      : canonicalizePath(resolve(repoRoot, options.summaryExportPath))
     : null;
   const recapRoot = options.recapExportRoot
     ? isAbsolute(options.recapExportRoot)
-      ? resolve(options.recapExportRoot)
-      : resolve(repoRoot, options.recapExportRoot)
+      ? canonicalizePath(options.recapExportRoot)
+      : canonicalizePath(resolve(repoRoot, options.recapExportRoot))
     : null;
 
   for (const pathspec of pathspecs) {
     const repoRelative = repoRelativePath(repoRoot, pathspec);
-    const absolute = resolve(repoRoot, repoRelative);
+    const absolute = resolve(canonicalizePath(repoRoot), repoRelative);
     const sharedRelative = relative(sharedRoot, absolute);
     const syncedRelative = relative(syncedRoot, absolute);
     const isSharedProjectPath =

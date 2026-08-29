@@ -8,6 +8,7 @@ import {
 import { readSyncedRecord } from '@commands/project/sync/record';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
+  canonicalizePath,
   isSyncedCheckout,
   resolveProjectScope,
   resolveProjectsParent,
@@ -67,9 +68,12 @@ async function runProjectScope(
       repoRoot,
       dependencies.processEnv,
     );
-    const configuredRoot = isAbsolute(projectsRoot)
-      ? resolve(projectsRoot)
-      : resolve(repoRoot, projectsRoot);
+    const canonicalRepoRoot = canonicalizePath(repoRoot);
+    const configuredRoot = canonicalizePath(
+      isAbsolute(projectsRoot)
+        ? resolve(projectsRoot)
+        : resolve(repoRoot, projectsRoot),
+    );
     const configuredParent = resolveProjectsParent(repoRoot, projectsRoot);
     const archivedRoot = join(configuredParent, 'archived');
 
@@ -82,9 +86,9 @@ async function runProjectScope(
         throw new CliError('No active project is configured.', 1);
       }
     }
-    const absoluteProjectPath = isAbsolute(target)
-      ? resolve(target)
-      : resolve(repoRoot, target);
+    const absoluteProjectPath = canonicalizePath(
+      isAbsolute(target) ? resolve(target) : resolve(repoRoot, target),
+    );
     if (isWithin(archivedRoot, absoluteProjectPath)) {
       throw new CliError(
         'Archived projects have no active project scope. Restore or open a live project instead.',
@@ -100,7 +104,7 @@ async function runProjectScope(
       );
     }
 
-    const projectPath = relative(repoRoot, absoluteProjectPath)
+    const projectPath = relative(canonicalRepoRoot, absoluteProjectPath)
       .split(sep)
       .join('/');
     const payload: Record<string, unknown> = {

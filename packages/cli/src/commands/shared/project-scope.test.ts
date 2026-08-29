@@ -6,6 +6,7 @@ import { CliError } from '@errors/cli-error';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  canonicalizePath,
   isSyncedCheckout,
   resolveDefaultScope,
   resolveProjectScope,
@@ -45,16 +46,18 @@ describe('project scope paths', () => {
     const absoluteRoot = '/var/oat/projects/shared';
     expect(isAbsolute(absoluteRoot)).toBe(true);
     expect(resolveScopeRoot(repoRoot, absoluteRoot, 'synced')).toBe(
-      '/var/oat/projects/synced',
+      canonicalizePath('/var/oat/projects/synced'),
     );
 
     const customRoot = '/var/oat/team-projects';
-    expect(resolveScopeRoot(repoRoot, customRoot, 'shared')).toBe(customRoot);
+    expect(resolveScopeRoot(repoRoot, customRoot, 'shared')).toBe(
+      canonicalizePath(customRoot),
+    );
     expect(resolveScopeRoot(repoRoot, customRoot, 'local')).toBe(
-      '/var/oat/local',
+      canonicalizePath('/var/oat/local'),
     );
     expect(resolveScopeRoot(repoRoot, customRoot, 'synced')).toBe(
-      '/var/oat/synced',
+      canonicalizePath('/var/oat/synced'),
     );
   });
 

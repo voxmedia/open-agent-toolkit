@@ -5,6 +5,7 @@ import {
   readFile,
   rm,
   stat,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -615,6 +616,50 @@ describe('scaffoldProject', () => {
     ).toBe('');
   });
 
+  it('canonicalizes a symlinked absolute projects root before committing the record', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const repoAlias = join(fixture.rootDir, 'clone-alias');
+    await symlink(fixture.cloneA, repoAlias, 'dir');
+    const env = {
+      OAT_PROJECTS_ROOT: join(repoAlias, '.oat', 'symlinked', 'shared'),
+    };
+    const gitignorePath = join(fixture.cloneA, '.gitignore');
+    await writeFile(
+      gitignorePath,
+      `${await readFile(gitignorePath, 'utf8')}/.oat/symlinked/synced/*/\n`,
+      'utf8',
+    );
+    execFileSync('git', ['add', '.gitignore'], { cwd: fixture.cloneA });
+    execFileSync('git', ['commit', '-q', '-m', 'configure symlinked root'], {
+      cwd: fixture.cloneA,
+    });
+
+    const result = await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'symlinked-root',
+      scope: 'synced',
+      env,
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+
+    expect(result.projectPath).toBe('.oat/symlinked/synced/symlinked-root');
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe('');
+    await expect(
+      readFile(
+        join(fixture.cloneA, '.oat/symlinked/synced/symlinked-root.json'),
+        'utf8',
+      ),
+    ).resolves.toContain('symlinked-root');
+  });
+
   it('rolls back invocation-owned worktree/ref and a self-healed gitignore on render failure', async () => {
     const fixture = await createSyncedFixture();
     tempDirs.push(fixture.rootDir);
@@ -727,7 +772,7 @@ describe('scaffoldProject', () => {
     ).toThrow();
   });
 
-  it('preserves a published checkout and gives pull-based recovery when record write fails', async () => {
+  it('rolls back an attempt-owned published checkout when record writing fails', async () => {
     const fixture = await createSyncedFixture();
     tempDirs.push(fixture.rootDir);
 
@@ -747,25 +792,30 @@ describe('scaffoldProject', () => {
         },
       ),
     ).rejects.toThrow(
-      /oat project pull 'record-write-failure'.*do not rerun project creation/i,
+      /attempt-owned ref, checkout, and record were rolled back/i,
     );
 
-    expect(
+    expect(() =>
       execFileSync(
         'git',
-        ['rev-parse', 'refs/oat/projects/record-write-failure'],
-        { cwd: fixture.originDir, encoding: 'utf8' },
-      ).trim(),
-    ).toMatch(/^[0-9a-f]{40}$/);
+        [
+          'show-ref',
+          '--verify',
+          '--quiet',
+          'refs/oat/projects/record-write-failure',
+        ],
+        { cwd: fixture.originDir, stdio: 'ignore' },
+      ),
+    ).toThrow();
     expect(
       execFileSync('git', ['worktree', 'list', '--porcelain'], {
         cwd: fixture.cloneA,
         encoding: 'utf8',
       }),
-    ).toContain('record-write-failure');
+    ).not.toContain('record-write-failure');
   });
 
-  it('preserves published state and gives exact parent commit recovery when record commit fails', async () => {
+  it('rolls back attempt-owned state when the parent record commit fails', async () => {
     const fixture = await createSyncedFixture();
     tempDirs.push(fixture.rootDir);
 
@@ -786,7 +836,7 @@ describe('scaffoldProject', () => {
         },
       ),
     ).rejects.toThrow(
-      /git add -- '.oat\/projects\/synced\/record-commit-failure.json'.*do not rerun project creation/i,
+      /attempt-owned ref, checkout, and record were rolled back/i,
     );
 
     await expect(
@@ -794,13 +844,13 @@ describe('scaffoldProject', () => {
         join(fixture.cloneA, '.oat/projects/synced/record-commit-failure.json'),
         'utf8',
       ),
-    ).resolves.toContain('record-commit-failure');
+    ).rejects.toThrow();
     expect(
       execFileSync('git', ['worktree', 'list', '--porcelain'], {
         cwd: fixture.cloneA,
         encoding: 'utf8',
       }),
-    ).toContain('record-commit-failure');
+    ).not.toContain('record-commit-failure');
   });
 
   it('preserves published state and recovers an active-pointer failure through project open', async () => {

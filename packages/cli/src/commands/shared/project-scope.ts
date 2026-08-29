@@ -1,6 +1,8 @@
+import { realpathSync } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import {
+  basename,
   dirname,
   isAbsolute,
   join,
@@ -25,6 +27,24 @@ export const SYNCED_REMOTE = 'origin';
 
 const PROJECT_SLUG_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
+export function canonicalizePath(path: string): string {
+  const absolute = resolve(path);
+  try {
+    return realpathSync(absolute);
+  } catch (error) {
+    if (
+      !(error instanceof Error && 'code' in error && error.code === 'ENOENT')
+    ) {
+      throw error;
+    }
+    const parent = dirname(absolute);
+    if (parent === absolute) {
+      return absolute;
+    }
+    return join(canonicalizePath(parent), basename(absolute));
+  }
+}
+
 interface EffectiveConfigResult {
   resolved: Record<string, { value: unknown }>;
 }
@@ -46,7 +66,7 @@ export function resolveProjectsParent(
   projectsRoot: string,
 ): string {
   const resolvedRoot = isAbsolute(projectsRoot)
-    ? normalize(projectsRoot)
+    ? canonicalizePath(projectsRoot)
     : resolve(repoRoot, projectsRoot);
   return dirname(resolvedRoot);
 }
@@ -57,7 +77,7 @@ export function resolveScopeRoot(
   scope: ProjectScope,
 ): string {
   const resolvedSharedRoot = isAbsolute(projectsRoot)
-    ? normalize(projectsRoot)
+    ? canonicalizePath(projectsRoot)
     : resolve(repoRoot, projectsRoot);
   return scope === 'shared'
     ? resolvedSharedRoot
@@ -69,8 +89,9 @@ export function resolveProjectScope(
   projectsRoot: string,
 ): ProjectScope | null {
   if (isAbsolute(projectsRoot)) {
-    const sharedRoot = normalize(projectsRoot);
-    const sharedRelative = relative(sharedRoot, normalize(projectPath));
+    const sharedRoot = canonicalizePath(projectsRoot);
+    const canonicalProjectPath = canonicalizePath(projectPath);
+    const sharedRelative = relative(sharedRoot, canonicalProjectPath);
     if (
       sharedRelative !== '' &&
       sharedRelative !== '..' &&
@@ -83,7 +104,7 @@ export function resolveProjectScope(
     const projectsParent = dirname(sharedRoot);
     for (const scope of ['local', 'synced'] as const) {
       const scopeRoot = join(projectsParent, scope);
-      const projectRelative = relative(scopeRoot, normalize(projectPath));
+      const projectRelative = relative(scopeRoot, canonicalProjectPath);
       if (
         projectRelative !== '' &&
         projectRelative !== '..' &&

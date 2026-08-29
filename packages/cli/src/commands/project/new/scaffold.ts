@@ -21,6 +21,7 @@ import {
 } from '@commands/project/sync/ref-sync';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
+  canonicalizePath,
   PROJECT_SCOPES,
   resolveDefaultScope,
   resolveScopeRoot,
@@ -470,7 +471,7 @@ async function ensureScopedProjectIgnored(
   scope: 'local' | 'synced',
   dependencies: ScaffoldProjectDependencies,
 ): Promise<GitignoreRepair> {
-  const scopeRelative = relative(resolve(repoRoot), absoluteScopeRoot);
+  const scopeRelative = relative(canonicalizePath(repoRoot), absoluteScopeRoot);
   if (
     scopeRelative === '..' ||
     scopeRelative.startsWith('../') ||
@@ -631,13 +632,16 @@ export async function scaffoldProject(
   const scope =
     options.scope ??
     (await dependencies.resolveDefaultScope(options.repoRoot, env));
-  const absoluteScopeRoot =
+  const absoluteScopeRoot = canonicalizePath(
     scope === 'shared'
       ? resolve(options.repoRoot, projectsRoot)
-      : resolveScopeRoot(options.repoRoot, projectsRoot, scope);
-  const absoluteProjectPath = join(absoluteScopeRoot, options.projectName);
+      : resolveScopeRoot(options.repoRoot, projectsRoot, scope),
+  );
+  const absoluteProjectPath = canonicalizePath(
+    join(absoluteScopeRoot, options.projectName),
+  );
   const relativeProjectPath = relative(
-    resolve(options.repoRoot),
+    canonicalizePath(options.repoRoot),
     absoluteProjectPath,
   );
   const projectPath =
@@ -665,6 +669,8 @@ export async function scaffoldProject(
   let recordWritten = false;
   let ref: string | undefined;
   let sha: string | undefined;
+  let recordPath: string | undefined;
+  let parentHeadBeforeRecordCommit: string | undefined;
   let committed = false;
   let commitSha: string | undefined;
   let commitStatus: CommitScaffoldStatus = 'skipped_disabled';
@@ -766,10 +772,7 @@ export async function scaffoldProject(
       published = true;
       ref = syncTarget.ref;
       sha = pushed.sha;
-      const recordPath = syncedRecordPath(
-        absoluteScopeRoot,
-        options.projectName,
-      );
+      recordPath = syncedRecordPath(absoluteScopeRoot, options.projectName);
       await dependencies.writeSyncedRecord(
         recordPath,
         buildSyncedRecord(options.projectName, new Date(nowUtc)),
@@ -777,6 +780,11 @@ export async function scaffoldProject(
       recordWritten = true;
 
       if (options.commit) {
+        parentHeadBeforeRecordCommit = (
+          await dependencies.gitRunner.run(['rev-parse', 'HEAD'], {
+            cwd: options.repoRoot,
+          })
+        ).stdout;
         const recordCommit = await dependencies.commitRecordChange(
           options.repoRoot,
           [recordPath, ...(gitignoreChanged ? ['.gitignore'] : [])],
@@ -806,19 +814,87 @@ export async function scaffoldProject(
         }
       }
     }
-    if (scope === 'synced' && published) {
+    if (scope === 'synced' && published && syncTarget && recordPath) {
       const detail = error instanceof Error ? error.message : String(error);
+      const currentParentHead = parentHeadBeforeRecordCommit
+        ? (
+            await dependencies.gitRunner.run(['rev-parse', 'HEAD'], {
+              cwd: options.repoRoot,
+            })
+          ).stdout
+        : undefined;
+      const canRollbackPublishedScaffold =
+        syncedCreatedByInvocation &&
+        sha !== undefined &&
+        (parentHeadBeforeRecordCommit === undefined ||
+          currentParentHead === parentHeadBeforeRecordCommit);
+      if (canRollbackPublishedScaffold) {
+        try {
+          await dependencies.gitRunner.run(
+            [
+              'push',
+              `--force-with-lease=${syncTarget.ref}:${sha}`,
+              syncTarget.remote,
+              `:${syncTarget.ref}`,
+            ],
+            { cwd: options.repoRoot },
+          );
+          await dependencies.gitRunner.run(
+            [
+              'reset',
+              '-q',
+              '--',
+              relative(canonicalizePath(options.repoRoot), recordPath)
+                .split('\\')
+                .join('/'),
+              ...(gitignoreChanged ? ['.gitignore'] : []),
+            ],
+            { cwd: options.repoRoot },
+          );
+          await rm(recordPath, { force: true });
+          await dependencies.rollbackCreatedSyncedProject(
+            syncTarget,
+            dependencies.gitRunner,
+          );
+          if (gitignoreChanged && gitignoreBefore !== undefined) {
+            const gitignorePath = join(options.repoRoot, '.gitignore');
+            if (gitignoreBefore === null) {
+              await rm(gitignorePath, { force: true });
+            } else {
+              await writeFile(gitignorePath, gitignoreBefore, 'utf8');
+            }
+          }
+          throw new CliError(
+            `Synced project ${options.projectName} scaffold failed and its attempt-owned ref, checkout, and record were rolled back: ${detail}. Retry project creation after correcting the failure.`,
+            error instanceof CliError ? error.exitCode : 2,
+          );
+        } catch (rollbackError) {
+          if (
+            rollbackError instanceof CliError &&
+            rollbackError.message.includes('were rolled back')
+          ) {
+            throw rollbackError;
+          }
+          const rollbackDetail =
+            rollbackError instanceof Error
+              ? rollbackError.message
+              : String(rollbackError);
+          throw new CliError(
+            `Synced project ${options.projectName} scaffold failed: ${detail}. Automatic rollback also failed: ${rollbackDetail}. Preserve the checkout and run oat project prune ${options.projectName} --force after verifying the remote ref.`,
+            2,
+          );
+        }
+      }
       if (!recordWritten) {
         throw new CliError(
           `Synced project ${options.projectName} was published, but its discovery record was not written: ${detail}. Run oat project pull '${options.projectName}' to resume record adoption; do not rerun project creation.`,
           2,
         );
       }
-      const recordPath = syncedRecordPath(
-        absoluteScopeRoot,
-        options.projectName,
-      );
-      const relativeRecordPath = relative(options.repoRoot, recordPath)
+      const relativeRecordPath = relative(
+        canonicalizePath(options.repoRoot),
+        recordPath,
+      )
         .split('\\')
         .join('/');
       throw new CliError(
