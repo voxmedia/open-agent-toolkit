@@ -218,6 +218,10 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 
 Fresh full-range final gate review at head 26f53309caca8e6360cdb24b8d1778e115a8b5e8 (8cc1b3827..26f53309c, reconnaissance attempted, 4 read-only lanes, 11 CLI reproductions): 0 critical, 3 important, 3 medium, 14 minor; artifact .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T063413Z.md
 
+### 2026-08-29 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:3,medium:3,minor:14 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T063413Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
