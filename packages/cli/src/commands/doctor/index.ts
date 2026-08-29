@@ -50,6 +50,7 @@ import {
 } from '@config/dispatch-matrix';
 import {
   readOatConfig,
+  readOatConfigForDefaultScopeRepair,
   type OatConfig,
   type OatLocalConfig,
   readOatLocalConfig,
@@ -103,6 +104,7 @@ interface DoctorDependencies {
   readFile: (path: string) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
+  readOatConfigForDefaultScopeRepair: (repoRoot: string) => Promise<OatConfig>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
   readUserConfig: (userConfigDir: string) => Promise<UserConfig>;
   validateMatrixCell: (
@@ -296,6 +298,7 @@ function createDependencies(): DoctorDependencies {
     readFile: async (path) => readFile(path, 'utf8'),
     resolveAssetsRoot,
     readOatConfig,
+    readOatConfigForDefaultScopeRepair,
     readOatLocalConfig,
     readUserConfig,
     validateMatrixCell,
@@ -1227,11 +1230,36 @@ async function runChecksForScope(
     }
 
     const repoReferenceRoot = join(scopeRoot, '.oat', 'repo');
-    const [userConfig, config, localConfig] = await Promise.all([
+    const [userConfig, configResult, localConfig] = await Promise.all([
       dependencies.readUserConfig(userConfigDir),
-      dependencies.readOatConfig(scopeRoot),
+      dependencies.readOatConfig(scopeRoot).then(
+        (config) => ({ config }),
+        async (error: unknown) => {
+          if (
+            !(error instanceof Error) ||
+            !error.message.startsWith('Invalid projects.defaultScope in ')
+          ) {
+            throw error;
+          }
+          return {
+            config:
+              await dependencies.readOatConfigForDefaultScopeRepair(scopeRoot),
+            defaultScopeError: error.message,
+          };
+        },
+      ),
       dependencies.readOatLocalConfig(scopeRoot),
     ]);
+    if ('defaultScopeError' in configResult) {
+      checks.push({
+        name: 'project:projects_default_scope',
+        description: 'Project creation default scope',
+        status: 'fail',
+        message: configResult.defaultScopeError,
+        fix: 'Run `oat config set projects.defaultScope <shared|local|synced>`.',
+      });
+    }
+    const config = configResult.config;
     checks.push(
       await createDispatchMatrixDoctorCheck(
         scopeRoot,

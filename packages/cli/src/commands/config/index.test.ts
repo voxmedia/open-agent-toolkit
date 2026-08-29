@@ -244,7 +244,7 @@ describe('oat config', () => {
       JSON.parse(await readFile(join(root, '.oat', 'config.json'), 'utf8')),
     ).toEqual({
       version: 1,
-      projects: { root: '.oat/projects/shared', defaultScope: 'local' },
+      projects: { defaultScope: 'local' },
     });
 
     const invalid = createHarness({ cwd: root });
@@ -272,6 +272,26 @@ describe('oat config', () => {
     ).toEqual({
       version: 1,
       projects: { root: '.oat/projects/team', defaultScope: 'local' },
+    });
+  });
+
+  it('repairs only projects.defaultScope when projects.root is absent', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, projects: { defaultScope: 'remote' } })}\n`,
+      'utf8',
+    );
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'projects.defaultScope', 'synced']);
+
+    expect(process.exitCode).toBe(0);
+    expect(
+      JSON.parse(await readFile(join(root, '.oat', 'config.json'), 'utf8')),
+    ).toEqual({
+      version: 1,
+      projects: { defaultScope: 'synced' },
     });
   });
 

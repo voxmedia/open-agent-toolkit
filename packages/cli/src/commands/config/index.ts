@@ -2177,7 +2177,6 @@ async function setConfigValue(
     await dependencies.writeOatConfig(repoRoot, {
       ...config,
       projects: {
-        root: config.projects?.root ?? '.oat/projects/shared',
         ...config.projects,
         defaultScope,
       },
