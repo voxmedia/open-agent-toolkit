@@ -1631,8 +1631,8 @@ export async function archiveProjectOnCompletion(
     dependencies,
   );
 
-  try {
-    if (!archiveExists) {
+  if (!archiveExists) {
+    try {
       await makeDir(dirname(archivePath));
       await copyProjectDirectory(
         options.projectPath,
@@ -1646,7 +1646,19 @@ export async function archiveProjectOnCompletion(
         snapshotName: exportIdentity,
         scope: projectScope,
       });
+    } catch (error) {
+      await removePath(archivePath, { recursive: true, force: true });
+      if (projectRecapExport) {
+        await removePath(projectRecapExport.exportRoot, {
+          recursive: true,
+          force: true,
+        });
+      }
+      throw error;
     }
+  }
+
+  try {
     if (!syncTarget) {
       await removePath(options.projectPath, { recursive: true, force: true });
     }

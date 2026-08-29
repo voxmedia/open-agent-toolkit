@@ -2218,6 +2218,55 @@ describe('archive utils', () => {
     await expect(access(exportRoot)).rejects.toThrow();
   });
 
+  it('removes an attempt-owned partial archive so retry uses one complete target', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    const archiveRoot = join(repoRoot, '.oat', 'projects', 'archived');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'summary.md'), '# summary\n', 'utf8');
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        },
+        {
+          copyDirectory: async (_source, destination) => {
+            await mkdir(destination, { recursive: true });
+            await writeFile(join(destination, 'partial.txt'), 'partial\n');
+            throw new Error('injected during-copy failure');
+          },
+          timestamp: () => '2026-04-01T12:34:56Z',
+        },
+      ),
+    ).rejects.toThrow('injected during-copy failure');
+
+    await expect(readdir(archiveRoot)).resolves.toEqual([]);
+    await expect(access(projectPath)).resolves.toBeUndefined();
+
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+
+    await expect(readdir(archiveRoot)).resolves.toEqual([
+      result.archivePath.slice(result.archivePath.lastIndexOf('/') + 1),
+    ]);
+    await expect(
+      access(join(result.archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME)),
+    ).resolves.toBeUndefined();
+  });
+
   it('uploads the archived project to S3 when completion sync is enabled and configured', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
