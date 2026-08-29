@@ -15,6 +15,7 @@ export interface SyncedProjectRecord {
   createdAt: string;
   completedAt: string | null;
   archiveSnapshot?: string;
+  archiveSourceRefSha?: string;
 }
 
 const schemaVersion = z.custom<1>((value) => value === 1, {
@@ -32,6 +33,10 @@ export const SyncedProjectRecordSchema: z.ZodType<SyncedProjectRecord> = z
     createdAt: z.string().datetime(),
     completedAt: z.string().datetime().nullable(),
     archiveSnapshot: z.string().min(1).optional(),
+    archiveSourceRefSha: z
+      .string()
+      .regex(/^[0-9a-f]{40}$/)
+      .optional(),
   })
   .strict()
   .superRefine((record, context) => {

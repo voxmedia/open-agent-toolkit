@@ -2655,6 +2655,7 @@ describe('archive utils', () => {
     const timestamp = () => '2026-04-01T12:34:56Z';
     const preflightSyncedCheckout = vi.fn(async () => ({
       status: 'clean' as const,
+      sha: 'a'.repeat(40),
     }));
     const removeSyncedCheckout = vi.fn(async () => ({
       status: 'removed' as const,
@@ -3664,6 +3665,76 @@ describe('archive utils', () => {
       await expect(
         readSyncedRecord(syncedRecordPath(canonical.syncedRoot, 'demo')),
       ).resolves.toMatchObject({ status: 'active' });
+    } finally {
+      await fixture.cleanup();
+    }
+  }, 20_000);
+
+  it('rejects an archive retry after the authoritative source ref advances', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'stale-archive-retry',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(join(target.projectPath, 'state.md'), 'old tree\n');
+      const firstPush = await pushSynced(target, defaultGitRunner, {});
+      const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(target.slug, new Date('2026-08-29T00:00:00Z')),
+      );
+      const options = {
+        repoRoot: fixture.cloneA,
+        projectPath: target.projectPath,
+        projectName: target.slug,
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      };
+
+      await expect(
+        archiveProjectOnCompletion(options, {
+          timestamp: () => '2026-08-29T12:00:00Z',
+          removeSyncedCheckout: vi.fn(async () => {
+            throw new Error('injected post-copy failure');
+          }),
+        }),
+      ).rejects.toThrow('injected post-copy failure');
+      const afterFailure = await readSyncedRecord(recordPath);
+      expect(afterFailure).toMatchObject({
+        archiveSourceRefSha: firstPush.sha,
+      });
+      const archivePath = (
+        await resolveArchiveProjectTarget({
+          repoRoot: fixture.cloneA,
+          projectsRoot: '.oat/projects/shared',
+          projectName: target.slug,
+          archiveSnapshot: afterFailure!.archiveSnapshot,
+          archiveScope: 'synced',
+        })
+      ).archivePath;
+      await expect(
+        readFile(join(archivePath, 'state.md'), 'utf8'),
+      ).resolves.toBe('old tree\n');
+
+      await writeFile(join(target.projectPath, 'state.md'), 'new tree\n');
+      const secondPush = await pushSynced(target, defaultGitRunner, {});
+      expect(secondPush.sha).not.toBe(firstPush.sha);
+
+      await expect(
+        archiveProjectOnCompletion(options, {
+          timestamp: () => '2026-08-29T12:00:00Z',
+        }),
+      ).rejects.toThrow('refusing to accept stale archive content');
+      await expect(
+        readFile(join(archivePath, 'state.md'), 'utf8'),
+      ).resolves.toBe('old tree\n');
+      await expect(access(target.projectPath)).resolves.toBeUndefined();
+      await expect(readSyncedRecord(recordPath)).resolves.toMatchObject({
+        archiveSourceRefSha: firstPush.sha,
+      });
     } finally {
       await fixture.cleanup();
     }

@@ -213,6 +213,7 @@ export interface ArchiveSnapshotMetadata {
   projectName: string;
   snapshotName: string;
   scope: ProjectScope;
+  sourceRefSha?: string;
 }
 
 function assertExactArchiveProjectRoot(
@@ -748,7 +749,8 @@ async function verifyArchiveSnapshotMetadata(
     !isRecord(actual) ||
     actual.projectName !== expected.projectName ||
     actual.snapshotName !== expected.snapshotName ||
-    actual.scope !== expected.scope
+    actual.scope !== expected.scope ||
+    actual.sourceRefSha !== expected.sourceRefSha
   ) {
     throw new CliError(
       `Existing archive \`${archivePath}\` does not match persisted snapshot \`${expected.snapshotName}\`; refusing to overwrite it.`,
@@ -1597,6 +1599,7 @@ export async function archiveProjectOnCompletion(
     : null;
   const git = dependencies.gitRunner ?? defaultGitRunner;
   let activeRecord: SyncedProjectRecord | null = record;
+  let sourceRefSha: string | undefined;
 
   if (syncTarget) {
     if (!activeRecord) {
@@ -1618,6 +1621,25 @@ export async function archiveProjectOnCompletion(
           : `oat project push ${options.projectName}`;
       throw new CliError(
         `Synced project ${options.projectName} is ${preflight.status}; run ${recoveryCommand} before archiving.`,
+        1,
+      );
+    }
+    sourceRefSha =
+      preflight.sha ??
+      (await git.run(['rev-parse', syncTarget.ref], { cwd: options.repoRoot }))
+        .stdout;
+    if (!/^[0-9a-f]{40}$/.test(sourceRefSha)) {
+      throw new CliError(
+        `Unable to bind archive retry identity for ${options.projectName} to ${syncTarget.ref}.`,
+        2,
+      );
+    }
+    if (
+      activeRecord.archiveSourceRefSha &&
+      activeRecord.archiveSourceRefSha !== sourceRefSha
+    ) {
+      throw new CliError(
+        `Archive retry for ${options.projectName} is bound to source ref ${activeRecord.archiveSourceRefSha}, but ${syncTarget.ref} is now ${sourceRefSha}. Restore the retained ref to the recorded commit to finish this archive transaction, or preserve the existing snapshot and start a separately reviewed recovery; refusing to accept stale archive content.`,
         1,
       );
     }
@@ -1666,10 +1688,16 @@ export async function archiveProjectOnCompletion(
   const snapshotId = syncTarget ? exportIdentity : basename(archivePath);
 
   const shouldPersistArchiveSnapshot = Boolean(
-    syncTarget && activeRecord && !activeRecord.archiveSnapshot,
+    syncTarget &&
+    activeRecord &&
+    (!activeRecord.archiveSnapshot || !activeRecord.archiveSourceRefSha),
   );
   if (shouldPersistArchiveSnapshot && activeRecord) {
-    activeRecord = { ...activeRecord, archiveSnapshot: exportIdentity };
+    activeRecord = {
+      ...activeRecord,
+      archiveSnapshot: exportIdentity,
+      archiveSourceRefSha: sourceRefSha,
+    };
     await writeRecord(recordPath, activeRecord);
   }
 
@@ -1681,6 +1709,7 @@ export async function archiveProjectOnCompletion(
       projectName: options.projectName,
       snapshotName: exportIdentity,
       scope: projectScope,
+      ...(sourceRefSha ? { sourceRefSha } : {}),
     });
   }
   const projectSourcePath = (await pathExists(options.projectPath))
@@ -1707,6 +1736,7 @@ export async function archiveProjectOnCompletion(
         projectName: options.projectName,
         snapshotName: exportIdentity,
         scope: projectScope,
+        ...(sourceRefSha ? { sourceRefSha } : {}),
       });
     } catch (error) {
       await removePath(archivePath, { recursive: true, force: true });
