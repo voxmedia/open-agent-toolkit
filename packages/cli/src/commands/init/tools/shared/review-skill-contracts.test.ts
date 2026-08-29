@@ -880,6 +880,58 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('pulls synced completion projects before artifact reads and fails closed', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const scopeIndex = content.indexOf(
+      'PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value)',
+    );
+    const pullIndex = content.indexOf(
+      'oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }',
+    );
+    const stateReadIndex = content.indexOf(
+      'Before asking the batched questions, read `oat_pr_status`',
+    );
+
+    expect(scopeIndex).toBeGreaterThanOrEqual(0);
+    expect(pullIndex).toBeGreaterThan(scopeIndex);
+    expect(stateReadIndex).toBeGreaterThan(pullIndex);
+
+    const arrivalBlock = content.slice(
+      scopeIndex,
+      content.indexOf('PROJECT_RETAINED_REF=""', scopeIndex),
+    );
+    const runArrival = (pullStatus: string) =>
+      execFileSync(
+        '/bin/bash',
+        [
+          '-c',
+          `oat() {
+  if [[ "$1 $2" == "project scope" ]]; then
+    printf synced
+  elif [[ "$1 $2" == "project pull" ]]; then
+    [[ "$pullStatus" == "success" ]]
+  fi
+}
+${arrivalBlock}
+printf 'artifact-read\\n'`,
+          'completion-arrival',
+        ],
+        {
+          encoding: 'utf8',
+          env: {
+            ...process.env,
+            PROJECT_PATH: '/tmp/synced-project',
+            pullStatus,
+          },
+        },
+      );
+
+    expect(runArrival('success')).toContain('artifact-read');
+    expect(() => runArrival('conflict')).toThrow();
+  });
+
   it('integrates interactive completion recap and retro policy before lifecycle mutation', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-complete/SKILL.md',

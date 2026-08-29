@@ -67,6 +67,9 @@ test -f "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" || {
 }
 
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing completion" >&2; exit 1; }
+if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+  oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }
+fi
 PROJECT_RETAINED_REF=""
 if [[ "$PROJECT_SCOPE" == "synced" ]]; then
   PROJECT_RETAINED_REF="refs/oat/projects/${PROJECT_NAME}"
