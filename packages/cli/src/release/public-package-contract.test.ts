@@ -49,6 +49,9 @@ const docsAppPackageJsonPath = fileURLToPath(
 const workspaceRootPackageJsonPath = fileURLToPath(
   new URL('../../../../package.json', import.meta.url),
 );
+const cliTsconfigPath = fileURLToPath(
+  new URL('../../tsconfig.json', import.meta.url),
+);
 const bundleAssetsScriptPath = fileURLToPath(
   new URL('../../scripts/bundle-assets.sh', import.meta.url),
 );
@@ -291,14 +294,26 @@ describe('getPublicPackageContracts', () => {
     }
   }, 20_000);
 
-  it('excludes root test-support fixtures from the real CLI build and package', async () => {
+  it('excludes root test support without mutating built package output', async () => {
     const cliContract = getPublicPackageContracts()[0];
-    const workspaceRoot = dirname(workspaceRootPackageJsonPath);
     const cliPackageRoot = dirname(cliPackageJsonPath);
+    const cliTsconfig = await readJson(cliTsconfigPath);
+    const packageJson = await readJson(cliPackageJsonPath);
+    const distIndexPath = join(cliPackageRoot, 'dist', 'index.js');
+    const assetsMetadataPath = join(
+      cliPackageRoot,
+      'assets',
+      'bundle-metadata.json',
+    );
+    const outputBeforePack = await Promise.all([
+      readFile(distIndexPath),
+      readFile(assetsMetadataPath),
+    ]);
 
-    await execFileAsync('pnpm', ['--filter', cliContract.publicName, 'build'], {
-      cwd: workspaceRoot,
-    });
+    expect(cliTsconfig.exclude).toContain('src/__tests__/**');
+    expect((packageJson.scripts as Record<string, string>).build).toContain(
+      'rm -rf dist/__tests__',
+    );
 
     await expect(
       access(join(cliPackageRoot, 'dist', '__tests__', 'synced-fixture.js')),
@@ -308,6 +323,10 @@ describe('getPublicPackageContracts', () => {
     expect(
       packedPaths.filter((path) => path.startsWith('dist/__tests__/')),
     ).toEqual([]);
+    await expect(readFile(distIndexPath)).resolves.toEqual(outputBeforePack[0]);
+    await expect(readFile(assetsMetadataPath)).resolves.toEqual(
+      outputBeforePack[1],
+    );
   }, 30_000);
 
   it('rejects notice payloads reduced to attribution summaries', () => {
