@@ -99,8 +99,10 @@ such as a dogfood transcript or a fixture README, recorded by exact source
 file, target skill, and target path. There is no wildcard, directory-wide, or
 skill-wide allowance, and no temporary migration allowlist — executable debt is
 fixed at the caller instead of being exempted. The same assertions run against
-the bundled CLI copies and the materialized provider views, so a canonical fix
-must survive bundling and sync as well.
+the bundled CLI copies of both skills and agents, and the sync contract test
+re-checks the roles it materializes for Codex, so a canonical fix must survive
+bundling and Codex sync as well. No test yet gates the generated `.claude` or
+`.cursor` agent views, so regenerate and spot-check those by hand.
 
 ## Contract components
 
