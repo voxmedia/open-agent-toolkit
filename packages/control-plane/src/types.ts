@@ -137,6 +137,7 @@ export type ProjectListRow =
       kind: 'materialized';
       scope: ProjectScope;
       checkout: 'present';
+      recordError?: string;
     })
   | {
       kind: 'recorded-absent';

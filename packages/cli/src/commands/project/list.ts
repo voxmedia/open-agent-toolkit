@@ -147,7 +147,9 @@ function formatProjectTable(projects: ProjectListRow[]): string[] {
     recommendation: project.recommendation.skill,
     hint:
       project.kind === 'materialized'
-        ? '—'
+        ? project.recordError
+          ? 'restore record from Git'
+          : '—'
         : project.kind === 'recorded-invalid'
           ? 'restore record from Git'
           : `oat project pull ${project.name}`,
@@ -260,23 +262,34 @@ async function collectProjectRows(
         onInvalid: (path, error) => {
           const message =
             error instanceof Error ? error.message : String(error);
-          rows.push({
-            kind: 'recorded-invalid',
-            name: basename(path, extname(path)),
-            path: displayPath(repoRoot, path),
-            scope: 'synced',
-            checkout: 'invalid',
-            recordError: message,
-            phase: null,
-            phaseStatus: null,
-            workflowMode: null,
-            lifecycle: null,
-            progress: null,
-            recommendation: {
-              skill: 'none',
-              reason: 'restore invalid record from a trusted Git revision',
-            },
-          });
+          const name = basename(path, extname(path));
+          const materializedRow = rows.find(
+            (row): row is Extract<ProjectListRow, { kind: 'materialized' }> =>
+              row.scope === 'synced' &&
+              row.kind === 'materialized' &&
+              row.name === name,
+          );
+          if (materializedRow) {
+            materializedRow.recordError = message;
+          } else {
+            rows.push({
+              kind: 'recorded-invalid',
+              name,
+              path: displayPath(repoRoot, path),
+              scope: 'synced',
+              checkout: 'invalid',
+              recordError: message,
+              phase: null,
+              phaseStatus: null,
+              workflowMode: null,
+              lifecycle: null,
+              progress: null,
+              recommendation: {
+                skill: 'none',
+                reason: 'restore invalid record from a trusted Git revision',
+              },
+            });
+          }
           context.logger.warn(
             `Skipping invalid synced project record ${displayPath(repoRoot, path)}: ${message}`,
           );

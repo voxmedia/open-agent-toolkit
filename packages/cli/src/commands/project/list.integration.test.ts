@@ -196,6 +196,11 @@ describe('oat project list coordination integration', () => {
       '{ malformed\n',
       'utf8',
     );
+    await writeFile(
+      join(root, '.oat', 'projects', 'synced', 'synced-present.json'),
+      '{ malformed materialized record\n',
+      'utf8',
+    );
 
     const result = await runCli(root, ['project', 'list', '--json']);
     expect(result.exitCode).toBe(0);
@@ -206,7 +211,14 @@ describe('oat project list coordination integration', () => {
       expect.arrayContaining([
         expect.objectContaining({ name: 'shared-project', scope: 'shared' }),
         expect.objectContaining({ name: 'local-project', scope: 'local' }),
-        expect.objectContaining({ name: 'synced-present', scope: 'synced' }),
+        expect.objectContaining({
+          name: 'synced-present',
+          scope: 'synced',
+          kind: 'materialized',
+          recordError: expect.stringContaining(
+            'Restore this exact record from a trusted Git revision',
+          ),
+        }),
         expect.objectContaining({
           name: 'synced-absent',
           kind: 'recorded-absent',
@@ -228,12 +240,16 @@ describe('oat project list coordination integration', () => {
         }),
       ]),
     );
+    expect(
+      payload.projects.filter((row) => row.name === 'synced-present'),
+    ).toHaveLength(1);
 
     const humanResult = await runCli(root, ['project', 'list']);
     expect(humanResult.exitCode).toBe(0);
     expect(humanResult.stdout).toContain('synced-absent');
     expect(humanResult.stdout).toContain('malformed');
     expect(humanResult.stdout).toContain('restore record from Git');
+    expect(humanResult.stdout.match(/synced-present/g)).toHaveLength(1);
     expect(humanResult.stderr).toContain(
       'Skipping invalid synced project record .oat/projects/synced/malformed.json:',
     );
