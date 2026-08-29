@@ -1700,6 +1700,12 @@ export async function archiveProjectOnCompletion(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (syncTarget) {
+        if (attemptedProjectRecapExport?.createdByAttempt) {
+          await removePath(attemptedProjectRecapExport.export.exportRoot, {
+            recursive: true,
+            force: true,
+          });
+        }
         throw new CliError(
           `Summary export to \`${options.summaryExportPath}\` failed: ${message}`,
           1,

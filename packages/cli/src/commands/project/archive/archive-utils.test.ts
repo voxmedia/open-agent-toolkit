@@ -13,7 +13,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, isAbsolute, join, relative } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 
 import { defaultGitRunner } from '@commands/project/sync/git';
 import {
@@ -2647,6 +2647,84 @@ describe('archive utils', () => {
     await expect(readFile(result.summaryExportFile!, 'utf8')).resolves.toBe(
       '# summary\n',
     );
+  });
+
+  it('cleans a new synced recap after summary failure, retries, and preserves the adopted recap', async () => {
+    const repoRoot = await createRepoRoot();
+    const syncedRoot = join(repoRoot, '.oat', 'projects', 'synced');
+    const projectPath = join(syncedRoot, 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'summary.md'), '# summary\n', 'utf8');
+    const recap = await createRecapPackage(projectPath);
+    await writeSyncedRecord(
+      syncedRecordPath(syncedRoot, 'demo'),
+      buildSyncedRecord('demo', new Date('2026-04-01T00:00:00.000Z')),
+    );
+    const options = {
+      repoRoot,
+      projectPath,
+      projectName: 'demo',
+      projectsRoot: '.oat/projects/shared',
+      projectRecapRun: recap.relativeRunPath,
+      s3SyncOnComplete: false,
+      summaryExportPath: '.oat/repo/reference/project-summaries',
+      commit: false,
+    };
+    const timestamp = () => '2026-04-01T12:34:56Z';
+    const preflightSyncedCheckout = vi.fn(async () => ({
+      status: 'clean' as const,
+    }));
+    const removeSyncedCheckout = vi.fn(async () => ({
+      status: 'removed' as const,
+    }));
+    const failSummaryCopy = async (source: string, destination: string) => {
+      if (basename(source) === 'summary.md') {
+        throw new Error('injected summary copy failure');
+      }
+      await mkdir(dirname(destination), { recursive: true });
+      await copyFile(source, destination);
+    };
+    const recapExportRoot = join(
+      repoRoot,
+      '.oat',
+      'repo',
+      'reference',
+      'project-recaps',
+      '20260401-demo',
+    );
+
+    await expect(
+      archiveProjectOnCompletion(options, {
+        copySingleFile: failSummaryCopy,
+        preflightSyncedCheckout,
+        removeSyncedCheckout,
+        timestamp,
+      }),
+    ).rejects.toThrow('injected summary copy failure');
+    await expect(access(recapExportRoot)).rejects.toThrow();
+
+    const retried = await archiveProjectOnCompletion(options, {
+      preflightSyncedCheckout,
+      removeSyncedCheckout,
+      timestamp,
+    });
+    expect(retried.snapshotId).toBe('20260401-demo');
+    await expect(
+      access(join(recapExportRoot, 'manifest.json')),
+    ).resolves.toBeUndefined();
+    await rm(retried.summaryExportFile!);
+
+    await expect(
+      archiveProjectOnCompletion(options, {
+        copySingleFile: failSummaryCopy,
+        preflightSyncedCheckout,
+        removeSyncedCheckout,
+        timestamp,
+      }),
+    ).rejects.toThrow('injected summary copy failure');
+    await expect(
+      access(join(recapExportRoot, 'manifest.json')),
+    ).resolves.toBeUndefined();
   });
 
   it('directs an active record with an absent checkout to project pull', async () => {
