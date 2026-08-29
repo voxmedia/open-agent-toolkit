@@ -108,22 +108,25 @@ export function resolveProjectScope(
   return null;
 }
 
-function assertValidSlug(slug: string): void {
+export function assertValidProjectSlug(
+  slug: string,
+  exitCode: 1 | 2 = 2,
+): void {
   if (slug.startsWith('-') || !PROJECT_SLUG_PATTERN.test(slug)) {
     throw new CliError(
       `Invalid project slug "${slug}". Use letters, numbers, dash, and underscore, and do not start with a dash.`,
-      2,
+      exitCode,
     );
   }
 }
 
 export function syncedRefName(slug: string): string {
-  assertValidSlug(slug);
+  assertValidProjectSlug(slug);
   return `${SYNCED_REF_NAMESPACE}/${slug}`;
 }
 
 export function syncedRecordPath(scopeRoot: string, slug: string): string {
-  assertValidSlug(slug);
+  assertValidProjectSlug(slug);
   return join(scopeRoot, `${slug}.json`);
 }
 

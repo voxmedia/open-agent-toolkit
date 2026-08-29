@@ -12,7 +12,7 @@ import {
 import { readOatLocalConfig, writeOatLocalConfig } from '@config/oat-config';
 import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createProjectMigrateCommand } from './index';
 
@@ -152,6 +152,38 @@ describe('createProjectMigrateCommand', () => {
     expect(capture.error[0]).toContain('not supported in v1');
     expect(process.exitCode).toBe(1);
   });
+
+  it.each(['bad.name', '-leading-dash', 'white space'])(
+    'rejects invalid shared filesystem basename %j as a user error',
+    async (slug) => {
+      const capture = createLoggerCapture();
+      const migrateSharedToSyncedMock = vi.fn();
+      const command = createProjectMigrateCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: '/repo',
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => '/repo',
+        resolveProjectsRoot: async () => '.oat/projects/shared',
+        migrateSharedToSynced: migrateSharedToSyncedMock,
+        processEnv: {},
+      });
+
+      await run(command, [`.oat/projects/shared/${slug}`, '--to', 'synced']);
+
+      expect(capture.error).toEqual([
+        expect.stringContaining(`Invalid project slug "${slug}"`),
+      ]);
+      expect(process.exitCode).toBe(1);
+      expect(migrateSharedToSyncedMock).not.toHaveBeenCalled();
+    },
+  );
 
   it('migrates a tracked shared project in exactly one parent commit', async () => {
     const fixture = await createSyncedFixture();

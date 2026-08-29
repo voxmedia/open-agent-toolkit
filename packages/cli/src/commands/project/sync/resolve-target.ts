@@ -4,9 +4,9 @@ import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
+  assertValidProjectSlug,
   resolveProjectScope,
   resolveScopeRoot,
-  syncedRefName,
 } from '@commands/shared/project-scope';
 import { readOatLocalConfig, type OatLocalConfig } from '@config/oat-config';
 import { CliError } from '@errors/cli-error';
@@ -18,8 +18,6 @@ import {
   type AdoptionRecordState,
   type SyncTarget,
 } from './ref-sync';
-
-const PROJECT_SLUG_PATTERN = /^(?!-)[a-zA-Z0-9_-]+$/;
 
 export interface ResolveSyncedTargetContext {
   repoRoot: string;
@@ -65,10 +63,6 @@ const DEFAULT_DEPENDENCIES: ResolveSyncedTargetDependencies = {
   gitRunner: defaultGitRunner,
 };
 
-function isBareSlug(value: string): boolean {
-  return PROJECT_SLUG_PATTERN.test(value);
-}
-
 export async function resolveSyncedTarget(
   context: ResolveSyncedTargetContext,
   pathOrSlug?: string,
@@ -92,7 +86,10 @@ export async function resolveSyncedTarget(
     }
   }
 
-  const bareSlug = isBareSlug(requested);
+  const bareSlug = !isAbsolute(requested) && !/[\\/]/.test(requested);
+  if (bareSlug) {
+    assertValidProjectSlug(requested, 1);
+  }
   const projectPath = bareSlug
     ? resolve(syncedRoot, requested)
     : isAbsolute(requested)
@@ -125,14 +122,14 @@ export async function resolveSyncedTarget(
       directChild === '..' ||
       directChild.startsWith(`..${sep}`) ||
       isAbsolute(directChild) ||
-      directChild.includes(sep) ||
-      !isBareSlug(directChild)
+      directChild.includes(sep)
     ) {
       throw new CliError(
         `Project path must identify exactly one direct child of the synced project root: ${requested}`,
         1,
       );
     }
+    assertValidProjectSlug(directChild, 1);
     slug = directChild;
   }
 
@@ -151,7 +148,7 @@ export async function resolveSyncedTarget(
   if (!checkoutExists && adoptionRecord === 'create') {
     if (options.allowMissingCheckout) {
       const remote = await dependencies.gitRunner.run(
-        ['ls-remote', '--exit-code', 'origin', `refs/oat/projects/${slug}`],
+        ['ls-remote', '--exit-code', target.remote, target.ref],
         { cwd: context.repoRoot, allowFailure: true },
       );
       if (remote.code === 0) {
@@ -164,7 +161,7 @@ export async function resolveSyncedTarget(
         )
       ) {
         throw new CliError(
-          `git ls-remote origin ${syncedRefName(slug)} failed (exit ${remote.code}): ${remote.stderr || remote.stdout || 'unknown Git error'}`,
+          `git ls-remote ${target.remote} ${target.ref} failed (exit ${remote.code}): ${remote.stderr || remote.stdout || 'unknown Git error'}`,
           2,
         );
       }

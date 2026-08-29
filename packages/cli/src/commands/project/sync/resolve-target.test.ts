@@ -70,6 +70,35 @@ describe('resolveSyncedTarget', () => {
     });
   });
 
+  it.each(['bad.name', '-leading-dash', 'white space'])(
+    'rejects invalid explicit slug %j as a user error',
+    async (slug) => {
+      const injected = deps();
+      await expect(
+        resolveSyncedTarget({ repoRoot: '/repo', env: {} }, slug, injected),
+      ).rejects.toMatchObject({
+        message: expect.stringContaining(`Invalid project slug "${slug}"`),
+        exitCode: 1,
+      });
+    },
+  );
+
+  it.each(['bad.name', '-leading-dash', 'white space'])(
+    'rejects invalid synced filesystem basename %j as a user error',
+    async (slug) => {
+      await expect(
+        resolveSyncedTarget(
+          { repoRoot: '/repo', env: {} },
+          `.oat/projects/synced/${slug}`,
+          deps(),
+        ),
+      ).rejects.toMatchObject({
+        message: expect.stringContaining(`Invalid project slug "${slug}"`),
+        exitCode: 1,
+      });
+    },
+  );
+
   it('resolves explicit and active synced paths', async () => {
     const injected = deps({
       activeProject: '.oat/projects/synced/demo',
@@ -175,19 +204,24 @@ describe('resolveSyncedTarget', () => {
 
   it('marks an origin-only ref for adoption', async () => {
     const injected = deps();
+    const run = vi.fn(async () => ({
+      code: 0,
+      stdout:
+        '1234567890123456789012345678901234567890\trefs/oat/projects/demo',
+      stderr: '',
+    }));
     injected.gitRunner = {
-      run: async () => ({
-        code: 0,
-        stdout:
-          '1234567890123456789012345678901234567890\trefs/oat/projects/demo',
-        stderr: '',
-      }),
+      run,
     };
     await expect(
       resolveSyncedTarget({ repoRoot: '/repo', env: {} }, 'demo', injected, {
         allowMissingCheckout: true,
       }),
     ).resolves.toMatchObject({ slug: 'demo', adopt: true });
+    expect(run).toHaveBeenCalledWith(
+      ['ls-remote', '--exit-code', 'origin', 'refs/oat/projects/demo'],
+      { cwd: '/repo', allowFailure: true },
+    );
   });
 
   it('treats only an empty exit-2 ls-remote result as a missing ref', async () => {

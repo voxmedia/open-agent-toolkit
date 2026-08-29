@@ -15,6 +15,7 @@ import {
 } from '@commands/project/sync/ref-sync';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
+  assertValidProjectSlug,
   canonicalizePath,
   resolveProjectScope,
   resolveScopeRoot,
@@ -86,6 +87,7 @@ async function runMigrate(
       );
     }
     const slug = basename(sourcePath);
+    assertValidProjectSlug(slug, 1);
     const target = buildSyncTarget(repoRoot, projectsRoot, slug);
     await dependencies.assertConfinedMigrationSource(target, sourcePath);
     if (resolveProjectScope(sourcePath, sharedRoot, repoRoot) !== 'shared') {
