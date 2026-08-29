@@ -1,6 +1,6 @@
 ---
 name: oat-brainstorm
-version: 1.3.2
+version: 1.3.3
 description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
@@ -89,9 +89,9 @@ These messages get a direct response, not a workflow takeover. If the model has 
 - No formal requirements / specs / architectural designs (the design phase belongs to `oat-project-design`, not here).
 - No auto-routing to a destination before convergence — the destination is identified at the end of the conversation, not the beginning. Opportunistic surfacing on a clear trigger phrase is allowed; pre-emptively forcing a destination is not.
 - Visual-companion offer must run only when the topic is visual-likely OR the user has explicitly asked for it. Never offer when the topic is text-likely; never skip when the topic is visual-likely.
-- No fold-back commit on a dirty working tree without running the preflight `git status` check first (see Process step 9 active-project branches).
-- No `git add -A` and no directory globs for the fold-back commit. Staging is always scoped: `git add -- "$ARTIFACT_PATH"`.
-- No printing the fold-back handoff prompt before `git commit` actually succeeds. The prompt references a hash; a missing commit makes the prompt misleading.
+- No fold-back persistence on a dirty artifact without running the preflight `git status` check first (see Process step 9 active-project branches).
+- For shared/local fold-back, no `git add -A` or directory globs: stage only `git add -- "$ARTIFACT_PATH"`. For synced fold-back, never stage on the parent branch; use the validated `oat project push --json` receipt.
+- No printing the fold-back handoff prompt before the scope-appropriate branch commit or synced push succeeds. The prompt references a hash; a missing persistence receipt makes it misleading.
 
 **ALLOWED Activities:**
 
@@ -100,7 +100,7 @@ These messages get a direct response, not a workflow takeover. If the model has 
 - Pack and active-project detection at convergence time (`oat tools has <pack>` / `oat config get activeProject`).
 - Reading downstream skill files (`oat-idea-*`, `oat-pjm-add-backlog-item`, `oat-project-*`) and following their process inline using the synthesized payload as pre-filled answers.
 - Rendering the doc-to-path artifact from `templates/brainstorm-doc.md`.
-- Active-project fold-back: appending synthesis to the chosen upstream artifact and committing — only after the safety contract (preflight, scoped staging, conditional handoff print) is satisfied.
+- Active-project fold-back: appending synthesis to the chosen upstream artifact and persisting by scope — exact-path branch commit for shared/local, validated project-ref push for synced — only after the safety contract is satisfied.
 
 **Self-Correction Protocol:**
 If you catch yourself:
@@ -110,9 +110,9 @@ If you catch yourself:
 - Forcing a destination before convergence → STOP. Return to free brainstorming and let convergence happen via trigger phrase or natural soft cue.
 - Skipping the visual-companion offer when visual content is coming → STOP. Print the offer as its own message before continuing.
 - Offering the visual companion before a text-likely brainstorm has any visual need → STOP. Set `VISUAL_COMPANION = "deferred"` and continue text-only.
-- Running the fold-back commit on a dirty working tree without preflight → STOP. Re-route through the dirty-tree handler (three-option picker) before any artifact mutation.
-- Staging with `-A` or a directory glob during fold-back → STOP. The fold-back commit must be `git add -- "$ARTIFACT_PATH"` only.
-- Printing the fold-back handoff prompt before the commit succeeds → STOP. Surface the commit error and let the user resolve it before the prompt is emitted.
+- Running fold-back persistence on a dirty artifact without preflight → STOP. Re-route through the dirty-tree handler (three-option picker) before any artifact mutation.
+- For shared/local scope, staging with `-A` or a directory glob during fold-back → STOP; use `git add -- "$ARTIFACT_PATH"` only. For synced scope, any parent-branch staging → STOP; use `oat project push`.
+- Printing the fold-back handoff prompt before the branch commit or synced push succeeds → STOP. Surface the persistence error and let the user resolve it before the prompt is emitted.
 
 **Recovery:**
 
@@ -406,7 +406,7 @@ After confirmation succeeds, proceed to step 9 (handoff).
 
 ### Step 9: Handoff
 
-Branch on the destination. Each branch executes its handoff inline using the confirmed payload. The non-fold-back destinations are listed first; the active-project router and fold-back commit safety contract are detailed at the end of this step.
+Branch on the destination. Each branch executes its handoff inline using the confirmed payload. The non-fold-back destinations are listed first; the active-project router and scope-aware fold-back persistence contract are detailed at the end of this step.
 
 **Resolving `${SKILLS_ROOT}` for chained skills.** The `ideas` and
 `project-management` packs default to user scope just as `brainstorm` does, so a
@@ -653,7 +653,7 @@ The check happens before any append, so the skill can route around the dirty cas
   For synced projects, the two returned project-ref SHAs prove that the prior
   dirty state was pushed before the fold-back.
 
-- **Option B — Include current changes in the fold-back commit.** Warn explicitly: "The fold-back commit will mix prior unrelated edits with the brainstorm synthesis. The handoff prompt's commit hash will reference both. Confirm?" If the user accepts, append the synthesis and persist the combined state once:
+- **Option B — Include current changes in the fold-back persistence.** Warn explicitly: "The persisted fold-back will mix prior unrelated edits with the brainstorm synthesis. The handoff prompt's receipt SHA will reference both. Confirm?" If the user accepts, append the synthesis and persist the combined state once:
 
   ```bash
   PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
@@ -673,7 +673,7 @@ The check happens before any append, so the skill can route around the dirty cas
 
 - **Option C — Abort fold-back; capture as reference file instead.** Switch the destination to **branch 9j** (active-project brainstorming reference file). Upstream artifact is left untouched.
 
-After the user picks A or B and the resulting commit succeeds, proceed to step 5. After option C, jump to branch 9j.
+After the user picks A or B and the resulting branch commit or synced push succeeds, proceed to step 5. After option C, jump to branch 9j.
 
 **Step 5 — Handoff prompt.** Print **only after the scoped commit or synced push succeeds.** If persistence failed (pre-commit hooks rejected, signing failed, push failed, anything else), surface the error verbatim and **do NOT print the handoff prompt** — the prompt references a commit hash, and a missing commit makes the prompt actively misleading. The user resolves the failure (or re-routes via option C above) before fold-back can complete.
 
@@ -685,7 +685,7 @@ Resolve the handoff target by `ACTIVE_PROJECT_MODE` and `ACTIVE_PROJECT_PR_STATU
 | quick       | none / closed                | `oat-project-quick-start` |
 | either      | open (`oat_pr_status: open`) | `oat-project-revise`      |
 
-Print the handoff prompt template, substituting `<skill-name>`, `<artifact>`, `<hash>`, and `<subject>` from the actual commit:
+Print the handoff prompt template, substituting `<skill-name>`, `<artifact>`, `<hash>`, and `<subject>` from the actual branch commit or synced push receipt:
 
 ```
 Run `<skill-name>` with this context:
@@ -728,7 +728,7 @@ else
 fi
 ```
 
-Use only `git add -- <path>` so unrelated working-tree changes are not swept into the commit. After the commit succeeds, capture the short hash via `git rev-parse --short HEAD` and report it alongside the absolute path written (for example: "Wrote `<absolute-path>` and committed as `<hash>`."). End mode assertion.
+For shared/local scope, use only `git add -- <path>` so unrelated working-tree changes are not swept into the commit, then capture `git rev-parse --short HEAD`. For synced scope, use the validated push receipt SHA and never stage the artifact on the parent branch. Report the resulting SHA alongside the absolute path written, then end mode assertion.
 
 For synced projects, the preceding short-hash sentence is superseded by the
 full `REFERENCE_COMMIT_SHA` returned from `oat project push --json`; no parent
@@ -758,7 +758,7 @@ End mode assertion when the split handoff completes or reports its own blocker.
 - ✅ Confirmation pattern matches `references/destinations.md`: `full` for scoped backlog item (field-by-field with example wording), `minimal` for slug/path/artifact destinations, `none` for inline-only and summarize-idea-directly.
 - ✅ Each handoff branch (9a-9k) reads the correct downstream `SKILL.md` path and enters at the documented step. Project promotion writes `discovery.md` only — never `design.md` — and does not auto-chain into the next phase.
 - ✅ Doc-to-path validation handles all four cases: path-is-directory, parent-missing (with explicit out-of-repo confirmation), file-already-exists (overwrite or rename), unwritable (surface OS error).
-- ✅ Fold-back commit safety contract honored: preflight `git status --porcelain -- "$ARTIFACT_PATH"` runs before any artifact mutation; clean → append + `git add -- "$ARTIFACT_PATH"` (explicit `--`, never `-A`, never globs) + scoped commit; dirty → three-option picker (commit-prior-first / mix / abort-to-reference-file); handoff prompt prints only after `git commit` succeeds.
+- ✅ Fold-back persistence safety contract honored: preflight `git status --porcelain -- "$ARTIFACT_PATH"` runs before any artifact mutation; clean → append + exact-path branch commit for shared/local or validated `oat project push --json` for synced; dirty → three-option picker (persist-prior-first / mix / abort-to-reference-file); handoff prompt prints only after the scope-appropriate receipt succeeds.
 - ✅ Handoff target for fold-back resolves correctly per `oat_workflow_mode` + `oat_pr_status`: `oat-project-plan` (spec-driven, no/closed PR) / `oat-project-quick-start` (quick, no/closed PR) / `oat-project-revise` (either mode, open PR).
 - ✅ Active-project 3-way router (related / independent / supplementary) fires before the standard pack-filtered picker when both `WORKFLOWS_INSTALLED == "true"` and `ACTIVE_PROJECT_VALID == "true"`.
 - ✅ Skill validates cleanly under `pnpm oat:validate-skills` (frontmatter contract, allowed-tools, mode-assertion structure).

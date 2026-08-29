@@ -6127,6 +6127,12 @@ describe('validateOatSkills', () => {
     expect(brainstorm).toContain(
       'clean fold-back, both dirty fold-back choices,\nand the brainstorming reference-file route',
     );
+    expect(brainstorm).toContain(
+      'exact-path branch commit for shared/local, validated project-ref push for synced',
+    );
+    expect(brainstorm).not.toContain(
+      'No fold-back commit on a dirty working tree',
+    );
   });
 
   it('keeps arrival scope failures non-blocking in progress and next routing', async () => {
