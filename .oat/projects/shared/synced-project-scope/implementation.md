@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: p19-t08
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,9 +14,8 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> One hundred eighty-six of one hundred eighty-nine implementation and revision
-> tasks are complete. Phase 19 review cycle 1 added `p19-t08` through
-> `p19-t10` with no deferrals.
+> All one hundred eighty-nine implementation and revision tasks are complete.
+> Phase 19 cycle-1 fix-delta re-review is pending.
 >
 > Conventions:
 >
@@ -28,36 +27,36 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 10    | 10/10     |
-| Phase 2      | complete    | 13    | 13/13     |
-| Phase 3      | complete    | 19    | 19/19     |
-| Phase 4      | complete    | 16    | 16/16     |
-| Phase 5      | complete    | 7     | 7/7       |
-| Phase 6      | complete    | 3     | 3/3       |
-| Phase 7      | complete    | 1     | 1/1       |
-| Phase 8      | complete    | 1     | 1/1       |
-| Phase 9      | complete    | 1     | 1/1       |
-| Phase 10     | complete    | 14    | 14/14     |
-| Phase 11     | complete    | 3     | 3/3       |
-| Phase 12     | complete    | 1     | 1/1       |
-| Phase p-rev1 | complete    | 1     | 1/1       |
-| Phase 13     | complete    | 16    | 16/16     |
-| Phase 14     | complete    | 19    | 19/19     |
-| Phase 15     | complete    | 19    | 19/19     |
-| Phase 16     | complete    | 20    | 20/20     |
-| Phase 17     | complete    | 14    | 14/14     |
-| Phase 18     | complete    | 1     | 1/1       |
-| Phase 19     | in_progress | 10    | 7/10      |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 10    | 10/10     |
+| Phase 2      | complete | 13    | 13/13     |
+| Phase 3      | complete | 19    | 19/19     |
+| Phase 4      | complete | 16    | 16/16     |
+| Phase 5      | complete | 7     | 7/7       |
+| Phase 6      | complete | 3     | 3/3       |
+| Phase 7      | complete | 1     | 1/1       |
+| Phase 8      | complete | 1     | 1/1       |
+| Phase 9      | complete | 1     | 1/1       |
+| Phase 10     | complete | 14    | 14/14     |
+| Phase 11     | complete | 3     | 3/3       |
+| Phase 12     | complete | 1     | 1/1       |
+| Phase p-rev1 | complete | 1     | 1/1       |
+| Phase 13     | complete | 16    | 16/16     |
+| Phase 14     | complete | 19    | 19/19     |
+| Phase 15     | complete | 19    | 19/19     |
+| Phase 16     | complete | 20    | 20/20     |
+| Phase 17     | complete | 14    | 14/14     |
+| Phase 18     | complete | 1     | 1/1       |
+| Phase 19     | complete | 10    | 10/10     |
 
-**Total:** 186/189 tasks completed
+**Total:** 189/189 tasks completed
 
 ---
 
 ## Phase 1: Sync foundations
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-08-27
 
 ### Phase Summary
@@ -3716,18 +3715,18 @@ re-reviewed.
 
 ### Task Status
 
-| Task    | Status  | Commit      |
-| ------- | ------- | ----------- |
-| p19-t01 | done    | `7b1bb113a` |
-| p19-t02 | done    | `4b6450e4a` |
-| p19-t03 | done    | `ea6bacfc6` |
-| p19-t04 | done    | `93d66c221` |
-| p19-t05 | done    | `bb8468047` |
-| p19-t06 | done    | `9b8e5c148` |
-| p19-t07 | done    | `81da1093a` |
-| p19-t08 | pending | -           |
-| p19-t09 | pending | -           |
-| p19-t10 | pending | -           |
+| Task    | Status | Commit      |
+| ------- | ------ | ----------- |
+| p19-t01 | done   | `7b1bb113a` |
+| p19-t02 | done   | `4b6450e4a` |
+| p19-t03 | done   | `ea6bacfc6` |
+| p19-t04 | done   | `93d66c221` |
+| p19-t05 | done   | `bb8468047` |
+| p19-t06 | done   | `9b8e5c148` |
+| p19-t07 | done   | `81da1093a` |
+| p19-t08 | done   | `6d39614b4` |
+| p19-t09 | done   | `8148e1e16` |
+| p19-t10 | done   | `efdb4cdc3` |
 
 ### Implementation Outcome
 
@@ -3776,3 +3775,18 @@ deferred or dismissed.
 - Recovery commit: 84c32d7fbca7adf0e5b2dbb052fce1421d9dc987
 - Verification: post-commit local-sync suite 20/20 and exact CLI TypeScript check exit 0; root rerun confirmed both
 - Reason: TypeScript could not prove the first parsed worktree line existed after array filtering; the bounded fix validates one local before use without changing behavior.
+
+### Recovery Event recovery-p19-02-archive-runner-dependency
+
+- Phase/task: p19 / p19-t09
+- Original request: impl-p19-20260829T141500Z
+- Original commit: 8148e1e16d8bbaae9206784f5b046ab0b6a5ca54
+- Defect class: composition
+- Discovered by: `pnpm test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 2/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 7f734bde63f75eb4707e0a80384883ae1af89a73
+- Verification: focused smoke 3/3, Phase 19 suite 257/257, full CI-order gates, lint, and format passed post-commit; root rerun confirmed the smoke suite
+- Reason: the package-coverage smoke harness manually constructed archive-runner dependencies and needed the same exact-root validator used by production.

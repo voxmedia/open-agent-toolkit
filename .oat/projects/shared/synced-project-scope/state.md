@@ -1,6 +1,6 @@
 ---
-oat_current_task: p19-t08
-oat_last_commit: 84c32d7f
+oat_current_task: null
+oat_last_commit: 7f734bde
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: review_pending # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -78,16 +78,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p19:
       used_attempts: 2
-      pending_attempt:
-        attempt: 2
-        event_id: recovery-p19-02-archive-runner-dependency
-        original_request_id: impl-p19-20260829T141500Z
-        original_task_id: p19-t09
-        original_commit: 8148e1e16d8bbaae9206784f5b046ab0b6a5ca54
-        discovered_by: pnpm test
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 4420b007877ccc1dd599c376c07c140ad332b5d5
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -174,13 +165,13 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Phase 19 review fixes pending
+**Status:** Phase 19 re-review pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Phase 19 review cycle 1 added three recovery tasks, starting at `p19-t08`.
+Phase 19 cycle-1 review fixes are complete; fix-delta re-review is pending.
 
 ## Artifacts
 
@@ -188,7 +179,7 @@ Phase 19 review cycle 1 added three recovery tasks, starting at `p19-t08`.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (186/189 tasks complete)
+- **Implementation:** `implementation.md` (189/189 tasks complete)
 
 ## Progress
 
@@ -370,6 +361,9 @@ Phase 19 review cycle 1 added three recovery tasks, starting at `p19-t08`.
 - ✗ Phase 19 review found 1 Important / 2 Medium residual gaps
 - ✓ Residuals converted into p19-t08 through p19-t10 with no deferral
 - ✓ Phase 19 recovery attempt 1/10 settled after restoring worktree parser type safety
+- ✓ Phase 19 tasks p19-t08 through p19-t10 completed in bounded commits
+- ✓ Phase 19 recovery attempt 2/10 settled after smoke dependency parity fix
+- ✓ Phase 19 focused suite passed 257/257 and all final gates passed
 
 ## Blockers
 
@@ -377,4 +371,4 @@ None.
 
 ## Next Milestone
 
-Execute p19-t08 through p19-t10, then re-review the fix delta.
+Run the narrowed Phase 19 fix-delta re-review.
