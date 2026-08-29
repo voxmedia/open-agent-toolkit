@@ -4168,4 +4168,10 @@ is eligible.
 
 **Next:** Persist `allowed/passed`, then refresh PR #227. A GitHub `ci` failure in `guided-setup.test.ts` is out of this artifact and will be fixed separately.
 
-The `guided-setup` harness now mocks `applyOatCoreGitattributes` (`e3b01202`). That test-only change is a substantive descendant after the allowed generation, so the exit gate is `stale` and needs a new generation before `oat-project-pr-final`.
+The `guided-setup` harness now mocks `applyOatCoreGitattributes` (`e3b01202`).
+The freshness rule would mark that test-only descendant `stale`. The maintainer
+waived a new exit-gate generation: the mock does not change shipped init
+behavior (the production `index.test.ts` harness already stubbed the same
+dependency), and the passing `cursor-fable-5-high` receipt remains the
+configured-gate provenance. Closeout may proceed to `oat-project-pr-final`
+without another gate.
