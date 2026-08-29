@@ -3071,3 +3071,32 @@ floor_satisfaction: satisfied
 **Fix completion:** Tasks `p13-t12` through `p13-t16` are complete in five
 verified commits. This exact review event is `fixes_completed`, never passed.
 A fresh independent review is required.
+
+### Review Received: p13 passing gate re-review - 2026-08-29T00:02:09Z
+
+**Date:** 2026-08-29
+**Review artifact:** `reviews/archived/p13-review-2026-08-29T000209Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**Disposition:** passing-gate judgment sweep. Both contained Minors were
+addressed immediately in `8483abad7` without adding plan tasks or reopening a
+blocking review cycle:
+
+- Archive metadata verification now compares the persisted `scope` directly,
+  with a wrong-scope mismatch regression.
+- The out-of-scope project refusal and missing-`archiveScope` refusal now have
+  explicit tests. The out-of-scope refusal is accepted as the intentional
+  fail-closed behavior required once scope is part of archive identity.
+
+**Verification:** focused archive suite 97/97, CLI type-check, file-scoped
+lint/format, and `git diff --check` all passed. No findings were deferred.
+
+**Review outcome:** passed at the configured threshold after all Minor
+dispositions were recorded. Phase 13 is complete; fresh final-project review
+and configured implementation exit-gate freshness remain.
