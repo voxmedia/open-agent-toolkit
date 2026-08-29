@@ -3604,3 +3604,29 @@ marker, result, artifact, and receive provenance are reset for this generation.
 The configured gate passed at its Important threshold. Its structured receipt
 is persisted; the correlated review must be received and its five Minor
 findings dispositioned before the exit gate can become allowed.
+
+### Configured Exit Gate - Review Received
+
+**Review artifact:** `reviews/archived/final-review-2026-08-29T094230Z.md`
+
+**Findings:** 0 Critical / 0 Important / 0 Medium / 5 Minor.
+
+**Passing-gate judgment dispositions:**
+
+- m1 (a stray END marker before an orphan header can grow on each repair) is
+  accepted post-release as a malformed-input hardening follow-up; the normal
+  and newly repaired orphan-header paths are idempotent.
+- m2 (files already damaged into the legacy two-header shape can still lose
+  interstitial rules) is accepted post-release because the current repair no
+  longer creates that shape; migration of already malformed files warrants a
+  dedicated compatibility fixture.
+- m3 (substring/LF-only marker matching) is accepted post-release pending a
+  broader managed-block parser hardening pass covering mid-line and CRLF input.
+- m4 (duplicated restore-recommendation literal) is accepted as negligible
+  maintainability debt; both live paths currently return identical guidance.
+- m5 (`summary.md` drift) is assigned to the immediate pre-PR closeout refresh
+  and must be complete before PR #227 is updated.
+
+The configured review passes with no blocking findings and no deferred Medium.
+Receive bookkeeping is durable; final allowance is recorded in project state
+only after the archived artifact, ledger row, and commit are reconciled.
