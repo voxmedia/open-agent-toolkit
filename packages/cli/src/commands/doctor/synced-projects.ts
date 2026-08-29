@@ -133,6 +133,33 @@ export async function checkSyncedProjects(
   const entries = (await pathExists(syncedRoot))
     ? await recordEntries(syncedRoot)
     : [];
+
+  const ignoreProbeSlug =
+    entries[0]?.slice(entries[0].lastIndexOf('/') + 1, -'.json'.length) ??
+    '__probe__';
+  const ignored = await dependencies.git.run(
+    [
+      'check-ignore',
+      '--quiet',
+      '--no-index',
+      `${syncedRelative}/${ignoreProbeSlug}/`,
+    ],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  if (ignored.code === 1) {
+    checks.push({
+      name: 'project:synced_gitignore',
+      description: 'Managed synced-project gitignore rule',
+      status: 'warn',
+      message:
+        'The managed gitignore block does not ignore synced project directories.',
+      fix: 'Run `oat tools update`.',
+    });
+  }
+
+  const hint = await editorHint(repoRoot);
+  if (hint) checks.push(hint);
+
   if (entries.length === 0 && checks.length === 0) {
     return [
       {
@@ -250,29 +277,6 @@ export async function checkSyncedProjects(
     }
   }
 
-  const ignoreProbeSlug = records[0]?.slug ?? '__probe__';
-  const ignored = await dependencies.git.run(
-    [
-      'check-ignore',
-      '--quiet',
-      '--no-index',
-      `${syncedRelative}/${ignoreProbeSlug}/`,
-    ],
-    { cwd: repoRoot, allowFailure: true },
-  );
-  if (ignored.code === 1) {
-    checks.push({
-      name: 'project:synced_gitignore',
-      description: 'Managed synced-project gitignore rule',
-      status: 'warn',
-      message:
-        'The managed gitignore block does not ignore synced project directories.',
-      fix: 'Run `oat tools update`.',
-    });
-  }
-
-  const hint = await editorHint(repoRoot);
-  if (hint) checks.push(hint);
   return checks.length > 0
     ? checks
     : [

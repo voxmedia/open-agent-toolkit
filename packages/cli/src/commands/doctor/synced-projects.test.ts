@@ -51,6 +51,38 @@ describe('checkSyncedProjects', () => {
     ]);
   });
 
+  it('warns about a missing ignore rule before the first synced record', async () => {
+    const repoRoot = await createRoot();
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: gitRunner({
+        'check-ignore --quiet': { code: 1, stdout: '', stderr: '' },
+      }),
+    });
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_gitignore',
+        status: 'warn',
+        fix: 'Run `oat tools update`.',
+      }),
+    );
+  });
+
+  it('offers the editor discovery hint before the first synced record', async () => {
+    const repoRoot = await createRoot();
+    await mkdir(join(repoRoot, '.vscode'), { recursive: true });
+
+    const checks = await checkSyncedProjects(repoRoot, { git: gitRunner() });
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_editor_hint',
+        status: 'pass',
+        message: expect.stringContaining('git.scanRepositories'),
+      }),
+    );
+  });
+
   it('warns when a record exists but its checkout is absent', async () => {
     const repoRoot = await createRoot();
     const syncedRoot = join(repoRoot, '.oat/projects/synced');
