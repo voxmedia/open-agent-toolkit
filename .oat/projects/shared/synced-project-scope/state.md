@@ -1,6 +1,6 @@
 ---
-oat_current_task: p19-t01
-oat_last_commit: 2c7aed51
+oat_current_task: null
+oat_last_commit: 81da1093a
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: review_pending # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -165,13 +165,13 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Phase 19 final-review fixes pending
+**Status:** Phase 19 review pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Phase 19 is ready to execute seven final-review fixes, starting at `p19-t01`.
+Phase 19 implementation is complete; independent review is pending.
 
 ## Artifacts
 
@@ -179,7 +179,7 @@ Phase 19 is ready to execute seven final-review fixes, starting at `p19-t01`.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (179/186 tasks complete)
+- **Implementation:** `implementation.md` (186/186 tasks complete)
 
 ## Progress
 
@@ -355,6 +355,9 @@ Phase 19 is ready to execute seven final-review fixes, starting at `p19-t01`.
 - ✓ Upstream PR #229 merged; full workspace test suite passes
 - ✗ Fresh final review found 3 Important / 2 Medium / 2 Minor findings
 - ✓ All seven findings converted into Phase 19 with no deferral
+- ✓ Phase 19 tasks p19-t01 through p19-t07 completed in seven bounded commits
+- ✓ Phase 19 root-focused verification passed (232 tests)
+- ✓ Phase 19 Definition-of-Done and release gates passed at lockstep `0.2.44`
 
 ## Blockers
 
@@ -362,4 +365,4 @@ None.
 
 ## Next Milestone
 
-Implement `p19-t01` through `p19-t07`, then run a fresh independent review.
+Run a fresh independent Phase 19 review, including stale worktree-registration behavior.

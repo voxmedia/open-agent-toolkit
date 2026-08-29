@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-29
 oat_generated: true
-oat_summary_last_task: p19-t06
+oat_summary_last_task: p19-t07
 oat_summary_revision_count: 1
 oat_summary_includes_revisions: [p-rev1]
 ---
@@ -23,7 +23,7 @@ OAT project artifacts must travel across sessions, worktrees, and machines witho
 - Phase 15 strengthened cross-scope Git behavior, deterministic recovery and validation inventories, project listing, pause/pull flows, and full-range compatibility discovered by independent review.
 - Phases 16–17 completed archive/config/autonomy safety, lifecycle durability, provider-view parity, invalid-record diagnostics, custom-root ignores, locale and environment isolation, command parsing, scaffold guards, and decoupled release tests through `p17-t14`.
 - Phase 18 corrected the remote-review regression that could run the final synced-project publication against an already archived project path; its independent phase review passed.
-- Phase 19 final-review remediation now requires exact archive-root identity, protects nested worktrees during local sync, rejects external synced roots before mutation, recovers a failed final prune commit through an exact-path retry, and binds archive retries to the authoritative source ref. The durable summary is refreshed through `p19-t06`; resume-header alignment remains the final implementation task.
+- Phase 19 final-review remediation now requires exact archive-root identity, protects nested worktrees during local sync, rejects external synced roots before mutation, recovers a failed final prune commit through an exact-path retry, and binds archive retries to the authoritative source ref. All seven tasks are complete through the `p19-t07` resume-state alignment.
 
 ## Key Decisions
 
@@ -49,13 +49,13 @@ OAT project artifacts must travel across sessions, worktrees, and machines witho
 ## Revision History
 
 - **p-rev1 — PR #226 integration (2026-08-28).** Merged current `origin/main` into PR #227, reconciled overlapping assets and contracts, passed focused and full isolated-environment verification, and received an independent passing integration review.
-- **Phase 18 and Phase 19 closeout remediation (2026-08-29).** Phase 18 passed after correcting post-archive publication routing. After upstream PR #229 merged, a fresh full-range review produced five behavioral and two artifact findings; Phase 19 implemented the five archive, local-sync, external-root, prune-recovery, and retry-identity corrections and refreshed this summary through `p19-t06`.
+- **Phase 18 and Phase 19 closeout remediation (2026-08-29).** Phase 18 passed after correcting post-archive publication routing. After upstream PR #229 merged, a fresh full-range review produced five behavioral and two artifact findings; Phase 19 implemented all seven corrections through `p19-t07`.
 
 ## Follow-up Items
 
 - Accepted post-release cleanup: avoid timestamp-only duplicate pause commits; enforce rather than merely advise the partial-prune no-republish rule; unify invalid-config exit-code policy; strengthen provider parity at the codec level; audit direct Git calls outside `GitRunner`; and extend custom-root archive ignores beyond synced scope.
 - Managed-block compatibility still merits fixtures for legacy two-header damage, stray/mid-line/CRLF markers, plus consolidation of duplicate restore guidance. Self-migration to `synced` and deletion of the disposable GitHub spike repository remain separately controlled closeout actions.
-- Complete `p19-t07`, run independent Phase 19 and final-project review, then refresh the exact CI-order Definition-of-Done and configured exit gate before updating PR #227.
+- Run independent Phase 19 and final-project review, then refresh the configured exit gate before updating PR #227.
 
 ## Workflow Observations
 
