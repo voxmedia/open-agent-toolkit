@@ -1,6 +1,6 @@
 ---
-oat_current_task: p19-t11
-oat_last_commit: 7f734bde
+oat_current_task: null
+oat_last_commit: 62e4ade8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -165,15 +165,16 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Final artifact alignment in progress
+**Status:** Implementation tasks complete; closeout evidence pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-The narrowed final project review closed all behavioral findings and added two
-documentation-only alignment tasks. Resume at `p19-t11`; the maintainer waived
-another re-review after these corrections.
+All 191 implementation and revision tasks are complete. The maintainer waived
+another documentation-only re-review of `p19-t11` and `p19-t12`. The current
+closeout route is to require a current passing final review and refresh the
+configured exit gate before the PR update.
 
 ## Artifacts
 
@@ -181,7 +182,7 @@ another re-review after these corrections.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete — reviewed, 9 findings resolved)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (189/191 tasks complete)
+- **Implementation:** `implementation.md` (191/191 tasks complete)
 
 ## Progress
 
@@ -370,6 +371,8 @@ another re-review after these corrections.
 - ✗ Narrowed final review found 1 Important / 1 Minor artifact-only alignment gaps
 - ✓ Both artifact findings converted into p19-t11 and p19-t12 with no deferral
 - ✓ Maintainer waived a documentation-only re-review after p19-t11 and p19-t12
+- ✓ Phase 19 task p19-t11 documented the archive snapshot/source-ref retry identity
+- ✓ Phase 19 task p19-t12 stabilized durable closeout prose at 191/191 tasks
 
 ## Blockers
 
@@ -377,5 +380,6 @@ None.
 
 ## Next Milestone
 
-Complete p19-t11 and p19-t12, then refresh the configured implementation exit
-gate without an intervening documentation-only re-review.
+No plan task remains. Require a current passing final review and refresh the
+configured implementation exit gate before updating PR #227; do not insert an
+additional documentation-only re-review for p19-t11 or p19-t12.

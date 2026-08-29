@@ -5623,13 +5623,11 @@ Run formatting and project artifact validation. Commit as
 
 **Operator step after implementation:** delete the disposable spike repository `https://github.com/tkstang/disposable-test-repo-for-oat` (used by p01-t10); the implementing agent never deletes repositories.
 
-The Phase 12 narrowed final lifecycle re-review passed with no findings, and
-the historical configured exit-gate attempt subsequently passed at the
-Important threshold. That stored result predates the PR #226 integration and
-the Phase 13-14 effective delta, so it is not fresh closeout evidence for the
-current branch. After Phase 14 receives a fresh independent final-project
-review, generate and launch a refreshed configured exit gate against the
-current effective delta. That refreshed gate has not run yet.
+All 191 implementation and revision tasks are complete. Before the PR update,
+closeout requires a current passing final review and a fresh configured exit
+gate. The maintainer explicitly waived another documentation-only re-review of
+`p19-t11` and `p19-t12`; transient review and resume routing remains
+authoritative only in `state.md`.
 
 ---
 
