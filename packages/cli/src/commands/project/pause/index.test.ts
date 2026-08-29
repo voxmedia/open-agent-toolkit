@@ -8,7 +8,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
-import { defaultGitRunner } from '@commands/project/sync/git';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
   buildSyncTarget,
   continueSynced,
@@ -242,7 +242,7 @@ describe('oat project pause', () => {
   });
 
   it.each(['rejected'] as const)(
-    'restores synced state byte-for-byte after a %s pause publication',
+    'retains a clean retryable pause after a %s publication',
     async (pushStatus) => {
       const root = await createRepoRoot();
       const statePath = await writeProjectState(root, 'synced-demo', 'synced');
@@ -252,7 +252,7 @@ describe('oat project pause', () => {
         `${JSON.stringify({ version: 1, activeProject: '.oat/projects/synced/synced-demo' })}\n`,
         'utf8',
       );
-      const { command, pushSynced } = createHarness({
+      const { capture, command, pushSynced } = createHarness({
         cwd: root,
         pushStatus,
       });
@@ -260,7 +260,13 @@ describe('oat project pause', () => {
       await runCommand(command, []);
 
       expect(pushSynced).toHaveBeenCalledOnce();
-      expect(await readFile(statePath, 'utf8')).toBe(originalState);
+      expect(await readFile(statePath, 'utf8')).not.toBe(originalState);
+      expect(await readFile(statePath, 'utf8')).toContain(
+        'oat_lifecycle: paused',
+      );
+      expect(capture.error.join('\n')).toContain(
+        're-run oat project pause synced-demo to retry publication',
+      );
       const localConfig = JSON.parse(
         await readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
       );
@@ -420,7 +426,7 @@ describe('oat project pause', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('retries a rejected synced pause from the exact pre-pause state', async () => {
+  it('retries a retained rejected synced pause', async () => {
     const root = await createRepoRoot();
     const statePath = await writeProjectState(root, 'synced-demo', 'synced');
     const originalState = await readFile(statePath, 'utf8');
@@ -435,7 +441,10 @@ describe('oat project pause', () => {
     });
 
     await runCommand(command, []);
-    expect(await readFile(statePath, 'utf8')).toBe(originalState);
+    expect(await readFile(statePath, 'utf8')).not.toBe(originalState);
+    expect(await readFile(statePath, 'utf8')).toContain(
+      'oat_lifecycle: paused',
+    );
     expect(process.exitCode).toBe(1);
 
     process.exitCode = undefined;
@@ -450,6 +459,99 @@ describe('oat project pause', () => {
     );
     expect(localConfig.activeProject).toBeNull();
     expect(process.exitCode).toBe(0);
+  });
+
+  it('retains a clean pause commit after a real remote decline', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    tempDirs.push(fixture.rootDir);
+    const slug = 'pause-decline';
+    const targetA = buildSyncTarget(
+      fixture.cloneA,
+      '.oat/projects/shared',
+      slug,
+    );
+    await createSyncedProject(targetA, defaultGitRunner);
+    await writeFile(
+      join(targetA.projectPath, 'state.md'),
+      '---\noat_phase: implement\noat_phase_status: in_progress\noat_lifecycle: active\n---\n\n# State\n',
+    );
+    await pushSyncedReal(targetA, defaultGitRunner, {
+      message: 'seed pause decline',
+    });
+    const targetB = buildSyncTarget(
+      fixture.cloneB!,
+      '.oat/projects/shared',
+      slug,
+    );
+    await pullSynced(targetB, defaultGitRunner);
+    await writeFile(
+      join(fixture.cloneB!, '.oat/config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: `.oat/projects/synced/${slug}` })}\n`,
+    );
+
+    let remoteAdvanceSha = '';
+    const decliningGitRunner: GitRunner = {
+      run: async (args, options) => {
+        if (
+          remoteAdvanceSha === '' &&
+          args.includes('push') &&
+          args.includes(targetB.projectPath)
+        ) {
+          await writeFile(
+            join(targetA.projectPath, 'remote-note.md'),
+            'advanced during pause publication\n',
+          );
+          remoteAdvanceSha = (
+            await pushSyncedReal(targetA, defaultGitRunner, {
+              message: 'advance during pause publication',
+            })
+          ).sha;
+        }
+        return defaultGitRunner.run(args, options);
+      },
+    };
+    const capture = createLoggerCapture();
+    const command = createProjectPauseCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneB!,
+        home: '/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneB!,
+      now: () => new Date('2026-08-29T01:30:00Z'),
+      gitRunner: decliningGitRunner,
+    });
+
+    await runCommand(command, []);
+
+    expect(process.exitCode).toBe(1);
+    expect(capture.error.join('\n')).toContain(
+      `re-run oat project pause ${slug} to retry publication`,
+    );
+    expect(
+      await readFile(join(targetB.projectPath, 'state.md'), 'utf8'),
+    ).toContain('oat_lifecycle: paused');
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: targetB.projectPath,
+        encoding: 'utf8',
+      }),
+    ).toBe('');
+    expect(
+      execFileSync('git', ['rev-parse', targetA.ref], {
+        cwd: fixture.originDir,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe(remoteAdvanceSha);
+    const localConfig = JSON.parse(
+      await readFile(join(fixture.cloneB!, '.oat/config.local.json'), 'utf8'),
+    );
+    expect(localConfig.activeProject).toBe(`.oat/projects/synced/${slug}`);
   });
 
   it('persists pause reason when provided', async () => {
