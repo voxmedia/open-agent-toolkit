@@ -3710,6 +3710,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | final   | code     | passed          | 2026-08-29 | reviews/archived/final-review-2026-08-29T094230Z.md               | ebe32dc59d134130df64c0d76a7443fd0b1464b2 | gate       | claude-fable-skip-permissions |
 | remote  | code     | fixes_completed | 2026-08-29 | reviews/archived/remote-pr-227-review-2026-08-29T131316Z.md       | d1a84e7dfcf9e2487bebde9368d3d2c8bb91fe37 | -          | -                             |
 | p18     | code     | passed          | 2026-08-29 | reviews/archived/p18-review-2026-08-29T133009Z.md                 | 9e73c3750357fea997d0927e8b991109c5095930 | auto       | -                             |
+| final   | code     | received        | 2026-08-29 | reviews/final-review-2026-08-29T134331Z.md                        | 9ca20b411b07c792d169e46e812f1aef4910ea0f | auto       | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

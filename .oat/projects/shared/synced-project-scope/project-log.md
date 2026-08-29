@@ -248,6 +248,10 @@ attempts_completed=0/2, and launch_state=not_started.
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:5 exit=0 status=ok artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T094230Z.md
 
+### 2026-08-29 · structural · oat-project-review-provide · final-review-2026-08-29T134331Z
+
+Independent final review used two consequential reconnaissance lanes; see reviews/final-review-2026-08-29T134331Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
