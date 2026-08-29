@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 7c861f85d
+oat_last_commit: f2a5795e3
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -63,16 +63,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p14:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: p14-recovery-01-phase-test-contracts
-        original_request_id: 9ed2e738-8271-4915-ab31-c01f7b1f04e5
-        original_task_id: p14-t19
-        original_commit: 82b7620139118c63bb4f15045512b0dafbc905bd
-        discovered_by: HOME="$phase_test_home" pnpm test
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 82b7620139118c63bb4f15045512b0dafbc905bd
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -149,7 +140,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T04:39:19.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T04:53:58.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -159,14 +150,14 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Phase 14 planned tasks complete; verification and independent review pending
+**Status:** Phase 14 verified; independent final review pending
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Implementation — Phase 14 planned tasks complete; verification and independent
-review pending.
+Implementation — Phase 14 complete and verified; independent final review
+pending.
 
 ## Artifacts
 
@@ -314,8 +305,9 @@ review pending.
 - ⨯ Fresh full-project final review found 2 Important, 4 Medium, and 13 Minor findings
 - ✓ All final-review findings received into p14-t01 through p14-t19 with no deferrals
 - ✓ Phase 14 tasks p14-t01 through p14-t19 complete in bounded commits
-- ✓ Phase 14 recovery ledger remains settled at 0/10 with no pending attempt
-- ⧗ Phase 14 phase-wide verification and fresh independent review pending
+- ✓ Phase 14 recovery attempt 1/10 validated and settled with no pending attempt
+- ✓ Phase 14 final-head Definition of Done gates pass in exact CI order, plus skill validation, lint, format, and diff checks
+- ⧗ Fresh independent final-project review pending
 - ✓ Cycle-5 findings converted into consolidated task p09-t01 with no deferrals
 - ✓ Phase 9 task p09-t01 completed and verified in `e193c8ffb`
 - ✓ Phase 9 recovery ledger settled at 0/10 with no pending attempt
@@ -331,8 +323,8 @@ None.
 
 ## Next Milestone
 
-Run Phase 14 phase-wide verification and a fresh independent final-project
-review, then generate and launch the refreshed configured exit gate for the
+Run a fresh independent final-project review, then generate and launch the
+refreshed configured exit gate for the
 post-PR #226 integration effective delta before updating PR #227. The stored
 historical gate pass is not fresh for this delta, and the refreshed gate has not
 run yet.

@@ -3132,7 +3132,7 @@ and configured implementation exit-gate freshness remain.
 | p14-t16 | done   | `cb7647781` |
 | p14-t17 | done   | `1d5f044f1` |
 | p14-t18 | done   | `7c861f85d` |
-| p14-t19 | done   | this commit |
+| p14-t19 | done   | `82b762013` |
 
 ### Review Received: final integration review - 2026-08-29T00:27:06Z
 
@@ -3193,6 +3193,61 @@ the full effective delta, prior review closures, and repository gates.
 **Review outcome:** fixes added. This review event is not passed. Phase 14 must
 complete and receive a fresh independent final review before publication.
 
+### Generic Implementation Dispatch Record
+
+```yaml
+request_id: 9ed2e738-8271-4915-ab31-c01f7b1f04e5
+caller: oat-project-implement
+scope: synced-project-scope/p14
+objective: Implement Phase 14 final integration review fixes in task order.
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+authority: p14-t01 through p14-t19 declared files, tightly necessary adjacent tests, and Phase 14 bookkeeping
+role_selector: oat-phase-implementer-gpt-5-6-sol-high
+model_selector: gpt-5.6-sol
+model_selector_granularity: materialized-role
+effort_selector: high
+selection_source: native-default
+launch_status: accepted
+child_outcome: completed
+configured_invocation_evidence:
+  - exact registered implementer type accepted with materialized model and effort controls
+runtime_confirmation: not-reported
+diagnostics:
+  - oat status reported pre-existing unmanaged Cursor entries and retained pack overrides; no provider files changed
+continuation_events:
+  - p14-recovery-01-phase-test-contracts
+task_class: consequential
+model_class_floor: consequential
+classification_source: caller
+classification_reason: Git rollback, lifecycle recovery, archive safety, and cross-scope correctness make subtle misses expensive.
+floor_satisfaction: satisfied
+dispatch_stamp: 'Dispatch: scope=p14 action=implementation role=worker producer=oat-project-implement provenance=native model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high'
+```
+
+### Recovery Event p14-recovery-01-phase-test-contracts
+
+- Phase/task: p14 / p14-t19
+- Original request: 9ed2e738-8271-4915-ab31-c01f7b1f04e5
+- Original commit: 82b7620139118c63bb4f15045512b0dafbc905bd
+- Defect class: test
+- Discovered by: isolated-HOME `pnpm test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: f2a5795e3e1c285cb167dbf1d0cab84bf33ef2d9
+- Verification: focused 104/104 and isolated-HOME `pnpm test` passed before and after the recovery commit
+- Reason: deterministic stale expectations pinned the pre-p14-t16 help text and pre-p14-t14 completion-skill version; only those two test contracts changed
+
+Root settlement clears the completed pending marker while preserving monotonic
+Phase 14 recovery usage at 1/10.
+
 ### Phase 14 Closeout
 
 All nineteen final-integration findings are implemented in task order. The
@@ -3200,7 +3255,9 @@ historical configured exit-gate pass remains recorded in `state.md`, but its
 reviewed/freshness basis predates the PR #226 integration and the Phase 13-14
 delta. It must not be treated as current closeout evidence.
 
-The next lifecycle steps are phase-wide verification, a fresh independent
-final-project review, and then generation and launch of a refreshed configured
-exit gate against the current effective delta. The refreshed gate has not run;
-this closeout records the required next step without claiming a result.
+The phase-wide Definition of Done passed against final recovery HEAD in exact
+CI order, followed by skill validation, lint, format, and diff checks. The next
+lifecycle steps are a fresh independent final-project review and then generation
+and launch of a refreshed configured exit gate against the current effective
+delta. The refreshed gate has not run; this closeout records the required next
+step without claiming a result.
