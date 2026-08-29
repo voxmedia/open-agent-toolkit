@@ -77,8 +77,17 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p19:
-      used_attempts: 0
-      pending_attempt: null
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: recovery-p19-01-sync-reporoot-narrowing
+        original_request_id: impl-p19-20260829T141500Z
+        original_task_id: p19-t08
+        original_commit: 6d39614b44950f1597ef87b848cc396d07a63a93
+        discovered_by: pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit --pretty false
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: efdb4cdc393f005ad25defe3f7650ac638fe5bd7
+        status: active
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
