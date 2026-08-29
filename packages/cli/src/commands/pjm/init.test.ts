@@ -287,6 +287,11 @@ describe('initializeRepoReference', () => {
     const assetsRoot = join(root, 'assets');
     const templatesRoot = join(root, '.oat', 'templates');
     const repoRoot = join(root, 'repo');
+    // Inject an empty home so the user tier (`<home>/.oat/templates`) cannot
+    // answer first; without it, a machine with `oat tools install --scope user`
+    // resolves from the real `~/.oat/templates` and never reaches the bundle.
+    const home = join(root, 'home');
+    await mkdir(home, { recursive: true });
     await seedTemplates(join(assetsRoot, 'templates'));
     await seedTemplate(
       templatesRoot,
@@ -294,7 +299,12 @@ describe('initializeRepoReference', () => {
       '# Local Current State\n',
     );
 
-    await initializeRepoReference({ assetsRoot, repoRoot, templatesRoot });
+    await initializeRepoReference({
+      assetsRoot,
+      repoRoot,
+      templatesRoot,
+      home,
+    });
 
     await expect(
       readFile(join(repoRoot, 'pjm', 'current-state.md'), 'utf8'),
@@ -351,13 +361,18 @@ describe('initializeRepoReference', () => {
     const assetsRoot = join(root, 'assets');
     const templatesRoot = join(root, '.oat', 'templates');
     const repoRoot = join(root, 'repo');
+    // All three tiers must miss for the error to surface, so the user tier
+    // (`<home>/.oat/templates`) needs an empty injected home; on a machine with
+    // `oat tools install --scope user` the real `~/.oat/templates` supplies it.
+    const home = join(root, 'home');
+    await mkdir(home, { recursive: true });
     await seedTemplate(join(assetsRoot, 'templates'), 'current-state.md');
     await seedTemplate(join(assetsRoot, 'templates'), 'roadmap.md');
     await seedTemplate(join(assetsRoot, 'templates'), 'repo-agents.md');
     await seedTemplate(join(assetsRoot, 'templates'), 'pjm-agents.md');
 
     await expect(
-      initializeRepoReference({ assetsRoot, repoRoot, templatesRoot }),
+      initializeRepoReference({ assetsRoot, repoRoot, templatesRoot, home }),
     ).rejects.toThrow(
       'Template reference-agents.md was not found in repository, user, or bundled PJM templates.',
     );
