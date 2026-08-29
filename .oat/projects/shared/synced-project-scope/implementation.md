@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: review
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-29
-oat_current_task_id: null
+oat_current_task_id: p16-t01
 oat_generated: false
 ---
 
@@ -14,9 +14,9 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> All one hundred forty-four implementation and revision tasks are complete.
-> Phase 15 passed its final-head gates and now requires another independent
-> final review before the refreshed exit gate or PR #227 update.
+> One hundred forty-four of one hundred sixty-four implementation and revision
+> tasks are complete. A fresh full-range review added twenty Phase 16 fixes
+> before another independent review or PR #227 update.
 >
 > Conventions:
 >
@@ -28,26 +28,27 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 10    | 10/10     |
-| Phase 2      | complete | 13    | 13/13     |
-| Phase 3      | complete | 19    | 19/19     |
-| Phase 4      | complete | 16    | 16/16     |
-| Phase 5      | complete | 7     | 7/7       |
-| Phase 6      | complete | 3     | 3/3       |
-| Phase 7      | complete | 1     | 1/1       |
-| Phase 8      | complete | 1     | 1/1       |
-| Phase 9      | complete | 1     | 1/1       |
-| Phase 10     | complete | 14    | 14/14     |
-| Phase 11     | complete | 3     | 3/3       |
-| Phase 12     | complete | 1     | 1/1       |
-| Phase p-rev1 | complete | 1     | 1/1       |
-| Phase 13     | complete | 16    | 16/16     |
-| Phase 14     | complete | 19    | 19/19     |
-| Phase 15     | complete | 19    | 19/19     |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 10    | 10/10     |
+| Phase 2      | complete    | 13    | 13/13     |
+| Phase 3      | complete    | 19    | 19/19     |
+| Phase 4      | complete    | 16    | 16/16     |
+| Phase 5      | complete    | 7     | 7/7       |
+| Phase 6      | complete    | 3     | 3/3       |
+| Phase 7      | complete    | 1     | 1/1       |
+| Phase 8      | complete    | 1     | 1/1       |
+| Phase 9      | complete    | 1     | 1/1       |
+| Phase 10     | complete    | 14    | 14/14     |
+| Phase 11     | complete    | 3     | 3/3       |
+| Phase 12     | complete    | 1     | 1/1       |
+| Phase p-rev1 | complete    | 1     | 1/1       |
+| Phase 13     | complete    | 16    | 16/16     |
+| Phase 14     | complete    | 19    | 19/19     |
+| Phase 15     | complete    | 19    | 19/19     |
+| Phase 16     | in progress | 20    | 0/20      |
 
-**Total:** 144/144 tasks completed
+**Total:** 144/164 tasks completed
 
 ---
 
@@ -3361,3 +3362,51 @@ HEAD; isolated-HOME `pnpm test` had one five-second visual-companion startup
 timeout and then passed on an unchanged rerun (4,384/4,384), so no recovery was
 consumed. Skill validation, lint, format, and diff checks also passed. The next
 step is a fresh independent full-range review; publication remains blocked.
+
+---
+
+## Phase 16: Final full-range safety and contract fixes
+
+**Status:** in progress
+**Started:** 2026-08-29
+
+### Task Status
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p16-t01 | pending | -      |
+| p16-t02 | pending | -      |
+| p16-t03 | pending | -      |
+| p16-t04 | pending | -      |
+| p16-t05 | pending | -      |
+| p16-t06 | pending | -      |
+| p16-t07 | pending | -      |
+| p16-t08 | pending | -      |
+| p16-t09 | pending | -      |
+| p16-t10 | pending | -      |
+| p16-t11 | pending | -      |
+| p16-t12 | pending | -      |
+| p16-t13 | pending | -      |
+| p16-t14 | pending | -      |
+| p16-t15 | pending | -      |
+| p16-t16 | pending | -      |
+| p16-t17 | pending | -      |
+| p16-t18 | pending | -      |
+| p16-t19 | pending | -      |
+| p16-t20 | pending | -      |
+
+### Review Received: final full-range review - 2026-08-29T06:34:13Z
+
+**Review artifact:** `reviews/archived/final-review-2026-08-29T063413Z.md`
+
+**Findings:** 0 Critical / 3 Important / 3 Medium / 14 Minor.
+
+**Disposition:** all twenty findings converted with no deferrals. Important
+findings map to `p16-t01` through `p16-t03`, Medium findings to `p16-t04`
+through `p16-t06`, and Minor findings in review order to `p16-t07` through
+`p16-t20`.
+
+**Review run:** `38eb47c9-95b6-491a-9d1a-0ec478913ed7`, target
+`claude-fable-skip-permissions`, full explicit range
+`8cc1b3827f9c051d5d2bb078ae986aef3e9fbd80..26f53309caca8e6360cdb24b8d1778e115a8b5e8`.
+This event is `fixes_added`, never passed.

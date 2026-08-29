@@ -3704,7 +3704,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | p13     | code     | passed          | 2026-08-29 | reviews/archived/p13-review-2026-08-29T000209Z.md                 | 85e0b7b65403a8db9be5e18f353c5cfa66592b46 | gate       | claude-fable-skip-permissions |
 | final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T002706Z.md               | ab2a05ca4a3663acc752bb186c9c3e2393f30546 | gate       | claude-fable-skip-permissions |
 | final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T051437Z.md               | d1867ee31cc8b6cf01a745c2351cde6470170557 | gate       | claude-fable-skip-permissions |
-| final   | code     | received        | 2026-08-29 | reviews/final-review-2026-08-29T063413Z.md                        | 26f53309caca8e6360cdb24b8d1778e115a8b5e8 | gate       | claude-fable-skip-permissions |
+| final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T063413Z.md               | 26f53309caca8e6360cdb24b8d1778e115a8b5e8 | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -4979,6 +4979,143 @@ contract gaps, before another independent final review or PR publication.
 
 ---
 
+## Phase 16: Final full-range safety and contract fixes
+
+Goal: close all findings from the full-range review at `26f53309`, including
+three reproduced archive/sync safety regressions, three Medium lifecycle/build
+risks, and fourteen residual correctness and verification gaps.
+
+### Task p16-t01: (review) Make custom-root archive completion atomic
+
+Derive record/source pathspec allowlists inside sync plumbing from the target's
+configured roots, remove caller self-allowlisting, and add real-Git completion
+archive coverage for alternate and absolute roots with clean parent state.
+Verify archive/ref-sync suites and type-check; commit as
+`fix(p16-t01): complete custom root archive`.
+
+### Task p16-t02: (review) Stabilize Git outcomes across locales
+
+Pin Git child locale to `C`, clear ambient repository redirection variables,
+prefer exit-code probes where available, and test synced creation/push under a
+translated locale. Verify Git/ref-sync suites; commit as
+`fix(p16-t02): stabilize localized git outcomes`.
+
+### Task p16-t03: (review) Refuse archive paths outside the repository
+
+Canonicalize the configured root against `repoRoot` and reject any foreign or
+sibling-worktree project path before copy/removal. Add a matching-segments
+outside-repo regression proving no mutation. Commit as
+`fix(p16-t03): confine archive project paths`.
+
+### Task p16-t04: (review) Canonicalize symlinked absolute roots
+
+Realpath both repository and absolute scope-root/path comparisons, cover a
+symlinked temp prefix, and make scaffold failure roll back any attempt-owned
+ref/worktree/record. Commit as `fix(p16-t04): canonicalize absolute roots`.
+
+### Task p16-t05: (review) Enforce final-links scope bookkeeping
+
+Add the missing synced conjunct to completion final-links push, make validation
+join continued command lines and recognize array pathspecs, and reject broad
+project-artifact staging. Preserve the existing PR-scoped skill bump. Run skill
+validation/contracts/bump gate; commit as
+`fix(p16-t05): enforce completion bookkeeping scope`.
+
+### Task p16-t06: (review) Remove live builds from unit tests
+
+Replace the in-vitest workspace build with a non-mutating packaging contract
+probe against configuration or already-built output. Prove no assets/dist race
+and retain package-content coverage. Commit as
+`test(p16-t06): make package contract nonmutating`.
+
+### Task p16-t07: (review) Recover non-conflict pause failures cleanly
+
+For rejected/declined publication, either restore the pre-pause commit and
+clean checkout or retain the pause commit with exact retry guidance. Add a real
+remote-decline test and no-dirty-state assertions. Commit as
+`fix(p16-t07): recover rejected pause publication`.
+
+### Task p16-t08: (review) Complete pause conflict guidance
+
+Tell operators to re-run pause after continue/push so the active pointer is
+cleared, or make that finalization idempotent and automatic. Test the full
+documented sequence. Commit as `fix(p16-t08): finish pause conflict recovery`.
+
+### Task p16-t09: (review) Unify relative-root scope resolution
+
+Resolve relative roots against repo context at all callers, remove inconsistent
+segment scanning, and test split scope inheritance for single-segment roots.
+Commit as `fix(p16-t09): unify relative scope roots`.
+
+### Task p16-t10: (review) Centralize synced-root gitignore repair
+
+Export one managed gitignore helper for scoped roots, reuse it in scaffold,
+adoption, and migration, and ensure the custom rule is managed idempotently.
+Commit as `refactor(p16-t10): centralize scoped gitignore repair`.
+
+### Task p16-t11: (review) Exclude nested test support from packages
+
+Exclude every `src/**/__tests__/**` path from published dist, retain separate
+type coverage for test support, and assert no packed path contains `__tests__`.
+Commit as `fix(p16-t11): exclude nested test support`.
+
+### Task p16-t12: (review) Make the Git minimum truthful
+
+Either implement one clear Git-version probe or align design/docs with the
+actual best-effort compatibility contract and minimum. Add executable evidence
+and docs checks. Commit as `docs(p16-t12): align git minimum support`.
+
+### Task p16-t13: (review) Finish default-scope diagnostics and repair
+
+Let doctor report invalid `defaultScope`, align command exit semantics, and
+repair only the requested key without materializing a missing root. Add CLI
+command tests. Commit as `fix(p16-t13): finish default scope recovery`.
+
+### Task p16-t14: (review) Use real malformed-record boundaries
+
+Replace hand-typed resolver failures with on-disk malformed fixtures and render
+a `recorded-invalid` list row for JSON/human consumers while mutations remain
+fail-closed. Commit as `test(p16-t14): exercise malformed record boundaries`.
+
+### Task p16-t15: (review) Verify `--no-children` pull behavior
+
+Add a focused FR17 case proving child pull is skipped while parent pull remains
+correct. Commit as `test(p16-t15): cover pull no children`.
+
+### Task p16-t16: (review) Keep archive dry-run identity stable
+
+Read and pass persisted synced archive identity during dry-run so retries report
+the same snapshot as apply. Test first-run and retry parity. Commit as
+`fix(p16-t16): preserve dry run archive identity`.
+
+### Task p16-t17: (review) Clean recap exports on summary failure
+
+Route synced summary-export failure through attempt-owned recap cleanup without
+removing adopted output. Add retry coverage. Commit as
+`fix(p16-t17): clean failed recap exports`.
+
+### Task p16-t18: (review) Make skill pushes fail closed
+
+Add explicit push failure handling across inventoried lifecycle bookkeeping,
+replace two hand-rolled scope prefix checks with `oat project scope`, document
+push/pull JSON receipt fields, and validate all companion sites. Preserve
+existing PR-scoped skill bumps. Commit as
+`fix(p16-t18): fail closed on project push`.
+
+### Task p16-t19: (review) Avoid half-pruned remote failures
+
+Reorder or transactionally handle remote-ref deletion so transport failure
+does not remove local checkouts first, and return actionable retry guidance.
+Add real failure coverage. Commit as `fix(p16-t19): make prune failure atomic`.
+
+### Task p16-t20: (review) Normalize invalid-slug command errors
+
+Validate migrate/target slugs at command boundaries with exit 1, reuse the
+canonical target ref, and test invalid filesystem basenames and explicit slugs.
+Commit as `fix(p16-t20): normalize invalid slug errors`.
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -4999,8 +5136,9 @@ contract gaps, before another independent final review or PR publication.
 - Phase 13: 16 tasks - Post-merge final review fixes plus gate-review corrections for optional logs, scoped archive retries, failure-safe archive identity, locked stale registrations, local diagnostics, and release metadata
 - Phase 14: 19 tasks - Final integration review fixes across custom roots, validators/config, arrival, doctor, safety/recovery residuals, skills/docs, and closeout alignment
 - Phase 15: 19 tasks - Full-range final-review fixes for custom-root Git plumbing, conflict-safe pause recovery, offline creation, config durability, and residual portability/contract gaps
+- Phase 16: 20 tasks - Final full-range safety fixes for custom-root archive completion, locale-stable Git, repository confinement, symlink canonicalization, lifecycle bookkeeping, and residual contract coverage
 
-**Total: 144 tasks**
+**Total: 164 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
