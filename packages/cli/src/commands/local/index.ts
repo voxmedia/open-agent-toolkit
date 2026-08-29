@@ -180,6 +180,7 @@ export function createLocalCommand(): Command {
 
               const direction = options.from ? 'from' : 'to';
               const result = await syncLocalPaths({
+                repoRoot,
                 sourceRoot: repoRoot,
                 targetRoot: worktreePath,
                 localPaths,

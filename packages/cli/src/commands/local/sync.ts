@@ -1,6 +1,8 @@
-import { lstat, readdir, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { lstat, readdir, realpath, rm } from 'node:fs/promises';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
+import { CliError } from '@errors/cli-error';
 import { copyDirectory, dirExists, fileExists } from '@fs/io';
 
 import { expandLocalPaths } from './expand';
@@ -21,11 +23,96 @@ export interface SyncResult {
 }
 
 export interface SyncOptions {
+  repoRoot?: string;
   sourceRoot: string;
   targetRoot: string;
   localPaths: string[];
   direction: 'to' | 'from';
   force: boolean;
+  gitRunner?: GitRunner;
+}
+
+async function canonicalizeLocalSyncPath(path: string): Promise<string> {
+  const absolute = resolve(path);
+  try {
+    return await realpath(absolute);
+  } catch (error) {
+    if (
+      !(error instanceof Error && 'code' in error && error.code === 'ENOENT')
+    ) {
+      throw error;
+    }
+    const parent = dirname(absolute);
+    if (parent === absolute) return absolute;
+    return join(
+      await canonicalizeLocalSyncPath(parent),
+      relative(parent, absolute),
+    );
+  }
+}
+
+function pathsOverlap(left: string, right: string): boolean {
+  const leftToRight = relative(left, right);
+  const rightToLeft = relative(right, left);
+  const isWithin = (candidate: string) =>
+    candidate === '' ||
+    (candidate !== '..' &&
+      !candidate.startsWith(`..${sep}`) &&
+      !isAbsolute(candidate));
+  return isWithin(leftToRight) || isWithin(rightToLeft);
+}
+
+async function registeredNestedWorktrees(
+  repoRoot: string,
+  sourceRoot: string,
+  targetRoot: string,
+  git: GitRunner,
+): Promise<string[]> {
+  const result = await git.run(['worktree', 'list', '--porcelain'], {
+    cwd: repoRoot,
+    allowFailure: true,
+  });
+  if (result.code !== 0) {
+    throw new CliError(
+      `Unable to inspect registered worktrees before local sync: ${result.stderr || result.stdout || `git worktree list failed with exit ${result.code}`}`,
+      2,
+    );
+  }
+  const records = result.stdout ? result.stdout.split(/\n\n+/) : [];
+  const registered: string[] = [];
+  for (const record of records) {
+    const lines = record.split('\n').filter(Boolean);
+    const worktreeLines = lines.filter((line) => line.startsWith('worktree '));
+    if (
+      lines.length === 0 ||
+      worktreeLines.length !== 1 ||
+      lines[0] !== worktreeLines[0] ||
+      worktreeLines[0].slice('worktree '.length).trim() === ''
+    ) {
+      throw new CliError(
+        'Malformed `git worktree list --porcelain` output; refusing local sync.',
+        2,
+      );
+    }
+    registered.push(
+      await canonicalizeLocalSyncPath(
+        worktreeLines[0].slice('worktree '.length),
+      ),
+    );
+  }
+  if (registered.length === 0) {
+    throw new CliError(
+      'Git returned no registered worktrees; refusing repository-aware local sync.',
+      2,
+    );
+  }
+  const supportedRoots = new Set(
+    await Promise.all([
+      canonicalizeLocalSyncPath(sourceRoot),
+      canonicalizeLocalSyncPath(targetRoot),
+    ]),
+  );
+  return [...new Set(registered)].filter((path) => !supportedRoots.has(path));
 }
 
 async function containsNestedGitMarker(root: string): Promise<boolean> {
@@ -74,6 +161,14 @@ export async function syncLocalPaths(
   const toRoot = direction === 'to' ? targetRoot : sourceRoot;
 
   const entries: SyncEntry[] = [];
+  const registered = options.repoRoot
+    ? await registeredNestedWorktrees(
+        options.repoRoot,
+        sourceRoot,
+        targetRoot,
+        options.gitRunner ?? defaultGitRunner,
+      )
+    : [];
 
   const { resolved, missingGlobs } = await expandLocalPaths(
     fromRoot,
@@ -99,7 +194,16 @@ export async function syncLocalPaths(
     // This check must cover the whole selected entry on both sides and must
     // happen before force-removal. A localPath may be an ancestor of a linked
     // worktree, so checking only `<entry>/.git` is insufficient.
+    const [canonicalSourcePath, canonicalDestPath] = await Promise.all([
+      canonicalizeLocalSyncPath(sourcePath),
+      canonicalizeLocalSyncPath(destPath),
+    ]);
     if (
+      registered.some(
+        (worktreePath) =>
+          pathsOverlap(canonicalSourcePath, worktreePath) ||
+          pathsOverlap(canonicalDestPath, worktreePath),
+      ) ||
       (await containsNestedGitMarker(sourcePath)) ||
       (await containsNestedGitMarker(destPath))
     ) {

@@ -1,9 +1,17 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rename,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { fileExists } from '@fs/io';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { syncLocalPaths } from './sync';
 
@@ -413,4 +421,102 @@ describe('oat local sync', () => {
       }
     },
   );
+
+  it.each([
+    { direction: 'to' as const, damagedMarker: 'missing' as const },
+    { direction: 'from' as const, damagedMarker: 'renamed' as const },
+  ])(
+    'protects a registered nested worktree with a $damagedMarker marker during direction=$direction',
+    async ({ direction, damagedMarker }) => {
+      const repoRoot = await createDir();
+      const peerRoot = await createDir();
+      execFileSync('git', ['init', '-q'], { cwd: repoRoot });
+      execFileSync('git', ['config', 'user.email', 'test@example.com'], {
+        cwd: repoRoot,
+      });
+      execFileSync('git', ['config', 'user.name', 'Test User'], {
+        cwd: repoRoot,
+      });
+      await writeFile(join(repoRoot, 'seed.txt'), 'seed\n');
+      execFileSync('git', ['add', 'seed.txt'], { cwd: repoRoot });
+      execFileSync('git', ['commit', '-q', '-m', 'seed'], { cwd: repoRoot });
+      const localPath = '.local-state';
+      const nestedCheckout = join(repoRoot, localPath, 'nested-worktree');
+      execFileSync(
+        'git',
+        ['worktree', 'add', '-q', '-b', 'nested-worktree', nestedCheckout],
+        { cwd: repoRoot },
+      );
+      await writeFile(join(nestedCheckout, 'unsaved.txt'), 'do not delete\n');
+      const marker = join(nestedCheckout, '.git');
+      if (damagedMarker === 'missing') {
+        await rm(marker);
+      } else {
+        await rename(marker, join(nestedCheckout, '.git-corrupt'));
+      }
+      const registryBefore = execFileSync(
+        'git',
+        ['worktree', 'list', '--porcelain'],
+        { cwd: repoRoot, encoding: 'utf8' },
+      );
+      if (direction === 'from') {
+        await mkdir(join(peerRoot, localPath), { recursive: true });
+        await writeFile(join(peerRoot, localPath, 'replacement.txt'), 'new\n');
+      }
+
+      const result = await syncLocalPaths({
+        repoRoot,
+        sourceRoot: repoRoot,
+        targetRoot: peerRoot,
+        localPaths: [localPath],
+        direction,
+        force: true,
+      });
+
+      expect(result.entries).toEqual([
+        { path: localPath, status: 'skipped', reason: 'nested-worktree' },
+      ]);
+      await expect(
+        readFile(join(nestedCheckout, 'unsaved.txt'), 'utf8'),
+      ).resolves.toBe('do not delete\n');
+      expect(
+        execFileSync('git', ['worktree', 'list', '--porcelain'], {
+          cwd: repoRoot,
+          encoding: 'utf8',
+        }),
+      ).toBe(registryBefore);
+    },
+  );
+
+  it.each([
+    {
+      label: 'query failure',
+      result: { code: 128, stdout: '', stderr: 'registry unavailable' },
+    },
+    {
+      label: 'malformed output',
+      result: { code: 0, stdout: 'HEAD deadbeef', stderr: '' },
+    },
+  ])('fails closed before copying on $label', async ({ result }) => {
+    const sourceRoot = await createDir();
+    const targetRoot = await createDir();
+    await mkdir(join(sourceRoot, '.local-state'), { recursive: true });
+    await writeFile(join(sourceRoot, '.local-state', 'sentinel'), 'preserve\n');
+
+    await expect(
+      syncLocalPaths({
+        repoRoot: sourceRoot,
+        sourceRoot,
+        targetRoot,
+        localPaths: ['.local-state'],
+        direction: 'to',
+        force: true,
+        gitRunner: { run: vi.fn(async () => result) },
+      }),
+    ).rejects.toThrow();
+    expect(await fileExists(join(targetRoot, '.local-state'))).toBe(false);
+    await expect(
+      readFile(join(sourceRoot, '.local-state', 'sentinel'), 'utf8'),
+    ).resolves.toBe('preserve\n');
+  });
 });
