@@ -55,7 +55,7 @@ describe('GitRunner', () => {
     expect(result.stderr).toContain('fatal:');
   });
 
-  it('passes arguments without a shell and merges environment overrides', async () => {
+  it('passes arguments without a shell and stabilizes the Git environment', async () => {
     const execFile = vi.fn(
       (
         _file: string,
@@ -72,7 +72,15 @@ describe('GitRunner', () => {
     await expect(
       runner.run(['status', '--porcelain'], {
         cwd: '/repo',
-        env: { OAT_GIT_RUNNER_TEST: 'override' },
+        env: {
+          GIT_DIR: '/redirected/git-dir',
+          GIT_INDEX_FILE: '/redirected/index',
+          GIT_WORK_TREE: '/redirected/worktree',
+          LANG: 'de_DE.UTF-8',
+          LANGUAGE: 'de',
+          LC_ALL: 'de_DE.UTF-8',
+          OAT_GIT_RUNNER_TEST: 'override',
+        },
       }),
     ).resolves.toEqual({ stdout: 'output', stderr: '', code: 0 });
 
@@ -87,6 +95,16 @@ describe('GitRunner', () => {
       }),
     });
     expect(execFile.mock.calls[0]?.[2]).not.toHaveProperty('shell', true);
+    const env = execFile.mock.calls[0]?.[2].env;
+    expect(env).toMatchObject({
+      LANG: 'C',
+      LANGUAGE: 'C',
+      LC_ALL: 'C',
+      OAT_GIT_RUNNER_TEST: 'override',
+    });
+    expect(env).not.toHaveProperty('GIT_DIR');
+    expect(env).not.toHaveProperty('GIT_INDEX_FILE');
+    expect(env).not.toHaveProperty('GIT_WORK_TREE');
   });
 
   it('preserves a numeric exit code from an injected implementation', async () => {

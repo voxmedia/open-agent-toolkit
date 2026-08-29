@@ -45,6 +45,20 @@ function spawnFailure(error: ExecFileException): CliError {
   );
 }
 
+function gitEnvironment(overrides?: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = {
+    ...process.env,
+    ...overrides,
+    LANG: 'C',
+    LANGUAGE: 'C',
+    LC_ALL: 'C',
+  };
+  for (const variable of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE']) {
+    delete env[variable];
+  }
+  return env;
+}
+
 export function createGitRunner(
   execFileImpl: ExecFileImplementation = execFile,
 ): GitRunner {
@@ -56,7 +70,7 @@ export function createGitRunner(
           args,
           {
             cwd: options.cwd,
-            env: { ...process.env, ...options.env },
+            env: gitEnvironment(options.env),
             encoding: 'utf8',
           },
           (error, stdout, stderr) => {

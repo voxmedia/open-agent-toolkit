@@ -469,14 +469,28 @@ export async function pendingRebaseConflicts(
   return null;
 }
 
-function isMissingRemoteRef(stderr: string): boolean {
-  return /couldn't find remote ref|no such ref was fetched/i.test(stderr);
-}
-
 function isNonFastForwardPushRejection(stderr: string): boolean {
   return /(?:! \[rejected\]|\brejected\b)[\s\S]*\((?:non-fast-forward|fetch first)\)/i.test(
     stderr,
   );
+}
+
+async function fetchRemoteRefIfPresent(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<boolean> {
+  const remoteRef = await git.run(
+    ['ls-remote', '--exit-code', target.remote, target.ref],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  assertExpectedGitResult('git ls-remote synced ref', remoteRef, [0, 2]);
+  if (remoteRef.code === 2) {
+    return false;
+  }
+  await git.run(['fetch', target.remote, `+${target.ref}:${target.ref}`], {
+    cwd: target.repoRoot,
+  });
+  return true;
 }
 
 function assertExpectedGitResult(
@@ -523,15 +537,8 @@ export async function pushSynced(
   }
 
   const localCommit = await headSha(target, git);
-  const fetched = await git.run(
-    ['fetch', target.remote, `+${target.ref}:${target.ref}`],
-    { cwd: target.repoRoot, allowFailure: true },
-  );
-  const remoteExists = fetched.code === 0;
+  const remoteExists = await fetchRemoteRefIfPresent(target, git);
   let remoteBeforePushSha: string | null = null;
-  if (!remoteExists && !isMissingRemoteRef(fetched.stderr)) {
-    assertExpectedGitResult('git fetch synced ref', fetched, [0]);
-  }
 
   if (remoteExists) {
     remoteBeforePushSha = (
@@ -975,14 +982,7 @@ export async function preflightSyncedCheckout(
   git: GitRunner,
 ): Promise<CheckoutPreflight> {
   const checkoutExists = await assertCanonicalSyncTargetIdentity(target);
-  const fetched = await git.run(
-    ['fetch', target.remote, `+${target.ref}:${target.ref}`],
-    { cwd: target.repoRoot, allowFailure: true },
-  );
-  const remoteExists = fetched.code === 0;
-  if (!remoteExists && !isMissingRemoteRef(fetched.stderr)) {
-    assertExpectedGitResult('git fetch synced ref', fetched, [0]);
-  }
+  const remoteExists = await fetchRemoteRefIfPresent(target, git);
 
   if (!checkoutExists) {
     return { status: 'absent' };
