@@ -1,7 +1,14 @@
 import { basename, isAbsolute, join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { readSyncedRecord } from '@commands/project/sync/record';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  resolveProjectScope,
+  resolveScopeRoot,
+  syncedRecordPath,
+  type ProjectScope,
+} from '@commands/shared/project-scope';
 import {
   readOatConfig,
   readOatLocalConfig,
@@ -44,6 +51,7 @@ export interface ProjectArchivePushCommandDependencies {
   ) => Promise<string>;
   resolvePrimaryRepoRoot: typeof resolvePrimaryRepoRoot;
   resolveArchiveProjectTarget: typeof resolveArchiveProjectTarget;
+  readSyncedRecord: typeof readSyncedRecord;
   verifySelectedProjectRecapForArchive: typeof verifySelectedProjectRecapForArchive;
   archiveProjectOnCompletion: (
     options: ArchiveProjectOnCompletionOptions,
@@ -81,6 +89,7 @@ export function defaultProjectArchivePushCommandDependencies(): ProjectArchivePu
     resolveProjectsRoot,
     resolvePrimaryRepoRoot,
     resolveArchiveProjectTarget,
+    readSyncedRecord,
     verifySelectedProjectRecapForArchive,
     archiveProjectOnCompletion,
     processEnv: process.env,
@@ -152,11 +161,9 @@ async function buildDryRunReport(
   config: OatConfig,
   target: ResolvedArchiveTarget,
   archiveTarget: ArchiveProjectTarget,
+  snapshotName: string,
+  projectScope: ProjectScope | null,
 ): Promise<ArchivePushReport> {
-  const snapshotName = buildArchiveSnapshotName(
-    target.projectName,
-    dependencies.timestamp(),
-  );
   const remoteRepoRoot = await dependencies.resolvePrimaryRepoRoot(repoRoot);
   const s3Path =
     config.archive?.s3Uri && config.archive.s3SyncOnComplete === true
@@ -181,7 +188,10 @@ async function buildDryRunReport(
     warnings: [],
     lifecycleCommit: null,
     recapExportPaths: [],
-    snapshotId: basename(archiveTarget.archivePath),
+    snapshotId:
+      projectScope === 'synced'
+        ? snapshotName
+        : basename(archiveTarget.archivePath),
   };
 }
 
@@ -254,11 +264,36 @@ export async function runArchivePushCommand(
       repoRoot,
       projectPathArg,
     );
+    const projectScope = resolveProjectScope(
+      target.projectPath,
+      resolveScopeRoot(repoRoot, projectsRoot, 'shared'),
+      repoRoot,
+    );
+    const defaultSnapshotName = buildArchiveSnapshotName(
+      target.projectName,
+      dependencies.timestamp(),
+    );
+    const syncedRecord =
+      projectScope === 'synced'
+        ? await dependencies.readSyncedRecord(
+            syncedRecordPath(
+              resolveScopeRoot(repoRoot, projectsRoot, 'synced'),
+              target.projectName,
+            ),
+          )
+        : null;
+    const snapshotName = syncedRecord?.archiveSnapshot ?? defaultSnapshotName;
     const archiveTarget = await dependencies.resolveArchiveProjectTarget(
       {
         repoRoot,
         projectsRoot,
         projectName: target.projectName,
+        ...(syncedRecord?.archiveSnapshot
+          ? {
+              archiveSnapshot: syncedRecord.archiveSnapshot,
+              archiveScope: projectScope ?? undefined,
+            }
+          : {}),
       },
       {
         env: dependencies.processEnv,
@@ -281,6 +316,8 @@ export async function runArchivePushCommand(
         config,
         target,
         archiveTarget,
+        snapshotName,
+        projectScope,
       );
       emitArchivePushReport(report, config.archive?.summaryExportPath, context);
       process.exitCode = 0;
