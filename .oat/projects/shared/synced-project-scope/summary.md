@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-29
 oat_generated: true
-oat_summary_last_task: p17-t14
+oat_summary_last_task: p19-t06
 oat_summary_revision_count: 1
 oat_summary_includes_revisions: [p-rev1]
 ---
@@ -22,6 +22,8 @@ OAT project artifacts must travel across sessions, worktrees, and machines witho
 - Phase 14 closed full-integration safety gaps across canonical paths, migration/prune leases, review evidence, configuration, provider assets, packaging, and release contracts.
 - Phase 15 strengthened cross-scope Git behavior, deterministic recovery and validation inventories, project listing, pause/pull flows, and full-range compatibility discovered by independent review.
 - Phases 16–17 completed archive/config/autonomy safety, lifecycle durability, provider-view parity, invalid-record diagnostics, custom-root ignores, locale and environment isolation, command parsing, scaffold guards, and decoupled release tests through `p17-t14`.
+- Phase 18 corrected the remote-review regression that could run the final synced-project publication against an already archived project path; its independent phase review passed.
+- Phase 19 final-review remediation now requires exact archive-root identity, protects nested worktrees during local sync, rejects external synced roots before mutation, recovers a failed final prune commit through an exact-path retry, and binds archive retries to the authoritative source ref. The durable summary is refreshed through `p19-t06`; resume-header alignment remains the final implementation task.
 
 ## Key Decisions
 
@@ -33,25 +35,27 @@ OAT project artifacts must travel across sessions, worktrees, and machines witho
 
 - Self-migration moved from mid-implementation to post-closeout so the running workflow could first ship and use safe scope-aware bookkeeping; scratch projects supplied interim synced-scope dogfood.
 - Revision `p-rev1` merged upstream PR #226 into PR #227 at `17c3b80d`, preserving both projects' skill, PJM, validation, sync, and release behavior. Review replaced opaque merge evidence with reproducible tree/path equality and passed the integration with no blocking finding.
+- Upstream PR #229 was merged before the final remediation cycle and the full workspace test suite passed on the integrated branch. Phase 19 then converted the newest full-range review findings into bounded destructive-path and retry corrections.
 
 ## Notable Challenges
 
 - Independent phase/full-range reviews repeatedly exposed subtle Git ownership, archive/migration retry, receipt, path, packaging, and provider-parity defects. Phases 13–17 used bounded append-only recovery with settled usage of 2/10, 1/10, 2/10, 4/10, and 1/10 respectively; no marker remains pending.
-- The final full-range review passed at the Important threshold after three contained fixes; the refreshed configured exit-gate review then passed with 0 Critical, 0 Important, and 0 Medium findings. Accepted Minors are recorded as post-release follow-ups rather than hidden as completion claims.
+- Earlier full-range and configured exit-gate reviews passed for their then-current effective deltas. The later Phase 18 remote correction, upstream PR #229 merge, and Phase 19 destructive-path changes require fresh independent review and closeout evidence before this branch can claim final completion.
 
 ## Integration Notes
 
-- The five lockstep public packages and shipped CLI asset finish at `0.2.43`; 31 changed canonical skills carry their required PR-scoped version bump, generated implementer variants are synchronized, packaged output excludes test support, and the synced-bookkeeping inventory validates.
-- Every final CI-order gate passed with direct exit `0`, including isolated-`HOME` full tests, builds, skill/version gates, release validation, and docs build; `pnpm oat:validate-skills`, lint, format, diff checks, and provider sync dry-run also passed. The configured exit gate is received and allowed for the accepted effective delta.
+- The five lockstep public packages and shipped CLI asset are aligned at `0.2.44` for the Phase 19 shipped CLI and documentation changes. The final Definition-of-Done, skill/version, release, docs, and provider gates must be refreshed after the last Phase 19 artifact task.
 
 ## Revision History
 
 - **p-rev1 — PR #226 integration (2026-08-28).** Merged current `origin/main` into PR #227, reconciled overlapping assets and contracts, passed focused and full isolated-environment verification, and received an independent passing integration review.
+- **Phase 18 and Phase 19 closeout remediation (2026-08-29).** Phase 18 passed after correcting post-archive publication routing. After upstream PR #229 merged, a fresh full-range review produced five behavioral and two artifact findings; Phase 19 implemented the five archive, local-sync, external-root, prune-recovery, and retry-identity corrections and refreshed this summary through `p19-t06`.
 
 ## Follow-up Items
 
 - Accepted post-release cleanup: avoid timestamp-only duplicate pause commits; enforce rather than merely advise the partial-prune no-republish rule; unify invalid-config exit-code policy; strengthen provider parity at the codec level; audit direct Git calls outside `GitRunner`; and extend custom-root archive ignores beyond synced scope.
 - Managed-block compatibility still merits fixtures for legacy two-header damage, stray/mid-line/CRLF markers, plus consolidation of duplicate restore guidance. Self-migration to `synced` and deletion of the disposable GitHub spike repository remain separately controlled closeout actions.
+- Complete `p19-t07`, run independent Phase 19 and final-project review, then refresh the exact CI-order Definition-of-Done and configured exit gate before updating PR #227.
 
 ## Workflow Observations
 
@@ -262,3 +266,7 @@ attempts_completed=0/2, and launch_state=not_started.
 ### 2026-08-29 · structural · oat gate review · final
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:5 exit=0 status=ok artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T094230Z.md
+
+### 2026-08-29 · structural · oat-project-review-provide · final-review-2026-08-29T134331Z
+
+Independent final review used two consequential reconnaissance lanes; see reviews/final-review-2026-08-29T134331Z.md.
