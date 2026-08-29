@@ -199,6 +199,12 @@
   },
   {
     "file": ".agents/skills/oat-wave-execute/SKILL.md",
+    "anchor": "PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)",
+    "kind": "resolve",
+    "guard": "canonical-resolution"
+  },
+  {
+    "file": ".agents/skills/oat-wave-execute/SKILL.md",
     "anchor": "oat project push \"$PROJECT_PATH\" --message \"chore(oat): record wave plan gate\"",
     "kind": "write",
     "guard": "project-scope"

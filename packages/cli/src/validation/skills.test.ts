@@ -635,19 +635,28 @@ describe('validateOatSkills', () => {
       guard: string;
       kind: string;
     }>;
-    const site = inventory.find(
+    const sites = inventory.filter(
       (entry) => entry.file === '.agents/skills/oat-wave-execute/SKILL.md',
     );
 
-    expect(site).toEqual({
-      file: '.agents/skills/oat-wave-execute/SKILL.md',
-      anchor:
-        'oat project push "$PROJECT_PATH" --message "chore(oat): record wave plan gate"',
-      kind: 'write',
-      guard: 'project-scope',
-    });
+    expect(sites).toEqual([
+      {
+        file: '.agents/skills/oat-wave-execute/SKILL.md',
+        anchor:
+          'PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)',
+        kind: 'resolve',
+        guard: 'canonical-resolution',
+      },
+      {
+        file: '.agents/skills/oat-wave-execute/SKILL.md',
+        anchor:
+          'oat project push "$PROJECT_PATH" --message "chore(oat): record wave plan gate"',
+        kind: 'write',
+        guard: 'project-scope',
+      },
+    ]);
     expect(skill).toMatch(
-      /```bash\nPROJECT_SCOPE=\$\(oat project scope "\$PROJECT_PATH" --format value\)[\s\S]*?if \[ "\$PROJECT_SCOPE" = "synced" \]; then\n  oat project push "\$PROJECT_PATH" --message "chore\(oat\): record wave plan gate"[\s\S]*?\nfi\n```/,
+      /```bash\nPROJECT_PATH=\$\(oat config get activeProject[\s\S]*?PROJECT_SCOPE=\$\(oat project scope "\$PROJECT_PATH" --format value\)[\s\S]*?if \[ "\$PROJECT_SCOPE" = "synced" \]; then\n  oat project push "\$PROJECT_PATH" --message "chore\(oat\): record wave plan gate"[\s\S]*?else\n  git add -- "\$PROJECT_PATH"[\s\S]*?git commit --only -m "chore\(oat\): record wave plan gate" -- "\$PROJECT_PATH"\nfi\n```/,
     );
   });
 

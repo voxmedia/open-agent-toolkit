@@ -242,13 +242,19 @@ Persist the gate artifact and its dispositions through the wrapper project's
 scope-aware bookkeeping route:
 
 ```bash
+PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
+if [ -z "$PROJECT_PATH" ]; then
+  echo "oat: no active wrapper project; refusing wave gate bookkeeping" >&2
+  exit 1
+fi
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing wave gate bookkeeping" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): record wave plan gate"
 else
-  git add "$PROJECT_PATH"
-  git diff --cached --quiet || git commit -m "chore(oat): record wave plan gate"
+  git add -- "$PROJECT_PATH"
+  git diff --cached --quiet -- "$PROJECT_PATH" ||
+    git commit --only -m "chore(oat): record wave plan gate" -- "$PROJECT_PATH"
 fi
 ```
 
