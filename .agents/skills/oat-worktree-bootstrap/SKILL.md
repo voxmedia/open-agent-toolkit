@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap
-version: 1.3.0
+version: 1.3.1
 description: Use when creating or resuming a git worktree for OAT implementation. Creates or validates a worktree and runs OAT bootstrap checks.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--existing]'
 disable-model-invocation: true
@@ -166,7 +166,9 @@ if [ -n "$TARGET_ACTIVE_PROJECT" ]; then
   (
     cd "{target-path}"
     PROJECT_SCOPE=$(oat project scope "$TARGET_ACTIVE_PROJECT" --format value) || exit 1
-    [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$TARGET_ACTIVE_PROJECT"
+    if [ "$PROJECT_SCOPE" = "synced" ]; then
+      oat project pull "$TARGET_ACTIVE_PROJECT"
+    fi
   )
 fi
 ```

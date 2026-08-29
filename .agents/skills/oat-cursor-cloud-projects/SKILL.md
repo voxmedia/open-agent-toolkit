@@ -1,6 +1,6 @@
 ---
 name: oat-cursor-cloud-projects
-version: 1.1.0
+version: 1.1.1
 description: Use when OAT work is mentioned in a Cursor Cloud environment. Orients agents to cloud detection, repo-rooted project homes, user-first assets, CLI availability, and Cursor dispatch context without owning lifecycle execution.
 disable-model-invocation: false
 user-invocable: true
@@ -155,7 +155,9 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
 if [ -n "$PROJECT_PATH" ]; then
   PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1
-  [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$PROJECT_PATH"
+  if [ "$PROJECT_SCOPE" = "synced" ]; then
+    oat project pull "$PROJECT_PATH"
+  fi
 fi
 ```
 

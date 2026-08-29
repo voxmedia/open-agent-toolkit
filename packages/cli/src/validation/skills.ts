@@ -227,6 +227,16 @@ function collectSyncedContentFindings(
   content: string,
   findings: ValidationFinding[],
 ): void {
+  for (const match of content.matchAll(
+    /PROJECT_SCOPE=\$\(oat project scope[^\n]+\) \|\| exit 1\n\s*\[\s*"?\$PROJECT_SCOPE"?\s*=\s*"?synced"?\s*\]\s*&&\s*oat\s+project\s+pull\b/g,
+  )) {
+    const lineNumber = content.slice(0, match.index).split('\n').length + 1;
+    findings.push({
+      file,
+      message: `Line ${lineNumber}: Synced arrival pull must use an if block so shared and local arrival exits successfully`,
+    });
+  }
+
   const lines = content.split('\n');
   let fenceMarker: string | null = null;
   let scopeGuardSeen = false;

@@ -211,19 +211,19 @@
   },
   {
     "file": ".agents/skills/oat-worktree-bootstrap/SKILL.md",
-    "anchor": "[ \"$PROJECT_SCOPE\" = \"synced\" ] && oat project pull \"$TARGET_ACTIVE_PROJECT\"",
+    "anchor": "oat project pull \"$TARGET_ACTIVE_PROJECT\"",
     "kind": "arrival",
     "guard": "materialized-arrival"
   },
   {
     "file": ".agents/skills/oat-worktree-bootstrap-auto/SKILL.md",
-    "anchor": "[ \"$PROJECT_SCOPE\" = \"synced\" ] && oat project pull \"$TARGET_ACTIVE_PROJECT\"",
+    "anchor": "oat project pull \"$TARGET_ACTIVE_PROJECT\"",
     "kind": "arrival",
     "guard": "materialized-arrival"
   },
   {
     "file": ".agents/skills/oat-cursor-cloud-projects/SKILL.md",
-    "anchor": "[ \"$PROJECT_SCOPE\" = \"synced\" ] && oat project pull \"$PROJECT_PATH\"",
+    "anchor": "oat project pull \"$PROJECT_PATH\"",
     "kind": "arrival",
     "guard": "materialized-arrival"
   },
@@ -271,7 +271,7 @@
   },
   {
     "file": ".agents/skills/oat-project-autonomous/SKILL.md",
-    "anchor": "  [ \"$PROJECT_SCOPE\" = \"synced\" ] && oat project pull \"$PROJECT_PATH\"",
+    "anchor": "oat project pull \"$PROJECT_PATH\"",
     "kind": "arrival",
     "guard": "materialized-arrival"
   },

@@ -2142,7 +2142,7 @@ describe('validateOatSkills', () => {
       '### Step 2: Create or Reuse Worktree',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.1');
     expect(detectionIndex).toBeGreaterThanOrEqual(0);
     expect(creationIndex).toBeGreaterThan(detectionIndex);
     expect(content).toContain('BOOTSTRAP_MODE=normal');
@@ -2284,7 +2284,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-worktree-bootstrap/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.1');
     expect(content).toContain(
       'Prefer an explicit worktree bootstrap command when the repository declares',
     );
@@ -6141,6 +6141,23 @@ describe('validateOatSkills', () => {
       );
       expect(content).not.toMatch(
         /PROJECT_SCOPE=\$\(oat project scope[^\n]+\) \|\| exit 1/,
+      );
+    }
+  });
+
+  it('keeps shared and local arrival successful in bootstrap workflows', async () => {
+    for (const skillPath of [
+      '.agents/skills/oat-worktree-bootstrap/SKILL.md',
+      '.agents/skills/oat-worktree-bootstrap-auto/SKILL.md',
+      '.agents/skills/oat-cursor-cloud-projects/SKILL.md',
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+    ]) {
+      const content = await readRepoFile(skillPath);
+      expect(content).toMatch(
+        /if \[ "\$PROJECT_SCOPE" = "synced" \]; then\n\s+oat project pull/,
+      );
+      expect(content).not.toMatch(
+        /\[ "\$PROJECT_SCOPE" = "synced" \] && oat project pull/,
       );
     }
   });

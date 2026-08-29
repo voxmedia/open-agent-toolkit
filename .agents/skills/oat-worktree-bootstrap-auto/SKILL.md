@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap-auto
-version: 1.6.0
+version: 1.6.1
 description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]'
 disable-model-invocation: false
@@ -215,7 +215,9 @@ if [ -n "$TARGET_ACTIVE_PROJECT" ]; then
   (
     cd "$TARGET_PATH"
     PROJECT_SCOPE=$(oat project scope "$TARGET_ACTIVE_PROJECT" --format value) || exit 1
-    [ "$PROJECT_SCOPE" = "synced" ] && oat project pull "$TARGET_ACTIVE_PROJECT"
+    if [ "$PROJECT_SCOPE" = "synced" ]; then
+      oat project pull "$TARGET_ACTIVE_PROJECT"
+    fi
   )
 fi
 ```
