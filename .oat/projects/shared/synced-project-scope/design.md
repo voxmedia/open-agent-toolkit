@@ -27,7 +27,7 @@ All load-bearing git behaviors were verified in a scratch repository during desi
 
 ### System Context
 
-```
+```text
  work branch (refs/heads/feat/x)            project ref (refs/oat/projects/<slug>)
  ┌──────────────────────────────┐            ┌──────────────────────────────────┐
  │ src/…                        │            │ state.md  plan.md  design.md  …  │
@@ -55,7 +55,7 @@ All load-bearing git behaviors were verified in a scratch repository during desi
 
 ### Component Diagram
 
-```
+```text
                      ┌────────────────────────────┐
   skills / agents ──►│ oat project scope|push|pull │──► ref-sync ──► git runner ──► origin
                      │ prune|migrate|links|new     │        │
@@ -66,7 +66,7 @@ All load-bearing git behaviors were verified in a scratch repository during desi
 
 ### Data Flow
 
-```
+```text
 new ──► ensure gitignore rule ──► empty-tree root commit ──► update-ref refs/oat/projects/<slug>
     ──► git worktree add --detach <path> <ref> ──► scaffold templates into <path>
     ──► push (commit + publish) ──► write <slug>.json ──► scaffold commit on branch (record [+ .gitignore])
@@ -420,7 +420,7 @@ interface SyncedProjectRecord {
 
 ### Ref and worktree layout (git)
 
-```
+```text
 refs/oat/projects/<slug>            local ref = mirror of origin's ref (fetched with + refspec)
 .oat/projects/synced/<slug>/.git    worktree pointer file → <common-dir>/worktrees/<id>
 .oat/projects/synced/<slug>/        tree root == project directory (state.md, plan.md, …)
@@ -564,7 +564,7 @@ Not applicable — no database.
 ### Error Categories
 
 - **User Errors (exit 1, `CliError`):** not a synced project; no `origin` remote; checkout dirty on pull; rebase conflict; push rejected after one reconcile cycle; record missing or malformed; prune refused (open PR). Each message names the state and the exact next command.
-- **System Errors (exit 2):** git not on PATH; git older than the minimum (worktree add on a ref requires ≥ 2.5; detected once via `git --version`); filesystem failures. Surfaced verbatim.
+- **System Errors (exit 2):** git not on PATH; git older than the minimum (worktree add on a ref requires ≥ 2.5; detected once via `git --version`); filesystem failures. Synced rebase inspection uses portable `git rev-parse --git-path` output resolved against the checkout and does not require the Git 2.31+ `--path-format` option. Surfaced verbatim.
 - **External Service Errors:** `gh` missing/unauthenticated or PR edit failing → `prRefresh: 'skipped' | 'failed'` with a warning; push still succeeds. Network failure during fetch/push → user error with the git message.
 
 ### Conflict flow (push or pull)

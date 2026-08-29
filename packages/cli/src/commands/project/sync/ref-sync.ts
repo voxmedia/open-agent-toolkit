@@ -455,10 +455,13 @@ export async function pendingRebaseConflicts(
   await assertNestedWorktree(target, git);
   for (const rebaseDirectory of ['rebase-merge', 'rebase-apply']) {
     const gitPath = await git.run(
-      ['rev-parse', '--path-format=absolute', '--git-path', rebaseDirectory],
+      ['rev-parse', '--git-path', rebaseDirectory],
       { cwd: target.projectPath },
     );
-    if (await pathExists(gitPath.stdout)) {
+    const absoluteGitPath = isAbsolute(gitPath.stdout)
+      ? gitPath.stdout
+      : resolve(target.projectPath, gitPath.stdout);
+    if (await pathExists(absoluteGitPath)) {
       return listConflicts(target, git);
     }
   }

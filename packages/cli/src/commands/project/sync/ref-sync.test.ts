@@ -22,6 +22,7 @@ import {
   continueSynced,
   createSyncedProject,
   migrateSharedToSynced,
+  pendingRebaseConflicts,
   preflightSyncedCheckout,
   pullChildren,
   pullSynced,
@@ -1202,6 +1203,24 @@ describe('pullSynced', () => {
         status: 'conflict',
         conflicts: ['state.md'],
       });
+      const rebaseInspectionCalls: string[][] = [];
+      const recordingRunner: GitRunner = {
+        async run(args, options) {
+          rebaseInspectionCalls.push([...args]);
+          return defaultGitRunner.run(args, options);
+        },
+      };
+      await expect(
+        pendingRebaseConflicts(targetB, recordingRunner),
+      ).resolves.toEqual(['state.md']);
+      expect(rebaseInspectionCalls).toContainEqual([
+        'rev-parse',
+        '--git-path',
+        'rebase-merge',
+      ]);
+      expect(rebaseInspectionCalls.flat()).not.toContain(
+        '--path-format=absolute',
+      );
       await writeFile(
         join(targetB.projectPath, 'state.md'),
         'resolved\n',
