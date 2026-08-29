@@ -24,32 +24,83 @@ Skill behavior is defined by frontmatter plus the process contract in each `SKIL
 - Define a pre-work capability and authorization gate for skills that delegate to subagents, workers, or reviewers.
 - Keep output obligations explicit so downstream skills and users know what changed.
 
-## Portable sibling-skill reads
+## Portable sibling reads (skills and agents)
 
-Executable instructions must not assume the skill is running from a repository
-checkout. Before a skill or one of its operational reference files reads a
-sibling `SKILL.md`, resolve a `${SKILLS_ROOT}` in this order:
+Executable instructions must not assume the asset is running from a repository
+checkout. The rule is not skill-specific: it applies to every Markdown asset
+shipped by a pack whose `defaultScope` is `user`, which today means both
+canonical skills under `.agents/skills` and canonical agents under
+`.agents/agents`. The scanned surface is derived from `PACK_MANIFEST` rather
+than a hand-maintained list, so adding a skill or agent to a user-default pack
+puts it under the contract automatically.
+
+The contract covers a cross-asset read of a sibling `SKILL.md` and of any file
+or directory at or below a sibling's `references/`.
+
+### Loaded skills resolve in three steps
+
+Before a skill or one of its operational reference files reads a sibling,
+resolve a `${SKILLS_ROOT}` in this order:
 
 1. Derive `${SKILL_DIR}/..` from the directory containing the currently loaded
    `SKILL.md`, when the provider exposes that path.
 2. Try the user-scope root at `${HOME}/.agents/skills`.
 3. Fall back to the project-scope root at `<repo-root>/.agents/skills`.
 
-Probe each candidate for `<sibling>/SKILL.md` and use the first match. If none
+Probe each candidate for the exact target and use the first match. If none
 exists, name the missing sibling, give an actionable install or update command,
 and stop that workflow branch instead of improvising the sibling's process.
 
-When a caller needs multiple sibling skills, resolve and bind each sibling
-independently. Do not freeze one `${SKILLS_ROOT}` and assume every dependency is
-installed there: a workflows adapter may be at project scope while its utility
-contracts are at user scope. A missing-sibling recovery must name the owning
-pack and intended scope, using `oat tools install <pack> --scope <user|project>`
-or `oat tools update --pack <pack> --scope <user|project>` as appropriate.
+### Materialized agents resolve in two steps
+
+Canonical agents are materialized into provider-specific views — Codex receives
+agent content as developer instructions, while Claude and Cursor use distinct
+provider directories. No stable loaded-agent source path exists across those
+providers, so an agent must not invent a `${SKILL_DIR}`-style loaded-agent
+candidate. Agents resolve installed scope only:
+
+1. Try the user-scope root at `${HOME}/.agents/skills`.
+2. Fall back to the project-scope root at `<repo-root>/.agents/skills`.
+
+User scope comes first because the packs that own these dependencies default
+there; project scope remains a real fallback for project installations.
+
+### Bind every dependency independently
+
+When a caller needs multiple siblings, resolve and bind each one to its own
+root variable. Do not freeze a single `${SKILLS_ROOT}` and assume every
+dependency is installed there: a workflows adapter may be at project scope
+while its utility contracts are at user scope. Validate the exact target file
+before acting on it, and never substitute ambient discovery for a bound root.
+
+Follow-on reads inside an already-bound sibling root — for example a second
+reference file under a root that an earlier read established and validated —
+are local reads rather than new cross-asset reads. They are only acceptable
+when the anchoring read comes first.
+
+### Fail closed with pack-specific recovery
+
+A missing-sibling recovery must name the missing target, its owning pack, and
+the intended scope, using `oat tools install <pack> --scope <user|project>` or
+`oat tools update --pack <pack> --scope <user|project>` as appropriate. Do not
+degrade to a partially guided path, and do not continue past the missing
+dependency.
+
+### The ratchet allows only exact historical baselines
 
 Do not use a bare `.agents/skills/<sibling>/SKILL.md`, `./.agents/...`, or
-`../.agents/...` path for an executable read. Historical examples may retain
-those spellings only when they are non-executable and explicitly baselined by
-the bundled-docs contract test.
+`../.agents/...` path for an executable read in any user-default skill or
+agent. The bundled-docs contract test enforces this over the whole
+manifest-derived surface and reports each violation as exact
+`source -> target` evidence.
+
+The only exemption is a pinned historical baseline: non-executable evidence
+such as a dogfood transcript or a fixture README, recorded by exact source
+file, target skill, and target path. There is no wildcard, directory-wide, or
+skill-wide allowance, and no temporary migration allowlist — executable debt is
+fixed at the caller instead of being exempted. The same assertions run against
+the bundled CLI copies and the materialized provider views, so a canonical fix
+must survive bundling and sync as well.
 
 ## Contract components
 
