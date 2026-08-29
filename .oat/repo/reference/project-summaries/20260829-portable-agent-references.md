@@ -2,6 +2,9 @@
 oat_generated: true
 oat_generated_at: 2026-08-29
 oat_summary_scope: project
+oat_summary_last_task: p02-t02
+oat_summary_revision_count: 0
+oat_summary_includes_revisions: false
 oat_project: .oat/projects/shared/portable-agent-references
 ---
 
@@ -114,3 +117,33 @@ a claim is not confirming the claim.
 - Design: `design.md`
 - Plan: `plan.md`
 - Implementation: `implementation.md`
+
+## Workflow Observations
+
+### 2026-08-28 · structural · oat gate review · plan
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:1,medium:1,minor:5 exit=1 status=blocked artifact=.oat/projects/shared/portable-agent-references/reviews/artifact-plan-review-2026-08-28T223052Z.md
+
+### 2026-08-28 · structural · oat gate review · plan
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:1,minor:2 exit=0 status=ok artifact=.oat/projects/shared/portable-agent-references/reviews/artifact-plan-review-2026-08-28T224908Z.md
+
+### 2026-08-29 · structural · oat-project-implement · p02
+
+Phase p02 passed root-owned review round 2 at fa9d6e37d (0C/0I); see reviews/p02-review-2026-08-29T081859Z.md, which carries delegated-reconnaissance orchestration evidence.
+
+### 2026-08-29 · structural · oat-project-implement · p01
+
+Phase p01 passed root-owned review round 3 at 52745ef93 (0C/0I) after one implementer fix round; rounds 2-3 findings were root-owned bookkeeping. See reviews/p01-review-2026-08-29T074543Z.md.
+
+### 2026-08-29 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/portable-agent-references/references/project-retro.md evidence_used=lifecycle-artifacts,project-log,review-artifacts,session-transcript evidence_unavailable=oat-execution-learnings promotions=5 upstream=2 apply=declined filing=declined
+
+### 2026-08-29 · structural · oat-project-retro · project-retro
+
+correction of prior retro receipt: apply and filing outcomes were recorded as declined before the interactive consent step ran; no apply or filing decision had been made. Accurate outcome at that point was deferred for both. Prior entry preserved above; this entry supersedes its apply= and filing= values.
+
+### 2026-08-29 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/portable-agent-references/references/project-retro.md evidence_used=lifecycle-artifacts,project-log,review-artifacts,session-transcript evidence_unavailable=oat-execution-learnings promotions=5 upstream=2 apply=performed filing=performed
